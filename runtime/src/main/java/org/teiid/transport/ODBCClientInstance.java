@@ -45,7 +45,6 @@ public class ODBCClientInstance implements ChannelListener{
 	private ODBCClientRemote client;
 	private ODBCServerRemoteImpl server;
 	private ReflectionHelper serverProxy = new ReflectionHelper(ODBCServerRemote.class);
-	private boolean hasPending;
 	
 	public ODBCClientInstance(final ObjectChannel channel, ODBCServerRemote.AuthenticationType authType, TeiidDriver driver) {
 		this.client = (ODBCClientRemote)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {ODBCClientRemote.class}, new InvocationHandler() {
@@ -76,10 +75,6 @@ public class ODBCClientInstance implements ChannelListener{
 		server.terminate();
 	}
 	
-	public boolean hasPending() {
-		return hasPending;
-	}
-
 	@Override
 	public void onConnection() throws CommunicationException {
 	}
@@ -88,7 +83,6 @@ public class ODBCClientInstance implements ChannelListener{
 	public void receivedMessage(Object msg) throws CommunicationException {
         if (msg instanceof PGRequest) {
         	PGRequest request = (PGRequest)msg;
-        	hasPending = request.hasPending;
             processMessage(request.struct);
         }
 	}

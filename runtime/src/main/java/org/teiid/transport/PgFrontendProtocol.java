@@ -131,7 +131,6 @@ public class PgFrontendProtocol extends FrameDecoder {
         byte[] data = createByteArray(this.dataLength - 4);
         buffer.readBytes(data);
 		createRequestMessage(this.messageType, new NullTerminatedStringDataInputStream(new DataInputStream(new ByteArrayInputStream(data, 0, this.dataLength-4)), this.encoding));
-		message.hasPending = buffer.readableBytes() > 0;
 		this.dataLength = null;
 		this.messageType = null;
 		return message;
@@ -397,7 +396,6 @@ public class PgFrontendProtocol extends FrameDecoder {
 	
 	public static class PGRequest {
 		ServiceInvocationStruct struct;
-		boolean hasPending;
 	}
 	
 	static class NullTerminatedStringDataInputStream extends DataInputStream{

@@ -136,11 +136,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private static Pattern rollbackPattern = Pattern.compile("ROLLBACK\\s*(to)*\\s*(\\w+\\d+_*)*"); //$NON-NLS-1$
 	
 	private TeiidDriver driver;
-	private ODBCClientInstance clientInstance;
 	private ODBCClientRemote client;
 	private Properties props;
 	private AuthenticationType authType;
 	private ConnectionImpl connection;
+	private boolean shouldSynch;
+	private boolean synchCalled;
 	
 	private volatile ResultsFuture<Boolean> executionFuture;
 	
@@ -151,7 +152,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	public ODBCServerRemoteImpl(ODBCClientInstance client, AuthenticationType authType, TeiidDriver driver) {
 		this.driver = driver;
 		this.client = client.getClient();
-		this.clientInstance = client;
 		this.authType = authType;
 	}
 	
@@ -179,7 +179,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			this.connection =  (ConnectionImpl)driver.connect(url, info);
 			int hash = this.connection.getConnectionId().hashCode();
 			this.client.authenticationSucess(hash, hash);
-			sync();
+			ready(true);
 		} catch (SQLException e) {
 			this.client.errorOccurred(e);
 			terminate();
@@ -252,7 +252,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	@Override
 	public void unsupportedOperation(String msg) {
 		this.client.errorOccurred(msg);
-		sync();
+		ready(true);
 	}
 
 	@Override
@@ -267,7 +267,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		final Portal query = this.portalMap.get(bindName);
 		if (query == null) {
 			this.client.errorOccurred(RuntimePlugin.Util.getString("not_bound", bindName)); //$NON-NLS-1$
-			sync();
+			ready(true);
 		}				
 		else {
 			if (query.sql.trim().isEmpty()) {
@@ -297,9 +297,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
                         } catch (Throwable e) {
                             client.errorOccurred(e);
                         }
-                        if (!clientInstance.hasPending()) {
-                        	sync();
-                        }
+                    	ready(false);
 	        		}
 				});
             } catch (SQLException e) {
@@ -418,7 +416,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		
 		if (query.trim().length() == 0) {
     		this.client.emptyQueryReceived();
-    		sync();
+    		ready(false);
     		return;
     	}
         QueryWorkItem r = new QueryWorkItem(query);
@@ -431,8 +429,11 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private boolean isAwaitingAsynch() {
 		if (this.executionFuture != null) {
 			this.client.errorOccurred("Awaiting asynch result"); //$NON-NLS-1$
-			sync();
+			ready(true);
 			return true;
+		}
+		synchronized (this) {
+			this.shouldSynch = false;
 		}
 		return false;
 	}
@@ -445,7 +446,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		Prepared query = this.preparedMap.get(prepareName);
 		if (query == null) {
 			this.client.errorOccurred(RuntimePlugin.Util.getString("no_stmt_found", prepareName)); //$NON-NLS-1$
-			sync();
+			ready(true);
 		}
 		else {
 			try {
@@ -476,8 +477,26 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 
 	@Override
 	public void sync() {
-		if (this.executionFuture != null) {
-			return;
+		boolean ready = false;
+		synchronized (this) {
+			synchCalled = true;
+			ready = this.shouldSynch;
+		}
+		if (ready) {
+			ready(true);
+		}
+	}
+	
+	private void ready(boolean sendAlways) {
+		synchronized (this) {
+			if (!sendAlways) {
+				shouldSynch = true;
+				if (!synchCalled) {
+					return;
+				}
+			}
+			shouldSynch = true;
+			synchCalled = false;
 		}
 		boolean inTxn = false;
 		boolean failedTxn = false;
@@ -581,7 +600,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	@Override
 	public void functionCall(int oid) {
 		this.client.errorOccurred(RuntimePlugin.Util.getString("lo_not_supported")); //$NON-NLS-1$
-		sync();
+		ready(true);
 	}
 	
 	@Override
@@ -640,7 +659,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 					                modfiedSQL = fixSQL(sql);
 			        			} catch (Throwable e) {
 			        				client.errorOccurred(e);
-			        				sync();
+			        				ready(true);
 			        				return;
 			        			} finally {
 			        				try {
@@ -661,7 +680,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			} catch(IOException e) {
 				client.errorOccurred(e);
 			}
-			sync();
+			ready(false);
 		}
 	}
 
