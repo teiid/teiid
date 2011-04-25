@@ -131,6 +131,10 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 			this.type = (Type)in.readObject();
 		} catch (OptionalDataException e) {
 			this.type = Type.UNKNOWN;
+		} catch(IOException e) {
+			this.type = Type.UNKNOWN;
+		} catch(ClassNotFoundException e) {
+			this.type = Type.UNKNOWN;
 		}
 	}
 	
