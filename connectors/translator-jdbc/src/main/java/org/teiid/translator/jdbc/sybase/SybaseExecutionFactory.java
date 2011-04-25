@@ -37,6 +37,7 @@ import java.util.List;
 
 import org.teiid.language.Command;
 import org.teiid.language.Function;
+import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
 import org.teiid.language.OrderBy;
 import org.teiid.language.SetQuery;
@@ -51,6 +52,7 @@ import org.teiid.translator.jdbc.EscapeSyntaxModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.ModFunctionModifier;
+import org.teiid.translator.jdbc.db2.DB2ExecutionFactory;
 import org.teiid.translator.jdbc.oracle.ConcatFunctionModifier;
 
 
@@ -232,6 +234,14 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
 		return parts;
     }
     
+    @Override
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+    	if (!supportsCrossJoin()) {
+    		DB2ExecutionFactory.convertCrossJoinToInner(obj, getLanguageFactory());
+    	}
+    	return super.translate(obj, context);
+    }
+    
     @SuppressWarnings("unchecked")
 	@Override
     public List<?> translateLimit(Limit limit, ExecutionContext context) {
@@ -375,6 +385,10 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
     @Override
     public String translateLiteralDate(Date dateValue) {
     	return "CAST('" + formatDateValue(dateValue) +"' AS DATE)"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    protected boolean supportsCrossJoin() {
+    	return false;
     }
     
 }

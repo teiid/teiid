@@ -212,4 +212,9 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	return true;
     }
     
+    @Override
+    protected boolean supportsCrossJoin() {
+    	return true;
+    }
+    
 }

@@ -242,6 +242,13 @@ public class TestSybaseSQLConversionVisitor {
             input, 
             output);
     }
+    
+    @Test public void testCrossJoin() throws Exception {
+    	String input = "select smalla.intnum from (bqt1.smalla cross join bqt1.smallb) left outer join bqt1.mediuma on (smalla.intnum = mediuma.intnum)"; //$NON-NLS-1$
+        String output = "SELECT SmallA.IntNum FROM SmallA INNER JOIN SmallB ON 1 = 1 LEFT OUTER JOIN MediumA ON SmallA.IntNum = MediumA.IntNum"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(), input, output);
+    }
 
 
 }

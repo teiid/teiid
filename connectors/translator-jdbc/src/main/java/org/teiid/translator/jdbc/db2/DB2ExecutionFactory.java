@@ -30,6 +30,7 @@ import org.teiid.language.DerivedColumn;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.Join;
+import org.teiid.language.LanguageFactory;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
 import org.teiid.language.Literal;
@@ -126,14 +127,7 @@ public class DB2ExecutionFactory extends JDBCExecutionFactory {
 	@Override
 	public List<?> translate(LanguageObject obj, ExecutionContext context) {
 		//DB2 doesn't support cross join
-		if (obj instanceof Join) {
-			Join join = (Join)obj;
-			if (join.getJoinType() == JoinType.CROSS_JOIN) {
-				Literal one = getLanguageFactory().createLiteral(1, TypeFacility.RUNTIME_TYPES.INTEGER);
-				join.setCondition(getLanguageFactory().createCompareCriteria(Operator.EQ, one, one));
-				join.setJoinType(JoinType.INNER_JOIN);
-			}
-		}
+		convertCrossJoinToInner(obj, getLanguageFactory());
 		//DB2 needs projected nulls wrapped in casts
 		if (obj instanceof DerivedColumn) {
 			DerivedColumn selectSymbol = (DerivedColumn)obj;
@@ -151,6 +145,16 @@ public class DB2ExecutionFactory extends JDBCExecutionFactory {
 		return super.translate(obj, context);
 	}
 
+	public static void convertCrossJoinToInner(LanguageObject obj, LanguageFactory lf) {
+		if (obj instanceof Join) {
+			Join join = (Join)obj;
+			if (join.getJoinType() == JoinType.CROSS_JOIN) {
+				Literal one = lf.createLiteral(1, TypeFacility.RUNTIME_TYPES.INTEGER);
+				join.setCondition(lf.createCompareCriteria(Operator.EQ, one, one));
+				join.setJoinType(JoinType.INNER_JOIN);
+			}
+		}
+	}
 	
 	@Override
 	public NullOrder getDefaultNullOrder() {
