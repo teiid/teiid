@@ -25,7 +25,9 @@ package org.teiid.translator.jdbc;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import javax.xml.bind.JAXBException;
 
@@ -48,7 +50,7 @@ public class TranslationHelper {
     public static final String BQT_VDB = "/bqt.vdb"; //$NON-NLS-1$
 
     public static Command helpTranslate(String vdbFileName, String sql) {
-    	return helpTranslate(vdbFileName, null, sql);
+    	return helpTranslate(vdbFileName, null, null, sql);
     }
     
     public static TranslationUtility getTranslationUtility(String vdbFileName, String udf) {
@@ -78,8 +80,24 @@ public class TranslationHelper {
 		}
 	}
     
-    public static Command helpTranslate(String vdbFileName, String udf, String sql) {
-        return getTranslationUtility(vdbFileName, udf).parseCommand(sql);        
+    public static Command helpTranslate(String vdbFileName, String udf, List<FunctionMethod> pushdowns, String sql) {
+    	TranslationUtility util =  getTranslationUtility(vdbFileName, null);   
+    	
+    	Collection <FunctionMethod> methods = new ArrayList<FunctionMethod>();
+    	if (udf != null) {
+    		try {
+				methods.addAll(FunctionMetadataReader.loadFunctionMethods(TranslationHelper.class.getResource(udf).openStream()));
+			} catch (JAXBException e) {
+				throw new TeiidRuntimeException("failed to load UDF"); //$NON-NLS-1$
+			} catch (IOException e) {
+				throw new TeiidRuntimeException("failed to load UDF"); //$NON-NLS-1$
+			}
+    	}
+    	if (pushdowns != null) {
+    		methods.addAll(pushdowns);
+    	}
+    	util.setUDF(methods);
+    	return util.parseCommand(sql);
     }    
 
 	public static void helpTestVisitor(String vdb, String input, String expectedOutput, JDBCExecutionFactory translator) throws TranslatorException {
@@ -88,7 +106,7 @@ public class TranslationHelper {
 	
 	public static void helpTestVisitor(String vdb, String udf, String input, String expectedOutput, JDBCExecutionFactory translator) throws TranslatorException {
 	    // Convert from sql to objects
-	    Command obj = helpTranslate(vdb, udf, input);
+	    Command obj = helpTranslate(vdb, udf, translator.getPushDownFunctions(), input);
 	    
 	    helpTestVisitor(expectedOutput, translator, obj);
 	}	

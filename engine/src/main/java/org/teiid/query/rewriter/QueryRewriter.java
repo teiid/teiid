@@ -626,6 +626,8 @@ public class QueryRewriter {
         	}
             if(crit == TRUE_CRITERIA) {
                 query.setCriteria(null);
+            } else if (crit == UNKNOWN_CRITERIA) {
+            	query.setCriteria(FALSE_CRITERIA);
             } else {
                 query.setCriteria(crit);
             } 
