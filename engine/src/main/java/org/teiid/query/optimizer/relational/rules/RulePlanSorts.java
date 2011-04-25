@@ -41,6 +41,9 @@ import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.SetQuery;
+import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.AliasSymbol;
+import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.util.CommandContext;
 
@@ -236,8 +239,21 @@ public class RulePlanSorts implements OptimizerRule {
 		List<SingleElementSymbol> childOutputCols = (List<SingleElementSymbol>) projectNode.getFirstChild().getProperty(Info.OUTPUT_COLS);
 		OrderBy orderBy = (OrderBy) node.getProperty(Info.SORT_ORDER);
 		List<SingleElementSymbol> orderByKeys = orderBy.getSortKeys();
-		if (!childOutputCols.containsAll(orderByKeys)) {
-			return root;
+		for (SingleElementSymbol ss : orderByKeys) {
+			if(ss instanceof AliasSymbol) {
+                ss = ((AliasSymbol)ss).getSymbol();
+            }
+            
+            if (ss instanceof ExpressionSymbol && !(ss instanceof AggregateSymbol)) {
+                ExpressionSymbol exprSymbol = (ExpressionSymbol)ss;
+                
+                if (!exprSymbol.isDerivedExpression()) {
+                    return root; //TODO: insert a new project node to handle this case
+                } 
+            }
+			if (!childOutputCols.contains(ss)) {
+				return root;
+			}
 		}
 		NodeEditor.removeChildNode(projectNode.getParent(), projectNode);
 		if (parent != null && parent.getType() == NodeConstants.Types.TUPLE_LIMIT && parent.getParent() != null) {
@@ -256,12 +272,20 @@ public class RulePlanSorts implements OptimizerRule {
 			}
 		}
 		List<SingleElementSymbol> orderByOutputSymbols = (List<SingleElementSymbol>) node.getProperty(Info.OUTPUT_COLS);
+		boolean unrelated = false;
 		if (node.hasBooleanProperty(Info.UNRELATED_SORT)) {
 			node.setProperty(Info.UNRELATED_SORT, false);
-			//update sort order
-			for (OrderByItem item : orderBy.getOrderByItems()) {
+			unrelated = true;
+		}
+		for (OrderByItem item : orderBy.getOrderByItems()) {
+			if (unrelated) {
+			    //update sort order
 				int index = childOutputCols.indexOf(item.getSymbol());
 				item.setExpressionPosition(index);
+			}
+			//strip alias as project was raised
+			if (item.getSymbol() instanceof AliasSymbol) {
+				item.setSymbol(((AliasSymbol)item.getSymbol()).getSymbol());
 			}
 		}
 		projectNode.setProperty(Info.OUTPUT_COLS, orderByOutputSymbols);

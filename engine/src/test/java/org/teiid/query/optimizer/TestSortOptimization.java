@@ -239,6 +239,20 @@ public class TestSortOptimization {
         helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, 
                                       new String[] {"SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1 ORDER BY pm1.g1.e1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
+    
+    @Test public void testProjectionRaisingWithAlias() throws Exception { 
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
+        
+        String sql = "select (select e1 from pm2.g1 where e2 = x.e2) as z, x.e1 as foo from pm1.g1 as x order by foo limit 1"; //$NON-NLS-1$
+
+        helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, 
+                                      new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0 LIMIT 1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    }
 
 
 }
