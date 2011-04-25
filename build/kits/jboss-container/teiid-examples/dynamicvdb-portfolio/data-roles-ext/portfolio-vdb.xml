@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="DynamicPortfolio" version="1">
+
+    <description>A Dynamic VDB</description>
+    
+    <!-- 
+      Setting to use connector supplied metadata. Can be "true" or "cached".  
+      "true" will obtain metadata once for every launch of Teiid. 
+      "cached" will save a file containing the metadata into 
+      the deploy/<vdb name>/<vdb version/META-INF directory
+    -->
+    <property name="UseConnectorMetadata" value="true" />
+
+
+    <!-- 
+      Each model represents a access to one or more sources.
+      The name of the model will be used as a top level schema name
+      for all of the metadata imported from the connector.
+    
+      NOTE: Multiple model, with different import settings, can be bound to 
+      the same connector binding and will be treated as the same source at
+      runtime. 
+    --> 
+    <model name="MarketData">
+        <!-- 
+            Each source represents a translator and data source. There are 
+            pre-defined translators, or you can create one. ConnectionFactories 
+            or DataSources in JBoss AS they are typically defined using "xxx-ds.xml" files. 
+        -->
+        <source name="text-connector" translator-name="file" connection-jndi-name="java:marketdata-file"/>
+    </model>
+
+    <model name="Accounts">
+        <!-- 
+          JDBC Import settings 
+          
+          importer.useFullSchemaName directs the importer to drop the source 
+          schema from the Teiid object name, so that the Teiid fully qualified name
+          will be in the form of <model name>.<table name>
+        -->
+        <property name="importer.useFullSchemaName" value="false"/>
+           
+         <!--
+            This connector is defined to reference the HSQL localDS" 
+          -->
+        <source name="hsql-connector" translator-name="hsql" connection-jndi-name="java:DefaultDS"/>
+    </model>
+    
+    <!-- For detailed description about data roles please refer to Reference Guide's Data Roles chapter -->
+    <data-role name="ReadOnly" any-authenticated="true">
+        <description>Allow ReadOnly Operations by default to any authenticated user</description>
+
+        <permission>
+            <resource-name>Accounts</resource-name>
+            <allow-create>false</allow-create>
+            <allow-read>true</allow-read>
+            <allow-update>false</allow-update>
+        </permission>
+        
+        <permission>
+            <resource-name>MarketData</resource-name>
+            <allow-create>false</allow-create>
+            <allow-read>true</allow-read>
+            <allow-update>false</allow-update>
+        </permission>
+        
+        <!-- 
+            Since any-authenticated is set to true above, any user who has login credentials to access the VDB
+            will be given this role. No explicit mapping to a JAAS role is not needed.
+        -->
+        <mapped-role-name>anyuser</mapped-role-name>
+    </data-role>
+    
+    <data-role name="ReadWrite">
+        <description>Allow Reads and Writes to tables and procedures</description>
+
+        <permission>
+            <resource-name>Accounts</resource-name>
+            <allow-create>false</allow-create>
+            <allow-read>true</allow-read>
+            <allow-update>true</allow-update>
+        </permission>
+        
+        <permission>
+            <resource-name>MarketData</resource-name>
+            <allow-create>false</allow-create>
+            <allow-read>true</allow-read>
+            <allow-update>true</allow-update>
+        </permission>
+        
+        <!--
+            This role must defined in the JAAS security domain, the sample UserRolesLoginModules based roles file provided 
+            in this sample directory. copy these "teiid-security-roles.properties" and "teiid-security-users.proeprties" 
+            into "servers/default/conf/props" directory and replace the old ones.
+        -->
+        <mapped-role-name>supervisor</mapped-role-name>
+    </data-role>    
+    
+    
+
+</vdb>
