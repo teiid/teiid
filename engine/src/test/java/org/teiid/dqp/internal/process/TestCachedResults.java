@@ -23,6 +23,7 @@ package org.teiid.dqp.internal.process;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -125,6 +126,7 @@ public class TestCachedResults {
 		
 		TupleBuffer cachedTb = cachedResults.getResults();
 		
+		assertTrue(cachedTb.isFinal());
 		assertEquals(tb.getRowCount(), cachedTb.getRowCount());
 		assertEquals(tb.getBatchSize(), cachedTb.getBatchSize());
 		

@@ -140,6 +140,7 @@ public class CachedResults implements Serializable, Cachable {
 				}
 				this.results = buffer;	
 				bufferManager.addTupleBuffer(this.results);
+				this.results.close();
 			}
 			return true;
 		} catch (TeiidComponentException e) {

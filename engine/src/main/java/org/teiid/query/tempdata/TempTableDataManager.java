@@ -396,10 +396,10 @@ public class TempTableDataManager implements ProcessorDataManager {
 				key.vdb = new VDBKey(context.getVdbName(), context.getVdbVersion());
 				
 				MatTableEntry entry = this.tables.get(key);
-				if (entry != null && entry.lastUpdate > info.getUpdateTime() 
-						&& info.getState() != MatState.LOADING) {
+				boolean firstload = !info.isValid();
+				if (entry != null && entry.lastUpdate > info.getUpdateTime() && info.getState() != MatState.LOADING) {
 					//remote load
-					info.setState(MatState.NEEDS_LOADING, entry.valid, null);
+					info.setState(MatState.NEEDS_LOADING, firstload?false:entry.valid, null);
 					loadTime = entry.lastUpdate;
 				}
 			}
