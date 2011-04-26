@@ -27,6 +27,7 @@ import static org.junit.Assert.*;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Properties;
@@ -132,6 +133,14 @@ public class TestODBCSocketTransport {
 			"pg_catalog.pg_namespace n, pg_catalog.pg_class ic where tc.relname = E'pg_attribute' AND n.nspname = E'pg_catalog'");
 		TestMMDatabaseMetaData.compareResultSet(rs);
 	}
+	
+	@Test public void testPkPrepared() throws Exception {
+		PreparedStatement stmt = conn.prepareStatement("select ta.attname, ia.attnum, ic.relname, n.nspname, tc.relname " +//$NON-NLS-1$
+				"from pg_catalog.pg_attribute ta, pg_catalog.pg_attribute ia, pg_catalog.pg_class tc, pg_catalog.pg_index i, " +//$NON-NLS-1$
+				"pg_catalog.pg_namespace n, pg_catalog.pg_class ic where tc.relname = E'pg_attribute' AND n.nspname = E'pg_catalog'");
+		ResultSet rs = stmt.executeQuery();
+		TestMMDatabaseMetaData.compareResultSet(rs);
+	}	
 	
 	@Test public void testEscapedLiteral() throws Exception {
 		Statement stmt = conn.createStatement();

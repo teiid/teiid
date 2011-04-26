@@ -297,6 +297,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
                         } catch (Throwable e) {
                             client.errorOccurred(e);
                         }
+                        if (query.closeRequested) {
+                        	closeBoundStatement(query.name);
+                        }
                     	ready(false);
 	        		}
 				});
@@ -520,7 +523,16 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		if (bindName == null || bindName.length() == 0) {
 			bindName  = UNNAMED;
 		}		
-		Portal query = this.portalMap.remove(bindName);
+		Portal query = this.portalMap.get(bindName);
+		if (query != null) {
+			if (this.executionFuture != null) {
+				synchronized(query) {
+					query.closeRequested = true;
+				}
+				return;
+			}
+		}
+		query = this.portalMap.remove(bindName);
 		if (query == null) {
 			this.client.errorOccurred(RuntimePlugin.Util.getString("not_bound", bindName)); //$NON-NLS-1$
 		}
@@ -671,6 +683,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			        			QueryWorkItem.this.run(); //continue processing
 			        		}
 						});
+		                ready(false);
 		                return; //wait for the execution to finish
 		            } catch (SQLException e) {
 		                client.errorOccurred(e);
@@ -680,7 +693,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			} catch(IOException e) {
 				client.errorOccurred(e);
 			}
-			ready(false);
+			sync();
 		}
 	}
 
@@ -751,6 +764,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
          * The prepared statement.
          */
         PreparedStatementImpl stmt;
+        
+        boolean closeRequested;
     }
 
 
