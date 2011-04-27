@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -140,8 +141,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private Properties props;
 	private AuthenticationType authType;
 	private ConnectionImpl connection;
-	private boolean shouldSynch;
-	private boolean synchCalled;
+	private boolean executing;
+	private boolean errorOccurred;
 	
 	private volatile ResultsFuture<Boolean> executionFuture;
 	
@@ -179,9 +180,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			this.connection =  (ConnectionImpl)driver.connect(url, info);
 			int hash = this.connection.getConnectionId().hashCode();
 			this.client.authenticationSucess(hash, hash);
-			ready(true);
+			ready();
 		} catch (SQLException e) {
-			this.client.errorOccurred(e);
+			errorOccurred(e);
 			terminate();
 		} 
 	}	
@@ -208,12 +209,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 					this.preparedMap.put(prepareName, new Prepared(prepareName, sql, stmt, paramType));
 					this.client.prepareCompleted(prepareName);
 				} catch (SQLException e) {
-					this.client.errorOccurred(e);
+					errorOccurred(e);
 				}
 			}
 		}
 		else {
-			this.client.errorOccurred(RuntimePlugin.Util.getString("no_active_connection")); //$NON-NLS-1$
+			errorOccurred(RuntimePlugin.Util.getString("no_active_connection")); //$NON-NLS-1$
 		}
 	}	
 	
@@ -229,7 +230,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		
 		Prepared previous = this.preparedMap.get(prepareName);
 		if (previous == null) {
-			this.client.errorOccurred(RuntimePlugin.Util.getString("bad_binding", prepareName)); //$NON-NLS-1$
+			errorOccurred(RuntimePlugin.Util.getString("bad_binding", prepareName)); //$NON-NLS-1$
 			return;
 		}		
 		
@@ -242,7 +243,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				previous.stmt.setObject(i+1, params[i]);
 			}
 		} catch (SQLException e) {
-			this.client.errorOccurred(e);
+			errorOccurred(e);
 		}
 		
 		this.portalMap.put(bindName, new Portal(bindName, prepareName, previous.sql, previous.stmt, resultColumnFormat));
@@ -251,13 +252,13 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 
 	@Override
 	public void unsupportedOperation(String msg) {
-		this.client.errorOccurred(msg);
-		ready(true);
+		errorOccurred(msg);
 	}
 
 	@Override
 	public void execute(String bindName, int maxRows) {
-		if (isAwaitingAsynch()) {
+		if (beginExecution()) {
+			errorOccurred("Awaiting asynch result"); //$NON-NLS-1$
 			return;
 		}
 		if (bindName == null || bindName.length() == 0) {
@@ -266,8 +267,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		
 		final Portal query = this.portalMap.get(bindName);
 		if (query == null) {
-			this.client.errorOccurred(RuntimePlugin.Util.getString("not_bound", bindName)); //$NON-NLS-1$
-			ready(true);
+			errorOccurred(RuntimePlugin.Util.getString("not_bound", bindName)); //$NON-NLS-1$
 		}				
 		else {
 			if (query.sql.trim().isEmpty()) {
@@ -288,23 +288,34 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	        		public void onCompletion(ResultsFuture<Boolean> future) {
 	        			executionFuture = null;
                         try {
-		        			if (future.get()) {
-	                            client.sendResults(query.sql, stmt.getResultSet(), true);
-		                    } else {
-		                    	client.sendUpdateCount(query.sql, stmt.getUpdateCount());
-		                    	setEncoding();
-		                    }
+                        	ResultsFuture<Void> result = null;
+			                if (future.get()) {
+			                	result = new ResultsFuture<Void>();
+	                            client.sendResults(query.sql, stmt.getResultSet(), result, true);
+			                } else {
+			                	result = ResultsFuture.NULL_FUTURE;
+			                	client.sendUpdateCount(query.sql, stmt.getUpdateCount());
+			                	setEncoding();
+			                }
+		        			result.addCompletionListener(new ResultsFuture.CompletionListener<Void>() {
+                            	public void onCompletion(ResultsFuture<Void> future) {
+                            		try {
+										future.get();
+	                            		doneExecuting();
+									} catch (InterruptedException e) {
+										throw new AssertionError(e);
+									} catch (ExecutionException e) {
+										errorOccurred(e.getCause());
+									}
+                            	};
+							});
                         } catch (Throwable e) {
-                            client.errorOccurred(e);
+                            errorOccurred(e);
                         }
-                        if (query.closeRequested) {
-                        	closeBoundStatement(query.name);
-                        }
-                    	ready(false);
 	        		}
 				});
             } catch (SQLException e) {
-            	this.client.errorOccurred(e);
+            	errorOccurred(e);
             }			
 		}
 	}
@@ -410,7 +421,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 
 	@Override
 	public void executeQuery(final String query) {
-		if (isAwaitingAsynch()) {
+		if (beginExecution()) {
+			this.client.errorOccurred("Awaiting asynch result"); //$NON-NLS-1$
+			ready();
 			return;
 		}
 		//46.2.3 Note that a simple Query message also destroys the unnamed portal.
@@ -419,26 +432,29 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		
 		if (query.trim().length() == 0) {
     		this.client.emptyQueryReceived();
-    		ready(false);
+    		ready();
     		return;
     	}
         QueryWorkItem r = new QueryWorkItem(query);
 		r.run();
 	}
 
-	/**
-	 * Just a sanity check.  Should never happen
-	 */
-	private boolean isAwaitingAsynch() {
+	private boolean beginExecution() {
 		if (this.executionFuture != null) {
-			this.client.errorOccurred("Awaiting asynch result"); //$NON-NLS-1$
-			ready(true);
 			return true;
 		}
 		synchronized (this) {
-			this.shouldSynch = false;
+			this.executing = true;			
 		}
 		return false;
+	}
+	
+	public boolean isExecuting() {
+		return executing;
+	}
+	
+	public boolean isErrorOccurred() {
+		return errorOccurred;
 	}
 
 	@Override
@@ -448,15 +464,30 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		}		
 		Prepared query = this.preparedMap.get(prepareName);
 		if (query == null) {
-			this.client.errorOccurred(RuntimePlugin.Util.getString("no_stmt_found", prepareName)); //$NON-NLS-1$
-			ready(true);
+			errorOccurred(RuntimePlugin.Util.getString("no_stmt_found", prepareName)); //$NON-NLS-1$
 		}
 		else {
 			try {
 				this.client.sendParameterDescription(query.stmt.getParameterMetaData(), query.paramType);
 			} catch (SQLException e) {
-				this.client.errorOccurred(e);
+				errorOccurred(e);
 			}
+		}
+	}
+	
+	private void errorOccurred(String error) {
+		this.client.errorOccurred(error);
+		synchronized (this) {
+			this.errorOccurred = true;
+			doneExecuting();
+		}
+	}
+	
+	private void errorOccurred(Throwable error) {
+		this.client.errorOccurred(error);
+		synchronized (this) {
+			this.errorOccurred = true;
+			doneExecuting();
 		}
 	}
 
@@ -467,40 +498,27 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		}		
 		Portal query = this.portalMap.get(bindName);
 		if (query == null) {
-			this.client.errorOccurred(RuntimePlugin.Util.getString("not_bound", bindName)); //$NON-NLS-1$
+			errorOccurred(RuntimePlugin.Util.getString("not_bound", bindName)); //$NON-NLS-1$
 		}
 		else {
 			try {
 				this.client.sendResultSetDescription(query.stmt.getMetaData(), query.stmt);
 			} catch (SQLException e) {
-				this.client.errorOccurred(e);
+				errorOccurred(e);
 			}
 		}
 	}
 
 	@Override
 	public void sync() {
-		boolean ready = false;
-		synchronized (this) {
-			synchCalled = true;
-			ready = this.shouldSynch;
-		}
-		if (ready) {
-			ready(true);
-		}
+		ready();
 	}
 	
-	private void ready(boolean sendAlways) {
-		synchronized (this) {
-			if (!sendAlways) {
-				shouldSynch = true;
-				if (!synchCalled) {
-					return;
-				}
-			}
-			shouldSynch = true;
-			synchCalled = false;
-		}
+	protected synchronized void doneExecuting() {
+		executing = false;
+	}
+	
+	private void ready() {
 		boolean inTxn = false;
 		boolean failedTxn = false;
 		try {
@@ -509,6 +527,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			}
 		} catch (SQLException e) {
 			failedTxn = true;
+		}
+		synchronized (this) {
+			this.errorOccurred = false;
 		}
 		this.client.ready(inTxn, failedTxn);
 	}
@@ -523,18 +544,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		if (bindName == null || bindName.length() == 0) {
 			bindName  = UNNAMED;
 		}		
-		Portal query = this.portalMap.get(bindName);
-		if (query != null) {
-			if (this.executionFuture != null) {
-				synchronized(query) {
-					query.closeRequested = true;
-				}
-				return;
-			}
-		}
-		query = this.portalMap.remove(bindName);
+		Portal query = this.portalMap.remove(bindName);
 		if (query == null) {
-			this.client.errorOccurred(RuntimePlugin.Util.getString("not_bound", bindName)); //$NON-NLS-1$
+			errorOccurred(RuntimePlugin.Util.getString("not_bound", bindName)); //$NON-NLS-1$
 		}
 		else {
 			try {
@@ -559,7 +571,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		}		
 		Prepared query = this.preparedMap.remove(preparedName);
 		if (query == null) {
-			this.client.errorOccurred(RuntimePlugin.Util.getString("no_stmt_found", preparedName)); //$NON-NLS-1$
+			errorOccurred(RuntimePlugin.Util.getString("no_stmt_found", preparedName)); //$NON-NLS-1$
 		}
 		else {
 			// Close all the bound messages off of this prepared
@@ -570,7 +582,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				query.stmt.close();
 				this.client.statementClosed();
 			} catch (SQLException e) {
-				this.client.errorOccurred(RuntimePlugin.Util.getString("error_closing_stmt", preparedName)); //$NON-NLS-1$
+				errorOccurred(RuntimePlugin.Util.getString("error_closing_stmt", preparedName)); //$NON-NLS-1$
 			}			
 		}	
 	}
@@ -611,8 +623,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	
 	@Override
 	public void functionCall(int oid) {
-		this.client.errorOccurred(RuntimePlugin.Util.getString("lo_not_supported")); //$NON-NLS-1$
-		ready(true);
+		errorOccurred(RuntimePlugin.Util.getString("lo_not_supported")); //$NON-NLS-1$
 	}
 	
 	@Override
@@ -661,29 +672,45 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			        		public void onCompletion(ResultsFuture<Boolean> future) {
 			        			executionFuture = null;
 			        			try {
+			        				ResultsFuture<Void> result = null;
 					                if (future.get()) {
-					                	client.sendResults(sql, stmt.getResultSet(), true);
+					                	result = new ResultsFuture<Void>();
+			                            client.sendResults(sql, stmt.getResultSet(), result, true);
 					                } else {
+					                	result = ResultsFuture.NULL_FUTURE;
 					                	client.sendUpdateCount(sql, stmt.getUpdateCount());
 					                	setEncoding();
 					                }
-					                sql = reader.readStatement();
-					                modfiedSQL = fixSQL(sql);
+					                result.addCompletionListener(new ResultsFuture.CompletionListener<Void>() {
+		                            	public void onCompletion(ResultsFuture<Void> future) {
+		                            		try {
+												future.get();
+								                sql = reader.readStatement();
+								                modfiedSQL = fixSQL(sql);
+											} catch (InterruptedException e) {
+												throw new AssertionError(e);
+											} catch (IOException e) {
+												client.errorOccurred(e);
+												return;
+											} catch (ExecutionException e) {
+												client.errorOccurred(e.getCause());
+												return;
+											} finally {
+												try {
+													stmt.close();
+												} catch (SQLException e) {
+													LogManager.logDetail(LogConstants.CTX_ODBC, e, "Error closing statement"); //$NON-NLS-1$
+												}
+											}
+						        			QueryWorkItem.this.run(); //continue processing
+		                            	};
+									});
 			        			} catch (Throwable e) {
 			        				client.errorOccurred(e);
-			        				ready(true);
 			        				return;
-			        			} finally {
-			        				try {
-										stmt.close();
-									} catch (SQLException e) {
-										LogManager.logDetail(LogConstants.CTX_ODBC, e, "Error closing statement"); //$NON-NLS-1$
-									}
 			        			}
-			        			QueryWorkItem.this.run(); //continue processing
 			        		}
 						});
-		                ready(false);
 		                return; //wait for the execution to finish
 		            } catch (SQLException e) {
 		                client.errorOccurred(e);
@@ -693,8 +720,10 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			} catch(IOException e) {
 				client.errorOccurred(e);
 			}
-			sync();
+			doneExecuting();
+			ready();
 		}
+
 	}
 
 	/**
@@ -764,9 +793,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
          * The prepared statement.
          */
         PreparedStatementImpl stmt;
-        
-        boolean closeRequested;
     }
-
 
 }

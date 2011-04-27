@@ -26,6 +26,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.util.Properties;
 
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.jdbc.ResultSetImpl;
 
 public interface ODBCClientRemote {
@@ -65,7 +66,7 @@ public interface ODBCClientRemote {
 	
 	//	DataRow (B)
 	//	CommandComplete (B)
-	void sendResults(String sql, ResultSetImpl rs, boolean describeRows);
+	void sendResults(String sql, ResultSetImpl rs, ResultsFuture<Void> result, boolean describeRows);
 
 	//	CommandComplete (B)
 	void sendUpdateCount(String sql, int updateCount);

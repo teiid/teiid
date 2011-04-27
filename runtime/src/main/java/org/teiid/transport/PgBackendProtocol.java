@@ -72,12 +72,14 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		private final List<PgColInfo> cols;
 		private final String sql;
 		private final ResultSetImpl rs;
+		private final ResultsFuture<Void> result;
 
 		private ResultsWorkItem(List<PgColInfo> cols, String sql,
-				ResultSetImpl rs) {
+				ResultSetImpl rs, ResultsFuture<Void> result) {
 			this.cols = cols;
 			this.sql = sql;
 			this.rs = rs;
+			this.result = result;
 		}
 
 		@Override
@@ -101,11 +103,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			    		break;
 			    	}
 				} catch (Throwable t) {
-					try {
-						sendErrorResponse(t);
-					} catch (IOException e) {
-						terminate(e);
-					}
+					result.getResultsReceiver().exceptionOccurred(t);
 				}
 			}
 		}
@@ -118,14 +116,11 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
     				sendDataRow(rs, cols);
     			} else {
     				sendCommandComplete(sql, 0);
+    				result.getResultsReceiver().receiveResults(null);
     				processNext = false;
     			}
 			} catch (Throwable t) {
-				try {
-					sendErrorResponse(t);
-				} catch (IOException e) {
-					terminate(e);
-				}
+				result.getResultsReceiver().exceptionOccurred(t);
 				return false;
 			}
 			return processNext;
@@ -167,6 +162,8 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
     private MessageEvent message;
     private int maxLobSize = (2*1024*1024); // 2 MB
     
+	private volatile ResultsFuture<Boolean> nextFuture;
+
     public PgBackendProtocol(int maxLobSize) {
     	this.maxLobSize = maxLobSize;
     }
@@ -328,25 +325,22 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		}
 	}
 	
-	private volatile ResultsFuture<Boolean> nextFuture;
-
 	@Override
-	public void sendResults(final String sql, final ResultSetImpl rs, boolean describeRows) {
+	public void sendResults(final String sql, final ResultSetImpl rs, ResultsFuture<Void> result, boolean describeRows) {
 		try {
 			if (nextFuture != null) {
 				sendErrorResponse(new IllegalStateException("Pending results have not been sent")); //$NON-NLS-1$
 			}
-            try {
-    			ResultSetMetaData meta = rs.getMetaData();
-        		List<PgColInfo> cols = getPgColInfo(meta, rs.getStatement());
-            	if (describeRows) {
-            		sendRowDescription(cols);
-            	}
-            	Runnable r = new ResultsWorkItem(cols, sql, rs);
-            	r.run();                
-			} catch (SQLException e) {
-				sendErrorResponse(e);
-			}			
+        	
+			ResultSetMetaData meta = rs.getMetaData();
+    		List<PgColInfo> cols = getPgColInfo(meta, rs.getStatement());
+        	if (describeRows) {
+        		sendRowDescription(cols);
+        	}
+        	Runnable r = new ResultsWorkItem(cols, sql, rs, result);
+        	r.run();    
+		} catch (SQLException e) {
+			result.getResultsReceiver().exceptionOccurred(e);
 		} catch (IOException e) {
 			terminate(e);
 		}

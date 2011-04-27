@@ -26,6 +26,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.jdbc.TeiidDriver;
@@ -45,6 +46,7 @@ public class ODBCClientInstance implements ChannelListener{
 	private ODBCClientRemote client;
 	private ODBCServerRemoteImpl server;
 	private ReflectionHelper serverProxy = new ReflectionHelper(ODBCServerRemote.class);
+	private ConcurrentLinkedQueue<PGRequest> messageQueue = new ConcurrentLinkedQueue<PGRequest>();
 	
 	public ODBCClientInstance(final ObjectChannel channel, ODBCServerRemote.AuthenticationType authType, TeiidDriver driver) {
 		this.client = (ODBCClientRemote)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {ODBCClientRemote.class}, new InvocationHandler() {
@@ -58,7 +60,21 @@ public class ODBCClientInstance implements ChannelListener{
 				return null;
 			}
 		});
-		this.server = new ODBCServerRemoteImpl(this, authType, driver);
+		this.server = new ODBCServerRemoteImpl(this, authType, driver) {
+			@Override
+			protected synchronized void doneExecuting() {
+				super.doneExecuting();
+				while (!server.isExecuting()) {
+					PGRequest request = messageQueue.poll();
+					if (request == null) {
+						break;
+					}
+	        		if (!server.isErrorOccurred() || request.struct.methodName.equals("sync")) { //$NON-NLS-1$
+	        			processMessage(request.struct);
+	        		}
+				}
+			}
+		};
 	}
 	
 	public ODBCClientRemote getClient() {
@@ -83,6 +99,17 @@ public class ODBCClientInstance implements ChannelListener{
 	public void receivedMessage(Object msg) throws CommunicationException {
         if (msg instanceof PGRequest) {
         	PGRequest request = (PGRequest)msg;
+        	synchronized (server) {
+        		if (server.isExecuting()) {
+        			//queue until done
+        			messageQueue.add(request);
+        			return;
+        		}
+        		if (server.isErrorOccurred() && !request.struct.methodName.equals("sync")) { //$NON-NLS-1$
+        			//discard until sync
+        			return;
+        		}
+			}
             processMessage(request.struct);
         }
 	}
