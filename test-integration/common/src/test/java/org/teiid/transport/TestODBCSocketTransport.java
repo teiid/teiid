@@ -29,6 +29,7 @@ import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
@@ -141,6 +142,25 @@ public class TestODBCSocketTransport {
 		ResultSet rs = stmt.executeQuery();
 		TestMMDatabaseMetaData.compareResultSet(rs);
 	}	
+	
+	@Test public void testPreparedError() throws Exception {
+		PreparedStatement stmt = conn.prepareStatement("select cast(? as integer)");
+		stmt.setString(1, "a");
+		try {
+			stmt.executeQuery();
+		} catch (SQLException e) {
+			assertTrue(e.getMessage().contains("Error converting"));
+		}
+	}
+	
+	@Test public void testPreparedError1() throws Exception {
+		PreparedStatement stmt = conn.prepareStatement("select");
+		try {
+			stmt.executeQuery();
+		} catch (SQLException e) {
+			assertTrue(e.getMessage().contains("Parsing error"));
+		}
+	}
 	
 	@Test public void testEscapedLiteral() throws Exception {
 		Statement stmt = conn.createStatement();
