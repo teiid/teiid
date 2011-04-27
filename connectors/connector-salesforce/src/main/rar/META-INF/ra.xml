@@ -57,7 +57,13 @@
                <config-property-name>URL</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
                <config-property-value>https://www.salesforce.com/services/Soap/u/17.0</config-property-value>
-            </config-property>     
+            </config-property> 
+            
+            <config-property>
+                <description>{$display:"CXF Configuration File",$description:"CXF client configuration File or URL"}</description>
+                <config-property-name>ConfigFile</config-property-name>
+                <config-property-type>java.lang.String</config-property-type>
+            </config-property>
             
             <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
             <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>

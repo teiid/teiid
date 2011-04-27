@@ -30,6 +30,8 @@ import javax.resource.ResourceException;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.ws.BindingProvider;
 
+import org.apache.cxf.Bus;
+import org.apache.cxf.BusFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
@@ -67,12 +69,14 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	private Soap sfSoap;
 	private SessionHeader sh;
 	private CallOptions co;
+	private SalesForceManagedConnectionFactory mcf;
 	
 	private ObjectFactory partnerFactory = new ObjectFactory();
 	
 	PackageVersionHeader pvHeader = partnerFactory.createPackageVersionHeader();
 	
-	public SalesforceConnectionImpl(String username, String password, URL url) throws ResourceException {
+	public SalesforceConnectionImpl(String username, String password, URL url, SalesForceManagedConnectionFactory mcf) throws ResourceException {
+		this.mcf = mcf;
 		login(username, password, url);
 	}
 	
@@ -102,6 +106,8 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 				throw new ResourceException("SalesForce URL is not specified, please provide a valid URL"); //$NON-NLS-1$
 			}
 
+			Bus bus = BusFactory.getThreadDefaultBus();
+			BusFactory.setThreadDefaultBus(mcf.getBus());
 			try {
 				sfService = new SforceService();
 				sfSoap = sfService.getSoap();
@@ -113,6 +119,8 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 				throw new ResourceException(e);
 			} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
 				throw new ResourceException(e);
+			} finally {
+				BusFactory.setThreadDefaultBus(bus);
 			}
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Login was successful for username " + username); //$NON-NLS-1$
 

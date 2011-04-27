@@ -197,6 +197,12 @@
                 getTextFiles, and saveFile procedures.
                 </para>
             </section>
+            
+            <section>
+                <title>JCA Resource Adapter</title>
+                <para>The resource adapter for this translator provided through "File Data Source", Refer to Admin Guide for 
+                configuration information.</para>
+            </section>            
 
         </section>
         
@@ -490,6 +496,12 @@
             </para>
         </section>
         
+        <section>
+            <title>JCA Resource Adapter</title>
+            <para>The resource adapter for this translator provided through data source in JBoss AS, 
+            Refer to Admin Guide for "JDBC Data Sources" configuration section.</para>
+        </section>          
+        
     </section>
     
     <section>
@@ -542,6 +554,13 @@
 	        any value may be returned.  
 	        </para>        
         </section>
+        
+        <section>
+            <title>JCA Resource Adapter</title>
+            <para>The resource adapter for this translator provided through "LDAP Data Source", 
+            Refer to Admin Guide for configuration.</para>
+        </section> 
+                
     </section>
 
     <section>
@@ -594,6 +613,11 @@
         There are no import settings for the Loopback translator; it also does not 
         provide metadata - it should be used as a testing stub.
         </para>
+        
+        <section>
+            <title>JCA Resource Adapter</title>
+            <para>The source connection is required for this translator</para>
+        </section>         
         
     </section>
     
@@ -942,6 +966,13 @@ Account.Contacts) FROM Account]]></programlisting>
                 </section>
                 
             </section>
+            
+        <section>
+            <title>JCA Resource Adapter</title>
+            <para>The resource adapter for this translator provided through "Salesforce Data Source", 
+            Refer to Admin Guide for configuration.</para>
+        </section> 
+                    
         </section>
         
         <section>
@@ -1061,6 +1092,11 @@ Account.Contacts) FROM Account]]></programlisting>
                     </para>
                 </section>
             </section>
+            <section>
+                <title>JCA Resource Adapter</title>
+                <para>Theresource adapter for this translator provided through "Web Service Data Source", 
+                Refer to Admin Guide for configuration.</para>
+            </section>             
         </section>
         
         <section>
@@ -1098,13 +1134,18 @@ Account.Contacts) FROM Account]]></programlisting>
                     </para>
                     <note><para>The use of <xref linkend="dataroles"/> should be considered to prevent arbitrary MDX from being submitted to the invokeMDX procedure.</para></note>
                     <para>
-                    This translator requires a data source to be configured to the OLAP cube using OLAP4J JDBC driver. Two sample
-                    -ds.xml files provided for accessing OLAP servers in teiid-examples section. One is Mondrian specific, when Mondrian server is deloyed
-                    in the same JBoss AS as Teiid (mondrian-ds.xml). To access any other OLAP servers using XMLA interface, 
-                    the data source for them can be created using them example template olap-xmla-ds.xml
                     </para>
                 </section>
             </section>
+            <section>
+                <title>JCA Resource Adapter</title>
+                <para>The resource adapter for this translator provided through data source in JBoss AS, 
+                     Refer to Admin Guide for "JDBC Data Sources" configuration section. Two sample
+                    -ds.xml files provided for accessing OLAP servers in teiid-examples section. One is Mondrian specific, 
+                    when Mondrian server is deloyed
+                    in the same JBoss AS as Teiid (mondrian-ds.xml). To access any other OLAP servers using XMLA interface, 
+                    the data source for them can be created using them example template olap-xmla-ds.xml</para>
+            </section>              
         </section>        
         
         <section>

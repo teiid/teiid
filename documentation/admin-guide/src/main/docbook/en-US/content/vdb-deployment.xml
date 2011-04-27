@@ -117,7 +117,9 @@
 </datasources>]]></programlisting>     
                 </listitem>
             </orderedlist>
-            
+            <para>Template files [xxx-ds.xml] for different databases can found at {jboss-as}/docs/examples/jca, and also
+            additional  sources like ingres, mondrian, intersystems-cache etc that Teiid suports can be found at
+            {jboss-as}/server/{profile}/teiid-examples/jca directory. </para>
         </section>        
         <section>
             <title>File Data Sources</title>
@@ -136,7 +138,7 @@
 </connection-factories>]]></programlisting></example>             
         </section>
         
-        <section>
+        <section id="ws-ds">
         	<title>Web Service Data Sources</title>
         	<para>Web service data sources use a Teiid specific JCA connector. You need to create "-ds.xml" file and copy it to the 
             "&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy" directory.</para>
@@ -296,6 +298,24 @@
       <config-property name="password">password</config-property>
    </no-tx-connection-factory>
 </connection-factories>]]></programlisting></example>
+
+            <section>
+                <title>CXF Configuration</title>
+                <para>Salesforce service data source may choose a particular CXF config file and port configuration. 
+                The <code>ConfigFile</code> config property specifies the Spring XML configuration 
+                file for the CXF Bus and port configuration to be used by connections.  
+                If no config file is specified then the system default configuration will be used.</para>
+                
+                <para>Only 1 port configuration can be used by this data source.  The namespace URI for the QName in your 
+                 config file should be "urn:partner.soap.sforce.com", with configuration name "SforceService". For sample
+                 cxf configuration file and details on configuration see <link linkend="ws-ds">Web Service Data Sources</link>
+                 </para>
+                 
+                <para>See the <ulink url="http://cxf.apache.org/docs/">CXF documentation</ulink> for all possible configuration options.</para>
+                
+                <note><para>The CXF configuration in Salesforce data source is only used for http bus configuration not for purposes of 
+                ws-security, Salesforce has its own security authentication.</para></note>
+            </section>
         </section>
         
         <section>
