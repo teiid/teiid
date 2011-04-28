@@ -16,6 +16,12 @@
         <config-property name="username">user</config-property>
         <config-property name="password">pass</config-property>
         
+        <!-- 
+            Uncomment this property to supply specific configuration for SalesForce service. This configuration
+            must contain config for "SforceService" service with namespace "urn:partner.soap.sforce.com"
+        <config-property name="configFile">path/to/jbossws-cxf.xml</config-property>
+        -->
+        
         <!-- connection pool size -->
         <max-pool-size>1</max-pool-size>
     </no-tx-connection-factory>

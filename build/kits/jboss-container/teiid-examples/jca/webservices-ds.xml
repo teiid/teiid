@@ -14,6 +14,12 @@
       <!-- End point for the web service -->
       <config-property name="EndPoint">endpoint url</config-property>
         
+        <!-- 
+            Uncomment these properties to supply specific CXF configuration for this service. This file
+            must contain configuration for name defined on "configName" property. 
+        <config-property name="configFile">path/to/jbossws-cxf.xml</config-property>
+        <config-property name="configName">webSVC</config-property>
+        -->        
             
       <max-pool-size>1</max-pool-size>
 
