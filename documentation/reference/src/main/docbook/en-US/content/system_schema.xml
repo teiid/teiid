@@ -781,7 +781,7 @@
 									<para>string</para>
 								</entry>
 								<entry>
-									<para>Minimum numeric value</para>
+									<para>Minimum value</para>
 								</entry>
 							</row>
 							<row>
@@ -792,7 +792,29 @@
 									<para>string</para>
 								</entry>
 								<entry>
-									<para>Maximum numeric value</para>
+									<para>Maximum value</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>DistinctCount</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>Distinct value count, -1 can indicate unknown</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>NullCount</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>Null value count, -1 can indicate unknown</para>
 								</entry>
 							</row>
 							<row>
@@ -1771,7 +1793,7 @@
 							<para>Parameters</para>
 						</entry>
 						<entry>
-							<para>ResultSet</para>
+							<para>Description</para>
 						</entry>
 					</row>
 				</thead>
@@ -1781,10 +1803,10 @@
 							<para>SYS.getXMLSchemas</para>
 						</entry>
 						<entry>
-							<para>(string document)</para>
+							<para>(in string document)</para>
 						</entry>
 						<entry>
-							<para>A single column containing the schemas as clobs.</para>
+							<para>Returns a resultset with a single column, schema, containing the schemas as clobs.</para>
 						</entry>
 					</row>
 					<row>
@@ -1792,10 +1814,10 @@
 							<para>SYSADMIN.refreshMatView</para>
 						</entry>
 						<entry>
-							<para>(string ViewName, boolean Invalidate)</para>
+							<para>(in string ViewName, in boolean Invalidate)</para>
 						</entry>
 						<entry>
-							<para>An return return value, RowsUpdated. -1 indicates a load is in progress, otherwise the cardinality of the table is returned.  See the Caching Guide for more.</para>
+							<para>Returns integer RowsUpdated. -1 indicates a load is in progress, otherwise the cardinality of the table is returned.  See the Caching Guide for more.</para>
 						</entry>
 					</row>
 					<row>
@@ -1803,10 +1825,32 @@
 							<para>SYSADMIN.refreshMatViewRow</para>
 						</entry>
 						<entry>
-							<para>(string ViewName, object Key)</para>
+							<para>(in string ViewName, in object Key)</para>
 						</entry>
 						<entry>
-							<para>An return return value, RowsUpdated. -1 indicates the materialized table is currently invalid. 0 indicates that the specified row did not exist in the live data query or in the materialized table.  See the Caching Guide for more.</para>
+							<para>Returns integer RowsUpdated. -1 indicates the materialized table is currently invalid. 0 indicates that the specified row did not exist in the live data query or in the materialized table.  See the Caching Guide for more.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>SYSADMIN.setTableStats</para>
+						</entry>
+						<entry>
+							<para>(in string TableName, in integer Cardinality)</para>
+						</entry>
+						<entry>
+							<para>Set statistics for the given table.  A <code>MetadataRepository</code> must be configured to make the update persistent.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>SYSADMIN.setColumnStats</para>
+						</entry>
+						<entry>
+							<para>(in string TableName, in string ColumnName, in integer DistinctCount, in integer NullCount, in string Max, in string Min)</para>
+						</entry>
+						<entry>
+							<para>Set statistics for the given column.  A <code>MetadataRepository</code> must be configured to make the update persistent.</para>
 						</entry>
 					</row>
 				</tbody>

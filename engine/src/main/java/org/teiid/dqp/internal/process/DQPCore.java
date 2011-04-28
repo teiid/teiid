@@ -67,11 +67,13 @@ import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionService;
 import org.teiid.dqp.service.TransactionContext.Scope;
+import org.teiid.events.EventDistributor;
 import org.teiid.logging.CommandLogMessage;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.logging.CommandLogMessage.Event;
+import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
@@ -175,6 +177,8 @@ public class DQPCore implements DQP {
     private SessionAwareCache<CachedResults> rsCache;
     private TransactionService transactionService;
     private BufferService bufferService;
+    private EventDistributor eventDistributor;
+    private MetadataRepository metadataRepository;
     
     private DQPConfiguration config = new DQPConfiguration();
     
@@ -324,7 +328,6 @@ public class DQPCore implements DQP {
 		request.setResultSetCacheEnabled(this.rsCache != null);
 		request.setAuthorizationValidator(this.authorizationValidator);
 		request.setUserRequestConcurrency(this.getUserRequestSourceConcurrency());
-		request.setMetadataProvider(this.config.getMetadataProvider());
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
         RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
     	logMMCommand(workItem, Event.NEW, null); 
@@ -715,7 +718,11 @@ public class DQPCore implements DQP {
         	matTables.setBufferManager(this.bufferManager);
         }
         
-        dataTierMgr = new TempTableDataManager(new DataTierManagerImpl(this,this.bufferService, this.config.isDetectingChangeEvents()), this.bufferManager, this.processWorkerPool, this.rsCache, this.matTables, this.cacheFactory); 
+        DataTierManagerImpl processorDataManager = new DataTierManagerImpl(this,this.bufferService, this.config.isDetectingChangeEvents());
+        processorDataManager.setEventDistributor(eventDistributor);
+        processorDataManager.setMetadataRepository(metadataRepository);
+		dataTierMgr = new TempTableDataManager(processorDataManager, this.bufferManager, this.processWorkerPool, this.rsCache, this.matTables, this.cacheFactory);
+        dataTierMgr.setEventDistributor(eventDistributor);
 	}
 	
 	public void setBufferService(BufferService service) {
@@ -724,6 +731,14 @@ public class DQPCore implements DQP {
 	
 	public void setTransactionService(TransactionService service) {
 		this.transactionService = service;
+	}
+	
+	public void setMetadataRepository(MetadataRepository metadataRepository) {
+		this.metadataRepository = metadataRepository;
+	}
+	
+	public void setEventDistributor(EventDistributor eventDistributor) {
+		this.eventDistributor = eventDistributor;
 	}
 	
 	@Override

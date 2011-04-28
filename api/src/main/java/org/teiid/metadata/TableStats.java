@@ -22,15 +22,19 @@
  
 package org.teiid.metadata;
 
-public class TableStats {
+import java.io.Serializable;
+
+public class TableStats implements Serializable {
 	
-	private int cardinality;
+	private static final long serialVersionUID = 4316568283357485330L;
 	
-	public int getCardinality() {
+	private Integer cardinality;
+	
+	public Integer getCardinality() {
 		return cardinality;
 	}
 	
-	public void setCardinality(int cardinality) {
+	public void setCardinality(Integer cardinality) {
 		this.cardinality = cardinality;
 	}
 

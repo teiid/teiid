@@ -1,0 +1,3 @@
+When updating the System.vdb using a VDB built by a 7.x Designer, the runtime-inf/DATATYPES.INDEX must be copied from the old
+version.  Designer VDBs no longer contain a separate copy of that INDEX.  We could consider splitting the datatype information
+into its own vdb to better handle this. 

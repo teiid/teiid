@@ -34,6 +34,8 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -51,16 +53,19 @@ public class AccessInfo implements Serializable {
 	private static final long serialVersionUID = -2608267960584191359L;
 	
 	private transient Set<Table> viewsAccessed;
+	private transient Set<Procedure> proceduresAccessed;
 	private transient Set<Object> tablesAccessed;
 	
 	private List<List<String>> externalTableNames;
 	private List<List<String>> externalViewNames;
+	private List<List<String>> externalProcedureNames;
 	
 	private transient long creationTime = System.currentTimeMillis();
 	
 	private void writeObject(java.io.ObjectOutputStream out)  throws IOException {
 		externalTableNames = initExternalList(externalTableNames, tablesAccessed);
 		externalViewNames = initExternalList(externalViewNames, viewsAccessed);
+		externalProcedureNames = initExternalList(externalProcedureNames, proceduresAccessed);
 		out.defaultWriteObject();
 	}
 	
@@ -73,8 +78,8 @@ public class AccessInfo implements Serializable {
 		if (externalNames == null) {
 			externalNames = new ArrayList<List<String>>(accessed.size());
 			for (Object object : accessed) {
-				if (object instanceof Table) {
-					Table t = (Table)object;
+				if (object instanceof AbstractMetadataRecord) {
+					AbstractMetadataRecord t = (AbstractMetadataRecord)object;
 					externalNames.add(Arrays.asList(t.getParent().getName(), t.getName()));
 				} else if (object instanceof TempMetadataID) {
 					TempMetadataID t = (TempMetadataID)object;
@@ -83,6 +88,10 @@ public class AccessInfo implements Serializable {
 			}
 		}
 		return externalNames;
+	}
+	
+	public Set<Procedure> getProceduresAccessed() {
+		return proceduresAccessed;
 	}
 
 	public Set<Table> getViewsAccessed() {
@@ -112,6 +121,11 @@ public class AccessInfo implements Serializable {
 			this.viewsAccessed = new HashSet<Table>(context.getViewsAccessed());
 		} else {
 			this.viewsAccessed = Collections.emptySet();
+		}
+		if (!context.getProceduresAccessed().isEmpty()) {
+			this.proceduresAccessed = new HashSet<Procedure>(context.getProceduresAccessed());
+		} else {
+			this.proceduresAccessed = Collections.emptySet();
 		}
 	}
 	
@@ -150,6 +164,14 @@ public class AccessInfo implements Serializable {
 			this.tablesAccessed = Collections.emptySet();
 		}
 		this.externalTableNames = null;
+		if (!externalProcedureNames.isEmpty()) {
+			for (List<String> key : this.externalProcedureNames) {
+				this.proceduresAccessed.add(tm.getMetadataStore().getSchema(key.get(0).toUpperCase()).getProcedures().get(key.get(1).toUpperCase()));
+			}
+		} else {
+			this.proceduresAccessed = Collections.emptySet();
+		}
+		this.externalProcedureNames = null;
 	}
 	
 	boolean validate(boolean data, long modTime) {
@@ -159,6 +181,11 @@ public class AccessInfo implements Serializable {
 		if (!data) {
 			for (Table t : getViewsAccessed()) {
 				if (t.getLastModified() - modTime > this.creationTime) {
+					return false;
+				}
+			}
+			for (Procedure p : getProceduresAccessed()) {
+				if (p.getLastModified() - modTime > this.creationTime) {
 					return false;
 				}
 			}

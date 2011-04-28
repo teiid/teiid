@@ -44,6 +44,7 @@ import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.service.FakeBufferService;
+import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.index.IndexMetadataFactory;
@@ -99,6 +100,11 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         
         registerClientService(ILogon.class, logon, null);
         registerClientService(DQP.class, dqp, null);
+	}
+	
+	public void setMetadataRepository(MetadataRepository metadataRepository) {
+		this.repo.setMetadataRepository(metadataRepository);
+		this.dqp.setMetadataRepository(metadataRepository);
 	}
 	
 	public void setUseCallingThread(boolean useCallingThread) {

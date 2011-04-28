@@ -40,6 +40,7 @@ import org.teiid.core.util.ArgCheck;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
+import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
@@ -126,6 +127,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     private LinkedList<String> recursionStack;
     private boolean nonBlocking;
     private HashSet<Table> viewsAccessed;
+    private HashSet<Procedure> proceduresAccessed;
 
     /**
      * Construct a new context.
@@ -549,6 +551,20 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 			return Collections.emptySet();
 		}
 		return viewsAccessed;
+	}
+	
+	public void accessedProcedure(Procedure id) {
+		if (this.proceduresAccessed == null) {
+			this.proceduresAccessed = new HashSet<Procedure>();
+		}
+		this.proceduresAccessed.add(id);
+	}
+	
+	public Set<Procedure> getProceduresAccessed() {
+		if (this.proceduresAccessed == null) {
+			return Collections.emptySet();
+		}
+		return proceduresAccessed;
 	}
 	
 }

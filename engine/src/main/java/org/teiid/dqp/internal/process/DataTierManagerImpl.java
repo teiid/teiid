@@ -55,13 +55,16 @@ import org.teiid.dqp.service.BufferService;
 import org.teiid.events.EventDistributor;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.ColumnStats;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
+import org.teiid.metadata.TableStats;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.TempMetadataID;
@@ -104,6 +107,11 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		VDBRESOURCES
 	}
 	
+	private enum SystemAdminProcs {
+		SETTABLESTATS,
+		SETCOLUMNSTATS
+	}
+	
 	private enum SystemProcs {
 		GETXMLSCHEMAS
 	}
@@ -113,6 +121,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
     private BufferService bufferService;
     private EventDistributor eventDistributor;
     private boolean detectChangeEvents;
+    private MetadataRepository metadataRepository;
 
     public DataTierManagerImpl(DQPCore requestMgr, BufferService bufferService, boolean detectChangeEvents) {
 		this.requestMgr = requestMgr;
@@ -130,6 +139,10 @@ public class DataTierManagerImpl implements ProcessorDataManager {
     
     public EventDistributor getEventDistributor() {
 		return eventDistributor;
+	}
+    
+    public void setMetadataRepository(MetadataRepository metadataRepository) {
+		this.metadataRepository = metadataRepository;
 	}
     
 	public TupleSource registerRequest(CommandContext context, Command command, String modelName, String connectorBindingId, int nodeID, int limit) throws TeiidComponentException, TeiidProcessingException {
@@ -170,7 +183,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 			Query query = (Query)command;
 			UnaryFromClause ufc = (UnaryFromClause)query.getFrom().getClauses().get(0);
 			GroupSymbol group = ufc.getGroup();
-			if (StringUtil.startsWithIgnoreCase(group.getNonCorrelationName(), (CoreConstants.SYSTEM_ADMIN_MODEL))) {
+			if (StringUtil.startsWithIgnoreCase(group.getNonCorrelationName(), CoreConstants.SYSTEM_ADMIN_MODEL)) {
 				final SystemAdminTables sysTable = SystemAdminTables.valueOf(group.getNonCorrelationName().substring(CoreConstants.SYSTEM_ADMIN_MODEL.length() + 1).toUpperCase());
 				switch (sysTable) {
 				case MATVIEWS:
@@ -296,7 +309,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 								rows.add(Arrays.asList(vdbName, schema.getName(), table.getName(), column.getName(), column.getPosition(), column.getNameInSource(), 
 										dt!=null?dt.getRuntimeTypeName():null, column.getScale(), column.getLength(), column.isFixedLength(), column.isSelectable(), column.isUpdatable(),
 										column.isCaseSensitive(), column.isSigned(), column.isCurrency(), column.isAutoIncremented(), column.getNullType().toString(), column.getMinimumValue(), 
-										column.getMaximumValue(), column.getSearchType().toString(), column.getFormat(), column.getDefaultValue(), dt!=null?dt.getJavaClassName():null, column.getPrecision(), 
+										column.getMaximumValue(), column.getDistinctValues(), column.getNullValues(), column.getSearchType().toString(), column.getFormat(), 
+										column.getDefaultValue(), dt!=null?dt.getJavaClassName():null, column.getPrecision(), 
 										column.getCharOctetLength(), column.getRadix(), column.getUUID(), column.getAnnotation(), oid++));
 							}
 							break;
@@ -331,7 +345,68 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				break;
 			}
 		} else {					
-			StoredProcedure proc = (StoredProcedure)command;			
+			StoredProcedure proc = (StoredProcedure)command;		
+			if (StringUtil.startsWithIgnoreCase(proc.getProcedureCallableName(), CoreConstants.SYSTEM_ADMIN_MODEL)) {
+				final SystemAdminProcs sysProc = SystemAdminProcs.valueOf(proc.getProcedureCallableName().substring(CoreConstants.SYSTEM_ADMIN_MODEL.length() + 1).toUpperCase());
+				Table table = indexMetadata.getGroupID((String)((Constant)proc.getParameter(1).getExpression()).getValue());
+				switch (sysProc) {
+				case SETCOLUMNSTATS:
+					String columnName = (String)((Constant)proc.getParameter(2).getExpression()).getValue();
+					Column c = null;
+					for (Column col : table.getColumns()) {
+						if (col.getName().equalsIgnoreCase(columnName)) {
+							c = col;
+							break;
+						}
+					}
+					if (c == null) {
+						throw new TeiidProcessingException(columnName + TransformationMetadata.NOT_EXISTS_MESSAGE);
+					}
+					Integer distinctVals = (Integer)((Constant)proc.getParameter(3).getExpression()).getValue();
+					Integer nullVals = (Integer)((Constant)proc.getParameter(4).getExpression()).getValue();
+					String max = (String) ((Constant)proc.getParameter(5).getExpression()).getValue();
+					String min = (String) ((Constant)proc.getParameter(6).getExpression()).getValue();
+					if (distinctVals != null) {
+						c.setDistinctValues(distinctVals);
+					}
+					if (nullVals != null) {
+						c.setNullValues(nullVals);					
+					}
+					if (max != null) {
+						c.setMaximumValue(max);
+					}
+					if (min != null) {
+						c.setMinimumValue(min);
+					}
+					ColumnStats columnStats = new ColumnStats();
+					columnStats.setDistinctValues(distinctVals);
+					columnStats.setNullValues(nullVals);
+					columnStats.setMaximumValue(max);
+					columnStats.setMinimumValue(min);
+					if (eventDistributor != null) {
+						eventDistributor.setColumnStats(vdbName, vdbVersion, table.getParent().getName(), table.getName(), columnName, columnStats);
+					}
+					if (this.metadataRepository != null) {
+						this.metadataRepository.setColumnStats(vdbName, vdbVersion, c, columnStats);
+					}
+					break;
+				case SETTABLESTATS:
+					Constant val = (Constant)proc.getParameter(2).getExpression();
+					int cardinality = (Integer)val.getValue();
+					table.setCardinality(cardinality);
+					TableStats tableStats = new TableStats();
+					tableStats.setCardinality(cardinality);
+					if (eventDistributor != null) {
+						eventDistributor.setTableStats(vdbName, vdbVersion, table.getParent().getName(), table.getName(), tableStats);
+					}
+					if (this.metadataRepository != null) {
+						this.metadataRepository.setTableStats(vdbName, vdbVersion, table, tableStats);
+					}
+					break;
+				}
+				table.setLastModified(System.currentTimeMillis());
+				return new CollectionTupleSource(rows.iterator());
+			}
 			final SystemProcs sysTable = SystemProcs.valueOf(proc.getProcedureCallableName().substring(CoreConstants.SYSTEM_MODEL.length() + 1).toUpperCase());
 			switch (sysTable) {
 			case GETXMLSCHEMAS:

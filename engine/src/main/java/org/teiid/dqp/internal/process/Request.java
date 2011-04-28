@@ -25,9 +25,7 @@ package org.teiid.dqp.internal.process;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -59,14 +57,10 @@ import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.metadata.MetadataProvider;
-import org.teiid.metadata.ViewDefinition;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.SecurityFunctionEvaluator;
-import org.teiid.query.mapping.relational.QueryNode;
-import org.teiid.query.metadata.BasicQueryMetadataWrapper;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempCapabilitiesFinder;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -106,47 +100,6 @@ import org.teiid.query.validator.ValidatorReport;
  */
 public class Request implements SecurityFunctionEvaluator {
     
-	private final class ViewDefinitionMetadataWrapper extends
-			BasicQueryMetadataWrapper {
-		
-		private Map<Object, QueryNode> qnodes = new HashMap<Object, QueryNode>();
-		
-		private ViewDefinitionMetadataWrapper(
-				QueryMetadataInterface actualMetadata) {
-			super(actualMetadata);
-		}
-
-		@Override
-		public QueryNode getVirtualPlan(Object groupID)
-				throws TeiidComponentException, QueryMetadataException {
-			QueryNode result = super.getVirtualPlan(groupID);
-			//if there's no exception, then this must be a visible view
-
-			String schema = getName(getModelID(groupID));
-			String viewName = getName(groupID);
-			
-			QueryNode cached = qnodes.get(groupID);
-			if (cached != null) {
-				return cached;
-			}
-			if (context == null) {
-				//TODO: could just consider moving up when the context is created
-				throw new AssertionError("Should not attempt to resolve a view before the context has been set."); //$NON-NLS-1$
-			}
-			ViewDefinition vd = metadataProvider.getViewDefinition(schema, viewName, context);
-			if (vd != null) {
-				result = new QueryNode(DataTypeManager.getCanonicalString(vd.getSql()));
-			}
-			qnodes.put(groupID, result);
-			return result;
-		}
-
-		@Override
-		public QueryMetadataInterface getDesignTimeMetadata() {
-			return new ViewDefinitionMetadataWrapper(this.actualMetadata.getDesignTimeMetadata());
-		}
-	}
-
 	// init state
     protected RequestMessage requestMsg;
     private String vdbName;
@@ -182,7 +135,6 @@ public class Request implements SecurityFunctionEvaluator {
 	private boolean resultSetCacheEnabled = true;
 	private int userRequestConcurrency;
 	private AuthorizationValidator authorizationValidator;
-	private MetadataProvider metadataProvider;
 
     void initialize(RequestMessage requestMsg,
                               BufferManager bufferManager,
@@ -221,10 +173,6 @@ public class Request implements SecurityFunctionEvaluator {
 		this.authorizationValidator = authorizationValidator;
 	}
 	
-	public void setMetadataProvider(MetadataProvider metadataProvider) {
-		this.metadataProvider = metadataProvider;
-	}
-	
 	/**
 	 * if the metadata has not been supplied via setMetadata, this method will create the appropriate state
 	 * 
@@ -251,10 +199,6 @@ public class Request implements SecurityFunctionEvaluator {
         if(multiSourceModelList != null && multiSourceModelList.size() > 0) {
         	this.multiSourceModels = multiSourceModelList;
             this.metadata = new MultiSourceMetadataWrapper(this.metadata, this.multiSourceModels);
-        }
-        
-        if (this.metadataProvider != null) {
-        	this.metadata = new ViewDefinitionMetadataWrapper(this.metadata);
         }
         
         TempMetadataAdapter tma = new TempMetadataAdapter(metadata, new TempMetadataStore());

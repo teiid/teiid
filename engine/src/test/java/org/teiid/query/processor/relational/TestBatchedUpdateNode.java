@@ -36,7 +36,6 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.events.EventDistributor;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestBatchedUpdatePlanner;
 import org.teiid.query.processor.ProcessorDataManager;
@@ -220,10 +219,6 @@ public class TestBatchedUpdateNode {
             actualCommands.add(command);
             return new FakeTupleSource(numExecutedCommands);
         }
-    	@Override
-    	public void setEventDistributor(EventDistributor ed) {
-    	}
-
     }
     private static final class FakeTupleSource implements TupleSource {
         private int currentTuple = 0;

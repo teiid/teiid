@@ -119,7 +119,11 @@ public class CompositeVDB {
 		TransformationMetadata metadata =  new TransformationMetadata(vdb, compositeStore, visibilityMap, systemFunctions, udfs);
 				
 		return metadata;
-	}	
+	}
+	
+	public MetadataStore[] getAdditionalStores() {
+		return additionalStores;
+	}
 	
 	public VDBMetaData getVDB() {
 		if (this.children == null || this.children.isEmpty()) {

@@ -36,6 +36,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.id.IntegerIDFactory;
 import org.teiid.dqp.internal.process.PreparedPlan;
+import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -128,6 +129,9 @@ public class QueryOptimizer {
 				result = pp.getPlan().clone();
 				for (Table t : pp.getAccessInfo().getViewsAccessed()) {
 					context.accessedView(t);
+				}
+				for (Procedure p : pp.getAccessInfo().getProceduresAccessed()) {
+					context.accessedProcedure(p);
 				}
 			}
 	        // propagate procedure parameters to the plan to allow runtime type checking

@@ -23,9 +23,11 @@ package org.teiid.deployers;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -42,8 +44,16 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ColumnStats;
 import org.teiid.metadata.Datatype;
+import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
+import org.teiid.metadata.TableStats;
+import org.teiid.metadata.MetadataRepository.TriggerOperation;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.runtime.RuntimePlugin;
@@ -63,6 +73,11 @@ public class VDBRepository implements Serializable{
 	private boolean odbcEnabled = false;
 	private List<VDBLifeCycleListener> listeners = new CopyOnWriteArrayList<VDBLifeCycleListener>();
 	private SystemFunctionManager systemFunctionManager;
+	private MetadataRepository metadataRepository;
+	
+	public MetadataRepository getMetadataRepository() {
+		return metadataRepository;
+	}
 	
 	public void addVDB(VDBMetaData vdb, MetadataStoreGroup stores, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr) throws DeploymentException {
 		if (getVDB(vdb.getName(), vdb.getVersion()) != null) {
@@ -77,14 +92,72 @@ public class VDBRepository implements Serializable{
 		if (this.odbcEnabled && odbcStore == null) {
 			this.odbcStore = getODBCMetadataStore();
 		}
-		
+		CompositeVDB cvdb = null;
 		if (this.odbcStore == null) {
-			this.vdbRepo.put(vdbId(vdb), new CompositeVDB(vdb, stores, visibilityMap, udf, this.systemFunctionManager.getSystemFunctions(), cmr, this.systemStore));
+			cvdb = new CompositeVDB(vdb, stores, visibilityMap, udf, this.systemFunctionManager.getSystemFunctions(), cmr, this.systemStore);
 		}
 		else {
-			this.vdbRepo.put(vdbId(vdb), new CompositeVDB(vdb, stores, visibilityMap, udf, this.systemFunctionManager.getSystemFunctions(), cmr, this.systemStore, odbcStore));
+			cvdb = new CompositeVDB(vdb, stores, visibilityMap, udf, this.systemFunctionManager.getSystemFunctions(), cmr, this.systemStore, odbcStore);
 		}
+		updateFromMetadataRepository(stores, cvdb);
+		this.vdbRepo.put(vdbId(vdb), cvdb); 
 		notifyAdd(vdb.getName(), vdb.getVersion());
+	}
+
+	private void updateFromMetadataRepository(MetadataStoreGroup stores,
+			CompositeVDB cvdb) {
+		if (metadataRepository == null) {
+			return;
+		}
+		String vdbName = cvdb.getVDB().getName();
+		int vdbVersion = cvdb.getVDB().getVersion();
+		LinkedList<MetadataStore> allStores = new LinkedList<MetadataStore>(stores.getStores());
+		allStores.addAll(Arrays.asList(cvdb.getAdditionalStores()));
+		for (MetadataStore metadataStore : allStores) {
+			for (Schema schema : metadataStore.getSchemas().values()) {
+				for (Table t : schema.getTables().values()) {
+					if (t.isPhysical()) {
+						TableStats stats = metadataRepository.getTableStats(vdbName, vdbVersion, t);
+						if (stats != null) {
+							t.setTableStats(stats);
+						}
+						for (Column c : t.getColumns()) {
+							ColumnStats cStats = metadataRepository.getColumnStats(vdbName, vdbVersion, c);
+							if (cStats != null) {
+								c.setColumnStats(cStats);
+							}
+						}
+					} else {
+						String def = metadataRepository.getViewDefinition(vdbName, vdbVersion, t);
+						if (def != null) {
+							t.setSelectTransformation(def);
+						}
+						if (t.supportsUpdate()) {
+							def = metadataRepository.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, TriggerOperation.INSERT);
+							if (def != null) {
+								t.setInsertPlan(def);
+							}
+							def = metadataRepository.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, TriggerOperation.UPDATE);
+							if (def != null) {
+								t.setUpdatePlan(def);
+							}
+							def = metadataRepository.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, TriggerOperation.DELETE);
+							if (def != null) {
+								t.setDeletePlan(def);
+							}
+						}
+					}
+				}
+				for (Procedure p : schema.getProcedures().values()) {
+					if (p.isVirtual() && !p.isFunction()) {
+						String proc = metadataRepository.getProcedureDefinition(vdbName, vdbVersion, p);
+						if (proc != null) {
+							p.setQueryPlan(proc);								
+						}
+					}
+				}
+			}
+		}
 	}
 
 	public VDBMetaData getVDB(String name, int version) {
@@ -142,6 +215,10 @@ public class VDBRepository implements Serializable{
 	
 	public void setSystemStore(MetadataStore store) {
 		this.systemStore = store;
+	}
+	
+	public void setMetadataRepository(MetadataRepository metadataRepository) {
+		this.metadataRepository = metadataRepository;
 	}
 
 	private MetadataStore getODBCMetadataStore() {

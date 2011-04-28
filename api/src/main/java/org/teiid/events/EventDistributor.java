@@ -63,9 +63,11 @@ public interface EventDistributor {
 	 * @param tableNames
 	 */
 	void dataModification(String vdbName, int vdbVersion, String schema, String... tableNames);
-	
-	void setTableStats(String vdbName, int vdbVersion, String schemaName, String tableName, TableStats stats);
-	
-	void setColumnStats(String vdbName, int vdbVersion, String schemaName, String tableName, String columnName, ColumnStats stats);
+
+	void setColumnStats(String vdbName, int vdbVersion, String schemaName,
+			String tableName, String columnName, ColumnStats stats);
+
+	void setTableStats(String vdbName, int vdbVersion, String schemaName,
+			String tableName, TableStats stats);
 	
 }

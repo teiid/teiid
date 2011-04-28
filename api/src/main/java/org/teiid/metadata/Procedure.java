@@ -48,6 +48,7 @@ public class Procedure extends AbstractMetadataRecord {
     private String queryPlan;
     
     private Schema parent;
+    private transient long lastModified;
     
     public void setParent(Schema parent) {
 		this.parent = parent;
@@ -126,6 +127,14 @@ public class Procedure extends AbstractMetadataRecord {
 	@Override
 	public Schema getParent() {
 		return parent;
+	}
+	
+	public long getLastModified() {
+		return lastModified;
+	}
+	
+	public void setLastModified(long lastModified) {
+		this.lastModified = lastModified;
 	}
 
 }

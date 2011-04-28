@@ -79,6 +79,7 @@
 | &lt;AND: "and"&gt;
 | &lt;ANY: "any"&gt;
 | &lt;ARRAY: "array"&gt;
+| &lt;ARRAY_AGG: "array_agg"&gt;
 | &lt;AS: "as"&gt;
 | &lt;ASC: "asc"&gt;
 | &lt;ATOMIC: "atomic"&gt;
@@ -348,9 +349,10 @@
 | &lt;TIMETYPE: "{" "t"&gt;
 | &lt;TIMESTAMPTYPE: "{" "ts"&gt;
 | &lt;BOOLEANTYPE: "{" "b"&gt;
+| &lt;POS_REF: ["$"] (&lt;DIGIT&gt;)+&gt;
 | &lt;INTEGERVAL: (&lt;MINUS&gt;)? (&lt;DIGIT&gt;)+&gt;
 | &lt;FLOATVAL: (&lt;MINUS&gt;)? (&lt;DIGIT&gt;)* &lt;PERIOD&gt; (&lt;DIGIT&gt;)+ (["e","E"] (["+","-"])? (&lt;DIGIT&gt;)+)?&gt;
-| &lt;STRINGVAL: ("N")? "\'" ("\'\'" | ~["\'"])* "\'"&gt;
+| &lt;STRINGVAL: ("N" | "E")? "\'" ("\'\'" | ~["\'"])* "\'"&gt;
 | &lt;#LETTER: ["a"-"z","A"-"Z"] | ["\u0153"-"\ufffd"]&gt;
 | &lt;#DIGIT: ["0"-"9"]&gt;
 }
@@ -364,6 +366,8 @@
 | &lt;RPAREN: ")"&gt;
 | &lt;LBRACE: "{"&gt;
 | &lt;RBRACE: "}"&gt;
+| &lt;LSBRACE: "["&gt;
+| &lt;RSBRACE: "]"&gt;
 | &lt;EQ: "="&gt;
 | &lt;NE: "&lt;&gt;"&gt;
 | &lt;NE2: "!="&gt;
@@ -406,439 +410,455 @@
 <entry align="left" valign="top"><para>::= 
 ( <link linkend="prod4">createUpdateProcedure</link> | <link linkend="prod5">userCommand</link> | <link linkend="prod6">callableStatement</link> ) ( &lt;SEMICOLON&gt; )? &lt;EOF&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod7" xreflabel="updateProcedure"/>updateProcedure</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod7" xreflabel="designerCommand"/>designerCommand</para></entry>
 <entry align="left" valign="top"><para>::= 
-( <link linkend="prod4">createUpdateProcedure</link> | <link linkend="prod8">triggerAction</link> ) &lt;EOF&gt;</para></entry></row>
+( <link linkend="prod8">updateProcedure</link> | <link linkend="prod5">userCommand</link> ) ( &lt;SEMICOLON&gt; )? &lt;EOF&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod8" xreflabel="triggerAction"/>triggerAction</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod8" xreflabel="updateProcedure"/>updateProcedure</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;FOR&gt; &lt;EACH&gt; &lt;ROW&gt; <link linkend="prod9">block</link></para></entry></row>
+( <link linkend="prod4">createUpdateProcedure</link> | <link linkend="prod9">triggerAction</link> ) &lt;EOF&gt;</para></entry></row>
+<row>
+<entry align="right" valign="top"><para><anchor id="prod10" xreflabel="alter"/>alter</para></entry>
+<entry align="left" valign="top"><para>::= 
+&lt;ALTER&gt; ( ( <link linkend="prod11">nonReserved</link> <link linkend="prod2">id</link> &lt;AS&gt; <link linkend="prod12">queryExpression</link> ) | ( &lt;PROCEDURE&gt; <link linkend="prod2">id</link> &lt;AS&gt; <link linkend="prod13">block</link> ) | ( &lt;TRIGGER&gt; &lt;ON&gt; <link linkend="prod2">id</link> <link linkend="prod11">nonReserved</link> &lt;OF&gt; ( &lt;INSERT&gt; | &lt;UPDATE&gt; | &lt;DELETE&gt; ) &lt;AS&gt; <link linkend="prod9">triggerAction</link> ) )</para></entry></row>
+<row>
+<entry align="right" valign="top"><para><anchor id="prod9" xreflabel="triggerAction"/>triggerAction</para></entry>
+<entry align="left" valign="top"><para>::= 
+&lt;FOR&gt; &lt;EACH&gt; &lt;ROW&gt; <link linkend="prod13">block</link></para></entry></row>
 <row>
 <entry align="right" valign="top"><para><anchor id="prod5" xreflabel="userCommand"/>userCommand</para></entry>
 <entry align="left" valign="top"><para>::= 
-( <link linkend="prod10">queryExpression</link> | <link linkend="prod11">storedProcedure</link> | <link linkend="prod12">insert</link> | <link linkend="prod13">update</link> | <link linkend="prod14">delete</link> | <link linkend="prod15">dropTable</link> | <link linkend="prod16">createTempTable</link> )</para></entry></row>
+( <link linkend="prod12">queryExpression</link> | <link linkend="prod14">storedProcedure</link> | <link linkend="prod15">insert</link> | <link linkend="prod16">update</link> | <link linkend="prod17">delete</link> | <link linkend="prod18">dropTable</link> | <link linkend="prod19">createTempTable</link> | <link linkend="prod10">alter</link> )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod15" xreflabel="dropTable"/>dropTable</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod18" xreflabel="dropTable"/>dropTable</para></entry>
 <entry align="left" valign="top"><para>::= 
 &lt;DROP&gt; &lt;TABLE&gt; <link linkend="prod2">id</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod16" xreflabel="createTempTable"/>createTempTable</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod19" xreflabel="createTempTable"/>createTempTable</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;CREATE&gt; &lt;LOCAL&gt; &lt;TEMPORARY&gt; &lt;TABLE&gt; <link linkend="prod2">id</link> &lt;LPAREN&gt; <link linkend="prod17">tableElement</link> ( &lt;COMMA&gt; <link linkend="prod17">tableElement</link> )* ( &lt;COMMA&gt; &lt;PRIMARY&gt; <link linkend="prod18">nonReserved</link> &lt;LPAREN&gt; <link linkend="prod2">id</link> ( &lt;COMMA&gt; <link linkend="prod2">id</link> )* &lt;RPAREN&gt; )? &lt;RPAREN&gt;</para></entry></row>
+&lt;CREATE&gt; &lt;LOCAL&gt; &lt;TEMPORARY&gt; &lt;TABLE&gt; <link linkend="prod2">id</link> &lt;LPAREN&gt; <link linkend="prod20">tableElement</link> ( &lt;COMMA&gt; <link linkend="prod20">tableElement</link> )* ( &lt;COMMA&gt; &lt;PRIMARY&gt; <link linkend="prod11">nonReserved</link> &lt;LPAREN&gt; <link linkend="prod2">id</link> ( &lt;COMMA&gt; <link linkend="prod2">id</link> )* &lt;RPAREN&gt; )? &lt;RPAREN&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod17" xreflabel="tableElement"/>tableElement</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod20" xreflabel="tableElement"/>tableElement</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod2">id</link> ( <link linkend="prod19">dataTypeString</link> | <link linkend="prod18">nonReserved</link> ) ( &lt;NOT&gt; &lt;NULL&gt; )?</para></entry></row>
+<link linkend="prod2">id</link> ( <link linkend="prod21">dataTypeString</link> | <link linkend="prod11">nonReserved</link> ) ( &lt;NOT&gt; &lt;NULL&gt; )?</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod20" xreflabel="errorStatement"/>errorStatement</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod22" xreflabel="errorStatement"/>errorStatement</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;ERROR&gt; <link linkend="prod21">expression</link></para></entry></row>
+&lt;ERROR&gt; <link linkend="prod23">expression</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod22" xreflabel="statement"/>statement</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod24" xreflabel="statement"/>statement</para></entry>
 <entry align="left" valign="top"><para>::= 
-( <link linkend="prod23">ifStatement</link> | <link linkend="prod24">loopStatement</link> | <link linkend="prod25">whileStatement</link> | <link linkend="prod26">delimitedStatement</link> )</para></entry></row>
+( <link linkend="prod25">ifStatement</link> | <link linkend="prod26">loopStatement</link> | <link linkend="prod27">whileStatement</link> | <link linkend="prod28">delimitedStatement</link> )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod26" xreflabel="delimitedStatement"/>delimitedStatement</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod28" xreflabel="delimitedStatement"/>delimitedStatement</para></entry>
 <entry align="left" valign="top"><para>::= 
-( <link linkend="prod27">assignStatement</link> | <link linkend="prod28">sqlStatement</link> | <link linkend="prod20">errorStatement</link> | <link linkend="prod29">declareStatement</link> | <link linkend="prod30">continueStatement</link> | <link linkend="prod31">breakStatement</link> ) &lt;SEMICOLON&gt;</para></entry></row>
+( <link linkend="prod29">assignStatement</link> | <link linkend="prod30">sqlStatement</link> | <link linkend="prod22">errorStatement</link> | <link linkend="prod31">declareStatement</link> | <link linkend="prod32">continueStatement</link> | <link linkend="prod33">breakStatement</link> ) &lt;SEMICOLON&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod9" xreflabel="block"/>block</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod13" xreflabel="block"/>block</para></entry>
 <entry align="left" valign="top"><para>::= 
-( <link linkend="prod22">statement</link> | ( &lt;BEGIN&gt; ( <link linkend="prod22">statement</link> )* &lt;END&gt; ) )</para></entry></row>
+( <link linkend="prod24">statement</link> | ( &lt;BEGIN&gt; ( <link linkend="prod24">statement</link> )* &lt;END&gt; ) )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod31" xreflabel="breakStatement"/>breakStatement</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod33" xreflabel="breakStatement"/>breakStatement</para></entry>
 <entry align="left" valign="top"><para>::= 
 &lt;BREAK&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod30" xreflabel="continueStatement"/>continueStatement</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod32" xreflabel="continueStatement"/>continueStatement</para></entry>
 <entry align="left" valign="top"><para>::= 
 &lt;CONTINUE&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod25" xreflabel="whileStatement"/>whileStatement</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod27" xreflabel="whileStatement"/>whileStatement</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;WHILE&gt; &lt;LPAREN&gt; <link linkend="prod32">criteria</link> &lt;RPAREN&gt; <link linkend="prod9">block</link></para></entry></row>
+&lt;WHILE&gt; &lt;LPAREN&gt; <link linkend="prod34">criteria</link> &lt;RPAREN&gt; <link linkend="prod13">block</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod24" xreflabel="loopStatement"/>loopStatement</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod26" xreflabel="loopStatement"/>loopStatement</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;LOOP&gt; &lt;ON&gt; &lt;LPAREN&gt; <link linkend="prod10">queryExpression</link> &lt;RPAREN&gt; &lt;AS&gt; <link linkend="prod2">id</link> <link linkend="prod9">block</link></para></entry></row>
+&lt;LOOP&gt; &lt;ON&gt; &lt;LPAREN&gt; <link linkend="prod12">queryExpression</link> &lt;RPAREN&gt; &lt;AS&gt; <link linkend="prod2">id</link> <link linkend="prod13">block</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod23" xreflabel="ifStatement"/>ifStatement</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod25" xreflabel="ifStatement"/>ifStatement</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;IF&gt; &lt;LPAREN&gt; <link linkend="prod32">criteria</link> &lt;RPAREN&gt; <link linkend="prod9">block</link> ( &lt;ELSE&gt; <link linkend="prod9">block</link> )?</para></entry></row>
+&lt;IF&gt; &lt;LPAREN&gt; <link linkend="prod34">criteria</link> &lt;RPAREN&gt; <link linkend="prod13">block</link> ( &lt;ELSE&gt; <link linkend="prod13">block</link> )?</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod33" xreflabel="criteriaSelector"/>criteriaSelector</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod35" xreflabel="criteriaSelector"/>criteriaSelector</para></entry>
 <entry align="left" valign="top"><para>::= 
 ( ( &lt;EQ&gt; | &lt;NE&gt; | &lt;NE2&gt; | &lt;LE&gt; | &lt;GE&gt; | &lt;LT&gt; | &lt;GT&gt; | &lt;IN&gt; | &lt;LIKE&gt; | ( &lt;IS&gt; &lt;NULL&gt; ) | &lt;BETWEEN&gt; ) )? &lt;CRITERIA&gt; ( &lt;ON&gt; &lt;LPAREN&gt; <link linkend="prod2">id</link> ( &lt;COMMA&gt; <link linkend="prod2">id</link> )* &lt;RPAREN&gt; )?</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod34" xreflabel="hasCriteria"/>hasCriteria</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod36" xreflabel="hasCriteria"/>hasCriteria</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;HAS&gt; <link linkend="prod33">criteriaSelector</link></para></entry></row>
+&lt;HAS&gt; <link linkend="prod35">criteriaSelector</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod29" xreflabel="declareStatement"/>declareStatement</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod31" xreflabel="declareStatement"/>declareStatement</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;DECLARE&gt; <link linkend="prod35">dataType</link> <link linkend="prod2">id</link> ( ( <link linkend="prod18">nonReserved</link> | &lt;EQ&gt; ) <link linkend="prod36">assignStatementOperand</link> )?</para></entry></row>
+&lt;DECLARE&gt; <link linkend="prod37">dataType</link> <link linkend="prod2">id</link> ( ( <link linkend="prod11">nonReserved</link> | &lt;EQ&gt; ) <link linkend="prod38">assignStatementOperand</link> )?</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod27" xreflabel="assignStatement"/>assignStatement</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod29" xreflabel="assignStatement"/>assignStatement</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod2">id</link> ( <link linkend="prod18">nonReserved</link> | &lt;EQ&gt; ) <link linkend="prod36">assignStatementOperand</link></para></entry></row>
+<link linkend="prod2">id</link> ( <link linkend="prod11">nonReserved</link> | &lt;EQ&gt; ) <link linkend="prod38">assignStatementOperand</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod36" xreflabel="assignStatementOperand"/>assignStatementOperand</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod38" xreflabel="assignStatementOperand"/>assignStatementOperand</para></entry>
 <entry align="left" valign="top"><para>::= 
-( ( <link linkend="prod12">insert</link> ) | <link linkend="prod13">update</link> | <link linkend="prod14">delete</link> | ( <link linkend="prod21">expression</link> ) | <link linkend="prod10">queryExpression</link> )</para></entry></row>
+( ( <link linkend="prod15">insert</link> ) | <link linkend="prod16">update</link> | <link linkend="prod17">delete</link> | ( <link linkend="prod23">expression</link> ) | <link linkend="prod12">queryExpression</link> )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod28" xreflabel="sqlStatement"/>sqlStatement</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod30" xreflabel="sqlStatement"/>sqlStatement</para></entry>
 <entry align="left" valign="top"><para>::= 
-( ( <link linkend="prod5">userCommand</link> ) | <link linkend="prod37">dynamicCommand</link> | ( <link linkend="prod2">id</link> ( <link linkend="prod18">nonReserved</link> | &lt;EQ&gt; ) <link linkend="prod11">storedProcedure</link> ) )</para></entry></row>
+( ( <link linkend="prod5">userCommand</link> ) | <link linkend="prod39">dynamicCommand</link> | ( <link linkend="prod2">id</link> ( <link linkend="prod11">nonReserved</link> | &lt;EQ&gt; ) <link linkend="prod14">storedProcedure</link> ) )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod38" xreflabel="translateCriteria"/>translateCriteria</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod40" xreflabel="translateCriteria"/>translateCriteria</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;TRANSLATE&gt; <link linkend="prod33">criteriaSelector</link> ( &lt;WITH&gt; &lt;LPAREN&gt; <link linkend="prod2">id</link> &lt;EQ&gt; <link linkend="prod21">expression</link> ( &lt;COMMA&gt; <link linkend="prod2">id</link> &lt;EQ&gt; <link linkend="prod21">expression</link> )* &lt;RPAREN&gt; )?</para></entry></row>
+&lt;TRANSLATE&gt; <link linkend="prod35">criteriaSelector</link> ( &lt;WITH&gt; &lt;LPAREN&gt; <link linkend="prod2">id</link> &lt;EQ&gt; <link linkend="prod23">expression</link> ( &lt;COMMA&gt; <link linkend="prod2">id</link> &lt;EQ&gt; <link linkend="prod23">expression</link> )* &lt;RPAREN&gt; )?</para></entry></row>
 <row>
 <entry align="right" valign="top"><para><anchor id="prod4" xreflabel="createUpdateProcedure"/>createUpdateProcedure</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;CREATE&gt; ( &lt;VIRTUAL&gt; )? ( &lt;UPDATE&gt; )? &lt;PROCEDURE&gt; <link linkend="prod9">block</link></para></entry></row>
+&lt;CREATE&gt; ( &lt;VIRTUAL&gt; )? ( &lt;UPDATE&gt; )? &lt;PROCEDURE&gt; <link linkend="prod13">block</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod37" xreflabel="dynamicCommand"/>dynamicCommand</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod39" xreflabel="dynamicCommand"/>dynamicCommand</para></entry>
 <entry align="left" valign="top"><para>::= 
-( &lt;EXECUTE&gt; | &lt;EXEC&gt; ) ( ( &lt;STRING&gt; | &lt;IMMEDIATE&gt; ) )? <link linkend="prod21">expression</link> ( &lt;AS&gt; <link linkend="prod39">createElementsWithTypes</link> ( &lt;INTO&gt; <link linkend="prod2">id</link> )? )? ( &lt;USING&gt; <link linkend="prod40">setClauseList</link> )? ( &lt;UPDATE&gt; ( ( &lt;INTEGERVAL&gt; ) | ( &lt;STAR&gt; ) ) )?</para></entry></row>
+( &lt;EXECUTE&gt; | &lt;EXEC&gt; ) ( ( &lt;STRING&gt; | &lt;IMMEDIATE&gt; ) )? <link linkend="prod23">expression</link> ( &lt;AS&gt; <link linkend="prod41">createElementsWithTypes</link> ( &lt;INTO&gt; <link linkend="prod2">id</link> )? )? ( &lt;USING&gt; <link linkend="prod42">setClauseList</link> )? ( &lt;UPDATE&gt; ( ( &lt;INTEGERVAL&gt; ) | ( &lt;STAR&gt; ) ) )?</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod40" xreflabel="setClauseList"/>setClauseList</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod42" xreflabel="setClauseList"/>setClauseList</para></entry>
 <entry align="left" valign="top"><para>::= 
 <link linkend="prod2">id</link> &lt;EQ&gt; ( &lt;COMMA&gt; <link linkend="prod2">id</link> &lt;EQ&gt; )*</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod39" xreflabel="createElementsWithTypes"/>createElementsWithTypes</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod41" xreflabel="createElementsWithTypes"/>createElementsWithTypes</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod2">id</link> <link linkend="prod19">dataTypeString</link> ( &lt;COMMA&gt; <link linkend="prod2">id</link> <link linkend="prod19">dataTypeString</link> )*</para></entry></row>
+<link linkend="prod2">id</link> <link linkend="prod21">dataTypeString</link> ( &lt;COMMA&gt; <link linkend="prod2">id</link> <link linkend="prod21">dataTypeString</link> )*</para></entry></row>
 <row>
 <entry align="right" valign="top"><para><anchor id="prod6" xreflabel="callableStatement"/>callableStatement</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;LBRACE&gt; ( &lt;QMARK&gt; &lt;EQ&gt; )? &lt;CALL&gt; <link linkend="prod2">id</link> ( &lt;LPAREN&gt; ( <link linkend="prod41">executeUnnamedParams</link> ) &lt;RPAREN&gt; )? &lt;RBRACE&gt; ( <link linkend="prod42">option</link> )?</para></entry></row>
+&lt;LBRACE&gt; ( &lt;QMARK&gt; &lt;EQ&gt; )? &lt;CALL&gt; <link linkend="prod2">id</link> ( &lt;LPAREN&gt; ( <link linkend="prod43">executeUnnamedParams</link> ) &lt;RPAREN&gt; )? &lt;RBRACE&gt; ( <link linkend="prod44">option</link> )?</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod11" xreflabel="storedProcedure"/>storedProcedure</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod14" xreflabel="storedProcedure"/>storedProcedure</para></entry>
 <entry align="left" valign="top"><para>::= 
-( ( &lt;EXEC&gt; | &lt;EXECUTE&gt; | &lt;CALL&gt; ) <link linkend="prod2">id</link> &lt;LPAREN&gt; ( <link linkend="prod43">executeNamedParams</link> | <link linkend="prod41">executeUnnamedParams</link> ) &lt;RPAREN&gt; ) ( <link linkend="prod42">option</link> )?</para></entry></row>
+( ( &lt;EXEC&gt; | &lt;EXECUTE&gt; | &lt;CALL&gt; ) <link linkend="prod2">id</link> &lt;LPAREN&gt; ( <link linkend="prod45">executeNamedParams</link> | <link linkend="prod43">executeUnnamedParams</link> ) &lt;RPAREN&gt; ) ( <link linkend="prod44">option</link> )?</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod41" xreflabel="executeUnnamedParams"/>executeUnnamedParams</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod43" xreflabel="executeUnnamedParams"/>executeUnnamedParams</para></entry>
 <entry align="left" valign="top"><para>::= 
-( <link linkend="prod21">expression</link> ( &lt;COMMA&gt; <link linkend="prod21">expression</link> )* )?</para></entry></row>
+( <link linkend="prod23">expression</link> ( &lt;COMMA&gt; <link linkend="prod23">expression</link> )* )?</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod43" xreflabel="executeNamedParams"/>executeNamedParams</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod45" xreflabel="executeNamedParams"/>executeNamedParams</para></entry>
 <entry align="left" valign="top"><para>::= 
-( <link linkend="prod2">id</link> &lt;EQ&gt; ( &lt;GT&gt; )? <link linkend="prod21">expression</link> ( &lt;COMMA&gt; <link linkend="prod2">id</link> &lt;EQ&gt; ( &lt;GT&gt; )? <link linkend="prod21">expression</link> )* )</para></entry></row>
+( <link linkend="prod2">id</link> &lt;EQ&gt; ( &lt;GT&gt; )? <link linkend="prod23">expression</link> ( &lt;COMMA&gt; <link linkend="prod2">id</link> &lt;EQ&gt; ( &lt;GT&gt; )? <link linkend="prod23">expression</link> )* )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod12" xreflabel="insert"/>insert</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod15" xreflabel="insert"/>insert</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;INSERT&gt; &lt;INTO&gt; <link linkend="prod2">id</link> ( <link linkend="prod44">columnList</link> )? ( ( &lt;VALUES&gt; <link linkend="prod45">rowValues</link> ) | ( <link linkend="prod10">queryExpression</link> ) ) ( <link linkend="prod42">option</link> )?</para></entry></row>
+&lt;INSERT&gt; &lt;INTO&gt; <link linkend="prod2">id</link> ( <link linkend="prod46">columnList</link> )? ( ( &lt;VALUES&gt; <link linkend="prod47">rowValues</link> ) | ( <link linkend="prod12">queryExpression</link> ) ) ( <link linkend="prod44">option</link> )?</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod44" xreflabel="columnList"/>columnList</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod46" xreflabel="columnList"/>columnList</para></entry>
 <entry align="left" valign="top"><para>::= 
 &lt;LPAREN&gt; <link linkend="prod2">id</link> ( &lt;COMMA&gt; <link linkend="prod2">id</link> )* &lt;RPAREN&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod45" xreflabel="rowValues"/>rowValues</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod47" xreflabel="rowValues"/>rowValues</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;LPAREN&gt; <link linkend="prod21">expression</link> ( &lt;COMMA&gt; <link linkend="prod21">expression</link> )* &lt;RPAREN&gt;</para></entry></row>
+&lt;LPAREN&gt; <link linkend="prod23">expression</link> ( &lt;COMMA&gt; <link linkend="prod23">expression</link> )* &lt;RPAREN&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod13" xreflabel="update"/>update</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod16" xreflabel="update"/>update</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;UPDATE&gt; <link linkend="prod2">id</link> &lt;SET&gt; <link linkend="prod40">setClauseList</link> ( <link linkend="prod46">where</link> )? ( <link linkend="prod42">option</link> )?</para></entry></row>
+&lt;UPDATE&gt; <link linkend="prod2">id</link> &lt;SET&gt; <link linkend="prod42">setClauseList</link> ( <link linkend="prod48">where</link> )? ( <link linkend="prod44">option</link> )?</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod14" xreflabel="delete"/>delete</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod17" xreflabel="delete"/>delete</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;DELETE&gt; &lt;FROM&gt; <link linkend="prod2">id</link> ( <link linkend="prod46">where</link> )? ( <link linkend="prod42">option</link> )?</para></entry></row>
+&lt;DELETE&gt; &lt;FROM&gt; <link linkend="prod2">id</link> ( <link linkend="prod48">where</link> )? ( <link linkend="prod44">option</link> )?</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod10" xreflabel="queryExpression"/>queryExpression</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod12" xreflabel="queryExpression"/>queryExpression</para></entry>
 <entry align="left" valign="top"><para>::= 
-( &lt;WITH&gt; <link linkend="prod47">withListElement</link> ( &lt;COMMA&gt; <link linkend="prod47">withListElement</link> )* )? <link linkend="prod48">queryExpressionBody</link></para></entry></row>
+( &lt;WITH&gt; <link linkend="prod49">withListElement</link> ( &lt;COMMA&gt; <link linkend="prod49">withListElement</link> )* )? <link linkend="prod50">queryExpressionBody</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod47" xreflabel="withListElement"/>withListElement</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod49" xreflabel="withListElement"/>withListElement</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod2">id</link> ( <link linkend="prod44">columnList</link> )? &lt;AS&gt; &lt;LPAREN&gt; <link linkend="prod10">queryExpression</link> &lt;RPAREN&gt;</para></entry></row>
+<link linkend="prod2">id</link> ( <link linkend="prod46">columnList</link> )? &lt;AS&gt; &lt;LPAREN&gt; <link linkend="prod12">queryExpression</link> &lt;RPAREN&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod48" xreflabel="queryExpressionBody"/>queryExpressionBody</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod50" xreflabel="queryExpressionBody"/>queryExpressionBody</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod49">queryTerm</link> ( ( &lt;UNION&gt; | &lt;EXCEPT&gt; ) ( &lt;ALL&gt; | &lt;DISTINCT&gt; )? <link linkend="prod49">queryTerm</link> )* ( <link linkend="prod50">orderby</link> )? ( <link linkend="prod51">limit</link> )? ( <link linkend="prod42">option</link> )?</para></entry></row>
+<link linkend="prod51">queryTerm</link> ( ( &lt;UNION&gt; | &lt;EXCEPT&gt; ) ( &lt;ALL&gt; | &lt;DISTINCT&gt; )? <link linkend="prod51">queryTerm</link> )* ( <link linkend="prod52">orderby</link> )? ( <link linkend="prod53">limit</link> )? ( <link linkend="prod44">option</link> )?</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod49" xreflabel="queryTerm"/>queryTerm</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod51" xreflabel="queryTerm"/>queryTerm</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod52">queryPrimary</link> ( &lt;INTERSECT&gt; ( &lt;ALL&gt; | &lt;DISTINCT&gt; )? <link linkend="prod52">queryPrimary</link> )*</para></entry></row>
+<link linkend="prod54">queryPrimary</link> ( &lt;INTERSECT&gt; ( &lt;ALL&gt; | &lt;DISTINCT&gt; )? <link linkend="prod54">queryPrimary</link> )*</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod52" xreflabel="queryPrimary"/>queryPrimary</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod54" xreflabel="queryPrimary"/>queryPrimary</para></entry>
 <entry align="left" valign="top"><para>::= 
-( <link linkend="prod53">query</link> | ( &lt;TABLE&gt; <link linkend="prod2">id</link> ) | ( &lt;LPAREN&gt; <link linkend="prod48">queryExpressionBody</link> &lt;RPAREN&gt; ) )</para></entry></row>
+( <link linkend="prod55">query</link> | ( &lt;TABLE&gt; <link linkend="prod2">id</link> ) | ( &lt;LPAREN&gt; <link linkend="prod50">queryExpressionBody</link> &lt;RPAREN&gt; ) )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod53" xreflabel="query"/>query</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod55" xreflabel="query"/>query</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod54">select</link> ( <link linkend="prod55">into</link> )? ( <link linkend="prod56">from</link> ( <link linkend="prod46">where</link> )? ( <link linkend="prod57">groupBy</link> )? ( <link linkend="prod58">having</link> )? )?</para></entry></row>
+<link linkend="prod56">select</link> ( <link linkend="prod57">into</link> )? ( <link linkend="prod58">from</link> ( <link linkend="prod48">where</link> )? ( <link linkend="prod59">groupBy</link> )? ( <link linkend="prod60">having</link> )? )?</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod55" xreflabel="into"/>into</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod57" xreflabel="into"/>into</para></entry>
 <entry align="left" valign="top"><para>::= 
 &lt;INTO&gt; ( <link linkend="prod2">id</link> )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod54" xreflabel="select"/>select</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod56" xreflabel="select"/>select</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;SELECT&gt; ( &lt;ALL&gt; | ( &lt;DISTINCT&gt; ) )? ( &lt;STAR&gt; | ( <link linkend="prod59">selectSymbol</link> ( &lt;COMMA&gt; <link linkend="prod59">selectSymbol</link> )* ) )</para></entry></row>
+&lt;SELECT&gt; ( &lt;ALL&gt; | ( &lt;DISTINCT&gt; ) )? ( &lt;STAR&gt; | ( <link linkend="prod61">selectSymbol</link> ( &lt;COMMA&gt; <link linkend="prod61">selectSymbol</link> )* ) )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod59" xreflabel="selectSymbol"/>selectSymbol</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod61" xreflabel="selectSymbol"/>selectSymbol</para></entry>
 <entry align="left" valign="top"><para>::= 
-( <link linkend="prod60">selectExpression</link> | <link linkend="prod61">allInGroupSymbol</link> )</para></entry></row>
+( <link linkend="prod62">selectExpression</link> | <link linkend="prod63">allInGroupSymbol</link> )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod60" xreflabel="selectExpression"/>selectExpression</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod62" xreflabel="selectExpression"/>selectExpression</para></entry>
 <entry align="left" valign="top"><para>::= 
-( <link linkend="prod21">expression</link> ( ( &lt;AS&gt; )? <link linkend="prod2">id</link> )? )</para></entry></row>
+( <link linkend="prod23">expression</link> ( ( &lt;AS&gt; )? <link linkend="prod2">id</link> )? )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod62" xreflabel="derivedColumn"/>derivedColumn</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod64" xreflabel="derivedColumn"/>derivedColumn</para></entry>
 <entry align="left" valign="top"><para>::= 
-( <link linkend="prod21">expression</link> ( &lt;AS&gt; <link linkend="prod2">id</link> )? )</para></entry></row>
+( <link linkend="prod23">expression</link> ( &lt;AS&gt; <link linkend="prod2">id</link> )? )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod61" xreflabel="allInGroupSymbol"/>allInGroupSymbol</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod63" xreflabel="allInGroupSymbol"/>allInGroupSymbol</para></entry>
 <entry align="left" valign="top"><para>::= 
 &lt;ALL_IN_GROUP&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod63" xreflabel="xmlAgg"/>xmlAgg</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod65" xreflabel="xmlAgg"/>xmlAgg</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;XMLAGG&gt; &lt;LPAREN&gt; <link linkend="prod21">expression</link> ( <link linkend="prod50">orderby</link> )? &lt;RPAREN&gt;</para></entry></row>
+&lt;XMLAGG&gt; &lt;LPAREN&gt; <link linkend="prod23">expression</link> ( <link linkend="prod52">orderby</link> )? &lt;RPAREN&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod64" xreflabel="textAgg"/>textAgg</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod66" xreflabel="arrayAgg"/>arrayAgg</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod18">nonReserved</link> &lt;LPAREN&gt; &lt;FOR&gt; <link linkend="prod62">derivedColumn</link> ( &lt;COMMA&gt; <link linkend="prod62">derivedColumn</link> )* ( &lt;ID&gt; <link linkend="prod65">charVal</link> )? ( ( &lt;ID&gt; <link linkend="prod65">charVal</link> ) )? ( &lt;ID&gt; )? ( ( &lt;ID&gt; <link linkend="prod2">id</link> ) )? ( <link linkend="prod50">orderby</link> )? &lt;RPAREN&gt;</para></entry></row>
+&lt;ARRAY_AGG&gt; &lt;LPAREN&gt; <link linkend="prod23">expression</link> ( <link linkend="prod52">orderby</link> )? &lt;RPAREN&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod66" xreflabel="aggregateSymbol"/>aggregateSymbol</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod67" xreflabel="textAgg"/>textAgg</para></entry>
 <entry align="left" valign="top"><para>::= 
-( ( <link linkend="prod18">nonReserved</link> &lt;LPAREN&gt; &lt;STAR&gt; &lt;RPAREN&gt; ) | ( ( <link linkend="prod18">nonReserved</link> | &lt;ANY&gt; | &lt;SOME&gt; ) &lt;LPAREN&gt; ( &lt;DISTINCT&gt; | &lt;ALL&gt; )? <link linkend="prod21">expression</link> &lt;RPAREN&gt; ) )</para></entry></row>
+<link linkend="prod11">nonReserved</link> &lt;LPAREN&gt; &lt;FOR&gt; <link linkend="prod64">derivedColumn</link> ( &lt;COMMA&gt; <link linkend="prod64">derivedColumn</link> )* ( &lt;ID&gt; <link linkend="prod68">charVal</link> )? ( ( &lt;ID&gt; <link linkend="prod68">charVal</link> ) )? ( &lt;ID&gt; )? ( ( &lt;ID&gt; <link linkend="prod2">id</link> ) )? ( <link linkend="prod52">orderby</link> )? &lt;RPAREN&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod56" xreflabel="from"/>from</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod69" xreflabel="aggregateSymbol"/>aggregateSymbol</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;FROM&gt; ( <link linkend="prod67">tableReference</link> ( &lt;COMMA&gt; <link linkend="prod67">tableReference</link> )* )</para></entry></row>
+( ( <link linkend="prod11">nonReserved</link> &lt;LPAREN&gt; &lt;STAR&gt; &lt;RPAREN&gt; ) | ( ( <link linkend="prod11">nonReserved</link> | &lt;ANY&gt; | &lt;SOME&gt; ) &lt;LPAREN&gt; ( &lt;DISTINCT&gt; | &lt;ALL&gt; )? <link linkend="prod23">expression</link> &lt;RPAREN&gt; ) )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod67" xreflabel="tableReference"/>tableReference</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod58" xreflabel="from"/>from</para></entry>
 <entry align="left" valign="top"><para>::= 
-( ( &lt;LBRACE&gt; <link linkend="prod18">nonReserved</link> <link linkend="prod68">joinedTable</link> &lt;RBRACE&gt; ) | <link linkend="prod68">joinedTable</link> )</para></entry></row>
+&lt;FROM&gt; ( <link linkend="prod70">tableReference</link> ( &lt;COMMA&gt; <link linkend="prod70">tableReference</link> )* )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod68" xreflabel="joinedTable"/>joinedTable</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod70" xreflabel="tableReference"/>tableReference</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod69">tablePrimary</link> ( ( <link linkend="prod70">crossJoin</link> | <link linkend="prod71">qualifiedJoin</link> ) )*</para></entry></row>
+( ( &lt;LBRACE&gt; <link linkend="prod11">nonReserved</link> <link linkend="prod71">joinedTable</link> &lt;RBRACE&gt; ) | <link linkend="prod71">joinedTable</link> )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod70" xreflabel="crossJoin"/>crossJoin</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod71" xreflabel="joinedTable"/>joinedTable</para></entry>
 <entry align="left" valign="top"><para>::= 
-( ( &lt;CROSS&gt; | &lt;UNION&gt; ) &lt;JOIN&gt; <link linkend="prod69">tablePrimary</link> )</para></entry></row>
+<link linkend="prod72">tablePrimary</link> ( ( <link linkend="prod73">crossJoin</link> | <link linkend="prod74">qualifiedJoin</link> ) )*</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod71" xreflabel="qualifiedJoin"/>qualifiedJoin</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod73" xreflabel="crossJoin"/>crossJoin</para></entry>
 <entry align="left" valign="top"><para>::= 
-( ( ( &lt;RIGHT&gt; ( &lt;OUTER&gt; )? ) | ( &lt;LEFT&gt; ( &lt;OUTER&gt; )? ) | ( &lt;FULL&gt; ( &lt;OUTER&gt; )? ) | &lt;INNER&gt; )? &lt;JOIN&gt; <link linkend="prod67">tableReference</link> &lt;ON&gt; <link linkend="prod32">criteria</link> )</para></entry></row>
+( ( &lt;CROSS&gt; | &lt;UNION&gt; ) &lt;JOIN&gt; <link linkend="prod72">tablePrimary</link> )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod69" xreflabel="tablePrimary"/>tablePrimary</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod74" xreflabel="qualifiedJoin"/>qualifiedJoin</para></entry>
 <entry align="left" valign="top"><para>::= 
-( <link linkend="prod72">textTable</link> | <link linkend="prod73">arrayTable</link> | <link linkend="prod74">xmlTable</link> | <link linkend="prod75">unaryFromClause</link> | <link linkend="prod76">subqueryFromClause</link> | ( &lt;LPAREN&gt; <link linkend="prod68">joinedTable</link> &lt;RPAREN&gt; ) ) ( ( &lt;MAKEDEP&gt; ) | ( &lt;MAKENOTDEP&gt; ) )?</para></entry></row>
+( ( ( &lt;RIGHT&gt; ( &lt;OUTER&gt; )? ) | ( &lt;LEFT&gt; ( &lt;OUTER&gt; )? ) | ( &lt;FULL&gt; ( &lt;OUTER&gt; )? ) | &lt;INNER&gt; )? &lt;JOIN&gt; <link linkend="prod70">tableReference</link> &lt;ON&gt; <link linkend="prod34">criteria</link> )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod77" xreflabel="xmlSerialize"/>xmlSerialize</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod72" xreflabel="tablePrimary"/>tablePrimary</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;XMLSERIALIZE&gt; &lt;LPAREN&gt; ( <link linkend="prod18">nonReserved</link> )? <link linkend="prod21">expression</link> ( &lt;AS&gt; ( &lt;STRING&gt; | &lt;VARCHAR&gt; | &lt;CLOB&gt; ) )? &lt;RPAREN&gt;</para></entry></row>
+( <link linkend="prod75">textTable</link> | <link linkend="prod76">arrayTable</link> | <link linkend="prod77">xmlTable</link> | <link linkend="prod78">unaryFromClause</link> | <link linkend="prod79">subqueryFromClause</link> | ( &lt;LPAREN&gt; <link linkend="prod71">joinedTable</link> &lt;RPAREN&gt; ) ) ( ( &lt;MAKEDEP&gt; ) | ( &lt;MAKENOTDEP&gt; ) )?</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod18" xreflabel="nonReserved"/>nonReserved</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod80" xreflabel="xmlSerialize"/>xmlSerialize</para></entry>
+<entry align="left" valign="top"><para>::= 
+&lt;XMLSERIALIZE&gt; &lt;LPAREN&gt; ( <link linkend="prod11">nonReserved</link> )? <link linkend="prod23">expression</link> ( &lt;AS&gt; ( &lt;STRING&gt; | &lt;VARCHAR&gt; | &lt;CLOB&gt; ) )? &lt;RPAREN&gt;</para></entry></row>
+<row>
+<entry align="right" valign="top"><para><anchor id="prod11" xreflabel="nonReserved"/>nonReserved</para></entry>
 <entry align="left" valign="top"><para>::= 
 &lt;ID&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod73" xreflabel="arrayTable"/>arrayTable</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod76" xreflabel="arrayTable"/>arrayTable</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;ID&gt; &lt;LPAREN&gt; <link linkend="prod21">expression</link> <link linkend="prod18">nonReserved</link> <link linkend="prod39">createElementsWithTypes</link> &lt;RPAREN&gt; ( &lt;AS&gt; )? <link linkend="prod2">id</link></para></entry></row>
+&lt;ID&gt; &lt;LPAREN&gt; <link linkend="prod23">expression</link> <link linkend="prod11">nonReserved</link> <link linkend="prod41">createElementsWithTypes</link> &lt;RPAREN&gt; ( &lt;AS&gt; )? <link linkend="prod2">id</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod72" xreflabel="textTable"/>textTable</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod75" xreflabel="textTable"/>textTable</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;ID&gt; &lt;LPAREN&gt; <link linkend="prod21">expression</link> <link linkend="prod18">nonReserved</link> <link linkend="prod78">textColumn</link> ( &lt;COMMA&gt; <link linkend="prod78">textColumn</link> )* ( &lt;ID&gt; <link linkend="prod65">charVal</link> )? ( ( &lt;ESCAPE&gt; <link linkend="prod65">charVal</link> ) | ( &lt;ID&gt; <link linkend="prod65">charVal</link> ) )? ( &lt;ID&gt; ( <link linkend="prod79">intVal</link> )? )? ( &lt;ID&gt; <link linkend="prod79">intVal</link> )? &lt;RPAREN&gt; ( &lt;AS&gt; )? <link linkend="prod2">id</link></para></entry></row>
+&lt;ID&gt; &lt;LPAREN&gt; <link linkend="prod23">expression</link> <link linkend="prod11">nonReserved</link> <link linkend="prod81">textColumn</link> ( &lt;COMMA&gt; <link linkend="prod81">textColumn</link> )* ( &lt;ID&gt; <link linkend="prod68">charVal</link> )? ( ( &lt;ESCAPE&gt; <link linkend="prod68">charVal</link> ) | ( &lt;ID&gt; <link linkend="prod68">charVal</link> ) )? ( &lt;ID&gt; ( <link linkend="prod82">intVal</link> )? )? ( &lt;ID&gt; <link linkend="prod82">intVal</link> )? &lt;RPAREN&gt; ( &lt;AS&gt; )? <link linkend="prod2">id</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod78" xreflabel="textColumn"/>textColumn</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod81" xreflabel="textColumn"/>textColumn</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod2">id</link> <link linkend="prod35">dataType</link> ( &lt;ID&gt; <link linkend="prod79">intVal</link> )?</para></entry></row>
+<link linkend="prod2">id</link> <link linkend="prod37">dataType</link> ( &lt;ID&gt; <link linkend="prod82">intVal</link> )?</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod80" xreflabel="xmlQuery"/>xmlQuery</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod83" xreflabel="xmlQuery"/>xmlQuery</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;XMLQUERY&gt; &lt;LPAREN&gt; ( <link linkend="prod81">xmlNamespaces</link> &lt;COMMA&gt; )? <link linkend="prod1">stringVal</link> ( &lt;ID&gt; <link linkend="prod62">derivedColumn</link> ( &lt;COMMA&gt; <link linkend="prod62">derivedColumn</link> )* )? ( ( &lt;NULL&gt; | <link linkend="prod18">nonReserved</link> ) &lt;ON&gt; <link linkend="prod18">nonReserved</link> )? &lt;RPAREN&gt;</para></entry></row>
+&lt;XMLQUERY&gt; &lt;LPAREN&gt; ( <link linkend="prod84">xmlNamespaces</link> &lt;COMMA&gt; )? <link linkend="prod1">stringVal</link> ( &lt;ID&gt; <link linkend="prod64">derivedColumn</link> ( &lt;COMMA&gt; <link linkend="prod64">derivedColumn</link> )* )? ( ( &lt;NULL&gt; | <link linkend="prod11">nonReserved</link> ) &lt;ON&gt; <link linkend="prod11">nonReserved</link> )? &lt;RPAREN&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod74" xreflabel="xmlTable"/>xmlTable</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod77" xreflabel="xmlTable"/>xmlTable</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;XMLTABLE&gt; &lt;LPAREN&gt; ( <link linkend="prod81">xmlNamespaces</link> &lt;COMMA&gt; )? <link linkend="prod1">stringVal</link> ( &lt;ID&gt; <link linkend="prod62">derivedColumn</link> ( &lt;COMMA&gt; <link linkend="prod62">derivedColumn</link> )* )? ( &lt;ID&gt; <link linkend="prod82">xmlColumn</link> ( &lt;COMMA&gt; <link linkend="prod82">xmlColumn</link> )* )? &lt;RPAREN&gt; ( &lt;AS&gt; )? <link linkend="prod2">id</link></para></entry></row>
+&lt;XMLTABLE&gt; &lt;LPAREN&gt; ( <link linkend="prod84">xmlNamespaces</link> &lt;COMMA&gt; )? <link linkend="prod1">stringVal</link> ( &lt;ID&gt; <link linkend="prod64">derivedColumn</link> ( &lt;COMMA&gt; <link linkend="prod64">derivedColumn</link> )* )? ( &lt;ID&gt; <link linkend="prod85">xmlColumn</link> ( &lt;COMMA&gt; <link linkend="prod85">xmlColumn</link> )* )? &lt;RPAREN&gt; ( &lt;AS&gt; )? <link linkend="prod2">id</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod82" xreflabel="xmlColumn"/>xmlColumn</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod85" xreflabel="xmlColumn"/>xmlColumn</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod2">id</link> ( ( &lt;FOR&gt; <link linkend="prod18">nonReserved</link> ) | ( <link linkend="prod35">dataType</link> ( &lt;DEFAULT_KEYWORD&gt; <link linkend="prod21">expression</link> )? ( <link linkend="prod18">nonReserved</link> <link linkend="prod1">stringVal</link> )? ) )</para></entry></row>
+<link linkend="prod2">id</link> ( ( &lt;FOR&gt; <link linkend="prod11">nonReserved</link> ) | ( <link linkend="prod37">dataType</link> ( &lt;DEFAULT_KEYWORD&gt; <link linkend="prod23">expression</link> )? ( <link linkend="prod11">nonReserved</link> <link linkend="prod1">stringVal</link> )? ) )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod79" xreflabel="intVal"/>intVal</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod82" xreflabel="intVal"/>intVal</para></entry>
 <entry align="left" valign="top"><para>::= 
 &lt;INTEGERVAL&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod76" xreflabel="subqueryFromClause"/>subqueryFromClause</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod79" xreflabel="subqueryFromClause"/>subqueryFromClause</para></entry>
 <entry align="left" valign="top"><para>::= 
-( &lt;TABLE&gt; )? &lt;LPAREN&gt; ( <link linkend="prod10">queryExpression</link> | <link linkend="prod11">storedProcedure</link> ) &lt;RPAREN&gt; ( &lt;AS&gt; )? <link linkend="prod2">id</link></para></entry></row>
+( &lt;TABLE&gt; )? &lt;LPAREN&gt; ( <link linkend="prod12">queryExpression</link> | <link linkend="prod14">storedProcedure</link> ) &lt;RPAREN&gt; ( &lt;AS&gt; )? <link linkend="prod2">id</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod75" xreflabel="unaryFromClause"/>unaryFromClause</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod78" xreflabel="unaryFromClause"/>unaryFromClause</para></entry>
 <entry align="left" valign="top"><para>::= 
 ( &lt;ID&gt; ( ( &lt;AS&gt; )? <link linkend="prod2">id</link> )? )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod46" xreflabel="where"/>where</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod48" xreflabel="where"/>where</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;WHERE&gt; <link linkend="prod32">criteria</link></para></entry></row>
+&lt;WHERE&gt; <link linkend="prod34">criteria</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod32" xreflabel="criteria"/>criteria</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod34" xreflabel="criteria"/>criteria</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod83">compoundCritOr</link></para></entry></row>
+<link linkend="prod86">compoundCritOr</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod83" xreflabel="compoundCritOr"/>compoundCritOr</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod86" xreflabel="compoundCritOr"/>compoundCritOr</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod84">compoundCritAnd</link> ( &lt;OR&gt; <link linkend="prod84">compoundCritAnd</link> )*</para></entry></row>
+<link linkend="prod87">compoundCritAnd</link> ( &lt;OR&gt; <link linkend="prod87">compoundCritAnd</link> )*</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod84" xreflabel="compoundCritAnd"/>compoundCritAnd</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod87" xreflabel="compoundCritAnd"/>compoundCritAnd</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod85">notCrit</link> ( &lt;AND&gt; <link linkend="prod85">notCrit</link> )*</para></entry></row>
+<link linkend="prod88">notCrit</link> ( &lt;AND&gt; <link linkend="prod88">notCrit</link> )*</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod85" xreflabel="notCrit"/>notCrit</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod88" xreflabel="notCrit"/>notCrit</para></entry>
 <entry align="left" valign="top"><para>::= 
-( &lt;NOT&gt; )? <link linkend="prod86">booleanPrimary</link></para></entry></row>
+( &lt;NOT&gt; )? <link linkend="prod89">booleanPrimary</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod86" xreflabel="booleanPrimary"/>booleanPrimary</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod89" xreflabel="booleanPrimary"/>booleanPrimary</para></entry>
 <entry align="left" valign="top"><para>::= 
-( <link linkend="prod38">translateCriteria</link> | ( <link linkend="prod87">commonValueExpression</link> ( ( <link linkend="prod88">betweenCrit</link> | <link linkend="prod89">matchCrit</link> | <link linkend="prod90">setCrit</link> | <link linkend="prod91">isNullCrit</link> | <link linkend="prod92">subqueryCompareCriteria</link> | <link linkend="prod93">compareCrit</link> ) )? ) | <link linkend="prod94">existsCriteria</link> | <link linkend="prod34">hasCriteria</link> )</para></entry></row>
+( <link linkend="prod40">translateCriteria</link> | ( <link linkend="prod90">commonValueExpression</link> ( ( <link linkend="prod91">betweenCrit</link> | <link linkend="prod92">matchCrit</link> | <link linkend="prod93">setCrit</link> | <link linkend="prod94">isNullCrit</link> | <link linkend="prod95">subqueryCompareCriteria</link> | <link linkend="prod96">compareCrit</link> ) )? ) | <link linkend="prod97">existsCriteria</link> | <link linkend="prod36">hasCriteria</link> )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod95" xreflabel="operator"/>operator</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod98" xreflabel="operator"/>operator</para></entry>
 <entry align="left" valign="top"><para>::= 
 ( &lt;EQ&gt; | &lt;NE&gt; | &lt;NE2&gt; | &lt;LT&gt; | &lt;LE&gt; | &lt;GT&gt; | &lt;GE&gt; )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod93" xreflabel="compareCrit"/>compareCrit</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod96" xreflabel="compareCrit"/>compareCrit</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod95">operator</link> <link linkend="prod87">commonValueExpression</link></para></entry></row>
+<link linkend="prod98">operator</link> <link linkend="prod90">commonValueExpression</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod96" xreflabel="subquery"/>subquery</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod99" xreflabel="subquery"/>subquery</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;LPAREN&gt; ( <link linkend="prod10">queryExpression</link> | ( <link linkend="prod11">storedProcedure</link> ) ) &lt;RPAREN&gt;</para></entry></row>
+<link linkend="prod100">subqueryAndHint</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod92" xreflabel="subqueryCompareCriteria"/>subqueryCompareCriteria</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod100" xreflabel="subqueryAndHint"/>subqueryAndHint</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod95">operator</link> ( &lt;ANY&gt; | &lt;SOME&gt; | &lt;ALL&gt; ) <link linkend="prod96">subquery</link></para></entry></row>
+&lt;LPAREN&gt; ( <link linkend="prod12">queryExpression</link> | ( <link linkend="prod14">storedProcedure</link> ) ) &lt;RPAREN&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod89" xreflabel="matchCrit"/>matchCrit</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod95" xreflabel="subqueryCompareCriteria"/>subqueryCompareCriteria</para></entry>
 <entry align="left" valign="top"><para>::= 
-( &lt;NOT&gt; )? &lt;LIKE&gt; <link linkend="prod87">commonValueExpression</link> ( &lt;ESCAPE&gt; <link linkend="prod65">charVal</link> | ( &lt;LBRACE&gt; &lt;ESCAPE&gt; <link linkend="prod65">charVal</link> &lt;RBRACE&gt; ) )?</para></entry></row>
+<link linkend="prod98">operator</link> ( &lt;ANY&gt; | &lt;SOME&gt; | &lt;ALL&gt; ) <link linkend="prod99">subquery</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod65" xreflabel="charVal"/>charVal</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod92" xreflabel="matchCrit"/>matchCrit</para></entry>
+<entry align="left" valign="top"><para>::= 
+( &lt;NOT&gt; )? &lt;LIKE&gt; <link linkend="prod90">commonValueExpression</link> ( &lt;ESCAPE&gt; <link linkend="prod68">charVal</link> | ( &lt;LBRACE&gt; &lt;ESCAPE&gt; <link linkend="prod68">charVal</link> &lt;RBRACE&gt; ) )?</para></entry></row>
+<row>
+<entry align="right" valign="top"><para><anchor id="prod68" xreflabel="charVal"/>charVal</para></entry>
 <entry align="left" valign="top"><para>::= 
 <link linkend="prod1">stringVal</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod88" xreflabel="betweenCrit"/>betweenCrit</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod91" xreflabel="betweenCrit"/>betweenCrit</para></entry>
 <entry align="left" valign="top"><para>::= 
-( &lt;NOT&gt; )? &lt;BETWEEN&gt; <link linkend="prod87">commonValueExpression</link> &lt;AND&gt; <link linkend="prod87">commonValueExpression</link></para></entry></row>
+( &lt;NOT&gt; )? &lt;BETWEEN&gt; <link linkend="prod90">commonValueExpression</link> &lt;AND&gt; <link linkend="prod90">commonValueExpression</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod91" xreflabel="isNullCrit"/>isNullCrit</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod94" xreflabel="isNullCrit"/>isNullCrit</para></entry>
 <entry align="left" valign="top"><para>::= 
 &lt;IS&gt; ( &lt;NOT&gt; )? &lt;NULL&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod90" xreflabel="setCrit"/>setCrit</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod93" xreflabel="setCrit"/>setCrit</para></entry>
 <entry align="left" valign="top"><para>::= 
-( &lt;NOT&gt; )? &lt;IN&gt; ( ( <link linkend="prod96">subquery</link> ) | ( &lt;LPAREN&gt; <link linkend="prod87">commonValueExpression</link> ( &lt;COMMA&gt; <link linkend="prod87">commonValueExpression</link> )* &lt;RPAREN&gt; ) )</para></entry></row>
+( &lt;NOT&gt; )? &lt;IN&gt; ( ( <link linkend="prod100">subqueryAndHint</link> ) | ( &lt;LPAREN&gt; <link linkend="prod90">commonValueExpression</link> ( &lt;COMMA&gt; <link linkend="prod90">commonValueExpression</link> )* &lt;RPAREN&gt; ) )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod94" xreflabel="existsCriteria"/>existsCriteria</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod97" xreflabel="existsCriteria"/>existsCriteria</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;EXISTS&gt; <link linkend="prod96">subquery</link></para></entry></row>
+&lt;EXISTS&gt; <link linkend="prod100">subqueryAndHint</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod57" xreflabel="groupBy"/>groupBy</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod59" xreflabel="groupBy"/>groupBy</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;GROUP&gt; &lt;BY&gt; ( <link linkend="prod97">groupByItem</link> ( &lt;COMMA&gt; <link linkend="prod97">groupByItem</link> )* )</para></entry></row>
+&lt;GROUP&gt; &lt;BY&gt; ( <link linkend="prod101">groupByItem</link> ( &lt;COMMA&gt; <link linkend="prod101">groupByItem</link> )* )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod97" xreflabel="groupByItem"/>groupByItem</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod101" xreflabel="groupByItem"/>groupByItem</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod21">expression</link></para></entry></row>
+<link linkend="prod23">expression</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod58" xreflabel="having"/>having</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod60" xreflabel="having"/>having</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;HAVING&gt; <link linkend="prod32">criteria</link></para></entry></row>
+&lt;HAVING&gt; <link linkend="prod34">criteria</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod50" xreflabel="orderby"/>orderby</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod52" xreflabel="orderby"/>orderby</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;ORDER&gt; &lt;BY&gt; <link linkend="prod98">sortSpecification</link> ( &lt;COMMA&gt; <link linkend="prod98">sortSpecification</link> )*</para></entry></row>
+&lt;ORDER&gt; &lt;BY&gt; <link linkend="prod102">sortSpecification</link> ( &lt;COMMA&gt; <link linkend="prod102">sortSpecification</link> )*</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod98" xreflabel="sortSpecification"/>sortSpecification</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod102" xreflabel="sortSpecification"/>sortSpecification</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod99">sortKey</link> ( &lt;ASC&gt; | &lt;DESC&gt; )? ( <link linkend="prod18">nonReserved</link> <link linkend="prod18">nonReserved</link> )?</para></entry></row>
+<link linkend="prod103">sortKey</link> ( &lt;ASC&gt; | &lt;DESC&gt; )? ( <link linkend="prod11">nonReserved</link> <link linkend="prod11">nonReserved</link> )?</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod99" xreflabel="sortKey"/>sortKey</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod103" xreflabel="sortKey"/>sortKey</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod21">expression</link></para></entry></row>
+<link linkend="prod23">expression</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod51" xreflabel="limit"/>limit</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod53" xreflabel="limit"/>limit</para></entry>
 <entry align="left" valign="top"><para>::= 
 &lt;LIMIT&gt; ( &lt;INTEGERVAL&gt; | &lt;QMARK&gt; ) ( &lt;COMMA&gt; ( &lt;INTEGERVAL&gt; | &lt;QMARK&gt; ) )?</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod42" xreflabel="option"/>option</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod44" xreflabel="option"/>option</para></entry>
 <entry align="left" valign="top"><para>::= 
 &lt;OPTION&gt; ( &lt;MAKEDEP&gt; <link linkend="prod2">id</link> ( &lt;COMMA&gt; <link linkend="prod2">id</link> )* | &lt;MAKENOTDEP&gt; <link linkend="prod2">id</link> ( &lt;COMMA&gt; <link linkend="prod2">id</link> )* | &lt;NOCACHE&gt; ( <link linkend="prod2">id</link> ( &lt;COMMA&gt; <link linkend="prod2">id</link> )* )? )*</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod21" xreflabel="expression"/>expression</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod23" xreflabel="expression"/>expression</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod32">criteria</link></para></entry></row>
+<link linkend="prod34">criteria</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod87" xreflabel="commonValueExpression"/>commonValueExpression</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod90" xreflabel="commonValueExpression"/>commonValueExpression</para></entry>
 <entry align="left" valign="top"><para>::= 
-( <link linkend="prod100">plusExpression</link> ( &lt;CONCAT_OP&gt; <link linkend="prod100">plusExpression</link> )* )</para></entry></row>
+( <link linkend="prod104">plusExpression</link> ( &lt;CONCAT_OP&gt; <link linkend="prod104">plusExpression</link> )* )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod100" xreflabel="plusExpression"/>plusExpression</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod104" xreflabel="plusExpression"/>plusExpression</para></entry>
 <entry align="left" valign="top"><para>::= 
-( <link linkend="prod101">timesExpression</link> ( <link linkend="prod102">plusOperator</link> <link linkend="prod101">timesExpression</link> )* )</para></entry></row>
+( <link linkend="prod105">timesExpression</link> ( <link linkend="prod106">plusOperator</link> <link linkend="prod105">timesExpression</link> )* )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod102" xreflabel="plusOperator"/>plusOperator</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod106" xreflabel="plusOperator"/>plusOperator</para></entry>
 <entry align="left" valign="top"><para>::= 
 ( &lt;PLUS&gt; | &lt;MINUS&gt; )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod101" xreflabel="timesExpression"/>timesExpression</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod105" xreflabel="timesExpression"/>timesExpression</para></entry>
 <entry align="left" valign="top"><para>::= 
-( <link linkend="prod103">valueExpressionPrimary</link> ( <link linkend="prod104">timesOperator</link> <link linkend="prod103">valueExpressionPrimary</link> )* )</para></entry></row>
+( <link linkend="prod107">valueExpressionPrimary</link> ( <link linkend="prod108">timesOperator</link> <link linkend="prod107">valueExpressionPrimary</link> )* )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod104" xreflabel="timesOperator"/>timesOperator</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod108" xreflabel="timesOperator"/>timesOperator</para></entry>
 <entry align="left" valign="top"><para>::= 
 ( &lt;STAR&gt; | &lt;SLASH&gt; )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod103" xreflabel="valueExpressionPrimary"/>valueExpressionPrimary</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod107" xreflabel="valueExpressionPrimary"/>valueExpressionPrimary</para></entry>
 <entry align="left" valign="top"><para>::= 
-( &lt;QMARK&gt; | <link linkend="prod105">literal</link> | ( &lt;LBRACE&gt; <link linkend="prod18">nonReserved</link> <link linkend="prod106">function</link> &lt;RBRACE&gt; ) | ( <link linkend="prod64">textAgg</link> ) | ( <link linkend="prod66">aggregateSymbol</link> ) | ( <link linkend="prod66">aggregateSymbol</link> ) | ( <link linkend="prod66">aggregateSymbol</link> ) | ( <link linkend="prod63">xmlAgg</link> ) | ( <link linkend="prod106">function</link> ) | ( &lt;ID&gt; ) | <link linkend="prod96">subquery</link> | ( &lt;LPAREN&gt; <link linkend="prod21">expression</link> &lt;RPAREN&gt; ) | <link linkend="prod107">searchedCaseExpression</link> | <link linkend="prod108">caseExpression</link> )</para></entry></row>
+( &lt;QMARK&gt; | &lt;POS_REF&gt; | <link linkend="prod109">literal</link> | ( &lt;LBRACE&gt; <link linkend="prod11">nonReserved</link> <link linkend="prod110">function</link> &lt;RBRACE&gt; ) | ( <link linkend="prod67">textAgg</link> ) | ( <link linkend="prod69">aggregateSymbol</link> ) | ( <link linkend="prod69">aggregateSymbol</link> ) | ( <link linkend="prod69">aggregateSymbol</link> ) | ( <link linkend="prod65">xmlAgg</link> ) | ( <link linkend="prod66">arrayAgg</link> ) | ( <link linkend="prod110">function</link> ) | ( &lt;ID&gt; ( &lt;LSBRACE&gt; <link linkend="prod82">intVal</link> &lt;RSBRACE&gt; )? ) | <link linkend="prod99">subquery</link> | ( &lt;LPAREN&gt; <link linkend="prod23">expression</link> &lt;RPAREN&gt; ( &lt;LSBRACE&gt; <link linkend="prod82">intVal</link> &lt;RSBRACE&gt; )? ) | <link linkend="prod111">searchedCaseExpression</link> | <link linkend="prod112">caseExpression</link> )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod108" xreflabel="caseExpression"/>caseExpression</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod112" xreflabel="caseExpression"/>caseExpression</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;CASE&gt; <link linkend="prod21">expression</link> ( &lt;WHEN&gt; <link linkend="prod21">expression</link> &lt;THEN&gt; <link linkend="prod21">expression</link> )+ ( &lt;ELSE&gt; <link linkend="prod21">expression</link> )? &lt;END&gt;</para></entry></row>
+&lt;CASE&gt; <link linkend="prod23">expression</link> ( &lt;WHEN&gt; <link linkend="prod23">expression</link> &lt;THEN&gt; <link linkend="prod23">expression</link> )+ ( &lt;ELSE&gt; <link linkend="prod23">expression</link> )? &lt;END&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod107" xreflabel="searchedCaseExpression"/>searchedCaseExpression</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod111" xreflabel="searchedCaseExpression"/>searchedCaseExpression</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;CASE&gt; ( &lt;WHEN&gt; <link linkend="prod32">criteria</link> &lt;THEN&gt; <link linkend="prod21">expression</link> )+ ( &lt;ELSE&gt; <link linkend="prod21">expression</link> )? &lt;END&gt;</para></entry></row>
+&lt;CASE&gt; ( &lt;WHEN&gt; <link linkend="prod34">criteria</link> &lt;THEN&gt; <link linkend="prod23">expression</link> )+ ( &lt;ELSE&gt; <link linkend="prod23">expression</link> )? &lt;END&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod106" xreflabel="function"/>function</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod110" xreflabel="function"/>function</para></entry>
 <entry align="left" valign="top"><para>::= 
-( ( &lt;CONVERT&gt; &lt;LPAREN&gt; <link linkend="prod21">expression</link> &lt;COMMA&gt; <link linkend="prod35">dataType</link> &lt;RPAREN&gt; ) | ( &lt;CAST&gt; &lt;LPAREN&gt; <link linkend="prod21">expression</link> &lt;AS&gt; <link linkend="prod35">dataType</link> &lt;RPAREN&gt; ) | ( <link linkend="prod18">nonReserved</link> &lt;LPAREN&gt; <link linkend="prod21">expression</link> &lt;COMMA&gt; <link linkend="prod109">stringConstant</link> &lt;RPAREN&gt; ) | ( <link linkend="prod18">nonReserved</link> &lt;LPAREN&gt; <link linkend="prod110">intervalType</link> &lt;COMMA&gt; <link linkend="prod21">expression</link> &lt;COMMA&gt; <link linkend="prod21">expression</link> &lt;RPAREN&gt; ) | <link linkend="prod111">queryString</link> | ( ( &lt;LEFT&gt; | &lt;RIGHT&gt; | &lt;CHAR&gt; | &lt;USER&gt; | &lt;YEAR&gt; | &lt;MONTH&gt; | &lt;HOUR&gt; | &lt;MINUTE&gt; | &lt;SECOND&gt; | &lt;XMLCONCAT&gt; | &lt;XMLCOMMENT&gt; ) &lt;LPAREN&gt; ( <link linkend="prod21">expression</link> ( &lt;COMMA&gt; <link linkend="prod21">expression</link> )* )? &lt;RPAREN&gt; ) | ( ( &lt;INSERT&gt; ) &lt;LPAREN&gt; ( <link linkend="prod21">expression</link> ( &lt;COMMA&gt; <link linkend="prod21">expression</link> )* )? &lt;RPAREN&gt; ) | ( ( &lt;TRANSLATE&gt; ) &lt;LPAREN&gt; ( <link linkend="prod21">expression</link> ( &lt;COMMA&gt; <link linkend="prod21">expression</link> )* )? &lt;RPAREN&gt; ) | <link linkend="prod112">xmlParse</link> | <link linkend="prod113">xmlElement</link> | ( &lt;XMLPI&gt; &lt;LPAREN&gt; ( &lt;ID&gt; <link linkend="prod114">idExpression</link> | <link linkend="prod114">idExpression</link> ) ( &lt;COMMA&gt; <link linkend="prod21">expression</link> )? &lt;RPAREN&gt; ) | <link linkend="prod115">xmlForest</link> | <link linkend="prod77">xmlSerialize</link> | <link linkend="prod80">xmlQuery</link> | ( <link linkend="prod2">id</link> &lt;LPAREN&gt; ( <link linkend="prod21">expression</link> ( &lt;COMMA&gt; <link linkend="prod21">expression</link> )* )? &lt;RPAREN&gt; ) )</para></entry></row>
+( ( &lt;CONVERT&gt; &lt;LPAREN&gt; <link linkend="prod23">expression</link> &lt;COMMA&gt; <link linkend="prod37">dataType</link> &lt;RPAREN&gt; ) | ( &lt;CAST&gt; &lt;LPAREN&gt; <link linkend="prod23">expression</link> &lt;AS&gt; <link linkend="prod37">dataType</link> &lt;RPAREN&gt; ) | ( <link linkend="prod11">nonReserved</link> &lt;LPAREN&gt; <link linkend="prod23">expression</link> &lt;COMMA&gt; <link linkend="prod113">stringConstant</link> &lt;RPAREN&gt; ) | ( <link linkend="prod11">nonReserved</link> &lt;LPAREN&gt; <link linkend="prod114">intervalType</link> &lt;COMMA&gt; <link linkend="prod23">expression</link> &lt;COMMA&gt; <link linkend="prod23">expression</link> &lt;RPAREN&gt; ) | <link linkend="prod115">queryString</link> | ( ( &lt;LEFT&gt; | &lt;RIGHT&gt; | &lt;CHAR&gt; | &lt;USER&gt; | &lt;YEAR&gt; | &lt;MONTH&gt; | &lt;HOUR&gt; | &lt;MINUTE&gt; | &lt;SECOND&gt; | &lt;XMLCONCAT&gt; | &lt;XMLCOMMENT&gt; ) &lt;LPAREN&gt; ( <link linkend="prod23">expression</link> ( &lt;COMMA&gt; <link linkend="prod23">expression</link> )* )? &lt;RPAREN&gt; ) | ( ( &lt;INSERT&gt; ) &lt;LPAREN&gt; ( <link linkend="prod23">expression</link> ( &lt;COMMA&gt; <link linkend="prod23">expression</link> )* )? &lt;RPAREN&gt; ) | ( ( &lt;TRANSLATE&gt; ) &lt;LPAREN&gt; ( <link linkend="prod23">expression</link> ( &lt;COMMA&gt; <link linkend="prod23">expression</link> )* )? &lt;RPAREN&gt; ) | <link linkend="prod116">xmlParse</link> | <link linkend="prod117">xmlElement</link> | ( &lt;XMLPI&gt; &lt;LPAREN&gt; ( &lt;ID&gt; <link linkend="prod118">idExpression</link> | <link linkend="prod118">idExpression</link> ) ( &lt;COMMA&gt; <link linkend="prod23">expression</link> )? &lt;RPAREN&gt; ) | <link linkend="prod119">xmlForest</link> | <link linkend="prod80">xmlSerialize</link> | <link linkend="prod83">xmlQuery</link> | ( <link linkend="prod2">id</link> &lt;LPAREN&gt; ( <link linkend="prod23">expression</link> ( &lt;COMMA&gt; <link linkend="prod23">expression</link> )* )? &lt;RPAREN&gt; ) )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod109" xreflabel="stringConstant"/>stringConstant</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod113" xreflabel="stringConstant"/>stringConstant</para></entry>
 <entry align="left" valign="top"><para>::= 
 <link linkend="prod1">stringVal</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod112" xreflabel="xmlParse"/>xmlParse</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod116" xreflabel="xmlParse"/>xmlParse</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;XMLPARSE&gt; &lt;LPAREN&gt; <link linkend="prod18">nonReserved</link> <link linkend="prod21">expression</link> ( <link linkend="prod18">nonReserved</link> )? &lt;RPAREN&gt;</para></entry></row>
+&lt;XMLPARSE&gt; &lt;LPAREN&gt; <link linkend="prod11">nonReserved</link> <link linkend="prod23">expression</link> ( <link linkend="prod11">nonReserved</link> )? &lt;RPAREN&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod111" xreflabel="queryString"/>queryString</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod115" xreflabel="queryString"/>queryString</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod18">nonReserved</link> &lt;LPAREN&gt; <link linkend="prod21">expression</link> ( &lt;COMMA&gt; <link linkend="prod62">derivedColumn</link> )* &lt;RPAREN&gt;</para></entry></row>
+<link linkend="prod11">nonReserved</link> &lt;LPAREN&gt; <link linkend="prod23">expression</link> ( &lt;COMMA&gt; <link linkend="prod64">derivedColumn</link> )* &lt;RPAREN&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod113" xreflabel="xmlElement"/>xmlElement</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod117" xreflabel="xmlElement"/>xmlElement</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;XMLELEMENT&gt; &lt;LPAREN&gt; ( &lt;ID&gt; <link linkend="prod2">id</link> | <link linkend="prod2">id</link> ) ( &lt;COMMA&gt; <link linkend="prod81">xmlNamespaces</link> )? ( &lt;COMMA&gt; <link linkend="prod116">xmlAttributes</link> )? ( &lt;COMMA&gt; <link linkend="prod21">expression</link> )* &lt;RPAREN&gt;</para></entry></row>
+&lt;XMLELEMENT&gt; &lt;LPAREN&gt; ( &lt;ID&gt; <link linkend="prod2">id</link> | <link linkend="prod2">id</link> ) ( &lt;COMMA&gt; <link linkend="prod84">xmlNamespaces</link> )? ( &lt;COMMA&gt; <link linkend="prod120">xmlAttributes</link> )? ( &lt;COMMA&gt; <link linkend="prod23">expression</link> )* &lt;RPAREN&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod116" xreflabel="xmlAttributes"/>xmlAttributes</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod120" xreflabel="xmlAttributes"/>xmlAttributes</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;XMLATTRIBUTES&gt; &lt;LPAREN&gt; <link linkend="prod62">derivedColumn</link> ( &lt;COMMA&gt; <link linkend="prod62">derivedColumn</link> )* &lt;RPAREN&gt;</para></entry></row>
+&lt;XMLATTRIBUTES&gt; &lt;LPAREN&gt; <link linkend="prod64">derivedColumn</link> ( &lt;COMMA&gt; <link linkend="prod64">derivedColumn</link> )* &lt;RPAREN&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod115" xreflabel="xmlForest"/>xmlForest</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod119" xreflabel="xmlForest"/>xmlForest</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;XMLFOREST&gt; &lt;LPAREN&gt; ( <link linkend="prod81">xmlNamespaces</link> &lt;COMMA&gt; )? <link linkend="prod62">derivedColumn</link> ( &lt;COMMA&gt; <link linkend="prod62">derivedColumn</link> )* &lt;RPAREN&gt;</para></entry></row>
+&lt;XMLFOREST&gt; &lt;LPAREN&gt; ( <link linkend="prod84">xmlNamespaces</link> &lt;COMMA&gt; )? <link linkend="prod64">derivedColumn</link> ( &lt;COMMA&gt; <link linkend="prod64">derivedColumn</link> )* &lt;RPAREN&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod81" xreflabel="xmlNamespaces"/>xmlNamespaces</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod84" xreflabel="xmlNamespaces"/>xmlNamespaces</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;XMLNAMESPACES&gt; &lt;LPAREN&gt; <link linkend="prod117">namespaceItem</link> ( &lt;COMMA&gt; <link linkend="prod117">namespaceItem</link> )* &lt;RPAREN&gt;</para></entry></row>
+&lt;XMLNAMESPACES&gt; &lt;LPAREN&gt; <link linkend="prod121">namespaceItem</link> ( &lt;COMMA&gt; <link linkend="prod121">namespaceItem</link> )* &lt;RPAREN&gt;</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod117" xreflabel="namespaceItem"/>namespaceItem</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod121" xreflabel="namespaceItem"/>namespaceItem</para></entry>
 <entry align="left" valign="top"><para>::= 
 ( <link linkend="prod1">stringVal</link> &lt;AS&gt; <link linkend="prod2">id</link> )</para></entry></row>
 <row>
@@ -850,23 +870,23 @@
 <entry align="left" valign="top"><para>::= 
 ( &lt;DEFAULT_KEYWORD&gt; <link linkend="prod1">stringVal</link> )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod114" xreflabel="idExpression"/>idExpression</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod118" xreflabel="idExpression"/>idExpression</para></entry>
 <entry align="left" valign="top"><para>::= 
 <link linkend="prod2">id</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod19" xreflabel="dataTypeString"/>dataTypeString</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod21" xreflabel="dataTypeString"/>dataTypeString</para></entry>
 <entry align="left" valign="top"><para>::= 
 ( &lt;STRING&gt; | &lt;VARCHAR&gt; | &lt;BOOLEAN&gt; | &lt;BYTE&gt; | &lt;TINYINT&gt; | &lt;SHORT&gt; | &lt;SMALLINT&gt; | &lt;CHAR&gt; | &lt;INTEGER&gt; | &lt;LONG&gt; | &lt;BIGINT&gt; | &lt;BIGINTEGER&gt; | &lt;FLOAT&gt; | &lt;REAL&gt; | &lt;DOUBLE&gt; | &lt;BIGDECIMAL&gt; | &lt;DECIMAL&gt; | &lt;DATE&gt; | &lt;TIME&gt; | &lt;TIMESTAMP&gt; | &lt;OBJECT&gt; | &lt;BLOB&gt; | &lt;CLOB&gt; | &lt;XML&gt; )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod35" xreflabel="dataType"/>dataType</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod37" xreflabel="dataType"/>dataType</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod19">dataTypeString</link></para></entry></row>
+<link linkend="prod21">dataTypeString</link></para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod110" xreflabel="intervalType"/>intervalType</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod114" xreflabel="intervalType"/>intervalType</para></entry>
 <entry align="left" valign="top"><para>::= 
-( <link linkend="prod18">nonReserved</link> )</para></entry></row>
+( <link linkend="prod11">nonReserved</link> )</para></entry></row>
 <row>
-<entry align="right" valign="top"><para><anchor id="prod105" xreflabel="literal"/>literal</para></entry>
+<entry align="right" valign="top"><para><anchor id="prod109" xreflabel="literal"/>literal</para></entry>
 <entry align="left" valign="top"><para>::= 
 ( <link linkend="prod1">stringVal</link> | &lt;INTEGERVAL&gt; | &lt;FLOATVAL&gt; | &lt;FALSE&gt; | &lt;TRUE&gt; | &lt;UNKNOWN&gt; | &lt;NULL&gt; | ( ( &lt;BOOLEANTYPE&gt; | &lt;TIMESTAMPTYPE&gt; | &lt;DATETYPE&gt; | &lt;TIMETYPE&gt; ) <link linkend="prod1">stringVal</link> &lt;RBRACE&gt; ) )</para></entry></row>
 </tbody>

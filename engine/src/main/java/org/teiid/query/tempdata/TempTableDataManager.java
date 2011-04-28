@@ -161,7 +161,6 @@ public class TempTableDataManager implements ProcessorDataManager {
     
     public void setEventDistributor(EventDistributor eventDistributor) {
 		this.eventDistributor = eventDistributor;
-		this.processorDataManager.setEventDistributor(eventDistributor);
 	}
     
 	public TupleSource registerRequest(

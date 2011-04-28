@@ -289,4 +289,10 @@ public class Table extends ColumnSet<Schema> {
 		this.lastModified = lastModified;
 	}
 	
+	public void setTableStats(TableStats stats) {
+		if (stats.getCardinality() != null) {
+			setCardinality(stats.getCardinality());
+		}
+	}
+	
 }

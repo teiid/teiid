@@ -10,7 +10,7 @@
 <P><A HREF="http://www.teiid.org/"><IMG SRC="https://www.jboss.org/dms/teiid/images/teiid-banner.png" NAME="graphics1" ALT="Teiid" ALIGN=BOTTOM WIDTH=800></A>
 
 <H1>Teiid ${project.version} Release Notes</H1>
-<P>Teiid ${project.version} adds performance and integration features. 
+<P>Teiid ${project.version} adds performance, integration, and runtime metadata update features. 
 
 <H2>Overview</H2>
 <UL>
@@ -63,6 +63,8 @@
 
 <h4>from 7.3</h4>
 <ul>
+  <li>SYS.COLUMNS has two new columns to get statistical information: DistinctCount and NullCount
+  <li>ARRAY_AGG is now a reserved word</li>
   <li>The use of an IN procedure parameter with the name "source_name" in a multi-source model, will now be treated the parameter that controls which source
   the procedure will execute against.
   <li>Dynamic VDB functions injected via ExecutionFactory.getPushdownFunctions are now scoped to the SYS schema and have a fully qualified name that includes their source type.  For example, instead of oracle_model.relate - which was only valid against the oracle_model source, there is now the SYS.oracle_sdo.relate function that is valid for all Oracle sources.  Any fully-qualified reference to these functions will need updated. 
@@ -73,6 +75,7 @@
   <li>The default JDBC credentials are user/user - not admin/teiid
   <li>Unordered limits are no longer pushed through conditions, dup removal, or UNION not all.  This prevents the possibility of getting less results than the logical intent of the limit.  
 </ul>
+
 <h4>from 7.1</h4>
 <ul>
   <li>Subqueries are no longer allowed to be SELECT INTO.

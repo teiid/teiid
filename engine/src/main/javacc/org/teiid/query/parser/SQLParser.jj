@@ -448,7 +448,7 @@ Command command(ParseInfo info) :
 {
 	 (LOOKAHEAD(2) command = createUpdateProcedure(info) |
 	  command = userCommand(info) |
-	  command = callableStatement(info)	  
+	  command = callableStatement(info)
 	)
 	[<SEMICOLON>]
 	<EOF>
@@ -485,6 +485,31 @@ Command updateProcedure(ParseInfo info) :
 	}
 }
 
+Command alter(ParseInfo info) :
+{
+  	String target = null;
+  	QueryCommand command = null;
+  	Block block = null;
+  	TriggerAction triggerAction = null;
+}
+{
+	<ALTER>
+	(
+	 	(nonReserved("VIEW") target = id() <AS> command = queryExpression(info)) 
+	 	{
+	 	}
+		| (<PROCEDURE> target = id() <AS> block = block(info)) 
+		{
+		}
+		| (<TRIGGER> <ON> target = id() nonReserved("INSTEAD") <OF> (<INSERT>|<UPDATE>|<DELETE>) <AS> triggerAction = triggerAction(info))
+		{
+		}
+	)
+	{
+		return null;
+	} 
+}
+
 TriggerAction triggerAction(ParseInfo info) :
 {
 	Block b = null;
@@ -508,7 +533,8 @@ Command userCommand(ParseInfo info) :
 	command = update(info) |
 	command = delete(info) |
 	command = dropTable(info) |
-	command = createTempTable(info)
+	command = createTempTable(info) |
+	command = alter(info) 
 	)
 	{
 		return command;

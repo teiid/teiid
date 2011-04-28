@@ -249,5 +249,20 @@ public class Column extends BaseColumn implements Comparable<Column> {
     public void setNativeType(String nativeType) {
         this.nativeType = DataTypeManager.getCanonicalString(nativeType);
     }
+    
+    public void setColumnStats(ColumnStats stats) {
+    	if (stats.getDistinctValues() != null) {
+			setDistinctValues(stats.getDistinctValues());
+		}
+		if (stats.getNullValues() != null) {
+			setNullValues(stats.getNullValues());
+		}
+		if (stats.getMaximumValue() != null) {
+			setMaximumValue(stats.getMaximumValue());
+		}
+		if (stats.getMinimumValue() != null) {
+			setMinimumValue(stats.getMinimumValue());
+		}
+    }
 
 }

@@ -22,43 +22,47 @@
 
 package org.teiid.metadata;
 
-public class ColumnStats {
+import java.io.Serializable;
 
-    private int numDistinctValues = -1;
-    private int numNullValues = -1;
-    private String min;
-    private String max;
-    
-	public int getNumDistinctValues() {
-		return numDistinctValues;
+public class ColumnStats implements Serializable {
+
+	private static final long serialVersionUID = 7827734836519486538L;
+	
+	private Integer distinctValues;
+    private Integer nullValues;
+    private String minimumValue;
+    private String maximumValue;
+	
+	public String getMinimumValue() {
+		return minimumValue;
 	}
 	
-	public void setNumDistinctValues(int numDistinctValues) {
-		this.numDistinctValues = numDistinctValues;
+	public void setMinimumValue(String min) {
+		this.minimumValue = min;
 	}
 	
-	public int getNumNullValues() {
-		return numNullValues;
+	public String getMaximumValue() {
+		return maximumValue;
 	}
 	
-	public void setNumNullValues(int numNullValues) {
-		this.numNullValues = numNullValues;
+	public void setMaximumValue(String max) {
+		this.maximumValue = max;
 	}
-	
-	public String getMin() {
-		return min;
+
+	public Integer getDistinctValues() {
+		return distinctValues;
 	}
-	
-	public void setMin(String min) {
-		this.min = min;
+
+	public void setDistinctValues(Integer numDistinctValues) {
+		this.distinctValues = numDistinctValues;
 	}
-	
-	public String getMax() {
-		return max;
+
+	public Integer getNullValues() {
+		return nullValues;
 	}
-	
-	public void setMax(String max) {
-		this.max = max;
+
+	public void setNullValues(Integer numNullValues) {
+		this.nullValues = numNullValues;
 	}
     
 }

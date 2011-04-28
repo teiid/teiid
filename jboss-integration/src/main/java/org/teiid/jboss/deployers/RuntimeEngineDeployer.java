@@ -104,6 +104,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnStats;
+import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.TableStats;
@@ -716,10 +717,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		}
 		for (Column c : t.getColumns()) {
 			if (c.getName().equalsIgnoreCase(columnName)) {
-				c.setDistinctValues(stats.getNumDistinctValues());
-				c.setNullValues(stats.getNumNullValues());
-				c.setMaximumValue(stats.getMax());
-				c.setMinimumValue(stats.getMin());
+				c.setColumnStats(stats);
 				t.setLastModified(System.currentTimeMillis());
 				break;
 			}
@@ -733,7 +731,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		if (t == null) {
 			return;
 		}
-		t.setCardinality(stats.getCardinality());
+		t.setTableStats(stats);
 		t.setLastModified(System.currentTimeMillis());
 	}
 
@@ -757,10 +755,16 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		return s.getTables().get(tableName.toUpperCase());
 	}
 	
+	@Override
 	public EventDistributor getEventDistributor() {
 		if (this.eventDistributor != null) { 
 			return eventDistributor;
 		}
 		return this;
+	}
+	
+	@Override
+	public MetadataRepository getMetadataRepository() {
+		return this.vdbRepository.getMetadataRepository();
 	}
 }
