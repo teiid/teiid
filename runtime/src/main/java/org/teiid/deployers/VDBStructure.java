@@ -62,9 +62,7 @@ public class VDBStructure  extends AbstractVFSStructureDeployer{
 					
 					List<VirtualFile> children = file.getChildren();
 					for (VirtualFile child:children) {
-						if (!child.isLeaf()) {
-							scanDirs.add(child.getName());
-						}
+						addAllDirs(child, scanDirs, null);
 					}
 					createContext(structureContext, scanDirs.toArray(new String[scanDirs.size()]));	
 					return true;
@@ -74,6 +72,26 @@ public class VDBStructure  extends AbstractVFSStructureDeployer{
 			throw DeploymentException.rethrowAsDeploymentException("Error determining structure: " + file.getName(), e); //$NON-NLS-1$
 		}
 		return false;
+	}
+	
+	private void addAllDirs(VirtualFile file, List<String> scanDirs, String parentName) throws IOException {
+		if (!file.isLeaf()) {
+			if (parentName != null) {
+				scanDirs.add(parentName + "/" + file.getName()); //$NON-NLS-1$
+			}
+			else {
+				scanDirs.add(file.getName());
+			}
+			List<VirtualFile> children = file.getChildren();
+			for (VirtualFile child:children) {
+				if (parentName == null) {
+					addAllDirs(child, scanDirs, file.getName());
+				}
+				else {
+					addAllDirs(child, scanDirs, parentName + "/" +file.getName()); //$NON-NLS-1$
+				}
+			}
+		}
 	}
 
 }
