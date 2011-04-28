@@ -8,8 +8,8 @@
 		creating a UDF.</para>
 	<section id="define_udf">
 		<title>UDF Definition</title>
-		<para>A FunctionDefinition.xmi file provides metadata to the
-			query engine on User Defined Functions. See the Designer Documentation for more on creating a Function Definition Model.</para>
+		<para>A {FunctionDefinition}.xmi file provides metadata to the	query engine on User Defined Functions. 
+        See the Designer Documentation for more on creating a Function Definition Model.</para>
 		<itemizedlist>
 			<para>The following are used to define a UDF.</para>
 			<listitem>
@@ -56,7 +56,8 @@
 					<emphasis>Pushdown</emphasis>
 					- can be one of REQUIRED, NEVER, ALLOWED. Indicates the expected
 					pushdown behavior. If NEVER or ALLOWED are specified then a Java
-					implementation of the function should be supplied.
+					implementation of the function should be supplied. If REQUIRED is used, then user must extend the 
+                    Translator for the source and add this function to its pushdown function library.
 				</para>
 			</listitem>
 			<listitem>
@@ -78,6 +79,12 @@
 		    <para>Even pushdown required functions need to be added as a UDF to allow  
     Teiid to properly parse and resolve the function. Pushdown scalar functions differ from normal user-defined functions in that no code is provided for evaluation in the engine. 
      An exception will be raised if a pushdown required function cannot be evaluated by the appropriate source.</para>
+     
+        <note>
+            <title>Dynamic VDBs</title>
+            <para>Currently there is no provision to add UDF when you are working with the Dynamic VDBs. However, you can
+            extend the Translator to define source pushdown functions.</para>
+        </note>     
 	</section>
 	<section>
 		<title>Source Supported UDF</title>
@@ -115,8 +122,8 @@
 				<para>
 					<emphasis>Required</emphasis>
 					- extend the OracleExecutionFactory and add SCORE and CONTAINS as
-					supported functions. For this example, we'll call the class
-					MyOracleExecutionFactory. Add the
+					supported pushdown functions by either overriding or adding additional functions in "getPushDownFunctions" method. 
+                    For this example, we'll call the class MyOracleExecutionFactory. Add the
 					<code>org.teiid.translator.Translator</code>
 					annotation to the class, e.g.
 					<code>@Translator(name="myoracle")</code>
@@ -133,7 +140,9 @@
 				<para>
 					Create a new translator jar containing your custom
 					ExecutionFactory. Refer to <xref linkend="translator_package"/> and 
-					<xref linkend="translator_deploy"/> for instructions on using the JAR file.
+					<xref linkend="translator_deploy"/> for instructions on using the JAR file. Once this is extended 
+                    translator is deployed in the Teiid Server, use "myoracle" as
+                    translator name instead of the "oracle" in your VDB's Oracle source configuration.
 					</para>
 			</listitem>
 		</itemizedlist>
