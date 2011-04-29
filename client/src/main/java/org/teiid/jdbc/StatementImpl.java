@@ -163,7 +163,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     protected Map outParamIndexMap = new HashMap();
     
     private static Pattern TRANSACTION_STATEMENT = Pattern.compile("\\s*(commit|rollback|(start\\s*transaction))\\s*;?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    private static Pattern SET_STATEMENT = Pattern.compile("\\s*set\\s*(\\w+)\\s*(\\w*);?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    private static Pattern SET_STATEMENT = Pattern.compile("\\s*set\\s*(\\w+)\\s*([^;]*);?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     private static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s*(\\w*);?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     /**
      * Factory Constructor 

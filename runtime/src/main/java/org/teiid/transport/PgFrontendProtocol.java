@@ -31,6 +31,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Properties;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -209,6 +210,10 @@ public class PgFrontendProtocol extends FrameDecoder {
         this.user = props.getProperty("user");
         this.databaseName = props.getProperty("database");
         String clientEncoding = props.getProperty("client_encoding", "UTF-8");
+        props.setProperty("client_encoding", clientEncoding);
+        props.setProperty("default_transaction_isolation", "read committed");
+        props.setProperty("DateStyle", "ISO");
+        props.setProperty("TimeZone", Calendar.getInstance().getTimeZone().getDisplayName());
         Charset cs = PGCharsetConverter.getCharset(clientEncoding);
         if (cs != null) {
         	this.encoding = cs;

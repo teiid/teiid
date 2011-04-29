@@ -417,7 +417,9 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			tag = "COMMIT";
 		} else if (sql.startsWith("ROLLBACK")) {
 			tag = "ROLLBACK";
-		} else {
+		} else if (sql.startsWith("SET ")) {
+			tag = "SET";
+		}else {
 			trace("Check command tag:", sql);
 			tag = "UPDATE " + updateCount;
 		}

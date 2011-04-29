@@ -25,7 +25,9 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -179,6 +181,13 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			info.put("password", password); //$NON-NLS-1$
 			this.connection =  (ConnectionImpl)driver.connect(url, info);
 			int hash = this.connection.getConnectionId().hashCode();
+			Enumeration keys = this.props.propertyNames();
+			while (keys.hasMoreElements()) {
+				String key = (String)keys.nextElement();
+				Statement stmt = this.connection.createStatement();
+				stmt.execute("SET " + key + " '" + this.props.getProperty(key) + "'"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				stmt.close();
+			}
 			this.client.authenticationSucess(hash, hash);
 			ready();
 		} catch (SQLException e) {
@@ -674,8 +683,15 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			        			try {
 			        				ResultsFuture<Void> result = null;
 					                if (future.get()) {
-					                	result = new ResultsFuture<Void>();
-			                            client.sendResults(sql, stmt.getResultSet(), result, true);
+					                	if (stmt.getResultSet() != null) {
+						                	result = new ResultsFuture<Void>();
+				                            client.sendResults(sql, stmt.getResultSet(), result, true);
+					                	}
+					                	else {
+					                		// handles the "SET" commands.
+						                	result = ResultsFuture.NULL_FUTURE;
+						                	client.sendUpdateCount(sql, 0);
+					                	}					                	
 					                } else {
 					                	result = ResultsFuture.NULL_FUTURE;
 					                	client.sendUpdateCount(sql, stmt.getUpdateCount());
