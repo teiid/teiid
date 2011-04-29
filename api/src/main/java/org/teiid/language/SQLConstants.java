@@ -106,6 +106,9 @@ public class SQLConstants {
 		public static final String TEXTAGG = "TEXTAGG"; //$NON-NLS-1$
 		
 		public static final String ARRAYTABLE = "ARRAYTABLE"; //$NON-NLS-1$
+		
+		public static final String VIEW = "VIEW"; //$NON-NLS-1$
+		public static final String INSTEAD = "INSTEAD"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {

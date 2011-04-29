@@ -627,16 +627,15 @@ public class ResolverUtil {
             
             SingleElementSymbol symbol = (SingleElementSymbol)selectSymbol;
             
-            if(!DataTypeManager.DefaultDataClasses.NULL.equals(symbol.getType()) && symbol.getType() != null) {
-                continue;
-            }
-                        
-            setSymbolType(symbol, DataTypeManager.DefaultDataClasses.STRING);
+            setTypeIfNull(symbol, DataTypeManager.DefaultDataClasses.STRING);
         }
     }
 
-	public static void setSymbolType(SingleElementSymbol symbol,
+	public static void setTypeIfNull(SingleElementSymbol symbol,
 			Class<?> replacement) {
+		if(!DataTypeManager.DefaultDataClasses.NULL.equals(symbol.getType()) && symbol.getType() != null) {
+            return;
+        }
 		if(symbol instanceof AliasSymbol) {
             symbol = ((AliasSymbol)symbol).getSymbol();
         }
@@ -659,10 +658,7 @@ public class ResolverUtil {
 		    }
 		} else if(symbol instanceof ElementSymbol) {
 		    ElementSymbol elementSymbol = (ElementSymbol)symbol;
-		    Class elementType = elementSymbol.getType();
-		    if(elementType != null && elementType.equals(DataTypeManager.DefaultDataClasses.NULL)) {
-		        elementSymbol.setType(replacement);
-		    }
+	        elementSymbol.setType(replacement);
 		}
 	}
     

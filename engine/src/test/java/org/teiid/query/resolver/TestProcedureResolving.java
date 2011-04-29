@@ -51,6 +51,7 @@ import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
@@ -66,7 +67,7 @@ public class TestProcedureResolving {
         FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
         FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode(procedure); //$NON-NLS-1$ 
+        QueryNode sq2n1 = new QueryNode(procedure); 
         FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
 
         metadata.getStore().addObject(rs2);
@@ -117,13 +118,13 @@ public class TestProcedureResolving {
         assertNull(tempIDs.get("LOOPCURSOR")); //$NON-NLS-1$
         assertNull(tempIDs.get("LOOPCURSOR2")); //$NON-NLS-1$
         
-        Command subCommand = command.getSubCommands().get(0);
+        Command subCommand = CommandCollectorVisitor.getCommands(command).get(0);
         tempIDs = subCommand.getTemporaryMetadata();
         assertNotNull(tempIDs);
         assertNull(tempIDs.get("LOOPCURSOR")); //$NON-NLS-1$
         assertNull(tempIDs.get("LOOPCURSOR2")); //$NON-NLS-1$
 
-        subCommand = command.getSubCommands().get(1);
+        subCommand = CommandCollectorVisitor.getCommands(command).get(1);
         tempIDs = subCommand.getTemporaryMetadata();
         assertNotNull(tempIDs);
         assertNotNull(tempIDs.get("LOOPCURSOR")); //$NON-NLS-1$
@@ -1054,7 +1055,7 @@ public class TestProcedureResolving {
         procedure = procedure + "VARIABLES.NLEVELS = SELECT COUNT(*) FROM (SELECT oi.e1 AS Col1, oi.e2 AS Col2, oi.e3 FROM pm1.g2 AS oi) AS TOBJ, pm2.g2 AS TModel WHERE TModel.e3 = TOBJ.e3;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
         
-        TestResolver.helpResolve(procedure, FakeMetadataFactory.example1Cached(), null);
+        TestResolver.helpResolve(procedure, FakeMetadataFactory.example1Cached());
     }
     
     @Test public void testIssue174102() throws Exception {
@@ -1065,7 +1066,7 @@ public class TestProcedureResolving {
         procedure = procedure + "EXECUTE STRING ('SELECT e1 FROM pm1.sq2 ' || crit ) AS e1 string INTO #TTable;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
         
-        TestResolver.helpResolve(procedure, FakeMetadataFactory.example1Cached(), null);
+        TestResolver.helpResolve(procedure, FakeMetadataFactory.example1Cached());
     }
     
     // Address Issue 174519.
@@ -1573,7 +1574,7 @@ public class TestProcedureResolving {
         .append("\n  y = '1';") //$NON-NLS-1$
         .append("\nEND"); //$NON-NLS-1$
         
-        TestResolver.helpResolve(proc.toString(), FakeMetadataFactory.example1Cached(), null); 
+        TestResolver.helpResolve(proc.toString(), FakeMetadataFactory.example1Cached()); 
     }
     
     @Test public void testVDBQualified() throws Exception {

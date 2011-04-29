@@ -40,13 +40,6 @@ public class BatchedUpdateCommand extends Command {
     protected List<Command> commands;
     private List<VariableContext> variableContexts; //processing state
     
-    /** 
-     * @see org.teiid.query.sql.lang.Command#getSubCommands()
-     */
-    public List<Command> getSubCommands() {
-        return commands;
-    }
-    
     /**
      *  
      * @param updateCommands
@@ -62,7 +55,7 @@ public class BatchedUpdateCommand extends Command {
      * @since 4.2
      */
     public List<Command> getUpdateCommands() {
-        return getSubCommands();
+        return commands;
     }
 
     /** 

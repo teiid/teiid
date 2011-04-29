@@ -754,17 +754,6 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return getDriverMajorVersion()+"."+getDriverMinorVersion (); //$NON-NLS-1$
     }
 
-    /**
-     * <p>This method gets a description of the forignkey columns that reference the
-     * primary key columns in the given table.  Catalog and schema names are not
-     * used to narrow down the search, but they should match the virtualdatabasename
-     * and version used to obtain this driver connection.
-     * @param name of the catalog which contains the given table.
-     * @param schema name which contains the given table.
-     * @param table name which contains the primary keys.
-     * @return ResultSet object giving the exported key info.
-     * @throws SQLException if there is an error obtaining server results
-     */
     public ResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException {
         if (catalog == null) {
         	catalog = PERCENT;
@@ -824,17 +813,6 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return DOUBLE_QUOTE;
     }
 
-    /**
-     * <p>Gets a description of the primary key columns that are referenced by the
-     * foreign key columns in the given table. Catalog and schema names are not
-     * used to narrow down the search, but they should match the virtualdatabasename
-     * and version used to obtain this driver connection.
-     * @param name of the catalog which contains the given table.
-     * @param schema name which contains the given table.
-     * @param table name which contains the foreign keys.
-     * @return ResultSet object giving the imported key info.
-     * @throws SQLException if there is an error obtaining server results
-     */
     public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException {
     	if (catalog == null) {
         	catalog = PERCENT;
@@ -875,17 +853,6 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         }
     }
 
-    /**
-     * <p>Gets a description of the indexes that are present on a given table.
-     *
-     * @param name of the catalog which contains the given table.
-     * @param schema name which contains the given table.
-     * @param table name which contains the indexes.
-     * @param boolean indicating if unique key info needs to be returned.
-     * @param boolean indicating if approximate value are to be allowed.
-     * @return ResultSet object containing metadata info of index columns.
-     * @throws SQLException if catalog/schema info does not match for this connection.
-     */
     public ResultSet getIndexInfo(String catalog, String schema, String table, boolean unique, boolean approximate) throws SQLException {
         if (catalog == null) {
         	catalog = PERCENT;

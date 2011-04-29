@@ -45,7 +45,7 @@ public class TestAliasGenerator {
                           String expected, 
                           boolean aliasGroups,
                           boolean stripColumnAliases, QueryMetadataInterface metadata) throws TeiidComponentException, TeiidProcessingException {
-        Command command = TestResolver.helpResolve(sql, metadata, null);
+        Command command = TestResolver.helpResolve(sql, metadata);
         command = QueryRewriter.rewrite(command, metadata, null);
         command.acceptVisitor(new AliasGenerator(aliasGroups, stripColumnAliases));
         assertEquals(expected, command.toString());

@@ -39,7 +39,7 @@ import org.teiid.jdbc.FakeServer;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.MetadataRepository.TriggerOperation;
+import org.teiid.metadata.Table.TriggerOperation;
 
 @SuppressWarnings("nls")
 public class TestMetadataUpdates {
@@ -72,7 +72,7 @@ public class TestMetadataUpdates {
     			return null;
     		}
 		});
-    	Mockito.stub(repo.getInsteadOfTriggerDefinition(Mockito.anyString(), Mockito.anyInt(), (Table)Mockito.anyObject(), (TriggerOperation) Mockito.anyObject())).toAnswer(new Answer<String>() {
+    	Mockito.stub(repo.getInsteadOfTriggerDefinition(Mockito.anyString(), Mockito.anyInt(), (Table)Mockito.anyObject(), (Table.TriggerOperation) Mockito.anyObject())).toAnswer(new Answer<String>() {
     		@Override
     		public String answer(InvocationOnMock invocation) throws Throwable {
 				return "for each row select 1/0; begin end";

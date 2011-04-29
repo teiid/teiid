@@ -260,7 +260,7 @@ public class TestXMLProcessor {
 
        List rsElements12260 = FakeMetadataFactory.createElements(rs12260, 
            new String[] { "itemNum", "itemName", "itemQuantity", "itemStatus", "numSuppliers" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-           new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });        
+           new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });        
     
 // ======================================================================================================================
 // ALTERNATE METADATA E (mapping class w/ Union)

@@ -59,7 +59,7 @@ public class TestTriggerActions {
 		
 		CommandContext context = createCommandContext();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata, null), metadata, new DefaultCapabilitiesFinder(caps), context);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
         List[] expected = new List[] {Arrays.asList(1)};
     	helpProcess(plan, context, dm, expected);
 	}
@@ -78,7 +78,7 @@ public class TestTriggerActions {
 		FakeDataStore.addTable("pm1.g1", dm, metadata);
 		CommandContext context = createCommandContext();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata, null), metadata, new DefaultCapabilitiesFinder(caps), context);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
         List[] expected = new List[] {Arrays.asList(6)};
     	helpProcess(plan, context, dm, expected);
 	}
@@ -98,7 +98,7 @@ public class TestTriggerActions {
 		
 		CommandContext context = createCommandContext();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata, null), metadata, new DefaultCapabilitiesFinder(caps), context);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
         List[] expected = new List[] {Arrays.asList(1)};
     	helpProcess(plan, context, dm, expected);
 	}
@@ -118,7 +118,7 @@ public class TestTriggerActions {
 		
 		CommandContext context = createCommandContext();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata, null), metadata, new DefaultCapabilitiesFinder(caps), context);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
         List[] expected = new List[] {Arrays.asList(1)};
     	helpProcess(plan, context, dm, expected);
     	assertEquals("UPDATE pm1.g1 SET e2 = 5 WHERE e2 = 2", dm.getQueries().get(0));
@@ -139,7 +139,7 @@ public class TestTriggerActions {
 		
 		CommandContext context = createCommandContext();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata, null), metadata, new DefaultCapabilitiesFinder(caps), context);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
         List[] expected = new List[] {Arrays.asList(1)};
     	helpProcess(plan, context, dm, expected);
     	assertEquals("UPDATE pm1.g1 SET e2 = 1 WHERE e2 = 2", dm.getQueries().get(0));

@@ -161,7 +161,7 @@ public class TestProjectIntoNode {
             	}
             } else if ( command instanceof BatchedUpdateCommand ){
                 BatchedUpdateCommand bu = (BatchedUpdateCommand)command;
-                List batch = bu.getSubCommands();
+                List<Command> batch = bu.getUpdateCommands();
   
                 batchSize = batch.size();
                 assertEquals("Unexpected batch on call " + callCount, expectedBatchSize, batchSize); //$NON-NLS-1$

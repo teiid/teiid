@@ -128,8 +128,9 @@ public class FakeDataManager implements ProcessorDataManager {
 		} else if (command instanceof ProcedureContainer) {
 			group = ((ProcedureContainer) command).getGroup();
 		} else if ( command instanceof BatchedUpdateCommand ) {
-    		if ( command.getSubCommands().get(0) instanceof Update ) {
-    			group = ((Update)command.getSubCommands().get(0)).getGroup();
+			BatchedUpdateCommand buc = (BatchedUpdateCommand)command;
+    		if ( buc.getUpdateCommands().get(0) instanceof Update ) {
+    			group = ((Update)buc.getUpdateCommands().get(0)).getGroup();
     		}
     		if (this.recordingCommands) {
             	for ( Iterator<Command> it = ((BatchedUpdateCommand) command).getUpdateCommands().iterator(); it.hasNext(); ) {

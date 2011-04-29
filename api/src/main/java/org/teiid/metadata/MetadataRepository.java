@@ -27,12 +27,6 @@ package org.teiid.metadata;
  */
 public interface MetadataRepository {
 	
-	public enum TriggerOperation {
-		INSERT,
-		UPDATE,
-		DELETE
-	}
-	
 	/**
 	 * Returns an updated view definition (AS SQL only) or null if the current view definition should be used
 	 * should be used.
@@ -52,7 +46,7 @@ public interface MetadataRepository {
 	 * Returns an updated trigger definition (FOR EACH ROW ...) or null if the current view definition should be used
 	 * should be used.
 	 */
-	String getInsteadOfTriggerDefinition(String vdbName, int vdbVersion, Table table, TriggerOperation triggerOperation);
+	String getInsteadOfTriggerDefinition(String vdbName, int vdbVersion, Table table, Table.TriggerOperation triggerOperation);
 	
 	/**
 	 * 
@@ -62,7 +56,7 @@ public interface MetadataRepository {
 	 * @param triggerOperation
 	 * @param triggerDefinition
 	 */
-	void setInsteadOfTriggerDefinition(String vdbName, int vdbVersion, Table table, TriggerOperation triggerOperation, String triggerDefinition);
+	void setInsteadOfTriggerDefinition(String vdbName, int vdbVersion, Table table, Table.TriggerOperation triggerOperation, String triggerDefinition);
 	
 	/**
 	 * Returns an updated procedure definition (CREATE PROCEDURE ...) or null if the current procedure definition should be used

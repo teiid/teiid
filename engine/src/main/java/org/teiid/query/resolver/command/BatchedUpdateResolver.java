@@ -22,8 +22,6 @@
 
 package org.teiid.query.resolver.command;
 
-import java.util.Iterator;
-
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
@@ -45,8 +43,7 @@ public class BatchedUpdateResolver implements CommandResolver {
 
         BatchedUpdateCommand batchedUpdateCommand = (BatchedUpdateCommand) command;
         
-        for (Iterator i = batchedUpdateCommand.getSubCommands().iterator(); i.hasNext();) {
-            Command subCommand = (Command)i.next();
+        for (Command subCommand : batchedUpdateCommand.getUpdateCommands()) {
             QueryResolver.setChildMetadata(subCommand, command);
             QueryResolver.resolveCommand(subCommand, metadata.getMetadata());
         }

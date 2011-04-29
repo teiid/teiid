@@ -53,7 +53,6 @@ import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.TableStats;
-import org.teiid.metadata.MetadataRepository.TriggerOperation;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.runtime.RuntimePlugin;
@@ -133,15 +132,15 @@ public class VDBRepository implements Serializable{
 							t.setSelectTransformation(def);
 						}
 						if (t.supportsUpdate()) {
-							def = metadataRepository.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, TriggerOperation.INSERT);
+							def = metadataRepository.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, Table.TriggerOperation.INSERT);
 							if (def != null) {
 								t.setInsertPlan(def);
 							}
-							def = metadataRepository.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, TriggerOperation.UPDATE);
+							def = metadataRepository.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, Table.TriggerOperation.UPDATE);
 							if (def != null) {
 								t.setUpdatePlan(def);
 							}
-							def = metadataRepository.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, TriggerOperation.DELETE);
+							def = metadataRepository.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, Table.TriggerOperation.DELETE);
 							if (def != null) {
 								t.setDeletePlan(def);
 							}

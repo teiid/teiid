@@ -6168,15 +6168,11 @@ public class TestProcessor {
         FakeMetadataObject v1 = FakeMetadataFactory.createVirtualModel("v1"); //$NON-NLS-1$
         QueryNode n1 = new QueryNode("SELECT convert(a, integer) as c, b FROM p1.t"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vt1 = FakeMetadataFactory.createVirtualGroup("v1.t1", v1, n1); //$NON-NLS-1$
-        List vte1 = FakeMetadataFactory.createElements(vt1, new String[] {"c", "b" }, new String[] { "string", "string" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-
-        QueryNode n2 = new QueryNode("SELECT convert(a, integer) as c, b FROM p1.t"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vt2 = FakeMetadataFactory.createVirtualGroup("v1.t2", v1, n2); //$NON-NLS-1$
-        List vte2 = FakeMetadataFactory.createElements(vt2, new String[] {"c", "b" }, new String[] { "string", "string" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        List vte1 = FakeMetadataFactory.createElements(vt1, new String[] {"c", "b" }, new String[] { "integer", "string" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
         QueryNode n3 = new QueryNode("SELECT c, b FROM v1.t1 UNION ALL SELECT c, b FROM v1.t1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vu1 = FakeMetadataFactory.createVirtualGroup("v1.u1", v1, n3); //$NON-NLS-1$
-        List vtu1 = FakeMetadataFactory.createElements(vu1, new String[] {"c", "b" }, new String[] { "string", "string" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        List vtu1 = FakeMetadataFactory.createElements(vu1, new String[] {"c", "b" }, new String[] { "integer", "string" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         
         FakeMetadataStore store = new FakeMetadataStore();
         store.addObject(p1);
@@ -6185,8 +6181,6 @@ public class TestProcessor {
         store.addObject(v1);
         store.addObject(vt1);
         store.addObjects(vte1);
-        store.addObject(vt2);
-        store.addObjects(vte2);
         store.addObject(vu1);
         store.addObjects(vtu1);
         return new FakeMetadataFacade(store);

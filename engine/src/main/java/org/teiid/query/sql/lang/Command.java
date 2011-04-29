@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -103,6 +102,12 @@ public abstract class Command implements LanguageObject {
     public static final int TYPE_DROP = 12;
     
     public static final int TYPE_TRIGGER_ACTION = 13;
+    
+    public static final int TYPE_ALTER_VIEW = 14;
+    
+    public static final int TYPE_ALTER_PROC = 15;
+    
+    public static final int TYPE_ALTER_TRIGGER = 16;
 
     private static List<SingleElementSymbol> updateCommandSymbol;
     
@@ -144,15 +149,6 @@ public abstract class Command implements LanguageObject {
 		this.correlatedReferences = correlatedReferences;
 	}
 
-    /**
-     * Gets the subCommands (both embedded and non-embedded) under this command.  In general the returned list
-     * is not safe to manipulate (see @link#CommandContainer insead) 
-     * @return
-     */
-    public List<Command> getSubCommands() {
-        return CommandCollectorVisitor.getCommands(this);
-    }
-    
     public void setTemporaryMetadata(Map metadata) {
         this.tempGroupIDs = metadata;
     }
@@ -264,9 +260,7 @@ public abstract class Command implements LanguageObject {
         
         // Add children recursively
         tabLevel++;
-        Iterator iter = getSubCommands().iterator();
-        while(iter.hasNext()) {
-            Command subCommand = (Command) iter.next();
+        for (Command subCommand : CommandCollectorVisitor.getCommands(this)) {
             subCommand.printCommandTree(str, tabLevel);
         }
     }

@@ -38,6 +38,9 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.lang.AlterProcedure;
+import org.teiid.query.sql.lang.AlterTrigger;
+import org.teiid.query.sql.lang.AlterView;
 import org.teiid.query.sql.lang.ArrayTable;
 import org.teiid.query.sql.lang.AtomicCriteria;
 import org.teiid.query.sql.lang.BetweenCriteria;
@@ -1954,6 +1957,55 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(AS);
         append(SPACE);
         outputDisplayName(obj.getName());
+    }
+    
+    @Override
+    public void visit(AlterProcedure alterProcedure) {
+    	append(ALTER);
+    	append(SPACE);
+    	append(PROCEDURE);
+    	append(SPACE);
+    	append(alterProcedure.getTarget());
+    	beginClause(1);
+    	append(AS);
+    	addCacheHint(alterProcedure.getCacheHint());
+    	append(alterProcedure.getDefinition().getBlock());
+    }
+    
+    @Override
+    public void visit(AlterTrigger alterTrigger) {
+    	append(ALTER);
+    	append(SPACE);
+    	append(TRIGGER);
+    	append(SPACE);
+    	append(ON);
+    	append(SPACE);
+    	append(alterTrigger.getTarget());
+    	beginClause(0);
+    	append(NonReserved.INSTEAD);
+    	append(SPACE);
+    	append(OF);
+    	append(SPACE);
+    	append(alterTrigger.getOperation());
+    	beginClause(0);
+    	append(AS);
+    	append("\n"); //$NON-NLS-1$
+        addTabs(0);
+    	append(alterTrigger.getDefinition());
+    }
+    
+    @Override
+    public void visit(AlterView alterView) {
+    	append(ALTER);
+    	append(SPACE);
+    	append(NonReserved.VIEW);
+    	append(SPACE);
+    	append(alterView.getTarget());
+    	beginClause(0);
+    	append(AS);
+    	append("\n"); //$NON-NLS-1$
+        addTabs(0);
+    	append(alterView.getDefinition());
     }
 
     public static String escapeSinglePart( String part ) {

@@ -24,7 +24,6 @@ package org.teiid.query.resolver;
 
 import junit.framework.TestCase;
 
-import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Command;
@@ -42,7 +41,7 @@ import org.teiid.query.unittest.FakeMetadataFactory;
 public class TestXMLResolver extends TestCase {
     
     public Command helpResolve(String sql) {
-        Command cmd = TestResolver.helpResolve(sql, FakeMetadataFactory.example1Cached(), AnalysisRecord.createNonRecordingRecord());
+        Command cmd = TestResolver.helpResolve(sql, FakeMetadataFactory.example1Cached());
         ResolverUtil.fullyQualifyElements(cmd);
         return cmd;
     }

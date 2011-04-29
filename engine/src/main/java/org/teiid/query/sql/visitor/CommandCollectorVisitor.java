@@ -27,6 +27,9 @@ import java.util.List;
 
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.lang.AlterProcedure;
+import org.teiid.query.sql.lang.AlterTrigger;
+import org.teiid.query.sql.lang.AlterView;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.ExistsCriteria;
@@ -114,6 +117,21 @@ public class CommandCollectorVisitor extends LanguageVisitor {
     
     public void visit(BatchedUpdateCommand obj) {
         this.commands.addAll(obj.getUpdateCommands());
+    }
+    
+    @Override
+    public void visit(AlterProcedure alterProcedure) {
+    	this.commands.add(alterProcedure.getDefinition());
+    }
+    
+    @Override
+    public void visit(AlterTrigger alterTrigger) {
+    	this.commands.add(alterTrigger.getDefinition());
+    }
+    
+    @Override
+    public void visit(AlterView alterView) {
+    	this.commands.add(alterView.getDefinition());
     }
     
     /**

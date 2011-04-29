@@ -73,26 +73,24 @@ public class XMLQueryResolver implements CommandResolver {
 		query.setIsXML(true);
 
 		// get the group on this query
-		Collection groups = GroupCollectorVisitor.getGroups(query, true);
-		GroupSymbol group = (GroupSymbol) groups.iterator().next();
+		Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(query, true);
+		GroupSymbol group = groups.iterator().next();
 
 		//external groups
         GroupContext externalGroups = query.getExternalGroupContexts();
 
 		// valid elements for select
-		List validSelectElems = getElementsInDocument(group, metadata);
+		List<ElementSymbol> validSelectElems = getElementsInDocument(group, metadata);
 		resolveXMLSelect(query, group, validSelectElems, metadata);
 
 		// valid elements for criteria and order by
-		Collection validCriteriaElements = collectValidCriteriaElements(group, metadata);
+		Collection<ElementSymbol> validCriteriaElements = collectValidCriteriaElements(group, metadata);
 
 		Criteria crit = query.getCriteria();
 		OrderBy orderBy = query.getOrderBy();
         
-        List commands = CommandCollectorVisitor.getCommands(query);
-        for (Iterator i = commands.iterator(); i.hasNext();) {
-            Command subCommand = (Command)i.next();
-            
+        List<Command> commands = CommandCollectorVisitor.getCommands(query);
+        for (Command subCommand : commands) {
             QueryResolver.setChildMetadata(subCommand, command);
             
             QueryResolver.resolveCommand(subCommand, metadata.getMetadata());
@@ -130,7 +128,7 @@ public class XMLQueryResolver implements CommandResolver {
      * @throws QueryMetadataException if resolving fails
      * @throws TeiidComponentException if resolving fails
      */
-	void resolveXMLSelect(Query query, GroupSymbol group, List validElements, QueryMetadataInterface metadata)
+	void resolveXMLSelect(Query query, GroupSymbol group, List<ElementSymbol> validElements, QueryMetadataInterface metadata)
 		throws QueryMetadataException, TeiidComponentException, QueryResolverException {
         
         GroupContext externalGroups = null;
@@ -188,7 +186,7 @@ public class XMLQueryResolver implements CommandResolver {
                     resolveElement(elementSymbol, validElements, externalGroups, metadata);
 
                     // now find all the elements under this node and set as elements.
-                    List elementsInNode = getElementsUnderNode(elementSymbol, validElements, metadata);
+                    List<ElementSymbol> elementsInNode = getElementsUnderNode(elementSymbol, validElements, metadata);
                     ((AllInGroupSymbol)ss).setElementSymbols(elementsInNode);
                 }
 			} else if (ss instanceof AllSymbol) {
@@ -217,11 +215,11 @@ public class XMLQueryResolver implements CommandResolver {
      * @throws TeiidComponentException
      * @throws QueryResolverException
      */
-    public static Collection collectValidCriteriaElements(GroupSymbol group, QueryMetadataInterface metadata)
+    public static Collection<ElementSymbol> collectValidCriteriaElements(GroupSymbol group, QueryMetadataInterface metadata)
         throws QueryMetadataException, TeiidComponentException, QueryResolverException {
 
         // Get all groups and elements
-        List validElements = getElementsInDocument(group, metadata);
+        List<ElementSymbol> validElements = getElementsInDocument(group, metadata);
 
         // Create GroupSymbol for temp groups and add to groups
         Collection tempGroups = metadata.getXMLTempGroups(group.getMetadataID());
@@ -257,14 +255,12 @@ public class XMLQueryResolver implements CommandResolver {
      * @param metadata QueryMetadataInterface the metadata(for resolving criteria on temp groups)
      * @throws QueryResolverException if any of the above fail conditions are met
      */
-    public static void resolveXMLCriteria(Criteria criteria,GroupContext externalGroups, Collection validElements, QueryMetadataInterface metadata)
+    public static void resolveXMLCriteria(Criteria criteria,GroupContext externalGroups, Collection<ElementSymbol> validElements, QueryMetadataInterface metadata)
         throws QueryMetadataException, TeiidComponentException, QueryResolverException {
 
         // Walk through each element in criteria and check against valid elements
-        Collection critElems = ElementCollectorVisitor.getElements(criteria, false);
-        Iterator critElemIter = critElems.iterator();
-        while(critElemIter.hasNext()) {
-            ElementSymbol critElem = (ElementSymbol) critElemIter.next();
+        Collection<ElementSymbol> critElems = ElementCollectorVisitor.getElements(criteria, false);
+        for (ElementSymbol critElem : critElems) {
             if(! critElem.isExternalReference()) {
                 resolveElement(critElem, validElements, externalGroups, metadata);
             }
@@ -282,14 +278,12 @@ public class XMLQueryResolver implements CommandResolver {
      * @throws QueryMetadataException if resolving fails
      * @throws TeiidComponentException if resolving fails
      */
-    static void resolveXMLOrderBy(OrderBy orderBy, GroupContext externalGroups, Collection validElements, QueryMetadataInterface metadata)
+    static void resolveXMLOrderBy(OrderBy orderBy, GroupContext externalGroups, Collection<ElementSymbol> validElements, QueryMetadataInterface metadata)
         throws QueryMetadataException, TeiidComponentException, QueryResolverException {
 
         // Walk through each element in OrderBy clause and check against valid elements
-        Collection orderElems = ElementCollectorVisitor.getElements(orderBy, false);
-        Iterator orderElemIter = orderElems.iterator();
-        while(orderElemIter.hasNext()) {
-            ElementSymbol orderElem = (ElementSymbol) orderElemIter.next();
+        Collection<ElementSymbol> orderElems = ElementCollectorVisitor.getElements(orderBy, false);
+        for (ElementSymbol orderElem : orderElems) {
             resolveElement(orderElem, validElements, externalGroups, metadata);
         }
     }
@@ -304,7 +298,7 @@ public class XMLQueryResolver implements CommandResolver {
 	 * @throws QueryMetadataException
 	 * @throws TeiidComponentException
 	 */
-    static void resolveElement(ElementSymbol elem, Collection validElements, GroupContext externalGroups, QueryMetadataInterface metadata)
+    static void resolveElement(ElementSymbol elem, Collection<ElementSymbol> validElements, GroupContext externalGroups, QueryMetadataInterface metadata)
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
         
         // Get exact matching name
@@ -313,11 +307,11 @@ public class XMLQueryResolver implements CommandResolver {
 
         // Prepare results
         ElementSymbol exactMatch = null;
-        List partialMatches = new ArrayList(2);     // anything over 1 is an error and should be rare
+        List<ElementSymbol> partialMatches = new ArrayList<ElementSymbol>(2);     // anything over 1 is an error and should be rare
 
         //List of XML attributes that might match the criteria element,
         //if the criteria is specified without the optional "@" sign
-        List attributeMatches = new ArrayList(2);
+        List<ElementSymbol> attributeMatches = new ArrayList<ElementSymbol>(2);
 
         // look up name based on ID match - will work for uuid version
         try {
@@ -333,10 +327,7 @@ public class XMLQueryResolver implements CommandResolver {
         }
 
         // Walk through each valid element looking for a match
-        Iterator elemIter = validElements.iterator();
-        while(elemIter.hasNext()) {
-            ElementSymbol currentElem = (ElementSymbol) elemIter.next();
-
+        for (ElementSymbol currentElem : validElements) {
             // Look for exact match
             if(currentElem.getName().equalsIgnoreCase(critElemName)) {
                 exactMatch = currentElem;
@@ -368,9 +359,9 @@ public class XMLQueryResolver implements CommandResolver {
         // Check for single partial match
         if(exactMatch == null){
             if (partialMatches.size() == 1) {
-                exactMatch = (ElementSymbol) partialMatches.get(0);
+                exactMatch = partialMatches.get(0);
             } else if (partialMatches.size() == 0 && attributeMatches.size() == 1){
-                exactMatch = (ElementSymbol) attributeMatches.get(0);
+                exactMatch = attributeMatches.get(0);
             }
         }
 
@@ -395,18 +386,17 @@ public class XMLQueryResolver implements CommandResolver {
         }
     }
 
-    static List getElementsInDocument(GroupSymbol group, QueryMetadataInterface metadata)
-        throws QueryMetadataException, QueryResolverException, TeiidComponentException {
+    static List<ElementSymbol> getElementsInDocument(GroupSymbol group, QueryMetadataInterface metadata)
+        throws QueryMetadataException, TeiidComponentException {
         return ResolverUtil.resolveElementsInGroup(group, metadata);
     }
     
-    static List getElementsUnderNode(ElementSymbol node, List validElements, QueryMetadataInterface metadata) 
+    static List<ElementSymbol> getElementsUnderNode(ElementSymbol node, List<ElementSymbol> validElements, QueryMetadataInterface metadata) 
         throws TeiidComponentException, QueryMetadataException {
         
-        List elements = new ArrayList();
+        List<ElementSymbol> elements = new ArrayList<ElementSymbol>();
         String nodeName = metadata.getFullName(node.getMetadataID());
-        for (Iterator i = validElements.iterator(); i.hasNext();) {
-            ElementSymbol validElement = (ElementSymbol)i.next();
+        for (ElementSymbol validElement : validElements) {
             String qualifiedName = validElement.getName();
             if (qualifiedName.equals(nodeName) || qualifiedName.startsWith(nodeName+ElementSymbol.SEPARATOR)) {
                 elements.add(validElement);

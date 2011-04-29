@@ -41,7 +41,13 @@ public class Table extends ColumnSet<Schema> {
 		MaterializedTable
 	}
 	
-    private int cardinality;
+    public static enum TriggerOperation {
+		INSERT,
+		UPDATE,
+		DELETE
+	}
+
+	private int cardinality;
     private Type tableType;
     private boolean isVirtual;
     private boolean isSystem;

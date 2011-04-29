@@ -26,6 +26,9 @@ import java.util.Collection;
 
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.lang.AlterProcedure;
+import org.teiid.query.sql.lang.AlterTrigger;
+import org.teiid.query.sql.lang.AlterView;
 import org.teiid.query.sql.lang.ArrayTable;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.BetweenCriteria;
@@ -664,6 +667,30 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
         preVisitVisitor(obj);
         visitNode(obj.getArrayValue());
         visitNode(obj.getGroupSymbol());
+        postVisitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(AlterProcedure obj) {
+    	preVisitVisitor(obj);
+        visitNode(obj.getTarget());
+        visitNode(obj.getDefinition());
+        postVisitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(AlterTrigger obj) {
+    	preVisitVisitor(obj);
+        visitNode(obj.getTarget());
+        visitNode(obj.getDefinition());
+        postVisitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(AlterView obj) {
+    	preVisitVisitor(obj);
+        visitNode(obj.getTarget());
+        visitNode(obj.getDefinition());
         postVisitVisitor(obj);
     }
     

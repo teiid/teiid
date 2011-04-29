@@ -491,23 +491,45 @@ Command alter(ParseInfo info) :
   	QueryCommand command = null;
   	Block block = null;
   	TriggerAction triggerAction = null;
+  	Token comment = null;
+  	Table.TriggerOperation op = null;
 }
 {
 	<ALTER>
 	(
-	 	(nonReserved("VIEW") target = id() <AS> command = queryExpression(info)) 
+	 	(nonReserved("VIEW") target = id() <AS> { comment = getToken(1).specialToken; } command = queryExpression(info)) 
 	 	{
+	 	    if (comment != null) {
+		 	    command.setCacheHint(getQueryCacheOption(comment.image));
+	 	    }
+	 		AlterView alterView = new AlterView();
+	 		alterView.setTarget(new GroupSymbol(target));
+	 		alterView.setDefinition(command);
+	 		return alterView;	
 	 	}
-		| (<PROCEDURE> target = id() <AS> block = block(info)) 
+		| (<PROCEDURE> target = id() <AS> { comment = getToken(1).specialToken; } block = block(info)) 
 		{
+			CreateUpdateProcedureCommand cup = new CreateUpdateProcedureCommand(block);
+			cup.setUpdateProcedure(false);
+			if (comment != null) {
+		 	    cup.setCacheHint(getQueryCacheOption(comment.image));
+	 	    }
+			AlterProcedure alterProc = new AlterProcedure();
+			alterProc.setTarget(new GroupSymbol(target));
+			alterProc.setDefinition(cup);
+			return alterProc;
 		}
-		| (<TRIGGER> <ON> target = id() nonReserved("INSTEAD") <OF> (<INSERT>|<UPDATE>|<DELETE>) <AS> triggerAction = triggerAction(info))
+		| (<TRIGGER> <ON> target = id() nonReserved("INSTEAD") <OF> 
+		  (<INSERT> {op = Table.TriggerOperation.INSERT;} |<UPDATE> {op = Table.TriggerOperation.UPDATE;}|<DELETE> {op = Table.TriggerOperation.DELETE;}) 
+		  <AS> triggerAction = triggerAction(info))
 		{
+			AlterTrigger alterTrigger = new AlterTrigger();
+			alterTrigger.setTarget(new GroupSymbol(target));
+			alterTrigger.setDefinition(triggerAction);
+			alterTrigger.setOperation(op);
+			return alterTrigger;				
 		}
 	)
-	{
-		return null;
-	} 
 }
 
 TriggerAction triggerAction(ParseInfo info) :
@@ -2733,23 +2755,11 @@ CompareCriteria compareCrit(ParseInfo info, Expression expression) :
 
 QueryCommand subquery(ParseInfo info) :
 {
-	Object[] result = null;    
-}
-{
-	result = subqueryAndHint(info)
-	{
-		return (QueryCommand)result[0];
-	} 
-}
-
-Object[] subqueryAndHint(ParseInfo info) :
-{
     QueryCommand subquery = null;
     StoredProcedure proc = null;
-    Token lparen = null;
 }
 {
-	lparen = <LPAREN>
+	<LPAREN>
 	( subquery = queryExpression(info) | 
 	 (
 		proc = storedProcedure(info, new StoredProcedure()) //deprecated	  
@@ -2759,6 +2769,19 @@ Object[] subqueryAndHint(ParseInfo info) :
 	 }
 	)
 	<RPAREN>
+	{
+		return subquery;
+	}
+}
+
+Object[] subqueryAndHint(ParseInfo info) :
+{
+    QueryCommand subquery = null;
+    Token lparen = null;
+}
+{
+	{lparen = getToken(1);}
+	subquery = subquery(info)
 	{
 		return new Object[] {subquery, getSubqueryHint(lparen)};
 	}

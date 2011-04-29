@@ -637,13 +637,13 @@ public class TestOptimizer {
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
         List vm1a1e = FakeMetadataFactory.createElements(vm1a1, 
             new String[] { "e1", "sum_e2" }, //$NON-NLS-1$ //$NON-NLS-2$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.LONG });
         List vm1a2e = FakeMetadataFactory.createElements(vm1a2, 
             new String[] { "e1", "sum_e2" }, //$NON-NLS-1$ //$NON-NLS-2$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.LONG });
         List vm1a3e = FakeMetadataFactory.createElements(vm1a3, 
             new String[] { "sum_e2" }, //$NON-NLS-1$
-            new String[] { DataTypeManager.DefaultDataTypes.INTEGER });
+            new String[] { DataTypeManager.DefaultDataTypes.LONG });
         List vm1a4e = FakeMetadataFactory.createElements(vm1a4, 
             new String[] { "count" }, //$NON-NLS-1$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER });

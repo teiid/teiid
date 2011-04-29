@@ -36,7 +36,6 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.Request;
 import org.teiid.language.SQLConstants;
@@ -49,6 +48,7 @@ import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.resolver.command.AlterResolver;
 import org.teiid.query.resolver.command.BatchedUpdateResolver;
 import org.teiid.query.resolver.command.DeleteResolver;
 import org.teiid.query.resolver.command.DynamicCommandResolver;
@@ -108,6 +108,7 @@ public class QueryResolver {
     private static final CommandResolver BATCHED_UPDATE_RESOLVER = new BatchedUpdateResolver();
     private static final CommandResolver DYNAMIC_COMMAND_RESOLVER = new DynamicCommandResolver();
     private static final CommandResolver TEMP_TABLE_RESOLVER = new TempTableResolver();
+    private static final CommandResolver ALTER_RESOLVER = new AlterResolver();
     
     public static Command expandCommand(ProcedureContainer proc, QueryMetadataInterface metadata, AnalysisRecord analysisRecord) throws QueryResolverException, QueryMetadataException, TeiidComponentException {
     	ProcedureContainerResolver cr = (ProcedureContainerResolver)chooseResolver(proc, metadata);
@@ -194,8 +195,8 @@ public class QueryResolver {
 		    	ResolverVisitor.resolveLanguageObject(elementSymbol, metadata);
 		    	elementSymbol.setIsExternalReference(true);
 		    	if (!positional) {
-		    		symbolMap.put(new ElementSymbol(ProcedureReservedWords.INPUT + ElementSymbol.SEPARATOR + name), (ElementSymbol)elementSymbol.clone());
-		    		symbolMap.put(new ElementSymbol(ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + name), (ElementSymbol)elementSymbol.clone());
+		    		symbolMap.put(new ElementSymbol(ProcedureReservedWords.INPUT + ElementSymbol.SEPARATOR + name), elementSymbol.clone());
+		    		symbolMap.put(new ElementSymbol(ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + name), elementSymbol.clone());
 		    		elementSymbol.setShortName(name);
 		    	}
 		        elements.add(elementSymbol);
@@ -211,7 +212,7 @@ public class QueryResolver {
 			    		if (!ref.isPositional()) {
 			    			return ref;
 			    		}
-			    		return (ElementSymbol)elements.get(ref.getIndex()).clone();
+			    		return elements.get(ref.getIndex()).clone();
 		    		}
 		    	};
 		    	DeepPostOrderNavigator.doVisit(currentCommand, emv);
@@ -329,6 +330,9 @@ public class QueryResolver {
             case Command.TYPE_DYNAMIC:              return DYNAMIC_COMMAND_RESOLVER;
             case Command.TYPE_CREATE:               return TEMP_TABLE_RESOLVER;
             case Command.TYPE_DROP:                 return TEMP_TABLE_RESOLVER;
+            case Command.TYPE_ALTER_PROC:           
+            case Command.TYPE_ALTER_TRIGGER:        
+            case Command.TYPE_ALTER_VIEW:           return ALTER_RESOLVER;
             default:
                 throw new AssertionError("Unknown command type"); //$NON-NLS-1$
         }
@@ -357,7 +361,7 @@ public class QueryResolver {
             return false;
         }
         
-        FromClause clause = (FromClause)from.getClauses().get(0);
+        FromClause clause = from.getClauses().get(0);
         
         if (!(clause instanceof UnaryFromClause)) {
             return false;
@@ -456,19 +460,7 @@ public class QueryResolver {
             }
 	        Request.validateWithVisitor(new ValidationVisitor(), qmi, result);
             
-	        //ensure that null types match the view
-	        List<ElementSymbol> symbols = ResolverUtil.resolveElementsInGroup(virtualGroup, qmi);
-            List<SingleElementSymbol> projectedSymbols = result.getProjectedSymbols();
-            if (symbols.size() != projectedSymbols.size()) {
-            	Assertion.failed("View " + virtualGroup + " does not have the correct number of projected symbols"); //$NON-NLS-1$ //$NON-NLS-2$
-        	}
-            for (int i = 0; i < projectedSymbols.size(); i++) {
-            	SingleElementSymbol projectedSymbol = projectedSymbols.get(i);
-            	if (projectedSymbol.getType() != DataTypeManager.DefaultDataClasses.NULL) {
-            		continue;
-            	}
-            	ResolverUtil.setSymbolType(projectedSymbol, symbols.get(i).getType());
-            }
+	        validateProjectedSymbols(virtualGroup, qmi, result);
             cachedNode = new QueryNode(qnode.getQuery());
             cachedNode.setCommand((Command)result.clone());
 	        
@@ -486,6 +478,34 @@ public class QueryResolver {
 	        qmi.addToMetadataCache(virtualGroup.getMetadataID(), cacheString, cachedNode);
         }
 		return cachedNode;
+	}
+
+	public static void validateProjectedSymbols(GroupSymbol virtualGroup,
+			QueryMetadataInterface qmi, Command result)
+			throws QueryMetadataException, TeiidComponentException, QueryValidatorException {
+		//ensure that null types match the view
+		List<ElementSymbol> symbols = ResolverUtil.resolveElementsInGroup(virtualGroup, qmi);
+		List<SingleElementSymbol> projectedSymbols = result.getProjectedSymbols();
+		validateProjectedSymbols(virtualGroup, symbols, projectedSymbols);
+	}
+
+	public static void validateProjectedSymbols(GroupSymbol virtualGroup,
+			List<ElementSymbol> symbols,
+			List<SingleElementSymbol> projectedSymbols)
+			throws QueryValidatorException {
+		if (symbols.size() != projectedSymbols.size()) {
+			throw new QueryValidatorException(QueryPlugin.Util.getString("QueryResolver.wrong_view_symbols", virtualGroup, symbols.size(), projectedSymbols.size())); //$NON-NLS-1$
+		}
+		for (int i = 0; i < projectedSymbols.size(); i++) {
+			SingleElementSymbol projectedSymbol = projectedSymbols.get(i);
+			
+			ResolverUtil.setTypeIfNull(projectedSymbol, symbols.get(i).getType());
+			
+			if (projectedSymbol.getType() != symbols.get(i).getType()) {
+				throw new QueryValidatorException(QueryPlugin.Util.getString("QueryResolver.wrong_view_symbol_type", virtualGroup, i+1,  //$NON-NLS-1$
+						DataTypeManager.getDataTypeName(symbols.get(i).getType()), DataTypeManager.getDataTypeName(projectedSymbol.getType())));
+			}
+		}
 	}
 
 	public static boolean isView(GroupSymbol virtualGroup,

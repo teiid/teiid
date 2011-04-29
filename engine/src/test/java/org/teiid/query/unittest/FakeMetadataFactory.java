@@ -492,22 +492,22 @@ public class FakeMetadataFactory {
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
         List vm1g12e = createElements(vm1g12,
             new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.TIME, DataTypeManager.DefaultDataTypes.TIMESTAMP });
         List vm1g13e = createElements(vm1g13,
             new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.TIME, DataTypeManager.DefaultDataTypes.TIMESTAMP });
         List vm1g14e = createElements(vm1g14,
             new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.TIME, DataTypeManager.DefaultDataTypes.TIMESTAMP });
         List vm1g15e = createElements(vm1g15,
             new String[] { "e1", "x" }, //$NON-NLS-1$ //$NON-NLS-2$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
         List vm1g16e = createElements(vm1g16,
             new String[] { "e", "e2" }, //$NON-NLS-1$ //$NON-NLS-2$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.DATE });
         List vm1g17e = createElements(vm1g17,
             new String[] { "e1", "e2" }, //$NON-NLS-1$ //$NON-NLS-2$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.DATE });
         List vm1g18e = createElements(vm1g18,
             new String[] { "x" }, //$NON-NLS-1$
             new String[] { DataTypeManager.DefaultDataTypes.DOUBLE });
@@ -1083,7 +1083,7 @@ public class FakeMetadataFactory {
 		FakeMetadataObject vm1g35 = createVirtualGroup("vm1.g35", vm1, vm1g35n1); //$NON-NLS-1$
         FakeMetadataObject vm1g35e1 = FakeMetadataFactory.createElement("vm1.g35.e1", vm1g35, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
         vm1g35e1.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
-        FakeMetadataObject vm1g35e2 = FakeMetadataFactory.createElement("vm1.g35.e2", vm1g35, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
+        FakeMetadataObject vm1g35e2 = FakeMetadataFactory.createElement("vm1.g35.e2", vm1g35, DataTypeManager.DefaultDataTypes.INTEGER, 2); //$NON-NLS-1$
 		
         FakeMetadataObject vsprs36 = createResultSet("pm1.vsprs36", pm1, new String[] { "x" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp36p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, null, vsprs36); //$NON-NLS-1$
@@ -2432,11 +2432,11 @@ public class FakeMetadataFactory {
 
         List rsOrdersElements = FakeMetadataFactory.createElements(rsOrders, 
             new String[] { "orderNum", "orderDate", "orderQty", "orderStatus", "itemFK", "supplierFK" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
         List rsEmployeesElements = FakeMetadataFactory.createElements(rsEmployees, 
             new String[] { "employeeNum", "firstName", "lastName", "supervisorNum", "specializesInItemNum", "supplierNumFK" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
         // MAPPING DOC ======================================================================
         MappingDocument doc = new MappingDocument(true);

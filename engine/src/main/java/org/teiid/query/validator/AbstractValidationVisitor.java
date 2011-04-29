@@ -128,18 +128,18 @@ public class AbstractValidationVisitor extends LanguageVisitor {
         return false;
 	}   
 	
-    protected Collection validateElementsSupport(Collection elements, int supportsFlag) {
+    protected Collection<ElementSymbol> validateElementsSupport(Collection<ElementSymbol> elements, int supportsFlag) {
 	    // Collect any identifiers not supporting flag
-	    List dontSupport = null;  
+	    List<ElementSymbol> dontSupport = null;  
         ElementSymbol symbol = null;              
 
         try {
-	        Iterator elemIter = elements.iterator();
+	        Iterator<ElementSymbol> elemIter = elements.iterator();
             while(elemIter.hasNext()) {
-		    symbol = (ElementSymbol) elemIter.next();
+		    symbol = elemIter.next();
                if(! getMetadata().elementSupports(symbol.getMetadataID(), supportsFlag)) {
                     if(dontSupport == null) { 
-                        dontSupport = new ArrayList();
+                        dontSupport = new ArrayList<ElementSymbol>();
                     } 
                     dontSupport.add(symbol);    
                 }            

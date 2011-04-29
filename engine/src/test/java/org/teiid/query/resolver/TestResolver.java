@@ -87,6 +87,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
@@ -157,7 +158,7 @@ public class TestResolver {
 		return variables;
 	}
     
-    public static Command helpResolve(String sql, QueryMetadataInterface queryMetadata, AnalysisRecord analysis){
+    public static Command helpResolve(String sql, QueryMetadataInterface queryMetadata){
         return helpResolve(helpParse(sql), queryMetadata);
     }
     
@@ -1115,7 +1116,7 @@ public class TestResolver {
             "WHERE (y.IntKey >= 10) AND (y.IntKey < 30) " + //$NON-NLS-1$
             "ORDER BY IntKey, FloatNum";  //$NON-NLS-1$
 
-        helpResolve(sql, FakeMetadataFactory.exampleBQTCached(), null);
+        helpResolve(sql, FakeMetadataFactory.exampleBQTCached());
     }
 
     @Test public void testSubQueryINClause1(){
@@ -2111,7 +2112,7 @@ public class TestResolver {
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         AnalysisRecord analysis = AnalysisRecord.createNonRecordingRecord();
         
-        Query query = (Query) helpResolve(userSql, metadata, analysis);
+        Query query = (Query) helpResolve(userSql, metadata);
         From from = query.getFrom();
         Collection fromClauses = from.getClauses();
         SPParameter params[] = new SPParameter[2];
@@ -2707,7 +2708,7 @@ public class TestResolver {
     @Test public void testUpdateSetClauseReferenceType() {
     	String sql = "UPDATE pm1.g1 SET pm1.g1.e1 = 1, pm1.g1.e2 = ?;"; //$NON-NLS-1$
     	
-    	Update update = (Update)helpResolve(sql, FakeMetadataFactory.example1Cached(), null);
+    	Update update = (Update)helpResolve(sql, FakeMetadataFactory.example1Cached());
     	
     	Expression ref = update.getChangeList().getClauses().get(1).getValue();
     	assertTrue(ref instanceof Reference);
@@ -2722,21 +2723,21 @@ public class TestResolver {
     
     @Test public void testReferenceInSelect() {
     	String sql = "select ?, e1 from pm1.g1"; //$NON-NLS-1$
-    	Query command = (Query)helpResolve(sql, FakeMetadataFactory.example1Cached(), null);
-    	assertEquals(DataTypeManager.DefaultDataClasses.STRING, ((SingleElementSymbol)command.getProjectedSymbols().get(0)).getType());
+    	Query command = (Query)helpResolve(sql, FakeMetadataFactory.example1Cached());
+    	assertEquals(DataTypeManager.DefaultDataClasses.STRING, command.getProjectedSymbols().get(0).getType());
     }
     
     @Test public void testReferenceInSelect1() {
     	String sql = "select convert(?, integer), e1 from pm1.g1"; //$NON-NLS-1$
     	
-    	Query command = (Query)helpResolve(sql, FakeMetadataFactory.example1Cached(), null);
-    	assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, ((SingleElementSymbol)command.getProjectedSymbols().get(0)).getType());
+    	Query command = (Query)helpResolve(sql, FakeMetadataFactory.example1Cached());
+    	assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, command.getProjectedSymbols().get(0).getType());
     }
     
     @Test public void testUnionWithObjectTypeConversion() {
     	String sql = "select convert(null, xml) from pm1.g1 union all select 1"; //$NON-NLS-1$
     	
-    	SetQuery query = (SetQuery)helpResolve(sql, FakeMetadataFactory.example1Cached(), null);
+    	SetQuery query = (SetQuery)helpResolve(sql, FakeMetadataFactory.example1Cached());
     	assertEquals(DataTypeManager.DefaultDataClasses.OBJECT, ((SingleElementSymbol)query.getProjectedSymbols().get(0)).getType());
     }
     
@@ -2745,7 +2746,7 @@ public class TestResolver {
 
         SetQuery command = (SetQuery)helpResolve(sql);
         
-        assertEquals(1, command.getSubCommands().size());
+        assertEquals(1, CommandCollectorVisitor.getCommands(command).size());
     }
     @Test public void testOrderBy_J658a() {
         Query resolvedQuery = (Query) helpResolve("SELECT pm1.g1.e1, e2, e3 as x, (5+2) as y FROM pm1.g1 ORDER BY e3"); //$NON-NLS-1$
@@ -2779,7 +2780,7 @@ public class TestResolver {
     }
     
     @Test public void testSPOutParamWithExec() {
-    	StoredProcedure proc = (StoredProcedure)helpResolve("exec pm2.spTest8(1)", FakeMetadataFactory.exampleBQTCached(), null);
+    	StoredProcedure proc = (StoredProcedure)helpResolve("exec pm2.spTest8(1)", FakeMetadataFactory.exampleBQTCached());
     	assertEquals(2, proc.getProjectedSymbols().size());
     }
 
@@ -2788,7 +2789,7 @@ public class TestResolver {
      * That hack is handled by the PreparedStatementRequest
      */
     @Test public void testSPOutParamWithCallableStatement() {
-    	StoredProcedure proc = (StoredProcedure)helpResolve("{call pm2.spTest8(1)}", FakeMetadataFactory.exampleBQTCached(), null);
+    	StoredProcedure proc = (StoredProcedure)helpResolve("{call pm2.spTest8(1)}", FakeMetadataFactory.exampleBQTCached());
     	assertEquals(3, proc.getProjectedSymbols().size());
     }
     
@@ -2797,12 +2798,12 @@ public class TestResolver {
     }
     
     @Test public void testProcRelationalWithOutParam() {
-    	Query proc = (Query)helpResolve("select * from pm2.spTest8 where inkey = 1", FakeMetadataFactory.exampleBQTCached(), null);
+    	Query proc = (Query)helpResolve("select * from pm2.spTest8 where inkey = 1", FakeMetadataFactory.exampleBQTCached());
     	assertEquals(3, proc.getProjectedSymbols().size());
     }
     
     @Test public void testSPReturnParamWithNoResultSet() {
-    	StoredProcedure proc = (StoredProcedure)helpResolve("exec pm4.spTest9(1)", FakeMetadataFactory.exampleBQTCached(), null);
+    	StoredProcedure proc = (StoredProcedure)helpResolve("exec pm4.spTest9(1)", FakeMetadataFactory.exampleBQTCached());
     	assertEquals(1, proc.getProjectedSymbols().size());
     }
     
@@ -2954,7 +2955,7 @@ public class TestResolver {
     
     //return should be first, then out
     @Test public void testParamOrder() {
-        Query resolvedQuery = (Query)helpResolve("SELECT * FROM (exec pm4.spRetOut()) as a", RealMetadataFactory.exampleBQTCached(), null); //$NON-NLS-1$
+        Query resolvedQuery = (Query)helpResolve("SELECT * FROM (exec pm4.spRetOut()) as a", RealMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
         
         assertEquals("a.ret", resolvedQuery.getProjectedSymbols().get(0).getName());
     }

@@ -19,22 +19,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+package org.teiid.query.sql.lang;
 
-package org.teiid.query.sql.visitor;
+import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 
-import org.junit.Test;
-import org.teiid.query.resolver.TestResolver;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.visitor.EvaluatableVisitor;
-import org.teiid.query.unittest.FakeMetadataFactory;
-
-import static org.junit.Assert.*;
-
-public class TestEvaluatableVisitor {
-
-	@Test public void testNestedNeedsEvaluation() throws Exception {
-		Query command = (Query)TestResolver.helpResolve("select * from pm1.g1 where e1 in (select e1 from pm1.g2 where e2 = ?)", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
-		assertTrue(EvaluatableVisitor.needsProcessingEvaluation(command));
+public class AlterProcedure extends Alter<CreateUpdateProcedureCommand> {
+	
+	@Override
+	public void acceptVisitor(LanguageVisitor visitor) {
+		visitor.visit(this);
 	}
 	
+	@Override
+	public AlterProcedure clone() {
+		AlterProcedure clone = new AlterProcedure();
+		this.cloneOnTo(clone);
+		return clone;
+	}
+	
+	@Override
+	public int getType() {
+		return TYPE_ALTER_PROC;
+	}
 }
