@@ -202,7 +202,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("relhasrules", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$ 
 		
 		// 	True if we generate an OID for each row of the relation
-		addColumn("relhasoids", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+		addColumn("relhasoids", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$ 
 
 		addPrimaryKey("pk_pg_class", Arrays.asList("oid"), t); //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -252,7 +252,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"(CASE t1.KeyType WHEN 'Unique' THEN true ELSE false END) as indisunique, " + //$NON-NLS-1$
 				"(CASE t1.KeyType WHEN 'Primary' THEN true ELSE false END) as indisprimary, " + //$NON-NLS-1$
 				"'' as indexprs, " + //$NON-NLS-1$
-				"0 as indkey " + //$NON-NLS-1$
+				"'0' as indkey " + //$NON-NLS-1$
 				"FROM SYS.KeyColumns as t1"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		t.setMaterialized(true);
