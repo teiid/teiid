@@ -262,7 +262,7 @@ public class FrameUtil {
                 ExpressionMappingVisitor.mapExpressions(groupBy, symbolMap);
                 node.setProperty(NodeConstants.Info.GROUP_COLS, groupBy.getSymbols());
                 if (!singleMapping) {
-                    GroupsUsedByElementsVisitor.getGroups(groupCols, groups);
+                    GroupsUsedByElementsVisitor.getGroups(groupBy, groups);
                 }
             }               
         } else if (type == NodeConstants.Types.SOURCE || type == NodeConstants.Types.ACCESS) {

@@ -331,5 +331,16 @@ public class TestRuleMergeVirtual {
     
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
+    
+    @Test public void testMergeGroupBy() throws Exception {
+    	BasicSourceCapabilities caps = TestAggregatePushdown.getAggregateCapabilities();
+    	caps.setFunctionSupport("+", true); //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM (select c.e1 as x from (select e1 from pm1.g1) as c, pm1.g2 as d) as a group by x", //$NON-NLS-1$
+                                      FakeMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
+                                      new String[] {
+                                          "SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 GROUP BY g_0.e1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
+    }
 
 }
