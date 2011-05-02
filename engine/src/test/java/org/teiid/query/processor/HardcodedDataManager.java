@@ -32,6 +32,8 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.dqp.internal.datamgr.LanguageBridgeFactory;
+import org.teiid.events.EventDistributor;
+import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.util.CommandContext;
@@ -166,6 +168,18 @@ public class HardcodedDataManager implements
 
 	public void clearCodeTables() {
 		
+	}
+
+	@Override
+	public EventDistributor getEventDistributor() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public MetadataRepository getMetadataRepository() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

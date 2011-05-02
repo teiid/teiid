@@ -84,11 +84,11 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	}
 
 	@Test public void testProperties() {
-		String[] expected = { "Name[string]	Value[string]	UID[string]	OID[integer]",
-				"pg_type:oid	30	mmuid:ffa4ac73-b549-470e-931f-dc36330cb8c4	1",
-				"pg_type:oid	1009	mmuid:d9f36bdc-7b25-4af0-b9f5-a96aac6d3094	2",
-				"pg_type:oid	1002	mmuid:bcbed548-176c-4116-a5d6-7638cb0206e1	3",
-				"pg_type:oid	1028	mmuid:a385751f-a31a-4d5d-9197-3fbd390b0251	4"
+		String[] expected = { "Name[string]	Value[string]	UID[string]	OID[integer]	ClobValue[clob]",
+				"pg_type:oid	30	mmuid:ffa4ac73-b549-470e-931f-dc36330cb8c4	1	30",
+				"pg_type:oid	1009	mmuid:d9f36bdc-7b25-4af0-b9f5-a96aac6d3094	2	1009",
+				"pg_type:oid	1002	mmuid:bcbed548-176c-4116-a5d6-7638cb0206e1	3	1002",
+				"pg_type:oid	1028	mmuid:a385751f-a31a-4d5d-9197-3fbd390b0251	4	1028"
 		
 		}; //$NON-NLS-1$
 		executeAndAssertResults("select* from SYS.Properties", expected); //$NON-NLS-1$

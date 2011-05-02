@@ -46,6 +46,7 @@ import java.util.List;
 /** 
  * @since 4.2
  */
+@SuppressWarnings("nls")
 public class ResultSetUtil {
 
     public static final int DEFAULT_MAX_COL_WIDTH = 29;

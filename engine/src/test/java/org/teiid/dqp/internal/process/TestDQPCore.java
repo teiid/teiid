@@ -364,7 +364,7 @@ public class TestDQPCore {
         
         assertEquals(2, this.core.getPrepPlanCache().getCacheHitCount());
 
-        //perform a minor update, we will purge the plan
+        //perform a major update, we will purge the plan
         sql = "delete from #temp"; //$NON-NLS-1$
         reqMsg = exampleRequestMessage(sql);
         rm = execute(userName, sessionid, reqMsg);

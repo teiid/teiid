@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnStats;
 import org.teiid.metadata.Datatype;
@@ -113,8 +115,13 @@ public class VDBRepository implements Serializable{
 		LinkedList<MetadataStore> allStores = new LinkedList<MetadataStore>(stores.getStores());
 		allStores.addAll(Arrays.asList(cvdb.getAdditionalStores()));
 		for (MetadataStore metadataStore : allStores) {
+			Collection<AbstractMetadataRecord> records = new LinkedHashSet<AbstractMetadataRecord>();
 			for (Schema schema : metadataStore.getSchemas().values()) {
+				records.add(schema);
 				for (Table t : schema.getTables().values()) {
+					records.add(t);
+					records.addAll(t.getColumns());
+					records.addAll(t.getAllKeys());
 					if (t.isPhysical()) {
 						TableStats stats = metadataRepository.getTableStats(vdbName, vdbVersion, t);
 						if (stats != null) {
@@ -132,28 +139,51 @@ public class VDBRepository implements Serializable{
 							t.setSelectTransformation(def);
 						}
 						if (t.supportsUpdate()) {
-							def = metadataRepository.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, Table.TriggerOperation.INSERT);
+							def = metadataRepository.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, Table.TriggerEvent.INSERT);
 							if (def != null) {
 								t.setInsertPlan(def);
 							}
-							def = metadataRepository.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, Table.TriggerOperation.UPDATE);
+							Boolean enabled = metadataRepository.isInsteadOfTriggerEnabled(vdbName, vdbVersion, t, Table.TriggerEvent.INSERT);
+							if (enabled != null) {
+								t.setInsertPlanEnabled(enabled);
+							}
+							def = metadataRepository.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, Table.TriggerEvent.UPDATE);
 							if (def != null) {
 								t.setUpdatePlan(def);
 							}
-							def = metadataRepository.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, Table.TriggerOperation.DELETE);
+							enabled = metadataRepository.isInsteadOfTriggerEnabled(vdbName, vdbVersion, t, Table.TriggerEvent.UPDATE);
+							if (enabled != null) {
+								t.setUpdatePlanEnabled(enabled);
+							}
+							def = metadataRepository.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, Table.TriggerEvent.DELETE);
 							if (def != null) {
 								t.setDeletePlan(def);
+							}
+							enabled = metadataRepository.isInsteadOfTriggerEnabled(vdbName, vdbVersion, t, Table.TriggerEvent.DELETE);
+							if (enabled != null) {
+								t.setDeletePlanEnabled(enabled);
 							}
 						}
 					}
 				}
 				for (Procedure p : schema.getProcedures().values()) {
+					records.add(p);
+					records.addAll(p.getParameters());
+					if (p.getResultSet() != null) {
+						records.addAll(p.getResultSet().getColumns());
+					}
 					if (p.isVirtual() && !p.isFunction()) {
 						String proc = metadataRepository.getProcedureDefinition(vdbName, vdbVersion, p);
 						if (proc != null) {
 							p.setQueryPlan(proc);								
 						}
 					}
+				}
+			}
+			for (AbstractMetadataRecord abstractMetadataRecord : records) {
+				LinkedHashMap<String, String> p = metadataRepository.getProperties(vdbName, vdbVersion, abstractMetadataRecord);
+				if (p != null) {
+					abstractMetadataRecord.setProperties(p);
 				}
 			}
 		}

@@ -478,10 +478,31 @@ Command updateProcedure(ParseInfo info) :
 }
 {
 	(command = createUpdateProcedure(info) |
-	 command = triggerAction(info))
+	 command = forEachRowTriggerAction(info))
 	<EOF>
 	{
 		return command;
+	}
+}
+
+Command createTrigger(ParseInfo info) :
+{
+  	String target = null;
+  	TriggerAction triggerAction = null;
+  	Token event = null;
+  	
+}
+{
+	<CREATE> <TRIGGER> <ON> target = id() nonReserved("INSTEAD") <OF> 
+	(event = <INSERT> | event = <UPDATE> | event = <DELETE>) 
+	<AS> triggerAction = forEachRowTriggerAction(info)
+	{
+		AlterTrigger alterTrigger = new AlterTrigger();
+		alterTrigger.setTarget(new GroupSymbol(target));
+		alterTrigger.setDefinition(triggerAction);
+		alterTrigger.setEvent(Table.TriggerEvent.valueOf(event.image.toUpperCase()));
+		alterTrigger.setCreate(true);
+		return alterTrigger;				
 	}
 }
 
@@ -492,7 +513,8 @@ Command alter(ParseInfo info) :
   	Block block = null;
   	TriggerAction triggerAction = null;
   	Token comment = null;
-  	Table.TriggerOperation op = null;
+  	Token event = null;
+  	String enabled = null;
 }
 {
 	<ALTER>
@@ -520,19 +542,23 @@ Command alter(ParseInfo info) :
 			return alterProc;
 		}
 		| (<TRIGGER> <ON> target = id() nonReserved("INSTEAD") <OF> 
-		  (<INSERT> {op = Table.TriggerOperation.INSERT;} |<UPDATE> {op = Table.TriggerOperation.UPDATE;}|<DELETE> {op = Table.TriggerOperation.DELETE;}) 
-		  <AS> triggerAction = triggerAction(info))
+		  (event = <INSERT> | event = <UPDATE> | event = <DELETE>) 
+		  ((<AS> triggerAction = forEachRowTriggerAction(info))
+		  |enabled = nonReserved("ENABLED","DISABLED")))
 		{
 			AlterTrigger alterTrigger = new AlterTrigger();
 			alterTrigger.setTarget(new GroupSymbol(target));
 			alterTrigger.setDefinition(triggerAction);
-			alterTrigger.setOperation(op);
+			alterTrigger.setEvent(Table.TriggerEvent.valueOf(event.image.toUpperCase()));
+			if (enabled != null) {
+				alterTrigger.setEnabled(enabled.equalsIgnoreCase("ENABLED"));
+			}
 			return alterTrigger;				
 		}
 	)
 }
 
-TriggerAction triggerAction(ParseInfo info) :
+TriggerAction forEachRowTriggerAction(ParseInfo info) :
 {
 	Block b = null;
 }
@@ -555,8 +581,9 @@ Command userCommand(ParseInfo info) :
 	command = update(info) |
 	command = delete(info) |
 	command = dropTable(info) |
-	command = createTempTable(info) |
-	command = alter(info) 
+	LOOKAHEAD(2) command = createTempTable(info) |
+	command = alter(info) |
+	command = createTrigger(info)
 	)
 	{
 		return command;

@@ -22,7 +22,10 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.io.IOException;
+import java.sql.Clob;
 import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +33,8 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+
+import javax.sql.rowset.serial.SerialClob;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -42,9 +47,11 @@ import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobType;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Assertion;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
@@ -88,6 +95,8 @@ import org.teiid.query.util.CommandContext;
  */
 public class DataTierManagerImpl implements ProcessorDataManager {
 	
+	private static final int MAX_VALUE_LENGTH = 1 << 21;
+
 	private enum SystemTables {
 		VIRTUALDATABASES,
 		SCHEMAS,
@@ -109,7 +118,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	
 	private enum SystemAdminProcs {
 		SETTABLESTATS,
-		SETCOLUMNSTATS
+		SETCOLUMNSTATS,
+		SETPROPERTY
 	}
 	
 	private enum SystemProcs {
@@ -139,6 +149,10 @@ public class DataTierManagerImpl implements ProcessorDataManager {
     
     public EventDistributor getEventDistributor() {
 		return eventDistributor;
+	}
+    
+    public MetadataRepository getMetadataRepository() {
+		return metadataRepository;
 	}
     
     public void setMetadataRepository(MetadataRepository metadataRepository) {
@@ -271,27 +285,19 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				}
 				break;
 			case PROPERTIES: //TODO: consider storing separately in the metadatastore 
-				Collection<AbstractMetadataRecord> records = new LinkedHashSet<AbstractMetadataRecord>();
-				records.addAll(metadata.getDatatypes());
-				for (Schema schema : getVisibleSchemas(vdb, metadata)) {
-					records.add(schema);
-					records.addAll(schema.getTables().values());
-					for (Table table : schema.getTables().values()) {
-						records.add(table);
-						records.addAll(table.getColumns());
-						records.addAll(table.getAllKeys());
-					}
-					for (Procedure proc : schema.getProcedures().values()) {
-						records.add(proc);
-						records.addAll(proc.getParameters());
-						if (proc.getResultSet() != null) {
-							records.addAll(proc.getResultSet().getColumns());
-						}
-					}
-				}
+				Collection<AbstractMetadataRecord> records = getAllPropertiedObjects(metadata, getVisibleSchemas(vdb, metadata));
 				for (AbstractMetadataRecord record : records) {
 					for (Map.Entry<String, String> entry : record.getProperties().entrySet()) {
-						rows.add(Arrays.asList(entry.getKey(), entry.getValue(), record.getUUID(), oid++));
+						String value = entry.getValue();
+						Clob clobValue = null;
+						if (value != null) {
+							try {
+								clobValue = new ClobType(new SerialClob(value.toCharArray()));
+							} catch (SQLException e) {
+								throw new TeiidProcessingException(e);
+							}
+						}
+						rows.add(Arrays.asList(entry.getKey(), entry.getValue(), record.getUUID(), oid++, clobValue));
 					}
 				}
 				break;
@@ -348,6 +354,48 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 			StoredProcedure proc = (StoredProcedure)command;		
 			if (StringUtil.startsWithIgnoreCase(proc.getProcedureCallableName(), CoreConstants.SYSTEM_ADMIN_MODEL)) {
 				final SystemAdminProcs sysProc = SystemAdminProcs.valueOf(proc.getProcedureCallableName().substring(CoreConstants.SYSTEM_ADMIN_MODEL.length() + 1).toUpperCase());
+				switch (sysProc) {
+				case SETPROPERTY:
+					try {
+						String uuid = (String)((Constant)proc.getParameter(2).getExpression()).getValue();
+						String key = (String)((Constant)proc.getParameter(3).getExpression()).getValue();
+						Clob value = (Clob)((Constant)proc.getParameter(4).getExpression()).getValue();
+						String strVal = null;
+						String result = null;
+						if (value != null) {
+							if (value.length() > MAX_VALUE_LENGTH) {
+								throw new TeiidProcessingException(QueryPlugin.Util.getString("DataTierManagerImpl.max_value_length", MAX_VALUE_LENGTH)); //$NON-NLS-1$
+							}
+							strVal = ObjectConverterUtil.convertToString(value.getCharacterStream());
+						}
+						AbstractMetadataRecord target = getByUuid(metadata, uuid);
+						if (target == null) {
+							throw new TeiidProcessingException(QueryPlugin.Util.getString("DataTierManagerImpl.unknown_uuid", uuid)); //$NON-NLS-1$
+						}
+						if (value == null) {
+							result = target.setProperty(key, null);
+						} else {
+							strVal = ObjectConverterUtil.convertToString(value.getCharacterStream());
+							result = target.setProperty(key, strVal);
+						}
+						if (eventDistributor != null) {
+							eventDistributor.setProperty(vdbName, vdbVersion, uuid, key, strVal);
+						}
+						if (this.metadataRepository != null) {
+							this.metadataRepository.setProperty(vdbName, vdbVersion, target, key, strVal);
+						}
+						if (result == null) {
+							rows.add(Arrays.asList((Clob)null));
+						} else {
+							rows.add(Arrays.asList(new ClobType(new SerialClob(result.toCharArray()))));
+						}
+						return new CollectionTupleSource(rows.iterator());
+					} catch (SQLException e) {
+						throw new TeiidProcessingException(e);
+					} catch (IOException e) {
+						throw new TeiidProcessingException(e);
+					}
+				}
 				Table table = indexMetadata.getGroupID((String)((Constant)proc.getParameter(1).getExpression()).getValue());
 				switch (sysProc) {
 				case SETCOLUMNSTATS:
@@ -423,6 +471,38 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 			}
 		}
 		return new CollectionTupleSource(rows.iterator());
+	}
+
+	//TODO: do better than a linear search
+	public static AbstractMetadataRecord getByUuid(CompositeMetadataStore metadata,
+			String uuid) {
+		for (AbstractMetadataRecord object : getAllPropertiedObjects(metadata, metadata.getSchemas().values())) {
+			if (object.getUUID().equals(uuid)) {
+				return object;
+			}
+		}
+		return null;
+	}
+
+	public static Collection<AbstractMetadataRecord> getAllPropertiedObjects(CompositeMetadataStore metadata, Collection<Schema> schemas) {
+		Collection<AbstractMetadataRecord> records = new LinkedHashSet<AbstractMetadataRecord>();
+		records.addAll(metadata.getDatatypes());
+		for (Schema schema : schemas) {
+			records.add(schema);
+			for (Table table : schema.getTables().values()) {
+				records.add(table);
+				records.addAll(table.getColumns());
+				records.addAll(table.getAllKeys());
+			}
+			for (Procedure proc : schema.getProcedures().values()) {
+				records.add(proc);
+				records.addAll(proc.getParameters());
+				if (proc.getResultSet() != null) {
+					records.addAll(proc.getResultSet().getColumns());
+				}
+			}
+		}
+		return records;
 	}
 	
 	private List<Schema> getVisibleSchemas(VDBMetaData vdb, CompositeMetadataStore metadata) {

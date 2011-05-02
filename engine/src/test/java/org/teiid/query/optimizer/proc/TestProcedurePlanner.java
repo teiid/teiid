@@ -71,7 +71,7 @@ public class TestProcedurePlanner {
 		ValidatorReport report = Validator.validate(userCommand, metadata);
         
         if (report.hasItems()) {
-            ValidatorFailure firstFailure = (ValidatorFailure) report.getItems().iterator().next();
+            ValidatorFailure firstFailure = report.getItems().iterator().next();
             throw new QueryValidatorException(firstFailure.getMessage());
         }
         userCommand = QueryRewriter.rewrite(userCommand, metadata, null);

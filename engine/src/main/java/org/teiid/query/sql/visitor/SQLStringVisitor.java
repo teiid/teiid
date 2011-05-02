@@ -1974,7 +1974,11 @@ public class SQLStringVisitor extends LanguageVisitor {
     
     @Override
     public void visit(AlterTrigger alterTrigger) {
-    	append(ALTER);
+    	if (alterTrigger.isCreate()) {
+    		append(CREATE);
+    	} else {
+    		append(ALTER);
+    	}
     	append(SPACE);
     	append(TRIGGER);
     	append(SPACE);
@@ -1986,12 +1990,17 @@ public class SQLStringVisitor extends LanguageVisitor {
     	append(SPACE);
     	append(OF);
     	append(SPACE);
-    	append(alterTrigger.getOperation());
-    	beginClause(0);
-    	append(AS);
-    	append("\n"); //$NON-NLS-1$
-        addTabs(0);
-    	append(alterTrigger.getDefinition());
+    	append(alterTrigger.getEvent());
+    	if (alterTrigger.getDefinition() != null) {
+	    	beginClause(0);
+	    	append(AS);
+	    	append("\n"); //$NON-NLS-1$
+	        addTabs(0);
+	    	append(alterTrigger.getDefinition());
+    	} else {
+    		append(SPACE);
+    		append(alterTrigger.getEnabled()?NonReserved.ENABLED:NonReserved.DISABLED);
+    	}
     }
     
     @Override

@@ -25,7 +25,7 @@ package org.teiid.query.parser;
 import static org.teiid.query.parser.TestParser.*;
 
 import org.junit.Test;
-import org.teiid.metadata.Table.TriggerOperation;
+import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.sql.lang.AlterTrigger;
 import org.teiid.query.sql.lang.AlterView;
 import org.teiid.query.sql.lang.QueryCommand;
@@ -52,9 +52,26 @@ public class TestParseAlter {
 	@Test public void testAlterTrigger() throws Exception {
 		AlterTrigger alterTrigger = new AlterTrigger();
 		alterTrigger.setTarget(new GroupSymbol("x"));
-		alterTrigger.setOperation(TriggerOperation.UPDATE);
+		alterTrigger.setEvent(TriggerEvent.UPDATE);
 		alterTrigger.setDefinition((TriggerAction) QueryParser.getQueryParser().parseUpdateProcedure("for each row begin end"));
 		helpTest("alter trigger on x instead of update as for each row begin end", "ALTER TRIGGER ON x INSTEAD OF UPDATE AS\nFOR EACH ROW\nBEGIN\nEND", alterTrigger);
+	}
+	
+	@Test public void testAlterDisabled() throws Exception {
+		AlterTrigger alterTrigger = new AlterTrigger();
+		alterTrigger.setTarget(new GroupSymbol("x"));
+		alterTrigger.setEvent(TriggerEvent.UPDATE);
+		alterTrigger.setEnabled(false);
+		helpTest("alter trigger on x instead of update disabled", "ALTER TRIGGER ON x INSTEAD OF UPDATE DISABLED", alterTrigger);
+	}
+	
+	@Test public void testCreateTrigger() throws Exception {
+		AlterTrigger alterTrigger = new AlterTrigger();
+		alterTrigger.setCreate(true);
+		alterTrigger.setTarget(new GroupSymbol("x"));
+		alterTrigger.setEvent(TriggerEvent.UPDATE);
+		alterTrigger.setDefinition((TriggerAction) QueryParser.getQueryParser().parseUpdateProcedure("for each row begin end"));
+		helpTest("create trigger on x instead of update as for each row begin end", "CREATE TRIGGER ON x INSTEAD OF UPDATE AS\nFOR EACH ROW\nBEGIN\nEND", alterTrigger);
 	}
 	
 }

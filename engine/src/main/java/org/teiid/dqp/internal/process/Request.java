@@ -64,7 +64,6 @@ import org.teiid.query.eval.SecurityFunctionEvaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempCapabilitiesFinder;
 import org.teiid.query.metadata.TempMetadataAdapter;
-import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.parser.ParseInfo;
@@ -201,7 +200,7 @@ public class Request implements SecurityFunctionEvaluator {
             this.metadata = new MultiSourceMetadataWrapper(this.metadata, this.multiSourceModels);
         }
         
-        TempMetadataAdapter tma = new TempMetadataAdapter(metadata, new TempMetadataStore());
+        TempMetadataAdapter tma = new TempMetadataAdapter(metadata, this.tempTableStore.getMetadataStore());
         tma.setSession(true);
         this.metadata = tma;
     }
@@ -279,9 +278,6 @@ public class Request implements SecurityFunctionEvaluator {
     }
 
     protected void resolveCommand(Command command) throws QueryResolverException, TeiidComponentException {
-        if (this.tempTableStore != null) {
-        	QueryResolver.setChildMetadata(command, tempTableStore.getMetadataStore().getData(), null);
-        }
     	//ensure that the user command is distinct from the processing command
         //rewrite and planning may alter options, symbols, etc.
     	QueryResolver.resolveCommand(command, metadata);

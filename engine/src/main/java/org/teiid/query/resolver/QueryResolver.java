@@ -439,9 +439,7 @@ public class QueryResolver {
 		qmi = qmi.getDesignTimeMetadata();
 		cacheString = "transformation/" + cacheString; //$NON-NLS-1$
 		QueryNode cachedNode = (QueryNode)qmi.getFromMetadataCache(virtualGroup.getMetadataID(), cacheString);
-        if (cachedNode == null 
-        		|| (qnode.getQuery() != null && !cachedNode.getQuery().equals(qnode.getQuery()))
-        		|| (qnode.getCommand() != null && !cachedNode.getCommand().equals(qnode.getCommand()))) {
+        if (cachedNode == null) {
         	Command result = qnode.getCommand();
         	List bindings = null;
             if (result == null) {

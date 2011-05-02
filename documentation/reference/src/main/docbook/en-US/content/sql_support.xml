@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="sql_support">
-  <title>SQL Support</title>
+  <title>DML Support</title>
   <para>
     Teiid supports SQL for issuing queries and for defining view
     transformations; see also <link linkend="procedure_language">Procedure Language</link>
@@ -651,103 +651,6 @@
 	  </note>
     </section>
   </section>
-  <section id="temp_tables">
-    <title>Temp Tables</title>
-    <para>Teiid supports creating temporary,or "temp", tables. Temp tables are dynamically created, but are treated as any other physical table.
-    </para>
-    <para>
-      Temp tables can be defined implicitly by referencing them in a
-      INSERT statement or explicitly with a CREATE TABLE
-      statement. Implicitly created temp tables must have a name that
-      starts with '#'.
-    </para>
-    <itemizedlist>
-      <para>Creation syntax:
-      </para>
-      <listitem>
-        <para>Explicit: CREATE LOCAL TEMPORARY TABLE x (column type [NOT NULL], ... [PRIMARY KEY (column, ...)])
-        </para>
-      </listitem>
-      <listitem>
-        <para>Implicit: INSERT INTO #x (column, ...) VALUES (value, ...) 
-        </para>
-        <para>If #x doen't exist, it will be defined using the given column names and types from the value expressions.
-        </para>
-      </listitem>
-      <listitem>
-        <para>Implicit: INSERT INTO #x [(column, ...)] select c1, c2 from t
-        </para>
-        <para>If #x doesn't exist, it will be defined using the target column names (in not supplied, the column names will match the derived column names from the query), and the types from the query derived columns. 
-        </para>
-      </listitem>
-      <listitem>
-      	<para>Use the SERIAL data type to specify a NOT NULL and auto-incrementing INTEGER column.  The starting value of a SERIAL column is 1.</para>
-      </listitem>
-    </itemizedlist>
-    <itemizedlist>
-      <para>Drop syntax:
-      </para>
-      <listitem>
-        <para>DROP TABLE x
-        </para>
-      </listitem>
-    </itemizedlist>
-    <itemizedlist>
-    	<para>Primary Key Support</para>
-    	<listitem>
-        	<para>All key columns must be comparable.</para>
-      	</listitem>
-      	<listitem>
-        	<para>Use of a primary key creates a clustered index that supports search improvements for comparison, in, like, and order by.</para>
-      	</listitem>
-      	<listitem>
-        	<para>Null is an allowable primary key value, but there must be only 1 row that has an all null key.</para>
-      	</listitem>
-    </itemizedlist>
-    <itemizedlist>
-      <para>Limitations:
-      </para>
-      <listitem> 
-        <para>With the CREATE TABLE syntax only basic table definition (column name and type information) and an optional primary key are supported.
-        </para>
-      </listitem>
-      <listitem> 
-        <para>The "ON COMMIT" clause is not supported in the CREATE TABLE statement.
-        </para>
-      </listitem>
-      <listitem> 
-        <para>"drop behavior" option is not supported in the drop statement.
-        </para>
-      </listitem>
-      <listitem> 
-        <para>Only local temporary tables are supported. This implies that the scope of temp table will be either to the sesssion or the block of a virtual procedure that creates it.
-        </para>
-      </listitem>
-      <listitem>
-        <para>Session level temp tables are not fail-over safe.
-        </para>    
-      </listitem>    
-      <listitem>
-        <para>Temp tables are non-transactional.
-        </para>    
-      </listitem>  
-      <listitem>
-        <para>Lob values (xml, clob, blob) are tracked by reference rather than by value in a temporary table.  
-        Lob values from external sources that are inserted in a temporary table may become unreadable when the associated statement or connection is closed.
-        </para>    
-      </listitem>    
-    </itemizedlist>
-    <para>The following example is a series of statements that loads a temporary table with data from 2 sources, and with a manually inserted record, and then uses that temp table in a subsequent query.</para>
-    <programlisting>... 
-CREATE LOCAL TEMPORARY TABLE TEMP (a integer, b integer, c integer); 
-SELECT * INTO temp FROM Src1; SELECT * INTO temp FROM Src2; 
-INSERT INTO temp VALUES (1,2,3); 
-SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b; 
-...</programlisting>
-    <para>
-      See <link linkend="virtual_procedures">virtual procedures</link> for more on temp table usage.
-    </para>
-  </section>
   <section>
     <title>SQL Clauses</title>
     <para>This section describes the clauses that are used in the various <link linkend="sql_commands">SQL commands</link> described in the previous section. Nearly all these features follow standard SQL syntax and functionality, so any SQL reference can be used for more information.</para>
@@ -1213,10 +1116,10 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
   </section>
   <section id="set_operations">
     <title>Set Operations</title>
-    <para>Teiid supports the UNION, UNION ALL, INTERSECT, EXCEPT set operation as a way of combining the results of commands.</para>
+    <para>Teiid supports the UNION, UNION ALL, INTERSECT, EXCEPT set operation as a way of combining the results of query expressions.</para>
     <para>
       Usage:
-      <synopsis label="Usage">command (UNION|INTERSECT|EXCEPT) [ALL] command [ORDER BY...]</synopsis>
+      <synopsis label="Usage">queryExpression (UNION|INTERSECT|EXCEPT) [ALL] queryExpression [ORDER BY...]</synopsis>
     </para>
     <itemizedlist>
       <para>Syntax Rules:

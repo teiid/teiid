@@ -275,13 +275,21 @@ public class TempTableStore {
 					for (Object index : indexes) {
 						id.addIndex(resolveIndex(metadata, id, index));
 					}
-					Command c = (Command)QueryResolver.resolveView(group, metadata.getVirtualPlan(viewId), SQLConstants.Reserved.SELECT, metadata).getCommand().clone();
-					CacheHint hint = c.getCacheHint();
-					id.setCacheHint(hint);
 				}
 			}
 		}
+		updateCacheHint(viewId, metadata, group, id);
 		return id;
+	}
+
+	private void updateCacheHint(Object viewId,
+			QueryMetadataInterface metadata, GroupSymbol group,
+			TempMetadataID id) throws TeiidComponentException,
+			QueryMetadataException, QueryResolverException,
+			QueryValidatorException {
+		Command c = QueryResolver.resolveView(group, metadata.getVirtualPlan(viewId), SQLConstants.Reserved.SELECT, metadata).getCommand();
+		CacheHint hint = c.getCacheHint();
+		id.setCacheHint(hint);
 	}
 	
 	static ArrayList<TempMetadataID> resolveIndex(

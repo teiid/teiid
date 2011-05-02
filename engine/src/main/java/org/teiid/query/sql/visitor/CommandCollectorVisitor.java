@@ -126,7 +126,9 @@ public class CommandCollectorVisitor extends LanguageVisitor {
     
     @Override
     public void visit(AlterTrigger alterTrigger) {
-    	this.commands.add(alterTrigger.getDefinition());
+    	if (alterTrigger.getDefinition() != null) {
+    		this.commands.add(alterTrigger.getDefinition());
+    	}
     }
     
     @Override

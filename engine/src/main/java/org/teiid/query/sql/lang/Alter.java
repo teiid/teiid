@@ -62,7 +62,9 @@ public abstract class Alter<T extends Command> extends Command {
 	
 	public void cloneOnTo(Alter<T> clone) {
 		copyMetadataState(clone);
-		clone.setDefinition((T)getDefinition().clone());
+		if (this.definition != null) {
+			clone.setDefinition((T)this.definition.clone());
+		}
 		clone.setTarget(getTarget().clone());
 	}
 	

@@ -44,7 +44,7 @@ public class CacheConfiguration {
 	private String name;
 	private String location;
 	
-	private int maxStaleness = -1;
+	private int maxStaleness = 0;
 	
 	public CacheConfiguration() {
 	}

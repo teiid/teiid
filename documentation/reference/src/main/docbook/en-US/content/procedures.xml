@@ -458,6 +458,19 @@ END
     	<para>A FOR EACH ROW procedure will evaluate its block for each row of the view affected by the update statement.  
     	For UPDATE and DELETE statements this will be every row that passes the WHERE condition.  For INSERT statements there will be 1 new row for each set of values from the VALUES or query expression.  
     	The rows updated is reported as this number regardless of the affect of the underlying procedure logic.</para>
+    	<para>Teiid FOR EACH ROW update procedures function like INSTEAD OF triggers in traditional databases.  
+    	There may only be 1 FOR EACH ROW procedure for each INSERT, UPDATE, or DELETE operation against a view.  FOR EACH ROW update procedures can also be used to emulate BEFORE/AFTER each row triggers while still retaining the ability to perform an inherent update.  
+    	This BEFORE/AFTER trigger behavior with an inherent update can be achieved by creating an additional updatable view over the target view with update proceudres of the form:
+		<programlisting lang="sql">FOR EACH ROW
+	BEGIN
+	--before row logic
+	
+	--default insert/update/delete against the target view
+	INSERT INTO VW (c1, c2, c3) VALUES (NEW.c1, NEW.c2, NEW.c3); 
+	
+	--after row logic
+	END</programlisting>   	
+    	</para>
     	<section>
 	      <title>Definition</title>
 	      <para>

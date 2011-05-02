@@ -369,7 +369,7 @@
                     required="false" readOnly="false" />
                 <c:simple-property name="PreparedPlanCacheConfig.maxStaleness"
                     displayName="Max Entry Staleness"
-                    description="The maximum staleness of a prepared plan cache entry in seconds based upon costing modifications. -1 indicates no max. (default 300)"
+                    description="The maximum staleness of a prepared plan cache entry in seconds based upon metadata modifications. -1 indicates no max. (default 0)"
                     required="false" readOnly="false" />            
             </c:group>
             

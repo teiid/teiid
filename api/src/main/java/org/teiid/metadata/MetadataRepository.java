@@ -21,6 +21,7 @@
  */
 
 package org.teiid.metadata;
+import java.util.LinkedHashMap;
 
 /**
  * A hook for externalizing view, procedure, and other metadata.
@@ -46,7 +47,7 @@ public interface MetadataRepository {
 	 * Returns an updated trigger definition (FOR EACH ROW ...) or null if the current view definition should be used
 	 * should be used.
 	 */
-	String getInsteadOfTriggerDefinition(String vdbName, int vdbVersion, Table table, Table.TriggerOperation triggerOperation);
+	String getInsteadOfTriggerDefinition(String vdbName, int vdbVersion, Table table, Table.TriggerEvent triggerOperation);
 	
 	/**
 	 * 
@@ -56,7 +57,27 @@ public interface MetadataRepository {
 	 * @param triggerOperation
 	 * @param triggerDefinition
 	 */
-	void setInsteadOfTriggerDefinition(String vdbName, int vdbVersion, Table table, Table.TriggerOperation triggerOperation, String triggerDefinition);
+	void setInsteadOfTriggerDefinition(String vdbName, int vdbVersion, Table table, Table.TriggerEvent triggerOperation, String triggerDefinition);
+
+	/**
+	 * Returns whether the trigger is enabled
+	 * @param vdbName
+	 * @param vdbVersion
+	 * @param table
+	 * @param triggerOperation
+	 * @return
+	 */
+	boolean isInsteadOfTriggerEnabled(String vdbName, int vdbVersion, Table table, Table.TriggerEvent triggerOperation);
+	
+	/**
+	 * Set the given trigger enabled.
+	 * @param vdbName
+	 * @param vdbVersion
+	 * @param table
+	 * @param triggerOperation
+	 * @param enabled
+	 */
+	void setInsteadOfTriggerEnabled(String vdbName, int vdbVersion, Table table, Table.TriggerEvent triggerOperation, boolean enabled);
 	
 	/**
 	 * Returns an updated procedure definition (CREATE PROCEDURE ...) or null if the current procedure definition should be used
@@ -71,7 +92,7 @@ public interface MetadataRepository {
 	 * @param table
 	 * @param procedureDefinition
 	 */
-	void setProcedureDefinition(String vdbName, int vdbVersion, Procedure table, String procedureDefinition);
+	void setProcedureDefinition(String vdbName, int vdbVersion, Procedure procedure, String procedureDefinition);
 	
 	/**
 	 * Get updated {@link TableStats} for the given table
@@ -108,4 +129,23 @@ public interface MetadataRepository {
 	 * @param columnStats
 	 */
 	void setColumnStats(String vdbName, int vdbVersion, Column column, ColumnStats columnStats);
+	
+	/**
+	 * Get the extension metadata for a given record.
+	 * @param vdbName
+	 * @param vdbVersion
+	 * @param record
+	 * @return
+	 */
+	LinkedHashMap<String, String> getProperties(String vdbName, int vdbVersion, AbstractMetadataRecord record);
+	
+	/**
+	 * Set an extension metadata property for a given record.
+	 * @param vdbName
+	 * @param vdbVersion
+	 * @param record
+	 * @param name
+	 * @param value
+	 */
+	void setProperty(String vdbName, int vdbVersion, AbstractMetadataRecord record, String name, String value);
 }

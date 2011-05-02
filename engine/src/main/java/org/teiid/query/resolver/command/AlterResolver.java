@@ -25,7 +25,7 @@ package org.teiid.query.resolver.command;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.metadata.Table.TriggerOperation;
+import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.resolver.CommandResolver;
@@ -47,8 +47,8 @@ public class AlterResolver implements CommandResolver {
 		int type = Command.TYPE_QUERY;
 		boolean viewTarget = true;
 		if (alter instanceof AlterTrigger) {
-			TriggerOperation op = ((AlterTrigger)alter).getOperation();
-			switch (op) {
+			TriggerEvent event = ((AlterTrigger)alter).getEvent();
+			switch (event) {
 			case DELETE:
 				type = Command.TYPE_DELETE;
 				break;
@@ -66,7 +66,9 @@ public class AlterResolver implements CommandResolver {
 		if (viewTarget && !QueryResolver.isView(alter.getTarget(), metadata)) {
 			throw new QueryResolverException(QueryPlugin.Util.getString("AlterResolver.not_a_view", alter.getTarget())); //$NON-NLS-1$
 		}
-		QueryResolver.resolveCommand(alter.getDefinition(), alter.getTarget(), type, metadata.getDesignTimeMetadata());
+		if (alter.getDefinition() != null) {
+			QueryResolver.resolveCommand(alter.getDefinition(), alter.getTarget(), type, metadata.getDesignTimeMetadata());
+		}
 	}
 
 }

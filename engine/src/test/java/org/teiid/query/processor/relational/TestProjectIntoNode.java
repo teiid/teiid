@@ -36,6 +36,8 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.events.EventDistributor;
+import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.processor.FakeTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;
@@ -184,6 +186,16 @@ public class TestProjectIntoNode {
             Object val = row.get(0);
             assertEquals(new Integer(value), val);
         }
+		@Override
+		public EventDistributor getEventDistributor() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		@Override
+		public MetadataRepository getMetadataRepository() {
+			// TODO Auto-generated method stub
+			return null;
+		}
     }
     
     private static final class FakeDataTupleSource implements TupleSource {

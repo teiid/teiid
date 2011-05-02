@@ -53,6 +53,9 @@
 	<LI><B>Enhanced Sort Join</B> - the partitioned merge join was replaced with an enhanced sort join.  The enhanced sort join will use the actual row counts from each side of the relation to perform a index based join if one side is small enough, a partial sort of the larger side and a repeated merge join if the tuples are unbalanced but one side is not small enough to form an index, or a standard sort merge join if the tuples are balanced.
 	<LI><B>JDK1.5 JDBC Client JAR</B> - A retro-translated Teiid client JDBC jar now available to use with JDK 1.5 VM. Note only the JDBC API is supported, not the Admin API, or retrieving query plans as XML.
 	<LI><B>Security Improvements</B> - UDF and pushdown functions can now be protected with data roles.  Also the CommandContext can provide the Subject for custom security checks in UDFs.
+	<LI><B>Cache Invalidation</B> - Prepared plan and result set caches can have a maxStaleness value, which will invalidate entries based upon metadata and data changes respectively.  See the Admin Guide for more.
+	<LI><B>Runtime-updates of Metadata</B> - Alter statements have been added to change view/procedure/INSTEAD OF trigger (update procedure) definitions have been added.  A create statement was also added to add INSTEAD OF trigger (update procedures) to views. 
+	System procedures were added to set extension metadata and stat values.  By default all effects of metadata updates happen only on running vdbs across the cluster.  To make the changes persistent see the Developers Guide Runtime Updates section. 
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -63,6 +66,7 @@
 
 <h4>from 7.3</h4>
 <ul>
+  <li>SYS.PROPERTIES has a new column, ClobValue, to get values exceeding the max string length
   <li>SYS.COLUMNS has two new columns to get statistical information: DistinctCount and NullCount
   <li>ARRAY_AGG is now a reserved word</li>
   <li>The use of an IN procedure parameter with the name "source_name" in a multi-source model, will now be treated the parameter that controls which source
@@ -123,6 +127,7 @@ See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on c
 
 <h4>from 7.3</h4>
 <ul>
+  <LI>The prepared plan cache is now configured via the PreparedPlanCacheConfig bean, rather than through properties on the RuntimeEngineDeployer
   <LI>SocketConfiguration.maxSocketThreads will interpret a setting of 0 to mean use the system default of max available processors.  Both the ODBC and JDBC transports now default to the 0 setting.
   <LI>maxReserveBatchColumns and maxProcessingBatchesColumns will interpret a setting of -1 to mean auto-calculate acceptable values given the max heap and other information.  See the admin guide for more.
   <LI>The default for org.teiid.useValueCache has changed to false, since typical installations will not greatly benefit from the additional lookup cost.

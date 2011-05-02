@@ -72,6 +72,7 @@ public class QueryOptimizer {
 	private static final CommandPlanner XML_PLANNER = new XMLPlanner();
 	private static final CommandPlanner PROCEDURE_PLANNER = new ProcedurePlanner();
     private static final CommandPlanner BATCHED_UPDATE_PLANNER = new BatchedUpdatePlanner();
+    private static final CommandPlanner DDL_PLANNER = new DdlPlanner();
 
 	// Can't construct	
 	private QueryOptimizer() {}
@@ -109,18 +110,28 @@ public class QueryOptimizer {
                                    
 		ProcessorPlan result = null;
 
-		if (command.getType() == Command.TYPE_UPDATE_PROCEDURE){
+		switch (command.getType()) {
+		case Command.TYPE_UPDATE_PROCEDURE:
 			CreateUpdateProcedureCommand cupc = (CreateUpdateProcedureCommand)command;
 			if (cupc.isUpdateProcedure()) {
 				result = planProcedure(command, metadata, idGenerator, capFinder, analysisRecord, context);
 			} else {
-				String fullName = metadata.getFullName(cupc.getVirtualGroup().getMetadataID());
+				StoredProcedure c = (StoredProcedure)cupc.getUserCommand();
+				Object pid = cupc.getVirtualGroup().getMetadataID();
+				if (c != null) {
+					pid = c.getProcedureID();
+				}
+				String fullName = metadata.getFullName(pid);
+				fullName = "procedure cache:" + fullName; //$NON-NLS-1$
 				PreparedPlan pp = context.getPlan(fullName);
 				if (pp == null) {
 					Determinism determinismLevel = context.resetDeterminismLevel();
 					CommandContext clone = context.clone();
 					ProcessorPlan plan = planProcedure(command, metadata, idGenerator, capFinder, analysisRecord, clone);
 					//note that this is not a full prepared plan.  It is not usable by user queries.
+					if (pid instanceof Procedure) {
+						clone.accessedProcedure((Procedure)pid);
+					}
 					pp = new PreparedPlan();
 					pp.setPlan(plan, clone);
 					context.putPlan(fullName, pp, context.getDeterminismLevel());
@@ -166,9 +177,16 @@ public class QueryOptimizer {
 	            	plan.setImplicitParams(((TranslatableProcedureContainer)container).getImplicitParams());
 	            }
 	        }
-        } else if (command.getType() == Command.TYPE_BATCHED_UPDATE){
-            result = BATCHED_UPDATE_PLANNER.optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);
-        } else {
+	        break;
+		case Command.TYPE_BATCHED_UPDATE:
+			result = BATCHED_UPDATE_PLANNER.optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);
+			break;
+		case Command.TYPE_ALTER_PROC:
+		case Command.TYPE_ALTER_TRIGGER:
+		case Command.TYPE_ALTER_VIEW:
+			result = DDL_PLANNER.optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);
+			break;
+		default:
 			try {
 				if (command.getType() == Command.TYPE_QUERY && command instanceof Query && QueryResolver.isXMLQuery((Query)command, metadata)) {
 					result = XML_PLANNER.optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);

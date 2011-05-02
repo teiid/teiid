@@ -40,6 +40,7 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.util.ContextProperties;
 
@@ -50,7 +51,8 @@ import org.teiid.query.util.ContextProperties;
  */
 public class TestRequest extends TestCase {
 
-    private final static String QUERY = "SELECT * FROM pm1.g1";  //$NON-NLS-1$
+    private static final TempTableStore TEMP_TABLE_STORE = new TempTableStore("1"); //$NON-NLS-1$
+	private final static String QUERY = "SELECT * FROM pm1.g1";  //$NON-NLS-1$
     
     /**
      * Constructor for TestRequest.
@@ -77,7 +79,7 @@ public class TestRequest extends TestCase {
         RequestMessage message = new RequestMessage();
         DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, FakeMetadataFactory.example1VDB());
         
-        request.initialize(message, null, null,new FakeTransactionService(),null, workContext, null);
+        request.initialize(message, null, null,new FakeTransactionService(), TEMP_TABLE_STORE, workContext, null); 
         request.initMetadata();
         request.setAuthorizationValidator(new DataRoleAuthorizationValidator(true, true, true));
         request.validateAccess(command);
@@ -132,14 +134,11 @@ public class TestRequest extends TestCase {
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
         
         request.initialize(message, Mockito.mock(BufferManager.class),
-				new FakeDataManager(), new FakeTransactionService(), null, workContext, null);
+				new FakeDataManager(), new FakeTransactionService(), TEMP_TABLE_STORE, workContext, null);
         request.setAuthorizationValidator(new DataRoleAuthorizationValidator(false, true, true));
         request.processRequest();
         return request;
     }
-    
-    
-
     
     /**
      * Test PreparedStatementRequest.processRequest().  

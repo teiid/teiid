@@ -111,7 +111,7 @@ public class ResultSetReader extends StringLineReader {
                 for (int col = 1; col <= columnCount; col++) {
                     Object anObj = source.getObject(col);
                     if (columnTypes[col-1] == Types.CLOB) {
-                        sb.append(anObj != null ? anObj : "null"); //$NON-NLS-1$
+                        sb.append(anObj != null ? source.getString(col) : "null"); //$NON-NLS-1$
                     }
                     else if (columnTypes[col-1] == Types.BLOB) {
                         sb.append(anObj != null ? "BLOB" : "null"); //$NON-NLS-1$ //$NON-NLS-2$

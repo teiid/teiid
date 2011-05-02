@@ -78,6 +78,18 @@ import org.teiid.query.sql.lang.SPParameter;
  */
 public class TransformationMetadata extends BasicQueryMetadata implements Serializable {
 	
+	private final class LiveQueryNode extends QueryNode {
+		Procedure p;
+		private LiveQueryNode(Procedure p) {
+			super(null);
+			this.p = p;
+		}
+
+		public String getQuery() {
+			return p.getQueryPlan();
+		}
+	}
+
 	private final class VirtualFileInputStreamFactory extends
 			InputStreamFactory {
 		private final VirtualFile f;
@@ -330,7 +342,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
                 // if this is a virtual procedure get the procedure plan
                 if(procRecord.isVirtual()) {
-                    QueryNode queryNode = new QueryNode(procRecord.getQueryPlan()); 
+                    QueryNode queryNode = new LiveQueryNode(procRecord);
                     procInfo.setQueryPlan(queryNode);
                 }
                 
@@ -464,7 +476,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         if (!tableRecordImpl.isVirtual()) {
             throw new QueryMetadataException(QueryPlugin.Util.getString("TransformationMetadata.InsertPlan_could_not_be_found_for_physical_group__8")+tableRecordImpl.getFullName()); //$NON-NLS-1$
         }
-        return ((Table)groupID).getInsertPlan();
+        return tableRecordImpl.isInsertPlanEnabled()?tableRecordImpl.getInsertPlan():null;
     }
 
     public String getUpdatePlan(final Object groupID) throws TeiidComponentException, QueryMetadataException {
@@ -473,7 +485,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         if (!tableRecordImpl.isVirtual()) {
         	throw new QueryMetadataException(QueryPlugin.Util.getString("TransformationMetadata.InsertPlan_could_not_be_found_for_physical_group__10")+tableRecordImpl.getFullName());         //$NON-NLS-1$
         }
-        return ((Table)groupID).getUpdatePlan();
+        return tableRecordImpl.isUpdatePlanEnabled()?tableRecordImpl.getUpdatePlan():null;
     }
 
     public String getDeletePlan(final Object groupID) throws TeiidComponentException, QueryMetadataException {
@@ -482,7 +494,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         if (!tableRecordImpl.isVirtual()) {
             throw new QueryMetadataException(QueryPlugin.Util.getString("TransformationMetadata.DeletePlan_could_not_be_found_for_physical_group__12")+tableRecordImpl.getFullName()); //$NON-NLS-1$
         }
-        return ((Table)groupID).getDeletePlan();
+        return tableRecordImpl.isDeletePlanEnabled()?tableRecordImpl.getDeletePlan():null;
     }
 
     public boolean modelSupports(final Object modelID, final int modelConstant)
@@ -1035,8 +1047,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
 	@Override
-	public Object addToMetadataCache(Object metadataID, String key, Object value)
-			throws TeiidComponentException, QueryMetadataException {
+	public Object addToMetadataCache(Object metadataID, String key, Object value) {
         ArgCheck.isInstanceOf(AbstractMetadataRecord.class, metadataID);
         boolean groupInfo = key.startsWith(GroupInfo.CACHE_PREFIX);
         key = getCacheKey(key, (AbstractMetadataRecord)metadataID);

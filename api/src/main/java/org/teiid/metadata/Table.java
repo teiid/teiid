@@ -41,7 +41,7 @@ public class Table extends ColumnSet<Schema> {
 		MaterializedTable
 	}
 	
-    public static enum TriggerOperation {
+    public static enum TriggerEvent {
 		INSERT,
 		UPDATE,
 		DELETE
@@ -64,6 +64,9 @@ public class Table extends ColumnSet<Schema> {
     private String insertPlan;
     private String updatePlan;
     private String deletePlan;
+    private boolean insertPlanEnabled;
+    private boolean updatePlanEnabled;
+    private boolean deletePlanEnabled;
     private Table materializedStageTable;
     private Table materializedTable;
 
@@ -179,14 +182,17 @@ public class Table extends ColumnSet<Schema> {
     
     public void setInsertPlan(String insertPlan) {
 		this.insertPlan = DataTypeManager.getCanonicalString(insertPlan);
+		this.insertPlanEnabled = true;
 	}
     
     public void setUpdatePlan(String updatePlan) {
 		this.updatePlan = DataTypeManager.getCanonicalString(updatePlan);
+		this.updatePlanEnabled = true;
 	}
     
     public void setDeletePlan(String deletePlan) {
 		this.deletePlan = DataTypeManager.getCanonicalString(deletePlan);
+		this.deletePlanEnabled = true;
 	}
     
     public List<ForeignKey> getForeignKeys() {
@@ -299,6 +305,30 @@ public class Table extends ColumnSet<Schema> {
 		if (stats.getCardinality() != null) {
 			setCardinality(stats.getCardinality());
 		}
+	}
+	
+	public boolean isDeletePlanEnabled() {
+		return deletePlanEnabled;
+	}
+	
+	public boolean isInsertPlanEnabled() {
+		return insertPlanEnabled;
+	}
+	
+	public boolean isUpdatePlanEnabled() {
+		return updatePlanEnabled;
+	}
+	
+	public void setInsertPlanEnabled(boolean insertPlanEnabled) {
+		this.insertPlanEnabled = insertPlanEnabled;
+	}
+	
+	public void setDeletePlanEnabled(boolean deletePlanEnabled) {
+		this.deletePlanEnabled = deletePlanEnabled;
+	}
+	
+	public void setUpdatePlanEnabled(boolean updatePlanEnabled) {
+		this.updatePlanEnabled = updatePlanEnabled;
 	}
 	
 }

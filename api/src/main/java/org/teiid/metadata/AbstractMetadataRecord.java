@@ -129,13 +129,19 @@ public abstract class AbstractMetadataRecord implements Serializable {
     /**
      * The preferred setter for extension properties.
      * @param key
-     * @param value
+     * @param value, if null the property will be removed
      */
-    public void setProperty(String key, String value) {
+    public String setProperty(String key, String value) {
+    	if (value == null) {
+    		if (this.properties == null) {
+    			return null;
+    		}
+    		return this.properties.remove(key);
+    	}
     	if (this.properties == null) {
     		this.properties = new LinkedHashMap<String, String>();
     	}
-    	this.properties.put(DataTypeManager.getCanonicalString(key), DataTypeManager.getCanonicalString(value));
+    	return this.properties.put(DataTypeManager.getCanonicalString(key), DataTypeManager.getCanonicalString(value));
     }
     
     public void setProperties(LinkedHashMap<String, String> properties) {

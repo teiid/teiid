@@ -22,20 +22,23 @@
 
 package org.teiid.query.sql.lang;
 
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.metadata.Table;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.proc.TriggerAction;
 
 public class AlterTrigger extends Alter<TriggerAction> {
 	
-	private Table.TriggerOperation operation;
+	private Table.TriggerEvent event;
+	private Boolean enabled;
+	private boolean create;
 	
-	public Table.TriggerOperation getOperation() {
-		return operation;
+	public Table.TriggerEvent getEvent() {
+		return event;
 	}
 	
-	public void setOperation(Table.TriggerOperation operation) {
-		this.operation = operation;
+	public void setEvent(Table.TriggerEvent operation) {
+		this.event = operation;
 	}
 	
 	@Override
@@ -47,7 +50,9 @@ public class AlterTrigger extends Alter<TriggerAction> {
 	public AlterTrigger clone() {
 		AlterTrigger clone = new AlterTrigger();
 		cloneOnTo(clone);
-		clone.operation = operation;
+		clone.event = event;
+		clone.enabled = this.enabled;
+		clone.create = this.create;
 		return clone;
 	}
 	
@@ -65,6 +70,24 @@ public class AlterTrigger extends Alter<TriggerAction> {
 			return true;
 		}
 		AlterTrigger other = (AlterTrigger)obj;
-		return other.operation == this.operation;
+		return EquivalenceUtil.areEqual(this.enabled, other.enabled) 
+		&& this.create == other.create
+		&& other.event == this.event;
+	}
+	
+	public void setEnabled(Boolean enabled) {
+		this.enabled = enabled;
+	}
+	
+	public Boolean getEnabled() {
+		return enabled;
+	}
+	
+	public boolean isCreate() {
+		return create;
+	}
+	
+	public void setCreate(boolean create) {
+		this.create = create;
 	}
 }

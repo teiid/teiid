@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
+%CustomDTD;
+]>
 <chapter id="system_schema">
     <title>System Schema</title>
     <para>The built-in SYS and SYSADMIN schemas provide metadata tables and procedures against the current VDB.</para>
@@ -12,6 +15,8 @@
 				<para>This table provides the current VDB contents.</para>
 				<informaltable frame="all">
 					<tgroup cols="3">
+					    <colspec colwidth=".6*" />
+        			    <colspec colwidth=".4*" />
 						<thead>
 							<row>
 								<entry>
@@ -61,6 +66,8 @@
 					context of a connection).</para>
 				<informaltable frame="all">
 					<tgroup cols="3">
+						<colspec colwidth=".6*" />
+        			    <colspec colwidth=".4*" />
 						<thead>
 							<row>
 								<entry>
@@ -110,6 +117,8 @@
 				</para>
 				<informaltable frame="all">
 					<tgroup cols="3">
+						<colspec colwidth=".6*" />
+        			    <colspec colwidth=".4*" />
 						<thead>
 							<row>
 								<entry>
@@ -214,7 +223,9 @@
 					metamodel extensions are being used.</para>
 				<informaltable frame="all">
 					<tgroup cols="3">
-						<thead>
+						<colspec colwidth=".6*" />
+        			    <colspec colwidth=".4*" />
+        			    <thead>
 							<row>
 								<entry>
 									<para>Column Name</para>
@@ -286,6 +297,8 @@
 					views, documents, etc) in the virtual database.</para>
 				<informaltable frame="all">
 					<tgroup cols="3">
+						<colspec colwidth=".6*" />
+        			    <colspec colwidth=".4*" />					
 						<thead>
 							<row>
 								<entry>
@@ -443,6 +456,8 @@
 				<para>This table supplies information about all the materailized views in the virtual database.</para>
 				<informaltable frame="all">
 					<tgroup cols="3">
+						<colspec colwidth=".6*" />
+        			    <colspec colwidth=".4*" />
 						<thead>
 							<row>
 								<entry>
@@ -566,6 +581,8 @@
 					(columns, tags, attributes, etc) in the virtual database.</para>
 				<informaltable frame="all">
 					<tgroup cols="3">
+						<colspec colwidth=".6*" />
+        			    <colspec colwidth=".4*" />
 						<thead>
 							<row>
 								<entry>
@@ -958,10 +975,11 @@
 			<section>
 				<title>SYS.Keys</title>
 				<para>This table supplies information about primary, foreign,
-					and
-					unique keys.</para>
+					and unique keys.</para>
 				<informaltable frame="all">
 					<tgroup cols="3">
+						<colspec colwidth=".6*" />
+        			    <colspec colwidth=".4*" />
 						<thead>
 							<row>
 								<entry>
@@ -1106,10 +1124,11 @@
 			<section>
 				<title>SYS.KeyColumns</title>
 				<para>This table supplies information about the columns
-					referenced by
-					a key.</para>
+					referenced by a key.</para>
 				<informaltable frame="all">
 					<tgroup cols="3">
+						<colspec colwidth=".6*" />
+        			    <colspec colwidth=".4*" />
 						<thead>
 							<row>
 								<entry>
@@ -1241,16 +1260,15 @@
 			</section>
 		</section>
 		<section>
-			<title>
-				Procedure Metadata
-    </title>
+			<title>Procedure Metadata</title>
 			<section>
 				<title>SYS.Procedures</title>
 				<para>This table supplies information about the procedures in
-					the
-					virtual database.</para>
+					the virtual database.</para>
 				<informaltable frame="all">
 					<tgroup cols="3">
+						<colspec colwidth=".6*" />
+        			    <colspec colwidth=".4*" />
 						<thead>
 							<row>
 								<entry>
@@ -1363,6 +1381,8 @@
       </para>
 				<informaltable frame="all">
 					<tgroup cols="3">
+						<colspec colwidth=".6*" />
+        			    <colspec colwidth=".4*" />
 						<thead>
 							<row>
 								<entry>
@@ -1536,11 +1556,12 @@
 				<title>SYS.DataTypes</title>
 				<para>
 					This table supplies information on
-					<link linkend="datatypes">datatypes</link>
-					.
+					<link linkend="datatypes">datatypes</link>.
 				</para>
 				<informaltable frame="all">
 					<tgroup cols="3">
+						<colspec colwidth=".6*" />
+        			    <colspec colwidth=".4*" />
 						<thead>
 							<row>
 								<entry>
@@ -1774,87 +1795,52 @@
 			</section>
 		</section>
         <warning>
-		  <para>OID column is is guranteed to be unique only for given version of the VDB. If the VDB is updated and a different version of
-          the VDB is deployed, these IDs are not guranteed to be unique across both versions of VDB. UID is unique across different versions
-          only if the VDB is generated from Designer and metadata from old models are used(i.e. no re-importing from sources). 
-          UID column in a Dynamic VDB behaves same as OID column.</para>
+		  <para>The OID column is is guranteed to be unique/consistent only for given version running instance of a VDB. If a different version of
+          the VDB is deployed, these IDs are not guranteed to be the same or unique across both versions of the VDB. Dynamic VDB OIDs are not cluster safe.</para>
 	  </warning>
 	</section>
 	<section id="system_procedures">
 		<title>System Procedures</title>
-		<informaltable frame="all">
-			<tgroup cols="3">
-				<thead>
-					<row>
-						<entry>
-							<para>Procedure</para>
-						</entry>
-						<entry>
-							<para>Parameters</para>
-						</entry>
-						<entry>
-							<para>Description</para>
-						</entry>
-					</row>
-				</thead>
-				<tbody>
-					<row>
-						<entry>
-							<para>SYS.getXMLSchemas</para>
-						</entry>
-						<entry>
-							<para>(in string document)</para>
-						</entry>
-						<entry>
-							<para>Returns a resultset with a single column, schema, containing the schemas as clobs.</para>
-						</entry>
-					</row>
-					<row>
-						<entry>
-							<para>SYSADMIN.refreshMatView</para>
-						</entry>
-						<entry>
-							<para>(in string ViewName, in boolean Invalidate)</para>
-						</entry>
-						<entry>
-							<para>Returns integer RowsUpdated. -1 indicates a load is in progress, otherwise the cardinality of the table is returned.  See the Caching Guide for more.</para>
-						</entry>
-					</row>
-					<row>
-						<entry>
-							<para>SYSADMIN.refreshMatViewRow</para>
-						</entry>
-						<entry>
-							<para>(in string ViewName, in object Key)</para>
-						</entry>
-						<entry>
-							<para>Returns integer RowsUpdated. -1 indicates the materialized table is currently invalid. 0 indicates that the specified row did not exist in the live data query or in the materialized table.  See the Caching Guide for more.</para>
-						</entry>
-					</row>
-					<row>
-						<entry>
-							<para>SYSADMIN.setTableStats</para>
-						</entry>
-						<entry>
-							<para>(in string TableName, in integer Cardinality)</para>
-						</entry>
-						<entry>
-							<para>Set statistics for the given table.  A <code>MetadataRepository</code> must be configured to make the update persistent.</para>
-						</entry>
-					</row>
-					<row>
-						<entry>
-							<para>SYSADMIN.setColumnStats</para>
-						</entry>
-						<entry>
-							<para>(in string TableName, in string ColumnName, in integer DistinctCount, in integer NullCount, in string Max, in string Min)</para>
-						</entry>
-						<entry>
-							<para>Set statistics for the given column.  A <code>MetadataRepository</code> must be configured to make the update persistent.</para>
-						</entry>
-					</row>
-				</tbody>
-			</tgroup>
-		</informaltable>
+		<section>
+    	<title>SYS.getXMLSchemas</title>
+    	<para>Returns a resultset with a single column, schema, containing the schemas as clobs.</para>
+        <para><synopsis>SYS.getXMLSchemas(in string document)</synopsis></para>
+        </section>
+        <section>
+    	<title>SYSADMIN.refreshMatView</title>
+    	<para>Returns integer RowsUpdated. -1 indicates a load is in progress, otherwise the cardinality of the table is returned.  See the Caching Guide for more.</para>
+        <para><synopsis>SYSADMIN.refreshMatView(return integer RowsUpdated, in string ViewName, in boolean Invalidate)</synopsis></para>
+        </section>
+        <section>
+    	<title>SYSADMIN.refreshMatViewRow</title>
+    	<para>Returns integer RowsUpdated. -1 indicates the materialized table is currently invalid. 0 indicates that the specified row did not exist in the live data query or in the materialized table.  See the Caching Guide for more.</para>
+        <para><synopsis>SYSADMIN.refreshMatViewRow(return integer RowsUpdated, in string ViewName, in object Key)</synopsis></para>
+        </section>
+        <section>
+        	<title>Metadata Procedures</title>
+        	&metadata-update-note;	
+	        <section>
+	    	<title>SYSADMIN.setTableStats</title>
+	    	<para>Set statistics for the given table.</para>
+	        <para><synopsis>SYSADMIN.setTableStats(in string TableName, in integer Cardinality)</synopsis></para>
+	        </section>
+	        <section>
+	    	<title>SYSADMIN.setColumnStats</title>
+	    	<para>Set statistics for the given column.</para>
+	        <para><synopsis>SYSADMIN.setColumnStats(in string TableName, in string ColumnName, in integer DistinctCount, in integer NullCount, in string Max, in string Min)</synopsis></para>
+	        <para>Passing a null stat value will leave corresponding metadata value unchanged.</para>
+	        </section>
+	        <section>
+	    	<title>SYSADMIN.setProperty</title>
+	    	<para>Set an extension metadata property for the given record.  Extension metadata is typically used by <xref linkend="translators"/>.</para>
+	        <para><synopsis>SYSADMIN.setProperty(return clob OldValue, in string Uid, in string Name, in clob Value)</synopsis></para>
+	        <para>Setting a value to null will remove the property.</para>
+	        <example lang="sql">
+	        	<title>Example Property Set</title>
+	        	<programlisting>CALL SYSADMIN.setProperty(uid=>(SELECT uid FROM TABLES WHERE name='tab'), name=>'some name', value=>'some value')</programlisting>
+	        	<para>This will set the property 'some name'='some value' on table tab.</para>
+	        </example>
+	        </section>
+        </section>
 	</section>
 </chapter>

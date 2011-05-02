@@ -58,6 +58,7 @@ import org.teiid.events.EventDistributor;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
@@ -486,7 +487,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 		if (hint != null) {
 			table.setPreferMemory(hint.getPrefersMemory());
 			if (hint.getTtl() != null) {
-				info.setTtl(table.getCacheHint().getTtl());
+				info.setTtl(hint.getTtl());
 			}
 			if (pk != null) {
 				updatable = hint.isUpdatable();
@@ -619,5 +620,15 @@ public class TempTableDataManager implements ProcessorDataManager {
     	ts.closeSource();
     	return result;
     }
+
+	@Override
+	public EventDistributor getEventDistributor() {
+		return this.eventDistributor;
+	}
+
+	@Override
+	public MetadataRepository getMetadataRepository() {
+		return this.processorDataManager.getMetadataRepository();
+	}
 
 }

@@ -70,7 +70,6 @@ import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.adminapi.jboss.AdminProvider;
-import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.cache.CacheFactory;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
@@ -90,6 +89,7 @@ import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.dqp.internal.process.DataTierManagerImpl;
 import org.teiid.dqp.internal.process.TransactionServerImpl;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.SessionService;
@@ -102,16 +102,20 @@ import org.teiid.logging.Log4jListener;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnStats;
 import org.teiid.metadata.MetadataRepository;
+import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.TableStats;
+import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.net.TeiidURL;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
+import org.teiid.query.processor.DdlPlan;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.security.SecurityHelper;
 import org.teiid.transport.ClientServiceRegistry;
@@ -672,38 +676,23 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		updateModified(true, vdbName, vdbVersion, schema, tableNames);
 	}
 	
-	@Override
-	public void schemaModification(String vdbName, int vdbVersion,
-			String schema, String... objectNames) {
-		updateModified(false, vdbName, vdbVersion, schema, objectNames);
-	}
-
 	private void updateModified(boolean data, String vdbName, int vdbVersion, String schema,
 			String... objectNames) {
-		VDBMetaData vdb = this.vdbRepository.getVDB(vdbName, vdbVersion);
-		if (vdb == null) {
+		Schema s = getSchema(vdbName, vdbVersion, schema);
+		if (s == null) {
 			return;
 		}
-		TransformationMetadata tm = vdb.getAttachment(TransformationMetadata.class);
-		if (tm == null) {
-			return;
-		}
-		try {
-			Schema s = tm.getMetadataStore().getSchema(schema.toUpperCase());
-			long ts = System.currentTimeMillis();
-			for (String name:objectNames) {
-				Table table = s.getTables().get(name);
-				if (table == null) {
-					continue;
-				}
-				if (data) {
-					table.setLastDataModification(ts);
-				} else {
-					table.setLastModified(ts);
-				}
+		long ts = System.currentTimeMillis();
+		for (String name:objectNames) {
+			Table table = s.getTables().get(name);
+			if (table == null) {
+				continue;
 			}
-		} catch (TeiidException e) {
-			LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("DQPCore.unable_to_process_event")); //$NON-NLS-1$
+			if (data) {
+				table.setLastDataModification(ts);
+			} else {
+				table.setLastModified(ts);
+			}
 		}
 	}
 	
@@ -737,6 +726,14 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 
 	private Table getTable(String vdbName, int vdbVersion, String schemaName,
 			String tableName) {
+		Schema s = getSchema(vdbName, vdbVersion, schemaName);
+		if (s == null) {
+			return null;
+		}
+		return s.getTables().get(tableName.toUpperCase());
+	}
+
+	private Schema getSchema(String vdbName, int vdbVersion, String schemaName) {
 		VDBMetaData vdb = this.vdbRepository.getVDB(vdbName, vdbVersion);
 		if (vdb == null) {
 			return null;
@@ -745,14 +742,59 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		if (tm == null) {
 			return null;
 		}
-		Schema s;
-		try {
-			s = tm.getMetadataStore().getSchema(schemaName.toUpperCase());
-		} catch (QueryMetadataException e) {
-			LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("DQPCore.unable_to_process_event")); //$NON-NLS-1$
-			return null;
+		return tm.getMetadataStore().getSchemas().get(schemaName.toUpperCase());
+	}
+	
+	@Override
+	public void setInsteadOfTriggerDefinition(String vdbName, int vdbVersion,
+			String schema, String viewName, TriggerEvent triggerEvent,
+			String triggerDefinition, Boolean enabled) {
+		Table t = getTable(vdbName, vdbVersion, schema, viewName);
+		if (t == null) {
+			return;
 		}
-		return s.getTables().get(tableName.toUpperCase());
+		DdlPlan.alterInsteadOfTrigger(this.vdbRepository.getVDB(vdbName, vdbVersion), t, triggerDefinition, enabled, triggerEvent);
+	}
+	
+	@Override
+	public void setProcedureDefinition(String vdbName, int vdbVersion,
+			String schema, String procName, String definition) {
+		Schema s = getSchema(vdbName, vdbVersion, schema);
+		if (s == null) {
+			return;
+		}
+		Procedure p = s.getProcedures().get(procName.toUpperCase());
+		if (p == null) {
+			return;
+		}
+		DdlPlan.alterProcedureDefinition(this.vdbRepository.getVDB(vdbName, vdbVersion), p, definition);
+	}
+	
+	@Override
+	public void setViewDefinition(String vdbName, int vdbVersion,
+			String schema, String viewName, String definition) {
+		Table t = getTable(vdbName, vdbVersion, schema, viewName);
+		if (t == null) {
+			return;
+		}
+		DdlPlan.alterView(this.vdbRepository.getVDB(vdbName, vdbVersion), t, definition);
+	}
+	
+	@Override
+	public void setProperty(String vdbName, int vdbVersion, String uuid,
+			String name, String value) {
+		VDBMetaData vdb = this.vdbRepository.getVDB(vdbName, vdbVersion);
+		if (vdb == null) {
+			return;
+		}
+		TransformationMetadata tm = vdb.getAttachment(TransformationMetadata.class);
+		if (tm == null) {
+			return;
+		}
+		AbstractMetadataRecord record = DataTierManagerImpl.getByUuid(tm.getMetadataStore(), uuid);
+		if (record != null) {
+			record.setProperty(name, value);
+		}
 	}
 	
 	@Override

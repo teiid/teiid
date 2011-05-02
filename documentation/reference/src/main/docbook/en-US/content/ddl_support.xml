@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
+%CustomDTD;
+]>
+<chapter id="ddl_support">
+  <title>DDL Support</title>
+  <para>Teiid supports a subset of DDL to, create/drop temporary tables and to manipulate procedure and view definitions at runtime. 
+  	It is not currently possible to arbitrarily drop/create non-temporary metadata entries.</para>
+  	&metadata-update-note;
+    <section id="temp_tables">
+    <title>Temp Tables</title>
+    <para>Teiid supports creating temporary,or "temp", tables. Temp tables are dynamically created, but are treated as any other physical table.
+    </para>
+    <para>
+      Temp tables can be defined implicitly by referencing them in a
+      INSERT statement or explicitly with a CREATE TABLE
+      statement. Implicitly created temp tables must have a name that
+      starts with '#'.
+    </para>
+    <itemizedlist>
+      <para>Creation syntax:
+      </para>
+      <listitem>
+        <para>Explicit: CREATE LOCAL TEMPORARY TABLE x (column type [NOT NULL], ... [PRIMARY KEY (column, ...)])
+        </para>
+      </listitem>
+      <listitem>
+        <para>Implicit: INSERT INTO #x (column, ...) VALUES (value, ...) 
+        </para>
+        <para>If #x doen't exist, it will be defined using the given column names and types from the value expressions.
+        </para>
+      </listitem>
+      <listitem>
+        <para>Implicit: INSERT INTO #x [(column, ...)] select c1, c2 from t
+        </para>
+        <para>If #x doesn't exist, it will be defined using the target column names (in not supplied, the column names will match the derived column names from the query), and the types from the query derived columns. 
+        </para>
+      </listitem>
+      <listitem>
+      	<para>Use the SERIAL data type to specify a NOT NULL and auto-incrementing INTEGER column.  The starting value of a SERIAL column is 1.</para>
+      </listitem>
+    </itemizedlist>
+    <itemizedlist>
+      <para>Drop syntax:
+      </para>
+      <listitem>
+        <para>DROP TABLE x
+        </para>
+      </listitem>
+    </itemizedlist>
+    <itemizedlist>
+    	<para>Primary Key Support</para>
+    	<listitem>
+        	<para>All key columns must be comparable.</para>
+      	</listitem>
+      	<listitem>
+        	<para>Use of a primary key creates a clustered index that supports search improvements for comparison, in, like, and order by.</para>
+      	</listitem>
+      	<listitem>
+        	<para>Null is an allowable primary key value, but there must be only 1 row that has an all null key.</para>
+      	</listitem>
+    </itemizedlist>
+    <itemizedlist>
+      <para>Limitations:
+      </para>
+      <listitem> 
+        <para>With the CREATE TABLE syntax only basic table definition (column name and type information) and an optional primary key are supported.
+        </para>
+      </listitem>
+      <listitem> 
+        <para>The "ON COMMIT" clause is not supported in the CREATE TABLE statement.
+        </para>
+      </listitem>
+      <listitem> 
+        <para>"drop behavior" option is not supported in the drop statement.
+        </para>
+      </listitem>
+      <listitem> 
+        <para>Only local temporary tables are supported. This implies that the scope of temp table will be either to the sesssion or the block of a virtual procedure that creates it.
+        </para>
+      </listitem>
+      <listitem>
+        <para>Session level temp tables are not fail-over safe.
+        </para>    
+      </listitem>    
+      <listitem>
+        <para>Temp tables are non-transactional.
+        </para>    
+      </listitem>  
+      <listitem>
+        <para>Lob values (xml, clob, blob) are tracked by reference rather than by value in a temporary table.  
+        Lob values from external sources that are inserted in a temporary table may become unreadable when the associated statement or connection is closed.
+        </para>    
+      </listitem>    
+    </itemizedlist>
+    <para>The following example is a series of statements that loads a temporary table with data from 2 sources, and with a manually inserted record, and then uses that temp table in a subsequent query.</para>
+    <programlisting>... 
+CREATE LOCAL TEMPORARY TABLE TEMP (a integer, b integer, c integer); 
+SELECT * INTO temp FROM Src1; SELECT * INTO temp FROM Src2; 
+INSERT INTO temp VALUES (1,2,3); 
+SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b; 
+...</programlisting>
+    <para>
+      See <link linkend="virtual_procedures">virtual procedures</link> for more on temp table usage.
+    </para>
+  </section>
+  	<section>
+  		<title>Alter View</title>
+  		<para>
+	      Usage:
+	      <synopsis label="Usage">ALTER VIEW name AS queryExpression</synopsis>
+	    </para>
+	    <itemizedlist>
+        <para>Syntax Rules:</para>
+          <listitem><para>The alter query expression may be prefixed with a cache hint for materialized view definitions.  The hint will take effect the next time the materialized view table is loaded.</para></listitem>
+        </itemizedlist>
+  	</section>
+  	<section>
+  		<title>Alter Procedure</title>
+  		<para>
+	      Usage:
+	      <synopsis label="Usage">ALTER PROCEDURE name AS block</synopsis>
+	    </para>
+	    <itemizedlist>
+        <para>Syntax Rules:</para>
+          <listitem><para>The alter block should not include 'CREATE VIRTUAL PROCEDURE'</para></listitem>
+          <listitem><para>The alter block may be prefixed with a cache hint for cached procedures.</para></listitem>
+        </itemizedlist>
+  	</section>
+  	<section>
+  		<title>Create Trigger</title>
+  		<para>
+	      Usage:
+	      <synopsis label="Usage">CREATE TRIGGER ON name INSTEAD OF INSERT|UPDATE|DELETE AS FOR EACH ROW block</synopsis>
+	    </para>
+	    <itemizedlist>
+        <para>Syntax Rules:</para>
+          <listitem><para>The target, name, must be an updatable view.</para></listitem>
+          <listitem><para>An INSTEAD OF TRIGGER must not yet exist for the given event.</para></listitem>
+          <listitem><para>Triggers are not yet true schema objects.  They are scoped only to their view and have no name.</para></listitem>
+        </itemizedlist>
+        <itemizedlist>
+        <para>Limitations:</para>
+          <listitem><para>There is no corresponding drop operation.  See <xref linkend="alter_trigger"/> for enabling/disabling an existing trigger.</para></listitem>
+        </itemizedlist>
+  	</section>
+  	<section id="alter_trigger">
+  		<title>Alter Trigger</title>
+  		<para>
+	      Usage:
+	      <synopsis label="Usage">ALTER TRIGGER ON name INSTEAD OF INSERT|UPDATE|DELETE (AS FOR EACH ROW block) | (ENABLED|DISABLED)</synopsis>
+	    </para>
+	    <itemizedlist>
+        <para>Syntax Rules:</para>
+          <listitem><para>The target, name, must be an updatable view.</para></listitem>
+          <listitem><para>Triggers are not yet true schema objects.  They are scoped only to their view and have no name.</para></listitem>
+          <listitem><para>An <xref linkend="update_procedures"/> must already exist for the given trigger event.</para></listitem>
+        </itemizedlist>
+        <note><para>If the default inherent update is choosen in Teiid Designer, any SQL associated with update (shown in a greyed out text box) is not part of the VDB and cannot be enabled with an alter trigger statement.</para></note>
+  	</section>
+</chapter>

@@ -96,9 +96,14 @@
 		Even though it is possible to disable or otherwise severely constrain these caches, this would probably never be done in practice as it would lead to poor performance.
 		</para><para>Cache statistics can be obtained through the Admin Console or Adminshell.  The statistics can be used to help tune cache parameters and ensure a hit ratio.</para>
 		<para>Plans are currently fully held in memory and may have a significant memory footprint.  When making extensive use of prepared statements and/or virtual procedures, 
-		the size of the plan cache may be increased proportionally to number of GB intended for use by Teiid.
+		the size of the plan cache may be increased proportionally to number of gigabytes intended for use by Teiid.
 		</para><para>While the result cache parameters control the cache result entries (max number, eviction, etc.), the result batches themselves are accessed through the <link linkend="memory_management">BufferManager</link>.
 		If the size of the result cache is increased, you may need to tune the BufferManager configuration to ensure there is enough buffer space.
+		</para>
+		<para>Result set and prepared plan caches have their entries invalidated by data and metadata events.  
+		By default these events are captured by running commands through Teiid.  See the Developers Guide for further customization.
+		Teiid stores compiled forms of update plans or trigger actions with the prepared plan, so it is recommended to leave the maxStaleness of the prepared plan cache set to 0 so that metadata changes, for example disabling a trigger, may take effect immediately.
+		The default staleness for result set caching is 60 seconds to improve efficiency with rapidly changing sources.  Consider decreasing this value to make the result set cache more consistent with the underlying data.  Even with a setting of 0 full transactional consistency is not guaranteed.  
 		</para>
 	</section>
 	<section id="socket_transport">

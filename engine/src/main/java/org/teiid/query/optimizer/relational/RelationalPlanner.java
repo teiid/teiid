@@ -41,6 +41,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.dqp.internal.process.Request;
 import org.teiid.language.SQLConstants;
+import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -535,7 +536,7 @@ public class RelationalPlanner {
         boolean usingTriggerAction = false;
         if (command instanceof ProcedureContainer) {
         	ProcedureContainer container = (ProcedureContainer)command;
-        	usingTriggerAction = addNestedProcedure(sourceNode, container);
+        	usingTriggerAction = addNestedProcedure(sourceNode, container, container.getGroup().getMetadataID());
         }
         sourceNode.addGroups(groups);
 
@@ -556,15 +557,15 @@ public class RelationalPlanner {
 	}
 
 	private boolean addNestedProcedure(PlanNode sourceNode,
-			ProcedureContainer container) throws TeiidComponentException,
+			ProcedureContainer container, Object metadataId) throws TeiidComponentException,
 			QueryMetadataException, TeiidProcessingException {
-		String cacheString = "transformation/" + container.getClass().getSimpleName(); //$NON-NLS-1$
-		Command c = (Command)metadata.getFromMetadataCache(container.getGroup().getMetadataID(), cacheString);
+		String cacheString = "transformation/" + container.getClass().getSimpleName().toUpperCase(); //$NON-NLS-1$
+		Command c = (Command)metadata.getFromMetadataCache(metadataId, cacheString);
 		if (c == null) {
 			c = QueryResolver.expandCommand(container, metadata, analysisRecord);
 			if (c != null) {
 		        Request.validateWithVisitor(new ValidationVisitor(), metadata, c);
-		        metadata.addToMetadataCache(container.getGroup().getMetadataID(), cacheString, c.clone());
+		        metadata.addToMetadataCache(metadataId, cacheString, c.clone());
 			}
 		} else {
 			c = (Command)c.clone();
@@ -598,6 +599,12 @@ public class RelationalPlanner {
 			//skip the rewrite here, we'll do that in the optimizer
 			//so that we know what the determinism level is.
 			addNestedCommand(sourceNode, container.getGroup(), container, c, false);
+			if (container instanceof StoredProcedure) {
+				StoredProcedure sp = (StoredProcedure)container;
+				if (sp.getProcedureID() instanceof Procedure) {
+					context.accessedProcedure((Procedure)sp.getProcedureID());
+				}
+			}
 		} else if (!container.getGroup().isTempTable() && //we hope for the best, and do a specific validation for subqueries below
 				container instanceof TranslatableProcedureContainer //we force the evaluation of procedure params - TODO: inserts are fine except for nonpushdown functions on columns
 				&& !CriteriaCapabilityValidatorVisitor.canPushLanguageObject(container, metadata.getModelID(container.getGroup().getMetadataID()), metadata, capFinder, analysisRecord)) {
@@ -653,7 +660,7 @@ public class RelationalPlanner {
         // Define source of data for stored query / procedure
         PlanNode sourceNode = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
         sourceNode.setProperty(NodeConstants.Info.VIRTUAL_COMMAND, storedProc);
-    	addNestedProcedure(sourceNode, storedProc);
+    	addNestedProcedure(sourceNode, storedProc, storedProc.getProcedureID());
         
         hints.hasRelationalProc |= storedProc.isProcedureRelational();
 

@@ -25,6 +25,7 @@ package org.teiid.events;
 import java.util.List;
 
 import org.teiid.metadata.ColumnStats;
+import org.teiid.metadata.Table;
 import org.teiid.metadata.TableStats;
 
 /**
@@ -47,15 +48,6 @@ public interface EventDistributor {
 	void updateMatViewRow(String vdbName, int vdbVersion, String schema, String viewName, List<?> tuple, boolean delete);
 	
 	/**
-	 * Notify that the metadata has been changed for the given table or view.
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param schema
-	 * @param objectNames
-	 */
-	void schemaModification(String vdbName, int vdbVersion, String schema, String... objectNames);
-	
-	/**
 	 * Notify that the table data has changed.
 	 * @param vdbName
 	 * @param vdbVersion
@@ -64,10 +56,69 @@ public interface EventDistributor {
 	 */
 	void dataModification(String vdbName, int vdbVersion, String schema, String... tableNames);
 
+	/**
+	 * Set the column stats
+	 * @param vdbName
+	 * @param vdbVersion
+	 * @param schemaName
+	 * @param tableName
+	 * @param columnName
+	 * @param stats
+	 */
 	void setColumnStats(String vdbName, int vdbVersion, String schemaName,
 			String tableName, String columnName, ColumnStats stats);
 
+	/**
+	 * Set the table stats
+	 * @param vdbName
+	 * @param vdbVersion
+	 * @param schemaName
+	 * @param tableName
+	 * @param stats
+	 */
 	void setTableStats(String vdbName, int vdbVersion, String schemaName,
 			String tableName, TableStats stats);
+	
+	/**
+	 * Set the given property value
+	 * @param vdbName
+	 * @param vdbVersion
+	 * @param uuid
+	 * @param name
+	 * @param value
+	 */
+	void setProperty(String vdbName, int vdbVersion, String uuid, String name, String value);
+	
+	/**
+	 * Set the instead of trigger definition.  Only one of either the triggerDefinition or enabled should be specified.
+	 * @param vdbName
+	 * @param vdbVersion
+	 * @param schema
+	 * @param viewName
+	 * @param triggerEvent
+	 * @param triggerDefinition
+	 * @param enabled
+	 */
+	void setInsteadOfTriggerDefinition(String vdbName, int vdbVersion, String schema, String viewName, Table.TriggerEvent triggerEvent, String triggerDefinition, Boolean enabled);
+
+	/**
+	 * Set the procedure definition
+	 * @param vdbName
+	 * @param vdbVersion
+	 * @param schema
+	 * @param procName
+	 * @param definition
+	 */
+	void setProcedureDefinition(String vdbName, int vdbVersion, String schema, String procName, String definition);
+
+	/**
+	 * Set the view definition
+	 * @param vdbName
+	 * @param vdbVersion
+	 * @param schema
+	 * @param viewName
+	 * @param definition
+	 */
+	void setViewDefinition(String vdbName, int vdbVersion, String schema, String viewName, String definition);
 	
 }
