@@ -45,7 +45,7 @@ public class AbstractValidationVisitor extends LanguageVisitor {
     private LanguageObject exceptionObject;
         
     // Validation error handling
-    private ValidatorReport report;
+    protected ValidatorReport report;
     
     private QueryMetadataInterface metadata;
     

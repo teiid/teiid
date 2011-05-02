@@ -25,7 +25,7 @@ import java.util.List;
 
 public interface DataPolicy {
 	
-	public enum PermissionType {CREATE, READ, UPDATE, DELETE};
+	public enum PermissionType {CREATE, READ, UPDATE, DELETE, ALTER, EXECUTE};
 	
 	/**
 	 * Get the Name of the Data Policy
@@ -92,6 +92,18 @@ public interface DataPolicy {
 		 * Is "DELETE" allowed?
 		 * @return
 		 */
-		Boolean getAllowDelete();		
+		Boolean getAllowDelete();
+
+		/**
+		 * Is "ALTER" allowed?
+		 * @return
+		 */
+		Boolean getAllowAlter();
+
+		/**
+		 * Is "EXECUTE" allowed?
+		 * @return
+		 */
+		Boolean getAllowExecute();		
 	}
 }

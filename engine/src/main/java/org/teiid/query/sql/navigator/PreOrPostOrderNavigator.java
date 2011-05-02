@@ -674,7 +674,9 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     public void visit(AlterProcedure obj) {
     	preVisitVisitor(obj);
         visitNode(obj.getTarget());
-        visitNode(obj.getDefinition());
+        if (deep) {
+        	visitNode(obj.getDefinition());
+        }
         postVisitVisitor(obj);
     }
     
@@ -682,7 +684,9 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     public void visit(AlterTrigger obj) {
     	preVisitVisitor(obj);
         visitNode(obj.getTarget());
-        visitNode(obj.getDefinition());
+        if (deep) {
+        	visitNode(obj.getDefinition());
+        }
         postVisitVisitor(obj);
     }
     
@@ -690,7 +694,9 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     public void visit(AlterView obj) {
     	preVisitVisitor(obj);
         visitNode(obj.getTarget());
-        visitNode(obj.getDefinition());
+        if (deep) {
+        	visitNode(obj.getDefinition());
+        }
         postVisitVisitor(obj);
     }
     

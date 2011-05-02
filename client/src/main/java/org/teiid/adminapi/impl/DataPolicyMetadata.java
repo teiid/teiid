@@ -146,7 +146,9 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         "allowCreate",
         "allowRead",
         "allowUpdate",
-        "allowDelete"
+        "allowDelete",
+        "allowExecute",
+        "allowAlter"
     })	
     @ManagementObject(properties=ManagementProperties.EXPLICIT)
 	public static class PermissionMetaData implements DataPermission, Serializable {
@@ -162,6 +164,10 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         protected Boolean allowUpdate;
         @XmlElement(name = "allow-delete")
         protected Boolean allowDelete;
+        @XmlElement(name = "allow-execute")
+        protected Boolean allowExecute;
+        @XmlElement(name = "allow-alter")
+        protected Boolean allowAlter;
         
         @Override
         @ManagementProperty(description="Resource Name, for which permission defined")
@@ -229,13 +235,25 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         	if (Boolean.TRUE.equals(getAllowDelete())) {
         		sb.append("D");//$NON-NLS-1$
         	}     
+        	if (Boolean.TRUE.equals(getAllowExecute())) {
+        		sb.append("E");//$NON-NLS-1$
+        	}     
+        	if (Boolean.TRUE.equals(getAllowAlter())) {
+        		sb.append("A");//$NON-NLS-1$
+        	}     
         	return sb.toString();
         }
         
         public Boolean allows(PermissionType type) {
             switch (type) {
+            case ALTER:
+            	return getAllowAlter();
             case CREATE:
             	return getAllowCreate();
+            case EXECUTE:
+            	if (getAllowExecute() != null) {
+            		return getAllowExecute();
+            	}
             case READ:
             	return getAllowRead();
             case UPDATE:
@@ -246,7 +264,27 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
             throw new AssertionError();
         }
         
-        public String toString() {
+        @Override
+        @ManagementProperty(description="Allows Alter")
+        public Boolean getAllowAlter() {
+			return allowAlter;
+		}
+
+        @Override
+        @ManagementProperty(description="Allows Execute")
+		public Boolean getAllowExecute() {
+			return allowExecute;
+		}
+		
+		public void setAllowAlter(Boolean allowAlter) {
+			this.allowAlter = allowAlter;
+		}
+		
+		public void setAllowExecute(Boolean allowExecute) {
+			this.allowExecute = allowExecute;
+		}
+
+		public String toString() {
         	StringBuilder sb = new StringBuilder();
         	sb.append(getResourceName());
         	sb.append("["); //$NON-NLS-1$

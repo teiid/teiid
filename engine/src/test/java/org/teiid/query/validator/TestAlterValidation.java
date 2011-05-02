@@ -31,8 +31,13 @@ public class TestAlterValidation {
 	@Test public void testValidateAlterView() {
 		TestValidator.helpValidate("alter view SmallA_2589 as select 2", new String[] {"SELECT 2"}, RealMetadataFactory.exampleBQTCached());
 		TestValidator.helpValidate("alter view Defect15355 as select 'a', 1", new String[] {"SELECT 'a', 1"}, RealMetadataFactory.exampleBQTCached());
+		TestValidator.helpValidate("alter view Defect15355 as select 'a', cast(1 as biginteger)", new String[] {}, RealMetadataFactory.exampleBQTCached());
 		
 		TestValidator.helpValidate("alter view SmallA_2589 as select * from bqt1.smalla", new String[] {}, RealMetadataFactory.exampleBQTCached());
+	}
+	
+	@Test public void testValidateAlterViewDeep() {
+		TestValidator.helpValidate("alter view Defect15355 as select xpathvalue('a', ':'), cast(1 as biginteger)", new String[] {"xpathvalue('a', ':')"}, RealMetadataFactory.exampleBQTCached());
 	}
 	
 	@Test public void testValidateAlterTrigger() {

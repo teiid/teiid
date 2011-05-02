@@ -1434,6 +1434,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public void visit(AlterView obj) {
     	try {
 			QueryResolver.validateProjectedSymbols(obj.getTarget(), getMetadata(), obj.getDefinition());
+			Validator.validate(obj.getDefinition(), getMetadata(), this);
 		} catch (QueryValidatorException e) {
 			handleValidationError(e.getMessage(), obj.getDefinition());
 		} catch (TeiidComponentException e) {
@@ -1449,6 +1450,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	    		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.not_a_procedure", gs), gs); //$NON-NLS-1$
 	    		return;
 	    	}
+	    	Validator.validate(obj.getDefinition(), getMetadata(), this);
 	    	StoredProcedureInfo info = getMetadata().getStoredProcedureInfoForProcedure(gs.getName());
 	    	for (SPParameter param : info.getParameters()) {
 	    		if (param.getParameterType() == SPParameter.RESULT_SET) {
@@ -1466,6 +1468,13 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     @Override
     public void visit(AlterTrigger obj) {
     	validateGroupSupportsUpdate(obj.getTarget());
+		try {
+			if (obj.getDefinition() != null) {
+				Validator.validate(obj.getDefinition(), getMetadata(), this);
+			}			
+		} catch (TeiidComponentException e) {
+			handleException(e);
+		}
     }
 
     //TODO: it may be simpler to catch this in the parser

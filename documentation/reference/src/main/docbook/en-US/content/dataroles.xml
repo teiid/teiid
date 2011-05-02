@@ -73,15 +73,19 @@
 	    </orderedlist> 
 	    
 	    <orderedlist>
-	    	<para>To process a <emphasis>EXEC</emphasis> statement, the user account requires the following access rights:</para>
-	        <listitem> <para><emphasis>READ</emphasis> - on the Procedure being executed.</para></listitem>
+	    	<para>To process a <emphasis>EXEC/CALL</emphasis> statement, the user account requires the following access rights:</para>
+	        <listitem> <para><emphasis>EXECUTE (or READ)</emphasis> - on the Procedure being executed.</para></listitem>
 	    </orderedlist>
 	    
 	    <orderedlist>
 	    	<para>To process any function, the user account requires the following access rights:</para>
-	        <listitem> <para><emphasis>READ</emphasis> - on the Function being called.</para> </listitem>
-	        <note><para>For backwards compatibility RuntimeEngineDeployer.allowFunctionCallsByDefault located in the &jboss-beans; file in the <code>RuntimeEngineDeployer</code> section defaults to true. 
-	        This means that to actually require permissions for functions, you need to set this property to false.</para></note>
+	        <listitem> <para><emphasis>EXECUTE (or READ)</emphasis> - on the Function being called.</para> <note><para>For backwards compatibility RuntimeEngineDeployer.allowFunctionCallsByDefault located in the &jboss-beans; file in the <code>RuntimeEngineDeployer</code> section defaults to true. 
+	        This means that to actually require permissions for functions, you need to set this property to false.</para></note></listitem>
+	    </orderedlist>
+	    
+	    <orderedlist>
+	    	<para>To process any ALTER or CREATE TRIGGER statement, the user account requires the following access rights:</para>
+	        <listitem> <para><emphasis>ALTER</emphasis> - on the view or procedure that is effected.  INSTEAD OF Triggers (update procedures) are not yet treated as full schema objects and are instead treated as attributes of the view.</para></listitem>
 	    </orderedlist>
 	       
     </section>

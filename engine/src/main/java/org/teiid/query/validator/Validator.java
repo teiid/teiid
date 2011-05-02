@@ -51,9 +51,9 @@ public class Validator {
         // Construct combined runtime / query metadata if necessary
         if(object instanceof Command) {                        
             // Recursively validate subcommands
-            Iterator iter = CommandCollectorVisitor.getCommands((Command)object).iterator();
+            Iterator<Command> iter = CommandCollectorVisitor.getCommands((Command)object).iterator();
             while(iter.hasNext()) {
-                Command subCommand = (Command) iter.next();
+                Command subCommand = iter.next();
                 validate(subCommand, metadata, visitor);
             }
         }

@@ -51,6 +51,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
@@ -75,6 +76,12 @@ public class TestAuthorizationValidationVisitor {
     		break;
     	case UPDATE:
     		p.setAllowUpdate(flag);
+    		break;
+    	case ALTER:
+    		p.setAllowAlter(flag);
+    		break;
+    	case EXECUTE:
+    		p.setAllowExecute(flag);
     		break;
     	}
     	return p;    	
@@ -147,6 +154,13 @@ public class TestAuthorizationValidationVisitor {
         svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm3.g2.e1")); //$NON-NLS-1$
         svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm3.g2.e2")); //$NON-NLS-1$
         svc.setAllowCreateTemporaryTables(false);
+        return svc;
+    }
+    
+    private DataPolicyMetadata examplePolicyBQT() {
+    	DataPolicyMetadata svc = new DataPolicyMetadata();
+    	svc.setName("test"); //$NON-NLS-1$
+    	svc.addPermission(addResource(DataPolicy.PermissionType.ALTER, "VQT.SmallA_2589")); //$NON-NLS-1$
         return svc;
     }
 
@@ -236,6 +250,10 @@ public class TestAuthorizationValidationVisitor {
     @Test public void testUpdateCriteriaInaccessibleForRead() throws Exception {        
         helpTest(exampleAuthSvc1(), "UPDATE pm1.g2 SET e2 = 5 WHERE e1 = 'x'", FakeMetadataFactory.example1Cached(), new String[] {"pm1.g2.e1"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    @Test public void testUpdateCriteriaInaccessibleForRead1() throws Exception {        
+        helpTest(exampleAuthSvc1(), "UPDATE pm1.g2 SET e2 = cast(e1 as integer)", FakeMetadataFactory.example1Cached(), new String[] {"pm1.g2.e1"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
     @Test public void testUpdateElementInaccessibleForUpdate() throws Exception {        
         helpTest(exampleAuthSvc1(), "UPDATE pm1.g1 SET e1 = 5 WHERE e1 = 'x'", FakeMetadataFactory.example1Cached(), new String[] {"pm1.g1.e1"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -291,6 +309,14 @@ public class TestAuthorizationValidationVisitor {
     
     @Test public void testXMLInAccessible() throws Exception {
         helpTest(exampleAuthSvc1(), "select * from xmltest.doc1", FakeMetadataFactory.example1Cached(), new String[] {"xmltest.doc1"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testAlter() throws Exception {
+        helpTest(exampleAuthSvc1(), "alter view SmallA_2589 as select * from bqt1.smalla", RealMetadataFactory.exampleBQTCached(), new String[] {"SmallA_2589"}, FakeMetadataFactory.exampleBQTVDB()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(examplePolicyBQT(), "alter view SmallA_2589 as select * from bqt1.smalla", RealMetadataFactory.exampleBQTCached(), new String[] {}, FakeMetadataFactory.exampleBQTVDB()); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        helpTest(exampleAuthSvc1(), "alter trigger on SmallA_2589 INSTEAD OF UPDATE enabled", RealMetadataFactory.exampleBQTCached(), new String[] {"SmallA_2589"}, FakeMetadataFactory.exampleBQTVDB()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(examplePolicyBQT(), "alter trigger on SmallA_2589 INSTEAD OF UPDATE enabled", RealMetadataFactory.exampleBQTCached(), new String[] {}, FakeMetadataFactory.exampleBQTVDB()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
 	private void helpTestLookupVisibility(boolean visible) throws QueryParserException, QueryValidatorException, TeiidComponentException {

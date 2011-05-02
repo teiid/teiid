@@ -51,6 +51,9 @@ import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.lang.AlterProcedure;
+import org.teiid.query.sql.lang.AlterTrigger;
+import org.teiid.query.sql.lang.AlterView;
 import org.teiid.query.sql.lang.Create;
 import org.teiid.query.sql.lang.Delete;
 import org.teiid.query.sql.lang.Drop;
@@ -78,6 +81,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 		UPDATE,
 		DELETE,
 		FUNCTION,
+		ALTER,
 		STORED_PROCEDURE;
     }
     
@@ -107,6 +111,21 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     	Set<String> resources = Collections.singleton(obj.getTable().getName());
     	Collection<GroupSymbol> symbols = Arrays.asList(obj.getTable());
     	validateTemp(resources, symbols, Context.CREATE);
+    }
+    
+    @Override
+    public void visit(AlterProcedure obj) {
+    	validateEntitlements(Arrays.asList(obj.getTarget()), DataPolicy.PermissionType.ALTER, Context.ALTER);
+    }
+    
+    @Override
+    public void visit(AlterTrigger obj) {
+    	validateEntitlements(Arrays.asList(obj.getTarget()), DataPolicy.PermissionType.ALTER, obj.isCreate()?Context.CREATE:Context.ALTER);
+    }
+    
+    @Override
+    public void visit(AlterView obj) {
+    	validateEntitlements(Arrays.asList(obj.getTarget()), DataPolicy.PermissionType.ALTER, Context.ALTER);
     }
 
 	private void validateTemp(Set<String> resources,
@@ -190,7 +209,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     		if (schema != null && !isSystemSchema(schema)) {
     			Map<String, Function> map = new HashMap<String, Function>();
     			map.put(schema + '.' + obj.getFunctionDescriptor().getName(), obj);
-    			validateEntitlements(PermissionType.READ, Context.FUNCTION, map);
+    			validateEntitlements(PermissionType.EXECUTE, Context.FUNCTION, map);
     		}
     	}
     }
@@ -212,12 +231,15 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
      */
     protected void validateEntitlements(Update obj) {
         // Check that all elements used in criteria have read permission
+    	HashSet<ElementSymbol> elements = new HashSet<ElementSymbol>(); 
+    	ElementCollectorVisitor.getElements(obj.getChangeList().getClauseMap().values(), elements);
         if (obj.getCriteria() != null) {
-            validateEntitlements(
-                ElementCollectorVisitor.getElements(obj.getCriteria(), true),
+            ElementCollectorVisitor.getElements(obj.getCriteria(), elements);
+        }
+        validateEntitlements(
+        		elements,
                 DataPolicy.PermissionType.READ,
                 Context.UPDATE);
-        }
 
         // The variables from the changes must be checked for UPDATE entitlement
         // validateEntitlements on all the variables used in the update.
@@ -278,7 +300,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
      * Validate query entitlements
      */
     protected void validateEntitlements(StoredProcedure obj) {
-        validateEntitlements(Arrays.asList(obj.getGroup()), DataPolicy.PermissionType.READ, Context.STORED_PROCEDURE);
+        validateEntitlements(Arrays.asList(obj.getGroup()), DataPolicy.PermissionType.EXECUTE, Context.STORED_PROCEDURE);
     }
 
     /**
