@@ -102,5 +102,7 @@ public interface ExecutionProperties {
     
     public static final String NEWINSTANCE = "NEWINSTANCE"; //$NON-NLS-1$
     
+    public static final String QUERYTIMEOUT = "QUERYTIMEOUT"; //$NON-NLS-1$
+    
 }
     

@@ -224,7 +224,15 @@
                         if it finds a different security context on the calling thread, it switches the identity on the connection,
                         if the new user is also eligible to log in to Teiid otherwise connection fails to execute.</entry>
                     </row>                     
-                    
+                    <row>
+                    	<entry>
+                            <code>QueryTimeout</code>
+                        </entry>
+                        <entry>
+                            <code>integer</code>
+                        </entry>
+                        <entry>Default query timeout in seconds. Must be >= 0. 0 indicates no timeout. Can be overriden by <code>Statement.setQueryTimeout</code>. Default 0.</entry>
+                    </row>
                 </tbody>
             </tgroup>
         </table> 

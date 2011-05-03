@@ -145,6 +145,8 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     
     private boolean ansiQuotedIdentifiers = true;
     
+    private int queryTimeout;
+    
     /**
      * Reference to the logWriter, which is transient and is therefore not serialized with the DataSource.
      */
@@ -219,6 +221,10 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         
         if(this.getFetchSize() > 0) {
             props.setProperty(ExecutionProperties.PROP_FETCH_SIZE, String.valueOf(this.getFetchSize())); 
+        }
+        
+        if (this.getQueryTimeout() > 0) {
+        	props.setProperty(ExecutionProperties.QUERYTIMEOUT, String.valueOf(this.getQueryTimeout()));
         }
 
         if (this.getResultSetCacheMode() != null && this.getResultSetCacheMode().trim().length() != 0) {
@@ -299,6 +305,10 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         reason = reasonWhyInvalidTransactionAutoWrap(this.transactionAutoWrap);
         if ( reason != null ) {
             throw new SQLException(reason);
+        }
+        
+        if (this.queryTimeout < 0) {
+        	throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Bad_timeout_value")); //$NON-NLS-1$
         }
                 
         
@@ -800,6 +810,14 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
 
 	public boolean isAnsiQuotedIdentifiers() {
 		return ansiQuotedIdentifiers;
+	}
+	
+	public int getQueryTimeout() {
+		return queryTimeout;
+	}
+	
+	public void setQueryTimeout(int queryTimeout) {
+		this.queryTimeout = queryTimeout;
 	}
 
 }

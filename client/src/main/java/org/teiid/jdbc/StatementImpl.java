@@ -195,7 +195,15 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
             } catch(Exception e) {
                 // silently failover to default
             }
-        }        
+        }
+        String queryTimeoutStr = this.execProps.getProperty(ExecutionProperties.QUERYTIMEOUT);
+        if(queryTimeoutStr != null) {
+            try {
+                this.queryTimeoutMS = Integer.parseInt(fetchSizeStr)*1000;
+            } catch(Exception e) {
+                // silently failover to default
+            }
+        }
     }
 
     protected DQP getDQP() {
