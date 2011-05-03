@@ -223,17 +223,21 @@ public class TestProcessor {
     }
         
     public static void doProcess(ProcessorPlan plan, ProcessorDataManager dataManager, List[] expectedResults, CommandContext context) throws Exception {
-        BufferManagerImpl bufferMgr = BufferManagerFactory.createBufferManager();
-        bufferMgr.setProcessorBatchSize(context.getProcessorBatchSize());
-        bufferMgr.setConnectorBatchSize(context.getProcessorBatchSize());
-        context.getNextRand(0);
+    	BufferManager bufferMgr = context.getBufferManager();
+    	if (bufferMgr == null) {
+	        BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
+	        bm.setProcessorBatchSize(context.getProcessorBatchSize());
+	        bm.setConnectorBatchSize(context.getProcessorBatchSize());
+	        context.setBufferManager(bm);
+	        bufferMgr = bm;
+    	}
+    	context.getNextRand(0);
         if (context.getTempTableStore() == null) {
         	context.setTempTableStore(new TempTableStore(context.getConnectionID()));
         }
         if (context.getGlobalTableStore() == null) {
         	context.setGlobalTableStore(new TempTableStore("SYSTEM"));
         }
-        context.setBufferManager(bufferMgr);
         if (!(dataManager instanceof TempTableDataManager)) {
     	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
     	    cache.setBufferManager(bufferMgr);

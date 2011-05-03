@@ -293,10 +293,10 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 			List outputTuple = outputTuple(this.processingSortLeft==SortOption.NOT_SORTED?partitionedTuple:reorderedTuple, 
 					this.processingSortLeft==SortOption.NOT_SORTED?reorderedTuple:partitionedTuple);
 			boolean matches = this.joinNode.matchesCriteria(outputTuple);
+	        this.sortedTuple = null;
 	        if (matches) {
 	        	this.joinNode.addBatchRow(outputTuple);
 	        }
-	        this.sortedTuple = null;
     	}
     }
     

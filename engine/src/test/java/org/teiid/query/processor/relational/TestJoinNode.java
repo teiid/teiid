@@ -599,7 +599,12 @@ public class TestJoinNode {
     }
     
     @Test public void testMergeJoinOptimization() throws Exception {
-        this.joinType = JoinType.JOIN_INNER;
+        helpTestEnhancedSortMergeJoin(100);
+    }
+
+	private void helpTestEnhancedSortMergeJoin(int batchSize)
+			throws TeiidComponentException, TeiidProcessingException {
+		this.joinType = JoinType.JOIN_INNER;
         int rows = 100;
         List[] data = new List[rows];
         for(int i=0; i<rows; i++) { 
@@ -632,7 +637,11 @@ public class TestJoinNode {
         helpCreateJoin();               
         this.joinStrategy = new EnhancedSortMergeJoinStrategy(SortOption.SORT, SortOption.SORT);
         this.join.setJoinStrategy(joinStrategy);
-        helpTestJoinDirect(expected, 100, 1);
+        helpTestJoinDirect(expected, batchSize, 1);
+	}
+    
+    @Test public void testMergeJoinOptimizationMultiBatch() throws Exception {
+    	helpTestEnhancedSortMergeJoin(10);
     }
     
     @Test public void testMergeJoinOptimizationNoRows() throws Exception {
