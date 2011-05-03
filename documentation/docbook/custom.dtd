@@ -6,4 +6,5 @@
 <!ENTITY javaDocUrl "http://docs.jboss.org/teiid/&versionNumber;/apidocs">
 <!ENTITY desDocUrl "http://www.jboss.org/teiiddesigner/docs.html">
 <!ENTITY jboss-beans "<code>&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy/teiid/teiid-jboss-beans.xml</code>">
-<!ENTITY metadata-update-note "<note><para>A <code>MetadataRepository</code> must be configured to make a non-temporary metadata update persistent. See the Developers Guide Runtime Updates section for more.</para></note>">
+<!ENTITY teiid-deployer-beans "<code>&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy/deployers/teiid.deployer/teiid-deployer-jboss-beans.xml</code>">
+<!ENTITY metadata-update-note "<note><para>A <code>MetadataRepository</code> must be configured to make a non-temporary metadata update persistent. See the Developers Guide Runtime Metadata Updates section for more.</para></note>">

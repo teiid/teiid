@@ -114,6 +114,7 @@ public class VDBRepository implements Serializable{
 		int vdbVersion = cvdb.getVDB().getVersion();
 		LinkedList<MetadataStore> allStores = new LinkedList<MetadataStore>(stores.getStores());
 		allStores.addAll(Arrays.asList(cvdb.getAdditionalStores()));
+		metadataRepository.startLoadVdb(vdbName, vdbVersion);
 		for (MetadataStore metadataStore : allStores) {
 			Collection<AbstractMetadataRecord> records = new LinkedHashSet<AbstractMetadataRecord>();
 			for (Schema schema : metadataStore.getSchemas().values()) {
@@ -187,6 +188,7 @@ public class VDBRepository implements Serializable{
 				}
 			}
 		}
+		metadataRepository.endLoadVdb(vdbName, vdbVersion);
 	}
 
 	public VDBMetaData getVDB(String name, int version) {

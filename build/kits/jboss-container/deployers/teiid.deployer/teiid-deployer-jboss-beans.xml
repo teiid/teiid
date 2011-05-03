@@ -11,6 +11,10 @@
         
     <bean name="VDBRepository" class="org.teiid.deployers.VDBRepository">
         <property name="systemFunctionManager"><inject bean="SystemFunctionManager"/></property>
+        <!-- 
+          Optionally set a org.teiid.metadata.MetadataRepository for persistent metadata updates
+        -->
+        <!-- <property name="metadataRepository"><inject bean="MetadataRepository"/></property> -->
     </bean>
     
     <bean name="SecurityHelper" class="org.teiid.jboss.JBossSecurityHelper"/>    

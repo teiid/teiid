@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
+%CustomDTD;
+]>
+<chapter id="runtime-updates">
+	<title>Runtime Updates</title>
+	<para>Teiid supports several mechanisms for updating the runtime system.</para>
+	<section>
+		<title>Data Updates</title>
+		<para>Data change events are used by Teiid to invalidate result set cache entries.  Result set cache entires are tracked by the tables that contributed to their results.  
+		By default Teiid will capture internal data events against physical sources and distribute them across the cluster.
+		This approach has several limitations.  First updates are scoped only to their originating VDB/version.  Second updates made out side of Teiid are not captured.  
+		To increase data consistency external change data capture tools can be used to send events to Teiid.  From within a Teiid cluster the <code>org.teiid.events.EventDistributorFactory</code> 
+		and <code>org.teiid.events.EventDistributor</code> can be used to distribute change events.  The <code>EventDistributorFactory</code> is implemented by the 
+		<code>RuntimeEngineDeployer</code> bean and should be looked up by its name "teiid/engine-deployer". See the example below.</para>
+		<example>
+			<title>Usage of the <code>EventDistributor</code></title>
+					<programlisting language="java">InitialContext ctx = new InitialContext();
+EventDistributorFactory edf = (EventDistributorFactory)ctx.lookup("teiid/engine-deployer");
+EventDistributor ed = edf.getEventDistributor();
+ed.dataModification(vdbName, vdbVersion, schema, tableName);</programlisting>
+			<para>This will distribute a change event for schema.tableName in vdb vdbName.vdbVersion.</para>
+		</example>
+		<para>The use of the other <code>EventDistributor</code> methods to manual distribute other events is not recommended.</para>
+	</section>
+	<section>
+		<title>Runtime Metadata Updates</title>
+		<para>Runtime updates via system procedures and DDL statements are by default ephemeral.  They are effective across the cluster only for the currently running vdbs.  
+		With the next vdb start the values will revert to whatever is stored in the vdb.  Updates may be made persistent though by configuring a <code>org.teiid.metadata.MetadataRepository</code>.  
+		An instance of a <code>MetadataRepository</code> can be installed via the &teiid-deployer-beans; file in the <code>VDBRepository</code> bean. 
+		The <code>MetadataRepository</code> repository instance may fully implement as many of the methods as needed and return null from any unneeded getter.</para>
+		<note><para>It is not recommended to directly manipulate <code>org.teiid.metadata.AbstractMetadataRecord</code> instances.  
+		System procedures and DDL statements should be used instead since the effects will be distributed through the cluster and will not introduce inconsistencies.</para></note>
+		<para><code>org.teiid.metadata.AbstractMetadataRecord</code> objects passed to the <code>MetadataRepository</code> have not yet been modified.  
+		If the <code>MetadataRepository</code> cannot persist the update, then a <code>RuntimeException</code> should be thrown to prevent the update from being applied by the runtime engine.</para>
+		<section>
+			<title>Costing Updates</title>
+			<para>See the Reference for the system procedures <code>SYSADMIN.setColumnStats</code> and <code>SYSADMIN.setTableStats</code>.  
+			To make costing updates persistent <code>MetadataRepository</code> implementations should be provided for:
+			<programlisting language="java">TableStats getTableStats(String vdbName, int vdbVersion, Table table);
+void setTableStats(String vdbName, int vdbVersion, Table table, TableStats tableStats);
+ColumnStats getColumnStats(String vdbName, int vdbVersion, Column column);
+void setColumnStats(String vdbName, int vdbVersion, Column column, ColumnStats columnStats);</programlisting>
+			</para>
+		</section>
+		<section>
+			<title>Schema Updates</title>
+			<para>See the Reference for supported DDL statements.  To make schema updates persistent implementations should be provided for:</para>
+			<programlisting>String getViewDefinition(String vdbName, int vdbVersion, Table table);
+void setViewDefinition(String vdbName, int vdbVersion, Table table, String viewDefinition);
+String getInsteadOfTriggerDefinition(String vdbName, int vdbVersion, Table table, Table.TriggerEvent triggerOperation);
+void setInsteadOfTriggerDefinition(String vdbName, int vdbVersion, Table table, Table.TriggerEvent triggerOperation, String triggerDefinition);
+boolean isInsteadOfTriggerEnabled(String vdbName, int vdbVersion, Table table, Table.TriggerEvent triggerOperation);
+void setInsteadOfTriggerEnabled(String vdbName, int vdbVersion, Table table, Table.TriggerEvent triggerOperation, boolean enabled);
+String getProcedureDefinition(String vdbName, int vdbVersion, Procedure procedure);
+void setProcedureDefinition(String vdbName, int vdbVersion, Procedure procedure, String procedureDefinition);			
+LinkedHashMap&lt;String, String&gt; getProperties(String vdbName, int vdbVersion, AbstractMetadataRecord record);
+void setProperty(String vdbName, int vdbVersion, AbstractMetadataRecord record, String name, String value);</programlisting>
+		</section>
+	</section>
+</chapter>

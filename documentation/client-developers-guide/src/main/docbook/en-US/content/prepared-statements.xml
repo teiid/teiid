@@ -25,9 +25,6 @@
     		<para>Plans are cached for the entire VDB or for just a particular session.  The scope of a plan is detected automatically based upon the functions evaluated during it's planning process.</para>
     	</listitem>
     	<listitem>
-    		<para>Runtime updates of costing information do not yet cause replanning.  At this time only session scoped temporary table or internally materialized tables update their costing information.</para>
-    	</listitem>
-    	<listitem>
     		<para>Stored procedures executed through a <code>CallableStatement</code> have their plans cached just as a <code>PreparedStatement</code>.</para>
     	</listitem>
     	<listitem>

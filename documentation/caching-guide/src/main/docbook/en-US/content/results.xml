@@ -99,6 +99,8 @@ END</programlisting>
 		</para>
 		<note><para>While the result data is not held in memory, cache keys - including parameter values - may be held in memory.  
 		Thus the cache should not be given an unlimited maximum size.</para></note>
+		<para>Result set cache entries can be invalidated by data change events.  The maxStaleness setting determines how long an entry will remain 
+		in the case after one of the tables that contributed to the results has been changed.  See the Developers Guide for further customization.</para>
 	</section>
 	<section>
 		<title>Cache Administration</title>

@@ -1795,7 +1795,7 @@
 			</section>
 		</section>
         <warning>
-		  <para>The OID column is is guranteed to be unique/consistent only for given version running instance of a VDB. If a different version of
+		  <para>The OID column is guranteed to be unique/consistent only for given version running instance of a VDB. If a different version of
           the VDB is deployed, these IDs are not guranteed to be the same or unique across both versions of the VDB. Dynamic VDB OIDs are not cluster safe.</para>
 	  </warning>
 	</section>
@@ -1804,17 +1804,17 @@
 		<section>
     	<title>SYS.getXMLSchemas</title>
     	<para>Returns a resultset with a single column, schema, containing the schemas as clobs.</para>
-        <para><synopsis>SYS.getXMLSchemas(in string document)</synopsis></para>
+        <para><synopsis>SYS.getXMLSchemas(document in string) returns schema string</synopsis></para>
         </section>
         <section>
     	<title>SYSADMIN.refreshMatView</title>
     	<para>Returns integer RowsUpdated. -1 indicates a load is in progress, otherwise the cardinality of the table is returned.  See the Caching Guide for more.</para>
-        <para><synopsis>SYSADMIN.refreshMatView(return integer RowsUpdated, in string ViewName, in boolean Invalidate)</synopsis></para>
+        <para><synopsis>SYSADMIN.refreshMatView(RowsUpdated return integer, ViewName in string, Invalidate in boolean)</synopsis></para>
         </section>
         <section>
     	<title>SYSADMIN.refreshMatViewRow</title>
     	<para>Returns integer RowsUpdated. -1 indicates the materialized table is currently invalid. 0 indicates that the specified row did not exist in the live data query or in the materialized table.  See the Caching Guide for more.</para>
-        <para><synopsis>SYSADMIN.refreshMatViewRow(return integer RowsUpdated, in string ViewName, in object Key)</synopsis></para>
+        <para><synopsis>SYSADMIN.refreshMatViewRow(RowsUpdated return integer, ViewName in string, Key in object)</synopsis></para>
         </section>
         <section>
         	<title>Metadata Procedures</title>
@@ -1822,24 +1822,25 @@
 	        <section>
 	    	<title>SYSADMIN.setTableStats</title>
 	    	<para>Set statistics for the given table.</para>
-	        <para><synopsis>SYSADMIN.setTableStats(in string TableName, in integer Cardinality)</synopsis></para>
+	        <para><synopsis>SYSADMIN.setTableStats(TableName in string, Cardinality in integer)</synopsis></para>
 	        </section>
 	        <section>
 	    	<title>SYSADMIN.setColumnStats</title>
 	    	<para>Set statistics for the given column.</para>
-	        <para><synopsis>SYSADMIN.setColumnStats(in string TableName, in string ColumnName, in integer DistinctCount, in integer NullCount, in string Max, in string Min)</synopsis></para>
-	        <para>Passing a null stat value will leave corresponding metadata value unchanged.</para>
+	        <para><synopsis>SYSADMIN.setColumnStats(TableName in string, ColumnName in string, DistinctCount in integer, NullCount in integer, Max in string, Min in string)</synopsis></para>
+	        <para>All stat values are nullable. Passing a null stat value will leave corresponding metadata value unchanged.</para>
 	        </section>
 	        <section>
 	    	<title>SYSADMIN.setProperty</title>
 	    	<para>Set an extension metadata property for the given record.  Extension metadata is typically used by <xref linkend="translators"/>.</para>
-	        <para><synopsis>SYSADMIN.setProperty(return clob OldValue, in string Uid, in string Name, in clob Value)</synopsis></para>
+	        <para><synopsis>SYSADMIN.setProperty(OldValue return clob, Uid in string, Name in string, Value in clob)</synopsis></para>
 	        <para>Setting a value to null will remove the property.</para>
 	        <example lang="sql">
 	        	<title>Example Property Set</title>
 	        	<programlisting>CALL SYSADMIN.setProperty(uid=>(SELECT uid FROM TABLES WHERE name='tab'), name=>'some name', value=>'some value')</programlisting>
 	        	<para>This will set the property 'some name'='some value' on table tab.</para>
 	        </example>
+	        <para>The use of this procedure will not trigger replanning of associated prepared plans.</para>
 	        </section>
         </section>
 	</section>

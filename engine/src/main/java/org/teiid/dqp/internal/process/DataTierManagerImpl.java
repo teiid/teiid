@@ -378,17 +378,12 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						if (target == null) {
 							throw new TeiidProcessingException(QueryPlugin.Util.getString("DataTierManagerImpl.unknown_uuid", uuid)); //$NON-NLS-1$
 						}
-						if (value == null) {
-							result = target.setProperty(key, null);
-						} else {
-							strVal = ObjectConverterUtil.convertToString(value.getCharacterStream());
-							result = target.setProperty(key, strVal);
-						}
-						if (eventDistributor != null) {
-							eventDistributor.setProperty(vdbName, vdbVersion, uuid, key, strVal);
-						}
 						if (this.metadataRepository != null) {
 							this.metadataRepository.setProperty(vdbName, vdbVersion, target, key, strVal);
+						}
+						result = target.setProperty(key, strVal);
+						if (eventDistributor != null) {
+							eventDistributor.setProperty(vdbName, vdbVersion, uuid, key, strVal);
 						}
 						if (result == null) {
 							rows.add(Arrays.asList((Clob)null));
@@ -420,41 +415,30 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 					Integer nullVals = (Integer)((Constant)proc.getParameter(4).getExpression()).getValue();
 					String max = (String) ((Constant)proc.getParameter(5).getExpression()).getValue();
 					String min = (String) ((Constant)proc.getParameter(6).getExpression()).getValue();
-					if (distinctVals != null) {
-						c.setDistinctValues(distinctVals);
-					}
-					if (nullVals != null) {
-						c.setNullValues(nullVals);					
-					}
-					if (max != null) {
-						c.setMaximumValue(max);
-					}
-					if (min != null) {
-						c.setMinimumValue(min);
-					}
 					ColumnStats columnStats = new ColumnStats();
 					columnStats.setDistinctValues(distinctVals);
 					columnStats.setNullValues(nullVals);
 					columnStats.setMaximumValue(max);
 					columnStats.setMinimumValue(min);
-					if (eventDistributor != null) {
-						eventDistributor.setColumnStats(vdbName, vdbVersion, table.getParent().getName(), table.getName(), columnName, columnStats);
-					}
 					if (this.metadataRepository != null) {
 						this.metadataRepository.setColumnStats(vdbName, vdbVersion, c, columnStats);
+					}
+					c.setColumnStats(columnStats);
+					if (eventDistributor != null) {
+						eventDistributor.setColumnStats(vdbName, vdbVersion, table.getParent().getName(), table.getName(), columnName, columnStats);
 					}
 					break;
 				case SETTABLESTATS:
 					Constant val = (Constant)proc.getParameter(2).getExpression();
 					int cardinality = (Integer)val.getValue();
-					table.setCardinality(cardinality);
 					TableStats tableStats = new TableStats();
 					tableStats.setCardinality(cardinality);
-					if (eventDistributor != null) {
-						eventDistributor.setTableStats(vdbName, vdbVersion, table.getParent().getName(), table.getName(), tableStats);
-					}
 					if (this.metadataRepository != null) {
 						this.metadataRepository.setTableStats(vdbName, vdbVersion, table, tableStats);
+					}
+					table.setCardinality(cardinality);
+					if (eventDistributor != null) {
+						eventDistributor.setTableStats(vdbName, vdbVersion, table.getParent().getName(), table.getName(), tableStats);
 					}
 					break;
 				}

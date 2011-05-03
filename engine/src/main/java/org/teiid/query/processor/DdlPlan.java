@@ -60,12 +60,12 @@ public class DdlPlan extends ProcessorPlan {
     		VDBMetaData vdb = workContext.getVDB();
     		Table t = (Table)obj.getTarget().getMetadataID();
     		String sql = obj.getDefinition().toString();
+			if (pdm.getMetadataRepository() != null) {
+				pdm.getMetadataRepository().setViewDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t, sql);
+			}
     		alterView(vdb, t, sql);
     		if (pdm.getEventDistributor() != null) {
     			pdm.getEventDistributor().setViewDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t.getParent().getName(), t.getName(), sql);
-			}
-			if (pdm.getMetadataRepository() != null) {
-				pdm.getMetadataRepository().setViewDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t, sql);
 			}
     	}
 
@@ -74,12 +74,12 @@ public class DdlPlan extends ProcessorPlan {
     		VDBMetaData vdb = workContext.getVDB();
     		Procedure p = (Procedure)obj.getTarget().getMetadataID();
     		String sql = obj.getDefinition().toString();
+			if (pdm.getMetadataRepository() != null) {
+				pdm.getMetadataRepository().setProcedureDefinition(workContext.getVdbName(), workContext.getVdbVersion(), p, sql);
+			}
     		alterProcedureDefinition(vdb, p, sql);
     		if (pdm.getEventDistributor() != null) {
     			pdm.getEventDistributor().setProcedureDefinition(workContext.getVdbName(), workContext.getVdbVersion(), p.getParent().getName(), p.getName(), sql);
-			}
-			if (pdm.getMetadataRepository() != null) {
-				pdm.getMetadataRepository().setProcedureDefinition(workContext.getVdbName(), workContext.getVdbVersion(), p, sql);
 			}
     	}
 
@@ -101,16 +101,16 @@ public class DdlPlan extends ProcessorPlan {
     		} else if (getPlanForEvent(t, event) == null) {
 				throw new TeiidRuntimeException(new TeiidProcessingException(QueryPlugin.Util.getString("DdlPlan.event_not_exists", t.getName(), obj.getEvent()))); //$NON-NLS-1$
     		}
-    		alterInsteadOfTrigger(vdb, t, sql, obj.getEnabled(), event);
-    		if (pdm.getEventDistributor() != null) {
-    			pdm.getEventDistributor().setInsteadOfTriggerDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t.getParent().getName(), t.getName(), obj.getEvent(), sql, obj.getEnabled());
-			}
 			if (pdm.getMetadataRepository() != null) {
 				if (sql != null) {
 					pdm.getMetadataRepository().setInsteadOfTriggerDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t, obj.getEvent(), sql);
 				} else {
 					pdm.getMetadataRepository().setInsteadOfTriggerEnabled(workContext.getVdbName(), workContext.getVdbVersion(), t, obj.getEvent(), obj.getEnabled());
 				}
+			}
+    		alterInsteadOfTrigger(vdb, t, sql, obj.getEnabled(), event);
+    		if (pdm.getEventDistributor() != null) {
+    			pdm.getEventDistributor().setInsteadOfTriggerDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t.getParent().getName(), t.getName(), obj.getEvent(), sql, obj.getEnabled());
 			}
     	}
     }

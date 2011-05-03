@@ -15,9 +15,8 @@
     <xi:include href="content/adminapi.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/logging.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/security.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/runtime-updates.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/appendix-a.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/appendix-b.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-   
-   
 </book>
 

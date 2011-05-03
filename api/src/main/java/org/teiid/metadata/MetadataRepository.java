@@ -29,6 +29,20 @@ import java.util.LinkedHashMap;
 public interface MetadataRepository {
 	
 	/**
+	 * Marks the start of vdb metadata loading
+	 * @param vdbName
+	 * @param vdbVersion
+	 */
+	void startLoadVdb(String vdbName, int vdbVersion);
+	
+	/**
+	 * Marks the end of vdb metadata loading
+	 * @param vdbName
+	 * @param vdbVersion
+	 */
+	void endLoadVdb(String vdbName, int vdbVersion);
+	
+	/**
 	 * Returns an updated view definition (AS SQL only) or null if the current view definition should be used
 	 * should be used.
 	 */
@@ -67,7 +81,7 @@ public interface MetadataRepository {
 	 * @param triggerOperation
 	 * @return
 	 */
-	boolean isInsteadOfTriggerEnabled(String vdbName, int vdbVersion, Table table, Table.TriggerEvent triggerOperation);
+	Boolean isInsteadOfTriggerEnabled(String vdbName, int vdbVersion, Table table, Table.TriggerEvent triggerOperation);
 	
 	/**
 	 * Set the given trigger enabled.

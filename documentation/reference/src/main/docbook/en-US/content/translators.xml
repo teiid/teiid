@@ -63,7 +63,7 @@
         <table>
             <title>Base Execution Properties - shared by all translators</title>
             <tgroup cols="3">
-                <colspec colwidth="3*" />
+                <colspec colwidth="4*" />
                 <colspec colwidth="6*" />
                 <colspec colwidth="2*" />
                 <thead>
@@ -343,7 +343,7 @@
             <table>
                 <title>Execution Properties - shared by all JDBC Translators</title>
                 <tgroup cols="3">
-                    <colspec colwidth="3*" />
+                    <colspec colwidth="4*" />
                     <colspec colwidth="6*" />
                     <colspec colwidth="2*" />
                     <thead>
@@ -391,7 +391,7 @@
         <table>
             <title>Importer Properties - shared by all JDBC Translators</title>
             <tgroup cols="3">
-            <colspec colwidth="3*" />
+            <colspec colwidth="4*" />
             <colspec colwidth="6*" />
             <colspec colwidth="2*" />
                 <thead>
@@ -818,7 +818,7 @@ SELECT * FROM Issue WHERE Status != 'current;working';]]></programlisting>
                     in the query, and the value is 'true' the connector will call queryAll.
                     </para>
                     
-                    <programlisting language="SQL"><![CDATA[select * from Contact where isDeleted = true;</programlisting>
+                    <programlisting language="SQL"><![CDATA[select * from Contact where isDeleted = true;]]></programlisting>
                     
                     <para>
                     If the isDeleted column is used as a parameter in the query,
@@ -985,7 +985,7 @@ Account.Contacts) FROM Account]]></programlisting>
             <link linkend="xmltable">XMLTABLE</link> table functions to use CSV or XML 
             formated data.
             </para>
-            
+            <note><para>Setting the proper binding value on the translator is recommended as it removes the need for callers to pass an explict value.  If your service is actually uses SOAP11, but the binding used SOAP12 you will receive execution failures.</para></note>
             <table>
                 <title>Execution Properties</title>
                 <tgroup cols="3">
@@ -1003,7 +1003,6 @@ Account.Contacts) FROM Account]]></programlisting>
                         <row>
                             <entry>DefaultBinding</entry>
                             <entry>The binding that should be used if one is not specified.  Can be one of HTTP, SOAP11, or SOAP12
-                            <note><para>Setting the proper binding value on the translator is recommended as it removes the need for callers to pass an explict value.  If your service is actually uses SOAP11, but the binding used SOAP12 you will receive execution failures.</para></note>
                             </entry>
                             <entry>SOAP12</entry>
                         </row>
