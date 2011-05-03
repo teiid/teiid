@@ -29,6 +29,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.teiid.core.util.LRUCache;
+import org.teiid.metadata.AbstractMetadataRecord.DataModifiable;
+import org.teiid.metadata.AbstractMetadataRecord.Modifiable;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
@@ -42,7 +44,7 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
  * TODO: we should be using the real metadata objects, but internal and
  * designer legacy keep us on the temp framework
  */
-public class TempMetadataID implements Serializable {
+public class TempMetadataID implements Serializable, Modifiable, DataModifiable {
     
 	private static final long serialVersionUID = -1879211827339120135L;
 	private static final int LOCAL_CACHE_SIZE = 8;
@@ -155,6 +157,16 @@ public class TempMetadataID implements Serializable {
         this.ID = ID;
         this.type = type;
         this.originalMetadataID = metadataID;
+    }
+    
+    @Override
+    public long getLastDataModification() {
+    	return getTableData().getLastDataModification();
+    }
+    
+    @Override
+    public long getLastModified() {
+    	return getTableData().getLastModified();
     }
 
     /**

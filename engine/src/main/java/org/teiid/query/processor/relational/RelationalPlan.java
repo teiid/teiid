@@ -41,13 +41,10 @@ import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.processor.relational.ProjectIntoNode.Mode;
 import org.teiid.query.sql.LanguageObject;
-import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Create;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.WithQueryCommand;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.util.CommandContext;
 
@@ -288,29 +285,6 @@ public class RelationalPlan extends ProcessorPlan {
 			}
 		}
 		return false;
-    }
-    
-    @Override
-    public void getAccessedGroups(List<GroupSymbol> groups) {
-    	getAccessedGroups(groups, this.root);
-    }
-    
-    void getAccessedGroups(List<GroupSymbol> groups, RelationalNode node) {
-    	if (node instanceof AccessNode) {
-    		Command c = ((AccessNode)node).getCommand();
-    		if (c instanceof QueryCommand) {
-    			QueryCommand qc = (QueryCommand)c;
-    			groups.addAll(GroupCollectorVisitor.getGroupsIgnoreInlineViews(qc, true));
-    		}
-		} else if (node instanceof PlanExecutionNode) {
-			PlanExecutionNode pen = (PlanExecutionNode)node;
-			pen.getProcessorPlan().getAccessedGroups(groups);
-		}
-		for (RelationalNode child : node.getChildren()) {
-			if (child != null) {
-				getAccessedGroups(groups, child);
-			}
-		}
     }
     
     @Override

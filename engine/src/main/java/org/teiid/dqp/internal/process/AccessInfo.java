@@ -35,13 +35,12 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.AbstractMetadataRecord.DataModifiable;
+import org.teiid.metadata.AbstractMetadataRecord.Modifiable;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
-import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.util.CommandContext;
 
@@ -52,20 +51,14 @@ public class AccessInfo implements Serializable {
 	
 	private static final long serialVersionUID = -2608267960584191359L;
 	
-	private transient Set<Table> viewsAccessed;
-	private transient Set<Procedure> proceduresAccessed;
-	private transient Set<Object> tablesAccessed;
+	private transient Set<Object> objectsAccessed;
 	
-	private List<List<String>> externalTableNames;
-	private List<List<String>> externalViewNames;
-	private List<List<String>> externalProcedureNames;
+	private List<List<String>> externalNames;
 	
 	private transient long creationTime = System.currentTimeMillis();
 	
 	private void writeObject(java.io.ObjectOutputStream out)  throws IOException {
-		externalTableNames = initExternalList(externalTableNames, tablesAccessed);
-		externalViewNames = initExternalList(externalViewNames, viewsAccessed);
-		externalProcedureNames = initExternalList(externalProcedureNames, proceduresAccessed);
+		externalNames = initExternalList(externalNames, objectsAccessed);
 		out.defaultWriteObject();
 	}
 	
@@ -74,7 +67,7 @@ public class AccessInfo implements Serializable {
 		this.creationTime = System.currentTimeMillis();
 	}
 	
-	private List<List<String>> initExternalList(List<List<String>> externalNames, Set<? extends Object> accessed) {
+	private static List<List<String>> initExternalList(List<List<String>> externalNames, Set<? extends Object> accessed) {
 		if (externalNames == null) {
 			externalNames = new ArrayList<List<String>>(accessed.size());
 			for (Object object : accessed) {
@@ -90,63 +83,44 @@ public class AccessInfo implements Serializable {
 		return externalNames;
 	}
 	
-	public Set<Procedure> getProceduresAccessed() {
-		return proceduresAccessed;
-	}
-
-	public Set<Table> getViewsAccessed() {
-		return viewsAccessed;
-	}
-	
-	public Set<Object> getTablesAccessed() {
-		return tablesAccessed;
+	public Set<Object> getObjectsAccessed() {
+		return objectsAccessed;
 	}
 	
 	public long getCreationTime() {
 		return creationTime;
 	}
 	
-	void populate(ProcessorPlan plan, CommandContext context) {
-		List<GroupSymbol> groups = new ArrayList<GroupSymbol>();
-		plan.getAccessedGroups(groups);
-		if (!groups.isEmpty()) {
-			tablesAccessed = new HashSet<Object>();
-			for (GroupSymbol groupSymbol : groups) {
-				tablesAccessed.add(groupSymbol.getMetadataID());
-			}	
+	void populate(CommandContext context, boolean data) {
+		Set<Object> objects = null;
+		if (data) {
+			objects = context.getDataObjects();
 		} else {
-			tablesAccessed = Collections.emptySet();
+			objects = context.getPlanningObjects();
 		}
-		if (!context.getViewsAccessed().isEmpty()) {
-			this.viewsAccessed = new HashSet<Table>(context.getViewsAccessed());
+		if (objects == null || objects.isEmpty()) {
+			this.objectsAccessed = Collections.emptySet(); 
 		} else {
-			this.viewsAccessed = Collections.emptySet();
-		}
-		if (!context.getProceduresAccessed().isEmpty()) {
-			this.proceduresAccessed = new HashSet<Procedure>(context.getProceduresAccessed());
-		} else {
-			this.proceduresAccessed = Collections.emptySet();
+			this.objectsAccessed = objects;
 		}
 	}
 	
+	/**
+	 * Restore reconnects to the live metadata objects
+	 * @throws QueryResolverException
+	 * @throws QueryValidatorException
+	 * @throws TeiidComponentException
+	 */
 	void restore() throws QueryResolverException, QueryValidatorException, TeiidComponentException {
-		if (this.viewsAccessed != null) {
+		if (this.objectsAccessed != null) {
 			return;
 		}
 		VDBMetaData vdb = DQPWorkContext.getWorkContext().getVDB();
 		TransformationMetadata tm = vdb.getAttachment(TransformationMetadata.class);
 		TempTableStore globalStore = vdb.getAttachment(TempTableStore.class);
-		if (!externalViewNames.isEmpty()) {
-			this.viewsAccessed = new HashSet<Table>();
-			for (List<String> key : this.externalViewNames) {
-				this.viewsAccessed.add(tm.getMetadataStore().getSchema(key.get(0).toUpperCase()).getTables().get(key.get(1).toUpperCase()));
-			}
-		} else {
-			this.viewsAccessed = Collections.emptySet();
-		}
-		this.externalViewNames = null;
-		if (!externalTableNames.isEmpty()) {
-			for (List<String> key : this.externalTableNames) {
+		if (!externalNames.isEmpty()) {
+			this.objectsAccessed = new HashSet<Object>(externalNames.size());
+			for (List<String> key : this.externalNames) {
 				if (key.size() == 1) {
 					String matTableName = key.get(0);
 					TempMetadataID id = globalStore.getMetadataStore().getTempGroupID(matTableName);
@@ -155,52 +129,35 @@ public class AccessInfo implements Serializable {
 						String viewFullName = matTableName.substring(RelationalPlanner.MAT_PREFIX.length());
 						id = globalStore.getGlobalTempTableMetadataId(tm.getGroupID(viewFullName), tm);
 					}
-					this.tablesAccessed.add(id);
+					this.objectsAccessed.add(id);
 				} else {
-					this.tablesAccessed.add(tm.getMetadataStore().getSchema(key.get(0).toUpperCase()).getTables().get(key.get(1).toUpperCase()));
+					Schema s = tm.getMetadataStore().getSchema(key.get(0).toUpperCase());
+					Modifiable m = s.getTables().get(key.get(1).toUpperCase());
+					if (m == null) {
+						m = s.getProcedures().get(key.get(1).toUpperCase());
+					}
+					if (m != null) {
+						this.objectsAccessed.add(m);
+					}
 				}
 			}
 		} else {
-			this.tablesAccessed = Collections.emptySet();
+			this.objectsAccessed = Collections.emptySet();
 		}
-		this.externalTableNames = null;
-		if (!externalProcedureNames.isEmpty()) {
-			for (List<String> key : this.externalProcedureNames) {
-				this.proceduresAccessed.add(tm.getMetadataStore().getSchema(key.get(0).toUpperCase()).getProcedures().get(key.get(1).toUpperCase()));
-			}
-		} else {
-			this.proceduresAccessed = Collections.emptySet();
-		}
-		this.externalProcedureNames = null;
+		this.externalNames = null;
 	}
 	
 	boolean validate(boolean data, long modTime) {
-		if (this.tablesAccessed == null || modTime < 0) {
+		if (this.objectsAccessed == null || modTime < 0) {
 			return true;
 		}
-		if (!data) {
-			for (Table t : getViewsAccessed()) {
-				if (t.getLastModified() - modTime > this.creationTime) {
+		for (Object o : this.objectsAccessed) {
+			if (!data) {
+				if (o instanceof Modifiable && ((Modifiable)o).getLastModified() - modTime > this.creationTime) {
 					return false;
 				}
-			}
-			for (Procedure p : getProceduresAccessed()) {
-				if (p.getLastModified() - modTime > this.creationTime) {
-					return false;
-				}
-			}
-		}
-		for (Object o : getTablesAccessed()) {
-			if (o instanceof Table) {
-				Table t = (Table)o;
-				if ((data?t.getLastDataModification():t.getLastModified()) - modTime > this.creationTime) {
-					return false;
-				}
-			} else if (o instanceof TempMetadataID) {
-				TempMetadataID tid = (TempMetadataID)o;
-				if ((data?tid.getTableData().getLastDataModification():tid.getTableData().getLastModified()) - modTime > this.creationTime) {
-					return false;
-				}
+			} else if (o instanceof DataModifiable && ((DataModifiable)o).getLastDataModification() - modTime > this.creationTime) {
+				return false;
 			}
 		}
 		return true;

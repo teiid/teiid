@@ -39,7 +39,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 /** 
  * @since 5.5
  */
-public class Create extends Command {
+public class Create extends Command implements TargetedCommand {
     /** Identifies the table to be created. */
     private GroupSymbol table;
     private List<ElementSymbol> primaryKey = new ArrayList<ElementSymbol>();
@@ -48,6 +48,11 @@ public class Create extends Command {
     
     public GroupSymbol getTable() {
         return table;
+    }
+    
+    @Override
+    public GroupSymbol getGroup() {
+    	return table;
     }
 
     public void setTable(GroupSymbol table) {

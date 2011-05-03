@@ -26,16 +26,13 @@ import java.util.LinkedHashMap;
 
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 
 
-public abstract class ProcedureContainer extends Command {
+public abstract class ProcedureContainer extends Command implements TargetedCommand {
 
     private int updateCount = -1;
     private UpdateInfo updateInfo;
-    
-    public abstract GroupSymbol getGroup();
     
     protected void copyMetadataState(ProcedureContainer copy) {
         super.copyMetadataState(copy);

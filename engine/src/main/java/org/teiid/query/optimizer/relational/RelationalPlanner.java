@@ -42,7 +42,6 @@ import org.teiid.core.id.IDGenerator;
 import org.teiid.dqp.internal.process.Request;
 import org.teiid.language.SQLConstants;
 import org.teiid.metadata.Procedure;
-import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.mapping.relational.QueryNode;
@@ -96,6 +95,7 @@ import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.TableFunctionReference;
+import org.teiid.query.sql.lang.TargetedCommand;
 import org.teiid.query.sql.lang.TranslatableProcedureContainer;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
@@ -114,7 +114,6 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
-import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
@@ -522,9 +521,6 @@ public class RelationalPlanner {
         // Create top project node - define output columns for stored query / procedure
         PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
 
-        Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(command, false);
-        projectNode.addGroups(groups);
-
         // Set output columns
         List<SingleElementSymbol> cols = command.getProjectedSymbols();
         projectNode.setProperty(NodeConstants.Info.PROJECT_COLS, cols);
@@ -538,8 +534,12 @@ public class RelationalPlanner {
         	ProcedureContainer container = (ProcedureContainer)command;
         	usingTriggerAction = addNestedProcedure(sourceNode, container, container.getGroup().getMetadataID());
         }
-        sourceNode.addGroups(groups);
-
+        GroupSymbol target = ((TargetedCommand)command).getGroup();
+        sourceNode.addGroup(target);
+    	Object id = getTrackableGroup(target, metadata);
+    	if (id != null) {
+    		context.accessedPlanningObject(id);
+    	}
         attachLast(projectNode, sourceNode);
 
         //for INTO query, attach source and project nodes
@@ -559,6 +559,12 @@ public class RelationalPlanner {
 	private boolean addNestedProcedure(PlanNode sourceNode,
 			ProcedureContainer container, Object metadataId) throws TeiidComponentException,
 			QueryMetadataException, TeiidProcessingException {
+		if (container instanceof StoredProcedure) {
+			StoredProcedure sp = (StoredProcedure)container;
+			if (sp.getProcedureID() instanceof Procedure) {
+				context.accessedPlanningObject(sp.getProcedureID());
+			}
+		}
 		String cacheString = "transformation/" + container.getClass().getSimpleName().toUpperCase(); //$NON-NLS-1$
 		Command c = (Command)metadata.getFromMetadataCache(metadataId, cacheString);
 		if (c == null) {
@@ -599,12 +605,6 @@ public class RelationalPlanner {
 			//skip the rewrite here, we'll do that in the optimizer
 			//so that we know what the determinism level is.
 			addNestedCommand(sourceNode, container.getGroup(), container, c, false);
-			if (container instanceof StoredProcedure) {
-				StoredProcedure sp = (StoredProcedure)container;
-				if (sp.getProcedureID() instanceof Procedure) {
-					context.accessedProcedure((Procedure)sp.getProcedureID());
-				}
-			}
 		} else if (!container.getGroup().isTempTable() && //we hope for the best, and do a specific validation for subqueries below
 				container instanceof TranslatableProcedureContainer //we force the evaluation of procedure params - TODO: inserts are fine except for nonpushdown functions on columns
 				&& !CriteriaCapabilityValidatorVisitor.canPushLanguageObject(container, metadata.getModelID(container.getGroup().getMetadataID()), metadata, capFinder, analysisRecord)) {
@@ -790,11 +790,14 @@ public class RelationalPlanner {
             	hints.hasVirtualGroups = true;
             }
             Command nestedCommand = ufc.getExpandedCommand();
-            if (nestedCommand == null && !group.isTempGroupSymbol() && !group.isProcedure() 
-            		&& (!(group.getMetadataID() instanceof TempMetadataID) || metadata.getVirtualPlan(group.getMetadataID()) != null)
-        	        && (metadata.isVirtualGroup(group.getMetadataID()))) { 
-            	//must be a view layer
-            	nestedCommand = resolveVirtualGroup(group);
+            if (nestedCommand == null && !group.isProcedure()) {
+            	Object id = getTrackableGroup(group, metadata);
+            	if (id != null) {
+            		context.accessedPlanningObject(id);
+            	}
+            	if (!group.isTempGroupSymbol() && metadata.isVirtualGroup(group.getMetadataID())) { 
+    				nestedCommand = resolveVirtualGroup(group);
+        		}
             }
             node = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
             if (group.getModelMetadataId() != null) {
@@ -874,6 +877,24 @@ public class RelationalPlanner {
             node.setProperty(NodeConstants.Info.MAKE_NOT_DEP, Boolean.TRUE);
         }
     }
+
+	public static Object getTrackableGroup(GroupSymbol group, QueryMetadataInterface metadata)
+			throws TeiidComponentException, QueryMetadataException {
+		if (group.isTempGroupSymbol()) {
+			QueryMetadataInterface qmi = metadata.getSessionMetadata();
+			try {
+				//exclude proc scoped temp tables
+				if (group.isGlobalTable() || (qmi != null && qmi.getGroupID(group.getNonCorrelationName()) == group.getMetadataID())) {
+					return group.getMetadataID();
+				}
+			} catch (QueryMetadataException e) {
+				//not a session table
+			}
+		} else {
+			return group.getMetadataID();
+		}
+		return null;
+	}
 
 	private SymbolMap getCorrelatedReferences(PlanNode parent, PlanNode node,
 			LanguageObject lo) {
@@ -1111,6 +1132,7 @@ public class RelationalPlanner {
         		//TODO: update the table for defaultMat
         		recordAnnotation(analysisRecord, Annotation.MATERIALIZED_VIEW, Priority.LOW, "SimpleQueryResolver.materialized_table_not_used", virtualGroup, matTableName); //$NON-NLS-1$
         	}else{
+            	this.context.accessedPlanningObject(matMetadataId);
         		qnode = new QueryNode(null);
         		Query query = createMatViewQuery(matMetadataId, matTableName, Arrays.asList(new AllSymbol()), isImplicitGlobal);
         		query.setCacheHint(hint);
@@ -1121,9 +1143,6 @@ public class RelationalPlanner {
         } else {
             // Not a materialized view - query the primary transformation
             qnode = metadata.getVirtualPlan(metadataID); 
-            if (metadataID instanceof Table) {
-            	this.context.accessedView((Table)metadataID);
-            }
         }
 
         Command result = (Command)QueryResolver.resolveView(virtualGroup, qnode, cacheString, metadata).getCommand().clone();   

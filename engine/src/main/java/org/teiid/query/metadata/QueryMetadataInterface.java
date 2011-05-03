@@ -677,4 +677,6 @@ public interface QueryMetadataInterface {
 	 * @throws TeiidComponentException
 	 */
 	boolean hasProcedure(String name) throws TeiidComponentException;
+
+	QueryMetadataInterface getSessionMetadata();
 }

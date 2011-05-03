@@ -75,7 +75,7 @@ public class TestCachedResults {
 		ProcessorPlan plan = new FakeProcessorPlan(0);
 		CommandContext cc = new CommandContext();
 		Table t = RealMetadataFactory.exampleBQT().getGroupID("bqt1.smalla");
-		cc.accessedView(t);
+		cc.accessedDataObject(t);
 		plan.setContext(cc);
 		results.setResults(tb, plan);
 		results.setCommand(new Query());

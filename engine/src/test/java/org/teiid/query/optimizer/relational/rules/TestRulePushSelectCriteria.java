@@ -43,7 +43,6 @@ import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
-import org.teiid.query.optimizer.relational.rules.RulePushSelectCriteria;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -72,7 +71,8 @@ public class TestRulePushSelectCriteria {
     	Command command = TestOptimizer.helpGetCommand("select * from (select * from pm1.g1 union select * from pm1.g2) x where e1 = 1", metadata, null); //$NON-NLS-1$
     	Command subCommand = TestOptimizer.helpGetCommand("select * from pm1.g1 union select * from pm1.g2", metadata, null); //$NON-NLS-1$
     	RelationalPlanner p = new RelationalPlanner();
-    	p.initialize(command, null, metadata, null, null, null);
+    	CommandContext cc = new CommandContext();
+    	p.initialize(command, null, metadata, null, null, cc);
     	PlanNode root = p.generatePlan(command);
     	PlanNode child = p.generatePlan(subCommand);
     	PlanNode sourceNode = NodeEditor.findNodePreOrder(root, NodeConstants.Types.SOURCE);
@@ -83,7 +83,7 @@ public class TestRulePushSelectCriteria {
         accessNode.addGroups(child.getFirstChild().getGroups());
     	child.getFirstChild().addAsParent(accessNode);
     	
-    	new RulePushSelectCriteria().execute(root, metadata, new DefaultCapabilitiesFinder(), new RuleStack(), AnalysisRecord.createNonRecordingRecord(), new CommandContext());
+    	new RulePushSelectCriteria().execute(root, metadata, new DefaultCapabilitiesFinder(), new RuleStack(), AnalysisRecord.createNonRecordingRecord(), cc);
     	// the select node should still be above the access node
     	accessNode = NodeEditor.findNodePreOrder(root, NodeConstants.Types.ACCESS);
     	assertEquals(NodeConstants.Types.SELECT, accessNode.getParent().getType());

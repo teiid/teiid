@@ -65,7 +65,6 @@ import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.tempdata.TempTableStore;
@@ -712,22 +711,6 @@ public class ProcedurePlan extends ProcessorPlan {
     public boolean requiresTransaction(boolean transactionalReads) {
     	//TODO: detect simple select case
     	return requiresTransaction || transactionalReads;
-    }
-    
-    @Override
-    public void getAccessedGroups(List<GroupSymbol> groups) {
-    	ArrayList<ProcessorPlan> plans = new ArrayList<ProcessorPlan>();
-    	this.originalProgram.getChildPlans(plans);
-    	LinkedList<GroupSymbol> tempGroups = new LinkedList<GroupSymbol>();
-    	for (ProcessorPlan processorPlan : plans) {
-			processorPlan.getAccessedGroups(tempGroups);
-		}
-    	for (GroupSymbol groupSymbol : tempGroups) {
-			if (groupSymbol.isTempTable() && !groupSymbol.isGlobalTable()) {
-				continue;
-			}
-			groups.add(groupSymbol);
-		}
     }
     
 }

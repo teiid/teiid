@@ -37,7 +37,6 @@ import org.teiid.core.id.IDGenerator;
 import org.teiid.core.id.IntegerIDFactory;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.metadata.Procedure;
-import org.teiid.metadata.Table;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -130,7 +129,7 @@ public class QueryOptimizer {
 					ProcessorPlan plan = planProcedure(command, metadata, idGenerator, capFinder, analysisRecord, clone);
 					//note that this is not a full prepared plan.  It is not usable by user queries.
 					if (pid instanceof Procedure) {
-						clone.accessedProcedure((Procedure)pid);
+						clone.accessedPlanningObject(pid);
 					}
 					pp = new PreparedPlan();
 					pp.setPlan(plan, clone);
@@ -138,11 +137,8 @@ public class QueryOptimizer {
 					context.setDeterminismLevel(determinismLevel);
 				}
 				result = pp.getPlan().clone();
-				for (Table t : pp.getAccessInfo().getViewsAccessed()) {
-					context.accessedView(t);
-				}
-				for (Procedure p : pp.getAccessInfo().getProceduresAccessed()) {
-					context.accessedProcedure(p);
+				for (Object id : pp.getAccessInfo().getObjectsAccessed()) {
+					context.accessedPlanningObject(id);
 				}
 			}
 	        // propagate procedure parameters to the plan to allow runtime type checking

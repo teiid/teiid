@@ -27,8 +27,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.AbstractMetadataRecord.DataModifiable;
+import org.teiid.metadata.AbstractMetadataRecord.Modifiable;
 
-public class Table extends ColumnSet<Schema> {
+public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiable {
 
 	private static final long serialVersionUID = 4891356771125218672L;
 

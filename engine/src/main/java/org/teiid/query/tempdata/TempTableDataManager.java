@@ -286,6 +286,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 		Determinism determinismLevel = context.resetDeterminismLevel();
 		QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(proc.toString(), fullName.toUpperCase(), context);
 		qp.setNonBlocking(true);
+		qp.getContext().setDataObjects(null);
 		BatchCollector bc = qp.createBatchCollector();
 		TupleBuffer tb = bc.collectTuples();
 		CachedResults cr = new CachedResults();
@@ -352,6 +353,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 				metadata.getFullName(ids.iterator().next()) + " = ?" + ' ' + Reserved.OPTION + ' ' + Reserved.NOCACHE; //$NON-NLS-1$
 			QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(queryString, matViewName.toUpperCase(), context, key.getValue());
 			qp.setNonBlocking(true);
+			qp.getContext().setDataObjects(null);
 			TupleSource ts = new BatchCollector.BatchProducerTupleSource(qp);
 			List<?> tuple = ts.nextTuple();
 			boolean delete = false;
@@ -430,8 +432,15 @@ public class TempTableDataManager implements ProcessorDataManager {
 				}
 			} 
 			table = globalStore.getOrCreateTempTable(tableName, query, bufferManager, false);
+			context.accessedDataObject(group.getMetadataID());
 		} else {
 			table = contextStore.getOrCreateTempTable(tableName, query, bufferManager, true);
+			if (context.getDataObjects() != null) {
+				Object id = RelationalPlanner.getTrackableGroup(group, context.getMetadata());
+				if (id != null) {
+					context.accessedDataObject(group.getMetadataID());
+				}
+			}
 		}
 		if (remapColumns) {
 			//convert to the actual table symbols (this is typically handled by the languagebridgefactory
@@ -516,7 +525,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 				String transformation = metadata.getVirtualPlan(group.getMetadataID()).getQuery();
 				QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(transformation, fullName, context);
 				qp.setNonBlocking(true);
-				
+				qp.getContext().setDataObjects(null);
 				if (distributedCache != null) {
 					CachedResults cr = new CachedResults();
 					BatchCollector bc = qp.createBatchCollector();

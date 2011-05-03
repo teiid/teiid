@@ -40,8 +40,6 @@ import org.teiid.core.util.ArgCheck;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.Table;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.SecurityFunctionEvaluator;
@@ -118,6 +116,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    
 	    private int userRequestSourceConcurrency;
 	    private Subject subject;
+	    private HashSet<Object> dataObjects;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -126,8 +125,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     private TempTableStore tempTableStore;
     private LinkedList<String> recursionStack;
     private boolean nonBlocking;
-    private HashSet<Table> viewsAccessed;
-    private HashSet<Procedure> proceduresAccessed;
+    private HashSet<Object> planningObjects;
+    private HashSet<Object> dataObjects = this.globalState.dataObjects;
 
     /**
      * Construct a new context.
@@ -160,6 +159,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     
     private CommandContext(GlobalState state) {
     	this.globalState = state;
+    	this.dataObjects = this.globalState.dataObjects;
     }
     
     public Determinism getDeterminismLevel() {
@@ -539,32 +539,32 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		this.globalState.subject = subject;
 	}
 	
-	public void accessedView(Table id) {
-		if (this.viewsAccessed == null) {
-			this.viewsAccessed = new HashSet<Table>();
+	public void accessedPlanningObject(Object id) {
+		if (this.planningObjects == null) {
+			this.planningObjects = new HashSet<Object>();
 		}
-		this.viewsAccessed.add(id);
+		this.planningObjects.add(id);
 	}
 	
-	public Set<Table> getViewsAccessed() {
-		if (this.viewsAccessed == null) {
+	public Set<Object> getPlanningObjects() {
+		if (this.planningObjects == null) {
 			return Collections.emptySet();
 		}
-		return viewsAccessed;
+		return planningObjects;
 	}
 	
-	public void accessedProcedure(Procedure id) {
-		if (this.proceduresAccessed == null) {
-			this.proceduresAccessed = new HashSet<Procedure>();
+	public void accessedDataObject(Object id) {
+		if (this.dataObjects != null) {
+			this.dataObjects.add(id);
 		}
-		this.proceduresAccessed.add(id);
 	}
 	
-	public Set<Procedure> getProceduresAccessed() {
-		if (this.proceduresAccessed == null) {
-			return Collections.emptySet();
-		}
-		return proceduresAccessed;
+	public Set<Object> getDataObjects() {
+		return dataObjects;
+	}
+	
+	public void setDataObjects(HashSet<Object> dataObjectsAccessed) {
+		this.dataObjects = dataObjectsAccessed;
 	}
 	
 }

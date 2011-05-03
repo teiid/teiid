@@ -92,7 +92,7 @@ public class CachedResults implements Serializable, Cachable {
 		this.rowCount = results.getRowCount();
 		this.uuid = results.getId();
 		this.hasLobs = results.isLobs();
-		this.accessInfo.populate(plan, plan.getContext());
+		this.accessInfo.populate(plan.getContext(), true);
 	}
 	
 	public void setCommand(Command command) {

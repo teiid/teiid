@@ -479,8 +479,4 @@ public class XMLPlan extends ProcessorPlan {
         return this.originalProgram;
     }
     
-    @Override
-    public void getAccessedGroups(List<GroupSymbol> groups) {
-    	//TODO: add support
-    }
 }

@@ -85,6 +85,7 @@ import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.tempdata.TempTableStore.MatTableInfo;
 import org.teiid.query.util.CommandContext;
@@ -169,6 +170,11 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		AtomicRequestMessage aqr = createRequest(context.getProcessorID(), command, modelName, connectorBindingId, nodeID);
 		if (limit > 0) {
 			aqr.setFetchSize(Math.min(limit, aqr.getFetchSize()));
+		}
+		if (context.getDataObjects() != null) {
+			for (GroupSymbol gs : GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, false)) {
+				context.accessedDataObject(gs.getMetadataID());
+			}
 		}
 		ConnectorManagerRepository cmr = workItem.getDqpWorkContext().getVDB().getAttachment(ConnectorManagerRepository.class);
 		ConnectorWork work = cmr.getConnectorManager(aqr.getConnectorName()).registerRequest(aqr);

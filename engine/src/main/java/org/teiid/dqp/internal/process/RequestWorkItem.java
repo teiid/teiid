@@ -25,6 +25,7 @@ package org.teiid.dqp.internal.process;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -425,6 +426,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		originalCommand = request.userCommand;
         if (cachable && (requestMsg.useResultSetCache() || originalCommand.getCacheHint() != null) && rsCache != null && originalCommand.areResultsCachable()) {
         	this.cid = cacheId;
+        	//turn on the collection of data objects used
+        	request.processor.getContext().setDataObjects(new HashSet<Object>(4));
         }
 		processor = request.processor;
 		collector = new BatchCollector(processor, processor.getBufferManager(), this.request.context, isForwardOnly()) {

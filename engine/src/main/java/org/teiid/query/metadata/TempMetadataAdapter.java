@@ -80,6 +80,15 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
 		this.session = session;
 	}
     
+    public QueryMetadataInterface getSessionMetadata() {
+    	if (isSession()) {
+    		TempMetadataAdapter tma = new TempMetadataAdapter(new BasicQueryMetadata(), this.tempStore);
+    		tma.session = true;
+    		return tma;
+    	}
+    	return this.actualMetadata.getSessionMetadata();
+    }
+    
     public QueryMetadataInterface getDesignTimeMetadata() {
     	if (isSession()) {
     		return this.actualMetadata.getDesignTimeMetadata();

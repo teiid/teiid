@@ -25,11 +25,13 @@ package org.teiid.metadata;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.teiid.metadata.AbstractMetadataRecord.Modifiable;
+
 
 /**
  * ProcedureRecordImpl
  */
-public class Procedure extends AbstractMetadataRecord {
+public class Procedure extends AbstractMetadataRecord implements Modifiable {
     
 	private static final long serialVersionUID = 7714869437683360834L;
 

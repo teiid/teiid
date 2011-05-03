@@ -382,5 +382,10 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 			QueryMetadataException {
 		return actualMetadata.getName(metadataID);
 	}
+	
+	@Override
+	public QueryMetadataInterface getSessionMetadata() {
+		return actualMetadata.getSessionMetadata();
+	}
 
 }

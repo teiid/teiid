@@ -24,10 +24,8 @@ package org.teiid.query.sql.lang;
 
 import java.util.List;
 
-import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
-import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
@@ -37,12 +35,17 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 /** 
  * @since 5.5
  */
-public class Drop extends Command {
+public class Drop extends Command implements TargetedCommand {
     /** Identifies the table to be dropped. */
     private GroupSymbol table;
     
     public GroupSymbol getTable() {
         return table;
+    }
+    
+    @Override
+    public GroupSymbol getGroup() {
+    	return table;
     }
 
     public void setTable(GroupSymbol table) {

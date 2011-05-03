@@ -37,6 +37,14 @@ import org.teiid.core.util.EquivalenceUtil;
  */
 public abstract class AbstractMetadataRecord implements Serializable {
 	
+	public interface Modifiable {
+		long getLastModified();
+	}
+	
+	public interface DataModifiable {
+		long getLastDataModification();
+	}
+	
 	private static final long serialVersionUID = 564092984812414058L;
 
 	public final static char NAME_DELIM_CHAR = '.';

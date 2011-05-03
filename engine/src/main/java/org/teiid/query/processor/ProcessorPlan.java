@@ -37,7 +37,6 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
-import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.util.CommandContext;
 
 
@@ -176,7 +175,5 @@ public abstract class ProcessorPlan implements Cloneable, BatchProducer {
     public boolean hasFinalBuffer() {
     	return false;
     }
-    
-    public abstract void getAccessedGroups(List<GroupSymbol> groups);
     
 }

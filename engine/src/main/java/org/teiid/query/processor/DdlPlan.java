@@ -48,7 +48,6 @@ import org.teiid.query.sql.lang.AlterTrigger;
 import org.teiid.query.sql.lang.AlterView;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.util.CommandContext;
 
 public class DdlPlan extends ProcessorPlan {
@@ -224,11 +223,6 @@ public class DdlPlan extends ProcessorPlan {
 		PlanNode props = super.getDescriptionProperties();
         props.addProperty(PROP_SQL, this.command.toString());
         return props;
-	}
-	
-	@Override
-	public void getAccessedGroups(List<GroupSymbol> groups) {
-		
 	}
 	
 }

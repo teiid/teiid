@@ -76,7 +76,7 @@ public class PreparedPlan implements Cachable {
 	 */
 	public void setPlan(ProcessorPlan planValue, CommandContext context){
 		plan = planValue;
-		this.accessInfo.populate(planValue, context);
+		this.accessInfo.populate(context, false);
 	}
 	
 	/**

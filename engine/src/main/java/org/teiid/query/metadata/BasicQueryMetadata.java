@@ -508,5 +508,10 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 			QueryMetadataException {
 		return null;
 	}
+	
+	@Override
+	public QueryMetadataInterface getSessionMetadata() {
+		return null;
+	}
     
 }
