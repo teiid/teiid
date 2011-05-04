@@ -75,11 +75,11 @@ public class TestTeradataTranslator {
     }
     
     @Test public void testByteToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "string", "TRIM(BOTH FROM 1 (FORMAT 'Z')(CHAR(4)))"); 
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "string", "TRIM(BOTH FROM 1 (FORMAT 'ZZZZ')(CHAR(4)))"); 
     }
     
     @Test public void testDoubleToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Double(1.0), Double.class), "string", "TRIM(BOTH FROM 1.0 (FORMAT 'Z')(CHAR(25)))"); 
+        helpTest(LANG_FACTORY.createLiteral(new Double(1.0), Double.class), "string", "TRIM(BOTH FROM 1.0 (FORMAT 'ZZZZZZZZZZZZZZZZZZZZZZZZZ')(CHAR(25)))"); 
     }    
     
 	@Test public void testInDecompose() throws Exception {

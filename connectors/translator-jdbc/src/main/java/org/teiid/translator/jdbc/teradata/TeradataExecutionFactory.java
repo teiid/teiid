@@ -291,12 +291,18 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
     
     public static class NumericToStringModifier extends FunctionModifier {
     	private int charSize;
+    	private String formatCode;
     	public NumericToStringModifier(int size) {
     		this.charSize = size;
+    		StringBuilder sb = new StringBuilder();
+    		for(int i = 0; i < size; i++) {
+    			sb.append('Z');
+    		}
+    		this.formatCode = sb.toString();
     	}
 		@Override
 		public List<?> translate(Function function) {
-			return Arrays.asList("TRIM(BOTH FROM ",function.getParameters().get(0), " (FORMAT 'Z')(CHAR("+this.charSize+")))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+			return Arrays.asList("TRIM(BOTH FROM ",function.getParameters().get(0), " (FORMAT '"+this.formatCode+"')(CHAR("+this.charSize+")))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
 	}
 }
