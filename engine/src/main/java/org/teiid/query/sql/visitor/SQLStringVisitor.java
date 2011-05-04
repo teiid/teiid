@@ -930,8 +930,8 @@ public class SQLStringVisitor extends LanguageVisitor {
     protected void appendSetQuery( SetQuery parent,
                                    QueryCommand obj,
                                    boolean right ) {
-        if (right && obj instanceof SetQuery
-            && ((parent.isAll() && !((SetQuery)obj).isAll()) || parent.getOperation() != ((SetQuery)obj).getOperation())) {
+        if (right && ((obj instanceof SetQuery
+            && ((parent.isAll() && !((SetQuery)obj).isAll()) || parent.getOperation() != ((SetQuery)obj).getOperation())) || obj.getLimit() != null || obj.getOrderBy() != null)) {
             append(Tokens.LPAREN);
             visitNode(obj);
             append(Tokens.RPAREN);

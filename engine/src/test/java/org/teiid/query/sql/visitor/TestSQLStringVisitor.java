@@ -1875,6 +1875,12 @@ public class TestSQLStringVisitor extends TestCase {
         helpTest(command, "SELECT pm1.g1.e1 FROM pm1.g1 UNION SELECT e2 FROM pm1.g2 ORDER BY e1"); //$NON-NLS-1$
     }
     
+    public void testUnionBranchOrderBy() throws Exception {
+        Command command = QueryParser.getQueryParser().parseCommand("select pm1.g1.e1 from pm1.g1 union (select e2 from pm1.g2 order by e1)"); //$NON-NLS-1$
+        QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());
+        helpTest(command, "SELECT pm1.g1.e1 FROM pm1.g1 UNION (SELECT e2 FROM pm1.g2 ORDER BY e1)"); //$NON-NLS-1$
+    }
+    
     public void testAliasedOrderBy() throws Exception {
         Command command = QueryParser.getQueryParser().parseCommand("select pm1.g1.e1 as a from pm1.g1 order by a"); //$NON-NLS-1$
         QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());
