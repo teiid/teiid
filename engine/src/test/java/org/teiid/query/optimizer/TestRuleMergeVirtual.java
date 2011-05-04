@@ -273,6 +273,22 @@ public class TestRuleMergeVirtual {
         }, TestLimit.NODE_TYPES);                                    
     }
     
+    @Test public void testSimpleMergeUnionSecondBranchWithOrderBy() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_UNION, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+         
+        ProcessorPlan plan = TestOptimizer.helpPlan("select '1' as x, e2 from pm1.g1 union all select e1, e2 from (select e1, 1 as e2 from pm1.g2 limit 1) as x order by x", //$NON-NLS-1$
+                                      FakeMetadataFactory.example1Cached(), null, capFinder,
+                                      new String[] {"SELECT '1' AS c_0, pm1.g1.e2 AS c_1 FROM pm1.g1 UNION ALL (SELECT pm1.g2.e1 AS c_0, 1 AS c_1 FROM pm1.g2 LIMIT 1) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
+    }
+    
     /**
      * Note that the merge is not performed since it would create an expression in the group by clause
      */
