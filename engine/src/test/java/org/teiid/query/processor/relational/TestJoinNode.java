@@ -247,11 +247,10 @@ public class TestJoinNode {
         while(true) {
             try {
                 TupleBatch batch = join.nextBatch();
-                for(int row = currentRow; row <= batch.getEndRow(); row++) {
-                    List tuple = batch.getTuple(row);
-                    assertEquals("Rows don't match at " + row, expectedResults[row-1], tuple); //$NON-NLS-1$
+                for(;currentRow <= batch.getEndRow(); currentRow++) {
+                    List tuple = batch.getTuple(currentRow);
+                    assertEquals("Rows don't match at " + currentRow, expectedResults[currentRow-1], tuple); //$NON-NLS-1$
                 }
-                currentRow += batch.getRowCount();    
                 if(batch.getTerminationFlag()) {
                     break;
                 }
@@ -599,7 +598,7 @@ public class TestJoinNode {
     }
     
     @Test public void testMergeJoinOptimization() throws Exception {
-        helpTestEnhancedSortMergeJoin(100);
+        helpTestEnhancedSortMergeJoin(99);
     }
 
 	private void helpTestEnhancedSortMergeJoin(int batchSize)
@@ -679,13 +678,13 @@ public class TestJoinNode {
            Arrays.asList(new Object[] { 7, 7 }),
            Arrays.asList(new Object[] { 2, 2 }),
            Arrays.asList(new Object[] { 6, 6 }),
-           Arrays.asList(new Object[] { 1, 1 })
+           Arrays.asList(new Object[] { 1, 1 }),
         };
         helpCreateJoin();               
         this.joinStrategy = new EnhancedSortMergeJoinStrategy(SortOption.SORT, SortOption.SORT);
         this.join.setJoinStrategy(joinStrategy);
         //this.join.setRightDistinct(true);
-        helpTestJoinDirect(expected, 100, 1);
+        helpTestJoinDirect(expected, 40, 1);
     }
     
     @Test public void testMergeJoinOptimizationWithDistinctAlreadySorted() throws Exception {
@@ -717,7 +716,7 @@ public class TestJoinNode {
         helpCreateJoin();               
         this.joinStrategy = new EnhancedSortMergeJoinStrategy(SortOption.SORT, SortOption.ALREADY_SORTED);
         this.join.setJoinStrategy(joinStrategy);
-        helpTestJoinDirect(expected, 100, 1);
+        helpTestJoinDirect(expected, 40, 1);
     }
 
     @Test public void testRepeatedMerge() throws Exception {

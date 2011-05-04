@@ -224,7 +224,8 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	int schemaSize = this.joinNode.getBufferManager().getSchemaSize(other.getSource().getOutputElements());
     	int toReserve = this.joinNode.getBufferManager().getMaxProcessingKB();
     	//check if the other side can be sorted in memory
-    	if (other.getRowCount()/this.joinNode.getBatchSize() < toReserve/schemaSize) {
+    	if (other.getRowCount() <= this.joinNode.getBatchSize() 
+    			|| (possibleIndex.getRowCount() > this.joinNode.getBatchSize() && other.getRowCount()/this.joinNode.getBatchSize() < toReserve/schemaSize)) {
     		return false;
     	}
     	boolean useIndex = false;
