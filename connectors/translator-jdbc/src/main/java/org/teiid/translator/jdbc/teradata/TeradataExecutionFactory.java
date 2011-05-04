@@ -65,15 +65,15 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 		convert.addTypeMapping("double precision", FunctionModifier.DOUBLE); //$NON-NLS-1$
 		convert.addTypeMapping("numeric(18,0)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
 		convert.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
-    	convert.addConvert(FunctionModifier.INTEGER, FunctionModifier.STRING, new NumericToStringModifier(12));
-    	convert.addConvert(FunctionModifier.BIGDECIMAL, FunctionModifier.STRING, new NumericToStringModifier(38));
-    	convert.addConvert(FunctionModifier.BIGINTEGER, FunctionModifier.STRING, new NumericToStringModifier(38));
-    	convert.addConvert(FunctionModifier.FLOAT, FunctionModifier.STRING, new NumericToStringModifier(25));
-    	convert.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.STRING, new NumericToStringModifier(1));
-    	convert.addConvert(FunctionModifier.LONG, FunctionModifier.STRING, new NumericToStringModifier(25));
-    	convert.addConvert(FunctionModifier.SHORT, FunctionModifier.STRING, new NumericToStringModifier(12));
-    	convert.addConvert(FunctionModifier.DOUBLE, FunctionModifier.STRING, new NumericToStringModifier(25));
-    	convert.addConvert(FunctionModifier.BYTE, FunctionModifier.STRING, new NumericToStringModifier(4));
+    	convert.addConvert(FunctionModifier.INTEGER, FunctionModifier.STRING, new ImplicitConvertModifier());
+    	convert.addConvert(FunctionModifier.BIGDECIMAL, FunctionModifier.STRING, new ImplicitConvertModifier());
+    	convert.addConvert(FunctionModifier.BIGINTEGER, FunctionModifier.STRING, new ImplicitConvertModifier());
+    	convert.addConvert(FunctionModifier.FLOAT, FunctionModifier.STRING, new ImplicitConvertModifier());
+    	convert.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.STRING, new ImplicitConvertModifier());
+    	convert.addConvert(FunctionModifier.LONG, FunctionModifier.STRING, new ImplicitConvertModifier());
+    	convert.addConvert(FunctionModifier.SHORT, FunctionModifier.STRING, new ImplicitConvertModifier());
+    	convert.addConvert(FunctionModifier.DOUBLE, FunctionModifier.STRING, new ImplicitConvertModifier());
+    	convert.addConvert(FunctionModifier.BYTE, FunctionModifier.STRING, new ImplicitConvertModifier());
     	convert.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
     	convert.addNumericBooleanConversions();
 		
@@ -289,20 +289,10 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 		}
 	}
     
-    public static class NumericToStringModifier extends FunctionModifier {
-    	private int charSize;
-    	private String formatCode;
-    	public NumericToStringModifier(int size) {
-    		this.charSize = size;
-    		StringBuilder sb = new StringBuilder();
-    		for(int i = 0; i < size; i++) {
-    			sb.append('Z');
-    		}
-    		this.formatCode = sb.toString();
-    	}
+    public static class ImplicitConvertModifier extends FunctionModifier {
 		@Override
 		public List<?> translate(Function function) {
-			return Arrays.asList("TRIM(BOTH FROM ",function.getParameters().get(0), " (FORMAT '"+this.formatCode+"')(CHAR("+this.charSize+")))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+			return Arrays.asList(function.getParameters().get(0));
 		}
 	}
 }
