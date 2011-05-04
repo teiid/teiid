@@ -53,8 +53,8 @@
 	<LI><B>Enhanced Sort Join</B> - the partitioned merge join was replaced with an enhanced sort join.  The enhanced sort join will use the actual row counts from each side of the relation to perform a index based join if one side is small enough, a partial sort of the larger side and a repeated merge join if the tuples are unbalanced but one side is not small enough to form an index, or a standard sort merge join if the tuples are balanced.
 	<LI><B>JDK1.5 JDBC Client JAR</B> - A retro-translated Teiid client JDBC jar now available to use with JDK 1.5 VM. Note only the JDBC API is supported, not the Admin API, or retrieving query plans as XML.
 	<LI><B>Security Improvements</B> - UDF and pushdown functions can now be protected with data roles.  Also the CommandContext can provide the Subject for custom security checks in UDFs.
-	<LI><B>Cache Invalidation</B> - Prepared plan and result set caches can have a maxStaleness value, which will invalidate entries based upon metadata and data changes respectively.  See the Admin Guide for more.
-	<LI><B>Runtime-updates of Metadata</B> - Alter statements have been added to change view/procedure/INSTEAD OF trigger (update procedure) definitions have been added.  A create statement was also added to add INSTEAD OF trigger (update procedures) to views. 
+	<LI><B>Cache Invalidation</B> - Prepared plan and result set caches have will invalidate entries based upon metadata and data changes respectively.  See the cache configuration maxStaleness setting and the Admin and Developer Guides for more.
+	<LI><B>Runtime-updates of Metadata</B> - ALTER statements have been added to change view/procedure/INSTEAD OF trigger (update procedure) definitions.  A CREATE TRIGGER statement is also available to add an INSTEAD OF trigger (update procedures) to views. 
 	System procedures were added to set extension metadata and stat values.  By default all effects of metadata updates happen only on running vdbs across the cluster.  To make the changes persistent see the Developers Guide Runtime Updates section.
 </UL>
 

@@ -28,6 +28,7 @@
             profiles is required.  The default profile is the typical installation location, for example "&lt;jboss-install&gt;/server/default". 
             The Teiid runtime directory structure matches JBoss profiles directly - it is just an overlay.
             </para>
+            <para>The all profile is recommended in a clustered environment to take advantage of clustered caching and cluster safe distribution of events.</para>
         </listitem>
         
         <listitem>

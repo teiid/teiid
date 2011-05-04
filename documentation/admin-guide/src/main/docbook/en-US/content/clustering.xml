@@ -16,6 +16,7 @@
             <listitem> <para>Load Balancing: Take look at the Client developers guide on how to use load balancing between multiple nodes.</para> </listitem>
             <listitem> <para>Fail Over: Take look at the Client developers guide on how to use fail over between multiple nodes.</para> </listitem>
             <listitem> <para>Distributed Caching: This is automatically done for you once you configure it as specified above. </para> </listitem>
+            <listitem> <para>Event distribution: metadata and data modifications will be distributed to all cluster members. </para> </listitem>
         </orderedlist>          
    </para>   
    
