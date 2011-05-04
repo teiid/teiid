@@ -279,25 +279,21 @@ public final class RuleMergeVirtual implements
                 }
             }
         }
-        
-        if (parentProject.getParent() != null 
-        		&& (parentProject.getParent().getType() != NodeConstants.Types.SET_OP || parentProject.getParent().getFirstChild() == parentProject)) {
-	        PlanNode sort = NodeEditor.findParent(parentProject, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
-	        if (sort != null) { //special handling is needed since we are retaining the child aliases
-	        	List<SingleElementSymbol> childProject = (List<SingleElementSymbol>)NodeEditor.findNodePreOrder(frame, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS);
-	        	OrderBy elements = (OrderBy)sort.getProperty(NodeConstants.Info.SORT_ORDER);
-	        	for (OrderByItem item : elements.getOrderByItems()) {
-					item.setSymbol(childProject.get(selectSymbols.indexOf(item.getSymbol())));
-				}
-	            sort.getGroups().clear();
-	            sort.addGroups(GroupsUsedByElementsVisitor.getGroups(elements));
-	        }
-	        PlanNode parentSource = NodeEditor.findParent(parentProject, NodeConstants.Types.SOURCE);
+
+        correctOrderBy(frame, selectSymbols, parentProject);
+        PlanNode parentSource = NodeEditor.findParent(frame, NodeConstants.Types.SOURCE);        
+        PlanNode parentSetOp = NodeEditor.findParent(parentProject, NodeConstants.Types.SET_OP, NodeConstants.Types.SOURCE);
+  
+        if (parentSetOp == null || NodeEditor.findNodePreOrder(parentSetOp, NodeConstants.Types.PROJECT) == parentProject) {
 	        if (parentSource != null) {
 	        	FrameUtil.correctSymbolMap(((SymbolMap)frame.getProperty(NodeConstants.Info.SYMBOL_MAP)).asMap(), parentSource);
 	        }
+	        if (parentSetOp != null) {
+	        	correctOrderBy(frame, selectSymbols, parentSetOp);
+	        }
         }
         
+        prepareFrame(frame);
         //remove the parent project and the source node
         NodeEditor.removeChildNode(parentProject, frame);
         if (parentProject.getParent() == null) {
@@ -309,6 +305,20 @@ public final class RuleMergeVirtual implements
                  
         return root;
     }
+
+	private static void correctOrderBy(PlanNode frame,
+			List<SingleElementSymbol> selectSymbols, PlanNode startNode) {
+		PlanNode sort = NodeEditor.findParent(startNode, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE | NodeConstants.Types.SET_OP);
+		if (sort != null) { //special handling is needed since we are retaining the child aliases
+			List<SingleElementSymbol> childProject = (List<SingleElementSymbol>)NodeEditor.findNodePreOrder(frame, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS);
+			OrderBy elements = (OrderBy)sort.getProperty(NodeConstants.Info.SORT_ORDER);
+			for (OrderByItem item : elements.getOrderByItems()) {
+				item.setSymbol(childProject.get(selectSymbols.indexOf(item.getSymbol())));
+			}
+		    sort.getGroups().clear();
+		    sort.addGroups(GroupsUsedByElementsVisitor.getGroups(elements));
+		}
+	}
     
     /**
      * Check to ensure that we are not projecting a subquery or null dependent expressions
