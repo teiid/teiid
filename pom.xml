@@ -5,7 +5,7 @@
 	<artifactId>teiid-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>Teiid</name>
-	<version>7.4.0.CR2-SNAPSHOT</version>
+	<version>7.5.0.Alpha1-SNAPSHOT</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 		<ant.version>1.7.0</ant.version>
