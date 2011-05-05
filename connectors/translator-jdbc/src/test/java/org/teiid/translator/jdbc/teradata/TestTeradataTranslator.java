@@ -24,6 +24,7 @@ package org.teiid.translator.jdbc.teradata;
 import static org.junit.Assert.assertEquals;
 
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -74,6 +75,10 @@ public class TestTeradataTranslator {
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
     
+    @Test public void testTimestampToTime() throws Exception {
+    	helpTest(LANG_FACTORY.createLiteral(new Timestamp(1304604994220L), Timestamp.class), "time", "cast({ts '2011-05-05 09:16:34.22'} AS TIME)");
+    }
+    
     @Test public void testByteToString() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "string", "1"); 
     }
@@ -118,6 +123,17 @@ public class TestTeradataTranslator {
         assertEquals("'1' = func() OR '1' = '3'", helpGetString(expr));
     }
 	
+	@Test public void testNegatedInDecomposeNonLiterals() throws Exception {
+    	Expression left = LANG_FACTORY.createLiteral("1", String.class);
+    	List<Expression> right = new ArrayList<Expression>();
+    	right.add(LANG_FACTORY.createFunction("func", new Expression[] {}, Date.class));
+    	right.add(LANG_FACTORY.createLiteral("3", String.class));
+    		
+        In expr = LANG_FACTORY.createIn(left,right, true);
+        
+        assertEquals("'1' <> func() AND '1' <> '3'", helpGetString(expr));
+    }
+	
 	@Test public void testsingleInDecomposeNonLiterals() throws Exception {
     	Expression left = LANG_FACTORY.createLiteral("1", String.class);
     	List<Expression> right = new ArrayList<Expression>();
@@ -131,12 +147,18 @@ public class TestTeradataTranslator {
 	@Test public void testNullComapreNull() throws Exception {
 		String input = "SELECT INTKEY, STRINGKEY, DOUBLENUM FROM bqt1.smalla WHERE NULL <> NULL";
 		String out = "SELECT SmallA.IntKey, SmallA.StringKey, SmallA.DoubleNum FROM SmallA WHERE 1 = 0";
-		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null, input, out, new TeradataExecutionFactory());		
+		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null, input, out, TRANSLATOR);		
 	}
 	
 	@Test public void testPushDownFunction() throws Exception {
 		String input = "SELECT teradata.HASHBAKAMP(STRINGKEY) DOUBLENUM FROM bqt1.smalla";
 		String out = "SELECT HASHBAKAMP(SmallA.StringKey) AS DOUBLENUM FROM SmallA";
-		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null, input, out, new TeradataExecutionFactory());		
+		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null, input, out, TRANSLATOR);		
+	}
+	
+	@Test public void testRightFunction() throws Exception {
+		String input = "SELECT INTKEY, FLOATNUM FROM BQT1.SmallA WHERE right(FLOATNUM, 2) <> 0 ORDER BY INTKEY";
+		String out = "SELECT SmallA.IntKey, SmallA.FloatNum FROM SmallA WHERE SUBSTR(SmallA.FloatNum, (-1 * 2)) <> '0' ORDER BY SmallA.IntKey";
+		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null, input, out, TRANSLATOR);		
 	}
 }

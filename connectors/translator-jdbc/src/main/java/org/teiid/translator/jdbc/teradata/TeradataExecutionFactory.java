@@ -30,12 +30,15 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.Expression;
 import org.teiid.language.Function;
+import org.teiid.language.Literal;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
@@ -74,14 +77,18 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
     	convert.addConvert(FunctionModifier.SHORT, FunctionModifier.STRING, new ImplicitConvertModifier());
     	convert.addConvert(FunctionModifier.DOUBLE, FunctionModifier.STRING, new ImplicitConvertModifier());
     	convert.addConvert(FunctionModifier.BYTE, FunctionModifier.STRING, new ImplicitConvertModifier());
+    	convert.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new TimeModifier("TIME")); //$NON-NLS-1$
+    	convert.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE,  new TimeModifier("DATE")); //$NON-NLS-1$ 
+    	convert.addConvert(FunctionModifier.TIME, FunctionModifier.TIMESTAMP, new TimeModifier("TIMESTAMP")); //$NON-NLS-1$
+    	convert.addConvert(FunctionModifier.DATE, FunctionModifier.TIMESTAMP,  new TimeModifier("TIMESTAMP")); //$NON-NLS-1$ 
+
+    	
     	convert.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
     	convert.addNumericBooleanConversions();
 		
 		registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
 		
-		registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("random")); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.NULLIF, new AliasModifier("NULLIFZERO")); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("ZEROIFNULL")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("random")); //$NON-NLS-1$				
 		registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("LN")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("LOWER")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UPPER")); //$NON-NLS-1$
@@ -104,6 +111,31 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 		});
         registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.RIGHT, new LeftOrRightFunctionModifier(getLanguageFactory()));
+        registerFunctionModifier(SourceSystemFunctions.COT, new FunctionModifier() {
+			@Override
+			public List<?> translate(Function function) {
+				function.setName(SourceSystemFunctions.TAN);
+				return Arrays.asList(getLanguageFactory().createFunction(SourceSystemFunctions.DIVIDE_OP, new Expression[] {new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER), function}, TypeFacility.RUNTIME_TYPES.DOUBLE));
+			}
+		});        
+        registerFunctionModifier(SourceSystemFunctions.LTRIM, new FunctionModifier() {
+			@Override
+			public List<?> translate(Function function) {
+				return Arrays.asList("TRIM(LEADING FROM ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		}); 
+        registerFunctionModifier(SourceSystemFunctions.RTRIM, new FunctionModifier() {
+			@Override
+			public List<?> translate(Function function) {
+				return Arrays.asList("TRIM(TRAILING FROM ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		}); 
+        registerFunctionModifier(SourceSystemFunctions.MOD, new FunctionModifier() {
+			@Override
+			public List<?> translate(Function function) {
+				return Arrays.asList(function.getParameters().get(0), " MOD ", function.getParameters().get(1)); //$NON-NLS-1$
+			}
+		});        
 	}
 
 	@Override
@@ -122,14 +154,37 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.ASIN);
         supportedFunctions.add(SourceSystemFunctions.ATAN);
         supportedFunctions.add(SourceSystemFunctions.ATAN2);
+        supportedFunctions.add(SourceSystemFunctions.COALESCE);
         supportedFunctions.add(SourceSystemFunctions.COS);
+        supportedFunctions.add(SourceSystemFunctions.COT);
         supportedFunctions.add(SourceSystemFunctions.CONVERT);
+		supportedFunctions.add(SourceSystemFunctions.CURDATE);
+		supportedFunctions.add(SourceSystemFunctions.CURTIME); 
+		supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
         supportedFunctions.add(SourceSystemFunctions.EXP);
+        supportedFunctions.add(SourceSystemFunctions.HOUR);
+        supportedFunctions.add(SourceSystemFunctions.LEFT);
+        supportedFunctions.add(SourceSystemFunctions.LOCATE);
         supportedFunctions.add(SourceSystemFunctions.LOG);
+        supportedFunctions.add(SourceSystemFunctions.LCASE);
+        supportedFunctions.add(SourceSystemFunctions.LTRIM);
+        supportedFunctions.add(SourceSystemFunctions.LENGTH);
+        supportedFunctions.add(SourceSystemFunctions.MINUTE);
+        supportedFunctions.add(SourceSystemFunctions.MOD);
+        supportedFunctions.add(SourceSystemFunctions.MONTH);
+        supportedFunctions.add(SourceSystemFunctions.NULLIF);
+        supportedFunctions.add(SourceSystemFunctions.RAND);
+        supportedFunctions.add(SourceSystemFunctions.RIGHT);
+        supportedFunctions.add(SourceSystemFunctions.RTRIM);
+        supportedFunctions.add(SourceSystemFunctions.SECOND);
         supportedFunctions.add(SourceSystemFunctions.SIN);
         supportedFunctions.add(SourceSystemFunctions.SQRT);
+        supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
         supportedFunctions.add(SourceSystemFunctions.TAN);
         supportedFunctions.add("||"); //$NON-NLS-1$
+        supportedFunctions.add("**"); //$NON-NLS-1$
+        supportedFunctions.add(SourceSystemFunctions.UCASE);
+        supportedFunctions.add(SourceSystemFunctions.YEAR);
 
         return supportedFunctions;
     }
@@ -210,6 +265,16 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 	            new FunctionParameter[] {
 	                new FunctionParameter("String2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
 	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		pushdownFunctions.add(new FunctionMethod(TERADATA + '.' + "NULLIFZERO", "NULLIFZERO", TERADATA, //$NON-NLS-1$ //$NON-NLS-2$
+	            new FunctionParameter[] {
+	                new FunctionParameter("integer", DataTypeManager.DefaultDataTypes.BIG_DECIMAL, "")}, //$NON-NLS-1$ //$NON-NLS-2$
+	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BIG_DECIMAL, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		pushdownFunctions.add(new FunctionMethod(TERADATA + '.' + "ZEROIFNULL", "ZEROIFNULL", TERADATA, //$NON-NLS-1$ //$NON-NLS-2$
+	            new FunctionParameter[] {
+	                new FunctionParameter("integer", DataTypeManager.DefaultDataTypes.BIG_DECIMAL, "")}, //$NON-NLS-1$ //$NON-NLS-2$
+	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BIG_DECIMAL, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$		
 		
 		return pushdownFunctions;		
     }    
@@ -293,6 +358,18 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 		@Override
 		public List<?> translate(Function function) {
 			return Arrays.asList(function.getParameters().get(0));
+		}
+	}
+    
+    
+    public static class TimeModifier extends FunctionModifier {
+    	private String target;
+    	public TimeModifier(String target) {
+    		this.target = target;
+    	}
+		@Override
+		public List<?> translate(Function function) {
+			return Arrays.asList("cast("+function.getParameters().get(0), " AS "+this.target+")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 	}
 }

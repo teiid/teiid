@@ -52,16 +52,17 @@ public class TeradataSQLConversionVisitor extends SQLConversionVisitor {
     	}
     	
     	if (decompose) {
+    		Comparison.Operator opCode = obj.isNegated()?Comparison.Operator.NE:Comparison.Operator.EQ;
 	    	if (exprs.size() > 1) {
-		    	Condition left = LanguageFactory.INSTANCE.createCompareCriteria(Comparison.Operator.EQ, obj.getLeftExpression(), exprs.get(0));
+		    	Condition left = LanguageFactory.INSTANCE.createCompareCriteria(opCode, obj.getLeftExpression(), exprs.get(0));
 		    	for (int i = 1; i < exprs.size(); i++) {
-		    		AndOr replace = LanguageFactory.INSTANCE.createAndOr(Operator.OR, left, LanguageFactory.INSTANCE.createCompareCriteria(Comparison.Operator.EQ, obj.getLeftExpression(), exprs.get(i)));
+		    		AndOr replace = LanguageFactory.INSTANCE.createAndOr(obj.isNegated()?Operator.AND:Operator.OR, left, LanguageFactory.INSTANCE.createCompareCriteria(opCode, obj.getLeftExpression(), exprs.get(i)));
 		    		left = replace;
 		    	}
 		    	super.visit((AndOr)left);
 	    	}
 	    	else {
-	    		super.visit(LanguageFactory.INSTANCE.createCompareCriteria(Comparison.Operator.EQ, obj.getLeftExpression(), exprs.get(0)));	
+	    		super.visit(LanguageFactory.INSTANCE.createCompareCriteria(opCode, obj.getLeftExpression(), exprs.get(0)));	
 	    	}
     	}
     	else {
