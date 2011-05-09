@@ -332,9 +332,10 @@ public class DQPCore implements DQP {
         RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
     	logMMCommand(workItem, Event.NEW, null); 
         addRequest(requestID, workItem, state);
+        boolean runInThread = DQPWorkContext.getWorkContext().useCallingThread() || requestMsg.isSync();
         synchronized (waitingPlans) {
-			if (currentlyActivePlans < maxActivePlans || (!DQPWorkContext.getWorkContext().useCallingThread() && requestMsg.isSync())) {
-				startActivePlan(workItem);
+			if (runInThread || currentlyActivePlans < maxActivePlans) {
+				startActivePlan(workItem, !runInThread);
 			} else {
 				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
 		            LogManager.logDetail(LogConstants.CTX_DQP, "Queuing plan, since max plans has been reached.");  //$NON-NLS-1$
@@ -342,6 +343,9 @@ public class DQPCore implements DQP {
 				waitingPlans.add(workItem);
 			}
 		}
+        if (runInThread) {
+        	workItem.run();
+        }
         return resultsFuture;
     }
 	
@@ -362,15 +366,12 @@ public class DQPCore implements DQP {
 		state.addRequest(requestID);
 	}
 
-	private void startActivePlan(RequestWorkItem workItem) {
+	private void startActivePlan(RequestWorkItem workItem, boolean addToQueue) {
 		workItem.active = true;
-		if (workItem.getDqpWorkContext().useCallingThread() || workItem.requestMsg.isSync()) {
-			this.currentlyActivePlans++;
-			workItem.run();
-		} else {
+		if (addToQueue) {
 			this.addWork(workItem);
-			this.currentlyActivePlans++;
 		}
+		this.currentlyActivePlans++;
 	}
 	
     void finishProcessing(final RequestWorkItem workItem) {
@@ -381,7 +382,7 @@ public class DQPCore implements DQP {
         	workItem.active = false;
     		currentlyActivePlans--;
 			if (!waitingPlans.isEmpty()) {
-				startActivePlan(waitingPlans.remove());
+				startActivePlan(waitingPlans.remove(), true);
 			}
 		}
     }

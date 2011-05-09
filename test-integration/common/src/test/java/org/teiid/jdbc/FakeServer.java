@@ -102,6 +102,10 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         registerClientService(DQP.class, dqp, null);
 	}
 	
+	public void stop() {
+		this.dqp.stop();
+	}
+	
 	public void setMetadataRepository(MetadataRepository metadataRepository) {
 		this.repo.setMetadataRepository(metadataRepository);
 		this.dqp.setMetadataRepository(metadataRepository);
