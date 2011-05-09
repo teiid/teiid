@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ===================================================================== -->
+<!--                                                                       -->
+<!--  This is template that can be used to deploy Teiid                    -->
+<!--  as a datasource.                                                     -->
+<!-- ===================================================================== -->
+
+<!-- See http://www.jboss.org/community/wiki/Multiple1PC for information about local-tx-datasource -->
+<!-- ==================================================================== -->
+<!--  Datasource template for Teiid										-->
+<!--  To use:															-->
+<!--		-	Replace (vdb) in the url with your vdb name				-->
+<!--		-	Place the file in the deploy directory					-->
+<!-- ==================================================================== -->
+
+
+<datasources>
+  <local-tx-datasource>
+    <jndi-name>TeiidDS</jndi-name>
+    <connection-url>jdbc:teiid:(vdb)@mm://localhost:31000</connection-url>
+
+    <driver-class>org.teiid.jdbc.TeiidDriver</driver-class>
+    <user>user</user>
+    <password>user</password>
+
+      <metadata>
+         <type-mapping>jdbc</type-mapping>
+      </metadata>
+  </local-tx-datasource>
+
+</datasources>
