@@ -111,11 +111,11 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 			repo.addTranslatorMetadata(data.getName(), data);
 		}
 		createConnectorManagers(cmr, repo, deployment);
-		
+		boolean asynchLoad = false;
 		// if store is null and vdb dynamic vdb then try to get the metadata
 		if (store == null && deployment.isDynamic()) {
 			store = new MetadataStoreGroup();
-			buildDynamicMetadataStore((VFSDeploymentUnit)unit, deployment, store, cmr);
+			asynchLoad = buildDynamicMetadataStore((VFSDeploymentUnit)unit, deployment, store, cmr);
 		}
 		
 		// allow empty vdbs for enabling the preview functionality
@@ -159,7 +159,8 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 				// Check if the VDB is fully configured.
 				if (!valid) {
 					deployment.setStatus(VDB.Status.INACTIVE);
-				} else if (!deployment.isDynamic()) {
+				} else if (!asynchLoad) {
+					//if asynch this will be set by the loading thread
 					this.vdbRepository.finishDeployment(deployment.getName(), deployment.getVersion());
 					deployment.setStatus(VDB.Status.ACTIVE);
 				}
@@ -282,8 +283,8 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		}
 	}
 	
-    private void buildDynamicMetadataStore(final VFSDeploymentUnit unit, final VDBMetaData vdb, final MetadataStoreGroup vdbStore, final ConnectorManagerRepository cmr) throws DeploymentException {
-    	
+    private boolean buildDynamicMetadataStore(final VFSDeploymentUnit unit, final VDBMetaData vdb, final MetadataStoreGroup vdbStore, final ConnectorManagerRepository cmr) throws DeploymentException {
+    	boolean asynch = false;
     	// make sure we are configured correctly first
 		for (final ModelMetaData model:vdb.getModelMetaDatas().values()) {
 	    	if (model.getSourceNames().isEmpty()) {
@@ -302,6 +303,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	    	}
 	    	
 	    	if (!loaded) {
+	    		asynch = true;
 	    		threadPool.run(new Runnable() {
 					@Override
 					public void run() {
@@ -317,6 +319,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	    		});
 	    	}
 		}
+		return asynch;
 	}	
     
     /**
