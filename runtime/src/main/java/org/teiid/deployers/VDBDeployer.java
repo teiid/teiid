@@ -157,11 +157,12 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 				valid = validateSources(cmr, deployment);
 				
 				// Check if the VDB is fully configured.
-				if (valid) {
-					deployment.setStatus(VDB.Status.ACTIVE);
-				} else {
+				if (!valid) {
 					deployment.setStatus(VDB.Status.INACTIVE);
-				}			
+				} else if (!deployment.isDynamic()) {
+					this.vdbRepository.finishDeployment(deployment.getName(), deployment.getVersion());
+					deployment.setStatus(VDB.Status.ACTIVE);
+				}
 			}
 			else {
 				deployment.setStatus(VDB.Status.ACTIVE);
@@ -369,7 +370,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	    		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("metadata_loaded",vdb.getName(), vdb.getVersion(), model.getName())); //$NON-NLS-1$
 	    		model.clearErrors();
 	    		if (vdb.isValid()) {
-	    			this.vdbRepository.updateVDB(vdb.getName(), vdb.getVersion());
+	    			this.vdbRepository.finishDeployment(vdb.getName(), vdb.getVersion());
 					vdb.setStatus(VDB.Status.ACTIVE);
 					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_activated",vdb.getName(), vdb.getVersion())); //$NON-NLS-1$    			
 	    		}

@@ -146,6 +146,7 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         	MetadataStoreGroup stores = new MetadataStoreGroup();
         	stores.addStore(metadata);
 			this.repo.addVDB(vdbMetaData, stores, entries, null, cmr);
+			this.repo.finishDeployment(vdbName, 1);
 		} catch (DeploymentException e) {
 			throw new RuntimeException(e);
 		}

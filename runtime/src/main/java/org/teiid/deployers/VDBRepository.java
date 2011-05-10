@@ -100,19 +100,17 @@ public class VDBRepository implements Serializable{
 		else {
 			cvdb = new CompositeVDB(vdb, stores, visibilityMap, udf, this.systemFunctionManager.getSystemFunctions(), cmr, this.systemStore, odbcStore);
 		}
-		updateFromMetadataRepository(stores, cvdb);
 		this.vdbRepo.put(vdbId(vdb), cvdb); 
 		notifyAdd(vdb.getName(), vdb.getVersion());
 	}
 
-	private void updateFromMetadataRepository(MetadataStoreGroup stores,
-			CompositeVDB cvdb) {
+	private void updateFromMetadataRepository(CompositeVDB cvdb) {
 		if (metadataRepository == null) {
 			return;
 		}
 		String vdbName = cvdb.getVDB().getName();
 		int vdbVersion = cvdb.getVDB().getVersion();
-		LinkedList<MetadataStore> allStores = new LinkedList<MetadataStore>(stores.getStores());
+		LinkedList<MetadataStore> allStores = new LinkedList<MetadataStore>(cvdb.getMetadataStores().getStores());
 		allStores.addAll(Arrays.asList(cvdb.getAdditionalStores()));
 		metadataRepository.startLoadVdb(vdbName, vdbVersion);
 		for (MetadataStore metadataStore : allStores) {
@@ -316,10 +314,11 @@ public class VDBRepository implements Serializable{
 		}
 	}
 	
-	void updateVDB(String name, int version) {
+	public void finishDeployment(String name, int version) {
 		CompositeVDB v = this.vdbRepo.get(new VDBKey(name, version));
 		if (v!= null) {
-			v.update(v.getVDB(), systemFunctionManager.getSystemFunctions());
+			updateFromMetadataRepository(v);
+			v.update();
 		}
 	}
 	

@@ -71,7 +71,8 @@ public class CompositeVDB {
 		this.cmr = cmr;
 		this.additionalStores = additionalStores;
 		this.vdb.addAttchment(ConnectorManagerRepository.class, cmr);
-		update(this.vdb, this.systemFunctions);
+		this.mergedVDB = vdb;
+		update();
 	}
 	
 	public void addChild(CompositeVDB child) {
@@ -90,15 +91,15 @@ public class CompositeVDB {
 		this.mergedVDB = null;
 	}	
 	
-	void update(VDBMetaData vdbMetadata, FunctionTree systemFunctions) {
-		TransformationMetadata metadata = buildTransformationMetaData(vdbMetadata, getVisibilityMap(), getMetadataStores(), getUDF(), systemFunctions);
-		vdbMetadata.addAttchment(QueryMetadataInterface.class, metadata);
-		vdbMetadata.addAttchment(TransformationMetadata.class, metadata);	
+	void update() {
+		TransformationMetadata metadata = buildTransformationMetaData(mergedVDB, getVisibilityMap(), getMetadataStores(), getUDF(), systemFunctions, this.additionalStores);
+		mergedVDB.addAttchment(QueryMetadataInterface.class, metadata);
+		mergedVDB.addAttchment(TransformationMetadata.class, metadata);	
 		TempTableStore globalTables = new TempTableStore("SYSTEM"); //$NON-NLS-1$
-		vdbMetadata.addAttchment(TempTableStore.class, globalTables); 
+		mergedVDB.addAttchment(TempTableStore.class, globalTables); 
 	}
 	
-	private TransformationMetadata buildTransformationMetaData(VDBMetaData vdb, LinkedHashMap<String, Resource> visibilityMap, MetadataStoreGroup stores, UDFMetaData udf, FunctionTree systemFunctions) {
+	private static TransformationMetadata buildTransformationMetaData(VDBMetaData vdb, LinkedHashMap<String, Resource> visibilityMap, MetadataStoreGroup stores, UDFMetaData udf, FunctionTree systemFunctions, MetadataStore[] additionalStores) {
 		Collection <FunctionTree> udfs = new ArrayList<FunctionTree>();
 		if (udf != null) {			
 			for (Map.Entry<String, Collection<FunctionMethod>> entry : udf.getFunctions().entrySet()) {
@@ -107,7 +108,7 @@ public class CompositeVDB {
 		}
 		
 		CompositeMetadataStore compositeStore = new CompositeMetadataStore(stores.getStores());
-		for (MetadataStore s:this.additionalStores) {
+		for (MetadataStore s:additionalStores) {
 			compositeStore.addMetadataStore(s);
 			for (Schema schema:s.getSchemas().values()) {
 				if (!schema.getFunctions().isEmpty()) {
@@ -126,43 +127,39 @@ public class CompositeVDB {
 	}
 	
 	public VDBMetaData getVDB() {
-		if (this.children == null || this.children.isEmpty()) {
-			return vdb;
-		}
 		if (this.mergedVDB == null) {
 			this.mergedVDB = buildVDB();
-			update(mergedVDB, this.systemFunctions);
+			update();
 		}
 		return this.mergedVDB;
 	}
 	
-	
 	private VDBMetaData buildVDB() {
-		VDBMetaData mergedVDB = new VDBMetaData();
-		mergedVDB.setName(this.vdb.getName());
-		mergedVDB.setVersion(this.vdb.getVersion());
-		mergedVDB.setModels(this.vdb.getModels());
-		mergedVDB.setDataPolicies(this.vdb.getDataPolicies());
-		mergedVDB.setDescription(this.vdb.getDescription());
-		mergedVDB.setStatus(this.vdb.getStatus());
-		mergedVDB.setJAXBProperties(this.vdb.getJAXBProperties());
-		mergedVDB.setConnectionType(this.vdb.getConnectionType());
+		VDBMetaData newMergedVDB = new VDBMetaData();
+		newMergedVDB.setName(this.vdb.getName());
+		newMergedVDB.setVersion(this.vdb.getVersion());
+		newMergedVDB.setModels(this.vdb.getModels());
+		newMergedVDB.setDataPolicies(this.vdb.getDataPolicies());
+		newMergedVDB.setDescription(this.vdb.getDescription());
+		newMergedVDB.setStatus(this.vdb.getStatus());
+		newMergedVDB.setJAXBProperties(this.vdb.getJAXBProperties());
+		newMergedVDB.setConnectionType(this.vdb.getConnectionType());
 		ConnectorManagerRepository mergedRepo = new ConnectorManagerRepository();
 		mergedRepo.getConnectorManagers().putAll(this.cmr.getConnectorManagers());
 		for (CompositeVDB child:this.children.values()) {
 			
 			// add models
 			for (Model m:child.getVDB().getModels()) {
-				mergedVDB.addModel((ModelMetaData)m);
+				newMergedVDB.addModel((ModelMetaData)m);
 			}
 			
 			for (DataPolicy p:child.getVDB().getDataPolicies()) {
-				mergedVDB.addDataPolicy((DataPolicyMetadata)p);
+				newMergedVDB.addDataPolicy((DataPolicyMetadata)p);
 			}
 			mergedRepo.getConnectorManagers().putAll(child.cmr.getConnectorManagers());
 		}
-		mergedVDB.addAttchment(ConnectorManagerRepository.class, mergedRepo);
-		return mergedVDB;
+		newMergedVDB.addAttchment(ConnectorManagerRepository.class, mergedRepo);
+		return newMergedVDB;
 	}
 	
 	private UDFMetaData getUDF() {
@@ -216,7 +213,7 @@ public class CompositeVDB {
 		return mergedvisibilityMap;
 	}
 	
-	private MetadataStoreGroup getMetadataStores() {
+	public MetadataStoreGroup getMetadataStores() {
 		if (this.children == null || this.children.isEmpty()) {
 			return this.stores;
 		}		
@@ -226,9 +223,9 @@ public class CompositeVDB {
 			mergedStores.addStores(this.stores.getStores());
 		}
 		for (CompositeVDB child:this.children.values()) {
-			MetadataStoreGroup stores = child.getMetadataStores();
-			if ( stores != null) {
-				mergedStores.addStores(stores.getStores());
+			MetadataStoreGroup childStores = child.getMetadataStores();
+			if ( childStores != null) {
+				mergedStores.addStores(childStores.getStores());
 			}
 		}		
 		return mergedStores;

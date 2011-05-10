@@ -22,15 +22,15 @@
 package org.teiid.deployers;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.teiid.metadata.MetadataStore;
 
 public class MetadataStoreGroup implements Serializable{
 	private static final long serialVersionUID = -3702321839716725121L;
 	
-	List<MetadataStore> stores = new ArrayList<MetadataStore>();
+	List<MetadataStore> stores = new CopyOnWriteArrayList<MetadataStore>();
 	
 	public void addStores(List<MetadataStore> stores) {
 		this.stores.addAll(stores);
