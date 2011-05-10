@@ -53,6 +53,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
     private boolean requiresContext;
     private FunctionMethod method;
     private String schema; //TODO: remove me - we need to create a proper schema for udf and system functions
+    private Object metadataID;
     
     // This is transient as it would be useless to invoke this method in 
     // a different VM.  This function descriptor can be used to look up 
@@ -104,6 +105,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         return this.requiresContext;
     }
     
+	@Override
 	public String toString() {
 		StringBuffer str = new StringBuffer(this.method.getName());
 		str.append("("); //$NON-NLS-1$
@@ -134,7 +136,8 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         return this.method.getDeterminism();
     }
 
-    public Object clone() {
+    @Override
+	public Object clone() {
         try {
             return super.clone();
         } catch (CloneNotSupportedException e) {
@@ -149,7 +152,15 @@ public class FunctionDescriptor implements Serializable, Cloneable {
     void setReturnType(Class<?> returnType) {
         this.returnType = returnType;
     }
-    
+
+	public Object getMetadataID() {
+		return this.metadataID;
+	}
+
+	public void setMetadataID(Object metadataID) {
+		this.metadataID = metadataID;
+	}
+
 	/**
 	 * Invoke the function described in the function descriptor, using the
 	 * values provided.  Return the result of the function.
