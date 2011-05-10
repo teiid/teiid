@@ -229,7 +229,7 @@ public class TestDependentJoins {
 
    @Test public void testMultiCritDepJoin5b() { 
        //Create query 
-       String sql = "SELECT X.e1, X.e2 FROM pm1.g1 as X, pm2.g1 WHERE concat(X.e1, convert(X.e4, string)) = concat(pm2.g1.e1, convert(pm2.g1.e4, string)) AND X.e2=pm2.g1.e2 order by x.e1 option makedep x"; //$NON-NLS-1$
+       String sql = "SELECT X.e1, X.e2 FROM pm1.g1 as X, pm2.g1 WHERE concat(X.e1, convert(X.e4, string)) = concat(pm2.g1.e1, convert(pm2.g1.e4, string)) AND X.e2=pm2.g1.e2 order by x.e1, x.e2 option makedep x"; //$NON-NLS-1$
        
        // Create expected results
        List[] expected = new List[] { 
@@ -779,7 +779,7 @@ public class TestDependentJoins {
     /** SELECT pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 WHERE (pm1.g1.e2+1)=pm2.g1.e2 OPTION MAKEDEP pm1.g2 */
     @Test public void testExpressionInDepJoin() { 
        // Create query 
-       String sql = "SELECT pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 WHERE (pm1.g1.e2+1)=pm2.g1.e2 OPTION MAKEDEP pm2.g1"; //$NON-NLS-1$
+       String sql = "SELECT pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 WHERE (pm1.g1.e2+1)=pm2.g1.e2 order by pm1.g1.e2, pm2.g1.e2 OPTION MAKEDEP pm2.g1"; //$NON-NLS-1$
        
        // Create expected results
        List[] expected = new List[] { 

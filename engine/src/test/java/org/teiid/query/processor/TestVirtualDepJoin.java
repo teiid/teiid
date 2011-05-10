@@ -221,7 +221,7 @@ public class TestVirtualDepJoin {
     
     public void helpTestVirtualDepJoinSourceSelection(boolean setPushdown) throws Exception {  
         // Create query  
-        String sql = "select c.id as CustomerID, First, Last, a.account_id as AccountID, transaction_id as TransactionID, txn_type AS TxnCode, Amount, source from (CustomerMaster.Customers c join CustomerMaster.Locations l on c.id=l.id) join Accounts.Accounts a on c.id=a.customer_id and l.location=a.source where c.first='Miles' option makenotdep c, l"; //$NON-NLS-1$
+        String sql = "select c.id as CustomerID, First, Last, a.account_id as AccountID, transaction_id as TransactionID, txn_type AS TxnCode, Amount, source from (CustomerMaster.Customers c join CustomerMaster.Locations l on c.id=l.id) join Accounts.Accounts a on c.id=a.customer_id and l.location=a.source where c.first='Miles' order by accountid option makenotdep c, l"; //$NON-NLS-1$
          
         // Create expected results 
         List[] expected = new List[] {  
@@ -270,7 +270,7 @@ public class TestVirtualDepJoin {
             0,      // PlanExecution
             3,      // Project
             selectCount,      // Select
-            0,      // Sort
+            1,      // Sort
             1       // UnionAll
         });   
                 

@@ -37,6 +37,7 @@ import org.teiid.common.buffer.STree.InsertMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -50,14 +51,14 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
  * Will be used for inner joins and only if both sorts are not required.
  * Degrades to a normal merge join if the tuples are balanced.
  * 
- * Refined in 7.4 to use a full index if it is small enough or a repeated merge, rather than a partitioning approach (which was really just a sinlge level index)
+ * Refined in 7.4 to use a full index if it is small enough or a repeated merge, rather than a partitioning approach (which was really just a single level index)
  */
 public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 	
 	private TupleSource currentSource;
 	private SourceState sortedSource;
 	private SourceState notSortedSource;
-	private List<?> partitionedTuple;
+	private List<?> currentTuple;
 	private TupleBrowser tb;
 	private int reserved;
 	private STree index;
@@ -132,7 +133,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	if (!state.isDistinct()) {
     		index.getComparator().setDistinctIndex(keyLength-2);
     	}
-    	IndexedTupleSource its = state.getTupleBuffer().createIndexedTupleSource(true);
+    	IndexedTupleSource its = state.getTupleBuffer().createIndexedTupleSource(!joinNode.isDependent());
     	int rowId = 0;
     	List<?> lastTuple = null;
     	boolean sortedDistinct = sorted && !state.isDistinct();
@@ -175,20 +176,35 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     @Override
     protected void loadLeft() throws TeiidComponentException,
     		TeiidProcessingException {
-    	//always buffer to determine row counts
-    	this.leftSource.getTupleBuffer();
+    	if (this.joinNode.isDependent()) {
+        	this.leftSource.getTupleBuffer();
+    	}
+    }
+    
+    private boolean shouldIndexIfSmall(SourceState source) throws TeiidComponentException, TeiidProcessingException {
+    	Number cardinality = source.getSource().getEstimateNodeCardinality();
+    	return (source.hasBuffer() || (cardinality != null && cardinality.floatValue() != NewCalculateCostUtil.UNKNOWN_VALUE && cardinality.floatValue() <= this.joinNode.getBatchSize())) 
+    	&& (source.getRowCount() <= this.joinNode.getBatchSize());
     }
     
     @Override
     protected void loadRight() throws TeiidComponentException,
     		TeiidProcessingException {
-    	this.rightSource.getTupleBuffer();
-    	
-    	if (processingSortRight == SortOption.SORT && shouldIndex(this.leftSource, this.rightSource)) {
-    		this.processingSortRight = SortOption.NOT_SORTED;
-    	} else if (processingSortLeft == SortOption.SORT && shouldIndex(this.rightSource, this.leftSource)) {
+    	//the checks are done in a particular order to ensure we don't buffer if possible
+    	if (processingSortRight == SortOption.SORT && shouldIndexIfSmall(this.leftSource)) {
+    		this.processingSortRight = SortOption.NOT_SORTED; 
+    	} else if (!this.leftSource.hasBuffer() && processingSortLeft == SortOption.SORT && shouldIndexIfSmall(this.rightSource)) {
     		this.processingSortLeft = SortOption.NOT_SORTED;
-    	} 
+    	} else { 
+    		this.leftSource.getTupleBuffer();
+    		if (!this.rightSource.hasBuffer() && processingSortRight == SortOption.SORT && shouldIndexIfSmall(this.leftSource)) {
+        		this.processingSortRight = SortOption.NOT_SORTED; 
+        	} else if (processingSortRight == SortOption.SORT && shouldIndex(this.leftSource, this.rightSource)) {
+    			this.processingSortRight = SortOption.NOT_SORTED;
+	    	} else if (processingSortLeft == SortOption.SORT && shouldIndex(this.rightSource, this.leftSource)) {
+	    		this.processingSortLeft = SortOption.NOT_SORTED;
+	    	} 
+    	}
     	if (this.processingSortLeft != SortOption.NOT_SORTED && this.processingSortRight != SortOption.NOT_SORTED) {
     		super.loadRight();
     		super.loadLeft();
@@ -257,7 +273,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     		super.process();
     		return;
     	}
-    	if (this.rightSource.getTupleBuffer().getRowCount() == 0) {
+    	if (this.sortedSource.getTupleBuffer().getRowCount() == 0) {
     		return;
     	}
     	if (repeatedMerge) {
@@ -271,28 +287,28 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	}
     	//else this is a single scan against the index
     	if (currentSource == null) {
-    		currentSource = this.notSortedSource.getTupleBuffer().createIndexedTupleSource();
+    		currentSource = this.notSortedSource.getIterator();
     	}
     	while (true) {
-	    	if (this.partitionedTuple == null) {
-	    		partitionedTuple = this.currentSource.nextTuple();
-	    		if (partitionedTuple == null) {
+	    	if (this.currentTuple == null) {
+	    		currentTuple = this.currentSource.nextTuple();
+	    		if (currentTuple == null) {
 	    			return;
 	    		}
-	        	List<?> key = RelationalNode.projectTuple(this.notSortedSource.getExpressionIndexes(), this.partitionedTuple);
+	        	List<?> key = RelationalNode.projectTuple(this.notSortedSource.getExpressionIndexes(), this.currentTuple);
 	        	tb = new TupleBrowser(this.index, new CollectionTupleSource(Arrays.asList(key).iterator()), OrderBy.ASC);
 	    	}
 	    	if (sortedTuple == null) {
 	    		sortedTuple = tb.nextTuple();
 	    	
 		    	if (sortedTuple == null) {
-		    		partitionedTuple = null;
+		    		currentTuple = null;
 		    		continue;
 		    	}
 	    	}
 	    	List<?> reorderedTuple = RelationalNode.projectTuple(reverseIndexes, sortedTuple);
-			List outputTuple = outputTuple(this.processingSortLeft==SortOption.NOT_SORTED?partitionedTuple:reorderedTuple, 
-					this.processingSortLeft==SortOption.NOT_SORTED?reorderedTuple:partitionedTuple);
+			List outputTuple = outputTuple(this.processingSortLeft==SortOption.NOT_SORTED?currentTuple:reorderedTuple, 
+					this.processingSortLeft==SortOption.NOT_SORTED?reorderedTuple:currentTuple);
 			boolean matches = this.joinNode.matchesCriteria(outputTuple);
 	        this.sortedTuple = null;
 	        if (matches) {
