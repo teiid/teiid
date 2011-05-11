@@ -127,6 +127,7 @@ See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on c
 
 <h4>from 7.3</h4>
 <ul>
+  <LI>The default value for the JDBC dynamic vdb importer setting importer.useFullSchemaName is now true, which matches the expected behavior from the documentation.
   <LI>The prepared plan cache is now configured via the PreparedPlanCacheConfig bean, rather than through properties on the RuntimeEngineDeployer
   <LI>SocketConfiguration.maxSocketThreads will interpret a setting of 0 to mean use the system default of max available processors.  Both the ODBC and JDBC transports now default to the 0 setting.
   <LI>maxReserveBatchColumns and maxProcessingBatchesColumns will interpret a setting of -1 to mean auto-calculate acceptable values given the max heap and other information.  See the admin guide for more.
