@@ -246,8 +246,12 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		    switch (c) {
 		    case '\r':
 				cr = true;
+				textLine++;
+				return '\n';
 		    case -1:
 		    	eof = true;
+		    	textLine++;
+				return '\n';
 		    case '\n':		
 				textLine++;
 				return '\n';
