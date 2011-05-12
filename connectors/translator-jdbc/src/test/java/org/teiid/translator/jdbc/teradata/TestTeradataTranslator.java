@@ -76,8 +76,27 @@ public class TestTeradataTranslator {
     }
     
     @Test public void testTimestampToTime() throws Exception {
-    	helpTest(LANG_FACTORY.createLiteral(new Timestamp(1304604994220L), Timestamp.class), "time", "cast({ts '2011-05-05 09:16:34.22'} AS TIME)");
+    	helpTest(LANG_FACTORY.createLiteral(new Timestamp(1304604994220L), Timestamp.class), "time", "cast(cast('2011-05-05 09:16:34.22' AS TIMESTAMP(6)) AS TIME)");
     }
+    
+    @Test public void testIntegerToString() throws Exception {
+        String input = "SELECT lcase(bigdecimalvalue) FROM BQT1.SMALLA"; 
+        String output = "SELECT LOWER(cast(SmallA.BigDecimalValue AS varchar(100))) FROM SmallA"; 
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);    	
+    }    
+    
+    @Test public void testDateToString() throws Exception {
+        String input = "SELECT intkey, UPPER(timevalue) AS UPPER FROM BQT1.SmallA ORDER BY intkey"; 
+        String output = "SELECT SmallA.IntKey, UPPER(cast(SmallA.TimeValue AS varchar(100))) AS UPPER FROM SmallA ORDER BY SmallA.IntKey"; 
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);    	
+    }    
+    
+    @Test public void testLocate() throws Exception {
+        String input = "SELECT INTKEY, BIGDECIMALVALUE FROM BQT1.SmallA WHERE LOCATE('-', BIGDECIMALVALUE) = 1 ORDER BY intkey"; 
+        String output = "SELECT SmallA.IntKey, SmallA.BigDecimalValue FROM SmallA WHERE position('-' in cast(SmallA.BigDecimalValue AS varchar(100))) = 1 ORDER BY SmallA.IntKey"; 
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);    	
+    }      
+    
     
     @Test public void testByteToString() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "string", "1"); 
@@ -158,7 +177,7 @@ public class TestTeradataTranslator {
 	
 	@Test public void testRightFunction() throws Exception {
 		String input = "SELECT INTKEY, FLOATNUM FROM BQT1.SmallA WHERE right(FLOATNUM, 2) <> 0 ORDER BY INTKEY";
-		String out = "SELECT SmallA.IntKey, SmallA.FloatNum FROM SmallA WHERE SUBSTR(SmallA.FloatNum, (-1 * 2)) <> '0' ORDER BY SmallA.IntKey";
+		String out = "SELECT SmallA.IntKey, SmallA.FloatNum FROM SmallA WHERE substr(cast(SmallA.FloatNum AS varchar(100)),(character_length(cast(SmallA.FloatNum AS varchar(100)))-2)) <> '0' ORDER BY SmallA.IntKey";
 		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null, input, out, TRANSLATOR);		
 	}
 }

@@ -104,7 +104,7 @@ public class InterSystemsCacheExecutionFactory extends JDBCExecutionFactory {
 			@Override
 			public List<?> translate(Function function) {
 				if (function.getType() == TypeFacility.RUNTIME_TYPES.INTEGER || function.getType() == TypeFacility.RUNTIME_TYPES.LONG) {
-					Function result = convert.createConvertFunction(getLanguageFactory(), function, TypeFacility.getDataTypeName(function.getType()));
+					Function result = ConvertModifier.createConvertFunction(getLanguageFactory(), function, TypeFacility.getDataTypeName(function.getType()));
 					function.setType(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL);
 					return Arrays.asList(result);
 				}
@@ -119,19 +119,44 @@ public class InterSystemsCacheExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.addAll(super.getSupportedFunctions());
 
         supportedFunctions.add(SourceSystemFunctions.ABS);
+		supportedFunctions.add(SourceSystemFunctions.ACOS);
+		supportedFunctions.add(SourceSystemFunctions.ASIN);
+		supportedFunctions.add(SourceSystemFunctions.ATAN);        
         supportedFunctions.add(SourceSystemFunctions.ASCII);
         supportedFunctions.add(SourceSystemFunctions.CEILING);
         supportedFunctions.add(SourceSystemFunctions.CHAR);
         supportedFunctions.add(SourceSystemFunctions.COALESCE);
+        supportedFunctions.add(SourceSystemFunctions.CONCAT);
         supportedFunctions.add(SourceSystemFunctions.CONVERT);
+		supportedFunctions.add(SourceSystemFunctions.COS);
+		supportedFunctions.add(SourceSystemFunctions.COT);
+		supportedFunctions.add(SourceSystemFunctions.CURDATE);		
+		supportedFunctions.add(SourceSystemFunctions.CURTIME);  
+		supportedFunctions.add(SourceSystemFunctions.DAYNAME);
+        supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH); 
+        supportedFunctions.add(SourceSystemFunctions.DAYOFWEEK);
+        supportedFunctions.add(SourceSystemFunctions.DAYOFYEAR);
+        supportedFunctions.add(SourceSystemFunctions.EXP);    
         supportedFunctions.add(SourceSystemFunctions.FLOOR);
+        supportedFunctions.add(SourceSystemFunctions.HOUR); 		
         supportedFunctions.add(SourceSystemFunctions.IFNULL);
         supportedFunctions.add(SourceSystemFunctions.LCASE);
         supportedFunctions.add(SourceSystemFunctions.LENGTH);
         supportedFunctions.add(SourceSystemFunctions.LPAD);
         supportedFunctions.add(SourceSystemFunctions.LTRIM);
+        supportedFunctions.add(SourceSystemFunctions.LOG); 
+        supportedFunctions.add(SourceSystemFunctions.LOG10); 
+        supportedFunctions.add(SourceSystemFunctions.LEFT);   
+        supportedFunctions.add(SourceSystemFunctions.MINUTE);
+        supportedFunctions.add(SourceSystemFunctions.MONTH);
+        supportedFunctions.add(SourceSystemFunctions.MONTHNAME);
+        supportedFunctions.add(SourceSystemFunctions.MOD);        
         supportedFunctions.add(SourceSystemFunctions.NULLIF);
+        supportedFunctions.add(SourceSystemFunctions.NOW);
+        supportedFunctions.add(SourceSystemFunctions.PI);
         supportedFunctions.add(SourceSystemFunctions.POWER);
+        supportedFunctions.add(SourceSystemFunctions.QUARTER);
+        supportedFunctions.add(SourceSystemFunctions.RIGHT);
         supportedFunctions.add(SourceSystemFunctions.REPEAT);
         supportedFunctions.add(SourceSystemFunctions.REPLACE);
         supportedFunctions.add(SourceSystemFunctions.ROUND);
@@ -139,8 +164,16 @@ public class InterSystemsCacheExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.RTRIM);
         supportedFunctions.add(SourceSystemFunctions.SIGN);
         supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
+        supportedFunctions.add(SourceSystemFunctions.SIN);
+        supportedFunctions.add(SourceSystemFunctions.SECOND);
+        supportedFunctions.add(SourceSystemFunctions.SQRT);
+        supportedFunctions.add(SourceSystemFunctions.TAN);
+        supportedFunctions.add(SourceSystemFunctions.TIMESTAMPADD);   
+        supportedFunctions.add(SourceSystemFunctions.TIMESTAMPDIFF);    
+        supportedFunctions.add(SourceSystemFunctions.TRUNCATE);
         supportedFunctions.add(SourceSystemFunctions.UCASE);
         supportedFunctions.add(SourceSystemFunctions.XMLCONCAT);
+        supportedFunctions.add(SourceSystemFunctions.WEEK);        
 
         return supportedFunctions;
     }
