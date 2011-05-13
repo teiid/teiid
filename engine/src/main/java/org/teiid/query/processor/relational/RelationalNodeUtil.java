@@ -74,7 +74,7 @@ public class RelationalNodeUtil {
                 
                 if (limit != null && limit.getRowLimit() instanceof Constant) {
                     Constant rowLimit = (Constant)limit.getRowLimit();
-                    if (Integer.valueOf(0) == rowLimit.getValue()) {
+                    if (Integer.valueOf(0).equals(rowLimit.getValue())) {
                         return false;
                     }
                 }

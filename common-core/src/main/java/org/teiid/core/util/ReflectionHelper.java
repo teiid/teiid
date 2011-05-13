@@ -23,6 +23,7 @@
 package org.teiid.core.util;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -175,26 +176,7 @@ public class ReflectionHelper {
         }
         for (Method method : methodsWithSameName) {
             Class[] args = method.getParameterTypes();
-            if ( args.length != argumentsClasses.size() ) {
-                continue;
-            }
-            boolean allMatch = true;            // assume all args match
-            for ( int i=0; i<args.length && allMatch == true; ++i ) {
-                Class<?> primitiveClazz = argumentsClassList.get(i);
-                Class<?> objectClazz = argumentsClasses.get(i);
-                if ( objectClazz != null ) {
-                    // Check for possible matches with (converted) primitive types
-                    // as well as the original Object type 
-                    if ( ! args[i].equals(primitiveClazz) && ! args[i].isAssignableFrom(objectClazz) ) {
-                        allMatch = false;   // found one that doesn't match
-                    }
-                } else {
-                    // a null is assignable for everything except a primitive
-                    if ( args[i].isPrimitive() ) {
-                        allMatch = false;   // found one that doesn't match
-                    }
-                }
-            }
+			boolean allMatch = argsMatch(argumentsClasses, argumentsClassList, args);
             if ( allMatch ) {
                 if (result != null) {
                     throw new NoSuchMethodException(methodName + " Args: " + argumentsClasses + " has multiple possible signatures."); //$NON-NLS-1$ //$NON-NLS-2$
@@ -209,6 +191,30 @@ public class ReflectionHelper {
 
         throw new NoSuchMethodException(methodName + " Args: " + argumentsClasses); //$NON-NLS-1$
     }
+
+	private static boolean argsMatch(List<Class<?>> argumentsClasses,
+			List<Class<?>> argumentsClassList, Class[] args) {
+        if ( args.length != argumentsClasses.size() ) {
+            return false;
+        }
+		for ( int i=0; i<args.length; ++i ) {
+		    Class<?> primitiveClazz = argumentsClassList.get(i);
+		    Class<?> objectClazz = argumentsClasses.get(i);
+		    if ( objectClazz != null ) {
+		        // Check for possible matches with (converted) primitive types
+		        // as well as the original Object type 
+		        if ( ! args[i].equals(primitiveClazz) && ! args[i].isAssignableFrom(objectClazz) ) {
+		            return false;   // found one that doesn't match
+		        }
+		    } else {
+		        // a null is assignable for everything except a primitive
+		        if ( args[i].isPrimitive() ) {
+		            return false;   // found one that doesn't match
+		        }
+		    }
+		}
+		return true;
+	}
     
     /**
      * Convert any argument classes to primitives.
@@ -260,10 +266,10 @@ public class ReflectionHelper {
      * @param classLoader the class loader to use; may be null if the current
      * class loader is to be used
      * @return Object is the instance of the class 
-     * @throws TeiidException if an error occurrs instantiating the class
+     * @throws TeiidException if an error occurs instantiating the class
      */
 
-    public static final Object create(String className, Collection ctorObjs, 
+    public static final Object create(String className, Collection<?> ctorObjs, 
                                       final ClassLoader classLoader) throws TeiidException {
     	try {
 	        int size = (ctorObjs == null ? 0 : ctorObjs.size());
@@ -272,10 +278,12 @@ public class ReflectionHelper {
 	        int i = 0;
 	
 	        if (size > 0) {
-	            for (Iterator it=ctorObjs.iterator(); it.hasNext(); ) {
+	            for (Iterator<?> it=ctorObjs.iterator(); it.hasNext(); ) {
 	                Object obj = it.next();
-	                names[i] = loadClass(obj.getClass().getName(),classLoader);
-	                objArray[i] = obj;
+	                if (obj != null) {
+		                names[i] = obj.getClass();
+		                objArray[i] = obj;
+	                }
 	                i++;
 	            }
 	        } 
@@ -287,16 +295,39 @@ public class ReflectionHelper {
     	
     public static final Object create(String className, Object[] ctorObjs, Class<?>[] argTypes, 
                 final ClassLoader classLoader) throws TeiidException {
+    	Class<?> cls;
         try {
-            final Class<?> cls = loadClass(className,classLoader);
-
-            Constructor<?> ctor = cls.getDeclaredConstructor(argTypes);
-
-            return ctor.newInstance(ctorObjs);
-            
+            cls = loadClass(className,classLoader);
         } catch(Exception e) {
             throw new TeiidException(e);
         }
+        Constructor<?> ctor = null;
+        try {
+        	ctor = cls.getDeclaredConstructor(argTypes);
+        } catch (NoSuchMethodException e) {
+        	
+        }
+        
+        if (ctor == null && argTypes != null && argTypes.length > 0) {
+        	List<Class<?>> argumentsClasses = Arrays.asList(argTypes);
+        	List<Class<?>> argumentsClassList = convertArgumentClassesToPrimitives(argumentsClasses);
+        	for (Constructor<?> possible : cls.getDeclaredConstructors()) {
+        		if (argsMatch(argumentsClasses, argumentsClassList, possible.getParameterTypes())) {
+        			ctor = possible;
+        			break;
+        		}
+        	}
+        }
+        
+        if (ctor == null) {
+        	throw new TeiidException(className + " Args: " + Arrays.toString(argTypes)); //$NON-NLS-1$
+        }
+        
+        try {
+			return ctor.newInstance(ctorObjs);
+		} catch (Exception e) {
+			throw new TeiidException(e);
+		}
     }
     
 }

@@ -189,7 +189,6 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         if (state == State.LOAD_RIGHT) {
         	this.joinStrategy.openRight();
             this.joinStrategy.loadRight();
-        	this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, null);
             state = State.EXECUTE;
         }
         try {
@@ -274,7 +273,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     public void closeDirect() {
         super.closeDirect();
         joinStrategy.close();
-        if (this.getContext() != null) {
+        if (this.getContext() != null && this.dependentValueSource != null) {
         	this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, null);
         }
     }

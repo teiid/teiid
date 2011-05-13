@@ -27,6 +27,7 @@ import static org.junit.Assert.*;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
@@ -384,6 +385,10 @@ public class TestReflectionHelper {
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
     
+    @Test public void testCreate() throws Exception {
+    	ReflectionHelper.create(SomeClass.class.getName(), Arrays.asList(true), null);
+    }
+    
     /**
      * Test base interface
      */
@@ -418,5 +423,10 @@ public class TestReflectionHelper {
         void method(Number arg1, Long arg2);
         void method(Serializable arg1, Number arg2);
         void method(Serializable arg1, Long arg2);
+    }
+    
+    public static class SomeClass {
+    	public SomeClass(boolean primArg) {
+		}
     }
 }

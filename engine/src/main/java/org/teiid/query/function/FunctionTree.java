@@ -189,7 +189,7 @@ public class FunctionTree {
      * @param source The function metadata source, which knows how to obtain the invocation class
      * @param method The function metadata for a particular method signature
      */
-    private void addFunction(String schema, FunctionMetadataSource source, FunctionMethod method) {
+    public FunctionDescriptor addFunction(String schema, FunctionMetadataSource source, FunctionMethod method) {
     	String categoryKey = method.getCategory();
     	if (categoryKey == null) {
     		method.setCategory(FunctionCategoryConstants.MISCELLANEOUS);
@@ -270,6 +270,7 @@ public class FunctionTree {
         }
         
         allFunctions.add(method);
+        return descriptor;
     }
 
 	private FunctionDescriptor createFunctionDescriptor(
@@ -285,7 +286,7 @@ public class FunctionTree {
         Method invocationMethod = null;
         boolean requiresContext = false;
         // Defect 20007 - Ignore the invocation method if pushdown is not required.
-        if (method.getPushdown() == PushDown.CAN_PUSHDOWN || method.getPushdown() == PushDown.CANNOT_PUSHDOWN) {
+        if (validateClass && (method.getPushdown() == PushDown.CAN_PUSHDOWN || method.getPushdown() == PushDown.CANNOT_PUSHDOWN)) {
             try {
                 Class<?> methodClass = source.getInvocationClass(method.getInvocationClass());
                 ReflectionHelper helper = new ReflectionHelper(methodClass);
@@ -297,9 +298,7 @@ public class FunctionTree {
                 	requiresContext = true;
                 }
             } catch (ClassNotFoundException e) {
-            	if (validateClass) {
-            		throw new TeiidRuntimeException(e, "ERR.015.001.0047", QueryPlugin.Util.getString("FunctionTree.no_class", method.getName(), method.getInvocationClass())); //$NON-NLS-1$ //$NON-NLS-2$
-            	}
+            	throw new TeiidRuntimeException(e, "ERR.015.001.0047", QueryPlugin.Util.getString("FunctionTree.no_class", method.getName(), method.getInvocationClass())); //$NON-NLS-1$ //$NON-NLS-2$
             } catch (NoSuchMethodException e) {
             	throw new TeiidRuntimeException(e, "ERR.015.001.0047", QueryPlugin.Util.getString("FunctionTree.no_method", method, method.getInvocationClass(), method.getInvocationMethod())); //$NON-NLS-1$ //$NON-NLS-2$
             } catch (Exception e) {                

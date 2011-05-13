@@ -35,6 +35,7 @@ ed.dataModification(vdbName, vdbVersion, schema, tableName);</programlisting>
 		System procedures and DDL statements should be used instead since the effects will be distributed through the cluster and will not introduce inconsistencies.</para></note>
 		<para><code>org.teiid.metadata.AbstractMetadataRecord</code> objects passed to the <code>MetadataRepository</code> have not yet been modified.  
 		If the <code>MetadataRepository</code> cannot persist the update, then a <code>RuntimeException</code> should be thrown to prevent the update from being applied by the runtime engine.</para>
+		<note><para>The MetadataRepository can be accessed by multiple threads both during load (if using dynamic vdbs) or at runtime with through DDL statements.  Your implementation should handle any needed synchronization.</para></note>
 		<section>
 			<title>Costing Updates</title>
 			<para>See the Reference for the system procedures <code>SYSADMIN.setColumnStats</code> and <code>SYSADMIN.setTableStats</code>.  

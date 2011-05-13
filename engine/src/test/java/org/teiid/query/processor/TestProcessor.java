@@ -1721,7 +1721,7 @@ public class TestProcessor {
 
 	@Test public void testSubqueryInJoinPredicate() {
 		// Create query
-		String sql = "SELECT x.e1 FROM (SELECT e1 FROM pm1.g1) AS x JOIN (SELECT e1 FROM pm1.g1) y ON x.e1=y.e1"; //$NON-NLS-1$
+		String sql = "SELECT x.e1 FROM (SELECT e1 FROM pm1.g1) AS x JOIN (SELECT e1 FROM pm1.g1) y ON x.e1=y.e1 order by x.e1"; //$NON-NLS-1$
 
 		// Create expected results
 		List[] expected = new List[] {
@@ -2805,15 +2805,15 @@ public class TestProcessor {
     }
 
     @Test public void testCorrelatedSubqueryVirtualLayer2() {
-        String sql = "Select e1, e2 from vm1.g2 where e2 in (select e2 FROM vm1.g1 WHERE vm1.g2.e4 = vm1.g1.e4)"; //$NON-NLS-1$
+        String sql = "Select e1, e2 from vm1.g2 where e2 in (select e2 FROM vm1.g1 WHERE vm1.g2.e4 = vm1.g1.e4) order by e1, e2"; //$NON-NLS-1$
 
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "a",   new Integer(0) }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "a",   new Integer(0) }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a",   new Integer(0) }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a",   new Integer(0) }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "a",   new Integer(3) }), //$NON-NLS-1$
-            Arrays.asList(new Object[] { "a",   new Integer(0) }), //$NON-NLS-1$
-            Arrays.asList(new Object[] { "a",   new Integer(0) }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "b",   new Integer(2) }) //$NON-NLS-1$
         };
 
@@ -4452,7 +4452,7 @@ public class TestProcessor {
     
     @Test public void testDefect11236_MergeJoinWithFunctions() { 
        // Create query 
-       String sql = "SELECT pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e2 = (pm2.g1.e2+1)"; //$NON-NLS-1$
+       String sql = "SELECT pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e2 = (pm2.g1.e2+1) order by pm1.g1.e2, pm2.g1.e2"; //$NON-NLS-1$
        boolean pushDown = false;
        boolean dependent = false;
        
@@ -5265,7 +5265,7 @@ public class TestProcessor {
         caps.setFunctionSupport("myrtrim", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new FakeFunctionMetadataSource()));
+        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new FakeFunctionMetadataSource(), true));
         FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
         
         processPreparedStatement(sql, expected, dataManager, capFinder,
@@ -5313,7 +5313,7 @@ public class TestProcessor {
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm4", caps); //$NON-NLS-1$
 
-        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new FakeFunctionMetadataSource()));
+        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new FakeFunctionMetadataSource(), true));
         FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
         
         processPreparedStatement(sql, expected, dataManager, capFinder,

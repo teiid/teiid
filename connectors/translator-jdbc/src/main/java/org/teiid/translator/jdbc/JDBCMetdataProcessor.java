@@ -76,7 +76,7 @@ public class JDBCMetdataProcessor {
 	private boolean importKeys;
 	private boolean importIndexes;
 	private String procedureNamePattern;
-	private boolean useFullSchemaName;	
+	private boolean useFullSchemaName = true;	
 	private String[] tableTypes;
 	private String tableNamePattern;
 	private String catalog;

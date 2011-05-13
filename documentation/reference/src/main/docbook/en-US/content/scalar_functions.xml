@@ -845,7 +845,7 @@
               <para>Get left y characters of x</para>
             </entry>
             <entry>
-              <para>x in {string}, y in {string}, return string</para>
+              <para>x in {string}, y in {integer}, return string</para>
             </entry>
           </row>
           <row>
@@ -963,7 +963,7 @@
               <para>Get right y characters of x</para>
             </entry>
             <entry>
-              <para>x in {string}, y in {string}, return string</para>
+              <para>x in {string}, y in {integer}, return string</para>
             </entry>
           </row>
           <row>

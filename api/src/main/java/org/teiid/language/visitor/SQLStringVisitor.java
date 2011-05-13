@@ -869,9 +869,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
 
     protected void appendSetQuery(SetQuery parent, QueryExpression obj, boolean right) {
         if((!(obj instanceof SetQuery) && useParensForSetQueries()) 
-        		|| (right && obj instanceof SetQuery 
+        		|| (right && ((obj instanceof SetQuery 
         				&& ((parent.isAll() && !((SetQuery)obj).isAll()) 
-        						|| parent.getOperation() != ((SetQuery)obj).getOperation()))) {
+        						|| parent.getOperation() != ((SetQuery)obj).getOperation())) || obj.getLimit() != null || obj.getOrderBy() != null))) {
             buffer.append(Tokens.LPAREN);
             append(obj);
             buffer.append(Tokens.RPAREN);

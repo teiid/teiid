@@ -273,6 +273,40 @@ public class TestRuleMergeVirtual {
         }, TestLimit.NODE_TYPES);                                    
     }
     
+    @Test public void testSimpleMergeUnionSecondBranchWithOrderBy() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_UNION, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+         
+        ProcessorPlan plan = TestOptimizer.helpPlan("select '1' as x, e2 from pm1.g1 union all select e1, e2 from (select e1, 1 as e2 from pm1.g2 limit 1) as x order by x", //$NON-NLS-1$
+                                      FakeMetadataFactory.example1Cached(), null, capFinder,
+                                      new String[] {"SELECT '1' AS c_0, pm1.g1.e2 AS c_1 FROM pm1.g1 UNION ALL (SELECT pm1.g2.e1 AS c_0, 1 AS c_1 FROM pm1.g2 LIMIT 1) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
+    }
+    
+    @Test public void testSimpleMergeUnionSecondBranchWithOrderBy1() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_UNION, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+         
+        ProcessorPlan plan = TestOptimizer.helpPlan("select '1' as x, e2 from pm1.g1 union all (select e1, e2 from (select distinct e1, 1 as e2 from pm1.g2) as x order by e1 limit 1) order by x", //$NON-NLS-1$
+                                      FakeMetadataFactory.example1Cached(), null, capFinder,
+                                      new String[] {"SELECT '1' AS c_0, pm1.g1.e2 AS c_1 FROM pm1.g1 UNION ALL (SELECT DISTINCT pm1.g2.e1 AS c_0, 1 AS c_1 FROM pm1.g2 ORDER BY c_0 LIMIT 1) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
+    }
+    
     /**
      * Note that the merge is not performed since it would create an expression in the group by clause
      */
@@ -316,6 +350,21 @@ public class TestRuleMergeVirtual {
 
         RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(),  
         		new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$  
+        
+        SortNode node = (SortNode)plan.getRootNode();
+        assertTrue("Alias was not accounted for in sort node", node.getElements().get(0).equals(node.getSortElements().get(0).getSymbol())); //$NON-NLS-1$
+    }
+    
+    @Test public void testSortAliasWithSameNameUnion() throws Exception { 
+        String sql = "select e1 from (select distinct pm1.g1.e1 as e1 from pm1.g1) x union all select e1 from pm1.g2 order by e1"; //$NON-NLS-1$
+
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+
+        RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(),  
+        		new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0", "SELECT g_0.e1 FROM pm1.g2 AS g_0"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$  
         
         SortNode node = (SortNode)plan.getRootNode();
         assertTrue("Alias was not accounted for in sort node", node.getElements().get(0).equals(node.getSortElements().get(0).getSymbol())); //$NON-NLS-1$

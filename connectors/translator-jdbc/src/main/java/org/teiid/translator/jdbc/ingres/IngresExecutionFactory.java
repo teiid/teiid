@@ -67,13 +67,7 @@ public class IngresExecutionFactory extends JDBCExecutionFactory {
 		convert.addTypeMapping("clob", FunctionModifier.CLOB); //$NON-NLS-1$
 		convert.addNumericBooleanConversions();
 		registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);		
-	}
-	
-    @Override
-    public List<String> getSupportedFunctions() {
-        List<String> supportedFunctions = new ArrayList<String>();
-        supportedFunctions.addAll(super.getSupportedFunctions());
-
+		
         registerFunctionModifier(SourceSystemFunctions.BITAND, new AliasModifier("bit_and")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.BITNOT, new AliasModifier("bit_not")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.BITOR, new AliasModifier("bit_or")); //$NON-NLS-1$
@@ -84,16 +78,29 @@ public class IngresExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("random")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("uppercase")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory())); 
-        
+        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory())); 		
+	}
+	
+    @Override
+    public List<String> getSupportedFunctions() {
+        List<String> supportedFunctions = new ArrayList<String>();
+        supportedFunctions.addAll(super.getSupportedFunctions());
+
 		supportedFunctions.add(SourceSystemFunctions.ABS);
 		supportedFunctions.add(SourceSystemFunctions.ATAN);
+		supportedFunctions.add(SourceSystemFunctions.BITAND);
+		supportedFunctions.add(SourceSystemFunctions.BITNOT);
+		supportedFunctions.add(SourceSystemFunctions.BITOR);
+		supportedFunctions.add(SourceSystemFunctions.BITXOR);		
 		supportedFunctions.add(SourceSystemFunctions.CONCAT);
 		supportedFunctions.add(SourceSystemFunctions.COS);
 		supportedFunctions.add(SourceSystemFunctions.CONVERT);
+		supportedFunctions.add(SourceSystemFunctions.CURTIME);
+		supportedFunctions.add(SourceSystemFunctions.CURDATE);		
 		supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
 		supportedFunctions.add(SourceSystemFunctions.EXP);
 		supportedFunctions.add(SourceSystemFunctions.HOUR);
+		supportedFunctions.add(SourceSystemFunctions.LCASE);
 		supportedFunctions.add(SourceSystemFunctions.LEFT);
 		supportedFunctions.add(SourceSystemFunctions.LPAD);
 		supportedFunctions.add(SourceSystemFunctions.LOCATE);
@@ -102,6 +109,7 @@ public class IngresExecutionFactory extends JDBCExecutionFactory {
 		supportedFunctions.add(SourceSystemFunctions.MINUTE);
 		supportedFunctions.add(SourceSystemFunctions.MONTH);
 		supportedFunctions.add(SourceSystemFunctions.POWER);
+		supportedFunctions.add(SourceSystemFunctions.RAND);
 		supportedFunctions.add(SourceSystemFunctions.RIGHT);
 		supportedFunctions.add(SourceSystemFunctions.RPAD);
 		supportedFunctions.add(SourceSystemFunctions.SECOND);
@@ -109,6 +117,7 @@ public class IngresExecutionFactory extends JDBCExecutionFactory {
 		supportedFunctions.add(SourceSystemFunctions.SQRT);
 		supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
 		supportedFunctions.add(SourceSystemFunctions.YEAR);
+		supportedFunctions.add(SourceSystemFunctions.UCASE);
 
         return supportedFunctions;
     }

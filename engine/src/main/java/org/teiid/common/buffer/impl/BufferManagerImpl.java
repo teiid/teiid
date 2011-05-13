@@ -283,7 +283,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 					}
 				}
 				long count = readCount.incrementAndGet();
-				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "reading batch from disk, total reads:", count); //$NON-NLS-1$
+				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "reading batch from disk, total reads:", count); //$NON-NLS-1$
 				try {
 					this.batchManager.compactionLock.readLock().lock();
 					long[] info = batchManager.physicalMapping.get(this.id);
@@ -320,7 +320,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				if (batch != null) {
 					if (!persistent) {
 						long count = writeCount.incrementAndGet();
-						LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "writing batch to disk, total writes: ", count); //$NON-NLS-1$
+						LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "writing batch to disk, total writes: ", count); //$NON-NLS-1$
 						long offset = 0;
 						if (lobManager != null) {
 							for (List<?> tuple : batch.getTuples()) {

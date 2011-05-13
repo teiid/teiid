@@ -64,13 +64,13 @@ public class TestDymamicImportedMetaData {
 	
     @Test public void testProcImport() throws Exception {
     	FakeServer server = new FakeServer();
-    	server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
-    	Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
+    	server.deployVDB("vdb", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
+    	Connection conn = server.createConnection("jdbc:teiid:vdb"); //$NON-NLS-1$
     	
     	Properties importProperties = new Properties();
     	importProperties.setProperty("importer.importProcedures", Boolean.TRUE.toString());
     	MetadataFactory mf = getMetadata(importProperties, conn);
-    	Procedure p = mf.getMetadataStore().getSchemas().get("TEST").getProcedures().get("GETXMLSCHEMAS");
+    	Procedure p = mf.getMetadataStore().getSchemas().get("TEST").getProcedures().get("VDB.SYS.GETXMLSCHEMAS");
     	assertEquals(1, p.getResultSet().getColumns().size());
     }
     
@@ -92,15 +92,17 @@ public class TestDymamicImportedMetaData {
     	Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
     	
     	Properties importProperties = new Properties();
+    	
+    	getMetadata(importProperties, conn);
+    	assertNotNull(mf.getMetadataStore().getSchemas().get("X").getTables().get("DUP"));
+
+    	importProperties.setProperty("importer.useFullSchemaName", Boolean.FALSE.toString());
     	try {
     		getMetadata(importProperties, conn);
+    		fail();
     	} catch (TranslatorException e) {
     		
     	}
-    	
-    	importProperties.setProperty("importer.useFullSchemaName", Boolean.TRUE.toString());
-    	getMetadata(importProperties, conn);
-    	assertNotNull(mf.getMetadataStore().getSchemas().get("X").getTables().get("DUP"));
     }
 
 }

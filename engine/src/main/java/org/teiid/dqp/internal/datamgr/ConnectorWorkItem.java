@@ -271,7 +271,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     
     protected AtomicResultsMessage handleBatch() throws TranslatorException {
     	Assertion.assertTrue(!this.lastBatch);
-        LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Sending results from connector"}); //$NON-NLS-1$
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Getting results from connector"}); //$NON-NLS-1$
         int batchSize = 0;
         List<List> rows = new ArrayList<List>(batchSize/4);
         
@@ -320,7 +320,9 @@ public class ConnectorWorkItem implements ConnectorWork {
         		}
         	}
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Obtained last batch, total row count:", rowCount}); //$NON-NLS-1$\
-        }   
+        }  else {
+        	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Obtained results from connector, current row count:", rowCount}); //$NON-NLS-1$
+        }
         
     	int currentRowCount = rows.size();
 		if ( !lastBatch && currentRowCount == 0 ) {
