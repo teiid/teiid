@@ -21,7 +21,7 @@
  */
 package org.teiid.translator.jdbc.teradata;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.sql.Date;
 import java.sql.Timestamp;
@@ -35,6 +35,7 @@ import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.In;
 import org.teiid.language.LanguageFactory;
+import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
@@ -76,7 +77,7 @@ public class TestTeradataTranslator {
     }
     
     @Test public void testTimestampToTime() throws Exception {
-    	helpTest(LANG_FACTORY.createLiteral(new Timestamp(1304604994220L), Timestamp.class), "time", "cast(cast('2011-05-05 09:16:34.22' AS TIMESTAMP(6)) AS TIME)");
+    	helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(111, 4, 5, 9, 16, 34, 220000000), Timestamp.class), "time", "cast(cast('2011-05-05 09:16:34.22' AS TIMESTAMP(6)) AS TIME)");
     }
     
     @Test public void testIntegerToString() throws Exception {
