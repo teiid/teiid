@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>coherence_translator</artifactId>
+    <groupId>org.teiid.coherence.translator</groupId>
+    <name>Coherence Translator</name>
+    <version>0.1</version>
+    <packaging>jar</packaging>
+    <description>This is the tranlator for a Coherence connector</description>
+
+    <dependencies>
+    
+         <dependency>
+        	<artifactId>coherence_connector</artifactId>
+    		<groupId>org.teiid.coherence.connector</groupId>
+			<scope>compile</scope>
+			<classifier>lib</classifier>
+            <version>0.1</version>
+        </dependency>   
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-api</artifactId>
+            <scope>provided</scope>
+            <version>7.1.1.GA</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-common-core</artifactId>
+            <scope>provided</scope>
+            <version>7.1.1.GA</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.resource</groupId>
+            <artifactId>connector-api</artifactId>
+            <scope>provided</scope>
+            <version>1.5</version>
+        </dependency>
+        
+    	<dependency>
+	      	<groupId>coherence</groupId>
+    	  	<artifactId>coherence</artifactId>
+    	  	<version>3.6.1</version>
+     	 	<scope>system</scope>
+      		<systemPath>${basedir}/../coherence_connector/lib/coherence.jar</systemPath>
+   	    </dependency> 
+		
+   	    
+   	 	<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.4</version>
+			<scope>test</scope>
+		</dependency> 						
+    </dependencies>
+
+</project>
