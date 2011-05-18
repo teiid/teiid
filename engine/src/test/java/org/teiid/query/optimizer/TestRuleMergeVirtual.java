@@ -87,7 +87,7 @@ public class TestRuleMergeVirtual {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x, x FROM (SELECT e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
                                       FakeMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),
                                       new String[] {
-                                          "SELECT v_0.c_0, v_0.c_0 FROM (SELECT MAX(g_0.e2) AS c_0 FROM pm1.g1 AS g_0 GROUP BY g_0.e1) AS v_0"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
+                                          "SELECT v_0.c_0 FROM (SELECT MAX(g_0.e2) AS c_0 FROM pm1.g1 AS g_0 GROUP BY g_0.e1) AS v_0"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }

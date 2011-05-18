@@ -45,6 +45,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
@@ -405,7 +406,8 @@ public final class RuleCollapseSource implements OptimizerRule {
 
 	public static void prepareSubquery(SubqueryContainer container) {
 		RelationalPlan subqueryPlan = (RelationalPlan)container.getCommand().getProcessorPlan();
-		QueryCommand command = CriteriaCapabilityValidatorVisitor.getQueryCommand(subqueryPlan);
+		AccessNode aNode = CriteriaCapabilityValidatorVisitor.getAccessNode(subqueryPlan);
+		QueryCommand command = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode);
 		if (command == null) {
 			return;
 		}

@@ -936,16 +936,16 @@ public class TestOptimizer {
     
     @Test public void testPushCriteriaThroughUnion11() {
         helpPlan("select * from vm1.u8 where const = 's3' or e1 is null", example1(), //$NON-NLS-1$
-            new String[] { "SELECT 's3', e1 FROM pm1.g3", //$NON-NLS-1$
-                            "SELECT 's2', e1 FROM pm1.g2 WHERE e1 IS NULL", //$NON-NLS-1$
-                            "SELECT 's1', e1 FROM pm1.g1 WHERE e1 IS NULL" } );     //$NON-NLS-1$
+            new String[] { "SELECT e1 FROM pm1.g3", //$NON-NLS-1$
+                            "SELECT e1 FROM pm1.g2 WHERE e1 IS NULL", //$NON-NLS-1$
+                            "SELECT e1 FROM pm1.g1 WHERE e1 IS NULL" } );     //$NON-NLS-1$
     }
 
     @Test public void testPushCriteriaThroughUnion12() {
         helpPlan("select * from vm1.u8 where const = 's1' or e1 is null", example1(), //$NON-NLS-1$
-            new String[] { "SELECT 's3', e1 FROM pm1.g3 WHERE e1 IS NULL", //$NON-NLS-1$
-                            "SELECT 's2', e1 FROM pm1.g2 WHERE e1 IS NULL", //$NON-NLS-1$
-                            "SELECT 's1', e1 FROM pm1.g1" } );     //$NON-NLS-1$
+            new String[] { "SELECT e1 FROM pm1.g3 WHERE e1 IS NULL", //$NON-NLS-1$
+                            "SELECT e1 FROM pm1.g2 WHERE e1 IS NULL", //$NON-NLS-1$
+                            "SELECT e1 FROM pm1.g1" } );     //$NON-NLS-1$
     }
 
     /** defect #4997 */
@@ -1096,8 +1096,8 @@ public class TestOptimizer {
     
     @Test public void testDefect6425_1() {
         helpPlan("select * from vm1.u9", example1(), //$NON-NLS-1$
-            new String[] { "SELECT e1, e1 FROM pm1.g1", //$NON-NLS-1$
-                            "SELECT e1, e1 FROM pm1.g2" } );     //$NON-NLS-1$
+            new String[] { "SELECT e1 FROM pm1.g1", //$NON-NLS-1$
+                            "SELECT e1 FROM pm1.g2" } );     //$NON-NLS-1$
     }
 
     @Test public void testDefect6425_2() {
@@ -3507,7 +3507,7 @@ public class TestOptimizer {
         ProcessorPlan plan = helpPlan("SELECT * FROM (SELECT IntKey a, IntNum b FROM BQT1.SmallA UNION ALL SELECT Intkey, Intkey FROM BQT1.SmallA) as x WHERE b = 0", FakeMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
             new String[] { 
                 "SELECT IntKey, IntNum FROM BQT1.SmallA WHERE IntNum = 0", //$NON-NLS-1$
-                "SELECT IntKey, IntKey FROM BQT1.SmallA WHERE IntKey = 0"  }); //$NON-NLS-1$ 
+                "SELECT IntKey FROM BQT1.SmallA WHERE IntKey = 0"  }); //$NON-NLS-1$ 
 
         checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -3532,7 +3532,7 @@ public class TestOptimizer {
         ProcessorPlan plan = helpPlan("SELECT * FROM (SELECT IntKey a, IntKey b FROM BQT1.SmallA UNION ALL SELECT IntKey, IntNum FROM BQT1.SmallA) as x WHERE b = 0", FakeMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
             new String[] { 
                 "SELECT IntKey, IntNum FROM BQT1.SmallA WHERE IntNum = 0", //$NON-NLS-1$
-                "SELECT IntKey, IntKey FROM BQT1.SmallA WHERE IntKey = 0"  }); //$NON-NLS-1$ 
+                "SELECT IntKey FROM BQT1.SmallA WHERE IntKey = 0"  }); //$NON-NLS-1$ 
 
         checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -5411,7 +5411,7 @@ public class TestOptimizer {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT g_0.intkey, g_0.intkey FROM bqt1.smalla AS g_0 ORDER BY g_0.intkey"},  //$NON-NLS-1$
+                                      new String[] {"SELECT g_0.intkey FROM bqt1.smalla AS g_0 ORDER BY g_0.intkey"},  //$NON-NLS-1$
                                       ComparisonMode.EXACT_COMMAND_STRING );
 
         checkNodeTypes(plan, FULL_PUSHDOWN);
@@ -5673,7 +5673,7 @@ public class TestOptimizer {
         helpPlan(sql,  
                                       metadata, 
                                       null, capFinder, 
-                                      new String[] {"SELECT '1', g_0.intkey, '2', g_1.IntKey FROM bqt2.smalla AS g_0, bqt2.smalla AS g_1 WHERE g_0.intkey = g_1.IntKey"},  //$NON-NLS-1$ 
+                                      new String[] {"SELECT g_0.intkey, g_1.IntKey FROM bqt2.smalla AS g_0, bqt2.smalla AS g_1 WHERE g_0.intkey = g_1.IntKey"},  //$NON-NLS-1$ 
                                       ComparisonMode.EXACT_COMMAND_STRING ); 
              
     } 
@@ -6020,16 +6020,12 @@ public class TestOptimizer {
         helpTestCase2430and2507(sql, expected);
     }     
 
-    /*
-     * If expressionsymbol comparison would ignore expression names then this should just select a single column,
-     * but for now it will select 2.
-     */
     @Test public void testCase2430E() {
         String sql = "SELECT CONCAT(bqt1.smalla.stringKey, bqt1.smalla.stringNum) as c1234567890123456789012345678901234567890, " + //$NON-NLS-1$
                      "CONCAT(bqt1.smalla.stringKey, bqt1.smalla.stringNum) AS EXPR FROM bqt1.smalla ORDER BY c1234567890123456789012345678901234567890, EXPR "; //$NON-NLS-1$
 
-        String expected = "SELECT CONCAT(bqt1.smalla.stringKey, bqt1.smalla.stringNum) AS c1234567890123456789012345678901234567890, CONCAT(bqt1.smalla.stringKey, bqt1.smalla.stringNum) " + //$NON-NLS-1$
-                     "FROM bqt1.smalla ORDER BY c1234567890123456789012345678901234567890"; //$NON-NLS-1$
+        String expected = "SELECT CONCAT(bqt1.smalla.stringKey, bqt1.smalla.stringNum) AS c_0 " + //$NON-NLS-1$
+                     "FROM bqt1.smalla ORDER BY c_0"; //$NON-NLS-1$
         helpTestCase2430and2507(sql, expected);
     }     
     
@@ -6037,8 +6033,8 @@ public class TestOptimizer {
         String sql = "SELECT CONCAT(bqt1.smalla.stringKey, bqt1.smalla.stringNum) as c1234567890123456789012345678901234567890, " + //$NON-NLS-1$
                      "CONCAT(bqt1.smalla.stringKey, bqt1.smalla.stringNum) AS EXPR FROM bqt1.smalla ORDER BY c1234567890123456789012345678901234567890"; //$NON-NLS-1$
 
-        String expected = "SELECT CONCAT(bqt1.smalla.stringKey, bqt1.smalla.stringNum) AS c1234567890123456789012345678901234567890, CONCAT(bqt1.smalla.stringKey, bqt1.smalla.stringNum) " + //$NON-NLS-1$
-                     "FROM bqt1.smalla ORDER BY c1234567890123456789012345678901234567890"; //$NON-NLS-1$
+        String expected = "SELECT CONCAT(bqt1.smalla.stringKey, bqt1.smalla.stringNum) AS c_0 " + //$NON-NLS-1$
+                     "FROM bqt1.smalla ORDER BY c_0"; //$NON-NLS-1$
         helpTestCase2430and2507(sql, expected);
     }  
     

@@ -294,7 +294,7 @@ public class RulePushAggregates implements
 			if (first) {
 				first = false;
 				QueryRewriter.makeSelectUnique(allSymbols, false);
-				symbols = allSymbols.getSymbols();
+				symbols = allSymbols.getProjectedSymbols();
 			}
 			projectPlanNode.setProperty(NodeConstants.Info.PROJECT_COLS, allSymbols.getSymbols());
 		    projectPlanNode.addGroups(view.getGroups());

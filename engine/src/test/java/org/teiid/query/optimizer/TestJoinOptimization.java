@@ -408,7 +408,7 @@ public class TestJoinOptimization {
         String sql = "select bqt1.smalla.intkey, bqt2.smalla.intkey from bqt1.smalla left outer join bqt2.smalla on (bqt1.smalla.stringkey = bqt2.smalla.intkey and bqt2.smalla.intkey = null)"; //$NON-NLS-1$
 
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT bqt1.smalla.intkey, null FROM bqt1.smalla"}); //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT bqt1.smalla.intkey FROM bqt1.smalla"}); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);        
     }

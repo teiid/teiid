@@ -1851,7 +1851,7 @@ public class TestSQLStringVisitor extends TestCase {
 
     public void testLimit() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
+        Select select = new Select(Arrays.asList(new AllSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
@@ -1861,7 +1861,7 @@ public class TestSQLStringVisitor extends TestCase {
     
     public void testLimitWithOffset() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
+        Select select = new Select(Arrays.asList(new AllSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);

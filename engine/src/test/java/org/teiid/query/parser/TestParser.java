@@ -6436,7 +6436,7 @@ public class TestParser {
     
     @Test public void testLimit() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
+        Select select = new Select(Arrays.asList(new AllSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
@@ -6446,7 +6446,7 @@ public class TestParser {
     
     @Test public void testLimitWithOffset() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
+        Select select = new Select(Arrays.asList(new AllSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
@@ -6456,7 +6456,7 @@ public class TestParser {
     
     @Test public void testLimitWithReferences1() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
+        Select select = new Select(Arrays.asList(new AllSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
@@ -6466,7 +6466,7 @@ public class TestParser {
     
     @Test public void testLimitWithReferences2() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
+        Select select = new Select(Arrays.asList(new AllSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
@@ -6476,7 +6476,7 @@ public class TestParser {
     
     @Test public void testLimitWithReferences3() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
+        Select select = new Select(Arrays.asList(new AllSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
@@ -6618,9 +6618,9 @@ public class TestParser {
         String expected = "CREATE PROCEDURE\nBEGIN\nIF(x > 1)\nBEGIN\nSELECT 1;\nEND\nIF(x > 1)\nBEGIN\nSELECT 1;\nEND\nELSE\nBEGIN\nSELECT 1;\nEND\nEND"; //$NON-NLS-1$
         
         Query query = new Query();
-        query.setSelect(new Select(Arrays.asList(new Object[] {new ExpressionSymbol("expr", new Constant(new Integer(1)))}))); //$NON-NLS-1$
+        query.setSelect(new Select(Arrays.asList(new ExpressionSymbol("expr", new Constant(1))))); //$NON-NLS-1$
         CommandStatement commandStmt = new CommandStatement(query);
-        CompareCriteria criteria = new CompareCriteria(new ElementSymbol("x"), CompareCriteria.GT, new Constant(new Integer(1))); //$NON-NLS-1$
+        CompareCriteria criteria = new CompareCriteria(new ElementSymbol("x"), CompareCriteria.GT, new Constant(1)); //$NON-NLS-1$
         Block block = new Block();
         block.addStatement(commandStmt);
         IfStatement ifStmt = new IfStatement(criteria, block);
@@ -6648,7 +6648,7 @@ public class TestParser {
         Function convert = new Function("convert", new Expression[] {new Constant(null), new Constant("blob")}); //$NON-NLS-1$ //$NON-NLS-2$
         Function convert1 = new Function("convert", new Expression[] {new Constant(null), new Constant("clob")}); //$NON-NLS-1$ //$NON-NLS-2$
         Function convert2 = new Function("convert", new Expression[] {new Constant(null), new Constant("xml")}); //$NON-NLS-1$ //$NON-NLS-2$
-        Select select = new Select(Arrays.asList(new Object[] {new ExpressionSymbol("expr", convert), new ExpressionSymbol("expr1", convert1), new ExpressionSymbol("expr2", convert2)})); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        Select select = new Select(Arrays.asList(new ExpressionSymbol("expr", convert), new ExpressionSymbol("expr1", convert1), new ExpressionSymbol("expr2", convert2))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         Query query = new Query();
         query.setSelect(select);
         

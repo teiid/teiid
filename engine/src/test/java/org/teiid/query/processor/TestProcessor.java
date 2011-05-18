@@ -7277,7 +7277,10 @@ public class TestProcessor {
         };
 
         HardcodedDataManager manager = new HardcodedDataManager();
-        manager.addData("SELECT 'a', pm1.g1.e1 FROM pm1.g1", expected); //$NON-NLS-1$ 
+        manager.addData("SELECT pm1.g1.e1 FROM pm1.g1", new List[] {
+                Arrays.asList("b"), //$NON-NLS-1$ //$NON-NLS-2$
+                Arrays.asList("c") //$NON-NLS-1$ //$NON-NLS-2$
+            }); //$NON-NLS-1$ 
         
         processPreparedStatement("select ?, e1 from pm1.g1", expected, manager, capFinder,
 				metadata, Arrays.asList("a")); 
@@ -7646,6 +7649,31 @@ public class TestProcessor {
         ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example4(), TestOptimizer.getGenericFinder());
         
         helpProcess(plan, dataManager, expected);
+    }
+    
+    
+    @Test public void testDupSelect() throws Exception {
+    	String sql = "select e1, e1 from pm1.g1";
+        
+    	HardcodedDataManager dataManager = new HardcodedDataManager();
+    	
+    	dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0", new List[] {Arrays.asList(1)});
+        
+        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, new List[] {Arrays.asList(1, 1)});
+    }
+    
+    @Test public void testDupSelect1() throws Exception {
+    	String sql = "select 1, 2 from pm1.g1";
+        
+    	HardcodedDataManager dataManager = new HardcodedDataManager();
+    	
+    	dataManager.addData("SELECT 2 FROM pm1.g1 AS g_0", new List[] {Arrays.asList(2)});
+        
+        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, new List[] {Arrays.asList(1, 2)});
     }
     
     private static final boolean DEBUG = false;

@@ -63,6 +63,7 @@ import org.teiid.query.optimizer.relational.rules.RuleCollapseSource;
 import org.teiid.query.optimizer.relational.rules.RuleConstants;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.resolver.ProcedureContainerResolver;
@@ -177,11 +178,12 @@ public class RelationalPlanner {
 	        		Command subCommand = with.getCommand();
 	                ProcessorPlan procPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
 	                subCommand.setProcessorPlan(procPlan);
-	                QueryCommand withCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(procPlan);
-	                if (withCommand != null && supportsWithPushdown) {
-	                	modelID = CriteriaCapabilityValidatorVisitor.validateCommandPushdown(modelID, metadata, capFinder, withCommand);
+	                AccessNode aNode = CriteriaCapabilityValidatorVisitor.getAccessNode(procPlan);
+	                if (aNode != null && supportsWithPushdown) {
+	                	modelID = CriteriaCapabilityValidatorVisitor.validateCommandPushdown(modelID, metadata, capFinder, aNode);
 	            	}
-	                if (modelID == null) {
+                	QueryCommand withCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode);
+	                if (modelID == null || withCommand == null) {
 	                	supportsWithPushdown = false;
 	                } else {
 	                	if (pushDownWith == null) {
@@ -226,9 +228,10 @@ public class RelationalPlanner {
 
         RelationalPlan result = planToProcessConverter.convert(plan);
         if (withList != null && supportsWithPushdown) {
-        	QueryCommand queryCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(result);
-        	if (queryCommand != null) { 
-				if (CriteriaCapabilityValidatorVisitor.validateCommandPushdown(modelID, metadata, capFinder, queryCommand) == null) {
+            AccessNode aNode = CriteriaCapabilityValidatorVisitor.getAccessNode(result);
+        	if (aNode != null) { 
+        		QueryCommand queryCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode);
+				if (queryCommand == null || CriteriaCapabilityValidatorVisitor.validateCommandPushdown(modelID, metadata, capFinder, aNode) == null) {
 					supportsWithPushdown = false;
 				} else {
 					queryCommand.setWith(pushDownWith);

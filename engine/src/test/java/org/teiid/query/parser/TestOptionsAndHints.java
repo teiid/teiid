@@ -308,7 +308,7 @@ public class TestOptionsAndHints {
         From from = new From(Arrays.asList(predicate));
         predicate.getLeftClause().setMakeNotDep(true);
         predicate.getRightClause().setMakeDep(true);
-        Select select = new Select(Arrays.asList(new Object[] {x, y}));
+        Select select = new Select(Arrays.asList(x, y));
         
         Query query = new Query(select, from, null, null, null, null, null);
         TestParser.helpTest("Select a.x, b.y From a MAKENOTDEP INNER JOIN b MAKEDEP ON a.x = func(b.y)",  //$NON-NLS-1$
@@ -996,7 +996,7 @@ public class TestOptionsAndHints {
         option.addDependentGroup("a"); //$NON-NLS-1$
         option.addNotDependentGroup("b"); //$NON-NLS-1$
         
-        Select select = new Select(Arrays.asList(new Object[] {x, y}));
+        Select select = new Select(Arrays.asList(x, y));
         
         Criteria criteria = new CompareCriteria(x, CompareCriteria.EQ, y);
         Query query = new Query(select, from, criteria, null, null, null, option);
