@@ -45,6 +45,17 @@ import org.teiid.events.EventDistributor;
 
 public class JGroupsEventDistributor extends ReceiverAdapter implements Serializable {
 	
+	private final class ProxyHandler implements InvocationHandler, Serializable {
+		private static final long serialVersionUID = 3879554695890338832L;
+
+		@Override
+		public Object invoke(Object proxy, Method method, Object[] args)
+				throws Throwable {
+			rpcDispatcher.callRemoteMethods(members, new MethodCall(method, args), GroupRequest.GET_NONE, 0);
+			return null;
+		}
+	}
+
 	private static final long serialVersionUID = -1140683411842561358L;
 	
 	private transient JChannelFactory channelFactory;
@@ -107,15 +118,7 @@ public class JGroupsEventDistributor extends ReceiverAdapter implements Serializ
 		channel = this.channelFactory.createMultiplexerChannel(this.multiplexerStack, null);
 		channel.connect(this.clusterName);
 		
-		proxyEventDistributor = (EventDistributor) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {EventDistributor.class}, new InvocationHandler() {
-			
-			@Override
-			public Object invoke(Object proxy, Method method, Object[] args)
-					throws Throwable {
-				rpcDispatcher.callRemoteMethods(members, new MethodCall(method, args), GroupRequest.GET_NONE, 0);
-				return null;
-			}
-		});
+		proxyEventDistributor = (EventDistributor) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {EventDistributor.class}, new ProxyHandler());
 		//wrap the local in a proxy to prevent unintended methods from being called
 		rpcDispatcher = new RpcDispatcher(channel, this, this, Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {EventDistributor.class}, new InvocationHandler() {
 			

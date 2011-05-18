@@ -181,8 +181,8 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 				LogManager.logDetail(LogConstants.CTX_RUNTIME, ne, IntegrationPlugin.Util.getString("jndi_failed", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
 			}
 		}
+		this.dqpCore.setEventDistributor(this.eventDistributor);
 		this.dqpCore.start(this);
-		this.dqpCore.getDataTierManager().setEventDistributor(this.eventDistributor);		
     	// create the necessary services
     	createClientServices();
     	
