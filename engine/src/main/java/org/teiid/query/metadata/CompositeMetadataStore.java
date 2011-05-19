@@ -137,9 +137,6 @@ public class CompositeMetadataStore extends MetadataStore {
 				}
 			}
 		}
-		if (result.isEmpty()) {
-	        throw new QueryMetadataException(name.substring(1)+TransformationMetadata.NOT_EXISTS_MESSAGE);
-		}
 		return result;
 	}
 

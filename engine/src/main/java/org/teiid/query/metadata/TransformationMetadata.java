@@ -181,7 +181,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     //                     I N T E R F A C E   M E T H O D S
     //==================================================================================
 
-    public Object getElementID(final String elementName) throws TeiidComponentException, QueryMetadataException {
+    public Column getElementID(final String elementName) throws TeiidComponentException, QueryMetadataException {
     	int columnIndex = elementName.lastIndexOf(TransformationMetadata.DELIMITER_STRING);
 		if (columnIndex == -1) {
 			throw new QueryMetadataException(elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
@@ -299,7 +299,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         Collection<StoredProcedureInfo> results = this.procedureCache.get(canonicalName);
         
         if (results == null) {
-        	Collection<Procedure> procRecords = getMetadataStore().getStoredProcedure(canonicalName); 
+        	Collection<Procedure> procRecords = getMetadataStore().getStoredProcedure(canonicalName);
+        	if (procRecords.isEmpty()) {
+        		return null;
+        	}
         	results = new ArrayList<StoredProcedureInfo>(procRecords.size());
         	for (Procedure procRecord : procRecords) {
                 String procedureFullName = procRecord.getFullName();
@@ -720,7 +723,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 					inputStream.close();
             	} catch(Exception e) {}
             }
-            return (MappingDocument)mappingDoc.clone();
+            return mappingDoc;
         }
 
         return null;
