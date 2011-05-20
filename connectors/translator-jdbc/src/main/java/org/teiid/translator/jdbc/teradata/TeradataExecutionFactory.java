@@ -82,20 +82,45 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
     	convert.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE,  new TimeModifier("DATE")); //$NON-NLS-1$ 
     	convert.addConvert(FunctionModifier.TIME, FunctionModifier.TIMESTAMP, new TimeModifier("TIMESTAMP")); //$NON-NLS-1$
     	convert.addConvert(FunctionModifier.DATE, FunctionModifier.TIMESTAMP,  new TimeModifier("TIMESTAMP")); //$NON-NLS-1$
-    	convert.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING,  new TimeModifier("varchar(100)")); //$NON-NLS-1$
-    	convert.addConvert(FunctionModifier.TIME, FunctionModifier.STRING,  new TimeModifier("varchar(100)")); //$NON-NLS-1$
-    	convert.addConvert(FunctionModifier.DATE, FunctionModifier.STRING,  new TimeModifier("varchar(100)")); //$NON-NLS-1$
+    	
+    	convert.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING,  new FunctionModifier() {
+			@Override
+			public List<?> translate(Function function) {
+				return Arrays.asList("cast(cast(", function.getParameters().get(0), " AS FORMAT 'Y4-MM-DDBHH:MI:SSDS(6)') AS VARCHAR(26))"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		}); 
+    	convert.addConvert(FunctionModifier.TIME, FunctionModifier.STRING,   new FunctionModifier() {
+			@Override
+			public List<?> translate(Function function) {
+				return Arrays.asList("cast(cast(", function.getParameters().get(0), " AS FORMAT 'HH:MI:SS') AS VARCHAR(9))"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		}); 
+    	convert.addConvert(FunctionModifier.DATE, FunctionModifier.STRING,  new FunctionModifier() {
+			@Override
+			public List<?> translate(Function function) {
+				return Arrays.asList("cast(cast(", function.getParameters().get(0), " AS FORMAT 'YYYY-MM-DD') AS VARCHAR(11))"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		}); 
     	
     	convert.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
     	convert.addNumericBooleanConversions();
 		
 		registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
-		
+		registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new SubstrModifier(this.convert)); 
 		registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("random")); //$NON-NLS-1$				
 		registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("LN")); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.LCASE, new UpperOrLowerModifier("LOWER", this.convert)); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.UCASE, new UpperOrLowerModifier("UPPER", this.convert)); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.LENGTH, new AliasModifier("CHARACTER_LENGTH")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.LCASE, new StringOnlyModifier("LOWER", this.convert)); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.UCASE, new StringOnlyModifier("UPPER", this.convert)); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.LENGTH, new FunctionModifier() {
+			@Override
+			public List<?> translate(Function function) {
+				ArrayList target = new ArrayList();
+				target.add("character_length("); //$NON-NLS-1$
+				target.addAll(expressionToString(function.getParameters().get(0), convert));
+				target.add(")"); //$NON-NLS-1$
+				return target;
+			}
+		});
 		registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("CURRENT_DATE")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier("CURRENT_TIME")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractModifier("YEAR")); //$NON-NLS-1$
@@ -117,13 +142,21 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.LTRIM, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
-				return Arrays.asList("TRIM(LEADING FROM ", expressionToString(function.getParameters().get(0), convert), ")"); //$NON-NLS-1$ //$NON-NLS-2$
+				ArrayList target = new ArrayList();
+				target.add("TRIM(LEADING FROM ");//$NON-NLS-1$
+				target.addAll(expressionToString(function.getParameters().get(0), convert));
+				target.add(")"); //$NON-NLS-1$				
+				return target; 
 			}
 		}); 
         registerFunctionModifier(SourceSystemFunctions.RTRIM, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
-				return Arrays.asList("TRIM(TRAILING FROM ", expressionToString(function.getParameters().get(0), convert), ")"); //$NON-NLS-1$ //$NON-NLS-2$
+				ArrayList target = new ArrayList();
+				target.add("TRIM(TRAILING FROM ");//$NON-NLS-1$
+				target.addAll(expressionToString(function.getParameters().get(0), convert));
+				target.add(")"); //$NON-NLS-1$
+				return target; 
 			}
 		}); 
         registerFunctionModifier(SourceSystemFunctions.MOD, new FunctionModifier() {
@@ -163,7 +196,6 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.LOCATE);
         supportedFunctions.add(SourceSystemFunctions.LOG);
         supportedFunctions.add(SourceSystemFunctions.LCASE);
-        supportedFunctions.add("lower");//$NON-NLS-1$
         supportedFunctions.add(SourceSystemFunctions.LTRIM);
         supportedFunctions.add(SourceSystemFunctions.LENGTH);
         supportedFunctions.add(SourceSystemFunctions.MINUTE);
@@ -349,41 +381,67 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 		
     	@Override
 		public List<?> translate(Function function) {
+    		ArrayList target = new ArrayList();
     		Expression expr1 =  function.getParameters().get(0);
     		Expression expr2 =  function.getParameters().get(1);
-    		ArrayList target = new ArrayList();
-    		target.add("position("); //$NON-NLS-1$
-    		target.addAll(expressionToString(expr1, this.convertModifier));
-    		target.add( " in "); //$NON-NLS-1$
-    		target.addAll(expressionToString(expr2, this.convertModifier));
-    		target.add(")"); //$NON-NLS-1$
+    		if (function.getParameters().size() > 2) {
+    			Expression expr3 =  function.getParameters().get(2);
+    			target.add("(");//$NON-NLS-1$
+    			target.add(expr3);
+    			target.add("+");//$NON-NLS-1$
+	    		target.add("position("); //$NON-NLS-1$
+	    		target.addAll(expressionToString(expr1, this.convertModifier));
+	    		target.add( " in "); //$NON-NLS-1$
+	    		target.add("substr("); //$NON-NLS-1$
+	    		target.addAll(expressionToString(expr2, this.convertModifier));
+	    		target.add(","); //$NON-NLS-1$
+	    		target.add(expr3);
+	    		target.add(")"); //$NON-NLS-1$	    		
+	    		target.add("))"); //$NON-NLS-1$    	
+    		}
+    		else {
+	    		target.add("position("); //$NON-NLS-1$
+	    		target.addAll(expressionToString(expr1, this.convertModifier));
+	    		target.add( " in "); //$NON-NLS-1$
+	    		target.addAll(expressionToString(expr2, this.convertModifier));
+	    		target.add(")"); //$NON-NLS-1$
+    		}
     		return target;
 		}
 	}
     
     private static List<?> expressionToString(Expression expr, ConvertModifier modifier) {
     	Class tgtType = expr.getType();
-		if (tgtType.equals(String.class) && (expr instanceof Literal)) {
+		if (tgtType.equals(String.class) && ((expr instanceof Literal) || expr instanceof ColumnReference)) {
 			return Arrays.asList(expr);  
 		}
 		else if (tgtType.equals(String.class) && (expr instanceof Function)) {
 			
 			Function func = (Function)expr;
-			if (func.getParameters().get(0) instanceof ColumnReference) {
+			while(true) {
+				Expression arg1 = func.getParameters().get(0);
+				if ((arg1 instanceof Function) && ((Function)arg1).getName().equals("convert")) { //$NON-NLS-1$
+					func = (Function)arg1;
+				}
+				else {
+					break;
+				}
+			}
+			Expression arg1 = func.getParameters().get(0);
+			if (arg1 instanceof ColumnReference) {
 				ColumnReference ref = (ColumnReference)func.getParameters().get(0);
 				if(Number.class.isAssignableFrom(ref.getType())) {
 					ArrayList target = new ArrayList();
 					target.add("cast("); //$NON-NLS-1$
 					target.add(func.getParameters().get(0));
 					target.add(" AS varchar(100))"); //$NON-NLS-1$
+					return target;
 				}
-				else {
-					return modifier.translate(func);
+				else if (String.class.isAssignableFrom(ref.getType())) {
+					return Arrays.asList(ref);
 				}
 			}
-			else {
-				return modifier.translate(func);	
-			}
+			return modifier.translate(func);	
 		} 
 		return Arrays.asList("cast(" , expr, " AS varchar(100))"); //$NON-NLS-1$ //$NON-NLS-2$ 
     }
@@ -418,10 +476,10 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 		}
 	}
     
-    public static class UpperOrLowerModifier extends FunctionModifier {
+    public static class StringOnlyModifier extends FunctionModifier {
     	String funcName;
     	ConvertModifier convertModifier;
-    	public UpperOrLowerModifier(String name, ConvertModifier converModifier) {
+    	public StringOnlyModifier(String name, ConvertModifier converModifier) {
     		this.funcName = name;
     		this.convertModifier = converModifier;
     	}
@@ -436,6 +494,28 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 			return target;
 		}
 	}
+    
+    public static class SubstrModifier extends FunctionModifier {
+    	ConvertModifier convertModifier;
+    	public SubstrModifier(ConvertModifier converModifier) {
+    		this.convertModifier = converModifier;
+    	}
+    	@Override
+		public List<?> translate(Function function) {
+			Expression expr = function.getParameters().get(0);
+			ArrayList target = new ArrayList();
+			target.add("substr("); //$NON-NLS-1$
+			target.addAll(expressionToString(expr, this.convertModifier));
+			target.add(","); //$NON-NLS-1$
+			target.add(function.getParameters().get(1)); 
+			if (function.getParameters().size() > 2 ) {
+				target.add(","); //$NON-NLS-1$
+				target.add(function.getParameters().get(2)); 
+			}
+			target.add(")"); //$NON-NLS-1$
+			return target;
+		}
+	}    
     
     public static class LeftOrRightFunctionModifier extends FunctionModifier {
         private LanguageFactory langFactory;
@@ -454,7 +534,9 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
             	//substr(string, 1, length)
             	target.add("substr("); //$NON-NLS-1$
             	target.addAll(expressionToString(args.get(0), this.convertModifier));
+            	target.add(","); //$NON-NLS-1$
             	target.add(langFactory.createLiteral(Integer.valueOf(1), TypeFacility.RUNTIME_TYPES.INTEGER));
+            	target.add(","); //$NON-NLS-1$
             	target.add(args.get(1));
             	target.add(")"); //$NON-NLS-1$
             } else if (function.getName().equalsIgnoreCase("right")) { //$NON-NLS-1$
@@ -466,7 +548,7 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
             	target.addAll(expressionToString(args.get(0), this.convertModifier));
             	target.add(")-"); //$NON-NLS-1$
             	target.add(args.get(1));
-            	target.add("))"); //$NON-NLS-1$
+            	target.add("+1))"); //$NON-NLS-1$ // offset for 1 based index
             }
             return target;
         }
