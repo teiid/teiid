@@ -224,6 +224,10 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
             obj.getVariables(),
             DataPolicy.PermissionType.CREATE,
             Context.INSERT);
+        
+        if (obj.getGroup().isTempTable()) {
+        	validateTemp(Collections.singleton(obj.getGroup().getNonCorrelationName()), Arrays.asList(obj.getGroup()), Context.INSERT);
+        }
     }
 
     /**
@@ -270,6 +274,9 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         Into intoObj = obj.getInto();
         if ( intoObj != null ) {
             GroupSymbol intoGroup = intoObj.getGroup();
+            if (intoGroup.isTempTable()) {
+        		validateTemp(Collections.singleton(intoGroup.getNonCorrelationName()), Arrays.asList(intoGroup), Context.INSERT);
+        	}
             List<ElementSymbol> intoElements = null;
             try {
                 intoElements = ResolverUtil.resolveElementsInGroup(intoGroup, getMetadata());
