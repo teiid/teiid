@@ -146,7 +146,7 @@ public class CompositeMetadataStore extends MetadataStore {
 
 	public Collection<Table> getXMLTempGroups(Table tableRecord) {
 		ArrayList<Table> results = new ArrayList<Table>();
-		String namePrefix = tableRecord.getFullName() + TransformationMetadata.DELIMITER_STRING;
+		String namePrefix = tableRecord.getName() + TransformationMetadata.DELIMITER_STRING;
 		for (Table table : tableRecord.getParent().getTables().values()) {
 			if (table.getTableType() == Type.XmlStagingTable && table.getName().startsWith(namePrefix)) {
 				results.add(table);

@@ -269,6 +269,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
             	return parent;
             }
         } 
+        if(elementID instanceof ProcedureParameter) {
+        	ProcedureParameter columnRecord = (ProcedureParameter) elementID;
+            return columnRecord.getParent();
+        }
         throw createInvalidRecordTypeException(elementID);
     }
     
