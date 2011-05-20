@@ -36,7 +36,7 @@ import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.LimitNode;
 import org.teiid.query.processor.relational.ProjectNode;
 import org.teiid.query.processor.relational.RelationalPlan;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 
 public class TestSortOptimization {
@@ -49,7 +49,7 @@ public class TestSortOptimization {
         // Create query 
         String sql = "select distinct e1, e2 from pm1.g1 order by e2"; //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, 
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
                                       new String[] {"SELECT e1, e2 FROM pm1.g1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
         
         checkNodeTypes(plan, FULL_PUSHDOWN); 
@@ -64,7 +64,7 @@ public class TestSortOptimization {
         // Create query 
         String sql = "select e1, e2 from pm1.g1 union select e1, e2 from pm1.g2 order by e2"; //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, 
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
                                       new String[] {"SELECT e1, e2 FROM pm1.g1", "SELECT e1, e2 FROM pm1.g2"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ //$NON-NLS-2$
         
         checkNodeTypes(plan, new int[] {
@@ -94,7 +94,7 @@ public class TestSortOptimization {
         // Create query 
         String sql = "select x.*, y.* from (select distinct e1, e2 from pm1.g1) x, (select distinct e1, e2 from pm1.g2) y where x.e1 = y.e1"; //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, 
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
                                       new String[] {"SELECT e1, e2 FROM pm1.g1", "SELECT e1, e2 FROM pm1.g2"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ //$NON-NLS-2$
         
         checkNodeTypes(plan, new int[] {
@@ -124,7 +124,7 @@ public class TestSortOptimization {
         // Create query 
         String sql = "select max(e1), e2 from (select distinct e1, e2 from pm1.g1) x group by e2"; //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, 
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
                                       new String[] {"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ 
         
         checkNodeTypes(plan, new int[] {
@@ -154,7 +154,7 @@ public class TestSortOptimization {
         // Create query 
         String sql = "select max(e1), e2 from pm1.g1 x group by e2 order by e2"; //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, 
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
                                       new String[] {"SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ 
         
         checkNodeTypes(plan, new int[] {
@@ -180,7 +180,7 @@ public class TestSortOptimization {
         // Create query 
         String sql = "select e1, (select e1 from pm2.g1 where e2 = x.e2) from pm1.g1 as x order by e1 limit 2"; //$NON-NLS-1$
 
-        RelationalPlan plan = (RelationalPlan)helpPlan(sql, FakeMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(), 
+        RelationalPlan plan = (RelationalPlan)helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(), 
                                       new String[] {"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
         
         assertTrue(plan.getRootNode() instanceof ProjectNode);
@@ -190,7 +190,7 @@ public class TestSortOptimization {
         // Create query 
         String sql = "select (select e1 from pm2.g1 where e2 = x.e2) as z from pm1.g1 as x order by z limit 2"; //$NON-NLS-1$
 
-        RelationalPlan plan = (RelationalPlan)helpPlan(sql, FakeMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(), 
+        RelationalPlan plan = (RelationalPlan)helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(), 
                                       new String[] {"SELECT pm1.g1.e2 FROM pm1.g1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
         
         assertTrue(plan.getRootNode() instanceof LimitNode);
@@ -200,7 +200,7 @@ public class TestSortOptimization {
         // Create query 
         String sql = "select e1, (select e1 from pm2.g1 where e2 = x.e2) as z from pm1.g1 as x order by e1"; //$NON-NLS-1$
 
-        helpPlan(sql, FakeMetadataFactory.example1Cached(), null, TestOptimizer.getGenericFinder(), 
+        helpPlan(sql, RealMetadataFactory.example1Cached(), null, TestOptimizer.getGenericFinder(), 
                                       new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
     
@@ -208,7 +208,7 @@ public class TestSortOptimization {
         // Create query 
         String sql = "select e1, (select e1 from pm2.g1 where e2 = x.e2) as z from pm1.g1 as x order by e1 limit 1"; //$NON-NLS-1$
 
-        helpPlan(sql, FakeMetadataFactory.example1Cached(), null, TestOptimizer.getGenericFinder(), 
+        helpPlan(sql, RealMetadataFactory.example1Cached(), null, TestOptimizer.getGenericFinder(), 
                                       new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
     
@@ -222,7 +222,7 @@ public class TestSortOptimization {
         
         String sql = "select (select e1 from pm2.g1 where e2 = x.e2) as z from pm1.g1 as x order by e1 limit 1"; //$NON-NLS-1$
 
-        helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, 
+        helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
                                       new String[] {"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 ORDER BY pm1.g1.e1 LIMIT 1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
     
@@ -236,7 +236,7 @@ public class TestSortOptimization {
         
         String sql = "select e2 from pm1.g1 as x order by e1"; //$NON-NLS-1$
 
-        helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, 
+        helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
                                       new String[] {"SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1 ORDER BY pm1.g1.e1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
     
@@ -250,7 +250,7 @@ public class TestSortOptimization {
         
         String sql = "select (select e1 from pm2.g1 where e2 = x.e2) as z, x.e1 as foo from pm1.g1 as x order by foo limit 1"; //$NON-NLS-1$
 
-        helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, 
+        helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
                                       new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0 LIMIT 1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
 

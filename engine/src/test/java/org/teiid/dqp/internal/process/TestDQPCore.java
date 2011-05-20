@@ -52,7 +52,6 @@ import org.teiid.dqp.service.BufferService;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
-import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
@@ -64,7 +63,7 @@ public class TestDQPCore {
 
     @Before public void setUp() throws Exception {
     	agds = new AutoGenDataService();
-        DQPWorkContext context = FakeMetadataFactory.buildWorkContext(RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.exampleBQTCached().getMetadataStore(), "bqt"));
+        DQPWorkContext context = RealMetadataFactory.buildWorkContext(RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.exampleBQTCached().getMetadataStore(), "bqt"));
         context.getVDB().getModel("BQT3").setVisible(false); //$NON-NLS-1$
         context.getVDB().getModel("VQT").setVisible(false); //$NON-NLS-1$
 

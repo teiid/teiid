@@ -43,7 +43,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
 
 @SuppressWarnings({"nls", "unchecked"})
@@ -338,7 +338,7 @@ public class TestSQLXMLProcessing {
         		Arrays.asList(ObjectConverterUtil.convertToString(new FileInputStream(UnitTestUtil.getTestDataFile("udf.xmi")))),
         };    
     
-        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), Arrays.asList(TestTextTable.clobFromFile("udf.xmi")));
+        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(TestTextTable.clobFromFile("udf.xmi")));
     }
 	
 	@Test public void testXmlParseBlob() throws Exception {
@@ -348,7 +348,7 @@ public class TestSQLXMLProcessing {
         		Arrays.asList(ObjectConverterUtil.convertToString(new FileInputStream(UnitTestUtil.getTestDataFile("udf.xmi")))),
         };    
     
-        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), Arrays.asList(blobFromFile("udf.xmi")));
+        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(blobFromFile("udf.xmi")));
     }
 	
 	@Test public void testXmlParseBlobWithEncoding() throws Exception {
@@ -358,7 +358,7 @@ public class TestSQLXMLProcessing {
         		Arrays.asList(ObjectConverterUtil.convertToString(new InputStreamReader(new FileInputStream(UnitTestUtil.getTestDataFile("encoding.xml")), Charset.forName("ISO-8859-1")))),
         };    
     
-        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), Arrays.asList(blobFromFile("encoding.xml")));
+        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(blobFromFile("encoding.xml")));
     }
 	
     @Test public void testXmlTableTypes() throws Exception {
@@ -393,7 +393,7 @@ public class TestSQLXMLProcessing {
     }
     
 	private void process(String sql, List<?>[] expected) throws Exception {
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), createCommandContext());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), createCommandContext());
         
         helpProcess(plan, createCommandContext(), dataManager, expected);
 	}

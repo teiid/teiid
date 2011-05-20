@@ -52,8 +52,7 @@ import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.TestProcessor;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings({"nls", "unchecked"})
 public class TestPreparedStatement {
@@ -151,7 +150,7 @@ public class TestPreparedStatement {
 		List<?> values = Arrays.asList((short)0);
 		FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData1(dataManager);
-		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, FakeMetadataFactory.example1VDB());
+		helpTestProcessing(preparedSql, values, expected, dataManager, RealMetadataFactory.example1Cached(), false, RealMetadataFactory.example1VDB());
 	}
     
     @Test public void testSessionSpecificFunction() throws Exception { 
@@ -168,7 +167,7 @@ public class TestPreparedStatement {
         List<?> values = Arrays.asList((short)0);
         FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData1(dataManager);
-		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, true, FakeMetadataFactory.example1VDB());
+		helpTestProcessing(preparedSql, values, expected, dataManager, RealMetadataFactory.example1Cached(), false, true, RealMetadataFactory.example1VDB());
 	}
     
     @Test public void testFunctionWithReferencePushDown() throws Exception { 
@@ -192,26 +191,26 @@ public class TestPreparedStatement {
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         List values = Arrays.asList(0);
 
-        PreparedStatementRequest plan = helpGetProcessorPlan(preparedSql, values, capFinder, metadata, new SessionAwareCache<PreparedPlan>(), SESSION_ID, false, false,FakeMetadataFactory.example1VDB());
+        PreparedStatementRequest plan = helpGetProcessorPlan(preparedSql, values, capFinder, metadata, new SessionAwareCache<PreparedPlan>(), SESSION_ID, false, false,RealMetadataFactory.example1VDB());
         
         TestOptimizer.checkNodeTypes(plan.processPlan, TestOptimizer.FULL_PUSHDOWN);  
     }
     
 	static public PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values, SessionAwareCache<PreparedPlan> prepPlanCache)
 			throws TeiidComponentException, TeiidProcessingException {    	
-		return helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), prepPlanCache, SESSION_ID, false, false, FakeMetadataFactory.example1VDB());
+		return helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), prepPlanCache, SESSION_ID, false, false, RealMetadataFactory.example1VDB());
     }
 	
 	static public PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values,
 			SessionAwareCache<PreparedPlan> prepPlanCache, int conn)
 			throws TeiidComponentException, TeiidProcessingException {
 		return helpGetProcessorPlan(preparedSql, values,
-				new DefaultCapabilitiesFinder(), FakeMetadataFactory
-						.example1Cached(), prepPlanCache, conn, false, false, FakeMetadataFactory.example1VDB());
+				new DefaultCapabilitiesFinder(), RealMetadataFactory
+						.example1Cached(), prepPlanCache, conn, false, false, RealMetadataFactory.example1VDB());
 	}
 
 	static PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values,
@@ -233,7 +232,7 @@ public class TestPreparedStatement {
         	request.setRowLimit(1);
         }
        
-        DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, vdb);
+        DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, vdb);
         workContext.getSession().setSessionId(String.valueOf(conn)); 
         
         PreparedStatementRequest serverRequest = new PreparedStatementRequest(prepPlanCache);
@@ -357,9 +356,9 @@ public class TestPreparedStatement {
         
         SessionAwareCache<PreparedPlan> planCache = new SessionAwareCache<PreparedPlan>();
         
-		helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), planCache, SESSION_ID, false, true, FakeMetadataFactory.example1VDB());
+		helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), planCache, SESSION_ID, false, true, RealMetadataFactory.example1VDB());
 
-		helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), planCache, SESSION_ID, false, true, FakeMetadataFactory.example1VDB());
+		helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), planCache, SESSION_ID, false, true, RealMetadataFactory.example1VDB());
 		//make sure the plan wasn't reused
 		assertEquals(0, planCache.getCacheHitCount());
     }
@@ -373,8 +372,8 @@ public class TestPreparedStatement {
     
 		List<String> values = Arrays.asList("aa "); //$NON-NLS-1$
         FakeDataManager dataManager = new FakeDataManager();
-        TestProcessor.sampleData2b(dataManager);
-		helpTestProcessing(preparedSql, values, expected, dataManager, TestOptimizer.getGenericFinder(), FakeMetadataFactory.example1Cached(), null, false, false, false, FakeMetadataFactory.example1VDB());
+        TestProcessor.sampleData2b(dataManager, RealMetadataFactory.example1Cached());
+		helpTestProcessing(preparedSql, values, expected, dataManager, TestOptimizer.getGenericFinder(), RealMetadataFactory.example1Cached(), null, false, false, false, RealMetadataFactory.example1VDB());
     }
     
     @Test(expected=QueryValidatorException.class) public void testLimitValidation() throws Exception {
@@ -382,7 +381,7 @@ public class TestPreparedStatement {
         
 		List values = Arrays.asList(-1);
         FakeDataManager dataManager = new FakeDataManager();
-		helpTestProcessing(preparedSql, values, null, dataManager, FakeMetadataFactory.example1Cached(), false, false, FakeMetadataFactory.example1VDB());
+		helpTestProcessing(preparedSql, values, null, dataManager, RealMetadataFactory.example1Cached(), false, false, RealMetadataFactory.example1VDB());
     }
     
     @Test public void testExecParam() throws Exception {
@@ -395,7 +394,7 @@ public class TestPreparedStatement {
         
         FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData1(dataManager);
-		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, false, FakeMetadataFactory.example1VDB());
+		helpTestProcessing(preparedSql, values, expected, dataManager, RealMetadataFactory.example1Cached(), false, false, RealMetadataFactory.example1VDB());
     }
     
     @Test public void testLimitParam() throws Exception {
@@ -408,7 +407,7 @@ public class TestPreparedStatement {
         
         FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData1(dataManager);
-		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, false,FakeMetadataFactory.example1VDB());
+		helpTestProcessing(preparedSql, values, expected, dataManager, RealMetadataFactory.example1Cached(), false, false,RealMetadataFactory.example1VDB());
     }
     
     @Test public void testWithSubqueryPushdown() throws Exception {
@@ -420,14 +419,14 @@ public class TestPreparedStatement {
     
 		List values = Arrays.asList("a"); //$NON-NLS-1$
 		
-		QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
         dataManager.addData("SELECT g_0.e1 FROM g1 AS g_0 WHERE g_0.e2 IN (SELECT g_1.e2 FROM g2 AS g_1 WHERE g_1.e1 = 'a')", new List[] {Arrays.asList("a")});
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
 	    caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         
-		helpTestProcessing(preparedSql, values, expected, dataManager, new DefaultCapabilitiesFinder(caps), metadata, null, false, false, false, FakeMetadataFactory.example1VDB());
+		helpTestProcessing(preparedSql, values, expected, dataManager, new DefaultCapabilitiesFinder(caps), metadata, null, false, false, false, RealMetadataFactory.example1VDB());
     }
     
 }

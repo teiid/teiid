@@ -35,23 +35,23 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 
 public class TestXMLResolver extends TestCase {
     
     public Command helpResolve(String sql) {
-        Command cmd = TestResolver.helpResolve(sql, FakeMetadataFactory.example1Cached());
+        Command cmd = TestResolver.helpResolve(sql, RealMetadataFactory.example1Cached());
         ResolverUtil.fullyQualifyElements(cmd);
         return cmd;
     }
     
     public void helpResolveException(String sql) {
-        TestResolver.helpResolveException(sql, FakeMetadataFactory.example1Cached());
+        TestResolver.helpResolveException(sql, RealMetadataFactory.example1Cached());
     }
     
     public void helpResolveException(String sql, String expectedMessage) {
-        TestResolver.helpResolveException(sql, FakeMetadataFactory.example1Cached(), expectedMessage);
+        TestResolver.helpResolveException(sql, RealMetadataFactory.example1Cached(), expectedMessage);
     }
 
     public void testXMLCriteriaShortElement() {
@@ -405,7 +405,7 @@ public class TestXMLResolver extends TestCase {
         expected.setOperator(CompareCriteria.EQ);
         expected.setRightExpression(new Constant("yyz")); //$NON-NLS-1$
     
-        Query query = (Query) TestResolver.helpResolve(QueryParser.getQueryParser().parseCommand("select \"xml\" from xmltest.doc1 where node1 = 'yyz'"), FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+        Query query = (Query) TestResolver.helpResolve(QueryParser.getQueryParser().parseCommand("select \"xml\" from xmltest.doc1 where node1 = 'yyz'"), RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         Criteria actual = query.getCriteria();
         assertEquals("Did not match expected criteria", expected, actual);     //$NON-NLS-1$
     } 

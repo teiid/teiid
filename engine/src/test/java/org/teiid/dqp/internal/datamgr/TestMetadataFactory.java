@@ -24,39 +24,43 @@
  */
 package org.teiid.dqp.internal.datamgr;
 
-import java.util.List;
+import static org.junit.Assert.*;
 
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.dqp.internal.datamgr.RuntimeMetadataImpl;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
-import org.teiid.query.unittest.FakeMetadataStore;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-import junit.framework.TestCase;
+import org.jboss.virtual.VirtualFile;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.metadata.TransformationMetadata.Resource;
 
-
-public class TestMetadataFactory  extends TestCase {
-    private RuntimeMetadataImpl metadataFactory;
-    private FakeMetadataObject pm1g1;
+@SuppressWarnings("nls")
+public class TestMetadataFactory {
+    private static final String MY_RESOURCE_PATH = "my/resource/path";
+	private RuntimeMetadataImpl metadataFactory;
     
-    public TestMetadataFactory(String name) {
-        super(name);
+    @Before public void setUp() throws IOException{
+        MetadataStore metadataStore = new MetadataStore();
+        CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
+    	VDBMetaData vdbMetaData = new VDBMetaData();
+    	vdbMetaData.setName("foo"); //$NON-NLS-1$
+    	vdbMetaData.setVersion(1);
+    	Map<String, Resource> vdbEntries = new LinkedHashMap<String, Resource>();
+    	VirtualFile vf = Mockito.mock(VirtualFile.class);
+    	Mockito.stub(vf.openStream()).toReturn(new ByteArrayInputStream("ResourceContents".getBytes()));
+    	vdbEntries.put(MY_RESOURCE_PATH, new Resource(vf, true));
+        metadataFactory = new RuntimeMetadataImpl(new TransformationMetadata(vdbMetaData, store, vdbEntries, null, null));
     }
     
-    public void setUp(){
-        FakeMetadataStore store = new FakeMetadataStore();
-        pm1g1 = FakeMetadataFactory.createPhysicalGroup("pm1.g1", FakeMetadataFactory.createPhysicalModel("pm1.g1")); //$NON-NLS-1$ //$NON-NLS-2$
-        List pm1g1e = FakeMetadataFactory.createElements(pm1g1, 
-            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-        store.addObject(pm1g1);
-        store.addObjects(pm1g1e);
-        metadataFactory = new RuntimeMetadataImpl(new FakeMetadataFacade(store));
-    }
-    
-    public void testGetVDBResourcePaths() throws Exception {
-        String[] expectedPaths = new String[] {"my/resource/path"}; //$NON-NLS-1$
+    @Test public void testGetVDBResourcePaths() throws Exception {
+        String[] expectedPaths = new String[] {MY_RESOURCE_PATH}; //$NON-NLS-1$
         String[] mfPaths = metadataFactory.getVDBResourcePaths();
         assertEquals(expectedPaths.length, mfPaths.length);
         for (int i = 0; i < expectedPaths.length; i++) {
@@ -64,17 +68,17 @@ public class TestMetadataFactory  extends TestCase {
         }
     }
      
-    public void testGetBinaryVDBResource() throws Exception {
+    @Test public void testGetBinaryVDBResource() throws Exception {
         byte[] expectedBytes = "ResourceContents".getBytes(); //$NON-NLS-1$
-        byte[] mfBytes =  metadataFactory.getBinaryVDBResource(null);
+        byte[] mfBytes =  metadataFactory.getBinaryVDBResource(MY_RESOURCE_PATH);
         assertEquals(expectedBytes.length, mfBytes.length);
         for (int i = 0; i < expectedBytes.length; i++) {
             assertEquals("Byte at index " + i + " differs from expected content", expectedBytes[i], mfBytes[i]); //$NON-NLS-1$ //$NON-NLS-2$
         }
     }
      
-    public void testGetCharacterVDBResource() throws Exception {
-        assertEquals("ResourceContents", metadataFactory.getCharacterVDBResource(null)); //$NON-NLS-1$
+    @Test public void testGetCharacterVDBResource() throws Exception {
+        assertEquals("ResourceContents", metadataFactory.getCharacterVDBResource(MY_RESOURCE_PATH)); //$NON-NLS-1$
     }
      
 }

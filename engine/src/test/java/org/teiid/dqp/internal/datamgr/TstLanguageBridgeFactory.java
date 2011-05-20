@@ -25,12 +25,12 @@ package org.teiid.dqp.internal.datamgr;
 import org.teiid.dqp.internal.datamgr.LanguageBridgeFactory;
 import org.teiid.dqp.internal.datamgr.RuntimeMetadataImpl;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 
 public class TstLanguageBridgeFactory {
     
-    public static final QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+    public static final QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
     public static final RuntimeMetadataImpl metadataFactory = new RuntimeMetadataImpl(metadata);
     public static final LanguageBridgeFactory factory = new LanguageBridgeFactory(metadata);
 

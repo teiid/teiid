@@ -36,7 +36,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 
 public class TestInlineView  {
@@ -244,7 +244,7 @@ public class TestInlineView  {
 	
 	protected void runTest(InlineViewCase testCase) throws Exception {
 		FakeCapabilitiesFinder capFinder = getInliveViewCapabilitiesFinder();
-    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
     	
 		ProcessorPlan plan = TestOptimizer.helpPlan(testCase.userQuery, metadata, null, capFinder, new String[] {testCase.optimizedQuery}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); 
 
@@ -253,7 +253,7 @@ public class TestInlineView  {
 	
     @Test public void testAliasCreationWithInlineView() {
         FakeCapabilitiesFinder capFinder = getInliveViewCapabilitiesFinder();
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = helpPlan("select a, b from (select distinct count(intNum) a, count(stringKey), bqt1.smalla.intkey as b from bqt1.smalla group by bqt1.smalla.intkey) q1 order by q1.a", //$NON-NLS-1$
                 metadata, null, capFinder, new String[] {"SELECT COUNT(g_0.intNum) AS c_0, g_0.intkey AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.intkey ORDER BY c_0"}, true); //$NON-NLS-1$
@@ -263,7 +263,7 @@ public class TestInlineView  {
     
     @Test public void testAliasPreservationWithInlineView() {
         FakeCapabilitiesFinder capFinder = getInliveViewCapabilitiesFinder();
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = helpPlan("select q1.a + 1, q1.b from (select count(bqt1.smalla.intNum) as a, bqt1.smalla.intkey as b from bqt1.smalla group by bqt1.smalla.intNum, bqt1.smalla.intkey order by b) q1 where q1.a = 1", //$NON-NLS-1$
                 metadata, null, capFinder, new String[] {"SELECT (q1.a + 1), q1.b FROM (SELECT COUNT(bqt1.smalla.intNum) AS a, bqt1.smalla.intkey AS b FROM bqt1.smalla GROUP BY bqt1.smalla.intNum, bqt1.smalla.intkey HAVING COUNT(bqt1.smalla.intNum) = 1) AS q1"}, true); //$NON-NLS-1$
@@ -276,7 +276,7 @@ public class TestInlineView  {
      */
     @Test public void testCrossSourceInlineView() throws Exception {
         FakeCapabilitiesFinder capFinder = getInliveViewCapabilitiesFinder();
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = helpPlan("select * from (select count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey) q1 inner join (select count(bqt2.smallb.intkey) as a, bqt2.smallb.intkey from bqt2.smallb group by bqt2.smallb.intkey) as q2 on q1.intkey = q2.intkey where q1.a = 1", //$NON-NLS-1$
                 metadata, null, capFinder, new String[] {"SELECT v_0.c_0, v_0.c_1 FROM (SELECT g_0.intkey AS c_0, COUNT(g_0.intkey) AS c_1 FROM bqt2.smallb AS g_0 GROUP BY g_0.intkey) AS v_0 ORDER BY c_0", //$NON-NLS-1$

@@ -47,7 +47,6 @@ import org.teiid.metadata.Column.SearchType;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
-import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ldap.IQueryToLdapSearchParser;
@@ -304,7 +303,7 @@ public class TestIQueryToLdapSearchParser extends TestCase {
         }
         
         // Create the facade from the store
-        return new TransformationMetadata(null, new CompositeMetadataStore(metadataStore), null, FakeMetadataFactory.SFM.getSystemFunctions(), null);
+        return new TransformationMetadata(null, new CompositeMetadataStore(metadataStore), null, RealMetadataFactory.SFM.getSystemFunctions(), null);
     }    
 }
 

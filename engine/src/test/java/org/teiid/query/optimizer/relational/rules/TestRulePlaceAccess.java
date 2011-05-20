@@ -34,14 +34,14 @@ import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 import junit.framework.TestCase;
 
 
 public class TestRulePlaceAccess extends TestCase {
 
-    private static final QueryMetadataInterface METADATA = FakeMetadataFactory.example1Cached();
+    private static final QueryMetadataInterface METADATA = RealMetadataFactory.example1Cached();
 
     // ################################## FRAMEWORK ################################
 

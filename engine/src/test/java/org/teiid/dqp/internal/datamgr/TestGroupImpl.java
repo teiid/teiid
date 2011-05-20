@@ -23,11 +23,10 @@
 package org.teiid.dqp.internal.datamgr;
 
 
+import junit.framework.TestCase;
+
 import org.teiid.language.NamedTable;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.unittest.FakeMetadataObject;
-
-import junit.framework.TestCase;
 
 
 public class TestGroupImpl extends TestCase {
@@ -45,17 +44,14 @@ public class TestGroupImpl extends TestCase {
     }
     
     public static GroupSymbol helpExample(String groupName, String definition) {
-        String name = groupName;
-        if (definition != null) {
-            name = definition;
-        }
-        Object obj = new FakeMetadataObject(name, FakeMetadataObject.GROUP);
-        return helpExample(groupName, definition, obj);
+        return helpExample(groupName, definition, null);
     }
     
     public static GroupSymbol helpExample(String groupName, String definition, Object metadataID) {
         GroupSymbol symbol = new GroupSymbol(groupName, definition);
-        symbol.setMetadataID(metadataID);
+        if (metadataID != null) {
+        	symbol.setMetadataID(metadataID);
+        }
         return symbol;
     }
     

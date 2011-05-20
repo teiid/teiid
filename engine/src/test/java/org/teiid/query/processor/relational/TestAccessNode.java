@@ -42,7 +42,7 @@ import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
 
@@ -74,7 +74,7 @@ public class TestAccessNode {
     }
     
     @Test public void testOpen_Defect16059() throws Exception {
-    	Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5 AND ? IS NULL", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+    	Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5 AND ? IS NULL", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         IsNullCriteria nullCrit = (IsNullCriteria)((CompoundCriteria)query.getCriteria()).getCriteria(1);
         nullCrit.setExpression(new Constant(null));
         
@@ -82,7 +82,7 @@ public class TestAccessNode {
     }
     
     @Test public void testOpen_Defect16059_2() throws Exception {
-    	Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5 AND ? IS NOT NULL", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+    	Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5 AND ? IS NOT NULL", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         IsNullCriteria nullCrit = (IsNullCriteria)((CompoundCriteria)query.getCriteria()).getCriteria(1);
         nullCrit.setExpression(new Constant(null));
         
@@ -92,7 +92,7 @@ public class TestAccessNode {
     @Test public void testExecCount()throws Exception{
         // Setup
         AccessNode node = new AccessNode(1);
-    	Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+    	Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         node.setCommand(query);
         CommandContext context = new CommandContext();
         context.setProcessorID("processorID"); //$NON-NLS-1$

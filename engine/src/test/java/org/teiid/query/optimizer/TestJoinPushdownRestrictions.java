@@ -26,7 +26,7 @@ import org.junit.Test;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
 
 
@@ -42,12 +42,12 @@ public class TestJoinPushdownRestrictions {
         caps.setFunctionSupport("+", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(),  
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(),  
         		new String[] {"SELECT g_0.e2 FROM pm1.g2 AS g_0", "SELECT g_0.e2 FROM pm1.g1 AS g_0"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$   
         
         caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.ANY);
         
-        TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(),  
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(),  
         		new String[] {"SELECT g_0.e2, g_1.e2 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e2 + g_1.e2) = 5"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$  
 	}
 	
@@ -60,12 +60,12 @@ public class TestJoinPushdownRestrictions {
         caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.EQUI);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(),  
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(),  
         		new String[] {"SELECT g_0.e2 FROM pm1.g2 AS g_0", "SELECT g_0.e2 FROM pm1.g1 AS g_0"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$   
         
         caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.THETA);
         
-        TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(),  
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(),  
         		new String[] {"SELECT g_0.e2, g_1.e2 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE g_0.e2 < g_1.e2"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$  
 	}
 	
@@ -78,12 +78,12 @@ public class TestJoinPushdownRestrictions {
         caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.KEY);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(),  
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(),  
         		new String[] {"SELECT g_0.e2 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e2 AS c_0 FROM pm1.g2 AS g_0 ORDER BY c_0"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$   
         
         caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.EQUI);
         
-        TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(),  
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(),  
         		new String[] {"SELECT g_0.e2, g_1.e2 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE g_0.e2 = g_1.e2"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$  
 	}
 	
@@ -96,7 +96,7 @@ public class TestJoinPushdownRestrictions {
         caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.KEY);
         capFinder.addCapabilities("pm4", caps); //$NON-NLS-1$
 
-        TestOptimizer.helpPlan(sql, FakeMetadataFactory.example4(),  
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example4(),  
         		new String[] {"SELECT g_1.e1 AS c_0, g_1.e2 AS c_1, g_0.e1 AS c_2 FROM pm4.g1 AS g_0, pm4.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_0.e2 = g_1.e2) ORDER BY c_0, c_1", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm4.g1 AS g_0 ORDER BY c_0, c_1"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$   
 	}
 	
@@ -109,7 +109,7 @@ public class TestJoinPushdownRestrictions {
         caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.KEY);
         capFinder.addCapabilities("pm4", caps); //$NON-NLS-1$
 
-        TestOptimizer.helpPlan(sql, FakeMetadataFactory.example4(),  
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example4(),  
         		new String[] {"SELECT g_0.e1, g_1.e1 FROM pm4.g1 AS g_0, pm4.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_0.e2 = g_1.e2)"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$   
 	}
 	
@@ -122,7 +122,7 @@ public class TestJoinPushdownRestrictions {
         caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.THETA);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(),  
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(),  
         		new String[] {"SELECT g_0.e2 FROM pm1.g2 AS g_0", "SELECT g_0.e2 FROM pm1.g1 AS g_0"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$   
 	}
 	
@@ -136,7 +136,7 @@ public class TestJoinPushdownRestrictions {
         caps.setFunctionSupport("+", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(),  
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(),  
         		new String[] {"SELECT g_0.e2 FROM pm1.g2 AS g_0", "SELECT g_0.e2 FROM pm1.g1 AS g_0"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$   
 	}
 	
@@ -149,7 +149,7 @@ public class TestJoinPushdownRestrictions {
         caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.THETA);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(),  
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(),  
         		new String[] {"SELECT g_0.e2 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e2 AS c_0 FROM pm1.g2 AS g_0 WHERE g_0.e1 = 'hello' ORDER BY c_0"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$   
 	}
 	

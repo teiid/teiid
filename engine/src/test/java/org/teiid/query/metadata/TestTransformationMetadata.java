@@ -45,7 +45,7 @@ import org.teiid.metadata.Table;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
@@ -102,7 +102,7 @@ public class TestTransformationMetadata {
 		vdb.addModel(buildModel("x1"));
 		vdb.addModel(buildModel("y"));
 		
-		return new TransformationMetadata(vdb, cms, resources, FakeMetadataFactory.SFM.getSystemFunctions(), null);
+		return new TransformationMetadata(vdb, cms, resources, RealMetadataFactory.SFM.getSystemFunctions(), null);
 	}
 	
 	ModelMetaData buildModel(String name) {
@@ -135,15 +135,15 @@ public class TestTransformationMetadata {
 		model2.setVisible(true);
 		vdb.addModel(model2);		
 
-		TransformationMetadata tm = new TransformationMetadata(vdb, cms, null, FakeMetadataFactory.SFM.getSystemFunctions(), null);
+		TransformationMetadata tm = new TransformationMetadata(vdb, cms, null, RealMetadataFactory.SFM.getSystemFunctions(), null);
 		Collection result = tm.getGroupsForPartialName("y"); //$NON-NLS-1$
 		assertEquals(2, result.size());
 
-		FakeMetadataFactory.buildWorkContext(tm, vdb);
+		RealMetadataFactory.buildWorkContext(tm, vdb);
 
 		model.setVisible(false);
 
-		tm = new TransformationMetadata(vdb, cms, null, FakeMetadataFactory.SFM.getSystemFunctions(), null);
+		tm = new TransformationMetadata(vdb, cms, null, RealMetadataFactory.SFM.getSystemFunctions(), null);
 		result = tm.getGroupsForPartialName("y"); //$NON-NLS-1$
 		assertEquals(1, result.size());
 	}

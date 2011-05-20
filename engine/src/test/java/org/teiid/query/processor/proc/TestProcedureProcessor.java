@@ -33,9 +33,14 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.metadata.ParameterInfo;
-import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.ColumnSet;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -59,11 +64,6 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
-import org.teiid.query.unittest.FakeMetadataStore;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.Validator;
@@ -125,131 +125,76 @@ public class TestProcedureProcessor {
     	helpTestProcess(procPlan, new List[] {Arrays.asList(expectedRows)}, dataMgr, metadata);
     }
     
-    // Helper to create a list of elements - used in creating sample data
-    private static List createElements(List elementIDs) { 
-        List elements = new ArrayList();
-        for(int i=0; i<elementIDs.size(); i++) {
-            FakeMetadataObject elementID = (FakeMetadataObject) elementIDs.get(i);            
-            ElementSymbol element = new ElementSymbol(elementID.getName());
-            elements.add(element);
-        }        
-        
-        return elements;
-    }    
-    
-    private FakeDataManager exampleDataManager(FakeMetadataFacade metadata) throws QueryMetadataException, TeiidComponentException {
+    private FakeDataManager exampleDataManager(QueryMetadataInterface metadata) throws TeiidException {
         FakeDataManager dataMgr = new FakeDataManager();
     
-        FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g1"); //$NON-NLS-1$
-        List elementIDs = metadata.getElementIDsInGroupID(groupID);
-        List elementSymbols = createElements(elementIDs);
-    
         dataMgr.registerTuples(
-            groupID,
-            elementSymbols,
-            
-            new List[] { 
-                Arrays.asList( new Object[] { "First", new Integer(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Second", new Integer(15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Third", new Integer(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
-                } );
+            metadata,
+            "pm1.g1", new List[] { 
+				    Arrays.asList( new Object[] { "First", Integer.valueOf(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
+				    Arrays.asList( new Object[] { "Second", Integer.valueOf(15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
+				    Arrays.asList( new Object[] { "Third", Integer.valueOf(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
+				    } );
 
-        groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g2"); //$NON-NLS-1$
-        elementIDs = metadata.getElementIDsInGroupID(groupID);
-        elementSymbols = createElements(elementIDs);
-    
         dataMgr.registerTuples(
-            groupID,
-            elementSymbols,
-            
-            new List[] { 
-                Arrays.asList( new Object[] { "First", new Integer(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Second", new Integer(15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Third", new Integer(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
-                } );
+            metadata,
+            "pm1.g2", new List[] { 
+				    Arrays.asList( new Object[] { "First", Integer.valueOf(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
+				    Arrays.asList( new Object[] { "Second", Integer.valueOf(15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
+				    Arrays.asList( new Object[] { "Third", Integer.valueOf(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
+				    } );
         
         return dataMgr;
     }    
     
-    private FakeDataManager exampleDataManager2(FakeMetadataFacade metadata) throws QueryMetadataException, TeiidComponentException {
+    private FakeDataManager exampleDataManager2(QueryMetadataInterface metadata) throws TeiidException {
         FakeDataManager dataMgr = new FakeDataManager();
     
-        FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g1"); //$NON-NLS-1$
-        List elementIDs = metadata.getElementIDsInGroupID(groupID);
-        List elementSymbols = createElements(elementIDs);
-    
         dataMgr.registerTuples(
-            groupID,
-            elementSymbols,
-            
-            new List[] { 
-                Arrays.asList( new Object[] { "First", new Integer(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Second", new Integer(15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Third", new Integer(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
-                } );
+            metadata,
+            "pm1.g1", new List[] { 
+				    Arrays.asList( new Object[] { "First", Integer.valueOf(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
+				    Arrays.asList( new Object[] { "Second", Integer.valueOf(15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
+				    Arrays.asList( new Object[] { "Third", Integer.valueOf(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
+				    } );
 
-        groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g2"); //$NON-NLS-1$
-        elementIDs = metadata.getElementIDsInGroupID(groupID);
-        elementSymbols = createElements(elementIDs);
-    
         dataMgr.registerTuples(
-            groupID,
-            elementSymbols,
-            
-            new List[] { 
-                Arrays.asList( new Object[] { "First", new Integer(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Second", new Integer(15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Third", new Integer(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
-                } );
+            metadata,
+            "pm1.g2", new List[] { 
+				    Arrays.asList( new Object[] { "First", Integer.valueOf(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
+				    Arrays.asList( new Object[] { "Second", Integer.valueOf(15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
+				    Arrays.asList( new Object[] { "Third", Integer.valueOf(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
+				    } );
         
-        groupID = (FakeMetadataObject) metadata.getGroupID("pm2.g1"); //$NON-NLS-1$
-        elementIDs = metadata.getElementIDsInGroupID(groupID);
-        elementSymbols = createElements(elementIDs);
-    
         dataMgr.registerTuples(
-            groupID,
-            elementSymbols,
-            
-            new List[] { 
-                Arrays.asList( new Object[] { "First", new Integer(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Second", new Integer(15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Third", new Integer(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
-                } );
+            metadata,
+            "pm2.g1", new List[] { 
+				    Arrays.asList( new Object[] { "First", Integer.valueOf(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
+				    Arrays.asList( new Object[] { "Second", Integer.valueOf(15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
+				    Arrays.asList( new Object[] { "Third", Integer.valueOf(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
+				    } );
         
-        groupID = (FakeMetadataObject) metadata.getGroupID("pm2.g2"); //$NON-NLS-1$
-        elementIDs = metadata.getElementIDsInGroupID(groupID);
-        elementSymbols = createElements(elementIDs);
-    
         dataMgr.registerTuples(
-            groupID,
-            elementSymbols,
-            
-            new List[] { 
-                Arrays.asList( new Object[] { "First", new Integer(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Second", new Integer(15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Third", new Integer(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
-                } );
+            metadata,
+            "pm2.g2", new List[] { 
+				    Arrays.asList( new Object[] { "First", Integer.valueOf(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
+				    Arrays.asList( new Object[] { "Second", Integer.valueOf(15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
+				    Arrays.asList( new Object[] { "Third", Integer.valueOf(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
+				    } );
         
         return dataMgr;
     }    
     
-    private FakeDataManager exampleDataManagerPm5(FakeMetadataFacade metadata) throws QueryMetadataException, TeiidComponentException {
+    private FakeDataManager exampleDataManagerPm5(QueryMetadataInterface metadata) throws TeiidException {
         FakeDataManager dataMgr = new FakeDataManager();
     
-        // Group stock.items
-        FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("pm5.g3"); //$NON-NLS-1$
-        List elementIDs = metadata.getElementIDsInGroupID(groupID);
-        List elementSymbols = createElements(elementIDs);
-    
         dataMgr.registerTuples(
-            groupID,
-            elementSymbols,
-            
-            new List[] { 
-                Arrays.asList( new Object[] { "First", new Short((short)5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Second", new Short((short)15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Third", new Short((short)51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
-                } );
+            metadata,
+            "pm5.g3", new List[] { 
+				    Arrays.asList( new Object[] { "First", new Short((short)5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
+				    Arrays.asList( new Object[] { "Second", new Short((short)15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
+				    Arrays.asList( new Object[] { "Third", new Short((short)51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
+				    } );
         
         return dataMgr;
     }    
@@ -264,7 +209,7 @@ public class TestProcedureProcessor {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -287,7 +232,7 @@ public class TestProcedureProcessor {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -310,7 +255,7 @@ public class TestProcedureProcessor {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
         dataMgr.setBlockOnce();
@@ -332,7 +277,7 @@ public class TestProcedureProcessor {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e2=40"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -362,7 +307,7 @@ public class TestProcedureProcessor {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e2=45"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -391,7 +336,7 @@ public class TestProcedureProcessor {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e2=45"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
         dataMgr.setBlockOnce();
@@ -419,7 +364,7 @@ public class TestProcedureProcessor {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e2=45"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -437,7 +382,7 @@ public class TestProcedureProcessor {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -474,7 +419,7 @@ public class TestProcedureProcessor {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -494,7 +439,7 @@ public class TestProcedureProcessor {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -522,7 +467,7 @@ public class TestProcedureProcessor {
 		
 		String userUpdateStr = "UPDATE vm1.g1 SET e2=30";    //$NON-NLS-1$
 		 
-		FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+		QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
 		FakeDataManager dataMgr = new FakeDataManager();
 		FakeDataStore.sampleData2(dataMgr);
 
@@ -550,7 +495,7 @@ public class TestProcedureProcessor {
 		
 		String userUpdateStr = "UPDATE vm1.g1 SET e2=30";    //$NON-NLS-1$
 		 
-		FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+		QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
 		FakeDataManager dataMgr = new FakeDataManager();
 		FakeDataStore.sampleData2(dataMgr);
 		
@@ -561,7 +506,7 @@ public class TestProcedureProcessor {
     @Test public void testVirtualProcedure() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp2()"; //$NON-NLS-1$
     
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -578,7 +523,7 @@ public class TestProcedureProcessor {
     @Test public void testVirtualProcedureWithBlockedException() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp2()"; //$NON-NLS-1$
     
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         FakeDataManager dataMgr = exampleDataManager(metadata);
         dataMgr.setBlockOnce();
@@ -596,7 +541,7 @@ public class TestProcedureProcessor {
     @Test public void testVirtualProcedure2() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp3()"; //$NON-NLS-1$
     
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -611,7 +556,7 @@ public class TestProcedureProcessor {
     @Test public void testVirtualProcedure3() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp4()"; //$NON-NLS-1$
     
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -626,7 +571,7 @@ public class TestProcedureProcessor {
     @Test public void testVirtualProcedure4() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp5()"; //$NON-NLS-1$
     
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -641,7 +586,7 @@ public class TestProcedureProcessor {
     @Test public void testVirtualProcedure5() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp6()"; //$NON-NLS-1$
     
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -656,7 +601,7 @@ public class TestProcedureProcessor {
     @Test public void testVirtualProcedure6() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp7(5)"; //$NON-NLS-1$
     
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -671,7 +616,7 @@ public class TestProcedureProcessor {
     @Test public void testVirtualProcedure7() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp8(51)"; //$NON-NLS-1$
     
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -686,7 +631,7 @@ public class TestProcedureProcessor {
     @Test public void testVirtualProcedure8() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp9(51)"; //$NON-NLS-1$
     
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -701,7 +646,7 @@ public class TestProcedureProcessor {
     @Test public void testVirtualProcedure9() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp10(51)"; //$NON-NLS-1$
     
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -716,7 +661,7 @@ public class TestProcedureProcessor {
     @Test public void testVirtualProcedure10() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp13()"; //$NON-NLS-1$
     
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -724,13 +669,13 @@ public class TestProcedureProcessor {
                 
         // Create expected results
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { "Third", new Integer(5)})};         //$NON-NLS-1$
+            Arrays.asList(new Object[] { "Third", Integer.valueOf(5)})};         //$NON-NLS-1$
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testVirtualProcedure11() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp14()";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         // Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -746,24 +691,18 @@ public class TestProcedureProcessor {
     
     @Test public void testVirtualProcedure12() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp15()";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         // Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
                 
-        FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g2"); //$NON-NLS-1$
-        List elementIDs = metadata.getElementIDsInGroupID(groupID);
-        List elementSymbols = createElements(elementIDs);
-    
         dataMgr.registerTuples(
-            groupID,
-            elementSymbols,
-            
-            new List[] { 
-                Arrays.asList( new Object[] { "First", new Integer(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Third", new Integer(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
-                } );
+            metadata,
+            "pm1.g2", new List[] { 
+				    Arrays.asList( new Object[] { "First", Integer.valueOf(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
+				    Arrays.asList( new Object[] { "Third", Integer.valueOf(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
+				    } );
         
         // Create expected results
         List[] expected = new List[] {
@@ -775,25 +714,19 @@ public class TestProcedureProcessor {
     //Defect17447_testVirtualProcedure13
     @Test public void testVirtualProcedure13() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp16()";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         // Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
                 
-        FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g2"); //$NON-NLS-1$
-        List elementIDs = metadata.getElementIDsInGroupID(groupID);
-        List elementSymbols = createElements(elementIDs);
-    
         dataMgr.registerTuples(
-            groupID,
-            elementSymbols,
-            
-            new List[] { 
-                Arrays.asList( new Object[] { "First", new Integer(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Third", new Integer(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
-                } );
+            metadata,
+            "pm1.g2", new List[] { 
+				    Arrays.asList( new Object[] { "First", Integer.valueOf(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
+				    Arrays.asList( new Object[] { "Third", Integer.valueOf(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
+				    } );
         
         // Create expected results
         List[] expected = new List[] {
@@ -804,7 +737,7 @@ public class TestProcedureProcessor {
     		
     @Test public void testVirtualProcedure14() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp17()";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         // Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -818,7 +751,7 @@ public class TestProcedureProcessor {
 
     @Test public void testVirtualProcedure15() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp19()";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         // Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
@@ -838,7 +771,7 @@ public class TestProcedureProcessor {
     
     @Test public void testVirtualProcedure16() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp20()";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         // Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -858,7 +791,7 @@ public class TestProcedureProcessor {
     
     @Test public void testVirtualProcedure17() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp21(7)";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         //Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -866,16 +799,16 @@ public class TestProcedureProcessor {
   
         // Create expected results
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { "First", new Integer(5)}),  //$NON-NLS-1$
-            Arrays.asList(new Object[] { "Second", new Integer(15)}),  //$NON-NLS-1$
-            Arrays.asList(new Object[] { "Third", new Integer(51)}),  //$NON-NLS-1$
-            Arrays.asList(new Object[] { "Fourth", new Integer(7)})};           //$NON-NLS-1$
+            Arrays.asList(new Object[] { "First", Integer.valueOf(5)}),  //$NON-NLS-1$
+            Arrays.asList(new Object[] { "Second", Integer.valueOf(15)}),  //$NON-NLS-1$
+            Arrays.asList(new Object[] { "Third", Integer.valueOf(51)}),  //$NON-NLS-1$
+            Arrays.asList(new Object[] { "Fourth", Integer.valueOf(7)})};           //$NON-NLS-1$
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testVirtualProcedure18() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp22(7)";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         //Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -883,14 +816,14 @@ public class TestProcedureProcessor {
   
         // Create expected results
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { "Second", new Integer(15)}),  //$NON-NLS-1$
-            Arrays.asList(new Object[] { "Third", new Integer(51)}) }; //$NON-NLS-1$
+            Arrays.asList(new Object[] { "Second", Integer.valueOf(15)}),  //$NON-NLS-1$
+            Arrays.asList(new Object[] { "Third", Integer.valueOf(51)}) }; //$NON-NLS-1$
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testVirtualProcedure19() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp23(7)";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         //Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -898,26 +831,26 @@ public class TestProcedureProcessor {
   
         // Create expected results
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { "Second", new Integer(15)})}; //$NON-NLS-1$
+            Arrays.asList(new Object[] { "Second", Integer.valueOf(15)})}; //$NON-NLS-1$
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testVirtualProcedure19WithBlockedException() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp23(7)";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         //Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata); 
         // Create expected results
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { "Second", new Integer(15)})}; //$NON-NLS-1$
+            Arrays.asList(new Object[] { "Second", Integer.valueOf(15)})}; //$NON-NLS-1$
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
 
     @Test public void testVirtualProcedureNoDataInTempTable() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp25()";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         //Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
@@ -946,7 +879,7 @@ public class TestProcedureProcessor {
 
         String userUpdateStr = "UPDATE g4 SET e1='x' where e2=5"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -957,7 +890,7 @@ public class TestProcedureProcessor {
     
     @Test public void testVirtualProcedure30() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp30()";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
     
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 
@@ -974,7 +907,7 @@ public class TestProcedureProcessor {
 
     @Test public void testVirtualProcedure31() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp31(51)";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
         // Set up data
@@ -989,7 +922,7 @@ public class TestProcedureProcessor {
     @Test public void testVirtualProcedureDefect14282() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp24()"; //$NON-NLS-1$
     
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -1003,7 +936,7 @@ public class TestProcedureProcessor {
     
     @Test public void testDefect16193() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp35(51)";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 
         // Set up data
@@ -1017,33 +950,23 @@ public class TestProcedureProcessor {
     
     @Test public void testVirtualProcedure16602() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp37()";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
       
 
         // Set up data
-        FakeDataManager dataMgr = exampleDataManager(metadata);
-        FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g1"); //$NON-NLS-1$
-        List elementSymbols = new ArrayList(); 
-        ElementSymbol element = new ElementSymbol("Count"); //$NON-NLS-1$
-        elementSymbols.add(element);            
+        HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("INSERT INTO pm1.g1 (e1, e2, e3, e4) VALUES (null, 5, UNKNOWN, null)", new List[] {Arrays.asList(1)});
                     
-        dataMgr.registerTuples(
-        		groupID,
-        		elementSymbols,
-            new List[] {
-                 Arrays.asList( new Object[] { new Integer(1) } ) 
-                } );
-        
         // Create expected results
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { new Integer(1)})};           
+            Arrays.asList(1)};           
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testDefect16649_1() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp38()";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 
         // Set up data
@@ -1057,7 +980,7 @@ public class TestProcedureProcessor {
     
     @Test public void testDefect16649_2() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp39()";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 
         // Set up data
@@ -1071,7 +994,7 @@ public class TestProcedureProcessor {
     
     @Test public void testDefect16694() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp40()";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 
         // Set up data
@@ -1085,7 +1008,7 @@ public class TestProcedureProcessor {
     
     @Test public void testDefect16707() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp44(2)";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 
         // Set up data
@@ -1101,7 +1024,7 @@ public class TestProcedureProcessor {
     
     @Test public void testDefect16707_1() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp43(2)";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 
         // Set up data
@@ -1117,25 +1040,19 @@ public class TestProcedureProcessor {
     
     @Test public void testDefect17451() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp45()";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         //Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-                    
-        FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g2"); //$NON-NLS-1$
-        List elementIDs = metadata.getElementIDsInGroupID(groupID);
-        List elementSymbols = createElements(elementIDs);
     
         dataMgr.registerTuples(
-            groupID,
-            elementSymbols,
-            
-            new List[] { 
-                Arrays.asList( new Object[] { "First", new Integer(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Third", new Integer(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
-                } );
+            metadata,
+            "pm1.g2", new List[] { 
+				    Arrays.asList( new Object[] { "First", Integer.valueOf(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
+				    Arrays.asList( new Object[] { "Third", Integer.valueOf(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
+				    } );
         
         // Create expected results
         List[] expected = new List[] {
@@ -1147,7 +1064,7 @@ public class TestProcedureProcessor {
     //Defect 17447
     @Test public void testVirtualProcedure46() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp46()";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);       
 
@@ -1181,7 +1098,7 @@ public class TestProcedureProcessor {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x' where e2=5"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure1, procedure2);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure1, procedure2);
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -1192,7 +1109,7 @@ public class TestProcedureProcessor {
     
     @Test public void testDefect19982() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp55(5)";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 
         // Set up data
@@ -1200,16 +1117,16 @@ public class TestProcedureProcessor {
   
         // Create expected results
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { "First", new Integer(5)}),  //$NON-NLS-1$
-            Arrays.asList(new Object[] { "Second", new Integer(5)}), //$NON-NLS-1$
-            Arrays.asList(new Object[] { "Third", new Integer(5)})};           //$NON-NLS-1$
+            Arrays.asList(new Object[] { "First", Integer.valueOf(5)}),  //$NON-NLS-1$
+            Arrays.asList(new Object[] { "Second", Integer.valueOf(5)}), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "Third", Integer.valueOf(5)})};           //$NON-NLS-1$
         helpTestProcess(plan, expected, dataMgr, metadata);
     } 
     
     @Test public void testCase3521() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp1()"; //$NON-NLS-1$
     
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -1242,7 +1159,7 @@ public class TestProcedureProcessor {
 
         String userUpdateStr = "UPDATE g4 SET e1='x' where e2=5"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -1254,20 +1171,13 @@ public class TestProcedureProcessor {
     @Test public void testDynamicCommandWithIntoExpression() throws Exception {
     	
     	//Test INTO clause with expression
-    	FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "execute string 'SELECT e1 FROM pm1.g1 WHERE e1 = ''First''' as x string into #temp; declare string VARIABLES.RESULT = select x from #temp;select VARIABLES.RESULT; END"); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1 }), sq2n1);  //$NON-NLS-1$
+    	TransformationMetadata metadata = RealMetadataFactory.example1();
+    	String query = "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+            + "execute string 'SELECT e1 FROM pm1.g1 WHERE e1 = ''First''' as x string into #temp; declare string VARIABLES.RESULT = select x from #temp;select VARIABLES.RESULT; END";
 
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq1);
-        
-        String userUpdateStr = "EXEC pm1.sq1()"; //$NON-NLS-1$
+        addProc(metadata, query);
+
+        String userUpdateStr = "EXEC pm1.sq2()"; //$NON-NLS-1$
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -1279,16 +1189,31 @@ public class TestProcedureProcessor {
             };           
         helpTestProcess(plan, expected, dataMgr, metadata);
       }
+
+	private void addProc(TransformationMetadata metadata, String query)
+			throws QueryMetadataException {
+		addProc(metadata, "sq2", query, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }, new String[0], new String[0]);
+	}
+	
+	private void addProc(TransformationMetadata metadata, String name, String query, String[] rsCols, String[] rsTypes, String[] params, String[] paramTypes)
+	throws QueryMetadataException {
+		Schema pm1 = metadata.getMetadataStore().getSchema("PM1"); //$NON-NLS-1$
+		pm1.getProcedures().remove(name.toUpperCase());
+		ColumnSet<Procedure> rs2 = RealMetadataFactory.createResultSet("rs1", rsCols, rsTypes);
+		QueryNode sq2n1 = new QueryNode(query); //$NON-NLS-1$ 
+		ArrayList<ProcedureParameter> procParams = new ArrayList<ProcedureParameter>(params.length);
+		for (int i = 0; i < params.length; i++) {
+			procParams.add(RealMetadataFactory.createParameter(params[i], SPParameter.IN, paramTypes[i]));
+		}
+		Procedure sq1 = RealMetadataFactory.createVirtualProcedure(name, pm1, procParams, sq2n1);  //$NON-NLS-1$
+		sq1.setResultSet(rs2);
+	}
     
     @Test public void testDynamicCommandWithIntoAndLoop() throws Exception {
     	
     	//Test INTO clause with loop
-    	FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+    	TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
         StringBuffer procedure = new StringBuffer("CREATE VIRTUAL PROCEDURE \n"); //$NON-NLS-1$
         procedure.append("BEGIN\n"); //$NON-NLS-1$
         procedure.append("declare integer VARIABLES.e2_total=0;\n"); //$NON-NLS-1$
@@ -1301,13 +1226,9 @@ public class TestProcedureProcessor {
         procedure.append("SELECT VARIABLES.e2_total;\n"); //$NON-NLS-1$
         procedure.append("END"); //$NON-NLS-1$
         
-        QueryNode sq2n1 = new QueryNode(procedure.toString()); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1 }), sq2n1);  //$NON-NLS-1$
-
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq1);
+        addProc(metadata, procedure.toString());
         
-        String userUpdateStr = "EXEC pm1.sq1()"; //$NON-NLS-1$
+        String userUpdateStr = "EXEC pm1.sq2()"; //$NON-NLS-1$
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -1315,26 +1236,18 @@ public class TestProcedureProcessor {
     	
         //Create expected results
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { new Integer(66)}),  
+            Arrays.asList(new Object[] { Integer.valueOf(66)}),  
             };           
         helpTestProcess(plan, expected, dataMgr, metadata);
       }
     
     @Test public void testDynamicCommandWithParameter() throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs2", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "execute string 'SELECT e1, e2 FROM pm1.g1 WHERE e1=pm1.sq2.in' as e1 string, e2 integer; END"); //$NON-NLS-1$ //
-        FakeMetadataObject sq2 = FakeMetadataFactory.createVirtualProcedure("pm1.sq2", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
+        addProc(metadata, "sq2", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+				        + "execute string 'SELECT e1, e2 FROM pm1.g1 WHERE e1=pm1.sq2.in' as e1 string, e2 integer; END", new String[] { "e1", "e2" }
+        , new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }, new String[] {"in"}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
 
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq2);
-        
         String userUpdateStr = "EXEC pm1.sq2('First')"; //$NON-NLS-1$
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
@@ -1343,25 +1256,17 @@ public class TestProcedureProcessor {
                 
         // Create expected results
         List[] expected = new List[] {
-                Arrays.asList(new Object[] { "First", new Integer(5) }),  //$NON-NLS-1$
+                Arrays.asList(new Object[] { "First", Integer.valueOf(5) }),  //$NON-NLS-1$
         };        
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testDynamicCommandWithUsing() throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs2", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "execute string 'SELECT e1, e2 FROM pm1.g1 WHERE e1=using.id' using id=pm1.sq2.in; END"); //$NON-NLS-1$ 
-        FakeMetadataObject sq2 = FakeMetadataFactory.createVirtualProcedure("pm1.sq2", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
-
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq2);
+        addProc(metadata, "sq2", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+				        + "execute string 'SELECT e1, e2 FROM pm1.g1 WHERE e1=using.id' using id=pm1.sq2.in; END", new String[] { "e1", "e2" }
+        , new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }, new String[] {"in"}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
         
         String userUpdateStr = "EXEC pm1.sq2('First')"; //$NON-NLS-1$
         
@@ -1371,25 +1276,17 @@ public class TestProcedureProcessor {
                 
         // Create expected results
         List[] expected = new List[] {
-                Arrays.asList(new Object[] { "First", new Integer(5) }),  //$NON-NLS-1$
+                Arrays.asList(new Object[] { "First", Integer.valueOf(5) }),  //$NON-NLS-1$
         };        
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testDynamicCommandWithVariable() throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs2", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "declare string VARIABLES.x; VARIABLES.x = pm1.sq2.in; execute string 'SELECT e1, e2 FROM pm1.g1 WHERE e1=VARIABLES.x'; END"); //$NON-NLS-1$ 
-        FakeMetadataObject sq2 = FakeMetadataFactory.createVirtualProcedure("pm1.sq2", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
-
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq2);
+        addProc(metadata, "sq2", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+				        + "declare string VARIABLES.x; VARIABLES.x = pm1.sq2.in; execute string 'SELECT e1, e2 FROM pm1.g1 WHERE e1=VARIABLES.x'; END", new String[] { "e1", "e2" }
+        , new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }, new String[] {"in"}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
         
         String userUpdateStr = "EXEC pm1.sq2('First')"; //$NON-NLS-1$
         
@@ -1399,25 +1296,17 @@ public class TestProcedureProcessor {
                 
         // Create expected results
         List[] expected = new List[] {
-                Arrays.asList(new Object[] { "First", new Integer(5) }),  //$NON-NLS-1$
+                Arrays.asList(new Object[] { "First", Integer.valueOf(5) }),  //$NON-NLS-1$
         };        
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testDynamicCommandValidationFails() throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+    	TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs2", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "declare object VARIABLES.x; execute string 'SELECT xmlelement(name elem, x)'; select 1; END"); //$NON-NLS-1$ 
-        FakeMetadataObject sq2 = FakeMetadataFactory.createVirtualProcedure("pm1.sq2", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
-
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq2);
+        addProc(metadata, "sq2", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+				        + "declare object VARIABLES.x; execute string 'SELECT xmlelement(name elem, x)'; select 1; END", new String[] { "e1", "e2" }
+        , new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }, new String[] {"in"}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
         
         String userUpdateStr = "EXEC pm1.sq2('First')"; //$NON-NLS-1$
         
@@ -1434,20 +1323,12 @@ public class TestProcedureProcessor {
     }
 
     @Test public void testDynamicCommandWithSingleSelect() throws Exception {
-    	//Test select of a single value in a DynamicCommand
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+    	TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        FakeMetadataObject rs1 = FakeMetadataFactory.createResultSet("pm1.rs2", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ 
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs1);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "execute string 'SELECT 26'; END"); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1 }), sq2n1);  //$NON-NLS-1$
+        addProc(metadata, "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+                + "execute string 'SELECT 26'; END");
 
-        metadata.getStore().addObject(rs1);
-        metadata.getStore().addObject(sq1);
-        
-        String userUpdateStr = "EXEC pm1.sq1()"; //$NON-NLS-1$
+        String userUpdateStr = "EXEC pm1.sq2()"; //$NON-NLS-1$
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -1463,20 +1344,12 @@ public class TestProcedureProcessor {
     
     //converts e1 from integer to string, with a different name
     @Test public void testDynamicCommandTypeConversion() throws Exception {
-    	 FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-         
-         FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-         
-         FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs2", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ 
-         FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-         FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-         QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                         + "declare string VARIABLES.x; VARIABLES.x = 'a'; execute string 'SELECT e2 ' || ' FROM pm1.g1 ' || ' where e1=pm1.sq2.in'; END"); //$NON-NLS-1$ //
-         FakeMetadataObject sq2 = FakeMetadataFactory.createVirtualProcedure("pm1.sq2", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
-
-         metadata.getStore().addObject(rs2);
-         metadata.getStore().addObject(sq2);
-         
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        
+        addProc(metadata, "sq2", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+				        + "declare string VARIABLES.x; VARIABLES.x = 'a'; execute string 'SELECT e2 ' || ' FROM pm1.g1 ' || ' where e1=pm1.sq2.in'; END", new String[] { "e1" }
+        , new String[] { DataTypeManager.DefaultDataTypes.STRING }, new String[] {"in"}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
+        
          String userUpdateStr = "EXEC pm1.sq2('First')"; //$NON-NLS-1$
          
          FakeDataManager dataMgr = exampleDataManager(metadata);
@@ -1491,23 +1364,11 @@ public class TestProcedureProcessor {
     }
     
     @Test public void testDynamicCommandRecursion() throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-
-        FakeMetadataObject rs2 = FakeMetadataFactory
-                                                    .createResultSet("pm1.rs2", pm1, new String[] {"e1", "e2"}, new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory
-                                                      .createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2); //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = FakeMetadataFactory
-                                                      .createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null); //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                                   + "execute string 'EXEC pm1.sq2(''First'')' as e1 string, e2 integer; END"); //$NON-NLS-1$ //
-        FakeMetadataObject sq2 = FakeMetadataFactory
-                                                    .createVirtualProcedure("pm1.sq2", pm1, Arrays.asList(new FakeMetadataObject[] {rs2p1, rs2p2}), sq2n1); //$NON-NLS-1$
-
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq2);
+    	TransformationMetadata metadata = RealMetadataFactory.example1();
+        
+        addProc(metadata, "sq2", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+				        + "execute string 'EXEC pm1.sq2(''First'')' as e1 string, e2 integer; END", new String[] { "e1", "e2" }
+        , new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }, new String[] {"in"}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
 
         String userUpdateStr = "EXEC pm1.sq2('First')"; //$NON-NLS-1$
 
@@ -1522,25 +1383,16 @@ public class TestProcedureProcessor {
     
     @Test public void testDynamicCommandIncorrectProjectSymbolCount() throws Exception {
     	//Tests dynamic query with incorrect number of elements   
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "SELECT pm1.g1.e1 FROM pm1.g1; END"); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
-        
-        QueryNode sq2n2 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                + "execute string 'EXEC pm1.sq1(''First'')' as e1 string, e2 integer; END"); //$NON-NLS-1$ 
-        FakeMetadataObject sq2 = FakeMetadataFactory.createVirtualProcedure("pm1.sq2", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n2);  //$NON-NLS-1$
+        addProc(metadata, "sq1", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+				        + "SELECT pm1.g1.e1 FROM pm1.g1; END", new String[] { "e1" }
+        , new String[] { DataTypeManager.DefaultDataTypes.STRING }, new String[] {"in"}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
 
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq1);
-        metadata.getStore().addObject(sq2);
-        
+        addProc(metadata, "sq2", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+				        + "execute string 'EXEC pm1.sq1(''First'')' as e1 string, e2 integer; END", new String[] { "e1" }
+        , new String[] { DataTypeManager.DefaultDataTypes.STRING }, new String[] {"in"}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
+
         String userUpdateStr = "EXEC pm1.sq2('test')"; //$NON-NLS-1$
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
@@ -1551,22 +1403,13 @@ public class TestProcedureProcessor {
      }
     
     @Test public void testDynamicCommandPositional() throws Exception {
-    	//Tests dynamic query with incorrect number of elements   
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+    	TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs1", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "execute string 'select e1 as x, e2 from pm1.g1'; END"); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
-        
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq1);
-        
-        String userUpdateStr = "EXEC pm1.sq1('test')"; //$NON-NLS-1$
+        addProc(metadata, "sq2", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+				        + "execute string 'select e1 as x, e2 from pm1.g1'; END", new String[] { "e1", "e2" }
+        , new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING }, new String[] {"in"}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
+
+        String userUpdateStr = "EXEC pm1.sq2('test')"; //$NON-NLS-1$
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -1578,22 +1421,12 @@ public class TestProcedureProcessor {
      }
     
     @Test public void testDynamicCommandIncorrectProjectSymbolDatatypes() throws Exception {
-    	//Tests dynamic query with a different datatype definition for an element in the AS clause that
-    	//has no implicit conversion. 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+    	TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
+        addProc(metadata, "sq2", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+										                                + "execute string 'select e1 from pm1.g1'; END", new String[] { "e1"}, new String[] { DataTypeManager.DefaultDataTypes.INTEGER}, new String[0], new String[0]); //$NON-NLS-1$ 
         
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "execute string 'select e1 from pm1.g1'; END"); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1 }), sq2n1);  //$NON-NLS-1$
-        
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq1);
-        
-        String userUpdateStr = "EXEC pm1.sq1()"; //$NON-NLS-1$
+        String userUpdateStr = "EXEC pm1.sq2()"; //$NON-NLS-1$
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -1604,18 +1437,11 @@ public class TestProcedureProcessor {
      
     @Test public void testDynamicCommandWithTwoDynamicStatements() throws Exception {
     	//Tests dynamic query with two consecutive DynamicCommands. The first without an AS clause and returning different results. 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs1", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "execute string 'select e1 from pm1.g1'; execute string 'select e1, e2 from pm1.g1' as e1 string, e2 integer; END"); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1 }), sq2n1);  //$NON-NLS-1$
-        
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq1);
+        addProc(metadata, "sq1", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+				        + "execute string 'select e1 as x, e2 from pm1.g1'; END", new String[] { "e1", "e2" }
+        , new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING }, new String[0], new String[0]);
         
         String userUpdateStr = "EXEC pm1.sq1()"; //$NON-NLS-1$
         
@@ -1625,15 +1451,15 @@ public class TestProcedureProcessor {
     	
         // Create expected results
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { "First", new Integer(5)}),  //$NON-NLS-1$
-            Arrays.asList(new Object[] { "Second", new Integer(15)}), //$NON-NLS-1$
-            Arrays.asList(new Object[] { "Third", new Integer(51)})};           //$NON-NLS-1$      
+            Arrays.asList(new Object[] { "First", "5"}),  //$NON-NLS-1$
+            Arrays.asList(new Object[] { "Second", "15"}), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "Third", "51"})};           //$NON-NLS-1$      
        
         helpTestProcess(plan, expected, dataMgr, metadata);
      }
     
     @Test public void testAssignmentWithCase() throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        TransformationMetadata metadata = RealMetadataFactory.example1();
         
         String sql = new StringBuffer("declare integer caseValue = ") //$NON-NLS-1$
         .append("CASE") //$NON-NLS-1$
@@ -1644,17 +1470,8 @@ public class TestProcedureProcessor {
         .append(" ELSE 9999") //$NON-NLS-1$
         .append(" END").toString(); //$NON-NLS-1$
 
-        
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("param", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$        
-        FakeMetadataObject rs1 = FakeMetadataFactory.createResultSet("pm1.rs2", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ 
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs1);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + sql + "; SELECT caseValue; END"); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
-
-        metadata.getStore().addObject(rs1);
-        metadata.getStore().addObject(sq1);
+        addProc(metadata, "sq1", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+                                        + sql + "; SELECT caseValue; END", new String[] { "e1"}, new String[] { DataTypeManager.DefaultDataTypes.INTEGER}, new String[] {"param"}, new String[] {DataTypeManager.DefaultDataTypes.STRING}); //$NON-NLS-1$ 
         
         String userUpdateStr = "EXEC pm1.sq1('d')"; //$NON-NLS-1$
         
@@ -1664,7 +1481,7 @@ public class TestProcedureProcessor {
                 
         // Create expected results
         List[] expected = new List[] {
-                Arrays.asList(new Object[] { new Integer(3) }),  
+                Arrays.asList(new Object[] { Integer.valueOf(3) }),  
         };        
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
@@ -1672,19 +1489,12 @@ public class TestProcedureProcessor {
     @Test public void testDynamicCommandInsertIntoTempTableWithDifferentDatatypeFromSource() throws Exception {
     	//Tests dynamic query with insert into a temp table using data returned from a physical table.
     	//See defect 23394  
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataObject pm5 = metadata.getStore().findObject("pm5",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        FakeMetadataObject rs1 = FakeMetadataFactory.createResultSet("pm5.rs1", pm5, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.SHORT}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs1);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "execute string 'select e1,e2 from pm5.g3' as e1 string, e2 integer INTO #temp; select * from #temp; END"); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm5.sq1", pm5, Arrays.asList(new FakeMetadataObject[] { rs2p1 }), sq2n1 );  //$NON-NLS-1$
+        addProc(metadata, "sq2", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+                + "execute string 'select e1,e2 from pm5.g3' as e1 string, e2 integer INTO #temp; select * from #temp; END", new String[] { "e1", "e2"}, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.SHORT}, new String[0], new String[0]); //$NON-NLS-1$
         
-        metadata.getStore().addObject(rs1);
-        metadata.getStore().addObject(sq1);
-        
-        String userUpdateStr = "EXEC pm5.sq1()"; //$NON-NLS-1$
+        String userUpdateStr = "EXEC pm1.sq2()"; //$NON-NLS-1$
         
         FakeDataManager dataMgr = exampleDataManagerPm5(metadata);
 
@@ -1692,29 +1502,21 @@ public class TestProcedureProcessor {
     	
         // Create expected results
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { "First", new Integer(5)}),  //$NON-NLS-1$
-            Arrays.asList(new Object[] { "Second", new Integer(15)}), //$NON-NLS-1$
-            Arrays.asList(new Object[] { "Third", new Integer(51)})};           //$NON-NLS-1$      
+            Arrays.asList(new Object[] { "First", Integer.valueOf(5)}),  //$NON-NLS-1$
+            Arrays.asList(new Object[] { "Second", Integer.valueOf(15)}), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "Third", Integer.valueOf(51)})};           //$NON-NLS-1$      
        
         helpTestProcess(plan, expected, dataMgr, metadata);
      }
     
     @Test public void testDynamicCommandWithVariableOnly() throws Exception {
     	//Tests dynamic query with only a variable that represents thte entire dynamic query.
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+    	TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataObject pm5 = metadata.getStore().findObject("pm5",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        FakeMetadataObject rs1 = FakeMetadataFactory.createResultSet("pm5.rs1", pm5, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.SHORT}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("param", 1, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.SHORT, rs1);  //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("ret", 2, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs1);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "DECLARE string VARIABLES.CRIT = 'select e1, e2 from pm5.g3 where e2=using.id'; execute string VARIABLES.CRIT USING ID = pm5.sq1.param; END"); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm5.sq1", pm5, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1 );  //$NON-NLS-1$
+        addProc(metadata, "sq1", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+                + "DECLARE string VARIABLES.CRIT = 'select e1, e2 from pm5.g3 where e2=using.id'; execute string VARIABLES.CRIT USING ID = pm1.sq1.param; END", new String[] { "e1", "e2"}, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.SHORT}, new String[] {"param"}, new String[] {DataTypeManager.DefaultDataTypes.SHORT}); //$NON-NLS-1$
         
-        metadata.getStore().addObject(rs1);
-        metadata.getStore().addObject(sq1);
-        
-        String userUpdateStr = "EXEC pm5.sq1(convert(5,short))"; //$NON-NLS-1$
+        String userUpdateStr = "EXEC pm1.sq1(convert(5,short))"; //$NON-NLS-1$
         
         FakeDataManager dataMgr = exampleDataManagerPm5(metadata);
 
@@ -1729,7 +1531,7 @@ public class TestProcedureProcessor {
     @Test public void testVirtualProcedureWithCreate() throws Exception{
         String userUpdateStr = "EXEC pm1.vsp60()"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -1746,7 +1548,7 @@ public class TestProcedureProcessor {
     @Test public void testVirtualProcedureWithCreateAndDrop() throws Exception{
         String userUpdateStr = "EXEC pm1.vsp61()"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -1763,7 +1565,7 @@ public class TestProcedureProcessor {
     @Test public void testVirtualProcedureWithCreateAndSelectInto() throws Exception{
         String userUpdateStr = "EXEC pm1.vsp62()"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -1779,12 +1581,8 @@ public class TestProcedureProcessor {
     
     @Test public void testDifferentlyScopedTempTables() throws Exception {
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
         StringBuffer procedure = new StringBuffer("CREATE VIRTUAL PROCEDURE \n"); //$NON-NLS-1$
         procedure.append("BEGIN\n"); //$NON-NLS-1$
         procedure.append("declare integer VARIABLES.e2_total=0;\n"); //$NON-NLS-1$
@@ -1801,13 +1599,9 @@ public class TestProcedureProcessor {
         procedure.append("SELECT VARIABLES.e2_total;\n"); //$NON-NLS-1$
         procedure.append("END"); //$NON-NLS-1$
         
-        QueryNode sq2n1 = new QueryNode(procedure.toString()); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1 }), sq2n1);  //$NON-NLS-1$
-
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq1);
+        addProc(metadata, procedure.toString());
         
-        String userUpdateStr = "EXEC pm1.sq1()"; //$NON-NLS-1$
+        String userUpdateStr = "EXEC pm1.sq2()"; //$NON-NLS-1$
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -1815,19 +1609,15 @@ public class TestProcedureProcessor {
         
         //Create expected results
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { new Integer(3)}),  
+            Arrays.asList(new Object[] { Integer.valueOf(3)}),  
             };           
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testLoopsWithBreak() throws Exception {
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
         StringBuffer procedure = new StringBuffer("CREATE VIRTUAL PROCEDURE \n"); //$NON-NLS-1$
         procedure.append("BEGIN\n"); //$NON-NLS-1$
         procedure.append("declare integer VARIABLES.e2_total=0;\n"); //$NON-NLS-1$
@@ -1843,13 +1633,9 @@ public class TestProcedureProcessor {
         procedure.append("SELECT VARIABLES.e2_total;\n"); //$NON-NLS-1$
         procedure.append("END"); //$NON-NLS-1$
         
-        QueryNode sq2n1 = new QueryNode(procedure.toString()); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1 }), sq2n1);  //$NON-NLS-1$
-
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq1);
+        addProc(metadata, procedure.toString());
         
-        String userUpdateStr = "EXEC pm1.sq1()"; //$NON-NLS-1$
+        String userUpdateStr = "EXEC pm1.sq2()"; //$NON-NLS-1$
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -1857,19 +1643,15 @@ public class TestProcedureProcessor {
         
         //Create expected results
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { new Integer(76)}),  
+            Arrays.asList(new Object[] { Integer.valueOf(76)}),  
             };           
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testCreateWithoutDrop() throws Exception {
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
         StringBuffer procedure = new StringBuffer("CREATE VIRTUAL PROCEDURE \n"); //$NON-NLS-1$
         procedure.append("BEGIN\n"); //$NON-NLS-1$
         procedure.append("create local temporary table t1 (e1 integer);\n"); //$NON-NLS-1$
@@ -1877,13 +1659,9 @@ public class TestProcedureProcessor {
         procedure.append("SELECT e1 from t1;\n"); //$NON-NLS-1$
         procedure.append("END"); //$NON-NLS-1$
         
-        QueryNode sq2n1 = new QueryNode(procedure.toString()); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1 }), sq2n1);  //$NON-NLS-1$
-
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq1);
+        addProc(metadata, procedure.toString());
         
-        String userUpdateStr = "EXEC pm1.sq1()"; //$NON-NLS-1$
+        String userUpdateStr = "EXEC pm1.sq2()"; //$NON-NLS-1$
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -1897,12 +1675,8 @@ public class TestProcedureProcessor {
      */
     @Test public void testDoubleDrop() throws Exception {
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
         StringBuffer procedure = new StringBuffer("CREATE VIRTUAL PROCEDURE \n"); //$NON-NLS-1$
         procedure.append("BEGIN\n"); //$NON-NLS-1$
         procedure.append("create local temporary table t1 (e1 string);\n"); //$NON-NLS-1$
@@ -1912,13 +1686,9 @@ public class TestProcedureProcessor {
         procedure.append("SELECT 1;\n"); //$NON-NLS-1$
         procedure.append("END"); //$NON-NLS-1$
         
-        QueryNode sq2n1 = new QueryNode(procedure.toString()); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1 }), sq2n1);  //$NON-NLS-1$
-
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq1);
+        addProc(metadata, procedure.toString());
         
-        String userUpdateStr = "EXEC pm1.sq1()"; //$NON-NLS-1$
+        String userUpdateStr = "EXEC pm1.sq2()"; //$NON-NLS-1$
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -1931,33 +1701,28 @@ public class TestProcedureProcessor {
      * defect 23975 
      */
     @Test public void testFunctionInput() throws Exception {
-        FakeMetadataObject v1 = FakeMetadataFactory.createVirtualModel("v1"); //$NON-NLS-1$
+    	MetadataStore metadataStore = new MetadataStore();
+        Schema v1 = RealMetadataFactory.createVirtualModel("v1", metadataStore); //$NON-NLS-1$
 
-        FakeMetadataObject p1 = FakeMetadataFactory.createParameter("v1.vp1.in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        FakeMetadataObject rs1 = FakeMetadataFactory.createResultSet("v1.rs1", v1, new String[] {"e1"}, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ 
-        FakeMetadataObject rs1p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs1);  //$NON-NLS-1$
+        ProcedureParameter p1 = RealMetadataFactory.createParameter("in", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING);  //$NON-NLS-1$
+        ColumnSet<Procedure> rs1 = RealMetadataFactory.createResultSet("v1.rs1", new String[] {"e1"}, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ 
 
         QueryNode n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN declare string VARIABLES.x = '1'; exec v1.vp2(concat(x, v1.vp1.in)); END"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vt1 = FakeMetadataFactory.createVirtualProcedure("v1.vp1", v1, Arrays.asList(new FakeMetadataObject[] { rs1p1, p1 }), n1); //$NON-NLS-1$
+        Procedure vt1 = RealMetadataFactory.createVirtualProcedure("vp1", v1, Arrays.asList(p1), n1); //$NON-NLS-1$
+        vt1.setResultSet(rs1);
         
-        FakeMetadataObject p2 = FakeMetadataFactory.createParameter("v1.vp2.in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
+        ProcedureParameter p2 = RealMetadataFactory.createParameter("in", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING);  //$NON-NLS-1$
         QueryNode n2 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN select v1.vp2.in; end"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vt2 = FakeMetadataFactory.createVirtualProcedure("v1.vp2", v1, Arrays.asList(new FakeMetadataObject[] { rs1p1, p2 }), n2); //$NON-NLS-1$
+        Procedure vt2 = RealMetadataFactory.createVirtualProcedure("vp2", v1, Arrays.asList(p2), n2); //$NON-NLS-1$
+        vt2.setResultSet(RealMetadataFactory.createResultSet("v1.rs1", new String[] {"e1"}, new String[] { DataTypeManager.DefaultDataTypes.STRING })); //$NON-NLS-1$ //$NON-NLS-2$
                 
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(v1);
-        store.addObject(rs1);
-        store.addObject(vt1);
-        store.addObject(vt2);
-        store.addObject(vt2);
-        
         String sql = "exec v1.vp1('1')"; //$NON-NLS-1$
         
         List[] expected = new List[] {  
             Arrays.asList(new Object[] { "11" }), //$NON-NLS-1$ 
         };        
         
-        FakeMetadataFacade metadata = new FakeMetadataFacade(store);
+        QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "foo");
         
         // Construct data manager with data 
         // Plan query 
@@ -1989,7 +1754,7 @@ public class TestProcedureProcessor {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x' where e2=5"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure1, procedure2);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure1, procedure2);
         
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
                                      
@@ -2004,23 +1769,15 @@ public class TestProcedureProcessor {
         // Create query 
         String sql = "EXEC pm1.vsp49()"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataStore store = metadata.getStore();
-        
-        FakeMetadataObject pm1 = store.findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs2", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN if (1 = 2) begin declare integer x = 1; end SELECT e1, e2 FROM pm1.g1 WHERE e1=pm1.sq2.in; END"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject sq2 = FakeMetadataFactory.createVirtualProcedure("pm1.sq2", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
-        
-        store.addObject(sq2);
+        addProc(metadata, "sq2", "CREATE VIRTUAL PROCEDURE BEGIN if (1 = 2) begin declare integer x = 1; end SELECT e1, e2 FROM pm1.g1 WHERE e1=pm1.sq2.in; END", 
+        		new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }
+        , new String[] {"in"}, new String[] {DataTypeManager.DefaultDataTypes.STRING});  //$NON-NLS-1$
         
         // Create expected results
         List[] expected = new List[] { 
-            Arrays.asList(new Object[] { "b", new Integer(2) }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "b", Integer.valueOf(2) }), //$NON-NLS-1$
         };    
     
         // Construct data manager with data
@@ -2035,12 +1792,8 @@ public class TestProcedureProcessor {
     }
     
     @Test public void testInsertAfterCreate() throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
         StringBuffer procedure = new StringBuffer("CREATE VIRTUAL PROCEDURE \n") //$NON-NLS-1$
         .append("BEGIN\n") //$NON-NLS-1$
         .append("\n  create local temporary table #temp (e1 string, e2 string);") //$NON-NLS-1$
@@ -2049,13 +1802,9 @@ public class TestProcedureProcessor {
         .append("SELECT e2 as e1 from #temp;\n") //$NON-NLS-1$
         .append("END"); //$NON-NLS-1$
         
-        QueryNode sq2n1 = new QueryNode(procedure.toString()); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1 }), sq2n1);  //$NON-NLS-1$
-
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq1);
+        addProc(metadata, procedure.toString());
         
-        String userUpdateStr = "EXEC pm1.sq1()"; //$NON-NLS-1$
+        String userUpdateStr = "EXEC pm1.sq2()"; //$NON-NLS-1$
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -2079,7 +1828,7 @@ public class TestProcedureProcessor {
 
         String userUpdateStr = "UPDATE g4 SET e1='x' where e2=5"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -2108,7 +1857,7 @@ public class TestProcedureProcessor {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x' where e2=5"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure, procedure2);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure, procedure2);
         
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -2118,23 +1867,14 @@ public class TestProcedureProcessor {
     }
     
     @Test public void testEvaluatableSelectWithOrderBy() throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("param", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
         StringBuffer procedure = new StringBuffer("CREATE VIRTUAL PROCEDURE \n") //$NON-NLS-1$
         .append("BEGIN\n") //$NON-NLS-1$
         .append("SELECT param from pm1.g1 order by param limit 1;\n") //$NON-NLS-1$
         .append("END"); //$NON-NLS-1$
         
-        QueryNode sq2n1 = new QueryNode(procedure.toString()); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
-
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq1);
+        addProc(metadata, "sq1", procedure.toString(), new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }, new String[] {"param"}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
         
         String userUpdateStr = "EXEC pm1.sq1(1)"; //$NON-NLS-1$
         
@@ -2148,23 +1888,14 @@ public class TestProcedureProcessor {
     }
     
     @Test public void testEvaluatableSelectWithOrderBy1() throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        TransformationMetadata metadata = RealMetadataFactory.example1();
         
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("param", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
         StringBuffer procedure = new StringBuffer("CREATE VIRTUAL PROCEDURE \n") //$NON-NLS-1$
         .append("BEGIN\n") //$NON-NLS-1$
         .append("SELECT param from pm1.g1 union select e1 from pm1.g1 order by param limit 2;\n") //$NON-NLS-1$
         .append("END"); //$NON-NLS-1$
         
-        QueryNode sq2n1 = new QueryNode(procedure.toString()); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
-
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq1);
+        addProc(metadata, "sq1", procedure.toString(), new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }, new String[] {"param"}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
         
         String userUpdateStr = "EXEC pm1.sq1(1)"; //$NON-NLS-1$
         
@@ -2200,7 +1931,7 @@ public class TestProcedureProcessor {
         .append("SELECT * FROM #TEMP;\n") //$NON-NLS-1$
         .append("END"); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = createProcedureMetadata(procedure.toString());
+        QueryMetadataInterface metadata = createProcedureMetadata(procedure.toString());
         
         String userUpdateStr = "EXEC pm1.sq1()"; //$NON-NLS-1$
         
@@ -2210,24 +1941,13 @@ public class TestProcedureProcessor {
         
         
         helpTestProcess(plan, new List[] {
-            Arrays.asList(new Object[] {new Integer(240)}),
-            Arrays.asList(new Object[] {new Integer(637)})}, dataMgr, metadata);
+            Arrays.asList(new Object[] {Integer.valueOf(240)}),
+            Arrays.asList(new Object[] {Integer.valueOf(637)})}, dataMgr, metadata);
     }
 
-    private FakeMetadataFacade createProcedureMetadata(String procedure) {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        
-        
-        QueryNode sq2n1 = new QueryNode(procedure.toString()); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1}), sq2n1);  //$NON-NLS-1$
-
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq1);
+    private QueryMetadataInterface createProcedureMetadata(String procedure) throws QueryMetadataException {
+    	TransformationMetadata metadata = RealMetadataFactory.example1();
+    	addProc(metadata, "sq1", procedure, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }, new String[0], new String[0]);
         return metadata;
     }
     
@@ -2240,7 +1960,7 @@ public class TestProcedureProcessor {
         procedure += "Select x from temp;\n"; //$NON-NLS-1$
         procedure += "END\n"; //$NON-NLS-1$
                 
-        FakeMetadataFacade metadata = createProcedureMetadata(procedure);
+        QueryMetadataInterface metadata = createProcedureMetadata(procedure);
         
         String userUpdateStr = "EXEC pm1.sq1()"; //$NON-NLS-1$
         
@@ -2257,24 +1977,21 @@ public class TestProcedureProcessor {
      * wraps {@link TestXMLPlanningEnhancements.testNested2WithContextCriteria5d1} in a procedure
      */
     @Test public void testXMLWithExternalCriteria() throws Exception {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
+        TransformationMetadata metadata = TestXMLProcessor.exampleMetadata();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String resultFile = "TestXMLProcessor-testNested2WithContextCriteria5d.xml"; //$NON-NLS-1$
         String expectedDoc = TestXMLProcessor.readFile(resultFile);
                 
-        FakeMetadataObject pm1 = metadata.getStore().findObject("xqttest",FakeMetadataObject.MODEL); //$NON-NLS-1$
+        Schema pm1 = metadata.getMetadataStore().getSchemas().get("XMLTEST"); //$NON-NLS-1
         
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs2", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("input", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null);  //$NON-NLS-1$
+        ColumnSet<Procedure> rs2 = RealMetadataFactory.createResultSet("pm1.rs2", new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
+        ProcedureParameter rs2p2 = RealMetadataFactory.createParameter("input", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER);  //$NON-NLS-1$
         QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "declare integer VARIABLES.x = xqttest.proc.input; SELECT * FROM xmltest.doc9 WHERE context(SupplierID, OrderID)=x OR OrderID='2'; END"); //$NON-NLS-1$ 
-        FakeMetadataObject sq2 = FakeMetadataFactory.createVirtualProcedure("xqttest.proc", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
-
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq2);
+                                        + "declare integer VARIABLES.x = proc.input; SELECT * FROM xmltest.doc9 WHERE context(SupplierID, OrderID)=x OR OrderID='2'; END"); //$NON-NLS-1$ 
+        Procedure sq2 = RealMetadataFactory.createVirtualProcedure("proc", pm1, Arrays.asList(rs2p2), sq2n1);  //$NON-NLS-1$
+        sq2.setResultSet(rs2);
         
-        String userUpdateStr = "EXEC xqttest.proc(5)"; //$NON-NLS-1$
+        String userUpdateStr = "EXEC proc(5)"; //$NON-NLS-1$
         
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
                         
@@ -2286,24 +2003,21 @@ public class TestProcedureProcessor {
     }
     
     @Test public void testXMLWithExternalCriteria_InXMLVar() throws Exception {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
+    	TransformationMetadata metadata = TestXMLProcessor.exampleMetadata();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String resultFile = "TestXMLProcessor-testNested2WithContextCriteria5d.xml"; //$NON-NLS-1$
         String expectedDoc = TestXMLProcessor.readFile(resultFile);
-        expectedDoc = expectedDoc.replaceAll("\\r", ""); //$NON-NLS-1$ //$NON-NLS-2$        
-        FakeMetadataObject pm1 = metadata.getStore().findObject("xqttest",FakeMetadataObject.MODEL); //$NON-NLS-1$
+        expectedDoc = expectedDoc.replaceAll("\\r", ""); //$NON-NLS-1$ //$NON-NLS-2$   
+        Schema pm1 = metadata.getMetadataStore().getSchemas().get("XMLTEST"); //$NON-NLS-1
         
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs2", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("input", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null);  //$NON-NLS-1$
+        ColumnSet<Procedure> rs2 = RealMetadataFactory.createResultSet("pm1.rs2", new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
+        ProcedureParameter rs2p2 = RealMetadataFactory.createParameter("input", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER);  //$NON-NLS-1$
         QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "declare integer VARIABLES.x = xqttest.proc.input; declare xml y = SELECT * FROM xmltest.doc9 WHERE context(SupplierID, OrderID)=x OR OrderID='2'; select convert(y, string); END"); //$NON-NLS-1$ 
-        FakeMetadataObject sq2 = FakeMetadataFactory.createVirtualProcedure("xqttest.proc", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
+                                        + "declare integer VARIABLES.x = proc.input; declare xml y = SELECT * FROM xmltest.doc9 WHERE context(SupplierID, OrderID)=x OR OrderID='2'; select convert(y, string); END"); //$NON-NLS-1$ 
+        Procedure sq2 = RealMetadataFactory.createVirtualProcedure("proc", pm1, Arrays.asList(rs2p2), sq2n1);  //$NON-NLS-1$
+        sq2.setResultSet(rs2);
 
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq2);
-        
-        String userUpdateStr = "EXEC xqttest.proc(5)"; //$NON-NLS-1$
+        String userUpdateStr = "EXEC proc(5)"; //$NON-NLS-1$
         
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
                         
@@ -2320,7 +2034,7 @@ public class TestProcedureProcessor {
      * This one will successfully auto-stage
      */
     @Test public void testXMLWithExternalCriteria1() throws Exception {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
+    	TransformationMetadata metadata = TestXMLProcessor.exampleMetadata();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +  //$NON-NLS-1$
@@ -2358,18 +2072,14 @@ public class TestProcedureProcessor {
             "   </Catalog>\n" +  //$NON-NLS-1$
             "</Catalogs>"; //$NON-NLS-1$
 
-        FakeMetadataObject pm1 = metadata.getStore().findObject("xmltest",FakeMetadataObject.MODEL); //$NON-NLS-1$
+        Schema pm1 = metadata.getMetadataStore().getSchemas().get("XMLTEST"); //$NON-NLS-1
         
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs2", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("input", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null);  //$NON-NLS-1$
+        ColumnSet<Procedure> rs2 = RealMetadataFactory.createResultSet("pm1.rs2", new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
+        ProcedureParameter rs2p2 = RealMetadataFactory.createParameter("input", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER);  //$NON-NLS-1$
         QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
                                         + "declare integer VARIABLES.x = xmltest.proc.input; SELECT * FROM xmltest.doc9 WHERE context(SupplierID, SupplierID)=x; END"); //$NON-NLS-1$ 
-        FakeMetadataObject sq2 = FakeMetadataFactory.createVirtualProcedure("xmltest.proc", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
-
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq2);
-        
+        Procedure sq2 = RealMetadataFactory.createVirtualProcedure("proc", pm1, Arrays.asList(rs2p2), sq2n1);  //$NON-NLS-1$
+        sq2.setResultSet(rs2);
         String userUpdateStr = "EXEC xmltest.proc(52)"; //$NON-NLS-1$
         
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
@@ -2384,7 +2094,7 @@ public class TestProcedureProcessor {
     @Test public void testCase174806() throws Exception{
         String userUpdateStr = "EXEC pm1.vsp63()"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -2398,7 +2108,7 @@ public class TestProcedureProcessor {
     
     @Test public void testJoinProcAndPhysicalModel() throws Exception {
         String userUpdateStr = "select a.e1 from (EXEC pm1.vsp46()) as a, pm1.g1 where a.e1=pm1.g1.e1";     //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);   
 
@@ -2451,12 +2161,12 @@ public class TestProcedureProcessor {
         procedure += "   SELECT VARIABLES.Var1 AS e1;\n"; //$NON-NLS-1$
         procedure += "END\n"; //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = createProcedureMetadata(procedure);
+        QueryMetadataInterface metadata = createProcedureMetadata(procedure);
         String userQuery = "SELECT e1 FROM (EXEC pm1.sq1()) as proc"; //$NON-NLS-1$
         FakeDataManager dataMgr = exampleDataManager(metadata);
         ProcessorPlan plan = getProcedurePlan(userQuery, metadata);
 
-        List[] expected = new List[] {Arrays.asList(new Object[] {new Integer(3)})};
+        List[] expected = new List[] {Arrays.asList(new Object[] {Integer.valueOf(3)})};
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
@@ -2473,7 +2183,7 @@ public class TestProcedureProcessor {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
         FakeDataManager dataMgr = exampleDataManager(metadata);
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 		helpTestProcess(plan, 5, dataMgr, metadata);									 
@@ -2491,7 +2201,7 @@ public class TestProcedureProcessor {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
                                      
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
         FakeDataManager dataMgr = exampleDataManager(metadata);
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 		helpTestProcess(plan, 0, dataMgr, metadata);									 
@@ -2506,7 +2216,7 @@ public class TestProcedureProcessor {
     
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
     
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
         FakeDataManager dataMgr = exampleDataManager(metadata);
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 		helpTestProcess(plan, 8, dataMgr, metadata);									 
@@ -2542,15 +2252,15 @@ public class TestProcedureProcessor {
         		"   " + sql + ";" + //$NON-NLS-1$ //$NON-NLS-2$
         		"END"; //$NON-NLS-1$
         	
-        FakeMetadataFacade metadata = createProcedureMetadata(proc);
+        QueryMetadataInterface metadata = createProcedureMetadata(proc);
         String userQuery = "SELECT * FROM (EXEC pm1.sq1()) as proc"; //$NON-NLS-1$
         FakeDataManager dataMgr = exampleDataManager2(metadata);
         ProcessorPlan plan = getProcedurePlan(userQuery, metadata);
 
         List[] expected = new List[] {
-                Arrays.asList( new Object[] { "First", "First", new Integer(5), new Integer(5)} ), //$NON-NLS-1$ //$NON-NLS-2$
-                Arrays.asList( new Object[] { "Second", null, new Integer(15), null} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Third", null, new Integer(51), null} ) //$NON-NLS-1$
+                Arrays.asList( new Object[] { "First", "First", Integer.valueOf(5), Integer.valueOf(5)} ), //$NON-NLS-1$ //$NON-NLS-2$
+                Arrays.asList( new Object[] { "Second", null, Integer.valueOf(15), null} ), //$NON-NLS-1$
+                Arrays.asList( new Object[] { "Third", null, Integer.valueOf(51), null} ) //$NON-NLS-1$
         };
         helpTestProcess(plan, expected, dataMgr, metadata);
         
@@ -2588,15 +2298,15 @@ public class TestProcedureProcessor {
         		"   " + sql + ";" + //$NON-NLS-1$ //$NON-NLS-2$
         		"END"; //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = createProcedureMetadata(proc);
+        QueryMetadataInterface metadata = createProcedureMetadata(proc);
         String userQuery = "SELECT * FROM (EXEC pm1.sq1()) as proc"; //$NON-NLS-1$
         FakeDataManager dataMgr = exampleDataManager2(metadata);
         ProcessorPlan plan = getProcedurePlan(userQuery, metadata, TestOptimizer.getGenericFinder());
 
         List[] expected = new List[] {
-                Arrays.asList( new Object[] { "First", "First", new Integer(5), new Integer(5)} ), //$NON-NLS-1$ //$NON-NLS-2$
-                Arrays.asList( new Object[] { "Second", null, new Integer(15), null} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Third", null, new Integer(51), null} ) //$NON-NLS-1$
+                Arrays.asList( new Object[] { "First", "First", Integer.valueOf(5), Integer.valueOf(5)} ), //$NON-NLS-1$ //$NON-NLS-2$
+                Arrays.asList( new Object[] { "Second", null, Integer.valueOf(15), null} ), //$NON-NLS-1$
+                Arrays.asList( new Object[] { "Third", null, Integer.valueOf(51), null} ) //$NON-NLS-1$
         };
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
@@ -2610,7 +2320,7 @@ public class TestProcedureProcessor {
                 " select e1 from #t1;\n" + //$NON-NLS-1$
         		"END"; //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = createProcedureMetadata(proc);
+        QueryMetadataInterface metadata = createProcedureMetadata(proc);
         String userQuery = "SELECT * FROM (EXEC pm1.sq1()) as proc"; //$NON-NLS-1$
         FakeDataManager dataMgr = exampleDataManager2(metadata);
         ProcessorPlan plan = getProcedurePlan(userQuery, metadata, TestOptimizer.getGenericFinder());
@@ -2629,7 +2339,7 @@ public class TestProcedureProcessor {
                 " select e2 from (exec pm1.sq2((select max(e1) from t1))) x;\n" + //$NON-NLS-1$
         		"END"; //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = createProcedureMetadata(proc);
+        QueryMetadataInterface metadata = createProcedureMetadata(proc);
         String userQuery = "SELECT * FROM (EXEC pm1.sq1()) as proc"; //$NON-NLS-1$
         FakeDataManager dataMgr = exampleDataManager2(metadata);
         ProcessorPlan plan = getProcedurePlan(userQuery, metadata, TestOptimizer.getGenericFinder());
@@ -2642,7 +2352,7 @@ public class TestProcedureProcessor {
     
     @Test public void testUnambiguousVirtualProc() throws Exception {
         String userQuery = "EXEC MMSP6('1')"; //$NON-NLS-1$
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         ProcessorPlan plan = getProcedurePlan(userQuery, metadata, TestOptimizer.getGenericFinder());
 
         List[] expected = new List[] {
@@ -2664,13 +2374,7 @@ public class TestProcedureProcessor {
     
     @Test public void testNonQueryPushdownValidation() throws Exception {
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        FakeMetadataObject in = FakeMetadataFactory.createParameter("pm1.sq1.in1", 2, SPParameter.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1();
 
         StringBuffer procedure = new StringBuffer("CREATE VIRTUAL PROCEDURE \n"); //$NON-NLS-1$
         procedure.append("BEGIN\n"); //$NON-NLS-1$
@@ -2681,12 +2385,8 @@ public class TestProcedureProcessor {
         procedure.append("exec pm1.sq2(in1 || 'foo');\n"); //$NON-NLS-1$
         procedure.append("END"); //$NON-NLS-1$
         
-        QueryNode sq2n1 = new QueryNode(procedure.toString()); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { in, rs2p1 }), sq2n1);  //$NON-NLS-1$
+        addProc(metadata, "sq1", procedure.toString(), new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }, new String[] {"in1"}, new String[] {DataTypeManager.DefaultDataTypes.INTEGER});        
 
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq1);
-        
         String userUpdateStr = "EXEC pm1.sq1(1)"; //$NON-NLS-1$
         
         FakeDataManager dataMgr = exampleDataManager(metadata);

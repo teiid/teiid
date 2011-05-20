@@ -48,7 +48,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
 
@@ -67,7 +67,7 @@ public class TestRulePushSelectCriteria {
     }
     
     @Test public void testPushAcrossFrameWithAccessNode() throws Exception {
-    	QueryMetadataInterface metadata = new TempMetadataAdapter(FakeMetadataFactory.example1Cached(), new TempMetadataStore());
+    	QueryMetadataInterface metadata = new TempMetadataAdapter(RealMetadataFactory.example1Cached(), new TempMetadataStore());
     	Command command = TestOptimizer.helpGetCommand("select * from (select * from pm1.g1 union select * from pm1.g2) x where e1 = 1", metadata, null); //$NON-NLS-1$
     	Command subCommand = TestOptimizer.helpGetCommand("select * from pm1.g1 union select * from pm1.g2", metadata, null); //$NON-NLS-1$
     	RelationalPlanner p = new RelationalPlanner();

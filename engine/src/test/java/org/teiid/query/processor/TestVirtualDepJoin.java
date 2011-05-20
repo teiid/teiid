@@ -28,7 +28,6 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -40,21 +39,24 @@ import org.teiid.common.buffer.impl.MemoryStorageManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.query.mapping.relational.QueryNode;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
-import org.teiid.query.unittest.FakeMetadataStore;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.TestValidator;
 
-
+@SuppressWarnings("nls")
 public class TestVirtualDepJoin {
     
     /** 
@@ -65,37 +67,34 @@ public class TestVirtualDepJoin {
      * @param object2
      * @since 4.3
      */
-    private static void setStats(List elementObjects,
+    private static void setStats(List<Column> elementObjects,
                                  int[] ndvs,
                                  int[] nnvs,
                                  String[] mins,
                                  String[] maxs) {
-        
-        Iterator iter = elementObjects.iterator();
-        for(int i=0; iter.hasNext(); i++) {
-            FakeMetadataObject obj = (FakeMetadataObject) iter.next();
+        for (int i = 0; i < elementObjects.size(); i++) {
+        	Column obj = elementObjects.get(i);
             if(ndvs != null) {
-                obj.putProperty(FakeMetadataObject.Props.DISTINCT_VALUES, new Integer(ndvs[i]));
+                obj.setDistinctValues(ndvs[i]);
             }
             if(nnvs != null) {
-                obj.putProperty(FakeMetadataObject.Props.NULL_VALUES, new Integer(nnvs[i]));
+                obj.setNullValues(nnvs[i]);
             }
             if(mins != null) {
-                obj.putProperty(FakeMetadataObject.Props.MIN_VALUE, mins[i]);
+                obj.setMinimumValue(mins[i]);
             }
             if(maxs != null) {
-                obj.putProperty(FakeMetadataObject.Props.MAX_VALUE, maxs[i]);
+                obj.setMaximumValue(maxs[i]);
             }
-            
         }
     }
     
-    public static FakeMetadataFacade exampleVirtualDepJoin() {
-        FakeMetadataObject us = FakeMetadataFactory.createPhysicalModel("US"); //$NON-NLS-1$
-        us.putProperty(FakeMetadataObject.Props.MAX_SET_SIZE, new Integer(0));
-        FakeMetadataObject usAccts = FakeMetadataFactory.createPhysicalGroup("US.Accounts", us); //$NON-NLS-1$
-        usAccts.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(1000000));
-        List usAcctsElem = FakeMetadataFactory.createElements(usAccts, 
+    public static TransformationMetadata exampleVirtualDepJoin() {
+    	MetadataStore metadataStore = new MetadataStore();
+        Schema us = RealMetadataFactory.createPhysicalModel("US", metadataStore); //$NON-NLS-1$
+        Table usAccts = RealMetadataFactory.createPhysicalGroup("Accounts", us); //$NON-NLS-1$
+        usAccts.setCardinality(1000000);
+        List<Column> usAcctsElem = RealMetadataFactory.createElements(usAccts, 
                                     new String[] { "customer", "account", "txn", "txnid", "pennies" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
                                     new String[] { DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER });
         setStats(usAcctsElem,
@@ -105,11 +104,10 @@ public class TestVirtualDepJoin {
                  new String[] {"1000", null, null, null, "-5"}  // max per column - use defaults //$NON-NLS-1$ //$NON-NLS-2$
         );
 
-        FakeMetadataObject europe = FakeMetadataFactory.createPhysicalModel("Europe"); //$NON-NLS-1$
-        europe.putProperty(FakeMetadataObject.Props.MAX_SET_SIZE, new Integer(0));
-        FakeMetadataObject euAccts = FakeMetadataFactory.createPhysicalGroup("Europe.CustAccts", europe); //$NON-NLS-1$
-        euAccts.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(1000000));
-        List euAcctsElem = FakeMetadataFactory.createElements(euAccts, 
+        Schema europe = RealMetadataFactory.createPhysicalModel("Europe", metadataStore); //$NON-NLS-1$
+        Table euAccts = RealMetadataFactory.createPhysicalGroup("CustAccts", europe); //$NON-NLS-1$
+        euAccts.setCardinality(1000000);
+        List<Column> euAcctsElem = RealMetadataFactory.createElements(euAccts, 
                                     new String[] { "id", "accid", "type", "amount" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                                     new String[] { DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.SHORT, DataTypeManager.DefaultDataTypes.BIG_DECIMAL });
         setStats(euAcctsElem,
@@ -119,11 +117,10 @@ public class TestVirtualDepJoin {
                  null  // max per column - use defaults
         );
 
-        FakeMetadataObject cust = FakeMetadataFactory.createPhysicalModel("CustomerMaster"); //$NON-NLS-1$
-        cust.putProperty(FakeMetadataObject.Props.MAX_SET_SIZE, new Integer(0));
-        FakeMetadataObject customers = FakeMetadataFactory.createPhysicalGroup("CustomerMaster.Customers", cust); //$NON-NLS-1$
-        customers.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(1000));
-        List customersElem = FakeMetadataFactory.createElements(customers, 
+        Schema cust = RealMetadataFactory.createPhysicalModel("CustomerMaster", metadataStore); //$NON-NLS-1$
+        Table customers = RealMetadataFactory.createPhysicalGroup("Customers", cust); //$NON-NLS-1$
+        customers.setCardinality(1000);
+        List<Column> customersElem = RealMetadataFactory.createElements(customers, 
                                     new String[] { "id", "first", "last", "birthday" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                                     new String[] { DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.DATE });
         setStats(customersElem,
@@ -132,9 +129,9 @@ public class TestVirtualDepJoin {
                  null, // min per column - use defaults
                  null  // max per column - use defaults
         );
-        FakeMetadataObject locations = FakeMetadataFactory.createPhysicalGroup("CustomerMaster.Locations", cust); //$NON-NLS-1$
-        locations.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(1200));
-        List locationsElem = FakeMetadataFactory.createElements(locations, 
+        Table locations = RealMetadataFactory.createPhysicalGroup("Locations", cust); //$NON-NLS-1$
+        locations.setCardinality(1200);
+        List<Column> locationsElem = RealMetadataFactory.createElements(locations, 
                                     new String[] { "id", "location" }, //$NON-NLS-1$ //$NON-NLS-2$ 
                                     new String[] { DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.STRING });
         setStats(locationsElem,
@@ -144,46 +141,23 @@ public class TestVirtualDepJoin {
                  null  // max per column - use defaults
         );
 
-        FakeMetadataObject vAccts = FakeMetadataFactory.createVirtualModel("Accounts"); //$NON-NLS-1$
+        Schema vAccts = RealMetadataFactory.createVirtualModel("Accounts", metadataStore); //$NON-NLS-1$
         QueryNode accountsPlan = new QueryNode("SELECT customer as customer_id, convert(account, long) as account_id, convert(txnid, long) as transaction_id, case txn when 'DEP' then 1 when 'TFR' then 2 when 'WD' then 3 else -1 end as txn_type, (pennies + convert('0.00', bigdecimal)) / 100 as amount, 'US' as source FROM US.Accounts where txn != 'X'" +  //$NON-NLS-1$
 		   "UNION ALL " +  //$NON-NLS-1$
 		   "SELECT id, convert(accid / 10000, long), mod(accid, 10000), convert(type, integer), amount, 'EU' from Europe.CustAccts"); //$NON-NLS-1$ 
-        FakeMetadataObject accounts = FakeMetadataFactory.createVirtualGroup("Accounts.Accounts", vAccts, accountsPlan); //$NON-NLS-1$
-        List accountsElem = FakeMetadataFactory.createElements(accounts, 
+        Table accounts = RealMetadataFactory.createVirtualGroup("Accounts", vAccts, accountsPlan); //$NON-NLS-1$
+        RealMetadataFactory.createElements(accounts, 
                                             new String[] { "customer_id", "account_id", "transaction_id", "txn_type", "amount", "source" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
                                             new String[] { DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BIG_DECIMAL, DataTypeManager.DefaultDataTypes.STRING });
         
-        FakeMetadataObject master = FakeMetadataFactory.createVirtualModel("Master"); //$NON-NLS-1$
+        Schema master = RealMetadataFactory.createVirtualModel("Master", metadataStore); //$NON-NLS-1$
         QueryNode masterPlan = new QueryNode("select id as CustomerID, First, Last, a.account_id as AccountID, transaction_id as TransactionID, txn_type AS TxnCode, Amount from CustomerMaster.Customers c, Accounts.Accounts a where c.id=a.customer_id"); //$NON-NLS-1$ 
-        FakeMetadataObject transactions = FakeMetadataFactory.createVirtualGroup("Master.Transactions", master, masterPlan); //$NON-NLS-1$
-        List transactionsElem = FakeMetadataFactory.createElements(transactions, 
+        Table transactions = RealMetadataFactory.createVirtualGroup("Transactions", master, masterPlan); //$NON-NLS-1$
+        RealMetadataFactory.createElements(transactions, 
                                             new String[] { "CustomerID", "First", "Last", "AccountID", "TransactionID", "TxnCode", "Amount" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
                                             new String[] { DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BIG_DECIMAL });
         
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(us);
-        store.addObject(usAccts);
-        store.addObjects(usAcctsElem);
-
-        store.addObject(europe);
-        store.addObject(euAccts);
-        store.addObjects(euAcctsElem);
-
-        store.addObject(cust);
-        store.addObject(customers);
-        store.addObjects(customersElem);
-        store.addObject(locations);
-        store.addObjects(locationsElem);
-        
-        store.addObject(vAccts);
-        store.addObject(accounts);
-        store.addObjects(accountsElem);
-
-        store.addObject(master);
-        store.addObject(transactions);
-        store.addObjects(transactionsElem);
-
-        return new FakeMetadataFacade(store);
+        return RealMetadataFactory.createTransformationMetadata(metadataStore, "virtualDepJoin");
     }
 
     @Test public void testVirtualDepJoinNoValues() throws Exception {  
@@ -195,7 +169,7 @@ public class TestVirtualDepJoin {
                 };     
 
         // Construct data manager with data 
-        FakeMetadataFacade metadata = exampleVirtualDepJoin();        
+        QueryMetadataInterface metadata = exampleVirtualDepJoin();        
         FakeDataManager dataManager = new FakeDataManager(); 
         sampleDataVirtualDepJoin(dataManager, metadata); 
          
@@ -208,7 +182,7 @@ public class TestVirtualDepJoin {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, false);    
         finder.addCapabilities("Europe", caps);//$NON-NLS-1$
         finder.addCapabilities("CustomerMaster", caps);//$NON-NLS-1$
-        ProcessorPlan plan = TestProcessor.helpGetPlan(command, exampleVirtualDepJoin(), finder, context); 
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, metadata, finder, context); 
  
         TestOptimizer.checkDependentJoinCount(plan, 1);
         // Run query 
@@ -235,7 +209,7 @@ public class TestVirtualDepJoin {
                 };     
 
         // Construct data manager with data 
-        FakeMetadataFacade metadata = exampleVirtualDepJoin();        
+        QueryMetadataInterface metadata = exampleVirtualDepJoin();        
         FakeDataManager dataManager = new FakeDataManager(); 
         sampleDataVirtualDepJoin(dataManager, metadata); 
          
@@ -251,7 +225,7 @@ public class TestVirtualDepJoin {
         finder.addCapabilities("US", caps); //$NON-NLS-1$
         finder.addCapabilities("Europe", caps);//$NON-NLS-1$
         finder.addCapabilities("CustomerMaster", caps);//$NON-NLS-1$
-        ProcessorPlan plan = TestProcessor.helpGetPlan(command, exampleVirtualDepJoin(), finder, context); 
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, metadata, finder, context); 
          
         // Check plan contents
         int selectCount = !setPushdown ? 3 : 0;
@@ -302,7 +276,7 @@ public class TestVirtualDepJoin {
                 };     
 
         // Construct data manager with data 
-        FakeMetadataFacade metadata = exampleVirtualDepJoin();        
+        QueryMetadataInterface metadata = exampleVirtualDepJoin();        
         FakeDataManager dataManager = new FakeDataManager(); 
         sampleDataVirtualDepJoin(dataManager, metadata); 
          
@@ -317,7 +291,7 @@ public class TestVirtualDepJoin {
         finder.addCapabilities("US", caps1); //$NON-NLS-1$
         finder.addCapabilities("Europe", caps2);//$NON-NLS-1$
         finder.addCapabilities("CustomerMaster", caps1);//$NON-NLS-1$
-        ProcessorPlan plan = TestProcessor.helpGetPlan(command, exampleVirtualDepJoin(), finder, context); 
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, metadata, finder, context); 
  
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -351,7 +325,7 @@ public class TestVirtualDepJoin {
                 };     
 
         // Construct data manager with data 
-        FakeMetadataFacade metadata = exampleVirtualDepJoin();        
+        QueryMetadataInterface metadata = exampleVirtualDepJoin();        
         FakeDataManager dataManager = new FakeDataManager(); 
         sampleDataVirtualDepJoin(dataManager, metadata); 
          
@@ -364,7 +338,7 @@ public class TestVirtualDepJoin {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, false);    
         finder.addCapabilities("Europe", caps);//$NON-NLS-1$
         finder.addCapabilities("CustomerMaster", caps);//$NON-NLS-1$
-        ProcessorPlan plan = TestProcessor.helpGetPlan(command, exampleVirtualDepJoin(), finder, context); 
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, metadata, finder, context); 
  
         TestOptimizer.checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -419,7 +393,7 @@ public class TestVirtualDepJoin {
         // Create query  
         String sql = "SELECT * from Master.Transactions where last = 'Davis' order by CustomerID, TransactionID"; //$NON-NLS-1$ 
          
-        List expected = new LinkedList();
+        List<List<Object>> expected = new LinkedList<List<Object>>();
         
         
         // Create expected results 
@@ -460,7 +434,7 @@ public class TestVirtualDepJoin {
         expected.add(Arrays.asList(new Object[] { new Long(300), "CloneB", "Davis", new Long(630), new Long(1008), new Integer(2), new BigDecimal("62.00") })); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 
         // Construct data manager with data 
-        FakeMetadataFacade metadata = exampleVirtualDepJoin();        
+        QueryMetadataInterface metadata = exampleVirtualDepJoin();        
         FakeDataManager dataManager = new FakeDataManager();
         sampleDataVirtualDepJoin(dataManager, metadata); 
         overrideVirtualDepJoinData(dataManager, metadata, unique);
@@ -475,7 +449,7 @@ public class TestVirtualDepJoin {
         finder.addCapabilities("US", caps); //$NON-NLS-1$
         finder.addCapabilities("Europe", caps);//$NON-NLS-1$
         finder.addCapabilities("CustomerMaster", caps);//$NON-NLS-1$
-        ProcessorPlan plan = TestProcessor.helpGetPlan(command, exampleVirtualDepJoin(), finder, context); 
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, metadata, finder, context); 
  
         // Run query 
         BufferManager bufferMgr = createCustomBufferMgr(2);
@@ -515,7 +489,7 @@ public class TestVirtualDepJoin {
                 };     
 
         // Construct data manager with data 
-        FakeMetadataFacade metadata = exampleVirtualDepJoin();        
+        QueryMetadataInterface metadata = exampleVirtualDepJoin();        
         FakeDataManager dataManager = new FakeDataManager(); 
         sampleDataVirtualDepJoin(dataManager, metadata); 
          
@@ -527,102 +501,71 @@ public class TestVirtualDepJoin {
         finder.addCapabilities("US", caps); //$NON-NLS-1$
         finder.addCapabilities("Europe", caps);//$NON-NLS-1$
         finder.addCapabilities("CustomerMaster", caps);//$NON-NLS-1$
-        ProcessorPlan plan = TestProcessor.helpGetPlan(command, exampleVirtualDepJoin(), finder); 
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, metadata, finder); 
  
         // Run query 
         CommandContext context = TestProcessor.createCommandContext();
         TestProcessor.helpProcess(plan, context, dataManager, expected); 
     }
     
-    private void sampleDataVirtualDepJoin(FakeDataManager dataMgr, FakeMetadataFacade metadata) throws Exception {
+    private void sampleDataVirtualDepJoin(FakeDataManager dataMgr, QueryMetadataInterface metadata) throws Exception {
         dataMgr.setBlockOnce();
-        // Group US.Accounts
-        FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("US.Accounts"); //$NON-NLS-1$
-        List elementIDs = metadata.getElementIDsInGroupID(groupID);
-        List elementSymbols = FakeDataStore.createElements(elementIDs);
     
         dataMgr.registerTuples(
-            groupID,
-            elementSymbols,
-            
-            new List[] { 
-                Arrays.asList(new Object[] { new Long(100), new Integer(15000), "DEP", new Integer(123), new Integer(10000) }), //$NON-NLS-1$
-                Arrays.asList(new Object[] { new Long(100), new Integer(15000), "TFR", new Integer(127), new Integer(25000) }), //$NON-NLS-1$
-                Arrays.asList(new Object[] { new Long(100), new Integer(15000), "WD", new Integer(128), new Integer(100000) }), //$NON-NLS-1$
-                Arrays.asList(new Object[] { new Long(100), new Integer(15001), "DEP", new Integer(134), new Integer(1000) }), //$NON-NLS-1$
-                Arrays.asList(new Object[] { new Long(100), new Integer(15001), "DEP", new Integer(201), new Integer(1000) }), //$NON-NLS-1$
-                Arrays.asList(new Object[] { new Long(200), new Integer(16000), "WD", new Integer(207), new Integer(1234) }), //$NON-NLS-1$
-                Arrays.asList(new Object[] { new Long(200), new Integer(16000), "WD", new Integer(299), new Integer(95034) }), //$NON-NLS-1$
-                Arrays.asList(new Object[] { new Long(200), new Integer(16000), "X", new Integer(301), new Integer(5000) }), //$NON-NLS-1$
-                } );    
+            metadata,
+            "US.Accounts", new List[] { 
+				    Arrays.asList(new Object[] { new Long(100), new Integer(15000), "DEP", new Integer(123), new Integer(10000) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { new Long(100), new Integer(15000), "TFR", new Integer(127), new Integer(25000) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { new Long(100), new Integer(15000), "WD", new Integer(128), new Integer(100000) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { new Long(100), new Integer(15001), "DEP", new Integer(134), new Integer(1000) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { new Long(100), new Integer(15001), "DEP", new Integer(201), new Integer(1000) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { new Long(200), new Integer(16000), "WD", new Integer(207), new Integer(1234) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { new Long(200), new Integer(16000), "WD", new Integer(299), new Integer(95034) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { new Long(200), new Integer(16000), "X", new Integer(301), new Integer(5000) }), //$NON-NLS-1$
+				    } );    
 
-        // Group Europe.CustAccts
-        groupID = (FakeMetadataObject) metadata.getGroupID("Europe.CustAccts"); //$NON-NLS-1$
-        elementIDs = metadata.getElementIDsInGroupID(groupID);
-        elementSymbols = FakeDataStore.createElements(elementIDs);
-    
         dataMgr.registerTuples(
-            groupID,
-            elementSymbols,
-            
-            new List[] { 
-                Arrays.asList(new Object[] { new Long(100), new Long(5401002), new Short((short)1), new BigDecimal("7.20") }), //$NON-NLS-1$
-                Arrays.asList(new Object[] { new Long(100), new Long(5401003), new Short((short)2), new BigDecimal("1000.00") }), //$NON-NLS-1$
-                Arrays.asList(new Object[] { new Long(200), new Long(5501004), new Short((short)3), new BigDecimal("542.20") }), //$NON-NLS-1$
-                Arrays.asList(new Object[] { new Long(200), new Long(5501005), new Short((short)1), new BigDecimal("99.99") }), //$NON-NLS-1$
-                Arrays.asList(new Object[] { new Long(300), new Long(6201006), new Short((short)1), new BigDecimal("10000.00") }), //$NON-NLS-1$
-                Arrays.asList(new Object[] { new Long(300), new Long(6201007), new Short((short)2), new BigDecimal("0.75") }), //$NON-NLS-1$
-                Arrays.asList(new Object[] { new Long(300), new Long(6301008), new Short((short)2), new BigDecimal("62.00") }), //$NON-NLS-1$
-                } );    
+            metadata,
+            "Europe.CustAccts", new List[] { 
+				    Arrays.asList(new Object[] { new Long(100), new Long(5401002), new Short((short)1), new BigDecimal("7.20") }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { new Long(100), new Long(5401003), new Short((short)2), new BigDecimal("1000.00") }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { new Long(200), new Long(5501004), new Short((short)3), new BigDecimal("542.20") }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { new Long(200), new Long(5501005), new Short((short)1), new BigDecimal("99.99") }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { new Long(300), new Long(6201006), new Short((short)1), new BigDecimal("10000.00") }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { new Long(300), new Long(6201007), new Short((short)2), new BigDecimal("0.75") }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { new Long(300), new Long(6301008), new Short((short)2), new BigDecimal("62.00") }), //$NON-NLS-1$
+				    } );    
 
-        // Group CustomerMaster.Customers
-        groupID = (FakeMetadataObject) metadata.getGroupID("CustomerMaster.Customers"); //$NON-NLS-1$
-        elementIDs = metadata.getElementIDsInGroupID(groupID);
-        elementSymbols = FakeDataStore.createElements(elementIDs);
-    
-        dataMgr.registerTuples(groupID, elementSymbols,                               
-                               new List[] { 
-                                   Arrays.asList(new Object[] { new Long(100), "Miles", "Davis", TimestampUtil.createDate(1926, 4, 25) }), //$NON-NLS-1$ //$NON-NLS-2$
-                                   Arrays.asList(new Object[] { new Long(200), "John", "Coltrane", TimestampUtil.createDate(1926, 8, 23) }), //$NON-NLS-1$ //$NON-NLS-2$
-                                   Arrays.asList(new Object[] { new Long(300), "Thelonious", "Monk", TimestampUtil.createDate(1917, 9, 10) }), //$NON-NLS-1$ //$NON-NLS-2$
-                                   } );    
+        dataMgr.registerTuples(metadata, "CustomerMaster.Customers", new List[] { 
+			       Arrays.asList(new Object[] { new Long(100), "Miles", "Davis", TimestampUtil.createDate(1926, 4, 25) }), //$NON-NLS-1$ //$NON-NLS-2$
+			       Arrays.asList(new Object[] { new Long(200), "John", "Coltrane", TimestampUtil.createDate(1926, 8, 23) }), //$NON-NLS-1$ //$NON-NLS-2$
+			       Arrays.asList(new Object[] { new Long(300), "Thelonious", "Monk", TimestampUtil.createDate(1917, 9, 10) }), //$NON-NLS-1$ //$NON-NLS-2$
+			       } );    
 
-        // Group CustomerMaster.Locations
-        groupID = (FakeMetadataObject) metadata.getGroupID("CustomerMaster.Locations"); //$NON-NLS-1$
-        elementIDs = metadata.getElementIDsInGroupID(groupID);
-        elementSymbols = FakeDataStore.createElements(elementIDs);
-    
-        dataMgr.registerTuples(groupID, elementSymbols,                               
-                               new List[] { 
-                                   Arrays.asList(new Object[] { new Long(100), "US" }), //$NON-NLS-1$ 
-                                   Arrays.asList(new Object[] { new Long(100), "EU" }), //$NON-NLS-1$ 
-                                   Arrays.asList(new Object[] { new Long(200), "US" }), //$NON-NLS-1$ 
-                                   Arrays.asList(new Object[] { new Long(200), "EU" }), //$NON-NLS-1$ 
-                                   Arrays.asList(new Object[] { new Long(300), "EU" }), //$NON-NLS-1$ 
-                                   } );        
+        dataMgr.registerTuples(metadata, "CustomerMaster.Locations", new List[] { 
+			       Arrays.asList(new Object[] { new Long(100), "US" }), //$NON-NLS-1$ 
+			       Arrays.asList(new Object[] { new Long(100), "EU" }), //$NON-NLS-1$ 
+			       Arrays.asList(new Object[] { new Long(200), "US" }), //$NON-NLS-1$ 
+			       Arrays.asList(new Object[] { new Long(200), "EU" }), //$NON-NLS-1$ 
+			       Arrays.asList(new Object[] { new Long(300), "EU" }), //$NON-NLS-1$ 
+			       } );        
     }                    
 
-    private void overrideVirtualDepJoinData(FakeDataManager dataMgr, FakeMetadataFacade metadata, boolean unique) throws Exception {
+    private void overrideVirtualDepJoinData(FakeDataManager dataMgr, QueryMetadataInterface metadata, boolean unique) throws Exception {
         // Group CustomerMaster.Customers
-        FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("CustomerMaster.Customers"); //$NON-NLS-1$
-        List elementIDs = metadata.getElementIDsInGroupID(groupID);
-        List elementSymbols = FakeDataStore.createElements(elementIDs);
+        List<List<?>> data = new LinkedList<List<?>>();
         
-        TimestampUtil ts = new TimestampUtil();
-        
-        List data = new LinkedList();
-        
-        data.add(Arrays.asList(new Object[] { new Long(100), "Miles", "Davis", ts.createDate(1926, 4, 25) })); //$NON-NLS-1$ //$NON-NLS-2$
+        data.add(Arrays.asList(new Object[] { new Long(100), "Miles", "Davis", TimestampUtil.createDate(1926, 4, 25) })); //$NON-NLS-1$ //$NON-NLS-2$
         if (!unique) {
-            data.add(Arrays.asList(new Object[] { new Long(100), "Miles", "Davis", ts.createDate(1926, 4, 25) })); //$NON-NLS-1$ //$NON-NLS-2$
+            data.add(Arrays.asList(new Object[] { new Long(100), "Miles", "Davis", TimestampUtil.createDate(1926, 4, 25) })); //$NON-NLS-1$ //$NON-NLS-2$
         }
-        data.add(Arrays.asList(new Object[] { new Long(200), "CloneA", "Davis", ts.createDate(1926, 4, 26) })); //$NON-NLS-1$ //$NON-NLS-2$
-        data.add(Arrays.asList(new Object[] { new Long(300), "CloneB", "Davis", ts.createDate(1926, 4, 27) })); //$NON-NLS-1$ //$NON-NLS-2$
-        data.add(Arrays.asList(new Object[] { new Long(400), "CloneC", "Davis", ts.createDate(1926, 4, 28) })); //$NON-NLS-1$ //$NON-NLS-2$
+        data.add(Arrays.asList(new Object[] { new Long(200), "CloneA", "Davis", TimestampUtil.createDate(1926, 4, 26) })); //$NON-NLS-1$ //$NON-NLS-2$
+        data.add(Arrays.asList(new Object[] { new Long(300), "CloneB", "Davis", TimestampUtil.createDate(1926, 4, 27) })); //$NON-NLS-1$ //$NON-NLS-2$
+        data.add(Arrays.asList(new Object[] { new Long(400), "CloneC", "Davis", TimestampUtil.createDate(1926, 4, 28) })); //$NON-NLS-1$ //$NON-NLS-2$
         
         dataMgr.registerTuples(
-            groupID,
-            elementSymbols, (List[])data.toArray(new List[data.size()]));
+            metadata,
+            "CustomerMaster.Customers", (List[])data.toArray(new List[data.size()]));
     }
     
     @Test public void testVirtualAccessVirtualDep() throws Exception {
@@ -686,7 +629,7 @@ public class TestVirtualDepJoin {
                 };     
 
         // Construct data manager with data 
-        FakeMetadataFacade metadata = exampleVirtualDepJoin();        
+        QueryMetadataInterface metadata = exampleVirtualDepJoin();        
         FakeDataManager dataManager = new FakeDataManager(); 
         sampleDataVirtualDepJoin(dataManager, metadata); 
          
@@ -699,7 +642,7 @@ public class TestVirtualDepJoin {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, false);    
         finder.addCapabilities("Europe", caps);//$NON-NLS-1$
         finder.addCapabilities("CustomerMaster", caps);//$NON-NLS-1$
-        ProcessorPlan plan = TestProcessor.helpGetPlan(command, exampleVirtualDepJoin(), finder, context); 
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, metadata, finder, context); 
  
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -735,7 +678,7 @@ public class TestVirtualDepJoin {
                 };     
 
         // Construct data manager with data 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();        
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();        
         FakeDataManager dataManager = new FakeDataManager(); 
         TestProcessor.sampleData1(dataManager); 
          

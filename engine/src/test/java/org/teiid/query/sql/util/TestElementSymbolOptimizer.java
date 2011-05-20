@@ -36,7 +36,7 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 /**
  */
@@ -65,51 +65,51 @@ public class TestElementSymbolOptimizer {
     /** Can be optimized */
     @Test public void testOptimize1() throws Exception {
         helpTestOptimize("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", //$NON-NLS-1$
-                            FakeMetadataFactory.example1Cached(), 
+                            RealMetadataFactory.example1Cached(), 
                             "SELECT e1, e2 FROM pm1.g1"); //$NON-NLS-1$
     }
 
     /** Can't be optimized */
     @Test public void testOptimize2() throws Exception {
         helpTestOptimize("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1, pm1.g2", //$NON-NLS-1$
-                            FakeMetadataFactory.example1Cached(), 
+                            RealMetadataFactory.example1Cached(), 
                             "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1, pm1.g2"); //$NON-NLS-1$
     }
 
     @Test public void testOptimize3() throws Exception {
         helpTestOptimize("UPDATE pm1.g1 SET pm1.g1.e1 = 'e' WHERE pm1.g1.e2 = 3", //$NON-NLS-1$
-                            FakeMetadataFactory.example1Cached(), 
+                            RealMetadataFactory.example1Cached(), 
                             "UPDATE pm1.g1 SET e1 = 'e' WHERE e2 = 3"); //$NON-NLS-1$
     }
 
     @Test public void testOptimize4() throws Exception {
         helpTestOptimize("INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES ('e', 3)", //$NON-NLS-1$
-                            FakeMetadataFactory.example1Cached(), 
+                            RealMetadataFactory.example1Cached(), 
                             "INSERT INTO pm1.g1 (e1, e2) VALUES ('e', 3)"); //$NON-NLS-1$
     }
 
     @Test public void testOptimize5() throws Exception {
         helpTestOptimize("DELETE FROM pm1.g1 WHERE pm1.g1.e2 = 3", //$NON-NLS-1$
-                            FakeMetadataFactory.example1Cached(), 
+                            RealMetadataFactory.example1Cached(), 
                             "DELETE FROM pm1.g1 WHERE e2 = 3"); //$NON-NLS-1$
     }
     
     @Test public void testOptimize6() throws Exception {
         helpTestOptimize("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 WHERE e2 > (SELECT AVG(pm1.g2.e2) FROM pm1.g2 WHERE pm1.g1.e1 = pm1.g2.e1)", //$NON-NLS-1$
-                            FakeMetadataFactory.example1Cached(), 
+                            RealMetadataFactory.example1Cached(), 
                             "SELECT e1, e2 FROM pm1.g1 WHERE e2 > (SELECT AVG(e2) FROM pm1.g2 WHERE pm1.g1.e1 = e1)"); //$NON-NLS-1$
     }
 
     /** alias */
     @Test public void testOptimize7() throws Exception {
         helpTestOptimize("SELECT 'text' AS zz, pm1.g1.e2 FROM pm1.g1", //$NON-NLS-1$
-                            FakeMetadataFactory.example1Cached(), 
+                            RealMetadataFactory.example1Cached(), 
                             "SELECT 'text' AS zz, e2 FROM pm1.g1"); //$NON-NLS-1$
     }
 
     @Test public void testOptimize8() throws Exception {
         helpTestOptimize("SELECT 1, 'xyz'", //$NON-NLS-1$
-                            FakeMetadataFactory.example1Cached(), 
+                            RealMetadataFactory.example1Cached(), 
                             "SELECT 1, 'xyz'"); //$NON-NLS-1$
     }
 
@@ -123,37 +123,37 @@ public class TestElementSymbolOptimizer {
     
     @Test public void testFullyQualify1() throws Exception {
         helpTestFullyQualify("SELECT e1, e2 FROM pm1.g1",  //$NON-NLS-1$
-                            FakeMetadataFactory.example1Cached(), 
+                            RealMetadataFactory.example1Cached(), 
                             "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"); //$NON-NLS-1$
     }
     
     @Test public void testXMLQuery() throws Exception {
         helpTestOptimize("SELECT root.node1.node2.node3 FROM xmltest.doc1",  //$NON-NLS-1$
-                            FakeMetadataFactory.example1Cached(), 
+                            RealMetadataFactory.example1Cached(), 
                             "SELECT root.node1.node2.node3 FROM xmltest.doc1"); //$NON-NLS-1$
     }
     
     @Test public void testVirtualStoredProcedure() throws Exception {
         helpTestOptimize("EXEC pm1.vsp7(5)",  //$NON-NLS-1$
-                            FakeMetadataFactory.example1Cached(), 
+                            RealMetadataFactory.example1Cached(), 
                             "EXEC pm1.vsp7(5)"); //$NON-NLS-1$
     }
 
     @Test public void testStoredQuerySubquery() throws Exception {
         helpTestOptimize("select x.e1 from (EXEC pm1.sq1()) as x",  //$NON-NLS-1$
-                            FakeMetadataFactory.example1Cached(), 
+                            RealMetadataFactory.example1Cached(), 
                             "SELECT e1 FROM (EXEC pm1.sq1()) AS x"); //$NON-NLS-1$
     }
 
     @Test public void testStoredQuerySubquery2() throws Exception {
         helpTestOptimize("select x.e1 from (EXEC pm1.sq1()) as x WHERE x.e2 = 3",  //$NON-NLS-1$
-                            FakeMetadataFactory.example1Cached(), 
+                            RealMetadataFactory.example1Cached(), 
                             "SELECT e1 FROM (EXEC pm1.sq1()) AS x WHERE e2 = 3"); //$NON-NLS-1$
     }
     
     @Test public void testOptimizeOrderBy() throws Exception {
         helpTestOptimize("SELECT pm1.g1.e1 FROM pm1.g1 order by pm1.g1.e1",  //$NON-NLS-1$
-                            FakeMetadataFactory.example1Cached(), 
+                            RealMetadataFactory.example1Cached(), 
                             "SELECT e1 FROM pm1.g1 ORDER BY e1"); //$NON-NLS-1$
     }
     
@@ -163,13 +163,13 @@ public class TestElementSymbolOptimizer {
      */
     @Test public void testOptimizeOrderBy1() throws Exception {
         helpTestFullyQualify("SELECT e1 FROM pm1.g1 order by e1",  //$NON-NLS-1$
-                            FakeMetadataFactory.example1Cached(), 
+                            RealMetadataFactory.example1Cached(), 
                             "SELECT pm1.g1.e1 FROM pm1.g1 ORDER BY e1"); //$NON-NLS-1$
     }
     
     @Test public void testOptimizeOrderByWithoutGroup() throws Exception {
         helpTestOptimize("SELECT pm1.g1.e1, count(*) as x FROM pm1.g1 order by x",  //$NON-NLS-1$
-                            FakeMetadataFactory.example1Cached(), 
+                            RealMetadataFactory.example1Cached(), 
                             "SELECT e1, COUNT(*) AS x FROM pm1.g1 ORDER BY x"); //$NON-NLS-1$
     }
 

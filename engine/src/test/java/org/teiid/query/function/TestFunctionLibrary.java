@@ -55,7 +55,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.metadata.FunctionMethod.PushDown;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.SourceSystemFunctions;
@@ -77,7 +77,7 @@ public class TestFunctionLibrary {
 	private static final Class<Date> T_DATE = DataTypeManager.DefaultDataClasses.DATE;
 	private static final Class<Timestamp> T_TIMESTAMP = DataTypeManager.DefaultDataClasses.TIMESTAMP;
 	
-	private FunctionLibrary library = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions());
+	private FunctionLibrary library = new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions());
 
 	@Before public void setUp() { 
 		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$ 

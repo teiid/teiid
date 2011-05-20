@@ -32,9 +32,9 @@ import java.util.List;
 import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.metadata.Column;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
-import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.Query;
@@ -42,8 +42,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 
 /**
@@ -54,36 +53,36 @@ public class TestOrderByRewrite  {
     private static Command getCommand(String sql) throws TeiidComponentException, TeiidProcessingException {
         Command command = QueryParser.getQueryParser().parseCommand(sql);
         
-        QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());
+        QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());
         
-        return QueryRewriter.rewrite(command, FakeMetadataFactory.example1Cached(), null);
+        return QueryRewriter.rewrite(command, RealMetadataFactory.example1Cached(), null);
     }
 
     private void helpCheckElements(OrderBy langObj,
                                    String[] elementNames,
                                    String[] elementIDs) {
-        List elements = new ArrayList();
-        for (Iterator i = langObj.getSortKeys().iterator(); i.hasNext();) {
-            ElementCollectorVisitor.getElements((LanguageObject)i.next(), elements);
+        List<ElementSymbol> elements = new ArrayList<ElementSymbol>();
+        for (Iterator<SingleElementSymbol> i = langObj.getSortKeys().iterator(); i.hasNext();) {
+            ElementCollectorVisitor.getElements(i.next(), elements);
         }
 
         assertEquals("Wrong number of elements: ", elementNames.length, elements.size()); //$NON-NLS-1$
 
         for (int i = 0; i < elements.size(); i++) {
-            ElementSymbol symbol = (ElementSymbol)elements.get(i);
+            ElementSymbol symbol = elements.get(i);
             assertEquals("Element name does not match: ", elementNames[i].toUpperCase(), symbol.getName().toUpperCase()); //$NON-NLS-1$
 
-            FakeMetadataObject elementID = (FakeMetadataObject)symbol.getMetadataID();
+            Column elementID = (Column)symbol.getMetadataID();
             assertNotNull("ElementSymbol " + symbol + " was not resolved and has no metadataID", elementID); //$NON-NLS-1$ //$NON-NLS-2$
-            assertEquals("ElementID name does not match: ", elementIDs[i].toUpperCase(), elementID.getName().toUpperCase()); //$NON-NLS-1$
+            assertEquals("ElementID name does not match: ", elementIDs[i].toUpperCase(), elementID.getFullName().toUpperCase()); //$NON-NLS-1$
         }
     }
     
     private void helpCheckExpressionsSymbols(OrderBy langObj,
                                              String[] functionsNames) {
     	int expCount = 0;
-        for (Iterator i = langObj.getSortKeys().iterator(); i.hasNext();) {
-        	SingleElementSymbol ses = (SingleElementSymbol)i.next();
+        for (Iterator<SingleElementSymbol> i = langObj.getSortKeys().iterator(); i.hasNext();) {
+        	SingleElementSymbol ses = i.next();
             if (ses instanceof ExpressionSymbol) {
                 assertEquals("Expression Symbols does not match: ", functionsNames[expCount++], ses.toString()); //$NON-NLS-1$                        		
             }

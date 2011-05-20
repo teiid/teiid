@@ -24,10 +24,12 @@ package org.teiid.dqp.internal.process;
 
 import static org.junit.Assert.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
+import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.metadata.MetadataResult;
@@ -35,11 +37,17 @@ import org.teiid.client.metadata.ResultsMetadataConstants;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.message.RequestID;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
+import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 
 /**
@@ -57,7 +65,7 @@ public class TestMetaDataProcessor {
         DQPCore requestMgr = new DQPCore();
         requestMgr.setTransactionService(new FakeTransactionService());
 
-        DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, vdb);
+        DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, vdb);
 
         // Initialize components
         RequestID requestID = workContext.getRequestID(1);  
@@ -70,27 +78,27 @@ public class TestMetaDataProcessor {
     }
     
     @Test public void testSimpleQuery() throws Exception {
-        Map[] metadata = helpGetMetadata("SELECT e1 FROM pm1.g1", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+        Map[] metadata = helpGetMetadata("SELECT e1 FROM pm1.g1", RealMetadataFactory.example1Cached(), RealMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNotNull(metadata);
         assertEquals(1, metadata.length);
     }
 
     @Test public void testSimpleUpdate() throws Exception {
-        Map[] metadata = helpGetMetadata("INSERT INTO pm1.g1 (e1) VALUES ('x')", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+        Map[] metadata = helpGetMetadata("INSERT INTO pm1.g1 (e1) VALUES ('x')", RealMetadataFactory.example1Cached(), RealMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNull(metadata);
         
-        metadata = helpGetMetadata("DELETE FROM pm1.g1 WHERE e1 = 'x'", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+        metadata = helpGetMetadata("DELETE FROM pm1.g1 WHERE e1 = 'x'", RealMetadataFactory.example1Cached(), RealMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNull(metadata);
         
-        metadata = helpGetMetadata("UPDATE pm1.g1 SET e1='y' WHERE e1 = 'x'", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+        metadata = helpGetMetadata("UPDATE pm1.g1 SET e1='y' WHERE e1 = 'x'", RealMetadataFactory.example1Cached(), RealMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNull(metadata);
         
-        metadata = helpGetMetadata("SELECT e1, e2, e3, e4 INTO pm1.g2 FROM pm1.g1", FakeMetadataFactory.example1Cached(),FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+        metadata = helpGetMetadata("SELECT e1, e2, e3, e4 INTO pm1.g2 FROM pm1.g1", RealMetadataFactory.example1Cached(),RealMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNull(metadata);
     }
     
     @Test public void testElementLabel() throws Exception {
-    	Map[] metadata = helpGetMetadata("SELECT E2 FROM pm1.g1", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+    	Map[] metadata = helpGetMetadata("SELECT E2 FROM pm1.g1", RealMetadataFactory.example1Cached(), RealMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNotNull(metadata);
         assertEquals(1, metadata.length);
         assertEquals("e2", metadata[0].get(ResultsMetadataConstants.ELEMENT_NAME)); //$NON-NLS-1$
@@ -98,13 +106,13 @@ public class TestMetaDataProcessor {
     }
     
     @Test public void testSimpleExec() throws Exception {
-        Map[] metadata = helpGetMetadata("EXEC pm1.sq1()", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+        Map[] metadata = helpGetMetadata("EXEC pm1.sq1()", RealMetadataFactory.example1Cached(), RealMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNotNull(metadata);
         assertEquals(2, metadata.length);        
     }
     
     @Test public void testExecNoResultColumns() throws Exception {
-        Map[] metadata = helpGetMetadata("EXEC pm1.sp5()", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+        Map[] metadata = helpGetMetadata("EXEC pm1.sp5()", RealMetadataFactory.example1Cached(), RealMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNotNull(metadata);
         assertEquals(0, metadata.length);                
     }
@@ -116,7 +124,7 @@ public class TestMetaDataProcessor {
         // Initialize components
         MetaDataProcessor mdProc = new MetaDataProcessor(new DQPCore(), prepPlanCache, "MyVDB", 1);
                      
-        DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, vdb);
+        DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, vdb);
         return mdProc.processMessage(workContext.getRequestID(1), workContext, sql, true);    
     }
 
@@ -129,19 +137,19 @@ public class TestMetaDataProcessor {
     }
 
     @Test public void testDefect16629_moneyType() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.examplePrivatePhysicalModel(); 
+        QueryMetadataInterface metadata = TestMetaDataProcessor.examplePrivatePhysicalModel(); 
         String sql = "SELECT e1 FROM pm1.g2"; //$NON-NLS-1$
         
-        MetadataResult response = helpTestQuery(metadata, sql, FakeMetadataFactory.examplePrivatePhysicalModelVDB());
+        MetadataResult response = helpTestQuery(metadata, sql, TestMetaDataProcessor.examplePrivatePhysicalModelVDB());
         
         helpCheckNumericAttributes(response, 0, 21, 19, 4);
     }
 
     @Test public void testDefect16629_aggregatesOnMoneyType() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.examplePrivatePhysicalModel(); 
+        QueryMetadataInterface metadata = TestMetaDataProcessor.examplePrivatePhysicalModel(); 
         String sql = "SELECT min(e1), max(e1), sum(e1), avg(e1) FROM pm1.g2"; //$NON-NLS-1$
         
-        MetadataResult response = helpTestQuery(metadata, sql, FakeMetadataFactory.examplePrivatePhysicalModelVDB());
+        MetadataResult response = helpTestQuery(metadata, sql, TestMetaDataProcessor.examplePrivatePhysicalModelVDB());
         helpCheckNumericAttributes(response, 0, 21, 19, 4);
         helpCheckNumericAttributes(response, 1, 21, 19, 4);
         helpCheckNumericAttributes(response, 2, 22, 20, 0);
@@ -222,4 +230,52 @@ public class TestMetaDataProcessor {
             fail("Invalid searchable constant value: " + searchable);          //$NON-NLS-1$
         }
     }
+
+	public static TransformationMetadata examplePrivatePhysicalModel() { 
+		MetadataStore metadataStore = new MetadataStore();
+	    // Create models
+	    Schema pm1 = RealMetadataFactory.createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
+	    Schema vm1 = RealMetadataFactory.createVirtualModel("vm1", metadataStore);  //$NON-NLS-1$
+	
+	    // Create physical groups
+	    Table pm1g1 = RealMetadataFactory.createPhysicalGroup("g1", pm1); //$NON-NLS-1$
+	        
+	    QueryNode vm1g1n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+	    Table vm1g1 = RealMetadataFactory.createVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
+	    
+	    Table pm1g2 = RealMetadataFactory.createPhysicalGroup("g2", pm1); //$NON-NLS-1$
+	    
+	    // Create physical elements
+	    List<Column> pm1g1e = RealMetadataFactory.createElements(pm1g1, 
+	        new String[] { "e1"}, //$NON-NLS-1$ 
+	        new String[] { DataTypeManager.DefaultDataTypes.SHORT});
+	
+	    // Create physical elements
+	    List<Column> pm1g2e = RealMetadataFactory.createElements(pm1g2, 
+	        new String[] { "e1"}, //$NON-NLS-1$ 
+	        new String[] { DataTypeManager.DefaultDataTypes.BIG_DECIMAL});
+	    
+	    Column e1 = pm1g2e.get(0);
+	    e1.setPrecision(19);
+	    e1.setLength(21);
+	    e1.setScale(4);
+	    
+	    RealMetadataFactory.createElements(vm1g1, 
+	                                new String[] { "e1" }, //$NON-NLS-1$
+	                                new String[] { DataTypeManager.DefaultDataTypes.STRING });
+	    // Create the facade from the store
+	    return RealMetadataFactory.createTransformationMetadata(metadataStore, "example");
+	}
+
+	public static VDBMetaData examplePrivatePhysicalModelVDB() {
+		VDBMetaData vdb = new VDBMetaData();
+		vdb.setName("example1");
+		vdb.setVersion(1);
+		ModelMetaData m = RealMetadataFactory.createModel("pm1", true);
+		m.setVisible(false);
+		vdb.addModel(m);
+		vdb.addModel(RealMetadataFactory.createModel("vm1", false));
+		
+		return vdb;
+	}
 }
