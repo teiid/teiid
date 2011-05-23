@@ -35,7 +35,7 @@ import javax.naming.NamingException;
 import org.jboss.util.naming.Util;
 import org.jgroups.Address;
 import org.jgroups.Channel;
-import org.jgroups.JChannelFactory;
+import org.jgroups.ChannelFactory;
 import org.jgroups.ReceiverAdapter;
 import org.jgroups.View;
 import org.jgroups.blocks.GroupRequest;
@@ -58,7 +58,7 @@ public class JGroupsEventDistributor extends ReceiverAdapter implements Serializ
 
 	private static final long serialVersionUID = -1140683411842561358L;
 	
-	private transient JChannelFactory channelFactory;
+	private transient ChannelFactory channelFactory;
 	private String multiplexerStack;
 	private String clusterName;
 	private String jndiName;
@@ -71,7 +71,7 @@ public class JGroupsEventDistributor extends ReceiverAdapter implements Serializ
 	private transient RpcDispatcher rpcDispatcher;
 	private transient Vector<Address> members;
 	
-	public JChannelFactory getChannelFactory() {
+	public ChannelFactory getChannelFactory() {
 		return channelFactory;
 	}
 	
@@ -99,7 +99,7 @@ public class JGroupsEventDistributor extends ReceiverAdapter implements Serializ
 		return clusterName;
 	}
 	
-	public void setChannelFactory(JChannelFactory channelFactory) {
+	public void setChannelFactory(ChannelFactory channelFactory) {
 		this.channelFactory = channelFactory;
 	}
 	
@@ -115,7 +115,7 @@ public class JGroupsEventDistributor extends ReceiverAdapter implements Serializ
 		if (this.channelFactory == null) {
 			return; //no need to distribute events
 		}
-		channel = this.channelFactory.createMultiplexerChannel(this.multiplexerStack, null);
+		channel = this.channelFactory.createMultiplexerChannel(this.multiplexerStack, "teiid-events"); //$NON-NLS-1$
 		channel.connect(this.clusterName);
 		
 		proxyEventDistributor = (EventDistributor) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {EventDistributor.class}, new ProxyHandler());
