@@ -105,7 +105,6 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnStats;
-import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
@@ -181,6 +180,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 				LogManager.logDetail(LogConstants.CTX_RUNTIME, ne, IntegrationPlugin.Util.getString("jndi_failed", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
 			}
 		}
+		this.dqpCore.setMetadataRepository(this.vdbRepository.getMetadataRepository());
 		this.dqpCore.setEventDistributor(this.eventDistributor);
 		this.dqpCore.start(this);
     	// create the necessary services
@@ -805,8 +805,4 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		return this;
 	}
 	
-	@Override
-	public MetadataRepository getMetadataRepository() {
-		return this.vdbRepository.getMetadataRepository();
-	}
 }
