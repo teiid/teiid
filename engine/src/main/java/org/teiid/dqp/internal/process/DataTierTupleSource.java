@@ -409,7 +409,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		if (exception.getCause() instanceof TeiidProcessingException) {
 			throw (TeiidProcessingException)exception.getCause();
 		}
-		throw new TeiidProcessingException(exception);
+		throw new TeiidProcessingException(exception, this.getConnectorName() + ": " + exception.getMessage()); //$NON-NLS-1$
 	}
 
 	void receiveResults(AtomicResultsMessage response) {
