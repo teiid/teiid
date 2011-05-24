@@ -1589,26 +1589,29 @@ public class QueryRewriter {
      */
     private Criteria rewriteCriteria(SubqueryCompareCriteria criteria) throws TeiidComponentException, TeiidProcessingException{
     	
-    	if (criteria.getCommand().getProcessorPlan() == null && criteria.getPredicateQuantifier() != SubqueryCompareCriteria.ALL) {
-    		if (criteria.getOperator() == CompareCriteria.EQ || criteria.getOperator() == CompareCriteria.NE) {
+    	if (criteria.getCommand().getProcessorPlan() == null) {
+    		if ((criteria.getOperator() == CompareCriteria.EQ && criteria.getPredicateQuantifier() != SubqueryCompareCriteria.ALL)
+    				|| (criteria.getOperator() == CompareCriteria.NE && criteria.getPredicateQuantifier() == SubqueryCompareCriteria.ALL)) {
     			SubquerySetCriteria result = new SubquerySetCriteria(criteria.getLeftExpression(), criteria.getCommand());
     			result.setNegated(criteria.getOperator() == CompareCriteria.NE);
     			return rewriteCriteria(result);
     		}
-    		CompareCriteria cc = new CompareCriteria();
-    		cc.setLeftExpression(criteria.getLeftExpression());
-    		Query q = createInlineViewQuery(new GroupSymbol("X"), criteria.getCommand(), metadata, criteria.getCommand().getProjectedSymbols()); //$NON-NLS-1$
-    		SingleElementSymbol ses = q.getProjectedSymbols().get(0);
-    		Expression expr = SymbolMap.getExpression(ses);
-    		q.getSelect().clearSymbols();
-    		AggregateSymbol.Type type = Type.MAX;
-    		if (criteria.getOperator() == CompareCriteria.GT || criteria.getOperator() == CompareCriteria.GE) {
-    			type = Type.MIN;
+    		if (criteria.getPredicateQuantifier() != SubqueryCompareCriteria.ALL && criteria.getOperator() != CompareCriteria.EQ && criteria.getOperator() != CompareCriteria.NE) {
+	    		CompareCriteria cc = new CompareCriteria();
+	    		cc.setLeftExpression(criteria.getLeftExpression());
+	    		Query q = createInlineViewQuery(new GroupSymbol("X"), criteria.getCommand(), metadata, criteria.getCommand().getProjectedSymbols()); //$NON-NLS-1$
+	    		SingleElementSymbol ses = q.getProjectedSymbols().get(0);
+	    		Expression expr = SymbolMap.getExpression(ses);
+	    		q.getSelect().clearSymbols();
+	    		AggregateSymbol.Type type = Type.MAX;
+	    		if (criteria.getOperator() == CompareCriteria.GT || criteria.getOperator() == CompareCriteria.GE) {
+	    			type = Type.MIN;
+	    		}
+	    		q.getSelect().addSymbol(new AggregateSymbol(ses.getName(), type.name(), false, expr));
+	    		cc.setRightExpression(new ScalarSubquery(q));
+				cc.setOperator(criteria.getOperator());
+	    		return rewriteCriteria(cc);
     		}
-    		q.getSelect().addSymbol(new AggregateSymbol(ses.getName(), type.name(), false, expr));
-    		cc.setRightExpression(new ScalarSubquery(q));
-			cc.setOperator(criteria.getOperator());
-    		return rewriteCriteria(cc);
     	}
 
         Expression leftExpr = rewriteExpressionDirect(criteria.getLeftExpression());

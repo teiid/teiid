@@ -836,6 +836,22 @@ public class TestSubqueryPushdown {
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 = all (select e2 FROM pm1.g1 where pm3.g1.e1 = e1)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e2 = ALL (SELECT e2 FROM pm1.g1 WHERE e1 = pm3.g1.e1)", RealMetadataFactory.example4());
     }
     
+    @Test public void testRewriteSubqueryCompare() throws Exception {
+    	TestQueryRewriter.helpTestRewriteCommand("select e1 from pm1.g1 where e1 <> ANY (select e1 from pm1.g1)", "SELECT e1 FROM pm1.g1 WHERE e1 <> SOME (SELECT e1 FROM pm1.g1)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testRewriteSubqueryCompare1() throws Exception {
+    	TestQueryRewriter.helpTestRewriteCommand("select e1 from pm1.g1 where e1 <> ALL (select e1 from pm1.g1)", "SELECT e1 FROM pm1.g1 WHERE e1 NOT IN (SELECT e1 FROM pm1.g1)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    @Test public void testRewriteSubqueryCompare2() throws Exception {
+    	TestQueryRewriter.helpTestRewriteCommand("select e1 from pm1.g1 where e1 = ANY (select e1 from pm1.g1)", "SELECT e1 FROM pm1.g1 WHERE e1 IN (SELECT e1 FROM pm1.g1)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testRewriteSubqueryCompare3() throws Exception {
+    	TestQueryRewriter.helpTestRewriteCommand("select e1 from pm1.g1 where e1 = ALL (select e1 from pm1.g1)", "SELECT e1 FROM pm1.g1 WHERE e1 = ALL (SELECT e1 FROM pm1.g1)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
     @Test public void testSubqueryExpressionJoin() throws Exception {
     	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (Select max(e2) from pm2.g2 where e1 = pm3.g1.e1 having convert(min(e2), string) > pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1, MIN(e2) AS MIN FROM pm2.g2 GROUP BY e1) AS X__1 WHERE (convert(X__1.MIN, string) > pm3.g1.e1) AND (pm3.g1.e2 < X__1.MAX) AND (pm3.g1.e1 = X__1.e1)", RealMetadataFactory.example4());
