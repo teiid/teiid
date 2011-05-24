@@ -1389,7 +1389,7 @@ public class TestProcedureResolving {
         
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
-        helpFailUpdateProcedure(proc.toString(), userUpdateStr, Table.TriggerEvent.UPDATE, "Cannot create temporary table \"loopCursor\". A table with the same name already exists."); //$NON-NLS-1$
+        helpFailUpdateProcedure(proc.toString(), userUpdateStr, Table.TriggerEvent.UPDATE, "Cannot create temporary table \"loopCursor\". An object with the same name already exists."); //$NON-NLS-1$
     }
     
     @Test public void testProcedureCreateDrop() {

@@ -2352,7 +2352,7 @@ public class TestResolver {
 
     @Test public void testCreateAlreadyExists() {
         String sql = "CREATE LOCAL TEMPORARY TABLE g1 (column1 string)"; //$NON-NLS-1$
-        helpResolveException(sql, "Cannot create temporary table \"g1\". A table with the same name already exists."); //$NON-NLS-1$
+        helpResolveException(sql, "Cannot create temporary table \"g1\". An object with the same name already exists."); //$NON-NLS-1$
     }
 
     @Test public void testCreateImplicitName() {
@@ -2362,7 +2362,7 @@ public class TestResolver {
     }
     
     @Test public void testCreateInProc() throws Exception{
-        helpResolveException("CREATE VIRTUAL PROCEDURE BEGIN create local temporary table g1(c1 string); end", "Cannot create temporary table \"g1\". A table with the same name already exists.");//$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("CREATE VIRTUAL PROCEDURE BEGIN create local temporary table g1(c1 string); end", "Cannot create temporary table \"g1\". An object with the same name already exists.");//$NON-NLS-1$ //$NON-NLS-2$
     }
     
     //this was the old virt.agg procedure.  It was defined in such a way that relied on the scope leak of #temp
