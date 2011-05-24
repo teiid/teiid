@@ -117,7 +117,9 @@ public class JGroupsEventDistributor extends ReceiverAdapter implements Serializ
 		}
 		channel = this.channelFactory.createMultiplexerChannel(this.multiplexerStack, "teiid-events"); //$NON-NLS-1$
 		channel.connect(this.clusterName);
-		
+		if (channel.getView() != null) {
+			viewAccepted(channel.getView());
+		}
 		proxyEventDistributor = (EventDistributor) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {EventDistributor.class}, new ProxyHandler());
 		//wrap the local in a proxy to prevent unintended methods from being called
 		rpcDispatcher = new RpcDispatcher(channel, this, this, Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {EventDistributor.class}, new InvocationHandler() {

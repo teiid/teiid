@@ -22,6 +22,7 @@
 package org.teiid.jboss.deployers;
 
 import java.io.Serializable;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -151,6 +152,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 
 	private String eventDistributorName;
 	private transient EventDistributor eventDistributor;
+	private transient EventDistributor eventDistributorProxy;
 	
     public RuntimeEngineDeployer() {
 		// TODO: this does not belong here
@@ -183,6 +185,18 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		this.dqpCore.setMetadataRepository(this.vdbRepository.getMetadataRepository());
 		this.dqpCore.setEventDistributor(this.eventDistributor);
 		this.dqpCore.start(this);
+		this.eventDistributorProxy = (EventDistributor)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {EventDistributor.class}, new InvocationHandler() {
+			
+			@Override
+			public Object invoke(Object proxy, Method method, Object[] args)
+					throws Throwable {
+				method.invoke(RuntimeEngineDeployer.this, args);
+				if (eventDistributor != null) {
+					method.invoke(eventDistributor, args);
+				}
+				return null;
+			}
+		});
     	// create the necessary services
     	createClientServices();
     	
@@ -684,7 +698,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		}
 		long ts = System.currentTimeMillis();
 		for (String name:objectNames) {
-			Table table = s.getTables().get(name);
+			Table table = s.getTables().get(name.toUpperCase());
 			if (table == null) {
 				continue;
 			}
@@ -799,10 +813,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	
 	@Override
 	public EventDistributor getEventDistributor() {
-		if (this.eventDistributor != null) { 
-			return eventDistributor;
-		}
-		return this;
+		return this.eventDistributorProxy;
 	}
 	
 }
