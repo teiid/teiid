@@ -21,6 +21,8 @@
  */
 package org.teiid.translator.jdbc.ingres;
 
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -28,10 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Limit;
-import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionParameter;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -40,7 +39,6 @@ import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
-
 @Translator(name="ingres", description="A translator for Ingres Databases")
 public class IngresExecutionFactory extends JDBCExecutionFactory {
 	
@@ -78,7 +76,45 @@ public class IngresExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("random")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("uppercase")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory())); 		
+        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory())); 	
+        
+        addPushDownFunction(INGRES, "bit_add", INTEGER, INTEGER, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(INGRES, "bit_length", INTEGER, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(INGRES, "character_length", STRING, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(INGRES, "charextract", CHAR, STRING, INTEGER); //$NON-NLS-1$
+
+			// uses ingres date??
+			//supportedFunctions.add("date_trunc");		
+			//supportedFunctions.add("dow");		
+			//supportedFunctions.add("extract");
+        addPushDownFunction(INGRES, "gmt_timestamp", STRING, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(INGRES, "hash", INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(INGRES, "hex", STRING, STRING); //$NON-NLS-1$
+
+        	// do not have byte[] type
+			//supportedFunctions.add("intextract");
+
+        addPushDownFunction(INGRES, "ln", DOUBLE, DOUBLE); //$NON-NLS-1$
+			
+			// see lowercase
+			// supportedFunctions.add("lower");
+			// supportedFunctions.add("upper");
+
+        addPushDownFunction(INGRES, "octet_length", INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(INGRES, "randomf", FLOAT); //$NON-NLS-1$
+        addPushDownFunction(INGRES, "session_user", STRING); //$NON-NLS-1$
+        addPushDownFunction(INGRES, "size", INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(INGRES, "squeeze", STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(INGRES, "soundex", STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(INGRES, "unhex", STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(INGRES, "usercode", STRING); //$NON-NLS-1$
+        addPushDownFunction(INGRES, "username", STRING); //$NON-NLS-1$
+			// ignore
+			// supportedFunctions.add("uuid_create");
+			// supportedFunctions.add("uuid_compare");
+			// supportedFunctions.add("uuid_from_char");
+			// supportedFunctions.add("uuid_to_char");
+
 	}
 	
     @Override
@@ -122,122 +158,6 @@ public class IngresExecutionFactory extends JDBCExecutionFactory {
         return supportedFunctions;
     }
     
-    @Override
-    public List<FunctionMethod> getPushDownFunctions(){
-    	List<FunctionMethod> pushdownFunctions = new ArrayList<FunctionMethod>();
-    
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "bit_add", "bit_add", INGRES, //$NON-NLS-1$ //$NON-NLS-2$
-            new FunctionParameter[] {
-                new FunctionParameter("integer1", DataTypeManager.DefaultDataTypes.INTEGER, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("integer2", DataTypeManager.DefaultDataTypes.INTEGER, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "bit_length", "bit_length", INGRES, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("integer1", DataTypeManager.DefaultDataTypes.INTEGER, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$    		
-		
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "character_length", "character_length", INGRES, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$  
-
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "charextract", "charextract", INGRES, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-	                new FunctionParameter("integer1", DataTypeManager.DefaultDataTypes.INTEGER, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.CHAR, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		// uses ingres date??
-		//supportedFunctions.add("date_trunc");		
-		//supportedFunctions.add("dow");		
-		//supportedFunctions.add("extract");
-
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "gmt_timestamp", "gmt_timestamp", INGRES, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.INTEGER, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$  
-
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "hash", "hash", INGRES,//$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$				
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$  
-		
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "hex", "hex", INGRES, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$    		
-
-		// do not have byte[] type
-		//supportedFunctions.add("intextract");
-		
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "ln", "ln", INGRES, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("float1", DataTypeManager.DefaultDataTypes.DOUBLE, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		// see lowercase
-		// supportedFunctions.add("lower");
-		// supportedFunctions.add("upper");
-		
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "octet_length", "octet_length", INGRES, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "pad", "pad", INGRES, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "pad", "pad", INGRES, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-	                new FunctionParameter("string2", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-	                new FunctionParameter("integer1", DataTypeManager.DefaultDataTypes.INTEGER, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "randomf", "randomf", INGRES, null,//$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.FLOAT, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$  
-
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "session_user", "session_user", INGRES, null,//$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$  
-
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "size", "size", INGRES, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "squeeze", "squeeze", INGRES, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "soundex", "soundex", INGRES, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "unhex", "unhex", INGRES, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$    		
-
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "usercode", "usercode", INGRES, null,//$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$  
-
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "username", "username", INGRES, null,//$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$  
-		
-		// ignore
-		// supportedFunctions.add("uuid_create");
-		// supportedFunctions.add("uuid_compare");
-		// supportedFunctions.add("uuid_from_char");
-		// supportedFunctions.add("uuid_to_char");
-		
-    	return pushdownFunctions;
-    }
-
     @Override
     public boolean supportsRowLimit() {
     	return true;

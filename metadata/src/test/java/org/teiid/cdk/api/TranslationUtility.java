@@ -24,7 +24,9 @@ package org.teiid.cdk.api;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.teiid.cdk.CommandBuilder;
 import org.teiid.dqp.internal.datamgr.RuntimeMetadataImpl;
@@ -53,25 +55,36 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 public class TranslationUtility {
     
     private QueryMetadataInterface metadata;
+    private FunctionLibrary functionLibrary;
 
     /**
      * Construct a utility instance with a given vdb file.  
      * @param vdbFile The .vdb file name representing metadata for the connector
      */
     public TranslationUtility(String vdbFile) {
-        metadata = VDBMetadataFactory.getVDBMetadata(vdbFile);     
+        initWrapper(VDBMetadataFactory.getVDBMetadata(vdbFile));
     }
+
+	private void initWrapper(QueryMetadataInterface acutalMetadata) {
+		functionLibrary = acutalMetadata.getFunctionLibrary();
+		metadata = new BasicQueryMetadataWrapper(acutalMetadata) {
+        	@Override
+        	public FunctionLibrary getFunctionLibrary() {
+        		return functionLibrary;
+        	}
+        };
+	}
     
     public TranslationUtility(URL url) {
         try {
-			metadata = VDBMetadataFactory.getVDBMetadata(url, null);
+    		initWrapper(VDBMetadataFactory.getVDBMetadata(url, null));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}     
     }
     
     public TranslationUtility(QueryMetadataInterface metadata) {
-    	this.metadata = metadata;
+    	initWrapper(metadata);
     }
     
     public Command parseCommand(String sql, boolean generateAliases, boolean supportsGroupAliases) {
@@ -98,14 +111,13 @@ public class TranslationUtility {
     public RuntimeMetadata createRuntimeMetadata() {
         return new RuntimeMetadataImpl(metadata);
     }
+    
+    private List<FunctionTree> functions = new ArrayList<FunctionTree>();
+    
+    public void addUDF(String schema, Collection<FunctionMethod> methods) {
+    	this.functions.add(new FunctionTree(schema, new UDFSource(methods)));
+		SystemFunctionManager sfm = new SystemFunctionManager();
+		functionLibrary = new FunctionLibrary(sfm.getSystemFunctions(), this.functions.toArray(new FunctionTree[this.functions.size()]));
+    }
 
-	public void setUDF(final Collection<FunctionMethod> methods) {
-		this.metadata = new BasicQueryMetadataWrapper(this.metadata) {
-			@Override
-			public FunctionLibrary getFunctionLibrary() {
-				SystemFunctionManager sfm = new SystemFunctionManager();
-				return new FunctionLibrary(sfm.getSystemFunctions(), new FunctionTree("foo", new UDFSource(methods)));  //$NON-NLS-1$
-			}
-		};
-	}
 }

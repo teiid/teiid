@@ -394,6 +394,14 @@ public class TestOracleTranslator {
                 input, output, 
                 TRANSLATOR);
     }
+    
+    @Test public void test_sdo_within_distance_pushdownfunction() throws Exception {
+        String input = "SELECT INTKEY FROM BQT1.SMALLA WHERE sdo_within_distance(OBJECTVALUE, 'SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL)', 'DISTANCE=25.0 UNIT=NAUT_MILE') = true"; //$NON-NLS-1$
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE sdo_within_distance(SmallA.ObjectValue, SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL), 'DISTANCE=25.0 UNIT=NAUT_MILE') = 'true'";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, 
+                TRANSLATOR);
+    }
 
     /**
      * Test a query which uses 

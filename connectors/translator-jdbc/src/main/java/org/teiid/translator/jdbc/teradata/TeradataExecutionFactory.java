@@ -22,6 +22,8 @@
 
 package org.teiid.translator.jdbc.teradata;
 
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -29,14 +31,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
 import org.teiid.language.Literal;
-import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionParameter;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
@@ -164,7 +163,23 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 			public List<?> translate(Function function) {
 				return Arrays.asList(function.getParameters().get(0), " MOD ", function.getParameters().get(1)); //$NON-NLS-1$
 			}
-		});        
+		});  
+        
+        addPushDownFunction(TERADATA, "COSH", FLOAT, FLOAT); //$NON-NLS-1$
+        addPushDownFunction(TERADATA, "TANH", FLOAT, FLOAT); //$NON-NLS-1$
+        addPushDownFunction(TERADATA, "ACOSH", FLOAT, FLOAT); //$NON-NLS-1$
+        addPushDownFunction(TERADATA, "ASINH", FLOAT, FLOAT); //$NON-NLS-1$
+        addPushDownFunction(TERADATA, "ATANH", FLOAT, FLOAT); //$NON-NLS-1$
+        addPushDownFunction(TERADATA, "CHAR2HEXINT", STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(TERADATA, "INDEX", INTEGER, STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(TERADATA, "BYTES", INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(TERADATA, "OCTET_LENGTH", INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(TERADATA, "HASHAMP", INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(TERADATA, "HASHBAKAMP", INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(TERADATA, "HASHBUCKET", INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(TERADATA, "HASHROW", INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(TERADATA, "NULLIFZERO", BIG_DECIMAL, BIG_DECIMAL); //$NON-NLS-1$        
+        addPushDownFunction(TERADATA, "ZEROIFNULL", BIG_DECIMAL, BIG_DECIMAL); //$NON-NLS-1$
 	}
 
 	@Override
@@ -210,104 +225,11 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.SQRT);
         supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
         supportedFunctions.add(SourceSystemFunctions.TAN);
-        supportedFunctions.add("||"); //$NON-NLS-1$
-        supportedFunctions.add("**"); //$NON-NLS-1$
         supportedFunctions.add(SourceSystemFunctions.UCASE);
         supportedFunctions.add(SourceSystemFunctions.YEAR);
 
         return supportedFunctions;
     }
-    
-    
-    @Override
-    public List<FunctionMethod> getPushDownFunctions(){
-    	        
-    	List<FunctionMethod> pushdownFunctions = new ArrayList<FunctionMethod>();
-    
-		pushdownFunctions.add(new FunctionMethod(TERADATA + '.' + "COSH", "COSH", TERADATA, //$NON-NLS-1$ //$NON-NLS-2$
-            new FunctionParameter[] {
-                new FunctionParameter("float", DataTypeManager.DefaultDataTypes.FLOAT, "Hyperbolic Cos")}, //$NON-NLS-1$ //$NON-NLS-2$
-            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.FLOAT, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-
-		pushdownFunctions.add(new FunctionMethod(TERADATA + '.' + "SINH", "SINH", TERADATA, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("float", DataTypeManager.DefaultDataTypes.FLOAT, "Hyperbolic Sin")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.FLOAT, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-
-		pushdownFunctions.add(new FunctionMethod(TERADATA + '.' + "TANH", "TANH", TERADATA, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("float", DataTypeManager.DefaultDataTypes.FLOAT, "Hyperbolic Tanh")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.FLOAT, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-
-		pushdownFunctions.add(new FunctionMethod(TERADATA + '.' + "ACOSH", "ACOSH", TERADATA, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("float", DataTypeManager.DefaultDataTypes.FLOAT, "Hyperbolic ArcCos")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.FLOAT, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		pushdownFunctions.add(new FunctionMethod(TERADATA + '.' + "ASINH", "ASINH", TERADATA, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("float", DataTypeManager.DefaultDataTypes.FLOAT, "Hyperbolic ArcSin")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.FLOAT, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-
-		pushdownFunctions.add(new FunctionMethod(TERADATA + '.' + "ATANH", "ATANH", TERADATA, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("float", DataTypeManager.DefaultDataTypes.FLOAT, "Hyperbolic ArcTan")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.FLOAT, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-				
-		pushdownFunctions.add(new FunctionMethod(TERADATA + '.' + "CHAR2HEXINT", "CHAR2HEXINT", TERADATA, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		pushdownFunctions.add(new FunctionMethod(TERADATA + '.' + "INDEX", "INDEX", TERADATA, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-	                new FunctionParameter("String2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-
-		pushdownFunctions.add(new FunctionMethod(TERADATA + '.' + "BYTES", "BYTES", TERADATA, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("String2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-
-		pushdownFunctions.add(new FunctionMethod(TERADATA + '.' + "OCTET_LENGTH", "OCTET_LENGTH", TERADATA, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("String2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-
-		pushdownFunctions.add(new FunctionMethod(TERADATA + '.' + "HASHAMP", "HASHAMP", TERADATA, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("String2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-
-		pushdownFunctions.add(new FunctionMethod(TERADATA + '.' + "HASHBAKAMP", "HASHBAKAMP", TERADATA, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("String2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-
-		pushdownFunctions.add(new FunctionMethod(TERADATA + '.' + "HASHBUCKET", "HASHBUCKET", TERADATA, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("String2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-
-		pushdownFunctions.add(new FunctionMethod(TERADATA + '.' + "HASHROW", "HASHROW", TERADATA, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("String2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		pushdownFunctions.add(new FunctionMethod(TERADATA + '.' + "NULLIFZERO", "NULLIFZERO", TERADATA, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("integer", DataTypeManager.DefaultDataTypes.BIG_DECIMAL, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BIG_DECIMAL, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		pushdownFunctions.add(new FunctionMethod(TERADATA + '.' + "ZEROIFNULL", "ZEROIFNULL", TERADATA, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("integer", DataTypeManager.DefaultDataTypes.BIG_DECIMAL, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BIG_DECIMAL, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$		
-		
-		return pushdownFunctions;		
-    }    
-    
     
     @Override
     public String translateLiteralDate(Date dateValue) {

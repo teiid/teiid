@@ -21,6 +21,8 @@
  */
 package org.teiid.translator.jdbc.intersyscache;
 
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -28,10 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Function;
-import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionParameter;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
@@ -111,6 +110,18 @@ public class InterSystemsCacheExecutionFactory extends JDBCExecutionFactory {
 				return null;
 			}
 		});
+        
+        addPushDownFunction(INTER_CACHE, "CHARACTER_LENGTH", INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(INTER_CACHE, "CHAR_LENGTH", INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(INTER_CACHE, "CHARINDEX", INTEGER, STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(INTER_CACHE, "CHARINDEX", INTEGER, STRING, STRING, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(INTER_CACHE, "INSTR", INTEGER, STRING, STRING); //$NON-NLS-1$			
+        addPushDownFunction(INTER_CACHE, "INSTR", INTEGER, STRING, STRING, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(INTER_CACHE, "IS_NUMERIC", INTEGER, STRING); //$NON-NLS-1$			
+        addPushDownFunction(INTER_CACHE, "REPLICATE", STRING, STRING, INTEGER); //$NON-NLS-1$					
+        addPushDownFunction(INTER_CACHE, "REVERSE", STRING, STRING); //$NON-NLS-1$			
+        addPushDownFunction(INTER_CACHE, "STUFF", STRING, STRING, STRING, INTEGER, STRING); //$NON-NLS-1$			
+        addPushDownFunction(INTER_CACHE, "TRIM", STRING, STRING); //$NON-NLS-1$			
 	}
 	
     @Override
@@ -177,80 +188,6 @@ public class InterSystemsCacheExecutionFactory extends JDBCExecutionFactory {
 
         return supportedFunctions;
     }
-    
-    @Override
-    public List<FunctionMethod> getPushDownFunctions(){
-    	        
-    	List<FunctionMethod> pushdownFunctions = new ArrayList<FunctionMethod>();
-    
-		pushdownFunctions.add(new FunctionMethod(INTER_CACHE + '.' + "CHARACTER_LENGTH", "CHARACTER_LENGTH", INTER_CACHE, //$NON-NLS-1$ //$NON-NLS-2$
-            new FunctionParameter[] {
-                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-
-		pushdownFunctions.add(new FunctionMethod(INTER_CACHE + '.' + "CHAR_LENGTH", "CHAR_LENGTH", INTER_CACHE, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		pushdownFunctions.add(new FunctionMethod(INTER_CACHE + '.' + "CHARINDEX", "CHARINDEX", INTER_CACHE, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("string2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		pushdownFunctions.add(new FunctionMethod(INTER_CACHE + '.' + "CHARINDEX", "CHARINDEX", INTER_CACHE, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("string2", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("integer1", DataTypeManager.DefaultDataTypes.INTEGER, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$    		
-		
-		pushdownFunctions.add(new FunctionMethod(INTER_CACHE + '.' + "INSTR", "INSTR", INTER_CACHE, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("string2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		pushdownFunctions.add(new FunctionMethod(INTER_CACHE + '.' + "INSTR", "INSTR", INTER_CACHE, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("string2", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("integer1", DataTypeManager.DefaultDataTypes.INTEGER, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$    		
-		
-		pushdownFunctions.add(new FunctionMethod(INTER_CACHE + '.' + "IS_NUMERIC", "IS_NUMERIC", INTER_CACHE, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-				
-		pushdownFunctions.add(new FunctionMethod(INTER_CACHE + '.' + "REPLICATE", "REPLICATE", INTER_CACHE, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("integer1", DataTypeManager.DefaultDataTypes.INTEGER, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$    		
-		
-		pushdownFunctions.add(new FunctionMethod(INTER_CACHE + '.' + "REVERSE", "REVERSE", INTER_CACHE, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		pushdownFunctions.add(new FunctionMethod(INTER_CACHE + '.' + "STUFF", "STUFF", INTER_CACHE, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("integer1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("integer2", DataTypeManager.DefaultDataTypes.INTEGER, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("string2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$  		
-		
-		pushdownFunctions.add(new FunctionMethod(INTER_CACHE + '.' + "TRIM", "TRIM", INTER_CACHE, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter[] {
-	                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-	            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-		
-    	return pushdownFunctions;
-    }
-
     
     @Override
     public String translateLiteralDate(Date dateValue) {

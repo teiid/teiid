@@ -354,8 +354,7 @@ public interface SourceCapabilities {
      * used if the capability FUNCTION is true.
      * 
      * @param functionName
-     *            The function that may be supported (see MetaMatrix documentation for further definition of the functions and
-     *            their parameters.)
+     *            The function that may be supported
      * @return True if function is supported.
      */
     public boolean supportsFunction(String functionName);

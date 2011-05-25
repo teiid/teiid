@@ -24,6 +24,8 @@
  */
 package org.teiid.translator.jdbc.oracle;
 
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -49,7 +51,6 @@ import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.metadata.Column;
-import org.teiid.metadata.FunctionMethod;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -75,6 +76,15 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public final static String DUAL = "DUAL"; //$NON-NLS-1$
     public final static String ROWNUM = "ROWNUM"; //$NON-NLS-1$
     public final static String SEQUENCE = ":SEQUENCE="; //$NON-NLS-1$
+	/*
+	 * Spatial Functions
+	 */
+	public static final String RELATE = "sdo_relate"; //$NON-NLS-1$
+	public static final String NEAREST_NEIGHBOR = "sdo_nn"; //$NON-NLS-1$
+	public static final String FILTER = "sdo_filter"; //$NON-NLS-1$
+	public static final String WITHIN_DISTANCE = "sdo_within_distance"; //$NON-NLS-1$
+	public static final String NEAREST_NEIGHBOR_DISTANCE = "sdo_nn_distance"; //$NON-NLS-1$
+	public static final String ORACLE_SDO = "Oracle-SDO"; //$NON-NLS-1$
     
     public void start() throws TranslatorException {
         super.start();
@@ -112,10 +122,10 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 		});
         
         //spatial functions
-        registerFunctionModifier(OracleSpatialFunctions.RELATE, new OracleSpatialFunctionModifier());
-        registerFunctionModifier(OracleSpatialFunctions.NEAREST_NEIGHBOR, new OracleSpatialFunctionModifier());
-        registerFunctionModifier(OracleSpatialFunctions.FILTER, new OracleSpatialFunctionModifier());
-        registerFunctionModifier(OracleSpatialFunctions.WITHIN_DISTANCE, new OracleSpatialFunctionModifier());
+        registerFunctionModifier(OracleExecutionFactory.RELATE, new OracleSpatialFunctionModifier());
+        registerFunctionModifier(OracleExecutionFactory.NEAREST_NEIGHBOR, new OracleSpatialFunctionModifier());
+        registerFunctionModifier(OracleExecutionFactory.FILTER, new OracleSpatialFunctionModifier());
+        registerFunctionModifier(OracleExecutionFactory.WITHIN_DISTANCE, new OracleSpatialFunctionModifier());
         
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
@@ -171,6 +181,21 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	convertModifier.addNumericBooleanConversions();
     	convertModifier.setWideningNumericImplicit(true);
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
+    	
+    	addPushDownFunction(ORACLE_SDO, RELATE, STRING, STRING, STRING, STRING);
+    	addPushDownFunction(ORACLE_SDO, RELATE, STRING, OBJECT, OBJECT, STRING);
+    	addPushDownFunction(ORACLE_SDO, RELATE, STRING, STRING, OBJECT, STRING);
+    	addPushDownFunction(ORACLE_SDO, RELATE, STRING, OBJECT, STRING, STRING);
+    	addPushDownFunction(ORACLE_SDO, NEAREST_NEIGHBOR, STRING, STRING, OBJECT, STRING, INTEGER);
+    	addPushDownFunction(ORACLE_SDO, NEAREST_NEIGHBOR, STRING, OBJECT, OBJECT, STRING, INTEGER);
+    	addPushDownFunction(ORACLE_SDO, NEAREST_NEIGHBOR, STRING, OBJECT, STRING, STRING, INTEGER);
+    	addPushDownFunction(ORACLE_SDO, NEAREST_NEIGHBOR_DISTANCE, INTEGER, INTEGER);
+    	addPushDownFunction(ORACLE_SDO, WITHIN_DISTANCE, STRING, OBJECT, OBJECT, STRING);
+    	addPushDownFunction(ORACLE_SDO, WITHIN_DISTANCE, STRING, STRING, OBJECT, STRING);
+    	addPushDownFunction(ORACLE_SDO, WITHIN_DISTANCE, STRING, OBJECT, STRING, STRING);
+    	addPushDownFunction(ORACLE_SDO, FILTER, STRING, OBJECT, STRING, STRING);
+    	addPushDownFunction(ORACLE_SDO, FILTER, STRING, OBJECT, OBJECT, STRING);
+    	addPushDownFunction(ORACLE_SDO, FILTER, STRING, STRING, OBJECT, STRING);
     }
     
     public void handleInsertSequences(Insert insert) throws TranslatorException {
@@ -327,7 +352,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	        // If so, the ORDERED hint is added, if not, it isn't
 	        Collection<Function> col = CollectorVisitor.collectObjects(Function.class, command);
 	        for (Function func : col) {
-	            if (func.getName().equalsIgnoreCase(OracleSpatialFunctions.RELATE)) {
+	            if (func.getName().equalsIgnoreCase(OracleExecutionFactory.RELATE)) {
 	                return comment + "/*+ ORDERED */ "; //$NON-NLS-1$
 	            }
 	        }
@@ -456,13 +481,12 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("IFNULL"); //$NON-NLS-1$
         supportedFunctions.add("NVL");      //$NON-NLS-1$ 
         supportedFunctions.add("COALESCE"); //$NON-NLS-1$
-        
+        supportedFunctions.add(RELATE);
+        supportedFunctions.add(NEAREST_NEIGHBOR);
+        supportedFunctions.add(NEAREST_NEIGHBOR_DISTANCE);
+        supportedFunctions.add(WITHIN_DISTANCE);
+        supportedFunctions.add(FILTER);
         return supportedFunctions;
-    }
-    
-    @Override
-    public List<FunctionMethod> getPushDownFunctions(){
-    	return OracleSpatialFunctions.getOracleSpatialFunctions();
     }
     
     @Override

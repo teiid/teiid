@@ -36,6 +36,7 @@ import junit.framework.Assert;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.cdk.unittest.FakeTranslationFactory;
+import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.language.Command;
 import org.teiid.metadata.FunctionMethod;
@@ -72,7 +73,7 @@ public class TranslationHelper {
 	public static void loadUDFs(String udf, TranslationUtility util) {
 		try {
 			Collection <FunctionMethod> methods = FunctionMetadataReader.loadFunctionMethods(TranslationHelper.class.getResource(udf).openStream());
-			util.setUDF(methods);
+			util.addUDF("foo", methods); //$NON-NLS-1$
 		} catch (IOException e) {
 			throw new TeiidRuntimeException("failed to load UDF"); //$NON-NLS-1$
 		} catch (JAXBException e) {
@@ -83,8 +84,11 @@ public class TranslationHelper {
     public static Command helpTranslate(String vdbFileName, String udf, List<FunctionMethod> pushdowns, String sql) {
     	TranslationUtility util =  getTranslationUtility(vdbFileName, null);   
     	
-    	Collection <FunctionMethod> methods = new ArrayList<FunctionMethod>();
+    	if (pushdowns != null) {
+    		util.addUDF(CoreConstants.SYSTEM_MODEL, pushdowns);
+    	}
     	if (udf != null) {
+        	Collection <FunctionMethod> methods = new ArrayList<FunctionMethod>();
     		try {
 				methods.addAll(FunctionMetadataReader.loadFunctionMethods(TranslationHelper.class.getResource(udf).openStream()));
 			} catch (JAXBException e) {
@@ -92,11 +96,8 @@ public class TranslationHelper {
 			} catch (IOException e) {
 				throw new TeiidRuntimeException("failed to load UDF"); //$NON-NLS-1$
 			}
+			util.addUDF("foo", methods); //$NON-NLS-1$
     	}
-    	if (pushdowns != null) {
-    		methods.addAll(pushdowns);
-    	}
-    	util.setUDF(methods);
     	return util.parseCommand(sql);
     }    
 
