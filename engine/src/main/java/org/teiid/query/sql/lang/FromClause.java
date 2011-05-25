@@ -26,6 +26,7 @@ import java.util.Collection;
 
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
@@ -50,7 +51,7 @@ public abstract class FromClause implements LanguageObject {
     }
     
     public abstract void acceptVisitor(LanguageVisitor visitor);
-    public abstract void collectGroups(Collection groups);
+    public abstract void collectGroups(Collection<GroupSymbol> groups);
     public abstract Object clone();
 
     public boolean isMakeDep() {

@@ -35,7 +35,10 @@ import org.teiid.client.security.SessionToken;
 
 /**
  * Add and delete properties also in the Mapper class for correct wrapping for profile service.
+ * 
  */
+/* TODO: it would probably be good to let ipAddress denote the connecting address 
+ and add clientIpAdress as the client reported value */
 @MetaMapping(SessionMetadataMapper.class)
 public class SessionMetadata extends AdminObjectImpl implements Session {
 
@@ -45,6 +48,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
     private long createdTime;
     private String ipAddress;
     private String clientHostName;    
+    private String clientHardwareAddress;
     private String userName;
     private String vdbName;
     private int vdbVersion;
@@ -59,7 +63,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
     private transient boolean embedded;
 
 	@Override
-	@ManagementProperty(description="Application assosiated with Session", readOnly=true)
+	@ManagementProperty(description="Application associated with Session", readOnly=true)
 	public String getApplicationName() {
 		return this.applicationName;
 	}
@@ -89,7 +93,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	}
 
 	@Override
-	@ManagementProperty(description="IP address from where session is created", readOnly=true)
+	@ManagementProperty(description="IP address of session client", readOnly=true)
 	public String getIPAddress() {
 		return this.ipAddress;
 	}
@@ -119,7 +123,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	}
 
 	@Override
-	@ManagementProperty(description="User name assosiated with session", readOnly=true)
+	@ManagementProperty(description="User name associated with session", readOnly=true)
 	public String getUserName() {
 		return this.userName;
 	}
@@ -129,7 +133,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	}
 
 	@Override
-	@ManagementProperty(description="VDB name assosiated with session", readOnly=true)
+	@ManagementProperty(description="VDB name associated with session", readOnly=true)
 	public String getVDBName() {
 		return this.vdbName;
 	}
@@ -139,7 +143,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	}
 
 	@Override
-	@ManagementProperty(description="VDB version name assosiated with session", readOnly=true)
+	@ManagementProperty(description="VDB version name associated with session", readOnly=true)
 	public int getVDBVersion() {
 		return this.vdbVersion;
 	}
@@ -168,6 +172,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
     	str.append("; createdTime=").append(new Date(createdTime));
     	str.append("; applicationName=").append(applicationName);
     	str.append("; clientHostName=").append(clientHostName);
+    	str.append("; clientHardwareAddress=").append(clientHardwareAddress);
     	str.append("; IPAddress=").append(ipAddress);
     	str.append("; securityDomain=").append(securityDomain); 
     	str.append("; lastPingTime=").append(new Date(lastPingTime));
@@ -216,6 +221,16 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 
 	public boolean isEmbedded() {
 		return embedded;
+	}
+	
+	@Override
+	@ManagementProperty(description="Hardware address reported by the client", readOnly=true)
+	public String getClientHardwareAddress() {
+		return this.clientHardwareAddress;
+	}
+	
+	public void setClientHardwareAddress(String clientHardwareAddress) {
+		this.clientHardwareAddress = clientHardwareAddress;
 	}
 	
 }

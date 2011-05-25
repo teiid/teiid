@@ -26,6 +26,7 @@ import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.util.CommandContext;
 
 /**
  * The default Teiid authorization validator
@@ -44,9 +45,9 @@ public class DataRoleAuthorizationValidator implements AuthorizationValidator {
 	}
 
 	@Override
-	public void validate(Command command, QueryMetadataInterface metadata, DQPWorkContext workContext) throws QueryValidatorException, TeiidComponentException {
+	public void validate(Command command, QueryMetadataInterface metadata, DQPWorkContext workContext, CommandContext commandContext) throws QueryValidatorException, TeiidComponentException {
 		if (useEntitlements && !workContext.getVDB().getDataPolicies().isEmpty()) {
-			AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(workContext.getAllowedDataPolicies(), workContext.getUserName());
+			AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(workContext.getAllowedDataPolicies(), commandContext);
 			visitor.setAllowCreateTemporaryTablesDefault(allowCreateTemporaryTablesByDefault);
 			visitor.setAllowFunctionCallsByDefault(allowFunctionCallsByDefault);
 			Request.validateWithVisitor(visitor, metadata, command);

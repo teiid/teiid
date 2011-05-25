@@ -29,11 +29,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.DataPolicy.PermissionType;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.api.exception.query.QueryParserException;
@@ -47,6 +49,7 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
@@ -55,6 +58,11 @@ import org.teiid.query.validator.ValidatorReport;
 public class TestAuthorizationValidationVisitor {
 
     public static final String CONN_ID = "connID"; //$NON-NLS-1$
+    private static CommandContext context = new CommandContext();
+    
+    @BeforeClass public static void oneTimeSetup() {
+    	context.setSession(new SessionMetadata());
+    }
 
     PermissionMetaData addResource(PermissionType type, boolean flag, String resource) {
     	PermissionMetaData p = new PermissionMetaData();
@@ -172,7 +180,7 @@ public class TestAuthorizationValidationVisitor {
         HashMap<String, DataPolicy> policies = new HashMap<String, DataPolicy>();
         policies.put(policy.getName(), policy);
         
-        AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(policies, "test"); //$NON-NLS-1$
+        AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(policies, context); //$NON-NLS-1$
         visitor.setAllowFunctionCallsByDefault(false);
         ValidatorReport report = Validator.validate(command, metadata, visitor);
         if(report.hasItems()) {
@@ -321,7 +329,7 @@ public class TestAuthorizationValidationVisitor {
 	private void helpTestLookupVisibility(boolean visible) throws QueryParserException, QueryValidatorException, TeiidComponentException {
 		VDBMetaData vdb = RealMetadataFactory.example1VDB();
 		vdb.getModel("pm1").setVisible(visible); //$NON-NLS-1$
-		AuthorizationValidationVisitor mvvv = new AuthorizationValidationVisitor(new HashMap<String, DataPolicy>(), "test"); //$NON-NLS-1$
+		AuthorizationValidationVisitor mvvv = new AuthorizationValidationVisitor(new HashMap<String, DataPolicy>(), context); //$NON-NLS-1$
 		String sql = "select lookup('pm1.g1', 'e1', 'e2', 1)"; //$NON-NLS-1$
 		Command command = QueryParser.getQueryParser().parseCommand(sql);
 		Request.validateWithVisitor(mvvv, RealMetadataFactory.example1Cached(), command);

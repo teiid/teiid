@@ -51,6 +51,7 @@ public class TeiidURL {
 	public static interface CONNECTION {
 		public static final String CLIENT_IP_ADDRESS = "clientIpAddress"; //$NON-NLS-1$
 		public static final String CLIENT_HOSTNAME = "clientHostName"; //$NON-NLS-1$
+		public static final String CLIENT_MAC = "clientMAC"; //$NON-NLS-1$
 		/**
 		 * If true, will automatically select a new server instance after a communication exception.
 		 * @since 5.6

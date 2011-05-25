@@ -30,6 +30,7 @@ import java.util.List;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.symbol.GroupSymbol;
 
 
 /**
@@ -165,7 +166,7 @@ public class JoinPredicate extends FromClause {
      * Collect all GroupSymbols for this from clause.
      * @param groups Groups to add to
      */
-    public void collectGroups(Collection groups) {
+    public void collectGroups(Collection<GroupSymbol> groups) {
         if(this.leftClause != null) { 
             this.leftClause.collectGroups(groups);
         } 

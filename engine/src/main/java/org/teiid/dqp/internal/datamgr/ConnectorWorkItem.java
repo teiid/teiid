@@ -100,6 +100,7 @@ public class ConnectorWorkItem implements ConnectorWork {
                 );
         this.securityContext.setUser(requestMsg.getWorkContext().getSubject());
         this.securityContext.setBatchSize(this.requestMsg.getFetchSize());
+        this.securityContext.setSession(requestMsg.getWorkContext().getSession());
         
         this.connector = manager.getExecutionFactory();
     	VDBMetaData vdb = requestMsg.getWorkContext().getVDB();

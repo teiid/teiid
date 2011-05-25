@@ -20,45 +20,16 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.logging;
+package net.sf.retrotranslator.runtime.java.net;
 
-import java.io.Serializable;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 
-
-public class LogMessage implements Serializable{
-
-	private static final long serialVersionUID = -134503344442009940L;
+public class _NetworkInterface {
 	
-	private Object[] msgParts;
-
-	public LogMessage(Object[] msgParts) {
-        this.msgParts = msgParts;
+	@SuppressWarnings("unused")
+	public static byte[] getHardwareAddress(NetworkInterface ni) throws SocketException {
+		return null;
 	}
 
-	public Object[] getMessageParts() {
-		return this.msgParts;
-	}
-
-	public String getText() {
-		StringBuffer text = null;
-		if(msgParts != null) {
-			text = new StringBuffer();
-		    for(int i=0; i<msgParts.length; i++) {
-		        if (i>0) text.append(" "); //$NON-NLS-1$
-                Object omsg = msgParts[i];
-                if ( omsg != null ) {
-		            text.append(omsg.toString());
-                }
-		    }
-		}
-
-        if (text == null) {
-        	return "NULL"; //$NON-NLS-1$
-        } 
-        return text.toString();
-	}
-	
-	public String toString() {
-		return getText();
-	}
 }

@@ -30,6 +30,7 @@ import org.mockito.Mockito;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.StatementType;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
@@ -79,7 +80,7 @@ public class TestRequest extends TestCase {
         RequestMessage message = new RequestMessage();
         DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, RealMetadataFactory.example1VDB());
         
-        request.initialize(message, null, null,new FakeTransactionService(), TEMP_TABLE_STORE, workContext, null); 
+        request.initialize(message, BufferManagerFactory.getStandaloneBufferManager(), null,new FakeTransactionService(), TEMP_TABLE_STORE, workContext, null); 
         request.initMetadata();
         request.setAuthorizationValidator(new DataRoleAuthorizationValidator(true, true, true));
         request.validateAccess(command);
