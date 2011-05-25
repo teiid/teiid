@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<connection-factories>
+
+   <no-tx-connection-factory>
+      <!-- The jndi name of the DataSource -->
+      <jndi-name>CoherenceDS</jndi-name>
+      
+      <!-- The resource archive file that defines JCA connection for Coherence (do not change this) -->
+      <rar-name>coherence_connector-0.1.rar</rar-name>
+      <!-- connection interface; (do not change this) -->
+      <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>      
+
+      <max-pool-size>20</max-pool-size>
+
+    </no-tx-connection-factory>
+
+</connection-factories>
