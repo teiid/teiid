@@ -68,19 +68,21 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 		convert.addTypeMapping("double precision", FunctionModifier.DOUBLE); //$NON-NLS-1$
 		convert.addTypeMapping("numeric(18,0)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
 		convert.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
-    	convert.addConvert(FunctionModifier.INTEGER, FunctionModifier.STRING, new ImplicitConvertModifier());
-    	convert.addConvert(FunctionModifier.BIGDECIMAL, FunctionModifier.STRING, new ImplicitConvertModifier());
-    	convert.addConvert(FunctionModifier.BIGINTEGER, FunctionModifier.STRING, new ImplicitConvertModifier());
-    	convert.addConvert(FunctionModifier.FLOAT, FunctionModifier.STRING, new ImplicitConvertModifier());
-    	convert.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.STRING, new ImplicitConvertModifier());
-    	convert.addConvert(FunctionModifier.LONG, FunctionModifier.STRING, new ImplicitConvertModifier());
-    	convert.addConvert(FunctionModifier.SHORT, FunctionModifier.STRING, new ImplicitConvertModifier());
-    	convert.addConvert(FunctionModifier.DOUBLE, FunctionModifier.STRING, new ImplicitConvertModifier());
-    	convert.addConvert(FunctionModifier.BYTE, FunctionModifier.STRING, new ImplicitConvertModifier());
-    	convert.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new TimeModifier("TIME")); //$NON-NLS-1$
-    	convert.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE,  new TimeModifier("DATE")); //$NON-NLS-1$ 
-    	convert.addConvert(FunctionModifier.TIME, FunctionModifier.TIMESTAMP, new TimeModifier("TIMESTAMP")); //$NON-NLS-1$
-    	convert.addConvert(FunctionModifier.DATE, FunctionModifier.TIMESTAMP,  new TimeModifier("TIMESTAMP")); //$NON-NLS-1$
+
+    	convert.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new CastModifier("TIME")); //$NON-NLS-1$
+    	convert.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE,  new CastModifier("DATE")); //$NON-NLS-1$ 
+    	convert.addConvert(FunctionModifier.TIME, FunctionModifier.TIMESTAMP, new CastModifier("TIMESTAMP")); //$NON-NLS-1$
+    	convert.addConvert(FunctionModifier.DATE, FunctionModifier.TIMESTAMP,  new CastModifier("TIMESTAMP")); //$NON-NLS-1$
+
+    	convert.addConvert(FunctionModifier.STRING, FunctionModifier.INTEGER, new CastModifier("integer")); //$NON-NLS-1$
+    	convert.addConvert(FunctionModifier.STRING, FunctionModifier.BIGDECIMAL, new CastModifier("decimal(37,5)"));//$NON-NLS-1$
+    	convert.addConvert(FunctionModifier.STRING, FunctionModifier.BIGINTEGER, new CastModifier("numeric(18,0)"));//$NON-NLS-1$
+    	convert.addConvert(FunctionModifier.STRING, FunctionModifier.FLOAT, new CastModifier("float"));//$NON-NLS-1$
+    	convert.addConvert(FunctionModifier.STRING, FunctionModifier.BOOLEAN, new CastModifier("byteint"));//$NON-NLS-1$
+    	convert.addConvert(FunctionModifier.STRING, FunctionModifier.LONG, new CastModifier("numeric(18,0)"));//$NON-NLS-1$
+    	convert.addConvert(FunctionModifier.STRING, FunctionModifier.SHORT, new CastModifier("smallint"));//$NON-NLS-1$
+    	convert.addConvert(FunctionModifier.STRING, FunctionModifier.DOUBLE, new CastModifier("double precision"));//$NON-NLS-1$
+    	convert.addConvert(FunctionModifier.STRING, FunctionModifier.BYTE, new CastModifier("byteint")); //$NON-NLS-1$
     	
     	convert.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING,  new FunctionModifier() {
 			@Override
@@ -308,9 +310,6 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
     		Expression expr2 =  function.getParameters().get(1);
     		if (function.getParameters().size() > 2) {
     			Expression expr3 =  function.getParameters().get(2);
-    			target.add("(");//$NON-NLS-1$
-    			target.add(expr3);
-    			target.add("+");//$NON-NLS-1$
 	    		target.add("position("); //$NON-NLS-1$
 	    		target.addAll(expressionToString(expr1, this.convertModifier));
 	    		target.add( " in "); //$NON-NLS-1$
@@ -318,8 +317,7 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 	    		target.addAll(expressionToString(expr2, this.convertModifier));
 	    		target.add(","); //$NON-NLS-1$
 	    		target.add(expr3);
-	    		target.add(")"); //$NON-NLS-1$	    		
-	    		target.add("))"); //$NON-NLS-1$    	
+	    		target.add("))"); //$NON-NLS-1$	    		
     		}
     		else {
 	    		target.add("position("); //$NON-NLS-1$
@@ -379,17 +377,9 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 		}
 	}
     
-    public static class ImplicitConvertModifier extends FunctionModifier {
-		@Override
-		public List<?> translate(Function function) {
-			return Arrays.asList(function.getParameters().get(0));
-		}
-	}
-    
-    
-    public static class TimeModifier extends FunctionModifier {
+    public static class CastModifier extends FunctionModifier {
     	private String target;
-    	public TimeModifier(String target) {
+    	public CastModifier(String target) {
     		this.target = target;
     	}
 		@Override

@@ -112,16 +112,20 @@ public class TestTeradataTranslator {
     
     
     @Test public void testByteToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "string", "1"); 
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "string", "cast(1 AS varchar(4000))"); 
     }
     
     @Test public void testByte2ToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)-1), Byte.class), "string", "-1"); 
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)-1), Byte.class), "string", "cast(-1 AS varchar(4000))"); 
     }
     
     @Test public void testDoubleToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Double(1.0), Double.class), "string", "1.0"); 
+        helpTest(LANG_FACTORY.createLiteral(new Double(1.0), Double.class), "string", "cast(1.0 AS varchar(4000))"); 
     }    
+    
+    @Test public void testStringToDouble() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral("1.0", String.class), "double", "cast('1.0' AS double precision)"); 
+    }      
     
 	@Test public void testInDecompose() throws Exception {
     	Expression left = LANG_FACTORY.createLiteral("1", String.class);
@@ -196,7 +200,7 @@ public class TestTeradataTranslator {
 	
 	@Test public void testLocateFunction() throws Exception {
 		String input = "SELECT INTKEY, STRINGKEY, SHORTVALUE FROM BQT1.SmallA WHERE (LOCATE(0, STRINGKEY) = 2) OR (LOCATE(2, SHORTVALUE, 4) = 6) ORDER BY intkey";
-		String out = "SELECT SmallA.IntKey, SmallA.StringKey, SmallA.ShortValue FROM SmallA WHERE position('0' in SmallA.StringKey) = 2 OR (4+position('2' in substr(cast(SmallA.ShortValue AS varchar(100)),4))) = 6 ORDER BY SmallA.IntKey";
+		String out = "SELECT SmallA.IntKey, SmallA.StringKey, SmallA.ShortValue FROM SmallA WHERE position('0' in SmallA.StringKey) = 2 OR position('2' in substr(cast(SmallA.ShortValue AS varchar(100)),4)) = 6 ORDER BY SmallA.IntKey";
 		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null, input, out, TRANSLATOR);		
 	}	
 }
