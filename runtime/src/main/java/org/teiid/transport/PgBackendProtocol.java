@@ -28,6 +28,7 @@ import java.io.StreamCorruptedException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
+import java.security.GeneralSecurityException;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.ParameterMetaData;
@@ -41,13 +42,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import javax.net.ssl.SSLEngine;
+
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.ChannelDownstreamHandler;
 import org.jboss.netty.channel.ChannelEvent;
+import org.jboss.netty.channel.ChannelFuture;
+import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.MessageEvent;
+import org.jboss.netty.handler.ssl.SslHandler;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
@@ -59,6 +65,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.socket.ServiceInvocationStruct;
 import org.teiid.odbc.ODBCClientRemote;
+import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.pg.PGbytea;
 
 /**
@@ -68,7 +75,25 @@ import org.teiid.transport.pg.PGbytea;
 @SuppressWarnings("nls")
 public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRemote {
 	
-    private final class ResultsWorkItem implements Runnable {
+    private final class SSLEnabler implements ChannelFutureListener {
+    	
+    	private SSLEngine engine;
+    	
+		public SSLEnabler(SSLEngine engine) {
+			this.engine = engine;
+		}
+
+		@Override
+		public void operationComplete(ChannelFuture future) throws Exception {
+			if (future.isSuccess()) {
+				SslHandler handler = new SslHandler(engine);
+				future.getChannel().getPipeline().addFirst("sslHandler", handler);
+				handler.handshake();
+			}
+		}
+	}
+
+	private final class ResultsWorkItem implements Runnable {
 		private final List<PgColInfo> cols;
 		private final String sql;
 		private final ResultSetImpl rs;
@@ -164,8 +189,11 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
     
 	private volatile ResultsFuture<Boolean> nextFuture;
 
-    public PgBackendProtocol(int maxLobSize) {
+	private SSLConfiguration config;
+
+    public PgBackendProtocol(int maxLobSize, SSLConfiguration config) {
     	this.maxLobSize = maxLobSize;
+    	this.config = config;
     }
     
 	@Override
@@ -550,10 +578,23 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	}	
 	
 	@Override
-	public void sslDenied() {
+	public void sendSslResponse() {
+		SSLEngine engine = null;
+		try {
+			engine = config.getServerSSLEngine();
+		} catch (IOException e) {
+			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.getString("PgBackendProtocol.ssl_error"));
+		} catch (GeneralSecurityException e) {
+			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.getString("PgBackendProtocol.ssl_error"));
+		}
 		ChannelBuffer buffer = ChannelBuffers.directBuffer(1);
-		buffer.writeByte('N');
-		Channels.write(this.ctx, this.message.getFuture(), buffer, this.message.getRemoteAddress());		
+		if (engine == null) {
+			buffer.writeByte('N');
+		} else {
+			this.message.getFuture().addListener(new SSLEnabler(engine));
+			buffer.writeByte('S');
+		}
+		Channels.write(this.ctx, this.message.getFuture(), buffer, this.message.getRemoteAddress());
 	}
 	
 	private void sendErrorResponse(Throwable t) throws IOException {

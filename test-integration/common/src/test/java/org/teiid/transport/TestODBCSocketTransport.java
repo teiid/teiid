@@ -24,14 +24,23 @@ package org.teiid.transport;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -44,35 +53,105 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
+import org.teiid.net.socket.SocketUtil;
 
 @SuppressWarnings("nls")
 public class TestODBCSocketTransport {
-
-	static InetSocketAddress addr;
-	static ODBCSocketListener odbcTransport;
 	
-	@BeforeClass public static void oneTimeSetup() throws Exception {
-		SocketConfiguration config = new SocketConfiguration();
-		config.setSSLConfiguration(new SSLConfiguration());
-		addr = new InetSocketAddress(0);
-		config.setBindAddress(addr.getHostName());
-		config.setPortNumber(0);
-		odbcTransport = new ODBCSocketListener(config, BufferManagerFactory.getStandaloneBufferManager(), 0, 100000);
+public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		
-		FakeServer server = new FakeServer();
-		server.setUseCallingThread(false);
-		server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
+		private SSLSocketFactory sslSocketFactory;
 		
-		TeiidDriver driver = new TeiidDriver();
-		driver.setEmbeddedProfile(server);
-		odbcTransport.setDriver(driver);
+		public AnonSSLSocketFactory() {
+			try {
+				sslSocketFactory = SSLContext.getDefault().getSocketFactory();
+			} catch (NoSuchAlgorithmException e) {
+				throw new RuntimeException();
+			}			
+		}
+
+		public Socket createSocket() throws IOException {
+			return sslSocketFactory.createSocket();
+		}
+
+		public Socket createSocket(InetAddress address, int port,
+				InetAddress localAddress, int localPort) throws IOException {
+			return sslSocketFactory.createSocket(address, port, localAddress,
+					localPort);
+		}
+
+		public Socket createSocket(InetAddress host, int port)
+				throws IOException {
+			return sslSocketFactory.createSocket(host, port);
+		}
+
+		public Socket createSocket(Socket s, String host, int port,
+				boolean autoClose) throws IOException {
+			SSLSocket socket = (SSLSocket)sslSocketFactory.createSocket(s, host, port, autoClose);
+			SocketUtil.addCipherSuite(socket, SocketUtil.ANON_CIPHER_SUITE);
+			return socket;
+		}
+
+		public Socket createSocket(String host, int port,
+				InetAddress localHost, int localPort) throws IOException,
+				UnknownHostException {
+			return sslSocketFactory.createSocket(host, port, localHost,
+					localPort);
+		}
+
+		public Socket createSocket(String host, int port) throws IOException,
+				UnknownHostException {
+			return sslSocketFactory.createSocket(host, port);
+		}
+
+		public String[] getDefaultCipherSuites() {
+			return sslSocketFactory.getDefaultCipherSuites();
+		}
+
+		public String[] getSupportedCipherSuites() {
+			return sslSocketFactory.getSupportedCipherSuites();
+		}
 		
 	}
 	
-	@AfterClass public static void oneTimeTearDown() throws Exception {
-		if (odbcTransport != null) {
+	static class FakeOdbcServer {
+		InetSocketAddress addr;
+		ODBCSocketListener odbcTransport;
+		
+		public void start() throws Exception {
+			SocketConfiguration config = new SocketConfiguration();
+			SSLConfiguration sslConfig = new SSLConfiguration();
+			sslConfig.setMode(SSLConfiguration.ENABLED);
+			sslConfig.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
+			config.setSSLConfiguration(sslConfig);
+			addr = new InetSocketAddress(0);
+			config.setBindAddress(addr.getHostName());
+			config.setPortNumber(0);
+			odbcTransport = new ODBCSocketListener(config, BufferManagerFactory.getStandaloneBufferManager(), 0, 100000);
+			
+			FakeServer server = new FakeServer();
+			server.setUseCallingThread(false);
+			server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
+			
+			TeiidDriver driver = new TeiidDriver();
+			driver.setEmbeddedProfile(server);
+			odbcTransport.setDriver(driver);
+		}
+		
+		public void stop() {
 			odbcTransport.stop();
 		}
+		
+	}
+	
+	private static FakeOdbcServer odbcServer = new FakeOdbcServer();
+	
+	@BeforeClass public static void oneTimeSetup() throws Exception {
+		odbcServer.start();
+	}
+	
+	@AfterClass public static void oneTimeTearDown() throws Exception {
+		odbcServer.stop();
 	}
 	
 	Connection conn;
@@ -82,7 +161,7 @@ public class TestODBCSocketTransport {
 		Properties p = new Properties();
 		p.setProperty("user", "testuser");
 		p.setProperty("password", "testpassword");
-		conn = d.connect("jdbc:postgresql://"+addr.getHostName()+":" +odbcTransport.getPort()+"/parts", p);
+		conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
 	}
 	
 	@After public void tearDown() throws Exception {
@@ -180,5 +259,19 @@ public class TestODBCSocketTransport {
 		Statement stmt = conn.createStatement();
 		ResultSet rs = stmt.executeQuery("select has_function_privilege(100, 'foo')");
 		rs.next();
+	}
+	
+	@Test public void testSelectSsl() throws Exception {
+		conn.close();
+		Driver d = new Driver();
+		Properties p = new Properties();
+		p.setProperty("user", "testuser");
+		p.setProperty("password", "testpassword");
+		p.setProperty("ssl", "true");
+		p.setProperty("sslfactory", AnonSSLSocketFactory.class.getName());
+		conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
+		Statement s = conn.createStatement();
+		assertTrue(s.execute("select * from tables order by name"));
+		TestMMDatabaseMetaData.compareResultSet("TestODBCSocketTransport/testSelect", s.getResultSet());
 	}
 }

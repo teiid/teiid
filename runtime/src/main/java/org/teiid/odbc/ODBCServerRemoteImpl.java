@@ -637,7 +637,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	
 	@Override
 	public void sslRequest() {
-		this.client.sslDenied();
+		this.client.sendSslResponse();
 	}
 	
 	private void setEncoding() {

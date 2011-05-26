@@ -85,7 +85,7 @@ public interface ODBCClientRemote {
 	void functionCallResponse(byte[] data);
 	void functionCallResponse(int data);
 	
-	void sslDenied();
+	void sendSslResponse();
 	
 	// unimplemented backend messages
 	

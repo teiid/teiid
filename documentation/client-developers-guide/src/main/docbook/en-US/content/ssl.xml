@@ -13,13 +13,13 @@
     <section id="default_security">
         <title>Default Security</title>
         
-        <para>If you are using a socket connection, then you may need to secure the channel more completely.</para>
-    
-        <para>By default all sensitive (non-data) messages between client and server 
+        <para>By default all JDBC/Admin sensitive (non-data) messages between client and server 
         are encrypted using a <ulink url="http://en.wikipedia.org/wiki/Diffie-Hellman_key_exchange">Diffy-Hellman</ulink> 
         key that is negotiated per connection. This 
         encryption is controlled by <code>clientEncryptionEnabled</code> property in <code>JdbcSslConfiguration</code> and 
         <code>AdminSslConfiguration</code> sections in the &jboss-beans; file.</para>
+        
+        <para>If you are using a socket connection, then you may need to secure the channel more completely - especially if using ODBC, which currently only supports plain text authentication.</para>
     </section>
     
     <section id="ssl_modes">

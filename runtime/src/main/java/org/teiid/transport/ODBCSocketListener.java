@@ -23,11 +23,8 @@ package org.teiid.transport;
 
 import java.util.Properties;
 
-import javax.net.ssl.SSLEngine;
-
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.DefaultChannelPipeline;
-import org.jboss.netty.handler.ssl.SslHandler;
 import org.teiid.common.buffer.StorageManager;
 import org.teiid.core.TeiidException;
 import org.teiid.jdbc.EmbeddedProfile;
@@ -66,12 +63,8 @@ public class ODBCSocketListener extends SocketListener {
 			public ChannelPipeline getPipeline() throws Exception {
 				ChannelPipeline pipeline = new DefaultChannelPipeline();
 
-				SSLEngine engine = config.getServerSSLEngine();
-			    if (engine != null) {
-			        pipeline.addLast("ssl", new SslHandler(engine)); //$NON-NLS-1$
-			    }
 			    pipeline.addLast("odbcFrontendProtocol", new PgFrontendProtocol(1 << 20)); //$NON-NLS-1$
-			    pipeline.addLast("odbcBackendProtocol", new PgBackendProtocol(maxLobSize)); //$NON-NLS-1$
+			    pipeline.addLast("odbcBackendProtocol", new PgBackendProtocol(maxLobSize, config)); //$NON-NLS-1$
 			    pipeline.addLast("handler", this); //$NON-NLS-1$
 			    return pipeline;
 			}			

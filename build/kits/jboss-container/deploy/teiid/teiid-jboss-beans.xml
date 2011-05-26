@@ -229,7 +229,7 @@
     <bean name="OdbcSslConfiguration" class="org.teiid.transport.SSLConfiguration">
         <!-- can be one of disabled or enabled 
              disabled = no transport or message level security will be used
-             enabled = traffic will be secured using this configuration
+             enabled = traffic will be secured using this configuration if the client supports SSL
         -->
         <property name="mode">disabled</property>
         <property name="keystoreFilename">cert.keystore</property>

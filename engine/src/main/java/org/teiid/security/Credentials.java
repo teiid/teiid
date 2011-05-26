@@ -26,7 +26,9 @@ import java.io.Serializable;
 
 public class Credentials implements Serializable {
     
-    private char[] credentials = null;
+	private static final long serialVersionUID = 7453114713211221240L;
+	
+	private char[] credentials = null;
     
     /**
      * Construct a new PasswordCredentials 
