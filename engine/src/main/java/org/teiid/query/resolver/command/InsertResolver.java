@@ -135,7 +135,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         	List<Reference> references = new ArrayList<Reference>(insert.getVariables().size());
         	for (int i = 0; i < insert.getVariables().size(); i++) {
         		Reference ref = new Reference(i);
-        		ref.setType(((ElementSymbol)insert.getVariables().get(i)).getType());
+        		ref.setType(insert.getVariables().get(i).getType());
 				references.add(ref);
 			}
         	insert.setValues(references);
@@ -198,7 +198,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
                     //TODO: a special case here is a projected literal
                     throw new QueryResolverException(QueryPlugin.Util.getString("InsertResolver.cant_convert_query_type", new Object[] {expression, expression.getType().getName(), element, element.getType().getName()})); //$NON-NLS-1$
                 }
-            } else if (element.getType() == null && expression.getType() != null && !usingQuery)  {
+            } else if (element.getType() == null && expression.getType() != null)  {
                 element.setType(expression.getType());
                 newValues.add(expression);
             } else {

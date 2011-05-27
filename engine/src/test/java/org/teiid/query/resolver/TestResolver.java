@@ -2618,6 +2618,11 @@ public class TestResolver {
         helpResolveException(sql, "Cannot convert insert query expression projected symbol '3' of type java.lang.Integer to insert column 'pm1.g1.e3' of type java.lang.Boolean"); //$NON-NLS-1$
     }
     
+    @Test public void testInsertWithQueryImplicitWithColumns() {
+        String sql = "Insert into #X (x) select 1 as x"; //$NON-NLS-1$
+        helpResolve(sql); //$NON-NLS-1$
+    }
+    
     @Test public void testInsertWithQueryImplicitWithoutColumns() {
         String sql = "Insert into #X select 1 as x, 2 as y, 3 as z"; //$NON-NLS-1$
         helpResolve(sql); //$NON-NLS-1$
