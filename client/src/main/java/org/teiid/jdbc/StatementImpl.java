@@ -533,7 +533,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         }
         
         final RequestMessage reqMessage = createRequestMessage(commands, isBatchedCommand, resultsMode);
-        reqMessage.setSync(synch);
     	ResultsFuture<ResultsMessage> pendingResult = execute(reqMessage, synch);
     	final ResultsFuture<Boolean> result = new ResultsFuture<Boolean>();
     	pendingResult.addCompletionListener(new ResultsFuture.CompletionListener<ResultsMessage>() {
@@ -581,7 +580,8 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         reqMsg.setFetchSize(this.fetchSize);
         reqMsg.setRowLimit(this.maxRows);
         reqMsg.setTransactionIsolation(this.driverConnection.getTransactionIsolation());
-
+        String useCallingThread = getExecutionProperty(EmbeddedProfile.USE_CALLING_THREAD);
+        reqMsg.setSync(synch && (useCallingThread == null || Boolean.valueOf(useCallingThread)));
         // Get connection properties and set them onto request message
         copyPropertiesToRequest(reqMsg);
 

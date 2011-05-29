@@ -403,7 +403,7 @@ public class RulePushAggregates implements
         if (groupingExpressions != null) {
         	newGroupingExpressions = new HashSet<SingleElementSymbol>();
         	for (SingleElementSymbol singleElementSymbol : groupingExpressions) {
-				newGroupingExpressions.add((SingleElementSymbol)symbolMap.getKeys().get(virtualElements.indexOf(singleElementSymbol)).clone());
+				newGroupingExpressions.add(symbolMap.getKeys().get(virtualElements.indexOf(singleElementSymbol)).clone());
 			}
         }
 
