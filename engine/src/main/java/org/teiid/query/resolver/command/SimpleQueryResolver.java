@@ -127,7 +127,7 @@ public class SimpleQueryResolver implements CommandResolver {
         	ResolverUtil.resolveOrderBy(query.getOrderBy(), query, metadata);
         }
         
-        List symbols = query.getSelect().getProjectedSymbols();
+        List<SingleElementSymbol> symbols = query.getSelect().getProjectedSymbols();
         
         if (query.getInto() != null) {
             GroupSymbol symbol = query.getInto().getGroup();
@@ -281,7 +281,7 @@ public class SimpleQueryResolver implements CommandResolver {
             // Look for elements that are not selectable and remove them
             for (ElementSymbol element : elements) {
                 if(metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.SELECT)) {
-                    element = (ElementSymbol)element.clone();
+                    element = element.clone();
                     element.setGroupSymbol(group);
                 	result.add(element);
                 }
@@ -368,6 +368,9 @@ public class SimpleQueryResolver implements CommandResolver {
 			}
         }
         
+        /**
+		 * @param tfr  
+		 */
         public LinkedHashSet<GroupSymbol> preTableFunctionReference(TableFunctionReference tfr) {
         	LinkedHashSet<GroupSymbol> saved = new LinkedHashSet<GroupSymbol>(this.currentGroups);
         	if (allowImplicit) {
@@ -571,7 +574,7 @@ public class SimpleQueryResolver implements CommandResolver {
                 
         public void visit(From obj) {
             assert currentGroups.isEmpty();
-            for (FromClause clause : (List<FromClause>)obj.getClauses()) {
+            for (FromClause clause : obj.getClauses()) {
 				checkImplicit(clause);
 			}
             super.visit(obj);

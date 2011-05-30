@@ -90,7 +90,59 @@ import org.teiid.query.util.CommandContext;
  */
 @SuppressWarnings("nls")
 public class TestXMLProcessor {
-    private static final boolean DEBUG = false;
+    private static final String CARDS_MANAGER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
+	            "<BaseballPlayers>\r\n" + //$NON-NLS-1$
+	            "   <Player PlayerID=\"1001\">\r\n" + //$NON-NLS-1$
+	            "      <FirstName>Albert</FirstName>\r\n" + //$NON-NLS-1$
+	            "      <LastName>Pujols</LastName>\r\n" + //$NON-NLS-1$
+	            "      <Manager ManagerID=\"1004\">\r\n" + //$NON-NLS-1$
+	            "         <FirstName>Tony</FirstName>\r\n" + //$NON-NLS-1$
+	            "         <LastName>LaRussa</LastName>\r\n" + //$NON-NLS-1$
+	            "         <Owner OwnerID=\"1009\">\r\n" + //$NON-NLS-1$
+	            "            <FirstName>Bill</FirstName>\r\n" + //$NON-NLS-1$
+	            "            <LastName>DeWitt</LastName>\r\n" + //$NON-NLS-1$
+	            "         </Owner>\r\n" + //$NON-NLS-1$
+	            "      </Manager>\r\n" + //$NON-NLS-1$
+	            "   </Player>\r\n" + //$NON-NLS-1$
+	            "   <Player PlayerID=\"1002\">\r\n" + //$NON-NLS-1$
+	            "      <FirstName>Jim</FirstName>\r\n" + //$NON-NLS-1$
+	            "      <LastName>Edmunds</LastName>\r\n" + //$NON-NLS-1$
+	            "      <Manager ManagerID=\"1004\">\r\n" + //$NON-NLS-1$
+	            "         <FirstName>Tony</FirstName>\r\n" + //$NON-NLS-1$
+	            "         <LastName>LaRussa</LastName>\r\n" + //$NON-NLS-1$
+	            "         <Owner OwnerID=\"1009\">\r\n" + //$NON-NLS-1$
+	            "            <FirstName>Bill</FirstName>\r\n" + //$NON-NLS-1$
+	            "            <LastName>DeWitt</LastName>\r\n" + //$NON-NLS-1$
+	            "         </Owner>\r\n" + //$NON-NLS-1$
+	            "      </Manager>\r\n" + //$NON-NLS-1$
+	            "   </Player>\r\n" + //$NON-NLS-1$
+	            "   <Player PlayerID=\"1003\">\r\n" + //$NON-NLS-1$
+	            "      <FirstName>David</FirstName>\r\n" + //$NON-NLS-1$
+	            "      <LastName>Eckstein</LastName>\r\n" + //$NON-NLS-1$
+	            "      <Manager ManagerID=\"1004\">\r\n" + //$NON-NLS-1$
+	            "         <FirstName>Tony</FirstName>\r\n" + //$NON-NLS-1$
+	            "         <LastName>LaRussa</LastName>\r\n" + //$NON-NLS-1$
+	            "         <Owner OwnerID=\"1009\">\r\n" + //$NON-NLS-1$
+	            "            <FirstName>Bill</FirstName>\r\n" + //$NON-NLS-1$
+	            "            <LastName>DeWitt</LastName>\r\n" + //$NON-NLS-1$
+	            "         </Owner>\r\n" + //$NON-NLS-1$
+	            "      </Manager>\r\n" + //$NON-NLS-1$
+	            "   </Player>\r\n" + //$NON-NLS-1$
+	            "   <Player PlayerID=\"1005\">\r\n" + //$NON-NLS-1$
+	            "      <FirstName>Derrek</FirstName>\r\n" + //$NON-NLS-1$
+	            "      <LastName>Lee</LastName>\r\n" + //$NON-NLS-1$
+	            "   </Player>\r\n" + //$NON-NLS-1$
+	            "   <Player PlayerID=\"1006\">\r\n" + //$NON-NLS-1$
+	            "      <FirstName>Corey</FirstName>\r\n" + //$NON-NLS-1$
+	            "      <LastName>Patterson</LastName>\r\n" + //$NON-NLS-1$
+	            "   </Player>\r\n" + //$NON-NLS-1$
+	            "   <Player PlayerID=\"1008\">\r\n" + //$NON-NLS-1$
+	            "      <FirstName>Carlos</FirstName>\r\n" + //$NON-NLS-1$
+	            "      <LastName>Zambrano</LastName>\r\n" + //$NON-NLS-1$
+	            "   </Player>\r\n" + //$NON-NLS-1$
+	            "</BaseballPlayers>\r\n\r\n";
+
+	private static final boolean DEBUG = false;
     
     /**
      * Construct some fake metadata.  Basic conceptual tree is:
@@ -11153,62 +11205,17 @@ public class TestXMLProcessor {
         
         QueryMetadataInterface metadata = RealMetadataFactory.exampleCase3225();
         FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
-        String expectedDoc = 
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
-            "<BaseballPlayers>\r\n" + //$NON-NLS-1$
-            "   <Player PlayerID=\"1001\">\r\n" + //$NON-NLS-1$
-            "      <FirstName>Albert</FirstName>\r\n" + //$NON-NLS-1$
-            "      <LastName>Pujols</LastName>\r\n" + //$NON-NLS-1$
-            "      <Manager ManagerID=\"1004\">\r\n" + //$NON-NLS-1$
-            "         <FirstName>Tony</FirstName>\r\n" + //$NON-NLS-1$
-            "         <LastName>LaRussa</LastName>\r\n" + //$NON-NLS-1$
-            "         <Owner OwnerID=\"1009\">\r\n" + //$NON-NLS-1$
-            "            <FirstName>Bill</FirstName>\r\n" + //$NON-NLS-1$
-            "            <LastName>DeWitt</LastName>\r\n" + //$NON-NLS-1$
-            "         </Owner>\r\n" + //$NON-NLS-1$
-            "      </Manager>\r\n" + //$NON-NLS-1$
-            "   </Player>\r\n" + //$NON-NLS-1$
-            "   <Player PlayerID=\"1002\">\r\n" + //$NON-NLS-1$
-            "      <FirstName>Jim</FirstName>\r\n" + //$NON-NLS-1$
-            "      <LastName>Edmunds</LastName>\r\n" + //$NON-NLS-1$
-            "      <Manager ManagerID=\"1004\">\r\n" + //$NON-NLS-1$
-            "         <FirstName>Tony</FirstName>\r\n" + //$NON-NLS-1$
-            "         <LastName>LaRussa</LastName>\r\n" + //$NON-NLS-1$
-            "         <Owner OwnerID=\"1009\">\r\n" + //$NON-NLS-1$
-            "            <FirstName>Bill</FirstName>\r\n" + //$NON-NLS-1$
-            "            <LastName>DeWitt</LastName>\r\n" + //$NON-NLS-1$
-            "         </Owner>\r\n" + //$NON-NLS-1$
-            "      </Manager>\r\n" + //$NON-NLS-1$
-            "   </Player>\r\n" + //$NON-NLS-1$
-            "   <Player PlayerID=\"1003\">\r\n" + //$NON-NLS-1$
-            "      <FirstName>David</FirstName>\r\n" + //$NON-NLS-1$
-            "      <LastName>Eckstein</LastName>\r\n" + //$NON-NLS-1$
-            "      <Manager ManagerID=\"1004\">\r\n" + //$NON-NLS-1$
-            "         <FirstName>Tony</FirstName>\r\n" + //$NON-NLS-1$
-            "         <LastName>LaRussa</LastName>\r\n" + //$NON-NLS-1$
-            "         <Owner OwnerID=\"1009\">\r\n" + //$NON-NLS-1$
-            "            <FirstName>Bill</FirstName>\r\n" + //$NON-NLS-1$
-            "            <LastName>DeWitt</LastName>\r\n" + //$NON-NLS-1$
-            "         </Owner>\r\n" + //$NON-NLS-1$
-            "      </Manager>\r\n" + //$NON-NLS-1$
-            "   </Player>\r\n" + //$NON-NLS-1$
-            "   <Player PlayerID=\"1005\">\r\n" + //$NON-NLS-1$
-            "      <FirstName>Derrek</FirstName>\r\n" + //$NON-NLS-1$
-            "      <LastName>Lee</LastName>\r\n" + //$NON-NLS-1$
-            "   </Player>\r\n" + //$NON-NLS-1$
-            "   <Player PlayerID=\"1006\">\r\n" + //$NON-NLS-1$
-            "      <FirstName>Corey</FirstName>\r\n" + //$NON-NLS-1$
-            "      <LastName>Patterson</LastName>\r\n" + //$NON-NLS-1$
-            "   </Player>\r\n" + //$NON-NLS-1$
-            "   <Player PlayerID=\"1008\">\r\n" + //$NON-NLS-1$
-            "      <FirstName>Carlos</FirstName>\r\n" + //$NON-NLS-1$
-            "      <LastName>Zambrano</LastName>\r\n" + //$NON-NLS-1$
-            "   </Player>\r\n" + //$NON-NLS-1$
-            "</BaseballPlayers>\r\n\r\n"; //$NON-NLS-1$
         
-        helpTestProcess("select * from xmltest.playersDoc where context(manager, owner.@ownerid) = '1009'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
+        helpTestProcess("select * from xmltest.playersDoc where context(manager, owner.@ownerid) = '1009'", CARDS_MANAGER, metadata, dataMgr);         //$NON-NLS-1$
         
     }    
+    
+    @Test public void testBaseballPlayersPseudoGroup() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleCase3225();
+        FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
+
+    	helpTestProcess("select * from xmltest.playersDoc where context(manager, manager.firstname) > ALL (select firstname from player)", CARDS_MANAGER, metadata, dataMgr);         //$NON-NLS-1$
+    }
     
     /**
      * Ensures that temp tables are still visible when processing criteria

@@ -188,7 +188,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		}
 		Table table = this.store.findGroup(elementName.substring(0, columnIndex).toUpperCase());
 		String shortElementName = elementName.substring(columnIndex + 1);
-		for (Column column : (List<Column>)getElementIDsInGroupID(table)) {
+		for (Column column : getElementIDsInGroupID(table)) {
 			if (column.getName().equalsIgnoreCase(shortElementName)) {
 				return column;
 			}
@@ -256,7 +256,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         return metadataRecord.getName();
     }
 
-    public List getElementIDsInGroupID(final Object groupID) throws TeiidComponentException, QueryMetadataException {
+    public List<Column> getElementIDsInGroupID(final Object groupID) throws TeiidComponentException, QueryMetadataException {
     	ArgCheck.isInstanceOf(Table.class, groupID);
     	return ((Table)groupID).getColumns();
     }
@@ -710,13 +710,19 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         ArgCheck.isInstanceOf(Table.class, groupID);
 
         Table tableRecord = (Table) groupID;
+        
+        MappingDocument mappingDoc = tableRecord.getAttachment(MappingDocument.class);
+        
+        if (mappingDoc != null) {
+        	return mappingDoc;
+        }
+        
 		final String groupName = tableRecord.getFullName();
         if(tableRecord.isVirtual()) {
-            // get mappin transform
+            // get mapping transform
             String document = tableRecord.getSelectTransformation();            
             InputStream inputStream = new ByteArrayInputStream(document.getBytes());
             MappingLoader reader = new MappingLoader();
-            MappingDocument mappingDoc = null;
             try{
                 mappingDoc = reader.loadDocument(inputStream);
                 mappingDoc.setName(groupName);
@@ -727,6 +733,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 					inputStream.close();
             	} catch(Exception e) {}
             }
+            tableRecord.addAttchment(MappingDocument.class, mappingDoc);
             return mappingDoc;
         }
 
@@ -757,14 +764,14 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /**
      * @see org.teiid.query.metadata.QueryMetadataInterface#getXMLTempGroups(java.lang.Object)
      */
-    public Collection getXMLTempGroups(final Object groupID) throws TeiidComponentException, QueryMetadataException {
+    public Collection<Table> getXMLTempGroups(final Object groupID) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecord = (Table) groupID;
 
         if(tableRecord.getTableType() == Table.Type.Document) {
             return this.store.getXMLTempGroups(tableRecord);
         }
-        return Collections.EMPTY_SET;
+        return Collections.emptySet();
     }
 
     public int getCardinality(final Object groupID) throws TeiidComponentException, QueryMetadataException {

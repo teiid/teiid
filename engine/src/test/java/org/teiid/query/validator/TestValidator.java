@@ -120,9 +120,9 @@ public class TestValidator {
         
         MappingElement sourceNode = complexRoot.addChildElement(new MappingElement("a1")); //$NON-NLS-1$
         sourceNode.setSource("test.group"); //$NON-NLS-1$
-        sourceNode.addChildElement(new MappingElement("a2", "e1")); //$NON-NLS-1$ //$NON-NLS-2$
-        sourceNode.addChildElement(new MappingElement("b2", "e2")); //$NON-NLS-1$ //$NON-NLS-2$
-        sourceNode.addChildElement(new MappingElement("c2", "e3")); //$NON-NLS-1$ //$NON-NLS-2$
+        sourceNode.addChildElement(new MappingElement("a2", "test.group.e1")); //$NON-NLS-1$ //$NON-NLS-2$
+        sourceNode.addChildElement(new MappingElement("b2", "test.group.e2")); //$NON-NLS-1$ //$NON-NLS-2$
+        sourceNode.addChildElement(new MappingElement("c2", "test.group.e3")); //$NON-NLS-1$ //$NON-NLS-2$
         
     	Schema docModel = RealMetadataFactory.createVirtualModel("vm1", metadataStore); //$NON-NLS-1$
         Table doc1 = RealMetadataFactory.createXmlDocument("doc1", docModel, doc); //$NON-NLS-1$

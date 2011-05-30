@@ -86,10 +86,8 @@ public class XMLQueryPlanner {
             public void visit(MappingBaseNode baseNode) {
                 try {
                     // first if there are any explicit staging tables plan them first 
-                    List stagingTables = baseNode.getStagingTables();
-                    for (final Iterator i = stagingTables.iterator(); i.hasNext();) {
-                        
-                        final String tableName = (String)i.next();
+                    List<String> stagingTables = baseNode.getStagingTables();
+                    for (String tableName : stagingTables) {
                         planStagingTable(tableName, planEnv);    
                     }
                     
@@ -206,15 +204,15 @@ public class XMLQueryPlanner {
     static void prepareQuery(MappingSourceNode sourceNode, XMLPlannerEnvironment planEnv, QueryCommand rsQuery) 
         throws TeiidComponentException, QueryResolverException {
         
-        Collection externalGroups = getExternalGroups(sourceNode);
+        Collection<GroupSymbol> externalGroups = getExternalGroups(sourceNode);
         
         rsQuery.setExternalGroupContexts(new GroupContext(null, externalGroups));
         
 		QueryResolver.resolveCommand(rsQuery, planEnv.getGlobalMetadata());
     }
     
-    private static Collection getExternalGroups(MappingSourceNode sourceNode) {
-        Collection externalGroups = new HashSet();
+    private static Collection<GroupSymbol> getExternalGroups(MappingSourceNode sourceNode) {
+        Collection<GroupSymbol> externalGroups = new HashSet<GroupSymbol>();
 
         MappingSourceNode parentSource = sourceNode.getParentSourceNode();
         while (parentSource != null) {
@@ -249,12 +247,12 @@ public class XMLQueryPlanner {
         return singleParentage;
     }
     
-    private static LinkedList getResultSetStack(MappingSourceNode contextNode, MappingBaseNode node) {
-        LinkedList rsStack = new LinkedList();
+    private static LinkedList<MappingSourceNode> getResultSetStack(MappingSourceNode contextNode, MappingBaseNode node) {
+        LinkedList<MappingSourceNode> rsStack = new LinkedList<MappingSourceNode>();
         
         while (node != null && node != contextNode) {
             if (node instanceof MappingSourceNode) {
-                rsStack.add(0, node);
+                rsStack.add(0, (MappingSourceNode)node);
             }
             node = node.getParentNode();
         }
@@ -312,7 +310,7 @@ public class XMLQueryPlanner {
                 joinCriteria = (Criteria)joinCriteria.clone();
                 
                 //update the from clause
-                FromClause clause = (FromClause)currentQuery.getFrom().getClauses().remove(0);
+                FromClause clause = currentQuery.getFrom().getClauses().remove(0);
                 
                 JoinPredicate join = null;
                 

@@ -25,26 +25,35 @@ package org.teiid.query.resolver.command;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.util.StringUtil;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.mapping.xml.MappingDocument;
+import org.teiid.query.mapping.xml.MappingNode;
+import org.teiid.query.mapping.xml.MappingSourceNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataID.Type;
+import org.teiid.query.optimizer.xml.SourceNodeGenaratorVisitor;
 import org.teiid.query.resolver.CommandResolver;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.GroupContext;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
+import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.AllInGroupSymbol;
 import org.teiid.query.sql.symbol.AllSymbol;
@@ -52,16 +61,57 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SelectSymbol;
-import org.teiid.query.sql.visitor.CommandCollectorVisitor;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 
 /**
  */
 public class XMLQueryResolver implements CommandResolver {
+	
+	private static final class ResolvingNode {
+		ElementSymbol elementSymbol;
+		TreeMap<String, ResolvingNode> children = new TreeMap<String, ResolvingNode>(String.CASE_INSENSITIVE_ORDER);
+		
+		public void add(String name, ElementSymbol symbol) {
+			if (name == null) {
+				this.elementSymbol = symbol;
+				return;
+			}
+			int index = name.lastIndexOf('.');
+			String childName = name;
+			if (index >= 0) {
+				childName = name.substring(0, index);
+				name = name.substring(index + 1, name.length());
+			} else {
+				childName = null;
+			}
+			ResolvingNode child = children.get(name);
+			if (child == null) {
+				child = new ResolvingNode();
+				children.put(name, child);
+			}
+			child.add(childName, symbol);
+		}
+		
+		public <T extends Collection<ElementSymbol>> T values(T values) {
+			if (elementSymbol != null) {
+				values.add(elementSymbol);
+			}
+			for (ResolvingNode node : children.values()) {
+				node.values(values);
+			}
+			return values;
+		}
+		
+		public List<ElementSymbol> values() {
+			return values(new LinkedList<ElementSymbol>());
+		}
+	}
 
-    /**
+	/**
      * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, TempMetadataAdapter, boolean)
      */
 	public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals)
@@ -80,31 +130,41 @@ public class XMLQueryResolver implements CommandResolver {
         GroupContext externalGroups = query.getExternalGroupContexts();
 
 		// valid elements for select
-		List<ElementSymbol> validSelectElems = getElementsInDocument(group, metadata);
-		resolveXMLSelect(query, group, validSelectElems, metadata);
+		List<ElementSymbol> validSelectElems = ResolverUtil.resolveElementsInGroup(group, metadata);
+		ResolvingNode root = new ResolvingNode();
+		for (ElementSymbol elementSymbol : validSelectElems) {
+			root.add(elementSymbol.getName(), elementSymbol);
+		}
+		resolveXMLSelect(query, group, root, metadata);
 
 		// valid elements for criteria and order by
-		Collection<ElementSymbol> validCriteriaElements = collectValidCriteriaElements(group, metadata);
+		Collection<ElementSymbol> validCriteriaElements = collectTempElements(group, metadata);
+		for (ElementSymbol elementSymbol : validCriteriaElements) {
+			root.add(elementSymbol.getName(), elementSymbol);
+		}
 
 		Criteria crit = query.getCriteria();
 		OrderBy orderBy = query.getOrderBy();
-        
-        List<Command> commands = CommandCollectorVisitor.getCommands(query);
-        for (Command subCommand : commands) {
-            QueryResolver.setChildMetadata(subCommand, command);
-            
-            QueryResolver.resolveCommand(subCommand, metadata.getMetadata());
-        }
-        
+		
 		if(crit != null) {
-			resolveXMLCriteria(crit, externalGroups, validCriteriaElements, metadata);
+	        List<SubqueryContainer> commands = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(crit);
+	        if (!commands.isEmpty()) {
+	        	addPseudoSubqueryGroups(metadata, group, validSelectElems);
+		        for (SubqueryContainer subCommand : commands) {
+		            QueryResolver.setChildMetadata(subCommand.getCommand(), command);
+		            
+		            QueryResolver.resolveCommand(subCommand.getCommand(), metadata.getMetadata());
+		        }
+	        }
+
+			resolveXMLCriteria(crit, externalGroups, root, metadata);
 			// Resolve functions in current query
 			ResolverVisitor.resolveLanguageObject(crit, metadata);
 		}
 
 		// resolve any orderby specified on the query
 		if(orderBy != null) {
-			resolveXMLOrderBy(orderBy, externalGroups, validCriteriaElements, metadata);
+			resolveXMLOrderBy(orderBy, externalGroups, root, metadata);
 		}
         
         //we throw exceptions in these cases, since the clauses will not be resolved
@@ -117,6 +177,62 @@ public class XMLQueryResolver implements CommandResolver {
         }	
     }
 
+	private void addPseudoSubqueryGroups(TempMetadataAdapter metadata,
+			GroupSymbol group, List<ElementSymbol> validSelectElems)
+			throws TeiidComponentException, QueryMetadataException,
+			QueryResolverException {
+		/*
+		 * The next section of resolving logic adds in pseduo groups that can be used
+		 * in subqueries
+		 */
+		MappingDocument doc = (MappingDocument) metadata.getMappingNode(group.getMetadataID());
+		doc = doc.clone();
+		doc = SourceNodeGenaratorVisitor.extractSourceNodes(doc);
+		
+		HashMap<String, List<ElementSymbol>> psuedoGroups = new HashMap<String, List<ElementSymbol>>();
+		for (ElementSymbol elementSymbol : validSelectElems) {
+			MappingNode node = MappingNode.findNode(doc, elementSymbol.getCanonicalName());
+			if (node == null) {
+				continue;
+			}
+			MappingSourceNode mappingSourceNode = node.getSourceNode();
+			if (mappingSourceNode == null) {
+				continue;
+			}
+			String mappingClass = mappingSourceNode.getSource();
+			String tableName = SingleElementSymbol.getShortName(mappingClass);
+			
+			String name = elementSymbol.getName();
+			int index = name.lastIndexOf('.');
+			String xmlTableName = name.substring(0, index);
+			if (!xmlTableName.endsWith(tableName)) {
+				continue;
+			}
+			List<ElementSymbol> elements = psuedoGroups.get(xmlTableName);
+			if (elements == null) {
+				elements = new ArrayList<ElementSymbol>();
+				psuedoGroups.put(xmlTableName, elements);
+			}
+			ElementSymbol es = new ElementSymbol(name.substring(index+1, name.length()));
+			es.setType(elementSymbol.getType());
+			es.setMetadataID(elementSymbol.getMetadataID());
+			elements.add(es);
+		}
+		
+		for (Map.Entry<String, List<ElementSymbol>> entry : psuedoGroups.entrySet()) {
+			for (ElementSymbol elem : new ArrayList<ElementSymbol>(entry.getValue())) {
+				if (elem.getName().charAt(0) == '@') {
+					ElementSymbol alias = elem.clone();
+					alias.setShortName(elem.getName().substring(1));
+					if (!entry.getValue().contains(alias)) {
+						entry.getValue().add(alias);
+					}
+				}
+			}
+			ResolverUtil.addTempGroup(metadata, new GroupSymbol(entry.getKey()), entry.getValue(), false).setMetadataType(Type.XML);
+		}
+	}
+
     /**
      * Method resolveXMLSelect.
      * @param select Select clause in user command
@@ -128,7 +244,7 @@ public class XMLQueryResolver implements CommandResolver {
      * @throws QueryMetadataException if resolving fails
      * @throws TeiidComponentException if resolving fails
      */
-	void resolveXMLSelect(Query query, GroupSymbol group, List<ElementSymbol> validElements, QueryMetadataInterface metadata)
+	void resolveXMLSelect(Query query, GroupSymbol group, ResolvingNode validElements, QueryMetadataInterface metadata)
 		throws QueryMetadataException, TeiidComponentException, QueryResolverException {
         
         GroupContext externalGroups = null;
@@ -159,7 +275,7 @@ public class XMLQueryResolver implements CommandResolver {
 					}
 					select.clearSymbols();
                     AllSymbol all = new AllSymbol();
-                    all.setElementSymbols(validElements);
+                    all.setElementSymbols(validElements.values());
 					select.addSymbol(all);
 					query.setSelect(select);
 					return;
@@ -177,7 +293,7 @@ public class XMLQueryResolver implements CommandResolver {
                 if(elementPart.equalsIgnoreCase(group.getName())) {
                     select.clearSymbols();
                     AllSymbol all = new AllSymbol();
-                    all.setElementSymbols(validElements);
+                    all.setElementSymbols(validElements.values());
                     select.addSymbol(all);
                     query.setSelect(select);
                 } else {
@@ -186,12 +302,12 @@ public class XMLQueryResolver implements CommandResolver {
                     resolveElement(elementSymbol, validElements, externalGroups, metadata);
 
                     // now find all the elements under this node and set as elements.
-                    List<ElementSymbol> elementsInNode = getElementsUnderNode(elementSymbol, validElements, metadata);
+                    List<ElementSymbol> elementsInNode = getElementsUnderNode(elementSymbol, validElements.values(), metadata);
                     ((AllInGroupSymbol)ss).setElementSymbols(elementsInNode);
                 }
 			} else if (ss instanceof AllSymbol) {
                 AllSymbol all =  (AllSymbol)ss;
-                all.setElementSymbols(validElements);
+                all.setElementSymbols(validElements.values());
 				return;
 			} else if (ss instanceof ExpressionSymbol) {
                 throw new QueryResolverException(QueryPlugin.Util.getString("XMLQueryResolver.no_expressions_in_select")); //$NON-NLS-1$
@@ -202,30 +318,12 @@ public class XMLQueryResolver implements CommandResolver {
 		}
 	}
         
-    /**
-     * Collect all fully-qualified valid elements.  These can then be used to
-     * validate elements used in the query.  It's easier to look up the valid
-     * elements because the user is allow to used any partially-qualified name,
-     * which makes the logic for doing lookups essentially impossible with the
-     * existing metadata interface.
-     * @param group Document group
-     * @param metadata Metadata interface
-     * @return Collection of ElementSymbol for each possible valid element
-     * @throws QueryMetadataException
-     * @throws TeiidComponentException
-     * @throws QueryResolverException
-     */
-    public static Collection<ElementSymbol> collectValidCriteriaElements(GroupSymbol group, QueryMetadataInterface metadata)
-        throws QueryMetadataException, TeiidComponentException, QueryResolverException {
-
-        // Get all groups and elements
-        List<ElementSymbol> validElements = getElementsInDocument(group, metadata);
-
+    public static Collection<ElementSymbol> collectTempElements(GroupSymbol group, QueryMetadataInterface metadata)
+        throws QueryMetadataException, TeiidComponentException {
+    	ArrayList<ElementSymbol> validElements = new ArrayList<ElementSymbol>();
         // Create GroupSymbol for temp groups and add to groups
-        Collection tempGroups = metadata.getXMLTempGroups(group.getMetadataID());
-        Iterator tempGroupIter = tempGroups.iterator();
-        while(tempGroupIter.hasNext()) {
-            Object tempGroupID = tempGroupIter.next();
+        Collection<?> tempGroups = metadata.getXMLTempGroups(group.getMetadataID());
+        for (Object tempGroupID : tempGroups) {
             String name = metadata.getFullName(tempGroupID);
             GroupSymbol tempGroup = new GroupSymbol(name);
             tempGroup.setMetadataID(tempGroupID);
@@ -234,7 +332,6 @@ public class XMLQueryResolver implements CommandResolver {
         }
         return validElements;
     }
-
 
     /**
      * <p> Resolve the criteria specified on the XML query. The elements specified on the criteria should
@@ -255,7 +352,7 @@ public class XMLQueryResolver implements CommandResolver {
      * @param metadata QueryMetadataInterface the metadata(for resolving criteria on temp groups)
      * @throws QueryResolverException if any of the above fail conditions are met
      */
-    public static void resolveXMLCriteria(Criteria criteria,GroupContext externalGroups, Collection<ElementSymbol> validElements, QueryMetadataInterface metadata)
+    public static void resolveXMLCriteria(LanguageObject criteria,GroupContext externalGroups, ResolvingNode validElements, QueryMetadataInterface metadata)
         throws QueryMetadataException, TeiidComponentException, QueryResolverException {
 
         // Walk through each element in criteria and check against valid elements
@@ -278,7 +375,7 @@ public class XMLQueryResolver implements CommandResolver {
      * @throws QueryMetadataException if resolving fails
      * @throws TeiidComponentException if resolving fails
      */
-    static void resolveXMLOrderBy(OrderBy orderBy, GroupContext externalGroups, Collection<ElementSymbol> validElements, QueryMetadataInterface metadata)
+    static void resolveXMLOrderBy(OrderBy orderBy, GroupContext externalGroups, ResolvingNode validElements, QueryMetadataInterface metadata)
         throws QueryMetadataException, TeiidComponentException, QueryResolverException {
 
         // Walk through each element in OrderBy clause and check against valid elements
@@ -298,100 +395,62 @@ public class XMLQueryResolver implements CommandResolver {
 	 * @throws QueryMetadataException
 	 * @throws TeiidComponentException
 	 */
-    static void resolveElement(ElementSymbol elem, Collection<ElementSymbol> validElements, GroupContext externalGroups, QueryMetadataInterface metadata)
+    static void resolveElement(ElementSymbol elem, ResolvingNode validElements, GroupContext externalGroups, QueryMetadataInterface metadata)
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
         
         // Get exact matching name
-        String critElemName = elem.getName();
-        String critElemNameSuffix = "." + elem.getCanonicalName(); //$NON-NLS-1$
+        String partialName = elem.getName();
+        String fullName = partialName;
 
-        // Prepare results
-        ElementSymbol exactMatch = null;
-        List<ElementSymbol> partialMatches = new ArrayList<ElementSymbol>(2);     // anything over 1 is an error and should be rare
+        ResolvingNode current = validElements;
+    	String part = partialName;
+        for (int i = 0; partialName != null; i++) {
+        	int index = partialName.lastIndexOf('.');
+        	if (index < 0) {
+        		part = partialName;
+        		partialName = null;
+        	} else {
+        		part = partialName.substring(index + 1, partialName.length());
+        		partialName = partialName.substring(0, index);
+        	}
+			current = current.children.get(part);
+			if (current == null) {
+				if (i == 0 && part.charAt(0) != '@') {
+					//handle attribute case
+					part = '@' + part;
+					current = validElements.children.get(part);
+					if (current != null) {
+						continue;
+					}
+				}
+				try {
+	                ResolverVisitor.resolveLanguageObject(elem, Collections.EMPTY_LIST, externalGroups, metadata);
+	                return;
+	            } catch (QueryResolverException e) {
+	                throw new QueryResolverException(e, "ERR.015.008.0019", QueryPlugin.Util.getString("ERR.015.008.0019", fullName)); //$NON-NLS-1$ //$NON-NLS-2$
+	            }
+			}
+		}
 
-        //List of XML attributes that might match the criteria element,
-        //if the criteria is specified without the optional "@" sign
-        List<ElementSymbol> attributeMatches = new ArrayList<ElementSymbol>(2);
+        List<ElementSymbol> partialMatches = current.values();
 
-        // look up name based on ID match - will work for uuid version
-        try {
+        if (partialMatches.size() != 1) {
+        	// Found multiple matches
+            throw new QueryResolverException("ERR.015.008.0020", QueryPlugin.Util.getString("ERR.015.008.0020", fullName)); //$NON-NLS-1$ //$NON-NLS-2$
+        } 
 
-            Object elementID = metadata.getElementID(critElemName);
-
-            if(elementID != null) {
-                critElemName = metadata.getFullName(elementID);
-            }
-        } catch(QueryMetadataException e) {
-            //e.printStackTrace();
-            // ignore and go on
-        }
-
-        // Walk through each valid element looking for a match
-        for (ElementSymbol currentElem : validElements) {
-            // Look for exact match
-            if(currentElem.getName().equalsIgnoreCase(critElemName)) {
-                exactMatch = currentElem;
-                break;
-            }
-
-            if(currentElem.getName().toUpperCase().endsWith(critElemNameSuffix)) {
-                partialMatches.add(currentElem);
-            } else {
-                // The criteria element might be referring to an
-                // XML attribute, but might not have the optional
-                // "@" sign
-                String currentElemName = currentElem.getName();
-                int atSignIndex = currentElemName.indexOf("@"); //$NON-NLS-1$
-                if (atSignIndex != -1){
-                    currentElemName = StringUtil.replace(currentElemName, "@", ""); //$NON-NLS-1$ //$NON-NLS-2$
-                    if(currentElemName.equalsIgnoreCase(critElemName)) {
-                        attributeMatches.add(currentElem);
-                    } else {
-                        currentElemName = currentElemName.toUpperCase();
-                        if(currentElemName.endsWith(critElemNameSuffix)) {
-                            attributeMatches.add(currentElem);
-                        }
-                    }
-                }
-            }
-        }
-
-        // Check for single partial match
-        if(exactMatch == null){
-            if (partialMatches.size() == 1) {
-                exactMatch = partialMatches.get(0);
-            } else if (partialMatches.size() == 0 && attributeMatches.size() == 1){
-                exactMatch = attributeMatches.get(0);
-            }
-        }
-
-        if(exactMatch != null) {
-            String name = elem.getOutputName();
-            // Resolve based on exact match
-            elem.setShortName(exactMatch.getShortName());
-            elem.setShortCanonicalName(exactMatch.getShortCanonicalName());
-            elem.setMetadataID(exactMatch.getMetadataID());
-            elem.setType(exactMatch.getType());
-            elem.setGroupSymbol(exactMatch.getGroupSymbol());
-            elem.setOutputName(name);
-        } else if(partialMatches.size() == 0 && attributeMatches.size() == 0){
-            try {
-                ResolverVisitor.resolveLanguageObject(elem, Collections.EMPTY_LIST, externalGroups, metadata);
-            } catch (QueryResolverException e) {
-                throw new QueryResolverException(e, "ERR.015.008.0019", QueryPlugin.Util.getString("ERR.015.008.0019", critElemName)); //$NON-NLS-1$ //$NON-NLS-2$
-            }
-        } else {
-            // Found multiple matches
-            throw new QueryResolverException("ERR.015.008.0020", QueryPlugin.Util.getString("ERR.015.008.0020", critElemName)); //$NON-NLS-1$ //$NON-NLS-2$
-        }
+        ElementSymbol exactMatch = partialMatches.get(0);
+        String name = elem.getOutputName();
+        // Resolve based on exact match
+        elem.setShortName(exactMatch.getShortName());
+        elem.setShortCanonicalName(exactMatch.getShortCanonicalName());
+        elem.setMetadataID(exactMatch.getMetadataID());
+        elem.setType(exactMatch.getType());
+        elem.setGroupSymbol(exactMatch.getGroupSymbol());
+        elem.setOutputName(name);
     }
 
-    static List<ElementSymbol> getElementsInDocument(GroupSymbol group, QueryMetadataInterface metadata)
-        throws QueryMetadataException, TeiidComponentException {
-        return ResolverUtil.resolveElementsInGroup(group, metadata);
-    }
-    
-    static List<ElementSymbol> getElementsUnderNode(ElementSymbol node, List<ElementSymbol> validElements, QueryMetadataInterface metadata) 
+    static List<ElementSymbol> getElementsUnderNode(ElementSymbol node, Collection<ElementSymbol> validElements, QueryMetadataInterface metadata) 
         throws TeiidComponentException, QueryMetadataException {
         
         List<ElementSymbol> elements = new ArrayList<ElementSymbol>();

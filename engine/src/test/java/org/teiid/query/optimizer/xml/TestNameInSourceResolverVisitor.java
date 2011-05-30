@@ -63,7 +63,7 @@ public class TestNameInSourceResolverVisitor extends TestCase {
         GroupSymbol group = groups.iterator().next();
         
         MappingDocument docOrig = (MappingDocument)metadata.getMappingNode(metadata.getGroupID(group.getName())); 
-        MappingDocument doc = (MappingDocument)docOrig.clone(); 
+        MappingDocument doc = docOrig.clone(); 
 
         XMLPlannerEnvironment env = new XMLPlannerEnvironment(metadata);
         env.mappingDoc = doc;

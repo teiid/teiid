@@ -33,6 +33,7 @@ import java.util.Properties;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.StringUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingNode;
@@ -154,6 +155,19 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         throw new QueryMetadataException(msg);
     }
 
+    @Override
+    public Collection getGroupsForPartialName(String partialGroupName)
+    		throws TeiidComponentException, QueryMetadataException {
+    	Collection groups = super.getGroupsForPartialName(partialGroupName);
+    	ArrayList<String> allGroups = new ArrayList<String>(groups);
+    	for (String name : tempStore.getData().keySet()) {
+    		if (StringUtil.endsWithIgnoreCase(name, partialGroupName) 
+    				&& (name.length() == partialGroupName.length() || (name.length() > partialGroupName.length() && name.charAt(name.length() - partialGroupName.length() - 1) == '.'))) {
+    			allGroups.add(name);
+    		}
+    	}
+    	return allGroups;
+    }
 
     public Object getModelID(Object groupOrElementID)
         throws TeiidComponentException, QueryMetadataException {

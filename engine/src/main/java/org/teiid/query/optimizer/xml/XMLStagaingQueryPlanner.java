@@ -134,7 +134,7 @@ public class XMLStagaingQueryPlanner {
         //check for already staged queries
         if (groups.size() == 1) {
             GroupSymbol group = groups.iterator().next();
-            group = QueryUtil.createResolvedGroup((GroupSymbol)group.clone(), planEnv.getGlobalMetadata());
+            group = QueryUtil.createResolvedGroup(group.clone(), planEnv.getGlobalMetadata());
             if (planEnv.isStagingTable(group.getMetadataID()) && stagableQuery.getCriteria() == null) {
                 return false;
             }

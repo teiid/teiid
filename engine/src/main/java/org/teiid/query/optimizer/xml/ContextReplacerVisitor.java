@@ -41,7 +41,7 @@ import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
  */
 class ContextReplacerVisitor extends ExpressionMappingVisitor {
     
-    private Collection contextFunctions = new LinkedList(); //contains Function objects
+    private Collection<Function> contextFunctions = new LinkedList<Function>(); //contains Function objects
     
     /**
      * Construct a new visitor
@@ -55,7 +55,7 @@ class ContextReplacerVisitor extends ExpressionMappingVisitor {
      * which were stripped out of the language object by this visitor
      * @return Collection of Function
      */
-    Collection getContextFunctions(){
+    Collection<Function> getContextFunctions(){
         return this.contextFunctions;
     }
     
@@ -78,9 +78,9 @@ class ContextReplacerVisitor extends ExpressionMappingVisitor {
      * Helper to quickly replace 'context'
      * @param obj Language object
      */
-    static final Collection replaceContextFunctions(LanguageObject obj) {
+    static final Collection<Function> replaceContextFunctions(LanguageObject obj) {
         if (obj == null){
-            return Collections.EMPTY_SET;
+            return Collections.emptySet();
         }
         ContextReplacerVisitor visitor = new ContextReplacerVisitor();
         PreOrderNavigator.doVisit(obj, visitor);

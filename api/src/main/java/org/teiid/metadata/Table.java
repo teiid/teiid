@@ -23,8 +23,10 @@
 package org.teiid.metadata;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.AbstractMetadataRecord.DataModifiable;
@@ -79,6 +81,8 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 	
 	private transient long lastModified;
 	private transient long lastDataModification;
+	
+	private transient Map<Class<?>, Object> attachments;
 	
     public List<String> getBindings() {
 		return bindings;
@@ -332,5 +336,47 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 	public void setUpdatePlanEnabled(boolean updatePlanEnabled) {
 		this.updatePlanEnabled = updatePlanEnabled;
 	}
+	
+   /**
+    * Add attachment
+    *
+    * @param <T> the expected type
+    * @param attachment the attachment
+    * @param type the type
+    * @return any previous attachment
+    * @throws IllegalArgumentException for a null name, attachment or type
+    * @throws UnsupportedOperationException when not supported by the implementation
+    */	
+	synchronized public <T> T addAttchment(Class<T> type, T attachment) {
+      if (type == null)
+          throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
+      if (this.attachments == null) {
+    	  this.attachments = new HashMap<Class<?>, Object>();
+      }
+      Object result = this.attachments.put(type, attachment);
+      if (result == null)
+         return null;
+      return type.cast(result);
+	}
+	
+   /**
+    * Get attachment
+    * 
+    * @param <T> the expected type
+    * @param type the type
+    * @return the attachment or null if not present
+    * @throws IllegalArgumentException for a null name or type
+    */
+	synchronized public <T> T getAttachment(Class<T> type) {
+      if (type == null)
+          throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
+      if (this.attachments == null) {
+    	  return null;
+      }
+      Object result = this.attachments.get(type.getName());
+      if (result == null)
+         return null;
+      return type.cast(result);      
+   }
 	
 }

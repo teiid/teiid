@@ -47,11 +47,11 @@ public class TestMarkExcludeVisitor extends TestCase {
         QueryMetadataInterface metadata = TestXMLProcessor.exampleMetadataCached();
         Query query = (Query)TestXMLProcessor.helpGetCommand(sql, metadata); 
 
-        Collection groups = GroupCollectorVisitor.getGroups(query, true);
-        GroupSymbol group = (GroupSymbol) groups.iterator().next();
+        Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(query, true);
+        GroupSymbol group = groups.iterator().next();
         
         MappingDocument docOrig = (MappingDocument)metadata.getMappingNode(metadata.getGroupID(group.getName())); 
-        MappingDocument doc = (MappingDocument)docOrig.clone(); 
+        MappingDocument doc = docOrig.clone(); 
         
         doc = XMLPlanner.preMarkExcluded(query, doc);       
         XMLPlanner.removeExcluded(doc);

@@ -2517,10 +2517,10 @@ public class RealMetadataFactory {
 	        
 	    // Create mapping classes - baseball players employees doc
 	    QueryNode playersNode = new QueryNode("SELECT stock.employees.employeeNum, firstName, lastName, supervisorNum FROM stock.employees WHERE specializesInItemNum is not null"); //$NON-NLS-1$ //$NON-NLS-2$
-	    Table rsPlayers = createVirtualGroup("players", xmltest, playersNode); //$NON-NLS-1$
+	    Table rsPlayers = createVirtualGroup("player", xmltest, playersNode); //$NON-NLS-1$
 	
 	    QueryNode managersNode = new QueryNode("SELECT stock.employees.employeeNum, firstName, lastName, supervisorNum FROM stock.employees WHERE stock.employees.employeeNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
-	    managersNode.addBinding("xmltest.players.supervisorNum"); //$NON-NLS-1$
+	    managersNode.addBinding("xmltest.player.supervisorNum"); //$NON-NLS-1$
 	    Table rsManagers = createVirtualGroup("managers", xmltest, managersNode); //$NON-NLS-1$
 	
 	        // TODO what if elements in criteria weren't fully qualified? see defect 19541
@@ -2548,11 +2548,11 @@ public class RealMetadataFactory {
 	    MappingElement root2 = doc2.addChildElement(new MappingElement("BaseballPlayers")); //$NON-NLS-1$
 	    
 	    MappingElement player = root2.addChildElement(new MappingElement("Player")); //$NON-NLS-1$
-	    player.setSource("xmltest.players"); //$NON-NLS-1$
+	    player.setSource("xmltest.player"); //$NON-NLS-1$
 	    player.setMaxOccurrs(-1);
-	    player.addAttribute(new MappingAttribute("PlayerID", "xmltest.players.employeeNum")); //$NON-NLS-1$ //$NON-NLS-2$
-	    player.addChildElement(new MappingElement("FirstName", "xmltest.players.firstName")); //$NON-NLS-1$ //$NON-NLS-2$
-	    player.addChildElement(new MappingElement("LastName", "xmltest.players.lastName")); //$NON-NLS-1$ //$NON-NLS-2$
+	    player.addAttribute(new MappingAttribute("PlayerID", "xmltest.player.employeeNum")); //$NON-NLS-1$ //$NON-NLS-2$
+	    player.addChildElement(new MappingElement("FirstName", "xmltest.player.firstName")); //$NON-NLS-1$ //$NON-NLS-2$
+	    player.addChildElement(new MappingElement("LastName", "xmltest.player.lastName")); //$NON-NLS-1$ //$NON-NLS-2$
 	
 	    MappingElement manager = player.addChildElement(new MappingElement("Manager")); //$NON-NLS-1$
 	    manager.setSource("xmltest.managers");//$NON-NLS-1$
