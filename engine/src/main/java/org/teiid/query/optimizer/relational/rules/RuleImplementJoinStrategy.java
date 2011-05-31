@@ -152,7 +152,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 						toCriteria.add(j);
 					}
 				}
-        		List<Criteria> joinCriteria = (List<Criteria>) joinNode.getProperty(Info.JOIN_CRITERIA);
+        		List<Criteria> joinCriteria = (List<Criteria>) joinNode.getProperty(Info.NON_EQUI_JOIN_CRITERIA);
         		for (int index : toCriteria) {
 					SingleElementSymbol lses = leftExpressions.get(index);
 					SingleElementSymbol rses = rightExpressions.get(index);
@@ -163,7 +163,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 						joinNode.setProperty(Info.JOIN_TYPE, JoinType.JOIN_INNER);
 					}
 				}
-        		joinNode.setProperty(Info.JOIN_CRITERIA, joinCriteria);
+        		joinNode.setProperty(Info.NON_EQUI_JOIN_CRITERIA, joinCriteria);
         		leftExpressions = RelationalNode.projectTuple(reorder, leftExpressions);
             	rightExpressions = RelationalNode.projectTuple(reorder, rightExpressions);
             	joinNode.setProperty(NodeConstants.Info.LEFT_EXPRESSIONS, leftExpressions);
