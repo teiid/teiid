@@ -641,7 +641,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
             	updateCounts[i] = (Integer)results[i].get(0);
             }
             if (logger.isLoggable(Level.FINER)) {
-            	logger.fine(JDBCPlugin.Util.getString("Recieved update counts: " + Arrays.toString(updateCounts))); //$NON-NLS-1$
+            	logger.finer("Recieved update counts: " + Arrays.toString(updateCounts)); //$NON-NLS-1$
             }
             // In update scenarios close the statement implicitly
             try {
