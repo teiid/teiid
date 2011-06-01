@@ -551,7 +551,7 @@
         	The Teiid driver/DataSource should then typically be configured to just use the single host/port of your load balancer.</para>
         </section>
     </section>
-    <section>
+    <section id="reauthentication">
     	<title>Reauthentication</title>
     	<para>Teiid connections (defined by the <code>org.teiid.jdbc.TeiidConnection</code> interface) support the changeUser method to reauthenticate a given connection.  
     	If the reauthentication is successful the current connection my be used with the given identity.  

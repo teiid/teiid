@@ -972,6 +972,21 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
 	
+	Object setPassword(Object newPassword) {
+		if (newPassword != null) {
+			return this.connectionProps.put(TeiidURL.CONNECTION.PASSWORD, newPassword);
+		} 
+		return this.connectionProps.remove(TeiidURL.CONNECTION.PASSWORD);
+	}
+	
+	String getPassword() {
+		Object result = this.connectionProps.get(TeiidURL.CONNECTION.PASSWORD);
+		if (result == null) {
+			return null;
+		}
+		return result.toString();
+	}
+	
 	@Override
 	public void changeUser(String userName, String newPassword)
 			throws SQLException {
@@ -983,11 +998,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 		} else {
 			oldName = this.connectionProps.remove(TeiidURL.CONNECTION.USER_NAME);
 		}
-		if (newPassword != null) {
-			oldPassword = this.connectionProps.put(TeiidURL.CONNECTION.PASSWORD, newPassword);
-		} else {
-			oldPassword = this.connectionProps.remove(TeiidURL.CONNECTION.PASSWORD);
-		}
+		oldPassword = setPassword(newPassword);
 		boolean success = false;
 		try {
 			this.serverConn.authenticate();
@@ -1003,11 +1014,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 				} else {
 					this.connectionProps.remove(TeiidURL.CONNECTION.USER_NAME);
 				}
-				if (oldPassword != null) {
-					this.connectionProps.put(TeiidURL.CONNECTION.PASSWORD, oldPassword);
-				} else {
-					this.connectionProps.remove(TeiidURL.CONNECTION.PASSWORD);
-				}
+				setPassword(oldPassword);
 			}
 		}
 	}
