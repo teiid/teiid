@@ -783,9 +783,13 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testSubqueryRewriteToJoin2() throws Exception {
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ mj */ (select pm1.g1.e1 || 1 FROM pm1.g1)", "SELECT e1 FROM pm3.g1, (SELECT concat(pm1.g1.e1, '1') AS EXPR FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.EXPR", RealMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ mj */ (select distinct pm1.g1.e1 || 1 FROM pm1.g1)", "SELECT e1 FROM pm3.g1, (SELECT DISTINCT concat(pm1.g1.e1, '1') AS EXPR FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.EXPR", RealMetadataFactory.example4());
     }
-    
+
+    @Test public void testSubqueryRewriteToJoin2a() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ mj */ (select pm1.g1.e1 || 1 FROM pm1.g1)", "SELECT e1 FROM pm3.g1, (SELECT DISTINCT concat(pm1.g1.e1, '1') AS EXPR FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.EXPR", RealMetadataFactory.example4());
+    }
+
     /**
      * Even though this situation is essentially the same as above, we don't yet handle it
      */

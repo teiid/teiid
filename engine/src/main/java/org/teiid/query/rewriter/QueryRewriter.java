@@ -704,16 +704,6 @@ public class QueryRewriter {
 			if (!rmc.planQuery(groups, requiresDistinct, plannedResult)) {
 				continue;
 			}
-			if (requiresDistinct) {
-				//check for key preservation
-				HashSet<GroupSymbol> keyPreservingGroups = new HashSet<GroupSymbol>();
-				ResolverUtil.findKeyPreserved(query, keyPreservingGroups, metadata);
-				if (NewCalculateCostUtil.usesKey(plannedResult.leftExpressions, keyPreservingGroups, metadata, true) && plannedResult.madeDistinct) {
-					//if key perserved then the semi-join will remain in-tact without make the other query distinct
-					plannedResult.madeDistinct = false;
-					plannedResult.query.getSelect().setDistinct(false);
-				}
-			}
 			crits.remove();
 			
 			GroupSymbol viewName = RulePlaceAccess.recontextSymbol(new GroupSymbol("X"), names); //$NON-NLS-1$
