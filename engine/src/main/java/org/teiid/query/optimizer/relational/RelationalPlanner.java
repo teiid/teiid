@@ -756,16 +756,16 @@ public class RelationalPlanner {
      * Merges the from clause into a single join predicate if there are more than 1 from clauses
      */
     private static FromClause mergeClauseTrees(From from) {
-        List clauses = from.getClauses();
+        List<FromClause> clauses = from.getClauses();
         
         while (clauses.size() > 1) {
-            FromClause first = (FromClause)from.getClauses().remove(0);
-            FromClause second = (FromClause)from.getClauses().remove(0);
+            FromClause first = from.getClauses().remove(0);
+            FromClause second = from.getClauses().remove(0);
             JoinPredicate jp = new JoinPredicate(first, second, JoinType.JOIN_CROSS);
             clauses.add(0, jp);
         }
         
-        return (FromClause)clauses.get(0);
+        return clauses.get(0);
     }
     
     /**
@@ -867,6 +867,8 @@ public class RelationalPlanner {
             tt.setCorrelatedReferences(getCorrelatedReferences(parent, node, tt));
             node.addGroup(group);
             parent.addLastChild(node);
+        } else {
+        	throw new AssertionError("Unknown Type"); //$NON-NLS-1$
         }
         
         if (clause.isOptional()) {
@@ -878,6 +880,9 @@ public class RelationalPlanner {
             node.setProperty(NodeConstants.Info.MAKE_DEP, Boolean.TRUE);
         } else if (clause.isMakeNotDep()) {
             node.setProperty(NodeConstants.Info.MAKE_NOT_DEP, Boolean.TRUE);
+        }
+        if (clause.isMakeInd()) {
+        	node.setProperty(NodeConstants.Info.MAKE_IND, Boolean.TRUE);
         }
     }
 

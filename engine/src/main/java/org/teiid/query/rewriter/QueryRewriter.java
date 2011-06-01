@@ -721,7 +721,11 @@ public class QueryRewriter {
 			Criteria mappedCriteria = Criteria.combineCriteria(plannedResult.nonEquiJoinCriteria);
 			ExpressionMappingVisitor.mapExpressions(mappedCriteria, expressionMap);
 			query.setCriteria(Criteria.combineCriteria(query.getCriteria(), mappedCriteria));
-		    query.getFrom().addClause(q.getFrom().getClauses().get(0));
+			FromClause clause = q.getFrom().getClauses().get(0);
+			if (plannedResult.makeInd) {
+				clause.setMakeInd(true);
+			}
+		    query.getFrom().addClause(clause);
 		    query.getTemporaryMetadata().putAll(q.getTemporaryMetadata());
 			//transform the query into an inner join 
 		}

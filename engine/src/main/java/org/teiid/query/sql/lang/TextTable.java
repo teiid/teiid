@@ -155,7 +155,7 @@ public class TextTable extends TableFunctionReference {
 	}
 
 	@Override
-	public TextTable clone() {
+	protected TextTable cloneDirect() {
 		TextTable clone = new TextTable();
 		this.copy(clone);
 		clone.setDelimiter(this.delimiter);

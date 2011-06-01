@@ -120,13 +120,14 @@ public final class NodeConstants {
         SYMBOL_MAP,         // SymbolMap
         PARTITION_INFO,		// Map<ElementSymbol, List<Set<Constant>>> - it will only be consistent in the initial stages of planning
         VIRTUAL_COMMAND,    // Command
-        MAKE_DEP,           // ??? List of Groups ???
+        MAKE_DEP,           // Boolean
         PROCESSOR_PLAN,     // ProcessorPlan for non-relational sub plan
         NESTED_COMMAND,     // Command for nested processor plan
         TABLE_FUNCTION,     // Table Function
         CORRELATED_REFERENCES,  // SymbolMap
-        MAKE_NOT_DEP,       // Source should not be dependent
+        MAKE_NOT_DEP,       // Boolean
         INLINE_VIEW,        // If the source node represents an inline view
+        MAKE_IND,
         
         // Group node properties
         GROUP_COLS,         // List <SingleElementSymbol>

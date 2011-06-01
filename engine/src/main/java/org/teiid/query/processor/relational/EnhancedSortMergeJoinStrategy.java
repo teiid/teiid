@@ -346,7 +346,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     
     @Override
     public String getName() {
-    	return "ENHANCED SORT JOIN"; //$NON-NLS-1$ 
+    	return "ENHANCED SORT JOIN" + (semiDep?" [SEMI]":""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
     }
     
     public void setSemiDep(boolean semiDep) {

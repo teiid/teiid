@@ -253,6 +253,16 @@ public final class RuleChooseDependent implements OptimizerRule {
         		analysisRecord.println("Making access node dependent due to hint: "+ sourceNode2.nodeToString());                     //$NON-NLS-1$
         	}
             return rootNode2;
+        } else if (sourceNode1.hasBooleanProperty(NodeConstants.Info.MAKE_IND) && sourceNode2 != null) {
+        	if (analysisRecord.recordDebug()) {
+        		analysisRecord.println("Making access node dependent due to hint: "+ sourceNode2.nodeToString());                     //$NON-NLS-1$
+        	}
+        	return rootNode2;
+        } else if (sourceNode2 != null && sourceNode2.hasBooleanProperty(NodeConstants.Info.MAKE_IND)) {
+        	if (analysisRecord.recordDebug()) {
+        		analysisRecord.println("Making access node dependent due to hint: "+ sourceNode1.nodeToString());                     //$NON-NLS-1$
+        	}
+        	return rootNode1;
         }
         
         return null;

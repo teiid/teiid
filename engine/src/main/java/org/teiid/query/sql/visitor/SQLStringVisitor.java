@@ -447,7 +447,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit( JoinPredicate obj ) {
-        addOptionComment(obj);
+        addHintComment(obj);
 
         if (obj.hasHint()) {
             append("(");//$NON-NLS-1$
@@ -506,29 +506,31 @@ public class SQLStringVisitor extends LanguageVisitor {
         if (obj.hasHint()) {
             append(")"); //$NON-NLS-1$
         }
-        addFromClasueDepOptions(obj);
     }
 
-    private void addFromClasueDepOptions( FromClause obj ) {
-        if (obj.isMakeDep()) {
+    private void addHintComment( FromClause obj ) {
+    	if (obj.hasHint()) {
+    		append(BEGIN_HINT);
             append(SPACE);
-            append(Option.MAKEDEP);
-        }
-        if (obj.isMakeNotDep()) {
-            append(SPACE);
-            append(Option.MAKENOTDEP);
-        }
-    }
-
-    private void addOptionComment( FromClause obj ) {
-        if (obj.isOptional()) {
-            append(BEGIN_HINT);
-            append(SPACE);
-            append(Option.OPTIONAL);
-            append(SPACE);
+            if (obj.isOptional()) {
+                append(Option.OPTIONAL);
+                append(SPACE);
+            }
+            if (obj.isMakeDep()) {
+                append(Option.MAKEDEP);
+                append(SPACE);
+            }
+            if (obj.isMakeNotDep()) {
+                append(Option.MAKENOTDEP);
+                append(SPACE);
+            }
+            if (obj.isMakeInd()) {
+                append(FromClause.MAKEIND);
+                append(SPACE);
+            }
             append(END_HINT);
             append(SPACE);
-        }
+    	}
     }
 
     public void visit( JoinType obj ) {
@@ -1046,7 +1048,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit( SubqueryFromClause obj ) {
-        addOptionComment(obj);
+        addHintComment(obj);
         if (obj.isTable()) {
             append(TABLE);
         }
@@ -1055,7 +1057,6 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(")");//$NON-NLS-1$
         append(" AS ");//$NON-NLS-1$
         append(obj.getOutputName());
-        addFromClasueDepOptions(obj);
     }
 
     public void visit( SubquerySetCriteria obj ) {
@@ -1076,9 +1077,8 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit( UnaryFromClause obj ) {
-        addOptionComment(obj);
+        addHintComment(obj);
         visitNode(obj.getGroup());
-        addFromClasueDepOptions(obj);
     }
 
     public void visit( Update obj ) {
@@ -1569,6 +1569,13 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(SubqueryHint.NOUNNEST);
             append(SPACE);
             append(END_HINT);
+    	} else if (hint.isDepJoin()) {
+    		append(SPACE);
+        	append(BEGIN_HINT);
+            append(SPACE);
+            append(SubqueryHint.DJ);
+            append(SPACE);
+            append(END_HINT);
         } else if (hint.isMergeJoin()) {
             append(SPACE);
         	append(BEGIN_HINT);
@@ -1711,6 +1718,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     @Override
     public void visit( TextTable obj ) {
+        addHintComment(obj);
         append("TEXTTABLE("); //$NON-NLS-1$
         visitNode(obj.getFile());
         append(SPACE);
@@ -1771,6 +1779,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     @Override
     public void visit( XMLTable obj ) {
+        addHintComment(obj);
         append("XMLTABLE("); //$NON-NLS-1$
         if (obj.getNamespaces() != null) {
             visitNode(obj.getNamespaces());
@@ -1936,6 +1945,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     
     @Override
     public void visit(ArrayTable obj) {
+        addHintComment(obj);
     	append("ARRAYTABLE("); //$NON-NLS-1$
         visitNode(obj.getArrayValue());
         append(SPACE);

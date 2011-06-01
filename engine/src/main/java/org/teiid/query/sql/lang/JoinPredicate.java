@@ -224,15 +224,15 @@ public class JoinPredicate extends FromClause {
 	 * Return deep clone for object
 	 * @return Deep clone
 	 */
-	public Object clone() {
+	protected FromClause cloneDirect() {
 	    FromClause copyLeft = null;
 	    if(this.leftClause != null) { 
-	        copyLeft = (FromClause) this.leftClause.clone();
+	        copyLeft = this.leftClause.clone();
 	    }	
 
 	    FromClause copyRight = null;
 	    if(this.rightClause != null) { 
-	        copyRight = (FromClause) this.rightClause.clone();
+	        copyRight = this.rightClause.clone();
 	    }	
 	    
 		List copyCrits = null;
@@ -246,9 +246,6 @@ public class JoinPredicate extends FromClause {
 		}
 	    	    
         JoinPredicate clonedJoinPredicate = new JoinPredicate(copyLeft, copyRight, this.joinType, copyCrits);
-        clonedJoinPredicate.setOptional(this.isOptional());
-        clonedJoinPredicate.setMakeDep(this.isMakeDep());
-        clonedJoinPredicate.setMakeNotDep(this.isMakeNotDep());
         return clonedJoinPredicate;
 	}
 

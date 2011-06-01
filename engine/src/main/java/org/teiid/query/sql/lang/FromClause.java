@@ -38,9 +38,13 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  * and may contain criteria.
  */
 public abstract class FromClause implements LanguageObject {
+	
+	public static String MAKEIND = "MAKEIND"; //$NON-NLS-1$
+	
     private boolean optional;
     private boolean makeDep;
     private boolean makeNotDep;
+    private boolean makeInd;
 
     public boolean isOptional() {
         return optional;
@@ -50,9 +54,26 @@ public abstract class FromClause implements LanguageObject {
         this.optional = optional;
     }
     
+    public boolean isMakeInd() {
+		return makeInd;
+	}
+    
+    public void setMakeInd(boolean makeInd) {
+		this.makeInd = makeInd;
+	}
+    
     public abstract void acceptVisitor(LanguageVisitor visitor);
     public abstract void collectGroups(Collection<GroupSymbol> groups);
-    public abstract Object clone();
+    protected abstract FromClause cloneDirect();
+    
+    public FromClause clone() {
+    	FromClause clone = cloneDirect();
+    	clone.makeDep = makeDep;
+    	clone.makeInd = makeInd;
+    	clone.makeNotDep = makeNotDep;
+    	clone.optional = optional;
+    	return clone;
+    }
 
     public boolean isMakeDep() {
         return this.makeDep;
@@ -71,7 +92,7 @@ public abstract class FromClause implements LanguageObject {
     }
     
     public boolean hasHint() {
-        return optional || makeDep || makeNotDep;
+        return optional || makeDep || makeNotDep || makeInd;
     }
     
     public boolean equals(Object obj) {
@@ -87,7 +108,8 @@ public abstract class FromClause implements LanguageObject {
 
         return other.isOptional() == this.isOptional()
                && other.isMakeDep() == this.isMakeDep()
-               && other.isMakeNotDep() == this.isMakeNotDep();
+               && other.isMakeNotDep() == this.isMakeNotDep()
+        	   && other.isMakeInd() == this.isMakeInd();
     }
     
     @Override

@@ -839,4 +839,56 @@ public class TestDependentJoins {
         		new HashSet<String>(dataManager.getQueries()));
     }
     
+    @Test public void testDjHint() { 
+        // Create query 
+        String sql = "SELECT pm1.g1.e1 FROM pm1.g1 WHERE e1 IN /*+ DJ */ (select e1 from pm2.g1) order by pm1.g1.e1"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "b" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "c" }) //$NON-NLS-1$
+        };    
+        
+        // Construct data manager with data
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);
+        
+        // Plan query
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        TestOptimizer.checkDependentJoinCount(plan, 1);
+
+        // Run query
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testMakeIndHint() { 
+        // Create query 
+        String sql = "SELECT pm1.g1.e1 FROM /*+ MAKEIND */ pm1.g1, pm2.g1 WHERE pm1.g1.e1 = pm2.g1.e1 AND pm1.g1.e2=pm2.g1.e2 order by pm1.g1.e1"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "b" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "c" }) //$NON-NLS-1$
+        };    
+        
+        // Construct data manager with data
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);
+        
+        // Plan query
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        TestOptimizer.checkDependentJoinCount(plan, 1);
+
+        // Run query
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
+    
 }
