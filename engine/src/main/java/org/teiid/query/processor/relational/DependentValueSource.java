@@ -48,6 +48,8 @@ public class DependentValueSource implements
 
     private TupleBuffer buffer;
     private Map<Expression, Set<Object>> cachedSets;
+    private boolean unused; //TODO: use this value instead of the context
+    private boolean distinct;
     
     public DependentValueSource(TupleBuffer tupleSourceID) {
         this.buffer = tupleSourceID;
@@ -105,5 +107,23 @@ public class DependentValueSource implements
     	}
     	return result;
     }
+    
+    @Override
+    public boolean isUnused() {
+		return unused;
+	}
+    
+    @Override
+    public void setUnused(boolean unused) {
+		this.unused = unused;
+	}
+    
+    public boolean isDistinct() {
+		return distinct;
+	}
+    
+    public void setDistinct(boolean distinct) {
+		this.distinct = distinct;
+	}
            
 }

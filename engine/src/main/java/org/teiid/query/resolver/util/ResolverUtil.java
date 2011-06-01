@@ -938,7 +938,7 @@ public class ResolverUtil {
 			return;
 		}
 		if (query.getFrom().getClauses().size() == 1) {
-			findKeyPreserved((FromClause)query.getFrom().getClauses().get(0), keyPreservingGroups, metadata);
+			findKeyPreserved(query.getFrom().getClauses().get(0), keyPreservingGroups, metadata);
 			return;
 		}
 		//non-ansi join

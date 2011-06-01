@@ -95,6 +95,7 @@ public final class NodeConstants {
         IS_OPTIONAL,          // Boolean
         IS_LEFT_DISTINCT, 	// Boolean
         IS_RIGHT_DISTINCT, 	// Boolean
+        IS_SEMI_DEP,		// Boolean
 
         // Project node properties
         PROJECT_COLS,       // List <SingleElementSymbol>

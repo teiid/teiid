@@ -238,7 +238,9 @@ public class PlanToProcessConverter {
                 if(stype == JoinStrategyType.MERGE || stype == JoinStrategyType.ENHANCED_SORT) {
                 	MergeJoinStrategy mjStrategy = null;
                 	if (stype.equals(JoinStrategyType.ENHANCED_SORT)) { 
-                		mjStrategy = new EnhancedSortMergeJoinStrategy(leftSort, (SortOption)node.getProperty(NodeConstants.Info.SORT_RIGHT));
+                		EnhancedSortMergeJoinStrategy esmjStrategy = new EnhancedSortMergeJoinStrategy(leftSort, (SortOption)node.getProperty(NodeConstants.Info.SORT_RIGHT));
+                		esmjStrategy.setSemiDep(node.hasBooleanProperty(Info.IS_SEMI_DEP));
+                		mjStrategy = esmjStrategy;
                 	} else {
                 		mjStrategy = new MergeJoinStrategy(leftSort, (SortOption)node.getProperty(NodeConstants.Info.SORT_RIGHT), false);
                 	}

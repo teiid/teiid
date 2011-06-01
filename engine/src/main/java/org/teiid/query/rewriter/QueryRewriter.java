@@ -64,7 +64,6 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
-import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
 import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria.PlannedResult;
@@ -634,7 +633,7 @@ public class QueryRewriter {
         }
         
         if (from != null && !query.getIsXML()) {
-        	writeSubqueriesAsJoins(query);
+        	rewriteSubqueriesAsJoins(query);
         }
 
         query = rewriteGroupBy(query);
@@ -667,7 +666,7 @@ public class QueryRewriter {
         return query;
     }
 
-	private void writeSubqueriesAsJoins(Query query)
+	private void rewriteSubqueriesAsJoins(Query query)
 			throws TeiidComponentException, QueryMetadataException,
 			QueryResolverException {
 		if (query.getCriteria() == null) {
@@ -722,7 +721,7 @@ public class QueryRewriter {
 			Criteria mappedCriteria = Criteria.combineCriteria(plannedResult.nonEquiJoinCriteria);
 			ExpressionMappingVisitor.mapExpressions(mappedCriteria, expressionMap);
 			query.setCriteria(Criteria.combineCriteria(query.getCriteria(), mappedCriteria));
-		    query.getFrom().addClause((FromClause) q.getFrom().getClauses().get(0));
+		    query.getFrom().addClause(q.getFrom().getClauses().get(0));
 		    query.getTemporaryMetadata().putAll(q.getTemporaryMetadata());
 			//transform the query into an inner join 
 		}
