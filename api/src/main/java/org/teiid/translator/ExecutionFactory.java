@@ -137,8 +137,10 @@ public class ExecutionFactory<F, C> {
 	 * The default implementation assumes a JCA {@link ConnectionFactory}.  Subclasses should override, if they use 
 	 * another type of connection factory.
 	 * 
+	 * @deprecated
+	 * @see #getConnection(Object, ExecutionContext)
 	 * @param factory
-	 * @return
+	 * @return a connection
 	 * @throws TranslatorException
 	 */
 	@SuppressWarnings("unchecked")
@@ -156,6 +158,22 @@ public class ExecutionFactory<F, C> {
 		throw new AssertionError("A connection factory was supplied, but no implementation was provided getConnection"); //$NON-NLS-1$
 	}
 	
+	/**
+	 * Return a connection object from the given connection factory.
+	 * 
+	 * The default implementation assumes a JCA {@link ConnectionFactory}.  Subclasses should override, if they use 
+	 * another type of connection factory or wish to use the {@link ExecutionContext}.  By default calls {@link #getConnection(Object)}
+	 * 
+	 * @param factory
+	 * @param executionContext null if this is a system request for a connection
+	 * @return a connection
+	 * @throws TranslatorException
+	 */
+	public C getConnection(F factory,
+			ExecutionContext executionContext) throws TranslatorException {
+		return getConnection(factory);
+	}
+
 	/**
 	 * Closes a connection object from the given connection factory.
 	 * 
@@ -842,4 +860,5 @@ public class ExecutionFactory<F, C> {
     public boolean supportsCommonTableExpressions() {
     	return false;
     }
+
 }

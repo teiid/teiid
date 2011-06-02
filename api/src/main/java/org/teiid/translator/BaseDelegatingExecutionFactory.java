@@ -111,9 +111,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		return delegate.createUpdateExecution(command, executionContext,
 				metadata, connection);
 	}
-	@Override
-	public C getConnection(F factory) throws TranslatorException {
-		return delegate.getConnection(factory);
+	public C getConnection(F factory, ExecutionContext executionContext) throws TranslatorException {
+		return delegate.getConnection(factory, executionContext);
 	}
 	@Override
 	public NullOrder getDefaultNullOrder() {

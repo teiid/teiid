@@ -196,7 +196,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Processing NEW request:", this.requestMsg.getCommand()}); //$NON-NLS-1$                                     
     	try {
 	    	this.connectionFactory = this.manager.getConnectionFactory();
-	        this.connection = this.connector.getConnection(this.connectionFactory);
+	        this.connection = this.connector.getConnection(this.connectionFactory, securityContext);
 
 	        Object unwrapped = null;
 			if (connection instanceof WrappedConnection) {
