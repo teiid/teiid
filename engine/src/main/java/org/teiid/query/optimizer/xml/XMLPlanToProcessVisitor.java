@@ -22,7 +22,6 @@
 
 package org.teiid.query.optimizer.xml;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -53,7 +52,6 @@ import org.teiid.query.processor.xml.ExecSqlInstruction;
 import org.teiid.query.processor.xml.ExecStagingTableInstruction;
 import org.teiid.query.processor.xml.IfInstruction;
 import org.teiid.query.processor.xml.InitializeDocumentInstruction;
-import org.teiid.query.processor.xml.JoinedWhileInstruction;
 import org.teiid.query.processor.xml.MoveCursorInstruction;
 import org.teiid.query.processor.xml.MoveDocInstruction;
 import org.teiid.query.processor.xml.ProcessorInstruction;
@@ -258,19 +256,6 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
         String source = node.getActualResultSetName();
         ResultSetInfo info= node.getResultSetInfo();
         
-        if (info.isJoinedWithParent()) {
-            //create a dependent while loop
-            JoinedWhileInstruction whileInst = new JoinedWhileInstruction(source, new Integer(info.getMappingClassNumber()),
-                                                                          info.getMappingClassSymbol(), node.getResultName());
-            currentProgram.addInstruction(whileInst);
-            
-            Program childProgram = new Program();
-            whileInst.setBlockProgram(childProgram);
-            
-            programStack.push(childProgram);
-            return;
-        }
-        
         // Add instruction to execute relational query
         ExecSqlInstruction sqlInst = new ExecSqlInstruction(source, info);
         currentProgram.addInstruction(sqlInst);
@@ -306,10 +291,8 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
         String source = node.getActualResultSetName();  
         ResultSetInfo info= node.getResultSetInfo();
         
-        if (!info.isJoinRoot()) {
-            // move to next row.
-            currentProgram.addInstruction(new MoveCursorInstruction(source));
-        }
+        // move to next row.
+        currentProgram.addInstruction(new MoveCursorInstruction(source));
 
         // Since each element with a source started a new program; 
         // since now we are done with children, we need to pop to current program                                    
@@ -343,15 +326,14 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
             startRootRecursive(node, context);
         }
         
-        List stagingTables = node.getStagingTables();
-        for (final Iterator i = stagingTables.iterator(); i.hasNext();) {
-            final String table = (String)i.next();
+        List<String> stagingTables = node.getStagingTables();
+        for (String table : stagingTables) {
             Program currentProgram = (Program)programStack.peek();
 
             // load staging
             currentProgram.addInstruction(new ExecStagingTableInstruction(table, planEnv.getStagingTableResultsInfo(table)));
             
-            // unload sttaging
+            // unload staging
             String unloadName = planEnv.unLoadResultName(table);
             cleanupProgram.addInstruction(new ExecStagingTableInstruction(unloadName, planEnv.getStagingTableResultsInfo(unloadName)));
         } // for

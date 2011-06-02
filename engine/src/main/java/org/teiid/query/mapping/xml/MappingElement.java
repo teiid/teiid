@@ -39,9 +39,6 @@ public class MappingElement extends MappingBaseNode {
     // Element symbol in the resultset source
     ElementSymbol symbol;
     
-    // Position of the element in the resultset source
-    int position = -1;  
-    
     Namespace namespace;
     
     public MappingElement(String name) {

@@ -23,7 +23,6 @@
 package org.teiid.query.mapping.xml;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.teiid.core.TeiidRuntimeException;
@@ -205,11 +204,11 @@ public abstract class MappingBaseNode extends MappingNode {
         return false;
     }
     
-    public List getStagingTables() {
-        return (List)getProperty(MappingNodeConstants.Properties.TEMP_GROUP_NAMES);
+    public List<String> getStagingTables() {
+        return (List<String>)getProperty(MappingNodeConstants.Properties.TEMP_GROUP_NAMES);
     }
     
-    public void setStagingTables(List tables) {
+    public void setStagingTables(List<String> tables) {
         if (tables != null) {
             setProperty(MappingNodeConstants.Properties.TEMP_GROUP_NAMES, tables);
         }
@@ -222,9 +221,9 @@ public abstract class MappingBaseNode extends MappingNode {
         if (tablename == null) {
             return;
         }
-        List tables = getStagingTables();
-        if (tables == null || tables == Collections.EMPTY_LIST) {
-            tables = new ArrayList();
+        List<String> tables = getStagingTables();
+        if (tables == null || tables.isEmpty()) {
+            tables = new ArrayList<String>();
         }
         tables.add(tablename);
         setProperty(MappingNodeConstants.Properties.TEMP_GROUP_NAMES, tables);

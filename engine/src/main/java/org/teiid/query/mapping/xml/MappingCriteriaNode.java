@@ -22,8 +22,6 @@
 
 package org.teiid.query.mapping.xml;
 
-import java.util.List;
-
 import org.teiid.query.sql.lang.Criteria;
 
 
@@ -34,7 +32,6 @@ import org.teiid.query.sql.lang.Criteria;
  */
 public class MappingCriteriaNode extends MappingBaseNode{
     boolean defalt;
-    List criteriaGroups;
     Criteria criteriaNode;
     
     public MappingCriteriaNode(String criteria, boolean defalt) {
@@ -85,23 +82,6 @@ public class MappingCriteriaNode extends MappingBaseNode{
     
     public Criteria getCriteriaNode() {
         return this.criteriaNode;
-    }
-    
-    /**
-     * Groups that are referenced inthe criteria string. This is set by ValidateMappedCriteriaVisitor
-     * class during the preplan.
-     * @param criteriaGroups
-     */
-    public void setGroupsInCriteria(List criteriaGroups) {
-        this.criteriaGroups = criteriaGroups;
-    }
-
-    /**
-     * @deprecated - may not be needed
-     * @return
-     */
-    public List getGroupsInCriteria() {
-        return this.criteriaGroups;
     }
     
     /** 

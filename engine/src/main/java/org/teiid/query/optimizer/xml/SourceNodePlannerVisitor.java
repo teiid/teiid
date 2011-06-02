@@ -125,7 +125,7 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
             // root source nodes do not have any inputset criteria on them; so there is no use in
             // going through the raising the criteria.
             // if the original query is not a select.. we are out of luck. we can expand on this later
-            // versions. make ure bindings are only to parent.
+            // versions. make sure bindings are only to parent.
             if (parent == null || !canRaiseInputset(command, bindings) || !areBindingsOnlyToNode(modifiedNode, parent)) {
                 return;
             }
@@ -418,14 +418,14 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
                  */
                 @Override
                 protected void walkChildNodes(MappingNode element) {
-                    List children = new ArrayList(element.getNodeChildren());
-                    for(Iterator i=children.iterator(); i.hasNext();) {
+                    List<MappingNode> children = new ArrayList<MappingNode>(element.getNodeChildren());
+                    for(Iterator<MappingNode> i=children.iterator(); i.hasNext();) {
                         
                         if (shouldAbort()) {
                             break;
                         }
                         
-                        MappingNode node = (MappingNode)i.next();            
+                        MappingNode node = i.next();            
                         node.acceptVisitor(this);
                     }
                 }

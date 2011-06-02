@@ -190,6 +190,9 @@ class XMLContext {
         List elements = getOutputElements(resultSetName);
         
         for (int index = 0; index < elements.size(); index++) {
+        	if (!(elements.get(index) instanceof ElementSymbol)) {
+        		continue;
+        	}
             ElementSymbol symbol = (ElementSymbol)elements.get(index);
             variableContext.setValue(new ElementSymbol(resultSetName + ElementSymbol.SEPARATOR + symbol.getShortName()), row.get(index));
         }

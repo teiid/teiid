@@ -71,6 +71,7 @@ import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.visitor.StaticSymbolMappingVisitor;
@@ -114,10 +115,6 @@ public class XMLQueryPlanner {
                 try {
                     ResultSetInfo rsInfo = sourceNode.getResultSetInfo();
                 
-                    if (rsInfo.isJoinedWithParent()) {
-                        return;
-                    }
-                    
                     Query command = (Query)rsInfo.getCommand();
                     
                     prepareQuery(sourceNode, planEnv, command);
@@ -157,7 +154,7 @@ public class XMLQueryPlanner {
         }
     }
     
-    static void planQueries(MappingSourceNode sourceNode, XMLPlannerEnvironment planEnv) 
+    static void planQueries(final MappingSourceNode sourceNode, XMLPlannerEnvironment planEnv) 
         throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 
         ResultSetInfo rsInfo = sourceNode.getResultSetInfo();
@@ -185,8 +182,6 @@ public class XMLQueryPlanner {
             }
             rsQuery.setLimit(new Limit(null, new Constant(new Integer(limit))));
         }
-        
-        //prepareQuery(sourceNode, planEnv, rsQuery);
         
         // this query is not eligible for staging; proceed normally.
         rsInfo.setCommand(rsQuery);            
@@ -226,14 +221,14 @@ public class XMLQueryPlanner {
     /**
      * The Criteria Source nodes are source nodes underneath the context Node.  
      */
-    private static boolean getResultSets(MappingSourceNode contextNode, Set criteriaSourceNodes, LinkedHashSet allResultSets)  {
+    private static boolean getResultSets(MappingSourceNode contextNode, Set criteriaSourceNodes, LinkedHashSet<MappingSourceNode> allResultSets)  {
         
         boolean singleParentage = true;
 
         for (Iterator i = criteriaSourceNodes.iterator(); i.hasNext();) {
             MappingSourceNode node = (MappingSourceNode)i.next();
 
-            List rsStack = getResultSetStack(contextNode, node);
+            List<MappingSourceNode> rsStack = getResultSetStack(contextNode, node);
             
             if (allResultSets.containsAll(rsStack)) {
                 continue;
@@ -268,7 +263,7 @@ public class XMLQueryPlanner {
         
         // this list of all the source nodes below the context, which are directly ro indirectly 
         // involved in the criteria
-        LinkedHashSet resultSets = new LinkedHashSet();
+        LinkedHashSet<MappingSourceNode> resultSets = new LinkedHashSet<MappingSourceNode>();
         
         boolean singleParentage = getResultSets(contextNode, rsInfo.getCriteriaResultSets(), resultSets);
         
@@ -377,7 +372,7 @@ public class XMLQueryPlanner {
         GroupSymbol oldGroupSymbol = new GroupSymbol(oldGroup);
         ResolverUtil.resolveGroup(oldGroupSymbol, metadata);
         
-        HashSet projectedElements = new HashSet(ResolverUtil.resolveElementsInGroup(oldGroupSymbol, metadata));
+        HashSet<ElementSymbol> projectedElements = new HashSet<ElementSymbol>(ResolverUtil.resolveElementsInGroup(oldGroupSymbol, metadata));
         
         symbolMap.putAll(QueryUtil.createSymbolMap(oldGroupSymbol, newGroup, projectedElements));
     }
@@ -480,11 +475,11 @@ public class XMLQueryPlanner {
         rsInfo.setCommand(cmd);
         rsInfo.setPlan(plan);
         
-        //set the carinality on the temp group.
+        //set the cardinality on the temp group.
         TempMetadataID intoGroupID = (TempMetadataID)intoGroupSymbol.getMetadataID();
         intoGroupID.setCardinality(cardinality);
         
-        // add the meterialization hook for the staged table to original one.
+        // add the materialization hook for the staged table to original one.
         //GroupSymbol groupSymbol = (GroupSymbol)query.getFrom().getGroups().get(0);
         planEnv.addStagingTable(srcGroup.getMetadataID(), intoGroupID);
         

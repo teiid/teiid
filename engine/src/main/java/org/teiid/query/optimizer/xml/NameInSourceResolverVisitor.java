@@ -61,12 +61,12 @@ public class NameInSourceResolverVisitor extends MappingVisitor {
         
         Map symbols = element.getSymbolMap();
         
-        List elements = new LinkedList();
+        List<ElementSymbol> elements = new LinkedList<ElementSymbol>();
         
         for (Iterator i = symbols.values().iterator(); i.hasNext();) {
             Object symbol = i.next();
             if (symbol instanceof ElementSymbol) {
-                elements.add(symbol);
+                elements.add((ElementSymbol)symbol);
             }
         }
         

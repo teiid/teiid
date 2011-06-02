@@ -23,7 +23,6 @@
 package org.teiid.query.mapping.xml;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.teiid.query.processor.ProcessorPlan;
@@ -45,9 +44,6 @@ public class ResultSetInfo {
     // The result set command
     private Command rsCommand;
     
-    // The bound references for this result set: List<Reference>
-    private List boundReferences;
-
     // The processor plan output for the result set 
     private ProcessorPlan rsPlan;
     
@@ -68,8 +64,6 @@ public class ResultSetInfo {
     private boolean stagedResult = false;
     
     //joined source node state
-    private boolean joinedWithParent = false;
-    private boolean joinRoot = false;
     private int mappingClassNumber = 0;
     private ElementSymbol mappingClassSymbol;
     
@@ -150,13 +144,10 @@ public class ResultSetInfo {
     public Object clone() {
         ResultSetInfo clone = new ResultSetInfo(this.resultSetName, this.stagedResult);
         clone.rsPlan = this.rsPlan;
-        clone.boundReferences = this.boundReferences;
         clone.userRowLimit = this.userRowLimit;
         clone.exceptionOnRowLimit = this.exceptionOnRowLimit;
         clone.rsCommand = (Command)this.rsCommand.clone();
         clone.criteriaRaised = this.criteriaRaised;
-        clone.joinedWithParent = this.joinedWithParent;
-        clone.joinRoot = this.joinRoot;
         clone.mappingClassNumber = this.mappingClassNumber;
         clone.mappingClassSymbol = this.mappingClassSymbol;
         return clone;
@@ -164,22 +155,6 @@ public class ResultSetInfo {
     
     public String toString() {
         return resultSetName + ", resultSetObject " + rsCommand; //$NON-NLS-1$
-    }
-
-    public boolean isJoinedWithParent() {
-        return this.joinedWithParent;
-    }
-
-    public void setJoinedWithParent(boolean joinedWithParent) {
-        this.joinedWithParent = joinedWithParent;
-    }
-
-    public boolean isJoinRoot() {
-        return this.joinRoot;
-    }
-
-    public void setJoinRoot(boolean joinRoot) {
-        this.joinRoot = joinRoot;
     }
 
     public int getMappingClassNumber() {

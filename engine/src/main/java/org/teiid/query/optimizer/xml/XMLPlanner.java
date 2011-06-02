@@ -201,24 +201,28 @@ public final class XMLPlanner implements CommandPlanner{
         if (debug) {
             debugDocumentInfo("After Exclude", planEnv); //$NON-NLS-1$
         }
+
+        //Resolve all the "elements" against the result sets
+        NameInSourceResolverVisitor.resolveElements(planEnv.mappingDoc, planEnv);
+        
+        //Validate and resolve the criteria specified on the mapping nodes.
+        ValidateMappedCriteriaVisitor.validateAndCollectCriteriaElements(planEnv.mappingDoc, planEnv);
+
+        XMLProjectionMinimizer.minimizeProjection(planEnv);
+        
+        if (debug) {
+            debugDocumentInfo("After Projection Minimization", planEnv); //$NON-NLS-1$
+        }
         
         // Autostage queries. try to auto-stage the planned queries
         // removal of this step should not affect overall processing
         XMLStagaingQueryPlanner.stageQueries(planEnv.mappingDoc, planEnv);
-        
-        //JoinSourceNodes.joinSourceNodes(planEnv.mappingDoc, planEnv);
         
         //Plan the various relational result sets
         XMLQueryPlanner.optimizeQueries(planEnv.mappingDoc, planEnv);
         
 		//Handle nillable nodes
         planEnv.mappingDoc = HandleNillableVisitor.execute(planEnv.mappingDoc);
-        
-        //Resolve all the "elements" aginst the result sets
-        NameInSourceResolverVisitor.resolveElements(planEnv.mappingDoc, planEnv);
-        
-        //Validate and resolve the criteria specified on the mapping nodes.
-        ValidateMappedCriteriaVisitor.validateAndCollectCriteriaElements(planEnv.mappingDoc, planEnv);
 	}
     
     static void removeExcluded(MappingNode node) {

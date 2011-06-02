@@ -129,10 +129,10 @@ public class MappingOutputter {
      * @throws XMLStreamException 
      */
     void addElementProperties(Map properties ) throws XMLStreamException {
-        Iterator propNames = MappingNodeConstants.Tags.OUTPUTTER_PROPERTY_TAGS.iterator();
+        Iterator<String> propNames = MappingNodeConstants.Tags.OUTPUTTER_PROPERTY_TAGS.iterator();
         while ( propNames.hasNext() ) {
-            String propName = (String)propNames.next();
-            Integer propKey = MappingNodeConstants.getPropertyInteger(propName);
+            String propName = propNames.next();
+            MappingNodeConstants.Properties propKey = MappingNodeConstants.getProperty(propName);
             if ( properties.containsKey(propKey) ) {
                 Object value = properties.get(propKey);
                 addElementProperty( propName, value );

@@ -22,8 +22,6 @@
 
 package org.teiid.query.mapping.xml;
 
-import java.util.List;
-
 import org.teiid.query.sql.lang.Criteria;
 
 
@@ -34,7 +32,6 @@ import org.teiid.query.sql.lang.Criteria;
  * upto given depth limit. 
  */
 public class MappingRecursiveElement extends MappingElement {
-    List criteriaGroups;
     Criteria criteriaNode;    
     
     public MappingRecursiveElement(String name, String mappingClass) {
@@ -113,19 +110,6 @@ public class MappingRecursiveElement extends MappingElement {
         return MappingNodeConstants.Defaults.DEFAULT_EXCEPTION_ON_RECURSION_LIMIT.booleanValue();
     }
    
-    /**
-     * Groups that are referenced inthe criteria string. This is set by ValidateMappedCriteriaVisitor
-     * class during the preplan.
-     * @param criteriaGroups
-     */
-    public void setGroupsInCriteria(List criteriaGroups) {
-        this.criteriaGroups = criteriaGroups;
-    }
-
-    public List getGroupsInCriteria() {
-        return this.criteriaGroups;
-    }    
-    
     /**
      * This is parsed and resolved criteria node based on the criteria string. This is set by
      * ValidateMappedCriteriaVisitor class during pre planning.
