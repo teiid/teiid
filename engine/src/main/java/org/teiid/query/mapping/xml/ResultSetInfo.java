@@ -57,7 +57,7 @@ public class ResultSetInfo {
     
     private Criteria criteria;
     
-    private Set criteriaResultSets = new HashSet();
+    private Set<MappingSourceNode> criteriaResultSets = new HashSet<MappingSourceNode>();
     
     private boolean criteriaRaised = false;
     
@@ -125,11 +125,11 @@ public class ResultSetInfo {
         this.orderBy = orderBy;
     }
     
-    public Set getCriteriaResultSets() {
+    public Set<MappingSourceNode> getCriteriaResultSets() {
         return this.criteriaResultSets;
     }
 
-    public void addToCriteriaResultSets(Set criteriaResultSets) {
+    public void addToCriteriaResultSets(Set<MappingSourceNode> criteriaResultSets) {
         this.criteriaResultSets.addAll(criteriaResultSets);
     }    
     

@@ -67,7 +67,7 @@ import org.teiid.query.processor.xml.WhileInstruction;
  */
 public class XMLPlanToProcessVisitor implements MappingInterceptor {
     
-    Stack programStack = new Stack(); 
+    Stack<Program> programStack = new Stack<Program>(); 
     XMLPlannerEnvironment planEnv;
     Program originalProgram ;
     Program cleanupProgram  = new Program();
@@ -83,14 +83,14 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
     
     public void end(MappingDocument doc, Map context) {
         // remove the current program from the stack; we no longer need this
-        originalProgram=(Program)this.programStack.pop();
+        originalProgram=this.programStack.pop();
         
         // cleanup program will have instructions to unload the staging table.
         originalProgram.addInstructions(cleanupProgram);
     }
         
     public void start(MappingAttribute attribute, Map context){
-        Program currentProgram = (Program)this.programStack.peek();
+        Program currentProgram = this.programStack.peek();
         ProcessorInstruction tagInst = TagBuilderVisitor.buildTag(attribute);
         if (tagInst != null) {
             currentProgram.addInstruction(tagInst);
@@ -101,7 +101,7 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
     }
     
     public void start(MappingCommentNode comment, Map context){
-        Program currentProgram = (Program)this.programStack.peek();
+        Program currentProgram = this.programStack.peek();
         ProcessorInstruction tagInst = TagBuilderVisitor.buildTag(comment);
         if (tagInst != null) {
             currentProgram.addInstruction(tagInst);
@@ -136,7 +136,7 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
         // process the node as others (if see we have not done anything for this node yet..)
         commonStart(choice, context);
 
-        Program currentProgram = (Program)this.programStack.peek();        
+        Program currentProgram = this.programStack.peek();        
         currentProgram.addInstruction(ifInst);        
     }
     
@@ -195,10 +195,10 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
 
     private void endRootRecursive(MappingBaseNode node, Map context) {
         // add the recursive program to the main program.
-        Program recursiveProgram = (Program)programStack.pop();
+        Program recursiveProgram = programStack.pop();
         
         // this is the main program
-        Program currentProgram = (Program)this.programStack.peek();
+        Program currentProgram = this.programStack.peek();
         currentProgram.addInstructions(recursiveProgram);
         context.remove(node.getRecursionId());
         
@@ -213,7 +213,7 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
     
     public void start(MappingElement element, Map context){
         //commonStart(element, context);
-        Program currentProgram = (Program)programStack.peek();
+        Program currentProgram = programStack.peek();
         
         // if we are dealing with multiple documents
         startFragment(currentProgram, element);
@@ -226,13 +226,13 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
         // If there are more children under this node move the cursor down
         if (!element.getChildren().isEmpty()) {
             // update the program pointer 
-            currentProgram = (Program)programStack.peek();
+            currentProgram = programStack.peek();
             currentProgram.addInstruction(new MoveDocInstruction(MoveDocInstruction.DOWN));
         }
     }
 
     public void end(MappingElement element, Map context){
-        Program currentProgram = (Program)this.programStack.peek();
+        Program currentProgram = this.programStack.peek();
         
         // If there were more children under this node move the cursor up        
         if (!element.getChildren().isEmpty()) {
@@ -242,14 +242,14 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
         commonEnd(element, context);
         
         // update the program pointer
-        currentProgram = (Program)programStack.peek();            
+        currentProgram = programStack.peek();            
         
         // if we are dealing with multiple documents                        
         endFragment(currentProgram, element);        
     }
    
     public void start(MappingSourceNode node, Map context) {
-        Program currentProgram = (Program)programStack.peek();
+        Program currentProgram = programStack.peek();
         
         commonStart(node, context);
         
@@ -286,7 +286,7 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
     }
     
     public void end(MappingSourceNode node, Map context) {
-        Program currentProgram = (Program)programStack.peek();        
+        Program currentProgram = programStack.peek();        
         
         String source = node.getActualResultSetName();  
         ResultSetInfo info= node.getResultSetInfo();
@@ -328,7 +328,7 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
         
         List<String> stagingTables = node.getStagingTables();
         for (String table : stagingTables) {
-            Program currentProgram = (Program)programStack.peek();
+            Program currentProgram = programStack.peek();
 
             // load staging
             currentProgram.addInstruction(new ExecStagingTableInstruction(table, planEnv.getStagingTableResultsInfo(table)));
@@ -347,7 +347,7 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
     }
     
     public void start(final MappingRecursiveElement element, Map context){
-        Program currentProgram = (Program)programStack.peek();
+        Program currentProgram = programStack.peek();
         
         // if we are dealing with multiple documents
         startFragment(currentProgram, element);
@@ -367,7 +367,7 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
     }   
     
     public void end(final MappingRecursiveElement element, Map context){
-        Program currentProgram = (Program)programStack.peek();        
+        Program currentProgram = programStack.peek();        
 
         // if we are dealing with multiple documents                        
         endFragment(currentProgram, element);                

@@ -68,18 +68,39 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.Limit;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.visitor.ElementCollectorVisitor;
+import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
+import org.teiid.query.sql.visitor.PredicateCollectorVisitor;
 import org.teiid.query.sql.visitor.StaticSymbolMappingVisitor;
 
 
 public class XMLQueryPlanner {
 
-    static void prePlanQueries(MappingDocument doc, final XMLPlannerEnvironment planEnv) 
+    private static final class MappingSourceNodeFinder extends MappingVisitor {
+		private final GroupSymbol gs;
+		MappingSourceNode msn;
+
+		private MappingSourceNodeFinder(GroupSymbol gs) {
+			this.gs = gs;
+		}
+
+		@Override
+		public void visit(MappingSourceNode element) {
+			if (element.getAliasResultName() == null && element.getResultSetInfo().getResultSetName().equalsIgnoreCase(gs.getNonCorrelationName())) {
+				msn = element;
+				setAbort(true);
+			}
+		}
+	}
+
+	static void prePlanQueries(MappingDocument doc, final XMLPlannerEnvironment planEnv) 
         throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         
         MappingVisitor queryPlanVisitor = new MappingVisitor() {
@@ -221,12 +242,12 @@ public class XMLQueryPlanner {
     /**
      * The Criteria Source nodes are source nodes underneath the context Node.  
      */
-    private static boolean getResultSets(MappingSourceNode contextNode, Set criteriaSourceNodes, LinkedHashSet<MappingSourceNode> allResultSets)  {
+    private static boolean getResultSets(MappingSourceNode contextNode, Set<MappingSourceNode> criteriaSourceNodes, LinkedHashSet<MappingSourceNode> allResultSets)  {
         
         boolean singleParentage = true;
 
-        for (Iterator i = criteriaSourceNodes.iterator(); i.hasNext();) {
-            MappingSourceNode node = (MappingSourceNode)i.next();
+        for (Iterator<MappingSourceNode> i = criteriaSourceNodes.iterator(); i.hasNext();) {
+            MappingSourceNode node = i.next();
 
             List<MappingSourceNode> rsStack = getResultSetStack(contextNode, node);
             
@@ -364,7 +385,79 @@ public class XMLQueryPlanner {
             GroupSymbol groupSymbol = QueryUtil.createResolvedGroup(rsInfo.getResultSetName(), planEnv.getGlobalMetadata());
             planEnv.addQueryNodeToMetadata(groupSymbol.getMetadataID(), modifiedNode);
         } 
+        
+        for (Criteria crit : PredicateCollectorVisitor.getPredicates(userCrit)) {
+        	handleXmlSubqueries(planEnv, crit);
+        }
     }
+
+	private static void handleXmlSubqueries(XMLPlannerEnvironment planEnv,
+			Criteria userCrit) throws QueryPlannerException {
+		if (!(userCrit instanceof SubqueryContainer<?>)) {
+			return;
+		}
+    	SubqueryContainer<?> subquery = (SubqueryContainer<?>)userCrit;
+    	if (!(subquery.getCommand() instanceof Query)) {
+    		return;
+    	}
+		Query q = (Query)subquery.getCommand();
+		if (q.getFrom() == null || q.getCriteria() == null) {
+			return;
+		}
+		List<GroupSymbol> groups = q.getFrom().getGroups();
+		if (groups.size() != 1) {
+			return;
+		}
+		final GroupSymbol gs = groups.get(0);
+		LinkedHashSet<GroupSymbol> allGroups = new LinkedHashSet<GroupSymbol>();
+		allGroups.add(gs);
+		//TODO: this group should have been marked as xml, or could attempt this step prior to place user criteria
+		if (planEnv.getGlobalMetadata().getMetadataStore().getTempGroupID(gs.getNonCorrelationName().toUpperCase()) == null) {
+			return;
+		}
+		MappingSourceNode parentMsn = findMappingSourceNode(planEnv, gs);
+		for (Criteria crit : PredicateCollectorVisitor.getPredicates(q.getCriteria())) {
+			Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(crit, false);
+			Collection<GroupSymbol> critGroups = new LinkedList<GroupSymbol>();
+			for (ElementSymbol elementSymbol : elems) {
+				if (!elementSymbol.isExternalReference()) {
+					critGroups.add(elementSymbol.getGroupSymbol());
+				}
+			}
+			for (GroupSymbol groupSymbol : critGroups) {
+				if (allGroups.contains(groupSymbol)) {
+					continue;
+				}
+				MappingSourceNode childMsn = findMappingSourceNode(planEnv, groupSymbol);
+				while (childMsn != parentMsn) {
+					if (childMsn == null) {
+						throw new QueryPlannerException(QueryPlugin.Util.getString("XMLQueryPlanner.invalid_relationship", crit, parentMsn)); //$NON-NLS-1$
+					}
+					if (!childMsn.getResultSetInfo().isCriteriaRaised()) {
+						throw new QueryPlannerException(QueryPlugin.Util.getString("XMLQueryPlanner.non_simple_relationship", crit, childMsn)); //$NON-NLS-1$
+					}
+					Query parentQuery = (Query)childMsn.getResultSetInfo().getCommand();
+					if (parentQuery.getCriteria() != null 
+							&& allGroups.addAll(GroupsUsedByElementsVisitor.getGroups(parentQuery.getCriteria()))) {
+						q.setCriteria(Criteria.combineCriteria(q.getCriteria(), (Criteria) parentQuery.getCriteria().clone()));
+					}
+					childMsn = childMsn.getParentSourceNode();
+				}
+			}
+			q.getFrom().getClauses().clear();
+			for (GroupSymbol groupSymbol : allGroups) {
+				q.getFrom().addClause(new UnaryFromClause(groupSymbol));
+			}
+			handleXmlSubqueries(planEnv, crit);
+		}
+	}
+
+	private static MappingSourceNode findMappingSourceNode(
+			XMLPlannerEnvironment planEnv, final GroupSymbol gs) {
+		MappingSourceNodeFinder finder = new MappingSourceNodeFinder(gs);
+		planEnv.mappingDoc.acceptVisitor(new Navigator(true, finder));
+		return finder.msn;
+	}
 
     private static void updateSymbolMap(Map symbolMap, String oldGroup, final String newGroup, QueryMetadataInterface metadata) 
         throws QueryResolverException,QueryMetadataException,TeiidComponentException {

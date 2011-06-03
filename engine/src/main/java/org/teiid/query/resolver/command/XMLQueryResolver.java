@@ -25,23 +25,26 @@ package org.teiid.query.resolver.command;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.StringUtil;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.mapping.xml.MappingAttribute;
+import org.teiid.query.mapping.xml.MappingBaseNode;
 import org.teiid.query.mapping.xml.MappingDocument;
-import org.teiid.query.mapping.xml.MappingNode;
-import org.teiid.query.mapping.xml.MappingSourceNode;
+import org.teiid.query.mapping.xml.MappingElement;
+import org.teiid.query.mapping.xml.MappingVisitor;
+import org.teiid.query.mapping.xml.Navigator;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.metadata.TempMetadataID.Type;
-import org.teiid.query.optimizer.xml.SourceNodeGenaratorVisitor;
 import org.teiid.query.resolver.CommandResolver;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
@@ -61,7 +64,6 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SelectSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
@@ -71,6 +73,49 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
  */
 public class XMLQueryResolver implements CommandResolver {
 	
+	private final class SubSelectVisitor extends MappingVisitor {
+		private final List<ElementSymbol> selectElems;
+		private final ResolvingNode root;
+		private final String mc;
+		private String source;
+
+		private SubSelectVisitor(List<ElementSymbol> selectElems,
+				ResolvingNode root, String mc) {
+			this.selectElems = selectElems;
+			this.root = root;
+			this.mc = mc;
+		}
+
+		@Override
+		public void visit(MappingBaseNode baseNode) {
+			if (baseNode.getSource() != null && baseNode.getFullyQualifiedName().equalsIgnoreCase(mc)) {
+				source = baseNode.getSource();
+			}
+		}
+
+		@Override
+		public void visit(MappingElement element) {
+			visit((MappingBaseNode)element);
+			String nis = element.getNameInSource();
+			getMappingClassColumn(nis, element.getFullyQualifiedName());
+		}
+
+		private void getMappingClassColumn(String nis, String fqn) {
+			if (nis == null || source == null) {
+				return;
+			}
+			String name = nis.substring(0, nis.lastIndexOf('.'));
+			if (source.equalsIgnoreCase(name)) {
+				selectElems.add(root.find(fqn));
+			}
+		}
+
+		@Override
+		public void visit(MappingAttribute attribute) {
+			getMappingClassColumn(attribute.getNameInSource(), attribute.getFullyQualifiedName());
+		}
+	}
+
 	private static final class ResolvingNode {
 		ElementSymbol elementSymbol;
 		TreeMap<String, ResolvingNode> children = new TreeMap<String, ResolvingNode>(String.CASE_INSENSITIVE_ORDER);
@@ -106,6 +151,31 @@ public class XMLQueryResolver implements CommandResolver {
 			return values;
 		}
 		
+		public ElementSymbol find(String name) {
+			int index = name.lastIndexOf('.');
+			String part = name;
+			if (index > 0) {
+				part = name.substring(index + 1, name.length());
+				name = name.substring(0, index);
+			} else {
+				name = null;
+			}
+			ResolvingNode r = children.get(part);
+			if (r == null) {
+				return null;
+			}
+			if (name == null) {
+				return r.elementSymbol;
+			}
+			return r.find(name);
+		}
+		
+		public void addAll(Collection<ElementSymbol> elems) {
+			for (ElementSymbol es : elems) {
+				this.add(es.getName(), es);
+			}
+		}
+		
 		public List<ElementSymbol> values() {
 			return values(new LinkedList<ElementSymbol>());
 		}
@@ -116,32 +186,53 @@ public class XMLQueryResolver implements CommandResolver {
      */
 	public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals)
 		throws QueryMetadataException, QueryResolverException, TeiidComponentException {
+		resolveCommand((Query)command, null, metadata);
+	}
 
-		Query query = (Query) command;
-
+	public void resolveCommand(Query query, GroupSymbol docGroup, TempMetadataAdapter metadata)
+	throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 		// set isXML flag
-		query.setIsXML(true);
+		query.setIsXML(docGroup == null);
 
 		// get the group on this query
 		Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(query, true);
 		GroupSymbol group = groups.iterator().next();
 
+		boolean subQuery = true;
+		if (docGroup == null) {
+			docGroup = group;
+			subQuery = false;
+		}
+		
+		if (subQuery && group.getDefinition() != null) {
+			throw new QueryResolverException(QueryPlugin.Util.getString("XMLQueryResolver.aliased_subquery", group)); //$NON-NLS-1$
+		}
+
 		//external groups
         GroupContext externalGroups = query.getExternalGroupContexts();
 
 		// valid elements for select
-		List<ElementSymbol> validSelectElems = ResolverUtil.resolveElementsInGroup(group, metadata);
-		ResolvingNode root = new ResolvingNode();
-		for (ElementSymbol elementSymbol : validSelectElems) {
-			root.add(elementSymbol.getName(), elementSymbol);
-		}
-		resolveXMLSelect(query, group, root, metadata);
+        List<ElementSymbol> validElems = ResolverUtil.resolveElementsInGroup(docGroup, metadata);
+        final ResolvingNode root = new ResolvingNode();
+        ResolvingNode selectRoot = root;
+        if (subQuery) {
+        	validElems = getElementsUnderNode(group.getMetadataID(), validElems, metadata);
+        }
+        root.addAll(validElems);
+		if (subQuery) {
+        	//the select can only be to the mapping class itself
+        	MappingDocument doc = (MappingDocument) metadata.getMappingNode(docGroup.getMetadataID());
+    		final String mc = group.getNonCorrelationName();
+    		List<ElementSymbol> selectElems = new LinkedList<ElementSymbol>();
+            doc.acceptVisitor(new Navigator(true, new SubSelectVisitor(selectElems, root, mc)));
+			selectRoot = new ResolvingNode();
+			selectRoot.addAll(selectElems);
+        }
+		
+		resolveXMLSelect(subQuery, query, group, selectRoot, metadata);
 
 		// valid elements for criteria and order by
-		Collection<ElementSymbol> validCriteriaElements = collectTempElements(group, metadata);
-		for (ElementSymbol elementSymbol : validCriteriaElements) {
-			root.add(elementSymbol.getName(), elementSymbol);
-		}
+		root.addAll(collectTempElements(group, metadata));
 
 		Criteria crit = query.getCriteria();
 		OrderBy orderBy = query.getOrderBy();
@@ -149,11 +240,17 @@ public class XMLQueryResolver implements CommandResolver {
 		if(crit != null) {
 	        List<SubqueryContainer> commands = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(crit);
 	        if (!commands.isEmpty()) {
-	        	addPseudoSubqueryGroups(metadata, group, validSelectElems);
+	        	TempMetadataAdapter tma = new TempMetadataAdapter(metadata, new TempMetadataStore());
+	        	if (!subQuery) {
+	        		addPseudoSubqueryGroups(tma, group, docGroup);
+	        	}
 		        for (SubqueryContainer subCommand : commands) {
-		            QueryResolver.setChildMetadata(subCommand.getCommand(), command);
-		            
-		            QueryResolver.resolveCommand(subCommand.getCommand(), metadata.getMetadata());
+		            QueryResolver.setChildMetadata(subCommand.getCommand(), query);
+		            if (subCommand.getCommand() instanceof Query && QueryResolver.isXMLQuery((Query)subCommand.getCommand(), tma)) {
+		            	resolveCommand((Query)subCommand.getCommand(), docGroup, tma);
+		            } else {
+		            	QueryResolver.resolveCommand(subCommand.getCommand(), metadata.getMetadata());
+		            }
 		        }
 	        }
 
@@ -177,60 +274,32 @@ public class XMLQueryResolver implements CommandResolver {
         }	
     }
 
-	private void addPseudoSubqueryGroups(TempMetadataAdapter metadata,
-			GroupSymbol group, List<ElementSymbol> validSelectElems)
-			throws TeiidComponentException, QueryMetadataException,
-			QueryResolverException {
+	private void addPseudoSubqueryGroups(final TempMetadataAdapter metadata,
+			GroupSymbol group, GroupSymbol docGroup)
+			throws TeiidComponentException, QueryMetadataException {
 		/*
 		 * The next section of resolving logic adds in pseduo groups that can be used
 		 * in subqueries
 		 */
-		MappingDocument doc = (MappingDocument) metadata.getMappingNode(group.getMetadataID());
-		doc = doc.clone();
-		doc = SourceNodeGenaratorVisitor.extractSourceNodes(doc);
+		MappingDocument doc = (MappingDocument) metadata.getMappingNode(docGroup.getMetadataID());
 		
-		HashMap<String, List<ElementSymbol>> psuedoGroups = new HashMap<String, List<ElementSymbol>>();
-		for (ElementSymbol elementSymbol : validSelectElems) {
-			MappingNode node = MappingNode.findNode(doc, elementSymbol.getCanonicalName());
-			if (node == null) {
-				continue;
-			}
-			MappingSourceNode mappingSourceNode = node.getSourceNode();
-			if (mappingSourceNode == null) {
-				continue;
-			}
-			String mappingClass = mappingSourceNode.getSource();
-			String tableName = SingleElementSymbol.getShortName(mappingClass);
-			
-			String name = elementSymbol.getName();
-			int index = name.lastIndexOf('.');
-			String xmlTableName = name.substring(0, index);
-			if (!xmlTableName.endsWith(tableName)) {
-				continue;
-			}
-			List<ElementSymbol> elements = psuedoGroups.get(xmlTableName);
-			if (elements == null) {
-				elements = new ArrayList<ElementSymbol>();
-				psuedoGroups.put(xmlTableName, elements);
-			}
-			ElementSymbol es = new ElementSymbol(name.substring(index+1, name.length()));
-			es.setType(elementSymbol.getType());
-			es.setMetadataID(elementSymbol.getMetadataID());
-			elements.add(es);
-		}
-		
-		for (Map.Entry<String, List<ElementSymbol>> entry : psuedoGroups.entrySet()) {
-			for (ElementSymbol elem : new ArrayList<ElementSymbol>(entry.getValue())) {
-				if (elem.getName().charAt(0) == '@') {
-					ElementSymbol alias = elem.clone();
-					alias.setShortName(elem.getName().substring(1));
-					if (!entry.getValue().contains(alias)) {
-						entry.getValue().add(alias);
+		final String prefix = group.getNonCorrelationName() + ElementSymbol.SEPARATOR;
+
+        doc.acceptVisitor(new Navigator(true, new MappingVisitor() {
+        	@Override
+        	public void visit(MappingBaseNode baseNode) {
+        		if (baseNode.getSource() == null) {
+        			return;
+        		}
+        		if (StringUtil.startsWithIgnoreCase(baseNode.getFullyQualifiedName(), prefix)) {
+        			try {
+						ResolverUtil.addTempGroup(metadata, new GroupSymbol(baseNode.getFullyQualifiedName()), Collections.EMPTY_LIST, false).setMetadataType(Type.XML);
+					} catch (QueryResolverException e) {
+						throw new TeiidRuntimeException(e);
 					}
-				}
-			}
-			ResolverUtil.addTempGroup(metadata, new GroupSymbol(entry.getKey()), entry.getValue(), false).setMetadataType(Type.XML);
-		}
+        		}
+        	}
+        }));
 	}
 
     /**
@@ -244,7 +313,7 @@ public class XMLQueryResolver implements CommandResolver {
      * @throws QueryMetadataException if resolving fails
      * @throws TeiidComponentException if resolving fails
      */
-	void resolveXMLSelect(Query query, GroupSymbol group, ResolvingNode validElements, QueryMetadataInterface metadata)
+	void resolveXMLSelect(boolean subquery, Query query, GroupSymbol group, ResolvingNode validElements, QueryMetadataInterface metadata)
 		throws QueryMetadataException, TeiidComponentException, QueryResolverException {
         
         GroupContext externalGroups = null;
@@ -269,7 +338,7 @@ public class XMLQueryResolver implements CommandResolver {
 				// There are other cases of "xml", such as, element name = "xml",
 				// but those are ok because those will be resolved later as normal elements
 				String symbolName = ss.getName();
-				if(symbolName.equalsIgnoreCase("xml") || symbolName.equalsIgnoreCase(group.getName() + ".xml")) { //$NON-NLS-1$ //$NON-NLS-2$
+				if(!subquery && (symbolName.equalsIgnoreCase("xml") || symbolName.equalsIgnoreCase(group.getName() + ".xml"))) { //$NON-NLS-1$ //$NON-NLS-2$
 					if(elements.size() != 1) {
 						throw new QueryResolverException(QueryPlugin.Util.getString("XMLQueryResolver.xml_only_valid_alone")); //$NON-NLS-1$
 					}
@@ -302,7 +371,7 @@ public class XMLQueryResolver implements CommandResolver {
                     resolveElement(elementSymbol, validElements, externalGroups, metadata);
 
                     // now find all the elements under this node and set as elements.
-                    List<ElementSymbol> elementsInNode = getElementsUnderNode(elementSymbol, validElements.values(), metadata);
+                    List<ElementSymbol> elementsInNode = getElementsUnderNode(elementSymbol.getMetadataID(), validElements.values(), metadata);
                     ((AllInGroupSymbol)ss).setElementSymbols(elementsInNode);
                 }
 			} else if (ss instanceof AllSymbol) {
@@ -450,14 +519,14 @@ public class XMLQueryResolver implements CommandResolver {
         elem.setOutputName(name);
     }
 
-    static List<ElementSymbol> getElementsUnderNode(ElementSymbol node, Collection<ElementSymbol> validElements, QueryMetadataInterface metadata) 
+    static List<ElementSymbol> getElementsUnderNode(Object mid, Collection<ElementSymbol> validElements, QueryMetadataInterface metadata) 
         throws TeiidComponentException, QueryMetadataException {
         
         List<ElementSymbol> elements = new ArrayList<ElementSymbol>();
-        String nodeName = metadata.getFullName(node.getMetadataID());
+        String nodeName = metadata.getFullName(mid);
         for (ElementSymbol validElement : validElements) {
             String qualifiedName = validElement.getName();
-            if (qualifiedName.equals(nodeName) || qualifiedName.startsWith(nodeName+ElementSymbol.SEPARATOR)) {
+            if (StringUtil.startsWithIgnoreCase(qualifiedName, nodeName) && (qualifiedName.length() == nodeName.length() || qualifiedName.charAt(nodeName.length()) == '.')) {
                 elements.add(validElement);
             }
         }

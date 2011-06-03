@@ -101,7 +101,7 @@ public class CriteriaPlanner {
                 context = planEnv.mappingDoc;
             }
             
-            Set<MappingNode> sourceNodes = collectSourceNodesInConjunct(conjunct, context, planEnv.mappingDoc);
+            Set<MappingSourceNode> sourceNodes = collectSourceNodesInConjunct(conjunct, context, planEnv.mappingDoc);
 
             //TODO: this can be replaced with method on the source node?
             MappingSourceNode criteriaRs = findRootResultSetNode(context, sourceNodes, criteria);
@@ -117,11 +117,11 @@ public class CriteriaPlanner {
     /** 
      * This method collects all the MappingSourceNode(s) at or below the context given.
      */
-    private static Set<MappingNode> collectSourceNodesInConjunct(Criteria conjunct, MappingNode context, MappingDocument mappingDoc)
+    private static Set<MappingSourceNode> collectSourceNodesInConjunct(Criteria conjunct, MappingNode context, MappingDocument mappingDoc)
         throws QueryPlannerException {
         
         Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(conjunct, true);
-        Set<MappingNode> resultSets = new HashSet<MappingNode>();
+        Set<MappingSourceNode> resultSets = new HashSet<MappingSourceNode>();
         
         String contextFullName = context.getFullyQualifiedName().toUpperCase();
         
@@ -131,7 +131,7 @@ public class CriteriaPlanner {
             
             MappingNode node = MappingNode.findNode(mappingDoc, elementFullName);
             
-            MappingNode elementRsNode = node.getSourceNode(); 
+            MappingSourceNode elementRsNode = node.getSourceNode(); 
             if (elementRsNode == null) {
                 throw new QueryPlannerException(QueryPlugin.Util.getString("CriteriaPlanner.invalid_element", elementSymbol)); //$NON-NLS-1$
             }
@@ -155,7 +155,7 @@ public class CriteriaPlanner {
         return resultSets;
     }
 
-    private static MappingSourceNode findRootResultSetNode(MappingNode context, Set<MappingNode> resultSets, Criteria criteria) 
+    private static MappingSourceNode findRootResultSetNode(MappingNode context, Set<MappingSourceNode> resultSets, Criteria criteria) 
         throws QueryPlannerException {
         
         if (context instanceof MappingSourceNode) {

@@ -711,9 +711,9 @@ public class QueryRewriter {
 			Query q = createInlineViewQuery(viewName, plannedResult.query, metadata, plannedResult.query.getSelect().getProjectedSymbols());
 			
 			Iterator<SingleElementSymbol> iter = q.getSelect().getProjectedSymbols().iterator();
-		    HashMap<Expression, SingleElementSymbol> expressionMap = new HashMap<Expression, SingleElementSymbol>();
+		    HashMap<Expression, Expression> expressionMap = new HashMap<Expression, Expression>();
 		    for (SingleElementSymbol symbol : plannedResult.query.getSelect().getProjectedSymbols()) {
-		        expressionMap.put(SymbolMap.getExpression(symbol), iter.next());
+		        expressionMap.put(SymbolMap.getExpression(symbol), SymbolMap.getExpression(iter.next()));
 		    }
 			for (int i = 0; i < plannedResult.leftExpressions.size(); i++) {
 				plannedResult.nonEquiJoinCriteria.add(new CompareCriteria(SymbolMap.getExpression((Expression)plannedResult.leftExpressions.get(i)), CompareCriteria.EQ, (Expression)plannedResult.rightExpressions.get(i)));

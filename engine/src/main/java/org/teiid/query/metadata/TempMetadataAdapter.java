@@ -37,6 +37,7 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingNode;
+import org.teiid.query.metadata.TempMetadataID.Type;
 
 
 /**
@@ -497,7 +498,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         throws TeiidComponentException, QueryMetadataException {
 
         if(groupID instanceof TempMetadataID) {
-            return false;
+            return ((TempMetadataID)groupID).getMetadataType() == Type.XML;
         }
         return this.actualMetadata.isXMLGroup(groupID);
     }

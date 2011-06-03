@@ -101,13 +101,13 @@ public class XMLProjectionMinimizer {
 	                            
 	                Collection<ElementSymbol> bindings = QueryUtil.getBindingElements(node);
 	                MappingSourceNode parent = element.getParentSourceNode();
-	                parent = collectElementSymbols(element, bindings, parent);
+	                collectElementSymbols(element, bindings, parent);
 	    		} catch (TeiidException e) {
 	    			throw new TeiidRuntimeException(e);
 	    		}
 	    	}
 	
-			private MappingSourceNode collectElementSymbols(
+			private void collectElementSymbols(
 					MappingSourceNode element,
 					Collection<ElementSymbol> bindings, MappingSourceNode parent) {
 				for (ElementSymbol elementSymbol : bindings) {
@@ -122,7 +122,6 @@ public class XMLProjectionMinimizer {
 						parent = parent.getParentSourceNode();
 					}
 				}
-				return parent;
 			}
 	    	
 	    	@Override

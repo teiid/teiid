@@ -33,8 +33,6 @@ import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingNode;
 import org.teiid.query.mapping.xml.MappingSourceNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.metadata.TempMetadataID;
-import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
@@ -63,6 +61,11 @@ public class XMLNodeMappingVisitor extends AbstractSymbolMappingVisitor {
         this.metadata = metadata;
     }
     
+    @Override
+    protected boolean createAliases() {
+    	return false; //xml style selects do not have aliases
+    }
+    
     /**
      * @see AbstractSymbolMappingVisitor#getMappedSymbol(Symbol)
      */
@@ -80,7 +83,7 @@ public class XMLNodeMappingVisitor extends AbstractSymbolMappingVisitor {
 				groupId = element.getGroupSymbol().getMetadataID();
 	    	}
 	    	boolean xml = metadata.isXMLGroup(groupId);
-	    	if (!xml && !((groupId instanceof TempMetadataID) && ((TempMetadataID)groupId).getMetadataType() == TempMetadataID.Type.XML)) {
+	    	if (!xml) {
     			return symbol;
 	    	}
 	    	String path = metadata.getFullName(metadataId).toUpperCase();
@@ -96,9 +99,6 @@ public class XMLNodeMappingVisitor extends AbstractSymbolMappingVisitor {
 			}
     		if (symbol instanceof GroupSymbol) {
     			GroupSymbol gs = msn.getMappedSymbol(new GroupSymbol(msn.getResultName()));
-    			if (!xml && gs.getMetadataID() == null) {
-    				ResolverVisitor.resolveLanguageObject(gs, metadata);
-    			}
     			return gs;
     		} 
     		// Construct a new element node based on mapping node reference
@@ -107,14 +107,6 @@ public class XMLNodeMappingVisitor extends AbstractSymbolMappingVisitor {
     			return null;
     		}
 			ElementSymbol es = msn.getMappedSymbol(new ElementSymbol(symbolName));
-			if (!xml) {
-				if (((ElementSymbol)symbol).isExternalReference()) {
-					es.setIsExternalReference(true);
-				}
-				if (es.getMetadataID() == null) {
-					ResolverVisitor.resolveLanguageObject(es, metadata);
-				}
-			}
 			return es;
         } catch (TeiidException err) {
             throw new TeiidRuntimeException(err);
@@ -140,7 +132,7 @@ public class XMLNodeMappingVisitor extends AbstractSymbolMappingVisitor {
         //Don't want to do deep visiting
         XMLNodeMappingVisitor mappingVisitor = new XMLNodeMappingVisitor(rootNode, metadata);
         try {
-            PreOrPostOrderNavigator.doVisit(object, mappingVisitor, PreOrPostOrderNavigator.PRE_ORDER, deep);
+            PreOrPostOrderNavigator.doVisit(object, mappingVisitor, PreOrPostOrderNavigator.POST_ORDER, deep);
         } catch (TeiidRuntimeException e) {
             Throwable child = e.getChild();
             

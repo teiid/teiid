@@ -11214,7 +11214,7 @@ public class TestXMLProcessor {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleCase3225();
         FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
 
-    	helpTestProcess("select * from xmltest.playersDoc where context(manager, manager.firstname) > ALL (select firstname from player)", CARDS_MANAGER, metadata, dataMgr);         //$NON-NLS-1$
+    	helpTestProcess("select * from xmltest.playersDoc where context(manager, manager.firstname) > ALL (select firstname from BaseballPlayers.player)", CARDS_MANAGER, metadata, dataMgr);         //$NON-NLS-1$
     }
     
     /**
