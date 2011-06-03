@@ -318,7 +318,7 @@ public class TupleBuffer {
 				if(isFinal) {
 		            return null;
 		        } 
-		        throw BlockedException.INSTANCE;
+		        throw BlockedException.block("Blocking on non-final TupleBuffer", tupleSourceID); //$NON-NLS-1$
 			}
 			
 			@Override

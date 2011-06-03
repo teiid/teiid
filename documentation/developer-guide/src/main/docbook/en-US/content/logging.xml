@@ -33,8 +33,8 @@
             <title>Command Logging API</title>
             <para>
                 If you want to build a custom appender for command logging that will have access to 
-                log4j "LoggingEvents" to the "COMMAND_LOG" contextthe appender will receive a message that is an instance of
-                <code>org.teiid.logging.CommandLogMessage</code> wrapped in a <code>org.teiid.logging.LogMessage</code>.  The relevant Teiid classes are defined in the <code>teiid-api-&versionNumber;.jar</code>. 
+                log4j "LoggingEvents" to the "COMMAND_LOG" context, the appender will receive a message that is an instance of
+                <code>org.teiid.logging.CommandLogMessage</code>.  The relevant Teiid classes are defined in the <code>teiid-api-&versionNumber;.jar</code>. 
                 The CommmdLogMessage includes information about vdb, session, command sql, etc.  CommandLogMessages are logged at the DEBUG level.
             </para>
             <example>
@@ -48,14 +48,11 @@ public class CustomAppender extends AppenderSkeleton
 {
   
   protected void append(LoggingEvent event) {
-    if (event.getMessage() instanceof LogMessage) {
-      LogMessage logMessage = (LogMessage)event.getMessage();
-      if (logMessage.getMessageParts()[0] instanceof CommandLogMessage) {
-        CommandLogMessage clMessage = (CommandLogMessage)logMessage.getMessageParts()[0];
-        String sql = clMessage.getSql();
-        ...
-        //log to a database, trigger an email, etc.
-      }
+    if (event.getMessage() instanceof CommandLogMessage) {
+      CommandLogMessage clMessage = (CommandLogMessage)event.getMessage();
+      String sql = clMessage.getSql();
+      ...
+      //log to a database, trigger an email, etc.
     }
     ...
   }
@@ -70,7 +67,7 @@ public class CustomAppender extends AppenderSkeleton
             <title>Audit Logging API</title>
             <para>If you want to build a custom appender for command logging that will have access to 
                 log4j "LoggingEvents" to the "org.teiid.AUDIT_LOG" context, the appender will receive a message that is an instance of
-                <code>org.teiid.logging.AuditMessage</code> wrapped in a <code>org.teiid.logging.LogMessage</code>.  The relevant Teiid classes are defined in the <code>teiid-api-&versionNumber;.jar</code>. The <code>AuditMessage</code> includes information about user, the action, and the
+                <code>org.teiid.logging.AuditMessage</code>.  The relevant Teiid classes are defined in the <code>teiid-api-&versionNumber;.jar</code>. The <code>AuditMessage</code> includes information about user, the action, and the
                 target(s) of the action.  AuditMessages are logged at the DEBUG level.
             </para>                            
             <example>
@@ -84,14 +81,11 @@ public class CustomAppender extends AppenderSkeleton
 {
   
   protected void append(LoggingEvent event) {
-    if (event.getMessage() instanceof LogMessage) {
-      LogMessage logMessage = (LogMessage)event.getMessage();
-      if (logMessage.getMessageParts()[0] instanceof AuditMessage) {
-        AuditMessage auditMessage = (AuditMessage)logMessage.getMessageParts()[0];
-        String activity = auditMessage.getActivity();
-        ...
-        //log to a database, trigger an email, etc.
-      }
+    if (event.getMessage() instanceof AuditMessage) {
+      AuditMessage auditMessage = (AuditMessage)event.getMessage();
+      String activity = auditMessage.getActivity();
+      ...
+      //log to a database, trigger an email, etc.
     }
     ...
   }

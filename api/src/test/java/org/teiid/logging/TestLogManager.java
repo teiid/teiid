@@ -41,7 +41,7 @@ import junit.framework.TestCase;
  */
 public class TestLogManager extends TestCase {
 
-	String context = "SomeContext"; //$NON-NLS-1$
+	private static final String CONTEXT = "SomeContext"; //$NON-NLS-1$
 	
     /**
      * Constructor for TestLogManager.
@@ -54,7 +54,7 @@ public class TestLogManager extends TestCase {
 	@Override
 	protected void setUp() throws Exception {
     	ListLogger logger = new ListLogger();
-    	logger.setLogLevel(context, MessageLevel.DETAIL);
+    	logger.setLogLevel(CONTEXT, MessageLevel.DETAIL);
     	LogManager.logListener = logger;
 	}    
     
@@ -66,11 +66,11 @@ public class TestLogManager extends TestCase {
      * Test for boolean isMessageToBeRecorded(String, int)
      */
     public void testIsMessageToBeRecordedString() {
-    	assertTrue(LogManager.isMessageToBeRecorded(context, MessageLevel.CRITICAL) ); 
+    	assertTrue(LogManager.isMessageToBeRecorded(CONTEXT, MessageLevel.CRITICAL) ); 
     	
     	ListLogger cfg = (ListLogger)LogManager.logListener;
-        cfg.setLogLevel(context, MessageLevel.NONE);
-        assertFalse(LogManager.isMessageToBeRecorded(context, MessageLevel.CRITICAL) );
+        cfg.setLogLevel(CONTEXT, MessageLevel.NONE);
+        assertFalse(LogManager.isMessageToBeRecorded(CONTEXT, MessageLevel.CRITICAL) );
     }
 
     /**
@@ -78,7 +78,7 @@ public class TestLogManager extends TestCase {
      */
     public void testLogMessage() throws Exception {
     	ListLogger cfg = (ListLogger)LogManager.logListener;
-        cfg.setLogLevel(context, MessageLevel.INFO );
+        cfg.setLogLevel(CONTEXT, MessageLevel.INFO );
 
         List<String> sentMsgList = new ArrayList<String>();
         sentMsgList.add("A message 1"); //$NON-NLS-1$
@@ -88,12 +88,12 @@ public class TestLogManager extends TestCase {
         sentMsgList.add("A message 5"); //$NON-NLS-1$
         sentMsgList.add("A message 6"); //$NON-NLS-1$
 
-        for (Iterator iter = sentMsgList.iterator(); iter.hasNext();) {
-            String msg = (String) iter.next();
-            LogManager.logInfo(context, msg); 
+        for (Iterator<String> iter = sentMsgList.iterator(); iter.hasNext();) {
+            String msg = iter.next();
+            LogManager.logInfo(CONTEXT, msg); 
         }
         
-        List recevedMsgList = cfg.getLoggedMessages();
+        List<String> recevedMsgList = cfg.getLoggedMessages();
         assertEquals(sentMsgList.size(), recevedMsgList.size());
         assertEquals(sentMsgList, recevedMsgList);
     }
@@ -129,7 +129,7 @@ public class TestLogManager extends TestCase {
             return this.messages.size();
         }
 
-        public List getLoggedMessages() {
+        public List<String> getLoggedMessages() {
             return this.messages;
         }
     	

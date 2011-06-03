@@ -306,7 +306,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         	}
         	
         	if (!this.tupleSources.isEmpty()) {
-        		throw BlockedException.INSTANCE;
+        		throw BlockedException.block(getContext().getRequestId(), "Blocking on source request(s)."); //$NON-NLS-1$
         	}
         }
         

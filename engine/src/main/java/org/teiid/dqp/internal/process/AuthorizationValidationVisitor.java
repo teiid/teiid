@@ -36,7 +36,6 @@ import java.util.Set;
 
 import org.teiid.CommandContext;
 import org.teiid.adminapi.DataPolicy;
-import org.teiid.adminapi.Session;
 import org.teiid.adminapi.DataPolicy.PermissionType;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.api.exception.query.QueryMetadataException;

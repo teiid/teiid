@@ -450,7 +450,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 							&& !batch.getTerminationFlag() 
 							&& this.getTupleBuffer().getManagedRowCount() >= 20 * this.getTupleBuffer().getBatchSize()) {
 						//requestMore will trigger more processing
-						throw BlockedException.INSTANCE;
+						throw BlockedException.block(requestID, "Blocking due to full results buffer."); //$NON-NLS-1$
 					}
 				}
 			}

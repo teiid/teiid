@@ -23,6 +23,9 @@
 package org.teiid.common.buffer;
 
 import org.teiid.core.TeiidComponentException;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 
 /**
  * This exception is thrown if the buffer manager blocks waiting on input during
@@ -38,6 +41,13 @@ public class BlockedException extends TeiidComponentException {
      */
     public BlockedException() {
         super();
+    }
+    
+    public static BlockedException block(Object... msg) {
+    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+    		LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, msg);
+    	}
+    	return INSTANCE;
     }
     
 }

@@ -584,7 +584,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	@Override
 	public String getRequestId() {
-		return this.globalState.requestId.toString();
+		return this.globalState.requestId != null ? this.globalState.requestId.toString() : null;
 	}
 	
 	public void setRequestId(RequestID requestId) {
