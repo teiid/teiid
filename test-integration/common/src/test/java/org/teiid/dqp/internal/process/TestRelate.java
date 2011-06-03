@@ -63,7 +63,7 @@ public class TestRelate {
     	//config.setUserRequestSourceConcurrency(1);
     	server = new FakeServer();
     	JdbcDataSource h2ds = new JdbcDataSource();
-    	h2ds.setURL("jdbc:h2:src/test/resources/relate/test");
+    	h2ds.setURL("jdbc:h2:zip:src/test/resources/relate/test.zip!/test");
     	final DataSource ds = JdbcConnectionPool.create(h2ds);
 		ExecutionFactory h2 = new H2ExecutionFactory();
 		h2.start();
