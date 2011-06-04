@@ -40,7 +40,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.SourceSystemFunctions;
 
-@SuppressWarnings("nls")
+@SuppressWarnings({"nls", "unchecked"})
 public class TestAggregateProcessing {
 
 	static void sampleDataBQT3(FakeDataManager dataMgr) throws Exception {
@@ -219,7 +219,6 @@ public class TestAggregateProcessing {
         helpProcess(plan, dataManager, expected);
     }
     
-    @SuppressWarnings("unchecked")
 	@Test public void testAggregatePushdown() {
     	Command command = helpParse("select e1, count(e2), max(e2) from (select e1, e2, e3 from pm1.g1 union all select e1, e2, e3 from pm1.g2 union all select e1, e2, e3 from pm2.g1) z group by e1"); //$NON-NLS-1$
     	
@@ -349,5 +348,29 @@ public class TestAggregateProcessing {
         
         helpProcess(plan, dataManager, expected);
     }
+    
+	@Test public void testJira1621() throws Exception {
+		// Create query
+		String sql = "SELECT sum(t2.e4) as s, max(t1.e1 || t2.e1) FROM pm1.g1 as t1, pm1.g2 as t2, pm1.g3 as t3 WHERE t1.e1 = coalesce(t2.e1, 'b') AND t2.e2 = t3.e2 GROUP BY t2.e2, t2.e3, t3.e2 ORDER BY s"; //$NON-NLS-1$
+
+		// Create expected results
+		List[] expected = new List[] {
+				Arrays.asList(null, "cc"),
+				Arrays.asList(0.0, "bb"),
+				Arrays.asList(1.0, null),
+				Arrays.asList(2.0, "aa"),
+				Arrays.asList(7.0, "aa")
+		};
+
+		// Construct data manager with data
+		FakeDataManager dataManager = new FakeDataManager();
+		sampleData1(dataManager);
+
+		// Plan query
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+		// Run query
+		helpProcess(plan, dataManager, expected);
+	}
 
 }
