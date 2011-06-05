@@ -38,7 +38,7 @@ import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 
 /**
@@ -74,7 +74,7 @@ public class TestPreparedStatementBatchedUpdate {
         };
     	
     	// Create the plan and process the query
-    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, FakeMetadataFactory.example1Cached(), prepPlanCache, false, false, false,FakeMetadataFactory.example1VDB());
+    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, RealMetadataFactory.example1Cached(), prepPlanCache, false, false, false,RealMetadataFactory.example1VDB());
     	Update update = (Update)dataManager.getCommandHistory().iterator().next();
     	assertTrue(((Constant)update.getChangeList().getClauses().get(0).getValue()).isMultiValued());
     }
@@ -148,7 +148,7 @@ public class TestPreparedStatementBatchedUpdate {
    		finalQueryList.add(new String("UPDATE pm1.g1 SET e1 = null, e3 = FALSE WHERE pm1.g1.e2 = 1")); //$NON-NLS-1$
     	
     	// Create the plan and process the query
-    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, FakeMetadataFactory.example1Cached(), prepPlanCache, false, false, false,FakeMetadataFactory.example1VDB());
+    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, RealMetadataFactory.example1Cached(), prepPlanCache, false, false, false,RealMetadataFactory.example1VDB());
 
     	// Repeat with different number of commands in batch
     	// Create expected results
@@ -168,7 +168,7 @@ public class TestPreparedStatementBatchedUpdate {
    		finalQueryList.add(new String("UPDATE pm1.g1 SET e1 = 'b', e3 = TRUE WHERE pm1.g1.e2 = 5")); //$NON-NLS-1$
     	
     	// Use the cached plan and process the query
-    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, FakeMetadataFactory.example1Cached(), prepPlanCache, false, false, true,FakeMetadataFactory.example1VDB());
+    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, RealMetadataFactory.example1Cached(), prepPlanCache, false, false, true,RealMetadataFactory.example1VDB());
 
     	// Verify all the queries that were run
     	assertEquals("Unexpected queries executed -", finalQueryList, dataManager.getQueries()); //$NON-NLS-1$
@@ -242,7 +242,7 @@ public class TestPreparedStatementBatchedUpdate {
    		finalQueryList.add(new String("UPDATE pm1.g1 SET e2 = 1 WHERE pm1.g1.e1 = 'b'")); //$NON-NLS-1$
     	
     	// Create the plan and process the query
-    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, FakeMetadataFactory.example1Cached(), prepPlanCache, false, false, false, FakeMetadataFactory.example1VDB());
+    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, RealMetadataFactory.example1Cached(), prepPlanCache, false, false, false, RealMetadataFactory.example1VDB());
 
     	// Repeat
         expected = new List[] { 
@@ -260,7 +260,7 @@ public class TestPreparedStatementBatchedUpdate {
    		finalQueryList.add(new String("UPDATE pm1.g1 SET e2 = 3 WHERE pm1.g1.e1 = 'd'")); //$NON-NLS-1$
     	
     	// Use the cached plan and process the query
-    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, FakeMetadataFactory.example1Cached(), prepPlanCache, false, false, true,FakeMetadataFactory.example1VDB());
+    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, RealMetadataFactory.example1Cached(), prepPlanCache, false, false, true,RealMetadataFactory.example1VDB());
 
     	// Verify all the queries that were run
     	assertEquals("Unexpected queries executed -", finalQueryList, dataManager.getQueries()); //$NON-NLS-1$
@@ -337,7 +337,7 @@ public class TestPreparedStatementBatchedUpdate {
    		finalQueryList.add(new String("UPDATE pm1.g1 SET e1 = null, e3 = FALSE WHERE pm1.g1.e2 = 1")); //$NON-NLS-1$
     	
     	// Create the plan and process the query
-    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, FakeMetadataFactory.example1Cached(), prepPlanCache, false, false, false, FakeMetadataFactory.example1VDB());
+    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, RealMetadataFactory.example1Cached(), prepPlanCache, false, false, false, RealMetadataFactory.example1VDB());
 
     	// Repeat with different number of commands in batch
     	// Create expected results
@@ -354,7 +354,7 @@ public class TestPreparedStatementBatchedUpdate {
    		finalQueryList.add(new String("UPDATE pm1.g1 SET e1 = 'a', e3 = FALSE WHERE pm1.g1.e2 = 0")); //$NON-NLS-1$
     	
     	// Use the cached plan and process the query
-    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, FakeMetadataFactory.example1Cached(), prepPlanCache, false, false, true, FakeMetadataFactory.example1VDB());
+    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, RealMetadataFactory.example1Cached(), prepPlanCache, false, false, true, RealMetadataFactory.example1VDB());
 
     	// Repeat with different number of commands in batch
 		// Create expected results
@@ -382,7 +382,7 @@ public class TestPreparedStatementBatchedUpdate {
 		finalQueryList.add(new String("UPDATE pm1.g1 SET e1 = 'c', e3 = TRUE WHERE pm1.g1.e2 = 4")); //$NON-NLS-1$
 		finalQueryList.add(new String("UPDATE pm1.g1 SET e1 = 'b', e3 = TRUE WHERE pm1.g1.e2 = 5")); //$NON-NLS-1$
     	
-    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, FakeMetadataFactory.example1Cached(), prepPlanCache, false, false, true, FakeMetadataFactory.example1VDB());
+    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, RealMetadataFactory.example1Cached(), prepPlanCache, false, false, true, RealMetadataFactory.example1VDB());
 
     	// Verify all the queries that were run
     	assertEquals("Unexpected queries executed -", finalQueryList, dataManager.getQueries()); //$NON-NLS-1$
@@ -458,7 +458,7 @@ public class TestPreparedStatementBatchedUpdate {
    		finalQueryList.add(new String("UPDATE pm1.g1 SET e1 = 'b', e3 = TRUE WHERE pm1.g1.e2 = 1")); //$NON-NLS-1$
     	
     	// Create the plan and process the query
-    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, FakeMetadataFactory.example1Cached(), prepPlanCache, false, false, false, FakeMetadataFactory.example1VDB());
+    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, RealMetadataFactory.example1Cached(), prepPlanCache, false, false, false, RealMetadataFactory.example1VDB());
 
     	// Repeat with different number of commands in batch
         expected = new List[] { 
@@ -473,7 +473,7 @@ public class TestPreparedStatementBatchedUpdate {
    		finalQueryList.add(new String("UPDATE pm1.g1 SET e1 = 'c', e3 = FALSE WHERE pm1.g1.e2 = 1")); //$NON-NLS-1$
     	
     	// Use the cached plan and process the query
-    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, FakeMetadataFactory.example1Cached(), prepPlanCache, false, false, true, FakeMetadataFactory.example1VDB());
+    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, RealMetadataFactory.example1Cached(), prepPlanCache, false, false, true, RealMetadataFactory.example1VDB());
 
     	// Repeat with different number of commands in batch
         expected = new List[] { 
@@ -496,7 +496,7 @@ public class TestPreparedStatementBatchedUpdate {
 		finalQueryList.add(new String("UPDATE pm1.g1 SET e1 = 'f', e3 = TRUE WHERE pm1.g1.e2 = 2")); //$NON-NLS-1$
 		finalQueryList.add(new String("UPDATE pm1.g1 SET e1 = 'g', e3 = TRUE WHERE pm1.g1.e2 = 3")); //$NON-NLS-1$
     	
-    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, FakeMetadataFactory.example1Cached(), prepPlanCache, false, false, true,FakeMetadataFactory.example1VDB());
+    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, RealMetadataFactory.example1Cached(), prepPlanCache, false, false, true,RealMetadataFactory.example1VDB());
 
     	// Verify all the queries that were run
     	assertEquals("Unexpected queries executed -", finalQueryList, dataManager.getQueries()); //$NON-NLS-1$

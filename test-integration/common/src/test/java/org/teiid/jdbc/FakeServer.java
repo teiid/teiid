@@ -72,6 +72,10 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 	private boolean useCallingThread = true;
 	
 	public FakeServer() {
+		this(new DQPConfiguration());
+	}
+	
+	public FakeServer(DQPConfiguration config) {
 		this.logon = new LogonImpl(sessionService, null);
 		
 		this.repo.setSystemStore(VDBMetadataFactory.getSystem());
@@ -92,7 +96,6 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         	}
         });
         
-        DQPConfiguration config = new DQPConfiguration();
         config.setResultsetCacheConfig(new CacheConfiguration(Policy.LRU, 60, 250, "resultsetcache")); //$NON-NLS-1$
         this.dqp.setCacheFactory(new DefaultCacheFactory());
         this.dqp.start(config);
@@ -100,6 +103,10 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         
         registerClientService(ILogon.class, logon, null);
         registerClientService(DQP.class, dqp, null);
+	}
+	
+	public void setConnectorManagerRepository(ConnectorManagerRepository cmr) {
+		this.cmr = cmr;
 	}
 	
 	public void stop() {

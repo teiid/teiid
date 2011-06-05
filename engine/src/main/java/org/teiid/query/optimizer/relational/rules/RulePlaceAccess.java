@@ -286,6 +286,10 @@ public final class RulePlaceAccess implements
         if (hint != null) {
             copyTo.setProperty(NodeConstants.Info.MAKE_NOT_DEP, hint);
         }
+        hint = node.getProperty(NodeConstants.Info.MAKE_IND);
+        if (hint != null) {
+            copyTo.setProperty(NodeConstants.Info.MAKE_IND, hint);
+        }
     }
 
     /**

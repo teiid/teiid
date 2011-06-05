@@ -22,9 +22,9 @@
 
 package org.teiid.query.optimizer.xml;
 
-import java.util.ArrayList;
-import java.util.List;
+import static org.junit.Assert.*;
 
+import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
@@ -32,6 +32,9 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.id.IntegerIDFactory;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingAttribute;
@@ -40,11 +43,9 @@ import org.teiid.query.mapping.xml.MappingElement;
 import org.teiid.query.mapping.xml.MappingSequenceNode;
 import org.teiid.query.mapping.xml.Namespace;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
-import org.teiid.query.optimizer.xml.CriteriaPlanner;
-import org.teiid.query.optimizer.xml.XMLPlanner;
-import org.teiid.query.optimizer.xml.XMLPlannerEnvironment;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.xml.BlockInstruction;
 import org.teiid.query.processor.xml.EndBlockInstruction;
@@ -58,22 +59,11 @@ import org.teiid.query.processor.xml.XMLPlan;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
-import org.teiid.query.unittest.FakeMetadataStore;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
-import junit.framework.TestCase;
-
-
-public class TestXMLPlanner extends TestCase {
-
-    // ################################## FRAMEWORK ################################
-
-    public TestXMLPlanner(String name) {
-        super(name);
-    }
+@SuppressWarnings("nls")
+public class TestXMLPlanner {
 
     // ################################## TEST HELPERS ################################
 
@@ -93,26 +83,21 @@ public class TestXMLPlanner extends TestCase {
         } 
     }
 
-    public static FakeMetadataFacade example1() {
+    public static TransformationMetadata example1() {
+    	MetadataStore metadataStore = new MetadataStore();
         // Create models
-        FakeMetadataObject pm1 = FakeMetadataFactory.createPhysicalModel("pm1"); //$NON-NLS-1$
-        FakeMetadataObject vm1 = FakeMetadataFactory.createVirtualModel("vm1"); //$NON-NLS-1$
+        Schema pm1 = RealMetadataFactory.createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
+        Schema vm1 = RealMetadataFactory.createVirtualModel("vm1", metadataStore); //$NON-NLS-1$
 
         // Create physical groups
-        FakeMetadataObject pm1g1 =
-            FakeMetadataFactory.createPhysicalGroup("pm1.g1", pm1); //$NON-NLS-1$
-        FakeMetadataObject pm1g2 =
-            FakeMetadataFactory.createPhysicalGroup("pm1.g2", pm1); //$NON-NLS-1$
-        FakeMetadataObject pm1g3 =
-            FakeMetadataFactory.createPhysicalGroup("pm1.g3", pm1); //$NON-NLS-1$
-        FakeMetadataObject pm1g4 =
-            FakeMetadataFactory.createPhysicalGroup("pm1.g4", pm1); //$NON-NLS-1$
-        FakeMetadataObject pm1g5 =
-            FakeMetadataFactory.createPhysicalGroup("pm1.g5", pm1); //$NON-NLS-1$
+        Table pm1g1 = RealMetadataFactory.createPhysicalGroup("g1", pm1); //$NON-NLS-1$
+        Table pm1g2 = RealMetadataFactory.createPhysicalGroup("g2", pm1); //$NON-NLS-1$
+        Table pm1g3 = RealMetadataFactory.createPhysicalGroup("g3", pm1); //$NON-NLS-1$
+        Table pm1g4 = RealMetadataFactory.createPhysicalGroup("g4", pm1); //$NON-NLS-1$
+        Table pm1g5 = RealMetadataFactory.createPhysicalGroup("g5", pm1); //$NON-NLS-1$
 
         // Create physical elements
-        List pm1g1e =
-            FakeMetadataFactory.createElements(
+        RealMetadataFactory.createElements(
                 pm1g1,
                 new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                 new String[] {
@@ -120,8 +105,7 @@ public class TestXMLPlanner extends TestCase {
                     DataTypeManager.DefaultDataTypes.INTEGER,
                     DataTypeManager.DefaultDataTypes.BOOLEAN,
                     DataTypeManager.DefaultDataTypes.DOUBLE });
-        List pm1g2e =
-            FakeMetadataFactory.createElements(
+        RealMetadataFactory.createElements(
                 pm1g2,
                 new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                 new String[] {
@@ -129,8 +113,7 @@ public class TestXMLPlanner extends TestCase {
                     DataTypeManager.DefaultDataTypes.INTEGER,
                     DataTypeManager.DefaultDataTypes.BOOLEAN,
                     DataTypeManager.DefaultDataTypes.DOUBLE });
-        List pm1g3e =
-            FakeMetadataFactory.createElements(
+        RealMetadataFactory.createElements(
                 pm1g3,
                 new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                 new String[] {
@@ -138,8 +121,7 @@ public class TestXMLPlanner extends TestCase {
                     DataTypeManager.DefaultDataTypes.INTEGER,
                     DataTypeManager.DefaultDataTypes.BOOLEAN,
                     DataTypeManager.DefaultDataTypes.DOUBLE });
-        List pm1g4e =
-            FakeMetadataFactory.createElements(
+        RealMetadataFactory.createElements(
                 pm1g4,
                 new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                 new String[] {
@@ -147,8 +129,7 @@ public class TestXMLPlanner extends TestCase {
                     DataTypeManager.DefaultDataTypes.INTEGER,
                     DataTypeManager.DefaultDataTypes.BOOLEAN,
                     DataTypeManager.DefaultDataTypes.DOUBLE });
-        List pm1g5e =
-            FakeMetadataFactory.createElements(
+        RealMetadataFactory.createElements(
                 pm1g5,
                 new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                 new String[] {
@@ -158,43 +139,36 @@ public class TestXMLPlanner extends TestCase {
                     DataTypeManager.DefaultDataTypes.DOUBLE });
 
         // Create virtual groups
-        QueryNode vm1g1n1 = new QueryNode("SELECT * FROM tm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g1n1 = new QueryNode("SELECT * FROM tm1.g1"); //$NON-NLS-1$ 
         //selects from temp group
-        FakeMetadataObject vm1g1 =
-            FakeMetadataFactory.createVirtualGroup("vm1.g1", vm1, vm1g1n1); //$NON-NLS-1$
+        Table vm1g1 = RealMetadataFactory.createVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
 
         QueryNode vm1g2n1 =
-            new QueryNode("SELECT * FROM pm1.g2 where pm1.g2.e1=?"); //$NON-NLS-1$ //$NON-NLS-2$
+            new QueryNode("SELECT * FROM pm1.g2 where pm1.g2.e1=?"); //$NON-NLS-1$ 
         vm1g2n1.addBinding("vm1.g1.e1"); //$NON-NLS-1$
-        FakeMetadataObject vm1g2 =
-            FakeMetadataFactory.createVirtualGroup("vm1.g2", vm1, vm1g2n1); //$NON-NLS-1$
+        Table vm1g2 = RealMetadataFactory.createVirtualGroup("g2", vm1, vm1g2n1); //$NON-NLS-1$
 
         QueryNode vm1g3n1 =
-            new QueryNode("SELECT * FROM pm1.g3 where pm1.g3.e1=?"); //$NON-NLS-1$ //$NON-NLS-2$
+            new QueryNode("SELECT * FROM pm1.g3 where pm1.g3.e1=?"); //$NON-NLS-1$ 
         vm1g3n1.addBinding("vm1.g2.e1"); //$NON-NLS-1$
-        FakeMetadataObject vm1g3 =
-            FakeMetadataFactory.createVirtualGroup("vm1.g3", vm1, vm1g3n1); //$NON-NLS-1$
+        Table vm1g3 = RealMetadataFactory.createVirtualGroup("g3", vm1, vm1g3n1); //$NON-NLS-1$
 
-        QueryNode vm1g4n1 = new QueryNode("SELECT * FROM pm1.g4"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vm1g4 =
-            FakeMetadataFactory.createVirtualGroup("vm1.g4", vm1, vm1g4n1); //$NON-NLS-1$
+        QueryNode vm1g4n1 = new QueryNode("SELECT * FROM pm1.g4"); //$NON-NLS-1$ 
+        Table vm1g4 = RealMetadataFactory.createVirtualGroup("g4", vm1, vm1g4n1); //$NON-NLS-1$
 
         QueryNode vm1g5n1 =
             new QueryNode(
                 "SELECT * FROM pm1.g5 where pm1.g5.e1=? AND pm1.g5.e2=?"); //$NON-NLS-1$
         vm1g5n1.addBinding("vm1.g4.e1"); //$NON-NLS-1$
         vm1g5n1.addBinding("vm1.g1.e1"); //$NON-NLS-1$
-        FakeMetadataObject vm1g5 =
-            FakeMetadataFactory.createVirtualGroup("vm1.g5", vm1, vm1g5n1); //$NON-NLS-1$
+        Table vm1g5 = RealMetadataFactory.createVirtualGroup("g5", vm1, vm1g5n1); //$NON-NLS-1$
 
         QueryNode tempGroup1 =
-            new QueryNode("SELECT * FROM pm1.g1 where e2 < '5'"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject tm1g1 =
-            FakeMetadataFactory.createVirtualGroup("tm1.g1", vm1, tempGroup1); //$NON-NLS-1$
+            new QueryNode("SELECT * FROM pm1.g1 where e2 < '5'"); //$NON-NLS-1$ 
+        Table tm1g1 = RealMetadataFactory.createVirtualGroup("tm1.g1", vm1, tempGroup1); //$NON-NLS-1$
 
         // Create virtual elements
-        List vm1g1e =
-            FakeMetadataFactory.createElements(
+        RealMetadataFactory.createElements(
                 vm1g1,
                 new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                 new String[] {
@@ -202,8 +176,7 @@ public class TestXMLPlanner extends TestCase {
                     DataTypeManager.DefaultDataTypes.INTEGER,
                     DataTypeManager.DefaultDataTypes.BOOLEAN,
                     DataTypeManager.DefaultDataTypes.DOUBLE });
-        List vm1g2e =
-            FakeMetadataFactory.createElements(
+        RealMetadataFactory.createElements(
                 vm1g2,
                 new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                 new String[] {
@@ -211,8 +184,7 @@ public class TestXMLPlanner extends TestCase {
                     DataTypeManager.DefaultDataTypes.INTEGER,
                     DataTypeManager.DefaultDataTypes.BOOLEAN,
                     DataTypeManager.DefaultDataTypes.DOUBLE });
-        List vm1g3e =
-            FakeMetadataFactory.createElements(
+        RealMetadataFactory.createElements(
                 vm1g3,
                 new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                 new String[] {
@@ -220,8 +192,7 @@ public class TestXMLPlanner extends TestCase {
                     DataTypeManager.DefaultDataTypes.INTEGER,
                     DataTypeManager.DefaultDataTypes.BOOLEAN,
                     DataTypeManager.DefaultDataTypes.DOUBLE });
-        List vm1g4e =
-            FakeMetadataFactory.createElements(
+        RealMetadataFactory.createElements(
                 vm1g4,
                 new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                 new String[] {
@@ -229,8 +200,7 @@ public class TestXMLPlanner extends TestCase {
                     DataTypeManager.DefaultDataTypes.INTEGER,
                     DataTypeManager.DefaultDataTypes.BOOLEAN,
                     DataTypeManager.DefaultDataTypes.DOUBLE });
-        List vm1g5e =
-            FakeMetadataFactory.createElements(
+        RealMetadataFactory.createElements(
                 vm1g5,
                 new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                 new String[] {
@@ -238,8 +208,7 @@ public class TestXMLPlanner extends TestCase {
                     DataTypeManager.DefaultDataTypes.INTEGER,
                     DataTypeManager.DefaultDataTypes.BOOLEAN,
                     DataTypeManager.DefaultDataTypes.DOUBLE });
-        List tm1g1e =
-            FakeMetadataFactory.createElements(
+        RealMetadataFactory.createElements(
                 tm1g1,
                 new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                 new String[] {
@@ -250,10 +219,8 @@ public class TestXMLPlanner extends TestCase {
 
         // Create virtual documents
         // DOC 1
-        FakeMetadataObject doc1 =
-            FakeMetadataFactory.createVirtualGroup("vm1.doc1", vm1, doc1()); //$NON-NLS-1$
-        List docE1 =
-            FakeMetadataFactory.createElements(
+        Table doc1 = RealMetadataFactory.createXmlDocument("doc1", vm1, doc1()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(
                 doc1,
                 new String[] {
                     "a0", //$NON-NLS-1$
@@ -269,19 +236,15 @@ public class TestXMLPlanner extends TestCase {
                     DataTypeManager.DefaultDataTypes.STRING });
 
         // DOC 2 
-        FakeMetadataObject doc2 =
-            FakeMetadataFactory.createVirtualGroup("vm1.doc2", vm1, doc2()); //$NON-NLS-1$
-        List docE2 =
-            FakeMetadataFactory.createElements(
+        Table doc2 = RealMetadataFactory.createXmlDocument("doc2", vm1, doc2()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(
                 doc2,
                 new String[] { "a1" }, //$NON-NLS-1$
                 new String[] { DataTypeManager.DefaultDataTypes.STRING });
 
         // DOC 3
-        FakeMetadataObject doc3 =
-            FakeMetadataFactory.createVirtualGroup("vm1.doc3", vm1, doc3()); //$NON-NLS-1$
-        List docE3 =
-            FakeMetadataFactory.createElements(
+        Table doc3 = RealMetadataFactory.createXmlDocument("doc3", vm1, doc3()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(
                 doc3,
                 new String[] {
                     "root", //$NON-NLS-1$
@@ -297,10 +260,8 @@ public class TestXMLPlanner extends TestCase {
                     DataTypeManager.DefaultDataTypes.STRING });
 
         // DOC 4
-        FakeMetadataObject doc4 =
-            FakeMetadataFactory.createVirtualGroup("vm1.doc4", vm1, doc4()); //$NON-NLS-1$
-        List docE4 =
-            FakeMetadataFactory.createElements(
+        Table doc4 = RealMetadataFactory.createXmlDocument("doc4", vm1, doc4()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(
                 doc4,
                 new String[] {
                     "root", //$NON-NLS-1$
@@ -322,10 +283,8 @@ public class TestXMLPlanner extends TestCase {
                     DataTypeManager.DefaultDataTypes.STRING });
 
         // DOC 5
-        FakeMetadataObject doc5 =
-            FakeMetadataFactory.createVirtualGroup("vm1.doc5", vm1, doc5()); //$NON-NLS-1$
-        List docE5 =
-            FakeMetadataFactory.createElements(
+        Table doc5 = RealMetadataFactory.createXmlDocument("doc5", vm1, doc5()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(
                 doc5,
                 new String[] {
                     "root", //$NON-NLS-1$
@@ -353,22 +312,18 @@ public class TestXMLPlanner extends TestCase {
                     DataTypeManager.DefaultDataTypes.STRING });
 
         // DOC 6
-        FakeMetadataObject doc6 =
-            FakeMetadataFactory.createVirtualGroup("vm1.doc6", vm1, doc6()); //$NON-NLS-1$
-        List docE6 =
-            FakeMetadataFactory.createElements(
+        Table doc6 = RealMetadataFactory.createXmlDocument("doc6", vm1, doc6()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(
                 doc6,
                 new String[] { "tempGroupTest" }, //$NON-NLS-1$
                 new String[] { DataTypeManager.DefaultDataTypes.STRING });
 
         // DOC with excluded fragment
-        FakeMetadataObject docWithExcluded =
-            FakeMetadataFactory.createVirtualGroup(
+        Table docWithExcluded = RealMetadataFactory.createXmlDocument(
                 "vm1.docWithExcluded", //$NON-NLS-1$
                 vm1,
                 docWithExcluded());
-        List docWithExcludedElements =
-            FakeMetadataFactory.createElements(
+        RealMetadataFactory.createElements(
                 docWithExcluded,
                 new String[] {
                     "root", //$NON-NLS-1$
@@ -384,13 +339,11 @@ public class TestXMLPlanner extends TestCase {
                     DataTypeManager.DefaultDataTypes.STRING });
 
         // DOC 2 with excluded fragment
-        FakeMetadataObject doc2WithExcluded =
-            FakeMetadataFactory.createVirtualGroup(
+        Table doc2WithExcluded = RealMetadataFactory.createXmlDocument(
                 "vm1.docWithExcluded2", //$NON-NLS-1$
                 vm1,
                 docWithExcluded2());
-        List doc2WithExcludedElements =
-            FakeMetadataFactory.createElements(
+        RealMetadataFactory.createElements(
                 doc2WithExcluded,
                 new String[] {
                     "root", //$NON-NLS-1$
@@ -407,18 +360,15 @@ public class TestXMLPlanner extends TestCase {
 
 
         // DOC with attribute
-        FakeMetadataObject docWithAttribute =
-            FakeMetadataFactory.createVirtualGroup(
+        Table docWithAttribute = RealMetadataFactory.createXmlDocument(
                 "vm1.docWithAttribute", //$NON-NLS-1$
                 vm1,
                 docTestConvertCriteriaWithAttribute());
-        FakeMetadataObject docWithAttribute3 =
-            FakeMetadataFactory.createVirtualGroup(
+        Table docWithAttribute3 = RealMetadataFactory.createXmlDocument(
                 "vm1.docWithAttribute3", //$NON-NLS-1$
                 vm1,
                 docTestCriteriaWithAttribute());
-        List docWithAttributeElements =
-            FakeMetadataFactory.createElements(
+        RealMetadataFactory.createElements(
                docWithAttribute,
                 new String[] {
                     "root", //$NON-NLS-1$
@@ -429,13 +379,11 @@ public class TestXMLPlanner extends TestCase {
                     DataTypeManager.DefaultDataTypes.STRING,
                     DataTypeManager.DefaultDataTypes.STRING });
         // DOC with attribute2
-        FakeMetadataObject docWithAttribute2 =
-            FakeMetadataFactory.createVirtualGroup(
+        Table docWithAttribute2 = RealMetadataFactory.createXmlDocument(
                 "vm1.docWithAttribute2", //$NON-NLS-1$
                 vm1,
                 docTestConvertCriteriaWithAttribute2());
-        List docWithAttributeElements2 =
-            FakeMetadataFactory.createElements(
+        RealMetadataFactory.createElements(
                 docWithAttribute2,
                 new String[] {
                     "root", //$NON-NLS-1$
@@ -446,8 +394,7 @@ public class TestXMLPlanner extends TestCase {
                     DataTypeManager.DefaultDataTypes.STRING,
                     DataTypeManager.DefaultDataTypes.STRING });
         
-        List docWithAttributeElements3 =
-            FakeMetadataFactory.createElements(
+        RealMetadataFactory.createElements(
                 docWithAttribute3,
                 new String[] {
                     "root", //$NON-NLS-1$
@@ -458,58 +405,8 @@ public class TestXMLPlanner extends TestCase {
                     DataTypeManager.DefaultDataTypes.STRING,
                     DataTypeManager.DefaultDataTypes.STRING });
         
-        // Add all objects to the store
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(pm1);
-        store.addObject(pm1g1);
-        store.addObjects(pm1g1e);
-        store.addObject(pm1g2);
-        store.addObjects(pm1g2e);
-        store.addObject(pm1g3);
-        store.addObjects(pm1g3e);
-        store.addObject(pm1g4);
-        store.addObjects(pm1g4e);
-        store.addObject(pm1g5);
-        store.addObjects(pm1g5e);
-
-        store.addObject(vm1);
-        store.addObject(vm1g1);
-        store.addObjects(vm1g1e);
-        store.addObject(vm1g2);
-        store.addObjects(vm1g2e);
-        store.addObject(vm1g3);
-        store.addObjects(vm1g3e);
-        store.addObject(vm1g4);
-        store.addObjects(vm1g4e);
-        store.addObject(vm1g5);
-        store.addObjects(vm1g5e);
-        store.addObject(tm1g1);
-        store.addObjects(tm1g1e);
-        store.addObject(doc1);
-        store.addObject(doc2);
-        store.addObject(doc3);
-        store.addObject(doc4);
-        store.addObject(doc5);
-        store.addObject(doc6);
-        store.addObject(docWithExcluded);
-        store.addObject(doc2WithExcluded);
-        store.addObject(docWithAttribute);
-        store.addObject(docWithAttribute2);
-        store.addObject(docWithAttribute3);
-        store.addObjects(docE1);
-        store.addObjects(docE2);
-        store.addObjects(docE3);
-        store.addObjects(docE4);
-        store.addObjects(docE5);
-        store.addObjects(docE6);
-        store.addObjects(docWithExcludedElements);
-        store.addObjects(doc2WithExcludedElements);
-        store.addObjects(docWithAttributeElements);
-        store.addObjects(docWithAttributeElements2);
-        store.addObjects(docWithAttributeElements3);
-
         // Create the facade from the store
-        return new FakeMetadataFacade(store);
+        return RealMetadataFactory.createTransformationMetadata(metadataStore, "example1");
     }
 
     private static MappingDocument doc1() {
@@ -709,7 +606,7 @@ public class TestXMLPlanner extends TestCase {
    }
 
     
-    public void test1() throws Exception {
+    @Test public void test1() throws Exception {
         helpPlan("SELECT * FROM vm1.doc1", example1()); //$NON-NLS-1$
     }
 
@@ -718,7 +615,7 @@ public class TestXMLPlanner extends TestCase {
      * (a node that is not mapped to data)
      * (Also duplicate defect 8130)
      */
-    public void test1_defect7341() throws Exception {
+    @Test public void test1_defect7341() throws Exception {
         helpPlanException("SELECT * FROM vm1.doc1 WHERE a0 = '3'", example1()); //$NON-NLS-1$
     }
 
@@ -727,17 +624,17 @@ public class TestXMLPlanner extends TestCase {
      * (a node that is not mapped to data)
      * (Also duplicate defect 8130)
      */
-    public void test1_defect7341_a() throws Exception {
+    @Test public void test1_defect7341_a() throws Exception {
         helpPlanException(
             "SELECT * FROM vm1.doc3 WHERE context(m1, m1) = '3'", //$NON-NLS-1$
             example1());
     }
 
-    public void test2() throws Exception {
+    @Test public void test2() throws Exception {
         helpPlan("SELECT * FROM vm1.doc2", example1()); //$NON-NLS-1$
     }
 
-    public void test3() throws Exception {
+    @Test public void test3() throws Exception {
         helpPlan("SELECT * FROM vm1.doc1 where a0.a1.a1='x'", example1()); //$NON-NLS-1$
     }
 
@@ -746,11 +643,11 @@ public class TestXMLPlanner extends TestCase {
      * be executed before the temp group tm1.g1 is, since it selects from that 
      * group but is not in it's scope
      */
-    public void test4() throws Exception {
+    @Test public void test4() throws Exception {
         helpPlan("SELECT * FROM vm1.doc3", example1()); //$NON-NLS-1$
     }
 
-    public void testTempGroupPlan() throws Exception {
+    @Test public void testTempGroupPlan() throws Exception {
         QueryMetadataInterface qmi = example1();
         
         XMLPlan plan = helpPlan("SELECT * FROM vm1.doc6", qmi); //$NON-NLS-1$
@@ -767,13 +664,13 @@ public class TestXMLPlanner extends TestCase {
         assertTrue(program.getInstructionAt(i++) instanceof ExecStagingTableInstruction);
     }
 
-    public void testPreparePlan() throws Exception {
+    @Test public void testPreparePlan() throws Exception {
         helpPlan(
             "SELECT * FROM vm1.doc1 ORDER BY vm1.doc1.a0.a1.c1", //$NON-NLS-1$
             example1());
     }
 
-    public void testPreparePlan2() throws Exception {
+    @Test public void testPreparePlan2() throws Exception {
         helpPlan(
             "SELECT root.@myAttribute FROM vm1.docWithAttribute", //$NON-NLS-1$
             example1());
@@ -806,7 +703,7 @@ public class TestXMLPlanner extends TestCase {
         }
     }
 
-    public void testDefect18227() throws Exception {
+    @Test public void testDefect18227() throws Exception {
         QueryMetadataInterface metadata = example1();       
         String sql = "select * from vm1.docWithAttribute3 where root.@type = '3'"; //$NON-NLS-1$
         
@@ -820,7 +717,7 @@ public class TestXMLPlanner extends TestCase {
         }
     }
     
-    public void testDefect21983() throws Exception {
+    @Test public void testDefect21983() throws Exception {
         QueryMetadataInterface metadata = example1();       
         String sql = "select root.@type from vm1.docWithAttribute3"; //$NON-NLS-1$
         
@@ -835,7 +732,7 @@ public class TestXMLPlanner extends TestCase {
      * name is returned by XMLPlanner 
      * @throws Exception
      */
-    public void testRootStagingTableCase4308() throws Exception{
+    @Test public void testRootStagingTableCase4308() throws Exception{
         
         String sql = "select * from vm1.doc1 where stagingTable2.e1 IN ('a', 'b', 'c')"; //$NON-NLS-1$
         
@@ -844,26 +741,25 @@ public class TestXMLPlanner extends TestCase {
         Query query = (Query)new QueryParser().parseCommand(sql);
         QueryResolver.resolveCommand(query, metadata);
         
-        String expectedStagingTableResultSet = "tm1.stagingTable2"; //$NON-NLS-1$
+        String expectedStagingTableResultSet = "vm1.doc1.stagingTable2"; //$NON-NLS-1$
         String actualStagingTableResultSet = CriteriaPlanner.getStagingTableForConjunct(query.getCriteria(), metadata);
         
         assertEquals(expectedStagingTableResultSet, actualStagingTableResultSet);
         
     }
     
-    private FakeMetadataFacade exampleCase4308(){
+    private TransformationMetadata exampleCase4308(){
+    	MetadataStore metadataStore = new MetadataStore();
         
         // Create models
-        FakeMetadataObject pm1 = FakeMetadataFactory.createPhysicalModel("pm1"); //$NON-NLS-1$
-        FakeMetadataObject vm1 = FakeMetadataFactory.createVirtualModel("vm1"); //$NON-NLS-1$
+        Schema pm1 = RealMetadataFactory.createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
+        Schema vm1 = RealMetadataFactory.createVirtualModel("vm1", metadataStore); //$NON-NLS-1$
 
         // Create physical groups
-        FakeMetadataObject pm1g1 =
-            FakeMetadataFactory.createPhysicalGroup("pm1.g1", pm1); //$NON-NLS-1$
+        Table pm1g1 = RealMetadataFactory.createPhysicalGroup("g1", pm1); //$NON-NLS-1$
 
         // Create physical elements
-        List pm1g1e =
-            FakeMetadataFactory.createElements(
+        RealMetadataFactory.createElements(
                 pm1g1,
                 new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                 new String[] {
@@ -874,13 +770,10 @@ public class TestXMLPlanner extends TestCase {
 
 
         QueryNode stagingTableNode =
-            new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject stagingTable =
-            FakeMetadataFactory.createVirtualGroup("tm1.stagingTable2", vm1, stagingTableNode); //$NON-NLS-1$
+            new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ 
+        Table stagingTable = RealMetadataFactory.createXmlStagingTable("doc1.stagingTable2", vm1, stagingTableNode); //$NON-NLS-1$
         
-        
-        List stagingTableElements =
-            FakeMetadataFactory.createElements(
+        RealMetadataFactory.createElements(
                 stagingTable,
                 new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                 new String[] {
@@ -893,30 +786,16 @@ public class TestXMLPlanner extends TestCase {
         
         MappingElement root = doc.addChildElement(new MappingElement("root")); //$NON-NLS-1$
         
-        List stagingTables = new ArrayList(1);
-        stagingTables.add("tm1.stagingTable2"); //$NON-NLS-1$
-        root.setStagingTables(stagingTables);
+        root.addStagingTable("vm1.doc1.stagingTable2");
 
-        
         // Create virtual documents
         // DOC 1
-        FakeMetadataObject doc1 =
-            FakeMetadataFactory.createVirtualGroup(
-                "vm1.doc1", //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument(
+                "doc1", //$NON-NLS-1$
                 vm1,
                 doc);
 
-        // Add all objects to the store
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(pm1);
-        store.addObject(pm1g1);
-        store.addObjects(pm1g1e);
-        store.addObject(stagingTable);
-        store.addObjects(stagingTableElements);
-        store.addObject(doc1);
-
-        // Create the facade from the store
-        return new FakeMetadataFacade(store);
+        return RealMetadataFactory.createTransformationMetadata(metadataStore, "case4308");
     }
 
     private static final boolean DEBUG = false;

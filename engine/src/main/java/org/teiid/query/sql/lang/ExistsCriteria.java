@@ -43,9 +43,11 @@ implements SubqueryContainer<QueryCommand>, ContextReference, Negatable {
 	public static class SubqueryHint {
 		public static String MJ = "MJ"; //$NON-NLS-1$
 		public static String NOUNNEST = "NO_UNNEST"; //$NON-NLS-1$
+		public static String DJ = "DJ"; //$NON-NLS-1$
 
 		private boolean mergeJoin;
 	    private boolean noUnnest;
+	    private boolean depJoin;
 	    
 	    public void setMergeJoin(boolean semiJoin) {
 			this.mergeJoin = semiJoin;
@@ -63,6 +65,15 @@ implements SubqueryContainer<QueryCommand>, ContextReference, Negatable {
 			return noUnnest;
 		}
 	    
+	    public void setDepJoin(boolean depJoin) {
+			this.depJoin = depJoin;
+			this.mergeJoin = true;
+		}
+	    
+	    public boolean isDepJoin() {
+			return depJoin;
+		}
+	    
 		@Override
 		public boolean equals(Object obj) {
 			if (this == obj) {
@@ -72,13 +83,16 @@ implements SubqueryContainer<QueryCommand>, ContextReference, Negatable {
 				return false;
 			}
 			SubqueryHint other = (SubqueryHint) obj;
-			return mergeJoin == other.mergeJoin && noUnnest == other.noUnnest;
+			return mergeJoin == other.mergeJoin 
+			&& noUnnest == other.noUnnest 
+			&& depJoin == other.depJoin;
 		}
 		
 		public SubqueryHint clone() {
 			SubqueryHint clone = new SubqueryHint();
 			clone.mergeJoin = this.mergeJoin;
 			clone.noUnnest = this.noUnnest;
+			clone.depJoin = this.depJoin;
 			return clone;
 		}
 		

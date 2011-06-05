@@ -26,16 +26,15 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collection;
 
+import junit.framework.TestCase;
+
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingOutputter;
-import org.teiid.query.optimizer.xml.XMLPlanner;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.processor.xml.TestXMLProcessor;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
-import org.teiid.query.unittest.FakeMetadataFacade;
-
-import junit.framework.TestCase;
 
 
 
@@ -45,14 +44,14 @@ import junit.framework.TestCase;
 public class TestMarkExcludeVisitor extends TestCase {
     
     void helpTest(String sql, String expected) throws Exception{
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
+        QueryMetadataInterface metadata = TestXMLProcessor.exampleMetadataCached();
         Query query = (Query)TestXMLProcessor.helpGetCommand(sql, metadata); 
 
-        Collection groups = GroupCollectorVisitor.getGroups(query, true);
-        GroupSymbol group = (GroupSymbol) groups.iterator().next();
+        Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(query, true);
+        GroupSymbol group = groups.iterator().next();
         
         MappingDocument docOrig = (MappingDocument)metadata.getMappingNode(metadata.getGroupID(group.getName())); 
-        MappingDocument doc = (MappingDocument)docOrig.clone(); 
+        MappingDocument doc = docOrig.clone(); 
         
         doc = XMLPlanner.preMarkExcluded(query, doc);       
         XMLPlanner.removeExcluded(doc);

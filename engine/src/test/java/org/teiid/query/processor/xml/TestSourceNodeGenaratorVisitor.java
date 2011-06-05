@@ -82,7 +82,7 @@ public class TestSourceNodeGenaratorVisitor extends TestCase {
         MappingSourceNode source = (MappingSourceNode)root;
         assertEquals("licenseSource", source.getResultName()); //$NON-NLS-1$
         
-        List list = source.getStagingTables();
+        List<String> list = source.getStagingTables();
         assertEquals(2, list.size());
 
         assertEquals("testTempGroup1", list.get(0)); //$NON-NLS-1$
@@ -128,7 +128,7 @@ public class TestSourceNodeGenaratorVisitor extends TestCase {
         assertTrue(node instanceof MappingElement);
         MappingElement element = (MappingElement)node;
 
-        List list = element.getStagingTables();
+        List<String> list = element.getStagingTables();
         assertEquals(1, list.size());
         assertEquals("testTempGroup1", list.get(0)); //$NON-NLS-1$
         
@@ -137,7 +137,7 @@ public class TestSourceNodeGenaratorVisitor extends TestCase {
         assertEquals(1, element.getMinOccurence());
         assertEquals(1, element.getMaxOccurence());
         
-        MappingNode node1 = (MappingNode)element.getNodeChildren().get(0);
+        MappingNode node1 = element.getNodeChildren().get(0);
         assertTrue(node1 instanceof MappingSourceNode);
         
         MappingSourceNode source = (MappingSourceNode)node1;        
@@ -149,7 +149,7 @@ public class TestSourceNodeGenaratorVisitor extends TestCase {
         
         // make sure source's child is mapping element and mapping element's source
         // is above source        
-        node1 = (MappingNode)source.getNodeChildren().get(0);
+        node1 = source.getNodeChildren().get(0);
         assertTrue(node instanceof MappingElement);
         element = (MappingElement)node1;
         assertEquals("childNode", element.getName()); //$NON-NLS-1$
@@ -194,14 +194,14 @@ public class TestSourceNodeGenaratorVisitor extends TestCase {
         MappingSourceNode source = (MappingSourceNode)node;
         assertEquals("parentNodeSource", source.getSource()); //$NON-NLS-1$
         
-        node = (MappingNode)source.getNodeChildren().get(0);
+        node = source.getNodeChildren().get(0);
         assertTrue(node instanceof MappingElement);        
         MappingElement element = (MappingElement)node;
         assertEquals("parentNode", element.getName()); //$NON-NLS-1$
         assertTrue(element.isRootRecursiveNode());
         assertFalse(element.isRecursive());
         
-        node = (MappingNode)element.getNodeChildren().get(0);
+        node = element.getNodeChildren().get(0);
         assertTrue(node instanceof MappingElement);        
         element = (MappingElement)node;
         assertEquals("childNode", element.getName()); //$NON-NLS-1$
@@ -213,7 +213,7 @@ public class TestSourceNodeGenaratorVisitor extends TestCase {
         assertEquals("ddd", attribute.getDefaultValue()); //$NON-NLS-1$
         assertEquals("fff", attribute.getValue()); //$NON-NLS-1$
         
-        node = (MappingNode)element.getNodeChildren().get(0);
+        node = element.getNodeChildren().get(0);
         assertTrue(node instanceof MappingRecursiveElement);        
         MappingRecursiveElement recursive = (MappingRecursiveElement)node;
         assertEquals("recursivenodename", recursive.getName()); //$NON-NLS-1$
@@ -254,7 +254,7 @@ public class TestSourceNodeGenaratorVisitor extends TestCase {
         assertEquals("parentSource", source.getSource()); //$NON-NLS-1$
         
         // parent element
-        node = (MappingNode)source.getNodeChildren().get(0);
+        node = source.getNodeChildren().get(0);
         assertTrue(node instanceof MappingElement);        
         MappingElement element = (MappingElement)node;
         assertEquals("parentNode", element.getName()); //$NON-NLS-1$
@@ -262,12 +262,12 @@ public class TestSourceNodeGenaratorVisitor extends TestCase {
         assertFalse(element.isRecursive());
         
         // recursive source
-        node = (MappingNode)element.getNodeChildren().get(0);
+        node = element.getNodeChildren().get(0);
         source = (MappingSourceNode)node;
         assertEquals("childSource", source.getSource()); //$NON-NLS-1$
         assertEquals("parentSource", source.getAliasResultName()); //$NON-NLS-1$
         
-        node = (MappingNode)source.getNodeChildren().get(0);
+        node = source.getNodeChildren().get(0);
         assertTrue(node instanceof MappingRecursiveElement);        
         MappingRecursiveElement relement = (MappingRecursiveElement)node;
         

@@ -43,12 +43,12 @@ import org.teiid.query.sql.util.VariableContext;
 class XMLContext {
 
     // map between variables and their values
-    Map resultsMap = new HashMap();
+    Map<String, PlanExecutor> resultsMap = new HashMap<String, PlanExecutor>();
     
     // reference to the parent variable context
     XMLContext parentContext;
     
-    Map executorMap = new HashMap();
+    Map<String, PlanExecutor> executorMap = new HashMap<String, PlanExecutor>();
     
     VariableContext variableContext = new VariableContext();
     
@@ -56,14 +56,12 @@ class XMLContext {
      * Constructor for VariableContext.
      */
     public XMLContext() {
-        this.resultsMap = new HashMap();
     }
     
     /**
      * Constructor for VariableContext.
      */
     public XMLContext(XMLContext parent) {
-        this.resultsMap = new HashMap();
         this.parentContext = parent;
         this.variableContext.setParentContext(parent.variableContext);
     }
@@ -77,8 +75,8 @@ class XMLContext {
      * @param aliasResultName
      * @return
      */
-    public List getCurrentRow(String aliasResultName) throws TeiidComponentException, TeiidProcessingException {
-        PlanExecutor executor = (PlanExecutor)this.resultsMap.get(aliasResultName);
+    public List<?> getCurrentRow(String aliasResultName) throws TeiidComponentException, TeiidProcessingException {
+        PlanExecutor executor = this.resultsMap.get(aliasResultName);
         if (executor == null) {
             if (this.parentContext != null) {
                 return this.parentContext.getCurrentRow(aliasResultName);
@@ -94,8 +92,8 @@ class XMLContext {
      * @return
      * @throws TeiidComponentException
      */
-    public List getNextRow(String aliasResultName) throws TeiidComponentException, TeiidProcessingException {
-        PlanExecutor executor = (PlanExecutor)this.resultsMap.get(aliasResultName);
+    public List<?> getNextRow(String aliasResultName) throws TeiidComponentException, TeiidProcessingException {
+        PlanExecutor executor = this.resultsMap.get(aliasResultName);
         if (executor == null) {
             if (this.parentContext != null) {
                 return this.parentContext.getNextRow(aliasResultName);
@@ -119,7 +117,7 @@ class XMLContext {
      * as there may be another resultset with same name. (recursive condition) 
      */
     public void removeResultSet(String resultName) throws TeiidComponentException {
-        PlanExecutor executor = (PlanExecutor)this.resultsMap.remove(resultName);
+        PlanExecutor executor = this.resultsMap.remove(resultName);
         if (executor != null) {
             executor.close();
         }
@@ -132,8 +130,8 @@ class XMLContext {
      * @return
      * @throws TeiidComponentException
      */
-    public List getOutputElements(String resultName) throws TeiidComponentException {
-        PlanExecutor executor = (PlanExecutor)this.resultsMap.get(resultName);
+    public List<?> getOutputElements(String resultName) throws TeiidComponentException {
+        PlanExecutor executor = this.resultsMap.get(resultName);
         if (executor == null) {
             if (this.parentContext != null) {
                 return this.parentContext.getOutputElements(resultName);
@@ -160,7 +158,7 @@ class XMLContext {
      * @return
      */
     public PlanExecutor getResultExecutor(String resultName) {
-        return (PlanExecutor)this.executorMap.get(resultName);
+        return this.executorMap.get(resultName);
     }
 
     /**
@@ -186,10 +184,13 @@ class XMLContext {
     
 
     void setVariableValues(String resultSetName,
-                                   List row) throws TeiidComponentException {
+                                   List<?> row) throws TeiidComponentException {
         List elements = getOutputElements(resultSetName);
         
         for (int index = 0; index < elements.size(); index++) {
+        	if (!(elements.get(index) instanceof ElementSymbol)) {
+        		continue;
+        	}
             ElementSymbol symbol = (ElementSymbol)elements.get(index);
             variableContext.setValue(new ElementSymbol(resultSetName + ElementSymbol.SEPARATOR + symbol.getShortName()), row.get(index));
         }

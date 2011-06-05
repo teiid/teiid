@@ -86,9 +86,21 @@ public class TestTeradataTranslator {
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);    	
     }    
     
+    @Test public void testSubString() throws Exception {
+        String input = "SELECT intkey FROM BQT1.SmallA WHERE SUBSTRING(BQT1.SmallA.IntKey, 1) = '1' ORDER BY intkey"; 
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE substr(cast(SmallA.IntKey AS varchar(100)),1) = '1' ORDER BY SmallA.IntKey"; 
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);    	
+    }  
+    
+    @Test public void testSubString2() throws Exception {
+        String input = "SELECT intkey FROM BQT1.SmallA WHERE SUBSTRING(BQT1.SmallA.IntKey, 1, 2) = '1' ORDER BY intkey"; 
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE substr(cast(SmallA.IntKey AS varchar(100)),1,2) = '1' ORDER BY SmallA.IntKey"; 
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);    	
+    }     
+    
     @Test public void testDateToString() throws Exception {
         String input = "SELECT intkey, UPPER(timevalue) AS UPPER FROM BQT1.SmallA ORDER BY intkey"; 
-        String output = "SELECT SmallA.IntKey, UPPER(cast(SmallA.TimeValue AS varchar(100))) AS UPPER FROM SmallA ORDER BY SmallA.IntKey"; 
+        String output = "SELECT SmallA.IntKey, UPPER(cast(cast(SmallA.TimeValue AS FORMAT 'HH:MI:SS') AS VARCHAR(9))) AS UPPER FROM SmallA ORDER BY SmallA.IntKey"; 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);    	
     }    
     
@@ -100,16 +112,20 @@ public class TestTeradataTranslator {
     
     
     @Test public void testByteToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "string", "1"); 
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "string", "cast(1 AS varchar(4000))"); 
     }
     
     @Test public void testByte2ToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)-1), Byte.class), "string", "-1"); 
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)-1), Byte.class), "string", "cast(-1 AS varchar(4000))"); 
     }
     
     @Test public void testDoubleToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Double(1.0), Double.class), "string", "1.0"); 
+        helpTest(LANG_FACTORY.createLiteral(new Double(1.0), Double.class), "string", "cast(1.0 AS varchar(4000))"); 
     }    
+    
+    @Test public void testStringToDouble() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral("1.0", String.class), "double", "cast('1.0' AS double precision)"); 
+    }      
     
 	@Test public void testInDecompose() throws Exception {
     	Expression left = LANG_FACTORY.createLiteral("1", String.class);
@@ -178,7 +194,13 @@ public class TestTeradataTranslator {
 	
 	@Test public void testRightFunction() throws Exception {
 		String input = "SELECT INTKEY, FLOATNUM FROM BQT1.SmallA WHERE right(FLOATNUM, 2) <> 0 ORDER BY INTKEY";
-		String out = "SELECT SmallA.IntKey, SmallA.FloatNum FROM SmallA WHERE substr(cast(SmallA.FloatNum AS varchar(100)),(character_length(cast(SmallA.FloatNum AS varchar(100)))-2)) <> '0' ORDER BY SmallA.IntKey";
+		String out = "SELECT SmallA.IntKey, SmallA.FloatNum FROM SmallA WHERE substr(cast(SmallA.FloatNum AS varchar(100)),(character_length(cast(SmallA.FloatNum AS varchar(100)))-2+1)) <> '0' ORDER BY SmallA.IntKey";
 		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null, input, out, TRANSLATOR);		
 	}
+	
+	@Test public void testLocateFunction() throws Exception {
+		String input = "SELECT INTKEY, STRINGKEY, SHORTVALUE FROM BQT1.SmallA WHERE (LOCATE(0, STRINGKEY) = 2) OR (LOCATE(2, SHORTVALUE, 4) = 6) ORDER BY intkey";
+		String out = "SELECT SmallA.IntKey, SmallA.StringKey, SmallA.ShortValue FROM SmallA WHERE position('0' in SmallA.StringKey) = 2 OR position('2' in substr(cast(SmallA.ShortValue AS varchar(100)),4)) = 6 ORDER BY SmallA.IntKey";
+		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null, input, out, TRANSLATOR);		
+	}	
 }

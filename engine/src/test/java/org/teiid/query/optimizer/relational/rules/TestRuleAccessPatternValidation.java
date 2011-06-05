@@ -40,8 +40,7 @@ import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
 
@@ -50,7 +49,7 @@ import org.teiid.query.util.CommandContext;
  */
 public class TestRuleAccessPatternValidation {
 
-    private static final FakeMetadataFacade METADATA = FakeMetadataFactory.example1Cached();
+    private static final QueryMetadataInterface METADATA = RealMetadataFactory.example1Cached();
 
     private static final boolean DEBUG = false;
 

@@ -238,7 +238,9 @@ public class PlanToProcessConverter {
                 if(stype == JoinStrategyType.MERGE || stype == JoinStrategyType.ENHANCED_SORT) {
                 	MergeJoinStrategy mjStrategy = null;
                 	if (stype.equals(JoinStrategyType.ENHANCED_SORT)) { 
-                		mjStrategy = new EnhancedSortMergeJoinStrategy(leftSort, (SortOption)node.getProperty(NodeConstants.Info.SORT_RIGHT));
+                		EnhancedSortMergeJoinStrategy esmjStrategy = new EnhancedSortMergeJoinStrategy(leftSort, (SortOption)node.getProperty(NodeConstants.Info.SORT_RIGHT));
+                		esmjStrategy.setSemiDep(node.hasBooleanProperty(Info.IS_SEMI_DEP));
+                		mjStrategy = esmjStrategy;
                 	} else {
                 		mjStrategy = new MergeJoinStrategy(leftSort, (SortOption)node.getProperty(NodeConstants.Info.SORT_RIGHT), false);
                 	}
@@ -341,7 +343,10 @@ public class PlanToProcessConverter {
 	                    }
                     }
                     aNode.setCommand(command);
-                    aNode.setModelName(getRoutingName(node));
+                    if (!aNode.isShouldEvaluate()) {
+                    	aNode.minimizeProject(command);
+                    }
+                    setRoutingName(aNode, node);
                 }
                 break;
 
@@ -540,7 +545,7 @@ public class PlanToProcessConverter {
         return processNode;
     }
 
-	private String getRoutingName(PlanNode node)
+	private void setRoutingName(AccessNode accessNode, PlanNode node)
 		throws QueryPlannerException, TeiidComponentException {
 
 		// Look up connector binding name
@@ -558,7 +563,8 @@ public class PlanToProcessConverter {
 				}
 			}
 			String cbName = metadata.getFullName(modelID);
-			return cbName;
+			accessNode.setModelName(cbName);
+			accessNode.setModelId(modelID);
 		} catch(QueryMetadataException e) {
             throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0009")); //$NON-NLS-1$
 		}

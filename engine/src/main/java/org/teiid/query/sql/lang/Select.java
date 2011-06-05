@@ -24,17 +24,14 @@ package org.teiid.query.sql.lang;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.symbol.AllInGroupSymbol;
 import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
@@ -48,7 +45,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 public class Select implements LanguageObject {
 
     /** The set of symbols for the data elements to be selected. */
-    private List symbols;     // List<SelectSymbols>
+    private List<SelectSymbol> symbols;
 
     /** Flag for whether duplicate removal should be performed on the results */
     private boolean distinct;
@@ -61,15 +58,15 @@ public class Select implements LanguageObject {
      * Constructs a default instance of this class.
      */
     public Select() {
-        symbols = new ArrayList();
+        symbols = new ArrayList<SelectSymbol>();
     }
 
     /**
      * Constructs an instance of this class from an ordered set of symbols.
      * @param symbols The ordered list of symbols
      */
-    public Select( List symbols ) {
-        this.symbols = new ArrayList( symbols );
+    public Select( List<? extends SelectSymbol> symbols ) {
+        this.symbols = new ArrayList<SelectSymbol>( symbols );
     }
 
     // =========================================================================
@@ -95,7 +92,7 @@ public class Select implements LanguageObject {
      * Returns an ordered list of the symbols in the select.
      * @param Get list of SelectSymbol in SELECT
      */
-    public List getSymbols() {
+    public List<SelectSymbol> getSymbols() {
         return symbols;
     }
     
@@ -103,8 +100,8 @@ public class Select implements LanguageObject {
      * Sets an ordered list of the symbols in the select.
      * @param symbols list of SelectSymbol in SELECT
      */
-    public void setSymbols(List symbols) {
-        this.symbols = symbols;
+    public void setSymbols(List<? extends SelectSymbol> symbols) {
+        this.symbols = new ArrayList<SelectSymbol>(symbols);
     }    
 
     /**
@@ -113,7 +110,7 @@ public class Select implements LanguageObject {
      * @return The variable identifier at the index
      */
     public SelectSymbol getSymbol( int index ) {
-        return (SelectSymbol) symbols.get(index);
+        return symbols.get(index);
     }
 
     /**
@@ -130,9 +127,9 @@ public class Select implements LanguageObject {
      * Adds a new collection of symbols to the list of symbols.
      * @param symbols Collection of SelectSymbols
      */
-    public void addSymbols( Collection symbols) {
+    public void addSymbols( Collection<? extends SelectSymbol> toAdd) {
     	if(symbols != null) {
-	        this.symbols.addAll(symbols);
+	        this.symbols.addAll(toAdd);
         }
     }
     
@@ -151,38 +148,6 @@ public class Select implements LanguageObject {
     public boolean containsSymbol( SelectSymbol symbol ) {
         return symbols.contains(symbol);
     }
-
-    /**
-     * Check is the element symbol is being selected by this
-     * select clause.  This includes checking for select start
-     * and select group.star for the group of this element symbol.
-     * ElementSymbol is assumed to be fully resolved.
-     * @param elementSymbol fully resolved ElementSymbol
-     * @return whether this select will select the element symbol
-     */
-    public boolean isElementBeingSelected(ElementSymbol elementSymbol){
-        boolean isBeingSelected = this.containsSymbol(elementSymbol);
-        if (!isBeingSelected){
-            GroupSymbol g = elementSymbol.getGroupSymbol();
-            String groupDotStarName = g.getName() + ".*"; //$NON-NLS-1$
-            Iterator i = this.getSymbols().iterator();
-            while (i.hasNext()) {
-                Object selectSymbol = i.next();
-                if (selectSymbol instanceof AllSymbol){
-                    isBeingSelected = true;
-                    break;
-                } else if (selectSymbol instanceof AllInGroupSymbol){
-                    AllInGroupSymbol aigSymbol = (AllInGroupSymbol)selectSymbol;
-                    if (aigSymbol.getName().equalsIgnoreCase(groupDotStarName)){
-                        isBeingSelected = true;
-                        break;
-                    }
-                }
-            }
-        }
-        return isBeingSelected;
-    }
-    
 
 	/**
 	 * Set whether select is distinct.
@@ -212,9 +177,7 @@ public class Select implements LanguageObject {
 	 */
 	public List<SingleElementSymbol> getProjectedSymbols() { 
 		ArrayList<SingleElementSymbol> projectedSymbols = new ArrayList<SingleElementSymbol>();
-		Iterator iter = symbols.iterator();
-		while(iter.hasNext()) {
-			SelectSymbol symbol = (SelectSymbol) iter.next();
+		for (SelectSymbol symbol : symbols) {
 			if(symbol instanceof SingleElementSymbol) { 
 				projectedSymbols.add((SingleElementSymbol)symbol);
 			} else {
@@ -236,15 +199,7 @@ public class Select implements LanguageObject {
 	 * @return Deep clone
 	 */
 	public Object clone() {
-	    List thisSymbols = getSymbols();
-	    List copySymbols = new ArrayList(thisSymbols.size());
-	    Iterator iter = thisSymbols.iterator();
-	    while(iter.hasNext()) {
-	    	SelectSymbol ss = (SelectSymbol) iter.next();
-	    	copySymbols.add(ss.clone());    
-	    }
-	    	    
-		Select copy = new Select(copySymbols);
+		Select copy = new Select(LanguageObject.Util.deepClone(this.symbols, SelectSymbol.class));
 		copy.setDistinct( isDistinct() );
 		return copy;
 	}

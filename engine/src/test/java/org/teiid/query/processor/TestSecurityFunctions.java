@@ -30,7 +30,7 @@ import org.teiid.query.eval.SecurityFunctionEvaluator;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
 import junit.framework.TestCase;
@@ -58,7 +58,7 @@ public class TestSecurityFunctions extends TestCase {
         }); 
         
         Command command = TestProcessor.helpParse(sql);   
-        ProcessorPlan plan = TestProcessor.helpGetPlan(command, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached());
         
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -86,7 +86,7 @@ public class TestSecurityFunctions extends TestCase {
             }});
         
         Command command = TestProcessor.helpParse(sql);   
-        ProcessorPlan plan = TestProcessor.helpGetPlan(command, FakeMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
         
         // Run query
         TestProcessor.helpProcess(plan, context, dataManager, expected);

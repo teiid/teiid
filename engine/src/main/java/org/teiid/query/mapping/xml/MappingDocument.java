@@ -22,11 +22,6 @@
 
 package org.teiid.query.mapping.xml;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.query.QueryPlugin;
 
@@ -160,26 +155,10 @@ public class MappingDocument extends MappingBaseNode {
     /** 
      * @see org.teiid.query.mapping.xml.MappingNode#clone()
      */
-    public Object clone() {
-        // I found this as cheap way of cloneing for now fast, may be we will
-        // do all the object cloneing later..
-        try {
-            MappingOutputter out = new MappingOutputter();
-            StringWriter stream = new StringWriter();
-            out.write(this, new PrintWriter(stream));
-            MappingLoader loader = new MappingLoader();
-            MappingDocument doc =  loader.loadDocument(new ByteArrayInputStream(stream.toString().getBytes()));
-
-            // Copy the values of the instance variables.
-            doc.formatted = this.formatted;
-            doc.encoding = this.encoding;
-            doc.name = this.name;
-            
-            return doc;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch(MappingException e) {
-            throw new RuntimeException(e);
-        }
-    }    
+    public MappingDocument clone() {
+		MappingDocument clone = (MappingDocument) super.clone();
+		clone.root = (MappingBaseNode) clone.getChildren().iterator().next();
+		return clone;
+    }  
+    
 }

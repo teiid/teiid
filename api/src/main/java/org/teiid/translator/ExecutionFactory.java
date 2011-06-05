@@ -23,8 +23,8 @@
 package org.teiid.translator;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.resource.ResourceException;
@@ -43,6 +43,7 @@ import org.teiid.language.SetQuery;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 
@@ -108,6 +109,8 @@ public class ExecutionFactory<F, C> {
 	private int maxInSize = DEFAULT_MAX_IN_CRITERIA_SIZE;
 	private int maxDependentInPredicates = DEFAULT_MAX_IN_CRITERIA_SIZE;
 	
+	private LinkedList<FunctionMethod> pushdownFunctionMethods = new LinkedList<FunctionMethod>();
+	
 	/**
 	 * Initialize the connector with supplied configuration
 	 */
@@ -134,8 +137,10 @@ public class ExecutionFactory<F, C> {
 	 * The default implementation assumes a JCA {@link ConnectionFactory}.  Subclasses should override, if they use 
 	 * another type of connection factory.
 	 * 
+	 * @deprecated
+	 * @see #getConnection(Object, ExecutionContext)
 	 * @param factory
-	 * @return
+	 * @return a connection
 	 * @throws TranslatorException
 	 */
 	@SuppressWarnings("unchecked")
@@ -153,6 +158,22 @@ public class ExecutionFactory<F, C> {
 		throw new AssertionError("A connection factory was supplied, but no implementation was provided getConnection"); //$NON-NLS-1$
 	}
 	
+	/**
+	 * Return a connection object from the given connection factory.
+	 * 
+	 * The default implementation assumes a JCA {@link ConnectionFactory}.  Subclasses should override, if they use 
+	 * another type of connection factory or wish to use the {@link ExecutionContext}.  By default calls {@link #getConnection(Object)}
+	 * 
+	 * @param factory
+	 * @param executionContext null if this is a system request for a connection
+	 * @return a connection
+	 * @throws TranslatorException
+	 */
+	public C getConnection(F factory,
+			ExecutionContext executionContext) throws TranslatorException {
+		return getConnection(factory);
+	}
+
 	/**
 	 * Closes a connection object from the given connection factory.
 	 * 
@@ -651,8 +672,26 @@ public class ExecutionFactory<F, C> {
     	return null;
     }
     
+    /**
+     * Get a list of {@link FunctionMethod}s that will be contributed to the SYS schema.  
+     * To avoid conflicts with system functions, the function name should contain a 
+     * qualifier - typically &lt;translator name&gt;.&lt;function name&gt; 
+     * @see ExecutionFactory#addPushDownFunction(String, String, FunctionParameter, FunctionParameter...)
+     * @return
+     */
     public List<FunctionMethod> getPushDownFunctions(){
-    	return Collections.emptyList();
+    	return pushdownFunctionMethods;
+    }
+    
+    protected FunctionMethod addPushDownFunction(String qualifier, String name, String returnType, String...paramTypes) {
+    	FunctionParameter[] params = new FunctionParameter[paramTypes.length];
+    	for (int i = 0; i < paramTypes.length; i++) {
+			params[i] = new FunctionParameter("param" + (i+1), paramTypes[i]); //$NON-NLS-1$
+		}
+    	FunctionMethod method = new FunctionMethod(qualifier + '.' + name, name, qualifier, params, new FunctionParameter("result", returnType)); //$NON-NLS-1$
+    	method.setNameInSource(name);
+    	pushdownFunctionMethods.add(method);
+    	return method;
     }
     
     /**
@@ -821,4 +860,5 @@ public class ExecutionFactory<F, C> {
     public boolean supportsCommonTableExpressions() {
     	return false;
     }
+
 }

@@ -57,6 +57,7 @@ import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SelectSymbol;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 
@@ -110,7 +111,7 @@ public final class XMLPlanner implements CommandPlanner{
         GroupSymbol group = xmlQuery.getFrom().getGroups().iterator().next();
 
         MappingDocument doc = (MappingDocument)metadata.getMappingNode(group.getMetadataID());
-        doc = (MappingDocument)doc.clone();
+        doc = doc.clone();
         
         // make a copy of the document
         planEnv.mappingDoc = doc;
@@ -200,24 +201,28 @@ public final class XMLPlanner implements CommandPlanner{
         if (debug) {
             debugDocumentInfo("After Exclude", planEnv); //$NON-NLS-1$
         }
+
+        //Resolve all the "elements" against the result sets
+        NameInSourceResolverVisitor.resolveElements(planEnv.mappingDoc, planEnv);
+        
+        //Validate and resolve the criteria specified on the mapping nodes.
+        ValidateMappedCriteriaVisitor.validateAndCollectCriteriaElements(planEnv.mappingDoc, planEnv);
+
+        XMLProjectionMinimizer.minimizeProjection(planEnv);
+        
+        if (debug) {
+            debugDocumentInfo("After Projection Minimization", planEnv); //$NON-NLS-1$
+        }
         
         // Autostage queries. try to auto-stage the planned queries
         // removal of this step should not affect overall processing
         XMLStagaingQueryPlanner.stageQueries(planEnv.mappingDoc, planEnv);
-        
-        //JoinSourceNodes.joinSourceNodes(planEnv.mappingDoc, planEnv);
         
         //Plan the various relational result sets
         XMLQueryPlanner.optimizeQueries(planEnv.mappingDoc, planEnv);
         
 		//Handle nillable nodes
         planEnv.mappingDoc = HandleNillableVisitor.execute(planEnv.mappingDoc);
-        
-        //Resolve all the "elements" aginst the result sets
-        NameInSourceResolverVisitor.resolveElements(planEnv.mappingDoc, planEnv);
-        
-        //Validate and resolve the criteria specified on the mapping nodes.
-        ValidateMappedCriteriaVisitor.validateAndCollectCriteriaElements(planEnv.mappingDoc, planEnv);
 	}
     
     static void removeExcluded(MappingNode node) {
@@ -247,10 +252,9 @@ public final class XMLPlanner implements CommandPlanner{
         }
         
         // Get all the valid nodes to be marked as included.
-        Collection validElements = ElementCollectorVisitor.getElements(select, true);
-        HashSet elements = new HashSet(validElements.size());
-        for (final Iterator i = validElements.iterator(); i.hasNext();) {
-            final ElementSymbol element = (ElementSymbol)i.next();
+        Collection<ElementSymbol> validElements = ElementCollectorVisitor.getElements(select, true);
+        HashSet<String> elements = new HashSet<String>(validElements.size());
+        for (ElementSymbol element : validElements) {
             elements.add(element.getCanonicalName());
         }
         
@@ -277,8 +281,8 @@ public final class XMLPlanner implements CommandPlanner{
             return;
         }
         
-        List elements = orderBy.getSortKeys();
-		List types = orderBy.getTypes();
+        List<SingleElementSymbol> elements = orderBy.getSortKeys();
+		List<Boolean> types = orderBy.getTypes();
 
 		for (int i = 0; i< elements.size(); i++) {
 			ElementSymbol elemSymbol = (ElementSymbol) elements.get(i);
@@ -301,7 +305,7 @@ public final class XMLPlanner implements CommandPlanner{
                 by = new OrderBy();
             }
             ElementSymbol mappedSymbol = (ElementSymbol)sourceNode.getSymbolMap().get(new ElementSymbol(elementNode.getNameInSource()));
-            by.addVariable((ElementSymbol)mappedSymbol.clone(), ((Boolean)types.get(i)).booleanValue());
+            by.addVariable(mappedSymbol.clone(), ((Boolean)types.get(i)).booleanValue());
             rs.setOrderBy(by);
 		}
 	}

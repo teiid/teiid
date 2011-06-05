@@ -47,6 +47,13 @@ import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.ColumnSet;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
+import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
@@ -55,6 +62,7 @@ import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.sql.LanguageObject;
@@ -91,20 +99,16 @@ import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
-import org.teiid.query.unittest.FakeMetadataStore;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
 
 @SuppressWarnings("nls")
 public class TestResolver {
 
-	private FakeMetadataFacade metadata;
+	private QueryMetadataInterface metadata;
 
 	@Before public void setUp() {
-		metadata = FakeMetadataFactory.example1Cached();
+		metadata = RealMetadataFactory.example1Cached();
 	}
 
 	// ################################## TEST HELPERS ################################
@@ -131,9 +135,9 @@ public class TestResolver {
 
         assertTrue("Expected variables size " + variableNames.length + " but was " + variables.size(),  //$NON-NLS-1$ //$NON-NLS-2$
                    variables.size() == variableNames.length);
-        Iterator variablesIter = variables.iterator();
+        Iterator<ElementSymbol> variablesIter = variables.iterator();
         for (int i=0; variablesIter.hasNext(); i++) {
-            ElementSymbol variable = (ElementSymbol)variablesIter.next();
+            ElementSymbol variable = variablesIter.next();
             assertTrue("Expected variable name " + variableNames[i] + " but was " + variable.getName(),  //$NON-NLS-1$ //$NON-NLS-2$
                        variable.getName().equalsIgnoreCase(variableNames[i]));
         }
@@ -277,18 +281,13 @@ public class TestResolver {
 	
 	private void helpCheckFrom(Query query, String[] groupIDs) { 
 		From from = query.getFrom();
-		List groups = from.getGroups();			
+		List<GroupSymbol> groups = from.getGroups();			
 		assertEquals("Wrong number of group IDs: ", groupIDs.length, groups.size()); //$NON-NLS-1$
 		
 		for(int i=0; i<groups.size(); i++) { 
-			GroupSymbol group = (GroupSymbol) groups.get(i);
-            String matchString = null;
-            if(group.getMetadataID() instanceof FakeMetadataObject) {
-                matchString = ((FakeMetadataObject)group.getMetadataID()).getName();
-            } else if(group.getMetadataID() instanceof TempMetadataID) {
-                matchString = ((TempMetadataID)group.getMetadataID()).getID();
-            }
-			assertEquals("Group ID does not match: ", groupIDs[i].toUpperCase(), matchString.toUpperCase()); //$NON-NLS-1$
+			GroupSymbol group = groups.get(i);
+			assertNotNull(group.getMetadataID());
+			assertEquals("Group ID does not match: ", groupIDs[i].toUpperCase(), group.getNonCorrelationName().toUpperCase()); //$NON-NLS-1$
 		}
 	}
 	
@@ -304,17 +303,22 @@ public class TestResolver {
 	}
 
 	private void helpCheckElements(LanguageObject langObj, String[] elementNames, String[] elementIDs) {
-		List elements = new ArrayList();
+		List<ElementSymbol> elements = new ArrayList<ElementSymbol>();
 		ElementCollectorVisitor.getElements(langObj, elements);
 		assertEquals("Wrong number of elements: ", elementNames.length, elements.size()); //$NON-NLS-1$
 
 		for(int i=0; i<elements.size(); i++) { 
-			ElementSymbol symbol = (ElementSymbol) elements.get(i);
+			ElementSymbol symbol = elements.get(i);
 			assertEquals("Element name does not match: ", elementNames[i].toUpperCase(), symbol.getName().toUpperCase()); //$NON-NLS-1$
 			
-			FakeMetadataObject elementID = (FakeMetadataObject) symbol.getMetadataID();
-			assertNotNull("ElementSymbol " + symbol + " was not resolved and has no metadataID", elementID); //$NON-NLS-1$ //$NON-NLS-2$
-			assertEquals("ElementID name does not match: ", elementIDs[i].toUpperCase(), elementID.getName().toUpperCase()); //$NON-NLS-1$
+			Object elementID = symbol.getMetadataID();
+			try {
+				String name = metadata.getFullName(elementID);
+				assertNotNull("ElementSymbol " + symbol + " was not resolved and has no metadataID", elementID); //$NON-NLS-1$ //$NON-NLS-2$
+				assertEquals("ElementID name does not match: ", elementIDs[i].toUpperCase(), name.toUpperCase()); //$NON-NLS-1$
+			} catch (TeiidComponentException e) {
+				throw new RuntimeException(e);
+			}
 		}
 	}
     
@@ -390,84 +394,84 @@ public class TestResolver {
 	}
 
     @Test public void testGroupWithVDB() {
-        String sql = "SELECT e1 FROM myvdb.pm1.g1"; //$NON-NLS-1$
+        String sql = "SELECT e1 FROM example1.pm1.g1"; //$NON-NLS-1$
         Query resolvedQuery = (Query) helpResolve(sql);
         helpCheckFrom(resolvedQuery, new String[] { "pm1.g1" }); //$NON-NLS-1$
         assertEquals("Resolved string form was incorrect ", sql, resolvedQuery.toString()); //$NON-NLS-1$
     }
 
     @Test public void testAliasedGroupWithVDB() {
-        String sql = "SELECT e1 FROM myvdb.pm1.g1 AS x"; //$NON-NLS-1$
+        String sql = "SELECT e1 FROM example1.pm1.g1 AS x"; //$NON-NLS-1$
         Query resolvedQuery = (Query) helpResolve(sql);
         helpCheckFrom(resolvedQuery, new String[] { "pm1.g1" }); //$NON-NLS-1$
         assertEquals("Resolved string form was incorrect ", sql, resolvedQuery.toString());         //$NON-NLS-1$
     }
     
     @Test public void testPartiallyQualifiedGroup1() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
         String sql = "SELECT e1 FROM cat2.cat3.g1"; //$NON-NLS-1$
         Query resolvedQuery = (Query) helpResolve(sql);
         helpCheckFrom(resolvedQuery, new String[] { "pm1.cat1.cat2.cat3.g1" }); //$NON-NLS-1$
     }    
     
     @Test public void testPartiallyQualifiedGroup2() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
         String sql = "SELECT e1 FROM cat1.g2"; //$NON-NLS-1$
         Query resolvedQuery = (Query) helpResolve(sql);
         helpCheckFrom(resolvedQuery, new String[] { "pm1.cat1.g2" }); //$NON-NLS-1$
     }
     
     @Test public void testPartiallyQualifiedGroup3() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
         String sql = "SELECT e1 FROM cat1.cat2.cat3.g1"; //$NON-NLS-1$
         Query resolvedQuery = (Query) helpResolve(sql);
         helpCheckFrom(resolvedQuery, new String[] { "pm1.cat1.cat2.cat3.g1" }); //$NON-NLS-1$
     }
     
     @Test public void testPartiallyQualifiedGroup4() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
         String sql = "SELECT e1 FROM cat2.g2"; //$NON-NLS-1$
         Query resolvedQuery = (Query) helpResolve(sql);
         helpCheckFrom(resolvedQuery, new String[] { "pm2.cat2.g2" }); //$NON-NLS-1$
     }
     
     @Test public void testPartiallyQualifiedGroup5() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
         String sql = "SELECT e1 FROM cat2.g3"; //$NON-NLS-1$
         Query resolvedQuery = (Query) helpResolve(sql);
         helpCheckFrom(resolvedQuery, new String[] { "pm1.cat2.g3" }); //$NON-NLS-1$
     }    
     
     @Test public void testPartiallyQualifiedGroup6() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
         String sql = "SELECT e1 FROM cat1.g1"; //$NON-NLS-1$
         Query resolvedQuery = (Query) helpResolve(sql);
         helpCheckFrom(resolvedQuery, new String[] { "pm2.cat1.g1" }); //$NON-NLS-1$
     }    
     
     @Test public void testPartiallyQualifiedGroup7() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
         String sql = "SELECT e1 FROM g4"; //$NON-NLS-1$
         Query resolvedQuery = (Query) helpResolve(sql);
-        helpCheckFrom(resolvedQuery, new String[] { "pm2.g4" }); //$NON-NLS-1$
+        helpCheckFrom(resolvedQuery, new String[] { "pm3.g4" }); //$NON-NLS-1$
     }    
     
     @Test public void testPartiallyQualifiedGroup8() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
         String sql = "SELECT e1 FROM pm2.g3"; //$NON-NLS-1$
         Query resolvedQuery = (Query) helpResolve(sql);
         helpCheckFrom(resolvedQuery, new String[] { "pm2.g3" }); //$NON-NLS-1$
     }
     
     @Test public void testPartiallyQualifiedGroupWithAlias() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
         String sql = "SELECT X.e1 FROM cat2.cat3.g1 as X"; //$NON-NLS-1$
         Query resolvedQuery = (Query) helpResolve(sql);
         helpCheckFrom(resolvedQuery, new String[] { "pm1.cat1.cat2.cat3.g1" }); //$NON-NLS-1$
     } 
     
     @Test public void testPartiallyQualifiedElement1() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
         String sql = "SELECT cat2.cat3.g1.e1 FROM cat2.cat3.g1"; //$NON-NLS-1$
         Query resolvedQuery = (Query) helpResolve(sql);
         helpCheckSelect(resolvedQuery, new String[] { "pm1.cat1.cat2.cat3.g1.e1" }); //$NON-NLS-1$
@@ -475,7 +479,7 @@ public class TestResolver {
 
     /** defect 12536 */
     @Test public void testPartiallyQualifiedElement2() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
         String sql = "SELECT cat3.g1.e1 FROM cat2.cat3.g1"; //$NON-NLS-1$
         Query resolvedQuery = (Query) helpResolve(sql);
         helpCheckSelect(resolvedQuery, new String[] { "pm1.cat1.cat2.cat3.g1.e1" }); //$NON-NLS-1$
@@ -483,7 +487,7 @@ public class TestResolver {
     
     /** defect 12536 */
     @Test public void testPartiallyQualifiedElement3() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
         String sql = "SELECT cat3.g1.e1 FROM cat2.cat3.g1, cat1.g2"; //$NON-NLS-1$
         Query resolvedQuery = (Query) helpResolve(sql);
         helpCheckSelect(resolvedQuery, new String[] { "pm1.cat1.cat2.cat3.g1.e1" }); //$NON-NLS-1$
@@ -491,86 +495,86 @@ public class TestResolver {
     
     /** defect 12536 */
     @Test public void testPartiallyQualifiedElement4() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
         String sql = "SELECT cat3.g1.e1, cat1.g2.e1 FROM cat2.cat3.g1, cat1.g2"; //$NON-NLS-1$
         Query resolvedQuery = (Query) helpResolve(sql);
         helpCheckSelect(resolvedQuery, new String[] { "pm1.cat1.cat2.cat3.g1.e1", "pm1.cat1.g2.e1" }); //$NON-NLS-1$ //$NON-NLS-2$
     } 
     
     @Test public void testPartiallyQualifiedElement5() {
-    	metadata = FakeMetadataFactory.example3();
-        String sql = "SELECT cat3.g1.e1, cat1.g2.e1 FROM myvdb.pm1.cat1.cat2.cat3.g1, pm1.cat1.g2"; //$NON-NLS-1$
+    	metadata = RealMetadataFactory.example3();
+        String sql = "SELECT cat3.g1.e1, cat1.g2.e1 FROM example3.pm1.cat1.cat2.cat3.g1, pm1.cat1.g2"; //$NON-NLS-1$
         Query resolvedQuery = (Query) helpResolve(sql);
         helpCheckSelect(resolvedQuery, new String[] { "pm1.cat1.cat2.cat3.g1.e1", "pm1.cat1.g2.e1" }); //$NON-NLS-1$ //$NON-NLS-2$
     } 
     
     /** defect 12536 */
     @Test public void testPartiallyQualifiedElement6() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
         String sql = "SELECT cat3.g1.e1, e2 FROM cat2.cat3.g1"; //$NON-NLS-1$
         Query resolvedQuery = (Query) helpResolve(sql);
 	    helpCheckSelect(resolvedQuery, new String[] { "pm1.cat1.cat2.cat3.g1.e1", "pm1.cat1.cat2.cat3.g1.e2" }); //$NON-NLS-1$ //$NON-NLS-2$
     } 
     
     @Test public void testPartiallyQualifiedElement7() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
         String sql = "SELECT cat3.g1.e1, cat2.cat3.g1.e2, g1.e3 FROM pm1.cat1.cat2.cat3.g1"; //$NON-NLS-1$
         Query resolvedQuery = (Query) helpResolve(sql);
         helpCheckSelect(resolvedQuery, new String[] { "pm1.cat1.cat2.cat3.g1.e1", "pm1.cat1.cat2.cat3.g1.e2", "pm1.cat1.cat2.cat3.g1.e3" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     } 
     
     @Test public void testFailPartiallyQualifiedGroup1() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
 		helpResolveException("SELECT e1 FROM cat3.g1"); //$NON-NLS-1$
     }
     
     @Test public void testFailPartiallyQualifiedGroup2() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
 		helpResolveException("SELECT e1 FROM g1"); //$NON-NLS-1$
     }
     
     @Test public void testFailPartiallyQualifiedGroup3() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
 		helpResolveException("SELECT e1 FROM g2"); //$NON-NLS-1$
     }
     
     @Test public void testFailPartiallyQualifiedGroup4() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
 		helpResolveException("SELECT e1 FROM g3"); //$NON-NLS-1$
     }
     
     @Test public void testFailPartiallyQualifiedGroup5() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
 		helpResolveException("SELECT e1 FROM g5");		 //$NON-NLS-1$
     }
     
     @Test public void testFailPartiallyQualifiedElement1() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
 		helpResolveException("SELECT cat3.g1.e1 FROM pm1.cat1.cat2.cat3.g1, pm2.cat3.g1"); //$NON-NLS-1$
     }
     
     @Test public void testFailPartiallyQualifiedElement2() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
 		helpResolveException("SELECT g1.e1 FROM pm1.cat1.cat2.cat3.g1, pm2.cat3.g1"); //$NON-NLS-1$
     }
     
     @Test public void testFailPartiallyQualifiedElement3() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
 		helpResolveException("SELECT cat3.g1.e1 FROM pm2.cat2.g2, pm1.cat2.g3"); //$NON-NLS-1$
     }
     
     @Test public void testFailPartiallyQualifiedElement4() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
 		helpResolveException("SELECT cat3.g1.e1 FROM pm2.cat2.g2"); //$NON-NLS-1$
     }
     
     @Test public void testFailPartiallyQualifiedElement5() {
-    	metadata = FakeMetadataFactory.example3();
+    	metadata = RealMetadataFactory.example3();
 		helpResolveException("SELECT cat3.g1.e1 FROM g1"); //$NON-NLS-1$
     }    
 
     @Test public void testElementWithVDB() {
-        String sql = "SELECT myvdb.pm1.g1.e1 FROM pm1.g1"; //$NON-NLS-1$
+        String sql = "SELECT example1.pm1.g1.e1 FROM pm1.g1"; //$NON-NLS-1$
         Query resolvedQuery = (Query) helpResolve(sql);
         helpCheckSelect(resolvedQuery, new String[] { "pm1.g1.e1" }); //$NON-NLS-1$
         helpCheckElements(resolvedQuery.getSelect(),
@@ -580,7 +584,7 @@ public class TestResolver {
     }
 
     @Test public void testAliasedElementWithVDB() {
-        Query resolvedQuery = (Query) helpResolve("SELECT myvdb.pm1.g1.e1 AS x FROM pm1.g1"); //$NON-NLS-1$
+        Query resolvedQuery = (Query) helpResolve("SELECT example1.pm1.g1.e1 AS x FROM pm1.g1"); //$NON-NLS-1$
         helpCheckSelect(resolvedQuery, new String[] { "x" }); //$NON-NLS-1$
         helpCheckElements(resolvedQuery.getSelect(),
             new String[] { "pm1.g1.e1" }, //$NON-NLS-1$
@@ -887,15 +891,15 @@ public class TestResolver {
         StoredProcedure proc = (StoredProcedure) helpResolve("EXEC pm1.sq2('abc')"); //$NON-NLS-1$
         
         // Check number of resolved parameters
-        List params = proc.getParameters();
+        List<SPParameter> params = proc.getParameters();
         assertEquals("Did not get expected parameter count", 2, params.size()); //$NON-NLS-1$
         
         // Check resolved parameters
-        SPParameter param1 = (SPParameter) params.get(0);
-        helpCheckParameter(param1, ParameterInfo.RESULT_SET, 1, "pm1.sq2.ret", java.sql.ResultSet.class, null); //$NON-NLS-1$
+        SPParameter param1 = params.get(1);
+        helpCheckParameter(param1, ParameterInfo.RESULT_SET, 2, "pm1.sq2.ret", java.sql.ResultSet.class, null); //$NON-NLS-1$
 
-        SPParameter param2 = (SPParameter) params.get(1);
-        helpCheckParameter(param2, ParameterInfo.IN, 2, "pm1.sq2.in", DataTypeManager.DefaultDataClasses.STRING, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+        SPParameter param2 = params.get(0);
+        helpCheckParameter(param2, ParameterInfo.IN, 1, "pm1.sq2.in", DataTypeManager.DefaultDataClasses.STRING, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
 	/**
@@ -911,18 +915,18 @@ public class TestResolver {
 		StoredProcedure proc = (StoredProcedure) helpResolve("EXEC pm1.sq3a('abc', 123)"); //$NON-NLS-1$
 		
 		// Check number of resolved parameters
-		List params = proc.getParameters();
-		assertEquals("Did not get expected parameter count", 2, params.size()); //$NON-NLS-1$
+		List<SPParameter> params = proc.getParameters();
+		assertEquals("Did not get expected parameter count", 3, params.size()); //$NON-NLS-1$
         
 		// Check resolved parameters
-		SPParameter param1 = (SPParameter) params.get(0);
+		SPParameter param1 = params.get(0);
 		helpCheckParameter(param1, ParameterInfo.IN, 1, "pm1.sq3a.in", DataTypeManager.DefaultDataClasses.STRING, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 
-		SPParameter param2 = (SPParameter) params.get(1);
-		helpCheckParameter(param2, ParameterInfo.IN, 3, "pm1.sq3a.in2", DataTypeManager.DefaultDataClasses.INTEGER, new Constant(new Integer(123))); //$NON-NLS-1$
+		SPParameter param2 = params.get(1);
+		helpCheckParameter(param2, ParameterInfo.IN, 2, "pm1.sq3a.in2", DataTypeManager.DefaultDataClasses.INTEGER, new Constant(new Integer(123))); //$NON-NLS-1$
 	}    
     
-    private void helpCheckParameter(SPParameter param, int paramType, int index, String name, Class type, Expression expr) {
+    private void helpCheckParameter(SPParameter param, int paramType, int index, String name, Class<?> type, Expression expr) {
         assertEquals("Did not get expected parameter type", paramType, param.getParameterType()); //$NON-NLS-1$
         assertEquals("Did not get expected index for param", index, param.getIndex()); //$NON-NLS-1$
         assertEquals("Did not get expected name for param", name, param.getName()); //$NON-NLS-1$
@@ -1116,7 +1120,7 @@ public class TestResolver {
             "WHERE (y.IntKey >= 10) AND (y.IntKey < 30) " + //$NON-NLS-1$
             "ORDER BY IntKey, FloatNum";  //$NON-NLS-1$
 
-        helpResolve(sql, FakeMetadataFactory.exampleBQTCached());
+        helpResolve(sql, RealMetadataFactory.exampleBQTCached());
     }
 
     @Test public void testSubQueryINClause1(){
@@ -1334,7 +1338,7 @@ public class TestResolver {
         String tgtTypeName = DataTypeManager.DefaultDataTypes.DATE;
         Expression expression = new Constant("2003-02-27"); //$NON-NLS-1$
         
-		FunctionLibrary library = FakeMetadataFactory.SFM.getSystemFunctionLibrary();                         
+		FunctionLibrary library = RealMetadataFactory.SFM.getSystemFunctionLibrary();                         
 		FunctionDescriptor fd = library.findFunction(FunctionLibrary.CONVERT, new Class[] { srcType, DataTypeManager.DefaultDataClasses.STRING });
 
 		Function conversion = new Function(fd.getName(), new Expression[] { expression, new Constant(tgtTypeName) });
@@ -1370,7 +1374,7 @@ public class TestResolver {
 		String tgtTypeName = DataTypeManager.DefaultDataTypes.DATE;
 		Expression expression = new Constant("2003-02-27"); //$NON-NLS-1$
         
-		FunctionLibrary library = FakeMetadataFactory.SFM.getSystemFunctionLibrary();                        
+		FunctionLibrary library = RealMetadataFactory.SFM.getSystemFunctionLibrary();                        
 		FunctionDescriptor fd = library.findFunction(FunctionLibrary.CONVERT, new Class[] { srcType, DataTypeManager.DefaultDataClasses.STRING });
 
 		Function conversion = new Function(fd.getName(), new Expression[] { expression, new Constant(tgtTypeName) });
@@ -1488,13 +1492,13 @@ public class TestResolver {
 	@Test public void testLookupFunctionVirtualGroup() throws Exception {     
 		String sql = "SELECT lookup('vm1.g1', 'e1', 'e2', e2)  FROM vm1.g1 "; //$NON-NLS-1$
 		Query command = (Query) helpParse(sql);
-		QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());  		
+		QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());  		
 	}
 	
 	@Test public void testLookupFunctionPhysicalGroup() throws Exception {     
 		String sql = "SELECT lookup('pm1.g1', 'e1', 'e2', e2)  FROM pm1.g1 "; //$NON-NLS-1$
 		Query command = (Query) helpParse(sql);
-		QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());
+		QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());
 	}
 	
     @Test public void testLookupFunctionFailBadKeyElement() throws Exception {
@@ -1511,15 +1515,13 @@ public class TestResolver {
 	@Test public void testNamespacedFunction() throws Exception {     
 		String sql = "SELECT namespace.func('e1')  FROM vm1.g1 "; //$NON-NLS-1$
 
-        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new FakeFunctionMetadataSource()));
-        FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
+        QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Cached().getMetadataStore(), "example1", new FunctionTree("foo", new FakeFunctionMetadataSource()));
 		
 		Query command = (Query) helpParse(sql);
 		QueryResolver.resolveCommand(command, metadata);
 		
 		command = (Query) helpParse("SELECT func('e1')  FROM vm1.g1 ");
 		QueryResolver.resolveCommand(command, metadata);  		
-		
 	}    
     
     // special test for both sides are String
@@ -1537,8 +1539,8 @@ public class TestResolver {
    
         // resolve
         try { 
-            QueryResolver.resolveCriteria(expected, FakeMetadataFactory.exampleBQTCached());
-            QueryResolver.resolveCriteria(actual, FakeMetadataFactory.exampleBQTCached());
+            QueryResolver.resolveCriteria(expected, RealMetadataFactory.exampleBQTCached());
+            QueryResolver.resolveCriteria(actual, RealMetadataFactory.exampleBQTCached());
         } catch(TeiidException e) { 
             fail("Exception during resolution (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
         } 
@@ -1834,7 +1836,7 @@ public class TestResolver {
         //String sql = "select intkey from SmallA where user() = 'bqt2'";
 
         // Expected left expression
-        FunctionLibrary library = FakeMetadataFactory.SFM.getSystemFunctionLibrary();                          
+        FunctionLibrary library = RealMetadataFactory.SFM.getSystemFunctionLibrary();                          
         FunctionDescriptor fd = library.findFunction(FunctionLibrary.USER, new Class[] { });
         Function user = new Function(fd.getName(), new Expression[] {});
         user.setFunctionDescriptor(fd);
@@ -1890,7 +1892,7 @@ public class TestResolver {
  
     @Test public void testDefect10809(){
         String sql = "select * from LOB_TESTING_ONE where CLOB_COLUMN LIKE '%fff%'"; //$NON-NLS-1$
-        helpResolve(helpParse(sql), FakeMetadataFactory.exampleBQTCached());
+        helpResolve(helpParse(sql), RealMetadataFactory.exampleBQTCached());
     }
     
     @Test public void testNonAutoConversionOfLiteralIntegerToShort() throws Exception {       
@@ -1898,7 +1900,7 @@ public class TestResolver {
         Query command = (Query) QueryParser.getQueryParser().parseCommand("SELECT intkey FROM bqt1.smalla WHERE shortvalue = 5"); //$NON-NLS-1$
         
         // resolve
-        QueryResolver.resolveCommand(command, FakeMetadataFactory.exampleBQTCached());
+        QueryResolver.resolveCommand(command, RealMetadataFactory.exampleBQTCached());
         
         // Check whether an implicit conversion was added on the correct side
         CompareCriteria crit = (CompareCriteria) command.getCriteria();
@@ -1912,7 +1914,7 @@ public class TestResolver {
         Query command = (Query) QueryParser.getQueryParser().parseCommand("SELECT intkey FROM bqt1.smalla WHERE 5 = shortvalue"); //$NON-NLS-1$
         
         // resolve
-        QueryResolver.resolveCommand(command, FakeMetadataFactory.exampleBQTCached());
+        QueryResolver.resolveCommand(command, RealMetadataFactory.exampleBQTCached());
         
         // Check whether an implicit conversion was added on the correct side
         CompareCriteria crit = (CompareCriteria) command.getCriteria();
@@ -1974,30 +1976,23 @@ public class TestResolver {
         assertTrue(((Expression)command.getValues().get(0)).getType() == DataTypeManager.DefaultDataClasses.SHORT);
     }
     
-    public static FakeMetadataFacade example_12968() { 
+    public static TransformationMetadata example_12968() { 
+    	MetadataStore metadataStore = new MetadataStore();
         // Create models
-        FakeMetadataObject pm1 = FakeMetadataFactory.createPhysicalModel("myModel"); //$NON-NLS-1$
-        FakeMetadataObject pm2 = FakeMetadataFactory.createPhysicalModel("myModel2"); //$NON-NLS-1$
+        Schema pm1 = RealMetadataFactory.createPhysicalModel("myModel", metadataStore); //$NON-NLS-1$
+        Schema pm2 = RealMetadataFactory.createPhysicalModel("myModel2", metadataStore); //$NON-NLS-1$
         
-        FakeMetadataObject pm1g1 = FakeMetadataFactory.createPhysicalGroup("myModel.myTable", pm1); //$NON-NLS-1$
-        FakeMetadataObject pm2g1 = FakeMetadataFactory.createPhysicalGroup("myModel2.mySchema.myTable2", pm2); //$NON-NLS-1$
+        Table pm1g1 = RealMetadataFactory.createPhysicalGroup("myTable", pm1); //$NON-NLS-1$
+        Table pm2g1 = RealMetadataFactory.createPhysicalGroup("mySchema.myTable2", pm2); //$NON-NLS-1$
         
-        List pm1g1e = FakeMetadataFactory.createElements(pm1g1, 
+        RealMetadataFactory.createElements(pm1g1, 
             new String[] { "myColumn", "myColumn2" }, //$NON-NLS-1$ //$NON-NLS-2$ 
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
-        List pm2g1e = FakeMetadataFactory.createElements(pm2g1, 
+        RealMetadataFactory.createElements(pm2g1, 
             new String[] { "myColumn", "myColumn2" }, //$NON-NLS-1$ //$NON-NLS-2$ 
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
         
-        // Add all objects to the store
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(pm1);
-        store.addObject(pm1g1);     
-        store.addObjects(pm1g1e);
-        store.addObject(pm2g1);     
-        store.addObjects(pm2g1e);
-        
-        return new FakeMetadataFacade(store);
+        return RealMetadataFactory.createTransformationMetadata(metadataStore, "12968");
     }
         
     @Test public void testDefect12968_union() {
@@ -2109,7 +2104,7 @@ public class TestResolver {
     @Test public void testProcParamComparison_defect13653() {
         String userSql = "SELECT * FROM (EXEC mmspTest1.MMSP5('a')) AS a, (EXEC mmsptest1.mmsp6('b')) AS b"; //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         AnalysisRecord analysis = AnalysisRecord.createNonRecordingRecord();
         
         Query query = (Query) helpResolve(userSql, metadata);
@@ -2140,7 +2135,7 @@ public class TestResolver {
         String userSql = "SELECT null as x"; //$NON-NLS-1$
         Query query = (Query)helpParse(userSql);
         
-        QueryResolver.resolveCommand(query, FakeMetadataFactory.exampleBQTCached());
+        QueryResolver.resolveCommand(query, RealMetadataFactory.exampleBQTCached());
         
         // Check type of resolved null constant
         SingleElementSymbol symbol = (SingleElementSymbol) query.getSelect().getSymbols().get(0);
@@ -2195,7 +2190,7 @@ public class TestResolver {
     @Test public void testUnionInSubquery() throws Exception {
         String sql = "SELECT StringKey FROM (SELECT BQT2.SmallB.StringKey FROM BQT2.SmallB union SELECT convert(BQT2.SmallB.FloatNum, string) FROM BQT2.SmallB) x";  //$NON-NLS-1$
         Command command = QueryParser.getQueryParser().parseCommand(sql);
-        QueryResolver.resolveCommand(command, FakeMetadataFactory.exampleBQTCached());
+        QueryResolver.resolveCommand(command, RealMetadataFactory.exampleBQTCached());
     }
 
     @Test public void testParameterError() throws Exception {
@@ -2357,7 +2352,7 @@ public class TestResolver {
 
     @Test public void testCreateAlreadyExists() {
         String sql = "CREATE LOCAL TEMPORARY TABLE g1 (column1 string)"; //$NON-NLS-1$
-        helpResolveException(sql, "Cannot create temporary table \"g1\". A table with the same name already exists."); //$NON-NLS-1$
+        helpResolveException(sql, "Cannot create temporary table \"g1\". An object with the same name already exists."); //$NON-NLS-1$
     }
 
     @Test public void testCreateImplicitName() {
@@ -2367,7 +2362,7 @@ public class TestResolver {
     }
     
     @Test public void testCreateInProc() throws Exception{
-        helpResolveException("CREATE VIRTUAL PROCEDURE BEGIN create local temporary table g1(c1 string); end", "Cannot create temporary table \"g1\". A table with the same name already exists.");//$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("CREATE VIRTUAL PROCEDURE BEGIN create local temporary table g1(c1 string); end", "Cannot create temporary table \"g1\". An object with the same name already exists.");//$NON-NLS-1$ //$NON-NLS-2$
     }
     
     //this was the old virt.agg procedure.  It was defined in such a way that relied on the scope leak of #temp
@@ -2388,7 +2383,7 @@ public class TestResolver {
             + "        SELECT ID, Name, #temp.BITS AS source_bits FROM #temp;" //$NON-NLS-1$                                          
             + "END"; //$NON-NLS-1$ 
         
-        helpResolveException(proc, FakeMetadataFactory.exampleBitwise(), "Group does not exist: #temp"); //$NON-NLS-1$
+        helpResolveException(proc, RealMetadataFactory.exampleBitwise(), "Group does not exist: #temp"); //$NON-NLS-1$
     }
     
     @Test public void testDrop() {
@@ -2530,21 +2525,17 @@ public class TestResolver {
     }
     
     @Test public void testExecWithDuplicateNames() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        
-        FakeMetadataStore store = metadata.getStore();
-        
-        FakeMetadataObject pm1 = store.findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs2", pm1, new String[] { "in", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1 WHERE e1=pm1.sq2.in; END"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject sq2 = FakeMetadataFactory.createVirtualProcedure("pm1.sq2", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
+        MetadataStore metadataStore = new MetadataStore();
 
-        store.addObject(rs2);
-        store.addObject(sq2);
+        Schema pm1 = RealMetadataFactory.createPhysicalModel("pm1", metadataStore);
         
+        ColumnSet<Procedure> rs2 = RealMetadataFactory.createResultSet("rs2", new String[] { "in", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ProcedureParameter rs2p2 = RealMetadataFactory.createParameter("in", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING);  //$NON-NLS-1$
+        Procedure sq2 = RealMetadataFactory.createStoredProcedure("sq2", pm1, Arrays.asList(rs2p2));  //$NON-NLS-1$
+        sq2.setResultSet(rs2);
+
+        QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "example1");
+
         helpResolveException("select * from pm1.sq2", metadata, "Cannot access procedure pm1.sq2 using table semantics since the parameter and result set column names are not all unique."); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
@@ -2627,6 +2618,11 @@ public class TestResolver {
         helpResolveException(sql, "Cannot convert insert query expression projected symbol '3' of type java.lang.Integer to insert column 'pm1.g1.e3' of type java.lang.Boolean"); //$NON-NLS-1$
     }
     
+    @Test public void testInsertWithQueryImplicitWithColumns() {
+        String sql = "Insert into #X (x) select 1 as x"; //$NON-NLS-1$
+        helpResolve(sql); //$NON-NLS-1$
+    }
+    
     @Test public void testInsertWithQueryImplicitWithoutColumns() {
         String sql = "Insert into #X select 1 as x, 2 as y, 3 as z"; //$NON-NLS-1$
         helpResolve(sql); //$NON-NLS-1$
@@ -2670,11 +2666,11 @@ public class TestResolver {
     @Test public void testCase6319() throws QueryResolverException, TeiidComponentException {
         String sql = "select floatnum from bqt1.smalla group by floatnum having sum(floatnum) between 51.0 and 100.0 "; //$NON-NLS-1$
         Query query = (Query)helpParse(sql);
-        QueryResolver.resolveCommand(query, FakeMetadataFactory.exampleBQTCached());
+        QueryResolver.resolveCommand(query, RealMetadataFactory.exampleBQTCached());
     }
 
     @Test public void testUniqeNamesWithInlineView() {
-        helpResolveException("select * from (select count(intNum) a, count(stringKey) b, bqt1.smalla.intkey as b from bqt1.smalla group by bqt1.smalla.intkey) q1 order by q1.a", FakeMetadataFactory.exampleBQTCached(), "Cannot create group 'q1' with multiple columns named 'b'"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("select * from (select count(intNum) a, count(stringKey) b, bqt1.smalla.intkey as b from bqt1.smalla group by bqt1.smalla.intkey) q1 order by q1.a", RealMetadataFactory.exampleBQTCached(), "Cannot create group 'q1' with multiple columns named 'b'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
             
     @Test public void testResolveOldProcRelational() {
@@ -2702,13 +2698,13 @@ public class TestResolver {
 	@Test public void testCallableStatementTooManyParameters() throws Exception {
 		String sql = "{call pm4.spTest9(?, ?)}"; //$NON-NLS-1$
 		
-		TestResolver.helpResolveException(sql, FakeMetadataFactory.exampleBQTCached(), "Error Code:ERR.015.008.0007 Message:Incorrect number of parameters specified on the stored procedure pm4.spTest9 - expected 1 but got 2"); //$NON-NLS-1$
+		TestResolver.helpResolveException(sql, RealMetadataFactory.exampleBQTCached(), "Error Code:ERR.015.008.0007 Message:Incorrect number of parameters specified on the stored procedure pm4.spTest9 - expected 1 but got 2"); //$NON-NLS-1$
 	}	
 	    
     @Test public void testUpdateSetClauseReferenceType() {
     	String sql = "UPDATE pm1.g1 SET pm1.g1.e1 = 1, pm1.g1.e2 = ?;"; //$NON-NLS-1$
     	
-    	Update update = (Update)helpResolve(sql, FakeMetadataFactory.example1Cached());
+    	Update update = (Update)helpResolve(sql, RealMetadataFactory.example1Cached());
     	
     	Expression ref = update.getChangeList().getClauses().get(1).getValue();
     	assertTrue(ref instanceof Reference);
@@ -2718,26 +2714,26 @@ public class TestResolver {
     @Test public void testNoTypeCriteria() {
     	String sql = "select * from pm1.g1 where ? = ?"; //$NON-NLS-1$
     	
-    	helpResolveException(sql, FakeMetadataFactory.example1Cached(), "Error Code:ERR.015.008.0026 Message:Expression '? = ?' has a parameter with non-determinable type information.  The use of an explicit convert may be necessary."); //$NON-NLS-1$
+    	helpResolveException(sql, RealMetadataFactory.example1Cached(), "Error Code:ERR.015.008.0026 Message:Expression '? = ?' has a parameter with non-determinable type information.  The use of an explicit convert may be necessary."); //$NON-NLS-1$
     }
     
     @Test public void testReferenceInSelect() {
     	String sql = "select ?, e1 from pm1.g1"; //$NON-NLS-1$
-    	Query command = (Query)helpResolve(sql, FakeMetadataFactory.example1Cached());
+    	Query command = (Query)helpResolve(sql, RealMetadataFactory.example1Cached());
     	assertEquals(DataTypeManager.DefaultDataClasses.STRING, command.getProjectedSymbols().get(0).getType());
     }
     
     @Test public void testReferenceInSelect1() {
     	String sql = "select convert(?, integer), e1 from pm1.g1"; //$NON-NLS-1$
     	
-    	Query command = (Query)helpResolve(sql, FakeMetadataFactory.example1Cached());
+    	Query command = (Query)helpResolve(sql, RealMetadataFactory.example1Cached());
     	assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, command.getProjectedSymbols().get(0).getType());
     }
     
     @Test public void testUnionWithObjectTypeConversion() {
     	String sql = "select convert(null, xml) from pm1.g1 union all select 1"; //$NON-NLS-1$
     	
-    	SetQuery query = (SetQuery)helpResolve(sql, FakeMetadataFactory.example1Cached());
+    	SetQuery query = (SetQuery)helpResolve(sql, RealMetadataFactory.example1Cached());
     	assertEquals(DataTypeManager.DefaultDataClasses.OBJECT, ((SingleElementSymbol)query.getProjectedSymbols().get(0)).getType());
     }
     
@@ -2780,7 +2776,7 @@ public class TestResolver {
     }
     
     @Test public void testSPOutParamWithExec() {
-    	StoredProcedure proc = (StoredProcedure)helpResolve("exec pm2.spTest8(1)", FakeMetadataFactory.exampleBQTCached());
+    	StoredProcedure proc = (StoredProcedure)helpResolve("exec pm2.spTest8(1)", RealMetadataFactory.exampleBQTCached());
     	assertEquals(2, proc.getProjectedSymbols().size());
     }
 
@@ -2789,21 +2785,21 @@ public class TestResolver {
      * That hack is handled by the PreparedStatementRequest
      */
     @Test public void testSPOutParamWithCallableStatement() {
-    	StoredProcedure proc = (StoredProcedure)helpResolve("{call pm2.spTest8(1)}", FakeMetadataFactory.exampleBQTCached());
+    	StoredProcedure proc = (StoredProcedure)helpResolve("{call pm2.spTest8(1)}", RealMetadataFactory.exampleBQTCached());
     	assertEquals(3, proc.getProjectedSymbols().size());
     }
     
     @Test public void testOutWithWrongType() {
-    	helpResolveException("exec pm2.spTest8(inkey=>1, outkey=>{t '12:00:00'})", FakeMetadataFactory.exampleBQTCached());
+    	helpResolveException("exec pm2.spTest8(inkey=>1, outkey=>{t '12:00:00'})", RealMetadataFactory.exampleBQTCached());
     }
     
     @Test public void testProcRelationalWithOutParam() {
-    	Query proc = (Query)helpResolve("select * from pm2.spTest8 where inkey = 1", FakeMetadataFactory.exampleBQTCached());
+    	Query proc = (Query)helpResolve("select * from pm2.spTest8 where inkey = 1", RealMetadataFactory.exampleBQTCached());
     	assertEquals(3, proc.getProjectedSymbols().size());
     }
     
     @Test public void testSPReturnParamWithNoResultSet() {
-    	StoredProcedure proc = (StoredProcedure)helpResolve("exec pm4.spTest9(1)", FakeMetadataFactory.exampleBQTCached());
+    	StoredProcedure proc = (StoredProcedure)helpResolve("exec pm4.spTest9(1)", RealMetadataFactory.exampleBQTCached());
     	assertEquals(1, proc.getProjectedSymbols().size());
     }
     
@@ -2930,7 +2926,7 @@ public class TestResolver {
 			String userUpdateStr) throws QueryParserException,
 			QueryResolverException, TeiidComponentException,
 			QueryMetadataException {
-		FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+		QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(TriggerEvent.UPDATE, procedure);
 
         ProcedureContainer userCommand = (ProcedureContainer)QueryParser.getQueryParser().parseCommand(userUpdateStr);
         QueryResolver.resolveCommand(userCommand, metadata);

@@ -29,29 +29,27 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.DataPolicy.PermissionType;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.function.FunctionLibrary;
-import org.teiid.query.function.FunctionTree;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
@@ -60,6 +58,11 @@ import org.teiid.query.validator.ValidatorReport;
 public class TestAuthorizationValidationVisitor {
 
     public static final String CONN_ID = "connID"; //$NON-NLS-1$
+    private static CommandContext context = new CommandContext();
+    
+    @BeforeClass public static void oneTimeSetup() {
+    	context.setSession(new SessionMetadata());
+    }
 
     PermissionMetaData addResource(PermissionType type, boolean flag, String resource) {
     	PermissionMetaData p = new PermissionMetaData();
@@ -133,7 +136,7 @@ public class TestAuthorizationValidationVisitor {
         svc.addPermission(addResource(DataPolicy.PermissionType.DELETE, "pm1.g4.e2")); //$NON-NLS-1$
 
         svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1.sq1")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.READ, "foo.xyz")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1.xyz")); //$NON-NLS-1$
         
         return svc;
     }
@@ -153,6 +156,9 @@ public class TestAuthorizationValidationVisitor {
         // pm3.g2
         svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm3.g2.e1")); //$NON-NLS-1$
         svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm3.g2.e2")); //$NON-NLS-1$
+        
+        svc.addPermission(addResource(DataPolicy.PermissionType.READ, "xmltest.doc1")); //$NON-NLS-1$
+        
         svc.setAllowCreateTemporaryTables(false);
         return svc;
     }
@@ -174,7 +180,7 @@ public class TestAuthorizationValidationVisitor {
         HashMap<String, DataPolicy> policies = new HashMap<String, DataPolicy>();
         policies.put(policy.getName(), policy);
         
-        AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(policies, "test"); //$NON-NLS-1$
+        AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(policies, context); //$NON-NLS-1$
         visitor.setAllowFunctionCallsByDefault(false);
         ValidatorReport report = Validator.validate(command, metadata, visitor);
         if(report.hasItems()) {
@@ -199,133 +205,134 @@ public class TestAuthorizationValidationVisitor {
     
     @Test public void testTemp() throws Exception {
     	//allowed by default
-    	helpTest(exampleAuthSvc1(), "create local temporary table x (y string)", FakeMetadataFactory.example1Cached(), new String[] {}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+    	helpTest(exampleAuthSvc1(), "create local temporary table x (y string)", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$
     	//explicitly denied
-        helpTest(exampleAuthSvc2(), "create local temporary table x (y string)", FakeMetadataFactory.example1Cached(), new String[] {"x"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ 
+        helpTest(exampleAuthSvc2(), "create local temporary table x (y string)", RealMetadataFactory.example1Cached(), new String[] {"x"}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$
     }
     
     @Test public void testFunction() throws Exception {
-    	FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new FakeFunctionMetadataSource()));
-        FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
-    	helpTest(exampleAuthSvc1(), "SELECT e1 FROM pm1.g1 where xyz() > 0", metadata, new String[] {}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
-        helpTest(exampleAuthSvc2(), "SELECT e1, curdate() FROM pm1.g2 where xyz() > 0", metadata, new String[] {"xyz()"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ 
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+    	helpTest(exampleAuthSvc1(), "SELECT e1 FROM pm1.g1 where xyz() > 0", metadata, new String[] {}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$
+        helpTest(exampleAuthSvc2(), "SELECT e1, curdate() FROM pm1.g2 where xyz() > 0", metadata, new String[] {"xyz()"}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$ 
     }
     
     @Test public void testEverythingAccessible() throws Exception {
-        helpTest(exampleAuthSvc1(), "SELECT e1 FROM pm1.g1", FakeMetadataFactory.example1Cached(), new String[] {}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+        helpTest(exampleAuthSvc1(), "SELECT e1 FROM pm1.g1", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$
     }
     
     @Test public void testEverythingAccessible1() throws Exception {
-        helpTest(exampleAuthSvc1(), "SELECT e1 FROM (select e1 from pm1.g1) x", FakeMetadataFactory.example1Cached(), new String[] {}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+        helpTest(exampleAuthSvc1(), "SELECT e1 FROM (select e1 from pm1.g1) x", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$
     }
     
     @Test public void testEverythingAccessible2() throws Exception {
-        helpTest(exampleAuthSvc1(), "SELECT lookup('pm1.g1', 'e1', 'e1', '1'), e1 FROM (select e1 from pm1.g1) x", FakeMetadataFactory.example1Cached(), new String[] {}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+        helpTest(exampleAuthSvc1(), "SELECT lookup('pm1.g1', 'e1', 'e1', '1'), e1 FROM (select e1 from pm1.g1) x", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$
     }
 
     @Test public void testInaccesibleElement() throws Exception {        
-        helpTest(exampleAuthSvc1(), "SELECT e2 FROM pm1.g1", FakeMetadataFactory.example1Cached(), new String[] {"pm1.g1.e2"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(exampleAuthSvc1(), "SELECT e2 FROM pm1.g1", RealMetadataFactory.example1Cached(), new String[] {"pm1.g1.e2"}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testInaccesibleElement2() throws Exception {        
-        helpTest(exampleAuthSvc1(), "SELECT lookup('pm1.g1', 'e1', 'e2', '1')", FakeMetadataFactory.example1Cached(), new String[] {"pm1.g1.e2"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(exampleAuthSvc1(), "SELECT lookup('pm1.g1', 'e1', 'e2', '1')", RealMetadataFactory.example1Cached(), new String[] {"pm1.g1.e2"}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testInaccesibleGroup() throws Exception {        
-        helpTest(exampleAuthSvc1(), "SELECT e1 FROM pm1.g2", FakeMetadataFactory.example1Cached(), new String[] {"pm1.g2", "pm1.g2.e1"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(exampleAuthSvc1(), "SELECT e1 FROM pm1.g2", RealMetadataFactory.example1Cached(), new String[] {"pm1.g2", "pm1.g2.e1"}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     @Test public void testInsert() throws Exception {        
-        helpTest(exampleAuthSvc1(), "INSERT INTO pm1.g1 (e1, e2, e3, e4) VALUES ('x', 5, {b'true'}, 1.0)", FakeMetadataFactory.example1Cached(), new String[] {}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+        helpTest(exampleAuthSvc1(), "INSERT INTO pm1.g1 (e1, e2, e3, e4) VALUES ('x', 5, {b'true'}, 1.0)", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$
     }
 
     @Test public void testInsertInaccessible() throws Exception {        
-        helpTest(exampleAuthSvc1(), "INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('x', 5, {b'true'}, 1.0)", FakeMetadataFactory.example1Cached(), new String[] {"pm1.g2.e1"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(exampleAuthSvc1(), "INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('x', 5, {b'true'}, 1.0)", RealMetadataFactory.example1Cached(), new String[] {"pm1.g2.e1"}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testUpdate() throws Exception {        
-        helpTest(exampleAuthSvc1(), "UPDATE pm1.g1 SET e2 = 5", FakeMetadataFactory.example1Cached(), new String[] {}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+        helpTest(exampleAuthSvc1(), "UPDATE pm1.g1 SET e2 = 5", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$
     }
 
     @Test public void testUpdateCriteriaInaccessibleForRead() throws Exception {        
-        helpTest(exampleAuthSvc1(), "UPDATE pm1.g2 SET e2 = 5 WHERE e1 = 'x'", FakeMetadataFactory.example1Cached(), new String[] {"pm1.g2.e1"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(exampleAuthSvc1(), "UPDATE pm1.g2 SET e2 = 5 WHERE e1 = 'x'", RealMetadataFactory.example1Cached(), new String[] {"pm1.g2.e1"}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testUpdateCriteriaInaccessibleForRead1() throws Exception {        
-        helpTest(exampleAuthSvc1(), "UPDATE pm1.g2 SET e2 = cast(e1 as integer)", FakeMetadataFactory.example1Cached(), new String[] {"pm1.g2.e1"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(exampleAuthSvc1(), "UPDATE pm1.g2 SET e2 = cast(e1 as integer)", RealMetadataFactory.example1Cached(), new String[] {"pm1.g2.e1"}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testUpdateElementInaccessibleForUpdate() throws Exception {        
-        helpTest(exampleAuthSvc1(), "UPDATE pm1.g1 SET e1 = 5 WHERE e1 = 'x'", FakeMetadataFactory.example1Cached(), new String[] {"pm1.g1.e1"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(exampleAuthSvc1(), "UPDATE pm1.g1 SET e1 = 5 WHERE e1 = 'x'", RealMetadataFactory.example1Cached(), new String[] {"pm1.g1.e1"}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testDelete() throws Exception {        
-        helpTest(exampleAuthSvc1(), "DELETE FROM pm1.g1", FakeMetadataFactory.example1Cached(), new String[] {}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+        helpTest(exampleAuthSvc1(), "DELETE FROM pm1.g1", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$
     }
 
     @Test public void testDeleteCriteriaInaccesibleForRead() throws Exception {        
-        helpTest(exampleAuthSvc1(), "DELETE FROM pm1.g2 WHERE e1 = 'x'", FakeMetadataFactory.example1Cached(), new String[] {"pm1.g2.e1"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(exampleAuthSvc1(), "DELETE FROM pm1.g2 WHERE e1 = 'x'", RealMetadataFactory.example1Cached(), new String[] {"pm1.g2.e1"}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testDeleteInaccesibleGroup() throws Exception {        
-        helpTest(exampleAuthSvc1(), "DELETE FROM pm1.g3", FakeMetadataFactory.example1Cached(), new String[] {"pm1.g3"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(exampleAuthSvc1(), "DELETE FROM pm1.g3", RealMetadataFactory.example1Cached(), new String[] {"pm1.g3"}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testProc() throws Exception {
-        helpTest(exampleAuthSvc1(), "EXEC pm1.sq1()", FakeMetadataFactory.example1Cached(), new String[] {}, FakeMetadataFactory.example1VDB());         //$NON-NLS-1$
+        helpTest(exampleAuthSvc1(), "EXEC pm1.sq1()", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB());         //$NON-NLS-1$
     }
 
     @Test public void testProcInaccesible() throws Exception {
-        helpTest(exampleAuthSvc1(), "EXEC pm1.sq2('xyz')", FakeMetadataFactory.example1Cached(), new String[] {"pm1.sq2"}, FakeMetadataFactory.example1VDB());         //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(exampleAuthSvc1(), "EXEC pm1.sq2('xyz')", RealMetadataFactory.example1Cached(), new String[] {"pm1.sq2"}, RealMetadataFactory.example1VDB());         //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testSelectIntoEverythingAccessible() throws Exception {
-        helpTest(exampleAuthSvc2(), "SELECT e1, e2, e3, e4 INTO pm1.g2 FROM pm2.g1", FakeMetadataFactory.example1Cached(), new String[] {}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+        helpTest(exampleAuthSvc2(), "SELECT e1, e2, e3, e4 INTO pm1.g2 FROM pm2.g1", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$
     }
 
     @Test public void testSelectIntoTarget_e1_NotAccessible() throws Exception {
-        helpTest(exampleAuthSvc2(), "SELECT e1, e2, e3, e4 INTO pm2.g2 FROM pm2.g1", FakeMetadataFactory.example1Cached(), new String[] {"pm2.g2.e2","pm2.g2.e4","pm2.g2.e3"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        helpTest(exampleAuthSvc2(), "SELECT e1, e2, e3, e4 INTO pm2.g2 FROM pm2.g1", RealMetadataFactory.example1Cached(), new String[] {"pm2.g2.e2","pm2.g2.e4","pm2.g2.e3"}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
 
     @Test public void testSelectIntoTarget_e1e2_NotAccessible() throws Exception {
-        helpTest(exampleAuthSvc2(), "SELECT e1, e2, e3, e4 INTO pm3.g2 FROM pm2.g1", FakeMetadataFactory.example1Cached(), new String[] {"pm3.g2.e4", "pm3.g2.e3"},FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(exampleAuthSvc2(), "SELECT e1, e2, e3, e4 INTO pm3.g2 FROM pm2.g1", RealMetadataFactory.example1Cached(), new String[] {"pm3.g2.e4", "pm3.g2.e3"},RealMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
     
     @Test public void testTempTableSelectInto() throws Exception {
-        helpTest(exampleAuthSvc1(), "SELECT e1 INTO #temp FROM pm1.g1", FakeMetadataFactory.example1Cached(), new String[] {}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+        helpTest(exampleAuthSvc1(), "SELECT e1 INTO #temp FROM pm1.g1", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$
+        helpTest(exampleAuthSvc2(), "SELECT e1 INTO #temp FROM pm1.g1", RealMetadataFactory.example1Cached(), new String[] {"#temp"}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$
     }
     
     @Test public void testTempTableSelectInto1() throws Exception {
-        helpTest(exampleAuthSvc1(), "SELECT e1, e2 INTO #temp FROM pm1.g1", FakeMetadataFactory.example1Cached(), new String[] {"pm1.g1.e2"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(exampleAuthSvc1(), "SELECT e1, e2 INTO #temp FROM pm1.g1", RealMetadataFactory.example1Cached(), new String[] {"pm1.g1.e2"}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testTempTableInsert() throws Exception {
-        helpTest(exampleAuthSvc2(), "insert into #temp (e1, e2, e3, e4) values ('1', '2', '3', '4')", FakeMetadataFactory.example1Cached(), new String[] {}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+        helpTest(exampleAuthSvc1(), "insert into #temp (e1, e2, e3, e4) values ('1', '2', '3', '4')", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$
+        helpTest(exampleAuthSvc2(), "insert into #temp (e1, e2, e3, e4) values ('1', '2', '3', '4')", RealMetadataFactory.example1Cached(), new String[] {"#temp"}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$
     }
-
+    
     @Test public void testXMLAccessible() throws Exception {
-        helpTest(exampleAuthSvc2(), "select * from xmltest.doc1", FakeMetadataFactory.example1Cached(), new String[] {"xmltest.doc1"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(exampleAuthSvc2(), "select * from xmltest.doc1", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testXMLInAccessible() throws Exception {
-        helpTest(exampleAuthSvc1(), "select * from xmltest.doc1", FakeMetadataFactory.example1Cached(), new String[] {"xmltest.doc1"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(exampleAuthSvc1(), "select * from xmltest.doc1", RealMetadataFactory.example1Cached(), new String[] {"xmltest.doc1"}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testAlter() throws Exception {
-        helpTest(exampleAuthSvc1(), "alter view SmallA_2589 as select * from bqt1.smalla", RealMetadataFactory.exampleBQTCached(), new String[] {"SmallA_2589"}, FakeMetadataFactory.exampleBQTVDB()); //$NON-NLS-1$ //$NON-NLS-2$
-        helpTest(examplePolicyBQT(), "alter view SmallA_2589 as select * from bqt1.smalla", RealMetadataFactory.exampleBQTCached(), new String[] {}, FakeMetadataFactory.exampleBQTVDB()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(exampleAuthSvc1(), "alter view SmallA_2589 as select * from bqt1.smalla", RealMetadataFactory.exampleBQTCached(), new String[] {"SmallA_2589"}, RealMetadataFactory.exampleBQTVDB()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(examplePolicyBQT(), "alter view SmallA_2589 as select * from bqt1.smalla", RealMetadataFactory.exampleBQTCached(), new String[] {}, RealMetadataFactory.exampleBQTVDB()); //$NON-NLS-1$ //$NON-NLS-2$
         
-        helpTest(exampleAuthSvc1(), "alter trigger on SmallA_2589 INSTEAD OF UPDATE enabled", RealMetadataFactory.exampleBQTCached(), new String[] {"SmallA_2589"}, FakeMetadataFactory.exampleBQTVDB()); //$NON-NLS-1$ //$NON-NLS-2$
-        helpTest(examplePolicyBQT(), "alter trigger on SmallA_2589 INSTEAD OF UPDATE enabled", RealMetadataFactory.exampleBQTCached(), new String[] {}, FakeMetadataFactory.exampleBQTVDB()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(exampleAuthSvc1(), "alter trigger on SmallA_2589 INSTEAD OF UPDATE enabled", RealMetadataFactory.exampleBQTCached(), new String[] {"SmallA_2589"}, RealMetadataFactory.exampleBQTVDB()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(examplePolicyBQT(), "alter trigger on SmallA_2589 INSTEAD OF UPDATE enabled", RealMetadataFactory.exampleBQTCached(), new String[] {}, RealMetadataFactory.exampleBQTVDB()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
 	private void helpTestLookupVisibility(boolean visible) throws QueryParserException, QueryValidatorException, TeiidComponentException {
-		VDBMetaData vdb = FakeMetadataFactory.example1VDB();
+		VDBMetaData vdb = RealMetadataFactory.example1VDB();
 		vdb.getModel("pm1").setVisible(visible); //$NON-NLS-1$
-		AuthorizationValidationVisitor mvvv = new AuthorizationValidationVisitor(new HashMap<String, DataPolicy>(), "test"); //$NON-NLS-1$
+		AuthorizationValidationVisitor mvvv = new AuthorizationValidationVisitor(new HashMap<String, DataPolicy>(), context); //$NON-NLS-1$
 		String sql = "select lookup('pm1.g1', 'e1', 'e2', 1)"; //$NON-NLS-1$
 		Command command = QueryParser.getQueryParser().parseCommand(sql);
-		Request.validateWithVisitor(mvvv, FakeMetadataFactory.example1Cached(), command);
+		Request.validateWithVisitor(mvvv, RealMetadataFactory.example1Cached(), command);
 	}
 	
 	@Ignore("visibility no longer ristricts access")

@@ -131,6 +131,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		public Class<?> type;
 		public boolean mergeJoin;
 		public boolean madeDistinct;
+		public boolean makeInd;
 	}
 
 	private IDGenerator idGenerator;
@@ -363,6 +364,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			result.not ^= ssc.isNegated();
 			result.type = crit.getClass();
 			result.mergeJoin = ssc.getSubqueryHint().isMergeJoin();
+			result.makeInd = ssc.getSubqueryHint().isDepJoin();
 			if (!UNNEST && !result.mergeJoin) {
 				return result;
 			}

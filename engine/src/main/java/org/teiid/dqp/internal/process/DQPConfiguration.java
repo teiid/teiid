@@ -25,7 +25,6 @@ import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.client.RequestMessage;
 import org.teiid.core.util.ApplicationInfo;
-import org.teiid.metadata.MetadataRepository;
 
 
 public class DQPConfiguration{
@@ -226,10 +225,6 @@ public class DQPConfiguration{
 	public void setAuthorizationValidator(
 			AuthorizationValidator authorizationValidator) {
 		this.authorizationValidator = authorizationValidator;
-	}
-	
-	public MetadataRepository getMetadataRepository() {
-		return null;
 	}
 	
 	public CacheConfiguration getPreparedPlanCacheConfig() {

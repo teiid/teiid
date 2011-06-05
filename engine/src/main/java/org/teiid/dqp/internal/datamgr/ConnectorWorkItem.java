@@ -100,6 +100,7 @@ public class ConnectorWorkItem implements ConnectorWork {
                 );
         this.securityContext.setUser(requestMsg.getWorkContext().getSubject());
         this.securityContext.setBatchSize(this.requestMsg.getFetchSize());
+        this.securityContext.setSession(requestMsg.getWorkContext().getSession());
         
         this.connector = manager.getExecutionFactory();
     	VDBMetaData vdb = requestMsg.getWorkContext().getVDB();
@@ -195,7 +196,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Processing NEW request:", this.requestMsg.getCommand()}); //$NON-NLS-1$                                     
     	try {
 	    	this.connectionFactory = this.manager.getConnectionFactory();
-	        this.connection = this.connector.getConnection(this.connectionFactory);
+	        this.connection = this.connector.getConnection(this.connectionFactory, securityContext);
 
 	        Object unwrapped = null;
 			if (connection instanceof WrappedConnection) {

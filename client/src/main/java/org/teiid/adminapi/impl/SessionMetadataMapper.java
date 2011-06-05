@@ -43,6 +43,7 @@ public class SessionMetadataMapper extends MetaMapper<SessionMetadata> {
 	private static final String LAST_PING_TIME = "lastPingTime"; //$NON-NLS-1$
 	private static final String IP_ADDRESS = "IPAddress"; //$NON-NLS-1$
 	private static final String CLIENT_HOST_NAME = "clientHostName"; //$NON-NLS-1$
+	private static final String CLIENT_MAC = "clientMAC"; //$NON-NLS-1$
 	private static final String CREATED_TIME = "createdTime"; //$NON-NLS-1$
 	private static final String APPLICATION_NAME = "applicationName"; //$NON-NLS-1$
 	private static final MutableCompositeMetaType metaType;
@@ -60,6 +61,7 @@ public class SessionMetadataMapper extends MetaMapper<SessionMetadata> {
 		metaType.addItem(VDB_NAME, VDB_NAME, SimpleMetaType.STRING);
 		metaType.addItem(VDB_VERSION, VDB_VERSION, SimpleMetaType.INTEGER_PRIMITIVE);
 		metaType.addItem(SECURITY_DOMAIN, SECURITY_DOMAIN, SimpleMetaType.STRING);
+		metaType.addItem(CLIENT_MAC, CLIENT_MAC, SimpleMetaType.STRING);
 		metaType.freeze();
 	}
 	
@@ -91,7 +93,7 @@ public class SessionMetadataMapper extends MetaMapper<SessionMetadata> {
 			session.set(VDB_NAME,SimpleValueSupport.wrap(object.getVDBName()));
 			session.set(VDB_VERSION, SimpleValueSupport.wrap(object.getVDBVersion()));
 			session.set(SECURITY_DOMAIN, SimpleValueSupport.wrap(object.getSecurityDomain()));
-			
+			session.set(CLIENT_MAC, SimpleValueSupport.wrap(object.getSecurityDomain()));
 			return session;
 		}
 		throw new IllegalArgumentException("Cannot convert session " + object); //$NON-NLS-1$
@@ -116,6 +118,7 @@ public class SessionMetadataMapper extends MetaMapper<SessionMetadata> {
 			session.setVDBName((String) metaValueFactory.unwrap(compositeValue.get(VDB_NAME)));
 			session.setVDBVersion((Integer) metaValueFactory.unwrap(compositeValue.get(VDB_VERSION)));
 			session.setSecurityDomain((String) metaValueFactory.unwrap(compositeValue.get(SECURITY_DOMAIN)));
+			session.setClientHardwareAddress((String) metaValueFactory.unwrap(compositeValue.get(CLIENT_MAC)));
 			return session;
 		}
 		throw new IllegalStateException("Unable to unwrap session " + metaValue); //$NON-NLS-1$

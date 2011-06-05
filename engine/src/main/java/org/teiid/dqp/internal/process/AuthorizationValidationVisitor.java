@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.teiid.CommandContext;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.DataPolicy.PermissionType;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
@@ -86,13 +87,13 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     }
     
     private HashMap<String, DataPolicy> allowedPolicies;
-    private String userName;
     private boolean allowCreateTemporaryTablesDefault = true;
     private boolean allowFunctionCallsByDefault = true;
+    private CommandContext commandContext;
 
-    public AuthorizationValidationVisitor(HashMap<String, DataPolicy> policies, String user) {
+    public AuthorizationValidationVisitor(HashMap<String, DataPolicy> policies, CommandContext commandContext) {
         this.allowedPolicies = policies;
-        this.userName = user;
+        this.commandContext = commandContext;
     }
     
     public void setAllowCreateTemporaryTablesDefault(
@@ -150,7 +151,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     	logResult(resources, context, allowed);
     	if (!allowed) {
 		    handleValidationError(
-			        QueryPlugin.Util.getString("ERR.018.005.0095", userName, "CREATE_TEMPORARY_TABLES"), //$NON-NLS-1$  //$NON-NLS-2$
+			        QueryPlugin.Util.getString("ERR.018.005.0095", commandContext.getUserName(), "CREATE_TEMPORARY_TABLES"), //$NON-NLS-1$  //$NON-NLS-2$
 			        symbols);
     	}
 	}
@@ -158,7 +159,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 	private void logRequest(Set<String> resources, Context context) {
 		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
 	        // Audit - request
-	    	AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-request", this.userName, resources.toArray(new String[resources.size()])); //$NON-NLS-1$
+	    	AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-request", resources.toArray(new String[resources.size()]), commandContext); //$NON-NLS-1$
 	    	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
         }
 	}
@@ -224,6 +225,10 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
             obj.getVariables(),
             DataPolicy.PermissionType.CREATE,
             Context.INSERT);
+        
+        if (obj.getGroup().isTempTable()) {
+        	validateTemp(Collections.singleton(obj.getGroup().getNonCorrelationName()), Arrays.asList(obj.getGroup()), Context.INSERT);
+        }
     }
 
     /**
@@ -270,6 +275,9 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         Into intoObj = obj.getInto();
         if ( intoObj != null ) {
             GroupSymbol intoGroup = intoObj.getGroup();
+            if (intoGroup.isTempTable()) {
+        		validateTemp(Collections.singleton(intoGroup.getNonCorrelationName()), Arrays.asList(intoGroup), Context.INSERT);
+        	}
             List<ElementSymbol> intoElements = null;
             try {
                 intoElements = ResolverUtil.resolveElementsInGroup(intoGroup, getMetadata());
@@ -367,7 +375,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 	    // is not authorized in the exception message
 	    
 	    handleValidationError(
-	        QueryPlugin.Util.getString("ERR.018.005.0095", userName, actionCode), //$NON-NLS-1$                    
+	        QueryPlugin.Util.getString("ERR.018.005.0095", commandContext.getUserName(), actionCode), //$NON-NLS-1$                    
 	        inaccessibleSymbols);
 	}
 
@@ -402,10 +410,10 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 			boolean granted) {
 		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
 	        if (granted) {
-	        	AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-granted all", this.userName, resources.toArray(new String[resources.size()])); //$NON-NLS-1$
+	        	AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-granted all", resources.toArray(new String[resources.size()]), commandContext); //$NON-NLS-1$
 	        	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
 	        } else {
-	        	AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-denied", this.userName, resources.toArray(new String[resources.size()])); //$NON-NLS-1$
+	        	AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-denied", resources.toArray(new String[resources.size()]), commandContext); //$NON-NLS-1$
 	        	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
 	        }
 		}

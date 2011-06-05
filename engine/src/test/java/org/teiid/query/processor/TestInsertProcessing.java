@@ -9,27 +9,28 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
-import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
-import org.teiid.query.unittest.FakeMetadataStore;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.SourceSystemFunctions;
 
-
+@SuppressWarnings("nls")
 public class TestInsertProcessing {
 	
     @Test public void testSelectIntoWithTypeConversion() {
-        FakeMetadataObject pm1 = FakeMetadataFactory.createPhysicalModel("pm1"); //$NON-NLS-1$
-        FakeMetadataObject pm1g1 = FakeMetadataFactory.createPhysicalGroup("pm1.g1", pm1); //$NON-NLS-1$
+    	MetadataStore metadataStore = new MetadataStore();
+        Schema pm1 = RealMetadataFactory.createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
+        Table pm1g1 = RealMetadataFactory.createPhysicalGroup("g1", pm1); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder(); 
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities(); 
@@ -37,16 +38,11 @@ public class TestInsertProcessing {
         caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$ 
 
-        List pm1g1e = FakeMetadataFactory.createElements(pm1g1, 
+        RealMetadataFactory.createElements(pm1g1, 
                                     new String[] { "e1", "e2", "e3" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
                                     new String[] { DataTypeManager.DefaultDataTypes.BIG_INTEGER, DataTypeManager.DefaultDataTypes.FLOAT, DataTypeManager.DefaultDataTypes.FLOAT});
                                 
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(pm1);
-        store.addObject(pm1g1);     
-        store.addObjects(pm1g1e);
-        
-        FakeMetadataFacade metadata = new FakeMetadataFacade(store);
+        QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "foo");
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
         dataManager.addData("BatchedUpdate{I}",  //$NON-NLS-1$ 
@@ -103,7 +99,7 @@ public class TestInsertProcessing {
 
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$ 
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
 
@@ -150,10 +146,10 @@ public class TestInsertProcessing {
     
 
     @Test public void testSelectInto_Case5412a() {
-        
+        MetadataStore metadataStore = new MetadataStore();
         // test setting BULK_INSERT capability to true
-        FakeMetadataObject pm1 = FakeMetadataFactory.createPhysicalModel("pm1"); //$NON-NLS-1$
-        FakeMetadataObject pm1g1 = FakeMetadataFactory.createPhysicalGroup("pm1.g1", pm1); //$NON-NLS-1$
+        Schema pm1 = RealMetadataFactory.createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
+        Table pm1g1 = RealMetadataFactory.createPhysicalGroup("g1", pm1); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder(); 
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities(); 
@@ -161,16 +157,11 @@ public class TestInsertProcessing {
         caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$ 
 
-        List pm1g1e = FakeMetadataFactory.createElements(pm1g1, 
+        RealMetadataFactory.createElements(pm1g1, 
                                     new String[] { "e1", "e2" }, //$NON-NLS-1$ //$NON-NLS-2$ 
                                     new String[] { DataTypeManager.DefaultDataTypes.BIG_INTEGER, DataTypeManager.DefaultDataTypes.FLOAT});
                                 
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(pm1);
-        store.addObject(pm1g1);     
-        store.addObjects(pm1g1e);
-        
-        FakeMetadataFacade metadata = new FakeMetadataFacade(store);
+        QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "foo");
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
         dataManager.addData("INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES (?, ?)",  //$NON-NLS-1$ 
@@ -190,26 +181,21 @@ public class TestInsertProcessing {
 
     
     @Test public void testSelectInto_Case5412b() {
-        
+        MetadataStore metadataStore = new MetadataStore();
         // test setting BULK_INSERT capability to false
-        FakeMetadataObject pm1 = FakeMetadataFactory.createPhysicalModel("pm1"); //$NON-NLS-1$
-        FakeMetadataObject pm1g1 = FakeMetadataFactory.createPhysicalGroup("pm1.g1", pm1); //$NON-NLS-1$
+        Schema pm1 = RealMetadataFactory.createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
+        Table pm1g1 = RealMetadataFactory.createPhysicalGroup("g1", pm1); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder(); 
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities(); 
         caps.setCapabilitySupport(Capability.BULK_UPDATE, false); 
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$ 
         caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
-        List pm1g1e = FakeMetadataFactory.createElements(pm1g1, 
+        RealMetadataFactory.createElements(pm1g1, 
                                     new String[] { "e1", "e2" }, //$NON-NLS-1$ //$NON-NLS-2$ 
                                     new String[] { DataTypeManager.DefaultDataTypes.BIG_INTEGER, DataTypeManager.DefaultDataTypes.FLOAT});
                                 
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(pm1);
-        store.addObject(pm1g1);     
-        store.addObjects(pm1g1e);
-        
-        FakeMetadataFacade metadata = new FakeMetadataFacade(store);
+        QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "foo");
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
         dataManager.addData("INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES (1, 1.0)",  //$NON-NLS-1$ 
@@ -261,7 +247,7 @@ public class TestInsertProcessing {
 
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$ 
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
 
@@ -342,7 +328,7 @@ public class TestInsertProcessing {
 
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$ 
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
 
@@ -399,7 +385,7 @@ public class TestInsertProcessing {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);

@@ -24,20 +24,22 @@ package org.teiid.logging;
 
 import java.util.Arrays;
 
+import org.teiid.CommandContext;
+
 /**
  * Log format for auditing.
  */
 public class AuditMessage {
 	private String context;
 	private String activity;
-	private String principal;
-	private Object[] resources;
+	private String[] resources;
+	private CommandContext commandContext;
 
-	public AuditMessage(String context, String activity, String principal, String[] resources ) {
+	public AuditMessage(String context, String activity, String[] resources, CommandContext commandContext) {
 	    this.context = context;
 	    this.activity = activity;
-	    this.principal = principal;
 	    this.resources = resources;
+	    this.commandContext = commandContext;
 	}
 
     public String getContext() {
@@ -49,15 +51,20 @@ public class AuditMessage {
     }
 
     public String getPrincipal() {
-        return this.principal;
+        return this.commandContext.getUserName();
     }
 
-	public Object[] getResources() {
+	public String[] getResources() {
 		return this.resources;
 	}
-
+	
+	public CommandContext getCommandContext() {
+		return commandContext;
+	}
+	
 	public String toString() {
         StringBuffer msg = new StringBuffer();
+        msg.append( this.commandContext.getRequestId());
         msg.append(" ["); //$NON-NLS-1$
         msg.append( getPrincipal() );
         msg.append("] <"); //$NON-NLS-1$

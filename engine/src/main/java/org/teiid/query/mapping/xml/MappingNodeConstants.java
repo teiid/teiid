@@ -151,18 +151,17 @@ public final class MappingNodeConstants {
      * Property names for type-specific node properties.  Values will be of
      * type String unless otherwise specified.
      */
-    public static final class Properties {
-        private Properties() { }
+    public enum Properties {
         
         /** The basic name of this node. Will be the element or attribute tag name. */
-        public static final Integer NAME = new Integer(0);
+        NAME,
 
         /** 
          * The namespace prefix, which indicates the namespace for this node. 
          * The namespace must be declared either at this node or an ancestor
          * node; use the {@link #NAMESPACE_DECLARATIONS} property.
          */
-        public static final Integer NAMESPACE_PREFIX = new Integer(1);
+        NAMESPACE_PREFIX,
 
         /** 
          * <p>This property allows for one or more namespace declarations
@@ -182,42 +181,42 @@ public final class MappingNodeConstants {
          * <pre>&lt;shipDate xsi:nil="true"/&gt;</pre>
          * </p>
          */
-        public static final Integer NAMESPACE_DECLARATIONS = new Integer(2);
+        NAMESPACE_DECLARATIONS,
        
         /**
          * The target node type.  Can take on one of the values {@link #ATTRIBUTE}
          * or {@link #ELEMENT}.
          */        
-        public static final Integer NODE_TYPE = new Integer(4);  // Values: ATTRIBUTE|ELEMENT
+        NODE_TYPE,  // Values: ATTRIBUTE|ELEMENT
 
         /** 
          * <p>The minimum number of times this node must occur in a document.</p>
          * <p>Type: <code>java.lang.Integer</code></p>
          */
-        public static final Integer CARDINALITY_MIN_BOUND = new Integer(5);
+        CARDINALITY_MIN_BOUND,
 
         /** 
          * <p>The maximum number of times this node may occur in a document.</p>
          * <p>Type: <code>java.lang.Integer</code></p>
          */
-        public static final Integer CARDINALITY_MAX_BOUND = new Integer(6);
+        CARDINALITY_MAX_BOUND,
 
         /**
          * An optional constraint that applies for the node.  If a constraint is
          * defined, the input tuple to the node will be compared to the constraint.
          * The node will be processed only if the constraint is satisfied.
          */
-        public static final Integer CRITERIA = new Integer(7);
+        CRITERIA,
         
         /**
          * This property represents a default value for an XML node
          */
-        public static final Integer DEFAULT_VALUE = new Integer(8);
+        DEFAULT_VALUE,
 
         /**
          * This property represents a fixed value for an XML node
          */
-        public static final Integer FIXED_VALUE = new Integer(11);
+        FIXED_VALUE,
 
         /**
          * <p>Value will be of type Boolean.  Indicates that the node is nillable, 
@@ -226,11 +225,11 @@ public final class MappingNodeConstants {
          * indicates when the element has null content.</p>
          * 
          * <p><b>Note:</b> This property may only be set to true if this node
-         * is an element (i.e. the {@link #NODE_TYPE} property must have 
+         * is an element (i.e. the {@link #NODETYPE} property must have 
          * a value of {@link #ELEMENT}), although this constraint is not
          * enforced anywhere in the MappingNode framework.</p>
          */
-        public static final Integer IS_NILLABLE = new Integer(9);
+        IS_NILLABLE,
 
         /**
          * <p>This node will be completely ignored, not output, not
@@ -238,11 +237,11 @@ public final class MappingNodeConstants {
          * <p>Type: <code>java.lang.Boolean</code></p>
          * <p>Default: {@link MappingNodeConstants.Defaults#DEFAULT_IS_EXCLUDED}</p>
          */
-        public static final Integer IS_EXCLUDED = new Integer(10);
+        IS_EXCLUDED,
 
 
         /** The name of the result being returned by this node */
-        public static final Integer RESULT_SET_NAME = new Integer(20);
+        RESULT_SET_NAME,
 
         /** 
          * The name(s) of the temporary group(s) to be materialized at this 
@@ -250,18 +249,18 @@ public final class MappingNodeConstants {
          * <p>Type: <code>java.util.List</code> of </code>java.lang.String</code>
          * <p>Default: {@link MappingNodeConstants.Defaults#DEFAULT_TEMP_GROUP_NAMES}</p>
          */
-        public static final Integer TEMP_GROUP_NAMES = new Integer(23);
+        TEMP_GROUP_NAMES,
 
         /** The symbol from a result set that maps to this node. */
-        public static final Integer ELEMENT_NAME = new Integer(30);
+        ELEMENT_NAME,
 
 		/** The temporary property to mark whether this node should be included. */
-		public static final Integer IS_INCLUDED = new Integer(15);
+		IS_INCLUDED,
 
         /**
          * The text for a comment.
          */
-        public static final Integer COMMENT_TEXT = new Integer(16);
+        COMMENT_TEXT,
         
         /** 
          * Indicates that the element or attribute is to be considered optional,
@@ -271,7 +270,7 @@ public final class MappingNodeConstants {
          * <p>Type: <code>java.lang.Boolean</code> 
          * <p>Default: {@link MappingNodeConstants.Defaults#DEFAULT_IS_OPTIONAL}</p>
          */
-        public static final Integer IS_OPTIONAL = new Integer(22);
+        IS_OPTIONAL,
         
         /**
          * <p>Indicates the level of text normalization that will be applied
@@ -279,7 +278,7 @@ public final class MappingNodeConstants {
          * <p>Type: <code>java.lang.String</code></p>
          * <p>Default: {@link MappingNodeConstants.Defaults#DEFAULT_NORMALIZE_TEXT}</p>
          */
-        public static final Integer NORMALIZE_TEXT = new Integer(24);
+        NORMALIZE_TEXT,
         
         /**
          * Specifies the design-time base built-in type for the virtual document node.
@@ -288,7 +287,7 @@ public final class MappingNodeConstants {
          * is used to determine special translations from the runtime value to the expected
          * XML schema output value string.  
          */
-        public static final Integer BUILT_IN_TYPE = new Integer(25);
+        BUILT_IN_TYPE,
         
         // ========================================================================
         // CHOICE NODE RELATED PROPERTIES
@@ -300,7 +299,7 @@ public final class MappingNodeConstants {
          * <p>Type: <code>java.lang.Boolean</code></p>
          * <p>Default: {@link MappingNodeConstants.Defaults#DEFAULT_IS_DEFAULT_CHOICE}</p>
          */
-        public static final Integer IS_DEFAULT_CHOICE = new Integer(40);
+        IS_DEFAULT_CHOICE,
         
         /**
          * <p>This property of a choice node indicates that, by 
@@ -313,7 +312,7 @@ public final class MappingNodeConstants {
          * <p>Type: <code>java.lang.Boolean</code></p>
          * <p>Default: {@link MappingNodeConstants.Defaults#DEFAULT_EXCEPTION_ON_DEFAULT}</p>
          */
-        public static final Integer EXCEPTION_ON_DEFAULT = new Integer(42);
+        EXCEPTION_ON_DEFAULT,
 
         // ========================================================================
         // RECURSI0N RELATED PROPERTIES
@@ -324,7 +323,7 @@ public final class MappingNodeConstants {
          * <p>Type: <code>java.lang.Boolean</code></p>
          * <p>Default: {@link MappingNodeConstants.Defaults#DEFAULT_IS_RECURSIVE}</p>
          */
-        public static final Integer IS_RECURSIVE = new Integer(59);
+        IS_RECURSIVE,
 
         /**
          * The criteria of a node representing the root of a recursive
@@ -332,7 +331,7 @@ public final class MappingNodeConstants {
          * recursion should terminate.  i.e. "resultSetName.employeeName = 'Jones'"
          * @see #RECURSION_LIMIT
          */
-        public static final Integer RECURSION_CRITERIA = new Integer(50);
+        RECURSION_CRITERIA,
 
         /**
          * The recursion limit of a recursive XML fragment - if the 
@@ -343,7 +342,7 @@ public final class MappingNodeConstants {
          * <p>Default: {@link MappingNodeConstants.Defaults#DEFAULT_RECURSION_LIMIT}</p>
          * @see #EXCEPTION_ON_RECURSION_LIMIT
          */
-        public static final Integer RECURSION_LIMIT = new Integer(51);
+        RECURSION_LIMIT,
 
         /**
          * If recursion is terminated due to the safeguard {@link #RECURSION_LIMIT} being
@@ -353,7 +352,7 @@ public final class MappingNodeConstants {
          * @see #RECURSION_CRITERIA
          * @see #RECURSION_LIMIT
          */
-        public static final Integer EXCEPTION_ON_RECURSION_LIMIT = new Integer(52);
+        EXCEPTION_ON_RECURSION_LIMIT,
 
         /**
          * This property should be set on each document node at which a recursive
@@ -363,14 +362,14 @@ public final class MappingNodeConstants {
          * document).
          * <p>Type: <code>java.lang.String</code></p>
          */
-        public static final Integer RECURSION_ROOT_MAPPING_CLASS = new Integer(53);
+        RECURSION_ROOT_MAPPING_CLASS,
         
         /**
          * Indicates if the node is the root of a recursive XML fragment or not.
          * <p>Type: <code>java.lang.Boolean</code></p>
          * <p>Default: {@link MappingNodeConstants.Defaults#DEFAULT_IS_RECURSIVE_ROOT}</p>
          */
-        public static final Integer IS_RECURSIVE_ROOT = new Integer(54);
+        IS_RECURSIVE_ROOT,
         
         // ==================================================================================
         // DOCUMENT PROPERTIES (read from root node only, applicable to document as a whole)
@@ -381,7 +380,7 @@ public final class MappingNodeConstants {
          * set at the root MappingNode of the document.</p>
          * <p>Default: {@link MappingNodeConstants.Defaults#DEFAULT_DOCUMENT_ENCODING}</p>
          */
-        public static final Integer DOCUMENT_ENCODING = new Integer(80);
+        DOCUMENT_ENCODING,
         
         /**
          * <p>Indicates whether the document will be outputted as a compressed
@@ -391,14 +390,14 @@ public final class MappingNodeConstants {
          * <p>Type: <code>java.lang.Boolean</code></p>
          * <p>Default: {@link MappingNodeConstants.Defaults#DEFAULT_FORMATTED_DOCUMENT}</p>
          */
-        public static final Integer FORMATTED_DOCUMENT = new Integer(81);
+        FORMATTED_DOCUMENT,
         
         /**
          * A property to mark to implicity include a node which needs to be 
          * added to result document. The implicit nodes are such nodes which
          * define the encoding information and type defination information.
          */
-        public static final Integer ALWAYS_INCLUDE = new Integer(82); 
+        ALWAYS_INCLUDE, 
         
         /**
          * In the case of the recursive mapping element nodes, the source nodes
@@ -406,13 +405,13 @@ public final class MappingNodeConstants {
          * (i.e. mapping class in recurive node) is alias to the source node which is
          * above the recursive node.
          */
-        public static final Integer ALIAS_RESULT_SET_NAME = new Integer(83);
+        ALIAS_RESULT_SET_NAME,
      
         /**
          * Result Set Info object which contains the query and the plan for
          * the source node.
          */
-        public static final Integer RESULT_SET_INFO = new Integer(84);        
+        RESULT_SET_INFO,        
     }
 
     // =========================================================================
@@ -487,11 +486,11 @@ public final class MappingNodeConstants {
          * manner.  Some tags are left out that the MappingOutputter 
          * handles separately.
          */
-        static final List OUTPUTTER_PROPERTY_TAGS;
+        static final List<String> OUTPUTTER_PROPERTY_TAGS;
         
         // Initialize static variables...
         static {
-            List temp = Arrays.asList( new String[]{
+            List<String> temp = Arrays.asList( new String[]{
                 MappingNodeConstants.Tags.NAME, 
                 MappingNodeConstants.Tags.NODE_TYPE, 
                 MappingNodeConstants.Tags.NAMESPACE_PREFIX, 
@@ -535,7 +534,7 @@ public final class MappingNodeConstants {
      * defined in {@link Properties}
      * @see getPropertyString
      */
-    public static final Integer getPropertyInteger(String property) {
+    public static final MappingNodeConstants.Properties getProperty(String property) {
         if(property.equals(Tags.NAME)) return Properties.NAME;
         else if (property.equals(Tags.NAMESPACE_PREFIX)) return Properties.NAMESPACE_PREFIX;
         else if (property.equals(Tags.NODE_TYPE)) return Properties.NODE_TYPE;
@@ -626,7 +625,7 @@ public final class MappingNodeConstants {
          * {@link MappingNodeConstants.Properties}.  The {@link MappingNode} class will return
          * these values if none are defined, for each property.
          */
-        public static final Map DEFAULT_VALUES;
+        public static final Map<Properties, Object> DEFAULT_VALUES;
         
         /** The default minimum bound of the cardinality of a node. */
         public static final Integer DEFAULT_CARDINALITY_MINIMUM_BOUND = new Integer(1);
@@ -695,7 +694,7 @@ public final class MappingNodeConstants {
         public static final Boolean DEFAULT_FORMATTED_DOCUMENT = Boolean.FALSE;
 
         static{
-            HashMap temp = new HashMap();
+            HashMap<Properties, Object> temp = new HashMap<Properties, Object>();
             temp.put(Properties.CARDINALITY_MIN_BOUND, DEFAULT_CARDINALITY_MINIMUM_BOUND);
             temp.put(Properties.CARDINALITY_MAX_BOUND, DEFAULT_CARDINALITY_MAXIMUM_BOUND);
             temp.put(Properties.NODE_TYPE, DEFAULT_NODE_TYPE);

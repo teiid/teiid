@@ -34,15 +34,14 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.processor.relational.SortNode;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
 public class TestRuleMergeVirtual {
     
     @Test public void testSimpleMergeGroupBy() {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM (SELECT e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),
+                                      RealMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),
                                       new String[] {
                                           "SELECT MAX(e2) AS x FROM pm1.g1 GROUP BY e1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
@@ -51,7 +50,7 @@ public class TestRuleMergeVirtual {
     
     @Test public void testSimpleMergeGroupBy1() {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM (SELECT distinct min(e1), max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),
+                                      RealMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),
                                       new String[] {
                                           "SELECT v_0.c_1 FROM (SELECT DISTINCT MIN(g_0.e1) AS c_0, MAX(g_0.e2) AS c_1 FROM pm1.g1 AS g_0 GROUP BY g_0.e1) AS v_0"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
@@ -62,7 +61,7 @@ public class TestRuleMergeVirtual {
      * Same as above but all required symbols are selected
      */
     @Test public void testSimpleMergeGroupBy2() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
          
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x, e1 FROM (SELECT distinct e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
                                       metadata, null, TestAggregatePushdown.getAggregatesFinder(),
@@ -73,7 +72,7 @@ public class TestRuleMergeVirtual {
     }
     
     @Test public void testSimpleMergeGroupBy3() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
          
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT distinct x, e1 FROM (SELECT min(e1) as e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
                                       metadata, null, TestAggregatePushdown.getAggregatesFinder(),
@@ -85,16 +84,16 @@ public class TestRuleMergeVirtual {
     
     @Test public void testSimpleMergeGroupBy4() {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x, x FROM (SELECT e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),
+                                      RealMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),
                                       new String[] {
-                                          "SELECT v_0.c_0, v_0.c_0 FROM (SELECT MAX(g_0.e2) AS c_0 FROM pm1.g1 AS g_0 GROUP BY g_0.e1) AS v_0"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
+                                          "SELECT v_0.c_0 FROM (SELECT MAX(g_0.e2) AS c_0 FROM pm1.g1 AS g_0 GROUP BY g_0.e1) AS v_0"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
     
     @Test public void testSimpleMergeGroupBy5() {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM (SELECT e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z where z.x = 1", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),
+                                      RealMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),
                                       new String[] {
                                           "SELECT MAX(e2) AS x FROM pm1.g1 GROUP BY e1 HAVING MAX(e2) = 1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
@@ -103,7 +102,7 @@ public class TestRuleMergeVirtual {
     
     @Test public void testSimpleMergeGroupBy6() {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM (SELECT e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z where z.x = 1", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),
+                                      RealMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),
                                       new String[] {
                                           "SELECT MAX(e2) AS x FROM pm1.g1 GROUP BY e1 HAVING MAX(e2) = 1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
@@ -111,7 +110,7 @@ public class TestRuleMergeVirtual {
     }
     
     @Test public void testSimpleMergeGroupBy7() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
          
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT distinct x, e1 FROM (SELECT distinct min(e1) as e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
                                       metadata, null, TestAggregatePushdown.getAggregatesFinder(),
@@ -129,7 +128,7 @@ public class TestRuleMergeVirtual {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
          
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM (select '1' as x, e2 from pm1.g1 union all select e1, 1 from pm1.g2) x", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, capFinder,
+                                      RealMetadataFactory.example1Cached(), null, capFinder,
                                       new String[] {
                                           "SELECT '1' AS x FROM pm1.g1 UNION ALL SELECT e1 FROM pm1.g2"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
@@ -144,7 +143,7 @@ public class TestRuleMergeVirtual {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
          
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT distinct x FROM (select '1' as x, e2 from pm1.g1 union all select e1, 1 from pm1.g2) x", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, capFinder,
+                                      RealMetadataFactory.example1Cached(), null, capFinder,
                                       new String[] {
                                           "SELECT '1' AS x FROM pm1.g1 UNION SELECT e1 FROM pm1.g2"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
@@ -162,7 +161,7 @@ public class TestRuleMergeVirtual {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
          
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT distinct x || 'b' FROM (select '1' as x, e2 from pm1.g1 union all select e1, 1 from pm1.g2) x", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, capFinder,
+                                      RealMetadataFactory.example1Cached(), null, capFinder,
                                       new String[] {
                                           "SELECT '1' AS x FROM pm1.g1 UNION ALL SELECT e1 FROM pm1.g2"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
@@ -193,7 +192,7 @@ public class TestRuleMergeVirtual {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
          
         TestOptimizer.helpPlan("select * from (SELECT x.x, x.e2 FROM (select '1' as x, pm1.g1.e2 from pm1.g1, pm1.g2 where pm1.g1.e1 = pm1.g2.e1 group by pm1.g1.e2, pm1.g1.e3 || '1') x union all select e1, 1 from pm1.g2) as y where x = '1'", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, capFinder,
+                                      RealMetadataFactory.example1Cached(), null, capFinder,
                                       new String[] {
                                           "SELECT pm1.g2.e1 FROM pm1.g2", "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3 FROM pm1.g1"}, TestOptimizer.SHOULD_SUCCEED); 
     }
@@ -206,7 +205,7 @@ public class TestRuleMergeVirtual {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
          
         ProcessorPlan plan = TestOptimizer.helpPlan("select * from (SELECT distinct x FROM (select '1' as x, e2 from pm1.g1 union all select e1, 1 from pm1.g2) x) y, pm1.g2", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, capFinder,
+                                      RealMetadataFactory.example1Cached(), null, capFinder,
                                       new String[] {
                                           "SELECT '1' AS x FROM pm1.g1 UNION SELECT e1 FROM pm1.g2", "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ //$NON-NLS-2$
     
@@ -235,7 +234,7 @@ public class TestRuleMergeVirtual {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
          
         ProcessorPlan plan = TestOptimizer.helpPlan("select * from (select e1 from pm1.g1 limit 1) x", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, capFinder,
+                                      RealMetadataFactory.example1Cached(), null, capFinder,
                                       new String[] {
                                           "SELECT e1 FROM pm1.g1 LIMIT 1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
@@ -249,7 +248,7 @@ public class TestRuleMergeVirtual {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
          
         ProcessorPlan plan = TestOptimizer.helpPlan("select * from (select e1 from pm1.g1 limit 1) x order by e1", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, capFinder,
+                                      RealMetadataFactory.example1Cached(), null, capFinder,
                                       new String[] {
                                         "SELECT e1 FROM pm1.g1 LIMIT 1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
@@ -283,7 +282,7 @@ public class TestRuleMergeVirtual {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
          
         ProcessorPlan plan = TestOptimizer.helpPlan("select '1' as x, e2 from pm1.g1 union all select e1, e2 from (select e1, 1 as e2 from pm1.g2 limit 1) as x order by x", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, capFinder,
+                                      RealMetadataFactory.example1Cached(), null, capFinder,
                                       new String[] {"SELECT '1' AS c_0, pm1.g1.e2 AS c_1 FROM pm1.g1 UNION ALL (SELECT pm1.g2.e1 AS c_0, 1 AS c_1 FROM pm1.g2 LIMIT 1) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
@@ -301,7 +300,7 @@ public class TestRuleMergeVirtual {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
          
         ProcessorPlan plan = TestOptimizer.helpPlan("select '1' as x, e2 from pm1.g1 union all (select e1, e2 from (select distinct e1, 1 as e2 from pm1.g2) as x order by e1 limit 1) order by x", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, capFinder,
+                                      RealMetadataFactory.example1Cached(), null, capFinder,
                                       new String[] {"SELECT '1' AS c_0, pm1.g1.e2 AS c_1 FROM pm1.g1 UNION ALL (SELECT DISTINCT pm1.g2.e1 AS c_0, 1 AS c_1 FROM pm1.g2 ORDER BY c_0 LIMIT 1) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
@@ -330,7 +329,7 @@ public class TestRuleMergeVirtual {
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
 
         // Plan query
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata, 
@@ -348,7 +347,7 @@ public class TestRuleMergeVirtual {
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(),  
+        RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(),  
         		new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$  
         
         SortNode node = (SortNode)plan.getRootNode();
@@ -363,7 +362,7 @@ public class TestRuleMergeVirtual {
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(),  
+        RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(),  
         		new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0", "SELECT g_0.e1 FROM pm1.g2 AS g_0"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$  
         
         SortNode node = (SortNode)plan.getRootNode();
@@ -374,7 +373,7 @@ public class TestRuleMergeVirtual {
     	BasicSourceCapabilities caps = TestAggregatePushdown.getAggregateCapabilities();
     	caps.setFunctionSupport("+", true); //$NON-NLS-1$
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM (SELECT min(y), max(x) as x FROM (select e1 x, e2 + 1 y from pm1.g1) a) AS b", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
+                                      RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
                                       new String[] {
                                           "SELECT MAX(g_0.e1) FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     
@@ -385,7 +384,7 @@ public class TestRuleMergeVirtual {
     	BasicSourceCapabilities caps = TestAggregatePushdown.getAggregateCapabilities();
     	caps.setFunctionSupport("+", true); //$NON-NLS-1$
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM (select c.e1 as x from (select e1 from pm1.g1) as c, pm1.g2 as d) as a group by x", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
+                                      RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
                                       new String[] {
                                           "SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 GROUP BY g_0.e1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     

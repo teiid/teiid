@@ -27,7 +27,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 
 public class TestOptionalJoins {
@@ -48,7 +48,7 @@ public class TestOptionalJoins {
         TestProcessor.sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -76,7 +76,7 @@ public class TestOptionalJoins {
         TestProcessor.sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -101,7 +101,7 @@ public class TestOptionalJoins {
         TestProcessor.sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -126,7 +126,7 @@ public class TestOptionalJoins {
         TestProcessor.sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -157,7 +157,7 @@ public class TestOptionalJoins {
         TestProcessor.sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -188,7 +188,7 @@ public class TestOptionalJoins {
         TestProcessor.sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -213,7 +213,7 @@ public class TestOptionalJoins {
         TestProcessor.sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -238,7 +238,7 @@ public class TestOptionalJoins {
         TestProcessor.sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -263,7 +263,7 @@ public class TestOptionalJoins {
         TestProcessor.sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -288,7 +288,7 @@ public class TestOptionalJoins {
         TestProcessor.sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -313,7 +313,7 @@ public class TestOptionalJoins {
         TestProcessor.sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -338,7 +338,7 @@ public class TestOptionalJoins {
         TestProcessor.sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -358,7 +358,7 @@ public class TestOptionalJoins {
         TestProcessor.sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -383,7 +383,7 @@ public class TestOptionalJoins {
         TestProcessor.sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -408,7 +408,7 @@ public class TestOptionalJoins {
         TestProcessor.sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -432,7 +432,7 @@ public class TestOptionalJoins {
         TestProcessor.sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -457,7 +457,7 @@ public class TestOptionalJoins {
         TestProcessor.sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -482,7 +482,7 @@ public class TestOptionalJoins {
         TestProcessor.sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);

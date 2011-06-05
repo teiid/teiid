@@ -40,7 +40,6 @@ import org.teiid.query.processor.FakeProcessorPlan;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
@@ -91,7 +90,7 @@ public class TestCachedResults {
 		
 		CachedResults cachedResults = UnitTestUtil.helpSerialize(results);
 		
-		FakeMetadataFactory.buildWorkContext(RealMetadataFactory.exampleBQT());
+		RealMetadataFactory.buildWorkContext(RealMetadataFactory.exampleBQT());
 		
 		cachedResults.restore(cache, bm);
 		

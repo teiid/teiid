@@ -118,7 +118,6 @@ public class TeiidLoginContext {
 				this.loginContext.login();
 				this.userName = baseUsername+AT+domain;
 				this.securitydomain = domain;
-				LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", username, "\""}); //$NON-NLS-1$ //$NON-NLS-2$
 				return;
 			} catch (LoginException e) {
 				LogManager.logDetail(LogConstants.CTX_SECURITY,e, e.getMessage()); 

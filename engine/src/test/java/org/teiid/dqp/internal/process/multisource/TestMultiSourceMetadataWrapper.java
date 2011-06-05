@@ -30,7 +30,7 @@ import junit.framework.TestCase;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 
 
@@ -42,7 +42,7 @@ public class TestMultiSourceMetadataWrapper extends TestCase {
     public void testMultiSourcePseudoElement() throws Exception {
         HashSet<String> multiSourceModels = new HashSet<String>();
         multiSourceModels.add("BQT1");
-        MultiSourceMetadataWrapper wrapper = new MultiSourceMetadataWrapper(FakeMetadataFactory.exampleBQTCached(), multiSourceModels);
+        MultiSourceMetadataWrapper wrapper = new MultiSourceMetadataWrapper(RealMetadataFactory.exampleBQTCached(), multiSourceModels);
         
         Object groupID = wrapper.getGroupID("BQT1.SmallA"); //$NON-NLS-1$
         List elements = wrapper.getElementIDsInGroupID(groupID);

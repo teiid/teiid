@@ -25,10 +25,20 @@ package org.teiid.dqp.internal.process;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+import org.teiid.dqp.internal.process.AbstractWorkItem.ThreadState;
 
 
 public class TestWorkItemState {
 	
+	private final class WorkItemRunner implements Runnable {
+		TestWorkItem workItem;
+
+		@Override
+		public void run() {
+			workItem.run();
+		}
+	}
+
 	private class TestWorkItem extends AbstractWorkItem {
 
 		private boolean isDone;
@@ -40,7 +50,11 @@ public class TestWorkItemState {
 		}
 		
 		private TestWorkItem(boolean done, boolean callMoreWork) {
-			super(false);
+			this(done, callMoreWork, null);
+		}
+		
+		private TestWorkItem(boolean done, boolean callMoreWork, Thread callingThread) {
+			super(callingThread);
 			this.isDone = done;
 			this.callMoreWork = callMoreWork;
 		}
@@ -151,6 +165,28 @@ public class TestWorkItemState {
     	} catch (IllegalStateException e) {
     		
     	}
+    }
+    
+    @Test public void testUsingCallingThreadIdle() throws Exception {
+    	WorkItemRunner r = new WorkItemRunner();
+    	Thread t = new Thread(r);
+    	final TestWorkItem item = new TestWorkItem(false, false, t) {
+    		@Override
+    		protected boolean shouldPause() {
+    			return true;
+    		}
+    	};
+    	r.workItem = item;
+    	t.start();
+		for (int i = 0; i < 10 && item.getThreadState() != ThreadState.IDLE; i++) {
+			Thread.sleep(100);
+		}
+		if (item.getThreadState() != ThreadState.IDLE) {
+			fail();
+		}
+		item.moreWork();
+		//if we don't return from this call, that means that this thread has been hijacked -
+		//we should instead use t.
     }
         
 }

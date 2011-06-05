@@ -28,7 +28,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 
 public class TestAnsiJoinPushdown {
@@ -46,7 +46,7 @@ public class TestAnsiJoinPushdown {
     	
         ProcessorPlan plan = TestOptimizer.helpPlan(
         		"select pm2.g1.e1 from pm2.g1, pm2.g2 where pm2.g1.e1 = pm2.g2.e1 and (pm2.g1.e2 = 1 OR pm2.g2.e2 = 2) and pm2.g2.e3 = 1", //$NON-NLS-1$ 
-        		FakeMetadataFactory.example1Cached(), 
+        		RealMetadataFactory.example1Cached(), 
         		null,
         		capFinder,
         		new String[] { "SELECT g_0.e1 FROM pm2.g1 AS g_0 INNER JOIN pm2.g2 AS g_1 ON g_0.e1 = g_1.e1 AND ((g_0.e2 = 1) OR (g_1.e2 = 2)) WHERE g_1.e3 = TRUE" }, //$NON-NLS-1$

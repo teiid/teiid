@@ -44,7 +44,6 @@ import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TypeFacility;
@@ -113,10 +112,10 @@ public class TestVisitors {
         params.add(RealMetadataFactory.createParameter("start", SPParameter.IN, TypeFacility.RUNTIME_NAMES.TIMESTAMP));
         params.add(RealMetadataFactory.createParameter("end", SPParameter.IN, TypeFacility.RUNTIME_NAMES.TIMESTAMP));
         
-        Procedure getUpdated = RealMetadataFactory.createStoredProcedure("GetUpdated", salesforceModel, params, "GetUpdated");
+        Procedure getUpdated = RealMetadataFactory.createStoredProcedure("GetUpdated", salesforceModel, params);
         getUpdated.setResultSet(RealMetadataFactory.createResultSet("rs", new String[] {"updated"}, new String[] {TypeFacility.RUNTIME_NAMES.STRING}));
         
-        return new TransformationMetadata(null, new CompositeMetadataStore(store), null, FakeMetadataFactory.SFM.getSystemFunctions(), null);
+        return new TransformationMetadata(null, new CompositeMetadataStore(store), null, RealMetadataFactory.SFM.getSystemFunctions(), null);
     }    
 
 	private static TranslationUtility translationUtility = new TranslationUtility(exampleSalesforce());

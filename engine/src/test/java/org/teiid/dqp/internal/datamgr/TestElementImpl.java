@@ -27,7 +27,6 @@ import junit.framework.TestCase;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.NamedTable;
 import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.unittest.FakeMetadataObject;
 
 
 public class TestElementImpl extends TestCase {
@@ -44,10 +43,6 @@ public class TestElementImpl extends TestCase {
         ElementSymbol symbol = new ElementSymbol(elementName);
         symbol.setType(String.class);
         symbol.setGroupSymbol(TestGroupImpl.helpExample(groupName));
-        FakeMetadataObject obj = new FakeMetadataObject(groupName + "." + elementName, FakeMetadataObject.ELEMENT); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.GROUP, new FakeMetadataObject(groupName, FakeMetadataObject.GROUP));
-        obj.putProperty(FakeMetadataObject.Props.LENGTH, "3"); //$NON-NLS-1$
-        symbol.setMetadataID(obj);
         return symbol;
         
     }
@@ -56,12 +51,7 @@ public class TestElementImpl extends TestCase {
         ElementSymbol symbol = new ElementSymbol(elementName);
         symbol.setType(Integer.class);
         symbol.setGroupSymbol(TestGroupImpl.helpExample(groupName));
-        FakeMetadataObject obj = new FakeMetadataObject(groupName + "." + elementName, FakeMetadataObject.ELEMENT); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.GROUP, new FakeMetadataObject(groupName, FakeMetadataObject.GROUP));
-        obj.putProperty(FakeMetadataObject.Props.LENGTH, "3"); //$NON-NLS-1$
-        symbol.setMetadataID(obj);
         return symbol;
-        
     }
     
     public static ElementSymbol helpExample(String groupName, String elementName, Object metadataID) {

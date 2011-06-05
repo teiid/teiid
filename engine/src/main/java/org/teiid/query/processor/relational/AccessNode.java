@@ -26,6 +26,8 @@ import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.teiid.api.exception.query.QueryValidatorException;
@@ -43,6 +45,13 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.Select;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.SelectSymbol;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.util.CommandContext;
 
 
@@ -62,6 +71,10 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     protected Command nextCommand;
     private int reserved;
     private int schemaSize;
+    
+    private Object[] projection;
+    private List<SelectSymbol> originalSelect;
+	private Object modelId;
     
     protected AccessNode() {
 		super();
@@ -92,6 +105,14 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 
     public Command getCommand() {
         return this.command;
+    }
+    
+    public void setModelId(Object id) {
+    	this.modelId = id;
+    }
+    
+    public Object getModelId() {
+    	return this.modelId;
     }
 
 	public void setModelName(String name) {
@@ -135,6 +156,63 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 			}
 			//We hardcode an upper limit on currency because these commands have potentially large in-memory value sets
         } while (!processCommandsIndividually() && hasNextCommand() && this.tupleSources.size() < Math.min(MAX_CONCURRENT, this.getContext().getUserRequestSourceConcurrency()));
+	}
+	
+	public boolean isShouldEvaluate() {
+		return shouldEvaluate;
+	}
+
+	public void minimizeProject(Command atomicCommand) {
+		if (!(atomicCommand instanceof Query)) {
+			return;
+		}
+		Query query = (Query)atomicCommand;
+		Select select = query.getSelect();
+		List<SelectSymbol> symbols = select.getSymbols();
+		if (symbols.size() == 1) {
+			return;
+		}
+		boolean shouldProject = false;
+		LinkedHashMap<Expression, Integer> uniqueSymbols = new LinkedHashMap<Expression, Integer>();
+		projection = new Object[symbols.size()];
+		this.originalSelect = new ArrayList<SelectSymbol>(query.getSelect().getSymbols());
+		int i = 0;
+		int j = 0;
+		for (Iterator<SelectSymbol> iter = symbols.iterator(); iter.hasNext(); ) {
+			SingleElementSymbol ss = (SingleElementSymbol) iter.next();
+			Expression ex = SymbolMap.getExpression(ss);
+			if (ex instanceof Constant) {
+				projection[i] = ex;
+				if (iter.hasNext() || j!=0) {
+					iter.remove();
+					shouldProject = true;
+				} else {
+					projection[i] = j++;
+				}
+			} else {
+				Integer index = uniqueSymbols.get(ex);
+				if (index == null) {
+					uniqueSymbols.put(ex, j);
+					index = j++;
+				} else {
+					iter.remove();
+					shouldProject = true;
+				}
+				projection[i] = index;
+			}
+			i++;
+		}
+		if (!shouldProject) {
+			this.projection = new Object[0];
+		}
+	}
+	
+	public List<SelectSymbol> getOriginalSelect() {
+		return originalSelect;
+	}
+	
+	public Object[] getProjection() {
+		return projection;
 	}
 
 	static void rewriteAndEvaluate(Command atomicCommand, Evaluator eval, CommandContext context, QueryMetadataInterface metadata)
@@ -183,6 +261,17 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	        		
 	        		while ((tuple = tupleSource.nextTuple()) != null) {
 	                    returnedRows = true;
+	                    if (this.projection != null && this.projection.length > 0) {
+	                    	List<Object> newTuple = new ArrayList<Object>(this.projection.length);
+	                    	for (Object object : this.projection) {
+								if (object instanceof Integer) {
+									newTuple.add(tuple.get((Integer)object));
+								} else {
+									newTuple.add(((Constant)object).getValue());
+								}
+							}
+	                    	tuple = newTuple;
+	                    }
 	                    addBatchRow(tuple);
 	                    
 	                    if (isBatchFull()) {
@@ -217,7 +306,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         	}
         	
         	if (!this.tupleSources.isEmpty()) {
-        		throw BlockedException.INSTANCE;
+        		throw BlockedException.block(getContext().getRequestId(), "Blocking on source request(s)."); //$NON-NLS-1$
         	}
         }
         
@@ -246,6 +335,10 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 
 	private void registerRequest(Command atomicCommand)
 			throws TeiidComponentException, TeiidProcessingException {
+		if (shouldEvaluate) {
+			projection = null;
+			minimizeProject(atomicCommand);
+		}
 		int limit = -1;
 		if (getParent() instanceof LimitNode) {
 			LimitNode parent = (LimitNode)getParent();
@@ -295,8 +388,13 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	protected void copy(AccessNode source, AccessNode target){
 		super.copy(source, target);
 		target.modelName = source.modelName;
+		target.modelId = source.modelId;
 		target.connectorBindingId = source.connectorBindingId;
 		target.shouldEvaluate = source.shouldEvaluate;
+		if (!source.shouldEvaluate) {
+			target.projection = source.projection;
+			target.originalSelect = source.originalSelect;
+		}
 		target.command = source.command;
 	}
 

@@ -31,6 +31,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
@@ -42,14 +43,16 @@ import org.teiid.query.sql.symbol.ElementSymbol;
  */
 public abstract class MappingNode implements Cloneable, Serializable {
 
-    /** The parent of this node, null if root. */
+	private static final long serialVersionUID = 6761829541871178451L;
+
+	/** The parent of this node, null if root. */
     private MappingNode parent;
 
     /** Child nodes, usually just 1 or 2, but occasionally more */
-    private LinkedList children = new LinkedList();
+    private List<MappingNode> children = new LinkedList<MappingNode>();
 
     /** node properties, as defined in NodeConstants.Properties. */
-    private Map nodeProperties;
+    private Map<MappingNodeConstants.Properties, Object> nodeProperties;
 
     /** default constructor */
     public MappingNode(){
@@ -89,8 +92,8 @@ public abstract class MappingNode implements Cloneable, Serializable {
             }
         }
         
-        for (Iterator i = root.getChildren().iterator(); i.hasNext();) {
-            MappingNode child = (MappingNode)i.next();
+        for (Iterator<MappingNode> i = root.getChildren().iterator(); i.hasNext();) {
+            MappingNode child = i.next();
             MappingNode found = findNode(child, partialName);
             if (found != null) {
                 return found;
@@ -104,7 +107,7 @@ public abstract class MappingNode implements Cloneable, Serializable {
      * Set the parent of this node.  This method is restricted, as
      * it should be called only when {@link #addChild adding a child node}
      */
-    private void setParent( MappingNode parent ) {
+    void setParent( MappingNode parent ) {
         this.parent = parent;
     }
 
@@ -112,7 +115,7 @@ public abstract class MappingNode implements Cloneable, Serializable {
      * Get the children contained by this node, or an empty List
      * @return children; if no children, return empty List (never null)
      */
-    public List getChildren(){
+    public List<MappingNode> getChildren(){
         return this.children;
     }
 
@@ -120,11 +123,11 @@ public abstract class MappingNode implements Cloneable, Serializable {
      * Get all children of this node of a specified target node type.  The value
      * of node type should be one of {@link #ATTRIBUTE} or {@link #ELEMENT}.
      */
-    public List getChildren( String type ) {
-        List subset = new ArrayList();
-        Iterator iter = children.iterator();
+    public List<MappingNode> getChildren( String type ) {
+        List<MappingNode> subset = new ArrayList<MappingNode>();
+        Iterator<MappingNode> iter = children.iterator();
         while ( iter.hasNext() ) {
-            MappingNode node = (MappingNode)iter.next();
+            MappingNode node = iter.next();
             if ( node.getProperty(MappingNodeConstants.Properties.NODE_TYPE).equals(type) ) {
                 subset.add( node );
             }
@@ -132,11 +135,11 @@ public abstract class MappingNode implements Cloneable, Serializable {
         return subset;
     }
     
-    public List getNodeChildren() {
-        List subset = new ArrayList();
-        Iterator iter = children.iterator();
+    public List<MappingNode> getNodeChildren() {
+        List<MappingNode> subset = new ArrayList<MappingNode>();
+        Iterator<MappingNode> iter = children.iterator();
         while ( iter.hasNext() ) {
-            MappingNode node = (MappingNode)iter.next();
+            MappingNode node = iter.next();
             if ( !node.getProperty(MappingNodeConstants.Properties.NODE_TYPE).equals(MappingNodeConstants.ATTRIBUTE) ) {
                 subset.add( node );
             }
@@ -162,7 +165,7 @@ public abstract class MappingNode implements Cloneable, Serializable {
      * @param propertyID Integer property key
      * @return Object value
      */
-    public Object getProperty(Integer propertyID) {
+    public Object getProperty(MappingNodeConstants.Properties propertyID) {
         Object value = null;
         if(nodeProperties != null) {
             value = nodeProperties.get(propertyID);
@@ -180,11 +183,11 @@ public abstract class MappingNode implements Cloneable, Serializable {
      * @param propertyID Integer property key
      * @param value Object property value
      */
-    void setProperty(Integer propertyID, Object value) {
+    void setProperty(MappingNodeConstants.Properties propertyID, Object value) {
         if (value != null){
             // Get the default for the property ...
             final Object defaultValue = MappingNodeConstants.Defaults.DEFAULT_VALUES.get(propertyID);
-            final Map props = getNodeProperties();      // props is never null
+            final Map<MappingNodeConstants.Properties, Object> props = getNodeProperties();      // props is never null
             if ( !value.equals(defaultValue) ) {        // we know value is not null
                 // Set the value only if different than the default; note that the 'getProperty'
                 // method is returning the default if there isn't a value
@@ -197,7 +200,7 @@ public abstract class MappingNode implements Cloneable, Serializable {
         }
     }
 
-    void removeProperty(Integer propertyID) {
+    void removeProperty(MappingNodeConstants.Properties propertyID) {
         getNodeProperties().remove(propertyID);
     }
     
@@ -209,9 +212,9 @@ public abstract class MappingNode implements Cloneable, Serializable {
      * object.
      * @see #getProperties
      */
-    public Map getNodeProperties(){
+    public Map<MappingNodeConstants.Properties, Object> getNodeProperties(){
         if(nodeProperties == null) {
-            nodeProperties = new HashMap();
+            nodeProperties = new HashMap<MappingNodeConstants.Properties, Object>();
         }
         return nodeProperties;
     }
@@ -318,9 +321,9 @@ public abstract class MappingNode implements Cloneable, Serializable {
         str.append(node.getNodeProperties());
         str.append("\n"); //$NON-NLS-1$
 
-        Iterator i = node.getChildren().iterator();
+        Iterator<MappingNode> i = node.getChildren().iterator();
         while (i.hasNext()){
-            buildTreeString((MappingNode)i.next(), str, tabLevel);
+            buildTreeString(i.next(), str, tabLevel);
         }
     }
 
@@ -345,7 +348,7 @@ public abstract class MappingNode implements Cloneable, Serializable {
      * {@link MappingNodeConstants#SEARCH_DOWN} or {@link MappingNodeConstants#SEARCH_DOWN_BREADTH_FIRST}
      * @return MappingNode first node found that has the indicated property and value, or null if none found
      */
-    static MappingNode findFirstNodeWithProperty(Integer propertyKey, Object value, MappingNode node, int searchDirection) {
+    static MappingNode findFirstNodeWithProperty(MappingNodeConstants.Properties propertyKey, Object value, MappingNode node, int searchDirection) {
         return findFirstNodeWithPropertyValue(propertyKey, value, false, node, searchDirection);
     }
     
@@ -365,11 +368,11 @@ public abstract class MappingNode implements Cloneable, Serializable {
      * {@link MappingNodeConstants#SEARCH_DOWN} or {@link MappingNodeConstants#SEARCH_DOWN_BREADTH_FIRST}
      * @return MappingNode first node found that has the indicated property and value, or null if none found
      */
-    static MappingNode findFirstNodeWithPropertyString(Integer propertyKey, String value, MappingNode node, int searchDirection) {
+    static MappingNode findFirstNodeWithPropertyString(MappingNodeConstants.Properties propertyKey, String value, MappingNode node, int searchDirection) {
         return findFirstNodeWithPropertyValue(propertyKey, value, true, node, searchDirection);
     }
 
-    private static MappingNode findFirstNodeWithPropertyValue(Integer propertyKey, Object value, boolean isStringValue, MappingNode node, int searchDirection) {
+    private static MappingNode findFirstNodeWithPropertyValue(MappingNodeConstants.Properties propertyKey, Object value, boolean isStringValue, MappingNode node, int searchDirection) {
         
         if (node == null || propertyKey == null){
             return null;
@@ -389,11 +392,11 @@ public abstract class MappingNode implements Cloneable, Serializable {
         }
     }
 
-    private static MappingNode traverseDownForFirstNodeWithPropertyString(Integer propertyKey, Object value, boolean isStringValue, MappingNode node, boolean breadthFirst) {
+    private static MappingNode traverseDownForFirstNodeWithPropertyString(MappingNodeConstants.Properties propertyKey, Object value, boolean isStringValue, MappingNode node, boolean breadthFirst) {
         if (breadthFirst) {
-            Iterator children = node.getChildren().iterator();
+            Iterator<MappingNode> children = node.getChildren().iterator();
             while (children.hasNext()){
-                MappingNode child = (MappingNode)children.next();
+                MappingNode child = children.next();
                 if (checkThisNodeForPropertyValue(propertyKey, value, isStringValue, child)){
                     return child;
                 }
@@ -404,9 +407,9 @@ public abstract class MappingNode implements Cloneable, Serializable {
             }
         }
         
-        Iterator children = node.getChildren().iterator();
+        Iterator<MappingNode> children = node.getChildren().iterator();
         while (children.hasNext()){
-            MappingNode child = (MappingNode)children.next();
+            MappingNode child = children.next();
             
             //recursive call to this method
             MappingNode result = traverseDownForFirstNodeWithPropertyString(propertyKey, value, isStringValue, child, breadthFirst);
@@ -418,7 +421,7 @@ public abstract class MappingNode implements Cloneable, Serializable {
         return null;
     }
     
-    private static boolean checkThisNodeForPropertyValue(Integer propertyKey, Object value, boolean isStringValue, MappingNode node) {
+    private static boolean checkThisNodeForPropertyValue(MappingNodeConstants.Properties propertyKey, Object value, boolean isStringValue, MappingNode node) {
         Object thisValue = node.getProperty(propertyKey);
         if (thisValue != null){
             if (value == null){
@@ -434,7 +437,7 @@ public abstract class MappingNode implements Cloneable, Serializable {
         return false;
     }
 
-    private static MappingNode traverseUpForFirstNodeWithPropertyString(Integer propertyKey, Object value, boolean isStringValue, MappingNode node) {
+    private static MappingNode traverseUpForFirstNodeWithPropertyString(MappingNodeConstants.Properties propertyKey, Object value, boolean isStringValue, MappingNode node) {
         while (node != null){
             if (checkThisNodeForPropertyValue(propertyKey, value, isStringValue, node)){
                 return node;
@@ -477,4 +480,22 @@ public abstract class MappingNode implements Cloneable, Serializable {
     public String getNameInSource() {
         return null;        
     }    
+    
+    public MappingNode clone() {
+    	try {
+			MappingNode clone = (MappingNode) super.clone();
+			clone.children = new ArrayList<MappingNode>(children);
+			for (int i = 0; i < clone.children.size(); i++) {
+				clone.children.set(i, clone.children.get(i).clone());
+				clone.children.get(i).setParent(clone);
+			}
+			return clone;
+		} catch (CloneNotSupportedException e) {
+			throw new TeiidRuntimeException(e);
+		}
+    }
+    
+    public ElementSymbol getElementSymbol() {
+    	return null;
+    }
 }

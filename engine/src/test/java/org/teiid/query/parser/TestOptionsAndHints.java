@@ -93,7 +93,7 @@ public class TestOptionsAndHints {
         query.setFrom(from);
         query.setCriteria(crit);
         TestParser.helpTest("Select a From db.g1 MAKENOTDEP, db.g2 AS c MAKENOTDEP WHERE a = b",  //$NON-NLS-1$
-                 "SELECT a FROM db.g1 MAKENOTDEP, db.g2 AS c MAKENOTDEP WHERE a = b",  //$NON-NLS-1$
+                 "SELECT a FROM /*+ MAKENOTDEP */ db.g1, /*+ MAKENOTDEP */ db.g2 AS c WHERE a = b",  //$NON-NLS-1$
                  query);
     }
 
@@ -118,7 +118,7 @@ public class TestOptionsAndHints {
         query.setSelect(select);
         query.setFrom(from);
         TestParser.helpTest("Select a From db.g1 JOIN db.g2 MAKEDEP ON a = b",  //$NON-NLS-1$
-                 "SELECT a FROM db.g1 INNER JOIN db.g2 MAKEDEP ON a = b",  //$NON-NLS-1$
+                 "SELECT a FROM db.g1 INNER JOIN /*+ MAKEDEP */ db.g2 ON a = b",  //$NON-NLS-1$
                  query);
     } 
     
@@ -143,7 +143,7 @@ public class TestOptionsAndHints {
         query.setSelect(select);
         query.setFrom(from);
         TestParser.helpTest("Select a From db.g1 MAKEDEP JOIN db.g2 ON a = b",  //$NON-NLS-1$
-                 "SELECT a FROM db.g1 MAKEDEP INNER JOIN db.g2 ON a = b",  //$NON-NLS-1$
+                 "SELECT a FROM /*+ MAKEDEP */ db.g1 INNER JOIN db.g2 ON a = b",  //$NON-NLS-1$
                  query);
     }
 
@@ -174,7 +174,7 @@ public class TestOptionsAndHints {
         query.setSelect(select);
         query.setFrom(from);
         TestParser.helpTest("Select a From (db.g1 MAKEDEP JOIN db.g2 ON a = b) LEFT OUTER JOIN db.g3 MAKEDEP ON a = c",  //$NON-NLS-1$
-                 "SELECT a FROM (db.g1 MAKEDEP INNER JOIN db.g2 ON a = b) LEFT OUTER JOIN db.g3 MAKEDEP ON a = c",  //$NON-NLS-1$
+                 "SELECT a FROM (/*+ MAKEDEP */ db.g1 INNER JOIN db.g2 ON a = b) LEFT OUTER JOIN /*+ MAKEDEP */ db.g3 ON a = c",  //$NON-NLS-1$
                  query);
     }
 
@@ -203,7 +203,7 @@ public class TestOptionsAndHints {
         query.setFrom(from);
         query.setCriteria(crit);
         TestParser.helpTest("Select a From db.g1 MAKEDEP, db.g2 AS c MAKEDEP WHERE a = b",  //$NON-NLS-1$
-                 "SELECT a FROM db.g1 MAKEDEP, db.g2 AS c MAKEDEP WHERE a = b",  //$NON-NLS-1$
+                 "SELECT a FROM /*+ MAKEDEP */ db.g1, /*+ MAKEDEP */ db.g2 AS c WHERE a = b",  //$NON-NLS-1$
                  query);
     }
 
@@ -237,7 +237,7 @@ public class TestOptionsAndHints {
         query.setSelect(select);
         query.setFrom(from);
         TestParser.helpTest("Select a From db.g1 JOIN db.g2 MAKENOTDEP ON a = b",  //$NON-NLS-1$
-                 "SELECT a FROM db.g1 INNER JOIN db.g2 MAKENOTDEP ON a = b",  //$NON-NLS-1$
+                 "SELECT a FROM db.g1 INNER JOIN /*+ MAKENOTDEP */ db.g2 ON a = b",  //$NON-NLS-1$
                  query);
     } 
     
@@ -262,7 +262,7 @@ public class TestOptionsAndHints {
         query.setSelect(select);
         query.setFrom(from);
         TestParser.helpTest("Select a From db.g1 MAKENOTDEP JOIN db.g2 ON a = b",  //$NON-NLS-1$
-                 "SELECT a FROM db.g1 MAKENOTDEP INNER JOIN db.g2 ON a = b",  //$NON-NLS-1$
+                 "SELECT a FROM /*+ MAKENOTDEP */ db.g1 INNER JOIN db.g2 ON a = b",  //$NON-NLS-1$
                  query);
     }
 
@@ -293,7 +293,7 @@ public class TestOptionsAndHints {
         query.setSelect(select);
         query.setFrom(from);
         TestParser.helpTest("Select a From (db.g1 MAKENOTDEP JOIN db.g2 ON a = b) LEFT OUTER JOIN db.g3 MAKENOTDEP ON a = c",  //$NON-NLS-1$
-                 "SELECT a FROM (db.g1 MAKENOTDEP INNER JOIN db.g2 ON a = b) LEFT OUTER JOIN db.g3 MAKENOTDEP ON a = c",  //$NON-NLS-1$
+                 "SELECT a FROM (/*+ MAKENOTDEP */ db.g1 INNER JOIN db.g2 ON a = b) LEFT OUTER JOIN /*+ MAKENOTDEP */ db.g3 ON a = c",  //$NON-NLS-1$
                  query);
     }
 
@@ -308,11 +308,11 @@ public class TestOptionsAndHints {
         From from = new From(Arrays.asList(predicate));
         predicate.getLeftClause().setMakeNotDep(true);
         predicate.getRightClause().setMakeDep(true);
-        Select select = new Select(Arrays.asList(new Object[] {x, y}));
+        Select select = new Select(Arrays.asList(x, y));
         
         Query query = new Query(select, from, null, null, null, null, null);
         TestParser.helpTest("Select a.x, b.y From a MAKENOTDEP INNER JOIN b MAKEDEP ON a.x = func(b.y)",  //$NON-NLS-1$
-                 "SELECT a.x, b.y FROM a MAKENOTDEP INNER JOIN b MAKEDEP ON a.x = func(b.y)",  //$NON-NLS-1$
+                 "SELECT a.x, b.y FROM /*+ MAKENOTDEP */ a INNER JOIN /*+ MAKEDEP */ b ON a.x = func(b.y)",  //$NON-NLS-1$
                  query);
     }
 
@@ -996,7 +996,7 @@ public class TestOptionsAndHints {
         option.addDependentGroup("a"); //$NON-NLS-1$
         option.addNotDependentGroup("b"); //$NON-NLS-1$
         
-        Select select = new Select(Arrays.asList(new Object[] {x, y}));
+        Select select = new Select(Arrays.asList(x, y));
         
         Criteria criteria = new CompareCriteria(x, CompareCriteria.EQ, y);
         Query query = new Query(select, from, criteria, null, null, null, option);
@@ -1030,7 +1030,7 @@ public class TestOptionsAndHints {
         query.setSelect(select);
         query.setFrom(from);
         TestParser.helpTest("Select a From (db.g1 JOIN db.g2 ON a = b) makedep LEFT OUTER JOIN db.g3 ON a = c",  //$NON-NLS-1$
-                 "SELECT a FROM (db.g1 INNER JOIN db.g2 ON a = b) MAKEDEP LEFT OUTER JOIN db.g3 ON a = c",  //$NON-NLS-1$
+                 "SELECT a FROM /*+ MAKEDEP */ (db.g1 INNER JOIN db.g2 ON a = b) LEFT OUTER JOIN db.g3 ON a = c",  //$NON-NLS-1$
                  query);
         
         //ensure that the new string form is parsable

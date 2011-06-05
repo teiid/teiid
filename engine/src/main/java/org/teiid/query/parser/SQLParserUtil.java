@@ -172,7 +172,13 @@ public class SQLParserUtil {
         for (int i = 0; i < parts.length; i++) {
             if (parts[i].equalsIgnoreCase(Option.OPTIONAL)) {
                 fromClause.setOptional(true);
-            }        
+            } else if (parts[i].equalsIgnoreCase(Option.MAKEDEP)) {
+                fromClause.setMakeDep(true);
+            } else if (parts[i].equalsIgnoreCase(Option.MAKENOTDEP)) {
+                fromClause.setMakeNotDep(true);
+            } else if (parts[i].equalsIgnoreCase(FromClause.MAKEIND)) {
+                fromClause.setMakeInd(true);
+            }       
         }
     }
     
@@ -184,6 +190,8 @@ public class SQLParserUtil {
                 hint.setMergeJoin(true);
             } else if (parts[i].equalsIgnoreCase(SubqueryHint.NOUNNEST)) {
             	hint.setNoUnnest(true);
+            } else if (parts[i].equalsIgnoreCase(SubqueryHint.DJ)) {
+                hint.setDepJoin(true);
             }
         }
     	return hint;

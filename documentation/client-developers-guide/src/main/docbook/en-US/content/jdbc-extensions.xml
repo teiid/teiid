@@ -185,7 +185,7 @@
             <para>SET Syntax:
             </para>
             <listitem>
-                <para>SET parameter value
+                <para>SET (parameter|SESSION AUTHORIZATION) value
                 </para>
             </listitem>
         </itemizedlist>
@@ -193,10 +193,10 @@
             <para>Syntax Rules:
             </para>
             <listitem>
-                <para>Both parameter and value must be simple literals - they cannot contain spaces.</para>
+                <para>The parameter must be a non-quoted identifier - it cannot contain spaces.</para>
             </listitem>
             <listitem>
-                <para>The value is also not treated as an expression and will not be evaluated prior to being set as the parameter value.</para>
+                <para>The value may be either a non-quoted identifier or a quoted string literal value.</para>
             </listitem>
         </itemizedlist>
         <para>The SET statement is most commonly used to control planning and execution.</para>
@@ -208,7 +208,6 @@
                 <para>SET NOEXEC (ON|OFF)</para>
             </listitem>
         </itemizedlist>        
-        
         <example id="plan_debug">
         	<title>Enabling Plan Debug</title>
         	<programlisting>Statement s = connection.createStatement();
@@ -220,6 +219,16 @@ ResultSet rs = s1.executeQuery("select col from table");
 ResultSet planRs = s1.exeuteQuery("SHOW PLAN");
 planRs.next();
 String debugLog = planRs.getString("DEBUG_LOG"); 
+        	</programlisting>
+        </example>
+        <para>The SET statement may also be used to control authorization.  
+        A SET SESSION AUTHORIZATION statement will perform a <xref linkend="reauthentication"/> given the credentials currently set on the connection.
+        The connection credentials may be changed by issuing a SET PASSWORD statement.  A SET PASSWORD statement does not perform a reauthentication.</para>
+        <example>
+        	<title>Changing Session Authorization</title>
+        	<programlisting>Statement s = connection.createStatement();
+s.execute("SET PASSWORD 'someval'");
+s.execute("SET SESSION AUTHORIZATION 'newuser'");
         	</programlisting>
         </example>
        </section>

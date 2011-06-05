@@ -32,58 +32,53 @@ import org.junit.Test;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.ColumnSet;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingAttribute;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingElement;
-import org.teiid.query.mapping.xml.MappingNode;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.relational.rules.RuleChooseDependent;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
-import org.teiid.query.unittest.FakeMetadataStore;
+import org.teiid.query.unittest.RealMetadataFactory;
 
-
+@SuppressWarnings("nls")
 public class TestXMLPlanningEnhancements {
 
-    private FakeMetadataFacade getMetadata(String query) {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadata();
+    private TransformationMetadata getMetadata(String query) {
+    	TransformationMetadata metadata = TestXMLProcessor.exampleMetadata();
         
-        FakeMetadataStore store = metadata.getStore();
-        
-        FakeMetadataObject xmltest = store.findObject("xmltest", FakeMetadataObject.MODEL); //$NON-NLS-1$
+        Schema xmltest = metadata.getMetadataStore().getSchemas().get("XMLTEST");
         
         QueryNode rsQueryY = new QueryNode(query); //$NON-NLS-1$
         rsQueryY.addBinding("xmltest.group.items.itemNum"); //$NON-NLS-1$
         rsQueryY.addBinding("xmltest.group.items.itemNum"); //$NON-NLS-1$
-        FakeMetadataObject rsQY = FakeMetadataFactory.createVirtualGroup("xmltest.suppliersY", xmltest, rsQueryY); //$NON-NLS-1$
+        Table rsQY = RealMetadataFactory.createVirtualGroup("suppliersY", xmltest, rsQueryY); //$NON-NLS-1$
         
-        List rsElementsY = FakeMetadataFactory.createElements(rsQY, 
+        RealMetadataFactory.createElements(rsQY, 
                                                               new String[] { "supplierNum", "supplierName", "supplierZipCode" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                                                               new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
                                                          
-        FakeMetadataObject doc18a = FakeMetadataFactory.createVirtualGroup("xmltest.doc18a", xmltest, TestXMLProcessor.createXMLPlanNested("xmltest.suppliersY")); //$NON-NLS-1$ //$NON-NLS-2$
-        List docE18a = FakeMetadataFactory.createElements(doc18a, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name" },  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$
+        Table doc18a = RealMetadataFactory.createXmlDocument("doc18a", xmltest, TestXMLProcessor.createXMLPlanNested("xmltest.suppliersY")); //$NON-NLS-1$ //$NON-NLS-2$
+        RealMetadataFactory.createElements(doc18a, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name" },  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-        store.addObject(rsQY);
-        store.addObjects(rsElementsY);
-        store.addObject(doc18a);
-        store.addObjects(docE18a);
         return metadata;
     }
     
-    private FakeMetadataFacade getTempTableMetadata(boolean simpleTempSelect) {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadata();
+    private TransformationMetadata getTempTableMetadata(boolean simpleTempSelect) {
+        TransformationMetadata metadata = TestXMLProcessor.exampleMetadata();
         
-        FakeMetadataStore store = metadata.getStore();
+        Schema xmltest = metadata.getMetadataStore().getSchemas().get("XMLTEST");
         
-        FakeMetadataObject xmltest = store.findObject("xmltest", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject docJoin = FakeMetadataFactory.createVirtualGroup("xmltest.docJoin", xmltest, createXMLPlanNestedJoin()); //$NON-NLS-1$
-        List docEJoin = FakeMetadataFactory.createElements(docJoin, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name", "Catalogs.Catalog.items.item.suppliers.supplier.orders", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.@OrderID" ,"Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderDate", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderQuantity", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderStatus"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$ //$NON-NLS-18$
+        Table docJoin = RealMetadataFactory.createXmlDocument("docJoin", xmltest, createXMLPlanNestedJoin()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(docJoin, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name", "Catalogs.Catalog.items.item.suppliers.supplier.orders", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.@OrderID" ,"Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderDate", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderQuantity", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderStatus"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$ //$NON-NLS-18$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
         QueryNode tempQueryJoin = null;
@@ -93,44 +88,37 @@ public class TestXMLPlanningEnhancements {
             tempQueryJoin = new QueryNode("SELECT stock.orders.* FROM stock.orders join stock.suppliers on stock.orders.supplierFK=stock.suppliers.supplierNum"); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
-        FakeMetadataObject tempJoin = FakeMetadataFactory.createVirtualGroup("tempGroup.orders", xmltest, tempQueryJoin); //$NON-NLS-1$
+        Table tempJoin = RealMetadataFactory.createXmlStagingTable("docJoin.orders", xmltest, tempQueryJoin); //$NON-NLS-1$
 
         // Created virtual group w/ nested result set & binding - selects from 2nd temp root group
         QueryNode rsQueryJoin = null;
         if (!simpleTempSelect) {
-            rsQueryJoin = new QueryNode("SELECT orderNum, orderDate, orderQty, orderStatus FROM tempGroup.orders join stock.suppliers on tempGroup.orders.supplierFK=stock.suppliers.supplierNum WHERE itemFK = ? AND supplierNameFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+            rsQueryJoin = new QueryNode("SELECT orderNum, orderDate, orderQty, orderStatus FROM docJoin.orders join stock.suppliers on docJoin.orders.supplierFK=stock.suppliers.supplierNum WHERE itemFK = ? AND supplierNameFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
             rsQueryJoin.addBinding("xmltest.group.items.itemNum"); //$NON-NLS-1$
             rsQueryJoin.addBinding("xmltest.suppliers.supplierName"); //$NON-NLS-1$
         } else {
-            rsQueryJoin = new QueryNode("SELECT orderNum, orderDate, orderQty, orderStatus FROM tempGroup.orders WHERE supplierNameFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+            rsQueryJoin = new QueryNode("SELECT orderNum, orderDate, orderQty, orderStatus FROM docJoin.orders WHERE supplierNameFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
             rsQueryJoin.addBinding("xmltest.suppliers.supplierName"); //$NON-NLS-1$
         }
-        FakeMetadataObject rsJoin = FakeMetadataFactory.createVirtualGroup("xmltest.ordersC", xmltest, rsQueryJoin); //$NON-NLS-1$
+        Table rsJoin = RealMetadataFactory.createVirtualGroup("ordersC", xmltest, rsQueryJoin); //$NON-NLS-1$
         
-        List tempJoinElements = FakeMetadataFactory.createElements(tempJoin, 
+        RealMetadataFactory.createElements(tempJoin, 
                                                                    new String[] { "orderNum", "itemFK", "supplierFK", "supplierNameFK", "orderDate", "orderQty", "orderStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
                                                                    new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
 
-        List rsElementsJoin = FakeMetadataFactory.createElements(rsJoin, 
+        RealMetadataFactory.createElements(rsJoin, 
                                                                  new String[] { "orderNum", "orderDate", "orderQty", "orderStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                                                                  new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
-        store.addObject(docJoin);
-        store.addObjects(docEJoin);
-        store.addObjects(tempJoinElements);
-        store.addObjects(rsElementsJoin);        
-        store.addObject(tempJoin);
-        store.addObject(rsJoin);
-        
         return metadata;
     }
     
-    private static MappingNode createXMLPlanNestedJoin() {
+    private static MappingDocument createXMLPlanNestedJoin() {
         
         MappingDocument doc = new MappingDocument(true);
         
         MappingElement root = doc.addChildElement(new MappingElement("Catalogs")); //$NON-NLS-1$
 
-        root.setStagingTables(Arrays.asList(new String[] {"tempGroup.orders"})); //$NON-NLS-1$ 
+        root.setStagingTables(Arrays.asList("xmltest.docJoin.orders")); //$NON-NLS-1$ 
         
         MappingElement cats = root.addChildElement(new MappingElement("Catalog")); //$NON-NLS-1$
         MappingElement items = cats.addChildElement(new MappingElement("Items")); //$NON-NLS-1$
@@ -168,7 +156,7 @@ public class TestXMLPlanningEnhancements {
     
     @Test public void testBaseballPlayersDocDefect19541() throws Exception {
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleCase3225();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleCase3225();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerCase3225(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -216,7 +204,7 @@ public class TestXMLPlanningEnhancements {
     }   
     
     @Test public void testNested2WithContextCriteria5c() throws Exception {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
+        QueryMetadataInterface metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String resultFile = "TestXMLProcessor-testNested2WithContextCriteria5c.xml"; //$NON-NLS-1$
         String expectedDoc = TestXMLProcessor.readFile(resultFile);
@@ -225,7 +213,7 @@ public class TestXMLPlanningEnhancements {
     }
     
     @Test public void testNested2WithContextCriteria5d() throws Exception {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
+        QueryMetadataInterface metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String resultFile = "TestXMLProcessor-testNested2WithContextCriteria5d.xml"; //$NON-NLS-1$
         String expectedDoc = TestXMLProcessor.readFile(resultFile);
@@ -234,7 +222,7 @@ public class TestXMLPlanningEnhancements {
     }
 
     @Test public void testNested2WithContextCriteria5d1() throws Exception {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
+        QueryMetadataInterface metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String resultFile = "TestXMLProcessor-testNested2WithContextCriteria5d.xml"; //$NON-NLS-1$
         String expectedDoc = TestXMLProcessor.readFile(resultFile);
@@ -243,7 +231,7 @@ public class TestXMLPlanningEnhancements {
     }
 
     @Test public void testNested2WithContextCriteria5e() throws Exception {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
+        QueryMetadataInterface metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String resultFile = "TestXMLProcessor-testNested2WithContextCriteria5e.xml"; //$NON-NLS-1$
         String expectedDoc = TestXMLProcessor.readFile(resultFile);
@@ -252,7 +240,7 @@ public class TestXMLPlanningEnhancements {
     }
     
     @Test public void testXQTChoice_6796() throws Exception {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadata2();
+        QueryMetadataInterface metadata = TestXMLProcessor.exampleMetadata2();
         FakeDataManager dataMgr = TestXMLProcessor.exampleXQTDataManager(metadata);
         String resultFile = "TestXMLProcessor-testXQTChoice_6796.xml"; //$NON-NLS-1$
         String expectedDoc = TestXMLProcessor.readFile(resultFile);
@@ -261,7 +249,7 @@ public class TestXMLPlanningEnhancements {
     }
     
     @Test public void testOrderByWithChoiceCriteriaElement() throws Exception {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadata2();
+        QueryMetadataInterface metadata = TestXMLProcessor.exampleMetadata2();
         FakeDataManager dataMgr = TestXMLProcessor.exampleXQTDataManager(metadata);
         String expectedDoc = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>\n   <wrapper/>\n   <wrapper/>\n   <wrapper/>\n   <wrapper/>\n   <wrapper/>\n   <wrapper/>\n   <wrapper/>\n   <wrapper/>\n   <wrapper/>\n</root>"; //$NON-NLS-1$
         
@@ -269,7 +257,7 @@ public class TestXMLPlanningEnhancements {
     }
     
     @Test public void testXQTChoice_withContextCriteria() throws Exception {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadata2();
+        QueryMetadataInterface metadata = TestXMLProcessor.exampleMetadata2();
         FakeDataManager dataMgr = TestXMLProcessor.exampleXQTDataManager(metadata);
         String resultFile = "TestXMLProcessor-testXQTChoice_withContextCriteria.xml"; //$NON-NLS-1$
         String expectedDoc = TestXMLProcessor.readFile(resultFile);
@@ -278,7 +266,7 @@ public class TestXMLPlanningEnhancements {
     }
     
     @Test public void testXQTChoice_withContextCriteria1() throws Exception {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadata2();
+        QueryMetadataInterface metadata = TestXMLProcessor.exampleMetadata2();
         FakeDataManager dataMgr = TestXMLProcessor.exampleXQTDataManager(metadata);
         String resultFile = "TestXMLProcessor-testXQTChoice_withContextCriteria1.xml"; //$NON-NLS-1$
         String expectedDoc = TestXMLProcessor.readFile(resultFile);
@@ -287,7 +275,7 @@ public class TestXMLPlanningEnhancements {
     }
     
     @Test public void testMappingClassWithInlineViewAndCriteria() throws Exception {
-        FakeMetadataFacade metadata = getMetadata("SELECT upper(x.supplierNum) as supplierNum, x.supplierName, x.supplierZipCode from (select stock.suppliers.supplierNum, supplierName, supplierZipCode, itemNum FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum) x where x.itemNum = ?"); //$NON-NLS-1$
+        QueryMetadataInterface metadata = getMetadata("SELECT upper(x.supplierNum) as supplierNum, x.supplierName, x.supplierZipCode from (select stock.suppliers.supplierNum, supplierName, supplierZipCode, itemNum FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum) x where x.itemNum = ?"); //$NON-NLS-1$
 
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String expectedDoc = TestXMLProcessor.readFile("TestXMLPlanningEnhancements-testMappingClassWithStoredProcedureAndCriteria.xml"); //$NON-NLS-1$ 
@@ -296,7 +284,7 @@ public class TestXMLPlanningEnhancements {
     }
     
     @Test public void testMappingClassWithUnionAndCriteria() throws Exception {
-        FakeMetadataFacade metadata = getMetadata("SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = ? union all SELECT concat(stock.suppliers.supplierNum, '1'), supplierName, convert(12345, string) FROM stock.suppliers WHERE stock.suppliers.supplierNum = ?"); //$NON-NLS-1$
+        QueryMetadataInterface metadata = getMetadata("SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = ? union all SELECT concat(stock.suppliers.supplierNum, '1'), supplierName, convert(12345, string) FROM stock.suppliers WHERE stock.suppliers.supplierNum = ?"); //$NON-NLS-1$
 
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String expectedDoc = TestXMLProcessor.readFile("TestXMLPlanningEnhancements-testMappingClassWithStoredProcedureAndCriteria.xml"); //$NON-NLS-1$ 
@@ -305,7 +293,7 @@ public class TestXMLPlanningEnhancements {
     }
     
     @Test public void testMappingClassWithInputSetElementNameConflict() throws Exception {
-        FakeMetadataFacade metadata = getMetadata("SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.supplierNum = ?"); //$NON-NLS-1$
+        QueryMetadataInterface metadata = getMetadata("SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.supplierNum = ?"); //$NON-NLS-1$
 
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String expectedDoc = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Catalogs>\n<Catalog>\n<Items/>\n</Catalog>\n</Catalogs>"; //$NON-NLS-1$ 
@@ -313,19 +301,17 @@ public class TestXMLPlanningEnhancements {
     }
     
     @Test public void testAutoStagingFailsForMappingClassWithProcRelational() throws Exception {
-        FakeMetadataFacade metadata = getMetadata("SELECT supplierNum, supplierName, supplierZipCode FROM v1.supplierProc where itemnum = ?"); //$NON-NLS-1$
+        TransformationMetadata metadata = getMetadata("SELECT supplierNum, supplierName, supplierZipCode FROM v1.supplierProc where itemnum = ?"); //$NON-NLS-1$
 
-        FakeMetadataObject v1 = FakeMetadataFactory.createVirtualModel("v1"); //$NON-NLS-1$
+        Schema v1 = RealMetadataFactory.createVirtualModel("v1", metadata.getMetadataStore()); //$NON-NLS-1$
         
-        FakeMetadataObject rs1 = FakeMetadataFactory.createResultSet("v1.rs1", v1, new String[] {"supplierNum", "supplierName", "supplierZipCode"}, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING,DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        ColumnSet<Procedure> rs1 = RealMetadataFactory.createResultSet("v1.rs1", new String[] {"supplierNum", "supplierName", "supplierZipCode"}, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING,DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         
-        FakeMetadataObject rs1p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs1);  //$NON-NLS-1$
-        FakeMetadataObject rs1p2 = FakeMetadataFactory.createParameter("itemNum", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
+        ProcedureParameter rs1p2 = RealMetadataFactory.createParameter("itemNum", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING);  //$NON-NLS-1$
         QueryNode n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = v1.supplierProc.itemNum; END"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vt1 = FakeMetadataFactory.createVirtualProcedure("v1.supplierProc", v1, Arrays.asList(new FakeMetadataObject[] { rs1p1, rs1p2 }), n1); //$NON-NLS-1$
-
-        metadata.getStore().addObject(vt1);
-
+        Procedure vt1 = RealMetadataFactory.createVirtualProcedure("supplierProc", v1, Arrays.asList(rs1p2), n1); //$NON-NLS-1$
+        vt1.setResultSet(rs1);
+        
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String expectedDoc = TestXMLProcessor.readFile("TestXMLPlanningEnhancements-testMappingClassWithStoredProcedureAndCriteria.xml"); //$NON-NLS-1$ 
  
@@ -336,7 +322,7 @@ public class TestXMLPlanningEnhancements {
     }
     
     @Test public void testMappingClassWitSelectDistinctAndCriteria() throws Exception {
-        FakeMetadataFacade metadata = getMetadata("SELECT distinct '1' as supplierNum, '2' as supplierName, '3' as supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum like substring(?,1,1) || '%'"); //$NON-NLS-1$
+        QueryMetadataInterface metadata = getMetadata("SELECT distinct '1' as supplierNum, '2' as supplierName, '3' as supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum like substring(?,1,1) || '%'"); //$NON-NLS-1$
 
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
 
@@ -352,7 +338,7 @@ public class TestXMLPlanningEnhancements {
      * be used as inputs
      */
     @Test public void testMappingClassWithStoredProcedureAndCriteria() throws Exception {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
+        QueryMetadataInterface metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String expectedDoc = TestXMLProcessor.readFile("TestXMLPlanningEnhancements-testMappingClassWithStoredProcedureAndCriteria.xml"); //$NON-NLS-1$ 
         
@@ -360,7 +346,7 @@ public class TestXMLPlanningEnhancements {
     }
     
     public void defer_testXMLQueryWithFalseRootCriteria() throws Exception {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
+        QueryMetadataInterface metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String expectedDoc = ""; //$NON-NLS-1$ 
         
@@ -371,13 +357,13 @@ public class TestXMLPlanningEnhancements {
      * @see #testNested2WithCriteria2
      */
     @Test public void testAutoStagingByCosting() throws Exception {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadata();
+        TransformationMetadata metadata = TestXMLProcessor.exampleMetadata();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
-        FakeMetadataObject suppliers = metadata.getStore().findObject("stock.suppliers", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        FakeMetadataObject itemSuppliers = metadata.getStore().findObject("stock.item_supplier", FakeMetadataObject.GROUP); //$NON-NLS-1$
+        Table suppliers = metadata.getGroupID("stock.suppliers"); //$NON-NLS-1$
+        Table itemSuppliers = metadata.getGroupID("stock.item_supplier"); //$NON-NLS-1$
 
-        suppliers.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(10));
-        itemSuppliers.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(10));
+        suppliers.setCardinality(10);
+        itemSuppliers.setCardinality(10);
 
         String expectedDoc = TestXMLProcessor.readFile("TestXMLProcessor-FullSuppliers.xml"); //$NON-NLS-1$
         
@@ -392,13 +378,13 @@ public class TestXMLPlanningEnhancements {
      * @see #testNested2WithCriteria2
      */
     @Test public void testAutoStagingFailsByCosting() throws Exception {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadata();
+        TransformationMetadata metadata = TestXMLProcessor.exampleMetadata();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
-        FakeMetadataObject suppliers = metadata.getStore().findObject("stock.suppliers", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        FakeMetadataObject itemSuppliers = metadata.getStore().findObject("stock.item_supplier", FakeMetadataObject.GROUP); //$NON-NLS-1$
+        Table suppliers = metadata.getGroupID("stock.suppliers"); //$NON-NLS-1$
+        Table itemSuppliers = metadata.getGroupID("stock.item_supplier"); //$NON-NLS-1$
 
-        suppliers.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(10000));
-        itemSuppliers.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(10000));
+        suppliers.setCardinality(10000);
+        itemSuppliers.setCardinality(10000);
 
         String expectedDoc = TestXMLProcessor.readFile("TestXMLProcessor-FullSuppliers.xml"); //$NON-NLS-1$
         
@@ -410,7 +396,7 @@ public class TestXMLPlanningEnhancements {
     }
 
     @Test public void testAutoStagingFailsByNoCache() throws Exception {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
+        QueryMetadataInterface metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
 
         String expectedDoc = TestXMLProcessor.readFile("TestXMLProcessor-FullSuppliers.xml"); //$NON-NLS-1$
@@ -423,7 +409,7 @@ public class TestXMLPlanningEnhancements {
     }    
     
     @Test public void testAutoStagingFailsByNoCacheByGroup() throws Exception {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
+        QueryMetadataInterface metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
 
         String expectedDoc = TestXMLProcessor.readFile("TestXMLProcessor-FullSuppliers.xml"); //$NON-NLS-1$
@@ -443,7 +429,7 @@ public class TestXMLPlanningEnhancements {
     
     // see the next test with costing information too.
     @Test public void testUseOfStagingCardinalityOnDependentJoinsNoCost() throws Exception {
-        FakeMetadataFacade metadata = getTempTableMetadata(false);
+        QueryMetadataInterface metadata = getTempTableMetadata(false);
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
 
         String expectedDoc = TestXMLProcessor.readFile("TestXMLProcessor-FullSuppliers.xml"); //$NON-NLS-1$
@@ -477,15 +463,15 @@ public class TestXMLPlanningEnhancements {
     }    
     
     @Test public void testUseOfStagingCardinalityOnDependentJoinsWithCost() throws Exception {
-        FakeMetadataFacade metadata = getTempTableMetadata(false);
+        TransformationMetadata metadata = getTempTableMetadata(false);
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
-        FakeMetadataObject orders = metadata.getStore().findObject("stock.orders", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        FakeMetadataObject suppliers = metadata.getStore().findObject("stock.suppliers", FakeMetadataObject.GROUP); //$NON-NLS-1$
 
-        // supply the costing information for OrdersC
-        orders.putProperty(FakeMetadataObject.Props.CARDINALITY, BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE - 1);
-        suppliers.putProperty(FakeMetadataObject.Props.CARDINALITY, RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1);        
+        Table orders = metadata.getGroupID("stock.orders"); //$NON-NLS-1$
+        Table suppliers = metadata.getGroupID("stock.suppliers"); //$NON-NLS-1$
 
+        orders.setCardinality(BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE - 1);
+        suppliers.setCardinality(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1);
+        
         String expectedDoc = TestXMLProcessor.readFile("TestXMLProcessor-FullSuppliers.xml"); //$NON-NLS-1$
         
         XMLPlan xmlPlan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.docJoin", metadata, dataMgr, null, TestOptimizer.getGenericFinder(false), expectedDoc); //$NON-NLS-1$        
@@ -516,13 +502,14 @@ public class TestXMLPlanningEnhancements {
     } 
     
     @Test public void testNoRedundentStagingTables() throws Exception {
-        FakeMetadataFacade metadata = getTempTableMetadata(true);
+        TransformationMetadata metadata = getTempTableMetadata(true);
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
-        FakeMetadataObject suppliers = metadata.getStore().findObject("stock.suppliers", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        FakeMetadataObject orders = metadata.getStore().findObject("stock.orders", FakeMetadataObject.GROUP); //$NON-NLS-1$
+        
+        Table suppliers = metadata.getGroupID("stock.suppliers"); //$NON-NLS-1$
+        Table orders = metadata.getGroupID("stock.orders"); //$NON-NLS-1$
 
-        suppliers.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(10));
-        orders.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(10));
+        suppliers.setCardinality(10);
+        orders.setCardinality(10);
 
         String expectedDoc = TestXMLProcessor.readFile("TestXMLProcessor-OnlySupplier51.xml"); //$NON-NLS-1$
         
@@ -532,20 +519,4 @@ public class TestXMLPlanningEnhancements {
         assertEquals(4, ((List)stats.get(ExecStagingTableInstruction.class)).size());
     }
     
-    @Test public void testEmptyMappingClass() throws Exception {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadata();
-        FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
-        FakeMetadataObject suppliers = metadata.getStore().findObject("xmltest.suppliers", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        QueryNode node = (QueryNode)suppliers.getProperty(FakeMetadataObject.Props.PLAN);
-        node.setQuery(null);
-        
-        FakeMetadataObject docGroup = metadata.getStore().findObject("xmltest.doc9", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        MappingDocument doc = (MappingDocument)docGroup.getProperty(FakeMetadataObject.Props.PLAN);
-        MappingNode suppliersNode = MappingNode.findNode(doc, "Catalogs.Catalog.Items.Item.Suppliers.Supplier".toUpperCase());
-        suppliersNode.setExclude(true);
-        
-        String expectedDoc = TestXMLProcessor.readFile("TestXMLPlanningEnhancements-testEmptyMappingClass.xml"); //$NON-NLS-1$
-        
-        TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
-    }
 }

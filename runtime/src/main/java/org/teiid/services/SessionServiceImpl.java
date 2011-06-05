@@ -185,6 +185,7 @@ public class SessionServiceImpl implements SessionService {
         newSession.setApplicationName(applicationName);
         newSession.setClientHostName(properties.getProperty(TeiidURL.CONNECTION.CLIENT_HOSTNAME));
         newSession.setIPAddress(properties.getProperty(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS));
+        newSession.setClientHardwareAddress(properties.getProperty(TeiidURL.CONNECTION.CLIENT_MAC));
         newSession.setSecurityDomain(securityDomain);
         if (vdb != null) {
 	        newSession.setVDBName(vdb.getName());
@@ -195,7 +196,7 @@ public class SessionServiceImpl implements SessionService {
         newSession.setLoginContext(loginContext);
         newSession.setSecurityContext(securityContext);
         newSession.setVdb(vdb);
-        LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", userName, "\" - created SessionID \"", newSession.getSessionToken().getSessionID(), "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful, created", newSession }); //$NON-NLS-1$ 
         this.sessionCache.put(newSession.getSessionId(), newSession);
         return newSession;
 	}

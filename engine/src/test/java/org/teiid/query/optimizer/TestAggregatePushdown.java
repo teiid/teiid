@@ -33,8 +33,7 @@ import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings("nls")
@@ -69,7 +68,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         
         String sql = "SELECT a12.intkey AS REGION_NBR, SUM(a11.intnum) AS WJXBFS1 FROM bqt1.smalla AS a11 INNER JOIN bqt2.smalla AS a12 ON a11.stringkey = a12.stringkey WHERE a11.stringkey = 0 GROUP BY a12.intkey"; //$NON-NLS-1$
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), null, capFinder, 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
                                       new String[] {"SELECT SUM(a11.intnum) FROM bqt1.smalla AS a11 WHERE a11.stringkey = '0' HAVING COUNT(*) > 0", "SELECT a12.intkey FROM bqt2.smalla AS a12 WHERE a12.stringkey = '0' group by a12.intkey"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -105,7 +104,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         
         String sql = "SELECT a12.intkey, MAX(a12.stringkey), MIN(a11.intnum+a12.intnum) FROM bqt1.smalla AS a11 INNER JOIN bqt2.smalla AS a12 ON a11.stringkey = a12.stringkey GROUP BY a12.intkey"; //$NON-NLS-1$
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), null, capFinder, 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
                                       new String[] {"SELECT g_0.stringkey, g_0.intkey, g_0.intnum FROM bqt2.smalla AS g_0 GROUP BY g_0.stringkey, g_0.intkey, g_0.intnum", "SELECT g_0.stringkey, g_0.intnum FROM bqt1.smalla AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -136,7 +135,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         
         String sql = "SELECT a12.intkey, MAX(a12.stringkey), SUM(a11.intnum+a12.intnum) FROM bqt1.smalla AS a11 INNER JOIN bqt2.smalla AS a12 ON a11.stringkey = a12.stringkey GROUP BY a12.intkey"; //$NON-NLS-1$
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), null, capFinder, 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
                                       new String[] {"SELECT g_0.stringkey, g_0.intkey, g_0.intnum FROM bqt2.smalla AS g_0", "SELECT g_0.stringkey, g_0.intnum FROM bqt1.smalla AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -169,7 +168,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         
         String sql = "SELECT max(y.e2) from pm1.g1 x, pm2.g1 y where x.e3 = y.e3 group by y.e3"; //$NON-NLS-1$
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
                                       new String[] {"SELECT g_0.e3 FROM pm1.g1 AS g_0", "SELECT g_0.e3, MAX(g_0.e2) FROM pm2.g1 AS g_0 GROUP BY g_0.e3"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -203,7 +202,7 @@ public class TestAggregatePushdown {
         
         String sql = "select sum(a11.intnum) Profit, (sum(a11.intnum) / sum(a11.floatnum)) WJXBFS2 from bqt1.smalla a11 join bqt2.smallb a12 on a11.intkey=a12.intkey group by a12.intkey"; //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), null, capFinder, 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
                                       new String[] {"SELECT g_0.intkey, SUM(g_0.intnum), SUM(g_0.floatnum) FROM bqt1.smalla AS g_0 GROUP BY g_0.intkey", "SELECT g_0.intkey FROM bqt2.smallb AS g_0 GROUP BY g_0.intkey"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -228,7 +227,7 @@ public class TestAggregatePushdown {
      * Note that until we can test the other side cardinality, we cannot fully push the group node
      */ 
     @Test public void testAggregatePushdown1() throws Exception {        
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleAggregatesCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleAggregatesCached();
         String sql = "SELECT o_dealerid, o_productid, sum(o_amount) FROM m1.order, m1.dealer, m2.product " +  //$NON-NLS-1$
             "WHERE o_dealerid=d_dealerid AND o_productid=p_productid AND d_state = 'CA' AND p_divid = 100 " +  //$NON-NLS-1$
             "GROUP BY o_dealerid, o_productid"; //$NON-NLS-1$
@@ -236,7 +235,7 @@ public class TestAggregatePushdown {
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
                                       metadata,
                                       null, getAggregatesFinder(),
-                                      new String[] {"SELECT g_0.p_productid AS c_0 FROM m2.product AS g_0 WHERE g_0.p_divid = 100 ORDER BY c_0", "SELECT g_0.o_productid AS c_0, g_0.o_dealerid AS c_1, SUM(g_0.o_amount) AS c_2 FROM m1.\"order\" AS g_0, m1.dealer AS g_1 WHERE (g_0.o_dealerid = g_1.d_dealerid) AND (g_1.d_state = 'CA') AND (g_0.o_productid IN (<dependent values>)) GROUP BY g_0.o_productid, g_0.o_dealerid ORDER BY c_0"},  //$NON-NLS-1$ //$NON-NLS-2$
+                                      new String[] {"SELECT g_0.p_productid AS c_0 FROM m2.product AS g_0 WHERE g_0.p_divid = 100 ORDER BY c_0", "SELECT g_0.o_productid, g_0.o_dealerid, SUM(g_0.o_amount) FROM m1.\"order\" AS g_0, m1.dealer AS g_1 WHERE (g_0.o_dealerid = g_1.d_dealerid) AND (g_1.d_state = 'CA') AND (g_0.o_productid IN (<dependent values>)) GROUP BY g_0.o_productid, g_0.o_dealerid"},  //$NON-NLS-1$ //$NON-NLS-2$
                                                     TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -258,7 +257,7 @@ public class TestAggregatePushdown {
     }
 
     @Test public void testAggregatePushdown2() throws Exception {        
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleAggregatesCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleAggregatesCached();
         String sql = "SELECT o_dealerid, o_productid, sum(o_amount) FROM m1.order, m1.dealer, m2.product " +  //$NON-NLS-1$
             "WHERE o_dealerid=d_dealerid AND o_productid=p_productid AND d_state = 'CA' AND p_divid = 100 " +  //$NON-NLS-1$
             "GROUP BY o_dealerid, o_productid having max(o_amount) < 100"; //$NON-NLS-1$
@@ -266,7 +265,7 @@ public class TestAggregatePushdown {
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
                                       metadata,
                                       null, getAggregatesFinder(),
-                                      new String[] {"SELECT g_0.p_productid AS c_0 FROM m2.product AS g_0 WHERE g_0.p_divid = 100 ORDER BY c_0", "SELECT g_0.o_productid AS c_0, g_0.o_dealerid AS c_1, MAX(g_0.o_amount) AS c_2, SUM(g_0.o_amount) AS c_3 FROM m1.\"order\" AS g_0, m1.dealer AS g_1 WHERE (g_0.o_dealerid = g_1.d_dealerid) AND (g_1.d_state = 'CA') AND (g_0.o_productid IN (<dependent values>)) GROUP BY g_0.o_productid, g_0.o_dealerid ORDER BY c_0"},  //$NON-NLS-1$ //$NON-NLS-2$
+                                      new String[] {"SELECT g_0.p_productid AS c_0 FROM m2.product AS g_0 WHERE g_0.p_divid = 100 ORDER BY c_0", "SELECT g_0.o_productid, g_0.o_dealerid, MAX(g_0.o_amount), SUM(g_0.o_amount) FROM m1.\"order\" AS g_0, m1.dealer AS g_1 WHERE (g_0.o_dealerid = g_1.d_dealerid) AND (g_1.d_state = 'CA') AND (g_0.o_productid IN (<dependent values>)) GROUP BY g_0.o_productid, g_0.o_dealerid"},  //$NON-NLS-1$ //$NON-NLS-2$
                                                     TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -298,7 +297,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         
         String sql = "SELECT avg(y.e2) from pm1.g1 x, pm2.g1 y where x.e3 = y.e3 group by x.e2, y.e1"; //$NON-NLS-1$
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
                                       new String[] {"SELECT g_0.e3, g_0.e2 FROM pm1.g1 AS g_0 GROUP BY g_0.e3, g_0.e2", "SELECT g_0.e3, g_0.e1, SUM(g_0.e2), COUNT(g_0.e2) FROM pm2.g1 AS g_0 GROUP BY g_0.e3, g_0.e1"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -328,7 +327,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         
         String sql = "SELECT stddev_pop(y.e2) from pm1.g1 x, pm2.g1 y where x.e3 = y.e3 group by x.e2, y.e1"; //$NON-NLS-1$
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
                                       new String[] {"SELECT g_0.e3 AS c_0, g_0.e1 AS c_1, COUNT(g_0.e2) AS c_2, SUM(power(g_0.e2, 2)) AS c_3, SUM(g_0.e2) AS c_4 FROM pm2.g1 AS g_0 GROUP BY g_0.e3, g_0.e1 ORDER BY c_0", "SELECT g_0.e3 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 GROUP BY g_0.e3, g_0.e2 ORDER BY c_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -357,7 +356,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         
         String sql = "SELECT count(y.e2) from pm1.g1 x, pm2.g1 y where x.e3 = y.e3 group by x.e2, y.e1"; //$NON-NLS-1$
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
                                       new String[] {"SELECT g_0.e3, g_0.e2 FROM pm1.g1 AS g_0 GROUP BY g_0.e3, g_0.e2", "SELECT g_0.e3, g_0.e1, COUNT(g_0.e2) FROM pm2.g1 AS g_0 GROUP BY g_0.e3, g_0.e1"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -386,7 +385,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         
         String sql = "SELECT count(y.e2) from pm1.g1 x left outer join pm2.g1 y on x.e3 = y.e3 group by x.e2, y.e1"; //$NON-NLS-1$
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
                                       new String[] {"SELECT g_0.e3, g_0.e2 FROM pm1.g1 AS g_0", "SELECT g_0.e3, g_0.e1, g_0.e2 FROM pm2.g1 AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -416,7 +415,7 @@ public class TestAggregatePushdown {
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = TestOptimizer.helpPlan(
               "select count(*), a.intnum from bqt1.smalla as a, bqt2.smallb as b where a.intkey = b.intkey group by a.intnum",  //$NON-NLS-1$
@@ -456,7 +455,7 @@ public class TestAggregatePushdown {
         
         String sql = "select a11.intkey ITEM_ID, sum(a11.intnum) WJXBFS1 from bqt1.smalla a11 join bqt2.smalla a12 on (a11.stringkey = a12.stringkey) join bqt2.smallb a13 on (a11.intkey = a13.intkey) where a13.intnum in (10) group by a11.intkey"; //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), null, capFinder, 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
                                       new String[] {"SELECT g_0.stringkey FROM bqt2.smalla AS g_0", "SELECT g_0.stringkey, g_0.intkey, SUM(g_0.intnum) FROM bqt1.smalla AS g_0 GROUP BY g_0.stringkey, g_0.intkey", "SELECT g_0.intkey FROM bqt2.smallb AS g_0 WHERE g_0.intnum = 10"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -485,7 +484,7 @@ public class TestAggregatePushdown {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = TestOptimizer.helpPlan(
               "select count(*) from bqt1.smalla",  //$NON-NLS-1$
@@ -504,7 +503,7 @@ public class TestAggregatePushdown {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = TestOptimizer.helpPlan(
               "select stringkey, max(intkey) from bqt1.smalla group by stringkey having count(intkey) = 1",  //$NON-NLS-1$
@@ -537,7 +536,7 @@ public class TestAggregatePushdown {
         caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan("select X.e1 FROM vm1.g1 X group by X.e1 having X.e1 = 1 and sum(X.e2) = 2", FakeMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select X.e1 FROM vm1.g1 X group by X.e1 having X.e1 = 1 and sum(X.e2) = 2", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
             new String[]{"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 WHERE pm1.g1.e1 = '1'"}, true); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -571,7 +570,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("oraclemodel", caps); //$NON-NLS-1$
         capFinder.addCapabilities("msmodel", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBusObj();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBusObj();
 
         String sql = "SELECT Q1.S, Q2.C, Q1.PRODUCT, Q1.REGION AS Q1R, Q2.REGION AS Q2R FROM " + //$NON-NLS-1$
             "(SELECT SUM(SALES) AS S, REGION, PRODUCT FROM DB2_TABLE WHERE PRODUCT IN ('GUNS', 'TOYS', 'VIDEOTAPES') GROUP BY REGION, PRODUCT) Q1 " + //$NON-NLS-1$
@@ -618,7 +617,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("oraclemodel", caps); //$NON-NLS-1$
         capFinder.addCapabilities("msmodel", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBusObj();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBusObj();
 
         String sql = "SELECT SUM(F.SALES), G.REGION, T.YEAR " +  //$NON-NLS-1$
             "FROM SALES F, GEOGRAPHY G, msModel.TIME T " + //$NON-NLS-1$
@@ -666,7 +665,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("oraclemodel", caps); //$NON-NLS-1$
         capFinder.addCapabilities("msmodel", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBusObj();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBusObj();
 
         String sql = "SELECT SUM(F.SALES), G.REGION, T.YEAR " +  //$NON-NLS-1$
             "FROM SALES F MAKEDEP, GEOGRAPHY G, msModel.TIME T " + //$NON-NLS-1$
@@ -714,7 +713,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("oraclemodel", caps); //$NON-NLS-1$
         capFinder.addCapabilities("msmodel", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBusObj();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBusObj();
 
         String sql = "SELECT SUM(F.SALES), G.REGION, T.YEAR " +  //$NON-NLS-1$
             "FROM SALES F MAKEDEP, GEOGRAPHY2 G, msModel.TIME T " + //$NON-NLS-1$
@@ -761,7 +760,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("oraclemodel", caps); //$NON-NLS-1$
         capFinder.addCapabilities("msmodel", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBusObj();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBusObj();
 
         String sql = "select sum(c0), sum(b0), c1, b2 FROM db2Table, OraTable where c2=b2 group by c1, b2"; //$NON-NLS-1$
 
@@ -795,7 +794,7 @@ public class TestAggregatePushdown {
         BasicSourceCapabilities caps = getAggregateCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan("select e1, max(e2) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm1.g2) y group by e1", FakeMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select e1, max(e2) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm1.g2) y group by e1", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
             new String[]{"SELECT v_0.c_0, MAX(v_0.c_1) FROM (SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0", //$NON-NLS-1$
         	"SELECT v_0.c_0, MAX(v_0.c_1) FROM (SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g2 AS g_0) AS v_0 GROUP BY v_0.c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -821,7 +820,7 @@ public class TestAggregatePushdown {
         BasicSourceCapabilities caps = getAggregateCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm1.g2) z", FakeMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm1.g2) z", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
             new String[]{"SELECT MAX(v_0.c_0) FROM (SELECT g_0.e2 AS c_0 FROM pm1.g2 AS g_0) AS v_0 HAVING COUNT(*) > 0", //$NON-NLS-1$
         	"SELECT MAX(v_0.c_0) FROM (SELECT g_0.e2 AS c_0 FROM pm1.g1 AS g_0) AS v_0 HAVING COUNT(*) > 0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -850,7 +849,7 @@ public class TestAggregatePushdown {
         BasicSourceCapabilities caps = getAggregateCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan("select count(e2) from (select e1, e2 from pm1.g1 union select e1, e2 from pm1.g2) z", FakeMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select count(e2) from (select e1, e2 from pm1.g1 union select e1, e2 from pm1.g2) z", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
             new String[]{"SELECT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0", //$NON-NLS-1$
         	"SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -877,7 +876,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", TestOptimizer.getTypicalCapabilities()); //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2), count(*) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm2.g2) z", FakeMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2), count(*) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm2.g2) z", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
             new String[]{"SELECT MAX(v_0.c_0), COUNT(*) FROM (SELECT g_0.e2 AS c_0 FROM pm1.g1 AS g_0) AS v_0 HAVING COUNT(*) > 0", //$NON-NLS-1$
         	"SELECT g_0.e2 FROM pm2.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -907,7 +906,7 @@ public class TestAggregatePushdown {
         
         // Plan query
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
-                FakeMetadataFactory.exampleBQTCached(),
+                RealMetadataFactory.exampleBQTCached(),
                 null, getAggregatesFinder(),
                 new String[] {"SELECT g_0.DateValue FROM bqt1.smallb AS g_0"},  
                               TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );

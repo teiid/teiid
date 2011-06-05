@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -294,7 +295,7 @@ public class RulePushAggregates implements
 			if (first) {
 				first = false;
 				QueryRewriter.makeSelectUnique(allSymbols, false);
-				symbols = allSymbols.getSymbols();
+				symbols = allSymbols.getProjectedSymbols();
 			}
 			projectPlanNode.setProperty(NodeConstants.Info.PROJECT_COLS, allSymbols.getSymbols());
 		    projectPlanNode.addGroups(view.getGroups());
@@ -403,7 +404,7 @@ public class RulePushAggregates implements
         if (groupingExpressions != null) {
         	newGroupingExpressions = new HashSet<SingleElementSymbol>();
         	for (SingleElementSymbol singleElementSymbol : groupingExpressions) {
-				newGroupingExpressions.add((SingleElementSymbol)symbolMap.getKeys().get(virtualElements.indexOf(singleElementSymbol)).clone());
+				newGroupingExpressions.add(symbolMap.getKeys().get(virtualElements.indexOf(singleElementSymbol)).clone());
 			}
         }
 
@@ -540,20 +541,19 @@ public class RulePushAggregates implements
         }
         Map<PlanNode, List<SingleElementSymbol>> groupingMap = createNodeMapping(groupNode, groupingExpressions, false);
 
-        Set<PlanNode> possibleTargetNodes = new HashSet<PlanNode>(aggregateMap.keySet());
+        Set<PlanNode> possibleTargetNodes = new LinkedHashSet<PlanNode>(aggregateMap.keySet());
         possibleTargetNodes.addAll(groupingMap.keySet());
 
         for (PlanNode planNode : possibleTargetNodes) {
             Set<SingleElementSymbol> stagedGroupingSymbols = new LinkedHashSet<SingleElementSymbol>();
             List<AggregateSymbol> aggregates = aggregateMap.get(planNode);
-            List<SingleElementSymbol> groupBy = groupingMap.get(planNode);
 
             if (!canPush(groupNode, stagedGroupingSymbols, planNode)) {
                 continue;
             }
 
-            if (groupBy != null) {
-                stagedGroupingSymbols.addAll(groupBy);
+            if (groupingExpressions != null) {
+            	filterJoinColumns(stagedGroupingSymbols, planNode.getGroups(), groupingExpressions);
             }
 
             collectSymbolsFromOtherAggregates(allAggregates, aggregates, planNode, stagedGroupingSymbols);
@@ -715,7 +715,7 @@ public class RulePushAggregates implements
 
     private <T extends SingleElementSymbol> Map<PlanNode, List<T>> createNodeMapping(PlanNode groupNode,
                                                                        Collection<T> expressions, boolean aggs) {
-        Map<PlanNode, List<T>> result = new HashMap<PlanNode, List<T>>();
+        Map<PlanNode, List<T>> result = new LinkedHashMap<PlanNode, List<T>>();
         if (expressions == null) {
             return result;
         }

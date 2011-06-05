@@ -87,18 +87,21 @@ public class DependentCriteriaProcessor {
         public void sort() throws BlockedException,
                    TeiidComponentException, TeiidProcessingException {
             if (dvs == null) {
-            	//TODO: detect if we're already distinct
-            	if (sortUtility == null) {
-            		List<Expression> sortSymbols = new ArrayList<Expression>(dependentSetStates.size());
-	                List<Boolean> sortDirection = new ArrayList<Boolean>(sortSymbols.size());
-	                for (int i = 0; i < dependentSetStates.size(); i++) {
-	                    sortDirection.add(Boolean.valueOf(OrderBy.ASC));
-	                    sortSymbols.add(dependentSetStates.get(i).valueExpression);
-	                }
-	                DependentValueSource originalVs = (DependentValueSource)dependentNode.getContext().getVariableContext().getGlobalValue(valueSource);
-	                this.sortUtility = new SortUtility(originalVs.getTupleBuffer().createIndexedTupleSource(), sortSymbols, sortDirection, Mode.DUP_REMOVE, dependentNode.getBufferManager(), dependentNode.getConnectionID(), originalVs.getTupleBuffer().getSchema());
-            	}
-            	dvs = new DependentValueSource(sortUtility.sort());
+                DependentValueSource originalVs = (DependentValueSource)dependentNode.getContext().getVariableContext().getGlobalValue(valueSource);
+                if (!originalVs.isDistinct()) {
+	            	if (sortUtility == null) {
+	            		List<Expression> sortSymbols = new ArrayList<Expression>(dependentSetStates.size());
+		                List<Boolean> sortDirection = new ArrayList<Boolean>(sortSymbols.size());
+		                for (int i = 0; i < dependentSetStates.size(); i++) {
+		                    sortDirection.add(Boolean.valueOf(OrderBy.ASC));
+		                    sortSymbols.add(dependentSetStates.get(i).valueExpression);
+		                }
+		                this.sortUtility = new SortUtility(originalVs.getTupleBuffer().createIndexedTupleSource(), sortSymbols, sortDirection, Mode.DUP_REMOVE, dependentNode.getBufferManager(), dependentNode.getConnectionID(), originalVs.getTupleBuffer().getSchema());
+	            	}
+	            	dvs = new DependentValueSource(sortUtility.sort());
+                } else {
+                	dvs = originalVs;
+                }
             	for (SetState setState : dependentSetStates) {
                     setState.valueIterator = dvs.getValueIterator(setState.valueExpression);
                     if (setState.maxNdv > 0 && setState.maxNdv < dvs.getTupleBuffer().getRowCount()) {
@@ -363,8 +366,10 @@ public class DependentCriteriaProcessor {
         return hasNextCommand;
     }
     
-    public Criteria replaceDependentCriteria(AbstractSetCriteria crit, SetState state) {
+    public Criteria replaceDependentCriteria(AbstractSetCriteria crit, SetState state) throws TeiidComponentException {
     	if (state.overMax) {
+            DependentValueSource originalVs = (DependentValueSource)dependentNode.getContext().getVariableContext().getGlobalValue(((DependentSetCriteria)crit).getContextSymbol());
+            originalVs.setUnused(true);
     		return QueryRewriter.TRUE_CRITERIA;
     	}
     	if (state.replacement.isEmpty()) {

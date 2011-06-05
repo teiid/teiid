@@ -28,6 +28,7 @@ import org.junit.After;
 import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer.AntiSemiJoin;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.TestOptimizer.SemiJoin;
@@ -38,8 +39,6 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.rewriter.TestQueryRewriter;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.SourceSystemFunctions;
 
@@ -56,7 +55,7 @@ public class TestSubqueryPushdown {
 	    caps.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
 	    capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 	    
-	    FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+	    QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 	
 	    // Plan query
 	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata, 
@@ -96,7 +95,7 @@ public class TestSubqueryPushdown {
 	    caps.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
 	    capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 	    
-	    FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+	    QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 	
 	    // Plan query
 	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata, 
@@ -138,7 +137,7 @@ public class TestSubqueryPushdown {
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan("SELECT intkey FROM bqt1.smalla AS n WHERE intkey = (SELECT MAX(intkey) FROM bqt1.smallb AS s WHERE s.stringkey = n.stringkey )", FakeMetadataFactory.exampleBQTCached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("SELECT intkey FROM bqt1.smalla AS n WHERE intkey = (SELECT MAX(intkey) FROM bqt1.smallb AS s WHERE s.stringkey = n.stringkey )", RealMetadataFactory.exampleBQTCached(),  //$NON-NLS-1$
             null, capFinder,
             new String[] { "SELECT intkey FROM bqt1.smalla AS n WHERE intkey = (SELECT MAX(intkey) FROM bqt1.smallb AS s WHERE s.stringkey = n.stringkey)" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, FULL_PUSHDOWN); 
@@ -179,7 +178,7 @@ public class TestSubqueryPushdown {
 
         String sqlOut = "SELECT g_0.intkey FROM bqt1.mediuma AS g_0, bqt1.smallb AS g_1 WHERE (g_0.stringkey = concat('1', concat(g_1.intkey, '0'))) AND (g_0.datevalue = (SELECT MAX(g_2.datevalue) FROM bqt1.mediuma AS g_2, bqt1.smallb AS g_3 WHERE (g_2.stringkey = concat('1', concat(g_3.intkey, '0'))) AND (g_3.stringkey LIKE '%0') AND (g_3.stringkey = g_1.stringkey))) AND (g_1.stringkey LIKE '%0')"; //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan(sqlIn, FakeMetadataFactory.exampleBQTCached(),  
+        ProcessorPlan plan = helpPlan(sqlIn, RealMetadataFactory.exampleBQTCached(),  
             null, capFinder,
             new String[] { sqlOut }, SHOULD_SUCCEED); 
         checkNodeTypes(plan, FULL_PUSHDOWN); 
@@ -218,7 +217,7 @@ public class TestSubqueryPushdown {
         String sqlOut = 
             "SELECT SmallA__1.IntKey FROM BQT1.SmallA AS SmallA__1 WHERE (SmallA__1.StringKey = 'VOD.L') AND (SmallA__1.DateValue = (SELECT MAX(BQT1.SmallA.DateValue) FROM BQT1.SmallA WHERE BQT1.SmallA.StringKey = SmallA__1.StringKey))"; //$NON-NLS-1$
         
-        ProcessorPlan plan = helpPlan(sqlIn, FakeMetadataFactory.exampleBQTCached(),  
+        ProcessorPlan plan = helpPlan(sqlIn, RealMetadataFactory.exampleBQTCached(),  
             null, capFinder,
             new String[] { sqlOut }, SHOULD_SUCCEED); 
         checkNodeTypes(plan, FULL_PUSHDOWN); 
@@ -236,7 +235,7 @@ public class TestSubqueryPushdown {
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan("SELECT stringkey, (SELECT intkey FROM BQT1.SmallA AS b WHERE Intnum = 22) FROM BQT1.SmallA", FakeMetadataFactory.exampleBQTCached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("SELECT stringkey, (SELECT intkey FROM BQT1.SmallA AS b WHERE Intnum = 22) FROM BQT1.SmallA", RealMetadataFactory.exampleBQTCached(),  //$NON-NLS-1$
             null, capFinder,
             new String[] { "SELECT stringkey, (SELECT intkey FROM BQT1.SmallA AS b WHERE Intnum = 22) FROM BQT1.SmallA" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, new int[] {
@@ -258,7 +257,7 @@ public class TestSubqueryPushdown {
     }   
     
     @Test public void testCorrelatedSubquery1() {
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select e1 FROM pm2.g1 WHERE pm1.g1.e2 = pm2.g1.e2)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select e1 FROM pm2.g1 WHERE pm1.g1.e2 = pm2.g1.e2)", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
             new String[] { "SELECT e1, pm1.g1.e2 FROM pm1.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -279,7 +278,7 @@ public class TestSubqueryPushdown {
     }
 
     @Test public void testCorrelatedSubquery2() {
-        ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 WHERE pm1.g1.e2 = pm2.g1.e2) from pm1.g1", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 WHERE pm1.g1.e2 = pm2.g1.e2) from pm1.g1", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
             new String[] { "SELECT e1, pm1.g1.e2 FROM pm1.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -364,7 +363,7 @@ public class TestSubqueryPushdown {
 
     @Test public void testCorrelatedSubqueryInTransformation2() {
         String sql = "Select * from vm1.g20"; //$NON-NLS-1$
-        ProcessorPlan plan = helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), 
             new String[] { "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -394,7 +393,7 @@ public class TestSubqueryPushdown {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select max(e1) FROM pm1.g2)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select max(e1) FROM pm1.g2)", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
             null, capFinder,
             new String[] { "SELECT e1 FROM pm1.g1" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, new int[] {
@@ -426,7 +425,7 @@ public class TestSubqueryPushdown {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", getTypicalCapabilities()); //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select e1 FROM pm2.g1)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select e1 FROM pm2.g1)", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
             null, capFinder,
             new String[] { "SELECT e1 FROM pm1.g1" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, new int[] {
@@ -459,7 +458,7 @@ public class TestSubqueryPushdown {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", new BasicSourceCapabilities()); //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select * from xmltest.doc1)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select * from xmltest.doc1)", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
             null, capFinder,
             new String[] { "SELECT e1 FROM pm1.g1" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, new int[] {
@@ -492,7 +491,7 @@ public class TestSubqueryPushdown {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", new BasicSourceCapabilities()); //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (SELECT ltrim(e1) FROM pm1.g2)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (SELECT ltrim(e1) FROM pm1.g2)", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
             null, capFinder,
             new String[] { "SELECT e1 FROM pm1.g1" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, new int[] {
@@ -524,7 +523,7 @@ public class TestSubqueryPushdown {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", new BasicSourceCapabilities()); //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (SELECT 'xyz' FROM pm1.g2)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (SELECT 'xyz' FROM pm1.g2)", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
             null, capFinder,
             new String[] { "SELECT e1 FROM pm1.g1" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, new int[] {
@@ -556,7 +555,7 @@ public class TestSubqueryPushdown {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", new BasicSourceCapabilities()); //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (SELECT e1 FROM pm1.g2 ORDER BY e1 limit 2)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (SELECT e1 FROM pm1.g2 ORDER BY e1 limit 2)", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
             null, capFinder,
             new String[] { "SELECT e1 FROM pm1.g1" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, new int[] {
@@ -590,7 +589,7 @@ public class TestSubqueryPushdown {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", new BasicSourceCapabilities()); //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (SELECT rtrim(ltrim(e1)) FROM pm1.g2)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (SELECT rtrim(ltrim(e1)) FROM pm1.g2)", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
             null, capFinder,
             new String[] { "SELECT e1 FROM pm1.g1" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, new int[] {
@@ -622,7 +621,7 @@ public class TestSubqueryPushdown {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", new BasicSourceCapabilities()); //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (EXEC pm1.sqsp1())", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (EXEC pm1.sqsp1())", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
             null, capFinder,
             new String[] { "SELECT e1 FROM pm1.g1" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, new int[] {
@@ -654,7 +653,7 @@ public class TestSubqueryPushdown {
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (SELECT pm1.g2.e1 FROM pm1.g2 WHERE pm1.g2.e1 = pm1.g1.e1)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (SELECT pm1.g2.e1 FROM pm1.g2 WHERE pm1.g2.e1 = pm1.g1.e1)", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
             null, capFinder,
             new String[] { "SELECT e1 FROM pm1.g1" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, new int[] {
@@ -693,7 +692,7 @@ public class TestSubqueryPushdown {
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan("SELECT intkey FROM bqt1.smalla AS n WHERE intkey = (SELECT MAX(intkey) FROM bqt1.smallb AS s WHERE s.stringkey = n.stringkey ) or intkey = (SELECT MIN(intkey) FROM bqt1.smallb AS s WHERE s.stringkey = n.stringkey )", FakeMetadataFactory.exampleBQTCached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("SELECT intkey FROM bqt1.smalla AS n WHERE intkey = (SELECT MAX(intkey) FROM bqt1.smallb AS s WHERE s.stringkey = n.stringkey ) or intkey = (SELECT MIN(intkey) FROM bqt1.smallb AS s WHERE s.stringkey = n.stringkey )", RealMetadataFactory.exampleBQTCached(),  //$NON-NLS-1$
             null, capFinder,
             new String[] { "SELECT g_0.intkey FROM bqt1.smalla AS g_0 WHERE (g_0.intkey = (SELECT MAX(g_1.intkey) FROM bqt1.smallb AS g_1 WHERE g_1.stringkey = g_0.stringkey)) OR (g_0.intkey = (SELECT MIN(g_2.IntKey) FROM bqt1.smallb AS g_2 WHERE g_2.StringKey = g_0.stringkey))" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, FULL_PUSHDOWN); 
@@ -704,7 +703,7 @@ public class TestSubqueryPushdown {
      */
     @Test public void testProjectSubqueryPushdown() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
@@ -722,7 +721,7 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testScalarSubquery2() {
-        ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 where pm1.g1.e1 = 'x') as X from pm1.g1", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 where pm1.g1.e1 = 'x') as X from pm1.g1", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -746,66 +745,70 @@ public class TestSubqueryPushdown {
      * Technically this is not a full push-down, but the subquery will be evaluated prior to pushdown
      */
     @Test public void testCompareSubquery4() throws TeiidComponentException, TeiidProcessingException {
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 > (select e1 FROM pm2.g1 where e2 = 13)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 > (select e1 FROM pm2.g1 where e2 = 13)", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 > (SELECT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e2 = 13)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
     
     @Test public void testScalarSubquery1() throws TeiidComponentException, TeiidProcessingException {
-        ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 where e1 = 'x') from pm1.g1", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 where e1 = 'x') from pm1.g1", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
             new String[] { "SELECT g_0.e1, (SELECT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e1 = 'x') FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
     
     @Test public void testSubqueryRewriteToJoinDistinct() throws Exception {
-        TestQueryRewriter.helpTestRewriteCommand("Select distinct e1 from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1)", "SELECT DISTINCT e1 FROM pm1.g1 AS x, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE x.e1 = X__1.e1", FakeMetadataFactory.example1Cached());
+        TestQueryRewriter.helpTestRewriteCommand("Select distinct e1 from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1)", "SELECT DISTINCT e1 FROM pm1.g1 AS x, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE x.e1 = X__1.e1", RealMetadataFactory.example1Cached());
     }
     
     /**
      * Agg does not depend on cardinality
      */
     @Test public void testSubqueryRewriteToJoinGroupBy() throws Exception {
-        TestQueryRewriter.helpTestRewriteCommand("Select max(e1) from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1) group by e2", "SELECT MAX(e1) FROM pm1.g1 AS x, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE x.e1 = X__1.e1 GROUP BY e2", FakeMetadataFactory.example1Cached());
+        TestQueryRewriter.helpTestRewriteCommand("Select max(e1) from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1) group by e2", "SELECT MAX(e1) FROM pm1.g1 AS x, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE x.e1 = X__1.e1 GROUP BY e2", RealMetadataFactory.example1Cached());
     }
     
     /**
      * Agg does depend on cardinality
      */
     @Test public void testSubqueryRewriteToJoinGroupBy1() throws Exception {
-        TestQueryRewriter.helpTestRewriteCommand("Select avg(e1) from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1) group by e2", "SELECT AVG(e1) FROM pm1.g1 AS x WHERE EXISTS (SELECT pm1.g1.e1 FROM pm1.g1 WHERE e1 = x.e1 LIMIT 1) GROUP BY e2", FakeMetadataFactory.example1Cached());
+        TestQueryRewriter.helpTestRewriteCommand("Select avg(e1) from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1) group by e2", "SELECT AVG(e1) FROM pm1.g1 AS x WHERE EXISTS (SELECT pm1.g1.e1 FROM pm1.g1 WHERE e1 = x.e1 LIMIT 1) GROUP BY e2", RealMetadataFactory.example1Cached());
     }
     
     @Test public void testSubqueryRewriteToJoin() throws Exception {
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.e1", FakeMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.e1", RealMetadataFactory.example4());
     }
     
     @Test public void testSubqueryRewriteToJoin1() throws Exception {
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ mj */ (select pm1.g1.e1 as x FROM pm1.g1)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1 AS x FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.x", FakeMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ mj */ (select pm1.g1.e1 as x FROM pm1.g1)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1 AS x FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.x", RealMetadataFactory.example4());
     }
     
     @Test public void testSubqueryRewriteToJoin2() throws Exception {
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ mj */ (select pm1.g1.e1 || 1 FROM pm1.g1)", "SELECT e1 FROM pm3.g1, (SELECT concat(pm1.g1.e1, '1') AS EXPR FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.EXPR", FakeMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ mj */ (select distinct pm1.g1.e1 || 1 FROM pm1.g1)", "SELECT e1 FROM pm3.g1, (SELECT DISTINCT concat(pm1.g1.e1, '1') AS EXPR FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.EXPR", RealMetadataFactory.example4());
     }
-    
+
+    @Test public void testSubqueryRewriteToJoin2a() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ mj */ (select pm1.g1.e1 || 1 FROM pm1.g1)", "SELECT e1 FROM pm3.g1, (SELECT DISTINCT concat(pm1.g1.e1, '1') AS EXPR FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.EXPR", RealMetadataFactory.example4());
+    }
+
     /**
      * Even though this situation is essentially the same as above, we don't yet handle it
      */
     @Test public void testSubqueryRewriteToJoin3() throws Exception {
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where exists (select pm1.g1.e2 FROM pm1.g1 WHERE pm3.g1.e1 = pm1.g1.e1 || 1)", "SELECT e1 FROM pm3.g1 WHERE EXISTS (SELECT pm1.g1.e2 FROM pm1.g1 WHERE concat(pm1.g1.e1, '1') = pm3.g1.e1 LIMIT 1)", FakeMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where exists (select pm1.g1.e2 FROM pm1.g1 WHERE pm3.g1.e1 = pm1.g1.e1 || 1)", "SELECT e1 FROM pm3.g1 WHERE EXISTS (SELECT pm1.g1.e2 FROM pm1.g1 WHERE concat(pm1.g1.e1, '1') = pm3.g1.e1 LIMIT 1)", RealMetadataFactory.example4());
     }
     
     @Test public void testSubqueryRewriteToJoinWithOtherCriteria() throws Exception {
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ mj */ (select pm1.g1.e1 FROM pm1.g1 where e2 < pm3.g1.e2)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1, e2 FROM pm1.g1) AS X__1 WHERE (X__1.e2 < pm3.g1.e2) AND (pm3.g1.e1 = X__1.e1)", FakeMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ mj */ (select pm1.g1.e1 FROM pm1.g1 where e2 < pm3.g1.e2)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1, e2 FROM pm1.g1) AS X__1 WHERE (X__1.e2 < pm3.g1.e2) AND (pm3.g1.e1 = X__1.e1)", RealMetadataFactory.example4());
     }
     
     @Test public void testDontRewriteToJoinWithOtherCriteria() throws Exception {
     	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ NO_UNNEST */ (select pm1.g1.e1 FROM pm1.g1 where e2 < pm3.g1.e2)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e1 IN /*+ NO_UNNEST */ (SELECT pm1.g1.e1 FROM pm1.g1 WHERE e2 < pm3.g1.e2)", FakeMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ NO_UNNEST */ (select pm1.g1.e1 FROM pm1.g1 where e2 < pm3.g1.e2)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e1 IN /*+ NO_UNNEST */ (SELECT pm1.g1.e1 FROM pm1.g1 WHERE e2 < pm3.g1.e2)", RealMetadataFactory.example4());
     }
 
     @Test public void testSubqueryRewriteToJoinWithAggregate() throws Exception {
     	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (select max(e2) FROM pm1.g1 where pm3.g1.e1 = e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1 FROM pm1.g1 GROUP BY e1) AS X__1 WHERE (pm3.g1.e2 < X__1.MAX) AND (pm3.g1.e1 = X__1.e1)", FakeMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (select max(e2) FROM pm1.g1 where pm3.g1.e1 = e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1 FROM pm1.g1 GROUP BY e1) AS X__1 WHERE (pm3.g1.e2 < X__1.MAX) AND (pm3.g1.e1 = X__1.e1)", RealMetadataFactory.example4());
     }
     
     /**
@@ -813,12 +816,12 @@ public class TestSubqueryPushdown {
      * @throws Exception
      */
     @Test public void testSubqueryRewriteToJoinWithAggregate1() throws Exception {
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (select max(e2) FROM pm1.g1 where pm3.g1.e1 = e1 and pm3.g1.e3 > e3)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e2 < (SELECT MAX(e2) FROM pm1.g1 WHERE (e1 = pm3.g1.e1) AND (e3 < pm3.g1.e3))", FakeMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (select max(e2) FROM pm1.g1 where pm3.g1.e1 = e1 and pm3.g1.e3 > e3)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e2 < (SELECT MAX(e2) FROM pm1.g1 WHERE (e1 = pm3.g1.e1) AND (e3 < pm3.g1.e3))", RealMetadataFactory.example4());
     }
     
     @Test public void testSubqueryRewriteToJoinWithAggregate2() throws Exception {
     	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (select max(e2) FROM pm1.g1 WHERE pm3.g1.e1 = e1 HAVING min(e3) < pm3.g1.e3)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1, MIN(e3) AS MIN FROM pm1.g1 GROUP BY e1) AS X__1 WHERE (X__1.MIN < pm3.g1.e3) AND (pm3.g1.e2 < X__1.MAX) AND (pm3.g1.e1 = X__1.e1)", FakeMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (select max(e2) FROM pm1.g1 WHERE pm3.g1.e1 = e1 HAVING min(e3) < pm3.g1.e3)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1, MIN(e3) AS MIN FROM pm1.g1 GROUP BY e1) AS X__1 WHERE (X__1.MIN < pm3.g1.e3) AND (pm3.g1.e2 < X__1.MAX) AND (pm3.g1.e1 = X__1.e1)", RealMetadataFactory.example4());
     }
 
     /**
@@ -826,7 +829,7 @@ public class TestSubqueryPushdown {
      * @throws Exception
      */
     @Test public void testSubqueryRewriteNot() throws Exception {
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 not in (select e2 FROM pm1.g1 where pm3.g1.e1 = e1)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e2 NOT IN (SELECT e2 FROM pm1.g1 WHERE e1 = pm3.g1.e1)", FakeMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 not in (select e2 FROM pm1.g1 where pm3.g1.e1 = e1)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e2 NOT IN (SELECT e2 FROM pm1.g1 WHERE e1 = pm3.g1.e1)", RealMetadataFactory.example4());
     }
 
     /**
@@ -834,19 +837,35 @@ public class TestSubqueryPushdown {
      * @throws Exception
      */
     @Test public void testSubqueryRewriteAll() throws Exception {
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 = all (select e2 FROM pm1.g1 where pm3.g1.e1 = e1)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e2 = ALL (SELECT e2 FROM pm1.g1 WHERE e1 = pm3.g1.e1)", FakeMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 = all (select e2 FROM pm1.g1 where pm3.g1.e1 = e1)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e2 = ALL (SELECT e2 FROM pm1.g1 WHERE e1 = pm3.g1.e1)", RealMetadataFactory.example4());
     }
     
+    @Test public void testRewriteSubqueryCompare() throws Exception {
+    	TestQueryRewriter.helpTestRewriteCommand("select e1 from pm1.g1 where e1 <> ANY (select e1 from pm1.g1)", "SELECT e1 FROM pm1.g1 WHERE e1 <> SOME (SELECT e1 FROM pm1.g1)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testRewriteSubqueryCompare1() throws Exception {
+    	TestQueryRewriter.helpTestRewriteCommand("select e1 from pm1.g1 where e1 <> ALL (select e1 from pm1.g1)", "SELECT e1 FROM pm1.g1 WHERE e1 NOT IN (SELECT e1 FROM pm1.g1)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    @Test public void testRewriteSubqueryCompare2() throws Exception {
+    	TestQueryRewriter.helpTestRewriteCommand("select e1 from pm1.g1 where e1 = ANY (select e1 from pm1.g1)", "SELECT e1 FROM pm1.g1 WHERE e1 IN (SELECT e1 FROM pm1.g1)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testRewriteSubqueryCompare3() throws Exception {
+    	TestQueryRewriter.helpTestRewriteCommand("select e1 from pm1.g1 where e1 = ALL (select e1 from pm1.g1)", "SELECT e1 FROM pm1.g1 WHERE e1 = ALL (SELECT e1 FROM pm1.g1)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
     @Test public void testSubqueryExpressionJoin() throws Exception {
     	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (Select max(e2) from pm2.g2 where e1 = pm3.g1.e1 having convert(min(e2), string) > pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1, MIN(e2) AS MIN FROM pm2.g2 GROUP BY e1) AS X__1 WHERE (convert(X__1.MIN, string) > pm3.g1.e1) AND (pm3.g1.e2 < X__1.MAX) AND (pm3.g1.e1 = X__1.e1)", FakeMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (Select max(e2) from pm2.g2 where e1 = pm3.g1.e1 having convert(min(e2), string) > pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1, MIN(e2) AS MIN FROM pm2.g2 GROUP BY e1) AS X__1 WHERE (convert(X__1.MIN, string) > pm3.g1.e1) AND (pm3.g1.e2 < X__1.MAX) AND (pm3.g1.e1 = X__1.e1)", RealMetadataFactory.example4());
     }
 
     /**
      * Must be handled as a semi-join, rather than a regular join
      */
     @Test public void testSemiJoin() {
-        ProcessorPlan plan = helpPlan("Select e1 from pm2.g2 where e2 in /*+ mj */ (select count(e2) FROM pm1.g2 group by e1 having e1 < pm2.g2.e3)", FakeMetadataFactory.example4(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm2.g2 where e2 in /*+ mj */ (select count(e2) FROM pm1.g2 group by e1 having e1 < pm2.g2.e3)", RealMetadataFactory.example4(),  //$NON-NLS-1$
             new String[] { "SELECT g_0.e2 AS c_0, g_0.e3 AS c_1, g_0.e1 AS c_2 FROM pm2.g2 AS g_0 ORDER BY c_0" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -871,7 +890,7 @@ public class TestSubqueryPushdown {
      * This will not plan as a anti semi-join since the cost seems too high
      */
     @Test public void testNoAntiSemiJoinExistsCosting() {
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g2 as o where not exists (select 1 from pm3.g1 where e1 = o.e1 having o.e2 = count(e2))", FakeMetadataFactory.example4(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g2 as o where not exists (select 1 from pm3.g1 where e1 = o.e1 having o.e2 = count(e2))", RealMetadataFactory.example4(),  //$NON-NLS-1$
             new String[] { "SELECT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -895,7 +914,7 @@ public class TestSubqueryPushdown {
      * Same as above, but the source is much larger, so a semi-join is favorable
      */
     @Test public void testSemiJoinExistsCosting() {
-        ProcessorPlan plan = helpPlan("Select e1 from pm2.g2 as o where not exists (select 1 from pm3.g1 where e1 = o.e1 having o.e2 = count(e2))", FakeMetadataFactory.example4(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm2.g2 as o where not exists (select 1 from pm3.g1 where e1 = o.e1 having o.e2 = count(e2))", RealMetadataFactory.example4(),  //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_0, c_1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -917,7 +936,7 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testAntiSemiJoinExistsHint() {
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g2 as o where not exists /*+ MJ */ (select 1 from pm3.g1 where e1 = o.e1 having o.e2 = count(e2))", FakeMetadataFactory.example4(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g2 as o where not exists /*+ MJ */ (select 1 from pm3.g1 where e1 = o.e1 having o.e2 = count(e2))", RealMetadataFactory.example4(),  //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g2 AS g_0 ORDER BY c_0, c_1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -943,7 +962,7 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testAntiSemiJoinInHint() {
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g2 as o where e2 NOT IN /*+ MJ */ (select count(e2) from pm3.g1 where e1 = o.e1)", FakeMetadataFactory.example4(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g2 as o where e2 NOT IN /*+ MJ */ (select count(e2) from pm3.g1 where e1 = o.e1)", RealMetadataFactory.example4(),  //$NON-NLS-1$
             new String[] { "SELECT g_0.e2 AS c_0, g_0.e1 AS c_1 FROM pm1.g2 AS g_0 ORDER BY c_1, c_0" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -969,7 +988,7 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testNonSemiJoin() throws Exception {
-        ProcessorPlan plan = helpPlan("Select x from xmltable('/a/b' passing convert('<a/>', xml) columns x integer path '@x') as t where x = (select count(e2) FROM pm1.g2)", FakeMetadataFactory.example4(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select x from xmltable('/a/b' passing convert('<a/>', xml) columns x integer path '@x') as t where x = (select count(e2) FROM pm1.g2)", RealMetadataFactory.example4(),  //$NON-NLS-1$
             new String[] {}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             0,      // Access
@@ -1001,7 +1020,7 @@ public class TestSubqueryPushdown {
     }
 
     @Test public void testInvalidGeneratedSemijoinQuery1() throws Exception {
-    	TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 IN /*+ mj */ (Select max(e2) from pm2.g2 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1 FROM pm2.g2 GROUP BY e1) AS X__1 WHERE (pm3.g1.e1 = X__1.e1) AND (pm3.g1.e2 = X__1.MAX)", FakeMetadataFactory.example4());
+    	TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 IN /*+ mj */ (Select max(e2) from pm2.g2 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1 FROM pm2.g2 GROUP BY e1) AS X__1 WHERE (pm3.g1.e1 = X__1.e1) AND (pm3.g1.e2 = X__1.MAX)", RealMetadataFactory.example4());
     }
     
     @Test public void testCompareSubquery2() throws Exception {
@@ -1011,7 +1030,7 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testUncorrelatedSet() {
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in /*+ mj */ (select e1 FROM pm2.g1)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in /*+ mj */ (select e1 FROM pm2.g1)", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
             new String[] { "SELECT DISTINCT g_0.e1 FROM pm2.g1 AS g_0", "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             2,      // Access

@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -43,11 +42,21 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ColumnSet;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
+import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Column.SearchType;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingElement;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.LanguageObject;
@@ -55,58 +64,55 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
-import org.teiid.query.unittest.FakeMetadataStore;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
 public class TestValidator {
 
-    public static FakeMetadataFacade exampleMetadata() {
+    public static TransformationMetadata exampleMetadata() {
+    	MetadataStore metadataStore = new MetadataStore();
         // Create metadata objects        
-        FakeMetadataObject modelObj = FakeMetadataFactory.createPhysicalModel("test"); //$NON-NLS-1$
-        FakeMetadataObject vModelObj2 = FakeMetadataFactory.createVirtualModel("vTest");  //$NON-NLS-1$
-        FakeMetadataObject groupObj = FakeMetadataFactory.createPhysicalGroup("test.group", modelObj);         //$NON-NLS-1$
-        FakeMetadataObject elemObj0 = FakeMetadataFactory.createElement("test.group.e0", groupObj, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
-        elemObj0.putProperty(FakeMetadataObject.Props.NULL, Boolean.FALSE);
-        FakeMetadataObject elemObj1 = FakeMetadataFactory.createElement("test.group.e1", groupObj, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
-        elemObj1.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
-        FakeMetadataObject elemObj2 = FakeMetadataFactory.createElement("test.group.e2", groupObj, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
-        elemObj2.putProperty(FakeMetadataObject.Props.SEARCHABLE_COMPARE, Boolean.FALSE);
-        FakeMetadataObject elemObj3 = FakeMetadataFactory.createElement("test.group.e3", groupObj, DataTypeManager.DefaultDataTypes.STRING, 3); //$NON-NLS-1$
-        elemObj3.putProperty(FakeMetadataObject.Props.SEARCHABLE_LIKE, Boolean.FALSE);
+        Schema modelObj = RealMetadataFactory.createPhysicalModel("test", metadataStore); //$NON-NLS-1$
+        Schema vModelObj2 = RealMetadataFactory.createVirtualModel("vTest", metadataStore);  //$NON-NLS-1$
+        Table groupObj = RealMetadataFactory.createPhysicalGroup("group", modelObj);         //$NON-NLS-1$
+        Column elemObj0 = RealMetadataFactory.createElement("e0", groupObj, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        elemObj0.setNullType(NullType.No_Nulls);
+        Column elemObj1 = RealMetadataFactory.createElement("e1", groupObj, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        elemObj1.setSelectable(false);
+        Column elemObj2 = RealMetadataFactory.createElement("e2", groupObj, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        elemObj2.setSearchType(SearchType.Like_Only);
+        Column elemObj3 = RealMetadataFactory.createElement("e3", groupObj, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        elemObj3.setSearchType(SearchType.All_Except_Like);
     
-        FakeMetadataObject group2Obj = FakeMetadataFactory.createPhysicalGroup("test.group2", modelObj);         //$NON-NLS-1$
-        FakeMetadataObject elemObj2_0 = FakeMetadataFactory.createElement("test.group2.e0", group2Obj, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
-        elemObj2_0.putProperty(FakeMetadataObject.Props.UPDATE, Boolean.FALSE);
-        FakeMetadataObject elemObj2_1 = FakeMetadataFactory.createElement("test.group2.e1", group2Obj, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
-        FakeMetadataObject elemObj2_2 = FakeMetadataFactory.createElement("test.group2.e2", group2Obj, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
-        elemObj2_2.putProperty(FakeMetadataObject.Props.UPDATE, Boolean.FALSE);
+        Table group2Obj = RealMetadataFactory.createPhysicalGroup("group2", modelObj);         //$NON-NLS-1$
+        Column elemObj2_0 = RealMetadataFactory.createElement("e0", group2Obj, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        elemObj2_0.setUpdatable(false);
+        RealMetadataFactory.createElement("e1", group2Obj, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        Column elemObj2_2 = RealMetadataFactory.createElement("e2", group2Obj, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        elemObj2_2.setUpdatable(false);
     
-        FakeMetadataObject group3Obj = FakeMetadataFactory.createPhysicalGroup("test.group3", modelObj);         //$NON-NLS-1$
-        group3Obj.putProperty(FakeMetadataObject.Props.UPDATE, Boolean.FALSE); 
-        FakeMetadataObject elemObj3_0 = FakeMetadataFactory.createElement("test.group3.e0", group3Obj, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
-        FakeMetadataObject elemObj3_1 = FakeMetadataFactory.createElement("test.group3.e1", group3Obj, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
-        FakeMetadataObject elemObj3_2 = FakeMetadataFactory.createElement("test.group3.e2", group3Obj, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
+        Table group3Obj = RealMetadataFactory.createPhysicalGroup("group3", modelObj);         //$NON-NLS-1$
+        group3Obj.setSupportsUpdate(false); 
+        RealMetadataFactory.createElement("e0", group3Obj, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        RealMetadataFactory.createElement("e1", group3Obj, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        RealMetadataFactory.createElement("e2", group3Obj, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
     
         // Create virtual group & elements.
         QueryNode vNode = new QueryNode("SELECT * FROM test.group WHERE e2 = 'x'"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vGroup = FakeMetadataFactory.createVirtualGroup("vTest.vGroup", vModelObj2, vNode);         //$NON-NLS-1$
-        List vGroupE = FakeMetadataFactory.createElements(vGroup, 
+        Table vGroup = RealMetadataFactory.createVirtualGroup("vGroup", vModelObj2, vNode);         //$NON-NLS-1$
+        RealMetadataFactory.createElements(vGroup, 
             new String[] { "e0", "e1", "e2", "e3" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
 
         QueryNode vNode2 = new QueryNode("SELECT * FROM test.group"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vGroup2 = FakeMetadataFactory.createVirtualGroup("vTest.vMap", vModelObj2, vNode2);         //$NON-NLS-1$
-        List vGroupE2 = FakeMetadataFactory.createElements(vGroup2, 
+        Table vGroup2 = RealMetadataFactory.createVirtualGroup("vMap", vModelObj2, vNode2);         //$NON-NLS-1$
+        List<Column> vGroupE2 = RealMetadataFactory.createElements(vGroup2, 
             new String[] { "e0", "e1", "e2", "e3" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-        ((FakeMetadataObject)vGroupE2.get(0)).putProperty(FakeMetadataObject.Props.NULL, Boolean.FALSE);
-        ((FakeMetadataObject)vGroupE2.get(1)).putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
-        ((FakeMetadataObject)vGroupE2.get(2)).putProperty(FakeMetadataObject.Props.SEARCHABLE_COMPARE, Boolean.FALSE);
-        ((FakeMetadataObject)vGroupE2.get(3)).putProperty(FakeMetadataObject.Props.SEARCHABLE_LIKE, Boolean.FALSE);
+        vGroupE2.get(0).setNullType(NullType.No_Nulls);
+        vGroupE2.get(1).setSelectable(false);
+        vGroupE2.get(2).setSearchType(SearchType.Like_Only);
+        vGroupE2.get(3).setSearchType(SearchType.All_Except_Like);
     
         // Create virtual documents
         MappingDocument doc = new MappingDocument(false);
@@ -118,77 +124,47 @@ public class TestValidator {
         sourceNode.addChildElement(new MappingElement("b2", "test.group.e2")); //$NON-NLS-1$ //$NON-NLS-2$
         sourceNode.addChildElement(new MappingElement("c2", "test.group.e3")); //$NON-NLS-1$ //$NON-NLS-2$
         
-    	FakeMetadataObject docModel = FakeMetadataFactory.createVirtualModel("vm1"); //$NON-NLS-1$
-        FakeMetadataObject doc1 = FakeMetadataFactory.createVirtualGroup("vm1.doc1", docModel, doc); //$NON-NLS-1$
-    	List docE1 = FakeMetadataFactory.createElements(doc1, new String[] { "a0", "a0.a1", "a0.a1.a2", "a0.a1.b2", "a0.a1.c2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+    	Schema docModel = RealMetadataFactory.createVirtualModel("vm1", metadataStore); //$NON-NLS-1$
+        Table doc1 = RealMetadataFactory.createXmlDocument("doc1", docModel, doc); //$NON-NLS-1$
+    	RealMetadataFactory.createElements(doc1, new String[] { "a0", "a0.a1", "a0.a1.a2", "a0.a1.b2", "a0.a1.c2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     		new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
                         
-    	// set up validator metadata
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(modelObj);
-        store.addObject(groupObj);
-        store.addObject(elemObj0);
-        store.addObject(elemObj1);
-        store.addObject(elemObj2);
-        store.addObject(elemObj3);
-        store.addObject(vGroup);
-        store.addObjects(vGroupE);
-        store.addObject(vGroup2);
-        store.addObjects(vGroupE2);
-        store.addObject(docModel);
-        store.addObject(group2Obj);
-        store.addObject(elemObj2_0);
-        store.addObject(elemObj2_1);
-        store.addObject(elemObj2_2);
-        store.addObject(group3Obj);
-        store.addObject(elemObj3_0);
-        store.addObject(elemObj3_1);
-        store.addObject(elemObj3_2);
-        store.addObject(doc1);
-        store.addObjects(docE1);
-    	return new FakeMetadataFacade(store);
+    	return RealMetadataFactory.createTransformationMetadata(metadataStore, "example");
     }
 	
-    public FakeMetadataFacade exampleMetadata1() {
+    public TransformationMetadata exampleMetadata1() {
+    	MetadataStore metadataStore = new MetadataStore();
         // Create metadata objects        
-        FakeMetadataObject modelObj = FakeMetadataFactory.createPhysicalModel("test"); //$NON-NLS-1$
-        FakeMetadataObject groupObj = FakeMetadataFactory.createPhysicalGroup("test.group", modelObj);         //$NON-NLS-1$
+        Schema modelObj = RealMetadataFactory.createPhysicalModel("test", metadataStore); //$NON-NLS-1$
+        Table groupObj = RealMetadataFactory.createPhysicalGroup("group", modelObj);         //$NON-NLS-1$
 
-        FakeMetadataObject elemObj0 = FakeMetadataFactory.createElement("test.group.e0", groupObj, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
-        FakeMetadataObject elemObj1 = FakeMetadataFactory.createElement("test.group.e1", groupObj, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
-        FakeMetadataObject elemObj2 = FakeMetadataFactory.createElement("test.group.e2", groupObj, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
-        FakeMetadataObject elemObj3 = FakeMetadataFactory.createElement("test.group.e3", groupObj, DataTypeManager.DefaultDataTypes.STRING, 3);         //$NON-NLS-1$
+        Column elemObj0 = RealMetadataFactory.createElement("e0", groupObj, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        Column elemObj1 = RealMetadataFactory.createElement("e1", groupObj, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        Column elemObj2 = RealMetadataFactory.createElement("e2", groupObj, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        RealMetadataFactory.createElement("e3", groupObj, DataTypeManager.DefaultDataTypes.STRING);         //$NON-NLS-1$
 
-        elemObj0.putProperty(FakeMetadataObject.Props.NULL, Boolean.FALSE);
-        elemObj0.putProperty(FakeMetadataObject.Props.DEFAULT_VALUE, Boolean.FALSE);
+        elemObj0.setNullType(NullType.No_Nulls);
 
-        elemObj1.putProperty(FakeMetadataObject.Props.NULL, Boolean.TRUE);
-        elemObj1.putProperty(FakeMetadataObject.Props.DEFAULT_VALUE, Boolean.TRUE);
+        elemObj1.setNullType(NullType.Nullable);
+        elemObj1.setDefaultValue(Boolean.TRUE.toString());
         
-        elemObj2.putProperty(FakeMetadataObject.Props.NULL, Boolean.TRUE);
-        elemObj2.putProperty(FakeMetadataObject.Props.DEFAULT_VALUE, Boolean.FALSE);
+        elemObj2.setNullType(NullType.Nullable);
+        elemObj2.setDefaultValue(Boolean.FALSE.toString());
         
-		// set up validator metadata
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(modelObj);
-        store.addObject(groupObj);
-        store.addObject(elemObj0);
-        store.addObject(elemObj1);
-        store.addObject(elemObj2);
-        store.addObject(elemObj3);
-		return new FakeMetadataFacade(store);
+		return RealMetadataFactory.createTransformationMetadata(metadataStore, "example1");
     }
 
     /**
      * Group has element with type object
-     * @return FakeMetadataFacade
+     * @return QueryMetadataInterface
      */
-    public static FakeMetadataFacade exampleMetadata2() {
+    public static TransformationMetadata exampleMetadata2() {
+    	MetadataStore metadataStore = new MetadataStore();
         // Create metadata objects
-        FakeMetadataObject modelObj = FakeMetadataFactory.createPhysicalModel("test"); //$NON-NLS-1$
-        FakeMetadataObject groupObj = FakeMetadataFactory.createPhysicalGroup("test.group", modelObj); //$NON-NLS-1$
+        Schema modelObj = RealMetadataFactory.createPhysicalModel("test", metadataStore); //$NON-NLS-1$
+        Table groupObj = RealMetadataFactory.createPhysicalGroup("group", modelObj); //$NON-NLS-1$
         
-        List elements = FakeMetadataFactory.createElements(groupObj, new String[] {
+        RealMetadataFactory.createElements(groupObj, new String[] {
             "e0", "e1", "e2", "e3", "e4", "e5" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
         }, new String[] {
             DataTypeManager.DefaultDataTypes.INTEGER,
@@ -199,83 +175,56 @@ public class TestValidator {
             DataTypeManager.DefaultDataTypes.XML,
         });
 
-        // set up validator metadata
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(modelObj);
-        store.addObject(groupObj);
-        store.addObjects(elements);
-        return new FakeMetadataFacade(store);
+        return RealMetadataFactory.createTransformationMetadata(metadataStore, "example2");
     }
 
-    public static FakeMetadataFacade exampleMetadata3() {
+    public static TransformationMetadata exampleMetadata3() {
+    	MetadataStore metadataStore = new MetadataStore();
         // Create metadata objects        
-        FakeMetadataObject modelObj = FakeMetadataFactory.createPhysicalModel("test"); //$NON-NLS-1$
-        FakeMetadataObject groupObj = FakeMetadataFactory.createPhysicalGroup("test.group", modelObj);         //$NON-NLS-1$
+        Schema modelObj = RealMetadataFactory.createPhysicalModel("test", metadataStore); //$NON-NLS-1$
+        Table groupObj = RealMetadataFactory.createPhysicalGroup("group", modelObj);         //$NON-NLS-1$
 
-        FakeMetadataObject elemObj0 = FakeMetadataFactory.createElement("test.group.e0", groupObj, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
-        FakeMetadataObject elemObj1 = FakeMetadataFactory.createElement("test.group.e1", groupObj, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
+        RealMetadataFactory.createElement("e0", groupObj, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        Column elemObj1 = RealMetadataFactory.createElement("e1", groupObj, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
 
-        elemObj1.putProperty(FakeMetadataObject.Props.NULL, Boolean.FALSE);
-        elemObj1.putProperty(FakeMetadataObject.Props.DEFAULT_VALUE, Boolean.FALSE);
-        elemObj1.putProperty(FakeMetadataObject.Props.AUTO_INCREMENT, Boolean.TRUE);
-        elemObj1.putProperty(FakeMetadataObject.Props.NAME_IN_SOURCE, "e1:SEQUENCE=MYSEQUENCE.nextVal"); //$NON-NLS-1$
+        elemObj1.setNullType(NullType.No_Nulls);
+        elemObj1.setDefaultValue(Boolean.FALSE.toString());
+        elemObj1.setAutoIncremented(true);
+        elemObj1.setNameInSource("e1:SEQUENCE=MYSEQUENCE.nextVal"); //$NON-NLS-1$
         
-        // set up validator metadata
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(modelObj);
-        store.addObject(groupObj);
-        store.addObject(elemObj0);
-        store.addObject(elemObj1);
-        return new FakeMetadataFacade(store);
+        return RealMetadataFactory.createTransformationMetadata(metadataStore, "example3");
     }
 
-    public static FakeMetadataFacade exampleMetadata4() {
+    public static TransformationMetadata exampleMetadata4() {
+    	MetadataStore metadataStore = new MetadataStore();
         // Create metadata objects 
-    	FakeMetadataObject modelObj = FakeMetadataFactory.createPhysicalModel("test");  //$NON-NLS-1$
-        FakeMetadataObject groupObj = FakeMetadataFactory.createPhysicalGroup("test.group", modelObj); //$NON-NLS-1$
-        FakeMetadataObject elemObj0 = FakeMetadataFactory.createElement("test.group.e0", groupObj, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
-        FakeMetadataObject elemObj1 = FakeMetadataFactory.createElement("test.group.e1", groupObj, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
-        FakeMetadataObject elemObj2 = FakeMetadataFactory.createElement("test.group.e2", groupObj, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
-        FakeMetadataObject vModelObj = FakeMetadataFactory.createVirtualModel("vTest");  //$NON-NLS-1$
+    	Schema modelObj = RealMetadataFactory.createPhysicalModel("test", metadataStore);  //$NON-NLS-1$
+        Table groupObj = RealMetadataFactory.createPhysicalGroup("group", modelObj); //$NON-NLS-1$
+        RealMetadataFactory.createElement("e0", groupObj, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        RealMetadataFactory.createElement("e1", groupObj, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        RealMetadataFactory.createElement("e2", groupObj, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        Schema vModelObj = RealMetadataFactory.createVirtualModel("vTest", metadataStore);  //$NON-NLS-1$
         QueryNode vNode = new QueryNode("SELECT * FROM test.group"); //$NON-NLS-1$ //$NON-NLS-2$ 
-        FakeMetadataObject vGroupObj = FakeMetadataFactory.createVirtualGroup("vTest.vGroup", vModelObj, vNode); //$NON-NLS-1$
-        FakeMetadataObject vElemObj0 = FakeMetadataFactory.createElement("vTest.vGroup.e0", vGroupObj, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
-        FakeMetadataObject vElemObj1 = FakeMetadataFactory.createElement("vTest.vGroup.e1", vGroupObj, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
-        FakeMetadataObject vElemObj2 = FakeMetadataFactory.createElement("vTest.vGroup.e2", vGroupObj, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
-        List elements = new ArrayList(1);
+        Table vGroupObj = RealMetadataFactory.createVirtualGroup("vGroup", vModelObj, vNode); //$NON-NLS-1$
+        Column vElemObj0 = RealMetadataFactory.createElement("e0", vGroupObj, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        Column vElemObj1 = RealMetadataFactory.createElement("e1", vGroupObj, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        RealMetadataFactory.createElement("e2", vGroupObj, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        List<Column> elements = new ArrayList<Column>(2);
         elements.add(vElemObj0); 
         elements.add(vElemObj1);
-        FakeMetadataObject vGroupAp1 = FakeMetadataFactory.createAccessPattern("vTest.vGroup.ap1", vGroupObj, elements); //e1 //$NON-NLS-1$
+        RealMetadataFactory.createAccessPattern("ap1", vGroupObj, elements); //e1 //$NON-NLS-1$
         
         QueryNode vNode2 = new QueryNode("SELECT * FROM vTest.vGroup"); //$NON-NLS-1$ //$NON-NLS-2$ 
-        FakeMetadataObject vGroupObj2 = FakeMetadataFactory.createVirtualGroup("vTest.vGroup2", vModelObj, vNode2); //$NON-NLS-1$
-        FakeMetadataObject vElemObj20 = FakeMetadataFactory.createElement("vTest.vGroup2.e0", vGroupObj2, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
-        FakeMetadataObject vElemObj21 = FakeMetadataFactory.createElement("vTest.vGroup2.e1", vGroupObj2, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
-        FakeMetadataObject vElemObj22 = FakeMetadataFactory.createElement("vTest.vGroup2.e2", vGroupObj2, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
-        elements = new ArrayList(1);
+        Table vGroupObj2 = RealMetadataFactory.createVirtualGroup("vGroup2", vModelObj, vNode2); //$NON-NLS-1$
+        Column vElemObj20 = RealMetadataFactory.createElement("e0", vGroupObj2, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        Column vElemObj21 = RealMetadataFactory.createElement("e1", vGroupObj2, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        RealMetadataFactory.createElement("e2", vGroupObj2, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        elements = new ArrayList<Column>(2);
         elements.add(vElemObj20); 
         elements.add(vElemObj21);
-        FakeMetadataObject vGroup2Ap1 = FakeMetadataFactory.createAccessPattern("vTest.vGroup2.ap1", vGroupObj2, elements); //e1 //$NON-NLS-1$
+        RealMetadataFactory.createAccessPattern("vTest.vGroup2.ap1", vGroupObj2, elements); //e1 //$NON-NLS-1$
         
-        // set up validator metadata
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(modelObj);
-        store.addObject(groupObj);
-        store.addObject(elemObj0);
-        store.addObject(elemObj1);
-        store.addObject(elemObj2);
-        store.addObject(vModelObj);
-        store.addObject(vGroupObj);
-        store.addObject(vElemObj0);
-        store.addObject(vElemObj1);
-        store.addObject(vElemObj2);
-        store.addObject(vGroupAp1);
-        store.addObject(vGroupObj2);
-        store.addObject(vElemObj20);
-        store.addObject(vElemObj21);
-        store.addObject(vElemObj22);
-        store.addObject(vGroup2Ap1);
-        return new FakeMetadataFacade(store);
+        return RealMetadataFactory.createTransformationMetadata(metadataStore, "example4");
     }
     
 	// ################################## TEST HELPERS ################################
@@ -326,15 +275,13 @@ public class TestValidator {
 	private static void examineReport(Object command,
 			String[] expectedStringArray, ValidatorReport report) {
 		// Get invalid objects from report
-		Collection actualObjs = new ArrayList();
+		Collection<LanguageObject> actualObjs = new ArrayList<LanguageObject>();
 		report.collectInvalidObjects(actualObjs);
 
 		// Compare expected and actual objects
-		Set<String> expectedStrings = new HashSet(Arrays.asList(expectedStringArray));
+		Set<String> expectedStrings = new HashSet<String>(Arrays.asList(expectedStringArray));
 		Set<String> actualStrings = new HashSet<String>();
-		Iterator objIter = actualObjs.iterator();
-		while(objIter.hasNext()) {
-		    LanguageObject obj = (LanguageObject) objIter.next();
+		for (LanguageObject obj : actualObjs) {
 		    actualStrings.add(SQLStringVisitor.getSQLString(obj));
 		}
 
@@ -347,9 +294,9 @@ public class TestValidator {
 		}
 	}
 
-	private void helpValidateProcedure(String procedure, String userUpdateStr, String procedureType) {
+	private void helpValidateProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType) {
 
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleUpdateProc(procedureType, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(procedureType, procedure);
 
         try {
         	validateProcedure(userUpdateStr, metadata);
@@ -377,9 +324,9 @@ public class TestValidator {
 		}
 	}
 	
-	private void helpFailProcedure(String procedure, String userUpdateStr, String procedureType) {
+	private void helpFailProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType) {
 
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleUpdateProc(procedureType, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(procedureType, procedure);
 
         try {
         	validateProcedure(userUpdateStr, metadata);
@@ -394,7 +341,7 @@ public class TestValidator {
 	
 	
     @Test public void testSelectStarWhereNoElementsAreNotSelectable() {
-        helpValidate("SELECT * FROM pm1.g5", new String[] {"SELECT * FROM pm1.g5"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT * FROM pm1.g5", new String[] {"SELECT * FROM pm1.g5"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
 	@Test public void testValidateSelect1() {        
@@ -450,44 +397,44 @@ public class TestValidator {
 	}
     
     @Test public void testInvalidAggregate5() {
-        helpValidate("SELECT e1 || 'x' frOM pm1.g1 GROUP BY e2 + 1", new String[] {"e1"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e1 || 'x' frOM pm1.g1 GROUP BY e2 + 1", new String[] {"e1"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testInvalidAggregate6() {
-        helpValidate("SELECT e2 + 1 frOM pm1.g1 GROUP BY e2 + 1 HAVING e1 || 'x' > 0", new String[] {"e1"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e2 + 1 frOM pm1.g1 GROUP BY e2 + 1 HAVING e1 || 'x' > 0", new String[] {"e1"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testInvalidAggregate7() {
         helpValidate("SELECT StringKey, SUM(length(StringKey || 'x')) + 1 AS x FROM BQT1.SmallA GROUP BY StringKey || 'x' HAVING space(MAX(length((StringKey || 'x') || 'y'))) = '   '", //$NON-NLS-1$
-                     new String[] {"StringKey"}, FakeMetadataFactory.exampleBQTCached() ); //$NON-NLS-1$
+                     new String[] {"StringKey"}, RealMetadataFactory.exampleBQTCached() ); //$NON-NLS-1$
     }
     
     @Test public void testInvalidAggregate8() {
         helpValidate("SELECT max(ObjectValue) FROM BQT1.SmallA GROUP BY StringKey", //$NON-NLS-1$
-                     new String[] {"MAX(ObjectValue)"}, FakeMetadataFactory.exampleBQTCached() ); //$NON-NLS-1$
+                     new String[] {"MAX(ObjectValue)"}, RealMetadataFactory.exampleBQTCached() ); //$NON-NLS-1$
     }
     
     @Test public void testInvalidAggregate9() {
         helpValidate("SELECT count(distinct ObjectValue) FROM BQT1.SmallA GROUP BY StringKey", //$NON-NLS-1$
-                     new String[] {"COUNT(DISTINCT ObjectValue)"}, FakeMetadataFactory.exampleBQTCached() ); //$NON-NLS-1$
+                     new String[] {"COUNT(DISTINCT ObjectValue)"}, RealMetadataFactory.exampleBQTCached() ); //$NON-NLS-1$
     }
     
     @Test public void testInvalidAggregateIssue190644() {
-        helpValidate("SELECT e3 + 1 from pm1.g1 GROUP BY e2 + 1 HAVING e2 + 1 = 5", new String[] {"e3"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e3 + 1 from pm1.g1 GROUP BY e2 + 1 HAVING e2 + 1 = 5", new String[] {"e3"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testValidAggregate1() {
-        helpValidate("SELECT (e2 + 1) * 2 frOM pm1.g1 GROUP BY e2 + 1", new String[] {}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ 
+        helpValidate("SELECT (e2 + 1) * 2 frOM pm1.g1 GROUP BY e2 + 1", new String[] {}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ 
     }
 
     @Test public void testValidAggregate2() {
-        helpValidate("SELECT e2 + 1 frOM pm1.g1 GROUP BY e2 + 1", new String[] {}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ 
+        helpValidate("SELECT e2 + 1 frOM pm1.g1 GROUP BY e2 + 1", new String[] {}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ 
     }
 
     @Test public void testValidAggregate3() {
         helpValidate("SELECT sum (IntKey), case when IntKey>=5000 then '5000 +' else '0-999' end " + //$NON-NLS-1$
             "FROM BQT1.SmallA GROUP BY case when IntKey>=5000 then '5000 +' else '0-999' end", //$NON-NLS-1$
-            new String[] {}, FakeMetadataFactory.exampleBQTCached());
+            new String[] {}, RealMetadataFactory.exampleBQTCached());
     }
 	@Test public void testInvalidHaving1() {        
         helpValidate("SELECT e3 FROM test.group HAVING e3 > 0", new String[] {"e3"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -506,23 +453,23 @@ public class TestValidator {
     }
     
     @Test public void testValidateCaseInGroupBy() {        
-        helpValidate("SELECT SUM(e2) FROM pm1.g1 GROUP BY CASE e2 WHEN 0 THEN 1 ELSE 2 END", new String[] {}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ 
+        helpValidate("SELECT SUM(e2) FROM pm1.g1 GROUP BY CASE e2 WHEN 0 THEN 1 ELSE 2 END", new String[] {}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ 
     }
     
     @Test public void testValidateFunctionInGroupBy() {        
-        helpValidate("SELECT SUM(e2) FROM pm1.g1 GROUP BY (e2 + 1)", new String[] {}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ 
+        helpValidate("SELECT SUM(e2) FROM pm1.g1 GROUP BY (e2 + 1)", new String[] {}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ 
     }
 
     @Test public void testInvalidScalarSubqueryInGroupBy() {        
-        helpValidate("SELECT COUNT(*) FROM pm1.g1 GROUP BY (SELECT 1)", new String[] { "(SELECT 1)" }, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT COUNT(*) FROM pm1.g1 GROUP BY (SELECT 1)", new String[] { "(SELECT 1)" }, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testInvalidConstantInGroupBy() {        
-        helpValidate("SELECT COUNT(*) FROM pm1.g1 GROUP BY 1", new String[] { "1" }, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT COUNT(*) FROM pm1.g1 GROUP BY 1", new String[] { "1" }, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testInvalidReferenceInGroupBy() {        
-        helpValidate("SELECT COUNT(*) FROM pm1.g1 GROUP BY ?", new String[] { "?" }, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT COUNT(*) FROM pm1.g1 GROUP BY ?", new String[] { "?" }, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testValidateObjectType1() {
@@ -558,11 +505,11 @@ public class TestValidator {
     }
     
     @Test public void testValidateIntersectAll() {
-        helpValidate("SELECT e3 FROM pm1.g1 intersect all SELECT e3 FROM pm1.g1", new String[] {"SELECT e3 FROM pm1.g1 INTERSECT ALL SELECT e3 FROM pm1.g1"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e3 FROM pm1.g1 intersect all SELECT e3 FROM pm1.g1", new String[] {"SELECT e3 FROM pm1.g1 INTERSECT ALL SELECT e3 FROM pm1.g1"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testValidateSetSelectInto() {
-        helpValidate("SELECT e3 into #temp FROM pm1.g1 intersect all SELECT e3 FROM pm1.g1", new String[] {"SELECT e3 INTO #temp FROM pm1.g1 INTERSECT ALL SELECT e3 FROM pm1.g1"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e3 into #temp FROM pm1.g1 intersect all SELECT e3 FROM pm1.g1", new String[] {"SELECT e3 INTO #temp FROM pm1.g1 INTERSECT ALL SELECT e3 FROM pm1.g1"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testInsert1() {
@@ -912,7 +859,7 @@ public class TestValidator {
     }
     
     @Test public void testValidateSubquery3() {        
-        helpValidate("SELECT * FROM pm1.g1, (EXEC pm1.sq1( )) AS alias", new String[] {}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+        helpValidate("SELECT * FROM pm1.g1, (EXEC pm1.sq1( )) AS alias", new String[] {}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
 
     @Test public void testValidateUnionWithSubquery() {        
@@ -948,7 +895,7 @@ public class TestValidator {
     }
 
     @Test public void testValidateExec1() {
-        helpValidate("EXEC pm1.sq1()", new String[] {}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+        helpValidate("EXEC pm1.sq1()", new String[] {}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
     
 	// valid variable declared
@@ -962,7 +909,7 @@ public class TestValidator {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpValidateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// validating criteria selector(on HAS CRITERIA), elements on it should be virtual group elements
@@ -979,7 +926,7 @@ public class TestValidator {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpValidateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// validating Translate CRITERIA, elements on it should be virtual group elements
@@ -994,7 +941,7 @@ public class TestValidator {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpValidateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// ROWS_UPDATED not assigned
@@ -1008,7 +955,7 @@ public class TestValidator {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
 
 	// validating AssignmentStatement, more than one project symbol on the
@@ -1024,7 +971,7 @@ public class TestValidator {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// validating AssignmentStatement, more than one project symbol on the
@@ -1040,7 +987,7 @@ public class TestValidator {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// TranslateCriteria on criteria of the if statement
@@ -1058,7 +1005,7 @@ public class TestValidator {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpValidateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// INPUT ised in command
@@ -1073,7 +1020,7 @@ public class TestValidator {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpValidateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
@@ -1089,7 +1036,7 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailProcedure(procedure, userQuery,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
@@ -1106,7 +1053,7 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where e3= 1"; //$NON-NLS-1$
 
 		helpFailProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 	}
     
 	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
@@ -1123,7 +1070,7 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where y like '%a' and e3= 1"; //$NON-NLS-1$
 
 		helpFailProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 	}
 
 	
@@ -1140,7 +1087,7 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where y= 1"; //$NON-NLS-1$
 
 		helpFailProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 	}
 	
 	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
@@ -1155,7 +1102,7 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where y= 1"; //$NON-NLS-1$
 
 		helpValidateProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 	}
 
 	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
@@ -1170,7 +1117,7 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where y > 1"; //$NON-NLS-1$
 
 		helpFailProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 	}
 
 	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
@@ -1185,7 +1132,7 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where e3 > 1"; //$NON-NLS-1$
 
 		helpValidateProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 	}
 
 	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
@@ -1200,7 +1147,7 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
 
 		helpValidateProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 	}
 
     // using aggregate function within a procedure - defect #8394
@@ -1215,7 +1162,7 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
 
         helpValidateProcedure(procedure, userQuery,
-                FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                Table.TriggerEvent.UPDATE);
     }
     
 	// assigning null values to known datatype variable
@@ -1230,7 +1177,7 @@ public class TestValidator {
 		String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
 
 		helpValidateProcedure(procedure, userQuery,
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 	}
     
     @Test public void testDefect13643() {
@@ -1247,7 +1194,7 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
 
         helpFailProcedure(procedure, userQuery, 
-                FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                Table.TriggerEvent.UPDATE);
     }
     
     @Test public void testValidHaving() {
@@ -1256,17 +1203,17 @@ public class TestValidator {
             "FROM bqt1.smalla " + //$NON-NLS-1$
             "GROUP BY intnum " + //$NON-NLS-1$
             "HAVING SUM(floatnum) > 1",  //$NON-NLS-1$
-            new String[] { }, FakeMetadataFactory.exampleBQTCached());
+            new String[] { }, RealMetadataFactory.exampleBQTCached());
     } 
     
     @Test public void testValidHaving2() {
         String sql =  "SELECT intkey FROM bqt1.smalla WHERE intkey = 1 " + //$NON-NLS-1$
             "GROUP BY intkey HAVING intkey = 1";         //$NON-NLS-1$
-        helpValidate(sql, new String[] {}, FakeMetadataFactory.exampleBQTCached());
+        helpValidate(sql, new String[] {}, RealMetadataFactory.exampleBQTCached());
     } 
     
     @Test public void testVirtualProcedure(){
-          helpValidate("EXEC pm1.vsp1()", new String[] { }, FakeMetadataFactory.example1Cached());  //$NON-NLS-1$
+          helpValidate("EXEC pm1.vsp1()", new String[] { }, RealMetadataFactory.example1Cached());  //$NON-NLS-1$
     }
         
     @Test public void testSelectWithNoFrom() {        
@@ -1283,7 +1230,7 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
 
         helpValidateProcedure(procedure, userQuery,
-                FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                Table.TriggerEvent.UPDATE);
     }
     
     /**
@@ -1300,7 +1247,7 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
 
         helpFailProcedure(procedure, userQuery,
-                FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                Table.TriggerEvent.UPDATE);
     }
     
     /**
@@ -1317,12 +1264,12 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
 
         helpFailProcedure(procedure, userQuery,
-                FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                Table.TriggerEvent.UPDATE);
     }
 
     
     @Test public void testSelectIntoPhysicalGroup() {
-        helpValidate("SELECT e1, e2, e3, e4 INTO pm1.g1 FROM pm1.g2", new String[] { }, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+        helpValidate("SELECT e1, e2, e3, e4 INTO pm1.g1 FROM pm1.g2", new String[] { }, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -1333,7 +1280,7 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
 
         helpValidateProcedure(procedure, userQuery,
-                FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                Table.TriggerEvent.UPDATE);
     }
     
     @Test public void testSelectIntoPhysicalGroupNotUpdateable_Defect16857() {
@@ -1345,7 +1292,7 @@ public class TestValidator {
     }
     
     @Test public void testInvalidSelectIntoTooManyElements() {
-    	helpValidate("SELECT e1, e2, e3, e4, 'val' INTO pm1.g1 FROM pm1.g2", new String[] {"SELECT e1, e2, e3, e4, 'val' INTO pm1.g1 FROM pm1.g2"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpValidate("SELECT e1, e2, e3, e4, 'val' INTO pm1.g1 FROM pm1.g2", new String[] {"SELECT e1, e2, e3, e4, 'val' INTO pm1.g1 FROM pm1.g2"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
         
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -1356,11 +1303,11 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
 
         helpFailProcedure(procedure, userQuery,
-                FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                Table.TriggerEvent.UPDATE);
     }
     
     @Test public void testInvalidSelectIntoTooFewElements() {
-    	helpValidate("SELECT e1, e2, e3 INTO pm1.g1 FROM pm1.g2", new String[] {"SELECT e1, e2, e3 INTO pm1.g1 FROM pm1.g2"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpValidate("SELECT e1, e2, e3 INTO pm1.g1 FROM pm1.g2", new String[] {"SELECT e1, e2, e3 INTO pm1.g1 FROM pm1.g2"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
         
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -1371,11 +1318,11 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
 
         helpFailProcedure(procedure, userQuery,
-                FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                Table.TriggerEvent.UPDATE);
     }
     
     @Test public void testInvalidSelectIntoIncorrectTypes() {
-        helpValidate("SELECT e1, convert(e2, string), e3, e4 INTO pm1.g1 FROM pm1.g2", new String[] {"SELECT e1, convert(e2, string), e3, e4 INTO pm1.g1 FROM pm1.g2"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e1, convert(e2, string), e3, e4 INTO pm1.g1 FROM pm1.g2", new String[] {"SELECT e1, convert(e2, string), e3, e4 INTO pm1.g1 FROM pm1.g2"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
         
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -1386,15 +1333,15 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
 
         helpFailProcedure(procedure, userQuery,
-                FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                Table.TriggerEvent.UPDATE);
     }
     
     @Test public void testSelectIntoWithStar() {
-        helpResolve("SELECT * INTO pm1.g1 FROM pm1.g2", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+        helpResolve("SELECT * INTO pm1.g1 FROM pm1.g2", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
     
     @Test public void testInvalidSelectIntoWithStar() {
-        helpValidate("SELECT * INTO pm1.g1 FROM pm1.g2, pm1.g1", new String[] {"SELECT * INTO pm1.g1 FROM pm1.g2, pm1.g1"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT * INTO pm1.g1 FROM pm1.g2, pm1.g1", new String[] {"SELECT * INTO pm1.g1 FROM pm1.g2, pm1.g1"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
         
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -1405,11 +1352,11 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
 
         helpFailProcedure(procedure, userQuery,
-                FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                Table.TriggerEvent.UPDATE);
     }
     
     @Test public void testSelectIntoVirtualGroup() {
-        helpValidate("SELECT e1, e2, e3, e4 INTO vm1.g1 FROM pm1.g2", new String[] {}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+        helpValidate("SELECT e1, e2, e3, e4 INTO vm1.g1 FROM pm1.g2", new String[] {}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -1420,16 +1367,16 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
 
         helpValidateProcedure(procedure, userQuery,
-                FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                Table.TriggerEvent.UPDATE);
     }
     
     @Test public void testVirtualProcedure2(){
-          helpValidate("EXEC pm1.vsp13()", new String[] { }, FakeMetadataFactory.example1Cached());  //$NON-NLS-1$
+          helpValidate("EXEC pm1.vsp13()", new String[] { }, RealMetadataFactory.example1Cached());  //$NON-NLS-1$
     }
 
     //procedure that has another procedure in the transformation
     @Test public void testVirtualProcedure3(){
-        helpValidate("EXEC pm1.vsp27()", new String[] { }, FakeMetadataFactory.example1Cached());  //$NON-NLS-1$
+        helpValidate("EXEC pm1.vsp27()", new String[] { }, RealMetadataFactory.example1Cached());  //$NON-NLS-1$
     }
     
     @Test public void testNonEmbeddedSubcommand_defect11000() {        
@@ -1438,13 +1385,13 @@ public class TestValidator {
     
     @Test public void testValidateObjectInComparison() throws Exception {
         String sql = "SELECT IntKey FROM BQT1.SmallA WHERE ObjectValue = 5";   //$NON-NLS-1$
-        ValidatorReport report = helpValidate(sql, new String[] {"ObjectValue = 5"}, FakeMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
+        ValidatorReport report = helpValidate(sql, new String[] {"ObjectValue = 5"}, RealMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
         assertEquals("Expressions of type OBJECT, CLOB, BLOB, or XML cannot be used in comparison: ObjectValue = 5.", report.toString()); //$NON-NLS-1$
     }
 
     @Test public void testValidateAssignmentWithFunctionOnParameter_InServer() throws Exception{
         String sql = "EXEC pm1.vsp36(5)";  //$NON-NLS-1$
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         Command command = new QueryParser().parseCommand(sql);
         QueryResolver.resolveCommand(command, metadata);
@@ -1455,7 +1402,7 @@ public class TestValidator {
     }
 
     @Test public void testDefect9917() throws Exception{
-    	QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+    	QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         String sql = "SELECT lookup('pm1.g1', 'e1a', 'e2', e2) AS x, lookup('pm1.g1', 'e4', 'e3', e3) AS y FROM pm1.g1"; //$NON-NLS-1$
         Command command = new QueryParser().parseCommand(sql);
         try{
@@ -1486,7 +1433,7 @@ public class TestValidator {
     }
     
     @Test public void testDefect12107() throws Exception{
-    	QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+    	QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         String sql = "SELECT SUM(DISTINCT lookup('pm1.g1', 'e2', 'e2', e2)) FROM pm1.g1"; //$NON-NLS-1$
         Command command = helpResolve(sql, metadata);
         sql = "SELECT SUM(DISTINCT lookup('pm1.g1', 'e3', 'e2', e2)) FROM pm1.g1"; //$NON-NLS-1$
@@ -1508,7 +1455,7 @@ public class TestValidator {
     @Test public void testValidateDynamicCommandWithNonTempGroup_InModeler() throws Exception{
         // SQL is same as pm1.vsp36() in example1 
         String sql = "CREATE VIRTUAL PROCEDURE BEGIN execute string 'select ' || '1' as X integer into pm1.g3; END";  //$NON-NLS-1$        
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         // Validate
         ValidatorReport report = helpValidateInModeler("pm1.vsp36", sql, metadata);  //$NON-NLS-1$
@@ -1518,7 +1465,7 @@ public class TestValidator {
     
     @Test public void testDynamicDupUsing() throws Exception {
         String sql = "CREATE VIRTUAL PROCEDURE BEGIN execute string 'select ' || '1' as X integer into #temp using id=1, id=2; END";  //$NON-NLS-1$        
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         // Validate
         ValidatorReport report = helpValidateInModeler("pm1.vsp36", sql, metadata);  //$NON-NLS-1$
@@ -1529,7 +1476,7 @@ public class TestValidator {
     @Test public void testValidateAssignmentWithFunctionOnParameter_InModeler() throws Exception{
         // SQL is same as pm1.vsp36() in example1 
         String sql = "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; x = pm1.vsp36.param1 * 2; SELECT x; END";  //$NON-NLS-1$        
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         // Validate
         ValidatorReport report = helpValidateInModeler("pm1.vsp36", sql, metadata);  //$NON-NLS-1$
@@ -1540,7 +1487,7 @@ public class TestValidator {
         String sql = "SELECT BQT1.SmallA.DateValue, BQT2.SmallB.ObjectValue FROM BQT1.SmallA, BQT2.SmallB " +  //$NON-NLS-1$
             "WHERE BQT1.SmallA.DateValue = BQT2.SmallB.DateValue AND BQT1.SmallA.ObjectValue = BQT2.SmallB.ObjectValue " + //$NON-NLS-1$
             "AND BQT1.SmallA.IntKey < 30 AND BQT2.SmallB.IntKey < 30 ORDER BY BQT1.SmallA.DateValue"; //$NON-NLS-1$
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         // Validate
         helpValidate(sql, new String[] {"BQT1.SmallA.ObjectValue = BQT2.SmallB.ObjectValue"}, metadata);  //$NON-NLS-1$ 
@@ -1549,7 +1496,7 @@ public class TestValidator {
     @Test public void testDefect16772() throws Exception{
         String sql = "CREATE VIRTUAL PROCEDURE BEGIN IF (pm1.vsp42.param1 > 0) SELECT 1 AS x; ELSE SELECT 0 AS x; END"; //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         // Validate
         ValidatorReport report = helpValidateInModeler("pm1.vsp42", sql, metadata);  //$NON-NLS-1$ 
@@ -1558,7 +1505,7 @@ public class TestValidator {
 	
 	@Test public void testDefect14886() throws Exception{        
         String sql = "CREATE VIRTUAL PROCEDURE BEGIN END";  //$NON-NLS-1$        
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         Command command = new QueryParser().parseCommand(sql);
         QueryResolver.resolveCommand(command, metadata);
@@ -1571,9 +1518,9 @@ public class TestValidator {
 	
     @Test public void testDefect21389() throws Exception{        
         String sql = "CREATE VIRTUAL PROCEDURE BEGIN SELECT * INTO #temptable FROM pm1.g1; INSERT INTO #temptable (e1) VALUES ('a'); END"; //$NON-NLS-1$      
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject e1 = metadata.getStore().findObject("pm1.g1.e1", FakeMetadataObject.ELEMENT); //$NON-NLS-1$
-        e1.putProperty(FakeMetadataObject.Props.UPDATE, Boolean.FALSE);
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        Column c = metadata.getElementID("pm1.g1.e1"); //$NON-NLS-1$
+        c.setUpdatable(false);
         
         Command command = new QueryParser().parseCommand(sql);
         QueryResolver.resolveCommand(command, metadata);
@@ -1592,11 +1539,11 @@ public class TestValidator {
     }
     
     @Test public void testInvalidLimit() {
-        helpValidate("SELECT * FROM pm1.g1 LIMIT -5", new String[] {"LIMIT -5"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT * FROM pm1.g1 LIMIT -5", new String[] {"LIMIT -5"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testInvalidLimit_Offset() {
-    	helpValidate("SELECT * FROM pm1.g1 LIMIT -1, 100", new String[] {"LIMIT -1, 100"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpValidate("SELECT * FROM pm1.g1 LIMIT -1, 100", new String[] {"LIMIT -1, 100"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /**
@@ -1609,7 +1556,7 @@ public class TestValidator {
      */
     @Test public void testCase4237() {
 
-        FakeMetadataFacade metadata = helpCreateCase4237VirtualProcedureMetadata();
+        QueryMetadataInterface metadata = helpCreateCase4237VirtualProcedureMetadata();
         
         String sql = "CREATE VIRTUAL PROCEDURE BEGIN EXEC pm1.sp(vm1.sp.in1); END"; //$NON-NLS-1$ 
         Command command = helpResolve(sql, new GroupSymbol("vm1.sp"), Command.TYPE_STORED_PROCEDURE, metadata);
@@ -1622,7 +1569,7 @@ public class TestValidator {
      */
     @Test public void testCase4237InlineView() {
 
-        FakeMetadataFacade metadata = helpCreateCase4237VirtualProcedureMetadata();
+        QueryMetadataInterface metadata = helpCreateCase4237VirtualProcedureMetadata();
         
         String sql = "CREATE VIRTUAL PROCEDURE BEGIN SELECT * FROM (EXEC pm1.sp(vm1.sp.in1)) AS FOO; END"; //$NON-NLS-1$ 
         Command command = helpResolve(sql, new GroupSymbol("vm1.sp"), Command.TYPE_STORED_PROCEDURE, metadata);
@@ -1634,44 +1581,38 @@ public class TestValidator {
      * a virtual stored procedure which calls the physical one. 
      * @return
      */
-    private FakeMetadataFacade helpCreateCase4237VirtualProcedureMetadata() {
-        FakeMetadataObject physicalModel = FakeMetadataFactory.createPhysicalModel("pm1"); //$NON-NLS-1$
-        FakeMetadataObject resultSet = FakeMetadataFactory.createResultSet("pm1.rs", physicalModel, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        FakeMetadataObject returnParam = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, resultSet);  //$NON-NLS-1$
-        FakeMetadataObject inParam = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        FakeMetadataObject storedProcedure = FakeMetadataFactory.createStoredProcedure("pm1.sp", physicalModel, Arrays.asList(new FakeMetadataObject[] { returnParam, inParam }));  //$NON-NLS-1$ //$NON-NLS-2$
+    private TransformationMetadata helpCreateCase4237VirtualProcedureMetadata() {
+    	MetadataStore metadataStore = new MetadataStore();
+        Schema physicalModel = RealMetadataFactory.createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
+        ColumnSet<Procedure> resultSet = RealMetadataFactory.createResultSet("pm1.rs", new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ProcedureParameter inParam = RealMetadataFactory.createParameter("in", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING);  //$NON-NLS-1$
+        Procedure storedProcedure = RealMetadataFactory.createStoredProcedure("sp", physicalModel, Arrays.asList(inParam));  //$NON-NLS-1$ //$NON-NLS-2$
+        storedProcedure.setResultSet(resultSet);
         
-        FakeMetadataObject virtualModel = FakeMetadataFactory.createVirtualModel("vm1"); //$NON-NLS-1$
-        FakeMetadataObject virtualResultSet = FakeMetadataFactory.createResultSet("vm1.rs", physicalModel, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        FakeMetadataObject virtualReturnParam = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, virtualResultSet);  //$NON-NLS-1$
-        FakeMetadataObject virtualInParam = FakeMetadataFactory.createParameter("in1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
+        Schema virtualModel = RealMetadataFactory.createVirtualModel("vm1", metadataStore); //$NON-NLS-1$
+        ColumnSet<Procedure> virtualResultSet = RealMetadataFactory.createResultSet("vm1.rs", new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ProcedureParameter virtualInParam = RealMetadataFactory.createParameter("in1", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING);  //$NON-NLS-1$
         QueryNode queryNode = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN EXEC pm1.sp(vm1.sp.in1); END"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject virtualStoredProcedure = FakeMetadataFactory.createVirtualProcedure("vm1.sp", physicalModel, Arrays.asList(new FakeMetadataObject[] { virtualReturnParam, virtualInParam }), queryNode);  //$NON-NLS-1$
-                
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(physicalModel);
-        store.addObject(resultSet);
-        store.addObject(storedProcedure);
-        store.addObject(virtualModel);
-        store.addObject(virtualResultSet);
-        store.addObject(virtualStoredProcedure);
-        return new FakeMetadataFacade(store);
+        Procedure virtualStoredProcedure = RealMetadataFactory.createVirtualProcedure("sp", virtualModel, Arrays.asList(virtualInParam), queryNode);  //$NON-NLS-1$
+        virtualStoredProcedure.setResultSet(virtualResultSet);        
+        
+        return RealMetadataFactory.createTransformationMetadata(metadataStore, "case4237");
     }       
     
     @Test public void testSelectIntoWithNull() {
-        helpValidate("SELECT null, null, null, null INTO pm1.g1 FROM pm1.g2", new String[] {}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+        helpValidate("SELECT null, null, null, null INTO pm1.g1 FROM pm1.g2", new String[] {}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
     
     @Test public void testCreateWithNonSortablePrimaryKey() {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         Command command = helpResolve("create local temporary table x (column1 string, column2 clob, primary key (column2))", metadata); //$NON-NLS-1$
-        helpRunValidator(command, new String[] {"column2"}, FakeMetadataFactory.example1Cached()); 
+        helpRunValidator(command, new String[] {"column2"}, RealMetadataFactory.example1Cached()); 
     }
         
     @Test public void testDropNonTemporary() {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         Command command = helpResolve("drop table pm1.g1", metadata); //$NON-NLS-1$
-        helpRunValidator(command, new String[] {command.toString()}, FakeMetadataFactory.example1Cached()); 
+        helpRunValidator(command, new String[] {command.toString()}, RealMetadataFactory.example1Cached()); 
     }
     
     @Test public void testNestedContexts() {
@@ -1683,7 +1624,7 @@ public class TestValidator {
     }
     
     @Test public void testInsertIntoVirtualWithQuery() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         Command command = helpResolve("insert into vm1.g1 select 1, 2, true, 3", metadata); //$NON-NLS-1$
         ValidatorReport report = Validator.validate(command, metadata);
         assertTrue(report.getItems().isEmpty());
@@ -1697,7 +1638,7 @@ public class TestValidator {
                                 .append("select column1 from x;\n") //$NON-NLS-1$
                                 .append("END\n"); //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         // Validate
         ValidatorReport report = helpValidateInModeler("pm1.vsp36", procedure.toString(), metadata);  //$NON-NLS-1$
@@ -1711,7 +1652,7 @@ public class TestValidator {
         procedure += "select * from variables;\n"; //$NON-NLS-1$
         procedure += "END\n"; //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         Command command = helpResolve(procedure, metadata);
         helpRunValidator(command, new String[] {"variables"}, metadata); //$NON-NLS-1$
@@ -1758,12 +1699,12 @@ public class TestValidator {
 	
     @Test public void testXpathValueValid_defect15088() {
         String userSql = "SELECT xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', 'a/b/c')"; //$NON-NLS-1$
-        helpValidate(userSql, new String[] {}, FakeMetadataFactory.exampleBQTCached());        
+        helpValidate(userSql, new String[] {}, RealMetadataFactory.exampleBQTCached());        
     }
 
     @Test public void testXpathValueInvalid_defect15088() throws Exception {
         String userSql = "SELECT xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', '//*[local-name()=''bookName\"]')"; //$NON-NLS-1$
-        helpValidate(userSql, new String[] {"xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', '//*[local-name()=''bookName\"]')"}, FakeMetadataFactory.exampleBQTCached());
+        helpValidate(userSql, new String[] {"xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', '//*[local-name()=''bookName\"]')"}, RealMetadataFactory.exampleBQTCached());
     }
     
     @Test public void testTextTableNegativeWidth() {        
@@ -1779,84 +1720,84 @@ public class TestValidator {
 	}
     
     @Test public void testXMLNamespaces() {
-    	helpValidate("select xmlforest(xmlnamespaces(no default, default 'http://foo'), e1 as \"table\") from pm1.g1", new String[] {"XMLNAMESPACES(NO DEFAULT, DEFAULT 'http://foo')"}, FakeMetadataFactory.example1Cached());
+    	helpValidate("select xmlforest(xmlnamespaces(no default, default 'http://foo'), e1 as \"table\") from pm1.g1", new String[] {"XMLNAMESPACES(NO DEFAULT, DEFAULT 'http://foo')"}, RealMetadataFactory.example1Cached());
     }
 
     @Test public void testXMLNamespacesReserved() {
-    	helpValidate("select xmlforest(xmlnamespaces('http://foo' as xmlns), e1 as \"table\") from pm1.g1", new String[] {"XMLNAMESPACES('http://foo' AS xmlns)"}, FakeMetadataFactory.example1Cached());
+    	helpValidate("select xmlforest(xmlnamespaces('http://foo' as xmlns), e1 as \"table\") from pm1.g1", new String[] {"XMLNAMESPACES('http://foo' AS xmlns)"}, RealMetadataFactory.example1Cached());
     }
     
     @Test public void testXMLTablePassingMultipleContext() {
-    	helpValidate("select * from pm1.g1, xmltable('/' passing xmlparse(DOCUMENT '<a/>'), xmlparse(DOCUMENT '<b/>')) as x", new String[] {"XMLTABLE('/' PASSING XMLPARSE(DOCUMENT '<a/>'), XMLPARSE(DOCUMENT '<b/>')) AS x"}, FakeMetadataFactory.example1Cached());
+    	helpValidate("select * from pm1.g1, xmltable('/' passing xmlparse(DOCUMENT '<a/>'), xmlparse(DOCUMENT '<b/>')) as x", new String[] {"XMLTABLE('/' PASSING XMLPARSE(DOCUMENT '<a/>'), XMLPARSE(DOCUMENT '<b/>')) AS x"}, RealMetadataFactory.example1Cached());
     }
 
     @Ignore("this is actually handled by saxon and will show up during resolving")
     @Test public void testXMLTablePassingSameName() {
-    	helpValidate("select * from pm1.g1, xmltable('/' passing {x '<a/>'} as a, {x '<b/>'} as a) as x", new String[] {"xmltable('/' passing e1, e1 || 'x') as x"}, FakeMetadataFactory.example1Cached());
+    	helpValidate("select * from pm1.g1, xmltable('/' passing {x '<a/>'} as a, {x '<b/>'} as a) as x", new String[] {"xmltable('/' passing e1, e1 || 'x') as x"}, RealMetadataFactory.example1Cached());
     }
 
     @Test public void testXMLTablePassingContextType() {
-    	helpValidate("select * from pm1.g1, xmltable('/' passing 2) as x", new String[] {"XMLTABLE('/' PASSING 2) AS x"}, FakeMetadataFactory.example1Cached());
+    	helpValidate("select * from pm1.g1, xmltable('/' passing 2) as x", new String[] {"XMLTABLE('/' PASSING 2) AS x"}, RealMetadataFactory.example1Cached());
     }
 
     @Test public void testXMLTableMultipleOrdinals() {
-    	helpValidate("select * from pm1.g1, xmltable('/' passing XMLPARSE(DOCUMENT '<a/>') columns x for ordinality, y for ordinality) as x", new String[] {"XMLTABLE('/' PASSING XMLPARSE(DOCUMENT '<a/>') COLUMNS x FOR ORDINALITY, y FOR ORDINALITY) AS x"}, FakeMetadataFactory.example1Cached());
+    	helpValidate("select * from pm1.g1, xmltable('/' passing XMLPARSE(DOCUMENT '<a/>') columns x for ordinality, y for ordinality) as x", new String[] {"XMLTABLE('/' PASSING XMLPARSE(DOCUMENT '<a/>') COLUMNS x FOR ORDINALITY, y FOR ORDINALITY) AS x"}, RealMetadataFactory.example1Cached());
     }
     
     @Test public void testXMLTableContextRequired() {
-    	helpValidate("select * from xmltable('/a/b' passing convert('<a/>', xml) as a columns x for ordinality, c integer path '.') as x", new String[] {"XMLTABLE('/a/b' PASSING convert('<a/>', xml) AS a COLUMNS x FOR ORDINALITY, c integer PATH '.') AS x"}, FakeMetadataFactory.example1Cached());
+    	helpValidate("select * from xmltable('/a/b' passing convert('<a/>', xml) as a columns x for ordinality, c integer path '.') as x", new String[] {"XMLTABLE('/a/b' PASSING convert('<a/>', xml) AS a COLUMNS x FOR ORDINALITY, c integer PATH '.') AS x"}, RealMetadataFactory.example1Cached());
     }
 
     @Test public void testXMLQueryPassingContextType() {
-    	helpValidate("select xmlquery('/' passing 2)", new String[] {"XMLQUERY('/' PASSING 2)"}, FakeMetadataFactory.example1Cached());
+    	helpValidate("select xmlquery('/' passing 2)", new String[] {"XMLQUERY('/' PASSING 2)"}, RealMetadataFactory.example1Cached());
     }
     
     @Test public void testQueryString() {
-    	helpValidate("select querystring('/', '1')", new String[] {"QUERYSTRING('/', '1')"}, FakeMetadataFactory.example1Cached());
+    	helpValidate("select querystring('/', '1')", new String[] {"QUERYSTRING('/', '1')"}, RealMetadataFactory.example1Cached());
     }
 
     @Test public void testXmlNameValidation() throws Exception {
-    	helpValidate("select xmlelement(\":\")", new String[] {"XMLELEMENT(NAME \":\")"}, FakeMetadataFactory.example1Cached());
+    	helpValidate("select xmlelement(\":\")", new String[] {"XMLELEMENT(NAME \":\")"}, RealMetadataFactory.example1Cached());
     }
 
     @Test public void testXmlParse() throws Exception {
-    	helpValidate("select xmlparse(content e2) from pm1.g1", new String[] {"XMLPARSE(CONTENT e2)"}, FakeMetadataFactory.example1Cached());
+    	helpValidate("select xmlparse(content e2) from pm1.g1", new String[] {"XMLPARSE(CONTENT e2)"}, RealMetadataFactory.example1Cached());
     }
     
     @Test public void testDecode() throws Exception {
-    	helpValidate("select to_bytes(e1, '?') from pm1.g1", new String[] {"to_bytes(e1, '?')"}, FakeMetadataFactory.example1Cached());
+    	helpValidate("select to_bytes(e1, '?') from pm1.g1", new String[] {"to_bytes(e1, '?')"}, RealMetadataFactory.example1Cached());
     }
     
     @Test public void testValidateXMLAGG() {        
-        helpValidate("SELECT XMLAGG(e1) from pm1.g1", new String[] {"XMLAGG(e1)"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT XMLAGG(e1) from pm1.g1", new String[] {"XMLAGG(e1)"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
 	}
     
     @Test public void testValidateBooleanAgg() {        
-        helpValidate("SELECT EVERY(e1) from pm1.g1", new String[] {"EVERY(e1)"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT EVERY(e1) from pm1.g1", new String[] {"EVERY(e1)"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
 	}
     
     @Test public void testValidateStatAgg() {        
-        helpValidate("SELECT stddev_pop(distinct e2) from pm1.g1", new String[] {"STDDEV_POP(DISTINCT e2)"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT stddev_pop(distinct e2) from pm1.g1", new String[] {"STDDEV_POP(DISTINCT e2)"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
 	}
     
     @Test public void testValidateScalarSubqueryTooManyColumns() {        
-        helpValidate("SELECT e2, (SELECT e1, e2 FROM pm1.g1 WHERE e2 = '3') FROM pm1.g2", new String[] {"SELECT e1, e2 FROM pm1.g1 WHERE e2 = '3'"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e2, (SELECT e1, e2 FROM pm1.g1 WHERE e2 = '3') FROM pm1.g2", new String[] {"SELECT e1, e2 FROM pm1.g1 WHERE e2 = '3'"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testInvalidIntoSubquery() {
-    	helpValidate("SELECT e2, (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3') FROM pm1.g2", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpValidate("SELECT e2, (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3') FROM pm1.g2", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testInvalidIntoSubquery1() {
-    	helpValidate("SELECT e2 FROM pm1.g2 WHERE EXISTS (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3')", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpValidate("SELECT e2 FROM pm1.g2 WHERE EXISTS (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3')", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testInvalidIntoSubquery2() {
-    	helpValidate("SELECT * FROM (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3') x", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpValidate("SELECT * FROM (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3') x", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testInvalidIntoSubquery3() {
-    	helpValidate("SELECT e2 FROM pm1.g2 WHERE e2 in (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3')", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpValidate("SELECT e2 FROM pm1.g2 WHERE e2 in (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3')", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testInvalidIntoSubquery4() throws Exception {
@@ -1865,7 +1806,7 @@ public class TestValidator {
                                 .append("loop on (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3') as x\n") //$NON-NLS-1$
                                 .append("BEGIN\nSELECT 1;\nEND\nSELECT 1\n;END\n"); //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         // Validate
         ValidatorReport report = helpValidateInModeler("pm1.vsp36", procedure.toString(), metadata);  //$NON-NLS-1$
@@ -1875,28 +1816,28 @@ public class TestValidator {
     @Test public void testDisallowUpdateOnMultisourceElement() throws Exception {  
     	Set<String> models = new HashSet<String>();
     	models.add("pm1");
-        ValidatorReport report = helpValidateInModeler("pm1.vsp36", "UPDATE PM1.G1 set SOURCE_NAME='blah'", new MultiSourceMetadataWrapper(FakeMetadataFactory.example1(), models));  //$NON-NLS-1$
+        ValidatorReport report = helpValidateInModeler("pm1.vsp36", "UPDATE PM1.G1 set SOURCE_NAME='blah'", new MultiSourceMetadataWrapper(RealMetadataFactory.example1(), models));  //$NON-NLS-1$
         assertEquals(report.toString(), 1, report.getItems().size());
     }
     
     @Test public void testDisallowProjectIntoMultiSource() throws Exception {  
     	Set<String> models = new HashSet<String>();
     	models.add("pm1");
-        helpValidate("insert into pm1.g1 select * from pm1.g1", new String[] {"pm1.g1"}, new MultiSourceMetadataWrapper(FakeMetadataFactory.example1(), models));  //$NON-NLS-1$
+        helpValidate("insert into pm1.g1 select * from pm1.g1", new String[] {"pm1.g1"}, new MultiSourceMetadataWrapper(RealMetadataFactory.example1(), models));  //$NON-NLS-1$
     }
     
     @Test public void testTextAggEncoding() throws Exception {
-    	helpValidate("select textagg(for e1 encoding abc) from pm1.g1", new String[] {"TEXTAGG(FOR e1 ENCODING abc)"}, FakeMetadataFactory.example1Cached());  //$NON-NLS-1$
+    	helpValidate("select textagg(for e1 encoding abc) from pm1.g1", new String[] {"TEXTAGG(FOR e1 ENCODING abc)"}, RealMetadataFactory.example1Cached());  //$NON-NLS-1$
     }
     
     @Test public void testTextAggHeader() throws Exception {
-    	helpValidate("select textagg(for e1 || 1 HEADER) from pm1.g1", new String[] {"TEXTAGG(FOR (e1 || 1) HEADER)"}, FakeMetadataFactory.example1Cached());  //$NON-NLS-1$
+    	helpValidate("select textagg(for e1 || 1 HEADER) from pm1.g1", new String[] {"TEXTAGG(FOR (e1 || 1) HEADER)"}, RealMetadataFactory.example1Cached());  //$NON-NLS-1$
     }
     
     @Test public void testMultiSourceProcValue() throws Exception {  
     	Set<String> models = new HashSet<String>();
     	models.add("MultiModel");
-        helpValidate("exec MultiModel.proc('a', (select 1))", new String[] {"MultiModel.proc.source_name"}, new MultiSourceMetadataWrapper(FakeMetadataFactory.exampleMultiBinding(), models));  //$NON-NLS-1$
+        helpValidate("exec MultiModel.proc('a', (select 1))", new String[] {"MultiModel.proc.source_name"}, new MultiSourceMetadataWrapper(RealMetadataFactory.exampleMultiBinding(), models));  //$NON-NLS-1$
     }
 
 }

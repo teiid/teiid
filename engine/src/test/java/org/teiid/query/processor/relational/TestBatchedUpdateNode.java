@@ -44,7 +44,7 @@ import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
 
@@ -69,7 +69,7 @@ public class TestBatchedUpdateNode {
     }
     
     private BatchedUpdateNode helpOpen(String[] commands, ProcessorDataManager pdm) throws Exception {
-        BatchedUpdateNode node = helpGetNode(commands, FakeMetadataFactory.example1Cached(), pdm);
+        BatchedUpdateNode node = helpGetNode(commands, RealMetadataFactory.example1Cached(), pdm);
         node.open();
         return node;
     }

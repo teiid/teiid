@@ -764,15 +764,8 @@ public final class RuleRaiseAccess implements OptimizerRule {
 		newAccess.addGroups(leftAccess.getGroups());
         
         // Combine hints if necessary
-        Object leftHint = leftAccess.getProperty(NodeConstants.Info.MAKE_DEP);
-        if(leftHint != null) {
-            newAccess.setProperty(NodeConstants.Info.MAKE_DEP, leftHint);
-        } else {
-            Object rightHint = rightAccess.getProperty(NodeConstants.Info.MAKE_DEP);
-            if(rightHint != null) {
-                newAccess.setProperty(NodeConstants.Info.MAKE_DEP, rightHint);
-            }    
-        }
+        combineHint(leftAccess, rightAccess, newAccess, NodeConstants.Info.MAKE_DEP);
+        combineHint(leftAccess, rightAccess, newAccess, NodeConstants.Info.MAKE_IND);
         RulePlaceAccess.copyDependentHints(leftAccess, newAccess);
         RulePlaceAccess.copyDependentHints(rightAccess, newAccess);
         RulePlaceAccess.copyDependentHints(joinNode, newAccess);
@@ -784,6 +777,19 @@ public final class RuleRaiseAccess implements OptimizerRule {
         }
         
         return newAccess;
+	}
+
+	private static void combineHint(PlanNode leftAccess, PlanNode rightAccess,
+			PlanNode newAccess, NodeConstants.Info info) {
+		Object leftHint = leftAccess.getProperty(info);
+        if(leftHint != null) {
+            newAccess.setProperty(info, leftHint);
+        } else {
+            Object rightHint = rightAccess.getProperty(info);
+            if(rightHint != null) {
+                newAccess.setProperty(info, rightHint);
+            }    
+        }
 	}
 
     /**

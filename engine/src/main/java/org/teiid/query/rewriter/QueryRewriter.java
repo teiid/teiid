@@ -64,7 +64,6 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
-import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
 import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria.PlannedResult;
@@ -634,7 +633,7 @@ public class QueryRewriter {
         }
         
         if (from != null && !query.getIsXML()) {
-        	writeSubqueriesAsJoins(query);
+        	rewriteSubqueriesAsJoins(query);
         }
 
         query = rewriteGroupBy(query);
@@ -667,7 +666,7 @@ public class QueryRewriter {
         return query;
     }
 
-	private void writeSubqueriesAsJoins(Query query)
+	private void rewriteSubqueriesAsJoins(Query query)
 			throws TeiidComponentException, QueryMetadataException,
 			QueryResolverException {
 		if (query.getCriteria() == null) {
@@ -704,16 +703,6 @@ public class QueryRewriter {
 			if (!rmc.planQuery(groups, requiresDistinct, plannedResult)) {
 				continue;
 			}
-			if (requiresDistinct) {
-				//check for key preservation
-				HashSet<GroupSymbol> keyPreservingGroups = new HashSet<GroupSymbol>();
-				ResolverUtil.findKeyPreserved(query, keyPreservingGroups, metadata);
-				if (NewCalculateCostUtil.usesKey(plannedResult.leftExpressions, keyPreservingGroups, metadata, true) && plannedResult.madeDistinct) {
-					//if key perserved then the semi-join will remain in-tact without make the other query distinct
-					plannedResult.madeDistinct = false;
-					plannedResult.query.getSelect().setDistinct(false);
-				}
-			}
 			crits.remove();
 			
 			GroupSymbol viewName = RulePlaceAccess.recontextSymbol(new GroupSymbol("X"), names); //$NON-NLS-1$
@@ -722,9 +711,9 @@ public class QueryRewriter {
 			Query q = createInlineViewQuery(viewName, plannedResult.query, metadata, plannedResult.query.getSelect().getProjectedSymbols());
 			
 			Iterator<SingleElementSymbol> iter = q.getSelect().getProjectedSymbols().iterator();
-		    HashMap<Expression, SingleElementSymbol> expressionMap = new HashMap<Expression, SingleElementSymbol>();
+		    HashMap<Expression, Expression> expressionMap = new HashMap<Expression, Expression>();
 		    for (SingleElementSymbol symbol : plannedResult.query.getSelect().getProjectedSymbols()) {
-		        expressionMap.put(SymbolMap.getExpression(symbol), iter.next());
+		        expressionMap.put(SymbolMap.getExpression(symbol), SymbolMap.getExpression(iter.next()));
 		    }
 			for (int i = 0; i < plannedResult.leftExpressions.size(); i++) {
 				plannedResult.nonEquiJoinCriteria.add(new CompareCriteria(SymbolMap.getExpression((Expression)plannedResult.leftExpressions.get(i)), CompareCriteria.EQ, (Expression)plannedResult.rightExpressions.get(i)));
@@ -732,7 +721,11 @@ public class QueryRewriter {
 			Criteria mappedCriteria = Criteria.combineCriteria(plannedResult.nonEquiJoinCriteria);
 			ExpressionMappingVisitor.mapExpressions(mappedCriteria, expressionMap);
 			query.setCriteria(Criteria.combineCriteria(query.getCriteria(), mappedCriteria));
-		    query.getFrom().addClause((FromClause) q.getFrom().getClauses().get(0));
+			FromClause clause = q.getFrom().getClauses().get(0);
+			if (plannedResult.makeInd) {
+				clause.setMakeInd(true);
+			}
+		    query.getFrom().addClause(clause);
 		    query.getTemporaryMetadata().putAll(q.getTemporaryMetadata());
 			//transform the query into an inner join 
 		}
@@ -1589,26 +1582,29 @@ public class QueryRewriter {
      */
     private Criteria rewriteCriteria(SubqueryCompareCriteria criteria) throws TeiidComponentException, TeiidProcessingException{
     	
-    	if (criteria.getCommand().getProcessorPlan() == null && criteria.getPredicateQuantifier() != SubqueryCompareCriteria.ALL) {
-    		if (criteria.getOperator() == CompareCriteria.EQ || criteria.getOperator() == CompareCriteria.NE) {
+    	if (criteria.getCommand().getProcessorPlan() == null) {
+    		if ((criteria.getOperator() == CompareCriteria.EQ && criteria.getPredicateQuantifier() != SubqueryCompareCriteria.ALL)
+    				|| (criteria.getOperator() == CompareCriteria.NE && criteria.getPredicateQuantifier() == SubqueryCompareCriteria.ALL)) {
     			SubquerySetCriteria result = new SubquerySetCriteria(criteria.getLeftExpression(), criteria.getCommand());
     			result.setNegated(criteria.getOperator() == CompareCriteria.NE);
     			return rewriteCriteria(result);
     		}
-    		CompareCriteria cc = new CompareCriteria();
-    		cc.setLeftExpression(criteria.getLeftExpression());
-    		Query q = createInlineViewQuery(new GroupSymbol("X"), criteria.getCommand(), metadata, criteria.getCommand().getProjectedSymbols()); //$NON-NLS-1$
-    		SingleElementSymbol ses = q.getProjectedSymbols().get(0);
-    		Expression expr = SymbolMap.getExpression(ses);
-    		q.getSelect().clearSymbols();
-    		AggregateSymbol.Type type = Type.MAX;
-    		if (criteria.getOperator() == CompareCriteria.GT || criteria.getOperator() == CompareCriteria.GE) {
-    			type = Type.MIN;
+    		if (criteria.getPredicateQuantifier() != SubqueryCompareCriteria.ALL && criteria.getOperator() != CompareCriteria.EQ && criteria.getOperator() != CompareCriteria.NE) {
+	    		CompareCriteria cc = new CompareCriteria();
+	    		cc.setLeftExpression(criteria.getLeftExpression());
+	    		Query q = createInlineViewQuery(new GroupSymbol("X"), criteria.getCommand(), metadata, criteria.getCommand().getProjectedSymbols()); //$NON-NLS-1$
+	    		SingleElementSymbol ses = q.getProjectedSymbols().get(0);
+	    		Expression expr = SymbolMap.getExpression(ses);
+	    		q.getSelect().clearSymbols();
+	    		AggregateSymbol.Type type = Type.MAX;
+	    		if (criteria.getOperator() == CompareCriteria.GT || criteria.getOperator() == CompareCriteria.GE) {
+	    			type = Type.MIN;
+	    		}
+	    		q.getSelect().addSymbol(new AggregateSymbol(ses.getName(), type.name(), false, expr));
+	    		cc.setRightExpression(new ScalarSubquery(q));
+				cc.setOperator(criteria.getOperator());
+	    		return rewriteCriteria(cc);
     		}
-    		q.getSelect().addSymbol(new AggregateSymbol(ses.getName(), type.name(), false, expr));
-    		cc.setRightExpression(new ScalarSubquery(q));
-			cc.setOperator(criteria.getOperator());
-    		return rewriteCriteria(cc);
     	}
 
         Expression leftExpr = rewriteExpressionDirect(criteria.getLeftExpression());

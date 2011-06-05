@@ -697,8 +697,9 @@
         <listitem><para>FROM table1 CROSS JOIN table2</para></listitem>
         <listitem><para>FROM (subquery) [AS] alias</para></listitem>
         <listitem><para>FROM <link linkend="nested_table">TABLE(subquery)</link> [AS] alias</para></listitem>
-        <listitem><para>FROM table1 JOIN table2 MAKEDEP ON join-criteria</para></listitem>
-        <listitem><para>FROM table1 JOIN table2 MAKENOTDEP ON join-criteria</para></listitem>
+        <listitem><para>FROM table1 JOIN /*+ MAKEDEP */ table2 ON join-criteria</para></listitem>
+        <listitem><para>FROM table1 JOIN /*+ MAKENOTDEP */ table2 ON join-criteria</para></listitem>
+        <listitem><para>FROM /*+ MAKEIND */ table1 JOIN table2 ON join-criteria</para></listitem>
         <listitem><para>FROM table1 left outer join <link linkend="optional_join">/*+ optional */</link> table2 ON join-criteria</para></listitem>
         <listitem><para>FROM <link linkend="texttable">TEXTTABLE...</link></para></listitem>
         <listitem><para>FROM <link linkend="xmltable">XMLTABLE...</link></para></listitem>
@@ -708,11 +709,12 @@
       <note>
         <title>DEP Hints</title>
         <para>
-          MAKEDEP and MAKENOTDEP are hints used to control
+          MAKEIND, MAKEDEP, and MAKENOTDEP are hints used to control
           <link linkend="dependent_joins">dependent join</link>
           behavior. They should only be used in situations where the optimizer
           does not choose the most optimal plan based upon query structure,
-          metadata, and costing information.
+          metadata, and costing information.  The hints may appear in a comment that proceeds the from clause.  
+          The hints can be specified against any from clause, not just a named table.
         </para>
       </note>
       <section id="nested_table">

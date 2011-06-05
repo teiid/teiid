@@ -64,9 +64,9 @@ public class CriteriaPlanner {
     static void placeUserCriteria(Criteria criteria, XMLPlannerEnvironment planEnv)
         throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         
-        for (Iterator conjunctIter = Criteria.separateCriteriaByAnd(criteria).iterator(); conjunctIter.hasNext();) {
+        for (Iterator<Criteria> conjunctIter = Criteria.separateCriteriaByAnd(criteria).iterator(); conjunctIter.hasNext();) {
         
-            Criteria conjunct = (Criteria) conjunctIter.next();
+            Criteria conjunct = conjunctIter.next();
             
             if (planStagingTableCriteria(conjunct, planEnv)) {
                 continue;
@@ -79,11 +79,10 @@ public class CriteriaPlanner {
             
             MappingNode context = null;
             
-            Collection contextFunctions = ContextReplacerVisitor.replaceContextFunctions(conjunct);
+            Collection<Function> contextFunctions = ContextReplacerVisitor.replaceContextFunctions(conjunct);
             if (!contextFunctions.isEmpty()) {
                 //ensure that every part of the conjunct is to the same context
-                for (Iterator i = contextFunctions.iterator(); i.hasNext();) {
-                    Function contextFunction = (Function)i.next();
+            	for (Function contextFunction : contextFunctions) {
                     MappingNode otherContext = getContext(planEnv, contextFunction);
                     if (context == null) {
                         context = otherContext;
@@ -102,7 +101,7 @@ public class CriteriaPlanner {
                 context = planEnv.mappingDoc;
             }
             
-            Set sourceNodes = collectSourceNodesInConjunct(conjunct, context, planEnv.mappingDoc);
+            Set<MappingSourceNode> sourceNodes = collectSourceNodesInConjunct(conjunct, context, planEnv.mappingDoc);
 
             //TODO: this can be replaced with method on the source node?
             MappingSourceNode criteriaRs = findRootResultSetNode(context, sourceNodes, criteria);
@@ -118,23 +117,21 @@ public class CriteriaPlanner {
     /** 
      * This method collects all the MappingSourceNode(s) at or below the context given.
      */
-    private static Set collectSourceNodesInConjunct(Criteria conjunct, MappingNode context, MappingDocument mappingDoc)
+    private static Set<MappingSourceNode> collectSourceNodesInConjunct(Criteria conjunct, MappingNode context, MappingDocument mappingDoc)
         throws QueryPlannerException {
         
-        Collection elements = ElementCollectorVisitor.getElements(conjunct, true);
-        Set resultSets = new HashSet();
+        Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(conjunct, true);
+        Set<MappingSourceNode> resultSets = new HashSet<MappingSourceNode>();
         
         String contextFullName = context.getFullyQualifiedName().toUpperCase();
         
         //validate that each element's group is under the current context or is in the direct parentage
-        for (Iterator i = elements.iterator(); i.hasNext();) {
-            ElementSymbol elementSymbol = (ElementSymbol)i.next();
-            
+        for (ElementSymbol elementSymbol : elements) {
             String elementFullName = elementSymbol.getCanonicalName();
             
             MappingNode node = MappingNode.findNode(mappingDoc, elementFullName);
             
-            MappingNode elementRsNode = node.getSourceNode(); 
+            MappingSourceNode elementRsNode = node.getSourceNode(); 
             if (elementRsNode == null) {
                 throw new QueryPlannerException(QueryPlugin.Util.getString("CriteriaPlanner.invalid_element", elementSymbol)); //$NON-NLS-1$
             }
@@ -158,20 +155,16 @@ public class CriteriaPlanner {
         return resultSets;
     }
 
-    private static MappingSourceNode findRootResultSetNode(MappingNode context, Set resultSets, Criteria criteria) 
+    private static MappingSourceNode findRootResultSetNode(MappingNode context, Set<MappingSourceNode> resultSets, Criteria criteria) 
         throws QueryPlannerException {
         
         if (context instanceof MappingSourceNode) {
             return (MappingSourceNode)context;
         }
 
-        Set criteriaResultSets = new HashSet();
+        Set<MappingNode> criteriaResultSets = new HashSet<MappingNode>();
         // if the context node is not the root node then we need to find the root source node from list.
-        for (Iterator i = resultSets.iterator(); i.hasNext();) {
-
-            // these are actually source nodes.
-            MappingNode node = (MappingNode)i.next();
-   
+        for (MappingNode node : resultSets) {
             MappingNode root = node;
             
             while (node != null) {
@@ -288,14 +281,13 @@ public class CriteriaPlanner {
     static String getStagingTableForConjunct(Criteria conjunct, QueryMetadataInterface metadata)
         throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 
-        Collection elements = ElementCollectorVisitor.getElements(conjunct, true);
+        Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(conjunct, true);
 
         boolean first = true;
         String resultSet = null;
         
         // Check each remaining element to make sure it matches
-        for(Iterator elemIter = elements.iterator(); elemIter.hasNext();) {
-            ElementSymbol element = (ElementSymbol) elemIter.next();
+        for (ElementSymbol element : elements) {
             GroupSymbol group = element.getGroupSymbol();
             //assumes that all non-xml group elements are temp elements
             boolean hasTempElement = !metadata.isXMLGroup(group.getMetadataID());
@@ -314,7 +306,7 @@ public class CriteriaPlanner {
         }
         
         if (resultSet != null) {
-            Collection functions = ContextReplacerVisitor.replaceContextFunctions(conjunct);
+            Collection<Function> functions = ContextReplacerVisitor.replaceContextFunctions(conjunct);
             if (!functions.isEmpty()) {
                 throw new QueryPlannerException(QueryPlugin.Util.getString("CriteriaPlanner.staging_context")); //$NON-NLS-1$
             }

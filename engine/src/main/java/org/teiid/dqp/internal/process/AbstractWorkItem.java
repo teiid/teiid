@@ -43,10 +43,10 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
     
     private ThreadState threadState = ThreadState.MORE_WORK;
     private volatile boolean isProcessing;
-    private boolean useCallingThread;
+    private Thread callingThread;
     
-    public AbstractWorkItem(boolean useCallingThread) {
-    	this.useCallingThread = useCallingThread;
+    public AbstractWorkItem(Thread callingThread) {
+    	this.callingThread = callingThread;
     }
     
     public void run() {
@@ -99,14 +99,14 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
 	    		if (isDoneProcessing()) {
 	    			logTrace("done processing - ignoring more"); //$NON-NLS-1$
 	        		this.threadState = ThreadState.DONE;
-	        	} else if (!this.useCallingThread) {
+	        	} else if (this.callingThread == null) {
         			resumeProcessing();
 	        	}
 	    		break;
     		default:
     			throw new IllegalStateException("Should not END on " + this.threadState); //$NON-NLS-1$
     	}
-    	return useCallingThread;
+    	return this.callingThread != null;
     }
     
     protected boolean isIdle() {
@@ -127,11 +127,11 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
 	    		break;
 	    	case IDLE:
 	    		this.threadState = ThreadState.MORE_WORK;
-        		if (this.useCallingThread) {
-        			if (isProcessing) {
-        				this.notifyAll(); //notify the waiting caller
-        			} else {
+        		if (this.callingThread != null) {
+        			if (this.callingThread == Thread.currentThread()) {
         				run(); //restart with the calling thread
+        			} else {
+        				this.notifyAll(); //notify the waiting caller
         			}
         		} else {
         			resumeProcessing();
@@ -152,17 +152,17 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
     protected abstract void process();
 
 	protected boolean pauseProcessing() {
-		if (useCallingThread && !shouldPause()) {
+		if (this.callingThread != null && !shouldPause()) {
 			return false;
 		}
-		while (useCallingThread && this.getThreadState() == ThreadState.IDLE) {
+		while (this.callingThread != null && this.getThreadState() == ThreadState.IDLE) {
 			try {
 				this.wait(); //the lock should already be held
 			} catch (InterruptedException e) {
 				interrupted(e);
 			}
 		}
-		return useCallingThread;
+		return this.callingThread != null;
 	}
 	
 	/**

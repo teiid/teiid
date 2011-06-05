@@ -36,7 +36,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.XMLSerialize;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 
 public class TestFunctionResolving {
@@ -45,7 +45,7 @@ public class TestFunctionResolving {
         Function function = new Function("convert", new Expression[] {new Constant(new Character('a')), new Constant(DataTypeManager.DefaultDataTypes.DATE)}); //$NON-NLS-1$
         
         try {
-            ResolverVisitor.resolveLanguageObject(function, FakeMetadataFactory.example1Cached());
+            ResolverVisitor.resolveLanguageObject(function, RealMetadataFactory.example1Cached());
             fail("excpetion expected"); //$NON-NLS-1$
         } catch (QueryResolverException err) {
             assertEquals("Error Code:ERR.015.008.0037 Message:The conversion from char to date is not allowed.", err.getMessage()); //$NON-NLS-1$
@@ -59,7 +59,7 @@ public class TestFunctionResolving {
         e1.setMetadataID(new Object()); 
         Function function = new Function("abs", new Expression[] {e1}); //$NON-NLS-1$
         
-        ResolverVisitor.resolveLanguageObject(function, FakeMetadataFactory.example1Cached());
+        ResolverVisitor.resolveLanguageObject(function, RealMetadataFactory.example1Cached());
         
         assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, function.getType());
     }
@@ -67,7 +67,7 @@ public class TestFunctionResolving {
     @Test public void testResolveConvertReference() throws Exception {
         Function function = new Function("convert", new Expression[] {new Reference(0), new Constant(DataTypeManager.DefaultDataTypes.BOOLEAN)}); //$NON-NLS-1$
         
-        ResolverVisitor.resolveLanguageObject(function, FakeMetadataFactory.example1Cached());
+        ResolverVisitor.resolveLanguageObject(function, RealMetadataFactory.example1Cached());
         
         assertEquals(DataTypeManager.DefaultDataClasses.BOOLEAN, function.getType());
         assertEquals(DataTypeManager.DefaultDataClasses.BOOLEAN, function.getArgs()[0].getType());
@@ -77,7 +77,7 @@ public class TestFunctionResolving {
         Function function = new Function("LCASE", new Expression[] {new Reference(0)}); //$NON-NLS-1$
         
         try {
-        	ResolverVisitor.resolveLanguageObject(function, FakeMetadataFactory.example1Cached());
+        	ResolverVisitor.resolveLanguageObject(function, RealMetadataFactory.example1Cached());
             fail("excpetion expected"); //$NON-NLS-1$
         } catch (QueryResolverException err) {
             assertEquals("Error Code:ERR.015.008.0036 Message:The function 'LCASE(?)' has more than one possible signature.", err.getMessage()); //$NON-NLS-1$
@@ -130,7 +130,7 @@ public class TestFunctionResolving {
 	public static Expression getExpression(String sql) throws QueryParserException,
 			TeiidComponentException, QueryResolverException {
 		Expression func = QueryParser.getQueryParser().parseExpression(sql);
-		ResolverVisitor.resolveLanguageObject(func, FakeMetadataFactory.example1Cached());
+		ResolverVisitor.resolveLanguageObject(func, RealMetadataFactory.example1Cached());
 		return func;
 	}
 	

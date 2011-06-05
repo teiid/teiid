@@ -24,6 +24,7 @@ package org.teiid.query.optimizer.relational.rules;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -116,6 +117,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 
             List<SingleElementSymbol> leftExpressions = (List<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS);
             List<SingleElementSymbol> rightExpressions = (List<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS);
+            int origExpressionCount = leftExpressions.size();
 
             //check index information on each side
             //TODO: don't do null order compensation - in fact we should check what the order actually is, but we don't have that metadata
@@ -152,7 +154,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 						toCriteria.add(j);
 					}
 				}
-        		List<Criteria> joinCriteria = (List<Criteria>) joinNode.getProperty(Info.JOIN_CRITERIA);
+        		List<Criteria> joinCriteria = (List<Criteria>) joinNode.getProperty(Info.NON_EQUI_JOIN_CRITERIA);
         		for (int index : toCriteria) {
 					SingleElementSymbol lses = leftExpressions.get(index);
 					SingleElementSymbol rses = rightExpressions.get(index);
@@ -163,17 +165,32 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 						joinNode.setProperty(Info.JOIN_TYPE, JoinType.JOIN_INNER);
 					}
 				}
-        		joinNode.setProperty(Info.JOIN_CRITERIA, joinCriteria);
+        		joinNode.setProperty(Info.NON_EQUI_JOIN_CRITERIA, joinCriteria);
         		leftExpressions = RelationalNode.projectTuple(reorder, leftExpressions);
             	rightExpressions = RelationalNode.projectTuple(reorder, rightExpressions);
             	joinNode.setProperty(NodeConstants.Info.LEFT_EXPRESSIONS, leftExpressions);
             	joinNode.setProperty(NodeConstants.Info.RIGHT_EXPRESSIONS, rightExpressions);
             }
-            
+
+            Set<SingleElementSymbol> outputSymbols = new LinkedHashSet<SingleElementSymbol>((List<SingleElementSymbol>)joinNode.getProperty(NodeConstants.Info.OUTPUT_COLS));
+
 			boolean pushedLeft = insertSort(joinNode.getFirstChild(), leftExpressions, joinNode, metadata, capabilitiesFinder, pushLeft);	
-			insertSort(joinNode.getLastChild(), rightExpressions, joinNode, metadata, capabilitiesFinder, pushRight);
-        	
-        	if (joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER && (!pushRight || !pushedLeft)) {
+			
+	        if (origExpressionCount == 1 
+	        		&& joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER 
+	        		&& joinNode.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE) != null
+	        		&& !joinNode.hasCollectionProperty(Info.NON_EQUI_JOIN_CRITERIA)) {
+	        	Collection<SingleElementSymbol> output = (Collection<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.OUTPUT_COLS);
+	        	Collection<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(output);
+	        	if (Collections.disjoint(groups, FrameUtil.findJoinSourceNode(joinNode.getFirstChild()).getGroups())) {
+	        		pushRight = false;
+	        		joinNode.setProperty(Info.IS_SEMI_DEP, Boolean.TRUE);
+	        	}
+			}
+
+			boolean pushedRight = insertSort(joinNode.getLastChild(), rightExpressions, joinNode, metadata, capabilitiesFinder, pushRight);
+			
+        	if (joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER && (!pushedRight || !pushedLeft)) {
         		joinNode.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.ENHANCED_SORT);
         	}
         }
@@ -207,8 +224,20 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
                 
         PlanNode sortNode = createSortNode(new ArrayList<SingleElementSymbol>(orderSymbols), outputSymbols);
         
+        boolean distinct = false;
+        if (sourceNode.getType() == NodeConstants.Types.SOURCE && outputSymbols.size() == expressions.size() && outputSymbols.containsAll(expressions)) {
+        	PlanNode setOp = NodeEditor.findNodePreOrder(sourceNode.getFirstChild(), NodeConstants.Types.SET_OP, NodeConstants.Types.SOURCE);
+        	if (setOp != null) {
+        		if (setOp.hasBooleanProperty(NodeConstants.Info.USE_ALL)) {
+        			distinct = true;
+        		}
+        	} else if (NodeEditor.findNodePreOrder(sourceNode.getFirstChild(), NodeConstants.Types.DUP_REMOVE, NodeConstants.Types.PROJECT) != null) {
+	        	distinct = true;
+	        }
+        }
+        
         if (sourceNode.getType() == NodeConstants.Types.ACCESS) {
-        	if (NewCalculateCostUtil.usesKey(sourceNode, expressions, metadata)) {
+        	if (distinct || NewCalculateCostUtil.usesKey(sourceNode, expressions, metadata)) {
                 joinNode.setProperty(joinNode.getFirstChild() == childNode ? NodeConstants.Info.IS_LEFT_DISTINCT : NodeConstants.Info.IS_RIGHT_DISTINCT, true);
         	}
 	        if (attemptPush && RuleRaiseAccess.canRaiseOverSort(sourceNode, metadata, capFinder, sortNode, null, false)) {
@@ -220,6 +249,10 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 	            return true;
 	        }
         }
+        
+        if (distinct) {
+            joinNode.setProperty(joinNode.getFirstChild() == childNode ? NodeConstants.Info.IS_LEFT_DISTINCT : NodeConstants.Info.IS_RIGHT_DISTINCT, true);
+    	}
         
         joinNode.setProperty(joinNode.getFirstChild() == childNode ? NodeConstants.Info.SORT_LEFT : NodeConstants.Info.SORT_RIGHT, SortOption.SORT);
         

@@ -91,7 +91,7 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.TestCaseExpression;
 import org.teiid.query.sql.symbol.TestSearchedCaseExpression;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 
 public class TestSQLStringVisitor extends TestCase {
@@ -1851,7 +1851,7 @@ public class TestSQLStringVisitor extends TestCase {
 
     public void testLimit() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
+        Select select = new Select(Arrays.asList(new AllSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
@@ -1861,7 +1861,7 @@ public class TestSQLStringVisitor extends TestCase {
     
     public void testLimitWithOffset() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
+        Select select = new Select(Arrays.asList(new AllSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
@@ -1871,25 +1871,25 @@ public class TestSQLStringVisitor extends TestCase {
     
     public void testUnionOrderBy() throws Exception {
         Command command = QueryParser.getQueryParser().parseCommand("select pm1.g1.e1 from pm1.g1 union select e2 from pm1.g2 order by e1"); //$NON-NLS-1$
-        QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());
+        QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());
         helpTest(command, "SELECT pm1.g1.e1 FROM pm1.g1 UNION SELECT e2 FROM pm1.g2 ORDER BY e1"); //$NON-NLS-1$
     }
     
     public void testUnionBranchOrderBy() throws Exception {
         Command command = QueryParser.getQueryParser().parseCommand("select pm1.g1.e1 from pm1.g1 union (select e2 from pm1.g2 order by e1)"); //$NON-NLS-1$
-        QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());
+        QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());
         helpTest(command, "SELECT pm1.g1.e1 FROM pm1.g1 UNION (SELECT e2 FROM pm1.g2 ORDER BY e1)"); //$NON-NLS-1$
     }
     
     public void testAliasedOrderBy() throws Exception {
         Command command = QueryParser.getQueryParser().parseCommand("select pm1.g1.e1 as a from pm1.g1 order by a"); //$NON-NLS-1$
-        QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());
+        QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());
         helpTest(command, "SELECT pm1.g1.e1 AS a FROM pm1.g1 ORDER BY a"); //$NON-NLS-1$
     }
     
     public void testNumberOrderBy() throws Exception {
         Command command = QueryParser.getQueryParser().parseCommand("select pm1.g1.e1 as a from pm1.g1 order by 1"); //$NON-NLS-1$
-        QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());
+        QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());
         helpTest(command, "SELECT pm1.g1.e1 AS a FROM pm1.g1 ORDER BY 1"); //$NON-NLS-1$
     }
 

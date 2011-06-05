@@ -57,6 +57,8 @@ import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.events.EventDistributor;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.Table;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.processor.relational.RelationalNodeUtil;
@@ -244,7 +246,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 							workItem.moreWork();
     					}
     				}, 10, e.getRetryDelay());
-    				throw BlockedException.INSTANCE;
+    				throw BlockedException.block(aqr.getAtomicRequestID(), "Blocking on DataNotAvailableException"); //$NON-NLS-1$
     			} 
     			receiveResults(results);
     		}
@@ -295,7 +297,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 			addWork();
 		}
 		if (!futureResult.isDone()) {
-			throw BlockedException.INSTANCE;
+			throw BlockedException.block(aqr.getAtomicRequestID(), "Blocking on source query"); //$NON-NLS-1$
 		}
 		FutureWork<AtomicResultsMessage> currentResults = futureResult;
 		futureResult = null;
@@ -409,7 +411,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		if (exception.getCause() instanceof TeiidProcessingException) {
 			throw (TeiidProcessingException)exception.getCause();
 		}
-		throw new TeiidProcessingException(exception);
+		throw new TeiidProcessingException(exception, this.getConnectorName() + ": " + exception.getMessage()); //$NON-NLS-1$
 	}
 
 	void receiveResults(AtomicResultsMessage response) {

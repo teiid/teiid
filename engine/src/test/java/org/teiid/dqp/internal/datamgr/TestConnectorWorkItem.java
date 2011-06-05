@@ -49,14 +49,14 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 
 
 public class TestConnectorWorkItem {
 
-	private static final QueryMetadataInterface EXAMPLE_BQT = FakeMetadataFactory.exampleBQTCached();
+	private static final QueryMetadataInterface EXAMPLE_BQT = RealMetadataFactory.exampleBQTCached();
 
 	private static Command helpGetCommand(String sql,
 			QueryMetadataInterface metadata) throws Exception {
@@ -68,7 +68,7 @@ public class TestConnectorWorkItem {
 	static AtomicRequestMessage createNewAtomicRequestMessage(int requestid, int nodeid) throws Exception {
 		RequestMessage rm = new RequestMessage();
 		
-		DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(EXAMPLE_BQT, FakeMetadataFactory.exampleBQTVDB());
+		DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(EXAMPLE_BQT, RealMetadataFactory.exampleBQTVDB());
 		workContext.getSession().setSessionId(String.valueOf(1));
 		workContext.getSession().setUserName("foo"); //$NON-NLS-1$
 		

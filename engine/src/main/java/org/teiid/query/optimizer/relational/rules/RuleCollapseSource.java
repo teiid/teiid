@@ -24,6 +24,7 @@ package org.teiid.query.optimizer.relational.rules;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,6 +46,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
@@ -171,9 +173,11 @@ public final class RuleCollapseSource implements OptimizerRule {
 		 */
 		if (queryCommand instanceof SetQuery) {
 			((SetQuery)queryCommand).setAll(false);
-		} else if (!NewCalculateCostUtil.usesKey(accessNode, queryCommand.getProjectedSymbols(), metadata) && CapabilitiesUtil.supports(Capability.QUERY_SELECT_DISTINCT, RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata), metadata, capFinder)) {
+		} else if (CapabilitiesUtil.supports(Capability.QUERY_SELECT_DISTINCT, RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata), metadata, capFinder)) {
 			Query query = (Query)queryCommand;
-			if (!QueryRewriter.isDistinctWithGroupBy(query)) {
+			HashSet<GroupSymbol> keyPreservingGroups = new HashSet<GroupSymbol>();
+			ResolverUtil.findKeyPreserved(query, keyPreservingGroups, metadata);
+			if (!QueryRewriter.isDistinctWithGroupBy(query) && !NewCalculateCostUtil.usesKey(query.getSelect().getProjectedSymbols(), keyPreservingGroups, metadata, true)) {
 				((Query)queryCommand).getSelect().setDistinct(true);
 			}
 		}
@@ -405,7 +409,8 @@ public final class RuleCollapseSource implements OptimizerRule {
 
 	public static void prepareSubquery(SubqueryContainer container) {
 		RelationalPlan subqueryPlan = (RelationalPlan)container.getCommand().getProcessorPlan();
-		QueryCommand command = CriteriaCapabilityValidatorVisitor.getQueryCommand(subqueryPlan);
+		AccessNode aNode = CriteriaCapabilityValidatorVisitor.getAccessNode(subqueryPlan);
+		QueryCommand command = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode);
 		if (command == null) {
 			return;
 		}

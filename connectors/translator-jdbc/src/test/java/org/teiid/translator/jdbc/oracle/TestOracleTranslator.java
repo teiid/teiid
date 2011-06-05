@@ -42,7 +42,6 @@ import org.teiid.metadata.Table;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
-import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
@@ -395,6 +394,14 @@ public class TestOracleTranslator {
                 input, output, 
                 TRANSLATOR);
     }
+    
+    @Test public void test_sdo_within_distance_pushdownfunction() throws Exception {
+        String input = "SELECT INTKEY FROM BQT1.SMALLA WHERE sdo_within_distance(OBJECTVALUE, 'SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL)', 'DISTANCE=25.0 UNIT=NAUT_MILE') = true"; //$NON-NLS-1$
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE sdo_within_distance(SmallA.ObjectValue, SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL), 'DISTANCE=25.0 UNIT=NAUT_MILE') = 'true'";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, 
+                TRANSLATOR);
+    }
 
     /**
      * Test a query which uses 
@@ -536,7 +543,7 @@ public class TestOracleTranslator {
         String input = "SELECT ((CASE WHEN month(datevalue) < 10 THEN ('0' || convert(month(datevalue), string)) ELSE convert(month(datevalue), string) END || CASE WHEN dayofmonth(datevalue) < 10 THEN ('0' || convert(dayofmonth(datevalue), string)) ELSE convert(dayofmonth(datevalue), string) END) || convert(year(datevalue), string)), SUM(intkey) FROM bqt1.SMALLA GROUP BY datevalue"; //$NON-NLS-1$
         String output = "SELECT CASE WHEN CASE WHEN CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END IS NULL OR CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END IS NULL THEN NULL ELSE concat(CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END, CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END) END IS NULL OR to_char(EXTRACT(YEAR FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat(CASE WHEN CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END IS NULL OR CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END IS NULL THEN NULL ELSE concat(CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END, CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END) END, to_char(EXTRACT(YEAR FROM SmallA.DateValue))) END, SUM(SmallA.IntKey) FROM SmallA GROUP BY SmallA.DateValue"; //$NON-NLS-1$
         
-        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
+        helpTestVisitor(RealMetadataFactory.exampleBQTCached(),
                         input, 
                         EMPTY_CONTEXT, null, output);
     }
@@ -603,7 +610,7 @@ public class TestOracleTranslator {
         String input = "UPDATE bqt1.smalla SET intkey = intkey + 1"; //$NON-NLS-1$
         String output = "UPDATE SmallA SET IntKey = (SmallA.IntKey + 1)"; //$NON-NLS-1$
         
-        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
+        helpTestVisitor(RealMetadataFactory.exampleBQTCached(),
                 input, 
                 EMPTY_CONTEXT, null, output);
     }
@@ -722,7 +729,7 @@ public class TestOracleTranslator {
         RealMetadataFactory.createElements(dual, new String[] {"something"}, new String[] {DataTypeManager.DefaultDataTypes.STRING}); //$NON-NLS-1$
         
         CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
-        return new TransformationMetadata(null, store, null, FakeMetadataFactory.SFM.getSystemFunctions(), null);
+        return new TransformationMetadata(null, store, null, RealMetadataFactory.SFM.getSystemFunctions(), null);
     }
 
 	public void helpTestVisitor(String vdb, String input, String expectedOutput) throws TranslatorException {
@@ -733,7 +740,7 @@ public class TestOracleTranslator {
         String input = "select max(intkey), stringkey from (select intkey, stringkey from bqt1.smalla order by intkey limit 100) x group by stringkey"; //$NON-NLS-1$
         String output = "SELECT MAX(x.intkey), x.stringkey FROM (SELECT * FROM (SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA ORDER BY SmallA.IntKey) WHERE ROWNUM <= 100) x GROUP BY x.stringkey"; //$NON-NLS-1$
                
-        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
+        helpTestVisitor(RealMetadataFactory.exampleBQTCached(),
                 input, 
                 EMPTY_CONTEXT, null, output);        
     }
@@ -742,7 +749,7 @@ public class TestOracleTranslator {
         String input = "select intkey, intnum from bqt1.smalla except select intnum, intkey from bqt1.smallb"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey, SmallA.IntNum FROM SmallA MINUS SELECT SmallB.IntNum, SmallB.IntKey FROM SmallB"; //$NON-NLS-1$
                
-        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
+        helpTestVisitor(RealMetadataFactory.exampleBQTCached(),
                 input, 
                 EMPTY_CONTEXT, null, output);        
     }
@@ -750,20 +757,20 @@ public class TestOracleTranslator {
     @Test public void testConcat() throws Exception {
         String sql = "select concat(stringnum, stringkey) from BQT1.Smalla"; //$NON-NLS-1$       
         String expected = "SELECT CASE WHEN SmallA.StringNum IS NULL OR SmallA.StringKey IS NULL THEN NULL ELSE concat(SmallA.StringNum, SmallA.StringKey) END FROM SmallA"; //$NON-NLS-1$
-        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
+        helpTestVisitor(RealMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
     }
     
     @Test public void testConcat_withLiteral() throws Exception {
         String sql = "select stringnum || '1' from BQT1.Smalla"; //$NON-NLS-1$       
         String expected = "SELECT CASE WHEN SmallA.StringNum IS NULL THEN NULL ELSE concat(SmallA.StringNum, '1') END FROM SmallA"; //$NON-NLS-1$
-        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
+        helpTestVisitor(RealMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
     }
     
     @Test public void testRowLimitWithUnionOrderBy() throws Exception {
         String input = "(select intkey from bqt1.smalla limit 50, 100) union select intnum from bqt1.smalla order by intkey"; //$NON-NLS-1$
         String output = "SELECT c_0 FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT g_1.IntKey AS c_0 FROM SmallA g_1) VIEW_FOR_LIMIT WHERE ROWNUM <= 150) WHERE ROWNUM_ > 50 UNION SELECT g_0.IntNum AS c_0 FROM SmallA g_0 ORDER BY c_0"; //$NON-NLS-1$
                
-		CommandBuilder commandBuilder = new CommandBuilder(FakeMetadataFactory.exampleBQTCached());
+		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);
 		this.helpTestVisitor(obj, EMPTY_CONTEXT, null, output);
     }
@@ -771,7 +778,7 @@ public class TestOracleTranslator {
     @Test public void testCot() throws Exception {
     	String sql = "select cot(doublenum) from BQT1.Smalla"; //$NON-NLS-1$       
         String expected = "SELECT (1 / tan(SmallA.DoubleNum)) FROM SmallA"; //$NON-NLS-1$
-        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
+        helpTestVisitor(RealMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
     }
 
 }

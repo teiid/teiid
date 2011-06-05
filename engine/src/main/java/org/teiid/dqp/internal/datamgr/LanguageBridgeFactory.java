@@ -31,6 +31,7 @@ import java.util.NoSuchElementException;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.common.buffer.TupleSource;
+import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
@@ -70,8 +71,8 @@ import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.language.SubqueryComparison.Quantifier;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -506,8 +507,15 @@ public class LanguageBridgeFactory {
         String name = function.getName();
         if (function.getFunctionDescriptor() != null) {
         	name = function.getFunctionDescriptor().getName();
+        	//check for translator pushdown functions, and use the name in source if possible
+        	if (function.getFunctionDescriptor().getPushdown() == PushDown.MUST_PUSHDOWN 
+        			&& function.getFunctionDescriptor().getSchema().equalsIgnoreCase(CoreConstants.SYSTEM_MODEL)
+        			&& function.getFunctionDescriptor().getMethod().getNameInSource() != null) {
+        		name = function.getFunctionDescriptor().getMethod().getNameInSource();
+        	}
+        } else {
+        	name = SingleElementSymbol.getShortName(name);
         }
-        name = SingleElementSymbol.getShortName(name);
 
         //if there is any ambiguity in the function name it will be up to the translator logic to check the 
         //metadata
@@ -557,9 +565,7 @@ public class LanguageBridgeFactory {
 
         Object mid = symbol.getMetadataID();
         
-        if(! (mid instanceof TempMetadataID)) { 
-            element.setMetadataObject(metadataFactory.getElement(mid));
-        }
+        element.setMetadataObject(metadataFactory.getElement(mid));
         return element;
     }
 
@@ -717,9 +723,6 @@ public class LanguageBridgeFactory {
         }
         fullGroup = removeSchemaName(fullGroup);
         NamedTable group = new NamedTable(fullGroup, alias, null);
-		if (symbol.getMetadataID() instanceof TempMetadataID) {
-			return group;
-		}
         try {
 			group.setMetadataObject(metadataFactory.getGroup(symbol.getMetadataID()));
 		} catch (QueryMetadataException e) {

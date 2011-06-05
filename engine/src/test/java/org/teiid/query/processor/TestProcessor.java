@@ -59,13 +59,18 @@ import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.QueryProcessorFactoryImpl;
 import org.teiid.dqp.internal.process.SessionAwareCache;
+import org.teiid.metadata.ColumnSet;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.TestOptimizer;
@@ -85,16 +90,12 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
-import org.teiid.query.unittest.FakeMetadataStore;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.Validator;
@@ -105,7 +106,16 @@ public class TestProcessor {
 
 	// ################################## TEST HELPERS ################################
 
-    static Command helpParse(String sql) { 
+    private static final List[] SP1RS = new List[] { 
+	            Arrays.asList(new Object[] { "a",   new Integer(0) }), //$NON-NLS-1$
+	                    Arrays.asList(new Object[] { null,  new Integer(1)}),
+	                    Arrays.asList(new Object[] { "a",   new Integer(3) }), //$NON-NLS-1$
+	                    Arrays.asList(new Object[] { "c",   new Integer(1)}), //$NON-NLS-1$
+	                    Arrays.asList(new Object[] { "b",   new Integer(2)}), //$NON-NLS-1$
+	                    Arrays.asList(new Object[] { "a",   new Integer(0) }) //$NON-NLS-1$
+	        };
+
+	static Command helpParse(String sql) { 
         // parse
         try { 
             return QueryParser.getQueryParser().parseCommand(sql);
@@ -357,7 +367,7 @@ public class TestProcessor {
     	
     public static void sampleData1(FakeDataManager dataMgr) {
         try { 
-        	FakeDataStore.sampleData1(dataMgr, FakeMetadataFactory.example1Cached());
+        	FakeDataStore.sampleData1(dataMgr, RealMetadataFactory.example1Cached());
         } catch(Throwable e) { 
         	throw new RuntimeException(e);
         }
@@ -372,164 +382,71 @@ public class TestProcessor {
     }                  
 
     private void sampleData2a(FakeDataManager dataMgr) {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
     
         try { 
-            // Group pm1.g1
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g1"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = FakeDataStore.createElements(elementIDs);
-        
             dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
+                metadata,
+                "pm1.g1", new List[] { 
+					    Arrays.asList(new Object[] { "a",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
+					    Arrays.asList(new Object[] { "b",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
+					    Arrays.asList(new Object[] { "c",   new Integer(2),     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
+					    } );       
                 
-                new List[] { 
-                    Arrays.asList(new Object[] { "a",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "b",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "c",   new Integer(2),     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
-                    } );       
-                
-            // Group pm2.g1
-            groupID = (FakeMetadataObject) metadata.getGroupID("pm2.g1"); //$NON-NLS-1$
-            elementIDs = metadata.getElementIDsInGroupID(groupID);
-            elementSymbols = FakeDataStore.createElements(elementIDs);
-        
             dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList(new Object[] { "b",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "b",   new Integer(7),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "d",   new Integer(3),     Boolean.TRUE,   new Double(7.0) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "e",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
-                    } );      
+                metadata,
+                "pm2.g1", new List[] { 
+					    Arrays.asList(new Object[] { "b",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
+					    Arrays.asList(new Object[] { "b",   new Integer(7),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
+					    Arrays.asList(new Object[] { "d",   new Integer(3),     Boolean.TRUE,   new Double(7.0) }), //$NON-NLS-1$
+					    Arrays.asList(new Object[] { "e",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
+					    } );      
 
-            // Group pm4.g1
-            groupID = (FakeMetadataObject) metadata.getGroupID("pm4.g1"); //$NON-NLS-1$
-            elementIDs = metadata.getElementIDsInGroupID(groupID);
-            elementSymbols = FakeDataStore.createElements(elementIDs);
-        
             dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList(new Object[] { "aa",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "bb",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "cc",   new Integer(2),     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
-                    } );              
+                metadata,
+                "pm4.g1", new List[] { 
+					    Arrays.asList(new Object[] { "aa",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
+					    Arrays.asList(new Object[] { "bb",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
+					    Arrays.asList(new Object[] { "cc",   new Integer(2),     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
+					    } );              
             
         } catch(TeiidException e) { 
         	throw new RuntimeException(e);
         }
     }    
     
-    public static void sampleData2b(FakeDataManager dataMgr) {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-    
+    public static void sampleData2b(FakeDataManager dataMgr, QueryMetadataInterface metadata) {
         try { 
-            // Group pm1.g1
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g1"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = FakeDataStore.createElements(elementIDs);
-        
             dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
+                metadata,
+                "pm1.g1", new List[] { 
+					    Arrays.asList(new Object[] { "aa ",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
+					    Arrays.asList(new Object[] { "bb   ",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
+					    Arrays.asList(new Object[] { "cc  ",   new Integer(2),     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
+					    } );       
                 
-                new List[] { 
-                    Arrays.asList(new Object[] { "aa ",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "bb   ",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "cc  ",   new Integer(2),     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
-                    } );       
-                
-            // Group pm2.g1
-            groupID = (FakeMetadataObject) metadata.getGroupID("pm2.g1"); //$NON-NLS-1$
-            elementIDs = metadata.getElementIDsInGroupID(groupID);
-            elementSymbols = FakeDataStore.createElements(elementIDs);
-        
             dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList(new Object[] { "b",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "d",   new Integer(3),     Boolean.TRUE,   new Double(7.0) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "e",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
-                    } );      
+                metadata,
+                "pm2.g1", new List[] { 
+					    Arrays.asList(new Object[] { "b",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
+					    Arrays.asList(new Object[] { "d",   new Integer(3),     Boolean.TRUE,   new Double(7.0) }), //$NON-NLS-1$
+					    Arrays.asList(new Object[] { "e",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
+					    } );      
 
-            // Group pm4.g1
-            groupID = (FakeMetadataObject) metadata.getGroupID("pm4.g1"); //$NON-NLS-1$
-            elementIDs = metadata.getElementIDsInGroupID(groupID);
-            elementSymbols = FakeDataStore.createElements(elementIDs);
-        
             dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList(new Object[] { "aa ",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "bb   ",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "cc  ",   new Integer(2),     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
-                    } );       
-            
-            
+                metadata,
+                "pm4.g1", new List[] { 
+					    Arrays.asList(new Object[] { "aa ",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
+					    Arrays.asList(new Object[] { "bb   ",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
+					    Arrays.asList(new Object[] { "cc  ",   new Integer(2),     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
+					    } );       
         } catch(TeiidException e) { 
         	throw new RuntimeException(e);
         }
     }    
-    
-    private void sampleData3(FakeDataManager dataMgr) {
-    	FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-    
-        try { 
-            // Group pm1.g1
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g1"); //$NON-NLS-1$
-            List elementSymbols = new ArrayList(1);
-            ElementSymbol count = new ElementSymbol("Count"); //$NON-NLS-1$
-            count.setType(Integer.class);
-            elementSymbols.add(count);
-        
-            dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList(new Object[] { new Integer(1) }),                    
-                    } );    
-        }catch(TeiidException e) { 
-        	throw new RuntimeException(e);
-        }
-    }
-
-    private void sampleDataStringTimestamps(FakeDataManager dataMgr) {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-    
-        try { 
-            // Group pm1.g1
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g1"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = FakeDataStore.createElements(elementIDs);
-        
-            dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                new List[] { 
-                    Arrays.asList(new Object[] { "Jan 01 2004 12:00:00",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "Dec 31 2004 12:00:00",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "Aug 01 2004 12:00:00",   new Integer(2),     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
-                    } );       
-
-                                     
-        } catch(TeiidException e) { 
-        	throw new RuntimeException(e);
-        }
-    }     
     
     private void sampleDataBQT1(FakeDataManager dataMgr) {
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
     
         try { 
             // Group bqt1.smalla
@@ -562,7 +479,7 @@ public class TestProcessor {
     }
 
 	private void sampleDataBQT2(FakeDataManager dataMgr) {
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
     
         String[] groups = new String[] {"bqt1.smalla", "bqt2.smalla", "bqt3.smalla" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     
@@ -593,7 +510,7 @@ public class TestProcessor {
      * @since 4.2
      */
     private void sampleDataBQT_defect11682(FakeDataManager dataMgr) {
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
     
         try { 
             List[] tuples = new List[2];
@@ -627,7 +544,7 @@ public class TestProcessor {
     }    
 
     private void sampleDataBQTSmall(FakeDataManager dataMgr) {
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
     
         try { 
             List[] tuples = new List[1];
@@ -655,7 +572,7 @@ public class TestProcessor {
     }
             
     private void sampleDataBQT_case1566(FakeDataManager dataMgr) throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
     
         dataMgr.registerTuples(metadata, "bqt1.smalla", new List[] { //$NON-NLS-1$ 
                 createRowWithTimestamp("2002-01-01 10:00:00"), //$NON-NLS-1$
@@ -704,7 +621,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -724,7 +641,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -744,7 +661,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -765,7 +682,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -785,7 +702,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -810,7 +727,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -840,7 +757,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -871,7 +788,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -893,7 +810,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -914,7 +831,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -939,7 +856,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -962,7 +879,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -987,7 +904,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -1012,7 +929,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -1038,7 +955,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -1064,7 +981,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -1088,7 +1005,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -1112,7 +1029,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -1133,7 +1050,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -1158,10 +1075,10 @@ public class TestProcessor {
         CommandContext context = createCommandContext();
         context.setProcessorBatchSize(2);
         context.setConnectorBatchSize(2);
-        context.setMetadata(FakeMetadataFactory.example1Cached());
+        context.setMetadata(RealMetadataFactory.example1Cached());
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
 
         // Run query
         helpProcess(plan, context, dataManager, expected);
@@ -1182,7 +1099,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -1211,7 +1128,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -1231,7 +1148,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -1254,7 +1171,7 @@ public class TestProcessor {
         sampleData2(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -1277,7 +1194,7 @@ public class TestProcessor {
         sampleData2(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -1302,7 +1219,7 @@ public class TestProcessor {
         sampleData2(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -1325,7 +1242,7 @@ public class TestProcessor {
         sampleData2(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -1353,7 +1270,7 @@ public class TestProcessor {
         		Arrays.asList(4),
         		
         });
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
         CommandContext cc = createCommandContext();
         cc.setProcessorBatchSize(2);
         helpProcess(plan, cc, hdm, expected);
@@ -1379,7 +1296,7 @@ public class TestProcessor {
         sampleData2(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -1402,7 +1319,7 @@ public class TestProcessor {
         sampleData2(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -1428,7 +1345,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);        
@@ -1454,7 +1371,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);        
@@ -1480,7 +1397,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);        
@@ -1506,7 +1423,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);        
@@ -1532,7 +1449,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);        
@@ -1558,7 +1475,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);        
@@ -1577,7 +1494,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -1597,34 +1514,12 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
     }
 
-    @Test public void testTempGroup() { 
-        // Create query 
-        String sql = "SELECT e1 FROM tm1.g1 WHERE e1 = 'a'"; //$NON-NLS-1$
-        
-        // Create expected results
-        List[] expected = new List[] { 
-            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
-            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
-            Arrays.asList(new Object[] { "a" }) //$NON-NLS-1$
-        };    
-    
-        // Construct data manager with data
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
-        
-        // Run query
-        helpProcess(plan, dataManager, expected);
-    }
-    
     @Test public void testSubquery1() {
    		// Create query
    		String sql = "SELECT e1 FROM (SELECT e1 FROM pm1.g1) AS x"; //$NON-NLS-1$
@@ -1644,7 +1539,7 @@ public class TestProcessor {
    		sampleData1(dataManager);
    		
     	// Plan query
-    	ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+    	ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
    		// Run query
    		helpProcess(plan, dataManager, expected);
@@ -1669,7 +1564,7 @@ public class TestProcessor {
 		sampleData1(dataManager);
 
 		// Plan query
-		ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
 		// Run query
 		helpProcess(plan, dataManager, expected);
@@ -1691,7 +1586,7 @@ public class TestProcessor {
 		sampleData1(dataManager);
 
 		// Plan query
-		ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
 		// Run query
 		helpProcess(plan, dataManager, expected);
@@ -1713,7 +1608,7 @@ public class TestProcessor {
 		sampleData1(dataManager);
 
 		// Plan query
-		ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
 		// Run query
 		helpProcess(plan, dataManager, expected);
@@ -1743,7 +1638,7 @@ public class TestProcessor {
 		sampleData1(dataManager);
 
 		// Plan query
-		ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
 		// Run query
 		helpProcess(plan, dataManager, expected);
@@ -1768,7 +1663,7 @@ public class TestProcessor {
 		sampleData1(dataManager);
 
 		// Plan query
-		ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
 		// Run query
 		helpProcess(plan, dataManager, expected);
@@ -1793,7 +1688,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -1816,7 +1711,7 @@ public class TestProcessor {
 		sampleData2(dataManager);
 
 		// Plan query
-		ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
 		// Run query
 		helpProcess(plan, dataManager, expected);
@@ -1840,7 +1735,7 @@ public class TestProcessor {
 		sampleData2(dataManager);
 
 		// Plan query
-		ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
 		// Run query
 		helpProcess(plan, dataManager, expected);
@@ -1863,7 +1758,7 @@ public class TestProcessor {
 		sampleData2(dataManager);
 
 		// Plan query
-		ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
 		// Run query
 		helpProcess(plan, dataManager, expected);
@@ -1885,7 +1780,7 @@ public class TestProcessor {
 		sampleData2(dataManager);
 
 		// Plan query
-		ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
 		// Run query
 		helpProcess(plan, dataManager, expected);
@@ -1908,7 +1803,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -1931,7 +1826,7 @@ public class TestProcessor {
 		sampleData2(dataManager);
 
 		// Plan query
-		ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
 		// Run query
 		helpProcess(plan, dataManager, expected);
@@ -1953,7 +1848,7 @@ public class TestProcessor {
 		sampleData2(dataManager);
 
 		// Plan query
-		ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
 		// Run query
 		helpProcess(plan, dataManager, expected);
@@ -1976,7 +1871,7 @@ public class TestProcessor {
 		sampleData1(dataManager);
 
 		// Plan query
-		ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
 		// Run query
 		helpProcess(plan, dataManager, expected);
@@ -2000,7 +1895,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2021,7 +1916,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2044,7 +1939,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2067,7 +1962,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2087,7 +1982,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2109,7 +2004,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2133,7 +2028,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2156,7 +2051,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2179,7 +2074,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2192,7 +2087,7 @@ public class TestProcessor {
         String sql = "SELECT e1 FROM pm1.g1 WHERE e2 < SOME (SELECT e2 FROM pm2.g1 WHERE EXISTS (SELECT e2 FROM pm2.g1))"; //$NON-NLS-1$
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         // Construct data manager with data
@@ -2235,7 +2130,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2259,7 +2154,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2277,7 +2172,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcessException(plan, dataManager);
@@ -2301,7 +2196,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2325,7 +2220,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2358,7 +2253,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         // Plan query
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.exampleBQTCached(), capFinder);
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.exampleBQTCached(), capFinder);
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2376,7 +2271,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2413,7 +2308,7 @@ public class TestProcessor {
         String sql = "Select e1, e2, e4 from pm2.g1 where 1=2 " + //$NON-NLS-1$
            "UNION ALL Select e1, e2, e4 from vm1.g1 outg1 where outg1.e2 in (select ing1.e2 FROM vm1.g1 ing1 WHERE outg1.e4 = ing1.e4)";//$NON-NLS-1$
         Command command = helpParse(sql);   
-        ProcessorPlan plan = helpGetPlan(command, FakeMetadataFactory.example1Cached(), capFinder);
+        ProcessorPlan plan = helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
         
         // Run query
         List[] expected = new List[] {
@@ -2449,7 +2344,7 @@ public class TestProcessor {
         // Plan query
         String sql = "Select e1, e2, e4 from vm1.g1 outg1 where outg1.e2 in (select ing1.e2 FROM vm1.g1 ing1 WHERE outg1.e4 = ing1.e4)";//$NON-NLS-1$
         Command command = helpParse(sql);   
-        ProcessorPlan plan = helpGetPlan(command, FakeMetadataFactory.example1Cached(), capFinder);
+        ProcessorPlan plan = helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
         
         // Run query
         List[] expected = new List[] {
@@ -2475,7 +2370,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2497,7 +2392,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2518,7 +2413,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2539,7 +2434,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2560,7 +2455,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2579,7 +2474,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2598,7 +2493,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2617,7 +2512,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2636,7 +2531,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2655,7 +2550,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2675,7 +2570,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2698,7 +2593,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2720,7 +2615,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2747,7 +2642,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2774,7 +2669,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2797,7 +2692,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2822,7 +2717,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2840,7 +2735,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2857,7 +2752,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2881,7 +2776,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2905,7 +2800,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2930,7 +2825,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2954,7 +2849,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2971,7 +2866,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -2996,7 +2891,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3013,7 +2908,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3032,7 +2927,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3055,7 +2950,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3079,7 +2974,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3106,7 +3001,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3134,7 +3029,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3153,7 +3048,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3175,7 +3070,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3197,7 +3092,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3221,7 +3116,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3244,7 +3139,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3267,7 +3162,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3290,7 +3185,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3314,7 +3209,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3338,7 +3233,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3359,7 +3254,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3384,7 +3279,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3405,7 +3300,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3430,7 +3325,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3455,7 +3350,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3489,7 +3384,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3514,7 +3409,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(query, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(query, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3536,7 +3431,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);        
@@ -3556,7 +3451,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);        
@@ -3581,7 +3476,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);        
@@ -3603,7 +3498,7 @@ public class TestProcessor {
         sampleData2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);        
@@ -3626,7 +3521,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3637,21 +3532,14 @@ public class TestProcessor {
         String sql = "EXEC pm1.sq1()"; //$NON-NLS-1$
 
         // Create expected results
-        List[] expected = new List[] { 
-            Arrays.asList(new Object[] { "a",   new Integer(0) }), //$NON-NLS-1$
-            Arrays.asList(new Object[] { null,  new Integer(1) }),
-            Arrays.asList(new Object[] { "a",   new Integer(3) }), //$NON-NLS-1$
-            Arrays.asList(new Object[] { "c",   new Integer(1) }), //$NON-NLS-1$
-            Arrays.asList(new Object[] { "b",   new Integer(2) }), //$NON-NLS-1$
-            Arrays.asList(new Object[] { "a",   new Integer(0) }) //$NON-NLS-1$
-        };    
+        List[] expected = SP1RS;    
 
         // Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3673,7 +3561,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3698,7 +3586,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3720,7 +3608,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3731,21 +3619,14 @@ public class TestProcessor {
         String sql = "EXEC pm1.sp1()"; //$NON-NLS-1$
 
         // Create expected results
-        List[] expected = new List[] { 
-            Arrays.asList(new Object[] { "a",   new Integer(0) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { null,  new Integer(1)}),
-                    Arrays.asList(new Object[] { "a",   new Integer(3) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "c",   new Integer(1)}), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "b",   new Integer(2)}), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "a",   new Integer(0) }) //$NON-NLS-1$
-        };    
+        List[] expected = SP1RS;    
 
         // Construct data manager with data
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("EXEC pm1.sp1()", expected);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3766,11 +3647,11 @@ public class TestProcessor {
         };    
 
         // Construct data manager with data
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("EXEC pm1.sp1()", SP1RS);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3793,7 +3674,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3813,7 +3694,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3836,7 +3717,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3859,7 +3740,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3875,11 +3756,11 @@ public class TestProcessor {
         };    
 
         // Construct data manager with data
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData3(dataManager);
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES ('MyString', 1)", new List[] {Arrays.asList(1)});
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3910,7 +3791,7 @@ public class TestProcessor {
         sampleDataBQT1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.exampleBQTCached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.exampleBQTCached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3941,7 +3822,7 @@ public class TestProcessor {
         sampleDataBQT1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.exampleBQTCached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.exampleBQTCached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3972,7 +3853,7 @@ public class TestProcessor {
         sampleDataBQT1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.exampleBQTCached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.exampleBQTCached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -3997,7 +3878,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -4026,7 +3907,7 @@ public class TestProcessor {
         sampleDataBQT2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.exampleBQTCached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.exampleBQTCached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -4065,7 +3946,7 @@ public class TestProcessor {
        sampleDataBQT1(dataManager);
 
        // Plan query
-       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.exampleBQTCached());
+       ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.exampleBQTCached());
 
        // Run query
        helpProcess(plan, dataManager, expected);
@@ -4085,7 +3966,7 @@ public class TestProcessor {
        sampleData1(dataManager);
         
        // Plan query
-       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
        // Run query
        helpProcess(plan, dataManager, expected);
@@ -4107,7 +3988,7 @@ public class TestProcessor {
        sampleData1(dataManager);
         
        // Plan query
-       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
        // Run query
        helpProcess(plan, dataManager, expected);
@@ -4141,7 +4022,7 @@ public class TestProcessor {
        sampleData1(dataManager);
 
        // Plan query
-       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
        // Run query
        helpProcess(plan, dataManager, expected);
@@ -4171,7 +4052,7 @@ public class TestProcessor {
        sampleData1(dataManager);
 
        // Plan query
-       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
        // Run query
        helpProcess(plan, dataManager, expected);
@@ -4205,7 +4086,7 @@ public class TestProcessor {
        sampleData1(dataManager);
 
        // Plan query
-       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
        // Run query
        helpProcess(plan, dataManager, expected);
@@ -4235,7 +4116,7 @@ public class TestProcessor {
        sampleData1(dataManager);
 
        // Plan query
-       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
        // Run query
        helpProcess(plan, dataManager, expected);
@@ -4257,7 +4138,7 @@ public class TestProcessor {
        sampleData1(dataManager);
         
        // Plan query
-       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
        // Run query
        helpProcess(plan, dataManager, expected);
@@ -4277,7 +4158,7 @@ public class TestProcessor {
        sampleData1(dataManager);
         
        // Plan query
-       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
        // Run query
        helpProcess(plan, dataManager, expected);
@@ -4297,7 +4178,7 @@ public class TestProcessor {
        sampleData1(dataManager);
         
        // Plan query
-       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
        // Run query
        helpProcess(plan, dataManager, expected);
@@ -4327,7 +4208,7 @@ public class TestProcessor {
        Command command = QueryParser.getQueryParser().parseCommand(sql);
 
        // Plan query
-       ProcessorPlan plan = helpGetPlan(command, FakeMetadataFactory.exampleBQTCached(), capFinder);
+       ProcessorPlan plan = helpGetPlan(command, RealMetadataFactory.exampleBQTCached(), capFinder);
 
        // Run query
        helpProcess(plan, dataManager, expected);
@@ -4350,7 +4231,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);       
@@ -4373,7 +4254,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);       
@@ -4396,7 +4277,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);       
@@ -4421,7 +4302,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);       
@@ -4444,7 +4325,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);       
@@ -4562,7 +4443,7 @@ public class TestProcessor {
                dataManager = hardCoded;
            }
             
-           FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+           QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
            FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
            BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
            caps.setCapabilitySupport(Capability.CRITERIA_IN, pushDown);    
@@ -4595,7 +4476,7 @@ public class TestProcessor {
        sampleData1(dataManager);
         
        // Plan query
-       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
        // Run query
        helpProcess(plan, dataManager, expected);
@@ -4617,7 +4498,7 @@ public class TestProcessor {
        sampleData1(dataManager);
         
        // Plan query
-       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
        // Run query
        helpProcess(plan, dataManager, expected);
@@ -4641,7 +4522,7 @@ public class TestProcessor {
        sampleData1(dataManager);
         
        // Plan query
-       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
        // Run query
        helpProcess(plan, dataManager, expected);
@@ -4668,7 +4549,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -4697,7 +4578,7 @@ public class TestProcessor {
         sampleData2(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);          
@@ -4725,7 +4606,7 @@ public class TestProcessor {
         sampleData2(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);          
@@ -4752,7 +4633,7 @@ public class TestProcessor {
         sampleData2(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);          
@@ -4779,7 +4660,7 @@ public class TestProcessor {
         sampleData2(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);          
@@ -4801,7 +4682,7 @@ public class TestProcessor {
         sampleData2(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);          
@@ -4827,7 +4708,7 @@ public class TestProcessor {
 		sampleData2(dataManager);
     
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -4843,7 +4724,7 @@ public class TestProcessor {
 		};    
            
 		// Plan query
-		ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
 		// Run query
 		helpProcess(plan, new FakeDataManager(), expected);
@@ -4865,7 +4746,7 @@ public class TestProcessor {
         sampleDataBQT_defect11682(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.exampleBQTCached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.exampleBQTCached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -4886,7 +4767,7 @@ public class TestProcessor {
         sampleData2(dataManager);
     
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -4905,7 +4786,7 @@ public class TestProcessor {
         sampleData2(dataManager);
     
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -4925,7 +4806,7 @@ public class TestProcessor {
         sampleData2(dataManager);
     
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -4945,7 +4826,7 @@ public class TestProcessor {
         sampleData2(dataManager);
     
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -4966,7 +4847,7 @@ public class TestProcessor {
         sampleData2(dataManager);
     
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -4994,7 +4875,7 @@ public class TestProcessor {
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         
         Command command = helpParse(sql);   
-        ProcessorPlan plan = helpGetPlan(command, FakeMetadataFactory.example1Cached(), capFinder);
+        ProcessorPlan plan = helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
 
         // Run query
         helpProcess(plan, dataManager, expected);        
@@ -5007,7 +4888,7 @@ public class TestProcessor {
         };    
            
         // Plan query
-        ProcessorPlan plan = helpGetPlan("EXEC pm1.vsp36(5)", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+        ProcessorPlan plan = helpGetPlan("EXEC pm1.vsp36(5)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         
         // Run query
         helpProcess(plan, new FakeDataManager(), expected);
@@ -5024,11 +4905,17 @@ public class TestProcessor {
         
         Command command = helpParse("SELECT e5, e2, e3, e4 FROM vm1.g1c WHERE e5 >= {ts'2004-08-01 00:00:00.0'}");   //$NON-NLS-1$
         ProcessorPlan plan = helpGetPlan(command,  
-            FakeMetadataFactory.example1Cached(), capFinder);
+            RealMetadataFactory.example1Cached(), capFinder);
 
         // Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
-        sampleDataStringTimestamps(dataManager);
+        dataManager.registerTuples(
+                RealMetadataFactory.example1Cached(),
+                "pm1.g1", new List[] { 
+					    Arrays.asList(new Object[] { "Jan 01 2004 12:00:00",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
+					    Arrays.asList(new Object[] { "Dec 31 2004 12:00:00",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
+					    Arrays.asList(new Object[] { "Aug 01 2004 12:00:00",   new Integer(2),     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
+					    } );       
 
         Calendar cal = Calendar.getInstance();
         cal.set(2004, Calendar.DECEMBER, 31, 0, 0, 0);
@@ -5060,10 +4947,6 @@ public class TestProcessor {
             Arrays.asList(new Object[] { "bb   ", "b", new Integer(0) }) //$NON-NLS-1$ //$NON-NLS-2$ 
         };    
 
-        // Construct data manager with data
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData2b(dataManager);
-    
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
@@ -5075,12 +4958,14 @@ public class TestProcessor {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
-        FakeMetadataObject g2 = metadata.getStore().findObject("pm2.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1));
+        QueryMetadataInterface metadata = RealMetadataFactory.example1();
+        RealMetadataFactory.setCardinality("pm1.g1", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata);
+        RealMetadataFactory.setCardinality("pm2.g1", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1, metadata);
         
+        // Construct data manager with data
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData2b(dataManager, metadata);
+
         Command command = helpParse(sql);   
         CommandContext context = createCommandContext();
         context.setMetadata(metadata);
@@ -5107,10 +4992,6 @@ public class TestProcessor {
             Arrays.asList(new Object[] { "bb   ", "b", new Integer(0) }) //$NON-NLS-1$ //$NON-NLS-2$ 
         };    
 
-        // Construct data manager with data
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData2b(dataManager);
-    
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
@@ -5122,11 +5003,13 @@ public class TestProcessor {
         capFinder.addCapabilities("pm4", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject g1 = metadata.getStore().findObject("pm4.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
-        FakeMetadataObject g2 = metadata.getStore().findObject("pm2.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1));
+        QueryMetadataInterface metadata = RealMetadataFactory.example1();
+        RealMetadataFactory.setCardinality("pm4.g1", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata);
+        RealMetadataFactory.setCardinality("pm2.g1", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1, metadata);
+        
+        // Construct data manager with data
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData2b(dataManager, metadata);
         
         Command command = helpParse(sql);   
         CommandContext context = createCommandContext();
@@ -5169,7 +5052,7 @@ public class TestProcessor {
         sampleDataBQT2(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.exampleBQTCached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.exampleBQTCached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -5199,7 +5082,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5235,7 +5118,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5264,9 +5147,8 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setFunctionSupport("myrtrim", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-
-        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new FakeFunctionMetadataSource(), true));
-        FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Cached().getMetadataStore(), "example1", new FunctionTree("foo", new FakeFunctionMetadataSource(), true));
         
         processPreparedStatement(sql, expected, dataManager, capFinder,
 				metadata, Arrays.asList("a    "));        
@@ -5313,8 +5195,7 @@ public class TestProcessor {
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm4", caps); //$NON-NLS-1$
 
-        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new FakeFunctionMetadataSource(), true));
-        FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
+        QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Cached().getMetadataStore(), "example1", new FunctionTree("foo", new FakeFunctionMetadataSource(), true));
         
         processPreparedStatement(sql, expected, dataManager, capFinder,
 				metadata, Arrays.asList("a")); 
@@ -5332,7 +5213,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5363,7 +5244,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5411,7 +5292,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
 
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5459,7 +5340,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5495,7 +5376,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5533,7 +5414,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5572,7 +5453,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5605,7 +5486,7 @@ public class TestProcessor {
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5644,7 +5525,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
 
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5685,7 +5566,7 @@ public class TestProcessor {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);   
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());       
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());       
         // Run query
         helpProcess(plan, dataManager, expected);         
         
@@ -5703,7 +5584,7 @@ public class TestProcessor {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);   
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());       
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());       
         // Run query
         helpProcess(plan, dataManager, expected);         
         
@@ -5722,7 +5603,7 @@ public class TestProcessor {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);   
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());       
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());       
         // Run query
         helpProcess(plan, dataManager, expected);         
         
@@ -5741,7 +5622,7 @@ public class TestProcessor {
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,         
                                       metadata,
@@ -5803,7 +5684,7 @@ public class TestProcessor {
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,         
                           metadata,
@@ -5878,7 +5759,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", new BasicSourceCapabilities()); //$NON-NLS-1$
 
         Command command = helpParse(sql);
-        ProcessorPlan plan = helpGetPlan(command, FakeMetadataFactory.exampleBQTCached(), capFinder);
+        ProcessorPlan plan = helpGetPlan(command, RealMetadataFactory.exampleBQTCached(), capFinder);
         
         // Construct data manager with data        
         HardcodedDataManager dataManager = new HardcodedDataManager();
@@ -5926,7 +5807,7 @@ public class TestProcessor {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);   
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());       
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());       
         // Run query
         helpProcess(plan, dataManager, expected); 
     }
@@ -5945,7 +5826,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -5967,7 +5848,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -5987,7 +5868,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -6007,7 +5888,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -6027,7 +5908,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -6047,7 +5928,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -6067,7 +5948,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -6087,13 +5968,13 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
     }
     
-    @Test public void testBitwiseAggregateProc() { 
+    @Test public void testBitwiseAggregateProc() throws Exception { 
         // Create query 
         String sql = "EXEC virt.agg()"; //$NON-NLS-1$
         
@@ -6105,7 +5986,7 @@ public class TestProcessor {
         };    
     
         // Plan query
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBitwise();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBitwise();
         ProcessorPlan plan = helpGetPlan(sql, metadata);
 
         // Construct data manager with data
@@ -6116,30 +5997,17 @@ public class TestProcessor {
         helpProcess(plan, dataManager, expected);
     }
     
-    private void sampleDataBitwise(FakeDataManager dataMgr, FakeMetadataFacade metadata) {    
-        try { 
-            // Group pm1.g1
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("phys.t"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = FakeDataStore.createElements(elementIDs);
-        
-            dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList(new Object[] { new Integer(0), "a", new Integer(1) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { new Integer(0), "a", new Integer(3) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { new Integer(0), "a", new Integer(16) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { new Integer(1), "b", new Integer(4) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { new Integer(2), "c", new Integer(2) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { new Integer(2), "c", new Integer(1) }), //$NON-NLS-1$
-                    } );    
-
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());    //$NON-NLS-1$ //$NON-NLS-2$
-        }
+    private void sampleDataBitwise(FakeDataManager dataMgr, QueryMetadataInterface metadata) throws Exception {    
+        dataMgr.registerTuples(
+            metadata,
+            "phys.t", new List[] { 
+				    Arrays.asList(new Object[] { new Integer(0), "a", new Integer(1) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { new Integer(0), "a", new Integer(3) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { new Integer(0), "a", new Integer(16) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { new Integer(1), "b", new Integer(4) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { new Integer(2), "c", new Integer(2) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { new Integer(2), "c", new Integer(1) }), //$NON-NLS-1$
+				    } );    
     }  
     
     @Test public void testFunctionGroupByInJoinCriteria() {  
@@ -6158,41 +6026,33 @@ public class TestProcessor {
         sampleData1(dataManager); 
          
         // Plan query 
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached()); 
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached()); 
  
         // Run query 
         helpProcess(plan, dataManager, expected); 
     }
 
-    private FakeMetadataFacade createProjectErrorMetadata() {
-        FakeMetadataObject p1 = FakeMetadataFactory.createPhysicalModel("p1"); //$NON-NLS-1$
-        FakeMetadataObject t1 = FakeMetadataFactory.createPhysicalGroup("p1.t", p1); //$NON-NLS-1$
-        List e1 = FakeMetadataFactory.createElements(t1, new String[] {"a", "b" }, new String[] { "string", "string" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    private TransformationMetadata createProjectErrorMetadata() {
+    	MetadataStore metadataStore = new MetadataStore();
+        Schema p1 = RealMetadataFactory.createPhysicalModel("p1", metadataStore); //$NON-NLS-1$
+        Table t1 = RealMetadataFactory.createPhysicalGroup("t", p1); //$NON-NLS-1$
+        RealMetadataFactory.createElements(t1, new String[] {"a", "b" }, new String[] { "string", "string" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         
-        FakeMetadataObject v1 = FakeMetadataFactory.createVirtualModel("v1"); //$NON-NLS-1$
+        Schema v1 = RealMetadataFactory.createVirtualModel("v1", metadataStore); //$NON-NLS-1$
         QueryNode n1 = new QueryNode("SELECT convert(a, integer) as c, b FROM p1.t"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vt1 = FakeMetadataFactory.createVirtualGroup("v1.t1", v1, n1); //$NON-NLS-1$
-        List vte1 = FakeMetadataFactory.createElements(vt1, new String[] {"c", "b" }, new String[] { "integer", "string" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        Table vt1 = RealMetadataFactory.createVirtualGroup("t1", v1, n1); //$NON-NLS-1$
+        RealMetadataFactory.createElements(vt1, new String[] {"c", "b" }, new String[] { "integer", "string" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
         QueryNode n3 = new QueryNode("SELECT c, b FROM v1.t1 UNION ALL SELECT c, b FROM v1.t1"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vu1 = FakeMetadataFactory.createVirtualGroup("v1.u1", v1, n3); //$NON-NLS-1$
-        List vtu1 = FakeMetadataFactory.createElements(vu1, new String[] {"c", "b" }, new String[] { "integer", "string" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        Table vu1 = RealMetadataFactory.createVirtualGroup("u1", v1, n3); //$NON-NLS-1$
+        RealMetadataFactory.createElements(vu1, new String[] {"c", "b" }, new String[] { "integer", "string" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(p1);
-        store.addObject(t1);
-        store.addObjects(e1);
-        store.addObject(v1);
-        store.addObject(vt1);
-        store.addObjects(vte1);
-        store.addObject(vu1);
-        store.addObjects(vtu1);
-        return new FakeMetadataFacade(store);
+        return RealMetadataFactory.createTransformationMetadata(metadataStore, "projectError");
     }
     
     @Test public void testProjectionErrorOverUnionWithConvert() {  
         // Create query  
-        FakeMetadataFacade metadata = createProjectErrorMetadata();
+        QueryMetadataInterface metadata = createProjectErrorMetadata();
         String sql = "SELECT COUNT(*) FROM v1.u1"; //$NON-NLS-1$ 
          
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -6221,7 +6081,7 @@ public class TestProcessor {
         String sql = "update vm1.g39 set e2=3"; //$NON-NLS-1$ 
  
         // Plan query 
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());        
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());        
 
         // Construct data manager with data 
         HardcodedDataManager dataManager = new HardcodedDataManager(); 
@@ -6252,7 +6112,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -6264,17 +6124,15 @@ public class TestProcessor {
      * 
      */    
     @Test public void testInsertTempTableCreation() {
-        FakeMetadataObject v1 = FakeMetadataFactory.createVirtualModel("v1"); //$NON-NLS-1$
+    	MetadataStore metadataStore = new MetadataStore();
+        Schema v1 = RealMetadataFactory.createVirtualModel("v1", metadataStore); //$NON-NLS-1$
         QueryNode n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN insert into #temp (var1) values (1); select #temp.var1 from #temp; END"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs = FakeMetadataFactory.createResultSet("rs", v1, new String[] { "var1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER}); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject paramRS = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs);  //$NON-NLS-1$
-        FakeMetadataObject vp = FakeMetadataFactory.createVirtualProcedure("v1.vp", v1, Arrays.asList(new Object[] {paramRS}), n1); //$NON-NLS-1$
+        ColumnSet<Procedure> rs = RealMetadataFactory.createResultSet("rs", new String[] { "var1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER}); //$NON-NLS-1$ //$NON-NLS-2$
+        Procedure vp = RealMetadataFactory.createVirtualProcedure("vp", v1, null, n1); //$NON-NLS-1$
+        vp.setResultSet(rs);
+        QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "foo");
         
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(v1);
-        store.addObject(vp);
-        
-        ProcessorPlan plan = helpGetPlan("exec v1.vp()", new FakeMetadataFacade(store)); //$NON-NLS-1$
+        ProcessorPlan plan = helpGetPlan("exec v1.vp()", metadata); //$NON-NLS-1$
         
         List[] expected = new List[] {
             Arrays.asList(new Object[] { new Integer(1) })
@@ -6283,17 +6141,15 @@ public class TestProcessor {
     }
     
     @Test public void testInsertTempTableCreation1() {
-        FakeMetadataObject v1 = FakeMetadataFactory.createVirtualModel("v1"); //$NON-NLS-1$
+    	MetadataStore metadataStore = new MetadataStore();
+        Schema v1 = RealMetadataFactory.createVirtualModel("v1", metadataStore); //$NON-NLS-1$
         QueryNode n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN insert into #temp (var1) values (1); select 2 as var1 into #temp; select #temp.var1 from #temp; END"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs = FakeMetadataFactory.createResultSet("rs", v1, new String[] { "var1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER}); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject paramRS = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs);  //$NON-NLS-1$
-        FakeMetadataObject vp = FakeMetadataFactory.createVirtualProcedure("v1.vp", v1, Arrays.asList(new Object[] {paramRS}), n1); //$NON-NLS-1$
+        ColumnSet<Procedure> rs = RealMetadataFactory.createResultSet("rs", new String[] { "var1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER}); //$NON-NLS-1$ //$NON-NLS-2$
+        Procedure vp = RealMetadataFactory.createVirtualProcedure("vp", v1, null, n1); //$NON-NLS-1$
+        vp.setResultSet(rs);
+        QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "foo");
         
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(v1);
-        store.addObject(vp);
-        
-        ProcessorPlan plan = helpGetPlan("exec v1.vp()", new FakeMetadataFacade(store)); //$NON-NLS-1$
+        ProcessorPlan plan = helpGetPlan("exec v1.vp()", metadata); //$NON-NLS-1$
         
         List[] expected = new List[] {
             Arrays.asList(new Object[] { new Integer(1) }),
@@ -6313,7 +6169,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$ 
  
         Command command = helpParse(sql); 
-        ProcessorPlan plan = helpGetPlan(command, FakeMetadataFactory.exampleBQTCached(), capFinder); 
+        ProcessorPlan plan = helpGetPlan(command, RealMetadataFactory.exampleBQTCached(), capFinder); 
  
         // Run query  
         // Create expected results  
@@ -6334,7 +6190,7 @@ public class TestProcessor {
     }
         
     private void sampleDataBQT2a(FakeDataManager dataMgr) throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
     
         String[] groups = new String[] {"bqt1.smalla", "bqt2.smalla", "bqt3.smalla" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     
@@ -6388,7 +6244,7 @@ public class TestProcessor {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -6425,7 +6281,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT3", caps); //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -6455,7 +6311,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT3", caps); //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -6485,7 +6341,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT3", caps); //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -6515,7 +6371,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT3", caps); //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -6545,7 +6401,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT3", caps); //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -6575,7 +6431,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT3", caps); //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -6605,7 +6461,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT3", caps); //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -6635,7 +6491,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT3", caps); //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -6665,7 +6521,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT3", caps); //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -6690,7 +6546,7 @@ public class TestProcessor {
         HardcodedDataManager dataManager = new HardcodedDataManager();
         dataManager.addData("SELECT DISTINCT g_0.e1 FROM pm1.g3 AS g_0 WHERE g_0.e1 IN (SELECT g_0.e1 FROM pm1.g3 AS g_1)", expected); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -6718,7 +6574,7 @@ public class TestProcessor {
 
         // Plan query
         String sql = "SELECT e1 FROM pm1.g2 WHERE LOOKUP('pm1.g1','e1', 'e2', 0) = e1";//$NON-NLS-1$
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         Command command = TestProcessor.helpParse(sql);   
         CommandContext context = createCommandContext();
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder, context);
@@ -6736,7 +6592,7 @@ public class TestProcessor {
     
     @Test public void testRaiseNullWithSelectInto() {
         String sql = "select pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 into pm1.g2 from pm1.g1 where (1=0)"; //$NON-NLS-1$
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder()); 
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder()); 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
                 0,      // Access
@@ -6768,7 +6624,7 @@ public class TestProcessor {
      */
     @Test public void testCase6219() {
         String sql = "SELECT e1 FROM pm1.g1, (SELECT 'ACT' AS StateCode,'A' AS StateAbbrv UNION ALL SELECT 'NSW' AS StateCode, 'N' AS StateAbbrv) AS StateNames_Abbrvs WHERE (pm1.g1.e1 = StateCode) AND ((StateNames_Abbrvs.StateAbbrv || pm1.g1.e1) = 'VVIC')"; //$NON-NLS-1$
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder()); 
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder()); 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
                 0,      // Access
@@ -6799,7 +6655,7 @@ public class TestProcessor {
     @Test public void testSortWithLimit() {
         String sql = "select e1 from (select pm1.g1.e1, pm1.g1.e2 from pm1.g1 order by pm1.g1.e1, pm1.g1.e2 limit 1) x"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata);
         
@@ -6815,7 +6671,7 @@ public class TestProcessor {
     @Test public void testSortWithLimit1() {
         String sql = "select c from (select pm1.g1.e1 a, pm1.g1.e2 b, pm1.g1.e3 c from pm1.g1 order by b limit 1) x"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata);
         
@@ -6833,7 +6689,7 @@ public class TestProcessor {
     @Test public void testSortWithLimit2() {
         String sql = "select a from (select max(e2) a from pm1.g1 group by e2 order by a limit 1) x where a = 0"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
         
@@ -6852,7 +6708,7 @@ public class TestProcessor {
     @Test public void testSortWithLimit3() {
         String sql = "select c from (select pm1.g1.e3 c from pm1.g1 order by pm1.g1.e2 limit 1) x"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
         
@@ -6868,7 +6724,7 @@ public class TestProcessor {
     @Test public void testSortWithLimit4() {
         String sql = "select c from (select pm1.g1.e1 a, pm1.g1.e2 b, pm1.g1.e3 c from pm1.g1 order by b limit 1) x"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY_UNRELATED, false);
@@ -6888,7 +6744,7 @@ public class TestProcessor {
     @Test public void testCountWithHaving() {
         String sql = "select e1, count(*) from pm1.g1 group by e1 having count(*) > 1"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
         
@@ -6904,7 +6760,7 @@ public class TestProcessor {
     @Test public void testLimitZero() {
         String sql = "select e1 from pm1.g1 limit 0"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
         
@@ -6921,7 +6777,7 @@ public class TestProcessor {
     @Test public void testLimitZero1() {
         String sql = "select distinct vm1.g1.e1, y.e1 from vm1.g1 left outer join (select 1 x, e1 from vm1.g2 limit 0) y on vm1.g1.e1 = y.e1 where vm1.g1.e1 = 'a'"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
         
@@ -6954,7 +6810,7 @@ public class TestProcessor {
     @Test public void testLimitZero2() {
         String sql = "select vm1.g1.e1 from vm1.g1 union select e1 from pm1.g2 limit 0"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
         
@@ -6974,7 +6830,7 @@ public class TestProcessor {
         
         String sql = "select e1 from pm1.g2 limit 0"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, capFinder);
         
@@ -6989,7 +6845,7 @@ public class TestProcessor {
     @Test public void testUnionWithTypeConversion() {
         String sql = "select pm1.g1.e1, pm1.g1.e2 from pm1.g1 where e1 = 'b' union select e2, e1 from pm1.g2 where e1 = 'b' order by e1, e2"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
         
@@ -7014,7 +6870,7 @@ public class TestProcessor {
     @Test public void testNonDeterministicEvaluation() throws Exception {
         String sql = "select e1, convert(rand()*1000, integer) as x from pm1.g1 where e1 = 'a'"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
         
@@ -7035,7 +6891,7 @@ public class TestProcessor {
     @Test public void testDeterministicEvaluation() throws Exception {
         String sql = "select e1, convert(rand(0)*1000, integer) as x from pm1.g1 where e1 = 'a'"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
         
@@ -7053,7 +6909,7 @@ public class TestProcessor {
     @Test public void testEmptyAggregate() throws Exception {
         String sql = "select count(e1) from pm1.g1 where 1 = 0"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
         
@@ -7069,7 +6925,7 @@ public class TestProcessor {
     @Test public void testNullAggregate() throws Exception {
         String sql = "select count(*), count(e1), sum(convert(e1, integer)) from pm1.g1 where e1 is null"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
         
@@ -7088,7 +6944,7 @@ public class TestProcessor {
     @Test public void testNullAggregate1() throws Exception {
         String sql = "select e1 from pm1.g1 where 1 = 0 group by e1"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
         
@@ -7103,7 +6959,7 @@ public class TestProcessor {
     @Test public void testReferenceReplacementWithExpression() throws Exception {
         String sql = "select e1, e2 from (select e1, convert(e2, string) e2 from pm1.g1) x where exists (select e3 from pm1.g2 where x.e2 = e1)"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
         
@@ -7145,7 +7001,7 @@ public class TestProcessor {
         sampleDataBQT2(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
                                                     new String[] {"SELECT b.intkey FROM bqt2.SMALLA AS b", "SELECT a.intkey FROM bqt1.smalla AS a"}, new DefaultCapabilitiesFinder(), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -7191,7 +7047,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     new String[] {"SELECT a.e4, a.e2 FROM pm1.g1 AS a", "SELECT b.e4, b.e2 FROM pm1.g2 AS b"}, new DefaultCapabilitiesFinder(), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -7234,7 +7090,7 @@ public class TestProcessor {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     new String[] {"SELECT a.e4, a.e2 FROM pm1.g1 AS a", "SELECT b.e4, b.e2 FROM pm1.g2 AS b"}, new DefaultCapabilitiesFinder(), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -7269,7 +7125,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         List[] expected = new List[] {
             Arrays.asList("a", "b"), //$NON-NLS-1$ //$NON-NLS-2$
@@ -7277,7 +7133,10 @@ public class TestProcessor {
         };
 
         HardcodedDataManager manager = new HardcodedDataManager();
-        manager.addData("SELECT 'a', pm1.g1.e1 FROM pm1.g1", expected); //$NON-NLS-1$ 
+        manager.addData("SELECT pm1.g1.e1 FROM pm1.g1", new List[] {
+                Arrays.asList("b"), //$NON-NLS-1$ //$NON-NLS-2$
+                Arrays.asList("c") //$NON-NLS-1$ //$NON-NLS-2$
+            }); //$NON-NLS-1$ 
         
         processPreparedStatement("select ?, e1 from pm1.g1", expected, manager, capFinder,
 				metadata, Arrays.asList("a")); 
@@ -7298,7 +7157,7 @@ public class TestProcessor {
         sampleData2(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -7320,7 +7179,7 @@ public class TestProcessor {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData2(dataManager);
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, new String[] {"SELECT pm1.g1.e1 FROM pm1.g1 LIMIT 6"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"SELECT pm1.g1.e1 FROM pm1.g1 LIMIT 6"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         helpProcess(plan, dataManager, expected);          
     }
     
@@ -7338,7 +7197,7 @@ public class TestProcessor {
         		Arrays.asList(Integer.valueOf(2))
         });
         
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         List[] expected = new List[] {
                 Arrays.asList(new Object[] { "b" }), //$NON-NLS-1$
@@ -7369,7 +7228,7 @@ public class TestProcessor {
     	"   SELECT CONVERT(e2, long) AS e2 FROM pm1.g1 AS A WHERE e1 = 'a'" + //$NON-NLS-1$
     	") AS A"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
         
@@ -7392,7 +7251,7 @@ public class TestProcessor {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
         
         helpProcess(plan, dataManager, expected);
     }
@@ -7416,7 +7275,7 @@ public class TestProcessor {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
         
         helpProcess(plan, dataManager, expected);
     }
@@ -7432,7 +7291,7 @@ public class TestProcessor {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
         
         helpProcess(plan, dataManager, expected);
     }
@@ -7451,7 +7310,7 @@ public class TestProcessor {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
         
         helpProcess(plan, dataManager, expected);
     }
@@ -7471,7 +7330,7 @@ public class TestProcessor {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
         
         helpProcess(plan, dataManager, expected);
     }
@@ -7492,7 +7351,7 @@ public class TestProcessor {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
         
         helpProcess(plan, dataManager, expected);
     }
@@ -7507,14 +7366,14 @@ public class TestProcessor {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
         
         helpProcess(plan, dataManager, expected);
     }
     
     @Test public void testUncorrelatedScalarSubqueryPushdown() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, false);
@@ -7540,7 +7399,7 @@ public class TestProcessor {
     
     @Test public void testNonDeterministicScalarSubquery() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, false);
@@ -7564,7 +7423,7 @@ public class TestProcessor {
     
     @Test public void testUncorrelatedScalarSubqueryPushdown1() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, false);
@@ -7598,7 +7457,7 @@ public class TestProcessor {
         HardcodedDataManager dataManager = new HardcodedDataManager();
         dataManager.addData("SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1", new List[] {Arrays.asList(1, "2"), Arrays.asList(3, "4")});
         dataManager.addData("EXEC pm1.sp2(1)", new List[] {Arrays.asList("b", 2)});
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
         
         helpProcess(plan, dataManager, expected);
     }
@@ -7613,7 +7472,7 @@ public class TestProcessor {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
         
         helpProcess(plan, dataManager, expected);
     }
@@ -7628,7 +7487,7 @@ public class TestProcessor {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example4(), TestOptimizer.getGenericFinder());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example4(), TestOptimizer.getGenericFinder());
         
         helpProcess(plan, dataManager, expected);
     }
@@ -7643,9 +7502,36 @@ public class TestProcessor {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example4(), TestOptimizer.getGenericFinder());
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example4(), new DefaultCapabilitiesFinder(caps));
         
         helpProcess(plan, dataManager, expected);
+    }
+    
+    
+    @Test public void testDupSelect() throws Exception {
+    	String sql = "select e1, e1 from pm1.g1";
+        
+    	HardcodedDataManager dataManager = new HardcodedDataManager();
+    	
+    	dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0", new List[] {Arrays.asList(1)});
+        
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, new List[] {Arrays.asList(1, 1)});
+    }
+    
+    @Test public void testDupSelect1() throws Exception {
+    	String sql = "select 1, 2 from pm1.g1";
+        
+    	HardcodedDataManager dataManager = new HardcodedDataManager();
+    	
+    	dataManager.addData("SELECT 2 FROM pm1.g1 AS g_0", new List[] {Arrays.asList(2)});
+        
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, new List[] {Arrays.asList(1, 2)});
     }
     
     private static final boolean DEBUG = false;

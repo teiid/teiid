@@ -205,9 +205,9 @@ public class Request implements SecurityFunctionEvaluator {
         this.metadata = tma;
     }
     
-    protected void createCommandContext() throws QueryValidatorException {
-    	boolean returnsResultSet = userCommand.returnsResultSet();
-    	this.returnsUpdateCount = !(userCommand instanceof StoredProcedure) && !returnsResultSet;
+    protected void createCommandContext(Command command) throws QueryValidatorException {
+    	boolean returnsResultSet = command.returnsResultSet();
+    	this.returnsUpdateCount = !(command instanceof StoredProcedure) && !returnsResultSet;
     	if ((this.requestMsg.getResultsMode() == ResultsMode.UPDATECOUNT && !returnsUpdateCount) 
     			|| (this.requestMsg.getResultsMode() == ResultsMode.RESULTSET && !returnsResultSet)) {
         	throw new QueryValidatorException(QueryPlugin.Util.getString(this.requestMsg.getResultsMode()==ResultsMode.RESULTSET?"Request.no_result_set":"Request.result_set")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -252,6 +252,8 @@ public class Request implements SecurityFunctionEvaluator {
         context.setResultSetCacheEnabled(this.resultSetCacheEnabled);
         context.setUserRequestSourceConcurrency(this.userRequestConcurrency);
         context.setSubject(workContext.getSubject());
+        this.context.setSession(workContext.getSession());
+        this.context.setRequestId(this.requestId);
     }
     
     @Override
@@ -381,11 +383,9 @@ public class Request implements SecurityFunctionEvaluator {
         this.analysisRecord = new AnalysisRecord(requestMsg.getShowPlan() != ShowPlan.OFF, requestMsg.getShowPlan() == ShowPlan.DEBUG);
                 
         resolveCommand(command);
-        
+
         validateAccess(userCommand);
         
-        createCommandContext();
-
         Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(command, true);
         for (GroupSymbol groupSymbol : groups) {
 			if (groupSymbol.isTempTable()) {
@@ -464,7 +464,8 @@ public class Request implements SecurityFunctionEvaluator {
 	}
 
 	protected void validateAccess(Command command) throws QueryValidatorException, TeiidComponentException {
-		this.authorizationValidator.validate(command, metadata, workContext);
+		createCommandContext(command);
+		this.authorizationValidator.validate(command, metadata, workContext, context);
 	}
 	
 }

@@ -39,7 +39,7 @@ import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.function.source.SystemSource;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
 public class TestFunctionTree {
@@ -78,11 +78,11 @@ public class TestFunctionTree {
 	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), false, Determinism.DETERMINISTIC); //$NON-NLS-1$
     	
     	//allowed, since we're not validating the class
-    	new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method))));
+    	new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method))));
     	
     	//should fail, no class
     	try {
-    		new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+    		new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
     		fail();
     	} catch (TeiidRuntimeException e) {
     		
@@ -92,7 +92,7 @@ public class TestFunctionTree {
     	
     	//should fail, no method
     	try {
-    		new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+    		new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
     		fail();
     	} catch (TeiidRuntimeException e) {
     		
@@ -102,7 +102,7 @@ public class TestFunctionTree {
     	
     	//should fail, not void
     	try {
-    		new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+    		new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
     		fail();
     	} catch (TeiidRuntimeException e) {
     		
@@ -112,7 +112,7 @@ public class TestFunctionTree {
     	
     	//should fail, not public
     	try {
-    		new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+    		new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
     		fail();
     	} catch (TeiidRuntimeException e) {
     		
@@ -122,7 +122,7 @@ public class TestFunctionTree {
     	
     	//should fail, not static
     	try {
-    		new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+    		new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
     		fail();
     	} catch (TeiidRuntimeException e) {
     		
@@ -131,7 +131,7 @@ public class TestFunctionTree {
     	method.setInvocationMethod("y");
     	
     	//valid!
-    	new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+    	new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
     }
     
     @Test public void testNullCategory() {

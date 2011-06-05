@@ -28,7 +28,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 
 /**
@@ -55,7 +55,7 @@ public class TestExpressionsInGroupBy {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
             null, capFinder,
             new String[] { "SELECT convert(TimestampValue, date), COUNT(*) FROM bqt1.smalla GROUP BY convert(TimestampValue, date)" },  //$NON-NLS-1$
             true);
@@ -79,7 +79,7 @@ public class TestExpressionsInGroupBy {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
             null, capFinder,
             new String[] { "SELECT convert(TimestampValue, date), COUNT(*) FROM bqt1.smalla GROUP BY convert(TimestampValue, date)" },  //$NON-NLS-1$
             true);
@@ -90,7 +90,7 @@ public class TestExpressionsInGroupBy {
     @Test public void testCase1565_3() throws Exception {
         String sql = "SELECT x, COUNT(*) FROM (SELECT convert(TimestampValue, date) AS x FROM (SELECT TimestampValue from bqt1.smalla) as z) as y GROUP BY x"; //$NON-NLS-1$
 
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
             null, TestOptimizer.getGenericFinder(),
             new String[] { "SELECT TimestampValue FROM bqt1.smalla" },  //$NON-NLS-1$
             true);
@@ -128,7 +128,7 @@ public class TestExpressionsInGroupBy {
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
 
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
             null, capFinder,
             new String[] { "SELECT TimestampValue, stringkey FROM bqt1.smalla" },  //$NON-NLS-1$
             true);
@@ -166,7 +166,7 @@ public class TestExpressionsInGroupBy {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
             null, capFinder,
             new String[] { "SELECT intkey FROM bqt1.smalla" },  //$NON-NLS-1$
             true);
@@ -191,7 +191,7 @@ public class TestExpressionsInGroupBy {
     
     // SELECT SUM(x) FROM (SELECT IntKey+1 AS x FROM BQT1.SmallA) AS g
     @Test public void testAggregateNoGroupByWithNestedFunction() {
-        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT SUM(x) FROM (SELECT IntKey+1 AS x FROM BQT1.SmallA) AS g", FakeMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT SUM(x) FROM (SELECT IntKey+1 AS x FROM BQT1.SmallA) AS g", RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
             new String[] { "SELECT IntKey FROM BQT1.SmallA"  }); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -231,7 +231,7 @@ public class TestExpressionsInGroupBy {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
-                                      FakeMetadataFactory.exampleBQTCached(),
+                                      RealMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
                                       new String[] {"SELECT CASE WHEN BQT1.SmallA.IntKey >= 5000 THEN '5000 +' ELSE '0-999' END, BQT1.SmallA.IntKey FROM BQT1.SmallA"}, //$NON-NLS-1$ 
                                       TestOptimizer.SHOULD_SUCCEED );
@@ -275,7 +275,7 @@ public class TestExpressionsInGroupBy {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
-                                      FakeMetadataFactory.exampleBQTCached(),
+                                      RealMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
                                       new String[] {"SELECT IntKey FROM BQT1.SmallA"}, //$NON-NLS-1$ 
                                       TestOptimizer.SHOULD_SUCCEED );
@@ -320,7 +320,7 @@ public class TestExpressionsInGroupBy {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
-                                      FakeMetadataFactory.exampleBQTCached(),
+                                      RealMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
                                       new String[] {"SELECT IntKey FROM BQT1.SmallA"}, //$NON-NLS-1$ 
                                       TestOptimizer.SHOULD_SUCCEED );
@@ -362,7 +362,7 @@ public class TestExpressionsInGroupBy {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
-                                      FakeMetadataFactory.exampleBQTCached(),
+                                      RealMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
                                       new String[] {"SELECT IntKey FROM BQT1.SmallA"}, //$NON-NLS-1$ 
                                       TestOptimizer.SHOULD_SUCCEED );
@@ -394,7 +394,7 @@ public class TestExpressionsInGroupBy {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
-                                      FakeMetadataFactory.exampleBQTCached(),
+                                      RealMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
                                       new String[] {"SELECT StringKey FROM BQT1.SmallA"}, //$NON-NLS-1$ 
                                       TestOptimizer.SHOULD_SUCCEED );
@@ -426,7 +426,7 @@ public class TestExpressionsInGroupBy {
          
         ProcessorPlan plan = TestOptimizer.helpPlan(
             "SELECT e2 as x FROM pm1.g1 GROUP BY upper(e1), e2",  //$NON-NLS-1$
-            FakeMetadataFactory.example1Cached(),
+            RealMetadataFactory.example1Cached(),
             null, capFinder,
             new String[] {"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}, //$NON-NLS-1$
             ComparisonMode.EXACT_COMMAND_STRING );

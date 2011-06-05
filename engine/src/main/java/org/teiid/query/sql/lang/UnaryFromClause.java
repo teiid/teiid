@@ -74,7 +74,7 @@ public class UnaryFromClause extends FromClause {
      * Collect all GroupSymbols for this from clause.
      * @param groups Groups to add to
      */
-    public void collectGroups(Collection groups) {
+    public void collectGroups(Collection<GroupSymbol> groups) {
         groups.add(this.group);    
     }
 	
@@ -121,15 +121,12 @@ public class UnaryFromClause extends FromClause {
 	 * Get deep clone of object
 	 * @return Deep copy of the object
 	 */
-	public Object clone() {
+	public FromClause cloneDirect() {
 	    GroupSymbol copyGroup = null;
 	    if(this.group != null) { 
-	        copyGroup = (GroupSymbol) this.group.clone();
+	        copyGroup = this.group.clone();
 	    }
         UnaryFromClause clonedUnaryFromClause = new UnaryFromClause(copyGroup);
-        clonedUnaryFromClause.setOptional(this.isOptional());
-        clonedUnaryFromClause.setMakeDep(this.isMakeDep());
-        clonedUnaryFromClause.setMakeNotDep(this.isMakeNotDep());
         if (this.expandedCommand != null) {
         	clonedUnaryFromClause.setExpandedCommand((Command)this.expandedCommand.clone());
         }

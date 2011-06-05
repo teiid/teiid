@@ -26,6 +26,7 @@ import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.util.CommandContext;
 
 /**
  * Defines a validator that checks for proper authorization.  
@@ -33,7 +34,7 @@ import org.teiid.query.sql.lang.Command;
 public interface AuthorizationValidator {
 	
 	void validate(Command command, QueryMetadataInterface metadata,
-			DQPWorkContext workContext) throws QueryValidatorException, TeiidComponentException;
+			DQPWorkContext workContext, CommandContext commandContext) throws QueryValidatorException, TeiidComponentException;
 	
 	boolean hasRole(String roleName, DQPWorkContext workContext);
 }

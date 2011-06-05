@@ -232,7 +232,7 @@ public class TestMappingElement extends TestCase {
     public void testAddNullStagingTable() {        
         MappingElement element = new MappingElement("Test"); //$NON-NLS-1$
         element.addStagingTable(null);
-        List stagingTables = element.getStagingTables();
+        List<String> stagingTables = element.getStagingTables();
         assertTrue(stagingTables.isEmpty());
     } 
 }

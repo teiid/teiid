@@ -24,17 +24,15 @@ package org.teiid.query.resolver;
 
 import static org.junit.Assert.*;
 
-import java.util.Arrays;
 import java.util.Map;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
-import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.query.mapping.relational.QueryNode;
+import org.teiid.metadata.Table;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
@@ -53,34 +51,15 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
-
+import org.teiid.query.unittest.RealMetadataFactory;
 
 public class TestProcedureResolving {
 
- 	private QueryMetadataInterface exampleStoredProcedure(String procedure) {
-		FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode(procedure); 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
-
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq1);
-        
-        return metadata;
-	}
- 	
-    private void helpFailUpdateProcedure(String procedure, String userUpdateStr, String procedureType) {
+    private void helpFailUpdateProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType) {
         helpFailUpdateProcedure(procedure, userUpdateStr, procedureType, null);
     }
     
-	private void helpFailUpdateProcedure(String procedure, String userUpdateStr, String procedureType, String msg) {
+	private void helpFailUpdateProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType, String msg) {
         // resolve
         try {
     		helpResolveUpdateProcedure(procedure, userUpdateStr, procedureType);
@@ -112,7 +91,7 @@ public class TestProcedureResolving {
             
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
-        Command command = helpResolveUpdateProcedure(proc.toString(), userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE);
+        Command command = helpResolveUpdateProcedure(proc.toString(), userUpdateStr, Table.TriggerEvent.UPDATE);
         Map tempIDs = command.getTemporaryMetadata();
         assertNotNull(tempIDs);
         assertNull(tempIDs.get("LOOPCURSOR")); //$NON-NLS-1$
@@ -131,8 +110,8 @@ public class TestProcedureResolving {
         assertNull(tempIDs.get("LOOPCURSOR2")); //$NON-NLS-1$
     }
     
-	private CreateUpdateProcedureCommand helpResolveUpdateProcedure(String procedure, String userUpdateStr, String procedureType) throws QueryParserException, QueryResolverException, TeiidComponentException {
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleUpdateProc(procedureType, procedure);
+	private CreateUpdateProcedureCommand helpResolveUpdateProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType) throws QueryParserException, QueryResolverException, TeiidComponentException {
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(procedureType, procedure);
 		return resolveProcedure(userUpdateStr, metadata);
 	}
 
@@ -149,6 +128,7 @@ public class TestProcedureResolving {
 	private void helpResolveException(String userUpdateStr, QueryMetadataInterface metadata, String msg) throws QueryParserException, TeiidComponentException {
 		try {
 			helpResolve(userUpdateStr, metadata);
+			fail();
 		} catch (QueryResolverException e) {
 			assertEquals(msg, e.getMessage());
 		}
@@ -162,7 +142,7 @@ public class TestProcedureResolving {
      *  Constants will now auto resolve if they are consistently representable in the target type
      */
     @Test public void testDefect23257() throws Exception{
-    	CreateUpdateProcedureCommand command = helpResolve("EXEC pm5.vsp59()", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+    	CreateUpdateProcedureCommand command = helpResolve("EXEC pm6.vsp59()", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         
         CommandStatement cs = (CommandStatement)command.getBlock().getStatements().get(1);
         
@@ -187,7 +167,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         CreateUpdateProcedureCommand command = helpResolveUpdateProcedure(proc.toString(), userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                                     Table.TriggerEvent.UPDATE);
         
         Block block = command.getBlock();
         
@@ -217,7 +197,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// variable resolution, variable used in if statement, invalid operation on variable
@@ -232,7 +212,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }    
     
 	// variable resolution, variables declared in different blocks local variables
@@ -251,7 +231,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE, "Variable var1 was previously declared."); //$NON-NLS-1$
+									 Table.TriggerEvent.UPDATE, "Variable var1 was previously declared."); //$NON-NLS-1$
     }
     
 	// variable resolution, variables declared in different blocks local variables
@@ -270,7 +250,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// variable resolution, variables declared in different blocks local variables
@@ -290,7 +270,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }     
     
 	// variable resolution, variables declared in different blocks local variables
@@ -310,7 +290,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }    
     
 	// special variable ROWS_UPDATED resolution
@@ -326,7 +306,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// special variable ROWS_UPDATED used with declared variable
@@ -341,7 +321,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// special variable INPUT used with declared variable
@@ -356,7 +336,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// special variable CHANGING used with declared variable
@@ -374,7 +354,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// special variable CHANGING and INPUT used in compound criteria
@@ -392,7 +372,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// special variable CHANGING and INPUT used in compound criteria, with declared variables
@@ -410,7 +390,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// special variable CHANGING compared against integer no implicit conversion available
@@ -426,7 +406,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE, "Error Code:ERR.015.008.0027 Message:The expressions in this criteria are being compared but are of differing types (boolean and date) and no implicit conversion is available:  CHANGING.e4 = {d'2000-01-01'}"); //$NON-NLS-1$
+									 Table.TriggerEvent.UPDATE, "Error Code:ERR.015.008.0027 Message:The expressions in this criteria are being compared but are of differing types (boolean and date) and no implicit conversion is available:  CHANGING.e4 = {d'2000-01-01'}"); //$NON-NLS-1$
     }       
     
 	// virtual group elements used in procedure(HAS CRITERIA)
@@ -441,7 +421,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// virtual group elements used in procedure in if statement(HAS CRITERIA)
@@ -459,7 +439,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }    
     
 	// virtual group elements used in procedure(TRANSLATE CRITERIA)
@@ -474,7 +454,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// virtual group elements used in procedure(TRANSLATE CRITERIA)
@@ -489,7 +469,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// using undefined variable should fail
@@ -505,7 +485,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// using undefined variable declared is of invalid datatype
@@ -520,7 +500,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// using declare variable that has parts
@@ -533,7 +513,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// using declare variable is qualified
@@ -546,7 +526,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// using declare variable is qualified but has more parts
@@ -559,7 +539,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// using a variable that has not been declared in an assignment stmt
@@ -572,7 +552,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// using a variable that has not been declared in an assignment stmt
@@ -585,7 +565,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// using invalid function in assignment expr
@@ -599,7 +579,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }    
     
 	// using invalid function in assignment expr
@@ -613,7 +593,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// using a variable being used inside a subcomand
@@ -627,7 +607,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// variable resolution, variables declared in different blocks local variables
@@ -648,7 +628,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// physical elements used on criteria of the if statement
@@ -665,7 +645,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE, "Symbol pm1.g1.e2 is specified with an unknown group context"); //$NON-NLS-1$
+									 Table.TriggerEvent.UPDATE, "Symbol pm1.g1.e2 is specified with an unknown group context"); //$NON-NLS-1$
     }
     
 	// virtual elements used on criteria of the if statement
@@ -682,7 +662,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// physical elements used on criteria of the if statement
@@ -699,7 +679,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }          
     
 	// TranslateCriteria on criteria of the if statement
@@ -716,7 +696,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// validating Translate CRITERIA, elements on it should be virtual group elements
@@ -731,7 +711,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// physical elements used on criteria of the if statement
@@ -748,7 +728,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// TranslateCriteria on criteria of the if statement
@@ -765,7 +745,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// TranslateCriteria on criteria of the if statement
@@ -782,7 +762,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// TranslateCriteria on criteria of the if statement
@@ -799,7 +779,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// TranslateCriteria on criteria of the if statement
@@ -812,7 +792,7 @@ public class TestProcedureResolving {
 //        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUTS.e1, pm1.g1.e2 = INPUTS.e2;\n";
         procedure = procedure + "END\n"; //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
 
         Command procCommand = QueryParser.getQueryParser().parseCommand(procedure);
 		GroupSymbol virtualGroup = new GroupSymbol("vm1.g1"); //$NON-NLS-1$
@@ -833,7 +813,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "INSERT into vm1.g1 (e1) values('x')"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.INSERT_PROCEDURE);
+									 Table.TriggerEvent.INSERT);
     }
     
 	// special variable CHANGING compared against integer no implicit conversion available
@@ -848,7 +828,7 @@ public class TestProcedureResolving {
 
         Command procCommand = QueryParser.getQueryParser().parseCommand(procedure);
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.INSERT_PROCEDURE, procedure);        
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.INSERT, procedure);        
         
 		GroupSymbol virtualGroup = new GroupSymbol("vm1.g1"); //$NON-NLS-1$
 		virtualGroup.setMetadataID(metadata.getGroupID("vm1.g1")); //$NON-NLS-1$
@@ -865,7 +845,7 @@ public class TestProcedureResolving {
 
         Command procCommand = QueryParser.getQueryParser().parseCommand(procedure);
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);        
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);        
         
 		GroupSymbol virtualGroup = new GroupSymbol("vm1.g1"); //$NON-NLS-1$
 		virtualGroup.setMetadataID(metadata.getGroupID("vm1.g1")); //$NON-NLS-1$
@@ -887,7 +867,7 @@ public class TestProcedureResolving {
 		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
 	}
 	
 	// validating Translate CRITERIA, elements(left elements on  on it should be virtual group elements
@@ -901,7 +881,7 @@ public class TestProcedureResolving {
 		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
 	}
 	
 	// resolving Translate CRITERIA, right element should be present on the command
@@ -914,7 +894,7 @@ public class TestProcedureResolving {
 		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
 	}
 	
 	// resolving criteria selector(on HAS CRITERIA), elements on it should be virtual group elements
@@ -931,7 +911,7 @@ public class TestProcedureResolving {
 		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
 	}
 	
 	// resolving Translate CRITERIA, right side expression in the translate criteria should be elements on the command
@@ -947,7 +927,7 @@ public class TestProcedureResolving {
 		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
 	}
 	
 	// validating Translate CRITERIA, elements on it should be virtual group elements
@@ -963,7 +943,7 @@ public class TestProcedureResolving {
 		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
 	}
 	
 	// resolving AssignmentStatement, variable type and assigned type 
@@ -979,7 +959,7 @@ public class TestProcedureResolving {
 		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
 	}
 	
 	// resolving AssignmentStatement, variable type and assigned type 
@@ -995,7 +975,7 @@ public class TestProcedureResolving {
 		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
 	}
     
 	// resolving AssignmentStatement, variable type and assigned type 
@@ -1011,7 +991,7 @@ public class TestProcedureResolving {
 		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
 	}	
 
     @Test public void testDefect14912_CreateUpdateProcedure57_FunctionWithElementParamInAssignmentStatement() {
@@ -1025,7 +1005,7 @@ public class TestProcedureResolving {
         
         String userCommand = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-        helpFailUpdateProcedure(procedure, userCommand, FakeMetadataObject.Props.UPDATE_PROCEDURE, "Element \"badElement\" is not defined by any relevant group."); //$NON-NLS-1$
+        helpFailUpdateProcedure(procedure, userCommand, Table.TriggerEvent.UPDATE, "Element \"badElement\" is not defined by any relevant group."); //$NON-NLS-1$
     }
     
 	// addresses Cases 4624.  Before change to UpdateProcedureResolver,
@@ -1044,7 +1024,7 @@ public class TestProcedureResolving {
         
         String userCommand = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-        helpFailUpdateProcedure(procedure, userCommand, FakeMetadataObject.Props.UPDATE_PROCEDURE, "Group does not exist: Bert_MAP.BERT3.RACK"); //$NON-NLS-1$
+        helpFailUpdateProcedure(procedure, userCommand, Table.TriggerEvent.UPDATE, "Group does not exist: Bert_MAP.BERT3.RACK"); //$NON-NLS-1$
     }
 
 	// addresses Cases 5474.  
@@ -1055,7 +1035,7 @@ public class TestProcedureResolving {
         procedure = procedure + "VARIABLES.NLEVELS = SELECT COUNT(*) FROM (SELECT oi.e1 AS Col1, oi.e2 AS Col2, oi.e3 FROM pm1.g2 AS oi) AS TOBJ, pm2.g2 AS TModel WHERE TModel.e3 = TOBJ.e3;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
         
-        TestResolver.helpResolve(procedure, FakeMetadataFactory.example1Cached());
+        TestResolver.helpResolve(procedure, RealMetadataFactory.example1Cached());
     }
     
     @Test public void testIssue174102() throws Exception {
@@ -1066,21 +1046,7 @@ public class TestProcedureResolving {
         procedure = procedure + "EXECUTE STRING ('SELECT e1 FROM pm1.sq2 ' || crit ) AS e1 string INTO #TTable;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
         
-        TestResolver.helpResolve(procedure, FakeMetadataFactory.example1Cached());
-    }
-    
-    // Address Issue 174519.
-    // Expected result is resolver failure, but with different error.
-    @Test public void testIssue174519() throws Exception {
-        String procedure = "CREATE VIRTUAL PROCEDURE  \n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE string VARIABLES.l_in = pm1.sq1.in;\n"; //$NON-NLS-1$
-        procedure = procedure + "INSERT INTO #temp \n"; //$NON-NLS-1$
-        procedure = procedure + "SELECT pm1.sq3.e1 FROM pm1.sq3 WHERE pm1.sq3.in = VARIABLES.l_in;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = exampleStoredProcedure(procedure);
-        helpResolveException("EXEC pm1.sq1(1)", metadata, "Error Code:ERR.015.008.0010 Message:INSERT statement must have the same number of elements and values specified.  This statement has 0 elements and 0 values."); //$NON-NLS-1$ //$NON-NLS-2$
+        TestResolver.helpResolve(procedure, RealMetadataFactory.example1Cached());
     }
     
 	/*@Test public void testCommandUpdatingCountFromLastStatement() throws Exception {
@@ -1106,7 +1072,7 @@ public class TestProcedureResolving {
         
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-        helpFailUpdateProcedure(procedure, userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE);
+        helpFailUpdateProcedure(procedure, userUpdateStr, Table.TriggerEvent.UPDATE);
     }
     
     @Test public void testDynamicIntoInProc() throws Exception {
@@ -1119,7 +1085,7 @@ public class TestProcedureResolving {
                                 .append("ROWS_UPDATED =0;\n") //$NON-NLS-1$
                                 .append("END\n"); //$NON-NLS-1$
         helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
-                                   FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                                   Table.TriggerEvent.UPDATE);
     }
     
     @Test public void testDynamicStatement() throws Exception {
@@ -1131,7 +1097,7 @@ public class TestProcedureResolving {
                                 .append("ROWS_UPDATED =0;\n") //$NON-NLS-1$
                                 .append("END\n"); //$NON-NLS-1$
         helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
-                                   FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                                   Table.TriggerEvent.UPDATE);
     }
     
     @Test public void testDynamicStatementType() {
@@ -1143,7 +1109,7 @@ public class TestProcedureResolving {
                                 .append("execute string VARIABLES.X;\n") //$NON-NLS-1$
                                 .append("ROWS_UPDATED =0;\n") //$NON-NLS-1$
                                 .append("END\n"); //$NON-NLS-1$
-        helpFailUpdateProcedure(procedure.toString(), userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE);
+        helpFailUpdateProcedure(procedure.toString(), userUpdateStr, Table.TriggerEvent.UPDATE);
     }
 
 	// variable resolution
@@ -1158,7 +1124,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1=1"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
     
 	// variable resolution, variable used in if statement
@@ -1174,7 +1140,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 Table.TriggerEvent.UPDATE);
     }
 
     @Test public void testSelectIntoInProc() throws Exception {
@@ -1187,7 +1153,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                                     Table.TriggerEvent.UPDATE);
         
         procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
                                 .append("BEGIN\n") //$NON-NLS-1$
@@ -1195,7 +1161,7 @@ public class TestProcedureResolving {
                                 .append("ROWS_UPDATED =0;\n") //$NON-NLS-1$
                                 .append("END\n"); //$NON-NLS-1$
         helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
-                                   FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                                   Table.TriggerEvent.UPDATE);
     }
 
     @Test public void testSelectIntoInProcNoFrom() throws Exception {
@@ -1208,7 +1174,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                                     Table.TriggerEvent.UPDATE);
         
         procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
                                 .append("BEGIN\n") //$NON-NLS-1$
@@ -1216,7 +1182,7 @@ public class TestProcedureResolving {
                                 .append("ROWS_UPDATED =0;\n") //$NON-NLS-1$
                                 .append("END\n"); //$NON-NLS-1$
         helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
-                                   FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                                   Table.TriggerEvent.UPDATE);
     }
     
     /*@Test public void testCommandUpdating3() throws Exception{
@@ -1229,7 +1195,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         Command command = helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
-                                   FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                                   Table.TriggerEvent.UPDATE);
         assertEquals(2, command.updatingModelCount(metadata));
     }*/
 
@@ -1245,7 +1211,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "INSERT into vm1.g1 (e1) values('x')"; //$NON-NLS-1$
         
         Command command = helpResolveUpdateProcedure(procedure, userUpdateStr,
-                                     FakeMetadataObject.Props.INSERT_PROCEDURE);
+                                     Table.TriggerEvent.INSERT);
         assertEquals(2, command.updatingModelCount(metadata));
     }*/
     
@@ -1260,7 +1226,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         helpFailUpdateProcedure(procedure, userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE, "Variable rows_updated was previously declared."); //$NON-NLS-1$
+                                     Table.TriggerEvent.UPDATE, "Variable rows_updated was previously declared."); //$NON-NLS-1$
     }
     
     // validating INPUT element assigned
@@ -1275,7 +1241,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         helpFailUpdateProcedure(procedure, userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                                     Table.TriggerEvent.UPDATE);
     }
     
     // validating CHANGING element assigned
@@ -1290,7 +1256,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         helpFailUpdateProcedure(procedure, userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                                     Table.TriggerEvent.UPDATE);
     }
     
     // variables cannot be used among insert elements
@@ -1305,7 +1271,7 @@ public class TestProcedureResolving {
         String userQuery = "UPDATE vm1.g3 SET x='x' where e3= 1"; //$NON-NLS-1$
 
         helpFailUpdateProcedure(procedure, userQuery, 
-                FakeMetadataObject.Props.UPDATE_PROCEDURE, "Column variables do not reference columns on group \"pm1.g1\": [Unable to resolve 'var1': Element \"var1\" is not defined by any relevant group.]"); //$NON-NLS-1$
+                Table.TriggerEvent.UPDATE, "Column variables do not reference columns on group \"pm1.g1\": [Unable to resolve 'var1': Element \"var1\" is not defined by any relevant group.]"); //$NON-NLS-1$
     }
     
     // variables cannot be used among insert elements
@@ -1320,7 +1286,7 @@ public class TestProcedureResolving {
         String userQuery = "UPDATE vm1.g3 SET x='x' where e3= 1"; //$NON-NLS-1$
 
         helpFailUpdateProcedure(procedure, userQuery, 
-                FakeMetadataObject.Props.UPDATE_PROCEDURE, "Column variables do not reference columns on group \"pm1.g1\": [Unable to resolve 'INPUTS.x': Symbol INPUTS.x is specified with an unknown group context]"); //$NON-NLS-1$
+                Table.TriggerEvent.UPDATE, "Column variables do not reference columns on group \"pm1.g1\": [Unable to resolve 'INPUTS.x': Symbol INPUTS.x is specified with an unknown group context]"); //$NON-NLS-1$
     }
     
     //should resolve first to the table's column
@@ -1335,7 +1301,7 @@ public class TestProcedureResolving {
         String userQuery = "UPDATE vm1.g3 SET x='x' where e3= 1"; //$NON-NLS-1$
 
         helpResolveUpdateProcedure(procedure, userQuery, 
-                FakeMetadataObject.Props.UPDATE_PROCEDURE); 
+                Table.TriggerEvent.UPDATE); 
     }
     
     @Test public void testAmbigousInput() {
@@ -1347,7 +1313,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         helpFailUpdateProcedure(procedure, userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE, "Element \"e1\" is ambiguous, it exists in two or more groups."); //$NON-NLS-1$
+                                     Table.TriggerEvent.UPDATE, "Element \"e1\" is ambiguous, it exists in two or more groups."); //$NON-NLS-1$
     }
     
     @Test public void testLoopRedefinition() {
@@ -1366,7 +1332,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         helpFailUpdateProcedure(proc.toString(), userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE, "Nested Loop can not use the same cursor name as that of its parent."); //$NON-NLS-1$
+                                     Table.TriggerEvent.UPDATE, "Nested Loop can not use the same cursor name as that of its parent."); //$NON-NLS-1$
     }
     
     @Test public void testTempGroupElementShouldNotBeResolable() {
@@ -1379,7 +1345,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         helpFailUpdateProcedure(proc.toString(), userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE, "Symbol #temp.a is specified with an unknown group context"); //$NON-NLS-1$
+                                     Table.TriggerEvent.UPDATE, "Symbol #temp.a is specified with an unknown group context"); //$NON-NLS-1$
     }
     
     @Test public void testTempGroupElementShouldNotBeResolable1() {
@@ -1392,7 +1358,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         helpFailUpdateProcedure(proc.toString(), userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE, "Symbol #temp.a is specified with an unknown group context"); //$NON-NLS-1$
+                                     Table.TriggerEvent.UPDATE, "Symbol #temp.a is specified with an unknown group context"); //$NON-NLS-1$
     }
     
     @Test public void testProcedureCreate() throws Exception {
@@ -1406,7 +1372,7 @@ public class TestProcedureResolving {
         
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
-        helpResolveUpdateProcedure(proc.toString(), userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE); 
+        helpResolveUpdateProcedure(proc.toString(), userUpdateStr, Table.TriggerEvent.UPDATE); 
     }
     
     /**
@@ -1423,7 +1389,7 @@ public class TestProcedureResolving {
         
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
-        helpFailUpdateProcedure(proc.toString(), userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE, "Cannot create temporary table \"loopCursor\". A table with the same name already exists."); //$NON-NLS-1$
+        helpFailUpdateProcedure(proc.toString(), userUpdateStr, Table.TriggerEvent.UPDATE, "Cannot create temporary table \"loopCursor\". An object with the same name already exists."); //$NON-NLS-1$
     }
     
     @Test public void testProcedureCreateDrop() {
@@ -1435,7 +1401,7 @@ public class TestProcedureResolving {
         
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
-        helpFailUpdateProcedure(proc.toString(), userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE, "Group does not exist: t1"); //$NON-NLS-1$
+        helpFailUpdateProcedure(proc.toString(), userUpdateStr, Table.TriggerEvent.UPDATE, "Group does not exist: t1"); //$NON-NLS-1$
     }
     
     @Test public void testProcedureCreateDrop1() throws Exception {
@@ -1447,7 +1413,7 @@ public class TestProcedureResolving {
         
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
-        helpResolveUpdateProcedure(proc.toString(), userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE);
+        helpResolveUpdateProcedure(proc.toString(), userUpdateStr, Table.TriggerEvent.UPDATE);
     }
     
     @Test public void testCreateAfterImplicitTempTable() throws Exception {
@@ -1459,7 +1425,7 @@ public class TestProcedureResolving {
         
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
-        helpResolveUpdateProcedure(proc.toString(), userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE); 
+        helpResolveUpdateProcedure(proc.toString(), userUpdateStr, Table.TriggerEvent.UPDATE); 
     }
     
     @Test public void testInsertAfterCreate() throws Exception {
@@ -1471,7 +1437,7 @@ public class TestProcedureResolving {
         
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
-        helpResolveUpdateProcedure(proc.toString(), userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE); 
+        helpResolveUpdateProcedure(proc.toString(), userUpdateStr, Table.TriggerEvent.UPDATE); 
     }
     
 	/**
@@ -1487,11 +1453,11 @@ public class TestProcedureResolving {
         String userUpdateStr = "delete from vm1.g1 where e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.DELETE_PROCEDURE, "Symbol INPUTS.e1 is specified with an unknown group context"); //$NON-NLS-1$
+									 Table.TriggerEvent.DELETE, "Symbol INPUTS.e1 is specified with an unknown group context"); //$NON-NLS-1$
 	}
 	
     @Test public void testInvalidVirtualProcedure3() throws Exception {
-    	helpResolveException("EXEC pm1.vsp18()", FakeMetadataFactory.example1Cached(), "Group does not exist: temptable"); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpResolveException("EXEC pm1.vsp18()", RealMetadataFactory.example1Cached(), "Group does not exist: temptable"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     // variable resolution, variable compared against
@@ -1506,7 +1472,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1=1"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-				 FakeMetadataObject.Props.UPDATE_PROCEDURE, "Error Code:ERR.015.008.0041 Message:Cannot set symbol 'pm1.g1.e4' with expected type double to expression 'convert(var1, string)'"); //$NON-NLS-1$
+				 Table.TriggerEvent.UPDATE, "Error Code:ERR.015.008.0041 Message:Cannot set symbol 'pm1.g1.e4' with expected type double to expression 'convert(var1, string)'"); //$NON-NLS-1$
     }
     
     // special variable INPUT compared against invalid type
@@ -1521,48 +1487,48 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-				 FakeMetadataObject.Props.UPDATE_PROCEDURE, "Error Code:ERR.015.008.0041 Message:Cannot set symbol 'pm1.g1.e2' with expected type integer to expression 'INPUTS.e1'"); //$NON-NLS-1$
+				 Table.TriggerEvent.UPDATE, "Error Code:ERR.015.008.0041 Message:Cannot set symbol 'pm1.g1.e2' with expected type integer to expression 'INPUTS.e1'"); //$NON-NLS-1$
     }
     
     @Test public void testVirtualProcedure() throws Exception {
-        helpResolve("EXEC pm1.vsp1()", FakeMetadataFactory.example1Cached());   //$NON-NLS-1$
+        helpResolve("EXEC pm1.vsp1()", RealMetadataFactory.example1Cached());   //$NON-NLS-1$
     }
     
     @Test public void testVirtualProcedure2() throws Exception {
-        helpResolve("EXEC pm1.vsp14()", FakeMetadataFactory.example1Cached());   //$NON-NLS-1$
+        helpResolve("EXEC pm1.vsp14()", RealMetadataFactory.example1Cached());   //$NON-NLS-1$
     }
     
     @Test public void testVirtualProcedurePartialParameterReference() throws Exception {
-        helpResolve("EXEC pm1.vsp58(5)", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+        helpResolve("EXEC pm1.vsp58(5)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
     
     //cursor starts with "#" Defect14924
     @Test public void testVirtualProcedureInvalid1() throws Exception {
-    	helpResolveException("EXEC pm1.vsp32()",FakeMetadataFactory.example1Cached(), "Cursor names cannot begin with \"#\" as that indicates the name of a temporary table: #mycursor.");   //$NON-NLS-1$ //$NON-NLS-2$
+    	helpResolveException("EXEC pm1.vsp32()",RealMetadataFactory.example1Cached(), "Cursor names cannot begin with \"#\" as that indicates the name of a temporary table: #mycursor.");   //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testVirtualProcedureWithOrderBy() throws Exception {
-        helpResolve("EXEC pm1.vsp29()", FakeMetadataFactory.example1Cached());   //$NON-NLS-1$
+        helpResolve("EXEC pm1.vsp29()", RealMetadataFactory.example1Cached());   //$NON-NLS-1$
     }
     
     @Test public void testVirtualProcedureWithTempTableAndOrderBy() throws Exception {
-        helpResolve("EXEC pm1.vsp33()", FakeMetadataFactory.example1Cached());   //$NON-NLS-1$
+        helpResolve("EXEC pm1.vsp33()", RealMetadataFactory.example1Cached());   //$NON-NLS-1$
     }
     
     @Test public void testVirtualProcedureWithConstAndOrderBy() throws Exception {
-        helpResolve("EXEC pm1.vsp34()", FakeMetadataFactory.example1Cached());   //$NON-NLS-1$
+        helpResolve("EXEC pm1.vsp34()", RealMetadataFactory.example1Cached());   //$NON-NLS-1$
     }
     
     @Test public void testVirtualProcedureWithNoFromAndOrderBy() throws Exception {
-        helpResolve("EXEC pm1.vsp28()", FakeMetadataFactory.example1Cached());   //$NON-NLS-1$
+        helpResolve("EXEC pm1.vsp28()", RealMetadataFactory.example1Cached());   //$NON-NLS-1$
     }
     
     @Test public void testInvalidVirtualProcedure2() throws Exception {
-        helpResolveException("EXEC pm1.vsp12()", FakeMetadataFactory.example1Cached(), "Symbol mycursor.e2 is specified with an unknown group context"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("EXEC pm1.vsp12()", RealMetadataFactory.example1Cached(), "Symbol mycursor.e2 is specified with an unknown group context"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testLoopRedefinition2() throws Exception {
-        helpResolveException("EXEC pm1.vsp11()", FakeMetadataFactory.example1Cached(), "Nested Loop can not use the same cursor name as that of its parent."); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("EXEC pm1.vsp11()", RealMetadataFactory.example1Cached(), "Nested Loop can not use the same cursor name as that of its parent."); //$NON-NLS-1$ //$NON-NLS-2$
     }
         
     @Test public void testVariableResolutionWithIntervening() throws Exception {
@@ -1574,11 +1540,11 @@ public class TestProcedureResolving {
         .append("\n  y = '1';") //$NON-NLS-1$
         .append("\nEND"); //$NON-NLS-1$
         
-        TestResolver.helpResolve(proc.toString(), FakeMetadataFactory.example1Cached()); 
+        TestResolver.helpResolve(proc.toString(), RealMetadataFactory.example1Cached()); 
     }
     
     @Test public void testVDBQualified() throws Exception {
-        helpResolve("EXEC myvdb.pm1.vsp29()", FakeMetadataFactory.example1Cached());   //$NON-NLS-1$
+        helpResolve("EXEC example1.pm1.vsp29()", RealMetadataFactory.example1Cached());   //$NON-NLS-1$
     }
     
 }

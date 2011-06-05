@@ -26,20 +26,27 @@ import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryPlannerException;
+import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.metadata.ColumnSet;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingAttribute;
@@ -48,7 +55,6 @@ import org.teiid.query.mapping.xml.MappingCommentNode;
 import org.teiid.query.mapping.xml.MappingCriteriaNode;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingElement;
-import org.teiid.query.mapping.xml.MappingNode;
 import org.teiid.query.mapping.xml.MappingNodeConstants;
 import org.teiid.query.mapping.xml.MappingRecursiveElement;
 import org.teiid.query.mapping.xml.MappingSequenceNode;
@@ -56,6 +62,7 @@ import org.teiid.query.mapping.xml.Namespace;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -71,11 +78,7 @@ import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
-import org.teiid.query.unittest.FakeMetadataStore;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
 
@@ -87,7 +90,59 @@ import org.teiid.query.util.CommandContext;
  */
 @SuppressWarnings("nls")
 public class TestXMLProcessor {
-    private static final boolean DEBUG = false;
+    private static final String CARDS_MANAGER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
+	            "<BaseballPlayers>\r\n" + //$NON-NLS-1$
+	            "   <Player PlayerID=\"1001\">\r\n" + //$NON-NLS-1$
+	            "      <FirstName>Albert</FirstName>\r\n" + //$NON-NLS-1$
+	            "      <LastName>Pujols</LastName>\r\n" + //$NON-NLS-1$
+	            "      <Manager ManagerID=\"1004\">\r\n" + //$NON-NLS-1$
+	            "         <FirstName>Tony</FirstName>\r\n" + //$NON-NLS-1$
+	            "         <LastName>LaRussa</LastName>\r\n" + //$NON-NLS-1$
+	            "         <Owner OwnerID=\"1009\">\r\n" + //$NON-NLS-1$
+	            "            <FirstName>Bill</FirstName>\r\n" + //$NON-NLS-1$
+	            "            <LastName>DeWitt</LastName>\r\n" + //$NON-NLS-1$
+	            "         </Owner>\r\n" + //$NON-NLS-1$
+	            "      </Manager>\r\n" + //$NON-NLS-1$
+	            "   </Player>\r\n" + //$NON-NLS-1$
+	            "   <Player PlayerID=\"1002\">\r\n" + //$NON-NLS-1$
+	            "      <FirstName>Jim</FirstName>\r\n" + //$NON-NLS-1$
+	            "      <LastName>Edmunds</LastName>\r\n" + //$NON-NLS-1$
+	            "      <Manager ManagerID=\"1004\">\r\n" + //$NON-NLS-1$
+	            "         <FirstName>Tony</FirstName>\r\n" + //$NON-NLS-1$
+	            "         <LastName>LaRussa</LastName>\r\n" + //$NON-NLS-1$
+	            "         <Owner OwnerID=\"1009\">\r\n" + //$NON-NLS-1$
+	            "            <FirstName>Bill</FirstName>\r\n" + //$NON-NLS-1$
+	            "            <LastName>DeWitt</LastName>\r\n" + //$NON-NLS-1$
+	            "         </Owner>\r\n" + //$NON-NLS-1$
+	            "      </Manager>\r\n" + //$NON-NLS-1$
+	            "   </Player>\r\n" + //$NON-NLS-1$
+	            "   <Player PlayerID=\"1003\">\r\n" + //$NON-NLS-1$
+	            "      <FirstName>David</FirstName>\r\n" + //$NON-NLS-1$
+	            "      <LastName>Eckstein</LastName>\r\n" + //$NON-NLS-1$
+	            "      <Manager ManagerID=\"1004\">\r\n" + //$NON-NLS-1$
+	            "         <FirstName>Tony</FirstName>\r\n" + //$NON-NLS-1$
+	            "         <LastName>LaRussa</LastName>\r\n" + //$NON-NLS-1$
+	            "         <Owner OwnerID=\"1009\">\r\n" + //$NON-NLS-1$
+	            "            <FirstName>Bill</FirstName>\r\n" + //$NON-NLS-1$
+	            "            <LastName>DeWitt</LastName>\r\n" + //$NON-NLS-1$
+	            "         </Owner>\r\n" + //$NON-NLS-1$
+	            "      </Manager>\r\n" + //$NON-NLS-1$
+	            "   </Player>\r\n" + //$NON-NLS-1$
+	            "   <Player PlayerID=\"1005\">\r\n" + //$NON-NLS-1$
+	            "      <FirstName>Derrek</FirstName>\r\n" + //$NON-NLS-1$
+	            "      <LastName>Lee</LastName>\r\n" + //$NON-NLS-1$
+	            "   </Player>\r\n" + //$NON-NLS-1$
+	            "   <Player PlayerID=\"1006\">\r\n" + //$NON-NLS-1$
+	            "      <FirstName>Corey</FirstName>\r\n" + //$NON-NLS-1$
+	            "      <LastName>Patterson</LastName>\r\n" + //$NON-NLS-1$
+	            "   </Player>\r\n" + //$NON-NLS-1$
+	            "   <Player PlayerID=\"1008\">\r\n" + //$NON-NLS-1$
+	            "      <FirstName>Carlos</FirstName>\r\n" + //$NON-NLS-1$
+	            "      <LastName>Zambrano</LastName>\r\n" + //$NON-NLS-1$
+	            "   </Player>\r\n" + //$NON-NLS-1$
+	            "</BaseballPlayers>\r\n\r\n";
+
+	private static final boolean DEBUG = false;
     
     /**
      * Construct some fake metadata.  Basic conceptual tree is:
@@ -103,47 +158,46 @@ public class TestXMLProcessor {
      *     itemName (string)
      *     itemQuantity (integer)
      */
-    public static FakeMetadataFacade exampleMetadataCached() {
+    public static TransformationMetadata exampleMetadataCached() {
         return EXAMPLE_CACHED;
     } 
     
-    private static final FakeMetadataFacade EXAMPLE_CACHED = exampleMetadata();
+    private static final TransformationMetadata EXAMPLE_CACHED = exampleMetadata();
     
-    public static FakeMetadataFacade exampleMetadata() {
-        FakeMetadataStore store = new FakeMetadataStore();
-        FakeMetadataFacade facade = new FakeMetadataFacade(store);
+    public static TransformationMetadata exampleMetadata() {
+        MetadataStore metadataStore = new MetadataStore();
         
         // Create models
-        FakeMetadataObject stock = FakeMetadataFactory.createPhysicalModel("stock"); //$NON-NLS-1$
-        FakeMetadataObject xmltest = FakeMetadataFactory.createVirtualModel("xmltest");     //$NON-NLS-1$
+        Schema stock = RealMetadataFactory.createPhysicalModel("stock", metadataStore); //$NON-NLS-1$
+        Schema xmltest = RealMetadataFactory.createVirtualModel("xmltest", metadataStore);     //$NON-NLS-1$
 
         // Create physical groups
-        FakeMetadataObject items = FakeMetadataFactory.createPhysicalGroup("stock.items", stock); //$NON-NLS-1$
-        FakeMetadataObject item_supplier = FakeMetadataFactory.createPhysicalGroup("stock.item_supplier", stock); //$NON-NLS-1$
+        Table items = RealMetadataFactory.createPhysicalGroup("items", stock); //$NON-NLS-1$
+        Table item_supplier = RealMetadataFactory.createPhysicalGroup("item_supplier", stock); //$NON-NLS-1$
 
-        FakeMetadataObject suppliers = FakeMetadataFactory.createPhysicalGroup("stock.suppliers", stock); //$NON-NLS-1$
-        FakeMetadataObject orders = FakeMetadataFactory.createPhysicalGroup("stock.orders", stock); //$NON-NLS-1$
-        FakeMetadataObject employees = FakeMetadataFactory.createPhysicalGroup("stock.employees", stock); //$NON-NLS-1$
+        Table suppliers = RealMetadataFactory.createPhysicalGroup("suppliers", stock); //$NON-NLS-1$
+        Table orders = RealMetadataFactory.createPhysicalGroup("orders", stock); //$NON-NLS-1$
+        Table employees = RealMetadataFactory.createPhysicalGroup("employees", stock); //$NON-NLS-1$
              
         // Create physical elements
-        List itemElements = FakeMetadataFactory.createElements(items, 
+        RealMetadataFactory.createElements(items, 
             new String[] { "itemNum", "itemName", "itemQuantity", "itemStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
 
         //many-to-many join table
-        List itemSupplierElements = FakeMetadataFactory.createElements(item_supplier, 
+        RealMetadataFactory.createElements(item_supplier, 
             new String[] { "itemNum", "supplierNum" }, //$NON-NLS-1$ //$NON-NLS-2$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
 
-        List supplierElements = FakeMetadataFactory.createElements(suppliers, 
+        RealMetadataFactory.createElements(suppliers, 
             new String[] { "supplierNum", "supplierName", "supplierZipCode"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
-        List stockOrders = FakeMetadataFactory.createElements(orders, 
+        RealMetadataFactory.createElements(orders, 
             new String[] { "orderNum", "itemFK", "supplierFK", "supplierNameFK", "orderDate", "orderQty", "orderStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
 
-        List supplierEmployees = FakeMetadataFactory.createElements(employees, 
+        RealMetadataFactory.createElements(employees, 
             new String[] { "employeeNum", "supplierNumFK", "supervisorNum", "firstName", "lastName" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
@@ -154,43 +208,43 @@ public class TestXMLProcessor {
         // Create virtual groups
         // per defect 6829 - intentionally including the reserved word "group" as part of this virtual group name
         QueryNode rsQuery = new QueryNode("SELECT itemNum, itemName, itemQuantity, itemStatus FROM stock.items"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs = FakeMetadataFactory.createVirtualGroup("xmltest.group.items", xmltest, rsQuery); //$NON-NLS-1$
+        Table rs = RealMetadataFactory.createVirtualGroup("group.items", xmltest, rsQuery); //$NON-NLS-1$
 
         // Created 2nd virtual group w/ nested result set & binding
         QueryNode rsQuery2 = new QueryNode("SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = input.x"); //$NON-NLS-1$ //$NON-NLS-2$
         //QueryNode rsQuery2 = new QueryNode("xmltest.suppliers", "SELECT stock.suppliers.supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = ?");
         rsQuery2.addBinding("xmltest.group.items.itemNum as x"); //$NON-NLS-1$
-        FakeMetadataObject rs2 = FakeMetadataFactory.createVirtualGroup("xmltest.suppliers", xmltest, rsQuery2); //$NON-NLS-1$
+        Table rs2 = RealMetadataFactory.createVirtualGroup("suppliers", xmltest, rsQuery2); //$NON-NLS-1$
 
         // Created virtual group w/ nested result set & binding
         QueryNode rsQuery3 = new QueryNode("SELECT orderNum, orderDate, orderQty, orderStatus FROM stock.orders WHERE itemFK = ? AND supplierFK = ? AND supplierNameFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQuery3.addBinding("xmltest.group.items.itemNum"); //$NON-NLS-1$
         rsQuery3.addBinding("xmltest.suppliers.supplierNum"); //$NON-NLS-1$
         rsQuery3.addBinding("xmltest.suppliers.supplierName"); //$NON-NLS-1$
-        FakeMetadataObject rs3 = FakeMetadataFactory.createVirtualGroup("xmltest.orders", xmltest, rsQuery3); //$NON-NLS-1$
+        Table rs3 = RealMetadataFactory.createVirtualGroup("orders", xmltest, rsQuery3); //$NON-NLS-1$
 
 
 // ======================================================================================================================
 
         //create employees - not connected to any of the above
         QueryNode rsEmployees = new QueryNode("SELECT employeeNum, firstName, lastName FROM stock.employees WHERE supervisorNum IS NULL"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs4 = FakeMetadataFactory.createVirtualGroup("xmltest.employees", xmltest, rsEmployees); //$NON-NLS-1$
+        Table rs4 = RealMetadataFactory.createVirtualGroup("employees", xmltest, rsEmployees); //$NON-NLS-1$
 
         //recursive piece
         QueryNode rsEmployeesRecursive = new QueryNode("SELECT employeeNum, firstName, lastName FROM stock.employees WHERE supervisorNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsEmployeesRecursive.addBinding("xmltest.employees.employeeNum"); //$NON-NLS-1$
-        FakeMetadataObject rs4a = FakeMetadataFactory.createVirtualGroup("xmltest.employeesRecursive", xmltest, rsEmployeesRecursive); //$NON-NLS-1$
+        Table rs4a = RealMetadataFactory.createVirtualGroup("employeesRecursive", xmltest, rsEmployeesRecursive); //$NON-NLS-1$
 
 // ======================================================================================================================
 
         //create employees - not connected to any of the above
         QueryNode rsEmployees2 = new QueryNode("SELECT employeeNum, firstName, lastName, supervisorNum FROM stock.employees WHERE supplierNumFK = '2' AND NOT (supervisorNum IS NULL)"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs5 = FakeMetadataFactory.createVirtualGroup("xmltest.employees2", xmltest, rsEmployees2); //$NON-NLS-1$
+        Table rs5 = RealMetadataFactory.createVirtualGroup("employees2", xmltest, rsEmployees2); //$NON-NLS-1$
 
         //recursive piece
         QueryNode rsEmployees2Recursive = new QueryNode("SELECT employeeNum, firstName, lastName, supervisorNum FROM stock.employees WHERE employeeNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsEmployees2Recursive.addBinding("xmltest.employees2.supervisorNum"); //$NON-NLS-1$
-        FakeMetadataObject rs5a = FakeMetadataFactory.createVirtualGroup("xmltest.employees2Recursive", xmltest, rsEmployees2Recursive); //$NON-NLS-1$
+        Table rs5a = RealMetadataFactory.createVirtualGroup("employees2Recursive", xmltest, rsEmployees2Recursive); //$NON-NLS-1$
 
 //      ======================================================================================================================
 // Alternate mapping class which selects from stored query
@@ -198,25 +252,25 @@ public class TestXMLProcessor {
         // Created 2nd virtual group w/ nested result set & binding
         QueryNode rsQueryX = new QueryNode("SELECT * FROM (exec xmltest.sqX(?)) as X"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQueryX.addBinding("xmltest.group.items.itemNum"); //$NON-NLS-1$
-        FakeMetadataObject rsQX = FakeMetadataFactory.createVirtualGroup("xmltest.suppliersX", xmltest, rsQueryX); //$NON-NLS-1$
+        Table rsQX = RealMetadataFactory.createVirtualGroup("suppliersX", xmltest, rsQueryX); //$NON-NLS-1$
 
 // ======================================================================================================================
 // ALTERNATE METADATA A (temp groups)
 
         // root temp group
         QueryNode tempQuery = new QueryNode("SELECT * FROM stock.orders"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject temp = FakeMetadataFactory.createVirtualGroup("tempGroup.orders", xmltest, tempQuery); //$NON-NLS-1$
+        Table temp = RealMetadataFactory.createXmlStagingTable("doc9a.tempGroup.orders", xmltest, tempQuery); //$NON-NLS-1$
 
         // 2nd bogus root temp group selects from first - tests that temp groups can select from others
         QueryNode tempQuery2 = new QueryNode("SELECT * FROM tempGroup.orders"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject temp2 = FakeMetadataFactory.createVirtualGroup("tempGroup.orders2", xmltest, tempQuery2); //$NON-NLS-1$
+        Table temp2 = RealMetadataFactory.createXmlStagingTable("doc9a.tempGroup.orders2", xmltest, tempQuery2); //$NON-NLS-1$
         
         // Created virtual group w/ nested result set & binding - selects from 2nd temp root group
         QueryNode rsQuery3a = new QueryNode("SELECT orderNum, orderDate, orderQty, orderStatus FROM tempGroup.orders2 WHERE itemFK = ? AND supplierFK = ? AND supplierNameFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQuery3a.addBinding("xmltest.group.items.itemNum"); //$NON-NLS-1$
         rsQuery3a.addBinding("xmltest.suppliers.supplierNum"); //$NON-NLS-1$
         rsQuery3a.addBinding("xmltest.suppliers.supplierName"); //$NON-NLS-1$
-        FakeMetadataObject rs3a = FakeMetadataFactory.createVirtualGroup("xmltest.ordersA", xmltest, rsQuery3a); //$NON-NLS-1$
+        Table rs3a = RealMetadataFactory.createVirtualGroup("ordersA", xmltest, rsQuery3a); //$NON-NLS-1$
 
 // ======================================================================================================================
 // ALTERNATE METADATA B (temp groups)
@@ -228,11 +282,11 @@ public class TestXMLProcessor {
         tempQuery3b.addBinding("xmltest.group.items.itemNum"); //$NON-NLS-1$
         tempQuery3b.addBinding("xmltest.suppliers.supplierNum"); //$NON-NLS-1$
         tempQuery3b.addBinding("xmltest.suppliers.supplierName"); //$NON-NLS-1$
-        FakeMetadataObject temp3b = FakeMetadataFactory.createVirtualGroup("tempGroup.orders3B", xmltest, tempQuery3b); //$NON-NLS-1$
+        Table temp3b = RealMetadataFactory.createVirtualGroup("tempGroup.orders3B", xmltest, tempQuery3b); //$NON-NLS-1$
         
         // Created virtual group w/ nested result set & binding
         QueryNode rsQuery3b = new QueryNode("SELECT orderNum, orderDate, orderQty, orderStatus FROM tempGroup.orders3B"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs3b = FakeMetadataFactory.createVirtualGroup("xmltest.ordersB", xmltest, rsQuery3b); //$NON-NLS-1$
+        Table rs3b = RealMetadataFactory.createVirtualGroup("ordersB", xmltest, rsQuery3b); //$NON-NLS-1$
 
 
 // ======================================================================================================================
@@ -243,11 +297,11 @@ public class TestXMLProcessor {
 //        tempQuery3b.addBinding("xmltest.group.items.itemNum");
 //        tempQuery3b.addBinding("xmltest.suppliers.supplierNum");
 //        tempQuery3b.addBinding("xmltest.suppliers.supplierName");
-//        FakeMetadataObject temp3b = FakeMetadataFactory.createVirtualGroup("tempGroup.orders3B", xmltest, tempQuery3b);
+//        Table temp3b = RealMetadataFactory.createVirtualGroup("orders3B", xmltest, tempQuery3b);
 //        
 //        // Created virtual group w/ nested result set & binding
 //        QueryNode rsQuery3b = new QueryNode("xmltest.ordersB", "SELECT orderNum, orderDate, orderQty, orderStatus FROM tempGroup.orders3B");
-//        FakeMetadataObject rs3b = FakeMetadataFactory.createVirtualGroup("xmltest.ordersB", xmltest, rs   Query3b);
+//        Table rs3b = RealMetadataFactory.createVirtualGroup("ordersB", xmltest, rs   Query3b);
 
 // ======================================================================================================================
 
@@ -256,9 +310,9 @@ public class TestXMLProcessor {
        // Create virtual groups
        // per defect 12260 - correlated subquery in mapping class transformation
        QueryNode rsQuery12260 = new QueryNode("SELECT itemNum, itemName, itemQuantity, itemStatus, convert((select count(*) from stock.item_supplier where stock.items.itemNum = stock.item_supplier.itemNum), string) as NUMSuppliers FROM stock.items"); //$NON-NLS-1$ //$NON-NLS-2$
-       FakeMetadataObject rs12260 = FakeMetadataFactory.createVirtualGroup("xmltest.group.itemsWithNumSuppliers", xmltest, rsQuery12260); //$NON-NLS-1$
+       Table rs12260 = RealMetadataFactory.createVirtualGroup("group.itemsWithNumSuppliers", xmltest, rsQuery12260); //$NON-NLS-1$
 
-       List rsElements12260 = FakeMetadataFactory.createElements(rs12260, 
+       RealMetadataFactory.createElements(rs12260, 
            new String[] { "itemNum", "itemName", "itemQuantity", "itemStatus", "numSuppliers" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });        
     
@@ -267,24 +321,24 @@ public class TestXMLProcessor {
        // Create virtual groups
        // per defect 8373
        QueryNode rsQuery8373 = new QueryNode("SELECT itemNum, itemName, itemQuantity, itemStatus FROM stock.items UNION ALL SELECT itemNum, itemName, itemQuantity, itemStatus FROM stock.items"); //$NON-NLS-1$ //$NON-NLS-2$
-       FakeMetadataObject rs8373 = FakeMetadataFactory.createVirtualGroup("xmltest.items8373", xmltest, rsQuery8373); //$NON-NLS-1$
+       Table rs8373 = RealMetadataFactory.createVirtualGroup("items8373", xmltest, rsQuery8373); //$NON-NLS-1$
 
-       List rsElements8373 = FakeMetadataFactory.createElements(rs8373, 
+       RealMetadataFactory.createElements(rs8373, 
             new String[] { "itemNum", "itemName", "itemQuantity", "itemStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });        
 
        //select * from xmltest.items8373
        QueryNode rsQuery8373a = new QueryNode("SELECT * FROM xmltest.items8373"); //$NON-NLS-1$ //$NON-NLS-2$
-       FakeMetadataObject rs8373a = FakeMetadataFactory.createVirtualGroup("xmltest.items8373a", xmltest, rsQuery8373a); //$NON-NLS-1$
+       Table rs8373a = RealMetadataFactory.createVirtualGroup("items8373a", xmltest, rsQuery8373a); //$NON-NLS-1$
 
-       List rsElements8373a = FakeMetadataFactory.createElements(rs8373a, 
+       RealMetadataFactory.createElements(rs8373a, 
             new String[] { "itemNum", "itemName", "itemQuantity", "itemStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });        
 
        QueryNode rsQuery8373b = new QueryNode("SELECT * FROM xmltest.group.items UNION ALL SELECT * FROM xmltest.group.items"); //$NON-NLS-1$ //$NON-NLS-2$
-       FakeMetadataObject rs8373b = FakeMetadataFactory.createVirtualGroup("xmltest.items8373b", xmltest, rsQuery8373b); //$NON-NLS-1$
+       Table rs8373b = RealMetadataFactory.createVirtualGroup("items8373b", xmltest, rsQuery8373b); //$NON-NLS-1$
 
-       List rsElements8373b = FakeMetadataFactory.createElements(rs8373b, 
+       RealMetadataFactory.createElements(rs8373b, 
             new String[] { "itemNum", "itemName", "itemQuantity", "itemStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });        
        
@@ -294,133 +348,132 @@ public class TestXMLProcessor {
         // Test an update query as a mapping class transformation, as if it were a 
         // mapping class returning a single int - defect 8812
         QueryNode rsUpdateQuery = new QueryNode("INSERT INTO stock.items (itemNum, itemName, itemQuantity, itemStatus) VALUES ('3','beer',12,'something')"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rsUpdate = FakeMetadataFactory.createVirtualGroup("xmltest.updateTest", xmltest, rsUpdateQuery); //$NON-NLS-1$
+        Table rsUpdate = RealMetadataFactory.createVirtualGroup("updateTest", xmltest, rsUpdateQuery); //$NON-NLS-1$
 
         // Create virtual elements
-        List rsElements = FakeMetadataFactory.createElements(rs, 
+        RealMetadataFactory.createElements(rs, 
             new String[] { "itemNum", "itemName", "itemQuantity", "itemStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });        
 
 
-        List rsElements2 = FakeMetadataFactory.createElements(rs2, 
+        RealMetadataFactory.createElements(rs2, 
             new String[] { "supplierNum", "supplierName", "supplierZipCode"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
-        List rsElements3 = FakeMetadataFactory.createElements(rs3, 
+        RealMetadataFactory.createElements(rs3, 
             new String[] { "orderNum", "orderDate", "orderQty", "orderStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
 
-        List rsElements4 = FakeMetadataFactory.createElements(rs4, 
+        RealMetadataFactory.createElements(rs4, 
             new String[] { "employeeNum", "firstName", "lastName" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
-        List rsElements4a = FakeMetadataFactory.createElements(rs4a, 
+        RealMetadataFactory.createElements(rs4a, 
             new String[] { "employeeNum", "firstName", "lastName" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
-        List rsElements5 = FakeMetadataFactory.createElements(rs5, 
+        RealMetadataFactory.createElements(rs5, 
             new String[] { "employeeNum", "firstName", "lastName", "supervisorNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
-        List rsElements5a = FakeMetadataFactory.createElements(rs5a, 
+        RealMetadataFactory.createElements(rs5a, 
             new String[] { "employeeNum", "firstName", "lastName", "supervisorNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
-        List tempElements = FakeMetadataFactory.createElements(temp, 
+        RealMetadataFactory.createElements(temp, 
             new String[] { "orderNum", "itemFK", "supplierFK", "supplierNameFK", "orderDate", "orderQty", "orderStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
 
-        List tempElements2 = FakeMetadataFactory.createElements(temp2, 
+        RealMetadataFactory.createElements(temp2, 
             new String[] { "orderNum", "itemFK", "supplierFK", "supplierNameFK", "orderDate", "orderQty", "orderStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
 
-        List rsElements3a = FakeMetadataFactory.createElements(rs3a, 
+        RealMetadataFactory.createElements(rs3a, 
             new String[] { "orderNum", "orderDate", "orderQty", "orderStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
 
-        List tempElements3b = FakeMetadataFactory.createElements(temp3b, 
+        RealMetadataFactory.createElements(temp3b, 
             new String[] { "orderNum", "orderDate", "orderQty", "orderStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
 
-        List rsElements3b = FakeMetadataFactory.createElements(rs3b, 
+        RealMetadataFactory.createElements(rs3b, 
             new String[] { "orderNum", "orderDate", "orderQty", "orderStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
 
-        List rsUpdateElement = FakeMetadataFactory.createElements(rsUpdate, 
+        RealMetadataFactory.createElements(rsUpdate, 
             new String[] { "rowCount" }, //$NON-NLS-1$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER});
 
-        List rsElementsX = FakeMetadataFactory.createElements(rsQX, 
+        RealMetadataFactory.createElements(rsQX, 
             new String[] { "supplierNum", "supplierName", "supplierZipCode" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
        
         // Create virtual docs
-        FakeMetadataObject doc1 = FakeMetadataFactory.createVirtualGroup("xmltest.doc1", xmltest, createXMLMappingNode(true)); //$NON-NLS-1$
-        List docE1 = FakeMetadataFactory.createElements(doc1, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+        Table doc1 = RealMetadataFactory.createXmlDocument("doc1", xmltest, createXMLMappingNode(true)); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc1, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
             
-        FakeMetadataObject doc1a = FakeMetadataFactory.createVirtualGroup("xmltest.doc1Unformatted", xmltest, createXMLMappingNode(false)); //$NON-NLS-1$
-        FakeMetadataObject doc1b = FakeMetadataFactory.createVirtualGroup("xmltest.doc1b", xmltest, createXMLPlan2(false, true, 0 )); //$NON-NLS-1$
-        List docE1b = FakeMetadataFactory.createElements(doc1b, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+        RealMetadataFactory.createXmlDocument("doc1Unformatted", xmltest, createXMLMappingNode(false)); //$NON-NLS-1$
+        Table doc1b = RealMetadataFactory.createXmlDocument("doc1b", xmltest, createXMLPlan2(false, true, 0 )); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc1b, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
                                                         new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
-        FakeMetadataObject doc1c = FakeMetadataFactory.createVirtualGroup("xmltest.doc1c", xmltest, createXMLPlan2(false, true, 1 )); //$NON-NLS-1$
-        List docE1c = FakeMetadataFactory.createElements(doc1c, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+        Table doc1c = RealMetadataFactory.createXmlDocument("doc1c", xmltest, createXMLPlan2(false, true, 1 )); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc1c, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
                                                         new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
         
-        FakeMetadataObject docBounded = FakeMetadataFactory.createVirtualGroup("xmltest.docBounded", xmltest, createXMLMappingBoundingNode()); //$NON-NLS-1$
-        List docBoundedElements = FakeMetadataFactory.createElements(docBounded, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+        Table docBounded = RealMetadataFactory.createXmlDocument("docBounded", xmltest, createXMLMappingBoundingNode()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(docBounded, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
         
-
-        FakeMetadataObject doc2  = FakeMetadataFactory.createVirtualGroup("xmltest.doc2",  xmltest, createXMLPlan2(1, -1, false)); //$NON-NLS-1$
-        List docE2 = FakeMetadataFactory.createElements(doc2, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        Table doc2  = RealMetadataFactory.createXmlDocument("doc2",  xmltest, createXMLPlan2(1, -1, false)); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc2, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-        FakeMetadataObject doc2a = FakeMetadataFactory.createVirtualGroup("xmltest.doc2a", xmltest, createXMLPlan2(1, 1, false)); //$NON-NLS-1$
-        FakeMetadataObject doc2b = FakeMetadataFactory.createVirtualGroup("xmltest.doc2b", xmltest, createXMLPlan2(1, -1, true)); //$NON-NLS-1$
-        FakeMetadataObject doc2c = FakeMetadataFactory.createVirtualGroup("xmltest.doc2c", xmltest, createXMLPlan2(2, -1, false)); //$NON-NLS-1$
-        FakeMetadataObject doc2d = FakeMetadataFactory.createVirtualGroup("xmltest.doc2d", xmltest, createXMLPlan2(2, 1, false)); //$NON-NLS-1$
-        FakeMetadataObject doc2e = FakeMetadataFactory.createVirtualGroup("xmltest.doc2e", xmltest, createXMLPlan2(2, 3, false)); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc2a", xmltest, createXMLPlan2(1, 1, false)); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc2b", xmltest, createXMLPlan2(1, -1, true)); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc2c", xmltest, createXMLPlan2(2, -1, false)); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc2d", xmltest, createXMLPlan2(2, 1, false)); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc2e", xmltest, createXMLPlan2(2, 3, false)); //$NON-NLS-1$
 
-        FakeMetadataObject doc3 = FakeMetadataFactory.createVirtualGroup("xmltest.doc3", xmltest, createXMLPlanWithDefaults()); //$NON-NLS-1$
-        List docE3 = FakeMetadataFactory.createElements(doc3, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+        Table doc3 = RealMetadataFactory.createXmlDocument("doc3", xmltest, createXMLPlanWithDefaults()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc3, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
-        FakeMetadataObject doc4 = FakeMetadataFactory.createVirtualGroup("xmltest.doc4", xmltest, createXMLPlanAdvanced()); //$NON-NLS-1$
-        List docE4 = FakeMetadataFactory.createElements(doc4, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Fake", "Catalogs.Fake.FakeChild2", "Catalogs.Fake.FakeChild2.FakeChild2a", "Catalogs.Fake.FakeChild3", "Catalogs.Fake.FakeChild3.@FakeAtt" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$
+        Table doc4 = RealMetadataFactory.createXmlDocument("doc4", xmltest, createXMLPlanAdvanced()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc4, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Fake", "Catalogs.Fake.FakeChild2", "Catalogs.Fake.FakeChild2.FakeChild2a", "Catalogs.Fake.FakeChild3", "Catalogs.Fake.FakeChild3.@FakeAtt" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER,DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-        FakeMetadataObject doc5 = FakeMetadataFactory.createVirtualGroup("xmltest.doc5", xmltest, createXMLPlanUltraAdvanced()); //$NON-NLS-1$
-        List docE5 = FakeMetadataFactory.createElements(doc5, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.DiscontinuedItem", "Catalogs.Catalog.items.DiscontinuedItem.@ItemID", "Catalogs.Catalog.items.DiscontinuedItem.Name", "Catalogs.Catalog.items.DiscontinuedItem.Quantity", "Catalogs.Catalog.items.StatusUnknown", "Catalogs.Catalog.items.StatusUnknown.@ItemID", "Catalogs.Catalog.items.StatusUnknown.Name", "Catalogs.Catalog.items.StatusUnknown.Quantity", "Catalogs.Catalog.items.Shouldn't see", "Catalogs.Catalog.items.Shouldn't see 2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$
+        Table doc5 = RealMetadataFactory.createXmlDocument("doc5", xmltest, createXMLPlanUltraAdvanced()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc5, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.DiscontinuedItem", "Catalogs.Catalog.items.DiscontinuedItem.@ItemID", "Catalogs.Catalog.items.DiscontinuedItem.Name", "Catalogs.Catalog.items.DiscontinuedItem.Quantity", "Catalogs.Catalog.items.StatusUnknown", "Catalogs.Catalog.items.StatusUnknown.@ItemID", "Catalogs.Catalog.items.StatusUnknown.Name", "Catalogs.Catalog.items.StatusUnknown.Quantity", "Catalogs.Catalog.items.Shouldn't see", "Catalogs.Catalog.items.Shouldn't see 2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-        FakeMetadataObject doc6 = FakeMetadataFactory.createVirtualGroup("xmltest.doc6", xmltest, createXMLPlanUltraAdvancedExceptionOnDefault()); //$NON-NLS-1$
-        List docE6 = FakeMetadataFactory.createElements(doc6, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.DiscontinuedItem", "Catalogs.Catalog.items.DiscontinuedItem.@ItemID", "Catalogs.Catalog.items.DiscontinuedItem.Name", "Catalogs.Catalog.items.DiscontinuedItem.Quantity", "Catalogs.Catalog.items.Shouldn't see"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$
+        Table doc6 = RealMetadataFactory.createXmlDocument("doc6", xmltest, createXMLPlanUltraAdvancedExceptionOnDefault()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc6, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.DiscontinuedItem", "Catalogs.Catalog.items.DiscontinuedItem.@ItemID", "Catalogs.Catalog.items.DiscontinuedItem.Name", "Catalogs.Catalog.items.DiscontinuedItem.Quantity", "Catalogs.Catalog.items.Shouldn't see"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
-        FakeMetadataObject doc7 = FakeMetadataFactory.createVirtualGroup("xmltest.doc7", xmltest, createTestAttributePlan()); //$NON-NLS-1$
-        List docE7 = FakeMetadataFactory.createElements(doc7, new String[] { "FixedValueTest", "FixedValueTest.wrapper", "FixedValueTest.wrapper.@fixed", "FixedValueTest.wrapper.@key", "FixedValueTest.wrapper.@fixedAttr"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+        Table doc7 = RealMetadataFactory.createXmlDocument("doc7", xmltest, createTestAttributePlan()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc7, new String[] { "FixedValueTest", "FixedValueTest.wrapper", "FixedValueTest.wrapper.@fixed", "FixedValueTest.wrapper.@key", "FixedValueTest.wrapper.@fixedAttr"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
                         
-        FakeMetadataObject doc8 = FakeMetadataFactory.createVirtualGroup("xmltest.doc8", xmltest, createXMLPlanNested()); //$NON-NLS-1$
-        List docE8 = FakeMetadataFactory.createElements(doc8, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name" },  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$
+        Table doc8 = RealMetadataFactory.createXmlDocument("doc8", xmltest, createXMLPlanNested()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc8, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name" },  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
     
-        FakeMetadataObject doc9 = FakeMetadataFactory.createVirtualGroup("xmltest.doc9", xmltest, createXMLPlanNested2()); //$NON-NLS-1$
-        List docE9 = FakeMetadataFactory.createElements(doc9, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name", "Catalogs.Catalog.items.item.suppliers.supplier.orders", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.@OrderID" ,"Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderDate", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderQuantity", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderStatus"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$ //$NON-NLS-18$
+        Table doc9 = RealMetadataFactory.createXmlDocument("doc9", xmltest, createXMLPlanNested2()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc9, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name", "Catalogs.Catalog.items.item.suppliers.supplier.orders", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.@OrderID" ,"Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderDate", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderQuantity", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderStatus"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$ //$NON-NLS-18$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
             
-        FakeMetadataObject doc9a = FakeMetadataFactory.createVirtualGroup("xmltest.doc9a", xmltest, createXMLPlanNested2a()); //$NON-NLS-1$
-        List docE9a = FakeMetadataFactory.createElements(doc9a, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name", "Catalogs.Catalog.items.item.suppliers.supplier.orders", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.@OrderID" ,"Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderDate", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderQuantity", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderStatus"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$ //$NON-NLS-18$
+        Table doc9a = RealMetadataFactory.createXmlDocument("doc9a", xmltest, createXMLPlanNested2a()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc9a, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name", "Catalogs.Catalog.items.item.suppliers.supplier.orders", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.@OrderID" ,"Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderDate", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderQuantity", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderStatus"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$ //$NON-NLS-18$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
-        FakeMetadataObject doc9b = FakeMetadataFactory.createVirtualGroup("xmltest.doc9b", xmltest, createXMLPlanNested2b()); //$NON-NLS-1$
-        FakeMetadataObject doc10 = FakeMetadataFactory.createVirtualGroup("xmltest.doc10", xmltest, createXMLPlanNestedWithChoice()); //$NON-NLS-1$
-        List docE10 = FakeMetadataFactory.createElements(doc10, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.@OrderID" ,"Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.OrderDate", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.OrderQuantity", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.OrderStatus", "Catalogs.Catalog.items.item.suppliers.supplier.orders.ProcessingOrders" ,"Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.otherorder.@OrderID", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.otherorder"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$ //$NON-NLS-18$ //$NON-NLS-19$ //$NON-NLS-20$ //$NON-NLS-21$
+        RealMetadataFactory.createXmlDocument("doc9b", xmltest, createXMLPlanNested2b()); //$NON-NLS-1$
+        Table doc10 = RealMetadataFactory.createXmlDocument("doc10", xmltest, createXMLPlanNestedWithChoice()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc10, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.@OrderID" ,"Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.OrderDate", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.OrderQuantity", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.OrderStatus", "Catalogs.Catalog.items.item.suppliers.supplier.orders.ProcessingOrders" ,"Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.otherorder.@OrderID", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.otherorder"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$ //$NON-NLS-18$ //$NON-NLS-19$ //$NON-NLS-20$ //$NON-NLS-21$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
-        FakeMetadataObject doc10L = FakeMetadataFactory.createVirtualGroup("xmltest.doc10L", xmltest, createXMLPlanNestedWithLookupChoice()); //$NON-NLS-1$
-        List docE10L = FakeMetadataFactory.createElements(doc10L, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.@OrderID" ,"Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.OrderDate", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.OrderQuantity", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.OrderStatus", "Catalogs.Catalog.items.item.suppliers.supplier.orders.ProcessingOrders" ,"Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.otherorder.@OrderID", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.otherorder"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$ //$NON-NLS-18$ //$NON-NLS-19$ //$NON-NLS-20$ //$NON-NLS-21$
+        Table doc10L = RealMetadataFactory.createXmlDocument("doc10L", xmltest, createXMLPlanNestedWithLookupChoice()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc10L, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.@OrderID" ,"Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.OrderDate", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.OrderQuantity", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.OrderStatus", "Catalogs.Catalog.items.item.suppliers.supplier.orders.ProcessingOrders" ,"Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.otherorder.@OrderID", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.otherorder"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$ //$NON-NLS-18$ //$NON-NLS-19$ //$NON-NLS-20$ //$NON-NLS-21$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
 
-        FakeMetadataObject doc11 = FakeMetadataFactory.createVirtualGroup("xmltest.doc11", xmltest, createXMLPlanMultipleDocs()); //$NON-NLS-1$
-        List docE11 = FakeMetadataFactory.createElements(doc11, new String[] { "Item", "Item.@ItemID", "Item.Name", "Item.Quantity", "Item.Suppliers", "Item.Suppliers.Supplier", "Item.Suppliers.Supplier.@SupplierID", "Item.Suppliers.Supplier.Name", "Item.Suppliers.Supplier.Zip"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ 
+        Table doc11 = RealMetadataFactory.createXmlDocument("doc11", xmltest, createXMLPlanMultipleDocs()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc11, new String[] { "Item", "Item.@ItemID", "Item.Name", "Item.Quantity", "Item.Suppliers", "Item.Suppliers.Supplier", "Item.Suppliers.Supplier.@SupplierID", "Item.Suppliers.Supplier.Name", "Item.Suppliers.Supplier.Zip"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ 
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
         //variations on the same recursive doc====================
@@ -428,92 +481,92 @@ public class TestXMLProcessor {
         int recursionlimit = -1;
         boolean exceptionOnLimit = false;
 
-        FakeMetadataObject doc12 = FakeMetadataFactory.createVirtualGroup("xmltest.doc12", xmltest, createXMLPlanRecursive(useRecursiveCriteria, recursionlimit, exceptionOnLimit)); //$NON-NLS-1$
-        FakeMetadataObject doc12a = FakeMetadataFactory.createVirtualGroup("xmltest.doc12a", xmltest, createXMLPlanRecursiveA(useRecursiveCriteria, recursionlimit, exceptionOnLimit)); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc12", xmltest, createXMLPlanRecursive(useRecursiveCriteria, recursionlimit, exceptionOnLimit)); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc12a", xmltest, createXMLPlanRecursiveA(useRecursiveCriteria, recursionlimit, exceptionOnLimit)); //$NON-NLS-1$
 
         useRecursiveCriteria = true;
-        FakeMetadataObject doc13 = FakeMetadataFactory.createVirtualGroup("xmltest.doc13", xmltest, createXMLPlanRecursive(useRecursiveCriteria, recursionlimit, exceptionOnLimit)); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc13", xmltest, createXMLPlanRecursive(useRecursiveCriteria, recursionlimit, exceptionOnLimit)); //$NON-NLS-1$
         useRecursiveCriteria = false;
         recursionlimit = 2;
-        FakeMetadataObject doc14 = FakeMetadataFactory.createVirtualGroup("xmltest.doc14", xmltest, createXMLPlanRecursive(useRecursiveCriteria, recursionlimit, exceptionOnLimit)); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc14", xmltest, createXMLPlanRecursive(useRecursiveCriteria, recursionlimit, exceptionOnLimit)); //$NON-NLS-1$
         exceptionOnLimit = true;
-        FakeMetadataObject doc15 = FakeMetadataFactory.createVirtualGroup("xmltest.doc15", xmltest, createXMLPlanRecursive(useRecursiveCriteria, recursionlimit, exceptionOnLimit)); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc15", xmltest, createXMLPlanRecursive(useRecursiveCriteria, recursionlimit, exceptionOnLimit)); //$NON-NLS-1$
 
         useRecursiveCriteria = false;
         recursionlimit = -1;
         exceptionOnLimit = false;
-        FakeMetadataObject doc16 = FakeMetadataFactory.createVirtualGroup("xmltest.doc16", xmltest, createXMLPlanRecursive2(useRecursiveCriteria, recursionlimit, exceptionOnLimit)); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc16", xmltest, createXMLPlanRecursive2(useRecursiveCriteria, recursionlimit, exceptionOnLimit)); //$NON-NLS-1$
 
-        FakeMetadataObject doc17 = FakeMetadataFactory.createVirtualGroup("xmltest.doc17", xmltest, createXMLPlanWithComment()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc17", xmltest, createXMLPlanWithComment()); //$NON-NLS-1$
 
-        FakeMetadataObject doc_5266a = FakeMetadataFactory.createVirtualGroup("xmltest.doc_5266a", xmltest, createXMLPlanNestedWithChoiceFor5266()); //$NON-NLS-1$
-        List doc_E5266a = FakeMetadataFactory.createElements(doc_5266a, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        Table doc_5266a = RealMetadataFactory.createXmlDocument("doc_5266a", xmltest, createXMLPlanNestedWithChoiceFor5266()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc_5266a, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                                                              new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
 
 
-        FakeMetadataObject doc_8917 = FakeMetadataFactory.createVirtualGroup("xmltest.doc_8917", xmltest, createXMLPlan_defect8917()); //$NON-NLS-1$
-        FakeMetadataObject doc_9446 = FakeMetadataFactory.createVirtualGroup("xmltest.doc_9446", xmltest, createXMLPlan_defect9446()); //$NON-NLS-1$
-        FakeMetadataObject doc_9530 = FakeMetadataFactory.createVirtualGroup("xmltest.doc_9530", xmltest, createXMLPlan_defect_9530()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc_8917", xmltest, createXMLPlan_defect8917()); //$NON-NLS-1$
+        Table doc_9446 = RealMetadataFactory.createXmlDocument("doc_9446", xmltest, createXMLPlan_defect9446()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc_9530", xmltest, createXMLPlan_defect_9530()); //$NON-NLS-1$
 
-        List docE_9446 = FakeMetadataFactory.createElements(doc_9446, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.XXXXX", "Catalogs.Catalog.items.item.XXXXX", "Catalogs.Catalog.items.item.XXXXX"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER});
+        RealMetadataFactory.createElements(doc_9446, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.XXXXX"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER});
         
         //Test doc w/ update mapping class transformation
-        FakeMetadataObject docUpdateTest = FakeMetadataFactory.createVirtualGroup("xmltest.docUpdateTest", xmltest, createUpdateTestDoc()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("docUpdateTest", xmltest, createUpdateTestDoc()); //$NON-NLS-1$
 
-        FakeMetadataObject doc_9893 = FakeMetadataFactory.createVirtualGroup("xmltest.doc9893", xmltest, createXMLPlan_9893()); //$NON-NLS-1$
-        List docE_9893 = FakeMetadataFactory.createElements(doc_9893, new String[] { "Root", "Root.ItemName"}, //$NON-NLS-1$ //$NON-NLS-2$
+        Table doc_9893 = RealMetadataFactory.createXmlDocument("doc9893", xmltest, createXMLPlan_9893()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc_9893, new String[] { "Root", "Root.ItemName"}, //$NON-NLS-1$ //$NON-NLS-2$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
-        FakeMetadataObject doc18 = FakeMetadataFactory.createVirtualGroup("xmltest.doc18", xmltest, createXMLPlanNested("xmltest.suppliersX")); //$NON-NLS-1$ //$NON-NLS-2$
-        List docE18 = FakeMetadataFactory.createElements(doc18, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name" },  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$
+        Table doc18 = RealMetadataFactory.createXmlDocument("doc18", xmltest, createXMLPlanNested("xmltest.suppliersX")); //$NON-NLS-1$ //$NON-NLS-2$
+        RealMetadataFactory.createElements(doc18, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name" },  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
-        FakeMetadataObject doc12260 = FakeMetadataFactory.createVirtualGroup("xmltest.doc12260", xmltest, createXMLPlanCorrelatedSubqueryTransform()); //$NON-NLS-1$
-        List docE12260 = FakeMetadataFactory.createElements(doc12260, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.numSuppliers" },  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-7$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-8$
+        Table doc12260 = RealMetadataFactory.createXmlDocument("doc12260", xmltest, createXMLPlanCorrelatedSubqueryTransform()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc12260, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.numSuppliers" },  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-7$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-8$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
 
-        FakeMetadataObject doc8373 = FakeMetadataFactory.createVirtualGroup("xmltest.doc8373", xmltest, createXMLPlan_defect8373()); //$NON-NLS-1$
-        List docE8373 = FakeMetadataFactory.createElements(doc8373, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.numSuppliers" },  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-7$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-8$
+        Table doc8373 = RealMetadataFactory.createXmlDocument("doc8373", xmltest, createXMLPlan_defect8373()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc8373, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.numSuppliers" },  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-7$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-8$
                                                             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
 
-        FakeMetadataObject doc8373a = FakeMetadataFactory.createVirtualGroup("xmltest.doc8373a", xmltest, createXMLPlan_defect8373a()); //$NON-NLS-1$
-        List docE8373a = FakeMetadataFactory.createElements(doc8373a, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.numSuppliers" },  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-7$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-8$
+        Table doc8373a = RealMetadataFactory.createXmlDocument("doc8373a", xmltest, createXMLPlan_defect8373a()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc8373a, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.numSuppliers" },  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-7$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-8$
                                                             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
 
-        FakeMetadataObject doc8373b = FakeMetadataFactory.createVirtualGroup("xmltest.doc8373b", xmltest, createXMLPlan_defect8373b()); //$NON-NLS-1$
-        List docE8373b = FakeMetadataFactory.createElements(doc8373b, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.numSuppliers" },  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-7$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-8$
+        Table doc8373b = RealMetadataFactory.createXmlDocument("doc8373b", xmltest, createXMLPlan_defect8373b()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc8373b, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.numSuppliers" },  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-7$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-8$
                                                             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
 
-        FakeMetadataObject doc13617 = FakeMetadataFactory.createVirtualGroup("xmltest.doc13617", xmltest, createXMLPlanDefect13617()); //$NON-NLS-1$
-        List docE13617 = FakeMetadataFactory.createElements(doc13617, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity" },  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-7$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ 
+        Table doc13617 = RealMetadataFactory.createXmlDocument("doc13617", xmltest, createXMLPlanDefect13617()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc13617, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity" },  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-7$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ 
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER});
         
 
         // recursive + staging ========================================================
 
-        FakeMetadataObject doc19 = FakeMetadataFactory.createVirtualGroup("xmltest.doc19", xmltest, createXMLPlanRecursiveStaging(true, recursionlimit, exceptionOnLimit)); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc19", xmltest, createXMLPlanRecursiveStaging(true, recursionlimit, exceptionOnLimit)); //$NON-NLS-1$
         
         // root temp group
         QueryNode doc19TempQuery = new QueryNode("SELECT employeeNum, firstName, lastName, supervisorNum FROM stock.employees"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject tempDoc19 = FakeMetadataFactory.createVirtualGroup("xmltest.doc19temp", xmltest, doc19TempQuery); //$NON-NLS-1$
-        List doc19TempQueryE = FakeMetadataFactory.createElements(tempDoc19, 
+        Table tempDoc19 = RealMetadataFactory.createVirtualGroup("doc19temp", xmltest, doc19TempQuery); //$NON-NLS-1$
+        RealMetadataFactory.createElements(tempDoc19, 
                                                               new String[] { "employeeNum", "firstName", "lastName", "supervisorNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                                                               new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
         
 
         //create employees - not connected to any of the above
         QueryNode rsEmployeesDoc19 = new QueryNode("SELECT employeeNum, firstName, lastName FROM xmltest.doc19temp WHERE supervisorNum IS NULL"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject mc1Doc19 = FakeMetadataFactory.createVirtualGroup("xmltest.employeesDoc19", xmltest, rsEmployeesDoc19); //$NON-NLS-1$
-        List mc1Doc19E = FakeMetadataFactory.createElements(mc1Doc19, 
+        Table mc1Doc19 = RealMetadataFactory.createVirtualGroup("employeesDoc19", xmltest, rsEmployeesDoc19); //$NON-NLS-1$
+        RealMetadataFactory.createElements(mc1Doc19, 
                                                                   new String[] { "employeeNum", "firstName", "lastName" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
                                                                   new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
         //recursive piece
         QueryNode rsEmployeesRecursiveDoc19 = new QueryNode("SELECT employeeNum, firstName, lastName FROM xmltest.doc19temp WHERE supervisorNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsEmployeesRecursiveDoc19.addBinding("xmltest.employeesDoc19.employeeNum"); //$NON-NLS-1$
-        FakeMetadataObject mc2Doc19 = FakeMetadataFactory.createVirtualGroup("xmltest.employeesRecursiveDoc19", xmltest, rsEmployeesRecursiveDoc19); //$NON-NLS-1$
-        List mc2Doc19E = FakeMetadataFactory.createElements(mc2Doc19, 
+        Table mc2Doc19 = RealMetadataFactory.createVirtualGroup("employeesRecursiveDoc19", xmltest, rsEmployeesRecursiveDoc19); //$NON-NLS-1$
+        RealMetadataFactory.createElements(mc2Doc19, 
                                                             new String[] { "employeeNum", "firstName", "lastName" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
                                                             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
         
@@ -522,217 +575,71 @@ public class TestXMLProcessor {
         //========================================================
 
         // Stored queries
-        FakeMetadataObject rsX = FakeMetadataFactory.createResultSet("xmltest.rsX", xmltest, new String[] { "supplierNum", "supplierName", "supplierZipCode" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        FakeMetadataObject rsXp1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rsX);  //$NON-NLS-1$
-        FakeMetadataObject rsXp2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
+        ColumnSet<Procedure> rsX = RealMetadataFactory.createResultSet("xmltest.rsX", new String[] { "supplierNum", "supplierName", "supplierZipCode" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        ProcedureParameter rsXp2 = RealMetadataFactory.createParameter("in", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING);  //$NON-NLS-1$
         //there is an extra statement in this proc so that the procedure wrapper is not removed
         QueryNode sqXn1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN declare string x; SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = xmltest.sqX.in; END"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject sqX = FakeMetadataFactory.createVirtualProcedure("xmltest.sqX", xmltest, Arrays.asList(new FakeMetadataObject[] { rsXp1, rsXp2 }), sqXn1);  //$NON-NLS-1$
+        Procedure sqX = RealMetadataFactory.createVirtualProcedure("sqX", xmltest, Arrays.asList(rsXp2), sqXn1);  //$NON-NLS-1$
+        sqX.setResultSet(rsX);
        
         // Documents for Text Normalization Test 
         // normDoc1 - for collapse
         // normDoc2 - for replace
         // normDoc3 - for preserve
-        FakeMetadataObject normDoc1 = FakeMetadataFactory.createVirtualGroup("xmltest.normDoc1", xmltest, createXMLPlanNormalization(MappingNodeConstants.NORMALIZE_TEXT_COLLAPSE)); //$NON-NLS-1$
-        List normDocE1 = FakeMetadataFactory.createElements(normDoc1, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.DiscontinuedItem", "Catalogs.Catalog.items.DiscontinuedItem.@ItemID", "Catalogs.Catalog.items.DiscontinuedItem.Name", "Catalogs.Catalog.items.DiscontinuedItem.Quantity", "Catalogs.Catalog.items.StatusUnknown", "Catalogs.Catalog.items.StatusUnknown.@ItemID", "Catalogs.Catalog.items.StatusUnknown.Name", "Catalogs.Catalog.items.StatusUnknown.Quantity", "Catalogs.Catalog.items.Shouldn't see", "Catalogs.Catalog.items.Shouldn't see 2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$
+        Table normDoc1 = RealMetadataFactory.createXmlDocument("normDoc1", xmltest, createXMLPlanNormalization(MappingNodeConstants.NORMALIZE_TEXT_COLLAPSE)); //$NON-NLS-1$
+        RealMetadataFactory.createElements(normDoc1, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.DiscontinuedItem", "Catalogs.Catalog.items.DiscontinuedItem.@ItemID", "Catalogs.Catalog.items.DiscontinuedItem.Name", "Catalogs.Catalog.items.DiscontinuedItem.Quantity", "Catalogs.Catalog.items.StatusUnknown", "Catalogs.Catalog.items.StatusUnknown.@ItemID", "Catalogs.Catalog.items.StatusUnknown.Name", "Catalogs.Catalog.items.StatusUnknown.Quantity", "Catalogs.Catalog.items.Shouldn't see", "Catalogs.Catalog.items.Shouldn't see 2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$
                                                         new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-        FakeMetadataObject normDoc2 = FakeMetadataFactory.createVirtualGroup("xmltest.normDoc2", xmltest, createXMLPlanNormalization(MappingNodeConstants.NORMALIZE_TEXT_REPLACE)); //$NON-NLS-1$
-        List normDocE2 = FakeMetadataFactory.createElements(normDoc2, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.DiscontinuedItem", "Catalogs.Catalog.items.DiscontinuedItem.@ItemID", "Catalogs.Catalog.items.DiscontinuedItem.Name", "Catalogs.Catalog.items.DiscontinuedItem.Quantity", "Catalogs.Catalog.items.StatusUnknown", "Catalogs.Catalog.items.StatusUnknown.@ItemID", "Catalogs.Catalog.items.StatusUnknown.Name", "Catalogs.Catalog.items.StatusUnknown.Quantity", "Catalogs.Catalog.items.Shouldn't see", "Catalogs.Catalog.items.Shouldn't see 2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$
+        Table normDoc2 = RealMetadataFactory.createXmlDocument("normDoc2", xmltest, createXMLPlanNormalization(MappingNodeConstants.NORMALIZE_TEXT_REPLACE)); //$NON-NLS-1$
+        RealMetadataFactory.createElements(normDoc2, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.DiscontinuedItem", "Catalogs.Catalog.items.DiscontinuedItem.@ItemID", "Catalogs.Catalog.items.DiscontinuedItem.Name", "Catalogs.Catalog.items.DiscontinuedItem.Quantity", "Catalogs.Catalog.items.StatusUnknown", "Catalogs.Catalog.items.StatusUnknown.@ItemID", "Catalogs.Catalog.items.StatusUnknown.Name", "Catalogs.Catalog.items.StatusUnknown.Quantity", "Catalogs.Catalog.items.Shouldn't see", "Catalogs.Catalog.items.Shouldn't see 2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$
                                                             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
  
-        FakeMetadataObject normDoc3 = FakeMetadataFactory.createVirtualGroup("xmltest.normDoc3", xmltest, createXMLPlanNormalization(MappingNodeConstants.NORMALIZE_TEXT_PRESERVE)); //$NON-NLS-1$
-        List normDocE3 = FakeMetadataFactory.createElements(normDoc3, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.DiscontinuedItem", "Catalogs.Catalog.items.DiscontinuedItem.@ItemID", "Catalogs.Catalog.items.DiscontinuedItem.Name", "Catalogs.Catalog.items.DiscontinuedItem.Quantity", "Catalogs.Catalog.items.StatusUnknown", "Catalogs.Catalog.items.StatusUnknown.@ItemID", "Catalogs.Catalog.items.StatusUnknown.Name", "Catalogs.Catalog.items.StatusUnknown.Quantity", "Catalogs.Catalog.items.Shouldn't see", "Catalogs.Catalog.items.Shouldn't see 2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$
+        Table normDoc3 = RealMetadataFactory.createXmlDocument("normDoc3", xmltest, createXMLPlanNormalization(MappingNodeConstants.NORMALIZE_TEXT_PRESERVE)); //$NON-NLS-1$
+        RealMetadataFactory.createElements(normDoc3, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.DiscontinuedItem", "Catalogs.Catalog.items.DiscontinuedItem.@ItemID", "Catalogs.Catalog.items.DiscontinuedItem.Name", "Catalogs.Catalog.items.DiscontinuedItem.Quantity", "Catalogs.Catalog.items.StatusUnknown", "Catalogs.Catalog.items.StatusUnknown.@ItemID", "Catalogs.Catalog.items.StatusUnknown.Name", "Catalogs.Catalog.items.StatusUnknown.Quantity", "Catalogs.Catalog.items.Shouldn't see", "Catalogs.Catalog.items.Shouldn't see 2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$
                                                             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
         
         QueryNode vspqn1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN insert into #temp select * from stock.items where itemquantity < param; SELECT * FROM xmltest.doc1 where Item.Quantity < (select avg(itemquantity) from #temp); END"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vsprs1 = FakeMetadataFactory.createResultSet("pm1.vsprs1", xmltest, new String[] { "xml" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vspp1 = FakeMetadataFactory.createParameter("param", 1, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, vsprs1); //$NON-NLS-1$
-        FakeMetadataObject vspp2 = FakeMetadataFactory.createParameter("ret", 2, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.XML, vsprs1); //$NON-NLS-1$
-        FakeMetadataObject vsp1 = FakeMetadataFactory.createVirtualProcedure("xmltest.vsp1", xmltest, Arrays.asList(vspp1, vspp2 ), vspqn1); //$NON-NLS-1$
+        ColumnSet<Procedure> vsprs1 = RealMetadataFactory.createResultSet("pm1.vsprs1", new String[] { "xml" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
+        ProcedureParameter vspp1 = RealMetadataFactory.createParameter("param", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        Procedure vsp1 = RealMetadataFactory.createVirtualProcedure("vsp1", xmltest, Arrays.asList(vspp1 ), vspqn1); //$NON-NLS-1$
+        vsp1.setResultSet(vsprs1);
 
-        // Add all objects to the store
-        store.addObject(stock);
-        store.addObject(items);
-        store.addObject(item_supplier);
-   
-        store.addObject(suppliers);
-        store.addObject(orders);
-        store.addObject(employees);
-        store.addObjects(itemElements);
-        store.addObjects(itemSupplierElements);
-        store.addObjects(supplierElements);
-        store.addObjects(stockOrders);
-        store.addObjects(supplierEmployees);
-     
-        store.addObject(xmltest);
-        store.addObject(rs);
-        store.addObject(rs2);
-        store.addObject(rs3);
-        store.addObject(rs4);
-        store.addObject(rs4a);
-        store.addObject(rs5);
-        store.addObject(rs5a);
-        store.addObject(temp);
-        store.addObject(temp2);
-        store.addObject(rs3a);
-        store.addObject(temp3b);
-        store.addObject(rs3b);
-        store.addObject(rsQX);
-        store.addObject(rs12260);
-        store.addObject(rs8373);
-        store.addObject(rs8373a);
-        store.addObject(rs8373b);
-        
-        //Stored query
-        store.addObject(rsX);
-        store.addObject(sqX);
-  
-        store.addObject(rsUpdate);
-        store.addObjects(rsElements);
-        store.addObjects(rsElements2);
-        store.addObjects(rsElements3);
-        store.addObjects(rsElements4);
-        store.addObjects(rsElements4a);
-        store.addObjects(rsElements5);
-        store.addObjects(rsElements5a);
-        store.addObjects(tempElements);
-        store.addObjects(tempElements2);
-        store.addObjects(rsElements3a);
-        store.addObjects(tempElements3b);
-        store.addObjects(rsElements3b);
-        store.addObjects(rsUpdateElement);
-        store.addObjects(rsElementsX);
-        store.addObjects(rsElements12260);
-        store.addObjects(rsElements8373);
-        store.addObjects(rsElements8373a);
-        store.addObjects(rsElements8373b);
-
-        store.addObject(doc1);
-        store.addObject(docBounded);
-        store.addObject(doc1a);
-        store.addObject(doc1b);
-        store.addObject(doc1c);
-        store.addObject(doc2);
-        store.addObject(doc2a);
-        store.addObject(doc2b);
-        store.addObject(doc2c);
-        store.addObject(doc2d);
-        store.addObject(doc2e);
-        store.addObject(doc3);
-        store.addObject(doc4);
-        store.addObject(doc5);
- 
-        store.addObject(normDoc1);
-        store.addObject(normDoc2);
-        store.addObject(normDoc3);
-
-        store.addObject(doc6);
-        store.addObject(doc7);
-        store.addObject(doc8);
-        store.addObject(doc9);
-        store.addObject(doc9a);
-        store.addObject(doc9b);
-     
-        store.addObject(doc10);
-        store.addObject(doc10L);
-        store.addObject(doc11);
-        store.addObject(doc12);
-        store.addObject(doc12a);
-        store.addObject(doc13);
-        store.addObject(doc14);
-        store.addObject(doc15);
-        store.addObject(doc16);
-        store.addObject(doc17);
-        store.addObject(doc_8917);
-        store.addObject(doc_9446);
-        store.addObject(doc_9530);
-        store.addObject(docUpdateTest);
-        store.addObject(doc_9893);
-        store.addObject(doc18);
-        store.addObject(doc12260);
-        store.addObject(doc8373);
-        store.addObject(doc8373a);
-        store.addObject(doc8373b);
-        store.addObject(doc13617);
-        store.addObject(doc19);
-        store.addObject(tempDoc19);
-        store.addObject(mc1Doc19);
-        store.addObject(mc2Doc19);
-        store.addObject(doc_5266a);
-
-        store.addObjects(doc19TempQueryE);
-        store.addObjects(mc1Doc19E);
-        store.addObjects(mc2Doc19E);
-        
-        store.addObjects(docE1);
-        store.addObjects(docE1b);
-        store.addObjects(docE1c);
-        store.addObjects(docBoundedElements);
-        store.addObjects(docE2);
-        store.addObjects(docE3);
-        store.addObjects(docE4);
-        store.addObjects(docE5);
-        store.addObjects(normDocE1);
-        store.addObjects(normDocE2);
-        store.addObjects(normDocE3);
-        store.addObjects(docE6);
-        store.addObjects(docE7);
-        store.addObjects(docE8);
-        store.addObjects(docE9);
-        store.addObjects(docE9a);
-        store.addObjects(docE_9446);
-        store.addObjects(docE_9893);
-        store.addObjects(docE18);
-        store.addObjects(docE12260);
-        store.addObjects(docE8373);
-        store.addObjects(docE8373a);
-        store.addObjects(docE8373b);
-        store.addObjects(docE13617);
-        store.addObjects(doc_E5266a);
-        
-        store.addObjects(docE10);
-        store.addObjects(docE10L);
-        store.addObjects(docE11);
-        
-        store.addObject(vsp1);        
-        return facade;
+        return RealMetadataFactory.createTransformationMetadata(metadataStore, "example1");
     }
 
-    public FakeMetadataFacade exampleMetadataNestedWithSibling() {
-		FakeMetadataStore store = new FakeMetadataStore();
-		FakeMetadataFacade facade = new FakeMetadataFacade(store);
+    public QueryMetadataInterface exampleMetadataNestedWithSibling() {
+		MetadataStore metadataStore = new MetadataStore();
         
 		// Create models
-		FakeMetadataObject stock = FakeMetadataFactory.createPhysicalModel("stock"); //$NON-NLS-1$
-		FakeMetadataObject xmltest = FakeMetadataFactory.createVirtualModel("xmltest");  //$NON-NLS-1$
+		Schema stock = RealMetadataFactory.createPhysicalModel("stock", metadataStore); //$NON-NLS-1$
+		Schema xmltest = RealMetadataFactory.createVirtualModel("xmltest", metadataStore);  //$NON-NLS-1$
 
 		// Create physical groups
-		FakeMetadataObject items = FakeMetadataFactory.createPhysicalGroup("stock.items", stock); //$NON-NLS-1$
-		FakeMetadataObject item_supplier = FakeMetadataFactory.createPhysicalGroup("stock.item_supplier", stock); //$NON-NLS-1$
-		FakeMetadataObject item_order = FakeMetadataFactory.createPhysicalGroup("stock.item_order", stock); //$NON-NLS-1$
-		FakeMetadataObject orders = FakeMetadataFactory.createPhysicalGroup("stock.orders", stock); //$NON-NLS-1$
-		FakeMetadataObject suppliers = FakeMetadataFactory.createPhysicalGroup("stock.suppliers", stock); //$NON-NLS-1$
+		Table items = RealMetadataFactory.createPhysicalGroup("items", stock); //$NON-NLS-1$
+		Table item_supplier = RealMetadataFactory.createPhysicalGroup("item_supplier", stock); //$NON-NLS-1$
+		Table item_order = RealMetadataFactory.createPhysicalGroup("item_order", stock); //$NON-NLS-1$
+		Table orders = RealMetadataFactory.createPhysicalGroup("orders", stock); //$NON-NLS-1$
+		Table suppliers = RealMetadataFactory.createPhysicalGroup("suppliers", stock); //$NON-NLS-1$
 		      
 		// Create physical elements
-		List itemElements = FakeMetadataFactory.createElements(items, 
+		RealMetadataFactory.createElements(items, 
 			new String[] { "itemNum", "itemName", "itemQuantity", "itemStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
 
 		//many-to-many join table
-		List itemSupplierElements = FakeMetadataFactory.createElements(item_supplier, 
+		RealMetadataFactory.createElements(item_supplier, 
 			new String[] { "itemNum", "supplierNum" }, //$NON-NLS-1$ //$NON-NLS-2$
 			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
 
-		List supplierElements = FakeMetadataFactory.createElements(suppliers, 
+		RealMetadataFactory.createElements(suppliers, 
 			new String[] { "supplierNum", "supplierName", "supplierZipCode" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
 
 		//many-to-many join table
-		List itemOrderElements = FakeMetadataFactory.createElements(item_order, 
+		RealMetadataFactory.createElements(item_order, 
 			new String[] { "itemNum", "orderNum" }, //$NON-NLS-1$ //$NON-NLS-2$
 			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
 
-		List stockOrders = FakeMetadataFactory.createElements(orders, 
+		RealMetadataFactory.createElements(orders, 
 			new String[] { "orderNum", "orderName", "orderZipCode" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
 	
@@ -740,288 +647,204 @@ public class TestXMLProcessor {
 
 		// Create virtual groups
 		QueryNode rsQuery1 = new QueryNode("SELECT itemNum, itemName, itemQuantity, itemStatus FROM stock.items"); //$NON-NLS-1$ //$NON-NLS-2$
-		FakeMetadataObject rs1 = FakeMetadataFactory.createVirtualGroup("xmltest.group.items", xmltest, rsQuery1); //$NON-NLS-1$
+		Table rs1 = RealMetadataFactory.createVirtualGroup("group.items", xmltest, rsQuery1); //$NON-NLS-1$
 
 		QueryNode rsQuery2 = new QueryNode("SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
 		rsQuery2.addBinding("xmltest.group.items.itemNum"); //$NON-NLS-1$
-		FakeMetadataObject rs2 = FakeMetadataFactory.createVirtualGroup("xmltest.suppliers", xmltest, rsQuery2); //$NON-NLS-1$
+		Table rs2 = RealMetadataFactory.createVirtualGroup("suppliers", xmltest, rsQuery2); //$NON-NLS-1$
 
 		QueryNode rsQuery3 = new QueryNode("SELECT concat(stock.orders.orderNum, '') as orderNum, orderName, orderZipCode FROM stock.orders, stock.item_order WHERE stock.orders.orderNum = stock.item_order.orderNum AND stock.item_order.itemNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
 		rsQuery3.addBinding("xmltest.group.items.itemNum"); //$NON-NLS-1$
-		FakeMetadataObject rs3= FakeMetadataFactory.createVirtualGroup("xmltest.orders", xmltest, rsQuery3); //$NON-NLS-1$
+		Table rs3= RealMetadataFactory.createVirtualGroup("orders", xmltest, rsQuery3); //$NON-NLS-1$
 
 		// Create virtual elements
-		List rsElements1 = FakeMetadataFactory.createElements(rs1, 
+		RealMetadataFactory.createElements(rs1, 
 			new String[] { "itemNum", "itemName", "itemQuantity", "itemStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
 		
-		List rsElements2 = FakeMetadataFactory.createElements(rs2, 
+		RealMetadataFactory.createElements(rs2, 
 			new String[] { "supplierNum", "supplierName", "supplierZipCode" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
 		
-		List rsElements3 = FakeMetadataFactory.createElements(rs3, 
+		RealMetadataFactory.createElements(rs3, 
 			new String[] { "orderNum", "orderName", "orderZipCode" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
 	
 // =========================================================================================================
 
 		// Create virtual docs
-		FakeMetadataObject doc9c= FakeMetadataFactory.createVirtualGroup("xmltest.doc9c", xmltest, createXMLPlanNested2c()); //$NON-NLS-1$
-		List docE9c = FakeMetadataFactory.createElements(doc9c, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name", "Catalogs.Catalog.items.item.orders", "Catalogs.Catalog.items.item.orders.order", "Catalogs.Catalog.items.item.orders.order.@OrderID" ,"Catalogs.Catalog.items.item.orders.order.zip", "Catalogs.Catalog.items.item.orders.order.Name"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$
+		Table doc9c= RealMetadataFactory.createXmlDocument("doc9c", xmltest, createXMLPlanNested2c()); //$NON-NLS-1$
+		RealMetadataFactory.createElements(doc9c, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name", "Catalogs.Catalog.items.item.orders", "Catalogs.Catalog.items.item.orders.order", "Catalogs.Catalog.items.item.orders.order.@OrderID" ,"Catalogs.Catalog.items.item.orders.order.zip", "Catalogs.Catalog.items.item.orders.order.Name"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$
 			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 		
-		//========================================================
-
-		// Add all objects to the store
-		store.addObject(stock);
-		
-		store.addObject(items);
-		store.addObject(item_supplier);
-		store.addObject(item_order);
-		store.addObject(suppliers);
-		store.addObject(orders);
-		
-		store.addObjects(itemElements);
-		store.addObjects(itemSupplierElements);
-		store.addObjects(supplierElements);
-		store.addObjects(stockOrders);
-		store.addObjects(itemOrderElements);
-
-		store.addObject(xmltest);
-		store.addObject(rs1);
-		store.addObject(rs2);
-		store.addObject(rs3);
-		
-		store.addObjects(rsElements1);
-		store.addObjects(rsElements2);
-		store.addObjects(rsElements3);
-
-		store.addObject(doc9c);
-		store.addObjects(docE9c);
-     
-		// Create the facade from the store
-		return facade;		
+		return RealMetadataFactory.createTransformationMetadata(metadataStore, "nestedWithSibling");		
 	}
 	
-    public static FakeMetadataFacade exampleMetadata2() { 
-        FakeMetadataStore store = new FakeMetadataStore();
-        FakeMetadataFacade facade = new FakeMetadataFacade(store);
+    public static TransformationMetadata exampleMetadata2() { 
+    	MetadataStore metadataStore = new MetadataStore();
         
         // Create models
-        FakeMetadataObject xqt = FakeMetadataFactory.createPhysicalModel("xqt"); //$NON-NLS-1$
-        FakeMetadataObject xqttest = FakeMetadataFactory.createVirtualModel("xqttest");     //$NON-NLS-1$
+        Schema xqt = RealMetadataFactory.createPhysicalModel("xqt", metadataStore); //$NON-NLS-1$
+        Schema xqttest = RealMetadataFactory.createVirtualModel("xqttest", metadataStore);     //$NON-NLS-1$
 
         // Create physical groups
-        FakeMetadataObject xqtGroup = FakeMetadataFactory.createPhysicalGroup("xqt.data", xqt); //$NON-NLS-1$
+        Table xqtGroup = RealMetadataFactory.createPhysicalGroup("data", xqt); //$NON-NLS-1$
                 
         // Create physical elements
-        List xqtData = FakeMetadataFactory.createElements(xqtGroup, 
+        RealMetadataFactory.createElements(xqtGroup, 
             new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
 
         // Create new XML recursion tests virtual groups
         QueryNode xqtDataGroup = new QueryNode("SELECT intKey as key, intNum as data, (intKey + 2) as nextKey FROM xqt.data"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject objData = FakeMetadataFactory.createVirtualGroup("xqttest.xqtData", xqttest, xqtDataGroup); //$NON-NLS-1$
+        Table objData = RealMetadataFactory.createVirtualGroup("xqtData", xqttest, xqtDataGroup); //$NON-NLS-1$
         
         QueryNode rsGroup = new QueryNode("SELECT key as ID, data as CODE, nextKey as supervisorID FROM xqttest.xqtData"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject objGroup = FakeMetadataFactory.createVirtualGroup("xqttest.group", xqttest, rsGroup); //$NON-NLS-1$
+        Table objGroup = RealMetadataFactory.createVirtualGroup("group", xqttest, rsGroup); //$NON-NLS-1$
         
         QueryNode rsSupervisor = new QueryNode("SELECT key as ID, data as CODE, nextKey as groupID FROM xqttest.xqtData WHERE key = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsSupervisor.addBinding("xqttest.group.supervisorID"); //$NON-NLS-1$
-        FakeMetadataObject objSupervisor = FakeMetadataFactory.createVirtualGroup("xqttest.supervisor", xqttest, rsSupervisor); //$NON-NLS-1$
+        Table objSupervisor = RealMetadataFactory.createVirtualGroup("supervisor", xqttest, rsSupervisor); //$NON-NLS-1$
 
         QueryNode rsGroup1 = new QueryNode("SELECT key as ID, data as CODE, nextKey as supervisorID FROM xqttest.xqtData WHERE key = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsGroup1.addBinding("xqttest.supervisor.groupID"); //$NON-NLS-1$
-        FakeMetadataObject objGroup1 = FakeMetadataFactory.createVirtualGroup("xqttest.group1", xqttest, rsGroup1); //$NON-NLS-1$
+        Table objGroup1 = RealMetadataFactory.createVirtualGroup("group1", xqttest, rsGroup1); //$NON-NLS-1$
         
         // Create virtual elements
         
-        List elemXQTData = FakeMetadataFactory.createElements(objData, 
+        RealMetadataFactory.createElements(objData, 
             new String[] { "key", "data", "nextKey" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER });
 
-        List elemGroup = FakeMetadataFactory.createElements(objGroup, 
+        RealMetadataFactory.createElements(objGroup, 
             new String[] { "ID", "code", "supervisorID" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER });
 
-        List elemSupervisor = FakeMetadataFactory.createElements(objSupervisor, 
+        RealMetadataFactory.createElements(objSupervisor, 
             new String[] { "ID", "code", "groupID" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER });
 
-        List elemGroup1 = FakeMetadataFactory.createElements(objGroup1, 
+        RealMetadataFactory.createElements(objGroup1, 
             new String[] { "ID", "code", "supervisorID" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER });
         
         // Create virtual groups
         QueryNode rsQuery = new QueryNode("SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey=13"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs = FakeMetadataFactory.createVirtualGroup("xqttest.data", xqttest, rsQuery); //$NON-NLS-1$
+        Table rs = RealMetadataFactory.createVirtualGroup("data", xqttest, rsQuery); //$NON-NLS-1$
         
         QueryNode rsQuery2 = new QueryNode("SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQuery2.addBinding("xqttest.data.intNum"); //$NON-NLS-1$
-        FakeMetadataObject rs2 = FakeMetadataFactory.createVirtualGroup("xqttest.data2", xqttest, rsQuery2); //$NON-NLS-1$
+        Table rs2 = RealMetadataFactory.createVirtualGroup("data2", xqttest, rsQuery2); //$NON-NLS-1$
 
         QueryNode rsQuery3 = new QueryNode("SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQuery3.addBinding("xqttest.data2.intNum"); //$NON-NLS-1$
-        FakeMetadataObject rs3 = FakeMetadataFactory.createVirtualGroup("xqttest.data3", xqttest, rsQuery3); //$NON-NLS-1$
+        Table rs3 = RealMetadataFactory.createVirtualGroup("data3", xqttest, rsQuery3); //$NON-NLS-1$
 
         QueryNode rsQuery4 = new QueryNode("SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQuery4.addBinding("xqttest.data.intNum"); //$NON-NLS-1$
-        FakeMetadataObject rs4 = FakeMetadataFactory.createVirtualGroup("xqttest.data4", xqttest, rsQuery4); //$NON-NLS-1$
+        Table rs4 = RealMetadataFactory.createVirtualGroup("data4", xqttest, rsQuery4); //$NON-NLS-1$
 
         QueryNode rsQuery5 = new QueryNode("SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQuery5.addBinding("xqttest.data4.intNum"); //$NON-NLS-1$
-        FakeMetadataObject rs5 = FakeMetadataFactory.createVirtualGroup("xqttest.data5", xqttest, rsQuery5); //$NON-NLS-1$
+        Table rs5 = RealMetadataFactory.createVirtualGroup("data5", xqttest, rsQuery5); //$NON-NLS-1$
 
         QueryNode rsQuery6 = new QueryNode("SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQuery6.addBinding("xqttest.data5.intNum"); //$NON-NLS-1$
-        FakeMetadataObject rs6 = FakeMetadataFactory.createVirtualGroup("xqttest.data6", xqttest, rsQuery6); //$NON-NLS-1$
+        Table rs6 = RealMetadataFactory.createVirtualGroup("data6", xqttest, rsQuery6); //$NON-NLS-1$
 
         
         QueryNode rsQuery7 = new QueryNode("SELECT intKey, intNum, stringNum FROM xqt.data"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs7 = FakeMetadataFactory.createVirtualGroup("xqttest.data7", xqttest, rsQuery7); //$NON-NLS-1$
+        Table rs7 = RealMetadataFactory.createVirtualGroup("data7", xqttest, rsQuery7); //$NON-NLS-1$
 
         QueryNode rsQuery8 = new QueryNode("SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey < ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQuery8.addBinding("xqttest.data7.intNum"); //$NON-NLS-1$
-        FakeMetadataObject rs8 = FakeMetadataFactory.createVirtualGroup("xqttest.data8", xqttest, rsQuery8); //$NON-NLS-1$
+        Table rs8 = RealMetadataFactory.createVirtualGroup("data8", xqttest, rsQuery8); //$NON-NLS-1$
 
         // Create virtual elements
-        List rsElements = FakeMetadataFactory.createElements(rs, 
+        RealMetadataFactory.createElements(rs, 
             new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
 
-        List rsElements2 = FakeMetadataFactory.createElements(rs2, 
+        RealMetadataFactory.createElements(rs2, 
             new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
 
-        List rsElements3 = FakeMetadataFactory.createElements(rs3, 
+        RealMetadataFactory.createElements(rs3, 
             new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
 
-        List rsElements4 = FakeMetadataFactory.createElements(rs4, 
+        RealMetadataFactory.createElements(rs4, 
             new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
 
-        List rsElements5 = FakeMetadataFactory.createElements(rs5, 
+        RealMetadataFactory.createElements(rs5, 
             new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
 
-        List rsElements6 = FakeMetadataFactory.createElements(rs6, 
+        RealMetadataFactory.createElements(rs6, 
             new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
 
-        List rsElements7 = FakeMetadataFactory.createElements(rs7, 
+        RealMetadataFactory.createElements(rs7, 
             new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
 
-        List rsElements8 = FakeMetadataFactory.createElements(rs8, 
+        RealMetadataFactory.createElements(rs8, 
             new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
 
 
-        FakeMetadataObject doc1 = FakeMetadataFactory.createVirtualGroup("xqttest.doc1", xqttest,   createXQTPlanRecursive_5988()); //$NON-NLS-1$
-        FakeMetadataObject doc1a = FakeMetadataFactory.createVirtualGroup("xqttest.doc1a", xqttest, createXQTPlanRecursive1a_5988()); //$NON-NLS-1$
-        FakeMetadataObject doc2 = FakeMetadataFactory.createVirtualGroup("xqttest.doc2", xqttest,   createXQTPlanRecursiveSiblings()); //$NON-NLS-1$
-        FakeMetadataObject doc3 = FakeMetadataFactory.createVirtualGroup("xqttest.doc3", xqttest,   createXQTPlanRecursive3_5988()); //$NON-NLS-1$
-        FakeMetadataObject doc4 = FakeMetadataFactory.createVirtualGroup("xqttest.doc4", xqttest,   createXQTPlanChoice_6796()); //$NON-NLS-1$
-        FakeMetadataObject doc5 = FakeMetadataFactory.createVirtualGroup("xqttest.doc5", xqttest,   createChoiceDefect24651()); //$NON-NLS-1$
-        FakeMetadataObject groupDoc = FakeMetadataFactory.createVirtualGroup("xqttest.groupDoc", xqttest,   createGroupDoc()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc1", xqttest,   createXQTPlanRecursive_5988()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc1a", xqttest, createXQTPlanRecursive1a_5988()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc2", xqttest,   createXQTPlanRecursiveSiblings()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc3", xqttest,   createXQTPlanRecursive3_5988()); //$NON-NLS-1$
+        Table doc4 = RealMetadataFactory.createXmlDocument("doc4", xqttest,   createXQTPlanChoice_6796()); //$NON-NLS-1$
+        Table doc5 = RealMetadataFactory.createXmlDocument("doc5", xqttest,   createChoiceDefect24651()); //$NON-NLS-1$
+        Table groupDoc = RealMetadataFactory.createXmlDocument("groupDoc", xqttest,   createGroupDoc()); //$NON-NLS-1$
 
-        List elemGroupDoc = FakeMetadataFactory.createElements(groupDoc, new String[] { "group", "group.pseudoID" /*, etc...*/ }, //$NON-NLS-1$ //$NON-NLS-2$
+        RealMetadataFactory.createElements(groupDoc, new String[] { "group", "group.pseudoID" /*, etc...*/ }, //$NON-NLS-1$ //$NON-NLS-2$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
         
-        List elemGroupDoc4 = FakeMetadataFactory.createElements(doc4, new String[] { "root", "root.key", "root.key.keys", "root.key.keys.nestedkey", "root.wrapper.key", "root.wrapper.key.keys", "root.wrapper.key.keys.nestedkey"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+        RealMetadataFactory.createElements(doc4, new String[] { "root", "root.key", "root.key.keys", "root.key.keys.nestedkey", "root.wrapper.key", "root.wrapper.key.keys", "root.wrapper.key.keys.nestedkey"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
                                                                new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
         
-        List elemGroupDoc5 = FakeMetadataFactory.createElements(doc5, new String[] { "root", "root.wrapper.key" }, //$NON-NLS-1$ //$NON-NLS-2$
+        RealMetadataFactory.createElements(doc5, new String[] { "root", "root.wrapper.key" }, //$NON-NLS-1$ //$NON-NLS-2$
                                                                 new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
          
-        store.addObject(xqt);
-        store.addObject(xqtGroup);
-        store.addObjects(xqtData);
-
-        store.addObject(xqttest);
-        
-        store.addObject(objData);
-        store.addObject(objGroup);
-        store.addObject(objSupervisor);
-        store.addObject(objGroup1);
-        store.addObjects(elemXQTData);
-        store.addObjects(elemGroup);
-        store.addObjects(elemSupervisor);
-        store.addObjects(elemGroup1);
-        
-        store.addObject(rs);
-        store.addObject(rs2);
-        store.addObject(rs3);
-        store.addObject(rs4);
-        store.addObject(rs5);
-        store.addObject(rs6);
-        store.addObject(rs7);
-        store.addObject(rs8);
-        store.addObjects(rsElements);
-        store.addObjects(rsElements2);
-        store.addObjects(rsElements3);
-        store.addObjects(rsElements4);
-        store.addObjects(rsElements5);
-        store.addObjects(rsElements6);
-        store.addObjects(rsElements7);
-        store.addObjects(rsElements8);
-
-        store.addObject(doc1);
-        store.addObject(doc1a);
-        store.addObject(doc2);
-        store.addObject(doc3);
-        store.addObject(doc4);
-        store.addObject(doc5);
-        store.addObject(groupDoc);
-        store.addObjects(elemGroupDoc);
-        store.addObjects(elemGroupDoc4);
-        store.addObjects(elemGroupDoc5);
-
-        return facade;
+        return RealMetadataFactory.createTransformationMetadata(metadataStore, "example2");
     }
 
-    public static FakeMetadataFacade exampleMetadataSoap1() {
-        FakeMetadataStore store = new FakeMetadataStore();
-        FakeMetadataFacade facade = new FakeMetadataFacade(store);
+    public static TransformationMetadata exampleMetadataSoap1() {
+    	MetadataStore metadataStore = new MetadataStore();
         
         // Create models
-        FakeMetadataObject taxReport = FakeMetadataFactory.createPhysicalModel("taxReport"); //$NON-NLS-1$
-        FakeMetadataObject xmltest = FakeMetadataFactory.createVirtualModel("xmltest");     //$NON-NLS-1$
+        Schema taxReport = RealMetadataFactory.createPhysicalModel("taxReport", metadataStore); //$NON-NLS-1$
+        Schema xmltest = RealMetadataFactory.createVirtualModel("xmltest", metadataStore);     //$NON-NLS-1$
 
         // Create physical groups
-        FakeMetadataObject arrayOfItem = FakeMetadataFactory.createPhysicalGroup("taxReport.TaxIDs", taxReport); //$NON-NLS-1$
+        Table arrayOfItem = RealMetadataFactory.createPhysicalGroup("TaxIDs", taxReport); //$NON-NLS-1$
 
         // Create physical elements
-        List itemElements = FakeMetadataFactory.createElements(arrayOfItem, 
+        RealMetadataFactory.createElements(arrayOfItem, 
             new String[] { "ID" }, //$NON-NLS-1$
             new String[] {DataTypeManager.DefaultDataTypes.STRING});
 
 
         QueryNode rsQuerySoap = new QueryNode("SELECT ID FROM taxReport.TaxIDs"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rsSoap = FakeMetadataFactory.createVirtualGroup("xmltest.group.TaxIDs", xmltest, rsQuerySoap); //$NON-NLS-1$
+        Table rsSoap = RealMetadataFactory.createVirtualGroup("group.TaxIDs", xmltest, rsQuerySoap); //$NON-NLS-1$
 
-        List rsSoapElements = FakeMetadataFactory.createElements(rsSoap, 
+        RealMetadataFactory.createElements(rsSoap, 
         new String[] { "ID"}, //$NON-NLS-1$
         new String[] {DataTypeManager.DefaultDataTypes.STRING});        
 
-        FakeMetadataObject doc_SOAP = FakeMetadataFactory.createVirtualGroup("xmltest.docSoap", xmltest, createXMLPlanSOAP()); //$NON-NLS-1$
-        List doc_SOAPE1 = FakeMetadataFactory.createElements(doc_SOAP, new String[] { "TaxReports", "TaxReports.TaxReport", "TaxReports.TaxReport.ArrayOfTaxID","TaxReports.TaxReport.ArrayOfTaxID.TaxID","TaxReports.TaxReport.ArrayOfTaxID.TaxID.ID"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+        Table doc_SOAP = RealMetadataFactory.createXmlDocument("docSoap", xmltest, createXMLPlanSOAP()); //$NON-NLS-1$
+        RealMetadataFactory.createElements(doc_SOAP, new String[] { "TaxReports", "TaxReports.TaxReport", "TaxReports.TaxReport.ArrayOfTaxID","TaxReports.TaxReport.ArrayOfTaxID.TaxID","TaxReports.TaxReport.ArrayOfTaxID.TaxID.ID"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
                                                
-        store.addObject(taxReport);
-        store.addObject(arrayOfItem);
-        store.addObjects(itemElements);
-
-        store.addObject(xmltest);
-        store.addObject(rsSoap);
-        store.addObjects(rsSoapElements); 
-        store.addObject(doc_SOAP);
-        store.addObjects(doc_SOAPE1);
-        return facade;
+        return RealMetadataFactory.createTransformationMetadata(metadataStore, "soap1");
     }
 	
-    private static MappingNode createXQTPlanChoice_6796() {
+    private static MappingDocument createXQTPlanChoice_6796() {
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("root")); //$NON-NLS-1$
 
@@ -1050,7 +873,7 @@ public class TestXMLProcessor {
         return doc;
     }
     
-    private static MappingNode createChoiceDefect24651() {
+    private static MappingDocument createChoiceDefect24651() {
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("root")); //$NON-NLS-1$
 
@@ -1070,7 +893,7 @@ public class TestXMLProcessor {
      * Method createXQTPlanRecursive.
      * @return Object
      */
-    private static MappingNode createXQTPlanRecursive_5988() {
+    private static MappingDocument createXQTPlanRecursive_5988() {
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("recursiveTest")); //$NON-NLS-1$
         
@@ -1102,7 +925,7 @@ public class TestXMLProcessor {
 	 * Method createXQTPlanRecursive.
 	 * @return Object
 	 */
-    private static MappingNode createXQTPlanRecursive1a_5988() {
+    private static MappingDocument createXQTPlanRecursive1a_5988() {
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("recursiveTest")); //$NON-NLS-1$
 
@@ -1135,7 +958,7 @@ public class TestXMLProcessor {
      * all nested "anchor" nodes are named "srcNested".  Test of defect #5988
      * @return Object
      */
-    private static MappingNode createXQTPlanRecursive3_5988() {   
+    private static MappingDocument createXQTPlanRecursive3_5988() {   
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("recursiveTest")); //$NON-NLS-1$
 
@@ -1160,7 +983,7 @@ public class TestXMLProcessor {
     }
     
     
-    private static MappingNode createXQTPlanRecursiveSiblings() {
+    private static MappingDocument createXQTPlanRecursiveSiblings() {
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("recursiveTest")); //$NON-NLS-1$
 
@@ -1184,7 +1007,7 @@ public class TestXMLProcessor {
 	 * Method createXMLPlanNested.
 	 * @return MappingNode root of mapping doc
 	 */
-	private static MappingNode createXMLPlanNested() {
+	private static MappingDocument createXMLPlanNested() {
 
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = new MappingElement("Catalogs"); //$NON-NLS-1$
@@ -1227,7 +1050,7 @@ public class TestXMLProcessor {
     /**
      * for defect 9929
      */
-    static MappingNode createXMLPlanNested(String queryGroup) {
+    static MappingDocument createXMLPlanNested(String queryGroup) {
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = new MappingElement("Catalogs"); //$NON-NLS-1$
         doc.addChildElement(root);
@@ -1268,7 +1091,7 @@ public class TestXMLProcessor {
     /**
      * for defect 12260
      */
-    private static MappingNode createXMLPlanCorrelatedSubqueryTransform() {
+    private static MappingDocument createXMLPlanCorrelatedSubqueryTransform() {
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("Catalogs")); //$NON-NLS-1$
         
@@ -1291,7 +1114,7 @@ public class TestXMLProcessor {
         return doc;  
     }
 
-    private static MappingNode createXMLPlan_9893() {
+    private static MappingDocument createXMLPlan_9893() {
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("Root")); //$NON-NLS-1$
         
@@ -1307,7 +1130,7 @@ public class TestXMLProcessor {
     /** 
      * DEFECT 8373
      */
-    private static Object createXMLPlan_defect8373() {
+    private static MappingDocument createXMLPlan_defect8373() {
         
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("Catalogs")); //$NON-NLS-1$
@@ -1327,7 +1150,7 @@ public class TestXMLProcessor {
     /** 
      * DEFECT 8373
      */
-    private static Object createXMLPlan_defect8373a() {        
+    private static MappingDocument createXMLPlan_defect8373a() {        
         MappingDocument doc = new MappingDocument(true);
         
         MappingElement root = doc.addChildElement(new MappingElement("Catalogs")); //$NON-NLS-1$
@@ -1348,7 +1171,7 @@ public class TestXMLProcessor {
     /** 
      * DEFECT 8373
      */
-    private static Object createXMLPlan_defect8373b() {
+    private static MappingDocument createXMLPlan_defect8373b() {
         
         MappingDocument doc = new MappingDocument(true);
         
@@ -1367,7 +1190,7 @@ public class TestXMLProcessor {
         return doc;
     }    
     
-    private static MappingNode createXMLPlanNested2() {
+    private static MappingDocument createXMLPlanNested2() {
         
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("Catalogs")); //$NON-NLS-1$
@@ -1408,7 +1231,7 @@ public class TestXMLProcessor {
     }
 
 	/** nested with sibling*/
-	private MappingNode createXMLPlanNested2c() {
+	private MappingDocument createXMLPlanNested2c() {
         
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("Catalogs")); //$NON-NLS-1$
@@ -1445,13 +1268,13 @@ public class TestXMLProcessor {
 	}
 
 
-    private static MappingNode createXMLPlanNested2a() {
+    private static MappingDocument createXMLPlanNested2a() {
         
         MappingDocument doc = new MappingDocument(true);
         
         MappingElement root = doc.addChildElement(new MappingElement("Catalogs")); //$NON-NLS-1$
 
-        root.setStagingTables(Arrays.asList(new String[] {"tempGroup.orders", "tempGroup.orders2"})); //$NON-NLS-1$ //$NON-NLS-2$
+        root.setStagingTables(Arrays.asList(new String[] {"xmltest.doc9a.tempGroup.orders", "xmltest.doc9a.tempGroup.orders2"})); //$NON-NLS-1$ //$NON-NLS-2$
         
         MappingElement cats = root.addChildElement(new MappingElement("Catalog")); //$NON-NLS-1$
         MappingElement items = cats.addChildElement(new MappingElement("Items")); //$NON-NLS-1$
@@ -1489,7 +1312,7 @@ public class TestXMLProcessor {
     }
 
     // for doc 9b - test temp group w/ bindings
-    private static MappingNode createXMLPlanNested2b() {
+    private static MappingDocument createXMLPlanNested2b() {
         
         MappingDocument doc = new MappingDocument(true);
         
@@ -1538,12 +1361,12 @@ public class TestXMLProcessor {
         return baseXMLPlanNestedWithLookupChoice("xmltest.orders.orderStatus = 'processing'", critNode); //$NON-NLS-1$
     }
 
-    private static MappingNode createXMLPlanNestedWithChoiceFor5266() {
+    private static MappingDocument createXMLPlanNestedWithChoiceFor5266() {
         MappingCriteriaNode critNode = new MappingCriteriaNode("xmltest.orders.orderStatus = 'shipped'", true); //$NON-NLS-1$
         return baseXMLPlanNestedWithLookupChoice("xmltest.orders.orderStatus = 'processing'", critNode); //$NON-NLS-1$        
     }
     
-    private static MappingNode createXMLPlanNestedWithLookupChoice() {
+    private static MappingDocument createXMLPlanNestedWithLookupChoice() {
         MappingCriteriaNode critNode = new MappingCriteriaNode(); 
         MappingElement defaltElement = critNode.addChildElement(new MappingElement("OtherOrder"));//$NON-NLS-1$
         defaltElement.addAttribute(new MappingAttribute("OrderID", "xmltest.orders.orderNum"));//$NON-NLS-1$ //$NON-NLS-2$                
@@ -1601,7 +1424,7 @@ public class TestXMLProcessor {
     }
 
 
-    private static MappingNode createTestAttributePlan() {
+    private static MappingDocument createTestAttributePlan() {
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("FixedValueTest")); //$NON-NLS-1$
         
@@ -1624,7 +1447,7 @@ public class TestXMLProcessor {
         return doc;
     }
 
-    private static Object createUpdateTestDoc() {
+    private static MappingDocument createUpdateTestDoc() {
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("UpdateTest")); //$NON-NLS-1$
         
@@ -1634,7 +1457,7 @@ public class TestXMLProcessor {
         return doc;
     }
 
-    private static MappingNode createXMLPlanWithComment(){
+    private static MappingDocument createXMLPlanWithComment(){
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("Root")); //$NON-NLS-1$
         
@@ -1667,13 +1490,13 @@ public class TestXMLProcessor {
         return doc;
     }
     
-    private static MappingNode createXMLPlan2(boolean format, boolean testNillable, int cardinality ) {
+    private static MappingDocument createXMLPlan2(boolean format, boolean testNillable, int cardinality ) {
         MappingDocument doc = new MappingDocument(format);
         doc.addChildElement(createXMLPlan1Unformatted(testNillable, cardinality));
         return doc;
     }    
     
-    private static MappingNode createXMLPlanSOAP() {
+    private static MappingDocument createXMLPlanSOAP() {
 
         Namespace namespace = new Namespace("ORG", "http://www.mm.org/dummy"); //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -1732,7 +1555,7 @@ public class TestXMLProcessor {
         return root;                                
     }
 
-    private static MappingNode createXMLPlanDefect13617() {
+    private static MappingDocument createXMLPlanDefect13617() {
 
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("Catalogs")); //$NON-NLS-1$
@@ -1755,7 +1578,7 @@ public class TestXMLProcessor {
     }     
     
 
-    private static MappingNode createXMLPlan2(int numChoices, int numDefaultChoice, boolean exception_on_Default) {
+    private static MappingDocument createXMLPlan2(int numChoices, int numDefaultChoice, boolean exception_on_Default) {
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("Catalogs")); //$NON-NLS-1$
         MappingElement cat = root.addChildElement(new MappingElement("Catalog")); //$NON-NLS-1$
@@ -1818,7 +1641,7 @@ public class TestXMLProcessor {
         return doc;                                
     }
 
-    private static MappingNode createXMLPlanUltraAdvanced() {
+    private static MappingDocument createXMLPlanUltraAdvanced() {
 
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("Catalogs")); //$NON-NLS-1$
@@ -1860,10 +1683,8 @@ public class TestXMLProcessor {
         
         return doc;        
     }
-    
-  
 
-    private static MappingNode createXMLPlanUltraAdvancedExceptionOnDefault() {
+    private static MappingDocument createXMLPlanUltraAdvancedExceptionOnDefault() {
 
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("Catalogs")); //$NON-NLS-1$
@@ -1898,7 +1719,7 @@ public class TestXMLProcessor {
     }
 
     //advanced tests of namespace declarations, use and scope; also fixed values
-    private static MappingNode createXMLPlanAdvanced() {
+    private static MappingDocument createXMLPlanAdvanced() {
         //add to previous example
         MappingDocument doc = createXMLPlanWithDefaults();
         MappingElement root = (MappingElement)doc.getRootNode();
@@ -1938,7 +1759,7 @@ public class TestXMLProcessor {
      * Method createXMLPlanNested.
      * @return MappingNode root of mapping doc
      */
-    private static MappingNode createXMLPlanMultipleDocs() {
+    private static MappingDocument createXMLPlanMultipleDocs() {
 
         MappingDocument doc = new MappingDocument(true);
         
@@ -1966,7 +1787,7 @@ public class TestXMLProcessor {
         return doc;  
     }
 
-    private static MappingNode createXMLPlanRecursive(boolean useRecursiveCriteria, int recursionLimit, boolean exceptionOnLimit) {
+    private static MappingDocument createXMLPlanRecursive(boolean useRecursiveCriteria, int recursionLimit, boolean exceptionOnLimit) {
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("OrgHierarchy")); //$NON-NLS-1$
         
@@ -1997,7 +1818,7 @@ public class TestXMLProcessor {
     /*
      * Recursion root mapping class is anchored at sequence node instead of "Employee" node
      */
-    private static MappingNode createXMLPlanRecursiveA(boolean useRecursiveCriteria, int recursionLimit, boolean exceptionOnLimit) {
+    private static MappingDocument createXMLPlanRecursiveA(boolean useRecursiveCriteria, int recursionLimit, boolean exceptionOnLimit) {
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("OrgHierarchy")); //$NON-NLS-1$
 
@@ -2027,8 +1848,7 @@ public class TestXMLProcessor {
         return doc;  
     }
     
-    
-    private static MappingNode createXMLPlanRecursiveStaging(boolean useRecursiveCriteria, int recursionLimit, boolean exceptionOnLimit) {
+    private static MappingDocument createXMLPlanRecursiveStaging(boolean useRecursiveCriteria, int recursionLimit, boolean exceptionOnLimit) {
         
         MappingDocument doc = new MappingDocument(true);
         
@@ -2060,7 +1880,7 @@ public class TestXMLProcessor {
         return doc;  
     }
     
-    private static MappingNode createXMLPlanRecursive2(boolean useRecursiveCriteria, int recursionLimit, boolean exceptionOnLimit) {
+    private static MappingDocument createXMLPlanRecursive2(boolean useRecursiveCriteria, int recursionLimit, boolean exceptionOnLimit) {
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("Employees")); //$NON-NLS-1$
 
@@ -2089,7 +1909,7 @@ public class TestXMLProcessor {
 
     //this is for testing how "optional" XML elements are included/
     //excluded from the result document
-    private static MappingNode createXMLPlan_defect8917() {
+    private static MappingDocument createXMLPlan_defect8917() {
         
         Namespace namespace1 = new Namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance"); //$NON-NLS-1$ //$NON-NLS-2$
         
@@ -2192,7 +2012,7 @@ public class TestXMLProcessor {
     /*
      * Test of identically named nodes
      */
-    private static MappingNode createXMLPlan_defect9446() {
+    private static MappingDocument createXMLPlan_defect9446() {
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("Catalogs")); //$NON-NLS-1$
 
@@ -2207,7 +2027,7 @@ public class TestXMLProcessor {
         return doc;                                
     }
     
-    private static MappingNode createXMLPlan_defect_9530() {        
+    private static MappingDocument createXMLPlan_defect_9530() {        
         Namespace namespace = new Namespace("mm", "http://www.duh.org/duh"); //$NON-NLS-1$ //$NON-NLS-2$
         Namespace namespace2 = new Namespace("mm", "http://www.duh2.org/duh2"); //$NON-NLS-1$ //$NON-NLS-2$
         Namespace namespace3 = new Namespace("mm2", "http://www.duh3.org/duh3"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -2231,7 +2051,7 @@ public class TestXMLProcessor {
         return doc;                              
     }    
     
-    private static MappingNode createGroupDoc() {
+    private static MappingDocument createGroupDoc() {
         MappingDocument doc = new MappingDocument(true);
         
         MappingElement root = doc.addChildElement(new MappingElement("group")); //$NON-NLS-1$
@@ -2262,391 +2082,247 @@ public class TestXMLProcessor {
         group1.setMaxOccurrs(-1);
         return doc;         
     }
-
      
-    // Helper to create a list of elements - used in creating sample data
-    private static List createElements(List elementIDs) { 
-        List elements = new ArrayList();
-        for(int i=0; i<elementIDs.size(); i++) {
-            FakeMetadataObject elementID = (FakeMetadataObject) elementIDs.get(i);            
-            ElementSymbol element = new ElementSymbol(elementID.getName());
-            elements.add(element);
-        }        
-        
-        return elements;
-    }    
-
-    public static FakeDataManager exampleDataManager(FakeMetadataFacade metadata) {
+    public static FakeDataManager exampleDataManager(QueryMetadataInterface metadata) {
         FakeDataManager dataMgr = new FakeDataManager();
     
         try { 
-            // Group stock.items
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("stock.items"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = createElements(elementIDs);
-        
             dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "001", "Lamp", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "002", "Screwdriver", new Integer(100), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "003", "Goat", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    } );    
+                metadata,
+                "stock.items", new List[] { 
+					    Arrays.asList( new Object[] { "001", "Lamp", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "002", "Screwdriver", new Integer(100), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "003", "Goat", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    } );    
 
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(TeiidException e) {
+        	throw new RuntimeException(e);
         }
         
         return dataMgr;
     }                    
 
-    public static FakeDataManager exampleDataManager15117(FakeMetadataFacade metadata) {
+    public static FakeDataManager exampleDataManager15117(QueryMetadataInterface metadata) {
         FakeDataManager dataMgr = new FakeDataManager();
     
         try { 
-            // Group stock.items
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("stock.items"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = createElements(elementIDs);
-        
             dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "001", " Lamp ", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "002", "  Screw  driver  ", new Integer(100), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "003", " Goat ", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    } );    
+                metadata,
+                "stock.items", new List[] { 
+					    Arrays.asList( new Object[] { "001", " Lamp ", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "002", "  Screw  driver  ", new Integer(100), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "003", " Goat ", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    } );    
 
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(TeiidException e) { 
+        	throw new RuntimeException(e);
         }
         
         return dataMgr;
     }     
 
     /** unusual characters in text */
-    public static FakeDataManager exampleDataManager15117a(FakeMetadataFacade metadata) {
+    public static FakeDataManager exampleDataManager15117a(QueryMetadataInterface metadata) {
         FakeDataManager dataMgr = new FakeDataManager();
     
         try { 
-            // Group stock.items
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("stock.items"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = createElements(elementIDs);
-        
             dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "001", "\t \n\r", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "002", "  >Screw< \n driver  &", new Integer(100), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "003", " >>\rGoat ", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    } );    
+                metadata,
+                "stock.items", new List[] { 
+					    Arrays.asList( new Object[] { "001", "\t \n\r", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "002", "  >Screw< \n driver  &", new Integer(100), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "003", " >>\rGoat ", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    } );    
 
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(TeiidException e) { 
+        	throw new RuntimeException(e);
         }
         
         return dataMgr;
     }    
     
-    public static FakeDataManager exampleDataManager14905(FakeMetadataFacade metadata) {
+    public static FakeDataManager exampleDataManager14905(QueryMetadataInterface metadata) {
         FakeDataManager dataMgr = new FakeDataManager();
     
         try { 
-            // Group stock.items
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("stock.items"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = createElements(elementIDs);
-        
             dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { " ", " ", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "  ", "  ", new Integer(100), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { " ", " ", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    } );    
+                metadata,
+                "stock.items", new List[] { 
+					    Arrays.asList( new Object[] { " ", " ", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "  ", "  ", new Integer(100), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { " ", " ", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    } );    
 
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(TeiidException e) { 
+        	throw new RuntimeException(e);
         }
         
         return dataMgr;
     }     
     
-    public static FakeDataManager exampleDataManager13617(FakeMetadataFacade metadata) {
+    public static FakeDataManager exampleDataManager13617(QueryMetadataInterface metadata) {
         FakeDataManager dataMgr = new FakeDataManager();
     
         try { 
-            // Group stock.items
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("stock.items"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = createElements(elementIDs);
-        
             dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "001", "Lamp", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "002", "Screwdriver", new Integer(100), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "003", "Goat", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "004", null, new Integer(1), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ 
-                    } );    
+                metadata,
+                "stock.items", new List[] { 
+					    Arrays.asList( new Object[] { "001", "Lamp", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "002", "Screwdriver", new Integer(100), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "003", "Goat", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "004", null, new Integer(1), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ 
+					    } );    
 
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(TeiidException e) { 
+        	throw new RuntimeException(e);
         }
-        
+
         return dataMgr;
     }     
     
-    public static FakeDataManager exampleDataManagerNested(FakeMetadataFacade metadata) {
+    public static FakeDataManager exampleDataManagerNested(QueryMetadataInterface metadata) {
         FakeDataManager dataMgr = new FakeDataManager();
     
         try { 
-            // Group stock.items
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("stock.items"); //$NON-NLS-1$
-
-            // Group stock.supplier
-            FakeMetadataObject groupID2 = (FakeMetadataObject) metadata.getGroupID("stock.suppliers"); //$NON-NLS-1$
-
-            // Group stock.orders
-            FakeMetadataObject groupID3 = (FakeMetadataObject) metadata.getGroupID("stock.orders"); //$NON-NLS-1$
-
-            // Group stock.item_supplier
-            FakeMetadataObject groupID1_2join = (FakeMetadataObject) metadata.getGroupID("stock.item_supplier"); //$NON-NLS-1$
-
-            // Group stock.employees
-            FakeMetadataObject groupEmployees = (FakeMetadataObject) metadata.getGroupID("stock.employees"); //$NON-NLS-1$
-
-            // Items
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = createElements(elementIDs);
-
-            // Supplier
-            elementIDs = metadata.getElementIDsInGroupID(groupID2);
-            List supplierElementSymbols = createElements(elementIDs);
-
-            // Orders
-            elementIDs = metadata.getElementIDsInGroupID(groupID3);
-            List ordersElementSymbols = createElements(elementIDs);
-
-            // Item_supplier
-            elementIDs = metadata.getElementIDsInGroupID(groupID1_2join);
-            List itemSupplierElementSymbols = createElements(elementIDs);
-
-            // Employees
-            elementIDs = metadata.getElementIDsInGroupID(groupEmployees);
-            List employeeSymbols = createElements(elementIDs);
-        
             dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "001", "Lamp", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "002", "Screwdriver", new Integer(100), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "003", "Goat", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    } );    
+                metadata,
+                "stock.items", new List[] { 
+					    Arrays.asList( new Object[] { "001", "Lamp", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "002", "Screwdriver", new Integer(100), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "003", "Goat", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    } );    
 
             dataMgr.registerTuples(
-                groupID1_2join,
-                itemSupplierElementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "001", "51" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "001", "52" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "001", "53" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "001", "56" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "002", "54" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "002", "55" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "002", "56" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "003", "56" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    } );    
+                metadata,
+                "stock.item_supplier", new List[] { 
+					    Arrays.asList( new Object[] { "001", "51" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+					    Arrays.asList( new Object[] { "001", "52" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+					    Arrays.asList( new Object[] { "001", "53" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+					    Arrays.asList( new Object[] { "001", "56" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+					    Arrays.asList( new Object[] { "002", "54" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+					    Arrays.asList( new Object[] { "002", "55" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+					    Arrays.asList( new Object[] { "002", "56" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+					    Arrays.asList( new Object[] { "003", "56" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+					    } );    
 
 
             dataMgr.registerTuples(
-                groupID2,
-                supplierElementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "51", "Chucky", "11111" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "52", "Biff's Stuff", "22222" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "53", "AAAA", "33333" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "54", "Nugent Co.", "44444" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "55", "Zeta", "55555" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "56", "Microsoft", "66666" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    } );    
+                metadata,
+                "stock.suppliers", new List[] { 
+					    Arrays.asList( new Object[] { "51", "Chucky", "11111" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "52", "Biff's Stuff", "22222" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "53", "AAAA", "33333" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "54", "Nugent Co.", "44444" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "55", "Zeta", "55555" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "56", "Microsoft", "66666" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    } );    
 
             dataMgr.registerTuples(
-                groupID3,
-                ordersElementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "1", "002", "54", "Nugent Co.", "10/23/01", new Integer(5), "complete" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-                    Arrays.asList( new Object[] { "2", "001", "52", "Biff's Stuff", "12/31/01", new Integer(87), "complete" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-                    Arrays.asList( new Object[] { "3", "003", "56", "Microsoft", "02/31/02", new Integer(12), "complete" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-                    Arrays.asList( new Object[] { "4", "003", "56", "Microsoft", "05/31/02", new Integer(9), "processing" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-                    Arrays.asList( new Object[] { "5", "002", "56", "Microsoft", "06/01/02", new Integer(87), "complete" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-                    Arrays.asList( new Object[] { "6", "002", "56", "Microsoft", "07/01/02", new Integer(1), null } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-                    Arrays.asList( new Object[] { "7", "002", "56", "bad data, shouldn't see", "07/01/02", new Integer(1), "complete" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-                    } );    
+                metadata,
+                "stock.orders", new List[] { 
+					    Arrays.asList( new Object[] { "1", "002", "54", "Nugent Co.", "10/23/01", new Integer(5), "complete" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+					    Arrays.asList( new Object[] { "2", "001", "52", "Biff's Stuff", "12/31/01", new Integer(87), "complete" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+					    Arrays.asList( new Object[] { "3", "003", "56", "Microsoft", "02/31/02", new Integer(12), "complete" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+					    Arrays.asList( new Object[] { "4", "003", "56", "Microsoft", "05/31/02", new Integer(9), "processing" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+					    Arrays.asList( new Object[] { "5", "002", "56", "Microsoft", "06/01/02", new Integer(87), "complete" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+					    Arrays.asList( new Object[] { "6", "002", "56", "Microsoft", "07/01/02", new Integer(1), null } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+					    Arrays.asList( new Object[] { "7", "002", "56", "bad data, shouldn't see", "07/01/02", new Integer(1), "complete" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+					    } );    
 
             dataMgr.registerTuples(
-                groupEmployees,
-                employeeSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "01", "1", null, "Ted", "Nugent" } ), //ceo, Nugent Co. //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-                    Arrays.asList( new Object[] { "02", "1", "01", "Bill", "Squier" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-                    Arrays.asList( new Object[] { "03", "1", "01", "John", "Smith" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-                    Arrays.asList( new Object[] { "04", "1", "02", "Leland", "Sklar" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-                    Arrays.asList( new Object[] { "05", "1", "03", "Kevin", "Moore" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-                    Arrays.asList( new Object[] { "06", "1", "04", "John", "Zorn" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-                    Arrays.asList( new Object[] { "07", "2", null, "Geoff", "Tate" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-                    Arrays.asList( new Object[] { "08", "2", "07", "Les", "Claypool" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-                    Arrays.asList( new Object[] { "09", "2", "08", "Meat", "Loaf" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-                    Arrays.asList( new Object[] { "10", "2", "08", "Keith", "Sweat" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-                    Arrays.asList( new Object[] { "11", "1", "06", "Mike", "Patton" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-                    Arrays.asList( new Object[] { "12", "1", "06", "Devin", "Townsend" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-                    Arrays.asList( new Object[] { "13", "1", "11", "Puffy", "Bordin" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-                    } );    
+                metadata,
+                "stock.employees", new List[] { 
+					    Arrays.asList( new Object[] { "01", "1", null, "Ted", "Nugent" } ), //ceo, Nugent Co. //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+					    Arrays.asList( new Object[] { "02", "1", "01", "Bill", "Squier" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+					    Arrays.asList( new Object[] { "03", "1", "01", "John", "Smith" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+					    Arrays.asList( new Object[] { "04", "1", "02", "Leland", "Sklar" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+					    Arrays.asList( new Object[] { "05", "1", "03", "Kevin", "Moore" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+					    Arrays.asList( new Object[] { "06", "1", "04", "John", "Zorn" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+					    Arrays.asList( new Object[] { "07", "2", null, "Geoff", "Tate" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+					    Arrays.asList( new Object[] { "08", "2", "07", "Les", "Claypool" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+					    Arrays.asList( new Object[] { "09", "2", "08", "Meat", "Loaf" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+					    Arrays.asList( new Object[] { "10", "2", "08", "Keith", "Sweat" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+					    Arrays.asList( new Object[] { "11", "1", "06", "Mike", "Patton" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+					    Arrays.asList( new Object[] { "12", "1", "06", "Devin", "Townsend" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+					    Arrays.asList( new Object[] { "13", "1", "11", "Puffy", "Bordin" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+					    } );    
 
 
 
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(TeiidException e) { 
+        	throw new RuntimeException(e);
         }
-        
+
         return dataMgr;
     }                    
 
-	private FakeDataManager exampleDataManagerNestedWithSibling(FakeMetadataFacade metadata) {
+	private FakeDataManager exampleDataManagerNestedWithSibling(QueryMetadataInterface metadata) {
 		FakeDataManager dataMgr = new FakeDataManager();
     
 		try { 
-			// Group stock.items
-			FakeMetadataObject groupID1 = (FakeMetadataObject) metadata.getGroupID("stock.items"); //$NON-NLS-1$
-
-			// Group stock.supplier
-			FakeMetadataObject groupID2 = (FakeMetadataObject) metadata.getGroupID("stock.suppliers"); //$NON-NLS-1$
-
-			// Group stock.orders
-			FakeMetadataObject groupID3 = (FakeMetadataObject) metadata.getGroupID("stock.orders"); //$NON-NLS-1$
-
-			// Group stock.item_supplier
-			FakeMetadataObject groupID1_2join = (FakeMetadataObject) metadata.getGroupID("stock.item_supplier"); //$NON-NLS-1$
-
-			// Group stock.item_order
-			FakeMetadataObject groupID1_3join = (FakeMetadataObject) metadata.getGroupID("stock.item_order"); //$NON-NLS-1$
-
-			// Items
-			List elementIDs = metadata.getElementIDsInGroupID(groupID1);
-			List elementSymbols = createElements(elementIDs);
-
-			// Supplier
-			elementIDs = metadata.getElementIDsInGroupID(groupID2);
-			List supplierElementSymbols = createElements(elementIDs);
-
-			// Orders
-			elementIDs = metadata.getElementIDsInGroupID(groupID3);
-			List ordersElementSymbols = createElements(elementIDs);
-
-			// Item_supplier
-			elementIDs = metadata.getElementIDsInGroupID(groupID1_2join);
-			List itemSupplierElementSymbols = createElements(elementIDs);
-
-			// Item_order
-			elementIDs = metadata.getElementIDsInGroupID(groupID1_3join);
-			List itemOrderElementSymbols = createElements(elementIDs);
-        
-			dataMgr.registerTuples(
-				groupID1,
-				elementSymbols,
-                
-				new List[] { 
-					Arrays.asList( new Object[] { "001", "Lamp", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					Arrays.asList( new Object[] { "002", "Screwdriver", new Integer(100), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					Arrays.asList( new Object[] { "003", "Goat", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					} );    
 
 			dataMgr.registerTuples(
-				groupID1_2join,
-				itemSupplierElementSymbols,
-                
-				new List[] { 
-					Arrays.asList( new Object[] { "001", "51" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-					Arrays.asList( new Object[] { "001", "52" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-					Arrays.asList( new Object[] { "001", "53" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-					Arrays.asList( new Object[] { "001", "56" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-					Arrays.asList( new Object[] { "002", "54" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-					Arrays.asList( new Object[] { "002", "55" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-					Arrays.asList( new Object[] { "002", "56" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-					Arrays.asList( new Object[] { "003", "56" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-					} );    
+				metadata,
+				"stock.items", new List[] { 
+						Arrays.asList( new Object[] { "001", "Lamp", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						Arrays.asList( new Object[] { "002", "Screwdriver", new Integer(100), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						Arrays.asList( new Object[] { "003", "Goat", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						} );    
+
+			dataMgr.registerTuples(
+				metadata,
+				"stock.item_supplier", new List[] { 
+						Arrays.asList( new Object[] { "001", "51" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+						Arrays.asList( new Object[] { "001", "52" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+						Arrays.asList( new Object[] { "001", "53" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+						Arrays.asList( new Object[] { "001", "56" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+						Arrays.asList( new Object[] { "002", "54" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+						Arrays.asList( new Object[] { "002", "55" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+						Arrays.asList( new Object[] { "002", "56" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+						Arrays.asList( new Object[] { "003", "56" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+						} );    
 
 
 			dataMgr.registerTuples(
-				groupID2,
-				supplierElementSymbols,
-                
-				new List[] { 
-					Arrays.asList( new Object[] { "51", "Chucky", "11111" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					Arrays.asList( new Object[] { "52", "Biff's Stuff", "22222" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					Arrays.asList( new Object[] { "53", "AAAA", "33333" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					Arrays.asList( new Object[] { "54", "Nugent Co.", "44444" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					Arrays.asList( new Object[] { "55", "Zeta", "55555" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					Arrays.asList( new Object[] { "56", "Microsoft", "66666" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					} );    
+				metadata,
+				"stock.suppliers", new List[] { 
+						Arrays.asList( new Object[] { "51", "Chucky", "11111" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						Arrays.asList( new Object[] { "52", "Biff's Stuff", "22222" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						Arrays.asList( new Object[] { "53", "AAAA", "33333" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						Arrays.asList( new Object[] { "54", "Nugent Co.", "44444" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						Arrays.asList( new Object[] { "55", "Zeta", "55555" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						Arrays.asList( new Object[] { "56", "Microsoft", "66666" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						} );    
 
 			dataMgr.registerTuples(
-				groupID3,
-				ordersElementSymbols,
-                
-				new List[] { 
-					Arrays.asList( new Object[] { "1", "KMart", "12345" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					Arrays.asList( new Object[] { "2", "Sun", "94040" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					Arrays.asList( new Object[] { "3", "Cisco", "94041" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					Arrays.asList( new Object[] { "4", "Doc", "94042" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					Arrays.asList( new Object[] { "5", "Excite", "21098" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					Arrays.asList( new Object[] { "6", "Yahoo", "94043" } ),  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					Arrays.asList( new Object[] { "7", "Inktomi", "94044" } ),  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					} );    
+				metadata,
+				"stock.orders", new List[] { 
+						Arrays.asList( new Object[] { "1", "KMart", "12345" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						Arrays.asList( new Object[] { "2", "Sun", "94040" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						Arrays.asList( new Object[] { "3", "Cisco", "94041" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						Arrays.asList( new Object[] { "4", "Doc", "94042" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						Arrays.asList( new Object[] { "5", "Excite", "21098" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						Arrays.asList( new Object[] { "6", "Yahoo", "94043" } ),  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						Arrays.asList( new Object[] { "7", "Inktomi", "94044" } ),  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						} );    
 
 			dataMgr.registerTuples(
-				groupID1_3join,
-				itemOrderElementSymbols,
-                
-				new List[] { 
-					Arrays.asList( new Object[] { "001", "1" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-					Arrays.asList( new Object[] { "001", "2" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-					Arrays.asList( new Object[] { "001", "3" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-					Arrays.asList( new Object[] { "001", "4" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-					Arrays.asList( new Object[] { "002", "5" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-					Arrays.asList( new Object[] { "002", "6" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-					Arrays.asList( new Object[] { "003", "7" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-					} );    
+				metadata,
+				"stock.item_order", new List[] { 
+						Arrays.asList( new Object[] { "001", "1" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+						Arrays.asList( new Object[] { "001", "2" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+						Arrays.asList( new Object[] { "001", "3" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+						Arrays.asList( new Object[] { "001", "4" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+						Arrays.asList( new Object[] { "002", "5" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+						Arrays.asList( new Object[] { "002", "6" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+						Arrays.asList( new Object[] { "003", "7" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+						} );    
 
 
 
-		} catch(Throwable e) { 
-			e.printStackTrace();
-			fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
-		}
+        } catch(TeiidException e) { 
+        	throw new RuntimeException(e);
+        }
         
 		return dataMgr;
 	}                    
@@ -2655,43 +2331,30 @@ public class TestXMLProcessor {
      * Returned with some null values in the tuples, to test default/fixed attributes of nodes
      * as well as nillable nodes
      */
-    private FakeDataManager exampleDataManagerWithNulls(FakeMetadataFacade metadata) {
+    private FakeDataManager exampleDataManagerWithNulls(QueryMetadataInterface metadata) {
         FakeDataManager dataMgr = new FakeDataManager();
     
         try { 
-            // Group stock.items
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("stock.items"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = createElements(elementIDs);
-        
             dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "001", null, new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "002", "Screwdriver", null, "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "003", "Goat", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    } );    
+                metadata,
+                "stock.items", new List[] { 
+					    Arrays.asList( new Object[] { "001", null, new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+					    Arrays.asList( new Object[] { "002", "Screwdriver", null, "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "003", "Goat", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    } );    
 
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(TeiidException e) { 
+        	throw new RuntimeException(e);
         }
         
         return dataMgr;
     }                    
 
-    public static FakeDataManager exampleDataManagerForSoap1(FakeMetadataFacade metadata, boolean makeEmpty) {
+    public static FakeDataManager exampleDataManagerForSoap1(QueryMetadataInterface metadata, boolean makeEmpty) {
         FakeDataManager dataMgr = new FakeDataManager();
     
         try { 
-            // Group stock.items
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("taxReport.TaxIDs"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = createElements(elementIDs);
-        
-            List[] tuples = null;
+            List<?>[] tuples = null;
             if (makeEmpty){
                 tuples = new List[0];
             } else {
@@ -2703,92 +2366,59 @@ public class TestXMLProcessor {
             }
         
             dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                tuples );    
+                metadata,
+                "taxReport.TaxIDs", tuples );    
 
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(TeiidException e) { 
+        	throw new RuntimeException(e);
         }
         
         return dataMgr;
     } 
 
-    /** data has a null value */
-    private FakeDataManager exampleDataManager_8917(FakeMetadataFacade metadata) {
+    /** data has a null value 
+     * @throws TeiidComponentException 
+     * @throws QueryResolverException */
+    private FakeDataManager exampleDataManager_8917(QueryMetadataInterface metadata) throws QueryResolverException, TeiidComponentException {
         FakeDataManager dataMgr = new FakeDataManager();
     
-        try { 
-            // Group stock.items
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("stock.items"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = createElements(elementIDs);
-        
-            dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "001", null, new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    } );    
-
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
-        }
-        
+        dataMgr.registerTuples(
+            metadata,
+            "stock.items", new List[] { 
+				    Arrays.asList( new Object[] { "001", null, new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+				    } );    
         return dataMgr;
     } 
 
     /** data has a NON-EMPTY WHITESPACE string */
-    private FakeDataManager exampleDataManager_8917a(FakeMetadataFacade metadata) {
+    private FakeDataManager exampleDataManager_8917a(QueryMetadataInterface metadata) {
         FakeDataManager dataMgr = new FakeDataManager();
     
         try { 
-            // Group stock.items
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("stock.items"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = createElements(elementIDs);
-        
             dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "001", " ", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    } );    
+                metadata,
+                "stock.items", new List[] { 
+					    Arrays.asList( new Object[] { "001", " ", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    } );    
 
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(TeiidException e) { 
+        	throw new RuntimeException(e);
         }
         
         return dataMgr;
     }
 
-    /** data has an EMPTY STRING */
-    private FakeDataManager exampleDataManager_8917b(FakeMetadataFacade metadata) {
+    /** data has an EMPTY STRING 
+     * @throws TeiidComponentException 
+     * @throws QueryResolverException */
+    private FakeDataManager exampleDataManager_8917b(QueryMetadataInterface metadata) throws QueryResolverException, TeiidComponentException {
         FakeDataManager dataMgr = new FakeDataManager();
     
-        try { 
-            // Group stock.items
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("stock.items"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = createElements(elementIDs);
-        
-            dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "001", "", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    } );    
-
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
-        }
+        dataMgr.registerTuples(
+            metadata,
+            "stock.items", new List[] { 
+				    Arrays.asList( new Object[] { "001", "", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				    } );    
         
         return dataMgr;
     }    
@@ -2797,30 +2427,19 @@ public class TestXMLProcessor {
 	 * Duplicate records in data
 	 * @param metadata
 	 * @return FakeDataManager
+	 * @throws TeiidComponentException 
+	 * @throws QueryResolverException 
 	 */
-	private FakeDataManager exampleDataManagerWithDuplicates(FakeMetadataFacade metadata) {
+	private FakeDataManager exampleDataManagerWithDuplicates(QueryMetadataInterface metadata) throws QueryResolverException, TeiidComponentException {
 		FakeDataManager dataMgr = new FakeDataManager();
     
-		try { 
-			// Group stock.items
-			FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("stock.items"); //$NON-NLS-1$
-			List elementIDs = metadata.getElementIDsInGroupID(groupID);
-			List elementSymbols = createElements(elementIDs);
-        
-			dataMgr.registerTuples(
-				groupID,
-				elementSymbols,
-                
-				new List[] { 
+		dataMgr.registerTuples(
+			metadata,
+			"stock.items", new List[] { 
 					Arrays.asList( new Object[] { "001", "Goat", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					Arrays.asList( new Object[] { "002", "Screwdriver",new Integer(100), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					Arrays.asList( new Object[] { "003", "Goat", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					} );    
-
-		} catch(Throwable e) { 
-			e.printStackTrace();
-			fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
-		}
         
 		return dataMgr;
 	}                    
@@ -2830,94 +2449,65 @@ public class TestXMLProcessor {
 	 * Duplicate records in data to test more than two order by elements at the same depth
 	 * @param metadata
 	 * @return FakeDataManager
+	 * @throws TeiidComponentException 
+	 * @throws QueryResolverException 
      */
-	private FakeDataManager exampleDataManagerWithDuplicates1(FakeMetadataFacade metadata) {
+	private FakeDataManager exampleDataManagerWithDuplicates1(QueryMetadataInterface metadata) throws QueryResolverException, TeiidComponentException {
 		FakeDataManager dataMgr = new FakeDataManager();
     
-		try { 
-			// Group stock.items
-			FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("stock.items"); //$NON-NLS-1$
-			List elementIDs = metadata.getElementIDsInGroupID(groupID);
-			List elementSymbols = createElements(elementIDs);
-        
-			dataMgr.registerTuples(
-				groupID,
-				elementSymbols,
-                
-				new List[] { 
+		dataMgr.registerTuples(
+			metadata,
+			"stock.items", new List[] { 
 					Arrays.asList( new Object[] { "001", "Goat", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					Arrays.asList( new Object[] { "003", "Screwdriver",new Integer(100), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					Arrays.asList( new Object[] { "001", "Goat", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					} );    
 
-		} catch(Throwable e) { 
-			e.printStackTrace();
-			fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
-		}
-        
 		return dataMgr;
 	}                   
 		
     /**
      * Deluxe example
+     * @throws TeiidComponentException 
+     * @throws QueryResolverException 
      */
-    private FakeDataManager exampleDataManagerDuJour(FakeMetadataFacade metadata) {
+    private FakeDataManager exampleDataManagerDuJour(QueryMetadataInterface metadata) throws QueryResolverException, TeiidComponentException {
         FakeDataManager dataMgr = new FakeDataManager();
     
-        try { 
-            // Group stock.items
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("stock.items"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = createElements(elementIDs);
-
-            dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "001", null, new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "002", "Screwdriver", null, "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "003", "Goat", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "004", "Flux Capacitor", new Integer(2), "discontinued" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "005", "Milkshake", new Integer(88), null } ), //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "006", "Feta Matrix", new Integer(0), "discontinued" } ) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    } );    
-
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
-        }
-        
+        dataMgr.registerTuples(
+            metadata,
+            "stock.items", new List[] { 
+				    Arrays.asList( new Object[] { "001", null, new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+				    Arrays.asList( new Object[] { "002", "Screwdriver", null, "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				    Arrays.asList( new Object[] { "003", "Goat", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				    Arrays.asList( new Object[] { "004", "Flux Capacitor", new Integer(2), "discontinued" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				    Arrays.asList( new Object[] { "005", "Milkshake", new Integer(88), null } ), //$NON-NLS-1$ //$NON-NLS-2$
+				    Arrays.asList( new Object[] { "006", "Feta Matrix", new Integer(0), "discontinued" } ) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				    } );    
         return dataMgr;
     }   
 
-    public static FakeDataManager exampleXQTDataManager(FakeMetadataFacade metadata) throws Exception {
+    public static FakeDataManager exampleXQTDataManager(QueryMetadataInterface metadata) throws Exception {
         FakeDataManager dataMgr = new FakeDataManager();
     
         // Group stock.items
-        FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("xqt.data"); //$NON-NLS-1$
-        List elementIDs = metadata.getElementIDsInGroupID(groupID);
-        List xqtData = createElements(elementIDs);
-    
         dataMgr.registerTuples(
-            groupID,
-            xqtData,
-            
-            new List[] { 
-                Arrays.asList( new Object[] { new Integer(1),  new Integer(-2), "-2" } ),         //$NON-NLS-1$
-                Arrays.asList( new Object[] { new Integer(2),  new Integer(-1), null } ),        
-                Arrays.asList( new Object[] { new Integer(3),  null,            "0" } ),         //$NON-NLS-1$
-                Arrays.asList( new Object[] { new Integer(4),  new Integer(1),  "1" } ),         //$NON-NLS-1$
-                Arrays.asList( new Object[] { new Integer(5),  new Integer(2),  "2" } ),         //$NON-NLS-1$
-                Arrays.asList( new Object[] { new Integer(6),  new Integer(3),  "3" } ),         //$NON-NLS-1$
-                Arrays.asList( new Object[] { new Integer(7),  new Integer(4),  "4" } ),         //$NON-NLS-1$
-                Arrays.asList( new Object[] { new Integer(8),  new Integer(5),  null } ),        
-                Arrays.asList( new Object[] { new Integer(9),  null,            "6" } ),         //$NON-NLS-1$
-                Arrays.asList( new Object[] { new Integer(10), new Integer(7),  "7" } ),         //$NON-NLS-1$
-                Arrays.asList( new Object[] { new Integer(11), new Integer(8),  "8" } ),         //$NON-NLS-1$
-                Arrays.asList( new Object[] { new Integer(12), new Integer(9),  "9" } ),         //$NON-NLS-1$
-                Arrays.asList( new Object[] { new Integer(13), new Integer(10), "10" } ),         //$NON-NLS-1$
-                } );    
+            metadata,
+            "xqt.data", new List[] { 
+				    Arrays.asList( new Object[] { new Integer(1),  new Integer(-2), "-2" } ),         //$NON-NLS-1$
+				    Arrays.asList( new Object[] { new Integer(2),  new Integer(-1), null } ),        
+				    Arrays.asList( new Object[] { new Integer(3),  null,            "0" } ),         //$NON-NLS-1$
+				    Arrays.asList( new Object[] { new Integer(4),  new Integer(1),  "1" } ),         //$NON-NLS-1$
+				    Arrays.asList( new Object[] { new Integer(5),  new Integer(2),  "2" } ),         //$NON-NLS-1$
+				    Arrays.asList( new Object[] { new Integer(6),  new Integer(3),  "3" } ),         //$NON-NLS-1$
+				    Arrays.asList( new Object[] { new Integer(7),  new Integer(4),  "4" } ),         //$NON-NLS-1$
+				    Arrays.asList( new Object[] { new Integer(8),  new Integer(5),  null } ),        
+				    Arrays.asList( new Object[] { new Integer(9),  null,            "6" } ),         //$NON-NLS-1$
+				    Arrays.asList( new Object[] { new Integer(10), new Integer(7),  "7" } ),         //$NON-NLS-1$
+				    Arrays.asList( new Object[] { new Integer(11), new Integer(8),  "8" } ),         //$NON-NLS-1$
+				    Arrays.asList( new Object[] { new Integer(12), new Integer(9),  "9" } ),         //$NON-NLS-1$
+				    Arrays.asList( new Object[] { new Integer(13), new Integer(10), "10" } ),         //$NON-NLS-1$
+				    } );    
 
         return dataMgr;
     }                    
@@ -2930,16 +2520,16 @@ public class TestXMLProcessor {
         return command;
     }
 
-    static ProcessorPlan helpTestProcess(String sql, String expectedDoc, FakeMetadataFacade metadata, FakeDataManager dataMgr) throws Exception{
+    static ProcessorPlan helpTestProcess(String sql, String expectedDoc, QueryMetadataInterface metadata, FakeDataManager dataMgr) throws Exception{
         return helpTestProcess(sql, expectedDoc, metadata, dataMgr, null);
     }
 
-    static ProcessorPlan helpTestProcess(String sql, String expectedDoc, FakeMetadataFacade metadata, FakeDataManager dataMgr, Class expectedException) throws Exception{
+    static ProcessorPlan helpTestProcess(String sql, String expectedDoc, QueryMetadataInterface metadata, FakeDataManager dataMgr, Class<?> expectedException) throws Exception{
 
         return helpTestProcess(sql, metadata, dataMgr, expectedException, new DefaultCapabilitiesFinder(), expectedDoc);
     }
 
-    static ProcessorPlan helpTestProcess(String sql, FakeMetadataFacade metadata, FakeDataManager dataMgr, Class expectedException, CapabilitiesFinder capFinder, String... expectedDoc) throws Exception{
+    static ProcessorPlan helpTestProcess(String sql, QueryMetadataInterface metadata, FakeDataManager dataMgr, Class<?> expectedException, CapabilitiesFinder capFinder, String... expectedDoc) throws Exception{
         Command command = helpGetCommand(sql, metadata);
         AnalysisRecord analysisRecord = new AnalysisRecord(false, DEBUG);
 
@@ -2951,7 +2541,7 @@ public class TestXMLProcessor {
             if(DEBUG) {
                 System.out.println(analysisRecord.getDebugLog());
             }
-            List[] expected = new List[expectedDoc.length];
+            List<?>[] expected = new List[expectedDoc.length];
             for (int i = 0; i < expectedDoc.length; i++) {
 				expected[i] = Arrays.asList(expectedDoc[i]);
 			}
@@ -2976,7 +2566,7 @@ public class TestXMLProcessor {
     // =============================================================================================
 
     @Test public void test1() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -3003,7 +2593,7 @@ public class TestXMLProcessor {
     }
     
     @Test public void testOrderBy1() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -3030,7 +2620,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testOrderBy1a() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -3057,7 +2647,7 @@ public class TestXMLProcessor {
     }
     
     @Test public void testOrderBy1b() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -3084,7 +2674,7 @@ public class TestXMLProcessor {
     }
                
     @Test public void testOrderBy2() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -3111,7 +2701,7 @@ public class TestXMLProcessor {
     }
     
     @Test public void testOrderBy3() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -3176,7 +2766,7 @@ public class TestXMLProcessor {
     }   
     
     @Test public void testOrderBy3a() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -3241,7 +2831,7 @@ public class TestXMLProcessor {
     }      
     
     @Test public void testOrderBy4() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
         String expectedDoc = 
@@ -3261,7 +2851,7 @@ public class TestXMLProcessor {
     }     
      
     @Test public void testOrderBy5() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
          String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -3288,7 +2878,7 @@ public class TestXMLProcessor {
     } 
     
     @Test public void testOrderBy6() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -3396,14 +2986,14 @@ public class TestXMLProcessor {
    
     //order by with temp group at the root    
     @Test public void testOrderBy7() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         helpTestProcess("SELECT * FROM xmltest.doc9a ORDER BY ItemID DESC", EXPECTED_ORDERED_DOC9A, metadata, dataMgr);         //$NON-NLS-1$
     }   
            
     //order by with multiple elements and criteria with long name, short name doesn't work
     @Test public void testOrderBy8() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -3474,7 +3064,7 @@ public class TestXMLProcessor {
 
     /*    
     @Test public void testOrderBy9() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadata();
+        QueryMetadataInterface metadata = exampleMetadata();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = "";
           
@@ -3487,7 +3077,7 @@ public class TestXMLProcessor {
     */
   
     @Test public void testOrderBy10() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
         String expectedDoc = 
@@ -3511,13 +3101,13 @@ public class TestXMLProcessor {
     }     
     
      @Test public void testOrderBy11() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         helpTestProcess("SELECT * FROM xmltest.doc9a WHERE ItemID='001' OR ItemID='002' OR ItemID='003' ORDER BY ItemID DESC", EXPECTED_ORDERED_DOC9A, metadata, dataMgr);         //$NON-NLS-1$
     }   
 
     @Test public void testOrderBy13() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
         String expectedDoc = 
@@ -3545,7 +3135,7 @@ public class TestXMLProcessor {
     }
         
     @Test public void testOrderBy14() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -3652,7 +3242,7 @@ public class TestXMLProcessor {
     }   
      
     @Test public void testOrderBy15() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
         String expectedDoc = 
@@ -3681,7 +3271,7 @@ public class TestXMLProcessor {
 
     /** test null elements*/
     @Test public void testOrderBy17() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerWithNulls(metadata);
         
         String expectedDoc = 
@@ -3710,7 +3300,7 @@ public class TestXMLProcessor {
     
     /**  test duplicate elements*/
     @Test public void testOrderBy18() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerWithDuplicates(metadata);
         
         String expectedDoc = 
@@ -3739,7 +3329,7 @@ public class TestXMLProcessor {
     
     /**  test more than two parallel elements*/
     @Test public void testOrderBy19() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerWithDuplicates1(metadata);
         
         String expectedDoc = 
@@ -3767,7 +3357,7 @@ public class TestXMLProcessor {
     }
     
     @Test public void testOrderBy20() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc =
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -3825,7 +3415,7 @@ public class TestXMLProcessor {
      * ORDER BY clause of an XML doc query
      */
     @Test public void testOrderBy_defect9803() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
                
         try {
@@ -3841,7 +3431,7 @@ public class TestXMLProcessor {
         
     //defect 8130
     @Test public void test1CriteriaWithUnmappedElementFails() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         
         helpTestProcess("SELECT * FROM xmltest.doc1 WHERE Catalog = 'something'", null, metadata, dataMgr, QueryPlannerException.class);         //$NON-NLS-1$
@@ -3849,14 +3439,14 @@ public class TestXMLProcessor {
 
     //defect 8130
     @Test public void test1CriteriaWithUnmappedElementFails2() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         
         helpTestProcess("SELECT * FROM xmltest.doc1 WHERE Item = 'something'", null, metadata, dataMgr, QueryPlannerException.class);         //$NON-NLS-1$
     }  
     
     @Test public void testNested() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -4062,7 +3652,7 @@ public class TestXMLProcessor {
             "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
             
     @Test public void testNested2() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2;
         helpTestProcess("SELECT * FROM xmltest.doc9", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
@@ -4073,14 +3663,14 @@ public class TestXMLProcessor {
      * selects from B
      */
     @Test public void testNested2aTempGroup() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2;
         helpTestProcess("SELECT * FROM xmltest.doc9a", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }   
 
     @Test public void testNested2aTempGroupCriteria() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -4160,7 +3750,7 @@ public class TestXMLProcessor {
 
     /** defect 13172, CSE Case 1811 */
     @Test public void testNested2aTempGroupCompoundCriteria() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -4241,7 +3831,7 @@ public class TestXMLProcessor {
 
     /** defect 13172, CSE Case 1811 */
     @Test public void testNested2aTempGroupCompoundCriteria1() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -4322,7 +3912,7 @@ public class TestXMLProcessor {
 
     /** defect 13172, CSE Case 1811 */
     @Test public void testNested2aTempGroupCompoundCriteria2() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -4408,7 +3998,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testNested2cTempGroup() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_3;
         helpTestProcess("SELECT * FROM xmltest.doc9a WHERE ItemID = '001'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
@@ -4419,7 +4009,7 @@ public class TestXMLProcessor {
      * some ancestor mapping classes ( we no longer support bindings on staging tables)
      */
     public void defer_testNested2bTempGroup() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2;
         helpTestProcess("SELECT * FROM xmltest.doc9b", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
@@ -4427,7 +4017,7 @@ public class TestXMLProcessor {
 
     @Test public void testNested2WithCriteria() throws Exception {
 
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -4484,7 +4074,7 @@ public class TestXMLProcessor {
      * @see #testNested2WithCriteria2a
      */
     @Test public void testNested2WithCriteria2() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -4544,7 +4134,7 @@ public class TestXMLProcessor {
      * @see #testNested2WithCriteria2a
      */
     @Test public void testNested2WithCriteria2_defect9802() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -4594,7 +4184,7 @@ public class TestXMLProcessor {
      * @see #testNested2WithCriteria2
      */
     @Test public void testNested2WithCriteria2_function() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc =
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" + //$NON-NLS-1$
@@ -4650,7 +4240,7 @@ public class TestXMLProcessor {
      * the criteria is actually specified on.</p>
      */
     @Test public void testNested2WithCriteria2a() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -4699,7 +4289,7 @@ public class TestXMLProcessor {
 
 
     @Test public void testNested2WithContextCriteria() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -4746,7 +4336,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testNested2WithContextCriteria2() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -4799,7 +4389,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testNested2WithContextCriteria3() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -4892,7 +4482,7 @@ public class TestXMLProcessor {
 
 
     @Test public void testNested2WithContextCriteria4() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2_WITH_CONTEXT_CRITERIA_4;
 
@@ -4900,7 +4490,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testNested2WithContextCriteria4a() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2_WITH_CONTEXT_CRITERIA_4;
 
@@ -4908,7 +4498,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testNested2WithContextCriteria4b() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2_WITH_CONTEXT_CRITERIA_4;
 
@@ -4994,7 +4584,7 @@ public class TestXMLProcessor {
             "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
 
     @Test public void testNested2WithContextCriteria5() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2_WITH_CONTEXT_CRITERIA_5;
 
@@ -5002,7 +4592,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testNested2WithContextCriteria5a() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2_WITH_CONTEXT_CRITERIA_5;
 
@@ -5010,7 +4600,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testNested2WithContextCriteria5b() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2_WITH_CONTEXT_CRITERIA_5;
 
@@ -5031,19 +4621,17 @@ public class TestXMLProcessor {
     }
 
     @Test public void testNested2WithContextCriteria5Fail() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = ""; //doesn't matter //$NON-NLS-1$
 
-        boolean shouldSucceed = false;
-        Class expectedException = QueryPlannerException.class;
-        String shouldFailMsg = "expected failure since two different contexts were specified in conjunct"; //$NON-NLS-1$
+        Class<?> expectedException = QueryPlannerException.class;
 
         helpTestProcess("SELECT * FROM xmltest.doc9 WHERE context(Item, OrderID)='5' OR context(SupplierID, OrderID)='2'", expectedDoc, metadata, dataMgr, expectedException);         //$NON-NLS-1$
     }
 
     @Test public void testNested2WithContextCriteria6() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5056,7 +4644,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testNested2WithContextCriteria6b() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5106,14 +4694,14 @@ public class TestXMLProcessor {
             "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
 
     @Test public void testNested2WithContextCriteria7() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2_WITH_CONTEXT_CRITERIA_7;
         helpTestProcess("SELECT * FROM xmltest.doc9 WHERE CONTEXT(SupplierID, OrderID)='5' AND context(OrderID, OrderID)='5'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
     @Test public void testNested2WithContextCriteria7b() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2_WITH_CONTEXT_CRITERIA_7;
         String query = "SELECT * FROM xmltest.doc9 WHERE CONTEXT(Catalogs.Catalog.Items.Item.Suppliers.Supplier.SupplierID, " //$NON-NLS-1$
@@ -5122,7 +4710,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testNested2WithContextCriteria7c() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2_WITH_CONTEXT_CRITERIA_7;
         String query = "SELECT * FROM xmltest.doc9 WHERE CONTEXT(Catalogs.Catalog.Items.Item.Suppliers.Supplier.SupplierID, " //$NON-NLS-1$
@@ -5134,7 +4722,7 @@ public class TestXMLProcessor {
      * per defect 7333
      */
     @Test public void testNested2WithContextCriteria_7333() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5173,7 +4761,7 @@ public class TestXMLProcessor {
      * per defect 7333
      */
     @Test public void testNested2WithContextCriteria_7333b() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5212,7 +4800,7 @@ public class TestXMLProcessor {
      * per defect 7333
      */
     @Test public void testNested2WithContextCriteria_7333c() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5228,7 +4816,7 @@ public class TestXMLProcessor {
      * per defect 7333
      */
     @Test public void testNested2WithContextCriteria_7333d() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5244,7 +4832,7 @@ public class TestXMLProcessor {
      * Select a single item, and then limit the suppliers based on an order #
      */
     @Test public void testNested2WithContextCriteria8() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5280,7 +4868,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testNestedWithChoice() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5369,7 +4957,7 @@ public class TestXMLProcessor {
      * Does not use 'context' operator
      */
     @Test public void testNestedWithChoiceAndCriteria2_6796() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5413,7 +5001,7 @@ public class TestXMLProcessor {
      * Uses the 'context' operator
      */
     @Test public void testNestedWithChoiceAndCriteria2a_6796() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5491,7 +5079,7 @@ public class TestXMLProcessor {
      * Does not use 'context' operator
      */
     @Test public void testNestedWithLookupChoice() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
         String expectedDoc = 
@@ -5533,7 +5121,7 @@ public class TestXMLProcessor {
     }    
     
     @Test public void test1Unformatted() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +  //$NON-NLS-1$
@@ -5563,7 +5151,7 @@ public class TestXMLProcessor {
     // jhTODO: complete this
 
     @Test public void testChoice_5266a() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5642,7 +5230,7 @@ public class TestXMLProcessor {
     
     
     @Test public void test1WithCriteriaShortName() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5665,7 +5253,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void test1WithCriteriaLongName() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5688,7 +5276,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void test2() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5707,7 +5295,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void test2a() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5734,13 +5322,13 @@ public class TestXMLProcessor {
     }
 
     @Test public void test2b() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         helpTestProcess("SELECT * FROM xmltest.doc2b", null, metadata, dataMgr, TeiidComponentException.class);         //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void test2c() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5763,7 +5351,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void test2d() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5790,7 +5378,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void test2e() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5817,7 +5405,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testWithNillableNode() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerWithNulls(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5844,7 +5432,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testWithDefault() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerWithNulls(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5871,7 +5459,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testWithNamespaces() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerWithNulls(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5904,7 +5492,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testWithNewIter3Properties() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerDuJour(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -5943,7 +5531,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testWithNewIter3PropertiesException() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerDuJour(metadata);
         
         Command command = helpGetCommand("SELECT * FROM xmltest.doc6", metadata); //$NON-NLS-1$
@@ -5965,7 +5553,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testAttributeBug() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
         String expectedDoc = 
@@ -5989,7 +5577,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testMultipleDocs() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
 
         String expectedDoc1 = 
@@ -6056,7 +5644,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testRecursive() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
 
         String expectedDoc = 
@@ -6141,7 +5729,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testRecursiveA() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
 
         String expectedDoc = 
@@ -6239,7 +5827,7 @@ public class TestXMLProcessor {
      * @throws Exception
      */
     @Test public void testRecursive2() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
 
         String expectedDoc = 
@@ -6301,7 +5889,7 @@ public class TestXMLProcessor {
         helpTestProcess("SELECT * FROM xmltest.doc13", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
     }
     @Test public void testRecursive3() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
 
         String expectedDoc = 
@@ -6363,7 +5951,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testRecursive4Exception() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         helpTestProcess("SELECT * FROM xmltest.doc15", null, metadata, dataMgr, TeiidComponentException.class); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -6372,7 +5960,7 @@ public class TestXMLProcessor {
      * Seems to be failing as a result of changes for defect 12288 
      */
     @Test public void testRecursive5() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
 
         String expectedDoc = 
@@ -6423,7 +6011,7 @@ public class TestXMLProcessor {
      * @throws Exception
      */
     @Test public void testRecursiveWithStagingTable_defect15607() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
 
         String expectedDoc = 
@@ -6490,7 +6078,7 @@ public class TestXMLProcessor {
      * all nested "anchor" nodes are named "srcNestedRecursive".  Test of defect #5988
      */
     @Test public void testXQTRecursive_5988() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadata2();
+        QueryMetadataInterface metadata = exampleMetadata2();
         FakeDataManager dataMgr = exampleXQTDataManager(metadata);
 
         String expectedDoc = 
@@ -6566,7 +6154,7 @@ public class TestXMLProcessor {
      * all nested "anchor" nodes are named "srcNested".  Test of defect #5988
      */
     public void DEFER_testXQTRecursive1a_5988() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadata2();
+        QueryMetadataInterface metadata = exampleMetadata2();
         FakeDataManager dataMgr = exampleXQTDataManager(metadata);
 
         String expectedDoc = 
@@ -6618,7 +6206,7 @@ public class TestXMLProcessor {
      * all nested "anchor" nodes are named "srcNested".  Test of defect #5988
      */
     @Test public void testXQTRecursive2_5988() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadata2();
+        QueryMetadataInterface metadata = exampleMetadata2();
         FakeDataManager dataMgr = exampleXQTDataManager(metadata);
 
         String expectedDoc = 
@@ -6670,7 +6258,7 @@ public class TestXMLProcessor {
      * for defect 5988
      */
     @Test public void testXQTRecursiveSiblings_5988() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadata2();
+        QueryMetadataInterface metadata = exampleMetadata2();
         FakeDataManager dataMgr = exampleXQTDataManager(metadata);
 
         String expectedDoc = 
@@ -6806,7 +6394,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testSelectElement1() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -6830,7 +6418,7 @@ public class TestXMLProcessor {
     }
      
     @Test public void testSelectElement2() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
         String expectedDoc = 
@@ -6907,7 +6495,7 @@ public class TestXMLProcessor {
     
     /** select element in the reverse order of depth*/
     @Test public void testSelectElement3() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
         String expectedDoc = 
@@ -6984,7 +6572,7 @@ public class TestXMLProcessor {
     
     /** two select elements at the same level*/
     @Test public void testSelectElement4() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7014,7 +6602,7 @@ public class TestXMLProcessor {
     
     /** defect 9756 */
     @Test public void testSelectElement4_defect9756() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7034,7 +6622,7 @@ public class TestXMLProcessor {
     
     /** three select elements with two of them at the same level and there are other nodes with the same name*/
     @Test public void testSelectElement5() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
         String expectedDoc = 
@@ -7119,7 +6707,7 @@ public class TestXMLProcessor {
     
     /** check element.* case */
     @Test public void testSelectElement6() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7147,7 +6735,7 @@ public class TestXMLProcessor {
     
     /** check element.* case without attribute in order by*/
     @Test public void testSelectElement6a() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7175,7 +6763,7 @@ public class TestXMLProcessor {
     }
     
     @Test public void testSelectElement7() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7203,7 +6791,7 @@ public class TestXMLProcessor {
     }
     
     @Test public void testSelectElement8() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7232,7 +6820,7 @@ public class TestXMLProcessor {
     
     /** SELECT clause has element.*, but the sibling elements should not be included, only subtree should */
     @Test public void testSelectElement9() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7268,7 +6856,7 @@ public class TestXMLProcessor {
     }         
     
     @Test public void testSelectElement9a() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7301,7 +6889,7 @@ public class TestXMLProcessor {
              
     /** check element.* case with criteria and order by clause */
     @Test public void testSelectElement10() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7329,7 +6917,7 @@ public class TestXMLProcessor {
     }
     
     @Test public void testSelectElement12() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7382,7 +6970,7 @@ public class TestXMLProcessor {
     }
     
     @Test public void testSelectElement13() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7404,7 +6992,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testSelectElement14() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc =
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7458,7 +7046,7 @@ public class TestXMLProcessor {
     }
     
     @Test public void testSelectElement15() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc =
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7511,7 +7099,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testSelectElement16() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc =
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7565,7 +7153,7 @@ public class TestXMLProcessor {
 
     /**  CSE query 0 */
     @Test public void testSelectElement17() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
 
         String expectedDoc = 
@@ -7666,7 +7254,7 @@ public class TestXMLProcessor {
 
     /**  CSE query 1 */
     @Test public void testSelectElement18() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7711,7 +7299,7 @@ public class TestXMLProcessor {
 
     /**  CSE query 2 */
     @Test public void testSelectElement19() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7757,7 +7345,7 @@ public class TestXMLProcessor {
 
     /**  CSE query 3 */
     @Test public void testSelectElement20() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7790,7 +7378,7 @@ public class TestXMLProcessor {
 
     /**  CSE query 3a */
     @Test public void testSelectElement20a() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7820,7 +7408,7 @@ public class TestXMLProcessor {
 
     /**  CSE query 4 */
     @Test public void testSelectElement21() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7907,7 +7495,7 @@ public class TestXMLProcessor {
 
     /**  CSE query 4a */
     @Test public void testSelectElement21a() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -7970,7 +7558,7 @@ public class TestXMLProcessor {
     
     /**  CSE query 5 */
     @Test public void testSelectElement22() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
 
         String expectedDoc = 
@@ -8029,7 +7617,7 @@ public class TestXMLProcessor {
     
     /**  CSE query 5a */
     @Test public void testSelectElement22a() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
 
         String expectedDoc = 
@@ -8085,7 +7673,7 @@ public class TestXMLProcessor {
     
     /**  CSE query 6 */
     @Test public void testSelectElement23() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
 
         String expectedDoc = 
@@ -8127,7 +7715,7 @@ public class TestXMLProcessor {
     
     /**  CSE query 6a */
     @Test public void testSelectElement23a() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -8166,7 +7754,7 @@ public class TestXMLProcessor {
                      
     /** test with order by and the element in the criteria is not in the select elements*/
     @Test public void testSelectElement24() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -8206,7 +7794,7 @@ public class TestXMLProcessor {
 
     /** test element.* with order by and the element in the criteria is not in the select elements*/
     @Test public void testSelectElement24a() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -8267,7 +7855,7 @@ public class TestXMLProcessor {
                          
     /** test with order by with only necessary sub-mapping classes are queried*/
     @Test public void testSelectElement25() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -8308,7 +7896,7 @@ public class TestXMLProcessor {
     
     /** test element.* with order by with only necessary sub-mapping classes are queried*/
     @Test public void testSelectElement25a() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -8375,7 +7963,7 @@ public class TestXMLProcessor {
      *  and case_insensitive nodes in the mapping tree
      */
     @Test public void testSelectElement25b() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -8439,7 +8027,7 @@ public class TestXMLProcessor {
     }
     
     @Test public void testSelectElement26() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -8506,7 +8094,7 @@ public class TestXMLProcessor {
      * --> refer to Defect9497, this should fail
      */
     @Test public void testSelectElement27() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -8534,7 +8122,7 @@ public class TestXMLProcessor {
         
     /** test special element, root element */
     @Test public void testSelectElement28() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -8558,7 +8146,7 @@ public class TestXMLProcessor {
     
     /** test special element */
     @Test public void testSelectElement28a() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc =  
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -8584,7 +8172,7 @@ public class TestXMLProcessor {
 
     /** test model.document.* */
     @Test public void testSelectElement28b() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -8615,7 +8203,7 @@ public class TestXMLProcessor {
         
     /** test special element, root element */
     @Test public void testSelectElement29() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -8640,7 +8228,7 @@ public class TestXMLProcessor {
     
     /** test simple case for two elements in a mapping class */
     @Test public void testSelectElement30() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
         String expectedDoc = 
@@ -8661,7 +8249,7 @@ public class TestXMLProcessor {
                         
     /** test NullPointerException*/
     @Test public void testDefect_9496_1() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -8725,7 +8313,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testDefect_9496_2() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -8782,7 +8370,7 @@ public class TestXMLProcessor {
     
     /** test StringIndexOutOfBoundsException */
     @Test public void testDefect_9496_3() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -8887,7 +8475,7 @@ public class TestXMLProcessor {
     
     /** should fail: because there are other element other than "xml" */
     /*@Test public void testResolver1() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = ""; 
 
@@ -8903,7 +8491,7 @@ public class TestXMLProcessor {
 
     /** should fail: partial qualified element name and "model.document.xml" */
     /*@Test public void testResolver2() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = ""; 
 
@@ -8919,7 +8507,7 @@ public class TestXMLProcessor {
 
     /** should fail: test XMLResolver validatation for model.* */
     /*@Test public void testDefect_9498_1() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = ""; 
 
@@ -8932,7 +8520,7 @@ public class TestXMLProcessor {
 
     /** should fail: test XMLResolver validatation for model.document.* */
     /*@Test public void testDefect_9498_2() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = ""; 
 
@@ -8945,7 +8533,7 @@ public class TestXMLProcessor {
 
     /** should fail: test XMLResolver validatation for xml.* */
     /*@Test public void testDefect_9498_3() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = ""; 
 
@@ -8960,7 +8548,7 @@ public class TestXMLProcessor {
      *  and case_insensitive nodes in the mapping tree
      */
     @Test public void testCommentNodeInDoc() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9009,7 +8597,7 @@ public class TestXMLProcessor {
         "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
 
     @Test public void testDefect8917() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager_8917(metadata);
         
 //        helpTestProcess("SELECT * FROM xmltest.doc_8917 WHERE Catalog.Items.Item.ItemID = '001'",
@@ -9020,7 +8608,7 @@ public class TestXMLProcessor {
      * jhTODO
      */
     @Test public void testNillableOptional() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
         String expectedDoc = 
@@ -9039,7 +8627,7 @@ public class TestXMLProcessor {
      * jhTODO
      */
     @Test public void testNillableNonOptional() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
         String expectedDoc = 
@@ -9061,7 +8649,7 @@ public class TestXMLProcessor {
      * see also defect 15117
      */
     @Test public void testDefect11789() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager_8917a(metadata);
 
         String expected = 
@@ -9123,7 +8711,7 @@ public class TestXMLProcessor {
      * testDefect8917
      */
     @Test public void testDefect11789b() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager_8917b(metadata);
 
         helpTestProcess("SELECT * FROM xmltest.doc_8917", //$NON-NLS-1$
@@ -9131,7 +8719,7 @@ public class TestXMLProcessor {
     }    
     
     @Test public void testDefect9446() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager_8917(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9152,7 +8740,7 @@ public class TestXMLProcessor {
     } 
 
     @Test public void testDefect9446_2() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager_8917(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9167,7 +8755,7 @@ public class TestXMLProcessor {
     } 
 
     @Test public void testDefect_9530() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9198,7 +8786,7 @@ public class TestXMLProcessor {
     } 
 
     @Test public void testSubqueryInXMLQueryCriteria() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9225,7 +8813,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testSubqueryInXMLQueryCriteria2() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9252,7 +8840,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testSubqueryInXMLQueryCriteria3() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9279,7 +8867,7 @@ public class TestXMLProcessor {
     }
 
     public void XXXtestSubqueryInXMLQueryCriteria4() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9306,7 +8894,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testSubqueryInXMLQueryCriteriaNestedSubquery() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9333,7 +8921,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testSubqueryInXMLQueryCriteriaNestedMappingClass() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9398,7 +8986,7 @@ public class TestXMLProcessor {
     }  
 
     @Test public void testSubqueryInXMLQueryCriteriaNestedMappingClass2() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9463,7 +9051,7 @@ public class TestXMLProcessor {
     } 
 
     @Test public void testSubqueryInXMLQueryCriteriaNestedMappingClass3() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9528,7 +9116,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testSubqueryInXMLQueryCriteriaNestedMappingClass3a() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9594,7 +9182,7 @@ public class TestXMLProcessor {
 
 
     @Test public void testSubqueryInXMLQueryCriteriaNestedMappingClass4() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9661,7 +9249,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testCritNestedMappingClass() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9726,7 +9314,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testDefect_9893() throws Exception{
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9741,7 +9329,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testDefect_9893_2() throws Exception{
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9756,7 +9344,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testDefect_9893_3() throws Exception{
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9771,7 +9359,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testDefect_9893_4() throws Exception{
-        FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
+        QueryMetadataInterface metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9785,13 +9373,12 @@ public class TestXMLProcessor {
             "    </Catalog>\r\n" +  //$NON-NLS-1$
             "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
         
-        final boolean SHOULD_SUCCEED = true;
         helpTestProcess("SELECT Item FROM xmltest.doc9c", //$NON-NLS-1$
             expectedDoc, metadata, dataMgr, null);       
     }
 
     @Test public void testNestedWithStoredQueryInMappingClass() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9857,7 +9444,7 @@ public class TestXMLProcessor {
 
     /** homegenous, simple array elements */
     @Test public void testWithSOAPEncoding1() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataSoap1();
+        QueryMetadataInterface metadata = exampleMetadataSoap1();
         FakeDataManager dataMgr = exampleDataManagerForSoap1(metadata, false);
          
         String expectedDoc = 
@@ -9891,7 +9478,7 @@ public class TestXMLProcessor {
      * whole fragment
      */        
     @Test public void testWithSOAPEncodingNoRows() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataSoap1();
+        QueryMetadataInterface metadata = exampleMetadataSoap1();
         FakeDataManager dataMgr = exampleDataManagerForSoap1(metadata, true);
          
         String expectedDoc = 
@@ -9917,7 +9504,7 @@ public class TestXMLProcessor {
     }  
     
     @Test public void testDefect12260() throws Exception{
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -9957,7 +9544,7 @@ public class TestXMLProcessor {
     
     @Test public void testDefect8373() throws Exception{
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerWithNulls(metadata);
          
         String expectedDoc = 
@@ -9998,7 +9585,7 @@ public class TestXMLProcessor {
 
     @Test public void testDefect8373a() throws Exception{
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerWithNulls(metadata);
          
         String expectedDoc = 
@@ -10039,7 +9626,7 @@ public class TestXMLProcessor {
 
     @Test public void testDefect8373b() throws Exception{
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerWithNulls(metadata);
          
         String expectedDoc = 
@@ -10079,7 +9666,7 @@ public class TestXMLProcessor {
     }    
 
     @Test public void testDefect13617() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager13617(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -10103,7 +9690,7 @@ public class TestXMLProcessor {
     }       
 
     @Test public void testDefect13617a() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager13617(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -10134,7 +9721,7 @@ public class TestXMLProcessor {
      * @since 4.2
      */
     @Test public void testDefect14905() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager14905(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -10161,7 +9748,7 @@ public class TestXMLProcessor {
     }    
 
     @Test public void testTextUnnormalizedDefect15117() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager15117(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -10188,7 +9775,7 @@ public class TestXMLProcessor {
     }
 
     @Test public void testTextUnnormalizedDefect15117a() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager15117a(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -10216,7 +9803,7 @@ public class TestXMLProcessor {
     
     @Test public void testRecursiveGroupDoc() throws Exception {
 
-        FakeMetadataFacade metadata = exampleMetadata2();
+        QueryMetadataInterface metadata = exampleMetadata2();
         FakeDataManager dataMgr = exampleXQTDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -10250,7 +9837,7 @@ public class TestXMLProcessor {
     
     @Test public void testCase2951MaxRows() throws Exception {
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -10317,7 +9904,7 @@ public class TestXMLProcessor {
     /** test rowlimitexception() doesn't throw exception is rowlimit isn't passed */
     @Test public void testDefect19173RowLimitException() throws Exception {
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -10384,7 +9971,7 @@ public class TestXMLProcessor {
     /** test criteria can be written backwards */
     @Test public void testDefect19173RowLimitExceptionBackwardsCriteria() throws Exception {
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -10450,7 +10037,7 @@ public class TestXMLProcessor {
     
     @Test public void testCase2951MaxRows2() throws Exception {
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -10505,7 +10092,7 @@ public class TestXMLProcessor {
     /** test processing exception is thrown if row limit is passed */
     @Test public void testDefect19173RowLimitException2() throws Exception {
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
         helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimitexception(supplier) = 2", null, metadata, dataMgr, TeiidProcessingException.class);         //$NON-NLS-1$ //$NON-NLS-2$
@@ -10514,7 +10101,7 @@ public class TestXMLProcessor {
     /** Two row limits on the same mapping class should be harmless as long as the row limits are identical. */
     @Test public void testCase2951MaxRows2a() throws Exception {
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -10569,7 +10156,7 @@ public class TestXMLProcessor {
     /** test processing exception is thrown if row limit is passed */
     @Test public void testDefect19173RowLimitException2a() throws Exception {
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
         helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimitexception(supplier) = 2 AND rowlimitexception(supplierid) = 2", null, metadata, dataMgr, TeiidProcessingException.class);         //$NON-NLS-1$ //$NON-NLS-2$
@@ -10578,7 +10165,7 @@ public class TestXMLProcessor {
     /** compound criteria */
     @Test public void testCase2951MaxRows3() throws Exception {
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -10609,7 +10196,7 @@ public class TestXMLProcessor {
     /** compound criteria */
     @Test public void testDefect19173RowLimitException3() throws Exception {
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
         helpTestProcess("SELECT * FROM xmltest.doc8 WHERE ItemID='002' AND rowlimitexception(supplier) = 2", null, metadata, dataMgr, TeiidProcessingException.class);         //$NON-NLS-1$ //$NON-NLS-2$
@@ -10617,7 +10204,7 @@ public class TestXMLProcessor {
     
     @Test public void testCase2951MaxRows4() throws Exception {
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -10661,7 +10248,7 @@ public class TestXMLProcessor {
 
     @Test public void testCase2951AndDefect19173MixTwoFunctions() throws Exception {
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -10716,7 +10303,7 @@ public class TestXMLProcessor {
     /** arg to rowlimit function isn't in the scope of any mapping class */
     @Test public void testCase2951MaxRowsFails() throws Exception {
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
         helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimit(catalogs) = 2", null, metadata, dataMgr, QueryPlannerException.class);         //$NON-NLS-1$ //$NON-NLS-2$
@@ -10725,7 +10312,7 @@ public class TestXMLProcessor {
     /** two conflicting row limits on the same mapping class */
     @Test public void testCase2951MaxRowsFails2() throws Exception {
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
         helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimit(supplier) = 2 AND rowlimit(supplierID) = 3", null, metadata, dataMgr, QueryPlannerException.class);         //$NON-NLS-1$ //$NON-NLS-2$
@@ -10734,7 +10321,7 @@ public class TestXMLProcessor {
     /** arg to rowlimitexception function isn't in the scope of any mapping class */
     @Test public void testDefect19173RowLimitExceptionFails() throws Exception {
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
         helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimitexception(catalogs) = 2", null, metadata, dataMgr, QueryPlannerException.class);         //$NON-NLS-1$ //$NON-NLS-2$
@@ -10743,7 +10330,7 @@ public class TestXMLProcessor {
     /** two conflicting rowlimitexceptions on the same mapping class */
     @Test public void testDefect19173RowLimitExceptionFails2() throws Exception {
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
         helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimitexception(supplier) = 2 AND rowlimitexception(supplierID) = 3", null, metadata, dataMgr, QueryPlannerException.class);         //$NON-NLS-1$ //$NON-NLS-2$
@@ -10752,7 +10339,7 @@ public class TestXMLProcessor {
     /** two conflicting rowlimit and rowlimitexceptions on the same mapping class fails planning */
     @Test public void testDefect19173RowLimitAndRowLimitExceptionMixFails2() throws Exception {
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
         helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimit(supplier) = 2 AND rowlimitexception(supplierID) = 3", null, metadata, dataMgr, QueryPlannerException.class);         //$NON-NLS-1$ //$NON-NLS-2$
@@ -10761,7 +10348,7 @@ public class TestXMLProcessor {
     /** try rowlimit criteria written the reverse way */
     @Test public void testCase2951MaxRows5() throws Exception {
         
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -10815,7 +10402,7 @@ public class TestXMLProcessor {
     
     
     @Test public void testNormalizationCollapse() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNormalization(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -10854,7 +10441,7 @@ public class TestXMLProcessor {
     }
     
     @Test public void testNormalizationReplace() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNormalization(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -10892,7 +10479,7 @@ public class TestXMLProcessor {
         helpTestProcess("SELECT * FROM xmltest.normDoc2", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
     @Test public void testNormalizationPreserve() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNormalization2(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -10933,66 +10520,50 @@ public class TestXMLProcessor {
     /**
      * Deluxe example
      */
-    private FakeDataManager exampleDataManagerNormalization(FakeMetadataFacade metadata) {
+    private FakeDataManager exampleDataManagerNormalization(QueryMetadataInterface metadata) {
         FakeDataManager dataMgr = new FakeDataManager();
     
         try { 
-            // Group stock.items
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("stock.items"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = createElements(elementIDs);
-
             dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "001", null, new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "002", " \n Screwdriver \t    \r", null, "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "003", "       \t\rGoat \n", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "004", "Flux \t\r\n Capacitor", new Integer(2), "discontinued" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "005", "Milkshake", new Integer(88), null } ), //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "006", " Feta               Matrix       ", new Integer(0), "discontinued" } ) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    } );    
+                metadata,
+                "stock.items", new List[] { 
+					    Arrays.asList( new Object[] { "001", null, new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+					    Arrays.asList( new Object[] { "002", " \n Screwdriver \t    \r", null, "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "003", "       \t\rGoat \n", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "004", "Flux \t\r\n Capacitor", new Integer(2), "discontinued" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "005", "Milkshake", new Integer(88), null } ), //$NON-NLS-1$ //$NON-NLS-2$
+					    Arrays.asList( new Object[] { "006", " Feta               Matrix       ", new Integer(0), "discontinued" } ) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    } );    
 
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(TeiidException e) { 
+        	throw new RuntimeException(e);
         }
         
         return dataMgr;
     }   
-    private FakeDataManager exampleDataManagerNormalization2(FakeMetadataFacade metadata) {
+    private FakeDataManager exampleDataManagerNormalization2(QueryMetadataInterface metadata) {
         FakeDataManager dataMgr = new FakeDataManager();
     
         try { 
-            // Group stock.items
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("stock.items"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = createElements(elementIDs);
-
             dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "001", null, new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "002", "My Screwdriver", null, "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "003", "My Goat", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "004", "My Flux Capacitor", new Integer(2), "discontinued" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "005", "My Milkshake", new Integer(88), null } ), //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "006", "My Feta Matrix", new Integer(0), "discontinued" } ) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    } );    
+                metadata,
+                "stock.items", new List[] { 
+					    Arrays.asList( new Object[] { "001", null, new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+					    Arrays.asList( new Object[] { "002", "My Screwdriver", null, "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "003", "My Goat", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "004", "My Flux Capacitor", new Integer(2), "discontinued" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "005", "My Milkshake", new Integer(88), null } ), //$NON-NLS-1$ //$NON-NLS-2$
+					    Arrays.asList( new Object[] { "006", "My Feta Matrix", new Integer(0), "discontinued" } ) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    } );    
 
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(TeiidException e) { 
+        	throw new RuntimeException(e);
         }
         
         return dataMgr;
     }   
     
-    private static MappingNode createXMLPlanNormalization(String normMode) {
+    private static MappingDocument createXMLPlanNormalization(String normMode) {
 
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("Catalogs")); //$NON-NLS-1$
@@ -11039,116 +10610,70 @@ public class TestXMLProcessor {
         return doc;        
     }
 
-    static FakeDataManager exampleDataManagerCase3225(FakeMetadataFacade metadata) {
+    static FakeDataManager exampleDataManagerCase3225(QueryMetadataInterface metadata) {
         FakeDataManager dataMgr = new FakeDataManager();
     
         try { 
-            // Group stock.items
-            FakeMetadataObject groupItems = (FakeMetadataObject) metadata.getGroupID("stock.items"); //$NON-NLS-1$
+            dataMgr.registerTuples(
+                metadata,
+                "stock.items", new List[] { 
+					    Arrays.asList( new Object[] { "001", "Lamp", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "002", "Screwdriver", new Integer(100), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "003", "Goat", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    } );    
 
-            // Group stock.supplier
-            FakeMetadataObject groupSuppliers = (FakeMetadataObject) metadata.getGroupID("stock.suppliers"); //$NON-NLS-1$
+            dataMgr.registerTuples(
+                metadata,
+                "stock.item_supplier", new List[] { 
+					    Arrays.asList( new Object[] { "001", "51" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+					    Arrays.asList( new Object[] { "001", "52" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+					    Arrays.asList( new Object[] { "001", "53" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+					    Arrays.asList( new Object[] { "001", "56" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+					    Arrays.asList( new Object[] { "002", "54" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+					    Arrays.asList( new Object[] { "002", "55" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+					    Arrays.asList( new Object[] { "002", "56" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+					    Arrays.asList( new Object[] { "003", "56" } ),         //$NON-NLS-1$ //$NON-NLS-2$
+					    } );    
 
-            // Group stock.orders
-            FakeMetadataObject groupOrders = (FakeMetadataObject) metadata.getGroupID("stock.orders"); //$NON-NLS-1$
 
-            // Group stock.employees
-            FakeMetadataObject groupEmployees = (FakeMetadataObject) metadata.getGroupID("stock.employees"); //$NON-NLS-1$
+            dataMgr.registerTuples(
+                metadata,
+                "stock.suppliers", new List[] { 
+					    Arrays.asList( new Object[] { "51", "Chucky", "11111" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "52", "Biff's Stuff", "22222" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "53", "AAAA", "33333" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "54", "Nugent Co.", "44444" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "55", "Zeta", "55555" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    Arrays.asList( new Object[] { "56", "Microsoft", "66666" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    } );    
+
+            dataMgr.registerTuples(
+                metadata,
+                "stock.orders", new List[] { 
+					    Arrays.asList( new Object[] { "1", "001", "51", "2/13/05", new Integer(2), "complete" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+					    Arrays.asList( new Object[] { "2", "001", "52", "3/13/05", new Integer(1), "processing" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+					    Arrays.asList( new Object[] { "3", "002", "53", "4/13/05", new Integer(1), "complete" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+					    Arrays.asList( new Object[] { "4", "002", "56", "5/13/05", new Integer(1), "cancelled" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+					    Arrays.asList( new Object[] { "5", "003", "56", "6/13/05", new Integer(800), "processing" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+					    } );    
+
+            dataMgr.registerTuples(
+                metadata,
+                "stock.employees", new List[] { 
+					    Arrays.asList( new Object[] { "1001", "51", "001", "1004", "Albert", "Pujols" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+					    Arrays.asList( new Object[] { "1002", "51", "001", "1004", "Jim", "Edmunds" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+					    Arrays.asList( new Object[] { "1003", "54", "002", "1004", "David", "Eckstein" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+					    Arrays.asList( new Object[] { "1004", null, null, "1009", "Tony", "LaRussa" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
+					    Arrays.asList( new Object[] { "1005", "56", "001", "1007", "Derrek", "Lee" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+					    Arrays.asList( new Object[] { "1006", "56", "003", "1007", "Corey", "Patterson" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+					    Arrays.asList( new Object[] { "1007", null, null, "1010", "Dusty", "Baker" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
+					    Arrays.asList( new Object[] { "1008", "56", "002", "1007", "Carlos", "Zambrano" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+					    Arrays.asList( new Object[] { "1009", null, null, null, "Bill", "DeWitt" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+					    Arrays.asList( new Object[] { "1010", null, null, null, "Some", "Guy" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+					    } );             
             
-            // Group stock.item_supplier
-            FakeMetadataObject groupItemSupplier = (FakeMetadataObject) metadata.getGroupID("stock.item_supplier"); //$NON-NLS-1$
-
-            // Items
-            List elementIDs = metadata.getElementIDsInGroupID(groupItems);
-            List elementSymbols = createElements(elementIDs);
-
-            // Supplier
-            elementIDs = metadata.getElementIDsInGroupID(groupSuppliers);
-            List supplierElementSymbols = createElements(elementIDs);
-
-            // Orders
-            elementIDs = metadata.getElementIDsInGroupID(groupOrders);
-            List ordersElementSymbols = createElements(elementIDs);
-
-            // Employees
-            elementIDs = metadata.getElementIDsInGroupID(groupEmployees);
-            List employeesElementSymbols = createElements(elementIDs);
-            
-            // Item_supplier
-            elementIDs = metadata.getElementIDsInGroupID(groupItemSupplier);
-            List itemSupplierElementSymbols = createElements(elementIDs);
-        
-            dataMgr.registerTuples(
-                groupItems,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "001", "Lamp", new Integer(5), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "002", "Screwdriver", new Integer(100), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "003", "Goat", new Integer(4), "okay" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    } );    
-
-            dataMgr.registerTuples(
-                groupItemSupplier,
-                itemSupplierElementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "001", "51" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "001", "52" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "001", "53" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "001", "56" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "002", "54" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "002", "55" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "002", "56" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    Arrays.asList( new Object[] { "003", "56" } ),         //$NON-NLS-1$ //$NON-NLS-2$
-                    } );    
-
-
-            dataMgr.registerTuples(
-                groupSuppliers,
-                supplierElementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "51", "Chucky", "11111" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "52", "Biff's Stuff", "22222" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "53", "AAAA", "33333" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "54", "Nugent Co.", "44444" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "55", "Zeta", "55555" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    Arrays.asList( new Object[] { "56", "Microsoft", "66666" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    } );    
-
-            dataMgr.registerTuples(
-                groupOrders,
-                ordersElementSymbols,
-                
-                new List[] { 
-                    Arrays.asList( new Object[] { "1", "001", "51", "2/13/05", new Integer(2), "complete" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-                    Arrays.asList( new Object[] { "2", "001", "52", "3/13/05", new Integer(1), "processing" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-                    Arrays.asList( new Object[] { "3", "002", "53", "4/13/05", new Integer(1), "complete" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-                    Arrays.asList( new Object[] { "4", "002", "56", "5/13/05", new Integer(1), "cancelled" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-                    Arrays.asList( new Object[] { "5", "003", "56", "6/13/05", new Integer(800), "processing" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-                    } );    
-
-            dataMgr.registerTuples(
-                groupEmployees,
-                employeesElementSymbols,
-               
-                new List[] { 
-                    Arrays.asList( new Object[] { "1001", "51", "001", "1004", "Albert", "Pujols" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-                    Arrays.asList( new Object[] { "1002", "51", "001", "1004", "Jim", "Edmunds" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-                    Arrays.asList( new Object[] { "1003", "54", "002", "1004", "David", "Eckstein" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-                    Arrays.asList( new Object[] { "1004", null, null, "1009", "Tony", "LaRussa" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
-                    Arrays.asList( new Object[] { "1005", "56", "001", "1007", "Derrek", "Lee" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-                    Arrays.asList( new Object[] { "1006", "56", "003", "1007", "Corey", "Patterson" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-                    Arrays.asList( new Object[] { "1007", null, null, "1010", "Dusty", "Baker" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
-                    Arrays.asList( new Object[] { "1008", "56", "002", "1007", "Carlos", "Zambrano" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-                    Arrays.asList( new Object[] { "1009", null, null, null, "Bill", "DeWitt" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-                    Arrays.asList( new Object[] { "1010", null, null, null, "Some", "Guy" } ),         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-                    } );             
-            
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(TeiidException e) { 
+        	throw new RuntimeException(e);
         }
         
         return dataMgr;
@@ -11159,7 +10684,7 @@ public class TestXMLProcessor {
      * @throws Exception
      */
     @Test public void testCase3225() throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleCase3225();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleCase3225();
         FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
         String expectedDoc = 
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -11477,7 +11002,7 @@ public class TestXMLProcessor {
      * @throws Exception
      */
     @Test public void testCase3225WithCriteria() throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleCase3225();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleCase3225();
         FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
         helpTestProcess("select * from xmltest.itemsdoc where employee.@supervisorID='1004' and order.orderquantity > 1", CASE_3225_WITH_CRITERIA_EXPECTED_DOC, metadata, dataMgr);         //$NON-NLS-1$
     }    
@@ -11499,7 +11024,7 @@ public class TestXMLProcessor {
      * @throws Exception
      */
     @Test public void testCase3225WithCriteriaReversed() throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleCase3225();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleCase3225();
         FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
         helpTestProcess("select * from xmltest.itemsdoc where order.orderquantity > 1 and employee.@supervisorID='1004'", CASE_3225_WITH_CRITERIA_EXPECTED_DOC, metadata, dataMgr);         //$NON-NLS-1$
     }      
@@ -11511,7 +11036,7 @@ public class TestXMLProcessor {
      * @throws Exception
      */
     @Test public void testCase3225WithEmptyDocCriteria() throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleCase3225();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleCase3225();
         FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -11531,7 +11056,7 @@ public class TestXMLProcessor {
      */
     @Test public void testBaseballPlayersDoc() throws Exception {
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleCase3225();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleCase3225();
         FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -11623,7 +11148,7 @@ public class TestXMLProcessor {
      */
     @Test public void testBaseballPlayersDocCriteria() throws Exception {
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleCase3225();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleCase3225();
         FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -11678,70 +11203,25 @@ public class TestXMLProcessor {
      */
     @Test public void testBaseballPlayersDocContextCriteria() throws Exception {
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleCase3225();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleCase3225();
         FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
-        String expectedDoc = 
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
-            "<BaseballPlayers>\r\n" + //$NON-NLS-1$
-            "   <Player PlayerID=\"1001\">\r\n" + //$NON-NLS-1$
-            "      <FirstName>Albert</FirstName>\r\n" + //$NON-NLS-1$
-            "      <LastName>Pujols</LastName>\r\n" + //$NON-NLS-1$
-            "      <Manager ManagerID=\"1004\">\r\n" + //$NON-NLS-1$
-            "         <FirstName>Tony</FirstName>\r\n" + //$NON-NLS-1$
-            "         <LastName>LaRussa</LastName>\r\n" + //$NON-NLS-1$
-            "         <Owner OwnerID=\"1009\">\r\n" + //$NON-NLS-1$
-            "            <FirstName>Bill</FirstName>\r\n" + //$NON-NLS-1$
-            "            <LastName>DeWitt</LastName>\r\n" + //$NON-NLS-1$
-            "         </Owner>\r\n" + //$NON-NLS-1$
-            "      </Manager>\r\n" + //$NON-NLS-1$
-            "   </Player>\r\n" + //$NON-NLS-1$
-            "   <Player PlayerID=\"1002\">\r\n" + //$NON-NLS-1$
-            "      <FirstName>Jim</FirstName>\r\n" + //$NON-NLS-1$
-            "      <LastName>Edmunds</LastName>\r\n" + //$NON-NLS-1$
-            "      <Manager ManagerID=\"1004\">\r\n" + //$NON-NLS-1$
-            "         <FirstName>Tony</FirstName>\r\n" + //$NON-NLS-1$
-            "         <LastName>LaRussa</LastName>\r\n" + //$NON-NLS-1$
-            "         <Owner OwnerID=\"1009\">\r\n" + //$NON-NLS-1$
-            "            <FirstName>Bill</FirstName>\r\n" + //$NON-NLS-1$
-            "            <LastName>DeWitt</LastName>\r\n" + //$NON-NLS-1$
-            "         </Owner>\r\n" + //$NON-NLS-1$
-            "      </Manager>\r\n" + //$NON-NLS-1$
-            "   </Player>\r\n" + //$NON-NLS-1$
-            "   <Player PlayerID=\"1003\">\r\n" + //$NON-NLS-1$
-            "      <FirstName>David</FirstName>\r\n" + //$NON-NLS-1$
-            "      <LastName>Eckstein</LastName>\r\n" + //$NON-NLS-1$
-            "      <Manager ManagerID=\"1004\">\r\n" + //$NON-NLS-1$
-            "         <FirstName>Tony</FirstName>\r\n" + //$NON-NLS-1$
-            "         <LastName>LaRussa</LastName>\r\n" + //$NON-NLS-1$
-            "         <Owner OwnerID=\"1009\">\r\n" + //$NON-NLS-1$
-            "            <FirstName>Bill</FirstName>\r\n" + //$NON-NLS-1$
-            "            <LastName>DeWitt</LastName>\r\n" + //$NON-NLS-1$
-            "         </Owner>\r\n" + //$NON-NLS-1$
-            "      </Manager>\r\n" + //$NON-NLS-1$
-            "   </Player>\r\n" + //$NON-NLS-1$
-            "   <Player PlayerID=\"1005\">\r\n" + //$NON-NLS-1$
-            "      <FirstName>Derrek</FirstName>\r\n" + //$NON-NLS-1$
-            "      <LastName>Lee</LastName>\r\n" + //$NON-NLS-1$
-            "   </Player>\r\n" + //$NON-NLS-1$
-            "   <Player PlayerID=\"1006\">\r\n" + //$NON-NLS-1$
-            "      <FirstName>Corey</FirstName>\r\n" + //$NON-NLS-1$
-            "      <LastName>Patterson</LastName>\r\n" + //$NON-NLS-1$
-            "   </Player>\r\n" + //$NON-NLS-1$
-            "   <Player PlayerID=\"1008\">\r\n" + //$NON-NLS-1$
-            "      <FirstName>Carlos</FirstName>\r\n" + //$NON-NLS-1$
-            "      <LastName>Zambrano</LastName>\r\n" + //$NON-NLS-1$
-            "   </Player>\r\n" + //$NON-NLS-1$
-            "</BaseballPlayers>\r\n\r\n"; //$NON-NLS-1$
         
-        helpTestProcess("select * from xmltest.playersDoc where context(manager, owner.@ownerid) = '1009'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
+        helpTestProcess("select * from xmltest.playersDoc where context(manager, owner.@ownerid) = '1009'", CARDS_MANAGER, metadata, dataMgr);         //$NON-NLS-1$
         
     }    
+    
+    @Test public void testBaseballPlayersPseudoGroup() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleCase3225();
+        FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
+
+    	helpTestProcess("select * from xmltest.playersDoc where context(manager, manager.firstname) > ALL (select firstname from BaseballPlayers.player)", CARDS_MANAGER, metadata, dataMgr);         //$NON-NLS-1$
+    }
     
     /**
      * Ensures that temp tables are still visible when processing criteria
      */
     @Test public void testProcedureAndXML() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -11763,7 +11243,7 @@ public class TestXMLProcessor {
     }
     
     @Test public void testProcedureAndXML1() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc1 = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
@@ -11808,7 +11288,7 @@ public class TestXMLProcessor {
      * of bounded, but result set is returning more results then it should fail.
      */
     public void defer_testMinMaxOnSourceNode() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadataCached();
+        QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$

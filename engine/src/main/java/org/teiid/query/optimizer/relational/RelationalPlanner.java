@@ -63,6 +63,7 @@ import org.teiid.query.optimizer.relational.rules.RuleCollapseSource;
 import org.teiid.query.optimizer.relational.rules.RuleConstants;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.resolver.ProcedureContainerResolver;
@@ -177,11 +178,12 @@ public class RelationalPlanner {
 	        		Command subCommand = with.getCommand();
 	                ProcessorPlan procPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
 	                subCommand.setProcessorPlan(procPlan);
-	                QueryCommand withCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(procPlan);
-	                if (withCommand != null && supportsWithPushdown) {
-	                	modelID = CriteriaCapabilityValidatorVisitor.validateCommandPushdown(modelID, metadata, capFinder, withCommand);
+	                AccessNode aNode = CriteriaCapabilityValidatorVisitor.getAccessNode(procPlan);
+	                if (aNode != null && supportsWithPushdown) {
+	                	modelID = CriteriaCapabilityValidatorVisitor.validateCommandPushdown(modelID, metadata, capFinder, aNode);
 	            	}
-	                if (modelID == null) {
+                	QueryCommand withCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode);
+	                if (modelID == null || withCommand == null) {
 	                	supportsWithPushdown = false;
 	                } else {
 	                	if (pushDownWith == null) {
@@ -226,9 +228,10 @@ public class RelationalPlanner {
 
         RelationalPlan result = planToProcessConverter.convert(plan);
         if (withList != null && supportsWithPushdown) {
-        	QueryCommand queryCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(result);
-        	if (queryCommand != null) { 
-				if (CriteriaCapabilityValidatorVisitor.validateCommandPushdown(modelID, metadata, capFinder, queryCommand) == null) {
+            AccessNode aNode = CriteriaCapabilityValidatorVisitor.getAccessNode(result);
+        	if (aNode != null) { 
+        		QueryCommand queryCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode);
+				if (queryCommand == null || CriteriaCapabilityValidatorVisitor.validateCommandPushdown(modelID, metadata, capFinder, aNode) == null) {
 					supportsWithPushdown = false;
 				} else {
 					queryCommand.setWith(pushDownWith);
@@ -753,16 +756,16 @@ public class RelationalPlanner {
      * Merges the from clause into a single join predicate if there are more than 1 from clauses
      */
     private static FromClause mergeClauseTrees(From from) {
-        List clauses = from.getClauses();
+        List<FromClause> clauses = from.getClauses();
         
         while (clauses.size() > 1) {
-            FromClause first = (FromClause)from.getClauses().remove(0);
-            FromClause second = (FromClause)from.getClauses().remove(0);
+            FromClause first = from.getClauses().remove(0);
+            FromClause second = from.getClauses().remove(0);
             JoinPredicate jp = new JoinPredicate(first, second, JoinType.JOIN_CROSS);
             clauses.add(0, jp);
         }
         
-        return (FromClause)clauses.get(0);
+        return clauses.get(0);
     }
     
     /**
@@ -864,6 +867,8 @@ public class RelationalPlanner {
             tt.setCorrelatedReferences(getCorrelatedReferences(parent, node, tt));
             node.addGroup(group);
             parent.addLastChild(node);
+        } else {
+        	throw new AssertionError("Unknown Type"); //$NON-NLS-1$
         }
         
         if (clause.isOptional()) {
@@ -875,6 +880,9 @@ public class RelationalPlanner {
             node.setProperty(NodeConstants.Info.MAKE_DEP, Boolean.TRUE);
         } else if (clause.isMakeNotDep()) {
             node.setProperty(NodeConstants.Info.MAKE_NOT_DEP, Boolean.TRUE);
+        }
+        if (clause.isMakeInd()) {
+        	node.setProperty(NodeConstants.Info.MAKE_IND, Boolean.TRUE);
         }
     }
 

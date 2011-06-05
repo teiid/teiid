@@ -33,6 +33,7 @@ import java.util.TimeZone;
 
 import javax.security.auth.Subject;
 
+import org.teiid.adminapi.Session;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
@@ -40,6 +41,7 @@ import org.teiid.core.util.ArgCheck;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
+import org.teiid.dqp.message.RequestID;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.SecurityFunctionEvaluator;
@@ -117,6 +119,10 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    private int userRequestSourceConcurrency;
 	    private Subject subject;
 	    private HashSet<Object> dataObjects;
+
+		public Session session;
+
+		public RequestID requestId;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -565,6 +571,24 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	public void setDataObjects(HashSet<Object> dataObjectsAccessed) {
 		this.dataObjects = dataObjectsAccessed;
+	}
+	
+	@Override
+	public Session getSession() {
+		return this.globalState.session;
+	}
+	
+	public void setSession(Session session) {
+		this.globalState.session = session;
+	}
+	
+	@Override
+	public String getRequestId() {
+		return this.globalState.requestId != null ? this.globalState.requestId.toString() : null;
+	}
+	
+	public void setRequestId(RequestID requestId) {
+		this.globalState.requestId = requestId;
 	}
 	
 }

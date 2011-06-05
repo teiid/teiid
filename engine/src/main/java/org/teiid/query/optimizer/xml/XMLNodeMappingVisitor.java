@@ -26,15 +26,18 @@ import java.util.Collection;
 
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingNode;
+import org.teiid.query.mapping.xml.MappingSourceNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.navigator.PreOrderNavigator;
+import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.AbstractSymbolMappingVisitor;
 
@@ -58,33 +61,54 @@ public class XMLNodeMappingVisitor extends AbstractSymbolMappingVisitor {
         this.metadata = metadata;
     }
     
+    @Override
+    protected boolean createAliases() {
+    	return false; //xml style selects do not have aliases
+    }
+    
     /**
      * @see AbstractSymbolMappingVisitor#getMappedSymbol(Symbol)
      */
     protected Symbol getMappedSymbol(Symbol symbol) {
-    	if(!(symbol instanceof ElementSymbol)) {
-    		return null;
-    	}
-
-		// Lookup full path to mapping node from symbol
-		ElementSymbol element = (ElementSymbol) symbol;
-        
         try {
-            String path = metadata.getFullName(element.getMetadataID()).toUpperCase();
-		
+        	Object metadataId = null;
+        	Object groupId = null;
+	    	if (symbol instanceof GroupSymbol) {
+	    		GroupSymbol groupSymbol = (GroupSymbol)symbol;
+	    		metadataId = groupSymbol.getMetadataID();
+	    		groupId = metadataId;
+	    	} else {
+				ElementSymbol element = (ElementSymbol) symbol;
+				metadataId = element.getMetadataID();
+				groupId = element.getGroupSymbol().getMetadataID();
+	    	}
+	    	boolean xml = metadata.isXMLGroup(groupId);
+	    	if (!xml) {
+    			return symbol;
+	    	}
+	    	String path = metadata.getFullName(metadataId).toUpperCase();
+	
     		// Find mapping node for specified path
-    		MappingNode elementNode = MappingNode.findNode(rootNode, path); 
-    		if(elementNode == null) { 
+    		MappingNode node = MappingNode.findNode(rootNode, path); 
+    		if(node == null) { 
     			return null;
     		}
-    		
+    		MappingSourceNode msn = node.getSourceNode();
+			if (msn == null) {
+				return null;
+			}
+    		if (symbol instanceof GroupSymbol) {
+    			GroupSymbol gs = msn.getMappedSymbol(new GroupSymbol(msn.getResultName()));
+    			return gs;
+    		} 
     		// Construct a new element node based on mapping node reference
-    		String symbolName = elementNode.getNameInSource();
+    		String symbolName = node.getNameInSource();
     		if (symbolName == null){
     			return null;
     		}
-			return elementNode.getSourceNode().getMappedSymbol(new ElementSymbol(symbolName));
-        } catch (TeiidComponentException err) {
+			ElementSymbol es = msn.getMappedSymbol(new ElementSymbol(symbolName));
+			return es;
+        } catch (TeiidException err) {
             throw new TeiidRuntimeException(err);
         } 
     }
@@ -100,17 +124,15 @@ public class XMLNodeMappingVisitor extends AbstractSymbolMappingVisitor {
      */
     public static Criteria convertCriteria(Criteria simpleCrit, MappingDocument rootNode, QueryMetadataInterface metadata)
     throws QueryPlannerException, TeiidComponentException{
-        return (Criteria)convertObject(simpleCrit, rootNode, metadata);
+        return convertObject((Criteria)simpleCrit.clone(), rootNode, metadata, true);
     }
 
-    public static LanguageObject convertObject(LanguageObject object, MappingDocument rootNode, QueryMetadataInterface metadata)
+    public static <T extends LanguageObject> T convertObject(T object, MappingDocument rootNode, QueryMetadataInterface metadata, boolean deep)
     throws QueryPlannerException, TeiidComponentException{
-        LanguageObject copy = (LanguageObject)object.clone();
-
         //Don't want to do deep visiting
         XMLNodeMappingVisitor mappingVisitor = new XMLNodeMappingVisitor(rootNode, metadata);
         try {
-            PreOrderNavigator.doVisit(copy, mappingVisitor);
+            PreOrPostOrderNavigator.doVisit(object, mappingVisitor, PreOrPostOrderNavigator.POST_ORDER, deep);
         } catch (TeiidRuntimeException e) {
             Throwable child = e.getChild();
             
@@ -126,7 +148,7 @@ public class XMLNodeMappingVisitor extends AbstractSymbolMappingVisitor {
             throw new QueryPlannerException("ERR.015.004.0046", QueryPlugin.Util.getString("ERR.015.004.0046", new Object[] {unmappedSymbols, object})); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
-        return copy;
+        return object;
     }
         
 }

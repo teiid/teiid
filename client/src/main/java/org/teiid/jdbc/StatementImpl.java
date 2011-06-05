@@ -66,6 +66,7 @@ import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.util.SqlUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.jdbc.CancellationTimer.CancelTask;
+import org.teiid.net.TeiidURL;
 
 
 public class StatementImpl extends WrapperImpl implements TeiidStatement {
@@ -163,7 +164,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     protected Map outParamIndexMap = new HashMap();
     
     private static Pattern TRANSACTION_STATEMENT = Pattern.compile("\\s*(commit|rollback|(start\\s+transaction))\\s*;?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    private static Pattern SET_STATEMENT = Pattern.compile("\\s*set\\s+(\\w+)\\s*([^;]*);?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    private static Pattern SET_STATEMENT = Pattern.compile("\\s*set\\s+((?:session authorization)|(?:\\w+))\\s+(?:([a-zA-Z](?:\\w|_)*)|((?:'[^']*')+));?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     private static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s+(\\w*);?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     /**
      * Factory Constructor 
@@ -429,8 +430,19 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         		}
         		String key = match.group(1);
         		String value = match.group(2);
-        		if (ExecutionProperties.NEWINSTANCE.equalsIgnoreCase(key) && Boolean.valueOf(value)) {
-        			this.getMMConnection().getServerConnection().cleanUp();
+        		if (value == null) {
+        			value = match.group(3);
+        			value = StringUtil.replaceAll(value, "''", "'"); //$NON-NLS-1$ //$NON-NLS-2$
+        			value = value.substring(1, value.length() - 1);
+        		}
+        		if ("SESSION AUTHORIZATION".equalsIgnoreCase(key)) { //$NON-NLS-1$
+        			this.getMMConnection().changeUser(value, this.getMMConnection().getPassword());
+        		} else if (key.equalsIgnoreCase(TeiidURL.CONNECTION.PASSWORD)) {
+        			this.getMMConnection().setPassword(value);
+        		} else if (ExecutionProperties.NEWINSTANCE.equalsIgnoreCase(key)) {
+        			if (Boolean.valueOf(value)) {
+        				this.getMMConnection().getServerConnection().cleanUp();
+        			}
         		} else {
         			JDBCURL.addNormalizedProperty(key, value, this.driverConnection.getExecutionProperties());
         		}
@@ -533,7 +545,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         }
         
         final RequestMessage reqMessage = createRequestMessage(commands, isBatchedCommand, resultsMode);
-        reqMessage.setSync(synch);
     	ResultsFuture<ResultsMessage> pendingResult = execute(reqMessage, synch);
     	final ResultsFuture<Boolean> result = new ResultsFuture<Boolean>();
     	pendingResult.addCompletionListener(new ResultsFuture.CompletionListener<ResultsMessage>() {
@@ -581,7 +592,8 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         reqMsg.setFetchSize(this.fetchSize);
         reqMsg.setRowLimit(this.maxRows);
         reqMsg.setTransactionIsolation(this.driverConnection.getTransactionIsolation());
-
+        String useCallingThread = getExecutionProperty(EmbeddedProfile.USE_CALLING_THREAD);
+        reqMsg.setSync(synch && (useCallingThread == null || Boolean.valueOf(useCallingThread)));
         // Get connection properties and set them onto request message
         copyPropertiesToRequest(reqMsg);
 
@@ -641,7 +653,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
             	updateCounts[i] = (Integer)results[i].get(0);
             }
             if (logger.isLoggable(Level.FINER)) {
-            	logger.fine(JDBCPlugin.Util.getString("Recieved update counts: " + Arrays.toString(updateCounts))); //$NON-NLS-1$
+            	logger.finer("Recieved update counts: " + Arrays.toString(updateCounts)); //$NON-NLS-1$
             }
             // In update scenarios close the statement implicitly
             try {

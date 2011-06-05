@@ -59,7 +59,7 @@ public class ArrayTable extends TableFunctionReference {
 	}
 
 	@Override
-	public ArrayTable clone() {
+	protected ArrayTable cloneDirect() {
 		ArrayTable clone = new ArrayTable();
 		this.copy(clone);
 		clone.setArrayValue((Expression)this.arrayValue.clone());

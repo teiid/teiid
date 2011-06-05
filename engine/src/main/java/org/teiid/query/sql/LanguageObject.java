@@ -23,7 +23,7 @@
 package org.teiid.query.sql;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
 /**
  * This is the primary interface for all language objects.  It extends a few 
@@ -47,7 +47,7 @@ public interface LanguageObject extends Cloneable {
     
     public static class Util {
 
-		public static <S extends LanguageObject, T extends S> ArrayList<S> deepClone(List<T> collection, Class<S> type) {
+		public static <S extends LanguageObject, T extends S> ArrayList<S> deepClone(Collection<T> collection, Class<S> type) {
 			if (collection == null) {
 				return null;
 			}

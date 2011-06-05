@@ -23,6 +23,11 @@
      <para>Before an application can use ODBC, you must first install the ODBC driver on same machine that 
      the application is running on and then create Data Source Name (DSN) that represents a connection profile for your Teiid VDB.
      </para>
+     
+     <warning><para>Teiid currently only supports plain text passward authentication for ODBC.  
+     If the client/server are not configured to use SSL, the password will be sent in plain text over the network.  
+     If you need secure passwords in transit and are not using SSL, then consider installing a security domain 
+     that will accept safe password values from the client (for example encrypted or hashed).</para></warning>
 
     <section id="install">
         <title>Installing the ODBC Driver Client</title>
@@ -145,7 +150,6 @@
                     listenes for ODBC requests on port 35432</para>
                     <para>In the <emphasis>User Name</emphasis> and <emphasis>Password</emphasis> edit boxes, supply the user name and password
                     for the Teiid runtime access.</para>
-                    <para>Leave <emphasis>SSL Mode</emphasis> to disabled. SSL connections are currently not supported.</para>
                     <para>Provide any description about the data source in the <emphasis>Description</emphasis> field.</para>
                 </listitem>
                 

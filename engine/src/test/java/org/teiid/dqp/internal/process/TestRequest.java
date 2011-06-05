@@ -30,6 +30,7 @@ import org.mockito.Mockito;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.StatementType;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
@@ -41,7 +42,7 @@ import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.tempdata.TempTableStore;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.ContextProperties;
 
 
@@ -70,16 +71,16 @@ public class TestRequest extends TestCase {
      * @since 4.2
      */
     public void testValidateEntitlement() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         Request request = new Request();
         Command command = QueryParser.getQueryParser().parseCommand(QUERY);
         QueryResolver.resolveCommand(command, metadata);
         
         RequestMessage message = new RequestMessage();
-        DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, FakeMetadataFactory.example1VDB());
+        DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, RealMetadataFactory.example1VDB());
         
-        request.initialize(message, null, null,new FakeTransactionService(), TEMP_TABLE_STORE, workContext, null); 
+        request.initialize(message, BufferManagerFactory.getStandaloneBufferManager(), null,new FakeTransactionService(), TEMP_TABLE_STORE, workContext, null); 
         request.initMetadata();
         request.setAuthorizationValidator(new DataRoleAuthorizationValidator(true, true, true));
         request.validateAccess(command);
@@ -94,12 +95,12 @@ public class TestRequest extends TestCase {
      * @since 4.2
      */
     public void testProcessRequest() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         //Try before plan is cached.
         //If this doesn't throw an exception, assume it was successful.
         RequestMessage message = new RequestMessage(QUERY);
-        DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, FakeMetadataFactory.example1VDB());
+        DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, RealMetadataFactory.example1VDB());
 
         helpProcessMessage(message, null, workContext);
         
@@ -110,12 +111,12 @@ public class TestRequest extends TestCase {
     }
     
     public void testCommandContext() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         //Try before plan is cached.
         //If this doesn't throw an exception, assume it was successful.
         RequestMessage message = new RequestMessage(QUERY);
-        DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, FakeMetadataFactory.example1VDB());
+        DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, RealMetadataFactory.example1VDB());
         
         Request request = helpProcessMessage(message, null, workContext);
         assertEquals("1", request.context.getEnvironmentProperties().get(ContextProperties.SESSION_ID)); //$NON-NLS-1$
@@ -147,14 +148,14 @@ public class TestRequest extends TestCase {
      * @since 4.2
      */
     public void testProcessRequestPreparedStatement() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         SessionAwareCache<PreparedPlan> cache = new SessionAwareCache<PreparedPlan>();
         
 
         //Try before plan is cached.
         //If this doesn't throw an exception, assume it was successful.
         RequestMessage message = new RequestMessage(QUERY);
-        DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, FakeMetadataFactory.example1VDB());
+        DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, RealMetadataFactory.example1VDB());
         
         message.setStatementType(StatementType.PREPARED);
         message.setParameterValues(new ArrayList());

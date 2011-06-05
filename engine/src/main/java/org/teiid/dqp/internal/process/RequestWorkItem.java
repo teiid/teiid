@@ -162,7 +162,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     private long processingTimestamp = System.currentTimeMillis();
     
     public RequestWorkItem(DQPCore dqpCore, RequestMessage requestMsg, Request request, ResultsReceiver<ResultsMessage> receiver, RequestID requestID, DQPWorkContext workContext) {
-    	super(workContext.useCallingThread() || requestMsg.isSync());
+    	super(workContext.useCallingThread() || requestMsg.isSync() ? Thread.currentThread() : null);
         this.requestMsg = requestMsg;
         this.requestID = requestID;
         this.processorTimeslice = dqpCore.getProcessorTimeSlice();
@@ -450,7 +450,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 							&& !batch.getTerminationFlag() 
 							&& this.getTupleBuffer().getManagedRowCount() >= 20 * this.getTupleBuffer().getBatchSize()) {
 						//requestMore will trigger more processing
-						throw BlockedException.INSTANCE;
+						throw BlockedException.block(requestID, "Blocking due to full results buffer."); //$NON-NLS-1$
 					}
 				}
 			}

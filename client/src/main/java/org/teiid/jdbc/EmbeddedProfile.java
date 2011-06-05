@@ -28,6 +28,7 @@ import java.util.Properties;
 
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
@@ -36,7 +37,9 @@ import org.teiid.net.ServerConnection;
 
 public class EmbeddedProfile implements ConnectionProfile {
 	
-    /**
+    public static final String USE_CALLING_THREAD = "useCallingThread"; //$NON-NLS-1$
+
+	/**
      * This method tries to make a connection to the given URL. This class
      * will return a null if this is not the right driver to connect to the given URL.
      * @param The URL used to establish a connection.
@@ -61,7 +64,7 @@ public class EmbeddedProfile implements ConnectionProfile {
 
 	protected ServerConnection createServerConnection(Properties info)
 			throws TeiidException {
-		return (ServerConnection)ReflectionHelper.create("org.teiid.transport.LocalServerConnection", Arrays.asList(info, true), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
+		return (ServerConnection)ReflectionHelper.create("org.teiid.transport.LocalServerConnection", Arrays.asList(info, PropertiesUtils.getBooleanProperty(info, USE_CALLING_THREAD, true)), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
 	}
     
 }

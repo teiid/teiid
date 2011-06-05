@@ -109,6 +109,7 @@ import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.sql.symbol.XMLNamespaces.NamespaceItem;
 import org.teiid.query.sql.util.ValueIterator;
 import org.teiid.query.sql.util.ValueIteratorSource;
+import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.Result;
@@ -427,7 +428,8 @@ public class Evaluator {
         	valueIter = new CollectionValueIterator(((SetCriteria)criteria).getValues());
         } else if (criteria instanceof DependentSetCriteria){
         	ContextReference ref = (ContextReference)criteria;
-    		ValueIteratorSource vis = (ValueIteratorSource)getContext(criteria).getVariableContext().getGlobalValue(ref.getContextSymbol());
+        	VariableContext vc = getContext(criteria).getVariableContext();
+    		ValueIteratorSource vis = (ValueIteratorSource)vc.getGlobalValue(ref.getContextSymbol());
     		Set<Object> values;
     		try {
     			values = vis.getCachedSet(ref.getValueExpression());
@@ -437,6 +439,7 @@ public class Evaluator {
         	if (values != null) {
         		return values.contains(leftValue);
         	}
+    		vis.setUnused(true);
         	//there are too many values to justify a linear search or holding
         	//them in memory
         	return true;

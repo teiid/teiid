@@ -55,6 +55,8 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
  */
 public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 	
+	private boolean semiDep;
+	
 	private TupleSource currentSource;
 	private SourceState sortedSource;
 	private SourceState notSortedSource;
@@ -65,6 +67,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 	private int[] reverseIndexes;
 	private List<?> sortedTuple;
 	private boolean repeatedMerge;
+	private boolean validSemiDep;
 	
 	/**
 	 * Number of index batches we'll allow to marked as prefers memory regardless of buffer space
@@ -224,6 +227,17 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
         	this.sortedSource = this.leftSource;
         	this.notSortedSource = this.rightSource;
 
+    		if (semiDep && this.leftSource.isDistinct()) {
+    			this.rightSource.getTupleBuffer();
+    			if (!this.joinNode.getDependentValueSource().isUnused()) {
+    				//sort is not needed
+    				this.processingSortRight = SortOption.NOT_SORTED;
+    				this.validSemiDep = true;
+    				//TODO: this requires full buffering and performs an unnecessary projection
+    				return;
+    			}
+        	}
+
         	if (!repeatedMerge) {
         		createIndex(this.leftSource, this.processingSortLeft == SortOption.ALREADY_SORTED);
         	} else {
@@ -295,6 +309,12 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 	    		if (currentTuple == null) {
 	    			return;
 	    		}
+	    		if (validSemiDep) {
+	    			List<?> tuple = this.currentTuple;
+	    			this.currentTuple = null;
+	    			this.joinNode.addBatchRow(outputTuple(this.leftSource.getOuterVals(), tuple));
+	    			continue;
+	    		}
 	        	List<?> key = RelationalNode.projectTuple(this.notSortedSource.getExpressionIndexes(), this.currentTuple);
 	        	tb = new TupleBrowser(this.index, new CollectionTupleSource(Arrays.asList(key).iterator()), OrderBy.ASC);
 	    	}
@@ -319,12 +339,18 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     
     @Override
     public EnhancedSortMergeJoinStrategy clone() {
-    	return new EnhancedSortMergeJoinStrategy(this.sortLeft, this.sortRight);
+    	EnhancedSortMergeJoinStrategy clone = new EnhancedSortMergeJoinStrategy(this.sortLeft, this.sortRight);
+    	clone.semiDep = this.semiDep;
+    	return clone;
     }
     
     @Override
     public String getName() {
-    	return "ENHANCED SORT JOIN"; //$NON-NLS-1$
+    	return "ENHANCED SORT JOIN" + (semiDep?" [SEMI]":""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
     }
+    
+    public void setSemiDep(boolean semiDep) {
+		this.semiDep = semiDep;
+	}
        	
 }

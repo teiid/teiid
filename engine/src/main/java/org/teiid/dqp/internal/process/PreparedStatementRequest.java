@@ -158,8 +158,6 @@ public class PreparedStatementRequest extends Request {
             processPlan = cachedPlan.clone();
             //already in cache. obtain the values from cache
             analysisRecord = prepPlan.getAnalysisRecord();
-            
-            createCommandContext();
         }
         
         if (requestMsg.isBatchedUpdate()) {

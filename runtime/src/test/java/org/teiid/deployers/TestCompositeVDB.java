@@ -38,7 +38,6 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionFactory;
 
@@ -50,7 +49,7 @@ public class TestCompositeVDB {
     	vdbMetaData.setName(vdbName); //$NON-NLS-1$
     	vdbMetaData.setVersion(1);
     	for (Schema schema : metadataStore.getSchemas().values()) {
-			vdbMetaData.addModel(FakeMetadataFactory.createModel(schema.getName(), schema.isPhysical()));
+			vdbMetaData.addModel(RealMetadataFactory.createModel(schema.getName(), schema.isPhysical()));
 		}
     	MetadataStoreGroup metaGroup = new MetadataStoreGroup();
     	metaGroup.addStore(metadataStore);
@@ -59,7 +58,7 @@ public class TestCompositeVDB {
     	cmr.addConnectorManager("source", getConnectorManager("bqt1", "FakeTranslator", "FakeConnection", getFuncsOne()));
     	cmr.addConnectorManager("source2", getConnectorManager("bqt2", "FakeTranslator2", "FakeConnection2", getFuncsTwo()));
     	
-    	CompositeVDB cvdb = new CompositeVDB(vdbMetaData, metaGroup, null, null, FakeMetadataFactory.SFM.getSystemFunctions(),cmr);
+    	CompositeVDB cvdb = new CompositeVDB(vdbMetaData, metaGroup, null, null, RealMetadataFactory.SFM.getSystemFunctions(),cmr);
     	VDBMetaData vdb = cvdb.getVDB();
     	return vdb.getAttachment(TransformationMetadata.class);
 	}

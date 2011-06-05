@@ -129,7 +129,7 @@ public class UnionAllNode extends RelationalNode {
             
         } else if(activeSources > 0) {
             // Didn't get a batch but there are active sources so we are blocked
-            throw BlockedException.INSTANCE;
+        	throw BlockedException.block(getContext().getRequestId(), "Blocking on union source."); //$NON-NLS-1$
         } else {
             // No batch and no active sources - return empty termination batch (should never happen but just in case)
             outputBatch = new TupleBatch(outputRow, Collections.EMPTY_LIST);

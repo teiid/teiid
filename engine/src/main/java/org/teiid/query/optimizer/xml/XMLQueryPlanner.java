@@ -68,17 +68,39 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.Limit;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.visitor.ElementCollectorVisitor;
+import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
+import org.teiid.query.sql.visitor.PredicateCollectorVisitor;
 import org.teiid.query.sql.visitor.StaticSymbolMappingVisitor;
 
 
 public class XMLQueryPlanner {
 
-    static void prePlanQueries(MappingDocument doc, final XMLPlannerEnvironment planEnv) 
+    private static final class MappingSourceNodeFinder extends MappingVisitor {
+		private final GroupSymbol gs;
+		MappingSourceNode msn;
+
+		private MappingSourceNodeFinder(GroupSymbol gs) {
+			this.gs = gs;
+		}
+
+		@Override
+		public void visit(MappingSourceNode element) {
+			if (element.getAliasResultName() == null && element.getResultSetInfo().getResultSetName().equalsIgnoreCase(gs.getNonCorrelationName())) {
+				msn = element;
+				setAbort(true);
+			}
+		}
+	}
+
+	static void prePlanQueries(MappingDocument doc, final XMLPlannerEnvironment planEnv) 
         throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         
         MappingVisitor queryPlanVisitor = new MappingVisitor() {
@@ -86,10 +108,8 @@ public class XMLQueryPlanner {
             public void visit(MappingBaseNode baseNode) {
                 try {
                     // first if there are any explicit staging tables plan them first 
-                    List stagingTables = baseNode.getStagingTables();
-                    for (final Iterator i = stagingTables.iterator(); i.hasNext();) {
-                        
-                        final String tableName = (String)i.next();
+                    List<String> stagingTables = baseNode.getStagingTables();
+                    for (String tableName : stagingTables) {
                         planStagingTable(tableName, planEnv);    
                     }
                     
@@ -116,10 +136,6 @@ public class XMLQueryPlanner {
                 try {
                     ResultSetInfo rsInfo = sourceNode.getResultSetInfo();
                 
-                    if (rsInfo.isJoinedWithParent()) {
-                        return;
-                    }
-                    
                     Query command = (Query)rsInfo.getCommand();
                     
                     prepareQuery(sourceNode, planEnv, command);
@@ -159,7 +175,7 @@ public class XMLQueryPlanner {
         }
     }
     
-    static void planQueries(MappingSourceNode sourceNode, XMLPlannerEnvironment planEnv) 
+    static void planQueries(final MappingSourceNode sourceNode, XMLPlannerEnvironment planEnv) 
         throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 
         ResultSetInfo rsInfo = sourceNode.getResultSetInfo();
@@ -188,8 +204,6 @@ public class XMLQueryPlanner {
             rsQuery.setLimit(new Limit(null, new Constant(new Integer(limit))));
         }
         
-        //prepareQuery(sourceNode, planEnv, rsQuery);
-        
         // this query is not eligible for staging; proceed normally.
         rsInfo.setCommand(rsQuery);            
     }
@@ -206,15 +220,15 @@ public class XMLQueryPlanner {
     static void prepareQuery(MappingSourceNode sourceNode, XMLPlannerEnvironment planEnv, QueryCommand rsQuery) 
         throws TeiidComponentException, QueryResolverException {
         
-        Collection externalGroups = getExternalGroups(sourceNode);
+        Collection<GroupSymbol> externalGroups = getExternalGroups(sourceNode);
         
         rsQuery.setExternalGroupContexts(new GroupContext(null, externalGroups));
         
 		QueryResolver.resolveCommand(rsQuery, planEnv.getGlobalMetadata());
     }
     
-    private static Collection getExternalGroups(MappingSourceNode sourceNode) {
-        Collection externalGroups = new HashSet();
+    private static Collection<GroupSymbol> getExternalGroups(MappingSourceNode sourceNode) {
+        Collection<GroupSymbol> externalGroups = new HashSet<GroupSymbol>();
 
         MappingSourceNode parentSource = sourceNode.getParentSourceNode();
         while (parentSource != null) {
@@ -228,14 +242,14 @@ public class XMLQueryPlanner {
     /**
      * The Criteria Source nodes are source nodes underneath the context Node.  
      */
-    private static boolean getResultSets(MappingSourceNode contextNode, Set criteriaSourceNodes, LinkedHashSet allResultSets)  {
+    private static boolean getResultSets(MappingSourceNode contextNode, Set<MappingSourceNode> criteriaSourceNodes, LinkedHashSet<MappingSourceNode> allResultSets)  {
         
         boolean singleParentage = true;
 
-        for (Iterator i = criteriaSourceNodes.iterator(); i.hasNext();) {
-            MappingSourceNode node = (MappingSourceNode)i.next();
+        for (Iterator<MappingSourceNode> i = criteriaSourceNodes.iterator(); i.hasNext();) {
+            MappingSourceNode node = i.next();
 
-            List rsStack = getResultSetStack(contextNode, node);
+            List<MappingSourceNode> rsStack = getResultSetStack(contextNode, node);
             
             if (allResultSets.containsAll(rsStack)) {
                 continue;
@@ -249,12 +263,12 @@ public class XMLQueryPlanner {
         return singleParentage;
     }
     
-    private static LinkedList getResultSetStack(MappingSourceNode contextNode, MappingBaseNode node) {
-        LinkedList rsStack = new LinkedList();
+    private static LinkedList<MappingSourceNode> getResultSetStack(MappingSourceNode contextNode, MappingBaseNode node) {
+        LinkedList<MappingSourceNode> rsStack = new LinkedList<MappingSourceNode>();
         
         while (node != null && node != contextNode) {
             if (node instanceof MappingSourceNode) {
-                rsStack.add(0, node);
+                rsStack.add(0, (MappingSourceNode)node);
             }
             node = node.getParentNode();
         }
@@ -270,7 +284,7 @@ public class XMLQueryPlanner {
         
         // this list of all the source nodes below the context, which are directly ro indirectly 
         // involved in the criteria
-        LinkedHashSet resultSets = new LinkedHashSet();
+        LinkedHashSet<MappingSourceNode> resultSets = new LinkedHashSet<MappingSourceNode>();
         
         boolean singleParentage = getResultSets(contextNode, rsInfo.getCriteriaResultSets(), resultSets);
         
@@ -312,7 +326,7 @@ public class XMLQueryPlanner {
                 joinCriteria = (Criteria)joinCriteria.clone();
                 
                 //update the from clause
-                FromClause clause = (FromClause)currentQuery.getFrom().getClauses().remove(0);
+                FromClause clause = currentQuery.getFrom().getClauses().remove(0);
                 
                 JoinPredicate join = null;
                 
@@ -371,7 +385,79 @@ public class XMLQueryPlanner {
             GroupSymbol groupSymbol = QueryUtil.createResolvedGroup(rsInfo.getResultSetName(), planEnv.getGlobalMetadata());
             planEnv.addQueryNodeToMetadata(groupSymbol.getMetadataID(), modifiedNode);
         } 
+        
+        for (Criteria crit : PredicateCollectorVisitor.getPredicates(userCrit)) {
+        	handleXmlSubqueries(planEnv, crit);
+        }
     }
+
+	private static void handleXmlSubqueries(XMLPlannerEnvironment planEnv,
+			Criteria userCrit) throws QueryPlannerException {
+		if (!(userCrit instanceof SubqueryContainer<?>)) {
+			return;
+		}
+    	SubqueryContainer<?> subquery = (SubqueryContainer<?>)userCrit;
+    	if (!(subquery.getCommand() instanceof Query)) {
+    		return;
+    	}
+		Query q = (Query)subquery.getCommand();
+		if (q.getFrom() == null || q.getCriteria() == null) {
+			return;
+		}
+		List<GroupSymbol> groups = q.getFrom().getGroups();
+		if (groups.size() != 1) {
+			return;
+		}
+		final GroupSymbol gs = groups.get(0);
+		LinkedHashSet<GroupSymbol> allGroups = new LinkedHashSet<GroupSymbol>();
+		allGroups.add(gs);
+		//TODO: this group should have been marked as xml, or could attempt this step prior to place user criteria
+		if (planEnv.getGlobalMetadata().getMetadataStore().getTempGroupID(gs.getNonCorrelationName().toUpperCase()) == null) {
+			return;
+		}
+		MappingSourceNode parentMsn = findMappingSourceNode(planEnv, gs);
+		for (Criteria crit : PredicateCollectorVisitor.getPredicates(q.getCriteria())) {
+			Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(crit, false);
+			Collection<GroupSymbol> critGroups = new LinkedList<GroupSymbol>();
+			for (ElementSymbol elementSymbol : elems) {
+				if (!elementSymbol.isExternalReference()) {
+					critGroups.add(elementSymbol.getGroupSymbol());
+				}
+			}
+			for (GroupSymbol groupSymbol : critGroups) {
+				if (allGroups.contains(groupSymbol)) {
+					continue;
+				}
+				MappingSourceNode childMsn = findMappingSourceNode(planEnv, groupSymbol);
+				while (childMsn != parentMsn) {
+					if (childMsn == null) {
+						throw new QueryPlannerException(QueryPlugin.Util.getString("XMLQueryPlanner.invalid_relationship", crit, parentMsn)); //$NON-NLS-1$
+					}
+					if (!childMsn.getResultSetInfo().isCriteriaRaised()) {
+						throw new QueryPlannerException(QueryPlugin.Util.getString("XMLQueryPlanner.non_simple_relationship", crit, childMsn)); //$NON-NLS-1$
+					}
+					Query parentQuery = (Query)childMsn.getResultSetInfo().getCommand();
+					if (parentQuery.getCriteria() != null 
+							&& allGroups.addAll(GroupsUsedByElementsVisitor.getGroups(parentQuery.getCriteria()))) {
+						q.setCriteria(Criteria.combineCriteria(q.getCriteria(), (Criteria) parentQuery.getCriteria().clone()));
+					}
+					childMsn = childMsn.getParentSourceNode();
+				}
+			}
+			q.getFrom().getClauses().clear();
+			for (GroupSymbol groupSymbol : allGroups) {
+				q.getFrom().addClause(new UnaryFromClause(groupSymbol));
+			}
+			handleXmlSubqueries(planEnv, crit);
+		}
+	}
+
+	private static MappingSourceNode findMappingSourceNode(
+			XMLPlannerEnvironment planEnv, final GroupSymbol gs) {
+		MappingSourceNodeFinder finder = new MappingSourceNodeFinder(gs);
+		planEnv.mappingDoc.acceptVisitor(new Navigator(true, finder));
+		return finder.msn;
+	}
 
     private static void updateSymbolMap(Map symbolMap, String oldGroup, final String newGroup, QueryMetadataInterface metadata) 
         throws QueryResolverException,QueryMetadataException,TeiidComponentException {
@@ -379,7 +465,7 @@ public class XMLQueryPlanner {
         GroupSymbol oldGroupSymbol = new GroupSymbol(oldGroup);
         ResolverUtil.resolveGroup(oldGroupSymbol, metadata);
         
-        HashSet projectedElements = new HashSet(ResolverUtil.resolveElementsInGroup(oldGroupSymbol, metadata));
+        HashSet<ElementSymbol> projectedElements = new HashSet<ElementSymbol>(ResolverUtil.resolveElementsInGroup(oldGroupSymbol, metadata));
         
         symbolMap.putAll(QueryUtil.createSymbolMap(oldGroupSymbol, newGroup, projectedElements));
     }
@@ -482,11 +568,11 @@ public class XMLQueryPlanner {
         rsInfo.setCommand(cmd);
         rsInfo.setPlan(plan);
         
-        //set the carinality on the temp group.
+        //set the cardinality on the temp group.
         TempMetadataID intoGroupID = (TempMetadataID)intoGroupSymbol.getMetadataID();
         intoGroupID.setCardinality(cardinality);
         
-        // add the meterialization hook for the staged table to original one.
+        // add the materialization hook for the staged table to original one.
         //GroupSymbol groupSymbol = (GroupSymbol)query.getFrom().getGroups().get(0);
         planEnv.addStagingTable(srcGroup.getMetadataID(), intoGroupID);
         

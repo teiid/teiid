@@ -45,9 +45,7 @@ import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
 public class TestDependentJoins {
@@ -122,7 +120,7 @@ public class TestDependentJoins {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm2.g1 where pm1.g1.e1 = pm2.g1.e1 option makedep pm2.g1", FakeMetadataFactory.example1Cached(), null, capFinder, //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm2.g1 where pm1.g1.e1 = pm2.g1.e1 option makedep pm2.g1", RealMetadataFactory.example1Cached(), null, capFinder, //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
 
         checkDependentGroups(plan, new String[] {"pm2.g1"}); //$NON-NLS-1$
@@ -152,7 +150,7 @@ public class TestDependentJoins {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1, pm2.g1.e1 from pm1.g1 MAKEDEP INNER JOIN pm2.g1 MAKENOTDEP ON pm1.g1.e1 = pm2.g1.e1", FakeMetadataFactory.example1Cached(), null, capFinder, //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1, pm2.g1.e1 from pm1.g1 MAKEDEP INNER JOIN pm2.g1 MAKENOTDEP ON pm1.g1.e1 = pm2.g1.e1", RealMetadataFactory.example1Cached(), null, capFinder, //$NON-NLS-1$
                 new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm2.g1 AS g_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
 
         checkDependentGroups(plan, new String[] {"pm1.g1"}); //$NON-NLS-1$
@@ -339,7 +337,7 @@ public class TestDependentJoins {
      * Test that access node with unsatisfied access pattern is made dependent
      */
     @Test public void testMakeDependentAccessPattern1() throws Exception {
-        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm4.g1 where pm1.g1.e1 = pm4.g1.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm4.g1 where pm1.g1.e1 = pm4.g1.e1", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm4.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         checkDependentGroups(plan, new String[] {"pm4.g1"}); //$NON-NLS-1$
     }
@@ -349,7 +347,7 @@ public class TestDependentJoins {
      * (Same query written slightly different way)
      */
     @Test public void testMakeDependentAccessPattern1a() throws Exception {
-        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm4.g1, pm1.g1 where pm4.g1.e1 = pm1.g1.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm4.g1, pm1.g1 where pm4.g1.e1 = pm1.g1.e1", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm4.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         checkDependentGroups(plan, new String[] {"pm4.g1"}); //$NON-NLS-1$
     }
@@ -358,7 +356,7 @@ public class TestDependentJoins {
      * Test that access node with unsatisfied access pattern is made dependent
      */
     @Test public void testMakeDependentAccessPattern2() throws Exception {
-        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm4.g1 where pm4.g1.e2 = 1 and pm1.g1.e1 = pm4.g1.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm4.g1 where pm4.g1.e2 = 1 and pm1.g1.e1 = pm4.g1.e1", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm4.g1 AS g_0 WHERE (g_0.e2 = 1) AND (g_0.e1 IN (<dependent values>))", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         checkDependentGroups(plan, new String[] {"pm4.g1"}); //$NON-NLS-1$
     }
@@ -368,7 +366,7 @@ public class TestDependentJoins {
      * dependent with
      */
     @Test public void testMakeDependentAccessPattern3() throws Exception {
-        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm4.g2 where pm1.g1.e1 = pm4.g2.e5", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm4.g2 where pm1.g1.e1 = pm4.g2.e5", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e5 FROM pm4.g2 AS g_0 WHERE g_0.e5 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         checkDependentGroups(plan, new String[] {"pm4.g2"}); //$NON-NLS-1$
     }
@@ -379,7 +377,7 @@ public class TestDependentJoins {
      * needs to be fulfilled and there is no cost info available for either source
      */
     @Test public void testPushSelectAndMakeDependentAccessPattern1() throws Exception {
-        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm4.g1 where pm4.g1.e1 = 'abc' and pm1.g1.e1 = 'abc' and pm1.g1.e2 = pm4.g1.e2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm4.g1 where pm4.g1.e1 = 'abc' and pm1.g1.e1 = 'abc' and pm1.g1.e2 = pm4.g1.e2", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'", "SELECT pm4.g1.e2 FROM pm4.g1 WHERE pm4.g1.e1 = 'abc'" }, TestOptimizer.getGenericFinder(false), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         checkDependentGroups(plan, new String[0]); 
 
@@ -408,7 +406,7 @@ public class TestDependentJoins {
      * (Same query written slightly different)
      */
     @Test public void testPushSelectAndMakeDependentAccessPattern1a() throws Exception {
-        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm4.g1, pm1.g1 where pm4.g1.e2 = pm1.g1.e2 and pm4.g1.e1 = 'abc' and pm1.g1.e1 = 'abc'", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm4.g1, pm1.g1 where pm4.g1.e2 = pm1.g1.e2 and pm4.g1.e1 = 'abc' and pm1.g1.e1 = 'abc'", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'", "SELECT pm4.g1.e2 FROM pm4.g1 WHERE pm4.g1.e1 = 'abc'" }, TestOptimizer.getGenericFinder(false), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         checkDependentGroups(plan, new String[0]); 
     
@@ -435,7 +433,7 @@ public class TestDependentJoins {
      * because of it's (already-satisfied) access pattern - merge join is used
      */
     @Test public void testPushSelectAndMakeDependentAccessPattern2() throws Exception {
-        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm4.g1 where pm4.g1.e1 = 'abc' and pm1.g1.e2 = pm4.g1.e2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm4.g1 where pm4.g1.e1 = 'abc' and pm1.g1.e2 = pm4.g1.e2", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1", "SELECT pm4.g1.e2 FROM pm4.g1 WHERE pm4.g1.e1 = 'abc'" }, TestOptimizer.getGenericFinder(false), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         checkDependentGroups(plan, new String[0] ); 
 
@@ -471,10 +469,9 @@ public class TestDependentJoins {
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(10));
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1));
-    
+        QueryMetadataInterface metadata = RealMetadataFactory.example1();
+        RealMetadataFactory.setCardinality("pm1.g1", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1, metadata);
+            
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
             null, capFinder,
             new String[] { "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
@@ -507,9 +504,8 @@ public class TestDependentJoins {
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1));
+        QueryMetadataInterface metadata = RealMetadataFactory.example1();
+        RealMetadataFactory.setCardinality("pm1.g1", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1, metadata);
     
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
             null, capFinder,
@@ -546,13 +542,10 @@ public class TestDependentJoins {
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1000));
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1));
-        FakeMetadataObject g2 = metadata.getStore().findObject("pm1.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1 ));
-        FakeMetadataObject g3 = metadata.getStore().findObject("pm1.g3", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g3.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
+        QueryMetadataInterface metadata = RealMetadataFactory.example1();
+        RealMetadataFactory.setCardinality("pm1.g1", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1, metadata);
+        RealMetadataFactory.setCardinality("pm1.g2", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1, metadata);
+        RealMetadataFactory.setCardinality("pm1.g3", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata);
     
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
             null, capFinder,
@@ -587,13 +580,10 @@ public class TestDependentJoins {
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1000));
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1));
-        FakeMetadataObject g2 = metadata.getStore().findObject("pm1.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
-        FakeMetadataObject g3 = metadata.getStore().findObject("pm1.g3", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g3.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
+        QueryMetadataInterface metadata = RealMetadataFactory.example1();
+        RealMetadataFactory.setCardinality("pm1.g1", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1, metadata);
+        RealMetadataFactory.setCardinality("pm1.g2", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata);
+        RealMetadataFactory.setCardinality("pm1.g3", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata);
     
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
             null, capFinder,
@@ -636,14 +626,11 @@ public class TestDependentJoins {
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1000));
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1));
-        FakeMetadataObject g2 = metadata.getStore().findObject("pm1.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
-        FakeMetadataObject g3 = metadata.getStore().findObject("pm1.g3", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g3.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
-    
+        QueryMetadataInterface metadata = RealMetadataFactory.example1();
+        RealMetadataFactory.setCardinality("pm1.g1", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1, metadata);
+        RealMetadataFactory.setCardinality("pm1.g2", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata);
+        RealMetadataFactory.setCardinality("pm1.g3", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata);
+        
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
             null, capFinder,
             new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g3 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -679,11 +666,9 @@ public class TestDependentJoins {
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1000));
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1));
-        FakeMetadataObject g2 = metadata.getStore().findObject("pm1.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
+        QueryMetadataInterface metadata = RealMetadataFactory.example1();
+        RealMetadataFactory.setCardinality("pm1.g1", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1, metadata);
+        RealMetadataFactory.setCardinality("pm1.g2", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata);
     
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
             null, capFinder,
@@ -720,9 +705,9 @@ public class TestDependentJoins {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
 
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataFactory.setCardinality("bqt1.smalla", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata); //$NON-NLS-1$
-        FakeMetadataFactory.setCardinality("bqt2.smalla", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1, metadata); //$NON-NLS-1$
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQT();
+        RealMetadataFactory.setCardinality("bqt1.smalla", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata); //$NON-NLS-1$
+        RealMetadataFactory.setCardinality("bqt2.smalla", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1, metadata); //$NON-NLS-1$
          
         ProcessorPlan plan = TestOptimizer.helpPlan(
             "SELECT table1comp.IntKey, table1comp.key1, BQT1.SmallA.StringKey FROM (SELECT t1.*, (STRINGKEY || STRINGNUM) AS key1 FROM BQT2.SmallA AS t1) AS table1comp, BQT1.SmallA WHERE table1comp.key1 = BQT1.SmallA.StringKey",  //$NON-NLS-1$
@@ -764,9 +749,9 @@ public class TestDependentJoins {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
 
-        TransformationMetadata metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataFactory.setCardinality("bqt1.smalla", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata); //$NON-NLS-1$
-        FakeMetadataFactory.setCardinality("bqt2.smalla", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1, metadata); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.exampleBQT();
+        RealMetadataFactory.setCardinality("bqt1.smalla", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata); //$NON-NLS-1$
+        RealMetadataFactory.setCardinality("bqt2.smalla", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1, metadata); //$NON-NLS-1$
          
         ProcessorPlan plan = TestOptimizer.helpPlan(
             "SELECT table1comp.IntKey, table1comp.key1, BQT1.SmallA.StringKey FROM (SELECT t1.*, (STRINGKEY || STRINGNUM) AS key1 FROM BQT2.SmallA AS t1) AS table1comp, BQT1.SmallA WHERE table1comp.key1 = BQT1.SmallA.StringKey AND table1comp.key1 = BQT1.SmallA.StringNum",  //$NON-NLS-1$
@@ -805,9 +790,9 @@ public class TestDependentJoins {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
 
-        TransformationMetadata metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataFactory.setCardinality("bqt1.smalla", 1000, metadata); //$NON-NLS-1$
-        FakeMetadataFactory.setCardinality("bqt2.smalla", 10000, metadata); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.exampleBQT();
+        RealMetadataFactory.setCardinality("bqt1.smalla", 1000, metadata); //$NON-NLS-1$
+        RealMetadataFactory.setCardinality("bqt2.smalla", 10000, metadata); //$NON-NLS-1$
         Column fmo = (Column)metadata.getElementID("bqt1.smalla.intnum");
 		fmo.setDistinctValues(1000);
         Column floatnum = (Column)metadata.getElementID("bqt1.smalla.floatnum");
