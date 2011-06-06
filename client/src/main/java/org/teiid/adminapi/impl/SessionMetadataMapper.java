@@ -93,7 +93,7 @@ public class SessionMetadataMapper extends MetaMapper<SessionMetadata> {
 			session.set(VDB_NAME,SimpleValueSupport.wrap(object.getVDBName()));
 			session.set(VDB_VERSION, SimpleValueSupport.wrap(object.getVDBVersion()));
 			session.set(SECURITY_DOMAIN, SimpleValueSupport.wrap(object.getSecurityDomain()));
-			session.set(CLIENT_MAC, SimpleValueSupport.wrap(object.getSecurityDomain()));
+			session.set(CLIENT_MAC, SimpleValueSupport.wrap(object.getClientHardwareAddress()));
 			return session;
 		}
 		throw new IllegalArgumentException("Cannot convert session " + object); //$NON-NLS-1$
