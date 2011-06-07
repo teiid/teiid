@@ -130,6 +130,12 @@
 
 See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
 
+<h4>from 7.4</h4>
+<ul>
+  <LI>The configuration for authorization has been moved off of the RuntimeEngineDeployer bean and onto separate AuthorizationValidator and PolicyDecider beans.
+  <LI>The configuration for the buffer manager has been simplified to refer to memory sizes in KB, rather than batch columns.
+</ul>
+
 <h4>from 7.3</h4>
 <ul>
   <LI>The default value for the JDBC dynamic vdb importer setting importer.useFullSchemaName is now true, which matches the expected behavior from the documentation.

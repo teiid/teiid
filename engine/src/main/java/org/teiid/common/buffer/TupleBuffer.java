@@ -365,4 +365,8 @@ public class TupleBuffer {
 		return prefersMemory;
 	}
 	
+	public String[] getTypes() {
+		return types;
+	}
+	
 }

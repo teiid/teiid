@@ -25,15 +25,15 @@
         <!-- The max row count of a batch from a connector. Should be even multiple of processorBatchSize. (default 1024) -->
         <property name="connectorBatchSize">1024</property>
         <!-- 
-            The number of batch columns to allow in buffer memory. -1 means to automatically calculate a value (default -1).  
+            The approximate amount of buffer memory in kilobytes allowable for a single processing operation (sort, grouping, etc.) regardless of existing memory commitments. -1 means to automatically calculate a value (default -1).  
             See the admin guide for more.          
          -->
-        <property name="maxReserveBatchColumns">-1</property>
+        <property name="maxReserveKb">-1</property>
         <!-- 
-            The number of batch columns guaranteed to a processing operation. -1 means to automatically calculate a value (default -1).
+            The approximate amount of memory in kilobytes allowed to be held by the buffer manager. -1 means to automatically calculate a value (default -1).
             See the admin guide for more.        
          -->
-        <property name="maxProcessingBatchesColumns">-1</property>
+        <property name="maxProcessingKb">-1</property>
         <!--  Max File size in MB (default 2GB)-->
         <property name="maxFileSize">2048</property>
         <!-- Max storage space, in MB, to be used for buffer files (default 50G) -->

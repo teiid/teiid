@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
@@ -80,7 +81,7 @@ public class TestProjectIntoNode {
         
         CommandContext context = new CommandContext();
         context.setProcessorID("processorID"); //$NON-NLS-1$
-        BufferManager bm = NodeTestUtil.getTestBufferManager(tupleBatchSize, tupleBatchSize);
+        BufferManager bm = BufferManagerFactory.getTestBufferManager(tupleBatchSize, tupleBatchSize);
         ProcessorDataManager dataManager = new FakePDM(tupleBatchSize);
         
         child.initialize(context, bm, dataManager);

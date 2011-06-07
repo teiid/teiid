@@ -320,7 +320,7 @@ public class TestProcessor {
             List record = ts.nextTuple();
             
             //handle xml
-            if(record.size() == 1){
+            if(record.size() == 1 && expectedResults[i].size() == 1){
             	Object cellValue = record.get(0);
             	if(cellValue instanceof XMLType){
                     XMLType id =  (XMLType)cellValue; 
@@ -329,6 +329,9 @@ public class TestProcessor {
                 		compareDocuments((String)expectedResults[i].get(0), actualDoc);
                         continue;
                 	}
+            	} else if (cellValue instanceof Object[]) {
+            		assertArrayEquals((Object[])expectedResults[i].get(0), (Object[])cellValue);
+            		continue;
             	}
             }
             
