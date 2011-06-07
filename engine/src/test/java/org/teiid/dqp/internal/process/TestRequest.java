@@ -82,7 +82,12 @@ public class TestRequest extends TestCase {
         
         request.initialize(message, BufferManagerFactory.getStandaloneBufferManager(), null,new FakeTransactionService(), TEMP_TABLE_STORE, workContext, null); 
         request.initMetadata();
-        request.setAuthorizationValidator(new DataRoleAuthorizationValidator(true, true, true));
+        DefaultAuthorizationValidator drav = new DefaultAuthorizationValidator();
+        DataRolePolicyDecider drpd = new DataRolePolicyDecider();
+        drpd.setAllowCreateTemporaryTablesByDefault(true);
+        drpd.setAllowFunctionCallsByDefault(true);
+        drav.setPolicyDecider(drpd);
+        request.setAuthorizationValidator(drav);
         request.validateAccess(command);
     }
     
@@ -136,7 +141,9 @@ public class TestRequest extends TestCase {
         
         request.initialize(message, Mockito.mock(BufferManager.class),
 				new FakeDataManager(), new FakeTransactionService(), TEMP_TABLE_STORE, workContext, null);
-        request.setAuthorizationValidator(new DataRoleAuthorizationValidator(false, true, true));
+        DefaultAuthorizationValidator drav = new DefaultAuthorizationValidator();
+        drav.setEnabled(false);
+        request.setAuthorizationValidator(drav);
         request.processRequest();
         return request;
     }

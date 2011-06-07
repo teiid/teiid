@@ -58,7 +58,8 @@
 	<LI><B>Runtime Updates of Metadata</B> - ALTER statements have been added to change view/procedure/INSTEAD OF trigger (update procedure) definitions.  A CREATE TRIGGER statement is also available to add an INSTEAD OF trigger (update procedures) to views. 
 	System procedures were added to set extension metadata and stat values.  By default all effects of metadata updates happen only on running vdbs across the cluster.  To make the changes persistent see the Developers Guide Runtime Updates section.
 	<LI><B>ODBC SSL</B> - added support for SSL encrypted ODBC connections.
-	<LI><B>Reauthentication Statement</B> - SET SESSION AUTHORIZATION can now be used to perform a reauthentication via JDBC or ODBC.  
+	<LI><B>Reauthentication Statement</B> - SET SESSION AUTHORIZATION can now be used to perform a reauthentication via JDBC or ODBC.
+	<LI><B>Pluggable Authorization</B> - an alternative PolicyDecider can be defined in the teiid-jboss-beans.xml file to customize authorization decisions.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

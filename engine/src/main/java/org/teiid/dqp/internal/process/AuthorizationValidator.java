@@ -33,8 +33,11 @@ import org.teiid.query.util.CommandContext;
  */
 public interface AuthorizationValidator {
 	
-	void validate(Command command, QueryMetadataInterface metadata,
-			DQPWorkContext workContext, CommandContext commandContext) throws QueryValidatorException, TeiidComponentException;
+	void validate(Command command, QueryMetadataInterface metadata, CommandContext commandContext) throws QueryValidatorException, TeiidComponentException;
 	
-	boolean hasRole(String roleName, DQPWorkContext workContext);
+	boolean hasRole(String roleName, CommandContext commandContext);
+	
+	boolean isEnabled();
+	
+	void setEnabled(boolean enabled);
 }

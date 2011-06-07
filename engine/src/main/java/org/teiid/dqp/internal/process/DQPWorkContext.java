@@ -217,6 +217,10 @@ public class DQPWorkContext implements Serializable {
 		}
         return this.policies;
     }
+	
+	public void setPolicies(HashMap<String, DataPolicy> policies) {
+		this.policies = policies;
+	}
     
 	private boolean matchesPrincipal(Set<String> userRoles, DataPolicy policy) {
 		if (policy.isAnyAuthenticated()) {

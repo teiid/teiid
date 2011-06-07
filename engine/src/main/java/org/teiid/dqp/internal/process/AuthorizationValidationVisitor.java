@@ -28,16 +28,17 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.teiid.CommandContext;
+import org.teiid.PolicyDecider;
 import org.teiid.adminapi.DataPolicy;
+import org.teiid.adminapi.DataPolicy.Context;
 import org.teiid.adminapi.DataPolicy.PermissionType;
-import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
@@ -74,44 +75,19 @@ import org.teiid.query.validator.AbstractValidationVisitor;
 
 public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     
-	public enum Context {
-		CREATE,
-		DROP,
-		QUERY,
-		INSERT,
-		UPDATE,
-		DELETE,
-		FUNCTION,
-		ALTER,
-		STORED_PROCEDURE;
-    }
-    
-    private HashMap<String, DataPolicy> allowedPolicies;
-    private boolean allowCreateTemporaryTablesDefault = true;
-    private boolean allowFunctionCallsByDefault = true;
     private CommandContext commandContext;
+    private PolicyDecider decider;
 
-    public AuthorizationValidationVisitor(HashMap<String, DataPolicy> policies, CommandContext commandContext) {
-        this.allowedPolicies = policies;
+    public AuthorizationValidationVisitor(PolicyDecider decider, CommandContext commandContext) {
+        this.decider = decider;
         this.commandContext = commandContext;
     }
-    
-    public void setAllowCreateTemporaryTablesDefault(
-			boolean allowCreateTemporaryTablesDefault) {
-		this.allowCreateTemporaryTablesDefault = allowCreateTemporaryTablesDefault;
-	}
-    
-    public void setAllowFunctionCallsByDefault(boolean allowFunctionCallsDefault) {
-		this.allowFunctionCallsByDefault = allowFunctionCallsDefault;
-	}
 
     // ############### Visitor methods for language objects ##################
     
     @Override
     public void visit(Create obj) {
-    	Set<String> resources = Collections.singleton(obj.getTable().getName());
-    	Collection<GroupSymbol> symbols = Arrays.asList(obj.getTable());
-    	validateTemp(resources, symbols, Context.CREATE);
+    	validateTemp(PermissionType.CREATE, obj.getTable(), Context.CREATE);
     }
     
     @Override
@@ -129,30 +105,18 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     	validateEntitlements(Arrays.asList(obj.getTarget()), DataPolicy.PermissionType.ALTER, Context.ALTER);
     }
 
-	private void validateTemp(Set<String> resources,
-			Collection<GroupSymbol> symbols, Context context) {
+	private void validateTemp(DataPolicy.PermissionType action, GroupSymbol symbol, Context context) {
+		String resource = symbol.getNonCorrelationName();
+		Set<String> resources = Collections.singleton(resource);
 		logRequest(resources, context);
         
-    	boolean allowed = false;
-    	for(DataPolicy p:this.allowedPolicies.values()) {
-			DataPolicyMetadata policy = (DataPolicyMetadata)p;
-			
-			if (policy.isAllowCreateTemporaryTables() == null) {
-				if (allowCreateTemporaryTablesDefault) {
-					allowed = true;
-					break;
-				}
-			} else if (policy.isAllowCreateTemporaryTables()) {
-				allowed = true;
-				break;
-			}
-		}
+    	boolean allowed = decider.isTempAccessable(action, resource, context, commandContext);
     	
     	logResult(resources, context, allowed);
     	if (!allowed) {
 		    handleValidationError(
 			        QueryPlugin.Util.getString("ERR.018.005.0095", commandContext.getUserName(), "CREATE_TEMPORARY_TABLES"), //$NON-NLS-1$  //$NON-NLS-2$
-			        symbols);
+			        Arrays.asList(symbol));
     	}
 	}
 
@@ -166,9 +130,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     
     @Override
     public void visit(Drop obj) {
-    	Set<String> resources = Collections.singleton(obj.getTable().getName());
-    	Collection<GroupSymbol> symbols = Arrays.asList(obj.getTable());
-    	validateTemp(resources, symbols, Context.CREATE);
+    	validateTemp(PermissionType.DROP, obj.getTable(), Context.DROP);
     }
     
     public void visit(Delete obj) {
@@ -205,7 +167,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 			} catch (TeiidProcessingException e) {
 				handleException(e, obj);
 			}
-    	} else if (!allowFunctionCallsByDefault) {
+    	} else {
     		String schema = obj.getFunctionDescriptor().getSchema();
     		if (schema != null && !isSystemSchema(schema)) {
     			Map<String, Function> map = new HashMap<String, Function>();
@@ -221,14 +183,13 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
      * Validate insert entitlements
      */
     protected void validateEntitlements(Insert obj) {
+    	List<LanguageObject> insert = new LinkedList<LanguageObject>();
+    	insert.add(obj.getGroup());
+    	insert.addAll(obj.getVariables());
         validateEntitlements(
-            obj.getVariables(),
+        		insert,
             DataPolicy.PermissionType.CREATE,
             Context.INSERT);
-        
-        if (obj.getGroup().isTempTable()) {
-        	validateTemp(Collections.singleton(obj.getGroup().getNonCorrelationName()), Arrays.asList(obj.getGroup()), Context.INSERT);
-        }
     }
 
     /**
@@ -248,7 +209,10 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 
         // The variables from the changes must be checked for UPDATE entitlement
         // validateEntitlements on all the variables used in the update.
-        validateEntitlements(obj.getChangeList().getClauseMap().keySet(), DataPolicy.PermissionType.UPDATE, Context.UPDATE);
+        List<LanguageObject> updated = new LinkedList<LanguageObject>();
+        updated.add(obj.getGroup());
+        updated.addAll(obj.getChangeList().getClauseMap().keySet());
+        validateEntitlements(updated, DataPolicy.PermissionType.UPDATE, Context.UPDATE);
     }
 
     /**
@@ -275,12 +239,10 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         Into intoObj = obj.getInto();
         if ( intoObj != null ) {
             GroupSymbol intoGroup = intoObj.getGroup();
-            if (intoGroup.isTempTable()) {
-        		validateTemp(Collections.singleton(intoGroup.getNonCorrelationName()), Arrays.asList(intoGroup), Context.INSERT);
-        	}
-            List<ElementSymbol> intoElements = null;
+            Collection<LanguageObject> intoElements = new LinkedList<LanguageObject>();
+            intoElements.add(intoGroup);
             try {
-                intoElements = ResolverUtil.resolveElementsInGroup(intoGroup, getMetadata());
+                intoElements.addAll(ResolverUtil.resolveElementsInGroup(intoGroup, getMetadata()));
             } catch (QueryMetadataException err) {
                 handleException(err, intoGroup);
             } catch (TeiidComponentException err) {
@@ -292,7 +254,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         }
 
         // Validate this query's entitlements
-        Collection entitledObjects = GroupCollectorVisitor.getGroups(obj, true);
+        Collection<LanguageObject> entitledObjects = new ArrayList<LanguageObject>(GroupCollectorVisitor.getGroupsIgnoreInlineViews(obj, true));
         if (!isXMLCommand(obj)) {
             entitledObjects.addAll(ElementCollectorVisitor.getElements(obj, true));
         }
@@ -319,7 +281,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
      * @param auditContext The {@link AuthorizationService} to use when resource auditing is done.
      */
     protected void validateEntitlements(Collection<? extends LanguageObject> symbols, DataPolicy.PermissionType actionCode, Context auditContext) {
-        Map<String, LanguageObject> nameToSymbolMap = new HashMap<String, LanguageObject>();
+        Map<String, LanguageObject> nameToSymbolMap = new LinkedHashMap<String, LanguageObject>();
         for (LanguageObject symbol : symbols) {
             try {
                 String fullName = null;
@@ -333,6 +295,9 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                     GroupSymbol group = (GroupSymbol)symbol;
                     metadataID = group.getMetadataID();
                     if (metadataID instanceof TempMetadataID && !group.isProcedure()) {
+                    	if (group.isTempTable()) {
+                    		validateTemp(actionCode, group, auditContext);
+                    	}
                         continue;
                     }
                 }
@@ -380,27 +345,12 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 	}
 
     /**
-     * Out of resources specified, return the subset for which the specified not have authorization to access.
+     * Out of the resources specified, return the subset for which the specified not have authorization to access.
      */
     public Set<String> getInaccessibleResources(DataPolicy.PermissionType action, Set<String> resources, Context context) {
         logRequest(resources, context);
         
-        HashSet<String> results = new HashSet<String>(resources);
-        
-		for(DataPolicy p:this.allowedPolicies.values()) {
-			DataPolicyMetadata policy = (DataPolicyMetadata)p;
-			
-			if (results.isEmpty()) {
-				break;
-			}
-			
-			Iterator<String> i = results.iterator();
-			while (i.hasNext()) {				
-				if (policy.allows(i.next(), action)) {
-					i.remove();
-				}
-			}
-		}
+		Set<String> results = decider.getInaccessibleResources(action, resources, context, commandContext);
 
 		logResult(resources, context, results.isEmpty());
         return results;

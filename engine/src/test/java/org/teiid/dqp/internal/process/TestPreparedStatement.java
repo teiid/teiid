@@ -242,7 +242,9 @@ public class TestPreparedStatement {
         
         serverRequest.initialize(request, BufferManagerFactory.getStandaloneBufferManager(), null, new FakeTransactionService(), null, workContext, prepPlanCache);
         serverRequest.setMetadata(capFinder, metadata, null);
-        serverRequest.setAuthorizationValidator(new DataRoleAuthorizationValidator(false, true, true));
+        DefaultAuthorizationValidator drav = new DefaultAuthorizationValidator();
+        drav.setEnabled(false);
+        serverRequest.setAuthorizationValidator(drav);
         serverRequest.processRequest();
         
         assertNotNull(serverRequest.processPlan);
