@@ -108,6 +108,12 @@
       resulting names are unambiguous in the context of the command.
       Different forms of qualification can be mixed in the same query.
     </para>
+    <section>
+    	<title>Reserved Words</title>
+    	<para>Teiid's reserved words include the standard SQL 2003 Foundation, SQL/MED, and SQL/XML reserved words, as well as Teiid specific words such as BIGINTEGER, BIGDECIMAL, or MAKEDEP. 
+    	See the <xref linkend="grammar"/> TOKENS section for all reserved words.  They will appear as 'SMALLINT: "smallint"' where the quoted string is the actual lexical form. 
+    	 </para>
+    </section>
   </section>
   <section>
     <title>Expressions</title>
