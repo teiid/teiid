@@ -25,6 +25,7 @@
 			<artifactId>teiid-engine</artifactId>
             <scope>provided</scope>
 		</dependency>
+        <!-- 
 		<dependency>
 			<groupId>org.jboss.cache</groupId>
 			<artifactId>jbosscache-core</artifactId>
@@ -34,6 +35,7 @@
             <groupId>org.jboss.man</groupId>
             <artifactId>jboss-managed</artifactId>
             <scope>provided</scope>
-        </dependency>        
+        </dependency>   
+         -->     
 	</dependencies>
 </project>

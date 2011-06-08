@@ -22,79 +22,39 @@
 
 package org.teiid.adminapi.impl;
 
-import java.lang.reflect.Type;
+import org.jboss.dmr.ModelNode;
+import org.jboss.dmr.ModelType;
 
-import org.jboss.metatype.api.types.CompositeMetaType;
-import org.jboss.metatype.api.types.MetaType;
-import org.jboss.metatype.api.types.SimpleMetaType;
-import org.jboss.metatype.api.values.CompositeValue;
-import org.jboss.metatype.api.values.CompositeValueSupport;
-import org.jboss.metatype.api.values.MetaValue;
-import org.jboss.metatype.api.values.MetaValueFactory;
-import org.jboss.metatype.api.values.SimpleValueSupport;
-import org.jboss.metatype.plugins.types.MutableCompositeMetaType;
-import org.jboss.metatype.spi.values.MetaMapper;
-
-public class TransactionMetadataMapper extends MetaMapper<TransactionMetadata> {
+public class TransactionMetadataMapper {
 	private static final String ID = "id"; //$NON-NLS-1$
 	private static final String SCOPE = "scope"; //$NON-NLS-1$
 	private static final String CREATED_TIME = "createdTime"; //$NON-NLS-1$
 	private static final String ASSOCIATED_SESSION = "associatedSession"; //$NON-NLS-1$
-	private static final MutableCompositeMetaType metaType;
-	private static final MetaValueFactory metaValueFactory = MetaValueFactory.getInstance();
 	
-	static {
-		metaType = new MutableCompositeMetaType(TransactionMetadata.class.getName(), "The Transaction domain meta data"); //$NON-NLS-1$
-		metaType.addItem(ASSOCIATED_SESSION, ASSOCIATED_SESSION, SimpleMetaType.STRING);
-		metaType.addItem(CREATED_TIME, CREATED_TIME, SimpleMetaType.LONG_PRIMITIVE);
-		metaType.addItem(SCOPE, SCOPE, SimpleMetaType.STRING);
-		metaType.addItem(ID, ID, SimpleMetaType.STRING);
-		metaType.freeze();
-	}
-	
-	@Override
-	public Type mapToType() {
-		return TransactionMetadata.class;
-	}
-	
-	@Override
-	public MetaType getMetaType() {
-		return metaType;
-	}
-	
-	@Override
-	public MetaValue createMetaValue(MetaType metaType, TransactionMetadata object) {
+	public static ModelNode wrap(TransactionMetadata object) {
 		if (object == null)
 			return null;
-		if (metaType instanceof CompositeMetaType) {
-			CompositeMetaType composite = (CompositeMetaType) metaType;
-			CompositeValueSupport transaction = new CompositeValueSupport(composite);
-			
-			transaction.set(ASSOCIATED_SESSION, SimpleValueSupport.wrap(object.getAssociatedSession()));
-			transaction.set(CREATED_TIME, SimpleValueSupport.wrap(object.getCreatedTime()));
-			transaction.set(SCOPE, SimpleValueSupport.wrap(object.getScope()));
-			transaction.set(ID, SimpleValueSupport.wrap(object.getId()));
-			
-			return transaction;
-		}
-		throw new IllegalArgumentException("Cannot convert TransactionMetadata " + object); //$NON-NLS-1$
+		
+		ModelNode transaction = new ModelNode();
+		transaction.get(ModelNodeConstants.TYPE).set(ModelType.OBJECT);
+		
+		transaction.get(ASSOCIATED_SESSION).set(object.getAssociatedSession());
+		transaction.get(CREATED_TIME).set(object.getCreatedTime());
+		transaction.get(SCOPE).set(object.getScope());
+		transaction.get(ID).set(object.getId());
+		
+		return transaction;
 	}
 
-	@Override
-	public TransactionMetadata unwrapMetaValue(MetaValue metaValue) {
-		if (metaValue == null)
+	public static TransactionMetadata unwrap(ModelNode node) {
+		if (node == null)
 			return null;
 
-		if (metaValue instanceof CompositeValue) {
-			CompositeValue compositeValue = (CompositeValue) metaValue;
-			
-			TransactionMetadata transaction = new TransactionMetadata();
-			transaction.setAssociatedSession((String) metaValueFactory.unwrap(compositeValue.get(ASSOCIATED_SESSION)));
-			transaction.setCreatedTime((Long) metaValueFactory.unwrap(compositeValue.get(CREATED_TIME)));
-			transaction.setScope((String) metaValueFactory.unwrap(compositeValue.get(SCOPE)));
-			transaction.setId((String) metaValueFactory.unwrap(compositeValue.get(ID)));
-			return transaction;
-		}
-		throw new IllegalStateException("Unable to unwrap TransactionMetadata " + metaValue); //$NON-NLS-1$
+		TransactionMetadata transaction = new TransactionMetadata();
+		transaction.setAssociatedSession(node.get(ASSOCIATED_SESSION).asString());
+		transaction.setCreatedTime(node.get(CREATED_TIME).asLong());
+		transaction.setScope(node.get(SCOPE).asString());
+		transaction.setId(node.get(ID).asString());
+		return transaction;
 	}
 }

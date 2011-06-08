@@ -42,6 +42,7 @@ import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.Request.ThreadState;
 import org.teiid.adminapi.impl.CacheStatisticsMetadata;
 import org.teiid.adminapi.impl.RequestMetadata;
+import org.teiid.adminapi.impl.TransactionMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
@@ -614,7 +615,7 @@ public class DQPCore implements DQP {
 		}
 	}	
     
-	public Collection<org.teiid.adminapi.Transaction> getTransactions() {
+	public Collection<TransactionMetadata> getTransactions() {
 		return this.transactionService.getTransactions();
 	}
 	

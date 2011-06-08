@@ -29,14 +29,7 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -48,28 +41,18 @@ import javax.resource.spi.work.WorkManager;
 import javax.security.auth.login.LoginException;
 import javax.transaction.TransactionManager;
 
-import org.jboss.managed.api.ManagedOperation.Impact;
-import org.jboss.managed.api.annotation.ManagementComponent;
-import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementOperation;
-import org.jboss.managed.api.annotation.ManagementParameter;
-import org.jboss.managed.api.annotation.ManagementProperties;
-import org.jboss.managed.api.annotation.ManagementProperty;
-import org.jboss.managed.api.annotation.ViewUse;
-import org.jboss.profileservice.spi.ProfileService;
+import org.jboss.msc.service.Service;
+import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.StartContext;
+import org.jboss.msc.service.StopContext;
+import org.jboss.msc.value.InjectedValue;
 import org.jboss.util.naming.Util;
-import org.teiid.adminapi.Admin;
+import org.jboss.util.threadpool.ThreadPool;
 import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.Admin.Cache;
-import org.teiid.adminapi.impl.CacheStatisticsMetadata;
-import org.teiid.adminapi.impl.DQPManagement;
-import org.teiid.adminapi.impl.RequestMetadata;
-import org.teiid.adminapi.impl.SessionMetadata;
-import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
-import org.teiid.adminapi.jboss.AdminProvider;
+import org.teiid.adminapi.impl.*;
 import org.teiid.cache.CacheFactory;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
@@ -82,15 +65,12 @@ import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.LRUCache;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
-import org.teiid.dqp.internal.process.DQPConfiguration;
-import org.teiid.dqp.internal.process.DQPCore;
-import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.dqp.internal.process.DataTierManagerImpl;
-import org.teiid.dqp.internal.process.TransactionServerImpl;
+import org.teiid.dqp.internal.process.*;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.dqp.service.SessionServiceException;
@@ -102,14 +82,7 @@ import org.teiid.logging.Log4jListener;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnStats;
-import org.teiid.metadata.MetadataRepository;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
-import org.teiid.metadata.TableStats;
+import org.teiid.metadata.*;
 import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.net.TeiidURL;
 import org.teiid.query.QueryPlugin;
@@ -118,40 +91,39 @@ import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.processor.DdlPlan;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.security.SecurityHelper;
-import org.teiid.transport.ClientServiceRegistry;
-import org.teiid.transport.ClientServiceRegistryImpl;
-import org.teiid.transport.LogonImpl;
-import org.teiid.transport.ODBCSocketListener;
-import org.teiid.transport.SocketConfiguration;
-import org.teiid.transport.SocketListener;
+import org.teiid.transport.*;
 import org.teiid.vdb.runtime.VDBKey;
 
 
-@ManagementObject(name="RuntimeEngineDeployer", isRuntime=true, componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
-public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManagement, Serializable , ClientServiceRegistry, EventDistributor, EventDistributorFactory  {
+public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManagement, Serializable , ClientServiceRegistry, EventDistributor, EventDistributorFactory, Service<ClientServiceRegistry>  {
 	private static final long serialVersionUID = -4676205340262775388L;
+	public static final ServiceName SERVICE_NAME = ServiceName.JBOSS.append("teiid", "runtime"); //$NON-NLS-1$ //$NON-NLS-2$
 	
 	private transient SocketConfiguration jdbcSocketConfiguration;
-	private transient SocketConfiguration adminSocketConfiguration;
 	private transient SocketConfiguration odbcSocketConfiguration;
 	private transient SocketListener jdbcSocket;	
-	private transient SocketListener adminSocket;
 	private transient SocketListener odbcSocket;
 	private transient TransactionServerImpl transactionServerImpl = new TransactionServerImpl();
 		
 	private transient DQPCore dqpCore = new DQPCore();
 	private transient SessionService sessionService;
 	private transient ILogon logon;
-	private transient Admin admin;
 	private transient ClientServiceRegistryImpl csr = new ClientServiceRegistryImpl();	
 	private transient VDBRepository vdbRepository;
 	private transient VDBStatusChecker vdbStatusChecker;
 
-	private transient ProfileService profileService;
 	private transient String jndiName;
 
 	private String eventDistributorName;
 	private transient EventDistributor eventDistributor;
+	private ThreadPool theadPool;
+	
+	// TODO: remove public?
+	public final InjectedValue<WorkManager> workManagerInjector = new InjectedValue<WorkManager>();
+	public final InjectedValue<XATerminator> xaTerminatorInjector = new InjectedValue<XATerminator>();
+	public final InjectedValue<TransactionManager> txnManagerInjector = new InjectedValue<TransactionManager>();
+	public final InjectedValue<ThreadPool> threadPoolInjector = new InjectedValue<ThreadPool>();
+	
 	
     public RuntimeEngineDeployer() {
 		// TODO: this does not belong here
@@ -169,7 +141,12 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		return this.csr.getSecurityHelper();
 	}
 	
-    public void start() {
+	@Override
+    public void start(StartContext context) {
+		setWorkManager(this.workManagerInjector.getValue());
+		setXATerminator(xaTerminatorInjector.getValue());
+		setTransactionManager(txnManagerInjector.getValue());
+
 		dqpCore.setTransactionService((TransactionService)LogManager.createLoggingProxy(LogConstants.CTX_TXN_LOG, transactionServerImpl, new Class[] {TransactionService.class}, MessageLevel.DETAIL));
 
 		if (this.eventDistributorName != null) {
@@ -181,6 +158,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 				LogManager.logDetail(LogConstants.CTX_RUNTIME, ne, IntegrationPlugin.Util.getString("jndi_failed", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
 			}
 		}
+		this.vdbStatusChecker = new VDBStatusChecker(this.vdbRepository, this.theadPool);
 		this.dqpCore.start(this);
 		this.dqpCore.getDataTierManager().setEventDistributor(this.eventDistributor);		
     	// create the necessary services
@@ -204,8 +182,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	this.csr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
     	DQP dqpProxy = proxyService(DQP.class, this.dqpCore, LogConstants.CTX_DQP);
     	this.csr.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);
-    	Admin adminProxy = proxyService(Admin.class, admin, LogConstants.CTX_ADMIN_API);
-    	this.csr.registerClientService(Admin.class, adminProxy, LogConstants.CTX_ADMIN_API);
     	
     	ClientServiceRegistryImpl jdbcCsr = new ClientServiceRegistryImpl();
     	jdbcCsr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
@@ -216,17 +192,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled","Teiid JDBC = ",(this.jdbcSocketConfiguration.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+this.jdbcSocketConfiguration.getHostAddress().getHostName()+":"+(this.jdbcSocketConfiguration.getPortNumber()+offset))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     	} else {
     		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_not_enabled", "jdbc connections")); //$NON-NLS-1$ //$NON-NLS-2$
-    	}
-    	
-    	ClientServiceRegistryImpl adminCsr = new ClientServiceRegistryImpl(Type.Admin);
-    	adminCsr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
-    	adminCsr.registerClientService(Admin.class, adminProxy, LogConstants.CTX_ADMIN_API);
-    	
-    	if (this.adminSocketConfiguration.getEnabled()) {
-	    	this.adminSocket = new SocketListener(this.adminSocketConfiguration, adminCsr, this.dqpCore.getBufferManager(), offset);
-	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled","Teiid Admin", (this.adminSocketConfiguration.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+this.adminSocketConfiguration.getHostAddress().getHostName()+":"+(this.adminSocketConfiguration.getPortNumber()+offset))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-    	} else {
-    		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_not_enabled", "admin connections")); //$NON-NLS-1$ //$NON-NLS-2$
     	}
     	
     	if (this.odbcSocketConfiguration.getEnabled()) {
@@ -282,8 +247,14 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 			}			
 		});    	
 	}	
+	
+	@Override
+	public ClientServiceRegistry getValue() throws IllegalStateException, IllegalArgumentException {
+		return this;
+	}
     
-    public void stop() {
+	@Override
+    public void stop(StopContext context) {
     	if (jndiName != null) {
 	    	final InitialContext ic ;
 	    	try {
@@ -305,11 +276,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     		this.jdbcSocket = null;
     	}
     	
-    	if (this.adminSocket != null) {
-    		this.adminSocket.stop();
-    		this.adminSocket = null;
-    	}    
-    	
     	if (this.odbcSocket != null) {
     		this.odbcSocket.stop();
     		this.odbcSocket = null;
@@ -319,15 +285,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     
 	private void createClientServices() {
 		this.logon = new LogonImpl(this.sessionService, "teiid-cluster"); //$NON-NLS-1$
-		if (profileService != null) {
-			this.admin = AdminProvider.getLocal(profileService, vdbStatusChecker);
-		} else {
-			try {
-				this.admin = AdminProvider.getLocal(vdbStatusChecker);
-			} catch (AdminComponentException e) {
-				throw new TeiidRuntimeException(e.getCause());
-			}
-		}
 	}    
 	
 	/**
@@ -354,10 +311,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	
 	public void setJdbcSocketConfiguration(SocketConfiguration socketConfig) {
 		this.jdbcSocketConfiguration = socketConfig;
-	}
-	
-	public void setAdminSocketConfiguration(SocketConfiguration socketConfig) {
-		this.adminSocketConfiguration = socketConfig;
 	}
 	
 	public void setOdbcSocketConfiguration(SocketConfiguration socketConfig) {
@@ -393,12 +346,8 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		this.vdbRepository = repo;
 	}
 	
-	public void setVDBStatusChecker(VDBStatusChecker vdbStatusChecker) {
-		this.vdbStatusChecker = vdbStatusChecker;
-	}
-	
-	public void setProfileService(final ProfileService profileService) {
-		this.profileService = profileService ;
+	public void setThreadPool(ThreadPool threadPool) {
+		this.threadPool = threadPool;
 	}
 	
 	public void setJndiName(final String jndiName) {
@@ -406,13 +355,11 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	}
 	
 	@Override
-    @ManagementOperation(description="Requests for perticular session", impact=Impact.ReadOnly,params={@ManagementParameter(name="sessionId",description="The session Identifier")})
     public List<RequestMetadata> getRequestsForSession(String sessionId) {
 		return this.dqpCore.getRequestsForSession(sessionId);
 	}
 	
 	@Override
-    @ManagementOperation(description="Requests using a certain VDB", impact=Impact.ReadOnly,params={@ManagementParameter(name="vdbName",description="VDB Name"), @ManagementParameter(name="vdbVersion",description="VDB Version")})
     public List<RequestMetadata> getRequestsUsingVDB(String vdbName, int vdbVersion) throws AdminException {
 		List<RequestMetadata> requests = new ArrayList<RequestMetadata>();
 		try {
@@ -430,32 +377,26 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	
     
 	@Override
-    @ManagementOperation(description="Active requests", impact=Impact.ReadOnly)
     public List<RequestMetadata> getRequests() {
 		return this.dqpCore.getRequests();
 	}
 	
 	@Override
-    @ManagementOperation(description="Long running requests", impact=Impact.ReadOnly)
     public List<RequestMetadata> getLongRunningRequests() {
 		return this.dqpCore.getLongRunningRequests();
 	}
 	
-	
 	@Override
-	@ManagementOperation(description="Get thread statistics worker pool", impact=Impact.ReadOnly,params={@ManagementParameter(name="identifier",description="Get thread statistics worker pool")})
     public WorkerPoolStatisticsMetadata getWorkerPoolStatistics(){
 		return this.dqpCore.getWorkerPoolStatistics();
 	}
 	
 	@Override
-    @ManagementOperation(description="Terminate a Session",params={@ManagementParameter(name="terminateeId",description="The session to be terminated")})
     public void terminateSession(String terminateeId) {
 		this.sessionService.terminateSession(terminateeId, DQPWorkContext.getWorkContext().getSessionId());
     }
     
 	@Override
-    @ManagementOperation(description="Cancel a Request",params={@ManagementParameter(name="sessionId",description="The session Identifier"), @ManagementParameter(name="executionId",description="The Execution Identifier")})    
     public boolean cancelRequest(String sessionId, long executionId) throws AdminException {
     	try {
 			return this.dqpCore.cancelRequest(sessionId, executionId);
@@ -465,31 +406,26 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     }
     
 	@Override
-    @ManagementOperation(description="Get Cache types in the system", impact=Impact.ReadOnly)
     public Collection<String> getCacheTypes(){
 		return this.dqpCore.getCacheTypes();
 	}
 	
 	@Override
-	@ManagementOperation(description="Clear the caches in the system", impact=Impact.ReadOnly)
 	public void clearCache(String cacheType) {
 		this.dqpCore.clearCache(cacheType);
 	}
 	
 	@Override
-	@ManagementOperation(description="Clear the caches in the system for a VDB", params={@ManagementParameter(name="cacheType",description="Type of Cache"), @ManagementParameter(name="vdbName",description="VDB Name"),@ManagementParameter(name="version",description="VDB Version")}, impact=Impact.ReadOnly)
 	public void clearCache(String cacheType, String vdbName, int version) {
 		this.dqpCore.clearCache(cacheType, vdbName, version);
 	}	
 	
 	@Override
-	@ManagementOperation(description="Get the cache statistics", impact=Impact.ReadOnly)
 	public CacheStatisticsMetadata getCacheStatistics(String cacheType) {
 		return this.dqpCore.getCacheStatistics(cacheType);
 	}
 	
 	@Override
-	@ManagementOperation(description="Active sessions", impact=Impact.ReadOnly)
 	public Collection<SessionMetadata> getActiveSessions() throws AdminException {
 		try {
 			return this.sessionService.getActiveSessions();
@@ -499,7 +435,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	}
 	
 	@Override
-	@ManagementProperty(description="Active session count", use={ViewUse.STATISTIC}, readOnly=true)
 	public int getActiveSessionsCount() throws AdminException{
 		try {
 			return this.sessionService.getActiveSessionsCount();
@@ -509,19 +444,16 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	}
 	
 	@Override
-	@ManagementOperation(description="Active Transactions", impact=Impact.ReadOnly)
-	public Collection<org.teiid.adminapi.Transaction> getTransactions() {
+	public Collection<TransactionMetadata> getTransactions() {
 		return this.dqpCore.getTransactions();
 	}
 	
 	@Override
-	@ManagementOperation(description="Terminate the transaction", impact=Impact.ReadOnly)
 	public void terminateTransaction(String xid) throws AdminException {
 		this.dqpCore.terminateTransaction(xid);
 	}
 
 	@Override
-    @ManagementOperation(description="Merge Two VDBs",params={@ManagementParameter(name="sourceVDBName"),@ManagementParameter(name="sourceVDBName"), @ManagementParameter(name="targetVDBName"), @ManagementParameter(name="targetVDBVersion")})
 	public void mergeVDBs(String sourceVDBName, int sourceVDBVersion,
 			String targetVDBName, int targetVDBVersion) throws AdminException {
 		this.vdbRepository.mergeVDBs(sourceVDBName, sourceVDBVersion, targetVDBName, targetVDBVersion);
@@ -532,7 +464,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	}
 	
 	@Override
-    @ManagementOperation(description="Execute a sql query", params={@ManagementParameter(name="vdbName"),@ManagementParameter(name="vdbVersion"), @ManagementParameter(name="command"), @ManagementParameter(name="timoutInMilli")})	
 	public List<List> executeQuery(final String vdbName, final int version, final String command, final long timoutInMilli) throws AdminException {
 		Properties properties = new Properties();
 		properties.setProperty(TeiidURL.JDBC.VDB_NAME, vdbName);
@@ -809,4 +740,9 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	public MetadataRepository getMetadataRepository() {
 		return this.vdbRepository.getMetadataRepository();
 	}
+	
+	public String getRuntimeVersion() {
+		return ApplicationInfo.getInstance().getBuildNumber();
+	}
+	
 }

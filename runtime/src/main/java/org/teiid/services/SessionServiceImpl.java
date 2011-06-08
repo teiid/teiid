@@ -84,7 +84,6 @@ public class SessionServiceImpl implements SessionService {
     private Map<String, SessionMetadata> sessionCache = new ConcurrentHashMap<String, SessionMetadata>();
     private Timer sessionMonitor = new Timer("SessionMonitor", true); //$NON-NLS-1$
     private LinkedList<String> securityDomains = new LinkedList<String>();
-    private LinkedList<String> adminSecurityDomains = new LinkedList<String>();
     
     
     // -----------------------------------------------------------------------------------
@@ -345,11 +344,6 @@ public class SessionServiceImpl implements SessionService {
         }		
 	}
 	
-	public void setAdminSecurityDomain(String domain) {
-		this.adminSecurityDomains.add(domain);
-		LogManager.logInfo(LogConstants.CTX_SECURITY, "Admin Security Enabled: true"); //$NON-NLS-1$
-	}
-
 	public void start() {
         this.sessionMonitor.schedule(new TimerTask() {
         	@Override

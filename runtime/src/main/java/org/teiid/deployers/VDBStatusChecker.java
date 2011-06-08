@@ -40,6 +40,10 @@ public class VDBStatusChecker {
 	private VDBRepository vdbRepository;
 	private ThreadPool threadPool;
 	
+	public VDBStatusChecker(VDBRepository vdbRepository, ThreadPool threadPool) {
+		this.vdbRepository = vdbRepository;
+		this.threadPool = threadPool;
+	}
 	public void translatorAdded(String translatorName) {
 		resourceAdded(translatorName, true);
 	}
@@ -60,10 +64,6 @@ public class VDBStatusChecker {
 			dataSourceName = dataSourceName.substring(5);
 		}
 		resourceremoved(dataSourceName, false);
-	}	
-	
-	public void setVDBRepository(VDBRepository repo) {
-		this.vdbRepository = repo;
 	}	
 	
 	public void resourceAdded(String resourceName, boolean translator) {
@@ -168,9 +168,5 @@ public class VDBStatusChecker {
 			}
 		}
 		return null;
-	}
-	
-	public void setThreadPool(ThreadPool threadPool) {
-		this.threadPool = threadPool;
 	}
 }

@@ -21,76 +21,38 @@
  */
 package org.teiid.adminapi.impl;
 
-import java.lang.reflect.Type;
+import org.jboss.dmr.ModelNode;
+import org.jboss.dmr.ModelType;
 
-import org.jboss.metatype.api.types.CompositeMetaType;
-import org.jboss.metatype.api.types.MetaType;
-import org.jboss.metatype.api.types.SimpleMetaType;
-import org.jboss.metatype.api.values.CompositeValue;
-import org.jboss.metatype.api.values.CompositeValueSupport;
-import org.jboss.metatype.api.values.MetaValue;
-import org.jboss.metatype.api.values.MetaValueFactory;
-import org.jboss.metatype.api.values.SimpleValueSupport;
-import org.jboss.metatype.plugins.types.MutableCompositeMetaType;
-import org.jboss.metatype.spi.values.MetaMapper;
-
-public class CacheStatisticsMetadataMapper extends MetaMapper<CacheStatisticsMetadata> {
+public class CacheStatisticsMetadataMapper {
 	private static final String HITRATIO = "hitRatio"; //$NON-NLS-1$
 	private static final String TOTAL_ENTRIES = "totalEntries"; //$NON-NLS-1$
 	private static final String REQUEST_COUNT = "requestCount"; //$NON-NLS-1$
-	private static final MetaValueFactory metaValueFactory = MetaValueFactory.getInstance();
-	private static final MutableCompositeMetaType metaType;
+
 	
-	static {
-		metaType = new MutableCompositeMetaType(CacheStatisticsMetadata.class.getName(), "The Cache statistics"); //$NON-NLS-1$
-		metaType.addItem(TOTAL_ENTRIES, TOTAL_ENTRIES, SimpleMetaType.INTEGER_PRIMITIVE);
-		metaType.addItem(HITRATIO, HITRATIO, SimpleMetaType.DOUBLE_PRIMITIVE);
-		metaType.addItem(REQUEST_COUNT, REQUEST_COUNT, SimpleMetaType.INTEGER_PRIMITIVE);
-		metaType.freeze();
-	}
-	
-	@Override
-	public Type mapToType() {
-		return CacheStatisticsMetadata.class;
-	}
-	
-	@Override
-	public MetaType getMetaType() {
-		return metaType;
-	}
-	
-	@Override
-	public MetaValue createMetaValue(MetaType metaType, CacheStatisticsMetadata object) {
+	public static ModelNode wrap(CacheStatisticsMetadata object) {
 		if (object == null)
 			return null;
-		if (metaType instanceof CompositeMetaType) {
-			CompositeMetaType composite = (CompositeMetaType) metaType;
-			CompositeValueSupport cache = new CompositeValueSupport(composite);
-			
-			cache.set(TOTAL_ENTRIES, SimpleValueSupport.wrap(object.getTotalEntries()));
-			cache.set(HITRATIO, SimpleValueSupport.wrap(object.getHitRatio()));
-			cache.set(REQUEST_COUNT, SimpleValueSupport.wrap(object.getRequestCount()));
-			
-			return cache;
-		}
-		throw new IllegalArgumentException("Cannot convert cache statistics " + object); //$NON-NLS-1$
+		
+		ModelNode cache = new ModelNode();
+		cache.get(ModelNodeConstants.TYPE).set(ModelType.OBJECT);
+		
+		cache.get(TOTAL_ENTRIES).set(object.getTotalEntries());
+		cache.get(HITRATIO).set(object.getHitRatio());
+		cache.get(REQUEST_COUNT).set(object.getRequestCount());
+		
+		return cache;
 	}
 
-	@Override
-	public CacheStatisticsMetadata unwrapMetaValue(MetaValue metaValue) {
-		if (metaValue == null)
+	public static CacheStatisticsMetadata unwrap(ModelNode node) {
+		if (node == null)
 			return null;
-
-		if (metaValue instanceof CompositeValue) {
-			CompositeValue compositeValue = (CompositeValue) metaValue;
 			
-			CacheStatisticsMetadata cache = new CacheStatisticsMetadata();
-			cache.setTotalEntries((Integer) metaValueFactory.unwrap(compositeValue.get(TOTAL_ENTRIES)));
-			cache.setHitRatio((Double) metaValueFactory.unwrap(compositeValue.get(HITRATIO)));
-			cache.setRequestCount((Integer) metaValueFactory.unwrap(compositeValue.get(REQUEST_COUNT)));
-			return cache;
-		}
-		throw new IllegalStateException("Unable to unwrap cache statistics " + metaValue); //$NON-NLS-1$
+		CacheStatisticsMetadata cache = new CacheStatisticsMetadata();
+		cache.setTotalEntries(node.get(TOTAL_ENTRIES).asInt());
+		cache.setHitRatio(node.get(HITRATIO).asDouble());
+		cache.setRequestCount(node.get(REQUEST_COUNT).asInt());
+		return cache;
 	}
 
 }

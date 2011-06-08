@@ -29,7 +29,7 @@ import org.teiid.security.SecurityHelper;
 public interface ClientServiceRegistry {
 	
 	public enum Type {
-		ODBC, JDBC, Admin
+		ODBC, JDBC
 	}
 	
 	<T> T getClientService(Class<T> iface) throws ComponentNotFoundException;

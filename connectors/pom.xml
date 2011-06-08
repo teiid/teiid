@@ -59,7 +59,7 @@
       <scope>test</scope>
     </dependency>        
 
-    <!-- External dependencies -->
+    <!-- External dependencies
     <dependency>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-vfs</artifactId>
@@ -70,6 +70,7 @@
         <artifactId>jboss-managed</artifactId>
         <scope>test</scope>
     </dependency>     
+     -->
     
   </dependencies>
   

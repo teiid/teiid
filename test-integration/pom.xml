@@ -85,7 +85,7 @@
 			<groupId>javax.transaction</groupId>
                 <artifactId>jta</artifactId>
 		</dependency>
-
+        <!-- 
         <dependency>
             <groupId>org.jboss.deployers</groupId>
             <artifactId>jboss-deployers-vfs-spi</artifactId>
@@ -97,7 +97,7 @@
             <artifactId>jboss-deployers-vfs</artifactId>
             <scope>provided</scope>
         </dependency>   		
-        
+         -->
 	</dependencies>
 
   <modules>

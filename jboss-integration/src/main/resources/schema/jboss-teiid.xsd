@@ -1,0 +1,364 @@
+<!--
+  ~ JBoss, Home of Professional Open Source.
+  ~ Copyright 2010, Red Hat, Inc., and individual contributors
+  ~ as indicated by the @author tags. See the copyright.txt file in the
+  ~ distribution for a full listing of individual contributors.
+  ~
+  ~ This is free software; you can redistribute it and/or modify it
+  ~ under the terms of the GNU Lesser General Public License as
+  ~ published by the Free Software Foundation; either version 2.1 of
+  ~ the License, or (at your option) any later version.
+  ~
+  ~ This software is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~ Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public
+  ~ License along with this software; if not, write to the Free
+  ~ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+  -->
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+        targetNamespace="urn:jboss:domain:teiid:1.0" 
+        xmlns="urn:jboss:domain:teiid:1.0" 
+        elementFormDefault="qualified" 
+        attributeFormDefault="unqualified" 
+        version="1.0">
+
+    <!-- The naming subsystem root element -->
+    <xs:element name="subsystem" type="teiidType" />
+
+    <xs:complexType name="teiidType">
+        <xs:sequence>
+            <xs:element name="query-engine" type="runtime-engine-type" maxOccurs="1" minOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Main Teiid runtime engine configuration</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="buffer-service-type">
+        <xs:sequence>
+            <xs:element name="useDisk" type="xs:string" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Use disk for buffer management</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="diskDirectory" type="xs:string" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Directory location for the buffer files</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="processorBatchSize" type="xs:int" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>The max row count of a batch sent internally within the query processor. Should be &lt;= the connectorBatchSize. (default 512)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="connectorBatchSize" type="xs:int" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation> The max row count of a batch from a connector. Should be even multiple of processorBatchSize. (default 1024) </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="maxReserveBatchColumns" type="xs:int" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation> The number of batch columns to allow in buffer memory. -1 means to automatically calculate a value (default -1). See the admin guide for more. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="maxProcessingBatchesColumns" type="xs:int" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>The number of batch columns guaranteed to a processing operation. -1 means to automatically calculate a value (default -1).See the admin guide for more.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="maxFileSize" type="xs:int" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Max File size in MB (default 2GB)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="maxBufferSpace" type="xs:int" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Max storage space, in MB, to be used for buffer files (default 50G) </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="maxOpenFiles" type="xs:int" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Max open buffer files (default 64)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="cache-factory-type">
+        <xs:sequence>
+            <xs:element name="cache-service-jndi-name" type="xs:string" minOccurs="1" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>JNDI Name of the Cache manager</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="resultsetCacheName" type="xs:string" minOccurs="1" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Name of the resultset cache name</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="enabled" type="xs:boolean" />
+    </xs:complexType>
+    <xs:complexType name="cache-config">
+        <xs:sequence>
+            <xs:element name="maxEntries" type="xs:string" minOccurs="0" maxOccurs="1" default="1024">
+                <xs:annotation>
+                    <xs:documentation>Max Entries allowed (default 1024)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="maxAgeInSeconds" type="xs:int" minOccurs="0" maxOccurs="1" default="7200">
+                <xs:annotation>
+                    <xs:documentation>Max age in seconds (default 7200 - 2 hours)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="maxStaleness" type="xs:int" minOccurs="0" maxOccurs="1" default="-1">
+                <xs:annotation>
+                    <xs:documentation>Max staleness in seconds. Modifications are based upon data updates -1 indicates no max. (default 60 - 1 minute)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="type" minOccurs="0" maxOccurs="1" default="LRU">
+                <xs:annotation>
+                    <xs:documentation>Allowed values are LRU, EXPIRATION. Setting this value to LRU will cause cache hint TTL values to be ignored. (default EXPIRATION)</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="LRU" />
+                        <xs:enumeration value="EXPIRATION" />
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="location" type="xs:string" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>location</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="enabled" type="xs:boolean" default="true"/>
+    </xs:complexType>
+    <xs:complexType name="runtime-engine-type">
+        <xs:sequence>
+            <xs:element name="maxThreads" type="xs:int" minOccurs="0" maxOccurs="1" default="64">
+                <xs:annotation>
+                    <xs:documentation>Process pool maximum thread count. (default 64)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="maxActivePlans" type="xs:int" minOccurs="0" maxOccurs="1" default="20">
+                <xs:annotation>
+                    <xs:documentation>Max active plans (default 20). Increase this value on highly concurrent systems - but ensure that the underlying pools can handle the increased load without timeouts.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="userRequestSourceConcurrency" type="xs:int" minOccurs="0" maxOccurs="1" default="0">
+                <xs:annotation>
+                    <xs:documentation> Max source query concurrency per user request (default 0).
+                        0 indicates use the default calculated value based on max active plans and max threads - approximately 2*(max threads)/(max active plans).
+                        1 forces serial execution in the processing thread, just as is done for a transactional request.
+                        Any number greater than 1 limits the maximum number of concurrently executing source requests accordingly.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="timeSliceInMilli" type="xs:int" minOccurs="0" maxOccurs="1" default="2000">
+                <xs:annotation>
+                    <xs:documentation>Query processor time slice, in milliseconds. (default 2000)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="maxRowsFetchSize" type="xs:int" minOccurs="0" maxOccurs="1" default="20480">
+                <xs:annotation>
+                    <xs:documentation>Maximum allowed fetch size, set via JDBC. User requested value ignored above this value. (default 20480)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="lobChunkSizeInKB" type="xs:int" minOccurs="0" maxOccurs="1" default="100">
+                <xs:annotation>
+                    <xs:documentation>The max lob chunk size in KB transferred each time when processing blobs, clobs (100KB default)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="useDataRoles" type="xs:boolean" minOccurs="0" maxOccurs="1" default="true">
+                <xs:annotation>
+                    <xs:documentation>Turn on role checking based upon the data roles defined in VDBs. (default true)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="allowCreateTemporaryTablesByDefault" type="xs:boolean" minOccurs="0" maxOccurs="1" default="true">
+                <xs:annotation>
+                    <xs:documentation>Sets whether temporary table usage is allowed by default with data roles enabled. If false, the user must have a role that grants creates temporary table rights to use temporary tables. (default true)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="allowFunctionCallsByDefault" type="xs:boolean" minOccurs="0" maxOccurs="1" default="true">
+                <xs:annotation>
+                    <xs:documentation>Sets whether functions may be called by default with data roles enabled. If false, a specific permission must exist to call the function. (default true)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="queryThresholdInSecs" type="xs:int" minOccurs="0" maxOccurs="1" default="600">
+                <xs:annotation>
+                    <xs:documentation>Long running query threshold, after which a alert can be generated by tooling if configured (600 secs)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="maxSourceRows" type="xs:int" minOccurs="0" maxOccurs="1" default="-1">
+                <xs:annotation>
+                    <xs:documentation>Maximum rows allowed from a source query. -1 indicates no limit. (default -1)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="exceptionOnMaxSourceRows" type="xs:boolean" minOccurs="0" maxOccurs="1" default="true">
+                <xs:annotation>
+                    <xs:documentation>Indicates if an exception should be thrown if the specified value for Maximum Source Rows is exceeded; only up to the maximum rows will be consumed. (default true)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="maxODBCLobSizeAllowed" type="xs:int" minOccurs="0" maxOccurs="1" default="5242880">
+                <xs:annotation>
+                    <xs:documentation>Maximum size of lob allowed through ODBC connection in bytes (default 5MB)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="eventDistributorName" type="xs:string" minOccurs="1" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>The JNDI name of the Teiid Event Distributor</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="detectingChangeEvents" type="xs:boolean" minOccurs="0" maxOccurs="1" default="true">
+                <xs:annotation>
+                    <xs:documentation>Set to true for the engine to detect local change events. Should be disabled if using external change data capture tools. (default true)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="jdbc-security-domain" type="xs:string" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Comma separated list of domains to be used to login into Teiid using JDBC connection</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="admin-security-domain" type="xs:string" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Security domain to be used with Admin API</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="max-sessions-allowed" type="xs:int" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Maximum number of sessions allowed by the system (default 5000)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="sessions-expiration-timelimit" type="xs:int" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Max allowed time before the session is terminated by the system, 0 indicates unlimited (default 0)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="allow-env-function" type="xs:boolean" minOccurs="0" maxOccurs="1" default="false">
+                <xs:annotation>
+                    <xs:documentation>Allow execution of ENV function (default false)</xs:documentation>
+                </xs:annotation>
+            </xs:element>            
+
+            <xs:element name="buffer-service" type="buffer-service-type" maxOccurs="1" minOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Buffer manager information</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+
+            <xs:element name="distributed-cache-factory" type="cache-factory-type" maxOccurs="1" minOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Cache Factory</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+
+            <xs:element name="resultset-cache" type="cache-config" maxOccurs="1" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Configuration for result set caching.
+                        There will be 2 caches with these settings.
+                        One cache holds results that are specific to sessions.
+                        The other cache holds vdb scoped results and can
+                        be replicated.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="preparedplan-cache" type="cache-config" maxOccurs="1" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Configuration for prepared plan caching. (local memory only)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="jdbc" type="socket-config" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>jdbc port confguration</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="odbc" type="socket-config" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>odbc port configuration</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="jndi-name" type="xs:string" />
+    </xs:complexType>
+
+    <xs:complexType name="socket-config">
+        <xs:sequence>
+            <xs:element name="maxSocketThreads" type="xs:int" minOccurs="0" maxOccurs="1" default="0">
+                <xs:annotation>
+                    <xs:documentation>Max number of threads dedicated to initial request processing.
+                        Zero indicates the system default of max available processors. (default 0)
+                        Setting this value above the max available processors is not recommended.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="inputBufferSize" type="xs:int" minOccurs="0" maxOccurs="1" default="0">
+                <xs:annotation>
+                    <xs:documentation>SO_RCVBUF size, 0 indicates that system default should be used (default 0) </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="outputBufferSize" type="xs:int" minOccurs="0" maxOccurs="1" default="0">
+                <xs:annotation>
+                    <xs:documentation>SO_SNDBUF size, 0 indicates that system default should be used (default 0)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="socket-binding" type="xs:string" minOccurs="1" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Port binding name</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ssl" type="ssl-config" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>SSL Configuration</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="enabled" type="xs:boolean" default="true"/>
+    </xs:complexType>
+
+    <xs:complexType name="ssl-config">
+        <xs:sequence>
+            <xs:element name="mode" minOccurs="1" maxOccurs="1" default="disabled">
+                <xs:annotation>
+                    <xs:documentation>can be one of disabled, login, or enabled
+                        disabled = no transport or message level security will be used
+                        login = only the login traffic will be encrypted at a message level
+                        using 128 bit AES with an ephemerial DH key exchange.
+                        No other config values are needed in this mode
+                        enabled = traffic will be secured using this configuration</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="login" />
+                        <xs:enumeration value="enabled" />
+                        <xs:enumeration value="disabled" />
+                    </xs:restriction>
+                </xs:simpleType>                
+            </xs:element>
+            <xs:element name="keystoreFilename" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="keystorePassword" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="keystoreType" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="sslProtocol" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="keymanagementAlgorithm" type="xs:boolean" minOccurs="0" maxOccurs="1" />
+            <xs:element name="truststoreFilename" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="truststorePassword" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="authenticationMode" minOccurs="0" maxOccurs="1" default="anonymous">
+                <xs:annotation>
+                    <xs:documentation>1-way, 2-way, anonymous</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="1-way" />
+                        <xs:enumeration value="2-way" />
+                        <xs:enumeration value="anonymous" />
+                    </xs:restriction>
+                </xs:simpleType>                                
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+</xs:schema>

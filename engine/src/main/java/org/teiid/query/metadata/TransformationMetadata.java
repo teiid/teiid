@@ -22,43 +22,19 @@
 
 package org.teiid.query.metadata;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.io.*;
+import java.util.*;
 
-import org.jboss.virtual.VirtualFile;
+import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.types.BlobImpl;
-import org.teiid.core.types.ClobImpl;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.InputStreamFactory;
-import org.teiid.core.types.SQLXMLImpl;
+import org.teiid.core.types.*;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.LRUCache;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnSet;
-import org.teiid.metadata.Datatype;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ProcedureParameter.Type;
@@ -93,6 +69,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	private final class VirtualFileInputStreamFactory extends
 			InputStreamFactory {
 		private final VirtualFile f;
+		private InputStream is;
 
 		private VirtualFileInputStreamFactory(VirtualFile f) {
 			this.f = f;
@@ -100,21 +77,21 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
 		@Override
 		public InputStream getInputStream() throws IOException {
-			return f.openStream();
+			this.is = f.openStream();
+			return is;
 		}
 		
 		@Override
 		public long getLength() {
-			try {
-				return f.getSize();
-			} catch (IOException e) {
-			}
-			return super.getLength();
+			return f.getSize();
 		}
 		
 		@Override
-		public void free() throws IOException {
-			f.close();
+		public void free() {
+			try {
+				this.is.close();
+			} catch (IOException e) {
+			}
 		}
 	}
 

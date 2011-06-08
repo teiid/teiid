@@ -25,21 +25,11 @@ package org.teiid.metadata.index;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import org.jboss.virtual.VFS;
-import org.jboss.virtual.VirtualFile;
-import org.jboss.virtual.VirtualFileFilter;
-import org.jboss.virtual.plugins.context.zip.ZipEntryContext;
-import org.jboss.virtual.spi.VirtualFileHandler;
+import org.jboss.vfs.VFS;
+import org.jboss.vfs.VirtualFile;
+import org.jboss.vfs.VirtualFileFilter;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -50,18 +40,7 @@ import org.teiid.core.index.IEntryResult;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.StringUtil;
 import org.teiid.internal.core.index.Index;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnSet;
-import org.teiid.metadata.Datatype;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
-import org.teiid.metadata.VdbConstants;
+import org.teiid.metadata.*;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
 
@@ -93,10 +72,7 @@ public class IndexMetadataFactory {
 	 * @throws URISyntaxException
 	 */
 	public IndexMetadataFactory(URL url) throws IOException, URISyntaxException {
-		VFS.init();
-		ZipEntryContext context = new ZipEntryContext(url);
-		VirtualFileHandler vfh = context.getRoot();
-		VirtualFile vdb = new VirtualFile(vfh);
+		VirtualFile vdb = VFS.getChild(url.toURI());
 		List<VirtualFile> children = vdb.getChildrenRecursively(new VirtualFileFilter() {
 			@Override
 			public boolean accepts(VirtualFile file) {

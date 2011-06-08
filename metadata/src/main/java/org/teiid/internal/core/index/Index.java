@@ -15,12 +15,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jboss.virtual.VirtualFile;
-import org.teiid.core.index.IDocument;
-import org.teiid.core.index.IEntryResult;
-import org.teiid.core.index.IIndex;
-import org.teiid.core.index.IIndexer;
-import org.teiid.core.index.IQueryResult;
+import org.jboss.vfs.VirtualFile;
+import org.teiid.core.index.*;
 
 
 /**
@@ -460,12 +456,7 @@ public class Index implements IIndex {
     
     public void dispose() {
         close();
-        try {
-			if( !indexFile.delete() ) {
-			    indexFile.delete(1000);
-			}
-		} catch (IOException e) {
-		}
+	    indexFile.delete();
     }
     
 	/**
@@ -479,10 +470,7 @@ public class Index implements IIndex {
     public String toString() {
     	String str = this.toString;
     	if (str == null) str = super.toString();
-    	try {
-			str += "(length: "+ getIndexFile().getSize() +")"; //$NON-NLS-1$ //$NON-NLS-2$
-		} catch (IOException e) {
-		}
+		str += "(length: "+ getIndexFile().getSize() +")"; //$NON-NLS-1$ //$NON-NLS-2$
     	return str;
     }
     

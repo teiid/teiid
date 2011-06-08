@@ -60,16 +60,22 @@
     </dependency>
         
     <dependency>
-        <groupId>org.jboss.cache</groupId>
-        <artifactId>jbosscache-core</artifactId>
-        <scope>test</scope>
-    </dependency>        
-    
-    <dependency>
         <groupId>javax.resource</groupId>
         <artifactId>connector-api</artifactId>
         <scope>provided</scope>
     </dependency>
+    <dependency>
+        <groupId>org.jboss</groupId>
+        <artifactId>jboss-common-core</artifactId>
+        <scope>provided</scope>
+    </dependency>     
+    
+    <!-- 
+    <dependency>
+        <groupId>org.jboss.cache</groupId>
+        <artifactId>jbosscache-core</artifactId>
+        <scope>test</scope>
+    </dependency>     
     <dependency>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-vfs</artifactId>
@@ -89,6 +95,7 @@
         <groupId>org.jboss.integration</groupId>
         <artifactId>jboss-profileservice-spi</artifactId>
         <scope>provided</scope>
-    </dependency>      
+    </dependency>     
+     --> 
   </dependencies>
 </project>

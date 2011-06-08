@@ -38,7 +38,7 @@ public interface DQPManagement {
     void clearCache(String cacheType, String vdbName, int version);
     Collection<SessionMetadata> getActiveSessions() throws AdminException;
     int getActiveSessionsCount() throws AdminException;
-    Collection<org.teiid.adminapi.Transaction> getTransactions();
+    Collection<TransactionMetadata> getTransactions();
     void terminateTransaction(String xid) throws AdminException ;
     void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException;
     List<RequestMetadata> getLongRunningRequests();

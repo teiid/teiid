@@ -1,0 +1,82 @@
+<subsystem xmlns="urn:jboss:domain:teiid:1.0">
+    <query-engine jndi-name="teiid/engine-deployer">
+        <maxThreads>64</maxThreads>
+        <maxActivePlans>20</maxActivePlans>
+        <userRequestSourceConcurrency>0</userRequestSourceConcurrency>
+        <timeSliceInMilli>2000</timeSliceInMilli>
+        <maxRowsFetchSize>20480</maxRowsFetchSize>
+        <lobChunkSizeInKB>100</lobChunkSizeInKB>
+        <useDataRoles>true</useDataRoles>
+        <allowCreateTemporaryTablesByDefault>true</allowCreateTemporaryTablesByDefault>
+        <allowFunctionCallsByDefault>true</allowFunctionCallsByDefault>
+        <queryThresholdInSecs>600</queryThresholdInSecs>
+        <maxSourceRows>-1</maxSourceRows>
+        <exceptionOnMaxSourceRows>true</exceptionOnMaxSourceRows>
+        <maxODBCLobSizeAllowed>5242880</maxODBCLobSizeAllowed>
+        <eventDistributorName>teiid/event-distributor</eventDistributorName>
+        <detectingChangeEvents>true</detectingChangeEvents>
+
+        <jdbc-security-domain>teiid-security</jdbc-security-domain>
+        <admin-security-domain>jmx-console</admin-security-domain>
+        <max-sessions-allowed>5000</max-sessions-allowed>
+        <sessions-expiration-timelimit>0</sessions-expiration-timelimit>
+        <allow-env-function>false</allow-env-function>
+
+        <buffer-service>
+            <useDisk>true</useDisk>
+            <diskDirectory>${jboss.server.temp.dir}/teiid</diskDirectory>
+            <processorBatchSize>512</processorBatchSize>
+            <connectorBatchSize>1024</connectorBatchSize>
+            <maxReserveBatchColumns>-1</maxReserveBatchColumns>
+            <maxProcessingBatchesColumns>-1</maxProcessingBatchesColumns>
+            <maxFileSize>2048</maxFileSize>
+            <maxBufferSpace>51200</maxBufferSpace>
+            <maxOpenFiles>64</maxOpenFiles>
+        </buffer-service>
+        
+        <distributed-cache-factory enabled="true">
+            <cache-service-jndi-name>java:TeiidCacheManager</cache-service-jndi-name>
+            <resultsetCacheName>teiid-resultset-cache</resultsetCacheName>
+        </distributed-cache-factory>
+        
+        <resultset-cache enabled="true">
+            <maxEntries>1024</maxEntries>
+            <maxAgeInSeconds>7200</maxAgeInSeconds>
+            <maxStaleness>60</maxStaleness>
+            <type>EXPIRATION</type>
+            <location>resultset</location>
+        </resultset-cache>
+        
+        <preparedplan-cache>
+            <maxEntries>512</maxEntries>
+            <maxAgeInSeconds>28800</maxAgeInSeconds>
+            <maxStaleness>0</maxStaleness>
+        </preparedplan-cache>
+        
+        <jdbc enabled="true">
+            <maxSocketThreads>0</maxSocketThreads>
+            <inputBufferSize>0</inputBufferSize>
+            <outputBufferSize>0</outputBufferSize>
+            <socket-binding>teiid-jdbc</socket-binding>
+        </jdbc>
+
+        <admin enabled="true">
+            <maxSocketThreads>4</maxSocketThreads>
+            <inputBufferSize>0</inputBufferSize>
+            <outputBufferSize>0</outputBufferSize>
+            <socket-binding>teiid-admin</socket-binding>
+            <ssl>
+                <mode>login</mode>
+                <authenticationMode>anonymous</authenticationMode>
+            </ssl>
+        </admin>
+
+        <odbc enabled="true">
+            <maxSocketThreads>0</maxSocketThreads>
+            <inputBufferSize>0</inputBufferSize>
+            <outputBufferSize>0</outputBufferSize>
+            <socket-binding>teiid-odbc</socket-binding>
+        </odbc>
+    </query-engine>
+
+</subsystem>

@@ -24,14 +24,15 @@ package org.teiid.jdbc;
 
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.jboss.logging.Logger;
 
 /**
  * Specialized timer that actively purges tasks in lg(n) time
  */
 public class CancellationTimer {
-	
+	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 	private static AtomicInteger id = new AtomicInteger();
 	
 	static abstract class CancelTask implements Runnable, Comparable<CancelTask> {
@@ -101,7 +102,7 @@ public class CancellationTimer {
 		try {
 			task.run();
 		} catch (Throwable t) {
-			Logger.getLogger(CancellationTimer.class).error("Unexpected exception running task", t); //$NON-NLS-1$
+			logger.log(Level.SEVERE, "Unexpected exception running task", t); //$NON-NLS-1$
 		}
 	}
 	
