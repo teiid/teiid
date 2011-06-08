@@ -273,6 +273,7 @@ public class SQLConstants {
 	    public static final String NUMERIC = "NUMERIC"; //$NON-NLS-1$
 	    public static final String OBJECT = "OBJECT"; //$NON-NLS-1$
 		public static final String OF = "OF"; //$NON-NLS-1$
+		public static final String OFFSET = "OFFSET"; //$NON-NLS-1$
 		public static final String OLD = "OLD"; //$NON-NLS-1$
 		public static final String ON = "ON"; //$NON-NLS-1$
 		public static final String ONLY = "ONLY"; //$NON-NLS-1$

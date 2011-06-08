@@ -30,12 +30,18 @@
 	<LI><B>MAKEIND Hint</B> - The MAKEIND hint can be used to indicate that the other side of the join should be made dependent.
     <LI><B>ODBC SSL</B> - added support for SSL encrypted ODBC connections.
 	<LI><B>Reauthentication Statement</B> - SET SESSION AUTHORIZATION can now be used to perform a reauthentication via JDBC or ODBC.
+	<LI><B>ANSI OFFSET/FETCH FIRST</B> - instead of the limit clause, a standard OFFSET and/or FETCH FIRST/NEXT clause can be used to limit results.
 </UL>
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
 <ul>
   <li>TRANSLATE/HAS CRITERIA has been deprecated.  An alternative approach to update procedures will be introduced in a subsequent version.
   <li>Support for named parameter syntax using param=value has been deprecated, since it is ambiguous with a comparison predicate boolean value expression.  param<b>=></b>value should be used instead.  
   <li>Support for using the FROM clause post item hints MAKEDEP/MAKENOTDEP has been deprecated.  Use the pre item comment hint syntax instead, e.g. /*+ MAKEDEP */ tbl
+</ul>
+
+<h4>from 7.4</h4>
+<ul>
+  <li>OFFSET was added as a keyword. 
 </ul>
 
 <h4>from 7.3</h4>

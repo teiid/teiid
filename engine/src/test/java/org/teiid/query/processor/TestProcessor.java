@@ -6740,6 +6740,27 @@ public class TestProcessor {
         helpProcess(plan, manager, expected);
         assertEquals("SELECT g_0.e3 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_1", manager.getQueries().iterator().next()); //$NON-NLS-1$
     }
+    
+    @Test public void testSortWithOffset() {
+        String sql = "select e1 from (select pm1.g1.e1, pm1.g1.e2 from pm1.g1 order by pm1.g1.e1, pm1.g1.e2 offset 4 rows) x"; //$NON-NLS-1$
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.ROW_OFFSET, true);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, capFinder);
+        
+        List[] expected = new List[] {
+                Arrays.asList(new Object[] { "a"}),
+        };
+
+        HardcodedDataManager manager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+        manager.addData("SELECT g1.e1, g1.e2 FROM g1 ORDER BY g1.e1, g1.e2 LIMIT 4, 2147483647", new List[] {Arrays.asList("a", 1)});
+        helpProcess(plan, manager, expected);
+    }
 
     @Test public void testCountWithHaving() {
         String sql = "select e1, count(*) from pm1.g1 group by e1 having count(*) > 1"; //$NON-NLS-1$

@@ -213,6 +213,7 @@ TOKEN : /* Reserved words */
 |   <NOT: "not">
 |   <NULL: "null">
 |   <OF: "of">
+|   <OFFSET: "offset">
 |   <OLD: "old">
 |   <ON: "on">
 |   <ONLY: "only">
@@ -3157,39 +3158,61 @@ SingleElementSymbol sortKey(ParseInfo info) :
     }
 }
 
+Expression intParam(ParseInfo info) :
+{
+   Integer val = null;
+}
+{
+   (val = intVal() | <QMARK>)
+   {
+     if (val == null) {
+       return new Reference(info.referenceCount++);
+     } 
+     return new Constant(val, DataTypeManager.DefaultDataClasses.INTEGER);
+   }
+}
+
 /** 
  * <p>Parse an LIMIT clause.</p>
  * @return Parsed LIMIT
-  * @throws ParseException if parsing failed
+ * @throws ParseException if parsing failed
  */
 Limit limit(ParseInfo info) :
 {
-	Token val = null;
-	Token rowLimit = null;
-	Token ref = null;
-	Expression expr1 = null;
-	Expression expr2 = null;
+	Expression limit = null;
+	Expression offset = null;
 }
 {
-	<LIMIT>
-	(val=<INTEGERVAL> | <QMARK>)
-	[<COMMA> (rowLimit=<INTEGERVAL> | ref=<QMARK>)]
+    ((<LIMIT> offset = intParam(info)
+	[<COMMA> limit = intParam(info)])
 	{
-	    if (val == null) {
-	        expr1 = new Reference(info.referenceCount++);
-	    } else {
-	        expr1 = new Constant(Integer.valueOf(val.image), DataTypeManager.DefaultDataClasses.INTEGER);
-	    }
-		if (rowLimit == null && ref == null) {
-		    return new Limit(null, expr1);
-		}
-		if (rowLimit == null) {
-		    expr2 = new Reference(info.referenceCount++);
-		} else {
-	        expr2 = new Constant(Integer.valueOf(rowLimit.image), DataTypeManager.DefaultDataClasses.INTEGER);
-		}
-		return new Limit(expr1, expr2);
+	  if (limit == null) {
+	    limit = offset;
+	    offset = null;
+	  }
 	}
+	|
+	(<OFFSET> offset = intParam(info) (<ROW>|<ROWS>) 
+    [limit = fetchLimit(info)])
+    |
+    (limit = fetchLimit(info)))
+	{
+		return new Limit(offset, limit);
+	}
+}
+
+Expression fetchLimit(ParseInfo info) :
+{
+    Expression limit = null;
+}
+{
+    <FETCH> nonReserved("FIRST", "NEXT") [limit = intParam(info)] (<ROW>|<ROWS>) <ONLY>
+    {
+      if (limit == null) {
+        return new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER); 
+      }
+      return limit;
+    }
 }
 
 /** 

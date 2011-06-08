@@ -61,7 +61,6 @@ import org.teiid.query.sql.lang.Into;
 import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.JoinPredicate;
 import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.Limit;
 import org.teiid.query.sql.lang.MatchCriteria;
 import org.teiid.query.sql.lang.NotCriteria;
 import org.teiid.query.sql.lang.OrderBy;
@@ -6432,56 +6431,6 @@ public class TestParser {
         } catch(QueryParserException e) {
             assertTrue(e.getMessage().startsWith("Parsing error: Aggregate expressions are allowed only as top level functions in the SELECT and HAVING clauses.")); //$NON-NLS-1$
         }        
-    }
-    
-    @Test public void testLimit() {
-        Query query = new Query();
-        Select select = new Select(Arrays.asList(new AllSymbol()));
-        From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
-        query.setSelect(select);
-        query.setFrom(from);
-        query.setLimit(new Limit(null, new Constant(new Integer(100))));
-        helpTest("Select * from a limit 100", "SELECT * FROM a LIMIT 100", query); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testLimitWithOffset() {
-        Query query = new Query();
-        Select select = new Select(Arrays.asList(new AllSymbol()));
-        From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
-        query.setSelect(select);
-        query.setFrom(from);
-        query.setLimit(new Limit(new Constant(new Integer(50)), new Constant(new Integer(100))));
-        helpTest("Select * from a limit 50,100", "SELECT * FROM a LIMIT 50, 100", query); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testLimitWithReferences1() {
-        Query query = new Query();
-        Select select = new Select(Arrays.asList(new AllSymbol()));
-        From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
-        query.setSelect(select);
-        query.setFrom(from);
-        query.setLimit(new Limit(new Reference(0), new Constant(new Integer(100))));
-        helpTest("Select * from a limit ?,100", "SELECT * FROM a LIMIT ?, 100", query); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testLimitWithReferences2() {
-        Query query = new Query();
-        Select select = new Select(Arrays.asList(new AllSymbol()));
-        From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
-        query.setSelect(select);
-        query.setFrom(from);
-        query.setLimit(new Limit(new Constant(new Integer(50)), new Reference(0)));
-        helpTest("Select * from a limit 50,?", "SELECT * FROM a LIMIT 50, ?", query); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testLimitWithReferences3() {
-        Query query = new Query();
-        Select select = new Select(Arrays.asList(new AllSymbol()));
-        From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
-        query.setSelect(select);
-        query.setFrom(from);
-        query.setLimit(new Limit(new Reference(0), new Reference(1)));
-        helpTest("Select * from a limit ?,?", "SELECT * FROM a LIMIT ?, ?", query); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testEmptyOuterJoinCriteria() {

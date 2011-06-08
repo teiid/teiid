@@ -445,7 +445,7 @@
         </listitem>
         <listitem>  
           <para>
-            <link linkend="limit_clause">[LIMIT [offset,] limit]</link>
+            <link linkend="limit_clause">[(LIMIT ...) | ([OFFSET ...] [FETCH ...])]</link>
           </para>
         </listitem>
         <listitem>  
@@ -1032,12 +1032,26 @@
     <section id="limit_clause">
       <title>LIMIT Clause</title>
       <para>
-      The LIMIT clause specifies a limit on the number of records returned from the SELECT command. An optional offset (the number of rows to skip) can be specified. 
+      The LIMIT clause specifies a limit on the number of records returned from the SELECT command. An optional offset (the number of rows to skip) can be specified.  The LIMIT clause can also be specfied using the SQL 2008 OFFSET/FETCH FIRST clauses.  
+      If an ORDER BY is also specified, it will be applied before the OFFSET/LIMIT are applied.  If an ORDER BY is not specified there is generally no guarantee what subset of rows will be returned.
       </para>
       <para>
         Usage:
         <synopsis label="Usage">LIMIT [offset,] limit</synopsis>
+        <synopsis label="Usage">[OFFSET offset ROW|ROWS] [FETCH FIRST|NEXT [limit] ROW|ROWS ONLY</synopsis>
       </para>
+      <itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>The limit/offset expressions must be a non-negative integer or a parameter reference (?).  An offset of 0 is ignored.  A limit of 0 will return no rows.
+          </para>
+        </listitem>
+        <listitem>
+          <para>The terms FIRST/NEXT are interchangable as well as ROW/ROWS.
+          </para>
+        </listitem>
+      </itemizedlist>
       <itemizedlist>
         <para>Examples:
         </para>
@@ -1046,6 +1060,15 @@
         </listitem>
         <listitem>
           <para>LIMIT 500, 100 - skips 500 records and returns the next 100 records (rows 501-600)</para>
+        </listitem>
+        <listitem>
+          <para>OFFSET 500 ROWS - skips 500 records</para>
+        </listitem>
+        <listitem>
+          <para>OFFSET 500 ROWS FETCH NEXT 100 ROWS ONLY - skips 500 records and returns the next 100 records (rows 501-600)</para>
+        </listitem>
+        <listitem>
+          <para>FETCH FIRST ROW ONLY - returns only the first record</para>
         </listitem>
       </itemizedlist>
     </section>

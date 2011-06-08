@@ -762,7 +762,10 @@ public class LanguageBridgeFactory {
             rowOffset = ((Integer)c1.getValue()).intValue();
         }
         Literal c2 = (Literal)translate(limit.getRowLimit());
-        int rowLimit = ((Integer)c2.getValue()).intValue();
+        int rowLimit = Integer.MAX_VALUE;
+        if (c2 != null) {
+        	rowLimit = ((Integer)c2.getValue()).intValue();
+        }
         return new org.teiid.language.Limit(rowOffset, rowLimit);
     }
 }
