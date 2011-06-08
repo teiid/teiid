@@ -57,8 +57,6 @@ import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.events.EventDistributor;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
 import org.teiid.metadata.Table;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.processor.relational.RelationalNodeUtil;

@@ -58,6 +58,7 @@ import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionService;
 import org.teiid.dqp.service.TransactionContext.Scope;
+import org.teiid.jdbc.SQLStates;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -223,7 +224,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
                 state = ProcessingState.PROCESSING;
         		processNew();
                 if (isCanceled) {
-                	this.processingException = new TeiidProcessingException(QueryPlugin.Util.getString("QueryProcessor.request_cancelled", this.requestID)); //$NON-NLS-1$
+                	this.processingException = new TeiidProcessingException(SQLStates.QUERY_CANCELED, QueryPlugin.Util.getString("QueryProcessor.request_cancelled", this.requestID)); //$NON-NLS-1$
                     state = ProcessingState.CLOSE;
                 } 
         	}
@@ -626,10 +627,24 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     	}
 		LogManager.logDetail(LogConstants.CTX_DQP, processingException, "Sending error to client", requestID); //$NON-NLS-1$
         ResultsMessage response = new ResultsMessage(requestMsg);
-        response.setException(processingException);
+        Throwable exception = this.processingException;
+        if (isCanceled) {
+        	exception = addCancelCode(exception); 
+        }
+        response.setException(exception);
         setAnalysisRecords(response);
         receiver.receiveResults(response);
     }
+
+	private Throwable addCancelCode(Throwable exception) {
+		if (exception instanceof TeiidException) {
+			TeiidException te = (TeiidException)exception;
+			if (SQLStates.QUERY_CANCELED.equals(te.getCode())) {
+				return exception;
+			}
+		}
+		return new TeiidProcessingException(exception, SQLStates.QUERY_CANCELED, exception.getMessage());
+	}
     
     @Override
     protected boolean shouldPause() {

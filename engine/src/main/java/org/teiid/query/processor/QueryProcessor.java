@@ -34,6 +34,7 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.Assertion;
+import org.teiid.jdbc.SQLStates;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -130,7 +131,7 @@ public class QueryProcessor implements BatchProducer {
 			
 	        while(currentTime < context.getTimeSliceEnd() || context.isNonBlocking()) {
 	        	if (requestCanceled) {
-	                throw new TeiidProcessingException(QueryPlugin.Util.getString("QueryProcessor.request_cancelled", getProcessID())); //$NON-NLS-1$
+	                throw new TeiidProcessingException(SQLStates.QUERY_CANCELED, QueryPlugin.Util.getString("QueryProcessor.request_cancelled", getProcessID())); //$NON-NLS-1$
 	            }
 	        	if (currentTime > context.getTimeoutEnd()) {
 	        		throw new TeiidProcessingException("Query timed out"); //$NON-NLS-1$
