@@ -54,9 +54,9 @@ public class OlapQueryExecution implements ProcedureExecution {
     protected OlapExecutionFactory executionFactory;
     private OlapStatement stmt;
     private CellSet cellSet;
-    private CellSetAxis cols;
+    private CellSetAxis columnsAxis;
     private int colWidth;
-    private ListIterator<Position> iterator;
+    private ListIterator<Position> rowPositionIterator;
     
 	public OlapQueryExecution(Command command, OlapConnection connection, ExecutionContext context, OlapExecutionFactory executionFactory) {
 		this.command = command;
@@ -74,10 +74,10 @@ public class OlapQueryExecution implements ProcedureExecution {
 			stmt = this.connection.createStatement();
 			
 			cellSet = stmt.executeOlapQuery(mdxQuery);
-			CellSetAxis rows = this.cellSet.getAxes().get(Axis.ROWS.axisOrdinal());
-			iterator = rows.iterator();
-			cols = cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal());
-	    	colWidth = rows.getAxisMetaData().getHierarchies().size() + this.cols.getPositions().size();
+			CellSetAxis rowAxis = this.cellSet.getAxes().get(Axis.ROWS.axisOrdinal());
+			rowPositionIterator = rowAxis.iterator();
+			columnsAxis = cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal());
+	    	colWidth = rowAxis.getAxisMetaData().getHierarchies().size() + this.columnsAxis.getPositions().size();
 		} catch (SQLException e) {
 			throw new TranslatorException(e);
 		} 
@@ -109,22 +109,22 @@ public class OlapQueryExecution implements ProcedureExecution {
 	
     @Override
     public List<?> next() throws TranslatorException {
-    	if (!iterator.hasNext()) {
+    	if (!rowPositionIterator.hasNext()) {
     		return null;
     	}
-    	Position nextRow = iterator.next();
+    	Position rowPosition = rowPositionIterator.next();
     	Object[] result = new Object[colWidth];
     	int i = 0;
     	// add in rows axis
-		List<Member> members = nextRow.getMembers();
+		List<Member> members = rowPosition.getMembers();
 		for (Member member:members) {
-			String columnName = member.getHierarchy().getName();
+			String columnName = member.getName();
 			result[i++] = columnName;
 		}
 
 		// add col axis
-		for (Position colPos : cols) {
-			Cell cell = cellSet.getCell(colPos, nextRow);
+		for (Position colPos : columnsAxis) {
+			Cell cell = cellSet.getCell(colPos, rowPosition);
 			result[i++] = cell.getValue();
 		}	
 		ArrayList<Object[]> results = new ArrayList<Object[]>();
