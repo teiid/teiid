@@ -240,6 +240,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         this.batchedUpdates = null;
         this.updateCounts = null;
         this.outParamIndexMap.clear();
+        this.commandStatus = State.RUNNING;
     }
 
     /**

@@ -129,6 +129,10 @@ public class TestStatement {
 		statement.submitExecute("select 'hello world'");
 		Thread.sleep(100);
 		Mockito.verify(dqp).cancelRequest(0);
+		statement.setQueryTimeoutMS(1);
+		statement.submitExecute("select 'hello world'");
+		Thread.sleep(100);
+		Mockito.verify(dqp, Mockito.times(2)).cancelRequest(0);
 	}
 	
 }
