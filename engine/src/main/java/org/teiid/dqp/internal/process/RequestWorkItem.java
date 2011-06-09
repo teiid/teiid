@@ -293,10 +293,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	}
 
 	private void suspend() {
-		try {
-			this.transactionService.suspend(this.transactionContext);
-		} catch (XATransactionException e) {
-			LogManager.logDetail(LogConstants.CTX_DQP, e, "Error suspending active transaction"); //$NON-NLS-1$
+		if (this.transactionState == TransactionState.ACTIVE && this.transactionContext.getTransaction() != null) {
+			try {
+				this.transactionService.suspend(this.transactionContext);
+			} catch (XATransactionException e) {
+				LogManager.logDetail(LogConstants.CTX_DQP, e, "Error suspending active transaction"); //$NON-NLS-1$
+			}
 		}
 	}
 
