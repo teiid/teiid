@@ -789,8 +789,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
     
     protected void validateInsert(Insert obj) {
-        Collection vars = obj.getVariables();
-        Iterator varIter = vars.iterator();
+        Collection<ElementSymbol> vars = obj.getVariables();
+        Iterator<ElementSymbol> varIter = vars.iterator();
         Collection values = obj.getValues();
         Iterator valIter = values.iterator();
         GroupSymbol insertGroup = obj.getGroup();
@@ -798,9 +798,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 
         try {
             // Validate that all elements in variable list are updatable
-            Iterator elementIter = vars.iterator();
-            while(elementIter.hasNext()) {
-                ElementSymbol insertElem = (ElementSymbol) elementIter.next();
+        	for (ElementSymbol insertElem : vars) {
                 if(! getMetadata().elementSupports(insertElem.getMetadataID(), SupportConstants.Element.UPDATE)) {
                     handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0052", insertElem), insertElem); //$NON-NLS-1$
                 }
@@ -825,7 +823,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
             // if any of the value present in the insert are null
             while(valIter.hasNext() && varIter.hasNext()) {
                 Expression nextValue = (Expression) valIter.next();
-                ElementSymbol nextVar = (ElementSymbol) varIter.next();
+                ElementSymbol nextVar = varIter.next();
 
                 if (!(nextValue instanceof Constant) && getMetadata().isMultiSourceElement(nextVar.getMetadataID())) {
                 	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.multisource_constant", nextVar), nextVar); //$NON-NLS-1$

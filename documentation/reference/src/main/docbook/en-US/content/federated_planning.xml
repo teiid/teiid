@@ -377,6 +377,41 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
 		</listitem>
 	</itemizedlist>
    </section>
+   <section id="xquery_optimization">
+     <title>XQuery Optimization</title>
+     <para>A technique known as document projection is used to reduce the memory footprint of the context item document.  
+             Document projection loads only the parts of the document needed by the relevant XQuery and path expressions. 
+             Since document projection analysis uses all relevant path expressions, even 1 expression that could potentially use many nodes, e.g. //x rather than /a/b/x will cause a larger memory footprint.
+             With the relevant content removed the entire document will still be loaded into memory for processing.
+             Document projection will only be used when there is a context item (unnamed PASSING clause item) passed to XMLTABLE/XMLQUERY.  A named variable will not have document projection performed.
+             In some cases the expressions used may be too complex for the optimizer to use document projection.  You should check the SHOWPLAN DEBUG full plan output to see if the appropriate optimization has been performed.</para>
+     <para>With additional restrictions, simple context path expressions allow the processor to evaluate document subtrees independently - without loading the full document in memory.  
+     A simple context path expression can be of the form "[/][ns:]root/[ns1:]elem/...", where a namespace prefix or element name can also be the * wild card.  As with normal XQuery processing if namespace prefixes are used in the XQuery expression, they should be declared using the XMLNAMESPACES clause.</para>
+     <example>
+        <title>Streaming Eligible XMLQUERY</title>
+        <programlisting>XMLQUERY('/*:root/*:child' PASSING doc)</programlisting>
+        <para>Rather than loading the entire doc in-memory as a DOM tree, each child element will be independently added to the result.</para>
+     </example>
+     <example>
+        <title>Streaming Ineligible XMLQUERY</title>
+        <programlisting>XMLQUERY('//child' PASSING doc)</programlisting>
+        <para>The use of the descendent axis prevents the streaming optimization, but document projection can still be performed.</para>
+     </example>
+     <para>When using XMLTABLE, the COLUMN PATH expressions have additional restrictions.  
+     They are allowed to reference any part of the element subtree formed by the context expression and they may use any attribute value from their direct parentage. 
+     Any path expression where it is possible to reference a non-direct ancestor or sibling of the current context item prevent streaming from being used.
+     </para>
+     <example>
+        <title>Streaming Eligible XMLTABLE</title>
+        <programlisting>XMLTABLE('/*:root/*:child' PASSING doc COLUMNS fullchild XML PATH '.', parent_attr string PATH '../@attr', child_val integer)</programlisting>
+        <para>The context XQuery and the column path expression allow the streaming optimization, rather than loading the entire doc in-memory as a DOM tree, each child element will be independently added to the result.</para>
+     </example>
+     <example>
+        <title>Streaming Ineligible XMLTABLE</title>
+        <programlisting>XMLTABLE('/*:root/*:child' PASSING doc COLUMNS sibling_attr string PATH '../other_child/@attr')</programlisting>
+        <para>The reference of an element outside of the child subtree in the sibling_attr path prevents the streaming optimization from being used, but document projection can still be performed.</para>
+     </example>
+   </section>
    <section>
     <title>Federated Failure Modes</title>
     <section>
