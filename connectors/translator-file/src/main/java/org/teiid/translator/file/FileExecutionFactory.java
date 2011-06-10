@@ -46,6 +46,8 @@ import org.teiid.core.types.InputStreamFactory.FileInputStreamFactory;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.language.Call;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
@@ -79,6 +81,7 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 		@Override
 		public void execute() throws TranslatorException {
 			files = FileConnection.Util.getFiles((String)command.getArguments().get(0).getArgumentValue().getValue(), fc);
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Getting", files != null ? files.length : 0, "file(s)"); //$NON-NLS-1$ //$NON-NLS-2$
 			String name = command.getProcedureName();
 			if (name.equalsIgnoreCase(GETTEXTFILES)) {
 				isText = true;
@@ -104,6 +107,7 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 			}
 			ArrayList<Object> result = new ArrayList<Object>(2);
 			final File file = files[index++];
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Getting", file); //$NON-NLS-1$
 			FileInputStreamFactory isf = new FileInputStreamFactory(file);
 			isf.setLength(file.length());
 			Object value = null;
@@ -156,6 +160,7 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 					if (file == null || filePath == null) {
 						throw new TranslatorException(UTIL.getString("non_null")); //$NON-NLS-1$
 					}
+					LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Saving", filePath); //$NON-NLS-1$
 					InputStream is = null;
 					try {
 						if (file instanceof SQLXML) {
