@@ -7512,7 +7512,6 @@ public class TestProcessor {
         helpProcess(plan, dataManager, expected);
     }
     
-    
     @Test public void testDupSelect() throws Exception {
     	String sql = "select e1, e1 from pm1.g1";
         
@@ -7535,6 +7534,19 @@ public class TestProcessor {
         ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
         
         helpProcess(plan, dataManager, new List[] {Arrays.asList(1, 2)});
+    }
+    
+    @Test public void testDupSelectWithOrderBy() throws Exception {
+    	String sql = "select e1 as a, e1 as b from pm1.g1 order by b";
+        
+    	HardcodedDataManager dataManager = new HardcodedDataManager();
+    	
+    	//note that the command is referencing c_0
+    	dataManager.addData("SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0", new List[] {Arrays.asList(1)});
+        
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, new List[] {Arrays.asList(1, 1)});
     }
     
     private static final boolean DEBUG = false;
