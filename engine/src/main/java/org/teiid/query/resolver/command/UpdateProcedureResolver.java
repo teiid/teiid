@@ -194,7 +194,7 @@ public class UpdateProcedureResolver implements CommandResolver {
             			switch (param.getParameterType()) {
         	            case ParameterInfo.OUT:
         	            case ParameterInfo.RETURN_VALUE:
-        	            	if (!isAssignable(metadata, param)) {
+        	            	if (param.getExpression() != null && !isAssignable(metadata, param)) {
         	                    throw new QueryResolverException(QueryPlugin.Util.getString("UpdateProcedureResolver.only_variables", param.getExpression())); //$NON-NLS-1$
         	            	}
         	            	sp.setCallableStatement(true);
