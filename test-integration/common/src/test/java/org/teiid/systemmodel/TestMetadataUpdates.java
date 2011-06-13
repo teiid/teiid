@@ -67,7 +67,7 @@ public class TestMetadataUpdates {
     		public String answer(InvocationOnMock invocation) throws Throwable {
     			Procedure t = (Procedure)invocation.getArguments()[2];
     			if (t.getName().equals("proc")) {
-    				return "create virtual procedure begin select '2011'; end";
+    				return "create virtual procedure begin select '2011'; if ((call isLoggable())) call logMsg(msg=>'hello'); end";
     			}
     			return null;
     		}

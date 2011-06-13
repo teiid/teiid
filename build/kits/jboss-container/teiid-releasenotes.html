@@ -60,7 +60,8 @@
 	<LI><B>ODBC SSL</B> - added support for SSL encrypted ODBC connections.
 	<LI><B>Reauthentication Statement</B> - SET SESSION AUTHORIZATION can now be used to perform a reauthentication via JDBC or ODBC.
 	<LI><B>Pluggable Authorization</B> - an alternative PolicyDecider can be defined in the teiid-jboss-beans.xml file to customize authorization decisions.
-	<LI><B>Streaming XQuery</B> - in situations where document projection applies if the XMLQUERY/XMLTABLE path expressions meet certian conditions, then the incoming document will not only be projected, but the independent subtrees will be processed without loading the entire document.  This allows for nearly arbitrarily large XML documents to be processed.  See the Reference for more.
+	<LI><B>Streaming XQuery</B> - in situations where document projection applies if the XMLQUERY/XMLTABLE path expressions meet certain conditions, then the incoming document will not only be projected, but the independent subtrees will be processed without loading the entire document.  This allows for nearly arbitrarily large XML documents to be processed.  See the Reference for more.
+	<LI><B>Logging Procedures</B> - added SYSADMIN.isLoggable and SYSADMIN.logMsg to aid in debugging procedure logic.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

@@ -83,7 +83,7 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		checkResult("testProcedures", "select* from SYS.Procedures order by Name"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	@Test public void testProperties() {
+	@Test public void testProperties() throws Exception {
 		String[] expected = { "Name[string]	Value[string]	UID[string]	OID[integer]	ClobValue[clob]",
 				"pg_type:oid	30	mmuid:ffa4ac73-b549-470e-931f-dc36330cb8c4	1	30",
 				"pg_type:oid	1009	mmuid:d9f36bdc-7b25-4af0-b9f5-a96aac6d3094	2	1009",
@@ -94,7 +94,7 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		executeAndAssertResults("select* from SYS.Properties", expected); //$NON-NLS-1$
 	}
 
-	@Test public void testVirtualDatabase() {
+	@Test public void testVirtualDatabase() throws Exception {
 
 		String[] expected = { "Name[string]	Version[string]	", "PartsSupplier	1", //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -116,7 +116,7 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		checkResult("testColumns", "select* from SYS.Columns order by Name"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	@Test public void testTableType() {
+	@Test public void testTableType() throws Exception {
 
 		String[] expected = { "Type[string]	", "Table", }; //$NON-NLS-1$ //$NON-NLS-2$
 		executeAndAssertResults(
@@ -128,7 +128,7 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		checkResult("testTableIsSystem", "select Name from SYS.Tables where IsSystem = 'false' order by Name"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	@Test public void testDefect12064() {
+	@Test public void testDefect12064() throws Exception {
 		String[] expected = { 
 				"KeyName[string]	RefKeyUID[string]	",  //$NON-NLS-1$
 				"PK_PARTS	null", //$NON-NLS-1$
@@ -173,5 +173,13 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		execute("select distinct(OID) FROM SYS.DataTypes"); //$NON-NLS-1$
 		oidCount = getRowCount();
 		assertEquals(uidCount, oidCount);		
+	}
+	
+	@Test public void testLogMsg() throws Exception {
+		execute("call logMsg(level=>'DEBUG', context=>'org.teiid.foo', msg=>'hello world')"); //$NON-NLS-1$
+	}
+	
+	@Test(expected=SQLException.class) public void testLogMsg1() throws Exception {
+		execute("call logMsg(level=>'foo', context=>'org.teiid.foo', msg=>'hello world')"); //$NON-NLS-1$
 	}
 }
