@@ -32,7 +32,7 @@ import org.teiid.query.metadata.TransformationMetadata;
 public class TestStagingTable {
 
 	@Test public void testStagingTables() throws Exception {
-		TransformationMetadata tm = VDBMetadataFactory.getVDBMetadata(UnitTestUtil.getTestDataPath() + "/test.vdb");
+		TransformationMetadata tm = VDBMetadataFactory.getVDBMetadata(UnitTestUtil.getTestDataPath() + "/other/test.vdb");
 		
 		assertEquals(1, tm.getXMLTempGroups(tm.getGroupID("doc.newxmldocument")).size());
 	}
