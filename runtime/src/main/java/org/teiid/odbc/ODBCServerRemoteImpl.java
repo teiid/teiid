@@ -477,7 +477,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		}
 		else {
 			try {
+				// The response is a ParameterDescription message describing the parameters needed by the statement,
 				this.client.sendParameterDescription(query.stmt.getParameterMetaData(), query.paramType);
+				
+				// followed by a RowDescription message describing the rows that will be returned when the statement  
+				// is eventually executed (or a NoData message if the statement will not return rows).
+				this.client.sendResultSetDescription(query.stmt.getMetaData(), query.stmt);
 			} catch (SQLException e) {
 				errorOccurred(e);
 			}
