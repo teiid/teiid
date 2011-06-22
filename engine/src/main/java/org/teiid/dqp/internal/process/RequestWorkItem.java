@@ -445,15 +445,17 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					doneProducingBatches();
 				}
 				addToCache();
-				add = sendResultsIfNeeded(batch);
-				if (!added) {
-					super.flushBatchDirect(batch, add);
-					//restrict the buffer size for forward only results
-					if (add && !processor.hasFinalBuffer()
-							&& !batch.getTerminationFlag() 
-							&& this.getTupleBuffer().getManagedRowCount() >= 20 * this.getTupleBuffer().getBatchSize()) {
-						//requestMore will trigger more processing
-						throw BlockedException.block(requestID, "Blocking due to full results buffer."); //$NON-NLS-1$
+				synchronized (lobStreams) {
+					add = sendResultsIfNeeded(batch);
+					if (!added) {
+						super.flushBatchDirect(batch, add);
+						//restrict the buffer size for forward only results
+						if (add && !processor.hasFinalBuffer()
+								&& !batch.getTerminationFlag() 
+								&& this.getTupleBuffer().getManagedRowCount() >= 20 * this.getTupleBuffer().getBatchSize()) {
+							//requestMore will trigger more processing
+							throw BlockedException.block(requestID, "Blocking due to full results buffer."); //$NON-NLS-1$
+						}
 					}
 				}
 			}
@@ -668,10 +670,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     public void processLobChunkRequest(String id, int streamRequestId, ResultsReceiver<LobChunk> chunckReceiver) {
     	LobWorkItem workItem = null;
     	synchronized (lobStreams) {
-            workItem = this.lobStreams.get(new Integer(streamRequestId));
+            workItem = this.lobStreams.get(streamRequestId);
             if (workItem == null) {
             	workItem = new LobWorkItem(this, dqpCore, id, streamRequestId);
-            	lobStreams.put(new Integer(streamRequestId), workItem);
+            	lobStreams.put(streamRequestId, workItem);
             }
 		}
     	workItem.setResultsReceiver(chunckReceiver);
@@ -683,7 +685,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     }
     
     public void removeLobStream(int streamRequestId) {
-        this.lobStreams.remove(new Integer(streamRequestId));
+        this.lobStreams.remove(streamRequestId);
     } 
     
     public boolean requestCancel() throws TeiidComponentException {
