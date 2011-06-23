@@ -162,6 +162,14 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		        assignOutputElements(root.getLastChild(), outputElements, metadata, capFinder, rules, analysisRecord, context);
 		        break;
 		    case NodeConstants.Types.SOURCE: {
+		    	if (outputElements.isEmpty()) {
+		    		//we cannot completely filter an implicit grouping (this is a corner case)
+		            PlanNode grouping = NodeEditor.findNodePreOrder(root.getFirstChild(), NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE | NodeConstants.Types.JOIN);
+		    		if (grouping != null && !grouping.hasCollectionProperty(NodeConstants.Info.GROUP_COLS)) {
+		    			SymbolMap symbolMap = (SymbolMap) root.getProperty(NodeConstants.Info.SYMBOL_MAP);
+		                outputElements.add(symbolMap.getKeys().get(0).clone());
+		    		}
+	            }
 		        outputElements = (List<SingleElementSymbol>)determineSourceOutput(root, outputElements, metadata, capFinder);
 	            root.setProperty(NodeConstants.Info.OUTPUT_COLS, outputElements);
 	            List<SingleElementSymbol> childElements = filterVirtualElements(root, outputElements, metadata);

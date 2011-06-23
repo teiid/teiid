@@ -2357,16 +2357,6 @@ public class QueryRewriter {
     			expression.setAggregateFunction(Type.MAX);
     		}
     	}
-    	if ((expression.getAggregateFunction() == Type.MAX || expression.getAggregateFunction() == Type.MIN)
-				&& EvaluatableVisitor.willBecomeConstant(expression.getExpression())) {
-			try {
-				return new ExpressionSymbol(expression.getName(), ResolverUtil
-						.convertExpression(expression.getExpression(),DataTypeManager.getDataTypeName(expression.getType()), metadata));
-			} catch (QueryResolverException e) {
-				//should not happen, so throw as a runtime
-				throw new TeiidRuntimeException(e);
-			}
-		}
 		return expression;
 	}
    
