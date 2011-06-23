@@ -166,36 +166,37 @@
                 </tgroup>
             </table>
             
-            <para>There are file importer settings, but it does provide metadata for dynamic vdbs.</para>
-            
             <section>
                 <title>Usage</title>
                 <para>
-                Retrieve all files as BLOBs with the given extension at the given path.
+                Retrieve all files as BLOBs with an optional extension at the given path.
                 </para>
                 
                 <programlisting>call getFiles('path/*.ext')</programlisting>
                 
                 <para>
+                If the extension path is specified, then it will filter all of the file in the directory referenced by the base path. 
                 If the extension pattern is not specified and the path is a directory, 
-                then all files in the directory will be returned.  If the path or filename 
+                then all files in the directory will be returned.  Otherwise the single file referenced will be returned.  If the path 
                 doesn't exist, then no results will be returned.
                 </para>
                 
                 <para>
-                Retrieve all files as CLOBs with the given extension at the given path.
+                Retrieve all files as CLOB(s) with the an optional extension at the given path.
                 </para>
                 <programlisting>call getTextFiles('path/*.ext')</programlisting>
                 
                 <para>
-                Save the CLOB, BLOB, or XML file to given path
+                All the same files a getFiles will be retrieved, the only difference is that
+                the results will be CLOB values using the encoding execution property as the character set. 
+                </para>
+                
+                <para>
+                Save the CLOB, BLOB, or XML value to given path
                 </para>
                 <programlisting>call saveFile('path', value)</programlisting>
                 
-                <para>
-                See the database metadata for full descriptions of the getFiles, 
-                getTextFiles, and saveFile procedures.
-                </para>
+                <para>The path should reference a new file location or an existing file to overwrite completely.</para>
             </section>
             
             <section>
@@ -466,6 +467,12 @@
                         <entry>useProcedureSpecificName</entry>
                         <entry>true will allow the import of overloaded procedures (which will normally result in a duplicate procedure error) by using the unique procedure specific name as the Teiid name.  This option will only work with JDBC 4.0 compatable drivers that report specific names.</entry>
                         <entry>false</entry>
+                    </row>
+                    <row>
+                        <entry>useCatalogName</entry>
+                        <entry>true will use any non-null/non-empty catalog name as part of the name in source, e.g. "catalog"."table"."column", and in the Teiid runtime name if useFullSchemaName is true.  
+                        false will not use the catalog name in either the name in source or the Teiid runtime name.  Should be set to false for sources that do not fully support a catalog concept, but return a non-null catalog name in their metadata - such as HSQL.</entry>
+                        <entry>true</entry>
                     </row>
                 </tbody>
             </tgroup>
