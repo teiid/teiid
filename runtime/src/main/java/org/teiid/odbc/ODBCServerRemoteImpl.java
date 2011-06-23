@@ -137,10 +137,15 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private static Pattern preparedAutoIncrement = Pattern.compile("select 1 \\s*from pg_catalog.pg_attrdef \\s*where adrelid = \\$1 AND adnum = \\$2 " + //$NON-NLS-1$
 			"\\s*and pg_catalog.pg_get_expr\\(adbin, adrelid\\) \\s*like '%nextval\\(%'", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
-	private static Pattern deallocatePattern = Pattern.compile("DEALLOCATE \"(\\w+\\d+_*)\""); //$NON-NLS-1$
-	private static Pattern releasePattern = Pattern.compile("RELEASE (\\w+\\d+_*)"); //$NON-NLS-1$
-	private static Pattern savepointPattern = Pattern.compile("SAVEPOINT (\\w+\\d+_*)"); //$NON-NLS-1$
-	private static Pattern rollbackPattern = Pattern.compile("ROLLBACK\\s*(to)*\\s*(\\w+\\d+_*)*"); //$NON-NLS-1$
+	private static Pattern cursorSelectPattern = Pattern.compile("DECLARE \"(\\w+)\" CURSOR(\\s(WITH HOLD|SCROLL))? FOR (.*)", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern fetchPattern = Pattern.compile("FETCH (\\d+) IN \"(\\w+)\".*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern movePattern = Pattern.compile("MOVE (\\d+) IN \"(\\w+)\".*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern closePattern = Pattern.compile("CLOSE \"(\\w+)\"", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	
+	private static Pattern deallocatePattern = Pattern.compile("DEALLOCATE \"(\\w+\\d+_*)\"", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern releasePattern = Pattern.compile("RELEASE (\\w+\\d?_*)", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern savepointPattern = Pattern.compile("SAVEPOINT (\\w+\\d?_*)", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern rollbackPattern = Pattern.compile("ROLLBACK\\s*(to)*\\s*(\\w+\\d+_*)*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
 	private ODBCClientRemote client;
 	private Properties props;
@@ -150,6 +155,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	// TODO: this is unbounded map; need to define some boundaries as to how many stmts each session can have
 	private Map<String, Prepared> preparedMap = Collections.synchronizedMap(new HashMap<String, Prepared>());
 	private Map<String, Portal> portalMap = Collections.synchronizedMap(new HashMap<String, Portal>());
+	private Map<String, Cursor> cursorMap = Collections.synchronizedMap(new HashMap<String, Cursor>());
 	
 	public ODBCServerRemoteImpl(ODBCClientRemote client, AuthenticationType authType) {
 		this.client = client;
@@ -187,6 +193,76 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			terminate();
 		} 
 	}	
+	
+	@Override
+	public void cursorExecute(String cursorName, String sql) {
+		if (this.connection != null) {
+			if (sql != null) {
+				String modfiedSQL = sql.replaceAll("\\$\\d+", "?");//$NON-NLS-1$ //$NON-NLS-2$
+				try {
+					// close if the name is already used or the unnamed prepare; otherwise
+					// stmt is alive until session ends.
+					Prepared previous = this.preparedMap.remove(cursorName);
+					if (previous != null) {
+						previous.stmt.close();
+					}
+					
+					PreparedStatement stmt = this.connection.prepareStatement(modfiedSQL);
+					boolean hasResults = stmt.execute();
+					this.cursorMap.put(cursorName, new Cursor(cursorName, sql, stmt, null, hasResults?stmt.getResultSet():null));
+					this.client.sendCommandComplete("DECLARE CURSOR", 0); //$NON-NLS-1$
+				} catch (SQLException e) {
+					this.client.errorOccurred(e);
+				} catch (IOException e) {
+					this.client.errorOccurred(e);
+				}
+			}
+		}
+		else {
+			this.client.errorOccurred(RuntimePlugin.Util.getString("no_active_connection")); //$NON-NLS-1$
+		}
+		
+	}
+	@Override
+	public void cursorFetch(String cursorName, int rows) {
+		Cursor cursor = this.cursorMap.get(cursorName);
+		if (cursor != null) {
+			cursor.fetchSize = rows;
+			this.client.sendCursorResults(cursor.rs, rows);
+		}
+		else {
+			this.client.errorOccurred(RuntimePlugin.Util.getString("not_bound", cursorName)); //$NON-NLS-1$
+			return;
+		}
+	}
+	
+	@Override
+	public void cursorMove(String prepareName, int rows) {
+		Cursor cursor = this.cursorMap.get(prepareName);
+		if (cursor != null) {
+			this.client.sendMoveCursor(cursor.rs, rows);
+		}
+		else {
+			this.client.errorOccurred(RuntimePlugin.Util.getString("not_bound", prepareName)); //$NON-NLS-1$
+			return;
+		}
+	}	
+	
+	@Override
+	public void cursorClose(String prepareName) {
+		Cursor cursor = this.cursorMap.remove(prepareName);
+		if (cursor != null) {
+			try {
+				cursor.rs.close();
+				cursor.stmt.close();
+				this.client.sendCommandComplete("CLOSE CURSOR", 0); //$NON-NLS-1$
+			} catch (SQLException e) {
+				this.client.errorOccurred(e);
+			} catch (IOException e) {
+				this.client.errorOccurred(e);
+			}
+		}
+	}
 	
 	@Override
 	public void prepare(String prepareName, String sql, int[] paramType) {
@@ -263,43 +339,50 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			bindName  = UNNAMED;
 		}		
 		
-		Portal query = this.portalMap.get(bindName);
-		if (query == null) {
-			this.client.errorOccurred(RuntimePlugin.Util.getString("not_bound", bindName)); //$NON-NLS-1$
-			sync();
-		}				
+		Cursor cursor = this.cursorMap.get(bindName);
+		if (cursor != null) {
+			this.client.sendPortalResults(cursor.sql, cursor.rs, cursor.fetchSize, true);
+		}
 		else {
-			if (query.sql.trim().isEmpty()) {
-				this.client.emptyQueryReceived();
-				return;
+			Portal query = this.portalMap.get(bindName);
+			if (query == null) {
+				this.client.errorOccurred(RuntimePlugin.Util.getString("not_bound", bindName)); //$NON-NLS-1$
+				sync();
+			}				
+			else {
+				if (query.sql.trim().isEmpty()) {
+					this.client.emptyQueryReceived();
+					return;
+				}
+				
+	            PreparedStatement stmt = query.stmt;
+	            try {
+	            	// maxRows = 0, means unlimited.
+	            	if (maxRows != 0) {
+	            		stmt.setMaxRows(maxRows);
+	            	}
+	            	
+	                boolean result = stmt.execute();
+	                if (result) {
+	                    try {
+	                        ResultSet rs = stmt.getResultSet();
+	                        this.client.sendResults(query.sql, rs, true);
+	                    } catch (SQLException e) {
+	                        this.client.errorOccurred(e);
+	                    }
+	                } else {
+	                	this.client.sendUpdateCount(query.sql, stmt.getUpdateCount());
+	                }
+	            } catch (SQLException e) {
+	            	this.client.errorOccurred(e);
+	            }			
 			}
-			
-            PreparedStatement stmt = query.stmt;
-            try {
-            	// maxRows = 0, means unlimited.
-            	if (maxRows != 0) {
-            		stmt.setMaxRows(maxRows);
-            	}
-            	
-                boolean result = stmt.execute();
-                if (result) {
-                    try {
-                        ResultSet rs = stmt.getResultSet();
-                        this.client.sendResults(query.sql, rs, true);
-                    } catch (SQLException e) {
-                        this.client.errorOccurred(e);
-                    }
-                } else {
-                	this.client.sendUpdateCount(query.sql, stmt.getUpdateCount());
-                }
-            } catch (SQLException e) {
-            	this.client.errorOccurred(e);
-            }			
 		}
 	}
 	
 	private String fixSQL(String sql) {
 		String modified = sql;
+		Matcher m = null;
 		// select current_schema()
 		// set client_encoding to 'WIN1252'
 		if (sql != null) {
@@ -307,8 +390,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			String sqlLower = sql.toLowerCase();
 			if (sqlLower.startsWith("select")) { //$NON-NLS-1$
 				modified = sql.replace('\n', ' ');
-											
-				Matcher m = null;
+															
 				if ((m = pkPattern.matcher(modified)).matches()) {
 					modified = new StringBuffer("SELECT k.Name AS attname, convert(Position, short) AS attnum, TableName AS relname, SchemaName AS nspname, TableName AS relname") //$NON-NLS-1$
 				          .append(" FROM SYS.KeyColumns k") //$NON-NLS-1$ 
@@ -367,7 +449,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				modified = "select 63"; //$NON-NLS-1$
 			}
 			else {
-				Matcher m = setPattern.matcher(sql);
+				m = setPattern.matcher(sql);
 				if (m.matches()) {
 					if (m.group(2).equalsIgnoreCase("client_encoding")) { //$NON-NLS-1$
 						this.client.setEncoding(PGCharsetConverter.getCharset(m.group(4)));
@@ -383,16 +465,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				else if ((m = rollbackPattern.matcher(modified)).matches()) {
 					modified = "ROLLBACK"; //$NON-NLS-1$
 				}	
-				else if ((m = savepointPattern.matcher(modified)).matches()) {
-					modified = "SELECT 'SAVEPOINT'"; //$NON-NLS-1$
-				}
-				else if ((m = releasePattern.matcher(modified)).matches()) {
-					modified = "SELECT 'RELEASE'"; //$NON-NLS-1$
-				}		
-				else if ((m = deallocatePattern.matcher(modified)).matches()) {
-					closePreparedStatement(m.group(1));
-					modified = "SELECT 'DEALLOCATE'"; //$NON-NLS-1$
-				}					
 			}
 			if (modified != null && !modified.equalsIgnoreCase(sql)) {
 				LogManager.logDetail(LogConstants.CTX_ODBC, "Modified Query:"+modified); //$NON-NLS-1$
@@ -417,37 +489,69 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		try {			
 	        ScriptReader reader = new ScriptReader(new StringReader(query));
 	        String sql =  reader.readStatement();
-	        String s = fixSQL(sql);
-	        while (s != null) {
-	            Statement stmt = null;
-	            try {
-	                stmt = this.connection.createStatement();
-	                boolean result = stmt.execute(s);
-	                if (result) {
-	                	this.client.sendResults(sql, stmt.getResultSet(), true);
-	                } else {
-	                	this.client.sendUpdateCount(sql, stmt.getUpdateCount());
-	                }
-	                sql = reader.readStatement();
-	                s = fixSQL(sql);
-	            } catch (SQLException e) {
-	                this.client.errorOccurred(e);
-	                break;
-	            } finally {
-	                try {
-	                	if (stmt != null) {
-	                		stmt.close();
-	                	}
-					} catch (SQLException e) {
-						this.client.errorOccurred(e);
+	        while (sql != null) {
+		        Matcher m = null;
+		        if ((m = cursorSelectPattern.matcher(sql)).matches()){
+					cursorExecute(m.group(1), fixSQL(m.group(4)));
+				}
+				else if ((m = fetchPattern.matcher(sql)).matches()){
+					cursorFetch(m.group(2), Integer.parseInt(m.group(1)));
+				}
+				else if ((m = movePattern.matcher(sql)).matches()){
+					cursorMove(m.group(2), Integer.parseInt(m.group(1)));
+				}
+				else if ((m = closePattern.matcher(sql)).matches()){
+					cursorClose(m.group(1));
+				}
+				else if ((m = savepointPattern.matcher(sql)).matches()) {
+					this.client.sendCommandComplete("SAVEPOINT", 0); //$NON-NLS-1$
+				}
+				else if ((m = releasePattern.matcher(sql)).matches()) {
+					this.client.sendCommandComplete("RELEASE", 0); //$NON-NLS-1$
+				}		
+				else if ((m = deallocatePattern.matcher(sql)).matches()) { 
+					closePreparedStatement(m.group(1));
+					this.client.sendCommandComplete("DEALLOCATE", 0); //$NON-NLS-1$
+				}					
+		        
+				else {
+					if (!executeAndSend(fixSQL(sql))) {
 						break;
 					}
-	            }
+				}
+	            sql = reader.readStatement();
 	        }
+	        sync();
 		} catch(IOException e) {
 			this.client.errorOccurred(e);
 		}
-		sync();
+	}
+
+	private boolean executeAndSend(String sql) {
+		boolean sucess = true;
+        Statement stmt = null;
+        try {
+            stmt = this.connection.createStatement();
+            boolean result = stmt.execute(sql);
+            if (result) {
+            	this.client.sendResults(sql, stmt.getResultSet(), true);
+            } else {
+            	this.client.sendUpdateCount(sql, stmt.getUpdateCount());
+            }
+        } catch (SQLException e) {
+            this.client.errorOccurred(e);
+            sucess = false;
+        } finally {
+            try {
+            	if (stmt != null) {
+            		stmt.close();
+            	}
+			} catch (SQLException e) {
+				this.client.errorOccurred(e);
+				sucess = false;
+			}
+        }
+        return sucess;
 	}
 
 	@Override
@@ -624,6 +728,16 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
          * The list of parameter types (if set).
          */
         int[] paramType;
+    }
+    
+    static class Cursor extends Prepared {
+    	ResultSet rs;
+    	int fetchSize = 1000;
+    	
+    	public Cursor (String name, String sql, PreparedStatement stmt, int[] paramType, ResultSet rs) {
+    		super(name, sql, stmt, paramType);
+    		this.rs = rs;
+    	}
     }
 
     /**
