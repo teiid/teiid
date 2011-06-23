@@ -92,7 +92,7 @@ public class TestCachedResults {
 		
 		RealMetadataFactory.buildWorkContext(RealMetadataFactory.exampleBQT());
 		
-		cachedResults.restore(cache, bm);
+		assertTrue(cachedResults.restore(cache, bm));
 		
 		// since restored, simulate a async cache flush
 		cache.clear();
@@ -106,5 +106,10 @@ public class TestCachedResults {
 		assertArrayEquals(tb.getBatch(1).getAllTuples(), cachedTb.getBatch(1).getAllTuples());
 		assertArrayEquals(tb.getBatch(9).getAllTuples(), cachedTb.getBatch(9).getAllTuples());
 		assertTrue(ts - cachedResults.getAccessInfo().getCreationTime() <= 5000);
+		
+		//ensure that an incomplete load fails
+		cache.remove(results.getId()+","+1); //$NON-NLS-1$
+		cachedResults = UnitTestUtil.helpSerialize(results);
+		assertFalse(cachedResults.restore(cache, bm));
 	}	
 }
