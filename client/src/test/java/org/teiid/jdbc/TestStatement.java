@@ -136,4 +136,13 @@ public class TestStatement {
 		Mockito.verify(dqp, Mockito.times(2)).cancelRequest(0);
 	}
 	
+	@Test public void testTimeoutProperty() throws Exception {
+		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+		Properties p = new Properties();
+		p.setProperty(ExecutionProperties.QUERYTIMEOUT, "2");
+		Mockito.stub(conn.getExecutionProperties()).toReturn(p);
+		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		assertEquals(2, statement.getQueryTimeout());
+	}
+	
 }

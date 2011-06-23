@@ -200,7 +200,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         String queryTimeoutStr = this.execProps.getProperty(ExecutionProperties.QUERYTIMEOUT);
         if(queryTimeoutStr != null) {
             try {
-                this.queryTimeoutMS = Integer.parseInt(fetchSizeStr)*1000;
+                this.queryTimeoutMS = Integer.parseInt(queryTimeoutStr)*1000;
             } catch(Exception e) {
                 // silently failover to default
             }
