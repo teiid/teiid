@@ -74,7 +74,7 @@ public class TestDymamicImportedMetaData {
     	assertEquals(1, p.getResultSet().getColumns().size());
     }
     
-    @Test public void testDuplicatException() throws Exception {
+    @Test public void testDuplicateException() throws Exception {
     	FakeServer server = new FakeServer();
     	MetadataFactory mf = createMetadataFactory("x", new Properties());
     	MetadataFactory mf1 = createMetadataFactory("y", new Properties());
@@ -93,8 +93,9 @@ public class TestDymamicImportedMetaData {
     	
     	Properties importProperties = new Properties();
     	
-    	getMetadata(importProperties, conn);
-    	assertNotNull(mf.getMetadataStore().getSchemas().get("X").getTables().get("DUP"));
+    	mf = getMetadata(importProperties, conn);
+    	Table t = mf.getMetadataStore().getSchemas().get("TEST").getTables().get("TEST.X.DUP");
+    	assertEquals("\"test\".\"x\".\"dup\"", t.getNameInSource());
 
     	importProperties.setProperty("importer.useFullSchemaName", Boolean.FALSE.toString());
     	try {
@@ -103,6 +104,26 @@ public class TestDymamicImportedMetaData {
     	} catch (TranslatorException e) {
     		
     	}
+    }
+    
+    @Test public void testUseCatalog() throws Exception {
+    	FakeServer server = new FakeServer();
+    	MetadataFactory mf = createMetadataFactory("x", new Properties());
+    	
+    	Table dup = mf.addTable("dup");
+    	
+    	mf.addColumn("x", DataTypeManager.DefaultDataTypes.STRING, dup);
+    	
+    	MetadataStore ms = mf.getMetadataStore();
+    	
+    	server.deployVDB("test", ms, new LinkedHashMap<String, Resource>());
+    	Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
+    	
+    	Properties importProperties = new Properties();
+    	importProperties.setProperty("importer.useCatalogName", Boolean.FALSE.toString());
+    	mf = getMetadata(importProperties, conn);
+    	Table t = mf.getMetadataStore().getSchemas().get("TEST").getTables().get("X.DUP");
+    	assertEquals("\"x\".\"dup\"", t.getNameInSource());
     }
 
 }
