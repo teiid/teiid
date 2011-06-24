@@ -35,6 +35,7 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogConstants;
@@ -118,15 +119,16 @@ public class CachedResults implements Serializable, Cachable {
 
 	@Override
 	public synchronized boolean restore(Cache cache, BufferManager bufferManager) {
-		try {
-			if (this.results == null) {
+		if (this.results == null) {
+			TupleBuffer buffer = null;
+			try {
 				List<ElementSymbol> schema = new ArrayList<ElementSymbol>(types.length);
 				for (String type : types) {
 					ElementSymbol es = new ElementSymbol("x"); //$NON-NLS-1$
 					es.setType(DataTypeManager.getDataTypeClass(type));
 					schema.add(es);
 				}
-				TupleBuffer buffer = bufferManager.createTupleBuffer(schema, "cached", TupleSourceType.FINAL); //$NON-NLS-1$
+				buffer = bufferManager.createTupleBuffer(schema, "cached", TupleSourceType.FINAL); //$NON-NLS-1$
 				buffer.setBatchSize(this.batchSize);
 				if (this.hint != null) {
 					buffer.setPrefersMemory(this.hint.getPrefersMemory());
@@ -134,18 +136,24 @@ public class CachedResults implements Serializable, Cachable {
 				
 				for (int row = 1; row <= this.rowCount; row+=this.batchSize) {
 					TupleBatch batch = (TupleBatch)cache.get(uuid+","+row); //$NON-NLS-1$
-					if (batch != null) {					
-						buffer.addTupleBatch(batch, true);
-					}					
+					if (batch == null) {					
+						LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.getString("not_found_cache")); //$NON-NLS-1$
+						buffer.remove();
+						return false;
+					}		
+					buffer.addTupleBatch(batch, true);
 				}
 				this.results = buffer;	
 				bufferManager.addTupleBuffer(this.results);
 				this.results.close();
+			} catch (TeiidException e) {
+				LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("unexpected_exception_restoring_results")); //$NON-NLS-1$
+				if (buffer != null) {
+					buffer.remove();
+				}
+				return false;
 			}
-			return true;
-		} catch (TeiidComponentException e) {
-			LogManager.logDetail(LogConstants.CTX_DQP, QueryPlugin.Util.getString("not_found_cache")); //$NON-NLS-1$
 		}
-		return false;
+		return true;
 	}	
 }
