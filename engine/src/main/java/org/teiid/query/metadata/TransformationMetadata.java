@@ -80,6 +80,18 @@ import org.teiid.query.sql.lang.SPParameter;
  */
 public class TransformationMetadata extends BasicQueryMetadata implements Serializable {
 	
+	private static final class LiveTableQueryNode extends QueryNode {
+		Table t;
+		private LiveTableQueryNode(Table t) {
+			super(t.getFullName(), null);
+			this.t = t;
+		}
+
+		public String getQuery() {
+			return t.getSelectTransformation();
+		}
+	}
+	
 	private final class VirtualFileInputStreamFactory extends
 			InputStreamFactory {
 		private final VirtualFile f;
@@ -480,8 +492,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         if (!tableRecord.isVirtual()) {
             throw new QueryMetadataException(QueryPlugin.Util.getString("TransformationMetadata.QueryPlan_could_not_be_found_for_physical_group__6")+tableRecord.getFullName()); //$NON-NLS-1$
         }
-        String transQuery = tableRecord.getSelectTransformation();
-        QueryNode queryNode = new QueryNode(tableRecord.getFullName(), transQuery);
+        LiveTableQueryNode queryNode = new LiveTableQueryNode(tableRecord);
 
         // get any bindings and add them onto the query node
         List bindings = tableRecord.getBindings();

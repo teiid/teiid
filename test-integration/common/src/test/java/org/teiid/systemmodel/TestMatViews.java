@@ -22,20 +22,30 @@
 
 package org.teiid.systemmodel;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.metadata.Table;
+import org.teiid.query.function.metadata.FunctionMethod;
+import org.teiid.query.function.metadata.FunctionParameter;
 import org.teiid.query.metadata.TransformationMetadata;
 
 @SuppressWarnings("nls")
@@ -44,12 +54,31 @@ public class TestMatViews {
     private static final String MATVIEWS = "matviews";
 	private Connection conn;
 	private FakeServer server;
+	
+	private static int count = 0;
+	
+	public static int pause() throws InterruptedException {
+		synchronized (TestMatViews.class) {
+			count++;
+			TestMatViews.class.notify();
+			while (count < 2) {
+				TestMatViews.class.wait();
+			}
+		}
+		return 1;
+	}
 
 	@Before public void setUp() throws Exception {
     	server = new FakeServer();
-    	server.deployVDB(MATVIEWS, UnitTestUtil.getTestDataPath() + "/matviews.vdb");
+    	HashMap<String, Collection<FunctionMethod>> udfs = new HashMap<String, Collection<FunctionMethod>>();
+    	udfs.put("funcs", Arrays.asList(new FunctionMethod("pause", null, null, FunctionMethod.CANNOT_PUSHDOWN, TestMatViews.class.getName(), "pause", null, new FunctionParameter("return", DataTypeManager.DefaultDataTypes.INTEGER), false, FunctionMethod.NONDETERMINISTIC)));
+    	server.deployVDB(MATVIEWS, UnitTestUtil.getTestDataPath() + "/matviews.vdb", udfs);
     	conn = server.createConnection("jdbc:teiid:matviews");
     }
+	
+	@After public void tearDown() throws Exception {
+		server.stop();
+	}
 	
 	@Test public void testSystemMatViewsWithImplicitLoad() throws Exception {
 		Statement s = conn.createStatement();
@@ -80,9 +109,78 @@ public class TestMatViews {
 	
 	@Test public void testSystemMatViewsWithExplicitRefresh() throws Exception {
 		Statement s = conn.createStatement();
+		ResultSet rs = s.executeQuery("select * from (call refreshMatView('TEST.RANDOMVIEW', false)) p");
+		assertTrue(rs.next());
+		assertEquals(1, rs.getInt(1));
+		rs = s.executeQuery("select * from MatViews where name = 'RandomView'");
+		assertTrue(rs.next());
+		assertEquals("LOADED", rs.getString("loadstate"));
+		assertEquals(true, rs.getBoolean("valid"));
+		rs = s.executeQuery("select x from TEST.RANDOMVIEW");
+		assertTrue(rs.next());
+		double key = rs.getDouble(1);
+
+		rs = s.executeQuery("select * from (call refreshMatView('TEST.RANDOMVIEW', false)) p");
+		assertTrue(rs.next());
+		assertEquals(1, rs.getInt(1));
+		rs = s.executeQuery("select * from MatViews where name = 'RandomView'");
+		assertTrue(rs.next());
+		assertEquals("LOADED", rs.getString("loadstate"));
+		assertEquals(true, rs.getBoolean("valid"));
+		rs = s.executeQuery("select x from TEST.RANDOMVIEW");
+		assertTrue(rs.next());
+		double key1 = rs.getDouble(1);
+
+		//ensure that invalidate with distributed caching works
+		assertTrue(key1 != key);
+	}
+	
+	@Test public void testSystemManViewsWithExplictRefreshAndInvalidate() throws Exception {
+		Statement s = conn.createStatement();
 		ResultSet rs = s.executeQuery("select * from (call refreshMatView('TEST.MATVIEW', false)) p");
 		assertTrue(rs.next());
 		assertEquals(1, rs.getInt(1));
+		rs = s.executeQuery("select * from MatViews where name = 'MatView'");
+		assertTrue(rs.next());
+		assertEquals("LOADED", rs.getString("loadstate"));
+		assertEquals(true, rs.getBoolean("valid"));
+		
+		count = 0;
+		
+		VDBMetaData vdb = server.getVDB(MATVIEWS);
+		TransformationMetadata tm = vdb.getAttachment(TransformationMetadata.class);
+		Table tbl = tm.getGroupID("TEST.MATVIEW");
+		tbl.setSelectTransformation("select pause() as x");
+		
+		Thread t = new Thread() {
+			public void run() {
+				try {
+					Statement s1 = conn.createStatement();
+					ResultSet rs = s1.executeQuery("select * from (call refreshMatView('TEST.MATVIEW', true)) p");
+					assertTrue(rs.next());
+					assertEquals(1, rs.getInt(1));
+				} catch (Exception e) {
+					throw new TeiidRuntimeException(e);
+				}
+			}
+		};
+		t.start();
+		synchronized (TestMatViews.class) {
+			while (count < 1) {
+				TestMatViews.class.wait();
+			}
+		}
+		rs = s.executeQuery("select * from MatViews where name = 'MatView'");
+		assertTrue(rs.next());
+		assertEquals("NEEDS_LOADING", rs.getString("loadstate"));
+		assertEquals(false, rs.getBoolean("valid"));
+
+		synchronized (TestMatViews.class) {
+			count++;
+			TestMatViews.class.notify();
+		}
+		t.join();
+		
 		rs = s.executeQuery("select * from MatViews where name = 'MatView'");
 		assertTrue(rs.next());
 		assertEquals("LOADED", rs.getString("loadstate"));
@@ -99,14 +197,34 @@ public class TestMatViews {
 		s.execute("call refreshMatView('foo', false)");
 	}
 	
+	@Test(expected=TeiidSQLException.class) public void testSystemMatViewsWithRowRefreshNotAllowed() throws Exception {
+		Statement s = conn.createStatement();
+		VDBMetaData vdb = server.getVDB(MATVIEWS);
+		TransformationMetadata tm = vdb.getAttachment(TransformationMetadata.class);
+		Table t = tm.getGroupID("TEST.RANDOMVIEW");
+		t.setSelectTransformation("select rand() as x, rand() as y");
+		ResultSet rs = s.executeQuery("select * from (call refreshMatView('TEST.RANDOMVIEW', false)) p");
+		assertTrue(rs.next());
+		assertEquals(1, rs.getInt(1));
+		rs = s.executeQuery("select * from MatViews where name = 'RandomView'");
+		assertTrue(rs.next());
+		assertEquals("LOADED", rs.getString("loadstate"));
+		assertEquals(true, rs.getBoolean("valid"));
+		rs = s.executeQuery("select x from TEST.RANDOMVIEW");
+		assertTrue(rs.next());
+		double key = rs.getDouble(1);
+		
+		rs = s.executeQuery("select * from (call refreshMatViewRow('TEST.RANDOMVIEW', "+key+")) p");
+	}
+	
 	@Test public void testSystemMatViewsWithRowRefresh() throws Exception {
-		//TOOD: remove this. it's a workaround for TEIIDDES-549
+		Statement s = conn.createStatement();
+		
 		VDBMetaData vdb = server.getVDB(MATVIEWS);
 		TransformationMetadata tm = vdb.getAttachment(TransformationMetadata.class);
 		Table t = tm.getGroupID("TEST.RANDOMVIEW");
 		t.setSelectTransformation("/*+ cache(updatable) */ " +  t.getSelectTransformation());
 		
-		Statement s = conn.createStatement();
 		//prior to load refresh of a single row returns -1
 		ResultSet rs = s.executeQuery("select * from (call refreshMatViewRow('TEST.RANDOMVIEW', 0)) p");
 		assertTrue(rs.next());
