@@ -43,6 +43,7 @@ public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator
 	private String type;
 	private Class<?> executionClass;
 	private String description;
+	private String moduleName;
 	
 	@Override
 	@ManagementProperty(description="Name of the Translator", mandatory = true)
@@ -96,5 +97,13 @@ public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator
 	@XmlAttribute(name = "description")
 	public void setDescription(String desc) {
 		this.description = desc;
+	}
+	
+	public String getModuleName() {
+		return this.moduleName;
+	}
+	
+	public void setModuleName(String name) {
+		this.moduleName = name;
 	}
 }

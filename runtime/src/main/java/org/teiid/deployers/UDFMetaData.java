@@ -22,17 +22,11 @@
 package org.teiid.deployers;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.xml.bind.JAXBException;
 
-import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.virtual.VirtualFile;
-import org.teiid.api.exception.query.QueryMetadataException;
+import org.jboss.vfs.VirtualFile;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataReader;
@@ -42,7 +36,6 @@ import org.teiid.query.report.ReportItem;
 import org.teiid.runtime.RuntimePlugin;
 
 
-@ManagementObject
 public class UDFMetaData {
 	private HashMap<String, Collection <FunctionMethod>> methods = new HashMap<String, Collection<FunctionMethod>>();
 	private HashMap<String, VirtualFile> files = new HashMap<String, VirtualFile>();
@@ -52,7 +45,7 @@ public class UDFMetaData {
 	}
 	
 	
-	void buildFunctionModelFile(String name, String path) throws IOException, JAXBException, QueryMetadataException {
+	void buildFunctionModelFile(String name, String path) throws IOException, JAXBException {
 		for (String f:files.keySet()) {
 			if (f.endsWith(path)) {
 				path = f;
@@ -67,7 +60,7 @@ public class UDFMetaData {
 		ActivityReport<ReportItem> report = new ActivityReport<ReportItem>("UDF load"); //$NON-NLS-1$
 		FunctionMetadataValidator.validateFunctionMethods(udfMethods,report);
 		if(report.hasItems()) {
-		    throw new QueryMetadataException(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$
+		    throw new IOException(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$
 		}
 		this.methods.put(name, udfMethods);
 	}

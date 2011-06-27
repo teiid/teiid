@@ -83,6 +83,16 @@
         <groupId>org.picketbox</groupId>
         <artifactId>picketbox</artifactId>
         <scope>provided</scope>
+    </dependency>    
+    <dependency>
+        <groupId>org.jboss.as</groupId>
+        <artifactId>jboss-as-server</artifactId>
+        <scope>provided</scope>
+    </dependency>     
+    <dependency>
+        <groupId>org.jboss.as</groupId>
+        <artifactId>jboss-as-connector</artifactId>
+        <scope>provided</scope>
     </dependency>     
                             
     <!-- 

@@ -170,7 +170,7 @@ public class IndexMetadataFactory {
 	public void addEntriesPlusVisibilities(VirtualFile root, VDBMetaData vdb) throws IOException {
 		LinkedHashMap<String, Resource> visibilityMap = new LinkedHashMap<String, Resource>();
 		for(VirtualFile f: root.getChildrenRecursively()) {
-			if (f.isLeaf()) {
+			if (f.isFile()) {
 				// remove the leading vdb name from the entry
 				String path = f.getPathName().substring(root.getPathName().length());
 				if (!path.startsWith("/")) { //$NON-NLS-1$

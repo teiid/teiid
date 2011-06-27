@@ -143,6 +143,11 @@
     </xs:complexType>
     <xs:complexType name="runtime-engine-type">
         <xs:sequence>
+            <xs:element name="thread-group-async" type="xs:string" minOccurs="0" maxOccurs="1" default="teiid-async">
+                <xs:annotation>
+                    <xs:documentation>Thread group to use for Async Processing</xs:documentation>
+                </xs:annotation>
+            </xs:element>        
             <xs:element name="maxThreads" type="xs:int" minOccurs="0" maxOccurs="1" default="64">
                 <xs:annotation>
                     <xs:documentation>Process pool maximum thread count. (default 64)</xs:documentation>

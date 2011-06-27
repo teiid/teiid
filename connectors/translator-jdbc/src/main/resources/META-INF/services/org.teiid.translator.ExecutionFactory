@@ -1,0 +1,22 @@
+org.teiid.translator.jdbc.JDBCExecutionFactory #jdbc-ansi
+org.teiid.translator.jdbc.SimpleJDBCExecutionFactory #jdbc-simple
+org.teiid.translator.jdbc.access.AccessExecutionFactory # Access
+org.teiid.translator.jdbc.db2.DB2ExecutionFactory #db2
+org.teiid.translator.jdbc.derby.DerbyExecutionFactory #Derby
+org.teiid.translator.jdbc.h2.H2ExecutionFactory #h2
+org.teiid.translator.jdbc.hsql.HsqlExecutionFactory #hsql
+org.teiid.translator.jdbc.informix.InformixExecutionFactory #informix
+org.teiid.translator.jdbc.mm.MetaMatrixExecutionFactory #metamatrix
+org.teiid.translator.jdbc.mysql.MySQLExecutionFactory #mysql
+org.teiid.translator.jdbc.mysql.MySQL5ExecutionFactory #mysql5
+org.teiid.translator.jdbc.oracle.OracleExecutionFactory #oracle
+org.teiid.translator.jdbc.postgresql.PostgreSQLExecutionFactory #postgresql
+org.teiid.translator.jdbc.sqlserver.SQLServerExecutionFactory #sqlserver
+org.teiid.translator.jdbc.sybase.SybaseExecutionFactory #sybase
+org.teiid.translator.jdbc.teiid.TeiidExecutionFactory #teiid
+org.teiid.translator.jdbc.teradata.TeradataExecutionFactory #teradata
+org.teiid.translator.jdbc.modeshape.ModeShapeExecutionFactory #modeshape
+org.teiid.translator.jdbc.ingres.IngresExecutionFactory #ingres
+org.teiid.translator.jdbc.ingres.Ingres93ExecutionFactory #ingres93
+org.teiid.translator.jdbc.intersyscache.InterSystemsCacheExecutionFactory #intersystems-cache
+

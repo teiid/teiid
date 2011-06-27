@@ -21,77 +21,64 @@
  */
 package org.teiid.deployers;
 
+import java.io.Closeable;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.jboss.deployers.spi.DeploymentException;
-import org.jboss.deployers.vfs.plugins.structure.AbstractVFSStructureDeployer;
-import org.jboss.deployers.vfs.spi.structure.StructureContext;
-import org.jboss.virtual.VirtualFile;
-import org.jboss.virtual.plugins.context.jar.JarUtils;
+import org.jboss.as.server.deployment.*;
+import org.jboss.as.server.deployment.module.ModuleRootMarker;
+import org.jboss.as.server.deployment.module.MountHandle;
+import org.jboss.as.server.deployment.module.ResourceRoot;
+import org.jboss.as.server.deployment.module.TempFileProviderService;
+import org.jboss.vfs.VFS;
+import org.jboss.vfs.VirtualFile;
 import org.teiid.metadata.VdbConstants;
 
 
 
-public class VDBStructure  extends AbstractVFSStructureDeployer{
+public class VDBStructure  implements DeploymentUnitProcessor {
+	private static final String VDB_EXTENSION = ".vdb"; //$NON-NLS-1$
+	private static final String DYNAMIC_VDB_STRUCTURE = "-vdb.xml"; //$NON-NLS-1$
 	
-   public VDBStructure(){
-      setRelativeOrder(1000);
-      JarUtils.addJarSuffix(".vdb"); //$NON-NLS-1$
-   }	
-   
 	@Override
-	public boolean determineStructure(StructureContext structureContext) throws DeploymentException {
-		VirtualFile file = structureContext.getFile();
-		try {
-			if (isLeaf(file) == false) {
-				if (file.getName().endsWith(".vdb")) { //$NON-NLS-1$
-					
-					VirtualFile metainf = file.getChild("META-INF"); //$NON-NLS-1$
-					if (metainf == null) {
-						return false;
-					}
-					
-					if (metainf.getChild(VdbConstants.DEPLOYMENT_FILE) == null) {
-						return false;
-					}
-					
-					List<String> scanDirs = new ArrayList<String>();
-					scanDirs.add("/"); //$NON-NLS-1$
-					
-					List<VirtualFile> children = file.getChildren();
-					for (VirtualFile child:children) {
-						addAllDirs(child, scanDirs, null);
-					}
-					createContext(structureContext, scanDirs.toArray(new String[scanDirs.size()]));	
-					return true;
+	public void deploy(final DeploymentPhaseContext phaseContext)  throws DeploymentUnitProcessingException {
+		
+        DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
+        
+        VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
+        if (file == null) {
+        	return;
+        }
+        
+        if(file.getLowerCaseName().endsWith(VDB_EXTENSION)) {
+
+        	try {
+				final Closeable closable = VFS.mountZip(file, file, TempFileProviderService.provider());
+				final ResourceRoot vdbArchiveRoot = new ResourceRoot(file.getName(), file, new MountHandle(closable));
+				ModuleRootMarker.mark(vdbArchiveRoot);
+				
+				VirtualFile metainf = file.getChild("META-INF"); //$NON-NLS-1$
+				if (metainf == null) {
+					return;
 				}
-			}
-		} catch (IOException e) {
-			throw DeploymentException.rethrowAsDeploymentException("Error determining structure: " + file.getName(), e); //$NON-NLS-1$
-		}
-		return false;
+				
+				if (metainf.getChild(VdbConstants.DEPLOYMENT_FILE) == null) {
+					return;
+				}
+				// adds a TYPE attachment.
+				TeiidAttachments.setAsVDBDeployment(deploymentUnit);
+			} catch (IOException e) {
+				throw new DeploymentUnitProcessingException("failed to process " + file, e); //$NON-NLS-1$
+			}			
+        }
+        else if (file.getLowerCaseName().endsWith(DYNAMIC_VDB_STRUCTURE)) {
+	        TeiidAttachments.setAsDynamicVDBDeployment(deploymentUnit);			        	
+        }
 	}
 	
-	private void addAllDirs(VirtualFile file, List<String> scanDirs, String parentName) throws IOException {
-		if (!file.isLeaf()) {
-			if (parentName != null) {
-				scanDirs.add(parentName + "/" + file.getName()); //$NON-NLS-1$
-			}
-			else {
-				scanDirs.add(file.getName());
-			}
-			List<VirtualFile> children = file.getChildren();
-			for (VirtualFile child:children) {
-				if (parentName == null) {
-					addAllDirs(child, scanDirs, file.getName());
-				}
-				else {
-					addAllDirs(child, scanDirs, parentName + "/" +file.getName()); //$NON-NLS-1$
-				}
-			}
-		}
+	
+	@Override
+	public void undeploy(final DeploymentUnit context) {
+		
 	}
 
 }

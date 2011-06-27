@@ -21,6 +21,11 @@
  */
 package org.teiid.jboss;
 
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+
+import org.jboss.dmr.ModelNode;
+import org.jboss.dmr.ModelType;
+
 class Configuration {
 	public static final String BUFFER_SERVICE = "buffer-service";//$NON-NLS-1$
 	public static final String RESULTSET_CACHE = "resultset-cache";//$NON-NLS-1$
@@ -29,9 +34,11 @@ class Configuration {
 	public static final String QUERY_ENGINE = "query-engine";//$NON-NLS-1$
 	public static final String JDBC = "jdbc";//$NON-NLS-1$
 	public static final String ODBC = "odbc"; //$NON-NLS-1$
+	public static final String TRANSLATOR = "translator"; //$NON-NLS-1$
 	
 	// Query-ENGINE
 	public static final String JNDI_NAME = "jndi-name"; //$NON-NLS-1$
+	public static final String ASYNC_THREAD_GROUP = "thread-group-async";//$NON-NLS-1$
 	public static final String MAX_THREADS = "maxThreads";//$NON-NLS-1$
 	public static final String MAX_ACTIVE_PLANS = "maxActivePlans";//$NON-NLS-1$
 	public static final String USER_REQUEST_SOURCE_CONCURRENCY = "userRequestSourceConcurrency";//$NON-NLS-1$
@@ -90,6 +97,29 @@ class Configuration {
 	public static final String TRUST_PASSWD = "truststorePassword";//$NON-NLS-1$
 	public static final String AUTH_MODE = "authenticationMode";//$NON-NLS-1$
 	public static final String SSL = "ssl";//$NON-NLS-1$
+	
+	public static final String TRANSLATOR_NAME = "name";//$NON-NLS-1$
+	public static final String TRANSLATOR_MODULE = "module";//$NON-NLS-1$
+	
+	public static final String DESC = ".describe"; //$NON-NLS-1$
+	static void addAttribute(ModelNode node, String name, String type, String description, ModelType dataType, boolean required, String defaultValue) {
+		node.get(type, name, TYPE).set(dataType);
+        node.get(type, name, DESCRIPTION).set(description);
+        node.get(type, name, REQUIRED).set(required);
+        node.get(type, name, MAX_OCCURS).set(1);
+        if (defaultValue != null) {
+        	if (ModelType.INT.equals(dataType)) {
+        		node.get(type, name, DEFAULT).set(Integer.parseInt(defaultValue));
+        	}
+        	else if (ModelType.BOOLEAN.equals(dataType)) {
+        		node.get(type, name, DEFAULT).set(Boolean.parseBoolean(defaultValue));
+        	}
+        	else {
+        		node.get(type, name, DEFAULT).set(defaultValue);
+        	}
+        }
+        //TODO: add "allowed" values
+    }	
 }
 
 

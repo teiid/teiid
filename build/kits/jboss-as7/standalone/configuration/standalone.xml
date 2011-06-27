@@ -140,6 +140,12 @@
                 <max-threads count="10" per-cpu="20"/>
                 <keepalive-time time="10" unit="seconds"/>
             </bounded-queue-thread-pool>
+            <bounded-queue-thread-pool name="teiid-async" blocking="true">
+                <core-threads count="10" per-cpu="20"/>
+                <queue-length count="10" per-cpu="20"/>
+                <max-threads count="10" per-cpu="20"/>
+                <keepalive-time time="10" unit="seconds"/>
+            </bounded-queue-thread-pool>            
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:arquillian:1.0" />
         <subsystem xmlns="urn:jboss:domain:ee:1.0" />
@@ -333,12 +339,6 @@
        </subsystem>
        
        <subsystem xmlns="urn:jboss:domain:teiid:1.0">
-            <session-service>
-                <securityDomains>teiid-security</securityDomains>
-                <adminSecurityDomain>jmx-console</adminSecurityDomain>
-                <sessionMaxLimit>5000</sessionMaxLimit>
-                <sessionExpirationTimeLimit>0</sessionExpirationTimeLimit>
-            </session-service>
             <buffer-service>
                 <useDisk>true</useDisk>
                 <diskDirectory>${jboss.server.temp.dir}/teiid</diskDirectory>
@@ -368,6 +368,7 @@
             </preparedplan-cache-config>      
             
             <runtime-engine jndi-name="teiid/engine-deployer">
+                <thread-group-async>teiid-async</thread-group-async>
                 <maxThreads>64</maxThreads>
                 <maxActivePlans>20</maxActivePlans>
                 <userRequestSourceConcurrency>0</userRequestSourceConcurrency>
@@ -383,6 +384,10 @@
                 <maxODBCLobSizeAllowed>5242880</maxODBCLobSizeAllowed>
                 <eventDistributorName>teiid/event-distributor</eventDistributorName>
                 <detectingChangeEvents>true</detectingChangeEvents>
+                <securityDomains>teiid-security</securityDomains>
+                <adminSecurityDomain>jmx-console</adminSecurityDomain>
+                <sessionMaxLimit>5000</sessionMaxLimit>
+                <sessionExpirationTimeLimit>0</sessionExpirationTimeLimit>                
             </runtime-engine>      
             
             <jdbc enabled="true">
@@ -391,17 +396,6 @@
                 <outputBufferSize>0</outputBufferSize>
                 <socket-binding>teiid-jdbc</socket-binding>
             </jdbc>
-            
-            <admin enabled="true">
-                <maxSocketThreads>4</maxSocketThreads>
-                <inputBufferSize>0</inputBufferSize>
-                <outputBufferSize>0</outputBufferSize>
-                <socket-binding>teiid-admin</socket-binding>
-                <ssl>
-                    <mode>login</mode>
-                    <authenticationMode>anonymous</authenticationMode>
-                </ssl>
-            </admin>       
             
             <odbc enabled="true">
                 <maxSocketThreads>0</maxSocketThreads>
@@ -446,7 +440,6 @@
        <socket-binding name="messaging" port="5445" />
        <socket-binding name="messaging-throughput" port="5455"/>
        <socket-binding name="teiid-jdbc" port="31000"/>
-       <socket-binding name="teiid-admin" port="31443"/>
        <socket-binding name="teiid-odbc" port="35432"/>
     </socket-binding-group>
 

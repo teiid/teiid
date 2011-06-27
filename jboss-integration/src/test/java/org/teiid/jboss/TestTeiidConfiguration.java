@@ -274,7 +274,7 @@ public class TestTeiidConfiguration {
     
     @Test
     public void testSubSystemDescription() throws IOException {
-    	TeiidSubsystemDescription tsd = new TeiidSubsystemDescription();
+    	QueryEngineDescription tsd = new QueryEngineDescription();
     	assertEquals(ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-model-config.txt")), tsd.getModelDescription(null).toString());
     }
 }

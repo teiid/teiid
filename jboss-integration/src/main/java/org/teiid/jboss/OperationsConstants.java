@@ -21,7 +21,7 @@
  */
 package org.teiid.jboss;
 
-public class OperationsConstants {
+class OperationsConstants {
 	public static final String SESSION = "session";//$NON-NLS-1$
 	public static final String VDB_NAME = "vdb-name";//$NON-NLS-1$
 	public static final String VDB_VERSION = "vdb-version";//$NON-NLS-1$

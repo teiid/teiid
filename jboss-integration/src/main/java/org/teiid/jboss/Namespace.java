@@ -25,7 +25,7 @@ package org.teiid.jboss;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum Namespace {
+enum Namespace {
     // must be first
     UNKNOWN(null),
     TEIID_1_0("urn:jboss:domain:teiid:1.0"); //$NON-NLS-1$

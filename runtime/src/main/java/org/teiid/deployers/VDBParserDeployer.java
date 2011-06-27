@@ -22,10 +22,8 @@
 package org.teiid.deployers;
 
 import java.io.File;
-import java.util.HashMap;
+import java.io.IOException;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
@@ -34,22 +32,14 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
-import org.jboss.deployers.spi.DeploymentException;
-import org.jboss.deployers.spi.deployer.managed.ManagedObjectCreator;
-import org.jboss.deployers.structure.spi.DeploymentUnit;
-import org.jboss.deployers.vfs.spi.structure.VFSDeploymentUnit;
-import org.jboss.managed.api.ManagedObject;
-import org.jboss.managed.api.factory.ManagedObjectFactory;
-import org.jboss.virtual.VirtualFile;
+import org.jboss.as.server.deployment.*;
+import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.Model;
-import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.VdbConstants;
-import org.teiid.metadata.index.IndexConstants;
 import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.runtime.RuntimePlugin;
 import org.xml.sax.SAXException;
@@ -58,61 +48,87 @@ import org.xml.sax.SAXException;
 /**
  * This file loads the "vdb.xml" file inside a ".vdb" file, along with all the metadata in the .INDEX files
  */
-public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaData> implements ManagedObjectCreator {
+public class VDBParserDeployer implements DeploymentUnitProcessor {
 	private ObjectSerializer serializer;
 	private VDBRepository vdbRepository;
-	 
-	public VDBParserDeployer() {
-		super(VDBMetaData.class, getCustomMappings(), IndexConstants.NAME_DELIM_CHAR+IndexConstants.INDEX_EXT, IndexMetadataFactory.class, VdbConstants.MODEL_EXT, UDFMetaData.class);
-		setAllowMultipleFiles(true);
-	}
-
-	private static Map<String, Class<?>> getCustomMappings() {
-		Map<String, Class<?>> mappings = new HashMap<String, Class<?>>();
-		mappings.put(VdbConstants.DEPLOYMENT_FILE, VDBMetaData.class);
-		// this not required but the to make the framework with extended classes 
-		// this required otherwise different version of parse is invoked.
-		mappings.put("undefined", UDFMetaData.class); //$NON-NLS-1$
-		return mappings;
+	
+	public VDBParserDeployer(VDBRepository repo, ObjectSerializer serializer) {
+		this.vdbRepository = repo;
+		this.serializer = serializer;
 	}
 	
-	@Override
-	protected <U> U parse(VFSDeploymentUnit unit, Class<U> expectedType, VirtualFile file, Object root) throws Exception {
-		if (expectedType.equals(VDBMetaData.class)) {
-			Unmarshaller un = getUnMarsheller();
-			VDBMetaData def = (VDBMetaData)un.unmarshal(file.openStream());
-			
-			return expectedType.cast(def);
+	public void deploy(final DeploymentPhaseContext phaseContext)  throws DeploymentUnitProcessingException {
+		DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
+		if (!TeiidAttachments.isVDBDeployment(deploymentUnit)) {
+			return;
 		}
-		else if (expectedType.equals(UDFMetaData.class)) {
-			if (root == null) {
-				root = unit.getAttachment(UDFMetaData.class);
-				if (root == null) {
-					root = new UDFMetaData();
-					unit.addAttachment(UDFMetaData.class, UDFMetaData.class.cast(root));
-				}
-			}
-			UDFMetaData udf = UDFMetaData.class.cast(root);		
-			udf.addModelFile(file);
-			
-			return expectedType.cast(udf);
-		}		
-		else if (expectedType.equals(IndexMetadataFactory.class)) {
-			if (root == null) {
-				root = unit.getAttachment(IndexMetadataFactory.class);
-				if (root == null) {
-					root = new IndexMetadataFactory();
-				}
-			}
-			IndexMetadataFactory imf = IndexMetadataFactory.class.cast(root);
-			imf.addIndexFile(file);
-			unit.addAttachment(IndexMetadataFactory.class, imf);
-			return expectedType.cast(imf);
+
+		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
+
+		if (TeiidAttachments.isDynamicVDB(deploymentUnit)) {
+			parseVDBXML(file, deploymentUnit);			
 		}
 		else {
-			throw new IllegalArgumentException("Cannot match arguments: expectedClass=" + expectedType ); //$NON-NLS-1$
-		}		
+			// scan for different files 
+			List<VirtualFile> childFiles = file.getChildren();
+			for (VirtualFile childFile:childFiles) {
+				scanVDB(childFile, deploymentUnit);
+			}
+			
+			mergeMetaData(deploymentUnit);
+		}
 	}
+	
+	private void scanVDB(VirtualFile file, DeploymentUnit deploymentUnit) throws DeploymentUnitProcessingException {
+		if (file.isDirectory()) {
+			List<VirtualFile> childFiles = file.getChildren();
+			for (VirtualFile childFile:childFiles) {
+				scanVDB(childFile, deploymentUnit);
+			}
+		}
+		else {
+			if (file.getLowerCaseName().equals(VdbConstants.DEPLOYMENT_FILE)) {
+				parseVDBXML(file, deploymentUnit);
+			}
+			else if (file.getLowerCaseName().endsWith(VdbConstants.INDEX_EXT)) {
+				IndexMetadataFactory imf = deploymentUnit.getAttachment(TeiidAttachments.INDEX_METADATA);
+				if (imf == null) {
+					imf = new IndexMetadataFactory();
+					deploymentUnit.putAttachment(TeiidAttachments.INDEX_METADATA, imf);
+				}
+				imf.addIndexFile(file);
+			}
+			else if (file.getLowerCaseName().endsWith(VdbConstants.MODEL_EXT)) {
+				UDFMetaData udf = deploymentUnit.getAttachment(TeiidAttachments.UDF_METADATA);
+				if (udf == null) {
+					udf = new UDFMetaData();
+					deploymentUnit.putAttachment(TeiidAttachments.UDF_METADATA, udf);
+				}
+				udf.addModelFile(file);				
+			}
+			
+		}
+	}
+
+	private void parseVDBXML(VirtualFile file, DeploymentUnit deploymentUnit)
+			throws DeploymentUnitProcessingException {
+		try {
+			Unmarshaller un = getUnMarsheller();
+			VDBMetaData vdb = (VDBMetaData)un.unmarshal(file.openStream());
+			deploymentUnit.putAttachment(TeiidAttachments.VDB_METADATA, vdb);
+			LogManager.logDetail(LogConstants.CTX_RUNTIME,"VDB "+file.getName()+" has been parsed.");  //$NON-NLS-1$ //$NON-NLS-2$
+		} catch (JAXBException e) {
+			throw new DeploymentUnitProcessingException(e);
+		} catch (SAXException e) {
+			throw new DeploymentUnitProcessingException(e);
+		} catch (IOException e) {
+			throw new DeploymentUnitProcessingException(e);
+		}
+	}
+	
+    public void undeploy(final DeploymentUnit context) {
+    }	
+    
 
 	static Unmarshaller getUnMarsheller() throws JAXBException, SAXException {
 		JAXBContext jc = JAXBContext.newInstance(new Class<?>[] {VDBMetaData.class});
@@ -123,100 +139,62 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 		return un;
 	}
 	
-	@Override
-	protected VDBMetaData mergeMetaData(VFSDeploymentUnit unit, Map<Class<?>, List<Object>> metadata) throws Exception {
-		VDBMetaData vdb = getInstance(metadata, VDBMetaData.class);
-		UDFMetaData udf = getInstance(metadata, UDFMetaData.class);
-		IndexMetadataFactory imf = getInstance(metadata, IndexMetadataFactory.class);
+	protected VDBMetaData mergeMetaData(DeploymentUnit deploymentUnit) throws DeploymentUnitProcessingException {
+		VDBMetaData vdb = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
+		UDFMetaData udf = deploymentUnit.getAttachment(TeiidAttachments.UDF_METADATA);
+		IndexMetadataFactory imf = deploymentUnit.getAttachment(TeiidAttachments.INDEX_METADATA);
 		
+		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
 		if (vdb == null) {
-			LogManager.logError(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("invlaid_vdb_file",unit.getRoot().getName())); //$NON-NLS-1$
+			LogManager.logError(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("invlaid_vdb_file",file.getName())); //$NON-NLS-1$
 			return null;
 		}
 		
-		vdb.setUrl(unit.getRoot().toURL());		
-		
-		// build the metadata store
-		if (imf != null) {
-			imf.addEntriesPlusVisibilities(unit.getRoot(), vdb);
-			unit.addAttachment(IndexMetadataFactory.class, imf);
-							
-			// add the cached store.
-			File cacheFile = VDBDeployer.buildCachedVDBFileName(this.serializer, unit, vdb);
-			// check to see if the vdb has been modified when server is down; if it is then clear the old files
-			if (this.serializer.isStale(cacheFile, unit.getRoot().getLastModified())) {
-				this.serializer.removeAttachments(unit);
-				LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB", unit.getRoot().getName(), "old cached metadata has been removed"); //$NON-NLS-1$ //$NON-NLS-2$				
-			}
-			MetadataStoreGroup stores = this.serializer.loadSafe(cacheFile, MetadataStoreGroup.class);
-			if (stores == null) {				
-				// start to build the new metadata 
-				stores = new MetadataStoreGroup();
-				stores.addStore(imf.getMetadataStore(vdbRepository.getSystemStore().getDatatypes()));
-			}
-			else {
-				LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB", unit.getRoot().getName(), "was loaded from cached metadata"); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-			unit.addAttachment(MetadataStoreGroup.class, stores);				
-		}
-		
-		if (udf != null) {
-			// load the UDF
-			for(Model model:vdb.getModels()) {
-				if (model.getModelType().equals(Model.Type.FUNCTION)) {
-					String path = ((ModelMetaData)model).getPath();
-					if (path == null) {
-						throw new DeploymentException(RuntimePlugin.Util.getString("invalid_udf_file", model.getName())); //$NON-NLS-1$
-					}
-					udf.buildFunctionModelFile(model.getName(), path);
-				}
-			}		
+		try {
+			vdb.setUrl(file.toURL());		
 			
-			// If the UDF file is enclosed then attach it to the deployment artifact
-			unit.addAttachment(UDFMetaData.class, udf);
+			// build the metadata store
+			if (imf != null) {
+				imf.addEntriesPlusVisibilities(file, vdb);
+								
+				// add the cached store.
+				File cacheFile = VDBDeployer.buildCachedVDBFileName(this.serializer, file, vdb);
+				// check to see if the vdb has been modified when server is down; if it is then clear the old files
+				if (this.serializer.isStale(cacheFile, file.getLastModified())) {
+					this.serializer.removeAttachments(file);
+					LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB", file.getName(), "old cached metadata has been removed"); //$NON-NLS-1$ //$NON-NLS-2$				
+				}
+				MetadataStoreGroup stores = this.serializer.loadSafe(cacheFile, MetadataStoreGroup.class);
+				if (stores == null) {				
+					// start to build the new metadata 
+					stores = new MetadataStoreGroup();
+					stores.addStore(imf.getMetadataStore(vdbRepository.getSystemStore().getDatatypes()));
+				}
+				else {
+					LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB", file.getName(), "was loaded from cached metadata"); //$NON-NLS-1$ //$NON-NLS-2$
+				}
+				deploymentUnit.putAttachment(TeiidAttachments.METADATA_STORE, stores);				
+			}
+			
+			if (udf != null) {
+				// load the UDF
+				for(Model model:vdb.getModels()) {
+					if (model.getModelType().equals(Model.Type.FUNCTION)) {
+						String path = ((ModelMetaData)model).getPath();
+						if (path == null) {
+							throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("invalid_udf_file", model.getName())); //$NON-NLS-1$
+						}
+						udf.buildFunctionModelFile(model.getName(), path);
+					}
+				}		
+			}
+		} catch(IOException e) {
+			throw new DeploymentUnitProcessingException(e); 
+		} catch (JAXBException e) {
+			throw new DeploymentUnitProcessingException(e);
 		}
 				
-		LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB", unit.getRoot().getName(), "has been parsed."); //$NON-NLS-1$ //$NON-NLS-2$
+		LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB", file.getName(), "has been parsed."); //$NON-NLS-1$ //$NON-NLS-2$
 		return vdb;
 	}
-	
-	public void setVdbRepository(VDBRepository vdbRepository) {
-		this.vdbRepository = vdbRepository;
-	}
-	
-	public void setObjectSerializer(ObjectSerializer serializer) {
-		this.serializer = serializer;
-	}		
-	
-	private ManagedObjectFactory mof;
-	
-	@Override
-	public void build(DeploymentUnit unit, Set<String> attachmentNames, Map<String, ManagedObject> managedObjects)
-		throws DeploymentException {
-	          
-		ManagedObject vdbMO = managedObjects.get(VDBMetaData.class.getName());
-		if (vdbMO != null) {
-			VDBMetaData vdb = (VDBMetaData) vdbMO.getAttachment();
-			for (Model m : vdb.getModels()) {
-				ManagedObject mo = this.mof.initManagedObject(m, ModelMetaData.class, m.getName(),m.getName());
-				if (mo == null) {
-					throw new DeploymentException("could not create managed object"); //$NON-NLS-1$
-				}
-				managedObjects.put(mo.getName(), mo);
-			}
-			
-			for (Translator t: vdb.getOverrideTranslators()) {
-				ManagedObject mo = this.mof.initManagedObject(t, VDBTranslatorMetaData.class, t.getName(), t.getName());
-				if (mo == null) {
-					throw new DeploymentException("could not create managed object"); //$NON-NLS-1$
-				}
-				managedObjects.put(mo.getName(), mo);				
-			}
-		}
-	}	
-	
-	public void setManagedObjectFactory(ManagedObjectFactory mof) {
-		this.mof = mof;
-	}
-	
 }

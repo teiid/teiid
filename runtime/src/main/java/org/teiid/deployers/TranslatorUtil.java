@@ -21,6 +21,7 @@
  */
 package org.teiid.deployers;
 
+import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -28,10 +29,12 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
-import org.jboss.deployers.spi.DeploymentException;
+import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.TranslatorMetaData;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
@@ -54,7 +57,7 @@ public class TranslatorUtil {
 			Object instance = attachmentClass.newInstance();
 			Map<Method, TranslatorProperty> tps = TranslatorUtil.getTranslatorProperties(attachmentClass);
 			for (Method m:tps.keySet()) {
-				Object defaultValue = ManagedPropertyUtil.getDefaultValue(instance, m, tps.get(m));
+				Object defaultValue = getDefaultValue(instance, m, tps.get(m));
 				if (defaultValue != null) {
 					props.setProperty(getPropertyName(m), defaultValue.toString());
 				}
@@ -86,13 +89,13 @@ public class TranslatorUtil {
 		}
 	}	
 	
-	public static ExecutionFactory buildExecutionFactory(Translator data) throws DeploymentException {
+	public static ExecutionFactory buildExecutionFactory(Translator data) throws DeploymentUnitProcessingException {
 		ExecutionFactory executionFactory;
 		try {
 			String executionClass = data.getPropertyValue(TranslatorMetaData.EXECUTION_FACTORY_CLASS);
 			Object o = ReflectionHelper.create(executionClass, null, Thread.currentThread().getContextClassLoader());
 			if(!(o instanceof ExecutionFactory)) {
-				throw new DeploymentException(RuntimePlugin.Util.getString("invalid_class", executionClass));//$NON-NLS-1$	
+				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("invalid_class", executionClass));//$NON-NLS-1$	
 			}
 			
 			executionFactory = (ExecutionFactory)o;
@@ -100,15 +103,15 @@ public class TranslatorUtil {
 			executionFactory.start();
 			return executionFactory;
 		} catch (TeiidException e) {
-			throw new DeploymentException(e);
+			throw new DeploymentUnitProcessingException(e);
 		} catch (InvocationTargetException e) {
-			throw new DeploymentException(e);
+			throw new DeploymentUnitProcessingException(e);
 		} catch (IllegalAccessException e) {
-			throw new DeploymentException(e);
+			throw new DeploymentUnitProcessingException(e);
 		}
 	}
 	
-	private static void injectProperties(ExecutionFactory ef, final Translator data) throws InvocationTargetException, IllegalAccessException, DeploymentException{
+	private static void injectProperties(ExecutionFactory ef, final Translator data) throws InvocationTargetException, IllegalAccessException, DeploymentUnitProcessingException{
 		Map<Method, TranslatorProperty> props = TranslatorUtil.getTranslatorProperties(ef.getClass());
 		Map p = data.getProperties();
 		TreeMap<String, String> caseInsensitivProps = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
@@ -122,7 +125,7 @@ public class TranslatorUtil {
 				Method setterMethod = getSetter(ef.getClass(), method);
 				setterMethod.invoke(ef, convert(value, method.getReturnType()));
 			} else if (tp.required()) {
-				throw new DeploymentException(RuntimePlugin.Util.getString("required_property_not_exists", tp.display())); //$NON-NLS-1$
+				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("required_property_not_exists", tp.display())); //$NON-NLS-1$
 			}
 		}
 		caseInsensitivProps.remove(Translator.EXECUTION_FACTORY_CLASS);
@@ -142,7 +145,7 @@ public class TranslatorUtil {
 		return result;
 	}
 	
-	public static Method getSetter(Class<?> clazz, Method method) throws SecurityException, DeploymentException {
+	public static Method getSetter(Class<?> clazz, Method method) throws SecurityException, DeploymentUnitProcessingException {
 		String setter = method.getName();
 		if (method.getName().startsWith("get")) { //$NON-NLS-1$
 			setter = "set"+setter.substring(3);//$NON-NLS-1$
@@ -159,7 +162,7 @@ public class TranslatorUtil {
 			try {
 				return clazz.getMethod(method.getName(), method.getReturnType());
 			} catch (NoSuchMethodException e1) {
-				throw new DeploymentException(RuntimePlugin.Util.getString("no_set_method", setter, method.getName())); //$NON-NLS-1$
+				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("no_set_method", setter, method.getName())); //$NON-NLS-1$
 			}
 		}
 	}
@@ -175,4 +178,87 @@ public class TranslatorUtil {
 		}
 		return value;
 	}
+
+	public static VDBTranslatorMetaData buildTranslatorMetadata(ExecutionFactory factory, String moduleName) {
+		
+		org.teiid.translator.Translator translator = factory.getClass().getAnnotation(org.teiid.translator.Translator.class);
+		if (translator == null) {
+			return null;
+		}
+		
+		VDBTranslatorMetaData metadata = new VDBTranslatorMetaData();
+		metadata.setName(translator.name());
+		metadata.setDescription(translator.description());
+		metadata.setExecutionFactoryClass(factory.getClass());
+		metadata.setModuleName(moduleName);
+		
+		Properties props = getTranslatorPropertiesAsProperties(factory.getClass());
+		for (String key:props.stringPropertyNames()) {
+			metadata.addProperty(key, props.getProperty(key));
+		}
+		return metadata;
+	}
+	
+	private static Object convert(Object instance, Method method, TranslatorProperty prop) {
+		Class<?> type = method.getReturnType();
+		String[] allowedValues = null;
+		Method getter = null;
+		boolean readOnly = false;
+		if (type == Void.TYPE) { //check for setter
+			Class<?>[] types = method.getParameterTypes();
+			if (types.length != 1) {
+				throw new TeiidRuntimeException("TranslatorProperty annotation should be placed on valid getter or setter method, " + method + " is not valid."); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			type = types[0];
+			try {
+				getter = instance.getClass().getMethod("get" + method.getName(), (Class[])null); //$NON-NLS-1$
+			} catch (Exception e) {
+				try {
+					getter = instance.getClass().getMethod("get" + method.getName().substring(3), (Class[])null); //$NON-NLS-1$
+				} catch (Exception e1) {
+					//can't find getter, won't set the default value
+				}
+			}
+		} else if (method.getParameterTypes().length != 0) {
+			throw new TeiidRuntimeException("TranslatorProperty annotation should be placed on valid getter or setter method, " + method + " is not valid."); //$NON-NLS-1$ //$NON-NLS-2$
+		} else {
+			getter = method;
+			try {
+				TranslatorUtil.getSetter(instance.getClass(), method);
+			} catch (Exception e) {
+				readOnly = true;
+			}
+		}
+		Object defaultValue = null;
+		if (prop.required()) {
+			if (prop.advanced()) {
+				throw new TeiidRuntimeException("TranslatorProperty annotation should not both be advanced and required " + method); //$NON-NLS-1$
+			}
+		} else if (getter != null) {
+			try {
+				defaultValue = getter.invoke(instance, (Object[])null);
+			} catch (Exception e) {
+				//no simple default value
+			}
+		}
+		if (type.isEnum()) {
+			Object[] constants = type.getEnumConstants();
+			allowedValues = new String[constants.length];
+			for( int i=0; i<constants.length; i++ ) {
+                allowedValues[i] = ((Enum<?>)constants[i]).name();
+            }
+			type = String.class;
+			if (defaultValue != null) {
+				defaultValue = ((Enum<?>)defaultValue).name();
+			}
+		}
+		if (!(defaultValue instanceof Serializable)) {
+			defaultValue = null; //TODO
+		}
+		return defaultValue;
+	}
+	
+	public static Object getDefaultValue(Object instance, Method method, TranslatorProperty prop) {
+		return convert(instance, method, prop);
+	}	
 }

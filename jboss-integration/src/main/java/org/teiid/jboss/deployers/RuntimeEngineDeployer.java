@@ -31,6 +31,7 @@ import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -41,13 +42,13 @@ import javax.resource.spi.work.WorkManager;
 import javax.security.auth.login.LoginException;
 import javax.transaction.TransactionManager;
 
+import org.jboss.as.server.services.net.SocketBinding;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.jboss.util.naming.Util;
-import org.jboss.util.threadpool.ThreadPool;
 import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
@@ -69,7 +70,6 @@ import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.LRUCache;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
-import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.process.*;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.SessionService;
@@ -110,20 +110,19 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	private transient ILogon logon;
 	private transient ClientServiceRegistryImpl csr = new ClientServiceRegistryImpl();	
 	private transient VDBRepository vdbRepository;
-	private transient VDBStatusChecker vdbStatusChecker;
 
 	private transient String jndiName;
 
 	private String eventDistributorName;
 	private transient EventDistributor eventDistributor;
-	private ThreadPool theadPool;
 	
 	// TODO: remove public?
 	public final InjectedValue<WorkManager> workManagerInjector = new InjectedValue<WorkManager>();
 	public final InjectedValue<XATerminator> xaTerminatorInjector = new InjectedValue<XATerminator>();
 	public final InjectedValue<TransactionManager> txnManagerInjector = new InjectedValue<TransactionManager>();
-	public final InjectedValue<ThreadPool> threadPoolInjector = new InjectedValue<ThreadPool>();
-	
+	public final InjectedValue<Executor> threadPoolInjector = new InjectedValue<Executor>();
+	public final InjectedValue<SocketBinding> jdbcSocketBindingInjector = new InjectedValue<SocketBinding>();
+	public final InjectedValue<SocketBinding> odbcSocketBindingInjector = new InjectedValue<SocketBinding>();
 	
     public RuntimeEngineDeployer() {
 		// TODO: this does not belong here
@@ -146,6 +145,12 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		setWorkManager(this.workManagerInjector.getValue());
 		setXATerminator(xaTerminatorInjector.getValue());
 		setTransactionManager(txnManagerInjector.getValue());
+		
+		this.jdbcSocketConfiguration.setHostAddress(this.jdbcSocketBindingInjector.getValue().getAddress());
+		this.jdbcSocketConfiguration.setPortNumber(this.jdbcSocketBindingInjector.getValue().getPort());
+		this.odbcSocketConfiguration.setHostAddress(this.odbcSocketBindingInjector.getValue().getAddress());
+		this.odbcSocketConfiguration.setPortNumber(this.odbcSocketBindingInjector.getValue().getPort());
+		
 
 		dqpCore.setTransactionService((TransactionService)LogManager.createLoggingProxy(LogConstants.CTX_TXN_LOG, transactionServerImpl, new Class[] {TransactionService.class}, MessageLevel.DETAIL));
 
@@ -158,7 +163,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 				LogManager.logDetail(LogConstants.CTX_RUNTIME, ne, IntegrationPlugin.Util.getString("jndi_failed", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
 			}
 		}
-		this.vdbStatusChecker = new VDBStatusChecker(this.vdbRepository, this.theadPool);
 		this.dqpCore.start(this);
 		this.dqpCore.getDataTierManager().setEventDistributor(this.eventDistributor);		
     	// create the necessary services
@@ -344,10 +348,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	
 	public void setVDBRepository(VDBRepository repo) {
 		this.vdbRepository = repo;
-	}
-	
-	public void setThreadPool(ThreadPool threadPool) {
-		this.threadPool = threadPool;
 	}
 	
 	public void setJndiName(final String jndiName) {

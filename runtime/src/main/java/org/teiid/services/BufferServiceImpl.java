@@ -26,10 +26,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 
-import org.jboss.managed.api.annotation.ManagementComponent;
-import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementProperties;
-import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.common.buffer.impl.FileStorageManager;
@@ -49,7 +45,6 @@ import org.teiid.runtime.RuntimePlugin;
  * a mixed disk/memory model which requires use of a directory on the disk 
  * for file service access.
  */
-@ManagementObject(name="BufferService", componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class BufferServiceImpl implements BufferService, Serializable {
 	private static final long serialVersionUID = -6217808623863643531L;
 	private static final long MB = 1<<20;
@@ -153,12 +148,10 @@ public class BufferServiceImpl implements BufferService, Serializable {
 		return this.useDisk;
 	}
 
-	@ManagementProperty(description="The max row count of a batch sent internally within the query processor. Should be <= the connectorBatchSize. (default 256)")
 	public int getProcessorBatchSize() {
 		return this.processorBatchSize;
 	}
 
-	@ManagementProperty(description="The max row count of a batch from a connector. Should be even multiple of processorBatchSize. (default 512)")
 	public int getConnectorBatchSize() {
 		return this.connectorBatchSize;
 	}
@@ -175,31 +168,22 @@ public class BufferServiceImpl implements BufferService, Serializable {
     	this.maxProcessingBatchesColumns  = value;
     }
 
-    @ManagementProperty(description="Max file size, in MB, for buffer files (default 2GB)")
 	public long getMaxFileSize() {
 		return maxFileSize;
 	}
     
-    @ManagementProperty(description="Max open buffer files (default 64)")
     public void setMaxOpenFiles(int maxOpenFiles) {
 		this.maxOpenFiles = maxOpenFiles;
 	}
 
-    @ManagementProperty(description="The number of batch columns guarenteed to a processing operation.  Set this value lower if the workload typically" + 
-    		"processes larger numbers of concurrent queries with large intermediate results from operations such as sorting, " + 
-    		"grouping, etc. (default 128)")
 	public int getMaxProcessingBatchesColumns() {
 		return maxProcessingBatchesColumns;
 	}
 
-    @ManagementProperty(description="The number of batch columns to allow in memory (default 16384).  " + 
-    		"This value should be set lower or higher depending on the available memory to Teiid in the VM.  " + 
-    		"16384 is considered a good default for a dedicated 32-bit VM running Teiid with a 1 gig heap.")
 	public int getMaxReserveBatchColumns() {
 		return maxReserveBatchColumns;
 	}
     
-    @ManagementProperty(description="Max file storage space, in MB, to be used for buffer files (default 50G)")
 	public long getMaxBufferSpace() {
 		return maxBufferSpace;
 	}
@@ -208,7 +192,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
 		this.maxBufferSpace = maxBufferSpace;
 	}
 
-    @ManagementProperty(description="The currently used file buffer space in MB.", readOnly=true)
     public long getUserBufferSpace() {
     	if (fsm != null) {
     		return fsm.getUsedBufferSpace()/MB;
@@ -216,22 +199,18 @@ public class BufferServiceImpl implements BufferService, Serializable {
     	return 0;
     }
 
-    @ManagementProperty(description="The total number of batches added to the buffer mananger.", readOnly=true)
 	public long getBatchesAdded() {
 		return bufferMgr.getBatchesAdded();
 	}
 
-    @ManagementProperty(description="The total number of batches read from storage.", readOnly=true)
 	public long getReadCount() {
 		return bufferMgr.getReadCount();
 	}
 
-    @ManagementProperty(description="The total number of batches written to storage.", readOnly=true)
     public long getWriteCount() {
 		return bufferMgr.getWriteCount();
 	}
 
-    @ManagementProperty(description="The total number of batch read attempts.", readOnly=true)
 	public long getReadAttempts() {
 		return bufferMgr.getReadAttempts();
 	}

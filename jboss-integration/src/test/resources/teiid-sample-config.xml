@@ -1,5 +1,6 @@
 <subsystem xmlns="urn:jboss:domain:teiid:1.0">
     <query-engine jndi-name="teiid/engine-deployer">
+        <thread-group-async>teiid-async</thread-group-async>
         <maxThreads>64</maxThreads>
         <maxActivePlans>20</maxActivePlans>
         <userRequestSourceConcurrency>0</userRequestSourceConcurrency>
@@ -17,7 +18,6 @@
         <detectingChangeEvents>true</detectingChangeEvents>
 
         <jdbc-security-domain>teiid-security</jdbc-security-domain>
-        <admin-security-domain>jmx-console</admin-security-domain>
         <max-sessions-allowed>5000</max-sessions-allowed>
         <sessions-expiration-timelimit>0</sessions-expiration-timelimit>
         <allow-env-function>false</allow-env-function>
@@ -59,17 +59,6 @@
             <outputBufferSize>0</outputBufferSize>
             <socket-binding>teiid-jdbc</socket-binding>
         </jdbc>
-
-        <admin enabled="true">
-            <maxSocketThreads>4</maxSocketThreads>
-            <inputBufferSize>0</inputBufferSize>
-            <outputBufferSize>0</outputBufferSize>
-            <socket-binding>teiid-admin</socket-binding>
-            <ssl>
-                <mode>login</mode>
-                <authenticationMode>anonymous</authenticationMode>
-            </ssl>
-        </admin>
 
         <odbc enabled="true">
             <maxSocketThreads>0</maxSocketThreads>

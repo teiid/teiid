@@ -21,15 +21,10 @@
  */
 package org.teiid.deployers;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 
-import org.jboss.deployers.vfs.spi.structure.VFSDeploymentUnit;
 import org.jboss.logging.Logger;
+import org.jboss.vfs.VirtualFile;
 import org.teiid.core.util.FileUtils;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -44,7 +39,7 @@ public class ObjectSerializer {
 
 	private String storagePath;
 	
-	public void setAttachmentStoreRoot(String path) {
+	public ObjectSerializer(String path) {
 		this.storagePath = path;
 	}
 	
@@ -84,12 +79,12 @@ public class ObjectSerializer {
 		return (cacheFile.exists() && timeAfter > cacheFile.lastModified());
 	}
 	
-	public void removeAttachments(VFSDeploymentUnit vf) {
+	public void removeAttachments(VirtualFile vf) {
 		String dirName = baseDirectory(vf);
 		FileUtils.removeDirectoryAndChildren(new File(dirName));
 	}
 
-	public File getAttachmentPath(VFSDeploymentUnit vf, String baseName) {
+	public File getAttachmentPath(VirtualFile vf, String baseName) {
 		
 		String dirName = baseDirectory(vf);
 
@@ -101,8 +96,8 @@ public class ObjectSerializer {
 		return f;
 	}
 
-	private String baseDirectory(VFSDeploymentUnit vf) {
-		String fileName = vf.getRoot().getName();
+	private String baseDirectory(VirtualFile vf) {
+		String fileName = vf.getName();
 		String dirName = this.storagePath + File.separator + fileName + File.separator;
 		return dirName;
 	}

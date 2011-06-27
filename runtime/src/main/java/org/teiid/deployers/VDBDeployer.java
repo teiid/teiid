@@ -24,18 +24,14 @@ package org.teiid.deployers;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.Executor;
 
-import org.jboss.deployers.spi.DeploymentException;
-import org.jboss.deployers.spi.deployer.helpers.AbstractSimpleRealDeployer;
-import org.jboss.deployers.structure.spi.DeploymentUnit;
-import org.jboss.deployers.vfs.spi.structure.VFSDeploymentUnit;
-import org.jboss.util.threadpool.ThreadPool;
+import org.jboss.as.server.deployment.*;
+import org.jboss.msc.service.ServiceBuilder;
+import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.value.InjectedValue;
+import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
@@ -57,22 +53,31 @@ import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
 
-public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
+public class VDBDeployer implements DeploymentUnitProcessor {
+	public ServiceName VDB_SVC_BASE = ServiceName.JBOSS.append("teiid", "vdb"); //$NON-NLS-1$ //$NON-NLS-2$
+			
 	private VDBRepository vdbRepository;
 	private TranslatorRepository translatorRepository;
 	private ObjectSerializer serializer;
 	private ContainerLifeCycleListener shutdownListener;
-	private ThreadPool threadPool;
+	private InjectedValue<Executor> threadPoolInjector;
 	
-	public VDBDeployer() {
-		super(VDBMetaData.class);
-		setInput(VDBMetaData.class);
-		setOutput(VDBMetaData.class);
-		setRelativeOrder(3001); // after the data sources
+	public VDBDeployer (VDBRepository repo, InjectedValue<Executor> threadPoolInjector, TranslatorRepository translatorRepo, ObjectSerializer serializer, ContainerLifeCycleListener listener) {
+		this.vdbRepository = repo;
+		this.threadPoolInjector = threadPoolInjector;
+		this.translatorRepository = translatorRepo;
+		this.serializer = serializer;
+		this.shutdownListener = listener;
 	}
-
-	@Override
-	public void deploy(DeploymentUnit unit, VDBMetaData deployment) throws DeploymentException {
+	
+	public void deploy(final DeploymentPhaseContext context)  throws DeploymentUnitProcessingException {
+		DeploymentUnit deploymentUnit = context.getDeploymentUnit();
+		if (!TeiidAttachments.isVDBDeployment(deploymentUnit)) {
+			return;
+		}
+		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
+		VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
+		
 		if (this.vdbRepository.removeVDB(deployment.getName(), deployment.getVersion())) {
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("redeploying_vdb", deployment)); //$NON-NLS-1$ 
 		}
@@ -85,12 +90,12 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		if (!preview) {
 			List<String> errors = deployment.getValidityErrors();
 			if (errors != null && !errors.isEmpty()) {
-				throw new DeploymentException(RuntimePlugin.Util.getString("validity_errors_in_vdb", deployment)); //$NON-NLS-1$
+				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("validity_errors_in_vdb", deployment)); //$NON-NLS-1$
 			}
 		}
 		
 		// get the metadata store of the VDB (this is build in parse stage)
-		MetadataStoreGroup store = unit.getAttachment(MetadataStoreGroup.class);
+		MetadataStoreGroup store = deploymentUnit.getAttachment(TeiidAttachments.METADATA_STORE);
 		
 		// add required connector managers; if they are not already there
 		for (Translator t: deployment.getOverrideTranslators()) {
@@ -99,7 +104,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 			String type = data.getType();
 			Translator parent = this.translatorRepository.getTranslatorMetaData(type);
 			if ( parent == null) {
-				throw new DeploymentException(RuntimePlugin.Util.getString("translator_type_not_found", unit.getName())); //$NON-NLS-1$
+				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("translator_type_not_found", file.getName())); //$NON-NLS-1$
 			}
 			
 			Set<String> keys = parent.getProperties().stringPropertyNames();
@@ -115,7 +120,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		// if store is null and vdb dynamic vdb then try to get the metadata
 		if (store == null && deployment.isDynamic()) {
 			store = new MetadataStoreGroup();
-			asynchLoad = buildDynamicMetadataStore((VFSDeploymentUnit)unit, deployment, store, cmr);
+			asynchLoad = buildDynamicMetadataStore(file, deployment, store, cmr);
 		}
 		
 		// allow empty vdbs for enabling the preview functionality
@@ -128,18 +133,18 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		}
 		
 		// check if this is a VDB with index files, if there are then build the TransformationMetadata
-		UDFMetaData udf = unit.getAttachment(UDFMetaData.class);
+		UDFMetaData udf = deploymentUnit.getAttachment(TeiidAttachments.UDF_METADATA);
 		
 		LinkedHashMap<String, Resource> visibilityMap = null;
-		IndexMetadataFactory indexFactory = unit.getAttachment(IndexMetadataFactory.class);		
+		IndexMetadataFactory indexFactory = deploymentUnit.getAttachment(TeiidAttachments.INDEX_METADATA);		
 		if (indexFactory != null) {
 			visibilityMap = indexFactory.getEntriesPlusVisibilities();
 		}
 				
-		// add the metadata objects as attachments
-		deployment.removeAttachment(IndexMetadataFactory.class);
-		deployment.removeAttachment(UDFMetaData.class);
-		deployment.removeAttachment(MetadataStoreGroup.class);
+		// removethe metadata objects as attachments
+		deploymentUnit.removeAttachment(TeiidAttachments.INDEX_METADATA);
+		deploymentUnit.removeAttachment(TeiidAttachments.UDF_METADATA);
+		deploymentUnit.removeAttachment(TeiidAttachments.METADATA_STORE);
 		
 		// add transformation metadata to the repository.
 		this.vdbRepository.addVDB(deployment, store, visibilityMap, udf, cmr);
@@ -148,7 +153,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		synchronized (deployment) {
 			if (indexFactory != null) {
 				try {
-					saveMetadataStore((VFSDeploymentUnit)unit, deployment, store);
+					saveMetadataStore(file, deployment, store);
 				} catch (IOException e1) {
 					LogManager.logWarning(LogConstants.CTX_RUNTIME, e1, RuntimePlugin.Util.getString("vdb_save_failed", deployment.getName()+"."+deployment.getVersion())); //$NON-NLS-1$ //$NON-NLS-2$			
 				}
@@ -169,10 +174,19 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 				deployment.setStatus(VDB.Status.ACTIVE);
 			}
 		}
+
+		// build a VDB service 
+		ServiceBuilder<VDBMetaData> vdbService = context.getServiceTarget().addService(VDB_SVC_BASE.append(deployment.getName()+"."+deployment.getVersion()), new VDBService(deployment)); //$NON-NLS-1$
+		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
+			for (String sourceName:model.getSourceNames()) {
+				vdbService.addDependency(ServiceName.JBOSS.append("data-source", model.getSourceConnectionJndiName(sourceName)));	//$NON-NLS-1$
+			}
+		}
+		
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_deployed",deployment, valid?"active":"inactive")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
-	private void createConnectorManagers(ConnectorManagerRepository cmr, TranslatorRepository repo, final VDBMetaData deployment) throws DeploymentException {
+	private void createConnectorManagers(ConnectorManagerRepository cmr, TranslatorRepository repo, final VDBMetaData deployment) throws DeploymentUnitProcessingException {
 		IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map = new IdentityHashMap<Translator, ExecutionFactory<Object, Object>>();
 		
 		for (Model model:deployment.getModels()) {
@@ -191,16 +205,16 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		}
 	}
 	
-	private ExecutionFactory<Object, Object> getExecutionFactory(String name, TranslatorRepository repo, VDBMetaData deployment, IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map, HashSet<String> building) throws DeploymentException {
+	private ExecutionFactory<Object, Object> getExecutionFactory(String name, TranslatorRepository repo, VDBMetaData deployment, IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map, HashSet<String> building) throws DeploymentUnitProcessingException {
 		if (!building.add(name)) {
-			throw new DeploymentException(RuntimePlugin.Util.getString("recursive_delegation", deployment.getName(), deployment.getVersion(), building)); //$NON-NLS-1$
+			throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("recursive_delegation", deployment.getName(), deployment.getVersion(), building)); //$NON-NLS-1$
 		}
 		Translator translator = repo.getTranslatorMetaData(name);
 		if (translator == null) {
 			translator = this.translatorRepository.getTranslatorMetaData(name);
 		}
 		if (translator == null) {
-			throw new DeploymentException(RuntimePlugin.Util.getString("translator_not_found", deployment.getName(), deployment.getVersion(), name)); //$NON-NLS-1$
+			throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("translator_not_found", deployment.getName(), deployment.getVersion(), name)); //$NON-NLS-1$
 		}
 		ExecutionFactory<Object, Object> ef = map.get(translator);
 		if ( ef == null) {
@@ -241,54 +255,42 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		return valid;
 	}
 
-	public void setVDBRepository(VDBRepository repo) {
-		this.vdbRepository = repo;
-	}
-	
 	@Override
-	public void undeploy(DeploymentUnit unit, VDBMetaData deployment) {
-		super.undeploy(unit, deployment);
+	public void undeploy(final DeploymentUnit deploymentUnit) {
+		VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
+		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
 		
 		if (this.vdbRepository != null) {
 			this.vdbRepository.removeVDB(deployment.getName(), deployment.getVersion());
 		}
 		
 		deployment.setRemoved(true);
-		
-		try {
-			deleteMetadataStore((VFSDeploymentUnit)unit);
-		} catch (IOException e) {
-			LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_delete_failed", e.getMessage())); //$NON-NLS-1$
-		}
+		deleteMetadataStore(file);
 
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_undeployed", deployment)); //$NON-NLS-1$
 	}
 
-	public void setObjectSerializer(ObjectSerializer serializer) {
-		this.serializer = serializer;
-	}		
-	
-	private void saveMetadataStore(VFSDeploymentUnit unit, VDBMetaData vdb, MetadataStoreGroup store) throws IOException {
+	private void saveMetadataStore(VirtualFile unit, VDBMetaData vdb, MetadataStoreGroup store) throws IOException {
 		File cacheFileName = buildCachedVDBFileName(this.serializer, unit, vdb);
 		if (!cacheFileName.exists()) {
 			this.serializer.saveAttachment(cacheFileName,store);
-			LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+unit.getRoot().getName()+" metadata has been cached to "+ cacheFileName); //$NON-NLS-1$ //$NON-NLS-2$
+			LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+unit.getName()+" metadata has been cached to "+ cacheFileName); //$NON-NLS-1$ //$NON-NLS-2$
 		}		
 	}
 	
-	private void deleteMetadataStore(VFSDeploymentUnit unit) throws IOException {
-		if (!unit.getRoot().exists() || !shutdownListener.isShutdownInProgress()) {
+	private void deleteMetadataStore(VirtualFile unit) {
+		if (!unit.exists() || !shutdownListener.isShutdownInProgress()) {
 			this.serializer.removeAttachments(unit);
-			LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+unit.getRoot().getName()+" metadata removed"); //$NON-NLS-1$ //$NON-NLS-2$
+			LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+unit.getName()+" metadata removed"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 	
-    private boolean buildDynamicMetadataStore(final VFSDeploymentUnit unit, final VDBMetaData vdb, final MetadataStoreGroup vdbStore, final ConnectorManagerRepository cmr) throws DeploymentException {
+    private boolean buildDynamicMetadataStore(final VirtualFile unit, final VDBMetaData vdb, final MetadataStoreGroup vdbStore, final ConnectorManagerRepository cmr) throws DeploymentUnitProcessingException {
     	boolean asynch = false;
     	// make sure we are configured correctly first
 		for (final ModelMetaData model:vdb.getModelMetaDatas().values()) {
 	    	if (model.getSourceNames().isEmpty()) {
-	    		throw new DeploymentException(RuntimePlugin.Util.getString("fail_to_deploy", vdb.getName()+"-"+vdb.getVersion(), model.getName())); //$NON-NLS-1$ //$NON-NLS-2$
+	    		throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("fail_to_deploy", vdb.getName()+"-"+vdb.getVersion(), model.getName())); //$NON-NLS-1$ //$NON-NLS-2$
 	    	}
 			    	
 	    	final boolean cache = "cached".equalsIgnoreCase(vdb.getPropertyValue("UseConnectorMetadata")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -303,8 +305,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	    	}
 	    	
 	    	if (!loaded) {
-	    		asynch = true;
-	    		threadPool.run(new Runnable() {
+	    		Runnable job = new Runnable() {
 					@Override
 					public void run() {
 						Boolean loadStatus = loadMetadata(vdb, model, cache, cacheFile, vdbStore, cmr);
@@ -316,7 +317,15 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 							model.addAttchment(Runnable.class, this);
 						}	    				
 					}
-	    		});
+	    		};	    		
+	    		Executor executor = this.threadPoolInjector.getValue();
+	    		if (executor == null) {
+	    			job.run();
+	    		}
+	    		else {
+		    		asynch = true;
+		    		executor.execute(job);
+	    		}
 	    	}
 		}
 		return asynch;
@@ -383,23 +392,11 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
     	return loaded;
     }
     
-	private File buildCachedModelFileName(VFSDeploymentUnit unit, VDBMetaData vdb, String modelName) {
+	private File buildCachedModelFileName(VirtualFile unit, VDBMetaData vdb, String modelName) {
 		return this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()+"_"+modelName); //$NON-NLS-1$ //$NON-NLS-2$
 	}    
 	
-	static File buildCachedVDBFileName(ObjectSerializer serializer, VFSDeploymentUnit unit, VDBMetaData vdb) {
+	static File buildCachedVDBFileName(ObjectSerializer serializer, VirtualFile unit, VDBMetaData vdb) {
 		return serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
 	} 	
-	
-	public void setTranslatorRepository(TranslatorRepository repo) {
-		this.translatorRepository = repo;
-	}	
-	
-	public void setContainerLifeCycleListener(ContainerLifeCycleListener listener) {
-		shutdownListener = listener;
-	}
-	
-	public void setThreadPool(ThreadPool pool) {
-		this.threadPool = pool;
-	}
 }

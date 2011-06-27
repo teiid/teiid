@@ -21,8 +21,11 @@
  */
 package org.teiid.jboss;
 
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
 import static org.jboss.as.controller.parsing.ParseUtils.requireNoAttributes;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
 import java.util.List;
 
@@ -32,7 +35,6 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.as.controller.parsing.ParseUtils;
 import org.jboss.as.controller.persistence.SubsystemMarshallingContext;
 import org.jboss.dmr.ModelNode;
-import org.jboss.dmr.ModelType;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLElementWriter;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
@@ -150,6 +152,9 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 				//Strings
 				case EVENT_DISTRIBUTOR_NAME_ELEMENT:
 				case JDBC_SECURITY_DOMAIN_ELEMENT:
+				case ASYNC_THREAD_GROUP_ELEMENT:
+					node.get(reader.getLocalName()).set(reader.getElementText());
+					break;
 	
 				// complex types
 				case BUFFER_SERVICE_ELEMENT:

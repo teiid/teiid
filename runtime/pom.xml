@@ -68,8 +68,18 @@
         <groupId>org.jboss</groupId>
         <artifactId>jboss-common-core</artifactId>
         <scope>provided</scope>
-    </dependency>     
-    
+    </dependency> 
+    <!-- This dependecy must be removed later into jboss-integration -->    
+    <dependency>
+        <groupId>org.jboss.as</groupId>
+        <artifactId>jboss-as-server</artifactId>
+        <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.jboss</groupId>
+        <artifactId>jboss-vfs</artifactId>
+        <scope>provided</scope>
+    </dependency> 
     <!-- 
     <dependency>
         <groupId>org.jboss.cache</groupId>

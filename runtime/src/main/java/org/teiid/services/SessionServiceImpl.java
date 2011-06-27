@@ -22,24 +22,12 @@
 
 package org.teiid.services;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
-import org.jboss.managed.api.annotation.ManagementComponent;
-import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementProperties;
-import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.impl.SessionMetadata;
@@ -63,7 +51,6 @@ import org.teiid.security.SecurityHelper;
 /**
  * This class serves as the primary implementation of the Session Service.
  */
-@ManagementObject(name="SessionService", componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class SessionServiceImpl implements SessionService {
 	public static final String SECURITY_DOMAINS = "securitydomains"; //$NON-NLS-1$
 	
@@ -137,7 +124,7 @@ public class SessionServiceImpl implements SessionService {
 	}
 	
 	@Override
-	public SessionMetadata createSession(String userName, Credentials credentials, String applicationName, Properties properties, boolean adminConnection, boolean authenticate) 
+	public SessionMetadata createSession(String userName, Credentials credentials, String applicationName, Properties properties, boolean authenticate) 
 		throws LoginException, SessionServiceException {
 		ArgCheck.isNotNull(applicationName);
         ArgCheck.isNotNull(properties);
@@ -146,9 +133,6 @@ public class SessionServiceImpl implements SessionService {
         String securityDomain = "none"; //$NON-NLS-1$
         Object securityContext = null;
         List<String> domains = this.securityDomains;
-        if (adminConnection) {
-        	domains = this.adminSecurityDomains;
-        }
         
         // Validate VDB and version if logging on to server product...
         VDBMetaData vdb = null;
@@ -315,7 +299,6 @@ public class SessionServiceImpl implements SessionService {
 		return info;
 	}
 	
-	@ManagementProperty (description="Maximum number of sessions allowed by the system (default 5000)")
 	public long getSessionMaxLimit() {
 		return this.sessionMaxLimit;
 	}
@@ -324,7 +307,6 @@ public class SessionServiceImpl implements SessionService {
 		this.sessionMaxLimit = limit;
 	}
 	
-	@ManagementProperty(description="Max allowed time before the session is terminated by the system, 0 indicates unlimited (default 0)")
 	public long getSessionExpirationTimeLimit() {
 		return this.sessionExpirationTimeLimit;
 	}

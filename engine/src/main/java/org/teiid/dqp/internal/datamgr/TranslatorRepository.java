@@ -30,7 +30,7 @@ import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 
 
-public class TranslatorRepository implements Serializable{
+public class TranslatorRepository implements Serializable {
 	
 	private static final long serialVersionUID = -1212280886010974273L;
 	private Map<String, VDBTranslatorMetaData> translatorRepo = new ConcurrentHashMap<String, VDBTranslatorMetaData>();
