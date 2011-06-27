@@ -898,6 +898,64 @@ public class TestAggregatePushdown {
     }
     
     /**
+     * pushdown won't happen since searched case is not supported
+     */
+    @Test public void testPushDownOverUnionGroupingExpression() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm2", getAggregateCapabilities()); //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2), case when e1 is null then 0 else 1 end from (select e1, e2 from pm1.g1 union all select e1, e2 from pm2.g2) z group by case when e1 is null then 0 else 1 end", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+            new String[]{"SELECT v_1.c_0, MAX(v_1.c_1) FROM (SELECT CASE WHEN v_0.c_0 IS NULL THEN 0 ELSE 1 END AS c_0, v_0.c_1 FROM (SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0) AS v_0) AS v_1 GROUP BY v_1.c_0", //$NON-NLS-1$
+        	"SELECT g_0.e1, g_0.e2 FROM pm2.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            1,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            3,      // Project
+            0,      // Select
+            0,      // Sort
+            1       // UnionAll
+        }); 
+    }
+    
+    @Test public void testPushDownOverUnionGroupingExpressionPartitioned() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2), case when e1 is null then 0 else 1 end from (select e1, e2, 1 as part from pm1.g1 union all select e1, e2, 2 as part from pm1.g2) z group by case when e1 is null then 0 else 1 end, part", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+            new String[]{"SELECT MAX(v_1.c_2), v_1.c_0 FROM (SELECT CASE WHEN v_0.c_0 IS NULL THEN 0 ELSE 1 END AS c_0, v_0.c_1, v_0.c_2 FROM (SELECT g_0.e1 AS c_0, 2 AS c_1, g_0.e2 AS c_2 FROM pm1.g2 AS g_0) AS v_0) AS v_1 GROUP BY v_1.c_0, v_1.c_1", 
+        	"SELECT MAX(v_1.c_2), v_1.c_0 FROM (SELECT CASE WHEN v_0.c_0 IS NULL THEN 0 ELSE 1 END AS c_0, v_0.c_1, v_0.c_2 FROM (SELECT g_0.e1 AS c_0, 1 AS c_1, g_0.e2 AS c_2 FROM pm1.g1 AS g_0) AS v_0) AS v_1 GROUP BY v_1.c_0, v_1.c_1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            1       // UnionAll
+        }); 
+    }
+    
+    /**
      * Ensures that we do not raise criteria over a group by
      * TODO: check if the criteria only depends on grouping columns
      */
