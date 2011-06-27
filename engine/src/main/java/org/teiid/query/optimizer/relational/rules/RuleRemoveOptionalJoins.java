@@ -299,30 +299,13 @@ public class RuleRemoveOptionalJoins implements
 
 	static boolean areAggregatesCardinalityDependent(Set<AggregateSymbol> aggs) {
 		for (AggregateSymbol aggregateSymbol : aggs) {
-			if (isCardinalityDependent(aggregateSymbol)) {
+			if (aggregateSymbol.isCardinalityDependent()) {
 				return true;
 			}
 		}
 		return false;
 	}
 	
-	static boolean isCardinalityDependent(AggregateSymbol aggregateSymbol) {
-		if (aggregateSymbol.isDistinct()) {
-			return false;
-		}
-		switch (aggregateSymbol.getAggregateFunction()) {
-		case COUNT:
-		case AVG:
-		case STDDEV_POP:
-		case STDDEV_SAMP:
-		case VAR_POP:
-		case VAR_SAMP:
-		case SUM:
-			return true;
-		}
-		return false;
-	}
-
     public String toString() {
         return "RuleRemoveOptionalJoins"; //$NON-NLS-1$
     }

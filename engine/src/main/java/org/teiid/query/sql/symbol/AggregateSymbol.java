@@ -243,5 +243,22 @@ public class AggregateSymbol extends ExpressionSymbol {
                && EquivalenceUtil.areEqual(this.getExpression(), other.getExpression())
         	   && EquivalenceUtil.areEqual(this.getOrderBy(), other.getOrderBy());
     }
+    
+    public boolean isCardinalityDependent() {
+    	if (isDistinct()) {
+    		return false;
+    	}
+    	switch (getAggregateFunction()) {
+		case COUNT:
+		case AVG:
+		case STDDEV_POP:
+		case STDDEV_SAMP:
+		case VAR_POP:
+		case VAR_SAMP:
+		case SUM:
+			return true;
+		}
+		return false;
+    }
 
 }

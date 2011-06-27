@@ -22,7 +22,10 @@
 
 package org.teiid.query.optimizer;
 
-import static org.teiid.query.optimizer.TestOptimizer.*;
+import static org.teiid.query.optimizer.TestOptimizer.SHOULD_SUCCEED;
+import static org.teiid.query.optimizer.TestOptimizer.checkNodeTypes;
+import static org.teiid.query.optimizer.TestOptimizer.getTypicalCapabilities;
+import static org.teiid.query.optimizer.TestOptimizer.helpPlan;
 
 import org.junit.Test;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -35,6 +38,7 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings("nls")
@@ -892,6 +896,37 @@ public class TestAggregatePushdown {
             0,      // Null
             0,      // PlanExecution
             2,      // Project
+            0,      // Select
+            0,      // Sort
+            1       // UnionAll
+        }); 
+    }
+    
+    /**
+     * pushdown won't happen since searched case is not supported
+     */
+    @Test public void testPushDownOverUnionGroupingExpression() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm2", getAggregateCapabilities()); //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2), case when e1 is null then 0 else 1 end from (select e1, e2 from pm1.g1 union all select e1, e2 from pm2.g2) z group by case when e1 is null then 0 else 1 end", FakeMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+            new String[]{"SELECT v_1.c_0, MAX(v_1.c_1) FROM (SELECT CASE WHEN v_0.c_0 IS NULL THEN 0 ELSE 1 END AS c_0, v_0.c_1 FROM (SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0) AS v_0) AS v_1 GROUP BY v_1.c_0", //$NON-NLS-1$
+        	"SELECT g_0.e1, g_0.e2 FROM pm2.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            1,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            3,      // Project
             0,      // Select
             0,      // Sort
             1       // UnionAll

@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,6 +46,7 @@ import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -58,6 +60,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.rewriter.QueryRewriter;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageObject.Util;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
@@ -116,7 +119,7 @@ public class RulePushAggregates implements
                 PlanNode setOp = child.getFirstChild();
                 
                 try {
-					pushGroupNodeOverUnion(plan, metadata, capFinder, groupNode, child, groupingExpressions, setOp);
+					pushGroupNodeOverUnion(plan, metadata, capFinder, groupNode, child, groupingExpressions, setOp, context, analysisRecord);
 				} catch (QueryResolverException e) {
 					throw new TeiidComponentException(e);
 				}
@@ -154,21 +157,66 @@ public class RulePushAggregates implements
 	 *             source
 	 *               child 1
 	 *       ...
-	 * 
+	 *       
 	 * Or if the child does not support pushdown we add dummy aggregate projection
      * count(*) = 1, count(x) = case x is null then 0 else 1 end, avg(x) = x, etc.
 	 */
 	private void pushGroupNodeOverUnion(PlanNode plan,
 			QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
-			PlanNode groupNode, PlanNode child,
-			List<SingleElementSymbol> groupingExpressions, PlanNode setOp)
+			PlanNode groupNode, PlanNode unionSourceParent,
+			List<SingleElementSymbol> groupingExpressions, PlanNode setOp, CommandContext context, AnalysisRecord record)
 			throws TeiidComponentException, QueryMetadataException,
 			QueryPlannerException, QueryResolverException {
-		if (setOp == null || setOp.getType() != NodeConstants.Types.SET_OP || setOp.getProperty(NodeConstants.Info.SET_OPERATION) != Operation.UNION) {
-			return; //must not be a union
+		if (setOp == null) {
+			return;
+		}
+		PlanNode intermediateView = null; 
+		if (setOp.getType() != NodeConstants.Types.SET_OP) {
+			if (setOp.getType() != NodeConstants.Types.PROJECT) {
+				return;
+			}
+			intermediateView = unionSourceParent;
+			unionSourceParent = setOp.getFirstChild();
+			if (unionSourceParent == null || unionSourceParent.getType() != NodeConstants.Types.SOURCE || unionSourceParent.getFirstChild() == null 
+					|| unionSourceParent.getFirstChild().getType() != NodeConstants.Types.SET_OP || unionSourceParent.getFirstChild().getProperty(NodeConstants.Info.SET_OPERATION) != Operation.UNION) {
+				return; //not an eligible union
+			}
+			setOp = unionSourceParent.getFirstChild();
+			if (groupingExpressions == null) {
+				return; //shouldn't happen - the view should have been removed
+			}
+		}
+		if (setOp.getProperty(NodeConstants.Info.SET_OPERATION) != Operation.UNION) {
+			return;
 		}
 		LinkedHashSet<AggregateSymbol> aggregates = collectAggregates(groupNode);
 
+		//check to see if any aggregate is dependent upon cardinality
+		boolean cardinalityDependent = RuleRemoveOptionalJoins.areAggregatesCardinalityDependent(aggregates);
+
+		LinkedList<PlanNode> unionChildren = new LinkedList<PlanNode>();
+		findUnionChildren(unionChildren, cardinalityDependent, setOp);
+
+		SymbolMap parentMap = (SymbolMap)unionSourceParent.getProperty(NodeConstants.Info.SYMBOL_MAP);
+		List<ElementSymbol> virtualElements = parentMap.getKeys();
+		GroupSymbol virtualGroup = unionSourceParent.getGroups().iterator().next();
+
+		List<SingleElementSymbol> actualGroupingExpressions = groupingExpressions;
+		if (intermediateView != null) {
+			actualGroupingExpressions = new ArrayList<SingleElementSymbol>(groupingExpressions.size());
+			SymbolMap viewMap = (SymbolMap)intermediateView.getProperty(NodeConstants.Info.SYMBOL_MAP);
+			for (SingleElementSymbol ses : groupingExpressions) {
+				Expression ex = viewMap.getMappedExpression((ElementSymbol)ses);
+				SingleElementSymbol newCol = null;
+				if (ex instanceof SingleElementSymbol) {
+					newCol = (SingleElementSymbol)ex;
+				} else {
+					newCol = new ExpressionSymbol("grouping", ex); //$NON-NLS-1$
+				}
+				actualGroupingExpressions.add(newCol);
+			}
+		}
+		
 		/*
 		 * if there are no aggregates, this is just duplicate removal
 		 * mark the union as not all, which should be removed later but
@@ -181,26 +229,19 @@ public class RulePushAggregates implements
 			return;
 		}
 		
-		//check to see if any aggregate is dependent upon cardinality
-		boolean cardinalityDependent = RuleRemoveOptionalJoins.areAggregatesCardinalityDependent(aggregates);
-		
-		LinkedList<PlanNode> unionChildren = new LinkedList<PlanNode>();
-		findUnionChildren(unionChildren, cardinalityDependent, setOp);
-
 		if (unionChildren.size() < 2) {
 			return;
 		}
 		
-		SymbolMap parentMap = (SymbolMap)child.getProperty(NodeConstants.Info.SYMBOL_MAP);
-		List<ElementSymbol> virtualElements = parentMap.getKeys();
 		List<SingleElementSymbol> copy = new ArrayList<SingleElementSymbol>(aggregates);
 		aggregates.clear();
 		Map<AggregateSymbol, Expression> aggMap = buildAggregateMap(copy, metadata, aggregates);
 
 		boolean shouldPushdown = false;
 		List<Boolean> pushdownList = new ArrayList<Boolean>(unionChildren.size());
+		
 		for (PlanNode planNode : unionChildren) {
-			boolean pushdown = canPushGroupByToUnionChild(metadata, capFinder, groupingExpressions, aggregates, planNode); 
+			boolean pushdown = canPushGroupByToUnionChild(metadata, capFinder, actualGroupingExpressions, aggregates, planNode, record); 
 			pushdownList.add(pushdown);
 			shouldPushdown |= pushdown;
 		}
@@ -209,28 +250,24 @@ public class RulePushAggregates implements
 			return;
 		}
 
+		if (intermediateView != null) {
+			parentMap = pushGroupByView(plan, metadata, capFinder, unionSourceParent,
+					setOp, intermediateView, cardinalityDependent,
+					unionChildren, virtualElements, virtualGroup);
+			virtualElements = parentMap.getKeys();
+			virtualGroup = unionSourceParent.getGroups().iterator().next();
+		}
+
 		Iterator<Boolean> pushdownIterator = pushdownList.iterator();
 		for (PlanNode planNode : unionChildren) {
-		    addView(plan, planNode, pushdownIterator.next(), groupingExpressions, aggregates, virtualElements, metadata, capFinder);
+		    addView(plan, planNode, pushdownIterator.next(), new GroupSymbol("X"), groupingExpressions, aggregates, virtualElements, metadata, capFinder, null); //$NON-NLS-1$
 		}
 		
 		//update the parent plan with the staged aggregates and the new projected symbols
-		List<SingleElementSymbol> projectedViewSymbols = (List<SingleElementSymbol>)NodeEditor.findNodePreOrder(child, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS);
-		List<ElementSymbol> updatedVirturalElement = new ArrayList<ElementSymbol>(virtualElements);
+		List<SingleElementSymbol> projectedViewSymbols = (List<SingleElementSymbol>)NodeEditor.findNodePreOrder(unionSourceParent, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS);
 		
 		//hack to introduce aggregate symbols to the parent view TODO: this should change the metadata properly.
-		GroupSymbol virtualGroup = child.getGroups().iterator().next();
-		for (int i = updatedVirturalElement.size(); i < projectedViewSymbols.size(); i++) {
-			SingleElementSymbol symbol = projectedViewSymbols.get(i);
-			String name = symbol.getShortName();
-            String virtualElementName = virtualGroup.getCanonicalName() + ElementSymbol.SEPARATOR + name;
-            ElementSymbol virtualElement = new ElementSymbol(virtualElementName);
-            virtualElement.setGroupSymbol(virtualGroup);
-            virtualElement.setType(symbol.getType());
-            updatedVirturalElement.add(virtualElement);
-		}
-		SymbolMap newParentMap = SymbolMap.createSymbolMap(updatedVirturalElement, projectedViewSymbols);
-		child.setProperty(NodeConstants.Info.SYMBOL_MAP, newParentMap);
+		SymbolMap newParentMap = modifyUnionSourceParent(unionSourceParent, virtualGroup, projectedViewSymbols, virtualElements);
 		Map<AggregateSymbol, ElementSymbol> projectedMap = new HashMap<AggregateSymbol, ElementSymbol>();
 		Iterator<AggregateSymbol> aggIter = aggregates.iterator();
 		for (ElementSymbol projectedViewSymbol : newParentMap.getKeys().subList(projectedViewSymbols.size() - aggregates.size(), projectedViewSymbols.size())) {
@@ -242,10 +279,60 @@ public class RulePushAggregates implements
 		mapExpressions(groupNode.getParent(), aggMap, metadata);
 	}
 
+	private SymbolMap pushGroupByView(PlanNode plan,
+			QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
+			PlanNode unionSourceParent, PlanNode setOp,
+			PlanNode intermediateView, boolean cardinalityDependent,
+			LinkedList<PlanNode> unionChildren,
+			List<ElementSymbol> virtualElements, GroupSymbol virtualGroup)
+			throws TeiidComponentException, QueryPlannerException,
+			QueryResolverException {
+		//perform view pushing
+		/*
+		 * TODO: this introduces yet another potentially unneeded view, but cannot be removed by the normal merge virtual logic
+		 * due to an intervening access node
+		 */
+		PlanNode intermediateProject = intermediateView.getFirstChild();
+		List<SingleElementSymbol> projectedViewSymbols = (List<SingleElementSymbol>)intermediateProject.getProperty(NodeConstants.Info.PROJECT_COLS);
+		for (PlanNode planNode : unionChildren) {
+		    addView(plan, planNode, false, (GroupSymbol) virtualGroup.clone(), null, Collections.EMPTY_SET, virtualElements, metadata, capFinder, LanguageObject.Util.deepClone(projectedViewSymbols, SingleElementSymbol.class));
+		}
+		unionChildren.clear();
+		findUnionChildren(unionChildren, cardinalityDependent, setOp);
+		virtualGroup = intermediateView.getGroups().iterator().next();
+		unionSourceParent.getGroups().clear();
+		unionSourceParent.addGroup(virtualGroup);
+		projectedViewSymbols = (List<SingleElementSymbol>)NodeEditor.findNodePreOrder(unionSourceParent, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS);
+		SymbolMap parentMap = modifyUnionSourceParent(unionSourceParent, virtualGroup, projectedViewSymbols, Collections.EMPTY_LIST);
+		//remove the old view
+		NodeEditor.removeChildNode(intermediateView, intermediateProject);
+		NodeEditor.removeChildNode(intermediateView.getParent(), intermediateView);
+		return parentMap;
+	}
+
+	private SymbolMap modifyUnionSourceParent(PlanNode unionSourceParent,
+			GroupSymbol virtualGroup,
+			List<SingleElementSymbol> projectedViewSymbols, List<ElementSymbol> baseVirtualElements) {
+		List<ElementSymbol> updatedVirturalElement = new ArrayList<ElementSymbol>(baseVirtualElements);
+		for (int i = updatedVirturalElement.size(); i < projectedViewSymbols.size(); i++) {
+			SingleElementSymbol symbol = projectedViewSymbols.get(i);
+			String name = symbol.getShortName();
+            String virtualElementName = virtualGroup.getCanonicalName() + ElementSymbol.SEPARATOR + name;
+            ElementSymbol virtualElement = new ElementSymbol(virtualElementName);
+            virtualElement.setGroupSymbol(virtualGroup);
+            virtualElement.setType(symbol.getType());
+            virtualElement.setMetadataID(new TempMetadataID(virtualElementName, symbol.getType()));
+            updatedVirturalElement.add(virtualElement);
+		}
+		SymbolMap newParentMap = SymbolMap.createSymbolMap(updatedVirturalElement, projectedViewSymbols);
+		unionSourceParent.setProperty(NodeConstants.Info.SYMBOL_MAP, newParentMap);
+		return newParentMap;
+	}
+
 	private boolean canPushGroupByToUnionChild(QueryMetadataInterface metadata,
 			CapabilitiesFinder capFinder,
 			List<SingleElementSymbol> groupingExpressions,
-			LinkedHashSet<AggregateSymbol> aggregates, PlanNode planNode)
+			LinkedHashSet<AggregateSymbol> aggregates, PlanNode planNode, AnalysisRecord record)
 			throws QueryMetadataException, TeiidComponentException {
 		if (planNode.getType() != NodeConstants.Types.ACCESS) {
 			return false;
@@ -260,8 +347,16 @@ public class RulePushAggregates implements
 				return false;
 			}
 		}
-		if ((groupingExpressions == null || groupingExpressions.isEmpty()) && !CapabilitiesUtil.supports(Capability.QUERY_AGGREGATES_COUNT_STAR, modelId, metadata, capFinder)) {
-			return false;
+		if ((groupingExpressions == null || groupingExpressions.isEmpty())) {
+			if (!CapabilitiesUtil.supports(Capability.QUERY_AGGREGATES_COUNT_STAR, modelId, metadata, capFinder)) {
+				return false;
+			}
+		} else {
+			for (SingleElementSymbol ses : groupingExpressions) {
+				if(! CriteriaCapabilityValidatorVisitor.canPushLanguageObject(ses, modelId, metadata, capFinder, record)) {
+		            return false;
+		        }
+			}
 		}
 		//TODO: check to see if we are distinct
 		return true;
@@ -270,7 +365,7 @@ public class RulePushAggregates implements
 	/**
 	 * Recursively searches the union tree for all applicable source nodes
 	 */
-	private PlanNode findUnionChildren(List<PlanNode> unionChildren, boolean carinalityDependent, PlanNode setOp) {
+	static PlanNode findUnionChildren(List<PlanNode> unionChildren, boolean carinalityDependent, PlanNode setOp) {
 		if (setOp.getType() != NodeConstants.Types.SET_OP || setOp.getProperty(NodeConstants.Info.SET_OPERATION) != Operation.UNION) {
 			return setOp;
 		}
@@ -292,11 +387,14 @@ public class RulePushAggregates implements
 		return null;
 	}
     
-	public void addView(PlanNode root, PlanNode unionSource, boolean pushdown, List<SingleElementSymbol> groupingExpressions,
+	public void addView(PlanNode root, PlanNode unionSource, boolean pushdown, GroupSymbol group, List<SingleElementSymbol> groupingExpressions,
 			Set<AggregateSymbol> aggregates, List<ElementSymbol> virtualElements,
-			QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
+			QueryMetadataInterface metadata, CapabilitiesFinder capFinder, List<SingleElementSymbol> actualProject)
 			throws TeiidComponentException, QueryPlannerException, QueryResolverException {
-		PlanNode originalNode = unionSource;
+		PlanNode accessNode = null;
+		if (pushdown) {
+			accessNode = NodeEditor.findNodePreOrder(unionSource, NodeConstants.Types.ACCESS);
+		}
 		//branches other than the first need to have their projected column names updated
 		PlanNode sortNode = NodeEditor.findNodePreOrder(unionSource, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
 		List<SingleElementSymbol> sortOrder = null;
@@ -320,34 +418,23 @@ public class RulePushAggregates implements
 				updateSymbolName(projectCols, i, virtualElem, projectedSymbol);
 			}
 		}
-    	PlanNode intermediateView = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
-    	unionSource.addAsParent(intermediateView);
+		PlanNode intermediateView = createView(group, virtualElements, unionSource, metadata);
+    	SymbolMap symbolMap = (SymbolMap)intermediateView.getProperty(Info.SYMBOL_MAP);
     	unionSource = intermediateView;
-    	TempMetadataStore store = new TempMetadataStore();
-        TempMetadataAdapter tma = new TempMetadataAdapter(metadata, store);
-        GroupSymbol group = new GroupSymbol("X"); //$NON-NLS-1$
-        try {
-			group.setMetadataID(ResolverUtil.addTempGroup(tma, group, virtualElements, false));
-		} catch (QueryResolverException e) {
-			throw new TeiidComponentException(e);
-		}
-    	intermediateView.addGroup(group);
-    	List<ElementSymbol> projectedSymbols = ResolverUtil.resolveElementsInGroup(group, metadata);
-    	SymbolMap symbolMap = SymbolMap.createSymbolMap(projectedSymbols, 
-				(List<Expression>)NodeEditor.findNodePreOrder(unionSource, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS));
-    	intermediateView.setProperty(NodeConstants.Info.SYMBOL_MAP, symbolMap);
     	
         Set<SingleElementSymbol> newGroupingExpressions = Collections.emptySet();
         if (groupingExpressions != null) {
         	newGroupingExpressions = new HashSet<SingleElementSymbol>();
         	for (SingleElementSymbol singleElementSymbol : groupingExpressions) {
-				newGroupingExpressions.add((SingleElementSymbol)symbolMap.getKeys().get(virtualElements.indexOf(singleElementSymbol)).clone());
+				newGroupingExpressions.add((SingleElementSymbol) symbolMap.getKeys().get(virtualElements.indexOf(singleElementSymbol)).clone());
 			}
         }
 
-        List<SingleElementSymbol> projectedViewSymbols = Util.deepClone(projectedSymbols, SingleElementSymbol.class);
+        List<SingleElementSymbol> projectedViewSymbols = Util.deepClone(symbolMap.getKeys(), SingleElementSymbol.class);
 
-        SymbolMap viewMapping = SymbolMap.createSymbolMap(NodeEditor.findParent(unionSource, NodeConstants.Types.SOURCE).getGroups().iterator().next(), projectedSymbols, metadata);
+        PlanNode parent = NodeEditor.findParent(unionSource, NodeConstants.Types.SOURCE);
+        SymbolMap parentMap = (SymbolMap) parent.getProperty(NodeConstants.Info.SYMBOL_MAP);
+        SymbolMap viewMapping = SymbolMap.createSymbolMap(parentMap.getKeys(), projectedViewSymbols);
         for (AggregateSymbol agg : aggregates) {
         	agg = (AggregateSymbol)agg.clone();
         	ExpressionMappingVisitor.mapExpressions(agg, viewMapping.asMap());
@@ -380,17 +467,49 @@ public class RulePushAggregates implements
         unionSource = projectPlanNode;
 
         //create proper names for the aggregate symbols
-        Select select = new Select(projectedViewSymbols);
+        Select select = null;
+        if (actualProject == null) {
+        	select = new Select(projectedViewSymbols);
+        } else {
+        	select = new Select(actualProject);
+        }
         QueryRewriter.makeSelectUnique(select, false);
         projectedViewSymbols = select.getProjectedSymbols();
         projectPlanNode.setProperty(NodeConstants.Info.PROJECT_COLS, projectedViewSymbols);
         projectPlanNode.addGroup(group);
         if (pushdown) {
-        	while (RuleRaiseAccess.raiseAccessNode(root, originalNode, metadata, capFinder, true, null) != null) {
+        	while (RuleRaiseAccess.raiseAccessNode(root, accessNode, metadata, capFinder, true, null) != null) {
         		//continue to raise
         	}
         }
     }
+	
+	static PlanNode createView(GroupSymbol group, List<? extends SingleElementSymbol> virtualElements, PlanNode child, QueryMetadataInterface metadata) throws TeiidComponentException {
+    	SymbolMap symbolMap = createSymbolMap(group, virtualElements, child, metadata);
+    	PlanNode branchSource = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
+		branchSource.addGroup(group);
+		PlanNode projectNode = NodeEditor.findNodePreOrder(child, NodeConstants.Types.PROJECT);
+		branchSource.setProperty(Info.SYMBOL_MAP, SymbolMap.createSymbolMap(symbolMap.getKeys(), (List<? extends SingleElementSymbol>)projectNode.getProperty(Info.PROJECT_COLS)));
+		child.addAsParent(branchSource);
+		return branchSource;
+	}
+
+	private static SymbolMap createSymbolMap(GroupSymbol group,
+			List<? extends SingleElementSymbol> virtualElements,
+			PlanNode child, QueryMetadataInterface metadata)
+			throws TeiidComponentException, QueryMetadataException {
+		TempMetadataStore store = new TempMetadataStore();
+        TempMetadataAdapter tma = new TempMetadataAdapter(metadata, store);
+        try {
+			group.setMetadataID(ResolverUtil.addTempGroup(tma, group, virtualElements, false));
+		} catch (QueryResolverException e) {
+			throw new TeiidComponentException(e);
+		}
+    	List<ElementSymbol> projectedSymbols = ResolverUtil.resolveElementsInGroup(group, metadata);
+    	SymbolMap symbolMap = SymbolMap.createSymbolMap(projectedSymbols, 
+				(List<Expression>)NodeEditor.findNodePreOrder(child, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS));
+		return symbolMap;
+	}
 
 	private void updateSymbolName(List<SingleElementSymbol> projectCols, int i,
 			ElementSymbol virtualElem, SingleElementSymbol projectedSymbol) {
@@ -450,20 +569,19 @@ public class RulePushAggregates implements
         }
         Map<PlanNode, List<SingleElementSymbol>> groupingMap = createNodeMapping(groupNode, groupingExpressions, false);
 
-        Set<PlanNode> possibleTargetNodes = new HashSet<PlanNode>(aggregateMap.keySet());
+        Set<PlanNode> possibleTargetNodes = new LinkedHashSet<PlanNode>(aggregateMap.keySet());
         possibleTargetNodes.addAll(groupingMap.keySet());
 
         for (PlanNode planNode : possibleTargetNodes) {
             Set<SingleElementSymbol> stagedGroupingSymbols = new LinkedHashSet<SingleElementSymbol>();
             List<AggregateSymbol> aggregates = aggregateMap.get(planNode);
-            List<SingleElementSymbol> groupBy = groupingMap.get(planNode);
 
             if (!canPush(groupNode, stagedGroupingSymbols, planNode)) {
                 continue;
             }
 
-            if (groupBy != null) {
-                stagedGroupingSymbols.addAll(groupBy);
+            if (groupingExpressions != null) {
+            	filterJoinColumns(stagedGroupingSymbols, planNode.getGroups(), groupingExpressions);
             }
 
             collectSymbolsFromOtherAggregates(allAggregates, aggregates, planNode, stagedGroupingSymbols);
@@ -625,7 +743,7 @@ public class RulePushAggregates implements
 
     private <T extends SingleElementSymbol> Map<PlanNode, List<T>> createNodeMapping(PlanNode groupNode,
                                                                        Collection<T> expressions, boolean aggs) {
-        Map<PlanNode, List<T>> result = new HashMap<PlanNode, List<T>>();
+        Map<PlanNode, List<T>> result = new LinkedHashMap<PlanNode, List<T>>();
         if (expressions == null) {
             return result;
         }
@@ -657,7 +775,7 @@ public class RulePushAggregates implements
             if (originatingNode.getParent() == groupNode) {
             	//anything logically applied after the join and is
             	//dependent upon the cardinality prevents us from optimizing.
-            	if (aggs && RuleRemoveOptionalJoins.isCardinalityDependent((AggregateSymbol)aggregateSymbol)) {
+            	if (aggs && ((AggregateSymbol)aggregateSymbol).isCardinalityDependent()) {
             		return null;
             	}
                 continue;
@@ -753,7 +871,8 @@ public class RulePushAggregates implements
                 nestedAggregates.add(countAgg);
                 nestedAggregates.add(sumAgg);
                 nestedAggregates.add(sumSqAgg);
-            } else {
+            }
+            else {
                 //AGG(X) -> AGG(AGG(X))
                 newExpression = new AggregateSymbol("stagedAgg", aggFunction.name(), false, partitionAgg); //$NON-NLS-1$
                 nestedAggregates.add(partitionAgg);
@@ -787,4 +906,5 @@ public class RulePushAggregates implements
     public String toString() {
         return "PushAggregates"; //$NON-NLS-1$
     }
+    
 }
