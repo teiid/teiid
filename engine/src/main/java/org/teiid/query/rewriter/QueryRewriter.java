@@ -604,9 +604,9 @@ public class QueryRewriter {
         From from = query.getFrom();
         if(from != null){
             List<FromClause> clauses = new ArrayList<FromClause>(from.getClauses().size());
-            Iterator clauseIter = from.getClauses().iterator();
+            Iterator<FromClause> clauseIter = from.getClauses().iterator();
             while(clauseIter.hasNext()) {
-                clauses.add( rewriteFromClause(query, (FromClause) clauseIter.next()) );
+                clauses.add( rewriteFromClause(query, clauseIter.next()) );
             }
             from.setClauses(clauses);
         } else {

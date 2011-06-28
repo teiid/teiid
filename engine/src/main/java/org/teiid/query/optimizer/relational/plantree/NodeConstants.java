@@ -43,7 +43,6 @@ public final class NodeConstants {
         public static final int SET_OP = 1<<8;
         public static final int NULL = 1<<9;
         public static final int TUPLE_LIMIT = 1<<10;
-        public static final int WITH = 1<<11;
     }
 
     /**
@@ -64,7 +63,6 @@ public final class NodeConstants {
             case NodeConstants.Types.SET_OP:        return "SetOperation"; //$NON-NLS-1$
             case NodeConstants.Types.NULL:          return "Null"; //$NON-NLS-1$
             case NodeConstants.Types.TUPLE_LIMIT:   return "TupleLimit"; //$NON-NLS-1$
-            case NodeConstants.Types.WITH:   		return "With"; //$NON-NLS-1$
             default:                                return "Unknown: " + type; //$NON-NLS-1$
         }
     }
