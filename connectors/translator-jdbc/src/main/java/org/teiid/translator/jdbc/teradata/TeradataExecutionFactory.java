@@ -29,13 +29,21 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.teiid.language.ColumnReference;
+import org.teiid.language.Command;
+import org.teiid.language.DerivedColumn;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
 import org.teiid.language.Literal;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.Select;
+import org.teiid.language.SortSpecification;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
@@ -292,8 +300,37 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
     }
     
     @Override
-    public boolean supportsSetQueryOrderBy() {
-    	return false;
+    public List<?> translateCommand(Command command, ExecutionContext context) {
+    	if (command instanceof QueryExpression) {
+    		QueryExpression qe = (QueryExpression)command;
+    		//teradata prefers positional ordering
+    		if (qe.getOrderBy() != null) {
+    			Select select = qe.getProjectedQuery();
+    			List<DerivedColumn> derivedColumns = select.getDerivedColumns();
+    			Map<String, Integer> positions = new HashMap<String, Integer>();
+    			int i = 1;
+    			for (DerivedColumn derivedColumn : derivedColumns) {
+    				String name = derivedColumn.getAlias();
+    				if (name == null && derivedColumn.getExpression() instanceof ColumnReference) {
+    					ColumnReference cr = (ColumnReference)derivedColumn.getExpression();
+    					name = cr.toString();
+    				}
+					positions.put(name, i++);
+				}
+    			for (SortSpecification ss : qe.getOrderBy().getSortSpecifications()) {
+    				Expression ex = ss.getExpression();
+    				if (!(ex instanceof ColumnReference)) {
+    					continue;
+    				} 
+    				ColumnReference cr = (ColumnReference)ex;
+    				Integer position = positions.get(cr.toString());
+    				if (position != null) {
+    					ss.setExpression(new Literal(position, TypeFacility.RUNTIME_TYPES.INTEGER));
+    				}
+				}
+    		}
+    	}
+    	return super.translateCommand(command, context);
     }
     
     public static class LocateModifier extends FunctionModifier {

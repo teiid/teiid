@@ -71,6 +71,11 @@
   <li>Support for using the FROM clause post item hints MAKEDEP/MAKENOTDEP has been deprecated.  Use the pre item comment hint syntax instead, e.g. /*+ MAKEDEP */ tbl
 </ul>
 
+<h4>from 7.4</h4>
+<ul>
+  <li>ColumnReference.getName will always return just the element name.  Previously it inconsistently returned the qualified and unqualified form depending upon where the ColumnReference appeared.
+</ul>
+
 <h4>from 7.3</h4>
 <ul>
   <li>SYS.PROPERTIES has a new column, ClobValue, to get values exceeding the max string length
