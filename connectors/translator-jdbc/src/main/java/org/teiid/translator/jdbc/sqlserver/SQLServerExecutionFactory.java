@@ -24,6 +24,8 @@
  */
 package org.teiid.translator.jdbc.sqlserver;
 
+import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -203,8 +205,16 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     }
     
     @Override
+    public String translateLiteralDate(Date dateValue) {
+    	if (getDatabaseVersion().compareTo(V_2008) >= 0) {
+    		return super.translateLiteralDate(dateValue);
+    	}
+    	return super.translateLiteralTimestamp(new Timestamp(dateValue.getTime()));
+    }
+    
+    @Override
     public boolean hasTimeType() {
-    	return getDatabaseVersion().compareTo(V_2005) >= 0;
+    	return getDatabaseVersion().compareTo(V_2008) >= 0;
     }
     
     @Override
