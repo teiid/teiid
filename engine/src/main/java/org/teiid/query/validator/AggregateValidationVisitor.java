@@ -28,6 +28,13 @@ import java.util.Set;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.lang.BetweenCriteria;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.CompoundCriteria;
+import org.teiid.query.sql.lang.IsNullCriteria;
+import org.teiid.query.sql.lang.MatchCriteria;
+import org.teiid.query.sql.lang.NotCriteria;
+import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
@@ -35,7 +42,13 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
+import org.teiid.query.sql.symbol.XMLElement;
+import org.teiid.query.sql.symbol.XMLForest;
+import org.teiid.query.sql.symbol.XMLParse;
+import org.teiid.query.sql.symbol.XMLQuery;
+import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
@@ -110,6 +123,70 @@ public class AggregateValidationVisitor extends AbstractValidationVisitor {
     
     public void visit(Function obj) {
         validateExpression(obj);
+    }
+    
+    public void visit(NotCriteria obj) {
+    	validateExpression(obj);
+    }
+    
+    @Override
+    public void visit(CompoundCriteria obj) {
+    	validateExpression(obj);
+    }
+    
+    @Override
+    public void visit(CompareCriteria obj) {
+    	validateExpression(obj);
+    }
+    
+    @Override
+    public void visit(SetCriteria obj) {
+    	validateExpression(obj);
+    }
+    
+    @Override
+    public void visit(IsNullCriteria obj) {
+    	validateExpression(obj);
+    }
+    
+    @Override
+    public void visit(MatchCriteria obj) {
+    	validateExpression(obj);
+    }
+    
+    @Override
+    public void visit(BetweenCriteria obj) {
+    	validateExpression(obj);
+    }
+    
+    @Override
+    public void visit(QueryString obj) {
+    	validateExpression(obj);
+    }
+    
+    @Override
+    public void visit(XMLElement obj) {
+    	validateExpression(obj);
+    }
+    
+    @Override
+    public void visit(XMLForest obj) {
+    	validateExpression(obj);
+    }
+    
+    @Override
+    public void visit(XMLParse obj) {
+    	validateExpression(obj);
+    }
+    
+    @Override
+    public void visit(XMLQuery obj) {
+    	validateExpression(obj);
+    }
+    
+    @Override
+    public void visit(XMLSerialize obj) {
+    	validateExpression(obj);
     }
     
     private void validateExpression(Expression symbol) {

@@ -419,6 +419,14 @@ public class TestValidator {
                      new String[] {"COUNT(DISTINCT ObjectValue)"}, RealMetadataFactory.exampleBQTCached() ); //$NON-NLS-1$
     }
     
+    /**
+     * previously failed on stringkey, which is not entirely correct
+     */
+    @Test public void testInvalidAggregate10() {
+        helpValidate("SELECT xmlparse(document stringkey) FROM BQT1.SmallA GROUP BY xmlparse(document stringkey)", //$NON-NLS-1$
+                     new String[] {"XMLPARSE(DOCUMENT stringkey)"}, RealMetadataFactory.exampleBQTCached() ); //$NON-NLS-1$
+    }
+    
     @Test public void testInvalidAggregateIssue190644() {
         helpValidate("SELECT e3 + 1 from pm1.g1 GROUP BY e2 + 1 HAVING e2 + 1 = 5", new String[] {"e3"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -436,6 +444,11 @@ public class TestValidator {
             "FROM BQT1.SmallA GROUP BY case when IntKey>=5000 then '5000 +' else '0-999' end", //$NON-NLS-1$
             new String[] {}, RealMetadataFactory.exampleBQTCached());
     }
+    
+    @Test public void testValidAggregate4() {
+        helpValidate("SELECT max(e1), e2 is null from pm1.g1 GROUP BY e2 is null", new String[] {}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ 
+    }
+
 	@Test public void testInvalidHaving1() {        
         helpValidate("SELECT e3 FROM test.group HAVING e3 > 0", new String[] {"e3"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
 	}

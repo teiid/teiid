@@ -30,7 +30,7 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 /**
- * Represents XMLATTRIBUTES name value pairs
+ * Represents query string name value pairs
  */
 public class QueryString implements Expression {
 
