@@ -22,10 +22,6 @@
 
 package org.teiid.core;
 
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.sql.SQLException;
-
 import org.teiid.core.util.ExceptionUtil;
 
 
@@ -40,24 +36,7 @@ import org.teiid.core.util.ExceptionUtil;
 public class TeiidRuntimeException extends RuntimeException {
     public static final long serialVersionUID = -4035276728007979320L;
     
-    private static final String EMPTY_STRING = ""; //$NON-NLS-1$
     public static final String CAUSED_BY_STRING = CorePlugin.Util.getString("RuntimeException.Caused_by"); //$NON-NLS-1$
-    
-    //############################################################################################################################
-    //# Static Methods                                                                                                           #
-    //############################################################################################################################
-    
-    /**
-     * Utility method to get the name of a class, without package information.
-     *
-     * @param cls The class to get the name of
-     * @return The name of the class, without package info
-     */
-    public static String getClassShortName( Class cls ) {
-        if ( cls == null ) return EMPTY_STRING;
-        String className = cls.getName();
-        return className.substring( className.lastIndexOf('.')+1 );
-    }
     
     //############################################################################################################################
     //# Variables                                                                                                                #
@@ -86,19 +65,6 @@ public class TeiidRuntimeException extends RuntimeException {
         super(message);
     }
 
-    /**
-     * Construct an instance with the specified error code and message.  If the message is actually a key, the actual message will
-     * be retrieved from a resource bundle using the key, and the specified parameters will be substituted for placeholders within
-     * the message.
-     * @param code    The error code 
-     * @param message The error message or a resource bundle key
-     */
-    public TeiidRuntimeException(final int code, final String message) {
-        super(message);
-        // The following setCode call should be executed after setting the message 
-        setCode(code);
-    }
-    
     public TeiidRuntimeException(final String code, final String message) {
         super(message);
         // The following setCode call should be executed after setting the message 
@@ -125,22 +91,9 @@ public class TeiidRuntimeException extends RuntimeException {
      */
     public TeiidRuntimeException(final Throwable e, final String message) {
         super(message, e);
-        setCode(e);
+        setCode(TeiidException.getCode(e));
     }
 
-    /**
-     * Construct an instance with the linked exception, error code, and error message specified.  If the message is actually a
-     * key, the error message will be retrieved from a resource bundle using the key.
-     * @param e       The exception to chain to this exception
-     * @param code    The error code 
-     * @param message The error message or a resource bundle key
-     */
-    public TeiidRuntimeException(final Throwable e, final int code, final String message) {
-        super(message, e);
-        // The following setCode call should be executed after setting the message 
-        setCode(code);
-    }
-    
     /**
      * Construct an instance with the linked exception, error code, and error message specified. If the specified
      * exception is a {@link TeiidException} or a MetaMatrixRuntimeException, the code will
@@ -164,6 +117,7 @@ public class TeiidRuntimeException extends RuntimeException {
      * Get the exception which is linked to this exception.
      *
      * @return The linked exception
+     * @deprecated use {@link #getCause()} instead
      */
     public Throwable getChild() {
         return this.getCause();
@@ -175,45 +129,11 @@ public class TeiidRuntimeException extends RuntimeException {
      * @return The error code 
      */
     public String getCode() {
-    	if (code == null) {
-    		return "0"; //$NON-NLS-1$
-    	}
         return this.code;
-    }
-    
-    public int getIntCode() {
-    	if (code == null) {
-    		return 0;
-    	}
-        try {
-        	return Integer.parseInt(code);
-        } catch (NumberFormatException e) {
-        	
-        }
-        return 0;
-    }
-
-    /**
-     * Set the error code.
-     *
-     * @param code The error code 
-     */
-    private void setCode( int code ) {
-        this.code = Integer.toString(code);
     }
     
     private void setCode( String code ) {
         this.code = code;
-    }
-
-    private void setCode(Throwable e) {
-        if (e instanceof TeiidException) {
-            this.code = (((TeiidException) e).getCode());
-        } else if (e instanceof TeiidRuntimeException) {
-        	this.code = ((TeiidRuntimeException) e).getCode();
-        } else if (e instanceof SQLException) {
-        	this.code = Integer.toString(((SQLException)e).getErrorCode());
-        }
     }
 
     /**
@@ -225,12 +145,4 @@ public class TeiidRuntimeException extends RuntimeException {
         return ExceptionUtil.getLinkedMessages(this);
     }
 
-    public void superPrintStackTrace(PrintStream output) {
-        super.printStackTrace(output);
-    }
-
-    public void superPrintStackTrace(PrintWriter output) {
-        super.printStackTrace(output);
-    }
-    
 }

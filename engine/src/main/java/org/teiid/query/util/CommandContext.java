@@ -26,6 +26,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
@@ -33,11 +34,14 @@ import java.util.TimeZone;
 
 import javax.security.auth.Subject;
 
+import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Session;
+import org.teiid.adminapi.VDB;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.ArgCheck;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
@@ -120,9 +124,11 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    private Subject subject;
 	    private HashSet<Object> dataObjects;
 
-		public Session session;
+		private Session session;
 
-		public RequestID requestId;
+		private RequestID requestId;
+		
+		private DQPWorkContext dqpWorkContext;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -589,6 +595,24 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	public void setRequestId(RequestID requestId) {
 		this.globalState.requestId = requestId;
+	}
+	
+	public void setDQPWorkContext(DQPWorkContext workContext) {
+		this.globalState.dqpWorkContext = workContext;
+	}
+	
+	@Override
+	public Map<String, DataPolicy> getAllowedDataPolicies() {
+		return this.globalState.dqpWorkContext.getAllowedDataPolicies();
+	}
+	
+	@Override
+	public VDB getVdb() {
+		return this.globalState.dqpWorkContext.getVDB();
+	}
+	
+	public DQPWorkContext getDQPWorkContext() {
+		return this.globalState.dqpWorkContext;
 	}
 	
 }

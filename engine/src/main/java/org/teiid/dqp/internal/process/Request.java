@@ -254,6 +254,7 @@ public class Request implements SecurityFunctionEvaluator {
         context.setSubject(workContext.getSubject());
         this.context.setSession(workContext.getSession());
         this.context.setRequestId(this.requestId);
+        this.context.setDQPWorkContext(this.workContext);
     }
     
     @Override
@@ -262,7 +263,10 @@ public class Request implements SecurityFunctionEvaluator {
         if (!DATA_ROLE.equalsIgnoreCase(roleType)) {
             return false;
         }
-        return authorizationValidator.hasRole(roleName, workContext);
+        if (this.authorizationValidator == null) {
+        	return true;
+        }
+        return authorizationValidator.hasRole(roleName, context);
     }
     
     public void setUserRequestConcurrency(int userRequestConcurrency) {
@@ -465,7 +469,9 @@ public class Request implements SecurityFunctionEvaluator {
 
 	protected void validateAccess(Command command) throws QueryValidatorException, TeiidComponentException {
 		createCommandContext(command);
-		this.authorizationValidator.validate(command, metadata, workContext, context);
+		if (this.authorizationValidator != null) {
+			this.authorizationValidator.validate(command, metadata, context);
+		}
 	}
 	
 }

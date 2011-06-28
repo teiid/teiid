@@ -31,6 +31,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestAggregatePushdown;
 import org.teiid.query.optimizer.TestOptimizer;
@@ -38,6 +40,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
 import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings({"nls", "unchecked"})
@@ -371,6 +374,30 @@ public class TestAggregateProcessing {
 
 		// Run query
 		helpProcess(plan, dataManager, expected);
+	}
+	
+	@Test public void testArrayAggOrderByPersistence() throws Exception {
+		// Create query
+		String sql = "SELECT array_agg(e2 order by e1) from pm1.g1 group by e3"; //$NON-NLS-1$
+
+		// Create expected results
+		List[] expected = new List[] {
+				Arrays.asList((Object)new Integer[] {1, 0, 0, 2}),
+				Arrays.asList((Object)new Integer[] {3, 1}),
+		};
+
+		// Construct data manager with data
+		FakeDataManager dataManager = new FakeDataManager();
+		sampleData1(dataManager);
+
+		// Plan query
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+		CommandContext cc = TestProcessor.createCommandContext();
+		BufferManagerImpl impl = BufferManagerFactory.getTestBufferManager(0, 2);
+		impl.setUseWeakReferences(false);
+		cc.setBufferManager(impl);
+		// Run query
+		helpProcess(plan, cc, dataManager, expected);
 	}
 
 }

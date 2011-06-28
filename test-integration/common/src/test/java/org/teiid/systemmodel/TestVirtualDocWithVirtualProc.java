@@ -55,7 +55,7 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
     	closeConnection();
     }
     
-    @Test public void testDefect15241() {
+    @Test public void testDefect15241() throws Exception {
 
     	String sql = "SELECT SchemaName, Name, Description FROM SYS.Tables WHERE Name = 'yyyTestDocument'"; //$NON-NLS-1$
 
@@ -67,7 +67,7 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
     	executeAndAssertResults(sql, expected);
     }
 
-    @Test public void testDefect15241a() {
+    @Test public void testDefect15241a() throws Exception {
     	String sql = "SELECT TableName, Name, Description FROM SYS.Columns WHERE Name = 'IntKey'"; //$NON-NLS-1$
     	String[] expected ={
 		    "TableName[string]	Name[string]	Description[string]",	 //$NON-NLS-1$
@@ -83,7 +83,7 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
     	executeAndAssertResults(sql, expected);
     }
 
-    @Test public void testDefect15241b() {
+    @Test public void testDefect15241b() throws Exception {
     	
     	String sql = "SELECT p.Name, p.Value, UID FROM SYS.Properties p"; //$NON-NLS-1$
     	String[] expected ={

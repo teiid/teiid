@@ -2122,7 +2122,7 @@ public class TestOptimizer {
             "SELECT MAX(sa.datevalue) FROM bqt1.smalla AS sb " + //$NON-NLS-1$
             "WHERE (sb.intkey = sa.intkey) AND (sa.stringkey = sb.stringkey) ))"; //$NON-NLS-1$
 
-        String sqlOut = "SELECT g_0.intkey FROM bqt1.smalla AS g_0 WHERE (g_0.intkey = 46) AND (g_0.stringkey = '46') AND (g_0.datevalue = (SELECT g_0.datevalue FROM bqt1.smalla AS g_1 WHERE (g_1.intkey = g_0.intkey) AND (g_1.stringkey = g_0.stringkey)))"; //$NON-NLS-1$
+        String sqlOut = "SELECT g_0.intkey FROM bqt1.smalla AS g_0 WHERE (g_0.intkey = 46) AND (g_0.stringkey = '46') AND (g_0.datevalue = (SELECT MAX(g_0.datevalue) FROM bqt1.smalla AS g_1 WHERE (g_1.intkey = g_0.intkey) AND (g_1.stringkey = g_0.stringkey)))"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sqlIn, 
             RealMetadataFactory.exampleBQTCached(),
@@ -6585,6 +6585,26 @@ public class TestOptimizer {
     @Test public void testUpdatePushdownFails() { 
         helpPlan("update pm1.g1 set e1 = 1 where exists (select 1 from pm1.g2)", RealMetadataFactory.example1Cached(), null, //$NON-NLS-1$
 			null, null, false); //$NON-NLS-1$
+    }
+    
+    @Test public void testUnnamedAggInView() throws Exception {
+    	MetadataStore metadataStore = new MetadataStore();
+    	
+        Schema bqt1 = RealMetadataFactory.createPhysicalModel("BQT1", metadataStore); //$NON-NLS-1$
+        Schema vqt = RealMetadataFactory.createVirtualModel("VQT", metadataStore); //$NON-NLS-1$
+        
+        Table bqt1SmallA = RealMetadataFactory.createPhysicalGroup("SmallA", bqt1); //$NON-NLS-1$
+        RealMetadataFactory.createElement("col", bqt1SmallA, DataTypeManager.DefaultDataTypes.STRING);
+        
+        Table agg3 = RealMetadataFactory.createVirtualGroup("Agg3", vqt, new QueryNode("select count(*) from smalla"));
+        RealMetadataFactory.createElement("count", agg3, DataTypeManager.DefaultDataTypes.INTEGER);
+        
+        TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "x");
+        BasicSourceCapabilities bac = getTypicalCapabilities();
+        bac.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        bac.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
+        bac.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        helpPlan("select count(*) from agg3", metadata, new String[] {"SELECT COUNT(*) FROM (SELECT COUNT(*) AS c_0 FROM BQT1.SmallA AS g_0) AS v_0"}, new DefaultCapabilitiesFinder(bac), ComparisonMode.EXACT_COMMAND_STRING);
     }
     
 	public static final boolean DEBUG = false;

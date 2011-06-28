@@ -315,7 +315,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			String matTableName = metadata.getFullName(matTableId);
 			LogManager.logDetail(LogConstants.CTX_MATVIEWS, "processing refreshmatview for", matViewName); //$NON-NLS-1$
 			MatTableInfo info = globalStore.getMatTableInfo(matTableName);
-			boolean invalidate = Boolean.TRUE.equals(((Constant)proc.getParameter(1).getExpression()).getValue());
+			boolean invalidate = Boolean.TRUE.equals(((Constant)proc.getParameter(2).getExpression()).getValue());
 			if (invalidate) {
 				touchTable(context, matTableName, false);
 			}
@@ -325,7 +325,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			}
 			GroupSymbol matTable = new GroupSymbol(matTableName);
 			matTable.setMetadataID(matTableId);
-			int rowCount = loadGlobalTable(context, matTable, matTableName, globalStore, info, null);
+			int rowCount = loadGlobalTable(context, matTable, matTableName, globalStore, info, null, false);
 			return CollectionTupleSource.createUpdateCountTupleSource(rowCount);
 		} else if (StringUtil.endsWithIgnoreCase(proc.getProcedureCallableName(), REFRESHMATVIEWROW)) {
 			Object groupID = validateMatView(metadata, proc);
@@ -415,11 +415,13 @@ public class TempTableDataManager implements ProcessorDataManager {
 				key.vdb = new VDBKey(context.getVdbName(), context.getVdbVersion());
 				
 				MatTableEntry entry = this.tables.get(key);
-				boolean firstload = !info.isValid();
+				boolean notValid = !info.isValid();
 				if (entry != null && entry.lastUpdate > info.getUpdateTime() 
-						&& info.getState() != MatState.LOADING) {
-					//remote load
-					info.setState(MatState.NEEDS_LOADING, firstload?false:entry.valid, null);
+						&& info.getState() != MatState.LOADING
+						//TODO: use extension metadata or a config parameter to make this skew configurable
+						&& !(!notValid && entry.valid && info.getState() == MatState.LOADED && entry.lastUpdate < info.getUpdateTime() + 30000)) {
+					//trigger a remote load due to the cache being more up to date than the local copy
+					info.setState(MatState.NEEDS_LOADING, notValid?false:entry.valid, null);
 					loadTime = entry.lastUpdate;
 				}
 			}
@@ -427,7 +429,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			if (load) {
 				if (!info.isValid()) {
 					//blocking load
-					loadGlobalTable(context, group, tableName, globalStore, info, loadTime);
+					loadGlobalTable(context, group, tableName, globalStore, info, loadTime, true);
 				} else {
 					loadAsynch(context, group, tableName, globalStore, info, loadTime);
 				}
@@ -468,7 +470,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 		Callable<Integer> toCall = new Callable<Integer>() {
 			@Override
 			public Integer call() throws Exception {
-				return loadGlobalTable(context, group, tableName, globalStore, info, loadTime);
+				return loadGlobalTable(context, group, tableName, globalStore, info, loadTime, true);
 			}
 		};
 		FutureTask<Integer> task = new FutureTask<Integer>(toCall);
@@ -477,7 +479,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 
 	private int loadGlobalTable(CommandContext context,
 			GroupSymbol group, final String tableName,
-			TempTableStore globalStore, MatTableInfo info, Long loadTime)
+			TempTableStore globalStore, MatTableInfo info, Long loadTime, boolean useCache)
 			throws TeiidComponentException, TeiidProcessingException {
 		LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.getString("TempTableDataManager.loading", tableName)); //$NON-NLS-1$
 		QueryMetadataInterface metadata = context.getMetadata();
@@ -511,9 +513,11 @@ public class TempTableDataManager implements ProcessorDataManager {
 			if (distributedCache != null) {
 				cid = new CacheID(new ParseInfo(), fullName, context.getVdbName(), 
 						context.getVdbVersion(), context.getConnectionID(), context.getUserName());
-				CachedResults cr = this.distributedCache.get(cid);
-				if (cr != null) {
-					ts = cr.getResults().createIndexedTupleSource();
+				if (useCache) {
+					CachedResults cr = this.distributedCache.get(cid);
+					if (cr != null) {
+						ts = cr.getResults().createIndexedTupleSource();
+					}
 				}
 			}
 			

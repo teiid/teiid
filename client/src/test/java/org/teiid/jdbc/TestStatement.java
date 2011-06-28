@@ -50,6 +50,7 @@ public class TestStatement {
 		results.getResultsReceiver().receiveResults(rm);
 		Mockito.stub(conn.getDQP()).toReturn(dqp);
 		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		statement.clearBatch(); //previously caused npe
 		statement.addBatch("delete from table"); //$NON-NLS-1$
 		statement.addBatch("delete from table1"); //$NON-NLS-1$
 		assertTrue(Arrays.equals(new int[] {1, 2}, statement.executeBatch()));
@@ -129,6 +130,19 @@ public class TestStatement {
 		statement.submitExecute("select 'hello world'");
 		Thread.sleep(100);
 		Mockito.verify(dqp).cancelRequest(0);
+		statement.setQueryTimeoutMS(1);
+		statement.submitExecute("select 'hello world'");
+		Thread.sleep(100);
+		Mockito.verify(dqp, Mockito.times(2)).cancelRequest(0);
+	}
+	
+	@Test public void testTimeoutProperty() throws Exception {
+		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+		Properties p = new Properties();
+		p.setProperty(ExecutionProperties.QUERYTIMEOUT, "2");
+		Mockito.stub(conn.getExecutionProperties()).toReturn(p);
+		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		assertEquals(2, statement.getQueryTimeout());
 	}
 	
 }

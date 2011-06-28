@@ -1104,14 +1104,14 @@ public class RealMetadataFactory {
         sq15.setResultSet(rs18);
 
 		QueryNode sq16n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN INSERT INTO pm1.g1 ( e1, e2 ) VALUES( 1, 2 ); END"); //$NON-NLS-1$ //$NON-NLS-2$
-		Procedure sq16 = createVirtualProcedure("sq16", pm1, null, sq16n1);  //$NON-NLS-1$
+		createVirtualProcedure("sq16", pm1, null, sq16n1);  //$NON-NLS-1$
 
         ColumnSet<Procedure> rs19 = createResultSet("pm1.rs19", new String[] { "xml" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         QueryNode sq17n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT * FROM xmltest.doc1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         Procedure sq17 = createVirtualProcedure("sq17", pm1, null, sq17n1);  //$NON-NLS-1$
         sq17.setResultSet(rs19);
 
-        Procedure sp3 = createStoredProcedure("sp3", pm1, null);  //$NON-NLS-1$ //$NON-NLS-2$
+        createStoredProcedure("sp3", pm1, null);  //$NON-NLS-1$ //$NON-NLS-2$
 
 		ColumnSet<Procedure> rs20 = createResultSet("pm1.rs20", new String[] { "xml" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         QueryNode sq18n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT * FROM xmltest.doc1; END"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -1130,7 +1130,7 @@ public class RealMetadataFactory {
         sp4.setResultSet(rs22);
         
         // no params or result set at all
-        Procedure sp5 = createStoredProcedure("sp5", pm1, new ArrayList<ProcedureParameter>());  //$NON-NLS-1$ //$NON-NLS-2$
+        createStoredProcedure("sp5", pm1, new ArrayList<ProcedureParameter>());  //$NON-NLS-1$ //$NON-NLS-2$
 
         //virtual stored procedures
         ColumnSet<Procedure> vsprs1 = vsprs1(); //$NON-NLS-1$ //$NON-NLS-2$

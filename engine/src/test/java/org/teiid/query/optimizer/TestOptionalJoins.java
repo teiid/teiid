@@ -347,11 +347,36 @@ public class TestOptionalJoins {
     }
     
     /**
-     * Union should prevent the removal from happening 
+     * Union all should not prevent the removal from happening 
      */
     @Test public void testOptionalJoinWithUnion() { 
         ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g2.e4 from /* optional */ pm1.g1 inner join pm1.g2 on pm1.g1.e1 = pm1.g2.e1 union all select convert(pm1.g2.e2, double) from /* optional */ pm1.g1 inner join pm1.g2 on pm1.g1.e1 = pm1.g2.e1", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] {"SELECT pm1.g2.e4 FROM pm1.g2", "SELECT pm1.g2.e2 FROM pm1.g2"} ); //$NON-NLS-1$ //$NON-NLS-2$
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // Join
+            0,      // MergeJoin
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            1       // UnionAll
+        });    
+    }
+    
+    /**
+     * The first branch should have the join removed, but not the second branch
+     */
+    @Test public void testOptionalJoinWithUnion1() { 
+        ProcessorPlan plan = TestOptimizer.helpPlan("select e4 from (select e4, e2 from (select pm1.g2.e4, pm1.g1.e2 from /* optional */ pm1.g1 inner join pm1.g2 on pm1.g1.e1 = pm1.g2.e1) as x union all select e4, e2 from (select convert(pm2.g1.e2, double) as e4, pm2.g2.e2 from /* optional */ pm2.g1 inner join pm2.g2 on pm2.g1.e1 = pm2.g2.e1) as x) as y", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] {"SELECT pm1.g2.e4 FROM pm1.g2", "SELECT g_0.e2 FROM pm2.g1 AS g_0, pm2.g2 AS g_1 WHERE g_0.e1 = g_1.e1"} ); //$NON-NLS-1$ //$NON-NLS-2$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access

@@ -91,6 +91,18 @@
 			<groupId>com.googlecode.json-simple</groupId>
 			<artifactId>json-simple</artifactId>
 		</dependency>
+		
+		<dependency>
+            <groupId>nux</groupId>
+            <artifactId>nux</artifactId>
+            <version>1.6</version>
+        </dependency>
+
+        <dependency>
+            <groupId>xom</groupId>
+            <artifactId>xom</artifactId>
+            <version>1.2</version>
+        </dependency>
 
 	</dependencies>
 

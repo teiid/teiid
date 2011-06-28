@@ -2036,9 +2036,7 @@
              <para>xquery in string. Return value is xml.</para>
              <para>XMLQUERY is part of the SQL/XML 2006 specification.</para>
              <para>See also <link linkend="xmltable">XMLTABLE</link></para>
-             <note><para>A technique known as document projection is used to reduce the memory footprint of the context item document.  
-             Only the parts of the document needed by the XQuery path expressions will be loaded into memory.  Since document projection analysis uses all relevant path expressions, even 1 expression that could potentially use many nodes, e.g. //x rather than /a/b/x will cause a larger memory footprint.</para></note>
-             
+             <note><para>See also <xref linkend="xquery_optimization"/></para></note>
     </section>
     <section id="xmlserialize">
     	<title>XMLSERIALIZE</title>

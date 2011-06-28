@@ -31,6 +31,7 @@ import java.util.List;
 import org.junit.Test;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
@@ -45,7 +46,7 @@ import org.teiid.query.util.CommandContext;
 public class TestUnionAllNode {
 
     public void helpTestUnion(RelationalNode[] children, RelationalNode union, List[] expected) throws TeiidComponentException, TeiidProcessingException {
-        BufferManager mgr = NodeTestUtil.getTestBufferManager(1, 2);
+        BufferManager mgr = BufferManagerFactory.getTestBufferManager(1, 2);
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         FakeDataManager fdm = new FakeDataManager();
         for(int i=0; i<children.length; i++) {

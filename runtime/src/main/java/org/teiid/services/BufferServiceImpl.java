@@ -62,8 +62,8 @@ public class BufferServiceImpl implements BufferService, Serializable {
 	private int connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
     private int maxOpenFiles = FileStorageManager.DEFAULT_MAX_OPEN_FILES;
     private long maxFileSize = FileStorageManager.DEFAULT_MAX_FILESIZE; // 2GB
-    private int maxProcessingBatchesColumns = BufferManager.DEFAULT_MAX_PROCESSING_BATCHES;
-    private int maxReserveBatchColumns = BufferManager.DEFAULT_RESERVE_BUFFERS;
+    private int maxProcessingKb = BufferManager.DEFAULT_MAX_PROCESSING_KB;
+    private int maxReserveKb = BufferManager.DEFAULT_RESERVE_BUFFER_KB;
     private long maxBufferSpace = FileStorageManager.DEFAULT_MAX_BUFFERSPACE;
 	private FileStorageManager fsm;
 	
@@ -86,8 +86,8 @@ public class BufferServiceImpl implements BufferService, Serializable {
             this.bufferMgr = new BufferManagerImpl();
             this.bufferMgr.setConnectorBatchSize(Integer.valueOf(connectorBatchSize));
             this.bufferMgr.setProcessorBatchSize(Integer.valueOf(processorBatchSize));
-            this.bufferMgr.setMaxReserveBatchColumns(this.maxReserveBatchColumns);
-            this.bufferMgr.setMaxProcessingBatchColumns(this.maxProcessingBatchesColumns);
+            this.bufferMgr.setMaxReserveKB(this.maxReserveKb);
+            this.bufferMgr.setMaxProcessingKB(this.maxProcessingKb);
             
             this.bufferMgr.initialize();
             
@@ -167,14 +167,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
     	this.maxFileSize = maxFileSize;
 	}
     
-    public void setMaxReserveBatchColumns(int value) {
-		this.maxReserveBatchColumns = value;
-	}    
-    
-    public void setMaxProcessingBatchesColumns(int value) {
-    	this.maxProcessingBatchesColumns  = value;
-    }
-
     @ManagementProperty(description="Max file size, in MB, for buffer files (default 2GB)")
 	public long getMaxFileSize() {
 		return maxFileSize;
@@ -185,18 +177,22 @@ public class BufferServiceImpl implements BufferService, Serializable {
 		this.maxOpenFiles = maxOpenFiles;
 	}
 
-    @ManagementProperty(description="The number of batch columns guarenteed to a processing operation.  Set this value lower if the workload typically" + 
-    		"processes larger numbers of concurrent queries with large intermediate results from operations such as sorting, " + 
-    		"grouping, etc. (default 128)")
-	public int getMaxProcessingBatchesColumns() {
-		return maxProcessingBatchesColumns;
+    @ManagementProperty(description="The approximate amount of buffer memory in kilobytes allowable for a single processing operation (sort, grouping, etc.) regardless of existing memory commitments. -1 means to automatically calculate a value (default -1).")
+    public int getMaxProcessingKb() {
+		return maxProcessingKb;
 	}
 
-    @ManagementProperty(description="The number of batch columns to allow in memory (default 16384).  " + 
-    		"This value should be set lower or higher depending on the available memory to Teiid in the VM.  " + 
-    		"16384 is considered a good default for a dedicated 32-bit VM running Teiid with a 1 gig heap.")
-	public int getMaxReserveBatchColumns() {
-		return maxReserveBatchColumns;
+    @ManagementProperty(description="The approximate amount of memory in kilobytes allowed to be held by the buffer manager. -1 means to automatically calculate a value (default -1)")
+    public int getMaxReservedKb() {
+		return maxReserveKb;
+	}
+    
+    public void setMaxProcessingKb(int maxProcessingKb) {
+		this.maxProcessingKb = maxProcessingKb;
+	}
+    
+    public void setMaxReserveKb(int maxReserveKb) {
+		this.maxReserveKb = maxReserveKb;
 	}
     
     @ManagementProperty(description="Max file storage space, in MB, to be used for buffer files (default 50G)")

@@ -58,16 +58,35 @@ public class BufferManagerFactory {
     }
 
 	public static BufferManagerImpl createBufferManager() {
-		BufferManagerImpl bufferMgr = new BufferManagerImpl();
-		try {
-			bufferMgr.initialize();
+		return initBufferManager(new BufferManagerImpl());
+	}
+
+	public static BufferManagerImpl getTestBufferManager(long bytesAvailable, int procBatchSize, int connectorBatchSize) {
+		BufferManagerImpl bufferManager = new BufferManagerImpl();
+		bufferManager.setProcessorBatchSize(procBatchSize);
+		bufferManager.setConnectorBatchSize(connectorBatchSize);
+		bufferManager.setMaxProcessingKB((int) (bytesAvailable/1024));
+		bufferManager.setMaxReserveKB((int) (bytesAvailable/1024));
+	    return initBufferManager(bufferManager);
+	}
+
+	public static BufferManagerImpl getTestBufferManager(long bytesAvailable, int procBatchSize) {
+		BufferManagerImpl bufferManager = new BufferManagerImpl();
+		bufferManager.setProcessorBatchSize(procBatchSize);
+		bufferManager.setMaxProcessingKB((int) (bytesAvailable/1024));
+		bufferManager.setMaxReserveKB((int) (bytesAvailable/1024));
+		return initBufferManager(bufferManager);
+	}
+
+	public static BufferManagerImpl initBufferManager(BufferManagerImpl bufferManager) {
+	    try {
+			bufferManager.initialize();
 		} catch (TeiidComponentException e) {
 			throw new RuntimeException(e);
 		}
-
-		// Add unmanaged memory storage manager
-		bufferMgr.setStorageManager(new MemoryStorageManager());
-		return bufferMgr;
+	
+	    bufferManager.setStorageManager(new MemoryStorageManager());
+	    return bufferManager;
 	}
 
 }

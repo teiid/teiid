@@ -85,6 +85,7 @@ public class JDBCMetdataProcessor {
 	private boolean widenUnsingedTypes = true;
 	private boolean quoteNameInSource = true;
 	private boolean useProcedureSpecificName;
+	private boolean useCatalogName = true;
 	
 	private Set<String> unsignedTypes = new HashSet<String>();
 	private String quoteString;
@@ -422,13 +423,11 @@ public class JDBCMetdataProcessor {
 		if (schemaName != null && schemaName.length() > 0) {
 			fullName = (quoted?quoteName(schemaName):schemaName) + AbstractMetadataRecord.NAME_DELIM_CHAR + fullName;
 		}
-		if (catalogName != null && catalogName.length() > 0) {
+		if (useCatalogName && catalogName != null && catalogName.length() > 0) {
 			fullName = (quoted?quoteName(catalogName):catalogName) + AbstractMetadataRecord.NAME_DELIM_CHAR + fullName;
 		}
 		return fullName;
 	}
-		
-
 
 	public void setTableNamePattern(String tableNamePattern) {
 		this.tableNamePattern = tableNamePattern;
@@ -481,6 +480,10 @@ public class JDBCMetdataProcessor {
 	
 	public void setUseProcedureSpecificName(boolean useProcedureSpecificName) {
 		this.useProcedureSpecificName = useProcedureSpecificName;
+	}
+	
+	public void setUseCatalogName(boolean useCatalog) {
+		this.useCatalogName = useCatalog;
 	}
 	
 }

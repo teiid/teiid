@@ -131,7 +131,9 @@
         specified timeout period, a ‘cancel’ command is issued to the
         server for the request and no results are returned to the
         client. The cancel command is issued by the JDBC API without the
-        client’s intervention.</para>
+        client’s intervention.  See the Client Developers Guide for more on setting 
+        statement timeouts via the connection property "QUERYTIMEOUT" and see the Java JDBC API for setting 
+        the query timeout via <code>java.sql.Statement.setQueryTimeout</code> method.</para>
     </section>
   </section>
   <section>

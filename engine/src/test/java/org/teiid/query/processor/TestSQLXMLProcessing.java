@@ -271,6 +271,26 @@ public class TestSQLXMLProcessing {
     
         process(sql, expected);
     }
+
+    @Test public void testXmlQueryEmptyNullString() throws Exception {
+    	String sql = "select xmlquery('/a/b' passing xmlparse(document '<x/>') null on empty)"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList((String)null)
+        };    
+    
+        process(sql, expected);
+    }
+    
+    @Test public void testXmlQueryStreaming() throws Exception {
+    	String sql = "select xmlquery('/a/b' passing xmlparse(document '<a><b x=''1''/><b x=''2''/></a>') null on empty)"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("<b x=\"1\"/><b x=\"2\"/>")
+        };    
+    
+        process(sql, expected);
+    }
     
     @Test public void testXmlNameEscaping() throws Exception {
     	String sql = "select xmlforest(\"xml\") from (select 1 as \"xml\") x"; //$NON-NLS-1$
@@ -368,6 +388,27 @@ public class TestSQLXMLProcessing {
         		Arrays.asList(ts, ts),
         };    
     
+        process(sql, expected);
+    }
+    
+    @Test public void testXmlTableStreamingParentAttributes() throws Exception {
+        String sql = "select * from xmltable('/a/b' passing xmlparse(document '<a x=''1''><b>foo</b></a>') columns y string path '.', x integer path '../@x') as x"; //$NON-NLS-1$
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("foo", 1),
+        };    
+        process(sql, expected);
+    }
+    
+    /**
+     * Highlights that the PathMapFilter needs to be selective in calling startContent
+     * @throws Exception
+     */
+    @Test public void testXmlStreamingError() throws Exception {
+        String sql = "select * from xmltable('/a/a' passing xmlparse(document '<a><a>2000-01-01T01:01:00.2-06:00<a></a></a></a>') columns x timestamp path 'xs:dateTime(./text())') as x"; //$NON-NLS-1$
+        Timestamp ts = TimestampUtil.createTimestamp(100, 0, 1, 1, 1, 0, 200000000);
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList(ts),
+        };    
         process(sql, expected);
     }
     

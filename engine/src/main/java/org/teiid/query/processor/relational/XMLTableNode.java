@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.sf.saxon.om.Item;
+import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.sxpath.XPathDynamicContext;
 import net.sf.saxon.sxpath.XPathExpression;
@@ -42,8 +43,12 @@ import net.sf.saxon.value.Value;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.TupleBuffer;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.XMLType;
 import org.teiid.query.QueryPlugin;
@@ -51,11 +56,15 @@ import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.Result;
+import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
 
 /**
  * Handles xml table processing.
+ * 
+ * When streaming the results will be fully built and stored in a buffer
+ * before being returned
  */
-public class XMLTableNode extends SubqueryAwareRelationalNode {
+public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProcessor {
 
 	private static Map<Class<?>, BuiltInAtomicType> typeMapping = new HashMap<Class<?>, BuiltInAtomicType>();
 	
@@ -74,6 +83,10 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 	private int rowCount = 0;
 	private Item item;
 	
+	private TupleBuffer buffer;
+	private int outputRow = 1;
+	private boolean usingOutput;
+	
 	public XMLTableNode(int nodeID) {
 		super(nodeID);
 	}
@@ -81,6 +94,10 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 	@Override
 	public void closeDirect() {
 		super.closeDirect();
+		if(this.buffer != null) {
+    		this.buffer.remove();
+        	this.buffer = null;
+        }
 		reset();
 	}
 	
@@ -93,6 +110,9 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 		}
 		item = null;
 		rowCount = 0;
+		outputRow = 1;
+		usingOutput = false;
+		this.buffer = null;
 	}
 	
 	public void setTable(XMLTable table) {
@@ -116,31 +136,62 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 	protected TupleBatch nextBatchDirect() throws BlockedException,
 			TeiidComponentException, TeiidProcessingException {
 		
-		if (result == null) {
-			setReferenceValues(this.table);
-			result = getEvaluator(Collections.emptyMap()).evaluateXQuery(this.table.getXQueryExpression(), this.table.getPassing(), null);
+		evaluate();
+		
+		if (this.table.getXQueryExpression().isStreaming()) {
+			TupleBatch batch = this.buffer.getBatch(outputRow);
+			outputRow = batch.getEndRow() + 1;
+			return batch;
 		}
 		
 		while (!isBatchFull() && !isLastBatch()) {
-			processRow();
+			if (item == null) {
+				try {
+					item = result.iter.next();
+				} catch (XPathException e) {
+					throw new TeiidProcessingException(e, QueryPlugin.Util.getString("XMLTableNode.error", e.getMessage())); //$NON-NLS-1$
+				}
+				rowCount++;
+				if (item == null) {
+					terminateBatches();
+					break;
+				}
+			}
+			addBatchRow(processRow());
 		}
 		return pullBatch();
 	}
 
-	private void processRow() throws ExpressionEvaluationException, BlockedException,
-			TeiidComponentException, TeiidProcessingException {
-		if (item == null) {
-			try {
-				item = result.iter.next();
-			} catch (XPathException e) {
-				throw new TeiidProcessingException(e, QueryPlugin.Util.getString("XMLTableNode.error", e.getMessage())); //$NON-NLS-1$
+	private void evaluate() throws TeiidComponentException,
+			ExpressionEvaluationException, BlockedException,
+			TeiidProcessingException {
+		if (result == null) {
+			if (this.buffer == null && this.table.getXQueryExpression().isStreaming()) {
+				this.buffer = this.getBufferManager().createTupleBuffer(getOutputElements(), getConnectionID(), TupleSourceType.PROCESSOR); 
 			}
-			rowCount++;
-			if (item == null) {
-				terminateBatches();
-				return;
+			setReferenceValues(this.table);
+			try {
+				result = getEvaluator(Collections.emptyMap()).evaluateXQuery(this.table.getXQueryExpression(), this.table.getPassing(), null, this);
+				if (this.buffer != null) {
+					this.buffer.close();
+					if (!usingOutput) {
+						this.buffer.setForwardOnly(true);
+					}
+				}
+			} catch (TeiidRuntimeException e) {
+				if (e.getCause() instanceof TeiidComponentException) {
+					throw (TeiidComponentException)e.getCause();
+				}
+				if (e.getCause() instanceof TeiidProcessingException) {
+					throw (TeiidProcessingException)e.getCause();
+				}
+				throw e;
 			}
 		}
+	}
+
+	private List<?> processRow() throws ExpressionEvaluationException, BlockedException,
+			TeiidComponentException, TeiidProcessingException {
 		List<Object> tuple = new ArrayList<Object>(projectedColumns.size());
 		for (XMLColumn proColumn : projectedColumns) {
 			if (proColumn.isOrdinal()) {
@@ -167,8 +218,10 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 					if (pathIter.next() != null) {
 						throw new TeiidProcessingException(QueryPlugin.Util.getString("XMLTableName.multi_value", proColumn.getName())); //$NON-NLS-1$
 					}
-					Object value = Value.convertToJava(colItem);
-					if (value instanceof Item) {
+					Object value = colItem;
+					if (value instanceof AtomicValue) {
+						value = Value.convertToJava(colItem);
+					} else if (value instanceof Item) {
 						Item i = (Item)value;
 						BuiltInAtomicType bat = typeMapping.get(proColumn.getSymbol().getType());
 						if (bat != null) {
@@ -190,7 +243,37 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 			}
 		}
 		item = null;
-		addBatchRow(tuple);
+		return tuple;
+	}
+	
+	@Override
+	public boolean hasFinalBuffer() {
+		return this.table.getXQueryExpression().isStreaming();
+	}
+	
+	@Override
+	public TupleBuffer getFinalBuffer() throws BlockedException,
+			TeiidComponentException, TeiidProcessingException {
+		evaluate();
+		usingOutput = true;
+    	TupleBuffer finalBuffer = this.buffer;
+    	this.buffer = null;
+		close();
+		return finalBuffer;
+	}
+	
+	@Override
+	public void processRow(NodeInfo row) {
+		this.item = row;
+		rowCount++;
+		if (rowCount % 100 == 0) {
+			System.out.println(System.currentTimeMillis() + " " + rowCount);
+		}
+		try {
+			this.buffer.addTuple(processRow());
+		} catch (TeiidException e) {
+			throw new TeiidRuntimeException(e);
+		}
 	}
 		
 }

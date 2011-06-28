@@ -42,6 +42,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import javax.xml.transform.stream.StreamResult;
+
+import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.query.QueryResult;
 import net.sf.saxon.trans.XPathException;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
@@ -50,6 +54,7 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
@@ -68,6 +73,7 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.source.XMLSystemFunctions;
+import org.teiid.query.function.source.XMLSystemFunctions.XmlConcat;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.AbstractSetCriteria;
@@ -113,11 +119,37 @@ import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.Result;
+import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
 import org.teiid.translator.WSConnection.Util;
 
 public class Evaluator {
 
-    private final class SequenceReader extends Reader {
+    private final class XMLQueryRowProcessor implements RowProcessor {
+		XmlConcat concat; //just used to get a writer
+		Type type;
+		private javax.xml.transform.Result result;
+		
+		private XMLQueryRowProcessor() throws TeiidProcessingException {
+			concat = new XmlConcat(context.getBufferManager());
+			result = new StreamResult(concat.getWriter());
+		}
+
+		@Override
+		public void processRow(NodeInfo row) {
+			if (type == null) {
+				type = SaxonXQueryExpression.getType(row);
+			} else {
+				type = Type.CONTENT;
+			}
+			try {
+				QueryResult.serialize(row, result, SaxonXQueryExpression.DEFAULT_OUTPUT_PROPERTIES);
+			} catch (XPathException e) {
+				throw new TeiidRuntimeException(e);
+			}
+		}
+	}
+
+	private final class SequenceReader extends Reader {
 		private LinkedList<Reader> readers;
 		private Reader current = null;
 		
@@ -759,13 +791,33 @@ public class Evaluator {
 	private Object evaluateXMLQuery(List<?> tuple, XMLQuery xmlQuery)
 			throws BlockedException, TeiidComponentException,
 			FunctionExecutionException {
-		boolean emptyOnEmpty = true;
-		if (xmlQuery.getEmptyOnEmpty() != null)  {
-			emptyOnEmpty = xmlQuery.getEmptyOnEmpty();
-		}   
+		boolean emptyOnEmpty = xmlQuery.getEmptyOnEmpty() == null || xmlQuery.getEmptyOnEmpty();
 		Result result = null;
 		try {
-			result = evaluateXQuery(xmlQuery.getXQueryExpression(), xmlQuery.getPassing(), tuple);
+			XMLQueryRowProcessor rp = null;
+			if (xmlQuery.getXQueryExpression().isStreaming()) {
+				rp = new XMLQueryRowProcessor();
+			}
+			try {
+				result = evaluateXQuery(xmlQuery.getXQueryExpression(), xmlQuery.getPassing(), tuple, rp);
+			} catch (TeiidRuntimeException e) {
+				if (e.getCause() instanceof XPathException) {
+					throw (XPathException)e.getCause();
+				}
+				throw e;
+			}
+			if (rp != null) {
+				XMLType.Type type = rp.type;
+				if (type == null) {
+					if (!emptyOnEmpty) {
+						return null;
+					}
+					type = Type.CONTENT;
+				}
+				XMLType val = rp.concat.close();
+				val.setType(rp.type);
+				return val;
+			}
 			return xmlQuery.getXQueryExpression().createXMLType(result.iter, this.context.getBufferManager(), emptyOnEmpty);
 		} catch (TeiidProcessingException e) {
 			throw new FunctionExecutionException(e, QueryPlugin.Util.getString("Evaluator.xmlquery", e.getMessage())); //$NON-NLS-1$
@@ -859,7 +911,7 @@ public class Evaluator {
 		   }
 	}
 	
-	public Result evaluateXQuery(SaxonXQueryExpression xquery, List<DerivedColumn> cols, List<?> tuple) 
+	public Result evaluateXQuery(SaxonXQueryExpression xquery, List<DerivedColumn> cols, List<?> tuple, RowProcessor processor) 
 	throws BlockedException, TeiidComponentException, TeiidProcessingException {
 		HashMap<String, Object> parameters = new HashMap<String, Object>();
 		Object contextItem = null;
@@ -871,7 +923,7 @@ public class Evaluator {
 				parameters.put(passing.getAlias(), value);
 			}
 		}
-		return xquery.evaluateXQuery(contextItem, parameters);
+		return xquery.evaluateXQuery(contextItem, parameters, processor, context);
 	}
 
 	private Evaluator.NameValuePair<Object>[] getNameValuePairs(List<?> tuple, List<DerivedColumn> args, boolean xmlNames)

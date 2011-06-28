@@ -401,6 +401,7 @@ public class XMLSystemFunctions {
 		private Writer writer;
 		private FileStoreInputStreamFactory fsisf;
 		private FileStore fs;
+		private Type type;
 		
 		public XmlConcat(BufferManager bm) throws TeiidProcessingException {
 			fs = bm.createFileStore("xml"); //$NON-NLS-1$
@@ -417,6 +418,13 @@ public class XMLSystemFunctions {
 		}
 		
 		public void addValue(Object object) throws TeiidProcessingException {
+			if (type == null) {
+				if (object instanceof XMLType) {
+					type = ((XMLType)object).getType();
+				}
+			} else {
+				type = Type.CONTENT;
+			}
 			try {
 				convertValue(writer, eventWriter, eventFactory, object);
 			} catch (IOException e) {
@@ -431,6 +439,10 @@ public class XMLSystemFunctions {
 			}
 		}
 		
+		public Writer getWriter() {
+			return writer;
+		}
+		
 		public XMLType close() throws TeiidProcessingException {
 			try {
 				eventWriter.flush();
@@ -443,7 +455,11 @@ public class XMLSystemFunctions {
 				throw new TeiidProcessingException(e);
 			}
 	        XMLType result = new XMLType(new SQLXMLImpl(fsisf));
-	        result.setType(Type.CONTENT);
+	        if (type == null) {
+	        	result.setType(Type.CONTENT);
+	        } else {
+	        	result.setType(type);
+	        }
 	        return result;
 		}
 		

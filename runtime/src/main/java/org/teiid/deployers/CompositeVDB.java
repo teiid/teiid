@@ -146,17 +146,19 @@ public class CompositeVDB {
 		newMergedVDB.setConnectionType(this.vdb.getConnectionType());
 		ConnectorManagerRepository mergedRepo = new ConnectorManagerRepository();
 		mergedRepo.getConnectorManagers().putAll(this.cmr.getConnectorManagers());
-		for (CompositeVDB child:this.children.values()) {
-			
-			// add models
-			for (Model m:child.getVDB().getModels()) {
-				newMergedVDB.addModel((ModelMetaData)m);
+		if (this.children != null) {
+			for (CompositeVDB child:this.children.values()) {
+				
+				// add models
+				for (Model m:child.getVDB().getModels()) {
+					newMergedVDB.addModel((ModelMetaData)m);
+				}
+				
+				for (DataPolicy p:child.getVDB().getDataPolicies()) {
+					newMergedVDB.addDataPolicy((DataPolicyMetadata)p);
+				}
+				mergedRepo.getConnectorManagers().putAll(child.cmr.getConnectorManagers());
 			}
-			
-			for (DataPolicy p:child.getVDB().getDataPolicies()) {
-				newMergedVDB.addDataPolicy((DataPolicyMetadata)p);
-			}
-			mergedRepo.getConnectorManagers().putAll(child.cmr.getConnectorManagers());
 		}
 		newMergedVDB.addAttchment(ConnectorManagerRepository.class, mergedRepo);
 		return newMergedVDB;

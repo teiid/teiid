@@ -22,7 +22,9 @@
 package org.teiid.jdbc;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.jboss.deployers.spi.DeploymentException;
@@ -37,6 +39,7 @@ import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.deployers.MetadataStoreGroup;
+import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
@@ -44,6 +47,7 @@ import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.service.FakeBufferService;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
@@ -61,7 +65,7 @@ import org.teiid.transport.ClientServiceRegistryImpl;
 import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.LogonImpl;
 
-@SuppressWarnings("nls")
+@SuppressWarnings({"nls", "serial"})
 public class FakeServer extends ClientServiceRegistryImpl implements ConnectionProfile {
 
 	SessionServiceImpl sessionService = new SessionServiceImpl();
@@ -97,7 +101,12 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         });
         
         config.setResultsetCacheConfig(new CacheConfiguration(Policy.LRU, 60, 250, "resultsetcache")); //$NON-NLS-1$
-        this.dqp.setCacheFactory(new DefaultCacheFactory());
+        this.dqp.setCacheFactory(new DefaultCacheFactory() {
+        	@Override
+        	public boolean isReplicated() {
+        		return true; //pretend to be replicated for matview tests
+        	}
+        });
         this.dqp.start(config);
         this.sessionService.setDqp(this.dqp);
         
@@ -121,18 +130,25 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 	public void setUseCallingThread(boolean useCallingThread) {
 		this.useCallingThread = useCallingThread;
 	}
-	
+
 	public void deployVDB(String vdbName, String vdbPath) throws Exception {
-		
+		deployVDB(vdbName, vdbPath, null);
+	}
+	
+	public void deployVDB(String vdbName, String vdbPath, Map<String, Collection<FunctionMethod>> udfs) throws Exception {
 		IndexMetadataFactory imf = VDBMetadataFactory.loadMetadata(new File(vdbPath).toURI().toURL());
 		MetadataStore metadata = imf.getMetadataStore(repo.getSystemStore().getDatatypes());
 		LinkedHashMap<String, Resource> entries = imf.getEntriesPlusVisibilities();
-		
-        deployVDB(vdbName, metadata, entries);		
+        deployVDB(vdbName, metadata, entries, udfs);		
+	}
+	
+	public void deployVDB(String vdbName, MetadataStore metadata,
+			LinkedHashMap<String, Resource> entries) {
+		deployVDB(vdbName, metadata, entries, null);
 	}
 
 	public void deployVDB(String vdbName, MetadataStore metadata,
-			LinkedHashMap<String, Resource> entries) {
+			LinkedHashMap<String, Resource> entries, Map<String, Collection<FunctionMethod>> udfs) {
 		VDBMetaData vdbMetaData = new VDBMetaData();
         vdbMetaData.setName(vdbName);
         vdbMetaData.setStatus(VDB.Status.ACTIVE);
@@ -152,7 +168,14 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         try {
         	MetadataStoreGroup stores = new MetadataStoreGroup();
         	stores.addStore(metadata);
-			this.repo.addVDB(vdbMetaData, stores, entries, null, cmr);
+        	UDFMetaData udfMetaData = null;
+        	if (udfs != null) {
+        		udfMetaData = new UDFMetaData();
+        		for (Map.Entry<String, Collection<FunctionMethod>> entry : udfs.entrySet()) {
+        			udfMetaData.addFunctions(entry.getKey(), entry.getValue());
+        		}
+        	}
+			this.repo.addVDB(vdbMetaData, stores, entries, udfMetaData, cmr);
 			this.repo.finishDeployment(vdbName, 1);
 		} catch (DeploymentException e) {
 			throw new RuntimeException(e);

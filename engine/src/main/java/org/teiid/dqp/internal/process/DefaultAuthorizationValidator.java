@@ -22,6 +22,7 @@
  
 package org.teiid.dqp.internal.process;
 
+import org.teiid.PolicyDecider;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -31,35 +32,46 @@ import org.teiid.query.util.CommandContext;
 /**
  * The default Teiid authorization validator
  */
-public class DataRoleAuthorizationValidator implements AuthorizationValidator {
+public class DefaultAuthorizationValidator implements AuthorizationValidator {
 	
-	private boolean useEntitlements;
-	private boolean allowCreateTemporaryTablesByDefault;
-	private boolean allowFunctionCallsByDefault;
+	private boolean enabled = true;
+	private PolicyDecider policyDecider;
 	
-	public DataRoleAuthorizationValidator(boolean useEntitlements,
-			boolean allowCreateTemporaryTablesByDefault, boolean allowFunctionCallsByDefault) {
-		this.useEntitlements = useEntitlements;
-		this.allowCreateTemporaryTablesByDefault = allowCreateTemporaryTablesByDefault;
-		this.allowFunctionCallsByDefault = allowFunctionCallsByDefault;
+	public DefaultAuthorizationValidator() {
 	}
 
 	@Override
-	public void validate(Command command, QueryMetadataInterface metadata, DQPWorkContext workContext, CommandContext commandContext) throws QueryValidatorException, TeiidComponentException {
-		if (useEntitlements && !workContext.getVDB().getDataPolicies().isEmpty()) {
-			AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(workContext.getAllowedDataPolicies(), commandContext);
-			visitor.setAllowCreateTemporaryTablesDefault(allowCreateTemporaryTablesByDefault);
-			visitor.setAllowFunctionCallsByDefault(allowFunctionCallsByDefault);
+	public void validate(Command command, QueryMetadataInterface metadata, CommandContext commandContext) throws QueryValidatorException, TeiidComponentException {
+		if (enabled && policyDecider.validateCommand(commandContext)) {
+			AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.policyDecider, commandContext);
 			Request.validateWithVisitor(visitor, metadata, command);
 		}		
 	}
 	
 	@Override
-	public boolean hasRole(String roleName, DQPWorkContext workContext) {
-		if (!useEntitlements) {
+	public boolean hasRole(String roleName, CommandContext commandContext) {
+		if (!enabled) {
 			return true;
 		}
-		return workContext.getAllowedDataPolicies().containsKey(roleName);
+		return this.policyDecider.hasRole(roleName, commandContext);
 	}
-
+	
+	public void setPolicyDecider(PolicyDecider policyDecider) {
+		this.policyDecider = policyDecider;
+	}
+	
+	public PolicyDecider getPolicyDecider() {
+		return policyDecider;
+	}
+	
+	@Override
+	public boolean isEnabled() {
+		return enabled;
+	}
+	
+	@Override
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+	
 }

@@ -23,12 +23,15 @@
 package org.teiid;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 
 import javax.security.auth.Subject;
 
+import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Session;
+import org.teiid.adminapi.VDB;
 
 /**
  * Context information for the currently executing command.
@@ -117,5 +120,17 @@ public interface CommandContext {
 	 * @return
 	 */
 	String getRequestId();
+	
+	/**
+	 * Get the user's data policies, never null
+	 * @return
+	 */
+	Map<String, DataPolicy> getAllowedDataPolicies();
+	
+	/**
+	 * Get the current vdb
+	 * @return
+	 */
+	VDB getVdb();
 
 }

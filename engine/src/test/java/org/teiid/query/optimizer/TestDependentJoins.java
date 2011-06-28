@@ -793,9 +793,9 @@ public class TestDependentJoins {
         TransformationMetadata metadata = RealMetadataFactory.exampleBQT();
         RealMetadataFactory.setCardinality("bqt1.smalla", 1000, metadata); //$NON-NLS-1$
         RealMetadataFactory.setCardinality("bqt2.smalla", 10000, metadata); //$NON-NLS-1$
-        Column fmo = (Column)metadata.getElementID("bqt1.smalla.intnum");
+        Column fmo = metadata.getElementID("bqt1.smalla.intnum");
 		fmo.setDistinctValues(1000);
-        Column floatnum = (Column)metadata.getElementID("bqt1.smalla.floatnum");
+        Column floatnum = metadata.getElementID("bqt1.smalla.floatnum");
         floatnum.setDistinctValues(800);
 
         ProcessorPlan plan = TestOptimizer.helpPlan(

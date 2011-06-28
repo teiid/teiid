@@ -30,6 +30,9 @@
 	<LI><B>MAKEIND Hint</B> - The MAKEIND hint can be used to indicate that the other side of the join should be made dependent.
     <LI><B>ODBC SSL</B> - added support for SSL encrypted ODBC connections.
 	<LI><B>Reauthentication Statement</B> - SET SESSION AUTHORIZATION can now be used to perform a reauthentication via JDBC or ODBC.
+	<LI><B>Pluggable Authorization</B> - an alternative PolicyDecider can be defined in the teiid-jboss-beans.xml file to customize authorization decisions.
+	<LI><B>Streaming XQuery</B> - in situations where document projection applies if the XMLQUERY/XMLTABLE path expressions meet certain conditions, then the incoming document will not only be projected, but the independent subtrees will be processed without loading the entire document.  This allows for nearly arbitrarily large XML documents to be processed.  See the Reference for more.
+	<LI><B>Logging Procedures</B> - added SYSADMIN.isLoggable and SYSADMIN.logMsg to aid in debugging procedure logic.
 	<LI><B>ANSI OFFSET/FETCH FIRST</B> - instead of the limit clause, a standard OFFSET and/or FETCH FIRST/NEXT clause can be used to limit results.
 </UL>
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -105,6 +108,12 @@
 
 See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
 
+<h4>from 7.4</h4>
+<ul>
+  <LI>The configuration for authorization has been moved off of the RuntimeEngineDeployer bean and onto separate AuthorizationValidator and PolicyDecider beans.
+  <LI>The configuration for the buffer manager has been simplified to refer to memory sizes in KB, rather than batch columns.
+</ul>
+
 <h4>from 7.3</h4>
 <ul>
   <LI>The default value for the JDBC dynamic vdb importer setting importer.useFullSchemaName is now true, which matches the expected behavior from the documentation.
@@ -159,7 +168,8 @@ temporary table access.
     <li>TEIID-1008 - Most versions of Oracle and MySQL do not support deeply nested correlated references.  There is currently no workaround for this issue.
 	<li>For compatibility with the 7.0 release if a stored procedure parameter list begins with identifier=, then it will be parsed as a named parameter invocation even if the intent was to use a comparison predicate 
 	as the first parameter value.  The workaround is to use nesting parens, e.g. call proc((identifier=value), ...), which clarifies that this is positional value.  This workaround will not be needed in later releases.
-	<li><a url="https://issues.jboss.org/browse/TEIID-1511">TEIID-1511<a/> - When a VDB is deployed and undeployed a socket is left open, which may lead to "too manay open files". Check the defect comments for details.	  
+	<li><a url="https://issues.jboss.org/browse/TEIID-1511">TEIID-1511<a/> - When a VDB is deployed and undeployed a socket is left open, which may lead to "too manay open files". Check the defect comments for details.
+	<li>TEIID-1648 - Teradata lobs can only be consistently read from an embedded client (with the default option to use the calling thread) and in single threaded mode (transactional or userRequestSourceConcurrency=1). Usage of Teradata lobs under any other configuration is unlikely to work.	  
 </ul>
 <h4>from 7.0</h4>
 <ul>
@@ -175,6 +185,11 @@ temporary table access.
 <h2><a name="LibraryUpdates">Thirdparty Library Updates</a></h2>
 
 The following components have been updated:
+
+<h4>From 7.4</h4>
+<ul>
+    <li>nux 1.6, and xom 1.2 were added.
+</ul>
 <h4>From 7.1</h4>
 <ul>
     <li>json-simple 1.1 was added.

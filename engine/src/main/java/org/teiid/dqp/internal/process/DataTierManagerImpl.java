@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.sql.rowset.serial.SerialClob;
 
@@ -60,6 +61,8 @@ import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.events.EventDistributor;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnStats;
@@ -120,11 +123,32 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	private enum SystemAdminProcs {
 		SETTABLESTATS,
 		SETCOLUMNSTATS,
-		SETPROPERTY
+		SETPROPERTY,
+		LOGMSG,
+		ISLOGGABLE
 	}
 	
 	private enum SystemProcs {
 		GETXMLSCHEMAS
+	}
+	
+	private static final TreeMap<String, Integer> levelMap = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
+	static {
+		levelMap.put("OFF", MessageLevel.NONE); //$NON-NLS-1$
+		levelMap.put("FATAL", MessageLevel.CRITICAL); //$NON-NLS-1$
+		levelMap.put("ERROR", MessageLevel.ERROR); //$NON-NLS-1$
+		levelMap.put("WARN", MessageLevel.WARNING); //$NON-NLS-1$
+		levelMap.put("INFO", MessageLevel.INFO); //$NON-NLS-1$
+		levelMap.put("DEBUG", MessageLevel.DETAIL); //$NON-NLS-1$
+		levelMap.put("TRACE", MessageLevel.TRACE); //$NON-NLS-1$
+	}
+	
+	public static int getLevel(String level) throws TeiidProcessingException {
+		Integer intLevel = levelMap.get(level);
+		if (intLevel == null) {
+			throw new TeiidProcessingException(QueryPlugin.Util.getString("FunctionMethods.unknown_level", level, levelMap.keySet())); //$NON-NLS-1$
+		}
+		return intLevel;
 	}
 	
 	// Resources
@@ -361,6 +385,26 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 			if (StringUtil.startsWithIgnoreCase(proc.getProcedureCallableName(), CoreConstants.SYSTEM_ADMIN_MODEL)) {
 				final SystemAdminProcs sysProc = SystemAdminProcs.valueOf(proc.getProcedureCallableName().substring(CoreConstants.SYSTEM_ADMIN_MODEL.length() + 1).toUpperCase());
 				switch (sysProc) {
+				case LOGMSG:
+				case ISLOGGABLE:
+					String level = (String)((Constant)proc.getParameter(2).getExpression()).getValue();
+					String logContext = (String)((Constant)proc.getParameter(3).getExpression()).getValue();
+					Object message = null;
+					if (sysProc == SystemAdminProcs.LOGMSG) {
+						message = ((Constant)proc.getParameter(4).getExpression()).getValue();
+					}
+					int msgLevel = getLevel(level);
+					boolean logged = false;
+					if (LogManager.isMessageToBeRecorded(logContext, msgLevel)) {
+						if (message != null) {
+							LogManager.log(msgLevel, logContext, message);
+						}
+						logged = true;
+					}
+					if (proc.returnParameters()) {
+						rows.add(Arrays.asList(logged));
+					}
+					return new CollectionTupleSource(rows.iterator());
 				case SETPROPERTY:
 					try {
 						String uuid = (String)((Constant)proc.getParameter(2).getExpression()).getValue();
@@ -385,10 +429,12 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						if (eventDistributor != null) {
 							eventDistributor.setProperty(vdbName, vdbVersion, uuid, key, strVal);
 						}
-						if (result == null) {
-							rows.add(Arrays.asList((Clob)null));
-						} else {
-							rows.add(Arrays.asList(new ClobType(new SerialClob(result.toCharArray()))));
+						if (proc.returnParameters()) {
+							if (result == null) {
+								rows.add(Arrays.asList((Clob)null));
+							} else {
+								rows.add(Arrays.asList(new ClobType(new SerialClob(result.toCharArray()))));
+							}
 						}
 						return new CollectionTupleSource(rows.iterator());
 					} catch (SQLException e) {

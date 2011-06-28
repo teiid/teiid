@@ -80,7 +80,7 @@ public class AbstractMMQueryTestCase extends AbstractQueryTest {
     }    
         
       
-    protected void helpTest(String query, String[] expected, String vdb, String props, String urlProperties) {
+    protected void helpTest(String query, String[] expected, String vdb, String props, String urlProperties) throws SQLException {
         getConnection(vdb, props, urlProperties);
         executeAndAssertResults(query, expected);
         closeConnection();

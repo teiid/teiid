@@ -2086,7 +2086,7 @@ public class TestQueryRewriter {
     }
     
     @Test public void testRewiteEvaluatableAggregate() {
-    	helpTestRewriteCommand("select pm1.g1.e1, max(1) from pm1.g1", "SELECT pm1.g1.e1, 1 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestRewriteCommand("select max(1) from pm1.g1", "SELECT MAX(1) FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testRewriteFromUnixTime() throws Exception {

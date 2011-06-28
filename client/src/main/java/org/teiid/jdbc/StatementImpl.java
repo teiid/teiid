@@ -149,7 +149,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     private Serializable payload;
     
     /** List of INSERT, UPDATE, DELETE AND SELECT INTO commands */
-    private List batchedUpdates;
+    private List<String> batchedUpdates;
     
     /** Array of update counts as returned by executeBatch() */
     protected int[] updateCounts;
@@ -200,7 +200,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         String queryTimeoutStr = this.execProps.getProperty(ExecutionProperties.QUERYTIMEOUT);
         if(queryTimeoutStr != null) {
             try {
-                this.queryTimeoutMS = Integer.parseInt(fetchSizeStr)*1000;
+                this.queryTimeoutMS = Integer.parseInt(queryTimeoutStr)*1000;
             } catch(Exception e) {
                 // silently failover to default
             }
@@ -240,26 +240,18 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         this.batchedUpdates = null;
         this.updateCounts = null;
         this.outParamIndexMap.clear();
+        this.commandStatus = State.RUNNING;
     }
 
-    /**
-     * Adds sql to this statement object's current list of commands.
-     * @param sql statement to be added to the batch
-     */
     public void addBatch(String sql) throws SQLException {
         //Check to see the statement is closed and throw an exception
         checkStatement();
         if (batchedUpdates == null) {
-            batchedUpdates = new ArrayList();
+            batchedUpdates = new ArrayList<String>();
         }
         batchedUpdates.add(sql);
     }
 
-    /**
-     * This method can be used by one thread to cancel a statement that is being
-     * executed by another thread.
-     * @throws SQLException should never occur.
-     */
     public void cancel() throws SQLException {
         /* Defect 19848 - Mark the statement cancelled before sending the CANCEL request.
          * Otherwise, it's possible get into a race where the server response is quicker
@@ -271,10 +263,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         cancelRequest();
     }
 
-    /**
-     * Warning could be schema validation errors or partial results warnings.
-     * @throws SQLException should never occur.
-     */
     public void clearWarnings() throws SQLException {
         //Check to see the statement is closed and throw an exception
         checkStatement();
@@ -283,22 +271,12 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         serverWarnings = null;
     }
 
-    /**
-     * Makes the set of commands in the current batch empty.
-     *
-     * @throws SQLException if a database access error occurs or the
-     * driver does not support batch statements
-     */
     public void clearBatch() throws SQLException {
-        batchedUpdates.clear();
+    	if (batchedUpdates != null) {
+    		batchedUpdates.clear();
+    	}
     }
 
-    /**
-     * In many cases, it is desirable to immediately release a Statements's database
-     * and JDBC resources instead of waiting for this to happen when it is automatically
-     * closed; the close method provides this immediate release.
-     * @throws SQLException should never occur.
-     */
     public void close() throws SQLException {
         if ( isClosed ) {
             return;
@@ -345,7 +323,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         if (batchedUpdates == null || batchedUpdates.isEmpty()) {
             return new int[0];
         }
-        String[] commands = (String[])batchedUpdates.toArray(new String[batchedUpdates.size()]);
+        String[] commands = batchedUpdates.toArray(new String[batchedUpdates.size()]);
         executeSql(commands, true, ResultsMode.UPDATECOUNT, true);
         return updateCounts;
     }

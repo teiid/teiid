@@ -86,11 +86,11 @@ public abstract class AbstractQueryTest {
     	return this.internalConnection;
     }
           
-    public boolean execute(String sql) {
+    public boolean execute(String sql) throws SQLException {
         return execute(sql, new Object[] {});
     }
     
-    public boolean execute(String sql, Object[] params) {
+    public boolean execute(String sql, Object[] params) throws SQLException {
     	closeResultSet();
     	closeStatement();
     	this.updateCount = -1;
@@ -122,7 +122,7 @@ public abstract class AbstractQueryTest {
         } catch (SQLException e) {
             this.internalException = e;
             if (!exceptionExpected()) {
-            	throw new RuntimeException(e);
+            	throw e;
             }            
         } 
         return false;
@@ -465,7 +465,7 @@ public abstract class AbstractQueryTest {
     }
 
     
-    protected void executeAndAssertResults(String query, String[] expected) {
+    protected void executeAndAssertResults(String query, String[] expected) throws SQLException {
         execute(query);
         if (expected != null) {
             assertResults(expected);

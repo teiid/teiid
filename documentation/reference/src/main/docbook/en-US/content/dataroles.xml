@@ -168,4 +168,8 @@
 		<para>The <code>hasRole</code> system function will return true if the current user has the given data role.  
 		The <code>hasRole</code> function can be used in procedure or view definitions to allow for a more dynamic application of security - which allows for things such as value masking or row level security.</para>
 	</section>
+	<section>
+		<title>Customizing</title>
+		<para>See the Developer's Guide Custom Security Chapter for details on using an alternative authorization scheme.</para>
+	</section>
 </chapter>

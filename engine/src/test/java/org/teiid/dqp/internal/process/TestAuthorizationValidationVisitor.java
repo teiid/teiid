@@ -29,8 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.junit.BeforeClass;
-import org.junit.Ignore;
+import org.junit.Before;
 import org.junit.Test;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.DataPolicy.PermissionType;
@@ -40,7 +39,6 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
-import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.QueryParser;
@@ -58,10 +56,12 @@ import org.teiid.query.validator.ValidatorReport;
 public class TestAuthorizationValidationVisitor {
 
     public static final String CONN_ID = "connID"; //$NON-NLS-1$
-    private static CommandContext context = new CommandContext();
+    private CommandContext context;
     
-    @BeforeClass public static void oneTimeSetup() {
+    @Before public void setup() {
+    	context = new CommandContext();
     	context.setSession(new SessionMetadata());
+    	context.setDQPWorkContext(new DQPWorkContext());
     }
 
     PermissionMetaData addResource(PermissionType type, boolean flag, String resource) {
@@ -179,9 +179,10 @@ public class TestAuthorizationValidationVisitor {
         
         HashMap<String, DataPolicy> policies = new HashMap<String, DataPolicy>();
         policies.put(policy.getName(), policy);
-        
-        AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(policies, context); //$NON-NLS-1$
-        visitor.setAllowFunctionCallsByDefault(false);
+        this.context.getDQPWorkContext().setPolicies(policies);
+        DataRolePolicyDecider dataRolePolicyDecider = new DataRolePolicyDecider();
+        dataRolePolicyDecider.setAllowFunctionCallsByDefault(false);
+        AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(dataRolePolicyDecider, context); //$NON-NLS-1$
         ValidatorReport report = Validator.validate(command, metadata, visitor);
         if(report.hasItems()) {
             ValidatorFailure firstFailure = report.getItems().iterator().next();
@@ -289,11 +290,11 @@ public class TestAuthorizationValidationVisitor {
     }
 
     @Test public void testSelectIntoTarget_e1_NotAccessible() throws Exception {
-        helpTest(exampleAuthSvc2(), "SELECT e1, e2, e3, e4 INTO pm2.g2 FROM pm2.g1", RealMetadataFactory.example1Cached(), new String[] {"pm2.g2.e2","pm2.g2.e4","pm2.g2.e3"}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        helpTest(exampleAuthSvc2(), "SELECT e1, e2, e3, e4 INTO pm2.g2 FROM pm2.g1", RealMetadataFactory.example1Cached(), new String[] {"pm2.g2", "pm2.g2.e2","pm2.g2.e4","pm2.g2.e3"}, RealMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
 
     @Test public void testSelectIntoTarget_e1e2_NotAccessible() throws Exception {
-        helpTest(exampleAuthSvc2(), "SELECT e1, e2, e3, e4 INTO pm3.g2 FROM pm2.g1", RealMetadataFactory.example1Cached(), new String[] {"pm3.g2.e4", "pm3.g2.e3"},RealMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(exampleAuthSvc2(), "SELECT e1, e2, e3, e4 INTO pm3.g2 FROM pm2.g1", RealMetadataFactory.example1Cached(), new String[] {"pm3.g2", "pm3.g2.e4", "pm3.g2.e3"},RealMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
     
     @Test public void testTempTableSelectInto() throws Exception {
@@ -326,28 +327,4 @@ public class TestAuthorizationValidationVisitor {
         helpTest(examplePolicyBQT(), "alter trigger on SmallA_2589 INSTEAD OF UPDATE enabled", RealMetadataFactory.exampleBQTCached(), new String[] {}, RealMetadataFactory.exampleBQTVDB()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-	private void helpTestLookupVisibility(boolean visible) throws QueryParserException, QueryValidatorException, TeiidComponentException {
-		VDBMetaData vdb = RealMetadataFactory.example1VDB();
-		vdb.getModel("pm1").setVisible(visible); //$NON-NLS-1$
-		AuthorizationValidationVisitor mvvv = new AuthorizationValidationVisitor(new HashMap<String, DataPolicy>(), context); //$NON-NLS-1$
-		String sql = "select lookup('pm1.g1', 'e1', 'e2', 1)"; //$NON-NLS-1$
-		Command command = QueryParser.getQueryParser().parseCommand(sql);
-		Request.validateWithVisitor(mvvv, RealMetadataFactory.example1Cached(), command);
-	}
-	
-	@Ignore("visibility no longer ristricts access")
-	@Test public void testLookupVisibility() throws Exception {
-		helpTestLookupVisibility(true);
-	}
-	
-	@Ignore("visibility no longer ristricts access")
-	@Test public void testLookupVisibilityFails() throws Exception {
-		try {
-			helpTestLookupVisibility(false);
-			fail("expected exception"); //$NON-NLS-1$
-		} catch (QueryValidatorException e) {
-			assertEquals("Group does not exist: pm1.g1", e.getMessage()); //$NON-NLS-1$
-		}
-	}
-
 }

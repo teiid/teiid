@@ -40,7 +40,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     private static final String DQP_PROP_FILE = UnitTestUtil.getTestDataPath() + "/vdbless/dqp.properties;user=test"; //$NON-NLS-1$
     private static final String VDB = "VDBLess"; //$NON-NLS-1$
 
-    @Test public void testExecution() {
+    @Test public void testExecution() throws Exception {
     	getConnection(VDB, DQP_PROP_FILE);
     	executeAndAssertResults("select * from Example", new String[] { //$NON-NLS-1$
     			"TRADEID[string]    NOTIONAL[integer]", //$NON-NLS-1$
@@ -51,7 +51,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	closeConnection();
     }    
     
-    @Test public void testIntegrationExecution() {
+    @Test public void testIntegrationExecution() throws Exception {
     	getConnection(VDB, DQP_PROP_FILE);
     	executeAndAssertResults("select * from Example, Smalla where notional = intkey", new String[] { //$NON-NLS-1$
     			"TRADEID[string]    NOTIONAL[integer]    INTKEY[integer]    STRINGKEY[string]    INTNUM[integer]    STRINGNUM[string]    FLOATNUM[float]    LONGNUM[long]    DOUBLENUM[double]    BYTENUM[short]    DATEVALUE[date]    TIMEVALUE[time]    TIMESTAMPVALUE[timestamp]    BOOLEANVALUE[short]    CHARVALUE[string]    SHORTVALUE[short]    BIGINTEGERVALUE[long]    BIGDECIMALVALUE[bigdecimal]    OBJECTVALUE[string]", //$NON-NLS-1$
@@ -64,7 +64,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     /**
      * We have no results to assert here since derby does not provide procedure resultset columns in their metadata.
      */
-    @Test public void testProcedureExecution() {
+    @Test public void testProcedureExecution() throws Exception {
     	getConnection(VDB, DQP_PROP_FILE);
     	execute("exec Derby.SQLUDTS(null, null, null, null, null)"); //$NON-NLS-1$
     	closeConnection();

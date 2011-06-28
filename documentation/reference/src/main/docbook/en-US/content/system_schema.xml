@@ -1807,6 +1807,32 @@
         <para><synopsis>SYS.getXMLSchemas(document in string) returns schema string</synopsis></para>
         </section>
         <section>
+    	<title>SYSADMIN.logMsg</title>
+    	<para>Log a message to the underlying logging system.</para>
+        <para><synopsis>SYSADMIN.logMsg(logged RETURN boolean, level IN string, context IN string, msg IN object)</synopsis></para>
+        <para>Returns true if the message was logged.  level can be one of the log4j levels: OFF, FATAL, ERROR, WARN, INFO, DEBUG, TRACE.  level defaults to 'DEBUG' and context defaults to 'org.teiid.PROCESSOR'</para>
+        <example lang="sql">
+        	<title>Example logMsg</title>
+        	<programlisting>CALL SYSADMIN.logMsg(msg=>'some debug', context=>'org.something')</programlisting>
+        	<para>This will log the message 'some debug' at the default level DEBUG to the context org.something.</para>
+        </example>
+        </section>
+        <section>
+    	<title>SYSADMIN.isLoggable</title>
+    	<para>Tests if logging is enabled at the given level and context.</para>
+        <para><synopsis>SYSADMIN.isLoggable(loggable RETURN boolean, level IN string, context IN string)</synopsis></para>
+        <para>Returns true if logging is enabled.  level can be one of the log4j levels: OFF, FATAL, ERROR, WARN, INFO, DEBUG, TRACE.  level defaults to 'DEBUG' and context defaults to 'org.teiid.PROCESSOR'</para>
+        <example lang="sql">
+        	<title>Example isLoggable</title>
+        	<programlisting>IF ((CALL SYSADMIN.isLoggable(context=>'org.something'))
+BEGIN
+   DECLARE STRING msg;
+   // logic to build the message ...
+   CALL SYSADMIN.logMsg(msg=>msg, context=>'org.something')
+END</programlisting>
+        </example>
+        </section>
+        <section>
     	<title>SYSADMIN.refreshMatView</title>
     	<para>Returns integer RowsUpdated. -1 indicates a load is in progress, otherwise the cardinality of the table is returned.  See the Caching Guide for more.</para>
         <para><synopsis>SYSADMIN.refreshMatView(RowsUpdated return integer, ViewName in string, Invalidate in boolean)</synopsis></para>

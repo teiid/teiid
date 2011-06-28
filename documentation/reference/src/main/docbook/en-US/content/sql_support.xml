@@ -108,6 +108,12 @@
       resulting names are unambiguous in the context of the command.
       Different forms of qualification can be mixed in the same query.
     </para>
+    <section>
+    	<title>Reserved Words</title>
+    	<para>Teiid's reserved words include the standard SQL 2003 Foundation, SQL/MED, and SQL/XML reserved words, as well as Teiid specific words such as BIGINTEGER, BIGDECIMAL, or MAKEDEP. 
+    	See the <xref linkend="grammar"/> TOKENS section for all reserved words.  They will appear as 'SMALLINT: "smallint"' where the quoted string is the actual lexical form. 
+    	 </para>
+    </section>
   </section>
   <section>
     <title>Expressions</title>
@@ -832,6 +838,7 @@
       	<para>See XMLELEMENT for the definition of NSP - <link linkend="xmlnamespaces">XMLNAMESPACES</link>.</para>
       	<para>See XMLQUERY for the definition of <link linkend="passing">PASSING</link>.</para>
       	<para>See also <link linkend="xmlquery">XMLQUERY</link></para>
+      	<note><para>See also <xref linkend="xquery_optimization"/></para></note>
       	<itemizedlist>
         	<para>Parameters</para>
         <listitem>
@@ -843,8 +850,19 @@
         	</para>
         </listitem>
         <listitem>
-        	<para>If COLUMNS is not specified, then that is the same as having the COLUMNS clause: "COLUMNS OBJECT_VALUE XML PATH '.'", which returns the entire item as an XML value.  Each non-ordinality column specifies a type and optionally a PATH and a DEFAULT expression.  
-        	If PATH is not specified, then the path will be the same as the column name.  A FOR ORDINALITY column is typed as integer and will return the 1-based item number as its value.    
+        	<para>If COLUMNS is not specified, then that is the same as having the COLUMNS clause: "COLUMNS OBJECT_VALUE XML PATH '.'", which returns the entire item as an XML value.   
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>A FOR ORDINALITY column is typed as integer and will return the 1-based item number as its value.
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>Each non-ordinality column specifies a type and optionally a PATH and a DEFAULT expression.
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>If PATH is not specified, then the path will be the same as the column name.
         	</para>
         </listitem>
       	</itemizedlist>

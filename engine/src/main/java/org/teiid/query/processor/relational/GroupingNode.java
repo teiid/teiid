@@ -218,7 +218,7 @@ public class GroupingNode extends RelationalNode {
                 			OrderByItem item = iterator.next();
                 			orderIndecies[iterator.previousIndex()] = collectExpression(item.getSymbol());
                 			element = new ElementSymbol(String.valueOf(iterator.previousIndex()));
-                            element.setType(inputType);
+                            element.setType(item.getSymbol().getType());
                 			schema.add(element);
                 			OrderByItem newItem = item.clone();
                 			newItem.setSymbol(element);
@@ -286,7 +286,7 @@ public class GroupingNode extends RelationalNode {
 			@Override
 			protected List updateTuple(List tuple) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 				int columns = collectedExpressions.size();
-	            List exprTuple = new ArrayList(columns);
+	            List<Object> exprTuple = new ArrayList<Object>(columns);
 	            for(int col = 0; col<columns; col++) { 
 	                // The following call may throw BlockedException, but all state to this point
 	                // is saved in class variables so we can start over on building this tuple
@@ -335,7 +335,7 @@ public class GroupingNode extends RelationalNode {
 
             } else if(! sameGroup(currentGroupTuple, lastRow)) {
                 // Close old group
-                List row = new ArrayList(functions.length);
+                List<Object> row = new ArrayList<Object>(functions.length);
                 for(int i=0; i<functions.length; i++) {
                     row.add( functions[i].getResult() );
                     functions[i].reset();

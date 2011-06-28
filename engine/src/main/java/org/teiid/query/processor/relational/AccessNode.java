@@ -45,6 +45,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.symbol.Constant;
@@ -204,6 +205,14 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		}
 		if (!shouldProject) {
 			this.projection = new Object[0];
+		} else if (query.getOrderBy() != null) {
+			for (OrderByItem item : query.getOrderBy().getOrderByItems()) {
+				Integer index = uniqueSymbols.get(SymbolMap.getExpression(item.getSymbol()));
+				if (index != null) {
+					item.setExpressionPosition(index);
+					item.setSymbol((SingleElementSymbol) select.getSymbols().get(index));
+				}
+			}
 		}
 	}
 	

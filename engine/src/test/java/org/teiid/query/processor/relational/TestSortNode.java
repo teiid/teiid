@@ -52,7 +52,7 @@ public class TestSortNode {
     public static final int BATCH_SIZE = 100;
     
     private void helpTestSort(List elements, List[] data, List sortElements, List sortTypes, List[] expected, Mode mode) throws TeiidComponentException, TeiidProcessingException {
-        BufferManager mgr = NodeTestUtil.getTestBufferManager(100, BATCH_SIZE, BATCH_SIZE);
+        BufferManager mgr = BufferManagerFactory.getTestBufferManager(100, BATCH_SIZE, BATCH_SIZE);
         CommandContext context = new CommandContext ("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         BlockingFakeRelationalNode dataNode = new BlockingFakeRelationalNode(2, data);

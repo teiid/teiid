@@ -173,13 +173,13 @@ public class TestProcedureResolving {
         
         AssignmentStatement assStmt = (AssignmentStatement)block.getStatements().get(1);
         assertEquals(ProcedureReservedWords.VARIABLES, assStmt.getVariable().getGroupSymbol().getCanonicalName());
-        assertEquals(ProcedureReservedWords.VARIABLES, ((ElementSymbol)assStmt.getValue()).getGroupSymbol().getCanonicalName());
+        assertEquals(ProcedureReservedWords.VARIABLES, ((ElementSymbol)assStmt.getExpression()).getGroupSymbol().getCanonicalName());
         
         Block inner = ((LoopStatement)block.getStatements().get(2)).getBlock();
         
         assStmt = (AssignmentStatement)inner.getStatements().get(0);
         
-        ElementSymbol value = ElementCollectorVisitor.getElements(assStmt.getValue(), false).iterator().next();
+        ElementSymbol value = ElementCollectorVisitor.getElements(assStmt.getExpression(), false).iterator().next();
         
         assertEquals("LOOPCURSOR", value.getGroupSymbol().getCanonicalName()); //$NON-NLS-1$
     }
@@ -1036,6 +1036,16 @@ public class TestProcedureResolving {
         procedure = procedure + "END\n"; //$NON-NLS-1$
         
         TestResolver.helpResolve(procedure, RealMetadataFactory.example1Cached());
+    }
+    
+	// addresses Cases 5474.  
+    @Test public void testProcWithReturn() throws Exception {
+        String procedure = "CREATE VIRTUAL PROCEDURE  "; //$NON-NLS-1$
+        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
+        procedure = procedure + "call sptest9(1);\n"; //$NON-NLS-1$
+        procedure = procedure + "END\n"; //$NON-NLS-1$
+        
+        TestResolver.helpResolve(procedure, RealMetadataFactory.exampleBQTCached());
     }
     
     @Test public void testIssue174102() throws Exception {
