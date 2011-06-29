@@ -21,6 +21,26 @@
  * 02110-1301 USA.
  */package org.teiid.transport;
 
+import static org.teiid.odbc.PGUtil.PG_TYPE_BOOL;
+import static org.teiid.odbc.PGUtil.PG_TYPE_BPCHAR;
+import static org.teiid.odbc.PGUtil.PG_TYPE_BYTEA;
+import static org.teiid.odbc.PGUtil.PG_TYPE_CHARARRAY;
+import static org.teiid.odbc.PGUtil.PG_TYPE_DATE;
+import static org.teiid.odbc.PGUtil.PG_TYPE_FLOAT4;
+import static org.teiid.odbc.PGUtil.PG_TYPE_FLOAT8;
+import static org.teiid.odbc.PGUtil.PG_TYPE_INT2;
+import static org.teiid.odbc.PGUtil.PG_TYPE_INT4;
+import static org.teiid.odbc.PGUtil.PG_TYPE_INT8;
+import static org.teiid.odbc.PGUtil.PG_TYPE_NUMERIC;
+import static org.teiid.odbc.PGUtil.PG_TYPE_OIDARRAY;
+import static org.teiid.odbc.PGUtil.PG_TYPE_OIDVECTOR;
+import static org.teiid.odbc.PGUtil.PG_TYPE_TEXT;
+import static org.teiid.odbc.PGUtil.PG_TYPE_TEXTARRAY;
+import static org.teiid.odbc.PGUtil.PG_TYPE_TIME;
+import static org.teiid.odbc.PGUtil.PG_TYPE_TIMESTAMP_NO_TMZONE;
+import static org.teiid.odbc.PGUtil.PG_TYPE_UNKNOWN;
+import static org.teiid.odbc.PGUtil.PG_TYPE_VARCHAR;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -32,13 +52,9 @@ import java.security.GeneralSecurityException;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.ParameterMetaData;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Types;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -58,16 +74,15 @@ import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.ReflectionHelper;
-import org.teiid.deployers.PgCatalogMetadataStore;
 import org.teiid.jdbc.ResultSetImpl;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.socket.ServiceInvocationStruct;
 import org.teiid.odbc.ODBCClientRemote;
+import org.teiid.odbc.PGUtil.PgColInfo;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.pg.PGbytea;
-
 /**
  * Represents the messages going from Server --> PG ODBC Client  
  * Some parts of this code is taken from H2's implementation of ODBC
@@ -92,19 +107,24 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			}
 		}
 	}
-
+	
+    // 300k
+	static int ODBC_SOCKET_BUFF_SIZE = Integer.parseInt(System.getProperty("ODBCPacketSize", "307200"));
+	
 	private final class ResultsWorkItem implements Runnable {
 		private final List<PgColInfo> cols;
-		private final String sql;
 		private final ResultSetImpl rs;
-		private final ResultsFuture<Void> result;
+		private final ResultsFuture<Integer> result;
+		private int rows2Send;
+		private int rowsSent = 0;
+		private int rowsInBuffer = 0;
+		private ChannelBuffer buffer = ChannelBuffers.directBuffer(ODBC_SOCKET_BUFF_SIZE);
 
-		private ResultsWorkItem(List<PgColInfo> cols, String sql,
-				ResultSetImpl rs, ResultsFuture<Void> result) {
+		private ResultsWorkItem(List<PgColInfo> cols, ResultSetImpl rs, ResultsFuture<Integer> result, int rows2Send) {
 			this.cols = cols;
-			this.sql = sql;
 			this.rs = rs;
 			this.result = result;
+			this.rows2Send = rows2Send;
 		}
 
 		@Override
@@ -117,8 +137,10 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 				    		@Override
 				    		public void onCompletion(ResultsFuture<Boolean> future) {
 				    			if (processRow(future)) {
-				    				//this can be recursive, but ideally won't be called many times 
-				    				ResultsWorkItem.this.run();
+				    				if (rowsSent != rows2Send) {
+				    					//this can be recursive, but ideally won't be called many times 
+				    					ResultsWorkItem.this.run();
+				    				}
 				    			}
 				    		}
 						});
@@ -138,10 +160,18 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			boolean processNext = true;
 			try {
     			if (future.get()) {
-    				sendDataRow(rs, cols);
+    				sendDataRow(rs, cols, buffer);
+    				rowsSent++;
+    				rowsInBuffer++;
+    				boolean done = rowsSent == rows2Send;
+    				flushResults(done);
+    				processNext = !done;
+    				if (done) {
+    					result.getResultsReceiver().receiveResults(rowsSent);
+    				}
     			} else {
-    				sendCommandComplete(sql, 0);
-    				result.getResultsReceiver().receiveResults(null);
+    				sendContents(buffer);
+    				result.getResultsReceiver().receiveResults(rowsSent);
     				processNext = false;
     			}
 			} catch (Throwable t) {
@@ -150,32 +180,16 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			}
 			return processNext;
 		}
+		
+		private void flushResults(boolean force) {
+			int avgRowsize = buffer.readableBytes()/rowsInBuffer;
+			if (force || buffer.writableBytes() < (avgRowsize*2)) {
+				sendContents(buffer);
+				buffer= ChannelBuffers.directBuffer(ODBC_SOCKET_BUFF_SIZE);
+				rowsInBuffer = 0;
+			}			
+		}
 	}
-
-	private static final int PG_TYPE_VARCHAR = 1043;
-
-    private static final int PG_TYPE_BOOL = 16;
-    private static final int PG_TYPE_BYTEA = 17;
-    private static final int PG_TYPE_BPCHAR = 1042;
-    private static final int PG_TYPE_INT8 = 20;
-    private static final int PG_TYPE_INT2 = 21;
-    private static final int PG_TYPE_INT4 = 23;
-    private static final int PG_TYPE_TEXT = 25;
-    //private static final int PG_TYPE_OID = 26;
-    private static final int PG_TYPE_FLOAT4 = 700;
-    private static final int PG_TYPE_FLOAT8 = 701;
-    private static final int PG_TYPE_UNKNOWN = 705;
-    
-    private static final int PG_TYPE_OIDVECTOR = PgCatalogMetadataStore.PG_TYPE_OIDVECTOR;
-    private static final int PG_TYPE_OIDARRAY = PgCatalogMetadataStore.PG_TYPE_OIDARRAY;
-    private static final int PG_TYPE_CHARARRAY = PgCatalogMetadataStore.PG_TYPE_CHARARRAY;
-    private static final int PG_TYPE_TEXTARRAY = PgCatalogMetadataStore.PG_TYPE_TEXTARRAY;
-    
-    private static final int PG_TYPE_DATE = 1082;
-    private static final int PG_TYPE_TIME = 1083;
-    private static final int PG_TYPE_TIMESTAMP_NO_TMZONE = 1114;
-    private static final int PG_TYPE_NUMERIC = 1700;
-    //private static final int PG_TYPE_LO = 14939;
     
     private DataOutputStream dataOut;
     private ByteArrayOutputStream outBuffer;
@@ -191,7 +205,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 
 	private SSLConfiguration config;
 
-    public PgBackendProtocol(int maxLobSize, SSLConfiguration config) {
+	public PgBackendProtocol(int maxLobSize, SSLConfiguration config) {
     	this.maxLobSize = maxLobSize;
     	this.config = config;
     }
@@ -340,35 +354,65 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	}
 
 	@Override
-	public void sendResultSetDescription(ResultSetMetaData metaData, Statement stmt) {
+	public void sendResultSetDescription(List<PgColInfo> cols) {
 		try {
-			try {
-        		List<PgColInfo> cols = getPgColInfo(metaData, stmt);
-				sendRowDescription(cols);
-			} catch (SQLException e) {
-				sendErrorResponse(e);				
-			}			
+			sendRowDescription(cols);
 		} catch (IOException e) {
 			terminate(e);
 		}
 	}
 	
 	@Override
-	public void sendResults(final String sql, final ResultSetImpl rs, ResultsFuture<Void> result, boolean describeRows) {
+	public void sendCursorResults(ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, int rowCount) {
+		try {
+        	sendRowDescription(cols);
+
+        	ResultsWorkItem r = new ResultsWorkItem(cols, rs, result, rowCount);
+        	r.run();  	        					
+		} catch (IOException e) {
+			terminate(e);
+		}
+	}
+	
+	@Override
+	public void sendPortalResults(String sql, ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, int rowCount, boolean portal) {
+    	ResultsWorkItem r = new ResultsWorkItem(cols, rs, result, rowCount);
+    	r.run();	        	
+	}
+	
+	@Override
+	public void sendMoveCursor(ResultSetImpl rs, int rowCount, ResultsFuture<Integer> results) {
+		try {
+			try {
+				int rowsMoved = 0;
+				for (int i = 0; i < rowCount; i++) {
+					if (!rs.next()) {
+						break;
+					}
+					rowsMoved++;
+				}				
+				results.getResultsReceiver().receiveResults(rowsMoved);
+			} catch (SQLException e) {
+				sendErrorResponse(e);
+			}
+		} catch (IOException e) {
+			terminate(e);
+		}
+	}		
+	
+	@Override
+	public void sendResults(final String sql, final ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, boolean describeRows) {
 		try {
 			if (nextFuture != null) {
 				sendErrorResponse(new IllegalStateException("Pending results have not been sent")); //$NON-NLS-1$
 			}
         	
-			ResultSetMetaData meta = rs.getMetaData();
-    		List<PgColInfo> cols = getPgColInfo(meta, rs.getStatement());
         	if (describeRows) {
         		sendRowDescription(cols);
         	}
-        	Runnable r = new ResultsWorkItem(cols, sql, rs, result);
+        	ResultsWorkItem r = new ResultsWorkItem(cols, rs, result, -1);
         	r.run();    
-		} catch (SQLException e) {
-			result.getResultsReceiver().exceptionOccurred(e);
+        	sendCommandComplete(sql, 0);
 		} catch (IOException e) {
 			terminate(e);
 		}
@@ -425,8 +469,9 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		startMessage('I');
 		sendMessage();
 	}
-		
-	private void sendCommandComplete(String sql, int updateCount) throws IOException {
+
+	@Override
+	public void sendCommandComplete(String sql, int updateCount) throws IOException {
 		startMessage('C');
 		sql = sql.trim().toUpperCase();
 		// TODO remove remarks at the beginning
@@ -439,7 +484,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			tag = "UPDATE " + updateCount;
 		} else if (sql.startsWith("SELECT") || sql.startsWith("CALL")) {
 			tag = "SELECT";
-		} else if (sql.startsWith("BEGIN")) {
+		} else if (sql.startsWith("BEGIN") || sql.startsWith("START TRANSACTION")) {
 			tag = "BEGIN";
 		} else if (sql.startsWith("COMMIT")) {
 			tag = "COMMIT";
@@ -447,15 +492,23 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			tag = "ROLLBACK";
 		} else if (sql.startsWith("SET ")) {
 			tag = "SET";
-		}else {
-			trace("Check command tag:", sql);
-			tag = "UPDATE " + updateCount;
+		}  else if (sql.startsWith("DECLARE CURSOR")) {
+			tag = "DECLARE CURSOR";
+		} else if (sql.startsWith("CLOSE CURSOR")) {
+			tag = "CLOSE CURSOR";
+		} else if (sql.startsWith("FETCH")) {
+			tag = "FETCH "+ updateCount;
+		}  else if (sql.startsWith("MOVE")) {
+			tag = "MOVE "+ updateCount;
+		}
+		else {
+			tag = sql;
 		}
 		writeString(tag);
 		sendMessage();
 	}
 
-	private void sendDataRow(ResultSet rs, List<PgColInfo> cols) throws SQLException, IOException {
+	private void sendDataRow(ResultSet rs, List<PgColInfo> cols, ChannelBuffer buffer) throws SQLException, IOException {
 		startMessage('D');
 		writeShort(cols.size());
 		for (int i = 0; i < cols.size(); i++) {
@@ -467,9 +520,18 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 				write(bytes);
 			}
 		}
-		sendMessage();
+		
+		byte[] buff = outBuffer.toByteArray();
+		int len = buff.length;
+		this.outBuffer = null;
+		this.dataOut = null;
+		
+		// now build the wire contents.
+		buffer.writeByte((byte)this.messageType);
+		buffer.writeInt(len+4);
+		buffer.writeBytes(buff);
 	}
-
+	
 	private byte[] getContent(ResultSet rs, PgColInfo col, int column) throws SQLException, TeiidSQLException, IOException {
 		byte[] bytes = null;
 		switch (col.type) {
@@ -612,20 +674,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		write(0);
 		sendMessage();
 	}
-
-	private void sendNoData() {
-		startMessage('n');
-		sendMessage();
-	}
 	
-	private static class PgColInfo {
-		String name;
-		int reloid;
-		short attnum;
-		int type;
-		int precision;
-	}
-
 	private void sendRowDescription(List<PgColInfo> cols) throws IOException {
 		startMessage('T');
 		writeShort(cols.size());
@@ -645,46 +694,6 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			writeShort(0);
 		}
 		sendMessage();
-	}
-
-	private List<PgColInfo> getPgColInfo(ResultSetMetaData meta, Statement stmt)
-			throws SQLException {
-		int columns = meta.getColumnCount();
-		ArrayList<PgColInfo> result = new ArrayList<PgColInfo>(columns);
-		for (int i = 1; i < columns + 1; i++) {
-	 		PgColInfo info = new PgColInfo();
-			info.name = meta.getColumnName(i).toLowerCase();
-			info.type = meta.getColumnType(i);
-			info.type = convertType(info.type);
-			info.precision = meta.getColumnDisplaySize(i);
-			String name = meta.getColumnName(i);
-			String table = meta.getTableName(i);
-			String schema = meta.getSchemaName(i);
-			if (schema != null) {
-				PreparedStatement ps = null;
-				try {
-					ps = stmt.getConnection().prepareStatement("select attrelid, attnum, typoid from matpg_relatt where attname = ? and relname = ? and nspname = ?");
-					ps.setString(1, name);
-					ps.setString(2, table);
-					ps.setString(3, schema);
-					ResultSet rs = ps.executeQuery();
-					if (rs.next()) {
-						info.reloid = rs.getInt(1);
-						info.attnum = rs.getShort(2);
-						int specificType = rs.getInt(3);
-						if (!rs.wasNull()) {
-							info.type = specificType;
-						}
-					}
-				} finally {
-					if (ps != null) {
-						ps.close();
-					}
-				}
-			}
-			result.add(info);
-		}
-		return result;
 	}
 
 	private int getTypeSize(int pgType, int precision) {
@@ -728,6 +737,12 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		startMessage('2');
 		sendMessage();
 	}
+	
+	@Override
+	public void sendPortalSuspended() {
+		startMessage('s');
+		sendMessage();
+	}	
 
 	private void sendAuthenticationCleartextPassword() throws IOException {
 		startMessage('R');
@@ -842,6 +857,10 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		buffer.writeByte((byte)this.messageType);
 		buffer.writeInt(len+4);
 		buffer.writeBytes(buff);
+		Channels.write(this.ctx, this.message.getFuture(), buffer, this.message.getRemoteAddress());
+	}
+	
+	private void sendContents(ChannelBuffer buffer) {
 		Channels.write(this.ctx, this.message.getFuture(), buffer, this.message.getRemoteAddress());
 	}
 

@@ -62,6 +62,7 @@
 	<LI><B>Pluggable Authorization</B> - an alternative PolicyDecider can be defined in the teiid-jboss-beans.xml file to customize authorization decisions.
 	<LI><B>Streaming XQuery</B> - in situations where document projection applies if the XMLQUERY/XMLTABLE path expressions meet certain conditions, then the incoming document will not only be projected, but the independent subtrees will be processed without loading the entire document.  This allows for nearly arbitrarily large XML documents to be processed.  See the Reference for more.
 	<LI><B>Logging Procedures</B> - added SYSADMIN.isLoggable and SYSADMIN.logMsg to aid in debugging procedure logic.
+	<LI><B>ODBC Cursors</B> - Capability to use "UseDeclareFetch" with ODBC is added. This enables user to read the results in batches, especially useful when dealing with large row count of results.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

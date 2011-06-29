@@ -255,6 +255,13 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		assertEquals("oid", rs.getArray("proargtypes").getBaseTypeName());
 	}
 	
+	// this does not work as JDBC always sends the queries in prepared form
+	public void testPgDeclareCursor() throws Exception {
+		Statement stmt = conn.createStatement();
+		ResultSet rs = stmt.executeQuery("begin;declare \"foo\" cursor for select * from pg_proc;fetch 10 in \"foo\"; close \"foo\"");
+		rs.next();		
+	}	
+	
 	@Test public void testPgProcedure() throws Exception {
 		Statement stmt = conn.createStatement();
 		ResultSet rs = stmt.executeQuery("select has_function_privilege(100, 'foo')");
