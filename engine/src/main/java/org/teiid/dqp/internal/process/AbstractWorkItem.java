@@ -124,15 +124,14 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
 	    		this.threadState = ThreadState.MORE_WORK;
 	    		break;
 	    	case MORE_WORK:
+	    		if (this.callingThread != null && !this.isProcessing) {
+	    			useCallingThread();
+	    		}
 	    		break;
 	    	case IDLE:
 	    		this.threadState = ThreadState.MORE_WORK;
         		if (this.callingThread != null) {
-        			if (this.callingThread == Thread.currentThread()) {
-        				run(); //restart with the calling thread
-        			} else {
-        				this.notifyAll(); //notify the waiting caller
-        			}
+        			useCallingThread();
         		} else {
         			resumeProcessing();
         		}
@@ -144,6 +143,14 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
 				LogManager.logDetail(org.teiid.logging.LogConstants.CTX_DQP, new Object[] {this, "ignoring more work, since the work item is done"}); //$NON-NLS-1$
     	}
     }
+
+	private void useCallingThread() {
+		if (this.callingThread == Thread.currentThread()) {
+			run(); //restart with the calling thread
+		} else {
+			this.notifyAll(); //notify the waiting caller
+		}
+	}
     
 	private void logTrace(String msg) {
 		LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, new Object[] {this, msg, this.threadState}); 

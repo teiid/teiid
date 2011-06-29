@@ -181,12 +181,37 @@ public class TestWorkItemState {
 		for (int i = 0; i < 10 && item.getThreadState() != ThreadState.IDLE; i++) {
 			Thread.sleep(100);
 		}
-		if (item.getThreadState() != ThreadState.IDLE) {
-			fail();
-		}
+		assertEquals(ThreadState.IDLE, item.getThreadState());
 		item.moreWork();
 		//if we don't return from this call, that means that this thread has been hijacked -
 		//we should instead use t.
     }
-        
+    
+    @Test public void testUsingCallingThreadMoreWork() throws Exception {
+    	final int[] processCount = new int[1];
+    	final TestWorkItem item = new TestWorkItem(false, false, Thread.currentThread()) {
+    		@Override
+    		protected boolean shouldPause() {
+    			return false;
+    		}
+    		
+    		@Override
+    		protected void process() {
+    			super.process();
+    			processCount[0]++;
+    		}
+    	};
+    	item.run();
+		assertEquals(ThreadState.IDLE, item.getThreadState());
+		Thread t = new Thread() {
+			@Override
+			public void run() {
+				item.moreWork();
+			}
+		};
+		t.start();
+		t.join();
+		item.moreWork();
+		assertEquals(2, processCount[0]);
+    }        
 }
