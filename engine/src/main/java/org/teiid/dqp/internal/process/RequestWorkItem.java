@@ -293,7 +293,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	}
 
 	private void suspend() {
-		if (this.transactionState == TransactionState.ACTIVE && this.transactionContext.getTransaction() != null) {
+		if ((this.transactionState != TransactionState.NONE) && this.transactionContext.getTransaction() != null) {
 			try {
 				this.transactionService.suspend(this.transactionContext);
 			} catch (XATransactionException e) {
