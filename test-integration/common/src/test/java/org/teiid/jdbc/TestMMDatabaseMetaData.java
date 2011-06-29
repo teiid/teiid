@@ -615,6 +615,12 @@ public class TestMMDatabaseMetaData {
         ResultSet rs = dbmd.getTables(null, "SYSTEM", "VIRTUALDATABASES", null); //$NON-NLS-1$ //$NON-NLS-2$
         compareResultSet(rs);
     }
+    
+    @Test
+    public void testGetTables_noTypes() throws Exception {
+        ResultSet rs = dbmd.getTables(null, "SYSTEM", "VIRTUALDATABASES", new String[0]); //$NON-NLS-1$ //$NON-NLS-2$
+        assertFalse(rs.next());
+    }
 
     @Test
     public void testGetTables_specificTableTypes() throws Exception {

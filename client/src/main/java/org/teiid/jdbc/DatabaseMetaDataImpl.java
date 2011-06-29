@@ -1433,18 +1433,21 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         // query string to be submitted to get table metadata info
         StringBuffer sqlQuery = new StringBuffer(QUERY_TABLES);
 
-        StringBuffer typesString = new StringBuffer("("); // criteria string for different table types //$NON-NLS-1$
-        
         if (types != null) {
-            // construct the criteria string
-            for(int i=0; i < types.length; i++) {
-                if (types[i] != null && types[i].length() > 0) {
-                    if (i > 0) {
-                        typesString.append(" OR "); //$NON-NLS-1$
-                    } 
-                    typesString.append(TABLE_TYPE).append(LIKE_ESCAPE);
-                }
-            }
+        	StringBuffer typesString = new StringBuffer("("); // criteria string for different table types //$NON-NLS-1$
+        	if (types.length == 0) {
+        		typesString.append("1 = 0"); //$NON-NLS-1$
+        	} else {
+	            // construct the criteria string
+	            for(int i=0; i < types.length; i++) {
+	                if (types[i] != null && types[i].length() > 0) {
+	                    if (i > 0) {
+	                        typesString.append(" OR "); //$NON-NLS-1$
+	                    } 
+	                    typesString.append(TABLE_TYPE).append(LIKE_ESCAPE);
+	                }
+	            }
+        	}
             typesString.append(")"); //$NON-NLS-1$
             sqlQuery.append(" AND ").append(typesString.toString()); //$NON-NLS-1$
         }
