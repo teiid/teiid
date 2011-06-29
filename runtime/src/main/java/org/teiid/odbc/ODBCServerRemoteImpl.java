@@ -378,8 +378,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 					}
 					
 					PreparedStatementImpl stmt = this.connection.prepareStatement(modfiedSQL);
-					List<PgColInfo> cols = getPgColInfo(stmt.getMetaData());
-					this.preparedMap.put(prepareName, new Prepared(prepareName, sql, stmt, paramType, cols));
+					this.preparedMap.put(prepareName, new Prepared(prepareName, sql, stmt, paramType));
 					this.client.prepareCompleted(prepareName);
 				} catch (SQLException e) {
 					errorOccurred(e);
@@ -419,7 +418,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			errorOccurred(e);
 		}
 		
-		this.portalMap.put(bindName, new Portal(bindName, prepareName, previous.sql, previous.stmt, resultColumnFormat, previous.columnMetadata));
+		this.portalMap.put(bindName, new Portal(bindName, prepareName, previous.sql, previous.stmt, resultColumnFormat));
 		this.client.bindComplete();
 	}
 
@@ -475,7 +474,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
                     try {
                     	ResultsFuture<Integer> result = new ResultsFuture<Integer>();
 		                if (future.get()) {
-                            client.sendResults(query.sql, stmt.getResultSet(), query.columnMetadata, result, true);
+		                	List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
+                            client.sendResults(query.sql, stmt.getResultSet(), cols, result, true);
 		                } else {
 		                	// null future
 		                	client.sendUpdateCount(query.sql, stmt.getUpdateCount());
@@ -671,7 +671,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				
 				// followed by a RowDescription message describing the rows that will be returned when the statement  
 				// is eventually executed (or a NoData message if the statement will not return rows).
-				this.client.sendResultSetDescription(query.columnMetadata);
+				List<PgColInfo> cols = getPgColInfo(query.stmt.getMetaData());
+				this.client.sendResultSetDescription(cols);
 			} catch (SQLException e) {
 				errorOccurred(e);
 			}
@@ -704,7 +705,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			errorOccurred(RuntimePlugin.Util.getString("not_bound", bindName)); //$NON-NLS-1$
 		}
 		else {
-			this.client.sendResultSetDescription(query.columnMetadata);
+			try {
+				List<PgColInfo> cols = getPgColInfo(query.stmt.getMetaData());
+				this.client.sendResultSetDescription(cols);
+			} catch (SQLException e) {
+				errorOccurred(e);
+			}
 		}
 	}
 
@@ -956,9 +962,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 					if (!rs.wasNull()) {
 						info.type = specificType;
 					}
-				}	
-				result.add(info);
+				}					
 			}
+			result.add(info);
 		}
 		return result;
 	}  
@@ -968,12 +974,11 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
      */
     static class Prepared {
 
-    	public Prepared (String name, String sql, PreparedStatementImpl stmt, int[] paramType, List<PgColInfo> colMetadata) {
+    	public Prepared (String name, String sql, PreparedStatementImpl stmt, int[] paramType) {
     		this.name = name;
     		this.sql = sql;
     		this.stmt = stmt;
     		this.paramType = paramType;
-    		this.columnMetadata = colMetadata;
     	}
     	
         /**
@@ -994,12 +999,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
         /**
          * The list of parameter types (if set).
          */
-        int[] paramType;
-        
-        /**
-         * calculated column metadata
-         */
-        List<PgColInfo> columnMetadata;
+        int[] paramType;        
     }
 
     /**
@@ -1007,13 +1007,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
      */
     static class Portal {
 
-    	public Portal(String name, String preparedName, String sql, PreparedStatementImpl stmt, int[] resultColumnformat, List<PgColInfo> colMetadata) {
+    	public Portal(String name, String preparedName, String sql, PreparedStatementImpl stmt, int[] resultColumnformat) {
     		this.name = name;
     		this.preparedName = preparedName;
     		this.sql = sql;
     		this.stmt = stmt;
     		this.resultColumnFormat = resultColumnformat;
-    		this.columnMetadata = colMetadata;
     	}
         /**
          * The portal name.
@@ -1036,22 +1035,21 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
         /**
          * The prepared statement.
          */
-        PreparedStatementImpl stmt;
-        
-        /**
-         * calculated column metadata
-         */
-        List<PgColInfo> columnMetadata;        
+        PreparedStatementImpl stmt;        
     }
     
     static class Cursor extends Prepared {
     	ResultSetImpl rs;
     	int fetchSize = 1000;
-    	
+        /**
+         * calculated column metadata
+         */
+        List<PgColInfo> columnMetadata;	
     	
     	public Cursor (String name, String sql, PreparedStatementImpl stmt, int[] paramType, ResultSetImpl rs, List<PgColInfo> colMetadata) {
-    		super(name, sql, stmt, paramType, colMetadata);
+    		super(name, sql, stmt, paramType);
     		this.rs = rs;
+    		this.columnMetadata = colMetadata;
     	}
     }    
 
