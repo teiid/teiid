@@ -234,22 +234,23 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		        					client.sendCommandComplete("DECLARE CURSOR", 0); //$NON-NLS-1$		                            
 				                }
 				                else {
-				                	client.errorOccurred(RuntimePlugin.Util.getString("execution_failed")); //$NON-NLS-1$
+				                	errorOccurred(RuntimePlugin.Util.getString("execution_failed")); //$NON-NLS-1$
 				                }
-				                completion.getResultsReceiver().receiveResults(1);
-				                doneExecuting();
 	                        } catch (Throwable e) {
 	                            errorOccurred(e);
 	                        }
+			                completion.getResultsReceiver().receiveResults(1);			                	                        
 		        		}
 					});					
 				} catch (SQLException e) {
 					errorOccurred(e);
+					completion.getResultsReceiver().receiveResults(1);
 				} 
 			}
 		}
 		else {
 			errorOccurred(RuntimePlugin.Util.getString("no_active_connection")); //$NON-NLS-1$
+			completion.getResultsReceiver().receiveResults(1);
 		}
 		
 	}
@@ -262,10 +263,10 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			this.client.sendCursorResults(cursor.rs, cursor.columnMetadata, result, rows);
 			result.addCompletionListener(new ResultsFuture.CompletionListener<Integer>() {
             	public void onCompletion(ResultsFuture<Integer> future) {
+            		int rowsSent = 0;
             		try {
-						int rowsSent = future.get();
-						client.sendCommandComplete("FETCH", rowsSent); //$NON-NLS-1$
-						completion.getResultsReceiver().receiveResults(rowsSent);
+						rowsSent = future.get();
+						client.sendCommandComplete("FETCH", rowsSent); //$NON-NLS-1$						
 					} catch (InterruptedException e) {
 						throw new AssertionError(e);
 					} catch (ExecutionException e) {
@@ -273,25 +274,40 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 					} catch (IOException e) {
 						errorOccurred(e);
 					}
+					completion.getResultsReceiver().receiveResults(rowsSent);
             	};
 			});
 		}
 		else {
 			errorOccurred(RuntimePlugin.Util.getString("not_bound", cursorName)); //$NON-NLS-1$
+			completion.getResultsReceiver().receiveResults(1);
 		}
 	}
 	
 	private void cursorMove(String prepareName, int rows, final ResultsFuture<Integer> completion) {
+		
+		// win odbc driver sending a move after close; and error is ending up in failure; since the below
+		// is not harmful it is ok to send empty move.
+		if (rows == 0) {
+			try {
+				client.sendCommandComplete("MOVE", 0); //$NON-NLS-1$
+			} catch (IOException e) {
+				errorOccurred(e);
+			}
+			completion.getResultsReceiver().receiveResults(0);
+			return;			
+		}
+		
 		Cursor cursor = this.cursorMap.get(prepareName);
 		if (cursor != null) {
 			ResultsFuture<Integer> result = new ResultsFuture<Integer>();
 			this.client.sendMoveCursor(cursor.rs, rows, result);
 			result.addCompletionListener(new ResultsFuture.CompletionListener<Integer>() {
             	public void onCompletion(ResultsFuture<Integer> future) {
+            		int rowsMoved = 0;
             		try {
-						int rowsMoved = future.get();
-						client.sendCommandComplete("MOVE", rowsMoved); //$NON-NLS-1$
-						completion.getResultsReceiver().receiveResults(rowsMoved);
+						rowsMoved = future.get();
+						client.sendCommandComplete("MOVE", rowsMoved); //$NON-NLS-1$						
 					} catch (InterruptedException e) {
 						throw new AssertionError(e);
 					} catch (ExecutionException e) {
@@ -299,11 +315,13 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 					} catch (IOException e) {
 						errorOccurred(e);
 					}
+					completion.getResultsReceiver().receiveResults(rowsMoved);
             	};
 			});			
 		}
 		else {
 			errorOccurred(RuntimePlugin.Util.getString("not_bound", prepareName)); //$NON-NLS-1$
+			completion.getResultsReceiver().receiveResults(1);
 		}
 	}	
 	
@@ -352,8 +370,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	                	}
 	                });
     			} catch (Throwable e) {
-    				client.errorOccurred(e);
-    				return;
+    				errorOccurred(e);
+    				completion.getResultsReceiver().receiveResults(1);
     			}
     		}
 		});    	
@@ -875,7 +893,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		            	ResultsFuture<Integer> results = new ResultsFuture<Integer>();
 		    			results.addCompletionListener(new ResultsFuture.CompletionListener<Integer>() {
 		                	public void onCompletion(ResultsFuture<Integer> future) {
-		                		try {
+		                		try {		                			
 		    						future.get();
 		    		                sql = reader.readStatement();
 		    					} catch (InterruptedException e) {
@@ -886,11 +904,17 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		    					} catch (ExecutionException e) {
 		    						client.errorOccurred(e.getCause());
 		    						return;
-		    					} finally {
 		    					}
 		            			QueryWorkItem.this.run(); //continue processing
 		                	};
 		    			});	
+		    			
+		    			if (isErrorOccurred()) {
+		    				if (!connection.getAutoCommit()) {
+		    					connection.rollback(false);
+		    				}
+		    				break;
+		    			}
 		    			
 		            	Matcher m = null;
 		    	        if ((m = cursorSelectPattern.matcher(sql)).matches()){
@@ -924,12 +948,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		    			}
 		                return; //wait for the execution to finish
 		            } catch (SQLException e) {
-		                client.errorOccurred(e);
+		                errorOccurred(e);
 		                break;
 		            } 
 		        }
 			} catch(IOException e) {
-				client.errorOccurred(e);
+				errorOccurred(e);
 			}
 			doneExecuting();
 			ready();
