@@ -242,6 +242,21 @@
                         </entry>
                         <entry>Default query timeout in seconds. Must be >= 0. 0 indicates no timeout. Can be overriden by <code>Statement.setQueryTimeout</code>. Default 0.</entry>
                     </row>
+                    <row>
+                        <entry>
+                            <code>useJDBC4ColumnNameAndLabelSemantics</code>
+                        </entry>
+                        <entry>
+                            <code>boolean</code>
+                        </entry>						
+                        <entry>
+                            <para>A change was made in JDBC4 so that when an 'Alias' is used it will
+							now be returned as the label.   Prior to this, it was returned as
+							the name.   Setting this property to false will enable
+							backwards compatibility when JDBC3 and older support is still required.
+							</para>
+                        </entry>
+                    </row>						
                 </tbody>
             </tgroup>
         </table> 

@@ -170,6 +170,18 @@
                             <para>Same as the connection property.</para>
                         </entry>
                     </row>
+                    <row>
+                        <entry>
+                            <code>JDBC4COLUMNNAMEANDLABELSEMANTICS / useJDBC4ColumnNameAndLabelSemantics</code>
+                        </entry>
+                        <entry>
+                            <para>A change was made in JDBC4 so that when an 'Alias' is used it will.
+							now be returned as the label.   Prior to this, it was returned as
+							the name.   Setting this property to false will enable
+							backwards compatibility when JDBC3 and older support is still required.
+							</para>
+                        </entry>
+                    </row>						
                  </tbody>
              </tgroup>
         </table>        
