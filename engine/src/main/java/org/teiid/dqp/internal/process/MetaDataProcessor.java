@@ -387,6 +387,10 @@ public class MetaDataProcessor {
 
     public Map<Integer, Object> getDefaultColumn(String tableName, String columnName, 
         Class<?> javaType) {
+    	return getDefaultColumn(tableName, columnName, columnName, javaType);
+    }
+    
+    public Map<Integer, Object> getDefaultColumn(String tableName, String columnName, String columnLabel, Class<?> javaType ) {
             
         Map<Integer, Object> column = new HashMap<Integer, Object>();
         
@@ -395,7 +399,7 @@ public class MetaDataProcessor {
         column.put(ResultsMetadataConstants.VIRTUAL_DATABASE_VERSION, vdbVersion);
         column.put(ResultsMetadataConstants.GROUP_NAME, tableName);
         column.put(ResultsMetadataConstants.ELEMENT_NAME, columnName);
-        column.put(ResultsMetadataConstants.ELEMENT_LABEL, columnName);
+        column.put(ResultsMetadataConstants.ELEMENT_LABEL, columnLabel);
         column.put(ResultsMetadataConstants.AUTO_INCREMENTING, Boolean.FALSE);
         column.put(ResultsMetadataConstants.CASE_SENSITIVE, Boolean.FALSE);
         column.put(ResultsMetadataConstants.NULLABLE, ResultsMetadataConstants.NULL_TYPES.NULLABLE);  

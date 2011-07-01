@@ -34,10 +34,13 @@ import org.teiid.core.types.JDBCSQLTypeInfo;
 public class ResultSetMetaDataImpl extends WrapperImpl implements ResultSetMetaData {
 
     private MetadataProvider provider;
+
+    private boolean useJDBC4ColumnNameAndLabelSemantics = true;
     
-    public ResultSetMetaDataImpl(MetadataProvider provider) {
+    public ResultSetMetaDataImpl(MetadataProvider provider, String supportBackwardsCompatibility) {
     	this.provider = provider;
-    }
+    	this.useJDBC4ColumnNameAndLabelSemantics = (supportBackwardsCompatibility != null && supportBackwardsCompatibility.equalsIgnoreCase("false") ? false : true);
+    }    
     
     /**
      * Adjust from 1-based to internal 0-based representation
@@ -105,6 +108,13 @@ public class ResultSetMetaDataImpl extends WrapperImpl implements ResultSetMetaD
     }
 
     public String getColumnName(int index) throws SQLException {
+
+    	if (!useJDBC4ColumnNameAndLabelSemantics) {
+            String result = provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.ELEMENT_LABEL);
+            if (result != null) {
+            	return result;
+            }
+    	}
         return provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.ELEMENT_NAME);
     }
 

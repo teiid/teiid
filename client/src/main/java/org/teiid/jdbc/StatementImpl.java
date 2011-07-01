@@ -1158,7 +1158,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	}
 	
     ResultSetImpl createResultSet(List records, Map[] columnMetadata) throws SQLException {
-        ResultSetMetaData rsmd = new ResultSetMetaDataImpl(new MetadataProvider(columnMetadata));
+        ResultSetMetaData rsmd = new ResultSetMetaDataImpl(new MetadataProvider(columnMetadata), this.getExecutionProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS));
 
         return createResultSet(records, rsmd);
     }
