@@ -133,12 +133,11 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
         this.batchResults = new BatchResults(this, getCurrentBatch(resultsMsg), this.cursorType == ResultSet.TYPE_FORWARD_ONLY ? 1 : BatchResults.DEFAULT_SAVED_BATCHES);
         accumulateWarnings(resultsMsg);
         this.serverTimeZone = statement.getServerTimeZone();
-
 		if (metadata == null) {
 			MetadataProvider provider = new DeferredMetadataProvider(resultsMsg.getColumnNames(),
 							resultsMsg.getDataTypes(), statement,
 							statement.getCurrentRequestID());
-			rmetadata = new ResultSetMetaDataImpl(provider);
+			rmetadata = new ResultSetMetaDataImpl(provider, this.statement.getExecutionProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS));
 		} else {
 			rmetadata = metadata;
 		}

@@ -259,7 +259,7 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
 					return null;
 				}
                 MetadataProvider provider = new MetadataProvider(getMetadataResults().getColumnMetadata());
-                metadata = new ResultSetMetaDataImpl(provider);
+                metadata = new ResultSetMetaDataImpl(provider, this.getExecutionProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS));
             }
         }
 
@@ -653,7 +653,7 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
 	public ParameterMetaData getParameterMetaData() throws SQLException {
 		if (parameterMetaData == null) {
 			//TODO: some of the base implementation of ResultSetMetadata could be on the MetadataProvider
-			this.parameterMetaData = new ParameterMetaDataImpl(new ResultSetMetaDataImpl(new MetadataProvider(getMetadataResults().getParameterMetadata())));
+			this.parameterMetaData = new ParameterMetaDataImpl(new ResultSetMetaDataImpl(new MetadataProvider(getMetadataResults().getParameterMetadata()), this.getExecutionProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS)));
 		}
 		return parameterMetaData;
 	}

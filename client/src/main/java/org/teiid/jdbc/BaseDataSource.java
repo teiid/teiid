@@ -147,6 +147,8 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     
     private int queryTimeout;
     
+    private boolean useJDBC4ColumnNameAndLabelSemantics = true; 
+    
     /**
      * Reference to the logWriter, which is transient and is therefore not serialized with the DataSource.
      */
@@ -245,6 +247,10 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         
         if (this.getDisableLocalTxn() != null) {
             props.setProperty(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS, this.getDisableLocalTxn());
+        }
+        
+        if (!this.getUseJDBC4ColumnNameAndLabelSemantics()) {
+        	props.setProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS, "false");
         }
         
         if (this.additionalProperties != null) {
@@ -652,6 +658,15 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     public void setAutoCommitTxn(String transactionAutoWrap) {
     	this.transactionAutoWrap = transactionAutoWrap;
     }
+    
+    
+	public boolean getUseJDBC4ColumnNameAndLabelSemantics() {
+		return useJDBC4ColumnNameAndLabelSemantics;
+	}
+
+	public void setUseJDBC4ColumnNameAndLabelSemantics(boolean useJDBC4ColumnNameAndLabelSemantics) {
+		this.useJDBC4ColumnNameAndLabelSemantics = useJDBC4ColumnNameAndLabelSemantics;
+	}
 
     // --------------------------------------------------------------------------------------------
     //                  V A L I D A T I O N   M E T H O D S

@@ -104,5 +104,19 @@ public interface ExecutionProperties {
     
     public static final String QUERYTIMEOUT = "QUERYTIMEOUT"; //$NON-NLS-1$
     
+	/**
+	 * TEIID-1651
+	 * A change was made in JDBC4 so that when an 'Alias' is used it will
+	 * now be returned as the label.   Prior to this, it was returned as
+	 * the name.   Setting this property to <code>false</code> will enable
+	 * backwards compatibility when JDBC3 and older support is still required.
+	 * 
+	 * Default is <code>true</code>
+	 * @since 7.4.1
+	 */
+    
+    public static final String JDBC4COLUMNNAMEANDLABELSEMANTICS = "useJDBC4ColumnNameAndLabelSemantics"; //$NON-NLS-1$
+    
+    
 }
     

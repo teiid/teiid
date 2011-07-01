@@ -75,6 +75,7 @@ public class TestTeiidDataSource extends TestCase {
         dataSource.setPartialResultsMode(STD_PARTIAL_MODE);
         dataSource.setSecure(true);
         dataSource.setAlternateServers(STD_ALTERNATE_SERVERS);
+        dataSource.setUseJDBC4ColumnNameAndLabelSemantics(true);
     }
 
     // =========================================================================
@@ -141,6 +142,19 @@ public class TestTeiidDataSource extends TestCase {
                                      final int fetchSize, final boolean showPlan,
                                      final boolean secure, final String expectedURL) {
 
+ 
+    		helpTestBuildingURL2(vdbName, vdbVersion, serverName, portNumber, alternateServers,
+    					txnAutoWrap, partialMode, fetchSize, showPlan, secure, true, expectedURL);
+    }
+    
+    public void helpTestBuildingURL2( final String vdbName, final String vdbVersion,
+            final String serverName, final int portNumber,
+            final String alternateServers,
+            final String txnAutoWrap, final String partialMode,
+            final int fetchSize, final boolean showPlan,
+            final boolean secure, final boolean useJDBC4Semantics,
+            final String expectedURL ) {
+    	
         final TeiidDataSource ds = new TeiidDataSource();
         ds.setServerName(serverName);
         ds.setDatabaseVersion(vdbVersion);
@@ -154,6 +168,7 @@ public class TestTeiidDataSource extends TestCase {
         }
         ds.setSecure(secure);
         ds.setAlternateServers(alternateServers);
+        ds.setUseJDBC4ColumnNameAndLabelSemantics(useJDBC4Semantics);
 
         String url;
 		try {
@@ -184,6 +199,7 @@ public class TestTeiidDataSource extends TestCase {
         ds.setTransactionAutoWrap(txnAutoWrap);
         ds.setPartialResultsMode(partialMode);
         ds.setAlternateServers(alternateServers);
+        ds.setUseJDBC4ColumnNameAndLabelSemantics(true);
 
         return ds.getConnection();
 
@@ -625,6 +641,21 @@ public class TestTeiidDataSource extends TestCase {
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,transactionAutoWrap, partialMode, -1, true, secure,
                             "jdbc:teiid:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;SHOWPLAN=ON;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
+    }
+    
+    /**
+     * Test turning off using JDBC4 semantics
+     */
+    public void testBuildURL8() {
+        final String serverName = "hostName"; //$NON-NLS-1$
+        final String vdbName = "vdbName"; //$NON-NLS-1$
+        final String vdbVersion = "1.2.3"; //$NON-NLS-1$
+        final int portNumber = 7001;
+        final String transactionAutoWrap = null;
+        final String partialMode = "true"; //$NON-NLS-1$
+        final boolean secure = false;
+        helpTestBuildingURL2(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, 500, false, secure, false,
+                            "jdbc:teiid:vdbName@mm://hostname:7001;fetchSize=500;ApplicationName=JDBC;VirtualDatabaseVersion=1.2.3;partialResultsMode=true;useJDBC4ColumnNameAndLabelSemantics=false;VirtualDatabaseName=vdbName"); //$NON-NLS-1$
     }
     
     public void testBuildURL_AdditionalProperties() throws TeiidSQLException {
