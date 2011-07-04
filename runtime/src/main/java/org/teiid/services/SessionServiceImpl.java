@@ -25,9 +25,10 @@ package org.teiid.services;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.security.auth.login.LoginContext;
+import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
+import org.jboss.as.security.plugins.SecurityDomainContext;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.impl.SessionMetadata;
@@ -52,8 +53,6 @@ import org.teiid.security.SecurityHelper;
  * This class serves as the primary implementation of the Session Service.
  */
 public class SessionServiceImpl implements SessionService {
-	public static final String SECURITY_DOMAINS = "securitydomains"; //$NON-NLS-1$
-	
 	/*
 	 * Configuration state
 	 */
@@ -70,8 +69,13 @@ public class SessionServiceImpl implements SessionService {
 
     private Map<String, SessionMetadata> sessionCache = new ConcurrentHashMap<String, SessionMetadata>();
     private Timer sessionMonitor = new Timer("SessionMonitor", true); //$NON-NLS-1$
-    private LinkedList<String> securityDomains = new LinkedList<String>();
+    private Map<String, SecurityDomainContext> securityDomainMap;
+    private LinkedList<String> securityDomainNames;
     
+    public SessionServiceImpl(LinkedList<String> domainNames, Map<String, SecurityDomainContext> domains) {
+    	this.securityDomainNames = domainNames;
+    	this.securityDomainMap = domains;
+    }
     
     // -----------------------------------------------------------------------------------
     // S E R V I C E - R E L A T E D M E T H O D S
@@ -111,16 +115,6 @@ public class SessionServiceImpl implements SessionService {
                 LogManager.logWarning(LogConstants.CTX_SECURITY,e,"Exception terminitating session"); //$NON-NLS-1$
             }
 		}
-
-        // try to log out of the context.
-        try {
-        	LoginContext context = info.getLoginContext();
-        	if (context != null) {
-        		context.logout();
-        	}
-		} catch (LoginException e) {
-			 LogManager.logWarning(LogConstants.CTX_SECURITY,e,"Exception terminitating session"); //$NON-NLS-1$
-		}
 	}
 	
 	@Override
@@ -129,10 +123,10 @@ public class SessionServiceImpl implements SessionService {
 		ArgCheck.isNotNull(applicationName);
         ArgCheck.isNotNull(properties);
         
-        LoginContext loginContext = null;
         String securityDomain = "none"; //$NON-NLS-1$
         Object securityContext = null;
-        List<String> domains = this.securityDomains;
+        Subject subject = null;
+        List<String> domains = this.securityDomainNames;
         
         // Validate VDB and version if logging on to server product...
         VDBMetaData vdb = null;
@@ -150,11 +144,11 @@ public class SessionServiceImpl implements SessionService {
 	        // Authenticate user...
 	        // if not authenticated, this method throws exception
         	boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
-	        TeiidLoginContext membership = authenticate(userName, credentials, applicationName, domains, this.securityHelper, onlyAllowPassthrough);
-	        loginContext = membership.getLoginContext();
+	        TeiidLoginContext membership = authenticate(userName, credentials, applicationName, domains, this.securityDomainMap, this.securityHelper, onlyAllowPassthrough);
 	        userName = membership.getUserName();
 	        securityDomain = membership.getSecurityDomain();
 	        securityContext = membership.getSecurityContext();
+	        subject = membership.getSubject();
         }        
         
         long creationTime = System.currentTimeMillis();
@@ -175,7 +169,7 @@ public class SessionServiceImpl implements SessionService {
         }
         
         // these are local no need for monitoring.
-        newSession.setLoginContext(loginContext);
+        newSession.setSubject(subject);
         newSession.setSecurityContext(securityContext);
         newSession.setVdb(vdb);
         LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", userName, "\" - created SessionID \"", newSession.getSessionToken().getSessionID(), "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -223,10 +217,10 @@ public class SessionServiceImpl implements SessionService {
 		return vdb;
 	}
 
-	protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains, SecurityHelper helper, boolean onlyallowPassthrough)
+	protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains, Map<String, SecurityDomainContext> securityDomainMap, SecurityHelper helper, boolean onlyallowPassthrough)
 			throws LoginException {
 		TeiidLoginContext membership = new TeiidLoginContext(helper);
-        membership.authenticateUser(userName, credentials, applicationName, domains, onlyallowPassthrough);                        
+        membership.authenticateUser(userName, credentials, applicationName, domains, securityDomainMap, onlyallowPassthrough);                        
 		return membership;
 	}
 	
@@ -314,17 +308,6 @@ public class SessionServiceImpl implements SessionService {
 	public void setSessionExpirationTimeLimit(long limit) {
 		this.sessionExpirationTimeLimit = limit;
 	}	
-	
-	public void setSecurityDomains(String domainNameOrder) {
-        if (domainNameOrder != null && domainNameOrder.trim().length()>0) {
-        	LogManager.logInfo(LogConstants.CTX_SECURITY, "Security Enabled: true"); //$NON-NLS-1$
-
-	        String[] domainNames = domainNameOrder.split(","); //$NON-NLS-1$
-	        for (String domainName : domainNames) {
-	            this.securityDomains.addLast(domainName);
-	        }
-        }		
-	}
 	
 	public void start() {
         this.sessionMonitor.schedule(new TimerTask() {

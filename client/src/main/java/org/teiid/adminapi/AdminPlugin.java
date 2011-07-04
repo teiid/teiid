@@ -19,14 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.adminapi.impl;
 
-import org.jboss.managed.api.annotation.ManagementComponent;
-import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementProperties;
+package org.teiid.adminapi;
 
-@ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="translator"), properties=ManagementProperties.EXPLICIT)
-public class TranslatorMetaData extends VDBTranslatorMetaData{
-	private static final long serialVersionUID = 116875548438603151L;
-	public static final String TRANSLATOR_PREFIX = "translator-"; //$NON-NLS-1$
+import java.util.ResourceBundle;
+
+import org.teiid.core.BundleUtil;
+
+public class AdminPlugin { 
+    public static final String PLUGIN_ID = "org.teiid.adminapi" ; //$NON-NLS-1$
+	public static final BundleUtil Util = new BundleUtil(PLUGIN_ID, PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
 }

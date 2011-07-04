@@ -22,14 +22,11 @@
 
 package org.teiid.adminapi.impl;
 
-import org.jboss.managed.api.annotation.ManagementProperty;
-import org.jboss.metatype.api.annotations.MetaMapping;
 import org.teiid.adminapi.WorkerPoolStatistics;
 
 /**
  * This class is a holder for all the statistics gathered about a worker pool.
  */
-@MetaMapping(WorkerPoolStatisticsMetadataMapper.class)
 public class WorkerPoolStatisticsMetadata extends AdminObjectImpl implements WorkerPoolStatistics {
 
 	private static final long serialVersionUID = -4917902925523802295L;
@@ -44,49 +41,41 @@ public class WorkerPoolStatisticsMetadata extends AdminObjectImpl implements Wor
     private long totalCompleted;
             
     @Override
-    @ManagementProperty(description="Number of Active Threads", readOnly=true)
     public int getActiveThreads() {
 		return activeThreads;
 	}
     
     @Override
-    @ManagementProperty(description="Highest active threads", readOnly=true)
     public int getHighestActiveThreads() {
 		return highestActiveThreads;
 	}
     
     @Override
-    @ManagementProperty(description="Total Completed Tasks", readOnly=true)
     public long getTotalCompleted() {
 		return totalCompleted;
 	}
     
     @Override
-    @ManagementProperty(description="Total submitted Tasks", readOnly=true)
     public long getTotalSubmitted() {
 		return totalSubmitted;
 	}
     
     @Override
-    @ManagementProperty(description="Queue Name", readOnly=true)
     public String getQueueName() {
 		return getName();
 	}
     
     @Override
-    @ManagementProperty(description="Currently Queued Tasks", readOnly=true)
     public int getQueued() {
 		return queued;
 	}
     
     @Override
-    @ManagementProperty(description="Highest Queued Tasks", readOnly=true)
     public int getHighestQueued() {
 		return highestQueued;
 	}
     
     @Override
-    @ManagementProperty(description="Max Threads", readOnly=true)
     public int getMaxThreads() {
 		return maxThreads;
 	}

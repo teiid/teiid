@@ -29,10 +29,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
-import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementProperties;
-import org.jboss.managed.api.annotation.ManagementProperty;
-
 /**
  * <pre>
  * &lt;complexType name="property">
@@ -49,7 +45,6 @@ import org.jboss.managed.api.annotation.ManagementProperty;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = "property")
-@ManagementObject(properties=ManagementProperties.EXPLICIT)
 public class PropertyMetadata implements Serializable{
 	private static final long serialVersionUID = -5040224539939758816L;
 	
@@ -66,12 +61,10 @@ public class PropertyMetadata implements Serializable{
  	   this.value = value;
     }
 
-    @ManagementProperty(description="property key")
     public String getName() {
         return name;
     }
 
-    @ManagementProperty(description="property value")
     public String getValue() {
         return value;
     }

@@ -420,7 +420,13 @@
                 <groupId>org.jboss.as</groupId>
                 <artifactId>jboss-as-connector</artifactId>
                 <version>${jbossas-version}</version>
+            </dependency>   
+            <dependency>
+                <groupId>org.jboss.as</groupId>
+                <artifactId>jboss-as-security</artifactId>
+                <version>${jbossas-version}</version>
             </dependency>            
+                     
             <!-- 
 			<dependency>
 				<groupId>jgroups</groupId>

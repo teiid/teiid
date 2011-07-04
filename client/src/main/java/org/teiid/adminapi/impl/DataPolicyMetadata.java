@@ -25,16 +25,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.*;
 
-import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementObjectID;
-import org.jboss.managed.api.annotation.ManagementProperties;
-import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.DataPolicy;
 
 
@@ -44,7 +36,6 @@ import org.teiid.adminapi.DataPolicy;
     "permissions",
     "mappedRoleNames"
 })
-@ManagementObject(properties=ManagementProperties.EXPLICIT)
 public class DataPolicyMetadata implements DataPolicy, Serializable {
 	private static final long serialVersionUID = -4119646357275977190L;
 	
@@ -70,8 +61,6 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
     protected List<String> mappedRoleNames = new ArrayList<String>();
 
 	@Override
-	@ManagementProperty(description="Policy Name")
-	@ManagementObjectID(type="policy")
     public String getName() {
         return name;
     }
@@ -81,7 +70,6 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
     }
     
     @Override
-    @ManagementProperty(description="Policy Description")
     public String getDescription() {
         return description;
     }
@@ -91,7 +79,6 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
     }
 
 	@Override
-	@ManagementProperty(description="Permissions in a Data Policy", managed=true)
 	public List<DataPermission> getPermissions() {
 		return new ArrayList<DataPermission>(this.permissions.getMap().values());
 	}
@@ -110,7 +97,6 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 	}
 	
     @Override
-    @ManagementProperty(description="Mapped Container role names mapped to this policy")    
     public List<String> getMappedRoleNames() {
 		return mappedRoleNames;
 	}
@@ -150,7 +136,6 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         "allowExecute",
         "allowAlter"
     })	
-    @ManagementObject(properties=ManagementProperties.EXPLICIT)
 	public static class PermissionMetaData implements DataPermission, Serializable {
 		private static final long serialVersionUID = 7034744531663164277L;
         
@@ -170,8 +155,6 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         protected Boolean allowAlter;
         
         @Override
-        @ManagementProperty(description="Resource Name, for which permission defined")
-        //@ManagementObjectID(type="permission")
         @XmlElement(name = "resource-name", required = true)
         public String getResourceName() {
             return resourceName;
@@ -182,7 +165,6 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         }
 
         @Override
-        @ManagementProperty(description="Allows Create")
         public Boolean getAllowCreate() {
             return allowCreate;
         }
@@ -192,7 +174,6 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         }
 
         @Override
-        @ManagementProperty(description="Allows Read")
         public Boolean getAllowRead() {
             return allowRead;
         }
@@ -202,7 +183,6 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         }
 
         @Override
-        @ManagementProperty(description="Allows Update")
         public Boolean getAllowUpdate() {
             return allowUpdate;
         }
@@ -212,7 +192,6 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         }
 
         @Override
-        @ManagementProperty(description="Allows Delete")
         public Boolean getAllowDelete() {
             return allowDelete;
         }
@@ -265,13 +244,11 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         }
         
         @Override
-        @ManagementProperty(description="Allows Alter")
         public Boolean getAllowAlter() {
 			return allowAlter;
 		}
 
         @Override
-        @ManagementProperty(description="Allows Execute")
 		public Boolean getAllowExecute() {
 			return allowExecute;
 		}
@@ -303,7 +280,6 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 	}
 
     @Override
-    @ManagementProperty(description="Indicates if the role is mapped to any authenticated user.")
 	public boolean isAnyAuthenticated() {
 		return this.anyAuthenticated;
 	}

@@ -24,12 +24,9 @@ package org.teiid.adminapi.impl;
 
 import java.util.Date;
 
-import org.jboss.managed.api.annotation.ManagementProperty;
-import org.jboss.metatype.api.annotations.MetaMapping;
 import org.teiid.adminapi.Transaction;
 
 
-@MetaMapping(TransactionMetadataMapper.class)
 public class TransactionMetadata extends AdminObjectImpl implements Transaction {
 
 	private static final long serialVersionUID = -8588785315218789068L;
@@ -39,7 +36,6 @@ public class TransactionMetadata extends AdminObjectImpl implements Transaction 
 	private long createdTime;
 
 	@Override
-	@ManagementProperty(description="Session ID", readOnly=true)
 	public String getAssociatedSession() {
 		return associatedSession;
 	}
@@ -49,7 +45,6 @@ public class TransactionMetadata extends AdminObjectImpl implements Transaction 
 	}
 
 	@Override
-	@ManagementProperty(description="Scope", readOnly=true)
 	public String getScope() {
 		return scope;
 	}
@@ -59,7 +54,6 @@ public class TransactionMetadata extends AdminObjectImpl implements Transaction 
 	}
 
 	@Override
-	@ManagementProperty(description="ID", readOnly=true)
 	public String getId() {
 		return id;
 	}
@@ -69,7 +63,6 @@ public class TransactionMetadata extends AdminObjectImpl implements Transaction 
 	}
 	
 	@Override
-	@ManagementProperty(description="Transaction created time", readOnly=true)
 	public long getCreatedTime() {
 		return createdTime;
 	}

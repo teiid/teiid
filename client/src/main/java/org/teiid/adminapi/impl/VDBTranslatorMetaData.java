@@ -28,16 +28,10 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
-import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementObjectID;
-import org.jboss.managed.api.annotation.ManagementProperties;
-import org.jboss.managed.api.annotation.ManagementProperty;
-import org.jboss.managed.api.annotation.ManagementPropertyFactory;
 import org.teiid.adminapi.Translator;
 
 
 @XmlAccessorType(XmlAccessType.NONE)
-@ManagementObject(properties=ManagementProperties.EXPLICIT)
 public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator {
 	private static final long serialVersionUID = -3454161477587996138L;
 	private String type;
@@ -46,8 +40,6 @@ public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator
 	private String moduleName;
 	
 	@Override
-	@ManagementProperty(description="Name of the Translator", mandatory = true)
-	@ManagementObjectID(type="translator")
 	public String getName() {
 		return super.getName();
 	}	
@@ -58,7 +50,6 @@ public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator
 	}
 	
 	@Override
-	@ManagementProperty(description="Base type of Translator", mandatory = true)
 	public String getType() {
 		return type;
 	}
@@ -70,8 +61,6 @@ public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator
 	
 	@Override
 	@XmlElement(name = "property", type = PropertyMetadata.class)
-	@ManagementProperty(name="property", description = "Translator Properties", managed=true)
-	@ManagementPropertyFactory(TranslatorPropertyFactory.class)
 	public List<PropertyMetadata> getJAXBProperties(){
 		return super.getJAXBProperties();
 	}	
@@ -89,7 +78,6 @@ public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator
 		addProperty(EXECUTION_FACTORY_CLASS, clazz.getName());
 	}
 	
-	@ManagementProperty(description="Translator Description")
 	public String getDescription() {
 		return this.description;
 	}

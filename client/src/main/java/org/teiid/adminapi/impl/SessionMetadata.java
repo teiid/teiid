@@ -24,10 +24,7 @@ package org.teiid.adminapi.impl;
 import java.util.Date;
 
 import javax.security.auth.Subject;
-import javax.security.auth.login.LoginContext;
 
-import org.jboss.managed.api.annotation.ManagementProperty;
-import org.jboss.metatype.api.annotations.MetaMapping;
 import org.teiid.adminapi.Session;
 import org.teiid.client.security.SessionToken;
 
@@ -36,7 +33,6 @@ import org.teiid.client.security.SessionToken;
 /**
  * Add and delete properties also in the Mapper class for correct wrapping for profile service.
  */
-@MetaMapping(SessionMetadataMapper.class)
 public class SessionMetadata extends AdminObjectImpl implements Session {
 
 	private static final long serialVersionUID = 918638989081830034L;
@@ -54,12 +50,11 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
     //server session state
     private transient VDBMetaData vdb;
     private transient SessionToken sessionToken;
-    private transient LoginContext loginContext;
+    private transient Subject subject;
     private transient Object securityContext;
     private transient boolean embedded;
 
 	@Override
-	@ManagementProperty(description="Application assosiated with Session", readOnly=true)
 	public String getApplicationName() {
 		return this.applicationName;
 	}
@@ -69,7 +64,6 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	}	
     
 	@Override
-	@ManagementProperty(description="When session created", readOnly=true)
 	public long getCreatedTime() {
 		return this.createdTime;
 	}
@@ -79,7 +73,6 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	}
 
 	@Override
-	@ManagementProperty(description="Host name from where the session created", readOnly=true)
 	public String getClientHostName() {
 		return this.clientHostName;
 	}
@@ -89,7 +82,6 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	}
 
 	@Override
-	@ManagementProperty(description="IP address from where session is created", readOnly=true)
 	public String getIPAddress() {
 		return this.ipAddress;
 	}
@@ -99,7 +91,6 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	}
 
 	@Override
-	@ManagementProperty(description="Last ping time", readOnly=true)
 	public long getLastPingTime() {
 		return this.lastPingTime;
 	}
@@ -109,7 +100,6 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	}
 
 	@Override
-	@ManagementProperty(description="Session ID", readOnly=true)
 	public String getSessionId() {
 		return this.sessionId;
 	}
@@ -119,7 +109,6 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	}
 
 	@Override
-	@ManagementProperty(description="User name assosiated with session", readOnly=true)
 	public String getUserName() {
 		return this.userName;
 	}
@@ -129,7 +118,6 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	}
 
 	@Override
-	@ManagementProperty(description="VDB name assosiated with session", readOnly=true)
 	public String getVDBName() {
 		return this.vdbName;
 	}
@@ -139,7 +127,6 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	}
 
 	@Override
-	@ManagementProperty(description="VDB version name assosiated with session", readOnly=true)
 	public int getVDBVersion() {
 		return this.vdbVersion;
 	}
@@ -149,7 +136,6 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	}
 
 	@Override
-	@ManagementProperty(description="Security Domain that session logged into", readOnly=true)
 	public String getSecurityDomain() {
 		return this.securityDomain;
 	}
@@ -190,12 +176,8 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 		this.sessionToken = sessionToken;
 	}
 
-	public LoginContext getLoginContext() {
-		return loginContext;
-	}
-
-	public void setLoginContext(LoginContext loginContext) {
-		this.loginContext = loginContext;
+	public void setSubject(Subject subject) {
+		this.subject = subject;
 	}
 
 	public Object getSecurityContext() {
@@ -207,7 +189,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	}	
 	
 	public Subject getSubject() {
-		return this.loginContext.getSubject();
+		return this.subject;
 	}
 	
 	public void setEmbedded(boolean embedded) {

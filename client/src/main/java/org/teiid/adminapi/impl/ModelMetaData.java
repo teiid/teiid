@@ -28,17 +28,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.XmlValue;
+import javax.xml.bind.annotation.*;
 
-import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementObjectID;
-import org.jboss.managed.api.annotation.ManagementProperties;
-import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData.ValidationError.Severity;
 
@@ -50,7 +41,6 @@ import org.teiid.adminapi.impl.ModelMetaData.ValidationError.Severity;
     "sources",
     "errors"
 })
-@ManagementObject(properties=ManagementProperties.EXPLICIT)
 public class ModelMetaData extends AdminObjectImpl implements Model {
 	
 	private static final int DEFAULT_ERROR_HISTORY = 10;
@@ -82,9 +72,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     @XmlElement(name = "validation-error")
     protected List<ValidationError> errors;    
     
-	@ManagementProperty(description="Model Name")
 	@XmlAttribute(name = "name", required = true)
-	@ManagementObjectID(type="models")
 	public String getName() {
 		return super.getName();
 	}    
@@ -95,7 +83,6 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	}
 
 	@Override
-	@ManagementProperty(description = "Model description")	
 	public String getDescription() {
 		return description;
 	}
@@ -105,19 +92,16 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	}	
 	
 	@Override
-	@ManagementProperty(description = "Is Model Source model")
     public boolean isSource() {
 		return getModelType() == Model.Type.PHYSICAL;
 	}
 
 	@Override
-	@ManagementProperty(description = "Is Model Visible")
 	public boolean isVisible() {
 		return this.visible;
 	}
 
 	@Override
-	@ManagementProperty(description = "Model Type")
 	public Type getModelType() {
 		try {
 			return Type.valueOf(modelType.toUpperCase());
@@ -126,7 +110,6 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		}
 	}
 	
-	@ManagementProperty(description = "Path to model file inside the archive")
     public String getPath() {
 		return path;
 	}
@@ -136,7 +119,6 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	}	
 
 	@Override
-	@ManagementProperty(description = "Does Model supports multi-source bindings")
     public boolean isSupportsMultiSourceBindings() {
 		String supports = getPropertyValue(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY);
 		return Boolean.parseBoolean(supports);
@@ -144,7 +126,6 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	
 	@Override
 	@XmlElement(name = "property", type = PropertyMetadata.class)
-	@ManagementProperty(description = "Model Properties", managed=true)
 	public List<PropertyMetadata> getJAXBProperties(){
 		return super.getJAXBProperties();
 	}
@@ -169,7 +150,6 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     	this.visible = value;
     }    
 
-    @ManagementProperty(description = "Source Mappings (defined by user)", managed=true)
 	public List<SourceMappingMetadata> getSourceMappings(){
 		return new ArrayList<SourceMappingMetadata>(this.sources.getMap().values());
 	}
@@ -205,9 +185,12 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     
 	public void addSourceMapping(String name, String translatorName, String connJndiName) {
 		this.sources.getMap().put(name, new SourceMappingMetadata(name, translatorName, connJndiName));
+	}
+	
+	public void addSourceMapping(SourceMappingMetadata source) {
+		this.sources.getMap().put(source.getName(), new SourceMappingMetadata(source.getName(), source.getTranslatorName(), source.getConnectionJndiName()));
 	}    
 	
-	@ManagementProperty(description = "Model Validity Errors", readOnly=true, managed=true)
 	public List<ValidationError> getErrors(){
 		return getValidationErrors(Severity.ERROR);
 	}
@@ -241,6 +224,18 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         return ve;
     }
     
+    public synchronized ValidationError addError(ValidationError ve) {
+        if (this.errors == null) {
+            this.errors = new LinkedList<ValidationError>();
+        }
+        this.errors.add(ve);
+        if (this.errors.size() > DEFAULT_ERROR_HISTORY) {
+        	this.errors.remove(0);
+        }
+        return ve;
+    }
+    
+    
     public synchronized boolean removeError(ValidationError remove) {
     	if (this.errors == null) {
     		return false;
@@ -256,7 +251,6 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     @XmlType(name = "", propOrder = {
         "value"
     })
-    @ManagementObject(properties=ManagementProperties.EXPLICIT)
     public static class ValidationError implements Serializable{
 		private static final long serialVersionUID = 2044197069467559527L;
 
@@ -278,7 +272,6 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         	this.value = msg;
         }
     	
-        @ManagementProperty (description="Error Message")
         public String getValue() {
 			return value;
 		}
@@ -287,7 +280,6 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 			this.value = value;
 		}
 
-		@ManagementProperty (description="Severity")
 		public String getSeverity() {
 			return severity;
 		}
@@ -296,7 +288,6 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 			this.severity = severity;
 		}       
 		
-		@ManagementProperty (description="Path")
         public String getPath() {
 			return path;
 		}

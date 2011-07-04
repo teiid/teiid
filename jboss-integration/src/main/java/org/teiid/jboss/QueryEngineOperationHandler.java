@@ -55,7 +55,7 @@ abstract class QueryEngineOperationHandler implements OperationHandler, Descript
 
                 @Override
                 public void execute(RuntimeTaskContext context) throws OperationFailedException {
-                    ServiceController<?> sc = context.getServiceRegistry().getRequiredService(RuntimeEngineDeployer.SERVICE_NAME);
+                    ServiceController<?> sc = context.getServiceRegistry().getRequiredService(TeiidServiceNames.ENGINE);
                     RuntimeEngineDeployer engine = RuntimeEngineDeployer.class.cast(sc.getValue());
                     
                     resultHandler.handleResultFragment(ResultHandler.EMPTY_LOCATION, executeOperation(engine, operation));
@@ -80,6 +80,10 @@ abstract class QueryEngineOperationHandler implements OperationHandler, Descript
     	return RuntimeEngineDeployer.class.getSimpleName()+"."+this.operationName; //$NON-NLS-1$
     }
 	
+    protected String getReplyName() {
+    	return getBundleOperationName()+".reply"+DESCRIBE; //$NON-NLS-1$
+    }
+    
     protected String getParameterDescription(ResourceBundle bundle, String parmName) {
     	return bundle.getString(RuntimeEngineDeployer.class.getSimpleName()+"."+this.operationName+"."+parmName+DESCRIBE); //$NON-NLS-1$ //$NON-NLS-2$
     }    
@@ -130,7 +134,7 @@ class GetActiveSessions extends QueryEngineOperationHandler{
 		try {
 			Collection<SessionMetadata> sessions = engine.getActiveSessions();
 			for (SessionMetadata session:sessions) {
-				node.add(SessionMetadataMapper.wrap(session));
+				node.add(MetadataMapper.SessionMetadataMapper.wrap(session));
 			}
 		} catch (AdminException e) {
 			// TODO: handle exception in model node terms 
@@ -150,7 +154,7 @@ class GetRequestsPerSession extends QueryEngineOperationHandler{
 		
 		List<RequestMetadata> requests = engine.getRequestsForSession(operation.get(OperationsConstants.SESSION).asString());
 		for (RequestMetadata request:requests) {
-			node.add(RequestMetadataMapper.wrap(request));
+			node.add(MetadataMapper.RequestMetadataMapper.wrap(request));
 		}
 		return node;
 	}
@@ -178,7 +182,7 @@ class GetRequestsPerVDB extends QueryEngineOperationHandler{
 			int vdbVersion = operation.get(OperationsConstants.VDB_VERSION).asInt();
 			List<RequestMetadata> requests = engine.getRequestsUsingVDB(vdbName,vdbVersion);
 			for (RequestMetadata request:requests) {
-				node.add(RequestMetadataMapper.wrap(request));
+				node.add(MetadataMapper.RequestMetadataMapper.wrap(request));
 			}
 		} catch (AdminException e) {
 			// TODO: handle exception in model node terms 
@@ -210,7 +214,7 @@ class GetLongRunningQueries extends QueryEngineOperationHandler{
 		
 		List<RequestMetadata> requests = engine.getLongRunningRequests();
 		for (RequestMetadata request:requests) {
-			node.add(RequestMetadataMapper.wrap(request));
+			node.add(MetadataMapper.RequestMetadataMapper.wrap(request));
 		}
 		return node;
 	}
@@ -322,7 +326,7 @@ class CacheStatistics extends QueryEngineOperationHandler{
 	protected ModelNode executeOperation(RuntimeEngineDeployer engine, ModelNode operation) throws OperationFailedException {
 		String cacheType = operation.get(OperationsConstants.CACHE_TYPE).asString();
 		CacheStatisticsMetadata stats = engine.getCacheStatistics(cacheType);
-		return CacheStatisticsMetadataMapper.wrap(stats);
+		return MetadataMapper.CacheStatisticsMetadataMapper.wrap(stats);
 	}
 	
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
@@ -340,7 +344,7 @@ class WorkerPoolStatistics extends QueryEngineOperationHandler{
 	@Override
 	protected ModelNode executeOperation(RuntimeEngineDeployer engine, ModelNode operation) throws OperationFailedException {
 		WorkerPoolStatisticsMetadata stats = engine.getWorkerPoolStatistics();
-		return WorkerPoolStatisticsMetadataMapper.wrap(stats);
+		return MetadataMapper.WorkerPoolStatisticsMetadataMapper.wrap(stats);
 	}
 }
 
@@ -357,7 +361,7 @@ class ActiveTransactions extends QueryEngineOperationHandler{
 		node.get(TYPE).set(ModelType.LIST);
 		
 		for (TransactionMetadata txn:txns) {
-			node.add(TransactionMetadataMapper.wrap(txn));
+			node.add(MetadataMapper.TransactionMetadataMapper.wrap(txn));
 		}
 		
 		return node;
@@ -409,19 +413,19 @@ class MergeVDBs extends QueryEngineOperationHandler{
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SOURCE_VDBNAME, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SOURCE_VDBNAME, REQUIRED).set(true);
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SOURCE_VDBNAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.XID));
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SOURCE_VDBNAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.SOURCE_VDBNAME));
 		
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SOURCE_VDBVERSION, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SOURCE_VDBVERSION, REQUIRED).set(true);
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SOURCE_VDBVERSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.XID));
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SOURCE_VDBVERSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.SOURCE_VDBVERSION));
 
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TARGET_VDBNAME, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TARGET_VDBNAME, REQUIRED).set(true);
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TARGET_VDBNAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.XID));
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TARGET_VDBNAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.TARGET_VDBNAME));
 
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TARGET_VDBVERSION, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TARGET_VDBVERSION, REQUIRED).set(true);
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TARGET_VDBVERSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.XID));
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TARGET_VDBVERSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.TARGET_VDBVERSION));
 	}	
 }
 
@@ -463,18 +467,110 @@ class ExecuteQuery extends QueryEngineOperationHandler{
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_NAME, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_NAME, REQUIRED).set(true);
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_NAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.XID));
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_NAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.VDB_NAME));
 		
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, REQUIRED).set(true);
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.XID));
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.VDB_VERSION));
 
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SQL_QUERY, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SQL_QUERY, REQUIRED).set(true);
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SQL_QUERY, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.XID));
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SQL_QUERY, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.SQL_QUERY));
 
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TIMEOUT_IN_MILLI, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TIMEOUT_IN_MILLI, REQUIRED).set(true);
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TIMEOUT_IN_MILLI, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.XID));
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TIMEOUT_IN_MILLI, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.TIMEOUT_IN_MILLI));
+	}	
+}
+
+class GetVDB extends QueryEngineOperationHandler{
+	
+	protected GetVDB(String operationName) {
+		super(operationName);
+	}
+	@Override
+	protected ModelNode executeOperation(RuntimeEngineDeployer engine, ModelNode operation) throws OperationFailedException {
+		String vdbName = operation.get(OperationsConstants.VDB_NAME).asString();
+		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION).asInt();
+
+		VDBMetaData vdb = engine.getVDB(vdbName, vdbVersion);
+		return MetadataMapper.wrap(vdb);
+	}
+	
+	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_NAME, TYPE).set(ModelType.STRING);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_NAME, REQUIRED).set(true);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_NAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.VDB_NAME));
+		
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, TYPE).set(ModelType.STRING);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, REQUIRED).set(true);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.VDB_VERSION));
+	}	
+}
+
+class GetVDBs extends QueryEngineOperationHandler{
+	
+	protected GetVDBs(String operationName) {
+		super(operationName);
+	}
+	@Override
+	protected ModelNode executeOperation(RuntimeEngineDeployer engine, ModelNode operation) throws OperationFailedException {
+		List<VDBMetaData> vdbs = engine.getVDBs();
+		ModelNode node = new ModelNode();
+		node.get(TYPE).set(ModelType.LIST);
+		
+		for (VDBMetaData vdb:vdbs) {
+			node.add(MetadataMapper.wrap(vdb));
+		}
+		return node;
+	}
+	
+}
+
+class GetTranslators extends QueryEngineOperationHandler{
+	
+	protected GetTranslators(String operationName) {
+		super(operationName);
+	}
+	@Override
+	protected ModelNode executeOperation(RuntimeEngineDeployer engine, ModelNode operation) throws OperationFailedException {
+		List<VDBTranslatorMetaData> translators = engine.getTranslators();
+		ModelNode node = new ModelNode();
+		node.get(TYPE).set(ModelType.OBJECT);
+		
+		for (VDBTranslatorMetaData t:translators) {
+			node.add(MetadataMapper.VDBTranslatorMetaDataMapper.wrap(t));
+		}
+		return node;
+	}
+	
+	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
+		operationNode.get(REPLY_PROPERTIES, TYPE).set(ModelType.LIST);
+		operationNode.get(REPLY_PROPERTIES, VALUE_TYPE).set(ModelType.OBJECT);
+		operationNode.get(REPLY_PROPERTIES, DESCRIPTION).set(bundle.getString(getReplyName()));
+	}	
+}
+
+class GetTranslator extends QueryEngineOperationHandler{
+	
+	protected GetTranslator(String operationName) {
+		super(operationName);
+	}
+	
+	@Override
+	protected ModelNode executeOperation(RuntimeEngineDeployer engine, ModelNode operation) throws OperationFailedException {
+		String translatorName = operation.get(OperationsConstants.TRANSLATOR_NAME).asString();
+		
+		VDBTranslatorMetaData translator = engine.getTranslator(translatorName);
+		return MetadataMapper.VDBTranslatorMetaDataMapper.wrap(translator);
+	}
+	
+	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TRANSLATOR_NAME, TYPE).set(ModelType.STRING);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TRANSLATOR_NAME, REQUIRED).set(true);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TRANSLATOR_NAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.TRANSLATOR_NAME));
+		
+		operationNode.get(REPLY_PROPERTIES, TYPE).set(ModelType.OBJECT);
+		operationNode.get(REPLY_PROPERTIES, DESCRIPTION).set(bundle.getString(getReplyName()));
 	}	
 }

@@ -22,24 +22,10 @@
 package org.teiid.adminapi.impl;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.*;
 
-import org.jboss.managed.api.annotation.ManagementComponent;
-import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementObjectID;
-import org.jboss.managed.api.annotation.ManagementProperties;
-import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
@@ -48,7 +34,6 @@ import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
 import org.teiid.core.util.StringUtil;
 
 
-@ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="vdb"), properties=ManagementProperties.EXPLICIT)
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = "", propOrder = {
     "description",
@@ -110,14 +95,11 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	private ConnectionType connectionType = VDB.ConnectionType.BY_VERSION;
 	private boolean removed;
 
-	@ManagementProperty(description="Name of the VDB")
 	@XmlAttribute(name = "name", required = true)
 	public String getName() {
 		return super.getName();
 	}
 	
-	@ManagementProperty(description="Full Name of the VDB")
-	@ManagementObjectID(type="vdb")
 	public String getFullName() {
 		return getName() + VERSION_DELIM + getVersion();
 	}
@@ -136,7 +118,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	}
 	
 	@Override
-	@ManagementProperty(description="Collections Allowed")
 	public ConnectionType getConnectionType() {
 		return this.connectionType;
 	}
@@ -145,8 +126,11 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		this.connectionType = allowConnections;
 	}
 	
+	public void setConnectionType(String allowConnections) {
+		this.connectionType = ConnectionType.valueOf(allowConnections);
+	}
+	
 	@Override
-	@ManagementProperty(description="VDB Status")
 	public Status getStatus() {
 		return this.status;
 	}
@@ -155,8 +139,12 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		this.status = s;
 	}
 	
+	public void setStatus(String s) {
+		this.status = Status.valueOf(s);
+	}
+	
+	
 	@Override
-	@ManagementProperty(description="VDB version")
 	public int getVersion() {
 		return this.version;
 	}
@@ -166,7 +154,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	}	
 		
 	@Override
-	@ManagementProperty(description = "The VDB file url")
 	public String getUrl() {
 		return this.fileUrl;
 	}
@@ -194,7 +181,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	}
 
 	@Override
-	@ManagementProperty(description="Models in a VDB", managed=true)
 	public List<Model> getModels(){
 		return new ArrayList<Model>(this.models.getMap().values());
 	}
@@ -220,7 +206,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	}	
 	
 	@Override
-	@ManagementProperty(description="Translators in a VDB", managed=true)
 	public List<Translator> getOverrideTranslators() {
 		return new ArrayList<Translator>(this.translators.getMap().values());
 	}
@@ -231,8 +216,11 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		}
 	}
 	
+	public void addOverideTranslator(VDBTranslatorMetaData t) {
+		this.translators.getMap().put(t.getName(), t);
+	}
+	
 	@Override
-	@ManagementProperty(description = "Description")	
 	public String getDescription() {
 		return this.description;
 	}
@@ -242,7 +230,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	}
 
 	@Override
-	@ManagementProperty(description = "VDB validity errors", readOnly=true)		
 	public List<String> getValidityErrors(){
 		List<String> allErrors = new ArrayList<String>();
 		for (ModelMetaData model:this.models.getMap().values()) {
@@ -259,7 +246,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	}
 
 	@Override
-	@ManagementProperty(description = "Is VDB Valid", readOnly=true)
     public boolean isValid() {
         if (!getValidityErrors().isEmpty()) {
             return false;
@@ -310,12 +296,10 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	// This one manages the JAXB binding
 	@Override
 	@XmlElement(name = "property", type = PropertyMetadata.class)
-	@ManagementProperty(description = "VDB Properties", managed=true)
 	public List<PropertyMetadata> getJAXBProperties(){
 		return super.getJAXBProperties();
 	}
 	
-	@ManagementProperty(description="Is this a Dynamic VDB")
 	public boolean isDynamic() {
 		return dynamic;
 	}
@@ -325,7 +309,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	}	
 	
 	@Override
-	@ManagementProperty(description="Data Policies in a VDB", managed=true)
 	public List<DataPolicy> getDataPolicies(){
 		return new ArrayList<DataPolicy>(this.dataPolicies.getMap().values());
 	}	

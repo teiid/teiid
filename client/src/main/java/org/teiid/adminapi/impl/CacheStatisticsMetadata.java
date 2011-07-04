@@ -21,11 +21,8 @@
  */
 package org.teiid.adminapi.impl;
 
-import org.jboss.managed.api.annotation.ManagementProperty;
-import org.jboss.metatype.api.annotations.MetaMapping;
 import org.teiid.adminapi.CacheStatistics;
 
-@MetaMapping(CacheStatisticsMetadataMapper.class)
 public class CacheStatisticsMetadata extends AdminObjectImpl implements CacheStatistics{
 
 	private static final long serialVersionUID = -3514505497661004560L;
@@ -35,7 +32,6 @@ public class CacheStatisticsMetadata extends AdminObjectImpl implements CacheSta
 	private int requestCount;
 	
 	@Override
-	@ManagementProperty(description="Number of total requests made to the cache", readOnly=true)
 	public int getRequestCount() {
 		return requestCount;
 	}
@@ -45,13 +41,11 @@ public class CacheStatisticsMetadata extends AdminObjectImpl implements CacheSta
 	}
 
 	@Override
-	@ManagementProperty(description="Cache hit ratio", readOnly=true)
 	public double getHitRatio() {
 		return this.hitRatio;
 	}
 
 	@Override
-	@ManagementProperty(description="Total number of cache entries", readOnly=true)
 	public int getTotalEntries() {
 		return this.totalEntries;
 	}

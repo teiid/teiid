@@ -31,7 +31,6 @@ import java.util.TreeMap;
 
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.teiid.adminapi.Translator;
-import org.teiid.adminapi.impl.TranslatorMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
@@ -92,7 +91,7 @@ public class TranslatorUtil {
 	public static ExecutionFactory buildExecutionFactory(Translator data) throws DeploymentUnitProcessingException {
 		ExecutionFactory executionFactory;
 		try {
-			String executionClass = data.getPropertyValue(TranslatorMetaData.EXECUTION_FACTORY_CLASS);
+			String executionClass = data.getPropertyValue(VDBTranslatorMetaData.EXECUTION_FACTORY_CLASS);
 			Object o = ReflectionHelper.create(executionClass, null, Thread.currentThread().getContextClassLoader());
 			if(!(o instanceof ExecutionFactory)) {
 				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("invalid_class", executionClass));//$NON-NLS-1$	

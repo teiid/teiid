@@ -22,24 +22,16 @@
 
 package org.teiid.services;
 
-import java.io.IOException;
 import java.security.Principal;
 import java.security.acl.Group;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import javax.security.auth.Subject;
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.callback.NameCallback;
-import javax.security.auth.callback.PasswordCallback;
-import javax.security.auth.callback.UnsupportedCallbackException;
-import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
+import org.jboss.as.security.plugins.SecurityDomainContext;
+import org.jboss.security.AuthenticationManager;
+import org.jboss.security.SimplePrincipal;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.runtime.RuntimePlugin;
@@ -54,10 +46,10 @@ import org.teiid.security.SecurityHelper;
  */
 public class TeiidLoginContext {
 	public static final String AT = "@"; //$NON-NLS-1$
-	private LoginContext loginContext;
+	private Subject subject;
 	private String userName;
 	private String securitydomain;
-	private Object credentials;
+	private Object securityContext;
 	private SecurityHelper securityHelper;
 	
 	public TeiidLoginContext(SecurityHelper helper) {
@@ -65,7 +57,7 @@ public class TeiidLoginContext {
 	}
 	
 	public void authenticateUser(String username, final Credentials credential, 
-			String applicationName, List<String> domains, boolean onlyallowPassthrough) 
+			String applicationName, List<String> domains, Map<String, SecurityDomainContext> securityDomainMap, boolean onlyallowPassthrough) 
 		throws LoginException {
         
         LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"authenticateUser", username, applicationName}); //$NON-NLS-1$
@@ -78,7 +70,8 @@ public class TeiidLoginContext {
 	        	if (existing != null) {
 					this.userName = getUserName(existing)+AT+domain;
 					this.securitydomain = domain;     
-					this.loginContext = createLoginContext(domain, existing);
+					this.subject = existing;
+					this.securityContext = this.securityHelper.getSecurityContext(domain);
 					return;
 	        	}
             }
@@ -89,40 +82,23 @@ public class TeiidLoginContext {
         // If username specifies a domain (user@domain) only that domain is authenticated against.
         // If username specifies no domain, then all domains are tried in order.
         for (String domain:getDomainsForUser(domains, username)) {
-        	        	
-            try {
-        		CallbackHandler handler = new CallbackHandler() {
-					@Override
-					public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
-						for (int i = 0; i < callbacks.length; i++) {
-							if (callbacks[i] instanceof NameCallback) {
-								NameCallback nc = (NameCallback)callbacks[i];
-								nc.setName(baseUsername);
-							} else if (callbacks[i] instanceof PasswordCallback) {
-								PasswordCallback pc = (PasswordCallback)callbacks[i];
-						        char[] password = null;
-						        if (credential != null) {
-						        	password = credential.getCredentialsAsCharArray();
-						        }
-								pc.setPassword(password);
-								credentials = password;
-							} else {
-								throw new UnsupportedCallbackException(callbacks[i], "Unrecognized Callback"); //$NON-NLS-1$
-							}
-						}
-					}
-        		};      	
-            	
-        		// this is the configured login for teiid
-        		this.loginContext = createLoginContext(domain,handler);
-				this.loginContext.login();
-				this.userName = baseUsername+AT+domain;
-				this.securitydomain = domain;
-				LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", username, "\""}); //$NON-NLS-1$ //$NON-NLS-2$
-				return;
-			} catch (LoginException e) {
-				LogManager.logDetail(LogConstants.CTX_SECURITY,e, e.getMessage()); 
-			}
+    		// this is the configured login for teiid
+        	SecurityDomainContext securityDomainContext = securityDomainMap.get(domain);
+        	if (securityDomainContext != null) {
+        		AuthenticationManager authManager = securityDomainContext.getAuthenticationManager();
+        		if (authManager != null) {
+                    Principal userPrincipal = new SimplePrincipal(username);
+                    Subject subject = new Subject();
+                    boolean isValid = authManager.isValid(userPrincipal, credential, subject);
+                    if (isValid) {
+        				this.userName = baseUsername+AT+domain;
+        				this.securitydomain = domain;
+        				this.securityContext = this.securityHelper.createSecurityContext(this.securitydomain, userPrincipal, credential, subject);
+        				LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", username, "\""}); //$NON-NLS-1$ //$NON-NLS-2$
+        				return;
+                    }            			
+        		}
+        	}
         }
         throw new LoginException(RuntimePlugin.Util.getString("SessionServiceImpl.The_username_0_and/or_password_are_incorrect", username )); //$NON-NLS-1$       
     }
@@ -137,18 +113,6 @@ public class TeiidLoginContext {
 		}
 		return null;
 	}
-
-	protected LoginContext createLoginContext(String domain, CallbackHandler handler) throws LoginException {
-    	return new LoginContext(domain, handler);
-    }
-	
-	protected LoginContext createLoginContext(String domain, Subject subject) throws LoginException {
-    	return new LoginContext(domain, subject);
-    }
-    
-    public LoginContext getLoginContext() {
-    	return this.loginContext;
-    }
     
     public String getUserName() {
     	return this.userName;
@@ -158,23 +122,12 @@ public class TeiidLoginContext {
     	return this.securitydomain;
     }
     
+    public Subject getSubject() {
+    	return this.subject;
+    }
+    
     public Object getSecurityContext() {
-    	Object sc = null;
-        if (this.loginContext != null) {
-        	sc = this.securityHelper.getSecurityContext(this.securitydomain);
-        	if ( sc == null){
-	        	Subject subject = this.loginContext.getSubject();
-	        	Principal principal = null;
-	        	for(Principal p:subject.getPrincipals()) {
-	        		if (this.userName.startsWith(p.getName())) {
-	        			principal = p;
-	        			break;
-	        		}
-	        	}
-	        	return this.securityHelper.createSecurityContext(this.securitydomain, principal, credentials, subject);
-        	}
-        }
-    	return sc;
+    	return this.securityContext;
     }
     
     static String getBaseUsername(String username) {

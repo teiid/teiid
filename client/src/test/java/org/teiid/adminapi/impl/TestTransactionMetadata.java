@@ -22,9 +22,9 @@
 
 package org.teiid.adminapi.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import org.jboss.metatype.api.values.MetaValue;
+import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 
 @SuppressWarnings("nls")
@@ -33,13 +33,60 @@ public class TestTransactionMetadata {
 	@Test public void testMapping() {
 		TransactionMetadata tm = new TransactionMetadata();
 		tm.setAssociatedSession("x");
-
-		TransactionMetadataMapper tmm = new TransactionMetadataMapper();
-		MetaValue mv = tmm.createMetaValue(tmm.getMetaType(), tm);
+		tm.setCreatedTime(1234);
+		tm.setId("tnx-id");
+		tm.setScope("scope");
 		
-		TransactionMetadata tm1 = tmm.unwrapMetaValue(mv);
+		ModelNode node = MetadataMapper.TransactionMetadataMapper.wrap(tm);
+		
+		TransactionMetadata tm1 = MetadataMapper.TransactionMetadataMapper.unwrap(node);
 		
 		assertEquals(tm.getAssociatedSession(), tm1.getAssociatedSession());
+		
+		assertEquals(tm.getCreatedTime(), tm1.getCreatedTime());
+		assertEquals(tm.getId(), tm1.getId());
+		assertEquals(tm.getScope(), tm1.getScope());
 	}
 
+	private static final String describe = "{\n" + 
+			"    \"type\" : {\n" + 
+			"        \"TYPE_MODEL_VALUE\" : \"OBJECT\"\n" + 
+			"    },\n" + 
+			"    \"attributes\" : {\n" + 
+			"        \"session-id\" : {\n" + 
+			"            \"type\" : {\n" + 
+			"                \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+			"            },\n" + 
+			"            \"description\" : \"Session Identifier\",\n" + 
+			"            \"required\" : true\n" + 
+			"        },\n" + 
+			"        \"txn-created-time\" : {\n" + 
+			"            \"type\" : {\n" + 
+			"                \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
+			"            },\n" + 
+			"            \"description\" : \"Transaction created time\",\n" + 
+			"            \"required\" : true\n" + 
+			"        },\n" + 
+			"        \"txn-scope\" : {\n" + 
+			"            \"type\" : {\n" + 
+			"                \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
+			"            },\n" + 
+			"            \"description\" : \"Transaction scope (Request, Local, Global)\",\n" + 
+			"            \"required\" : true\n" + 
+			"        },\n" + 
+			"        \"txn-id\" : {\n" + 
+			"            \"type\" : {\n" + 
+			"                \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+			"            },\n" + 
+			"            \"description\" : \"Transaction Identifier (XID)\",\n" + 
+			"            \"required\" : true\n" + 
+			"        }\n" + 
+			"    }\n" + 
+			"}";
+	@Test
+	public void testDescribe() {
+		ModelNode n = MetadataMapper.TransactionMetadataMapper.describe(new ModelNode());
+		//System.out.println(n.toJSONString(false));
+		assertEquals(describe, n.toJSONString(false));
+	}
 }

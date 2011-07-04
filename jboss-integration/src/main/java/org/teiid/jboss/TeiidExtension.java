@@ -57,6 +57,8 @@ public class TeiidExtension implements Extension {
 	private static final String TERMINATE_TRANSACTION = "terminate-transaction";
 	private static final String MERGE_VDBS = "merge-vdbs";
 	private static final String EXECUTE_QUERY = "execute-query";
+	private static final String GETVDBS = "getVDBs";
+	private static final String GETVDB = "getVDB";
 	
 	public static final String SUBSYSTEM_NAME = "teiid"; //$NON-NLS-1$
 	private static TeiidSubsystemParser parser = new TeiidSubsystemParser();
@@ -159,7 +161,13 @@ public class TeiidExtension implements Extension {
 		subsystem.registerOperationHandler(MERGE_VDBS, op, op);	
 		
 		op = new ExecuteQuery(EXECUTE_QUERY);
-		subsystem.registerOperationHandler(EXECUTE_QUERY, op, op);			
+		subsystem.registerOperationHandler(EXECUTE_QUERY, op, op);	
+		
+		op = new GetVDBs(GETVDBS);
+		subsystem.registerOperationHandler(GETVDBS, op, op);
+		
+		op = new GetVDB(GETVDB);
+		subsystem.registerOperationHandler(GETVDB, op, op);		
 	}
 
 	@Override

@@ -94,7 +94,11 @@
         <artifactId>jboss-as-connector</artifactId>
         <scope>provided</scope>
     </dependency>     
-                            
+    <dependency>
+        <groupId>org.jboss.as</groupId>
+        <artifactId>jboss-as-security</artifactId>
+        <scope>provided</scope>
+    </dependency>                            
     <!-- 
     <dependency>
         <groupId>org.jboss</groupId>

@@ -31,11 +31,13 @@ import javax.transaction.TransactionManager;
 
 import org.jboss.as.controller.*;
 import org.jboss.as.controller.operations.common.Util;
+import org.jboss.as.security.plugins.SecurityDomainContext;
 import org.jboss.as.server.BootOperationContext;
 import org.jboss.as.server.BootOperationHandler;
 import org.jboss.as.server.deployment.Phase;
 import org.jboss.as.server.services.net.SocketBinding;
 import org.jboss.dmr.ModelNode;
+import org.jboss.msc.inject.ConcurrentMapInjector;
 import org.jboss.msc.service.*;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
@@ -43,9 +45,10 @@ import org.teiid.cache.jboss.ClusterableCacheFactory;
 import org.teiid.deployers.*;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.jboss.deployers.RuntimeEngineDeployer;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.services.BufferServiceImpl;
-import org.teiid.services.SessionServiceImpl;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.SSLConfiguration;
 import org.teiid.transport.SocketConfiguration;
@@ -79,9 +82,6 @@ class QueryEngineAdd implements ModelAddOperationHandler, BootOperationHandler {
                 	TranslatorRepositoryService translatorService = new TranslatorRepositoryService(translatorRepo);
                 	target.addService(TeiidServiceNames.TRANSLATOR_REPO, translatorService);
                 	
-                	final SessionServiceImpl sessionService = buildSessionService(queryEngineNode);
-                	sessionService.setVDBRepository(vdbRepo);
-                	
                 	final BufferServiceImpl bufferManager = buildBufferManager(queryEngineNode.get(Configuration.BUFFER_SERVICE));
                 	CacheFactory cacheFactory = getCacheFactory(queryEngineNode.get(Configuration.CACHE_FACORY));
                 	
@@ -100,16 +100,16 @@ class QueryEngineAdd implements ModelAddOperationHandler, BootOperationHandler {
                 	RuntimeEngineDeployer engine = buildQueryEngine(queryEngineNode);
                 	engine.setJdbcSocketConfiguration(jdbc);
                 	engine.setOdbcSocketConfiguration(odbc);
-                	engine.setSessionService(sessionService);
                 	engine.setBufferService(bufferManager);
                 	engine.setVDBRepository(vdbRepo);
                 	engine.setCacheFactory(cacheFactory);
                 	engine.setResultsetCacheConfig(resultsetCache);
                 	engine.setPreparedPlanCacheConfig(preparePlanCache);
                 	engine.setSecurityHelper(new JBossSecurityHelper());
+                	engine.setTranslatorRepository(translatorRepo);
                 	
                     
-                    ServiceBuilder<ClientServiceRegistry> serviceBuilder = target.addService(RuntimeEngineDeployer.SERVICE_NAME, engine);
+                    ServiceBuilder<ClientServiceRegistry> serviceBuilder = target.addService(TeiidServiceNames.ENGINE, engine);
                     
                     serviceBuilder.addDependency(ServiceName.JBOSS.append("connector", "workmanager"), WorkManager.class, engine.workManagerInjector); //$NON-NLS-1$ //$NON-NLS-2$
                     serviceBuilder.addDependency(ServiceName.JBOSS.append("txn", "XATerminator"), XATerminator.class, engine.xaTerminatorInjector); //$NON-NLS-1$ //$NON-NLS-2$
@@ -117,18 +117,27 @@ class QueryEngineAdd implements ModelAddOperationHandler, BootOperationHandler {
                     serviceBuilder.addDependency(ServiceName.JBOSS.append("thread", "executor", asyncExecutor), Executor.class, engine.threadPoolInjector); //$NON-NLS-1$ //$NON-NLS-2$
                     serviceBuilder.addDependency(ServiceName.JBOSS.append("binding", jdbc.getSocketBinding()), SocketBinding.class, engine.jdbcSocketBindingInjector); //$NON-NLS-1$
                     serviceBuilder.addDependency(ServiceName.JBOSS.append("binding", odbc.getSocketBinding()), SocketBinding.class, engine.odbcSocketBindingInjector); //$NON-NLS-1$
+                    
+                    // add security domains
+                    String domainNameOrder = queryEngineNode.get(Configuration.JDBC_SECURITY_DOMAIN).asString();
+                    if (domainNameOrder != null && domainNameOrder.trim().length()>0) {
+                    	LogManager.logInfo(LogConstants.CTX_SECURITY, "Security Enabled: true"); //$NON-NLS-1$
+            	        String[] domainNames = domainNameOrder.split(","); //$NON-NLS-1$
+            	        for (String domainName : domainNames) {
+            	            serviceBuilder.addDependency(ServiceName.JBOSS.append("security", "security-domain", domainName), SecurityDomainContext.class, new ConcurrentMapInjector<String,SecurityDomainContext>(engine.securityDomains, domainName)); //$NON-NLS-1$ //$NON-NLS-2$
+            	        }
+                    }
+                    
                     serviceBuilder.addListener(new AbstractServiceListener<Object>() {
                     	@Override
                     	public void serviceStarting(ServiceController<?> serviceController) {
                     		vdbRepo.start();
-                    		sessionService.start();
                     		bufferManager.start();
                         }     
                         
                         @Override
                         public void serviceStopped(ServiceController<?> serviceController) {
                         	bufferManager.stop();
-                        	sessionService.stop();
                         }
                         
                         @Override
@@ -213,25 +222,18 @@ class QueryEngineAdd implements ModelAddOperationHandler, BootOperationHandler {
     	}
     	if (node.get(Configuration.DETECTING_CHANGE_EVENTS) != null) {
     		engine.setDetectingChangeEvents(node.get(Configuration.DETECTING_CHANGE_EVENTS).asBoolean());
-    	}	                	
+    	}	             
+    	if (node.get(Configuration.SESSION_EXPIRATION_TIME_LIMIT) != null) {
+    		engine.setSessionExpirationTimeLimit(node.get(Configuration.SESSION_EXPIRATION_TIME_LIMIT).asInt());
+    	}
+    	if (node.get(Configuration.MAX_SESSIONS_ALLOWED) != null) {
+    		engine.setSessionMaxLimit(node.get(Configuration.MAX_SESSIONS_ALLOWED).asInt());
+    	}		                	
+    	
 		return engine;
 	}
 
 
-	private SessionServiceImpl buildSessionService(ModelNode node) {
-    	SessionServiceImpl sessionService = new SessionServiceImpl();
-    	if (node.get(Configuration.JDBC_SECURITY_DOMAIN) != null) {
-    		sessionService.setSecurityDomains(node.get(Configuration.JDBC_SECURITY_DOMAIN).asString());
-    	}
-    	if (node.get(Configuration.SESSION_EXPIRATION_TIME_LIMIT) != null) {
-    		sessionService.setSessionExpirationTimeLimit(node.get(Configuration.SESSION_EXPIRATION_TIME_LIMIT).asInt());
-    	}
-    	if (node.get(Configuration.MAX_SESSIONS_ALLOWED) != null) {
-    		sessionService.setSessionMaxLimit(node.get(Configuration.MAX_SESSIONS_ALLOWED).asInt());
-    	}		                	
-    	return sessionService;
-    }
-    
     private VDBRepository buildVDBRepository(ModelNode node) {
     	SystemFunctionManager systemFunctionManager = new SystemFunctionManager();
     	if (node.get(Configuration.ALLOW_ENV_FUNCTION) != null) {

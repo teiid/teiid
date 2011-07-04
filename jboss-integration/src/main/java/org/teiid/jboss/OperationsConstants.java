@@ -35,5 +35,6 @@ class OperationsConstants {
 	public static final String TARGET_VDBVERSION = "target-vdb-version";//$NON-NLS-1$
 	public static final String SQL_QUERY = "sql-query";//$NON-NLS-1$
 	public static final String TIMEOUT_IN_MILLI = "timeout-in-milli";//$NON-NLS-1$
+	public static final String TRANSLATOR_NAME = "translator-name"; //$NON-NLS-1$
 
 }

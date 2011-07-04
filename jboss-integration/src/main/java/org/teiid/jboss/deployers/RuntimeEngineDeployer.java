@@ -30,10 +30,7 @@ import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -42,12 +39,13 @@ import javax.resource.spi.work.WorkManager;
 import javax.security.auth.login.LoginException;
 import javax.transaction.TransactionManager;
 
+import org.jboss.as.security.plugins.SecurityDomainContext;
 import org.jboss.as.server.services.net.SocketBinding;
 import org.jboss.msc.service.Service;
-import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
+import org.jboss.netty.util.internal.ConcurrentHashMap;
 import org.jboss.util.naming.Util;
 import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
@@ -70,6 +68,7 @@ import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.LRUCache;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
+import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.process.*;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.SessionService;
@@ -91,14 +90,14 @@ import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.processor.DdlPlan;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.security.SecurityHelper;
+import org.teiid.services.SessionServiceImpl;
 import org.teiid.transport.*;
 import org.teiid.vdb.runtime.VDBKey;
 
 
 public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManagement, Serializable , ClientServiceRegistry, EventDistributor, EventDistributorFactory, Service<ClientServiceRegistry>  {
 	private static final long serialVersionUID = -4676205340262775388L;
-	public static final ServiceName SERVICE_NAME = ServiceName.JBOSS.append("teiid", "runtime"); //$NON-NLS-1$ //$NON-NLS-2$
-	
+		
 	private transient SocketConfiguration jdbcSocketConfiguration;
 	private transient SocketConfiguration odbcSocketConfiguration;
 	private transient SocketListener jdbcSocket;	
@@ -106,16 +105,19 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	private transient TransactionServerImpl transactionServerImpl = new TransactionServerImpl();
 		
 	private transient DQPCore dqpCore = new DQPCore();
-	private transient SessionService sessionService;
+	private transient SessionServiceImpl sessionService;
 	private transient ILogon logon;
 	private transient ClientServiceRegistryImpl csr = new ClientServiceRegistryImpl();	
 	private transient VDBRepository vdbRepository;
+	private transient TranslatorRepository translatorRepository;
 
 	private transient String jndiName;
 
 	private String eventDistributorName;
 	private transient EventDistributor eventDistributor;
-	
+    private long sessionMaxLimit = SessionService.DEFAULT_MAX_SESSIONS;
+	private long sessionExpirationTimeLimit = SessionService.DEFAULT_SESSION_EXPIRATION;
+
 	// TODO: remove public?
 	public final InjectedValue<WorkManager> workManagerInjector = new InjectedValue<WorkManager>();
 	public final InjectedValue<XATerminator> xaTerminatorInjector = new InjectedValue<XATerminator>();
@@ -123,6 +125,9 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	public final InjectedValue<Executor> threadPoolInjector = new InjectedValue<Executor>();
 	public final InjectedValue<SocketBinding> jdbcSocketBindingInjector = new InjectedValue<SocketBinding>();
 	public final InjectedValue<SocketBinding> odbcSocketBindingInjector = new InjectedValue<SocketBinding>();
+	public final ConcurrentMap<String, SecurityDomainContext> securityDomains = new ConcurrentHashMap<String, SecurityDomainContext>();
+	private LinkedList<String> securityDomainNames = new LinkedList<String>();
+	
 	
     public RuntimeEngineDeployer() {
 		// TODO: this does not belong here
@@ -145,6 +150,14 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		setWorkManager(this.workManagerInjector.getValue());
 		setXATerminator(xaTerminatorInjector.getValue());
 		setTransactionManager(txnManagerInjector.getValue());
+		
+		this.sessionService = new SessionServiceImpl(this.securityDomainNames, this.securityDomains);
+		this.sessionService.setSessionExpirationTimeLimit(this.sessionExpirationTimeLimit);
+		this.sessionService.setSessionMaxLimit(this.sessionMaxLimit);
+		this.sessionService.setDqp(this.dqpCore);
+		this.sessionService.setVDBRepository(this.vdbRepository);
+		this.sessionService.start();
+		
 		
 		this.jdbcSocketConfiguration.setHostAddress(this.jdbcSocketBindingInjector.getValue().getAddress());
 		this.jdbcSocketConfiguration.setPortNumber(this.jdbcSocketBindingInjector.getValue().getPort());
@@ -284,6 +297,9 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     		this.odbcSocket.stop();
     		this.odbcSocket = null;
     	}      	
+    	
+    	this.sessionService.stop();
+    	
     	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("engine_stopped", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
     }
     
@@ -332,12 +348,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     public void setWorkManager(WorkManager mgr) {
     	this.transactionServerImpl.setWorkManager(mgr);
     }
-	
-	public void setSessionService(SessionService service) {
-		this.sessionService = service;
-		service.setDqp(this.dqpCore);
-	}
-	
+		
 	public void setBufferService(BufferService service) {
 		this.dqpCore.setBufferService(service);
 	}
@@ -474,7 +485,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		
 		SessionMetadata session = null;
 		try {
-			session = this.sessionService.createSession(user, null, "JOPR", properties, false, false); //$NON-NLS-1$
+			session = this.sessionService.createSession(user, null, "JOPR", properties, false); //$NON-NLS-1$
 		} catch (SessionServiceException e1) {
 			throw new AdminProcessingException(e1);
 		} catch (LoginException e1) {
@@ -745,4 +756,35 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		return ApplicationInfo.getInstance().getBuildNumber();
 	}
 	
+	public void setSessionMaxLimit(long limit) {
+		this.sessionMaxLimit = limit;
+	}
+		
+	public void setSessionExpirationTimeLimit(long limit) {
+		this.sessionExpirationTimeLimit = limit;
+	}		
+	
+	public void addSecurityDomain(String domain) {
+		this.securityDomainNames.add(domain);
+	}
+	
+	public List<VDBMetaData> getVDBs(){
+		return this.vdbRepository.getVDBs();
+	}
+	
+	public VDBMetaData getVDB(String vdbName, int version){
+		return this.vdbRepository.getVDB(vdbName, version);
+	}	
+	
+	public List<VDBTranslatorMetaData> getTranslators(){
+		return this.translatorRepository.getTranslators();
+	}
+
+	public VDBTranslatorMetaData getTranslator(String translatorName) {
+		return (VDBTranslatorMetaData)this.translatorRepository.getTranslatorMetaData(translatorName);
+	}
+	
+	public void setTranslatorRepository(TranslatorRepository translatorRepo) {
+		this.translatorRepository = translatorRepo;
+	}
 }

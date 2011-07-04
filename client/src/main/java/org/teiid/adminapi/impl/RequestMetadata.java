@@ -24,14 +24,11 @@ package org.teiid.adminapi.impl;
 
 import java.util.Date;
 
-import org.jboss.managed.api.annotation.ManagementProperty;
-import org.jboss.metatype.api.annotations.MetaMapping;
 import org.teiid.adminapi.Request;
 import org.teiid.core.util.HashCodeUtil;
 
 
 
-@MetaMapping(RequestMetadataMapper.class)
 public class RequestMetadata extends AdminObjectImpl implements Request {
 
 	private static final long serialVersionUID = -2779106368517784259L;
@@ -47,7 +44,6 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
     private ThreadState threadState = ThreadState.RUNNING;
     
     @Override
-    @ManagementProperty(description="Unique Identifier for Request", readOnly=true)
     public long getExecutionId() {
 		return executionId;
 	}
@@ -57,7 +53,6 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
 	}
     
     @Override
-    @ManagementProperty(description="State of the Request", readOnly=true)
     public ProcessingState getState() {
 		return processingState;
 	}
@@ -76,7 +71,6 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
 	}
     
     @Override
-    @ManagementProperty(description="Session ID", readOnly=true)
     public String getSessionId() {
         return this.sessionId;
     }
@@ -86,7 +80,6 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
     }
     
     @Override
-    @ManagementProperty(description="Start time for the request", readOnly=true)
     public long getStartTime() {
         return this.startTime;
     }
@@ -96,7 +89,6 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
     }    
 
     @Override
-    @ManagementProperty(description="Executing Command", readOnly=true)
     public String getCommand() {
         return this.command;
     }
@@ -106,7 +98,6 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
     }    
     
     @Override
-    @ManagementProperty(description="Is this Connector level request", readOnly=true)
     public boolean sourceRequest() {
 		return sourceRequest;
 	}
@@ -116,7 +107,6 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
 	}    
         
 	@Override
-	@ManagementProperty(description="Node Id", readOnly=true)
     public Integer getNodeId() {
         return this.nodeID;
     }
@@ -126,7 +116,6 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
     }
     
 	@Override
-	@ManagementProperty(description="Get Transaction XID if transaction involved", readOnly=true)
 	public String getTransactionId() {
 		return this.transactionId;
 	}

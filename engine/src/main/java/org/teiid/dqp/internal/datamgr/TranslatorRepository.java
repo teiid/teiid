@@ -23,6 +23,8 @@
 package org.teiid.dqp.internal.datamgr;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -48,4 +50,7 @@ public class TranslatorRepository implements Serializable {
 		return this.translatorRepo.remove(name);
 	}	
 	
+	public List<VDBTranslatorMetaData> getTranslators(){
+		return new ArrayList<VDBTranslatorMetaData>(translatorRepo.values());
+	}
 }

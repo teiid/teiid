@@ -29,14 +29,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
-import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementObjectID;
-import org.jboss.managed.api.annotation.ManagementProperties;
-import org.jboss.managed.api.annotation.ManagementProperty;
-
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = "")
-@ManagementObject(properties=ManagementProperties.EXPLICIT)
 public class SourceMappingMetadata implements Serializable {
 	private static final long serialVersionUID = -4417878417697685794L;
 
@@ -57,8 +51,6 @@ public class SourceMappingMetadata implements Serializable {
     	this.jndiName = connJndiName;
     }
 
-    @ManagementProperty (description="Source Name")
-    @ManagementObjectID(type="source")
 	public String getName() {
 		return name;
 	}
@@ -67,7 +59,6 @@ public class SourceMappingMetadata implements Serializable {
 		this.name = name;
 	}
 
-	@ManagementProperty (description="JNDI Name of the resource to assosiate with Source name")
 	public String getConnectionJndiName() {
 		// this default could be controlled if needed.
 		if (this.jndiName == null) {
@@ -80,7 +71,6 @@ public class SourceMappingMetadata implements Serializable {
 		this.jndiName = jndiName;
 	}
 	
-	@ManagementProperty (description="Translator Name")
     public String getTranslatorName() {
 		return translatorName;
 	}

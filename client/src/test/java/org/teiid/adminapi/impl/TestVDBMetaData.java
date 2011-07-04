@@ -21,14 +21,9 @@
  */
 package org.teiid.adminapi.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
-import java.io.StringReader;
-import java.io.StringWriter;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -42,12 +37,15 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.core.util.UnitTestUtil;
 
 @SuppressWarnings("nls")
 public class TestVDBMetaData {
@@ -55,60 +53,7 @@ public class TestVDBMetaData {
 	@Test
 	public void testMarshellUnmarshell() throws Exception {
 		
-		VDBMetaData vdb = new VDBMetaData();
-		vdb.setName("myVDB"); //$NON-NLS-1$
-		vdb.setDescription("vdb description"); //$NON-NLS-1$
-		vdb.setVersion(1);
-		vdb.addProperty("vdb-property", "vdb-value"); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		ModelMetaData modelOne = new ModelMetaData();
-		modelOne.setName("model-one"); //$NON-NLS-1$
-		modelOne.addSourceMapping("s1", "translator", "java:mybinding"); //$NON-NLS-1$ //$NON-NLS-2$
-		modelOne.setModelType(Model.Type.PHYSICAL); //$NON-NLS-1$
-		modelOne.addProperty("model-prop", "model-value"); //$NON-NLS-1$ //$NON-NLS-2$
-		modelOne.addProperty("model-prop", "model-value-override"); //$NON-NLS-1$ //$NON-NLS-2$
-		modelOne.setVisible(false);
-		modelOne.addError("ERROR", "There is an error in VDB"); //$NON-NLS-1$ //$NON-NLS-2$
-		modelOne.setDescription("model description");
-		
-		vdb.addModel(modelOne);
-		
-		ModelMetaData modelTwo = new ModelMetaData();
-		modelTwo.setName("model-two"); //$NON-NLS-1$
-		modelTwo.addSourceMapping("s1", "translator", "java:binding-one"); //$NON-NLS-1$ //$NON-NLS-2$
-		modelTwo.addSourceMapping("s2", "translator", "java:binding-two"); //$NON-NLS-1$ //$NON-NLS-2$
-		modelTwo.setModelType(Model.Type.VIRTUAL); //$NON-NLS-1$
-		modelTwo.addProperty("model-prop", "model-value"); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		vdb.addModel(modelTwo);
-		
-		TranslatorMetaData t1 = new TranslatorMetaData();
-		t1.setName("oracleOverride");
-		t1.setType("oracle");
-		t1.setDescription("hello world");
-		t1.addProperty("my-property", "my-value");
-		List<Translator> list = new ArrayList<Translator>();
-		list.add(t1);
-		vdb.setOverrideTranslators(list);
-		
-		DataPolicyMetadata roleOne = new DataPolicyMetadata();
-		roleOne.setName("roleOne"); //$NON-NLS-1$
-		roleOne.setDescription("roleOne described"); //$NON-NLS-1$
-		roleOne.setAllowCreateTemporaryTables(true);
-		PermissionMetaData perm1 = new PermissionMetaData();
-		perm1.setResourceName("myTable.T1"); //$NON-NLS-1$
-		perm1.setAllowRead(true);
-		roleOne.addPermission(perm1);
-		
-		PermissionMetaData perm2 = new PermissionMetaData();
-		perm2.setResourceName("myTable.T2"); //$NON-NLS-1$
-		perm2.setAllowRead(false);
-		perm2.setAllowDelete(true);
-		roleOne.addPermission(perm2);
-		
-		roleOne.setMappedRoleNames(Arrays.asList("ROLE1", "ROLE2")); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		vdb.addDataPolicy(roleOne);
+		VDBMetaData vdb = buildVDB();
 		
 		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         Schema schema = schemaFactory.newSchema(VDBMetaData.class.getResource("/vdb-deployer.xsd")); 		 //$NON-NLS-1$
@@ -127,6 +72,12 @@ public class TestVDBMetaData {
 		un.setSchema(schema);
 		vdb = (VDBMetaData)un.unmarshal(new StringReader(sw.toString()));
 		
+		validateVDB(vdb);
+	}
+
+	private void validateVDB(VDBMetaData vdb) {
+		ModelMetaData modelOne;
+		ModelMetaData modelTwo;
 		assertEquals("myVDB", vdb.getName()); //$NON-NLS-1$
 		assertEquals("vdb description", vdb.getDescription()); //$NON-NLS-1$
 		assertEquals(1, vdb.getVersion());
@@ -187,6 +138,65 @@ public class TestVDBMetaData {
 			}
 		}
 	}
+
+	private VDBMetaData buildVDB() {
+		VDBMetaData vdb = new VDBMetaData();
+		vdb.setName("myVDB"); //$NON-NLS-1$
+		vdb.setDescription("vdb description"); //$NON-NLS-1$
+		vdb.setVersion(1);
+		vdb.addProperty("vdb-property", "vdb-value"); //$NON-NLS-1$ //$NON-NLS-2$
+		vdb.addProperty("vdb-property2", "vdb-value2"); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		ModelMetaData modelOne = new ModelMetaData();
+		modelOne.setName("model-one"); //$NON-NLS-1$
+		modelOne.addSourceMapping("s1", "translator", "java:mybinding"); //$NON-NLS-1$ //$NON-NLS-2$
+		modelOne.setModelType(Model.Type.PHYSICAL); //$NON-NLS-1$
+		modelOne.addProperty("model-prop", "model-value"); //$NON-NLS-1$ //$NON-NLS-2$
+		modelOne.addProperty("model-prop", "model-value-override"); //$NON-NLS-1$ //$NON-NLS-2$
+		modelOne.setVisible(false);
+		modelOne.addError("ERROR", "There is an error in VDB"); //$NON-NLS-1$ //$NON-NLS-2$
+		modelOne.setDescription("model description");
+		
+		vdb.addModel(modelOne);
+		
+		ModelMetaData modelTwo = new ModelMetaData();
+		modelTwo.setName("model-two"); //$NON-NLS-1$
+		modelTwo.addSourceMapping("s1", "translator", "java:binding-one"); //$NON-NLS-1$ //$NON-NLS-2$
+		modelTwo.addSourceMapping("s2", "translator", "java:binding-two"); //$NON-NLS-1$ //$NON-NLS-2$
+		modelTwo.setModelType(Model.Type.VIRTUAL); //$NON-NLS-1$
+		modelTwo.addProperty("model-prop", "model-value"); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		vdb.addModel(modelTwo);
+		
+		VDBTranslatorMetaData t1 = new VDBTranslatorMetaData();
+		t1.setName("oracleOverride");
+		t1.setType("oracle");
+		t1.setDescription("hello world");
+		t1.addProperty("my-property", "my-value");
+		List<Translator> list = new ArrayList<Translator>();
+		list.add(t1);
+		vdb.setOverrideTranslators(list);
+		
+		DataPolicyMetadata roleOne = new DataPolicyMetadata();
+		roleOne.setName("roleOne"); //$NON-NLS-1$
+		roleOne.setDescription("roleOne described"); //$NON-NLS-1$
+		roleOne.setAllowCreateTemporaryTables(true);
+		PermissionMetaData perm1 = new PermissionMetaData();
+		perm1.setResourceName("myTable.T1"); //$NON-NLS-1$
+		perm1.setAllowRead(true);
+		roleOne.addPermission(perm1);
+		
+		PermissionMetaData perm2 = new PermissionMetaData();
+		perm2.setResourceName("myTable.T2"); //$NON-NLS-1$
+		perm2.setAllowRead(false);
+		perm2.setAllowDelete(true);
+		roleOne.addPermission(perm2);
+		
+		roleOne.setMappedRoleNames(Arrays.asList("ROLE1", "ROLE2")); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		vdb.addDataPolicy(roleOne);
+		return vdb;
+	}
 	
 	@Test
 	public void testAdminMOCreation() {
@@ -202,5 +212,21 @@ public class TestVDBMetaData {
 		vdb.setName("foo");
 		vdb.setUrl(new URL("file:///x/foo.2.vdb"));
 		assertEquals(2, vdb.getVersion());
+	}
+	
+	@Test public void testVDBMetaDataMapper() {
+		VDBMetaData vdb = buildVDB();
+		
+		ModelNode node = MetadataMapper.wrap(vdb);
+		
+		vdb = MetadataMapper.unwrap(node);
+		validateVDB(vdb);
+	}
+	
+	@Test
+	public void testVDBMetaDataDescribe() throws Exception {
+		ModelNode node = MetadataMapper.describe(new ModelNode());
+		String actual = node.toJSONString(false);
+		assertEquals(ObjectConverterUtil.convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/vdb-describe.txt")), actual);
 	}
 }

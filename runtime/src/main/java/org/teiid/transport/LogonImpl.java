@@ -71,9 +71,8 @@ public class LogonImpl implements ILogon {
             credential = new Credentials(password.toCharArray());
         }
         
-        boolean adminConnection = Boolean.parseBoolean(connProps.getProperty(TeiidURL.CONNECTION.ADMIN));
 		try {
-			SessionMetadata sessionInfo = service.createSession(user,credential, applicationName, connProps, adminConnection, true);
+			SessionMetadata sessionInfo = service.createSession(user,credential, applicationName, connProps, true);
 	        updateDQPContext(sessionInfo);
 	        if (DQPWorkContext.getWorkContext().getClientAddress() == null) {
 				sessionInfo.setEmbedded(true);
