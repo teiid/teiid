@@ -62,6 +62,7 @@ import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.Admin.Cache;
 import org.teiid.adminapi.impl.CacheStatisticsMetadata;
 import org.teiid.adminapi.impl.DQPManagement;
 import org.teiid.adminapi.impl.RequestMetadata;
@@ -239,6 +240,10 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 				} catch (SessionServiceException e) {
 					//ignore
 				}
+
+				// dump the caches. 
+				dqpCore.clearCache(Cache.PREPARED_PLAN_CACHE.toString(), name, version);
+				dqpCore.clearCache(Cache.QUERY_SERVICE_RESULT_SET_CACHE.toString(), name, version);
 			}			
 		});    	
 	}	
