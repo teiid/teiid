@@ -3,13 +3,14 @@ package org.teiid.services;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
-import javax.security.auth.login.LoginContext;
+import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
+import org.jboss.as.security.plugins.SecurityDomainContext;
+import org.jboss.security.AuthenticationManager;
+import org.jboss.security.SimplePrincipal;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.VDB.Status;
@@ -20,8 +21,6 @@ import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.security.Credentials;
 import org.teiid.security.SecurityHelper;
-import org.teiid.services.TeiidLoginContext;
-import org.teiid.services.SessionServiceImpl;
 
 @SuppressWarnings("nls")
 public class TestSessionServiceImpl {
@@ -29,20 +28,27 @@ public class TestSessionServiceImpl {
 	public void validateSession(boolean securityEnabled) throws Exception {
 		final TeiidLoginContext impl =  Mockito.mock(TeiidLoginContext.class);
 		Mockito.stub(impl.getUserName()).toReturn("steve@somedomain");
-		Mockito.stub(impl.getLoginContext()).toReturn(Mockito.mock(LoginContext.class));
 		final ArrayList<String> domains = new ArrayList<String>();
 		domains.add("somedomain");				
 
 		SessionServiceImpl ssi = new SessionServiceImpl() {
 			@Override
-			protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains, SecurityHelper helper, boolean passthough)
+			protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains,  Map<String, SecurityDomainContext> securityDomainMap, SecurityHelper helper, boolean passthough)
 				throws LoginException {
-				impl.authenticateUser(userName, credentials, applicationName, domains, passthough);
+				impl.authenticateUser(userName, credentials, applicationName, domains, securityDomainMap, passthough);
 				return impl;
 			}
 		};
 	
-		ssi.setSecurityDomains("somedomain");
+		Map<String, SecurityDomainContext> securityDomainMap = new HashMap<String, SecurityDomainContext>();
+        SecurityDomainContext securityContext = Mockito.mock(SecurityDomainContext.class);
+        AuthenticationManager authManager = Mockito.mock(AuthenticationManager.class);
+        Credentials credentials = new Credentials("pass1".toCharArray());
+        Mockito.stub(authManager.isValid(new SimplePrincipal("user1"), credentials, new Subject())).toReturn(true);
+        Mockito.stub(securityContext.getAuthenticationManager()).toReturn(authManager);
+        securityDomainMap.put("somedomain", securityContext); //$NON-NLS-1$
+		
+		ssi.setSecurityDomains(Arrays.asList("somedomain"), securityDomainMap);
 		
 		try {
 			ssi.validateSession(String.valueOf(1));
@@ -51,9 +57,9 @@ public class TestSessionServiceImpl {
 			
 		}
 		
-		SessionMetadata info = ssi.createSession("steve", null, "foo", new Properties(), false, true); //$NON-NLS-1$ //$NON-NLS-2$
+		SessionMetadata info = ssi.createSession("steve", null, "foo", new Properties(), true); //$NON-NLS-1$ //$NON-NLS-2$
 		if (securityEnabled) {
-			Mockito.verify(impl).authenticateUser("steve", null, "foo", domains, false); 
+			Mockito.verify(impl).authenticateUser("steve", null, "foo", domains, securityDomainMap, false); 
 		}
 		
 		String id1 = info.getSessionId();

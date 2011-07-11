@@ -21,16 +21,36 @@
  */
 package org.teiid.jboss;
 
-import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.Service;
+import org.jboss.msc.service.StartContext;
+import org.jboss.msc.service.StartException;
+import org.jboss.msc.service.StopContext;
+import org.jboss.msc.value.InjectedValue;
+import org.teiid.services.BufferServiceImpl;
 
-public class TeiidServiceNames {
-	public static ServiceName ENGINE = ServiceName.JBOSS.append("teiid", "query-engine");
-	public static ServiceName TRANSLATOR_REPO = ServiceName.JBOSS.append("teiid", "translator-repository");
-	static ServiceName TRANSLATOR_BASE = ServiceName.JBOSS.append("teiid", "translator");
-	public static ServiceName BUFFER_DIR = ServiceName.JBOSS.append("teiid", "buffer.dir");
-	public static ServiceName BUFFER_MGR = ServiceName.JBOSS.append("teiid", "buffer-mgr");
+public class BufferManagerService implements Service<BufferServiceImpl> {
+
+	private BufferServiceImpl bufferMgr;
+	public final InjectedValue<String> pathInjector = new InjectedValue<String>();
 	
-	public static ServiceName translatorServiceName(String name) {
-		return TRANSLATOR_BASE.append(name);
+	public BufferManagerService(BufferServiceImpl buffer) {
+		this.bufferMgr = buffer;
 	}
+	
+	@Override
+	public void start(StartContext context) throws StartException {
+		bufferMgr.setDiskDirectory(pathInjector.getValue());
+		bufferMgr.start();
+	}
+
+	@Override
+	public void stop(StopContext context) {
+		bufferMgr.stop();
+	}
+
+	@Override
+	public BufferServiceImpl getValue() throws IllegalStateException,IllegalArgumentException {
+		return this.bufferMgr;
+	}
+
 }

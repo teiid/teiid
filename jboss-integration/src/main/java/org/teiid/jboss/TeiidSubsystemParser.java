@@ -191,9 +191,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 			case USE_DISK_ELEMENT:
 				node.get(reader.getLocalName()).set(Boolean.parseBoolean(reader.getElementText()));
 				break;
-			case DISK_DIRECTORY_ELEMENT:
-				node.get(reader.getLocalName()).set(reader.getElementText());
-				break;
 			case PROCESSOR_BATCH_SIZE_ELEMENT:
 			case CONNECTOR_BATCH_SIZE_ELEMENT:
 			case MAX_RESERVE_BATCH_COLUMNS_ELEMENT:

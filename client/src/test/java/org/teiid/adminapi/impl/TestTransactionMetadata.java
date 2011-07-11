@@ -37,7 +37,7 @@ public class TestTransactionMetadata {
 		tm.setId("tnx-id");
 		tm.setScope("scope");
 		
-		ModelNode node = MetadataMapper.TransactionMetadataMapper.wrap(tm);
+		ModelNode node = MetadataMapper.TransactionMetadataMapper.wrap(tm, new ModelNode());
 		
 		TransactionMetadata tm1 = MetadataMapper.TransactionMetadataMapper.unwrap(node);
 		

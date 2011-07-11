@@ -24,13 +24,13 @@ package org.teiid.jboss;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 import static org.teiid.jboss.Configuration.addAttribute;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.ServiceLoader;
 
 import org.jboss.as.controller.*;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
-import org.jboss.as.controller.operations.common.Util;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.jboss.modules.Module;
@@ -46,7 +46,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.translator.ExecutionFactory;
 
-public class TranslatorAdd implements DescriptionProvider, ModelAddOperationHandler {
+public class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvider {
 
     @Override
     public ModelNode getModelDescription(final Locale locale) {
@@ -58,56 +58,54 @@ public class TranslatorAdd implements DescriptionProvider, ModelAddOperationHand
         addAttribute(operation, Configuration.TRANSLATOR_MODULE, REQUEST_PROPERTIES, bundle.getString(Configuration.TRANSLATOR_MODULE+Configuration.DESC), ModelType.STRING, true, null);
         return operation;
     }
-
-    @Override
-    public OperationResult execute(final OperationContext context, final ModelNode operation, final ResultHandler resultHandler) throws OperationFailedException {
+    
+	@Override
+	protected void populateModel(final ModelNode operation, final ModelNode model) throws OperationFailedException{
         final ModelNode address = operation.require(OP_ADDR);
         final PathAddress pathAddress = PathAddress.pathAddress(address);
 
-        final String name = operation.require(Configuration.TRANSLATOR_NAME).asString();
+		final String name = operation.require(Configuration.TRANSLATOR_NAME).asString();
         final String moduleName = operation.require(Configuration.TRANSLATOR_MODULE).asString();
 
-        //Apply to the model
-        final ModelNode model = context.getSubModel();
         model.get(NAME).set(pathAddress.getLastElement().getValue());
         model.get(Configuration.TRANSLATOR_NAME).set(name);
         model.get(Configuration.TRANSLATOR_MODULE).set(moduleName);
+	}
+	
+	@Override
+    protected void performRuntime(final OperationContext context, final ModelNode operation, final ModelNode model,
+            final ServiceVerificationHandler verificationHandler, final List<ServiceController<?>> newControllers) throws OperationFailedException {
 
-        if (context.getRuntimeContext() != null) {
-            context.getRuntimeContext().setRuntimeTask(new RuntimeTask() {
-                @Override
-                public void execute(RuntimeTaskContext context) throws OperationFailedException {
-                    final ServiceTarget target = context.getServiceTarget();
+		final String name = operation.require(Configuration.TRANSLATOR_NAME).asString();
+        final String moduleName = operation.require(Configuration.TRANSLATOR_MODULE).asString();
+		
+        final ServiceTarget target = context.getServiceTarget();
 
-                    final ModuleIdentifier moduleId;
-                    final Module module;
-                    try {
-                        moduleId = ModuleIdentifier.create(moduleName);
-                        module = Module.getCallerModuleLoader().loadModule(moduleId);
-                    } catch (ModuleLoadException e) {
-                        throw new OperationFailedException(e, new ModelNode().set("Failed to load module for translator [" + moduleName + "]"));
-                    }
-                    final ServiceLoader<ExecutionFactory> serviceLoader = module.loadService(ExecutionFactory.class);
-                    if (serviceLoader != null) {
-                    	for (ExecutionFactory ef:serviceLoader) {
-                    		VDBTranslatorMetaData metadata = TranslatorUtil.buildTranslatorMetadata(ef, moduleName);
-                    		if (metadata == null) {
-                    			throw new OperationFailedException( new ModelNode().set("Execution Factory is not valid"));
-                    		}
-                    		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("translator.added", metadata.getName())); //$NON-NLS-1$
-                    		
-                    		TranslatorService translatorService = new TranslatorService(metadata);
-                    		ServiceBuilder<VDBTranslatorMetaData> builder = target.addService(TeiidServiceNames.translatorServiceName(metadata.getName()), translatorService);
-                    		builder.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class, translatorService.repositoryInjector);
-	                        builder.setInitialMode(ServiceController.Mode.ACTIVE).install();                    		
-                    	}
-                    	resultHandler.handleResultComplete();
-                    }
-                }
-            });
-        } else {
-            resultHandler.handleResultComplete();
+        final ModuleIdentifier moduleId;
+        final Module module;
+        try {
+            moduleId = ModuleIdentifier.create(moduleName);
+            module = Module.getCallerModuleLoader().loadModule(moduleId);
+        } catch (ModuleLoadException e) {
+            throw new OperationFailedException(e, new ModelNode().set(IntegrationPlugin.Util.getString("failed_load_module", moduleName, name))); //$NON-NLS-1$
         }
-        return new BasicOperationResult(Util.getResourceRemoveOperation(address));
-    }
+        final ServiceLoader<ExecutionFactory> serviceLoader = module.loadService(ExecutionFactory.class);
+        if (serviceLoader != null) {
+        	for (ExecutionFactory ef:serviceLoader) {
+        		VDBTranslatorMetaData metadata = TranslatorUtil.buildTranslatorMetadata(ef, moduleName);
+        		if (metadata == null) {
+        			throw new OperationFailedException( new ModelNode().set(IntegrationPlugin.Util.getString("error_adding_translator", name))); //$NON-NLS-1$ 
+        		}
+        		
+        		if (name.equalsIgnoreCase(metadata.getName())) {
+	        		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("translator.added", metadata.getName())); //$NON-NLS-1$
+	        		
+	        		TranslatorService translatorService = new TranslatorService(metadata);
+	        		ServiceBuilder<VDBTranslatorMetaData> builder = target.addService(TeiidServiceNames.translatorServiceName(metadata.getName()), translatorService);
+	        		builder.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class, translatorService.repositoryInjector);
+	                builder.setInitialMode(ServiceController.Mode.ACTIVE).install();
+        		}
+        	}
+        }
+    }    
 }

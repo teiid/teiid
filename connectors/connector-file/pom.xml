@@ -40,6 +40,11 @@
                         <goals>
                             <goal>jar</goal>
                         </goals>
+                        <configuration>
+                          <archive>
+                            <manifestFile>src/main/rar/META-INF/MANIFEST.MF</manifestFile>
+                          </archive>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>deploy_jar</id>

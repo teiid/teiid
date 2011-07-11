@@ -26,7 +26,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -61,14 +60,14 @@ public class VDBRepository implements Serializable{
 		return metadataRepository;
 	}
 	
-	public void addVDB(VDBMetaData vdb, MetadataStoreGroup stores, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr) throws DeploymentUnitProcessingException {
+	public void addVDB(VDBMetaData vdb, MetadataStoreGroup stores, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr) throws VirtualDatabaseException {
 		if (getVDB(vdb.getName(), vdb.getVersion()) != null) {
-			throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("duplicate_vdb", vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
+			throw new VirtualDatabaseException(RuntimePlugin.Util.getString("duplicate_vdb", vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
 		}
 		
 		// get the system VDB metadata store
 		if (this.systemStore == null) {
-			throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("system_vdb_load_error")); //$NON-NLS-1$
+			throw new VirtualDatabaseException(RuntimePlugin.Util.getString("system_vdb_load_error")); //$NON-NLS-1$
 		}	
 		
 		if (this.odbcEnabled && odbcStore == null) {

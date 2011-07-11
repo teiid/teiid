@@ -34,7 +34,6 @@ public class CacheConfiguration {
 	private Policy policy;
 	private int maxage = -1;
 	private int maxEntries = SessionAwareCache.DEFAULT_MAX_SIZE_TOTAL;
-	private boolean enabled = true;
 	private String name;
 	private String location;
 	
@@ -97,12 +96,4 @@ public class CacheConfiguration {
 	public void setLocation(String location) {
 		this.location = location;
 	}	
-	
-	public boolean isEnabled() {
-		return enabled;
-	}
-
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
 }

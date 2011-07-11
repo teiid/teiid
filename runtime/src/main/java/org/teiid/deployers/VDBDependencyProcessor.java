@@ -85,7 +85,7 @@ public class VDBDependencyProcessor implements DeploymentUnitProcessor {
 
 			for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
 				for (String source:model.getSourceNames()) {
-					moduleSpecification.addDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create(model.getSourceTranslatorName(source)), false, false, false));		
+					moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create(model.getSourceTranslatorName(source)), false, false, false));		
 				}
 			}
 		} catch (ModuleLoadException e) {

@@ -42,7 +42,7 @@ public class TestSessionMetadata {
 		session.setSecurityContext("auth-domain");
 		session.setUserName("user");
 
-		ModelNode node = MetadataMapper.SessionMetadataMapper.wrap(session);
+		ModelNode node = MetadataMapper.SessionMetadataMapper.wrap(session, new ModelNode());
 		
 		SessionMetadata session1 = MetadataMapper.SessionMetadataMapper.unwrap(node);
 		

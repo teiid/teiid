@@ -47,11 +47,6 @@
                     <xs:documentation>Use disk for buffer management</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="diskDirectory" type="xs:string" minOccurs="0" maxOccurs="1">
-                <xs:annotation>
-                    <xs:documentation>Directory location for the buffer files</xs:documentation>
-                </xs:annotation>
-            </xs:element>
             <xs:element name="processorBatchSize" type="xs:int" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>The max row count of a batch sent internally within the query processor. Should be &lt;= the connectorBatchSize. (default 512)</xs:documentation>
@@ -103,7 +98,6 @@
                 </xs:annotation>
             </xs:element>
         </xs:sequence>
-        <xs:attribute name="enabled" type="xs:boolean" />
     </xs:complexType>
     <xs:complexType name="cache-config">
         <xs:sequence>
@@ -139,7 +133,6 @@
                 </xs:annotation>
             </xs:element>
         </xs:sequence>
-        <xs:attribute name="enabled" type="xs:boolean" default="true"/>
     </xs:complexType>
     <xs:complexType name="runtime-engine-type">
         <xs:sequence>
@@ -226,14 +219,9 @@
                     <xs:documentation>Set to true for the engine to detect local change events. Should be disabled if using external change data capture tools. (default true)</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="jdbc-security-domain" type="xs:string" minOccurs="0" maxOccurs="1">
+            <xs:element name="security-domain" type="xs:string" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
-                    <xs:documentation>Comma separated list of domains to be used to login into Teiid using JDBC connection</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="admin-security-domain" type="xs:string" minOccurs="0" maxOccurs="1">
-                <xs:annotation>
-                    <xs:documentation>Security domain to be used with Admin API</xs:documentation>
+                    <xs:documentation>Comma separated list of domains to be used to login into Teiid</xs:documentation>
                 </xs:annotation>
             </xs:element>
             <xs:element name="max-sessions-allowed" type="xs:int" minOccurs="0" maxOccurs="1">
@@ -289,7 +277,6 @@
                 </xs:annotation>
             </xs:element>
         </xs:sequence>
-        <xs:attribute name="jndi-name" type="xs:string" />
     </xs:complexType>
 
     <xs:complexType name="socket-config">
@@ -322,7 +309,6 @@
                 </xs:annotation>
             </xs:element>
         </xs:sequence>
-        <xs:attribute name="enabled" type="xs:boolean" default="true"/>
     </xs:complexType>
 
     <xs:complexType name="ssl-config">

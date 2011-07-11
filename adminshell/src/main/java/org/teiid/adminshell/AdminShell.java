@@ -64,11 +64,12 @@ public class AdminShell {
 	
 	@Doc(text="Get a named Admin connection to the specified server")
 	public static void connectAsAdmin(
-			@Doc(text = "url - URL in the format \"mm[s]://host:port\"") String url,
+			@Doc(text = "host - hostname") String host,
+			@Doc(text = "port - port") int port,
 			@Doc(text = "username") String username,
 			@Doc(text = "password") String password, 
 			@Doc(text = "connection name") String connectionName) throws AdminException {
-		internalAdmin = AdminFactory.getInstance().createAdmin(username, password.toCharArray(), url);
+		internalAdmin = AdminFactory.getInstance().createAdmin(host, port, username, password.toCharArray());
 		currentName = connectionName;
 		Admin old = connections.put(connectionName, internalAdmin);
 		if (old != null) {
@@ -81,8 +82,7 @@ public class AdminShell {
 	@SuppressWarnings("nls")
 	public static void connectAsAdmin() throws AdminException {
 		loadConnectionProperties();
-		connectAsAdmin(p.getProperty("admin.url", "mm://localhost:31443"), p.getProperty("admin.user", "admin"), 
-				p.getProperty("admin.password", "admin"), "conn-" + connectionCount++);
+		connectAsAdmin(p.getProperty("admin.host", "localhost"), Integer.parseInt(p.getProperty("admin.port", "9990")), p.getProperty("admin.user", "admin"), p.getProperty("admin.password", "admin"), "conn-" + connectionCount++);
 	}
 
 	static void loadConnectionProperties() {

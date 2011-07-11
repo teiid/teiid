@@ -31,5 +31,7 @@
 
     <dependencies>
         <module name="org.jboss.teiid.common-core" />
+        <module name="javax.transaction.api"/>
+        <module name="javax.api"/>
     </dependencies>
 </module>

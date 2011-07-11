@@ -34,7 +34,7 @@ import org.jboss.as.controller.SubsystemRegistration;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
 import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
 import org.jboss.as.controller.parsing.ExtensionParsingContext;
-import org.jboss.as.controller.registry.ModelNodeRegistration;
+import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.AttributeAccess.Storage;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
@@ -73,7 +73,7 @@ public class TeiidExtension implements Extension {
 		
 		registration.registerXMLElementWriter(parser);
 		
-		final ModelNodeRegistration subsystem = registration.registerSubsystemModel(new DescriptionProvider() {
+		final ManagementResourceRegistration subsystem = registration.registerSubsystemModel(new DescriptionProvider() {
 			
 			@Override
 			public ModelNode getModelDescription(Locale locale) {
@@ -99,7 +99,7 @@ public class TeiidExtension implements Extension {
 		subsystem.registerOperationHandler(ModelDescriptionConstants.ADD, ENGINE_ADD, ENGINE_DESC);
 		//subsystem.registerOperationHandler(ModelDescriptionConstants.DESCRIBE, describe, describe, false);
 		
-        final ModelNodeRegistration translators = subsystem.registerSubModel(PathElement.pathElement(Configuration.TRANSLATOR), new DescriptionProvider() {
+        final ManagementResourceRegistration translators = subsystem.registerSubModel(PathElement.pathElement(Configuration.TRANSLATOR), new DescriptionProvider() {
 			@Override
 			public ModelNode getModelDescription(Locale locale) {
 				final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);

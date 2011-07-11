@@ -17,7 +17,7 @@
         <eventDistributorName>teiid/event-distributor</eventDistributorName>
         <detectingChangeEvents>true</detectingChangeEvents>
 
-        <jdbc-security-domain>teiid-security</jdbc-security-domain>
+        <security-domain>teiid-security</security-domain>
         <max-sessions-allowed>5000</max-sessions-allowed>
         <sessions-expiration-timelimit>0</sessions-expiration-timelimit>
         <allow-env-function>false</allow-env-function>
@@ -34,12 +34,12 @@
             <maxOpenFiles>64</maxOpenFiles>
         </buffer-service>
         
-        <distributed-cache-factory enabled="true">
+        <distributed-cache-factory>
             <cache-service-jndi-name>java:TeiidCacheManager</cache-service-jndi-name>
             <resultsetCacheName>teiid-resultset-cache</resultsetCacheName>
         </distributed-cache-factory>
         
-        <resultset-cache enabled="true">
+        <resultset-cache>
             <maxEntries>1024</maxEntries>
             <maxAgeInSeconds>7200</maxAgeInSeconds>
             <maxStaleness>60</maxStaleness>
@@ -53,14 +53,14 @@
             <maxStaleness>0</maxStaleness>
         </preparedplan-cache>
         
-        <jdbc enabled="true">
+        <jdbc>
             <maxSocketThreads>0</maxSocketThreads>
             <inputBufferSize>0</inputBufferSize>
             <outputBufferSize>0</outputBufferSize>
             <socket-binding>teiid-jdbc</socket-binding>
         </jdbc>
 
-        <odbc enabled="true">
+        <odbc>
             <maxSocketThreads>0</maxSocketThreads>
             <inputBufferSize>0</inputBufferSize>
             <outputBufferSize>0</outputBufferSize>

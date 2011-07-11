@@ -52,11 +52,10 @@ public class MetadataMapper {
 	private static final String DATA_POLICIES = "data-policies"; //$NON-NLS-1$
 	
 	
-	public static ModelNode wrap(VDBMetaData vdb) {
+	public static ModelNode wrap(VDBMetaData vdb, ModelNode node) {
 		if (vdb == null) {
 			return null;
 		}
-		ModelNode node = new ModelNode();
 		node.get(ModelNodeConstants.TYPE).set(ModelType.OBJECT);
 			
 		node.get(VDBNAME).set(vdb.getName());
@@ -75,7 +74,7 @@ public class MetadataMapper {
 		if (properties!= null && !properties.isEmpty()) {
 			ModelNode propsNode = node.get(CHILDREN, PROPERTIES); 
 			for (PropertyMetadata prop:properties) {
-				propsNode.add(PropertyMetaDataMapper.wrap(prop));
+				propsNode.add(PropertyMetaDataMapper.wrap(prop, new ModelNode()));
 			}
 		}
 		
@@ -84,7 +83,7 @@ public class MetadataMapper {
 		if (models != null && !models.isEmpty()) {
 			ModelNode modelNodes = node.get(CHILDREN, MODELS);		
 			for(ModelMetaData model:models.values()) {
-				modelNodes.add(ModelMetadataMapper.wrap(model));
+				modelNodes.add(ModelMetadataMapper.wrap(model, new ModelNode()));
 			}
 		}
 		
@@ -93,7 +92,7 @@ public class MetadataMapper {
 		if (translators != null && !translators.isEmpty()) {
 			ModelNode translatorNodes = node.get(CHILDREN, OVERRIDE_TRANSLATORS);
 			for (Translator translator:translators) {
-				translatorNodes.add(VDBTranslatorMetaDataMapper.wrap((VDBTranslatorMetaData)translator));
+				translatorNodes.add(VDBTranslatorMetaDataMapper.wrap((VDBTranslatorMetaData)translator,  new ModelNode()));
 			}
 		}
 		
@@ -102,7 +101,7 @@ public class MetadataMapper {
 		if (policies != null && !policies.isEmpty()) {
 			ModelNode dataPoliciesNodes = node.get(CHILDREN, DATA_POLICIES);
 			for (DataPolicy policy:policies) {
-				dataPoliciesNodes.add(DataPolicyMetadataMapper.wrap((DataPolicyMetadata)policy));
+				dataPoliciesNodes.add(DataPolicyMetadataMapper.wrap((DataPolicyMetadata)policy,  new ModelNode()));
 			}
 		}
 		return node;
@@ -234,11 +233,10 @@ public class MetadataMapper {
 		private static final String SOURCE_MAPPINGS = "source-mappings"; //$NON-NLS-1$
 		private static final String VALIDITY_ERRORS = "validity-errors"; //$NON-NLS-1$
 		
-		public static ModelNode wrap(ModelMetaData model) {
+		public static ModelNode wrap(ModelMetaData model, ModelNode node) {
 			if (model == null) {
 				return null;
 			}
-			ModelNode node = new ModelNode();
 			node.get(TYPE).set(ModelType.OBJECT);
 			
 			node.get(MODEL_NAME).set(model.getName());
@@ -255,7 +253,7 @@ public class MetadataMapper {
 			if (properties!= null && !properties.isEmpty()) {
 				ModelNode propsNode = node.get(CHILDREN, PROPERTIES); 
 				for (PropertyMetadata prop:properties) {
-					propsNode.add(PropertyMetaDataMapper.wrap(prop));
+					propsNode.add(PropertyMetaDataMapper.wrap(prop,  new ModelNode()));
 				}
 			}
 			
@@ -263,7 +261,7 @@ public class MetadataMapper {
 			if (sources != null && !sources.isEmpty()) {
 				ModelNode sourceMappingNode = node.get(CHILDREN, SOURCE_MAPPINGS);
 				for(SourceMappingMetadata source:sources) {
-					sourceMappingNode.add(SourceMappingMetadataMapper.wrap(source));
+					sourceMappingNode.add(SourceMappingMetadataMapper.wrap(source,  new ModelNode()));
 				}
 			}
 			
@@ -421,12 +419,11 @@ public class MetadataMapper {
 		private static final String JNDI_NAME = "jndi-name"; //$NON-NLS-1$
 		private static final String TRANSLATOR_NAME = "translator-name"; //$NON-NLS-1$
 		
-		public static ModelNode wrap(SourceMappingMetadata source) {
+		public static ModelNode wrap(SourceMappingMetadata source, ModelNode node) {
 			if (source == null) {
 				return null;
 			}
 			
-			ModelNode node = new ModelNode();
 			node.get(TYPE).set(ModelType.OBJECT);
 			
 			node.get(SOURCE_NAME).set(source.getName());
@@ -471,15 +468,16 @@ public class MetadataMapper {
 		private static final String PROPERTIES = "properties"; //$NON-NLS-1$
 		private static final String MODULE_NAME = "module-name"; //$NON-NLS-1$
 		
-		public static ModelNode wrap(VDBTranslatorMetaData translator) {
+		public static ModelNode wrap(VDBTranslatorMetaData translator, ModelNode node) {
 			if (translator == null) {
 				return null;
 			}
-			ModelNode node = new ModelNode();
 			node.get(TYPE).set(ModelType.OBJECT);
 			
 			node.get(TRANSLATOR_NAME).set(translator.getName());
-			node.get(BASETYPE).set(translator.getType());
+			if (translator.getType() != null) {
+				node.get(BASETYPE).set(translator.getType());
+			}
 			if (translator.getDescription() != null) {
 				node.get(DESCRIPTION).set(translator.getDescription());
 			}
@@ -492,7 +490,7 @@ public class MetadataMapper {
 			if (properties!= null && !properties.isEmpty()) {
 				ModelNode propsNode = node.get(CHILDREN, PROPERTIES); 
 				for (PropertyMetadata prop:properties) {
-					propsNode.add(PropertyMetaDataMapper.wrap(prop));
+					propsNode.add(PropertyMetaDataMapper.wrap(prop, new ModelNode()));
 				}
 			}
 			return node;
@@ -549,11 +547,10 @@ public class MetadataMapper {
 		private static final String PROPERTY_NAME = "property-name"; //$NON-NLS-1$
 		private static final String PROPERTY_VALUE = "property-value"; //$NON-NLS-1$
 		
-		public static ModelNode wrap(PropertyMetadata property) {
+		public static ModelNode wrap(PropertyMetadata property, ModelNode node) {
 			if (property == null) {
 				return null;
 			}			
-			ModelNode node = new ModelNode();
 			node.get(ModelNodeConstants.TYPE).set(ModelType.OBJECT);
 			
 			node.get(PROPERTY_NAME).set(property.getName());
@@ -594,11 +591,10 @@ public class MetadataMapper {
 		private static final String ALLOW_CREATE_TEMP_TABLES = "allow-create-temp-tables"; //$NON-NLS-1$
 		private static final String ANY_AUTHENTICATED = "any-authenticated"; //$NON-NLS-1$
 		
-		public static ModelNode wrap(DataPolicyMetadata policy) {
+		public static ModelNode wrap(DataPolicyMetadata policy, ModelNode node) {
 			if (policy == null) {
 				return null;
 			}			
-			ModelNode node = new ModelNode();
 			node.get(ModelNodeConstants.TYPE).set(ModelType.OBJECT);
 			
 			node.get(POLICY_NAME).set(policy.getName());
@@ -615,7 +611,7 @@ public class MetadataMapper {
 			if (permissions != null && !permissions.isEmpty()) {
 				ModelNode permissionNodes = node.get(CHILDREN, DATA_PERMISSIONS); 
 				for (DataPolicy.DataPermission dataPermission:permissions) {
-					permissionNodes.add(PermissionMetaDataMapper.wrap((PermissionMetaData)dataPermission));
+					permissionNodes.add(PermissionMetaDataMapper.wrap((PermissionMetaData)dataPermission,  new ModelNode()));
 				}			
 			}
 			
@@ -699,12 +695,11 @@ public class MetadataMapper {
 		
 		
 		
-		public static ModelNode wrap(PermissionMetaData permission) {
+		public static ModelNode wrap(PermissionMetaData permission, ModelNode node) {
 			if (permission == null) {
 				return null;
 			}
 			
-			ModelNode node = new ModelNode();
 			node.get(ModelNodeConstants.TYPE).set(ModelType.OBJECT);
 			
 			node.get(RESOURCE_NAME).set(permission.getResourceName());
@@ -775,18 +770,17 @@ public class MetadataMapper {
 		private static final String TOTAL_ENTRIES = "totalEntries"; //$NON-NLS-1$
 		private static final String REQUEST_COUNT = "requestCount"; //$NON-NLS-1$
 		
-		public static ModelNode wrap(CacheStatisticsMetadata object) {
+		public static ModelNode wrap(CacheStatisticsMetadata object, ModelNode node) {
 			if (object == null)
 				return null;
 			
-			ModelNode cache = new ModelNode();
-			cache.get(ModelNodeConstants.TYPE).set(ModelType.OBJECT);
+			node.get(ModelNodeConstants.TYPE).set(ModelType.OBJECT);
 			
-			cache.get(TOTAL_ENTRIES).set(object.getTotalEntries());
-			cache.get(HITRATIO).set(object.getHitRatio());
-			cache.get(REQUEST_COUNT).set(object.getRequestCount());
+			node.get(TOTAL_ENTRIES).set(object.getTotalEntries());
+			node.get(HITRATIO).set(object.getHitRatio());
+			node.get(REQUEST_COUNT).set(object.getRequestCount());
 			
-			return cache;
+			return node;
 		}
 
 		public static CacheStatisticsMetadata unwrap(ModelNode node) {
@@ -821,27 +815,26 @@ public class MetadataMapper {
 		private static final String THREAD_STATE = "thread-state"; //$NON-NLS-1$
 		
 		
-		public static ModelNode wrap(RequestMetadata object) {
-			if (object == null) {
+		public static ModelNode wrap(RequestMetadata request, ModelNode node) {
+			if (request == null) {
 				return null;
 			}
-			ModelNode request = new ModelNode();
-			request.get(ModelNodeConstants.TYPE).set(ModelType.OBJECT);
+			node.get(ModelNodeConstants.TYPE).set(ModelType.OBJECT);
 			
-			request.get(EXECUTION_ID).set(object.getExecutionId());
-			request.get(SESSION_ID).set(object.getSessionId());
-			request.get(START_TIME).set(object.getStartTime());
-			request.get(COMMAND).set(object.getCommand());
-			request.get(SOURCE_REQUEST).set(object.sourceRequest());
-			if (object.getNodeId() != null) {
-				request.get(NODE_ID).set(object.getNodeId());
+			node.get(EXECUTION_ID).set(request.getExecutionId());
+			node.get(SESSION_ID).set(request.getSessionId());
+			node.get(START_TIME).set(request.getStartTime());
+			node.get(COMMAND).set(request.getCommand());
+			node.get(SOURCE_REQUEST).set(request.sourceRequest());
+			if (request.getNodeId() != null) {
+				node.get(NODE_ID).set(request.getNodeId());
 			}
-			if (object.getTransactionId() != null) {
-				request.get(TRANSACTION_ID).set(object.getTransactionId());
+			if (request.getTransactionId() != null) {
+				node.get(TRANSACTION_ID).set(request.getTransactionId());
 			}
-			request.get(STATE).set(object.getState().name());
-			request.get(THREAD_STATE).set(object.getThreadState().name());
-			return request;
+			node.get(STATE).set(request.getState().name());
+			node.get(THREAD_STATE).set(request.getThreadState().name());
+			return node;
 		}
 
 		public static RequestMetadata unwrap(ModelNode node) {
@@ -893,11 +886,10 @@ public class MetadataMapper {
 		private static final String APPLICATION_NAME = "application-name"; //$NON-NLS-1$
 		
 		
-		public static ModelNode wrap(SessionMetadata session) {
+		public static ModelNode wrap(SessionMetadata session, ModelNode node) {
 			if (session == null) {
 				return null;
 			}
-			ModelNode node = new ModelNode();
 			node.get(ModelNodeConstants.TYPE).set(ModelType.OBJECT);
 				
 			if (session.getApplicationName() != null) {
@@ -961,11 +953,10 @@ public class MetadataMapper {
 		private static final String CREATED_TIME = "txn-created-time"; //$NON-NLS-1$
 		private static final String ASSOCIATED_SESSION = "session-id"; //$NON-NLS-1$
 		
-		public static ModelNode wrap(TransactionMetadata object) {
+		public static ModelNode wrap(TransactionMetadata object, ModelNode transaction) {
 			if (object == null)
 				return null;
 			
-			ModelNode transaction = new ModelNode();
 			transaction.get(ModelNodeConstants.TYPE).set(ModelType.OBJECT);
 			transaction.get(ASSOCIATED_SESSION).set(object.getAssociatedSession());
 			transaction.get(CREATED_TIME).set(object.getCreatedTime());
@@ -1008,22 +999,21 @@ public class MetadataMapper {
 		private static final String ACTIVE_THREADS = "active-threads"; //$NON-NLS-1$
 		
 		
-		public static ModelNode wrap(WorkerPoolStatisticsMetadata object) {
-			if (object == null)
+		public static ModelNode wrap(WorkerPoolStatisticsMetadata stats, ModelNode node) {
+			if (stats == null)
 				return null;
-			ModelNode transaction = new ModelNode();
-			transaction.get(ModelNodeConstants.TYPE).set(ModelType.OBJECT);
+			node.get(ModelNodeConstants.TYPE).set(ModelType.OBJECT);
 			
-			transaction.get(ACTIVE_THREADS).set(object.getActiveThreads());
-			transaction.get(HIGHEST_ACTIVE_THREADS).set(object.getHighestActiveThreads());
-			transaction.get(TOTAL_COMPLETED).set(object.getTotalCompleted());
-			transaction.get(TOTAL_SUBMITTED).set(object.getTotalSubmitted());
-			transaction.get(QUEUE_NAME).set(object.getQueueName());
-			transaction.get(QUEUED).set(object.getQueued());
-			transaction.get(HIGHEST_QUEUED).set(object.getHighestQueued());
-			transaction.get(MAX_THREADS).set(object.getMaxThreads());
+			node.get(ACTIVE_THREADS).set(stats.getActiveThreads());
+			node.get(HIGHEST_ACTIVE_THREADS).set(stats.getHighestActiveThreads());
+			node.get(TOTAL_COMPLETED).set(stats.getTotalCompleted());
+			node.get(TOTAL_SUBMITTED).set(stats.getTotalSubmitted());
+			node.get(QUEUE_NAME).set(stats.getQueueName());
+			node.get(QUEUED).set(stats.getQueued());
+			node.get(HIGHEST_QUEUED).set(stats.getHighestQueued());
+			node.get(MAX_THREADS).set(stats.getMaxThreads());
 			
-			return transaction;
+			return node;
 		}
 
 		public static WorkerPoolStatisticsMetadata unwrapMetaValue(ModelNode node) {

@@ -39,8 +39,9 @@ import javax.resource.spi.work.WorkManager;
 import javax.security.auth.login.LoginException;
 import javax.transaction.TransactionManager;
 
+import org.jboss.as.network.SocketBinding;
 import org.jboss.as.security.plugins.SecurityDomainContext;
-import org.jboss.as.server.services.net.SocketBinding;
+import org.jboss.modules.Module;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StopContext;
@@ -90,6 +91,7 @@ import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.processor.DdlPlan;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.security.SecurityHelper;
+import org.teiid.services.BufferServiceImpl;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.transport.*;
 import org.teiid.vdb.runtime.VDBKey;
@@ -111,8 +113,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	private transient VDBRepository vdbRepository;
 	private transient TranslatorRepository translatorRepository;
 
-	private transient String jndiName;
-
 	private String eventDistributorName;
 	private transient EventDistributor eventDistributor;
     private long sessionMaxLimit = SessionService.DEFAULT_MAX_SESSIONS;
@@ -124,6 +124,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	public final InjectedValue<TransactionManager> txnManagerInjector = new InjectedValue<TransactionManager>();
 	public final InjectedValue<Executor> threadPoolInjector = new InjectedValue<Executor>();
 	public final InjectedValue<SocketBinding> jdbcSocketBindingInjector = new InjectedValue<SocketBinding>();
+	public final InjectedValue<BufferServiceImpl> bufferServiceInjector = new InjectedValue<BufferServiceImpl>();
 	public final InjectedValue<SocketBinding> odbcSocketBindingInjector = new InjectedValue<SocketBinding>();
 	public final ConcurrentMap<String, SecurityDomainContext> securityDomains = new ConcurrentHashMap<String, SecurityDomainContext>();
 	private LinkedList<String> securityDomainNames = new LinkedList<String>();
@@ -151,21 +152,29 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		setXATerminator(xaTerminatorInjector.getValue());
 		setTransactionManager(txnManagerInjector.getValue());
 		
-		this.sessionService = new SessionServiceImpl(this.securityDomainNames, this.securityDomains);
+		this.sessionService = new SessionServiceImpl();
+		if (!this.securityDomainNames.isEmpty()) {
+			this.sessionService.setSecurityDomains(this.securityDomainNames, this.securityDomains);			
+		}
 		this.sessionService.setSessionExpirationTimeLimit(this.sessionExpirationTimeLimit);
 		this.sessionService.setSessionMaxLimit(this.sessionMaxLimit);
 		this.sessionService.setDqp(this.dqpCore);
 		this.sessionService.setVDBRepository(this.vdbRepository);
 		this.sessionService.start();
 		
+		this.setBufferService(bufferServiceInjector.getValue());
 		
-		this.jdbcSocketConfiguration.setHostAddress(this.jdbcSocketBindingInjector.getValue().getAddress());
-		this.jdbcSocketConfiguration.setPortNumber(this.jdbcSocketBindingInjector.getValue().getPort());
-		this.odbcSocketConfiguration.setHostAddress(this.odbcSocketBindingInjector.getValue().getAddress());
-		this.odbcSocketConfiguration.setPortNumber(this.odbcSocketBindingInjector.getValue().getPort());
+		if (this.jdbcSocketConfiguration != null) {
+			this.jdbcSocketConfiguration.setHostAddress(this.jdbcSocketBindingInjector.getValue().getAddress());
+			this.jdbcSocketConfiguration.setPortNumber(this.jdbcSocketBindingInjector.getValue().getPort());
+		}
 		
-
-		dqpCore.setTransactionService((TransactionService)LogManager.createLoggingProxy(LogConstants.CTX_TXN_LOG, transactionServerImpl, new Class[] {TransactionService.class}, MessageLevel.DETAIL));
+		if (this.odbcSocketConfiguration != null) {
+			this.odbcSocketConfiguration.setHostAddress(this.odbcSocketBindingInjector.getValue().getAddress());
+			this.odbcSocketConfiguration.setPortNumber(this.odbcSocketBindingInjector.getValue().getPort());
+		}
+		
+		dqpCore.setTransactionService((TransactionService)LogManager.createLoggingProxy(LogConstants.CTX_TXN_LOG, transactionServerImpl, new Class[] {TransactionService.class}, MessageLevel.DETAIL, Module.getCallerModule().getClassLoader()));
 
 		if (this.eventDistributorName != null) {
 			try {
@@ -204,14 +213,14 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	jdbcCsr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
     	jdbcCsr.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);
     	
-    	if (this.jdbcSocketConfiguration.getEnabled()) {
+    	if (this.jdbcSocketConfiguration != null) {
 	    	this.jdbcSocket = new SocketListener(this.jdbcSocketConfiguration, jdbcCsr, this.dqpCore.getBufferManager(), offset);
 	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled","Teiid JDBC = ",(this.jdbcSocketConfiguration.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+this.jdbcSocketConfiguration.getHostAddress().getHostName()+":"+(this.jdbcSocketConfiguration.getPortNumber()+offset))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     	} else {
     		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_not_enabled", "jdbc connections")); //$NON-NLS-1$ //$NON-NLS-2$
     	}
     	
-    	if (this.odbcSocketConfiguration.getEnabled()) {
+    	if (this.odbcSocketConfiguration != null) {
     		this.vdbRepository.odbcEnabled();
 	    	this.odbcSocket = new ODBCSocketListener(this.odbcSocketConfiguration, this.dqpCore.getBufferManager(), offset, getMaxODBCLobSizeAllowed());
 	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("odbc_enabled","Teiid ODBC - SSL=", (this.odbcSocketConfiguration.getSSLConfiguration().isSslEnabled()?"ON":"OFF")+" Host = "+this.odbcSocketConfiguration.getHostAddress().getHostName()+" Port = "+(this.odbcSocketConfiguration.getPortNumber()+offset))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
@@ -220,17 +229,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	}    	
     	
     	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("engine_started", getRuntimeVersion(), new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
-    	if (jndiName != null) {
-	    	final InitialContext ic ;
-	    	try {
-	    		ic = new InitialContext() ;
-	    		Util.bind(ic, jndiName, this) ;
-	    	} catch (final NamingException ne) {
-	    		// Add jndi_failed to bundle
-	        	LogManager.logError(LogConstants.CTX_RUNTIME, ne, IntegrationPlugin.Util.getString("jndi_failed", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
-	    	}
-    	}
-    	
+
     	// add vdb life cycle listeners
 		this.vdbRepository.addListener(new VDBLifeCycleListener() {
 			
@@ -272,15 +271,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     
 	@Override
     public void stop(StopContext context) {
-    	if (jndiName != null) {
-	    	final InitialContext ic ;
-	    	try {
-	    		ic = new InitialContext() ;
-	    		Util.unbind(ic, jndiName) ;
-	    	} catch (final NamingException ne) {
-	    	}
-    	}
-    	
     	try {
 	    	this.dqpCore.stop();
     	} catch(TeiidRuntimeException e) {
@@ -359,10 +349,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	
 	public void setVDBRepository(VDBRepository repo) {
 		this.vdbRepository = repo;
-	}
-	
-	public void setJndiName(final String jndiName) {
-		this.jndiName = jndiName ;
 	}
 	
 	@Override

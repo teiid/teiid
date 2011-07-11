@@ -21,54 +21,49 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OPERATION_NAME;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REMOVE;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import org.jboss.as.controller.*;
+import org.jboss.as.controller.AbstractAddStepHandler;
+import org.jboss.as.controller.OperationContext;
+import org.jboss.as.controller.OperationFailedException;
+import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
-import org.jboss.as.controller.operations.common.Util;
 import org.jboss.dmr.ModelNode;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceRegistry;
 
-public class TranslatorRemove implements DescriptionProvider, ModelAddOperationHandler {
+public class TranslatorRemove extends AbstractAddStepHandler implements DescriptionProvider {
 
 	@Override
 	public ModelNode getModelDescription(Locale locale) {
         final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
         final ModelNode operation = new ModelNode();
         operation.get(OPERATION_NAME).set(REMOVE);
-        operation.get(DESCRIPTION).set(bundle.getString("translator.add")); //$NON-NLS-1$        
+        operation.get(DESCRIPTION).set(bundle.getString("translator.remove")); //$NON-NLS-1$        
         return operation;
 	}
-
+	
 	@Override
-	public OperationResult execute(final OperationContext context, final ModelNode operation, final ResultHandler resultHandler) throws OperationFailedException {
-        final ModelNode opAddr = operation.require(OP_ADDR);
-
-        // Compensating is add
-        final ModelNode model = context.getSubModel();
-        final String translatorName = model.get(Configuration.TRANSLATOR_NAME).asString();
-
-        final ModelNode compensating = Util.getEmptyOperation(ADD, opAddr);
-        compensating.get(Configuration.TRANSLATOR_NAME).set(translatorName);
-
-        if (context.getRuntimeContext() != null) {
-            context.getRuntimeContext().setRuntimeTask(new RuntimeTask() {
-                public void execute(final RuntimeTaskContext context) throws OperationFailedException {
-                    final ServiceRegistry registry = context.getServiceRegistry();
-                    final ServiceController<?> controller = registry.getService(TeiidServiceNames.translatorServiceName(translatorName));
-                    if (controller != null) {
-                        controller.setMode(ServiceController.Mode.REMOVE);
-                    }
-                    resultHandler.handleResultComplete();
-                }
-            });
-        } else {
-            resultHandler.handleResultComplete();
+	protected void populateModel(final ModelNode operation, final ModelNode model) throws OperationFailedException {
+		final String translatorName = model.require(Configuration.TRANSLATOR_NAME).asString();
+		model.get(Configuration.TRANSLATOR_NAME).set(translatorName);
+	}
+	
+	@Override
+    protected void performRuntime(final OperationContext context, final ModelNode operation, final ModelNode model,
+            final ServiceVerificationHandler verificationHandler, final List<ServiceController<?>> newControllers) throws OperationFailedException {
+		
+		final String translatorName = model.require(Configuration.TRANSLATOR_NAME).asString();
+        final ServiceRegistry registry = context.getServiceRegistry(true);
+        final ServiceController<?> controller = registry.getService(TeiidServiceNames.translatorServiceName(translatorName));
+        if (controller != null) {
+            controller.setMode(ServiceController.Mode.REMOVE);
         }
-        return new BasicOperationResult(compensating);
-    }
+	}
 }

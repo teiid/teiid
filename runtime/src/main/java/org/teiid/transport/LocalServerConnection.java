@@ -49,7 +49,7 @@ import org.teiid.runtime.RuntimePlugin;
 
 
 public class LocalServerConnection implements ServerConnection {
-	private static final String TEIID_RUNTIME = "teiid/engine-deployer"; //$NON-NLS-1$
+	public static final String TEIID_RUNTIME = "teiid/engine-deployer"; //$NON-NLS-1$
 	
 	private LogonResult result;
 	private boolean shutdown;

@@ -70,9 +70,9 @@ public class SessionServiceImpl implements SessionService {
     private Map<String, SessionMetadata> sessionCache = new ConcurrentHashMap<String, SessionMetadata>();
     private Timer sessionMonitor = new Timer("SessionMonitor", true); //$NON-NLS-1$
     private Map<String, SecurityDomainContext> securityDomainMap;
-    private LinkedList<String> securityDomainNames;
-    
-    public SessionServiceImpl(LinkedList<String> domainNames, Map<String, SecurityDomainContext> domains) {
+    private List<String> securityDomainNames;
+        
+    public void setSecurityDomains(List<String> domainNames, Map<String, SecurityDomainContext> domains) {
     	this.securityDomainNames = domainNames;
     	this.securityDomainMap = domains;
     }

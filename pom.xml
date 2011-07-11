@@ -10,7 +10,7 @@
 	<properties>
 		<ant.version>1.7.0</ant.version>
 		<site.url>http://www.jboss.org/teiid</site.url>
-        <jbossas-version>7.0.0.Beta4-SNAPSHOT</jbossas-version>
+        <jbossas-version>7.0.0.CR1</jbossas-version>
 	</properties>
 	<scm>
         <connection>scm:svn:https://anonsvn.jboss.org/repos/teiid/trunk</connection>
@@ -383,18 +383,18 @@
             <dependency>
                 <groupId>org.jboss</groupId>
                 <artifactId>jboss-dmr</artifactId>
-                <version>1.0.0.Beta5</version>
+                <version>1.0.0.Beta6</version>
             </dependency>
             
             <dependency>
                 <groupId>org.jboss.msc</groupId>
                 <artifactId>jboss-msc</artifactId>
-                <version>1.0.0.Beta8</version>
+                <version>1.0.0.CR2</version>
             </dependency> 
             <dependency>
                 <groupId>org.jboss</groupId>
                 <artifactId>jboss-vfs</artifactId>
-                <version>3.0.0.GA</version>
+                <version>3.0.1.GA</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.jboss.logging</groupId>
@@ -409,7 +409,7 @@
             <dependency>
                 <groupId>org.picketbox</groupId>
                 <artifactId>picketbox</artifactId>
-                <version>4.0.0.Beta3</version>
+                <version>4.0.0.CR1</version>
             </dependency>           
             <dependency>
                 <groupId>org.jboss.as</groupId>
@@ -425,7 +425,17 @@
                 <groupId>org.jboss.as</groupId>
                 <artifactId>jboss-as-security</artifactId>
                 <version>${jbossas-version}</version>
-            </dependency>            
+            </dependency>  
+            <dependency>
+                <groupId>org.jboss.as</groupId>
+                <artifactId>jboss-as-controller-client</artifactId>   
+                <version>${jbossas-version}</version>         
+            </dependency>    
+            <dependency>
+                <groupId>org.jboss.as</groupId>
+                <artifactId>jboss-as-cli</artifactId>  
+                <version>${jbossas-version}</version>          
+            </dependency>      
                      
             <!-- 
 			<dependency>
@@ -506,11 +516,15 @@
 		<module>client</module>
 		<module>engine</module>
 		<module>connectors</module>
+        <!-- 
 		<module>console</module>
+         -->
 		<module>metadata</module>
 		<module>runtime</module>
 		<module>adminshell</module>
+        <!-- 
 		<module>cache-jbosscache</module>
+         -->
 		<module>hibernate-dialect</module>
         <module>jboss-integration</module>
 		<module>test-integration</module>

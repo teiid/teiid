@@ -217,7 +217,7 @@ public class TestVDBMetaData {
 	@Test public void testVDBMetaDataMapper() {
 		VDBMetaData vdb = buildVDB();
 		
-		ModelNode node = MetadataMapper.wrap(vdb);
+		ModelNode node = MetadataMapper.wrap(vdb, new ModelNode());
 		
 		vdb = MetadataMapper.unwrap(node);
 		validateVDB(vdb);

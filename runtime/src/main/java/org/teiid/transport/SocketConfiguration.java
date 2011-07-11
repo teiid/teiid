@@ -35,7 +35,6 @@ public class SocketConfiguration {
 	private int portNumber;
 	private InetAddress hostAddress;
 	private SSLConfiguration sslConfiguration;
-	private boolean enabled;
 	private String hostName;
 	private String name;
 	private String socketBinding;
@@ -89,14 +88,6 @@ public class SocketConfiguration {
 		} catch (UnknownHostException e) {
 			throw new TeiidRuntimeException("Failed to resolve the bind address"); //$NON-NLS-1$
 		}
-	}
-
-	public boolean getEnabled() {
-		return enabled;
-	}
-
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
 	}
 
 	public int getOutputBufferSize() {

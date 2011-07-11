@@ -105,6 +105,18 @@
         <outputDirectory>modules/org/jboss/teiid/common-core/main</outputDirectory>
       </binaries>
     </moduleSet>
+
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+        <include>org.jboss.teiid:teiid-api</include>   
+      </includes>
+      <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>modules/org/jboss/teiid/api/main</outputDirectory>
+      </binaries>
+    </moduleSet>
     
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
@@ -179,7 +191,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>standalone/deployments/teiid</outputDirectory>
+          <outputDirectory>standalone/deployments</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
       
@@ -218,7 +230,7 @@
         <useAllReactorProjects>true</useAllReactorProjects>
 
         <includes>
-            <include>org.jboss.teiid.connectors:translator-loopback/main</include>
+            <include>org.jboss.teiid.connectors:translator-loopback</include>
         </includes>
 
         <binaries>        
@@ -328,7 +340,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/ws</outputDirectory>
+          <outputDirectory>modules/org/jboss/teiid/translator/ws/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
       

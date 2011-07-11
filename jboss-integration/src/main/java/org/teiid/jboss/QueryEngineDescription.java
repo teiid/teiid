@@ -47,7 +47,6 @@ class QueryEngineDescription implements DescriptionProvider {
 	}
 		
 	static void getQueryEngineDescription(ModelNode node, String type, ResourceBundle bundle) {
-		addAttribute(node, Configuration.JNDI_NAME, type, bundle.getString(Configuration.JNDI_NAME+DESC), ModelType.STRING, true, "teiid/engine-deployer"); //$NON-NLS-1$
 		addAttribute(node, Configuration.ASYNC_THREAD_GROUP, type, bundle.getString(Configuration.ASYNC_THREAD_GROUP+DESC), ModelType.STRING, false, "teiid-async"); //$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_THREADS, type, bundle.getString(Configuration.MAX_THREADS+DESC), ModelType.INT, false, "64"); //$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_ACTIVE_PLANS, type, bundle.getString(Configuration.MAX_ACTIVE_PLANS+DESC), ModelType.INT, false, "20"); //$NON-NLS-1$
@@ -66,7 +65,7 @@ class QueryEngineDescription implements DescriptionProvider {
 		addAttribute(node, Configuration.DETECTING_CHANGE_EVENTS, type, bundle.getString(Configuration.DETECTING_CHANGE_EVENTS+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
 		
 		//session stuff
-		addAttribute(node, Configuration.JDBC_SECURITY_DOMAIN, type, bundle.getString(Configuration.JDBC_SECURITY_DOMAIN+DESC), ModelType.STRING, false, null);
+		addAttribute(node, Configuration.SECURITY_DOMAIN, type, bundle.getString(Configuration.SECURITY_DOMAIN+DESC), ModelType.STRING, false, null);
 		addAttribute(node, Configuration.MAX_SESSIONS_ALLOWED, type, bundle.getString(Configuration.MAX_SESSIONS_ALLOWED+DESC), ModelType.INT, false, "5000"); //$NON-NLS-1$
 		addAttribute(node, Configuration.SESSION_EXPIRATION_TIME_LIMIT, type, bundle.getString(Configuration.SESSION_EXPIRATION_TIME_LIMIT+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
 		
@@ -128,14 +127,12 @@ class QueryEngineDescription implements DescriptionProvider {
 	}
 	
 	private static void getDistributedCacheDescription(ModelNode node, String type, ResourceBundle bundle) {
-		addAttribute(node, Configuration.ENABLED, type, bundle.getString(Configuration.ENABLED+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
 		addAttribute(node, Configuration.CACHE_SERVICE_JNDI_NAME, type, bundle.getString(Configuration.CACHE_SERVICE_JNDI_NAME+DESC), ModelType.STRING, false, "java:TeiidCacheManager"); //$NON-NLS-1$
 		addAttribute(node, Configuration.RESULTSET_CACHE_NAME, type, bundle.getString(Configuration.RESULTSET_CACHE_NAME+DESC), ModelType.STRING, false, "teiid-resultset-cache"); //$NON-NLS-1$
 	}
 	
 	private static void getBufferDescription(ModelNode node, String type, ResourceBundle bundle) {
 		addAttribute(node, Configuration.USE_DISK, type, bundle.getString(Configuration.USE_DISK+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
-		addAttribute(node, Configuration.DISK_DIRECTORY, type, bundle.getString(Configuration.DISK_DIRECTORY+DESC), ModelType.STRING, true, null); 
 		addAttribute(node, Configuration.PROCESSOR_BATCH_SIZE, type, bundle.getString(Configuration.PROCESSOR_BATCH_SIZE+DESC), ModelType.INT, false, "512"); //$NON-NLS-1$
 		addAttribute(node, Configuration.CONNECTOR_BATCH_SIZE, type, bundle.getString(Configuration.CONNECTOR_BATCH_SIZE+DESC), ModelType.INT, false, "1024"); //$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_RESERVE_BATCH_COLUMNS, type, bundle.getString(Configuration.MAX_RESERVE_BATCH_COLUMNS+DESC), ModelType.INT, false, "-1"); //$NON-NLS-1$
@@ -146,7 +143,6 @@ class QueryEngineDescription implements DescriptionProvider {
 	}	
 
 	static void getResultsetCacheDescription(ModelNode node, String type, ResourceBundle bundle) {
-		addAttribute(node, Configuration.ENABLED, type, bundle.getString(Configuration.ENABLED+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_ENTRIES, type, bundle.getString(Configuration.MAX_ENTRIES+DESC), ModelType.INT, false, "1024"); //$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_AGE_IN_SECS, type, bundle.getString(Configuration.MAX_AGE_IN_SECS+DESC), ModelType.INT, false, "7200");//$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_STALENESS, type, bundle.getString(Configuration.MAX_STALENESS+DESC), ModelType.INT, false, "60");//$NON-NLS-1$
@@ -155,7 +151,6 @@ class QueryEngineDescription implements DescriptionProvider {
 	}
 	
 	static void getPreparedPalnCacheDescription(ModelNode node, String type, ResourceBundle bundle) {
-		addAttribute(node, Configuration.ENABLED, type, bundle.getString(Configuration.ENABLED+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_ENTRIES, type, bundle.getString(Configuration.MAX_ENTRIES+DESC), ModelType.INT, false, "512"); //$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_AGE_IN_SECS, type, bundle.getString(Configuration.MAX_AGE_IN_SECS+DESC), ModelType.INT, false, "28800");//$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_STALENESS, type, bundle.getString(Configuration.MAX_STALENESS+DESC), ModelType.INT, false, "0");//$NON-NLS-1$

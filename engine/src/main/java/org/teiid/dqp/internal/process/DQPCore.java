@@ -684,7 +684,7 @@ public class DQPCore implements DQP {
         
         //result set cache
         CacheConfiguration rsCacheConfig = config.getResultsetCacheConfig();
-        if (rsCacheConfig != null && rsCacheConfig.isEnabled()) {
+        if (rsCacheConfig != null) {
 			this.rsCache = new SessionAwareCache<CachedResults>(this.cacheFactory, SessionAwareCache.Type.RESULTSET, rsCacheConfig);
 			this.rsCache.setBufferManager(this.bufferManager);
         }

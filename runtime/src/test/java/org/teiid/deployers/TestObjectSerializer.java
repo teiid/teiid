@@ -34,7 +34,7 @@ import org.teiid.core.util.UnitTestUtil;
 public class TestObjectSerializer {
 	
 	@Test public void testLoadSafe() throws Exception {
-		ObjectSerializer os = new ObjectSerializer();
+		ObjectSerializer os = new ObjectSerializer(System.getProperty("java.io.tmpdir"));
 		File f = UnitTestUtil.getTestScratchFile("foo");
 		os.saveAttachment(f, new Long(2));
 		assertNotNull(os.loadAttachment(f, Long.class));

@@ -37,7 +37,6 @@ class Configuration {
 	public static final String TRANSLATOR = "translator"; //$NON-NLS-1$
 	
 	// Query-ENGINE
-	public static final String JNDI_NAME = "jndi-name"; //$NON-NLS-1$
 	public static final String ASYNC_THREAD_GROUP = "thread-group-async";//$NON-NLS-1$
 	public static final String MAX_THREADS = "maxThreads";//$NON-NLS-1$
 	public static final String MAX_ACTIVE_PLANS = "maxActivePlans";//$NON-NLS-1$
@@ -54,13 +53,12 @@ class Configuration {
 	public static final String MAX_ODBC_LOB_SIZE_ALLOWED = "maxODBCLobSizeAllowed";//$NON-NLS-1$
 	public static final String EVENT_DISTRIBUTOR_NAME = "eventDistributorName";//$NON-NLS-1$
 	public static final String DETECTING_CHANGE_EVENTS = "detectingChangeEvents";//$NON-NLS-1$
-	public static final String JDBC_SECURITY_DOMAIN = "jdbc-security-domain";//$NON-NLS-1$
+	public static final String SECURITY_DOMAIN = "security-domain";//$NON-NLS-1$
 	public static final String MAX_SESSIONS_ALLOWED = "max-sessions-allowed";//$NON-NLS-1$
 	public static final String SESSION_EXPIRATION_TIME_LIMIT = "sessions-expiration-timelimit";//$NON-NLS-1$
 	public static final String ALLOW_ENV_FUNCTION = "allow-env-function";//$NON-NLS-1$
 	
 	public static final String USE_DISK = "useDisk";//$NON-NLS-1$
-	public static final String DISK_DIRECTORY = "diskDirectory";//$NON-NLS-1$
 	public static final String PROCESSOR_BATCH_SIZE = "processorBatchSize";//$NON-NLS-1$
 	public static final String CONNECTOR_BATCH_SIZE = "connectorBatchSize";//$NON-NLS-1$
 	public static final String MAX_RESERVE_BATCH_COLUMNS = "maxReserveBatchColumns";//$NON-NLS-1$
@@ -70,7 +68,6 @@ class Configuration {
 	public static final String MAX_OPEN_FILES = "maxOpenFiles";//$NON-NLS-1$
 		
 	//cache-config
-	public static final String ENABLED = "enabled";//$NON-NLS-1$
 	public static final String MAX_ENTRIES = "maxEntries";//$NON-NLS-1$
 	public static final String MAX_AGE_IN_SECS = "maxAgeInSeconds";//$NON-NLS-1$
 	public static final String MAX_STALENESS = "maxStaleness";//$NON-NLS-1$
@@ -80,6 +77,7 @@ class Configuration {
 	// cache-factory
 	public static final String  CACHE_SERVICE_JNDI_NAME = "cache-service-jndi-name";//$NON-NLS-1$
 	public static final String  RESULTSET_CACHE_NAME = "resultsetCacheName";//$NON-NLS-1$
+	public static final String  CLASS = "class";//$NON-NLS-1$
 	
 	//socket config
 	public static final String MAX_SOCKET_THREAD_SIZE = "maxSocketThreads";//$NON-NLS-1$

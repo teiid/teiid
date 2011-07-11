@@ -34,7 +34,7 @@ public class TestRequestMetadata {
 	@Test public void testMapping() {
 		RequestMetadata request = buildRequest();
 		
-		ModelNode node = MetadataMapper.RequestMetadataMapper.wrap(request);
+		ModelNode node = MetadataMapper.RequestMetadataMapper.wrap(request, new ModelNode());
 		
 		RequestMetadata actual = MetadataMapper.RequestMetadataMapper.unwrap(node);
 		

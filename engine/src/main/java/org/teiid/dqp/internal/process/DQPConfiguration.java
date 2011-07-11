@@ -115,7 +115,7 @@ public class DQPConfiguration{
 	}
 	
 	public boolean isResultSetCacheEnabled() {
-		return this.resultsetCacheConfig != null && this.resultsetCacheConfig.isEnabled();
+		return this.resultsetCacheConfig != null;
 	}
 	
     /**

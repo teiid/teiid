@@ -22,105 +22,33 @@
 
 package org.teiid.adminapi;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.UnknownHostException;
+import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
-import org.teiid.core.util.PropertiesUtils;
-import org.teiid.jdbc.JDBCPlugin;
-import org.teiid.net.CommunicationException;
-import org.teiid.net.ConnectionException;
-import org.teiid.net.ServerConnection;
-import org.teiid.net.ServerConnectionFactory;
-import org.teiid.net.TeiidURL;
-import org.teiid.net.socket.SocketServerConnectionFactory;
+import javax.security.auth.callback.*;
+import javax.security.sasl.RealmCallback;
+import javax.security.sasl.RealmChoiceCallback;
+
+import org.jboss.as.cli.Util;
+import org.jboss.as.cli.operation.impl.DefaultOperationRequestAddress;
+import org.jboss.as.controller.client.ModelControllerClient;
+import org.teiid.adminapi.VDB.ConnectionType;
 
 
 /** 
  * Singleton factory for class for creating Admin connections to the Teiid
  */
 public class AdminFactory {
+	private static AdminFactory INSTANCE = new AdminFactory();
 	
-    private final class AdminProxy implements InvocationHandler {
-
-    	private Admin admin;
-    	private ServerConnection serverConnection;
-    	private boolean closed;
-    	
-    	public AdminProxy(Properties p) throws ConnectionException, CommunicationException {
-    		this.serverConnection = serverConnectionFactory.getConnection(p);
-    		this.admin = serverConnection.getService(Admin.class);
-		}
-    	
-    	private synchronized Admin getTarget() throws AdminComponentException {
-    		if (closed) {
-    			throw new AdminComponentException(JDBCPlugin.Util.getString("admin_conn_closed")); //$NON-NLS-1$
-    		}
-    		return admin;
-    	}
-    	
-		@Override
-		public Object invoke(Object proxy, Method method, Object[] args)
-				throws Throwable {
-			if (method.getName().equals("close")) { //$NON-NLS-1$
-				close();
-				return null;
-			}
-			if (!method.getDeclaringClass().equals(Admin.class)) {
-				return method.invoke(this, args);
-			}
-			try {
-				return method.invoke(getTarget(), args);
-			} catch (InvocationTargetException e) {
-				throw e.getTargetException();
-			}
-		}
-		
-		public synchronized void close() {
-			if (closed) {
-				return;
-			}
-			this.closed = true;
-			if (serverConnection != null) {
-				serverConnection.close();
-			}
-		}		
-    }
-
-	public static final String DEFAULT_APPLICATION_NAME = "Admin"; //$NON-NLS-1$
-
-    private static AdminFactory instance = new AdminFactory(SocketServerConnectionFactory.getInstance());
-    
-    private ServerConnectionFactory serverConnectionFactory;
-    
-    AdminFactory(ServerConnectionFactory connFactory) {
-    	this.serverConnectionFactory = connFactory;
-    }
-    
-    public static AdminFactory getInstance() {
-        return instance;
-    }
-    
-    
-    /**
-     * Creates a ServerAdmin with the specified connection properties. 
-     * Uses the DEFAULT_APPLICATION_NAME as the application name.
-     * @param userName
-     * @param password
-     * @param serverURL
-     * @return
-     * @throws AdminException
-     */
-    public Admin createAdmin(String userName,
-                             char[] password,
-                             String serverURL) throws AdminException {
-        
-        return createAdmin(userName, password, serverURL, DEFAULT_APPLICATION_NAME);
-        
-    }
-    
+	public static AdminFactory getInstance() {
+		return INSTANCE;
+	}
     /**
      * Creates a ServerAdmin with the specified connection properties. 
      * @param userName
@@ -130,38 +58,285 @@ public class AdminFactory {
      * @return
      * @throws AdminException
      */
-    public Admin createAdmin(String userName,
-                                   char[] password,
-                                   String serverURL,
-                                   String applicationName) throws AdminException {
-        
-        if (userName == null || userName.trim().length() == 0) {
-            throw new IllegalArgumentException(JDBCPlugin.Util.getString("invalid_parameter")); //$NON-NLS-1$
+    public Admin createAdmin(String host, int port, String userName, char[] password) throws AdminException {
+        if(host == null) {
+            host = "localhost"; //$NON-NLS-1$
         }
-        
-    	final Properties p = new Properties();
-    	p.setProperty(TeiidURL.CONNECTION.APP_NAME, applicationName);
-    	p.setProperty(TeiidURL.CONNECTION.USER_NAME, userName);
-        if (password != null) {
-        	p.setProperty(TeiidURL.CONNECTION.PASSWORD, new String(password));
-        }
-    	p.setProperty(TeiidURL.CONNECTION.SERVER_URL, serverURL);
-    	return createAdmin(p);
-    }
 
-	public Admin createAdmin(Properties p) throws AdminException {
-		p = PropertiesUtils.clone(p);
-		p.remove(TeiidURL.JDBC.VDB_NAME);
-		p.remove(TeiidURL.JDBC.VDB_VERSION);
-    	p.setProperty(TeiidURL.CONNECTION.ADMIN, Boolean.TRUE.toString());
-    	
-		try {
-			Admin serverAdmin = (Admin)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] { Admin.class }, new AdminProxy(p));
-			return serverAdmin;
-		} catch (ConnectionException e) {				
-			throw new AdminComponentException(e);
-		} catch (CommunicationException e) {
-			throw new AdminComponentException(e);
+        if(port < 0) {
+            port = 9990;
+        }
+
+        try {
+            CallbackHandler cbh = new AuthenticationCallbackHandler(userName, password);
+            ModelControllerClient newClient = ModelControllerClient.Factory.create(host, port, cbh);
+
+            List<String> nodeTypes = Util.getNodeTypes(newClient, new DefaultOperationRequestAddress());
+            if (!nodeTypes.isEmpty()) {
+                boolean domainMode = nodeTypes.contains("server-group"); //$NON-NLS-1$ 
+                System.out.println("Connected to " //$NON-NLS-1$ 
+                        + (domainMode ? "domain controller at " : "standalone controller at ") //$NON-NLS-1$ //$NON-NLS-2$
+                        + host + ":" + port); //$NON-NLS-1$ 
+                return new AdminImpl(newClient);
+            } 
+            System.out.println("The controller is not available at " + host + ":" + port); //$NON-NLS-1$ //$NON-NLS-2$
+        } catch (UnknownHostException e) {
+        	System.out.println("Failed to resolve host '" + host + "': " + e.getLocalizedMessage()); //$NON-NLS-1$ //$NON-NLS-2$
+        }
+        return null;
+    }
+    
+    private class AuthenticationCallbackHandler implements CallbackHandler {
+        private boolean realmShown = false;
+        private String userName = null;
+        private char[] password = null;
+
+        public AuthenticationCallbackHandler(String user, char[] password) {
+        	this.userName = user;
+        	this.password = password;
+        }
+        
+        public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+            // Special case for anonymous authentication to avoid prompting user for their name.
+            if (callbacks.length == 1 && callbacks[0] instanceof NameCallback) {
+                ((NameCallback)callbacks[0]).setName("anonymous CLI user"); //$NON-NLS-1$
+                return;
+            }
+
+            for (Callback current : callbacks) {
+                if (current instanceof RealmCallback) {
+                    RealmCallback rcb = (RealmCallback) current;
+                    String defaultText = rcb.getDefaultText();
+                    rcb.setText(defaultText); // For now just use the realm suggested.
+                    if (realmShown == false) {
+                        realmShown = true;
+                    }
+                } else if (current instanceof RealmChoiceCallback) {
+                    throw new UnsupportedCallbackException(current, "Realm choice not currently supported."); //$NON-NLS-1$
+                } else if (current instanceof NameCallback) {
+                    NameCallback ncb = (NameCallback) current;
+                    ncb.setName(userName);
+                } else if (current instanceof PasswordCallback) {
+                    PasswordCallback pcb = (PasswordCallback) current;
+                    pcb.setPassword(password);
+                } else {
+                    throw new UnsupportedCallbackException(current);
+                }
+            }
+        }
+
+    }    
+    
+    private class AdminImpl implements Admin{
+    	public AdminImpl (ModelControllerClient connection) {
+    		
+    	}
+
+		@Override
+		public void addDataRoleMapping(String vdbName, int vdbVersion,
+				String dataRole, String mappedRoleName) throws AdminException {
+			// rameshTODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void assignToModel(String vdbName, int vdbVersion,
+				String modelName, String sourceName, String translatorName,
+				String dsName) throws AdminException {
+			// rameshTODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void cancelRequest(String sessionId, long executionId)
+				throws AdminException {
+			// rameshTODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void changeVDBConnectionType(String vdbName, int vdbVersion,
+				ConnectionType type) throws AdminException {
+			// rameshTODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void clearCache(String cacheType) throws AdminException {
+			// rameshTODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void clearCache(String cacheType, String vdbName, int vdbVersion)
+				throws AdminException {
+			// rameshTODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void close() {
+			// rameshTODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void createDataSource(String deploymentName,
+				String templateName, Properties properties)
+				throws AdminException {
+			// rameshTODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void deleteDataSource(String deployedName) throws AdminException {
+			// rameshTODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void deleteVDB(String vdbName, int vdbVersion)
+				throws AdminException {
+			// rameshTODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void deployVDB(String fileName, InputStream vdb)
+				throws AdminException {
+			// rameshTODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public CacheStatistics getCacheStats(String cacheType)
+				throws AdminException {
+			// rameshTODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Collection<String> getCacheTypes() throws AdminException {
+			// rameshTODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Collection<String> getDataSourceNames() throws AdminException {
+			// rameshTODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Set<String> getDataSourceTemplateNames() throws AdminException {
+			// rameshTODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Collection<Request> getRequests() throws AdminException {
+			// rameshTODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Collection<Request> getRequestsForSession(String sessionId)
+				throws AdminException {
+			// rameshTODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Collection<Session> getSessions() throws AdminException {
+			// rameshTODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Collection<PropertyDefinition> getTemplatePropertyDefinitions(
+				String templateName) throws AdminException {
+			// rameshTODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Collection<Transaction> getTransactions() throws AdminException {
+			// rameshTODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Translator getTranslator(String deployedName)
+				throws AdminException {
+			// rameshTODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Collection<Translator> getTranslators() throws AdminException {
+			// rameshTODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public VDB getVDB(String vdbName, int vbdVersion) throws AdminException {
+			// rameshTODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Set<VDB> getVDBs() throws AdminException {
+			// rameshTODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public WorkerPoolStatistics getWorkerPoolStats() throws AdminException {
+			// rameshTODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public void markDataSourceAvailable(String jndiName)
+				throws AdminException {
+			// rameshTODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mergeVDBs(String sourceVDBName, int sourceVDBVersion,
+				String targetVDBName, int targetVDBVersion)
+				throws AdminException {
+			// rameshTODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void removeDataRoleMapping(String vdbName, int vdbVersion,
+				String dataRole, String mappedRoleName) throws AdminException {
+			// rameshTODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void setAnyAuthenticatedForDataRole(String vdbName,
+				int vdbVersion, String dataRole, boolean anyAuthenticated)
+				throws AdminException {
+			// rameshTODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void terminateSession(String sessionId) throws AdminException {
+			// rameshTODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void terminateTransaction(String transactionId)
+				throws AdminException {
+			// rameshTODO Auto-generated method stub
+			
 		}
     }
     

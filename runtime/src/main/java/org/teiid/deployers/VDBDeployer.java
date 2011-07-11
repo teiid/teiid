@@ -146,8 +146,12 @@ public class VDBDeployer implements DeploymentUnitProcessor {
 		deploymentUnit.removeAttachment(TeiidAttachments.UDF_METADATA);
 		deploymentUnit.removeAttachment(TeiidAttachments.METADATA_STORE);
 		
-		// add transformation metadata to the repository.
-		this.vdbRepository.addVDB(deployment, store, visibilityMap, udf, cmr);
+		try {
+			// add transformation metadata to the repository.
+			this.vdbRepository.addVDB(deployment, store, visibilityMap, udf, cmr);
+		} catch (VirtualDatabaseException e) {
+			throw new DeploymentUnitProcessingException(e);
+		}
 		
 		boolean valid = true;
 		synchronized (deployment) {
@@ -260,12 +264,14 @@ public class VDBDeployer implements DeploymentUnitProcessor {
 		VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
 		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
 		
-		if (this.vdbRepository != null) {
+		if (this.vdbRepository != null && deployment != null) {
 			this.vdbRepository.removeVDB(deployment.getName(), deployment.getVersion());
+			deployment.setRemoved(true);
 		}
 		
-		deployment.setRemoved(true);
-		deleteMetadataStore(file);
+		if (file != null) {
+			deleteMetadataStore(file);
+		}
 
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_undeployed", deployment)); //$NON-NLS-1$
 	}

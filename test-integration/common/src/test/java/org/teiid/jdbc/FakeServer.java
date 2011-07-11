@@ -25,7 +25,6 @@ import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 
-import org.jboss.deployers.spi.DeploymentException;
 import org.mockito.Mockito;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.VDB;
@@ -38,6 +37,7 @@ import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.deployers.MetadataStoreGroup;
 import org.teiid.deployers.VDBRepository;
+import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
@@ -147,7 +147,7 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         	stores.addStore(metadata);
 			this.repo.addVDB(vdbMetaData, stores, entries, null, cmr);
 			this.repo.finishDeployment(vdbName, 1);
-		} catch (DeploymentException e) {
+		} catch (VirtualDatabaseException e) {
 			throw new RuntimeException(e);
 		}
 	}

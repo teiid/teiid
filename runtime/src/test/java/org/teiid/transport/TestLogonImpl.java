@@ -53,7 +53,7 @@ public class TestLogonImpl extends TestCase {
 		session.setSessionId(String.valueOf(1));
 		session.setSessionToken(new SessionToken(1, userName));
 
-		Mockito.stub(ssi.createSession(userName, null, applicationName,p, false, true)).toReturn(session);
+		Mockito.stub(ssi.createSession(userName, null, applicationName,p, true)).toReturn(session);
 
 		LogonImpl impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
 

@@ -21,10 +21,10 @@
  */
 package org.teiid.deployers;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.teiid.adminapi.impl.TranslatorMetaData;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorProperty;
@@ -34,7 +34,7 @@ public class TestTranslatorUtil {
 
 	@Test
 	public void testBuildExecutionFactory() throws Exception {
-		TranslatorMetaData tm = new TranslatorMetaData();
+		VDBTranslatorMetaData tm = new VDBTranslatorMetaData();
 		
 		tm.addProperty("MyProperty", "correctly-assigned");
 		tm.setExecutionFactoryClass(MyTranslator.class);
@@ -45,7 +45,7 @@ public class TestTranslatorUtil {
 	}
 	
 	@Test public void testBuildExecutionFactoryCaseInsensitive() throws Exception {
-		TranslatorMetaData tm = new TranslatorMetaData();
+		VDBTranslatorMetaData tm = new VDBTranslatorMetaData();
 		
 		tm.addProperty("myproperty", "correctly-assigned");
 		tm.setExecutionFactoryClass(MyTranslator.class);
