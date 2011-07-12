@@ -40,8 +40,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -538,11 +536,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		});
     	if (synch) {
     		try {
-    			if (queryTimeoutMS > 0) {
-    				pendingResult.get(queryTimeoutMS, TimeUnit.MILLISECONDS);
-    			} else {
-    				pendingResult.get();
-    			}
+				pendingResult.get();
     			result.get(); //throw an exception if needed
     			return result;
     		} catch (ExecutionException e) {
@@ -551,8 +545,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     			}
     			throw TeiidSQLException.create(e);
     		} catch (InterruptedException e) {
-    			timeoutOccurred();
-    		} catch (TimeoutException e) {
     			timeoutOccurred();
 			}
     		throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Timeout_before_complete")); //$NON-NLS-1$
@@ -578,7 +570,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         reqMsg.setExecutionId(this.currentRequestID);
         
         ResultsFuture.CompletionListener<ResultsMessage> compeletionListener = null;
-		if (queryTimeoutMS > 0 && !synch) {
+		if (queryTimeoutMS > 0) {
 			final CancelTask c = new QueryTimeoutCancelTask(queryTimeoutMS, this);
 			cancellationTimer.add(c);
 			compeletionListener = new ResultsFuture.CompletionListener<ResultsMessage>() {

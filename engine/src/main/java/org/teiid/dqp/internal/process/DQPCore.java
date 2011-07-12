@@ -108,7 +108,7 @@ public class DQPCore implements DQP {
 		
 		@Override
 		public void run() {
-			LogManager.logDetail("Running task for parent thread", parentName); //$NON-NLS-1$
+			LogManager.logDetail(LogConstants.CTX_DQP, "Running task for parent thread", parentName); //$NON-NLS-1$
 			super.run();
 		}
 		
@@ -352,6 +352,7 @@ public class DQPCore implements DQP {
 			}
 		}
         if (runInThread) {
+        	workItem.useCallingThread = true;
         	workItem.run();
         }
         return resultsFuture;

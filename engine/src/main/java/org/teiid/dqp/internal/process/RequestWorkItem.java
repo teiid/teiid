@@ -162,8 +162,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     /**The time when command begins processing on the server.*/
     private long processingTimestamp = System.currentTimeMillis();
     
+    protected boolean useCallingThread;
+    
     public RequestWorkItem(DQPCore dqpCore, RequestMessage requestMsg, Request request, ResultsReceiver<ResultsMessage> receiver, RequestID requestID, DQPWorkContext workContext) {
-    	super(workContext.useCallingThread() || requestMsg.isSync() ? Thread.currentThread() : null);
         this.requestMsg = requestMsg;
         this.requestID = requestID;
         this.processorTimeslice = dqpCore.getProcessorTimeSlice();
@@ -196,24 +197,56 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	protected boolean isDoneProcessing() {
 		return isClosed;
 	}
+		
+	@Override
+	public void run() {
+		while (!isDoneProcessing()) {
+			super.run();
+			if (!useCallingThread) {
+				break;
+			}
+			//should use the calling thread
+			synchronized (this) {
+				if (this.resultsReceiver == null) {
+					break; //allow results to be processed by calling thread
+				}
+				try {
+					wait();
+				} catch (InterruptedException e) {
+					try {
+						requestCancel();
+					} catch (TeiidComponentException e1) {
+						throw new TeiidRuntimeException(e1);
+					}
+				}
+			}
+		}
+	}
 
 	@Override
 	protected void resumeProcessing() {
-		if (doneProducingBatches && !closeRequested && !isCanceled) {
-			this.run(); // just run in the IO thread
-		} else {
+		if (!this.useCallingThread) {
 			dqpCore.addWork(this);
 		}
 	}
 	
-	@Override
-	protected void interrupted(InterruptedException e) {
-		try {
-			this.requestCancel();
-		} catch (TeiidComponentException e1) {
-			throw new TeiidRuntimeException(e1);
+	/**
+	 * Special call from request threads to allow resumption of processing by
+	 * the calling thread.
+	 */
+	public void doMoreWork() {
+		boolean run = false;
+		synchronized (this) {
+			run = this.getThreadState() == ThreadState.IDLE;
+			moreWork();
+			if (!useCallingThread || this.getThreadState() != ThreadState.MORE_WORK) {
+				return;
+			}
 		}
-		super.interrupted(e);
+		if (run) {
+			//run outside of the lock
+			run();
+		}
 	}
 	
 	@Override
@@ -650,12 +683,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		return new TeiidProcessingException(exception, SQLStates.QUERY_CANCELED, exception.getMessage());
 	}
     
-    @Override
-    protected boolean shouldPause() {
-    	//if we are waiting on results it's ok to pause
-    	return this.resultsReceiver != null;
-    }
-
     private static List<ParameterInfo> getParameterInfo(StoredProcedure procedure) {
         List<ParameterInfo> paramInfos = new ArrayList<ParameterInfo>();
         
@@ -750,12 +777,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     	if (!this.doneProducingBatches) {
     		this.requestCancel(); //pending work should be canceled for fastest clean up
     	}
-    	this.moreWork();
+    	this.doMoreWork();
     }
     
     public void requestMore(int batchFirst, int batchLast, ResultsReceiver<ResultsMessage> receiver) {
     	this.requestResults(batchFirst, batchLast, receiver);
-    	this.moreWork(); 
+    	this.doMoreWork(); 
     }
     
     public void closeAtomicRequest(AtomicRequestID atomicRequestId) {
