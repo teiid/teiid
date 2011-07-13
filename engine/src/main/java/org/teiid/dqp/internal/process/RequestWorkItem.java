@@ -163,6 +163,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     private long processingTimestamp = System.currentTimeMillis();
     
     protected boolean useCallingThread;
+    private volatile boolean hasThread;
     
     public RequestWorkItem(DQPCore dqpCore, RequestMessage requestMsg, Request request, ResultsReceiver<ResultsMessage> receiver, RequestID requestID, DQPWorkContext workContext) {
         this.requestMsg = requestMsg;
@@ -200,26 +201,34 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		
 	@Override
 	public void run() {
-		while (!isDoneProcessing()) {
-			super.run();
-			if (!useCallingThread) {
-				break;
-			}
-			//should use the calling thread
-			synchronized (this) {
-				if (this.resultsReceiver == null) {
-					break; //allow results to be processed by calling thread
+		hasThread = true;
+		try {
+			while (!isDoneProcessing()) {
+				super.run();
+				if (!useCallingThread) {
+					break;
 				}
-				try {
-					wait();
-				} catch (InterruptedException e) {
+				//should use the calling thread
+				synchronized (this) {
+					if (this.resultsReceiver == null) {
+						break; //allow results to be processed by calling thread
+					}
+					if (this.getThreadState() == ThreadState.MORE_WORK) {
+						continue;
+					}
 					try {
-						requestCancel();
-					} catch (TeiidComponentException e1) {
-						throw new TeiidRuntimeException(e1);
+						wait();
+					} catch (InterruptedException e) {
+						try {
+							requestCancel();
+						} catch (TeiidComponentException e1) {
+							throw new TeiidRuntimeException(e1);
+						}
 					}
 				}
 			}
+		} finally {
+			hasThread = false;
 		}
 	}
 
@@ -237,14 +246,15 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	public void doMoreWork() {
 		boolean run = false;
 		synchronized (this) {
-			run = this.getThreadState() == ThreadState.IDLE;
 			moreWork();
 			if (!useCallingThread || this.getThreadState() != ThreadState.MORE_WORK) {
 				return;
 			}
+			run = !hasThread;
 		}
 		if (run) {
 			//run outside of the lock
+			LogManager.logDetail(LogConstants.CTX_DQP, "Restarting processing using the calling thread", requestID); //$NON-NLS-1$
 			run();
 		}
 	}

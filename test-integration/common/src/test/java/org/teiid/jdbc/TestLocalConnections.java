@@ -26,17 +26,20 @@ import static org.junit.Assert.*;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.jboss.netty.handler.timeout.TimeoutException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -74,12 +77,14 @@ public class TestLocalConnections {
 	static Condition waiting = lock.newCondition();
 	static Condition wait = lock.newCondition();
 	
+	static Semaphore sourceCounter = new Semaphore(0);
+	
 	public static int blocking() throws InterruptedException {
 		lock.lock();
 		try {
 			waiting.signal();
 			if (!wait.await(2, TimeUnit.SECONDS)) {
-				throw new TimeoutException();
+				throw new RuntimeException();
 			}
 		} finally {
 			lock.unlock();
@@ -88,7 +93,7 @@ public class TestLocalConnections {
 	}
 
 	static FakeServer server = new FakeServer();
-    
+	
 	@SuppressWarnings("serial")
 	@BeforeClass public static void oneTimeSetup() throws Exception {
     	server.setUseCallingThread(true);
@@ -106,13 +111,15 @@ public class TestLocalConnections {
     								throws TranslatorException {
     						    return new ResultSetExecution() {
     						    	
+    						    	boolean returnedRow = false;
+    						    	
 									@Override
 									public void execute() throws TranslatorException {
 										lock.lock();
 										try {
-											waiting.signal();
+											sourceCounter.release();
 											if (!wait.await(2, TimeUnit.SECONDS)) {
-												throw new TimeoutException();
+												throw new RuntimeException();
 											}
 										} catch (InterruptedException e) {
 											throw new RuntimeException(e);
@@ -133,8 +140,11 @@ public class TestLocalConnections {
 									
 									@Override
 									public List<?> next() throws TranslatorException, DataNotAvailableException {
-										// TODO Auto-generated method stub
-										return null;
+										if (returnedRow) {
+											return null;
+										}
+										returnedRow = true;
+										return new ArrayList<Object>(Collections.singleton(null));
 									}
 								};
     						}
@@ -255,12 +265,7 @@ public class TestLocalConnections {
     	SimpleUncaughtExceptionHandler handler = new SimpleUncaughtExceptionHandler();
     	t.setUncaughtExceptionHandler(handler);
     	
-    	lock.lock();
-    	try {
-    		assertTrue(waiting.await(2, TimeUnit.SECONDS));
-    	} finally {
-    		lock.unlock();
-    	}    	
+    	sourceCounter.acquire();
     	
     	//t should now be waiting also
     	
@@ -272,6 +277,56 @@ public class TestLocalConnections {
     	}
 
     	//t should finish
+    	t.join();
+    	
+    	if (handler.t != null) {
+    		throw handler.t;
+    	}
+	}
+	
+	@Test public void testWaitMultiple() throws Throwable {
+		final Connection c = server.createConnection("jdbc:teiid:test");
+    	
+		Thread t = new Thread() {
+			public void run() {
+		    	Statement s;
+				try {
+					s = c.createStatement();
+			    	assertTrue(s.execute("select part_id from parts union all select part_id from parts"));
+			    	ResultSet r = s.getResultSet();
+			    	
+			    	//wake up the other source thread, should put the requestworkitem into the more work state 
+			    	lock.lock();
+			    	try {
+			    		wait.signal();
+			    	} finally {
+			    		lock.unlock();
+			    	}
+			    	Thread.sleep(1000); //TODO: need a better hook to determine that connector work has finished
+			    	while (r.next()) {
+			    		//will hang unless this thread is allowed to resume processing
+			    	}
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			}
+		};
+    	t.start();
+    	SimpleUncaughtExceptionHandler handler = new SimpleUncaughtExceptionHandler();
+    	t.setUncaughtExceptionHandler(handler);
+    	
+    	sourceCounter.acquire(2);
+    	
+    	//t should now be waiting also
+    	
+    	//wake up 1 source thread
+    	lock.lock();
+    	try {
+    		wait.signal();
+    	} finally {
+    		lock.unlock();
+    	}
+    	
     	t.join();
     	
     	if (handler.t != null) {
