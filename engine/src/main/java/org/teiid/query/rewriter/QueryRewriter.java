@@ -52,6 +52,7 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.Transform;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
@@ -876,11 +877,11 @@ public class QueryRewriter {
         try {
             PostOrderNavigator.doVisit(obj, visitor);
         } catch (TeiidRuntimeException err) {
-            if (err.getChild() instanceof TeiidComponentException) {
-                throw (TeiidComponentException)err.getChild();
+            if (err.getCause() instanceof TeiidComponentException) {
+                throw (TeiidComponentException)err.getCause();
             } 
-            if (err.getChild() instanceof TeiidProcessingException) {
-                throw (TeiidProcessingException)err.getChild();
+            if (err.getCause() instanceof TeiidProcessingException) {
+                throw (TeiidProcessingException)err.getCause();
             } 
             throw err;
         }
@@ -2514,17 +2515,44 @@ public class QueryRewriter {
         }
         function.setArgs(newArgs);
 
-        if( FunctionLibrary.isConvert(function) &&
-            newArgs[1] instanceof Constant) {
-            
-            Class srcType = newArgs[0].getType();
-            String tgtTypeName = (String) ((Constant)newArgs[1]).getValue();
-            Class tgtType = DataTypeManager.getDataTypeClass(tgtTypeName);
+        if( FunctionLibrary.isConvert(function)) {
+            Class<?> srcType = newArgs[0].getType();
+            Class<?> tgtType = function.getType();
 
             if(srcType != null && tgtType != null && srcType.equals(tgtType)) {
-                return newArgs[0];
+                return newArgs[0]; //unnecessary conversion
             }
-
+            
+            if (!(newArgs[0] instanceof Function) || tgtType == DataTypeManager.DefaultDataClasses.OBJECT) {
+            	return function;
+            }
+        	Function nested = (Function) newArgs[0];
+        	if (!FunctionLibrary.isConvert(nested)) {
+        		return function;
+        	}
+    		Class<?> nestedType = nested.getArgs()[0].getType();
+    		
+            Transform t = DataTypeManager.getTransform(nestedType, nested.getType());
+            if (t.isExplicit()) {
+            	//explicit conversions are required
+            	return function;
+            }
+            if (DataTypeManager.getTransform(nestedType, tgtType) == null) {
+            	//no direct conversion exists
+            	return function;
+            }
+    		//can't remove a convert that would alter the lexical form
+    		if (tgtType == DataTypeManager.DefaultDataClasses.STRING &&
+    				(nestedType == DataTypeManager.DefaultDataClasses.BOOLEAN
+    				|| nestedType == DataTypeManager.DefaultDataClasses.DATE
+    				|| nestedType == DataTypeManager.DefaultDataClasses.TIME
+    				|| tgtType == DataTypeManager.DefaultDataClasses.BIG_DECIMAL
+    				|| tgtType == DataTypeManager.DefaultDataClasses.FLOAT
+    				|| (tgtType == DataTypeManager.DefaultDataClasses.DOUBLE && srcType != DataTypeManager.DefaultDataClasses.FLOAT))) {
+    			return function;
+    		}
+        	//nested implicit transform is not needed
+        	return rewriteExpressionDirect(ResolverUtil.getConversion(nested.getArgs()[0], DataTypeManager.getDataTypeName(nestedType), DataTypeManager.getDataTypeName(tgtType), false, funcLibrary));
         }
 
         //convert DECODESTRING function to CASE expression
