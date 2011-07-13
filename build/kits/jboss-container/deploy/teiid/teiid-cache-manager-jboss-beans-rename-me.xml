@@ -85,7 +85,7 @@
                             <!-- Hibernate 2LC can replicate custom types, so we use marshalling -->
                             <property name="useRegionBasedMarshalling">true</property>
                             <!-- Must match the value of "useRegionBasedMarshalling" -->
-                            <property name="inactiveOnStartup">true</property>
+                            <property name="inactiveOnStartup">false</property>
 
                             <!-- Disable asynchronous RPC marshalling/sending -->
                             <property name="serializationExecutorPoolSize">0</property>
