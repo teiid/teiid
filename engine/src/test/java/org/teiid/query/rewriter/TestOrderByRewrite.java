@@ -305,11 +305,6 @@ public class TestOrderByRewrite  {
             new String[] { "pm1.g1.e1" } ); //$NON-NLS-1$ 
     } 
     
-    @Test public void testOrderByExpression() throws Exception {
-    	Query resolvedQuery = (Query) getCommand("SELECT 0 AS SOMEINT, pm1.g1.e2 as y FROM pm1.g1 ORDER BY e2 || e1, e3"); //$NON-NLS-1$
-        assertEquals("SELECT X.SOMEINT, X.y FROM (SELECT 0 AS SOMEINT, pm1.g1.e2 AS y, (e2 || e1) AS EXPR1, e3 FROM pm1.g1) AS X ORDER BY X.EXPR1, X.e3", resolvedQuery.toString()); //$NON-NLS-1$
-    }
-    
     @Test public void testRewiteOrderBy() {
         helpTestRewriteCommand("SELECT 1+1 as a FROM pm1.g1 order by a", "SELECT 2 AS a FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }

@@ -126,9 +126,6 @@ public final class RuleMergeVirtual implements
         		for (ElementSymbol elementSymbol : elements) {
 					if (virtualGroup.equals(elementSymbol.getGroupSymbol())) {
 						unrelated = true;
-						if (!(symbolMap.getMappedExpression(elementSymbol) instanceof ElementSymbol)) {
-							return root;
-						}
 					}
 				}
 			}

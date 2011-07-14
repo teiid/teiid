@@ -903,57 +903,14 @@ public class QueryRewriter {
         
         LinkedList<OrderByItem> unrelatedItems = new LinkedList<OrderByItem>();
         
-        boolean hasUnrelatedExpression = rewriteOrderBy(queryCommand, orderBy,
-				projectedSymbols, unrelatedItems);
+        rewriteOrderBy(queryCommand, orderBy, projectedSymbols, unrelatedItems);
         
-        if (orderBy.getVariableCount() == 0 || !hasUnrelatedExpression) {
-        	return queryCommand;
-        } 
-        
-        int originalSymbolCount = select.getProjectedSymbols().size();
-
-        //add unrelated to select
-        for (OrderByItem orderByItem : unrelatedItems) {
-            select.addSymbol(orderByItem.getSymbol());				
-		}
-        makeSelectUnique(select, false);
-        
-        Query query = queryCommand.getProjectedQuery();
-        
-        Into into = query.getInto();
-        query.setInto(null);
-        Limit limit = query.getLimit();
-        query.setLimit(null);
-        query.setOrderBy(null);
-        
-        Query top = null;
-        
-        try {
-        	top = createInlineViewQuery(new GroupSymbol("X"), query, metadata, select.getProjectedSymbols()); //$NON-NLS-1$
-			Iterator<SingleElementSymbol> iter = top.getSelect().getProjectedSymbols().iterator();
-		    HashMap<Expression, SingleElementSymbol> expressionMap = new HashMap<Expression, SingleElementSymbol>();
-		    for (SingleElementSymbol symbol : select.getProjectedSymbols()) {
-		    	SingleElementSymbol ses = iter.next();
-		        expressionMap.put(SymbolMap.getExpression(symbol), ses);
-		        expressionMap.put(new ElementSymbol(symbol.getName()), ses);
-		    }
-		    ExpressionMappingVisitor.mapExpressions(orderBy, expressionMap);
-		    //now the order by should only contain element symbols
-		} catch (TeiidException err) {
-            throw new TeiidRuntimeException(err);
-        }
-		List symbols = top.getSelect().getSymbols();
-		top.getSelect().setSymbols(symbols.subList(0, originalSymbolCount));
-		top.setInto(into);
-		top.setLimit(limit);
-		top.setOrderBy(orderBy);
-		return top;
+    	return queryCommand;
     }
 
-	public static boolean rewriteOrderBy(QueryCommand queryCommand,
+	public static void rewriteOrderBy(QueryCommand queryCommand,
 			final OrderBy orderBy, final List projectedSymbols,
 			LinkedList<OrderByItem> unrelatedItems) {
-		boolean hasUnrelatedExpression = false;
 		HashSet<Expression> previousExpressions = new HashSet<Expression>();
         for (int i = 0; i < orderBy.getVariableCount(); i++) {
         	SingleElementSymbol querySymbol = orderBy.getVariable(i);
@@ -970,14 +927,11 @@ public class QueryRewriter {
                 orderBy.removeOrderByItem(i--);
         	} else if (!isUnrelated) {
         		orderBy.getOrderByItems().get(i).setSymbol((SingleElementSymbol)querySymbol.clone());
-        	} else {
-        		hasUnrelatedExpression = true;
         	}
         }
         if (orderBy.getVariableCount() == 0) {
         	queryCommand.setOrderBy(null);
         } 
-		return hasUnrelatedExpression;
 	}
     
     /**

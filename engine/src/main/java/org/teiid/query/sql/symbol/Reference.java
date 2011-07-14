@@ -191,12 +191,4 @@ public class Reference implements Expression, ContextReference {
         return this.positional;
     }
     
-    /**
-     * Should never be called - used for an xml hack
-     * @param expression
-     */
-    public void setExpression(ElementSymbol expression) {
-		this.expression = expression;
-	}
-
 }

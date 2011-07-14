@@ -344,7 +344,6 @@ public final class RuleRaiseAccess implements OptimizerRule {
         
         List<OrderByItem> sortCols = ((OrderBy)parentNode.getProperty(NodeConstants.Info.SORT_ORDER)).getOrderByItems();
         for (OrderByItem symbol : sortCols) {
-            //TODO: this check shouldn't be necessary, since the order by is not introducing new expressions
             if(! canPushSymbol(symbol.getSymbol(), true, modelID, metadata, capFinder, record)) {
                 return false;
             }
