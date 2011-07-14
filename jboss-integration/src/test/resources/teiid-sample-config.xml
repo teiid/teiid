@@ -1,5 +1,5 @@
 <subsystem xmlns="urn:jboss:domain:teiid:1.0">
-    <query-engine jndi-name="teiid/engine-deployer">
+    <query-engine>
         <thread-group-async>teiid-async</thread-group-async>
         <maxThreads>64</maxThreads>
         <maxActivePlans>20</maxActivePlans>

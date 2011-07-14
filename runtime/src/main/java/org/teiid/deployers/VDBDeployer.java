@@ -261,6 +261,9 @@ public class VDBDeployer implements DeploymentUnitProcessor {
 
 	@Override
 	public void undeploy(final DeploymentUnit deploymentUnit) {
+		if (!TeiidAttachments.isVDBDeployment(deploymentUnit)) {
+			return;
+		}		
 		VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
 		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
 		

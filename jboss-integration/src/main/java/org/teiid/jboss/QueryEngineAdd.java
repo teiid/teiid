@@ -45,6 +45,7 @@ import org.jboss.as.server.services.path.RelativePathService;
 import org.jboss.dmr.ModelNode;
 import org.jboss.msc.inject.ConcurrentMapInjector;
 import org.jboss.msc.service.*;
+import org.jboss.msc.value.InjectedValue;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
 import org.teiid.cache.DefaultCacheFactory;
@@ -78,6 +79,11 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler {
     	final VDBRepository vdbRepo = buildVDBRepository(queryEngineNode);
     	final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener();
     	
+    	SystemVDBDeployer systemVDB = new SystemVDBDeployer();
+    	systemVDB.setVDBRepository(vdbRepo);
+    	SystemVDBService systemVDBService = new SystemVDBService(systemVDB);
+    	newControllers.add(target.addService(TeiidServiceNames.SYSTEM_VDB, systemVDBService).install());
+    	
     	//FIXME *******************
     	final ObjectSerializer serializer = new ObjectSerializer("/tmp");
     	//FIXME *******************
@@ -86,7 +92,7 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler {
     	TranslatorRepositoryService translatorService = new TranslatorRepositoryService(translatorRepo);
     	newControllers.add(target.addService(TeiidServiceNames.TRANSLATOR_REPO, translatorService).install());
 
-    	RelativePathService.addService(TeiidServiceNames.BUFFER_DIR, "teiid-buffer", "jboss.server.temp.dir", target); //$NON-NLS-1$ //$NON-NLS-2$
+    	newControllers.add(RelativePathService.addService(TeiidServiceNames.BUFFER_DIR, "teiid-buffer", "jboss.server.temp.dir", target)); //$NON-NLS-1$ //$NON-NLS-2$
     	
     	// TODO: remove verbose service by moving the buffer service from runtime project
     	final BufferServiceImpl bufferManager = buildBufferManager(queryEngineNode.get(Configuration.BUFFER_SERVICE));
@@ -133,7 +139,8 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler {
         serviceBuilder.addDependency(ServiceName.JBOSS.append("txn", "TransactionManager"), TransactionManager.class, engine.txnManagerInjector); //$NON-NLS-1$ //$NON-NLS-2$
         serviceBuilder.addDependency(ServiceName.JBOSS.append("thread", "executor", asyncExecutor), Executor.class, engine.threadPoolInjector); //$NON-NLS-1$ //$NON-NLS-2$
         serviceBuilder.addDependency(TeiidServiceNames.BUFFER_MGR, BufferServiceImpl.class, engine.bufferServiceInjector);
-       
+        serviceBuilder.addDependency(TeiidServiceNames.SYSTEM_VDB, SystemVDBDeployer.class,  new InjectedValue<SystemVDBDeployer>());
+        
         if (jdbc != null) {
         	serviceBuilder.addDependency(ServiceName.JBOSS.append("binding", jdbc.getSocketBinding()), SocketBinding.class, engine.jdbcSocketBindingInjector); //$NON-NLS-1$
         }

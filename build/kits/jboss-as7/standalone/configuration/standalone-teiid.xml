@@ -213,6 +213,7 @@
                 <module identifier="org.apache.aries.jmx" startlevel="2"/>
                 <module identifier="org.apache.felix.eventadmin" startlevel="2"/>
                 <module identifier="org.apache.felix.metatype" startlevel="2"/>
+                <module identifier="org.apache.felix.scr" startlevel="2"/>
                 <module identifier="org.apache.felix.webconsole" startlevel="2"/>
                 <module identifier="org.jboss.osgi.jmx" startlevel="2"/>
                 <module identifier="org.jboss.osgi.http" startlevel="2"/>
@@ -244,8 +245,8 @@
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:teiid:1.0">
             <query-engine>
-                <thread-group-async>teiid-async</thread-group-async>
-                <eventDistributorName>teiid/event-distributor</eventDistributorName>
+                <async-thread-group>teiid-async</async-thread-group>
+                <event-distributor-name>teiid/event-distributor</event-distributor-name>
                 <security-domain>teiid-security</security-domain>
                 <jdbc>
                     <socket-binding>teiid-jdbc</socket-binding>

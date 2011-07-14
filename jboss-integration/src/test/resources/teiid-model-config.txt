@@ -1,12 +1,5 @@
 {
     "attributes" => {
-        "jndi-name" => {
-            "type" => STRING,
-            "description" => "JNDI name of the Teiid Query Engine",
-            "required" => true,
-            "max-occurs" => 1,
-            "default" => "teiid/engine-deployer"
-        },
         "thread-group-async" => {
             "type" => STRING,
             "description" => "Thread Pool to be used with Asynchronous operations in Teiid",

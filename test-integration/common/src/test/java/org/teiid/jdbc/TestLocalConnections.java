@@ -22,17 +22,17 @@
 
 package org.teiid.jdbc;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.LinkedHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.jboss.netty.handler.timeout.TimeoutException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -62,7 +62,7 @@ public class TestLocalConnections {
 	static Condition waiting = lock.newCondition();
 	static Condition wait = lock.newCondition();
 	
-	public static int blocking() throws InterruptedException {
+	public static int blocking() throws InterruptedException, TimeoutException {
 		lock.lock();
 		try {
 			waiting.signal();

@@ -21,17 +21,32 @@
  */
 package org.teiid.jboss;
 
-import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.Service;
+import org.jboss.msc.service.StartContext;
+import org.jboss.msc.service.StartException;
+import org.jboss.msc.service.StopContext;
+import org.teiid.deployers.SystemVDBDeployer;
 
-public class TeiidServiceNames {
-	public static ServiceName ENGINE = ServiceName.JBOSS.append("teiid", "query-engine");
-	public static ServiceName TRANSLATOR_REPO = ServiceName.JBOSS.append("teiid", "translator-repository");
-	static ServiceName TRANSLATOR_BASE = ServiceName.JBOSS.append("teiid", "translator");
-	public static ServiceName BUFFER_DIR = ServiceName.JBOSS.append("teiid", "buffer.dir");
-	public static ServiceName BUFFER_MGR = ServiceName.JBOSS.append("teiid", "buffer-mgr");
-	public static ServiceName SYSTEM_VDB = ServiceName.JBOSS.append("teiid", "system.vdb");
+public class SystemVDBService implements Service<SystemVDBDeployer> {
+	private SystemVDBDeployer deployer;
 	
-	public static ServiceName translatorServiceName(String name) {
-		return TRANSLATOR_BASE.append(name);
+	public SystemVDBService(SystemVDBDeployer deployer){
+		this.deployer = deployer;
 	}
+	
+	@Override
+	public void start(StartContext context) throws StartException {
+		deployer.start();
+	}
+
+	@Override
+	public void stop(StopContext context) {
+		deployer.stop();
+	}
+
+	@Override
+	public SystemVDBDeployer getValue() throws IllegalStateException, IllegalArgumentException {
+		return deployer;
+	}
+
 }

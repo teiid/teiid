@@ -45,25 +45,137 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     @Override
     public void writeContent(final XMLExtendedStreamWriter writer, final SubsystemMarshallingContext context) throws XMLStreamException {
         context.startSubsystemElement(Namespace.CURRENT.getUri(), false);
-        writer.writeStartElement(Configuration.QUERY_ENGINE);
-
         ModelNode node = context.getModelNode();
-        ModelNode teiidRuntime = node.require(Configuration.QUERY_ENGINE);
-        //writeElement(writer, Element.batchSize, teiidRuntime.require("batch-size"));
-
-        //writer.writeEndElement(); // End teiid-runtime element.
+        if (!node.isDefined()) {
+        	return;
+        }
+        writer.writeStartElement(Element.QUERY_ENGINE_ELEMENT.getLocalName());
+        writeQueryEngine(writer, node);
+        writer.writeEndElement();
         writer.writeEndElement(); // End of subsystem element
     }
     
-    private boolean has(ModelNode node, String name) {
+    // write the elements according to the schema defined.
+    private void writeQueryEngine( XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+    	writeElement(writer, Element.ASYNC_THREAD_GROUP_ELEMENT, node);
+    	writeElement(writer, Element.MAX_THREADS_ELEMENT, node);
+    	writeElement(writer, Element.MAX_ACTIVE_PLANS_ELEMENT, node);
+    	writeElement(writer, Element.USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT, node);
+    	writeElement(writer, Element.TIME_SLICE_IN_MILLI_ELEMENT, node);
+    	writeElement(writer, Element.MAX_ROWS_FETCH_SIZE_ELEMENT, node);
+    	writeElement(writer, Element.LOB_CHUNK_SIZE_IN_KB_ELEMENT, node);
+    	writeElement(writer, Element.USE_DATA_ROLES_ELEMENT, node);
+    	writeElement(writer, Element.ALLOW_CREATE_TEMPORY_TABLES_BY_DEFAULT_ELEMENT, node);
+    	writeElement(writer, Element.ALLOW_FUNCTION_CALLS_BY_DEFAULT_ELEMENT, node);
+    	writeElement(writer, Element.QUERY_THRESHOLD_IN_SECS_ELEMENT, node);
+    	writeElement(writer, Element.MAX_SOURCE_ROWS_ELEMENT, node);
+    	writeElement(writer, Element.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT, node);
+    	writeElement(writer, Element.MAX_ODBC_LOB_SIZE_ALLOWED_ELEMENT, node);
+    	writeElement(writer, Element.EVENT_DISTRIBUTOR_NAME_ELEMENT, node);
+    	writeElement(writer, Element.DETECTING_CHANGE_EVENTS_ELEMENT, node);
+    	writeElement(writer, Element.JDBC_SECURITY_DOMAIN_ELEMENT, node);
+    	writeElement(writer, Element.MAX_SESSIONS_ALLOWED_ELEMENT, node);
+    	writeElement(writer, Element.SESSION_EXPIRATION_TIME_LIMIT_ELEMENT, node);
+    	writeElement(writer, Element.ALLOW_ENV_FUNCTION_ELEMENT, node);
+
+    	if (has(node, Element.BUFFER_SERVICE_ELEMENT.getLocalName())){
+    		writer.writeStartElement(Element.BUFFER_SERVICE_ELEMENT.getLocalName());
+    		writeBufferService(writer, node.get(Element.BUFFER_SERVICE_ELEMENT.getLocalName()));
+    		writer.writeEndElement();
+    	}
+    	
+    	if (has(node, Element.CACHE_FACORY_ELEMENT.getLocalName())){
+    		writer.writeStartElement(Element.CACHE_FACORY_ELEMENT.getLocalName());
+    		writeCacheFactoryConfiguration(writer, node.get(Element.CACHE_FACORY_ELEMENT.getLocalName()));
+    		writer.writeEndElement();
+    	}    	
+    	
+    	if (has(node, Element.RESULTSET_CACHE_ELEMENT.getLocalName())){
+    		writer.writeStartElement(Element.RESULTSET_CACHE_ELEMENT.getLocalName());
+    		writeCacheConfiguration(writer, node.get(Element.RESULTSET_CACHE_ELEMENT.getLocalName()));
+    		writer.writeEndElement();
+    	}
+    	
+    	if (has(node, Element.PREPAREDPLAN_CACHE_ELEMENT.getLocalName())){
+    		writer.writeStartElement(Element.RESULTSET_CACHE_ELEMENT.getLocalName());
+    		writeCacheConfiguration(writer, node.get(Element.PREPAREDPLAN_CACHE_ELEMENT.getLocalName()));
+    		writer.writeEndElement();
+    	}
+    	
+    	//jdbc
+    	if (has(node, Element.JDBC_ELEMENT.getLocalName())){
+    		writer.writeStartElement(Element.JDBC_ELEMENT.getLocalName());
+    		writeSocketConfiguration(writer, node.get(Element.JDBC_ELEMENT.getLocalName()));
+    		writer.writeEndElement();
+    	}
+    	
+    	//odbc
+    	if (has(node, Element.ODBC_ELEMENT.getLocalName())) {
+    		writer.writeStartElement(Element.ODBC_ELEMENT.getLocalName());
+    		writeSocketConfiguration(writer, node.get(Element.ODBC_ELEMENT.getLocalName()));
+    		writer.writeEndElement();
+    	}
+    }
+    
+    private void writeSocketConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+    	writeElement(writer, Element.MAX_SOCKET_SIZE_ELEMENT, node);
+    	writeElement(writer, Element.IN_BUFFER_SIZE_ELEMENT, node);
+    	writeElement(writer, Element.OUT_BUFFER_SIZE_ELEMENT, node);
+    	writeElement(writer, Element.SOCKET_BINDING_ELEMENT, node);
+    	
+    	if (has(node, Element.SSL_ELEMENT.getLocalName())) {
+    		writer.writeStartElement(Element.SSL_ELEMENT.getLocalName());
+    		writeSSLConfiguration(writer, node.get(Element.SSL_ELEMENT.getLocalName()));
+    		writer.writeEndElement();
+    	}
+	}
+
+	private void writeSSLConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+		writeElement(writer, Element.SSL_MODE_ELEMENT, node);
+		writeElement(writer, Element.KEY_STORE_FILE_ELEMENT, node);
+		writeElement(writer, Element.KEY_STORE_PASSWD_ELEMENT, node);
+		writeElement(writer, Element.KEY_STORE_TYPE_ELEMENT, node);
+		writeElement(writer, Element.SSL_PROTOCOL_ELEMENT, node);
+		writeElement(writer, Element.TRUST_FILE_ELEMENT, node);
+		writeElement(writer, Element.TRUST_PASSWD_ELEMENT, node);
+		writeElement(writer, Element.AUTH_MODE_ELEMENT, node);    
+		writeElement(writer, Element.KEY_MANAGEMENT_ALG_ELEMENT, node);  
+	}
+
+	private void writeBufferService(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+		writeElement(writer, Element.USE_DISK_ELEMENT, node);
+		writeElement(writer, Element.PROCESSOR_BATCH_SIZE_ELEMENT, node);
+		writeElement(writer, Element.CONNECTOR_BATCH_SIZE_ELEMENT, node);
+		writeElement(writer, Element.MAX_RESERVE_BATCH_COLUMNS_ELEMENT, node);
+		writeElement(writer, Element.MAX_PROCESSING_BATCH_COLUMNS_ELEMENT, node);
+		writeElement(writer, Element.MAX_FILE_SIZE_ELEMENT, node);
+		writeElement(writer, Element.MAX_BUFFER_SPACE_ELEMENT, node);
+		writeElement(writer, Element.MAX_OPEN_FILES_ELEMENT, node);
+	}
+
+	private void writeCacheFactoryConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+		writeElement(writer, Element.CACHE_SERVICE_JNDI_NAME_ELEMENT, node);
+		writeElement(writer, Element.RESULTSET_CACHE_NAME_ELEMENT, node);
+	}
+
+	private void writeCacheConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+		writeElement(writer, Element.MAX_ENTRIES_ELEMENT, node);
+		writeElement(writer, Element.MAX_AGE_IN_SECS_ELEMENT, node);
+		writeElement(writer, Element.MAX_STALENESS_ELEMENT, node);
+		writeElement(writer, Element.CACHE_TYPE_ELEMENT, node);
+		writeElement(writer, Element.CACHE_LOCATION_ELEMENT, node);
+	}
+
+	private boolean has(ModelNode node, String name) {
         return node.has(name) && node.get(name).isDefined();
     }
 
-    private void writeElement(final XMLExtendedStreamWriter writer, final Element element, final ModelNode value)
-            throws XMLStreamException {
-        writer.writeStartElement(element.getLocalName());
-        writer.writeCharacters(value.asString());
-        writer.writeEndElement();
+    private void writeElement(final XMLExtendedStreamWriter writer, final Element element, final ModelNode node) throws XMLStreamException {
+    	if (has(node, element.getLocalName())) {
+	        writer.writeStartElement(element.getLocalName());
+	        writer.writeCharacters(node.get(element.getLocalName()).asString());
+	        writer.writeEndElement();
+    	}
     }        
 
     @Override
@@ -88,12 +200,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
                     switch (element) {
                         case QUERY_ENGINE_ELEMENT:
                         	ModelNode node = parseQueryEngine(reader);
-//                        	node.get(OP).set(ADD);
-//                        	ModelNode nodeAddress = address.clone();
-//                        	nodeAddress.add(Configuration.QUERY_ENGINE, "teiid-query-engine"); // should this be for each instance name? // //$NON-NLS-1$
-//                        	nodeAddress.protect();
-//                          node.get(OP_ADDR).set(nodeAddress);       
-//                          list.add(node);
                         	subsystem.get(Configuration.QUERY_ENGINE).set(node);
                             break;                            
                         default: 

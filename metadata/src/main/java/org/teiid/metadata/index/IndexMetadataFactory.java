@@ -24,10 +24,8 @@ package org.teiid.metadata.index;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.*;
 
-import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
 import org.jboss.vfs.VirtualFileFilter;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -71,8 +69,7 @@ public class IndexMetadataFactory {
 	 * @throws IOException
 	 * @throws URISyntaxException
 	 */
-	public IndexMetadataFactory(URL url) throws IOException, URISyntaxException {
-		VirtualFile vdb = VFS.getChild(url.toURI());
+	public IndexMetadataFactory(VirtualFile vdb) throws IOException, URISyntaxException {
 		List<VirtualFile> children = vdb.getChildrenRecursively(new VirtualFileFilter() {
 			@Override
 			public boolean accepts(VirtualFile file) {
