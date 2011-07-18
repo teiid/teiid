@@ -206,24 +206,24 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, FileConnection connection) throws TranslatorException {
 		Procedure p = metadataFactory.addProcedure(GETTEXTFILES);
-		p.setAnnotation("Returns text files that match the given path and pattern as CLOBs");
+		p.setAnnotation("Returns text files that match the given path and pattern as CLOBs"); //$NON-NLS-1$
 		ProcedureParameter param = metadataFactory.addProcedureParameter("pathAndPattern", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
-		param.setAnnotation("The path and pattern of what files to return.  Currently the only pattern supported is *.<ext>, which returns only the files matching the given extension at the given path.");
+		param.setAnnotation("The path and pattern of what files to return.  Currently the only pattern supported is *.<ext>, which returns only the files matching the given extension at the given path."); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("file", TypeFacility.RUNTIME_NAMES.CLOB, p); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("filePath", TypeFacility.RUNTIME_NAMES.STRING, p); //$NON-NLS-1$
 		
 		Procedure p1 = metadataFactory.addProcedure(GETFILES);
-		p1.setAnnotation("Returns text files that match the given path and pattern as BLOBs");
+		p1.setAnnotation("Returns text files that match the given path and pattern as BLOBs"); //$NON-NLS-1$
 		param = metadataFactory.addProcedureParameter("pathAndPattern", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p1); //$NON-NLS-1$
-		param.setAnnotation("The path and pattern of what files to return.  Currently the only pattern supported is *.<ext>, which returns only the files matching the given extension at the given path.");
+		param.setAnnotation("The path and pattern of what files to return.  Currently the only pattern supported is *.<ext>, which returns only the files matching the given extension at the given path."); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("file", TypeFacility.RUNTIME_NAMES.BLOB, p1); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("filePath", TypeFacility.RUNTIME_NAMES.STRING, p1); //$NON-NLS-1$
 		
 		Procedure p2 = metadataFactory.addProcedure(SAVEFILE);
-		p2.setAnnotation("Saves the given vale to the given path.  Any existing file will be overriden.");
+		p2.setAnnotation("Saves the given vale to the given path.  Any existing file will be overriden."); //$NON-NLS-1$
 		metadataFactory.addProcedureParameter("filePath", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p2); //$NON-NLS-1$
 		param = metadataFactory.addProcedureParameter("file", TypeFacility.RUNTIME_NAMES.OBJECT, Type.In, p2); //$NON-NLS-1$
-		param.setAnnotation("The contents to save.  Can be one of CLOB, BLOB, or XML");
+		param.setAnnotation("The contents to save.  Can be one of CLOB, BLOB, or XML"); //$NON-NLS-1$
 	} 
 	
 	@Override
