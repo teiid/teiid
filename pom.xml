@@ -439,14 +439,8 @@
             </dependency>            
 			<dependency>
 				<groupId>net.sourceforge.saxon</groupId>
-				<artifactId>saxon</artifactId>
-				<version>9.1.0.8</version>
-			</dependency>
-			<dependency>
-				<groupId>net.sourceforge.saxon</groupId>
-				<artifactId>saxon</artifactId>
-				<classifier>dom</classifier>
-				<version>9.1.0.8</version>
+				<artifactId>saxonhe</artifactId>
+				<version>9.2.1.5</version>
 			</dependency>
 			<dependency>
 				<groupId>org.jboss.netty</groupId>

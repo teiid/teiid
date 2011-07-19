@@ -78,13 +78,7 @@
 
 		<dependency>
 			<groupId>net.sourceforge.saxon</groupId>
-			<artifactId>saxon</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>net.sourceforge.saxon</groupId>
-			<classifier>dom</classifier>
-			<artifactId>saxon</artifactId>
+			<artifactId>saxonhe</artifactId>
 		</dependency>
 		
 		<dependency>
