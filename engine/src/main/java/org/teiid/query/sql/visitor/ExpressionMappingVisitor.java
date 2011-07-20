@@ -24,6 +24,7 @@ package org.teiid.query.sql.visitor;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -52,6 +53,7 @@ import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
+import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.symbol.AggregateSymbol;
@@ -78,6 +80,7 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
 
     private Map symbolMap;
     private boolean clone = true;
+    private boolean elementSymbolsOnly;
 
     /**
      * Constructor for ExpressionMappingVisitor.
@@ -251,7 +254,7 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
 
     public void visit(SearchedCaseExpression obj) {
         int whenCount = obj.getWhenCount();
-        ArrayList thens = new ArrayList(whenCount);
+        ArrayList<Expression> thens = new ArrayList<Expression>(whenCount);
         for (int i = 0; i < whenCount; i++) {
             thens.add(replaceExpression(obj.getThenExpression(i)));
         }
@@ -299,6 +302,9 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     }    
     
     public Expression replaceExpression(Expression element) {
+    	if (elementSymbolsOnly && !(element instanceof ElementSymbol)) {
+    		return element;
+    	}
         Expression mapped = (Expression) this.symbolMap.get(element);
         if(mapped != null) {
         	if (clone) {
@@ -310,16 +316,19 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     }
     
     public void visit(StoredProcedure obj) {
-    	for (Iterator paramIter = obj.getInputParameters().iterator(); paramIter.hasNext();) {
-			SPParameter param = (SPParameter) paramIter.next();
+    	for (Iterator<SPParameter> paramIter = obj.getInputParameters().iterator(); paramIter.hasNext();) {
+			SPParameter param = paramIter.next();
             Expression expr = param.getExpression();
             param.setExpression(replaceExpression(expr));
         }
     }
     
     public void visit(AggregateSymbol obj) {
-    	if (obj.getExpression() != null) { //account for count(*) - TODO: clean this up
+    	if (obj.getExpression() != null) {
     		obj.setExpression(replaceExpression(obj.getExpression()));
+    	}
+    	if (obj.getCondition() != null) { 
+    		obj.setCondition(replaceExpression(obj.getCondition()));
     	}
     }
     
@@ -328,7 +337,11 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
      * @param obj Object to remap
      */
     public void visit(GroupBy obj) {        
-        replaceSymbols(obj.getSymbols(), false);
+    	List<Expression> symbols = obj.getSymbols();
+		for (int i = 0; i < symbols.size(); i++) {
+            Expression symbol = symbols.get(i);
+            symbols.set(i, replaceExpression(symbol));
+        }
     }
     
     @Override
@@ -371,21 +384,35 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
      * @param obj Language object
      * @param exprMap Expression map, Expression to Expression
      */
-    public static void mapExpressions(LanguageObject obj, Map exprMap) {
+    public static void mapExpressions(LanguageObject obj, Map<? extends Expression, ? extends Expression> exprMap) {
         if(obj == null || exprMap == null || exprMap.isEmpty()) { 
             return;
         }
-        final Set reverseSet = new HashSet(exprMap.values());
         final ExpressionMappingVisitor visitor = new ExpressionMappingVisitor(exprMap);
-        PreOrderNavigator pon = new PreOrderNavigator(visitor) {
-        	@Override
-        	protected void visitNode(LanguageObject obj) {
-        		if (!(obj instanceof Expression) || !reverseSet.contains(obj)) {
-            		super.visitNode(obj);
-        		}
+        visitor.elementSymbolsOnly = true;
+        for (Map.Entry<? extends Expression, ? extends Expression> entry : exprMap.entrySet()) {
+        	if (!(entry.getKey() instanceof ElementSymbol)) {
+        		visitor.elementSymbolsOnly = false;
+        		break;
         	}
-        };
-        obj.acceptVisitor(pon);
+		}
+        boolean useReverseMapping = !Collections.disjoint(GroupsUsedByElementsVisitor.getGroups(exprMap.keySet()),
+        		GroupsUsedByElementsVisitor.getGroups(exprMap.values()));
+        
+        if (useReverseMapping) {
+	        final Set<Expression> reverseSet = new HashSet<Expression>(exprMap.values());
+	        PreOrderNavigator pon = new PreOrderNavigator(visitor) {
+	        	@Override
+	        	protected void visitNode(LanguageObject obj) {
+	        		if (!(obj instanceof Expression) || !reverseSet.contains(obj)) {
+	            		super.visitNode(obj);
+	        		}
+	        	}
+	        };
+	        obj.acceptVisitor(pon);
+        } else {
+        	PreOrPostOrderNavigator.doVisit(obj, visitor, PreOrPostOrderNavigator.PRE_ORDER, false);
+        }
     }
     
     protected void setVariableValues(Map variableValues) {

@@ -130,7 +130,7 @@ public final class NodeConstants {
         MAKE_IND,
         
         // Group node properties
-        GROUP_COLS,         // List <SingleElementSymbol>
+        GROUP_COLS,         // List <Expression>
 
         // Special constant used in converting plan to process for all nodes
         OUTPUT_COLS,        // List <SingleElementSymbol>

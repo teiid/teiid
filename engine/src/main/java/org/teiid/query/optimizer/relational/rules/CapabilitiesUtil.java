@@ -120,12 +120,13 @@ public class CapabilitiesUtil {
         		return false;
         	}
             boolean supportsFunctionsInGroupBy = caps.supportsCapability(Capability.QUERY_FUNCTIONS_IN_GROUP_BY);
+            boolean supportsInlineView = caps.supportsCapability(Capability.QUERY_FROM_INLINE_VIEWS);
 
             // Also verify that if there is a function that we can support pushdown of functions in group by
             Iterator colIter = groupCols.iterator();
             while(colIter.hasNext()) {
                 Expression col = (Expression) colIter.next();
-                if(!(col instanceof ElementSymbol) && !supportsFunctionsInGroupBy) {
+                if(!(col instanceof ElementSymbol) && !supportsFunctionsInGroupBy && !supportsInlineView) {
                     // Function in GROUP BY can't be pushed
                     return false;
                 }
@@ -179,6 +180,11 @@ public class CapabilitiesUtil {
                 return false;
             }
             break;
+        case ARRAY_AGG:
+            if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_ARRAY)) {
+                return false;
+            }
+            break;
         default:
         	if (aggregate.isEnhancedNumeric()) { 
         		if (!caps.supportsCapability(Capability.QUERY_AGGREGATES_ENHANCED_NUMERIC)) {
@@ -195,10 +201,12 @@ public class CapabilitiesUtil {
             return false;
         }
         
+        if (aggregate.getCondition() != null && !caps.supportsCapability(Capability.ADVANCED_OLAP)) {
+    		return false;
+        }
+        
         // Passed all the checks!
         return true;
-        
-
     }
 
     public static boolean supportsScalarFunction(Object modelID, Function function, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 

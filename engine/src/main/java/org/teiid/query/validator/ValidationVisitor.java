@@ -114,7 +114,6 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.DerivedColumn;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.QueryString;
@@ -129,7 +128,6 @@ import org.teiid.query.sql.symbol.XMLNamespaces;
 import org.teiid.query.sql.symbol.XMLParse;
 import org.teiid.query.sql.symbol.XMLQuery;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
-import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
@@ -208,18 +206,12 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 
     public void visit(GroupBy obj) {
     	// Get list of all group by IDs
-        List groupBySymbols = obj.getSymbols();
+        List<Expression> groupBySymbols = obj.getSymbols();
         validateSortable(groupBySymbols);
-		Iterator symbolIter = groupBySymbols.iterator();
-		while(symbolIter.hasNext()) {
-            SingleElementSymbol symbol = (SingleElementSymbol)symbolIter.next();
-            if(symbol instanceof ExpressionSymbol) {
-                ExpressionSymbol exprSymbol = (ExpressionSymbol) symbol;
-                Expression expr = exprSymbol.getExpression();
-                if (!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr).isEmpty() || expr instanceof Constant || expr instanceof Reference) {
-                	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.groupby_subquery", expr), expr); //$NON-NLS-1$
-                }
-            }                
+        for (Expression expr : groupBySymbols) {
+            if (!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr).isEmpty() || expr instanceof Constant || expr instanceof Reference) {
+            	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.groupby_subquery", expr), expr); //$NON-NLS-1$
+            }
 		}
     }
     
@@ -666,15 +658,13 @@ public class ValidationVisitor extends AbstractValidationVisitor {
      * and ORDER BY.
      * @param symbols List of SingleElementSymbol
      */
-    protected void validateSortable(List symbols) {
-        Iterator iter = symbols.iterator();
-        while(iter.hasNext()) {
-            SingleElementSymbol symbol = (SingleElementSymbol) iter.next();
-            validateSortable(symbol);
+    protected void validateSortable(List<? extends Expression> symbols) {
+    	for (Expression expression : symbols) {
+            validateSortable(expression);
         }
     }
 
-	private void validateSortable(SingleElementSymbol symbol) {
+	private void validateSortable(Expression symbol) {
 		if (isNonComparable(symbol)) {
 		    handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0026", symbol), symbol); //$NON-NLS-1$
 		}
@@ -759,13 +749,16 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         Select select = query.getSelect();
         GroupBy groupBy = query.getGroupBy();
         Criteria having = query.getHaving();
+        validateNoAggsInClause(groupBy);
+        validateNoAggsInClause(query.getCriteria());
+        validateNoAggsInClause(query.getFrom());
         if(groupBy != null || having != null || !AggregateSymbolCollectorVisitor.getAggregates(select, false).isEmpty()) {
             Set<Expression> groupSymbols = null;
             if(groupBy != null) {
                 groupSymbols = new HashSet<Expression>();
-                for (final Iterator iterator = groupBy.getSymbols().iterator(); iterator.hasNext();) {
-                    final SingleElementSymbol element = (SingleElementSymbol)iterator.next();
-                    groupSymbols.add(SymbolMap.getExpression(element));
+                for (final Iterator<Expression> iterator = groupBy.getSymbols().iterator(); iterator.hasNext();) {
+                    final Expression element = iterator.next();
+                    groupSymbols.add(element);
                 }
             }
             
@@ -783,10 +776,20 @@ public class ValidationVisitor extends AbstractValidationVisitor {
             
             // Move items to this report
             ValidatorReport report = visitor.getReport();
-            Collection items = report.getItems();
+            Collection<ValidatorFailure> items = report.getItems();
             super.getReport().addItems(items);        
         }
     }
+
+	private void validateNoAggsInClause(LanguageObject clause) {
+		if (clause == null) {
+        	return;
+        }
+		Collection<AggregateSymbol> aggs = AggregateSymbolCollectorVisitor.getAggregates(clause, false);
+		if (!aggs.isEmpty()) {
+			handleValidationError(QueryPlugin.Util.getString("SQLParser.Aggregate_only_top_level", aggs), aggs);
+		}
+	}
     
     protected void validateInsert(Insert obj) {
         Collection<ElementSymbol> vars = obj.getVariables();
@@ -1202,6 +1205,17 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     
     @Override
     public void visit(AggregateSymbol obj) {
+    	if (obj.getCondition() != null) {
+    		Expression condition = obj.getCondition();
+    		if (!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(condition).isEmpty()) {
+    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.filter_subquery", condition), condition); //$NON-NLS-1$
+    		}
+    		for (ElementSymbol es : ElementCollectorVisitor.getElements(condition, false)) {
+    			if (es.isExternalReference()) {
+    				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.filter_subquery", es), es); //$NON-NLS-1$
+    			}
+    		}
+    	}
     	if (obj.getAggregateFunction() != Type.TEXTAGG) {
     		return;
     	}

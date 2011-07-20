@@ -333,7 +333,7 @@ public class ResolverUtil {
     	List<SingleElementSymbol> knownElements = command.getProjectedQuery().getSelect().getProjectedSymbols();
     	
     	boolean isSimpleQuery = false;
-    	List fromClauseGroups = Collections.emptyList();
+    	List<GroupSymbol> fromClauseGroups = Collections.emptyList();
         
         if (command instanceof Query) {
         	Query query = (Query)command;

@@ -32,8 +32,6 @@ import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.id.IDGenerator;
-import org.teiid.core.id.IntegerID;
-import org.teiid.core.id.IntegerIDFactory;
 import org.teiid.core.util.Assertion;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -53,6 +51,7 @@ import org.teiid.query.processor.relational.ArrayTableNode;
 import org.teiid.query.processor.relational.DependentAccessNode;
 import org.teiid.query.processor.relational.DependentProcedureAccessNode;
 import org.teiid.query.processor.relational.DependentProcedureExecutionNode;
+import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
 import org.teiid.query.processor.relational.GroupingNode;
 import org.teiid.query.processor.relational.InsertPlanExecutionNode;
 import org.teiid.query.processor.relational.JoinNode;
@@ -61,7 +60,6 @@ import org.teiid.query.processor.relational.MergeJoinStrategy;
 import org.teiid.query.processor.relational.NestedLoopJoinStrategy;
 import org.teiid.query.processor.relational.NestedTableJoinStrategy;
 import org.teiid.query.processor.relational.NullNode;
-import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
 import org.teiid.query.processor.relational.PlanExecutionNode;
 import org.teiid.query.processor.relational.ProjectIntoNode;
 import org.teiid.query.processor.relational.ProjectNode;
@@ -169,8 +167,7 @@ public class PlanToProcessConverter {
 	}
 
     protected int getID() {
-        IntegerIDFactory intFactory = (IntegerIDFactory) idGenerator.getDefaultFactory();
-        return ((IntegerID) intFactory.create()).getValue();
+        return idGenerator.nextInt();
     }
     
 	protected RelationalNode convertNode(PlanNode node)
@@ -377,7 +374,8 @@ public class PlanToProcessConverter {
 				break;
 			case NodeConstants.Types.GROUP:
 				GroupingNode gnode = new GroupingNode(getID());
-				gnode.setGroupingElements( (List) node.getProperty(NodeConstants.Info.GROUP_COLS) );
+				gnode.setGroupingElements( (List<Expression>) node.getProperty(NodeConstants.Info.GROUP_COLS) );
+				gnode.setOutputMapping((SymbolMap)node.getProperty(NodeConstants.Info.SYMBOL_MAP));
 				gnode.setRemoveDuplicates(node.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL));
 				processNode = gnode;
 				break;

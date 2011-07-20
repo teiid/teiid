@@ -32,7 +32,6 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 
 
@@ -50,25 +49,12 @@ public class AggregateSymbolCollectorVisitor extends LanguageVisitor {
             postVisitVisitor(obj);
         }
         
-        /** 
-         * @see org.teiid.query.sql.navigator.PreOrPostOrderNavigator#visit(org.teiid.query.sql.symbol.ExpressionSymbol)
-         */
-        @Override
-        public void visit(ExpressionSymbol obj) {
-            if (obj.isDerivedExpression()) {
-                preVisitVisitor(obj);
-                postVisitVisitor(obj);
-            } else {
-                super.visit(obj);
-            }
-        }
-         
     }
 
-    private Collection<AggregateSymbol> aggregates;
-    private Collection<SingleElementSymbol> groupingSymbols;
+    private Collection<? super AggregateSymbol> aggregates;
+    private Collection<? super SingleElementSymbol> groupingSymbols;
     
-	public AggregateSymbolCollectorVisitor(Collection<AggregateSymbol> aggregates, Collection<SingleElementSymbol> elements) { 
+	public AggregateSymbolCollectorVisitor(Collection<? super AggregateSymbol> aggregates, Collection<? super SingleElementSymbol> elements) { 
         this.aggregates = aggregates;
         this.groupingSymbols = elements;
 	}	
@@ -79,23 +65,16 @@ public class AggregateSymbolCollectorVisitor extends LanguageVisitor {
         }
     }
     
-    public void visit(ExpressionSymbol obj) {
-        if (this.groupingSymbols != null && obj.isDerivedExpression()) {
-            this.groupingSymbols.add(obj);     
-        }
-    }
-
     public void visit(ElementSymbol obj) {
         if (this.groupingSymbols != null) {
             this.groupingSymbols.add(obj);  
         }
     }
 
-    public static final void getAggregates(LanguageObject obj, Collection<SingleElementSymbol> aggregates, Collection<SingleElementSymbol> elements) {
-        AggregateSymbolCollectorVisitor visitor = new AggregateSymbolCollectorVisitor(new ArrayList<AggregateSymbol>(), elements);
+    public static final void getAggregates(LanguageObject obj, Collection<? super AggregateSymbol> aggregates, Collection<SingleElementSymbol> elements) {
+        AggregateSymbolCollectorVisitor visitor = new AggregateSymbolCollectorVisitor(aggregates, elements);
         AggregateStopNavigator asn = new AggregateStopNavigator(visitor);
         obj.acceptVisitor(asn);
-        aggregates.addAll(visitor.aggregates);
     }
 
     public static final Collection<AggregateSymbol> getAggregates(LanguageObject obj, boolean removeDuplicates) {

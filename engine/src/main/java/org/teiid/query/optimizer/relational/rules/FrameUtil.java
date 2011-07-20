@@ -45,6 +45,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.resolver.util.AccessPattern;
 import org.teiid.query.resolver.util.ResolverUtil;
@@ -178,6 +179,10 @@ public class FrameUtil {
     // multiple new groups.  
     static void convertNode(PlanNode node, GroupSymbol oldGroup, Set<GroupSymbol> newGroups, Map symbolMap, QueryMetadataInterface metadata, boolean rewrite)
         throws QueryPlannerException {
+    	
+    	if (node.getType() == NodeConstants.Types.GROUP) {
+    		correctSymbolMap(symbolMap, node);
+    	}
 
         // Convert expressions from correlated subquery references;
         List<SymbolMap> refMaps = node.getAllReferences();
@@ -256,7 +261,7 @@ public class FrameUtil {
                 GroupsUsedByElementsVisitor.getGroups(orderBy, groups);
             }
         } else if(type == NodeConstants.Types.GROUP) {  
-        	List<SingleElementSymbol> groupCols = (List<SingleElementSymbol>)node.getProperty(NodeConstants.Info.GROUP_COLS);
+        	List<Expression> groupCols = (List<Expression>)node.getProperty(NodeConstants.Info.GROUP_COLS);
             if (groupCols != null) {
                 GroupBy groupBy= new GroupBy(groupCols);
                 ExpressionMappingVisitor.mapExpressions(groupBy, symbolMap);
@@ -265,6 +270,10 @@ public class FrameUtil {
                     GroupsUsedByElementsVisitor.getGroups(groupBy, groups);
                 }
             }               
+            if (!singleMapping) {
+                //add back the anon group
+                groups.add(((SymbolMap)node.getProperty(Info.SYMBOL_MAP)).asMap().keySet().iterator().next().getGroupSymbol());
+            }
         } else if (type == NodeConstants.Types.SOURCE || type == NodeConstants.Types.ACCESS) {
             convertAccessPatterns(symbolMap, node);
         }
@@ -281,7 +290,9 @@ public class FrameUtil {
             if (mappedSymbol != null) {
                 return mappedSymbol;
             }
-            return expression;
+            if (expression instanceof ElementSymbol) {
+            	return expression;
+            }
         }
                 
         ExpressionMappingVisitor.mapExpressions(expression, symbolMap);
@@ -377,8 +388,7 @@ public class FrameUtil {
     private static PlanNode findOriginatingNode(PlanNode root, Set<GroupSymbol> groups, boolean joinSource) {
         boolean containsGroups = false;
         
-    	if(root.getType() == NodeConstants.Types.NULL || root.getType() == NodeConstants.Types.SOURCE 
-                        || root.getType() == NodeConstants.Types.JOIN || root.getType() == NodeConstants.Types.SET_OP ||
+    	if((root.getType() & (NodeConstants.Types.NULL | NodeConstants.Types.SOURCE | NodeConstants.Types.JOIN | NodeConstants.Types.SET_OP | NodeConstants.Types.GROUP)) == root.getType() ||
                         (joinSource && root.getType() == NodeConstants.Types.ACCESS)) {
     	    
             //if there are no groups then the first possible match is the one we want

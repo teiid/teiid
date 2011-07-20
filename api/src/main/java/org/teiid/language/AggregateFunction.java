@@ -43,6 +43,7 @@ public class AggregateFunction extends BaseLanguageObject implements Expression 
     private String aggName;
     private boolean isDistinct;
     private Class<?> type;
+    private Expression condition;
     
     public AggregateFunction(String aggName, boolean isDistinct, Expression exp, Class<?> type) {
         this.expression = exp;
@@ -118,5 +119,17 @@ public class AggregateFunction extends BaseLanguageObject implements Expression 
     public void setType(Class<?> type) {
         this.type = type;
     }
+    
+    /**
+     * 
+     * @return the filter clause condition
+     */
+    public Expression getCondition() {
+		return condition;
+	}
+    
+    public void setCondition(Expression condition) {
+		this.condition = condition;
+	}
 
 }

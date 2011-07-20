@@ -102,6 +102,7 @@ import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.TextLine;
+import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
@@ -140,12 +141,12 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
             visitVisitor(obj);
         }
     }
-
     
     public void visit(AggregateSymbol obj) {
         preVisitVisitor(obj);
         visitNode(obj.getExpression());
         visitNode(obj.getOrderBy());
+        visitNode(obj.getCondition());
         postVisitVisitor(obj);
     }
     public void visit(AliasSymbol obj) {
@@ -697,6 +698,15 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
         if (deep) {
         	visitNode(obj.getDefinition());
         }
+        postVisitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(WindowFunction obj) {
+    	preVisitVisitor(obj);
+        visitNode(obj.getFunction());
+        visitNodes(obj.getPartition());
+        visitNode(obj.getOrderBy());
         postVisitVisitor(obj);
     }
     

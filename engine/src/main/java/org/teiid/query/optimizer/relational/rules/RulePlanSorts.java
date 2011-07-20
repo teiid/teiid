@@ -22,6 +22,7 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -43,8 +44,11 @@ import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.util.CommandContext;
 
 
@@ -86,13 +90,25 @@ public class RulePlanSorts implements OptimizerRule {
 				root = checkForProjectOptimization(node, root, metadata, capFinder, record);
 			}
 			List<SingleElementSymbol> orderColumns = ((OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER)).getSortKeys();
+			List<Expression> sortExpressions = new ArrayList<Expression>(orderColumns.size());
 			PlanNode possibleSort = NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE | NodeConstants.Types.ACCESS);
 			if (possibleSort != null) {
-				List exprs = (List)possibleSort.getProperty(Info.GROUP_COLS);
-				if (exprs != null && exprs.containsAll(orderColumns)) {
-					exprs.removeAll(orderColumns);
-					orderColumns.addAll(exprs);
-					possibleSort.setProperty(Info.GROUP_COLS, orderColumns);
+				boolean otherExpression = false;
+				SymbolMap groupMap = (SymbolMap)possibleSort.getProperty(Info.SYMBOL_MAP);
+				for (SingleElementSymbol singleElementSymbol : orderColumns) {
+					Expression ex = SymbolMap.getExpression(singleElementSymbol);
+					if (ex instanceof ElementSymbol) {
+						sortExpressions.add(groupMap.getMappedExpression((ElementSymbol) ex));						
+					} else {
+						otherExpression = true;
+						break;
+					}
+				}
+
+				List<Expression> exprs = (List<Expression>)possibleSort.getProperty(Info.GROUP_COLS);
+				if (!otherExpression && exprs != null && exprs.containsAll(sortExpressions)) {
+					exprs.removeAll(sortExpressions);
+					exprs.addAll(0, sortExpressions);
 					if (node.getParent() == null) {
 						root = node.getFirstChild();
 						root.removeFromParent();
@@ -105,54 +121,6 @@ public class RulePlanSorts implements OptimizerRule {
 				}
 				break;
 			} 
-/*			possibleSort = NodeEditor.findNodePreOrder(node, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE | NodeConstants.Types.ACCESS);
-			if (possibleSort == null) {
-				break;
-			}
-			boolean left = false;
-			if (possibleSort.getType() == NodeConstants.Types.JOIN) {
-				if (possibleSort.getProperty(NodeConstants.Info.JOIN_STRATEGY) != JoinStrategyType.MERGE
-					|| possibleSort.getProperty(NodeConstants.Info.JOIN_TYPE) != JoinType.JOIN_INNER) {
-					break;
-				} 
-				if (FrameUtil.findJoinSourceNode(possibleSort.getFirstChild()).getGroups().containsAll(node.getGroups()) 
-						&& possibleSort.getProperty(NodeConstants.Info.SORT_LEFT) == SortOption.SORT) {
-					left = true;
-				} else if (!FrameUtil.findJoinSourceNode(possibleSort.getLastChild()).getGroups().containsAll(node.getGroups()) 
-						|| possibleSort.getProperty(NodeConstants.Info.SORT_RIGHT) != SortOption.SORT) {
-					break;
-				}
-			}
-			List exprs = (List)possibleSort.getProperty(left?Info.LEFT_EXPRESSIONS:Info.RIGHT_EXPRESSIONS);
-			if (exprs != null && exprs.containsAll(orderColumns)) {
-				List<Integer> indexes = new ArrayList<Integer>(orderColumns.size());
-				for (Expression expr : (List<Expression>)orderColumns) {
-					indexes.add(0, exprs.indexOf(expr));
-				}
-				exprs.removeAll(orderColumns);
-				List newExprs = new ArrayList(orderColumns);
-				newExprs.addAll(exprs);
-				possibleSort.setProperty(left?Info.LEFT_EXPRESSIONS:Info.RIGHT_EXPRESSIONS, newExprs);
-				if (node.getParent() == null) {
-					root = node.getFirstChild();
-					root.removeFromParent();
-					node = root;
-				} else {
-					PlanNode nextNode = node.getFirstChild();
-					NodeEditor.removeChildNode(node.getParent(), node);
-					node = nextNode;
-				}
-				exprs = (List)possibleSort.getProperty(left?Info.RIGHT_EXPRESSIONS:Info.LEFT_EXPRESSIONS);
-				List toRemove = new ArrayList();
-				for (Integer index : indexes) {
-					Object o = exprs.get(index);
-					exprs.add(0, o);
-					toRemove.add(o);
-				}
-				exprs.subList(indexes.size(), exprs.size()).removeAll(toRemove);
-				possibleSort.setProperty(left?NodeConstants.Info.SORT_LEFT:NodeConstants.Info.SORT_RIGHT, SortOption.SORT_REQUIRED);
-			}
-*/
 			break;
 		case NodeConstants.Types.DUP_REMOVE:
 			if (parentBlocking) {
@@ -243,13 +211,8 @@ public class RulePlanSorts implements OptimizerRule {
 			if(ss instanceof AliasSymbol) {
                 ss = ((AliasSymbol)ss).getSymbol();
             }
-            
             if (ss instanceof ExpressionSymbol && !(ss instanceof AggregateSymbol)) {
-                ExpressionSymbol exprSymbol = (ExpressionSymbol)ss;
-                
-                if (!exprSymbol.isDerivedExpression()) {
-                    return root; //TODO: insert a new project node to handle this case
-                } 
+                return root; //TODO: insert a new project node to handle this case
             }
 			if (!childOutputCols.contains(ss)) {
 				return root;

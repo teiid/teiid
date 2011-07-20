@@ -27,6 +27,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,9 +47,11 @@ import org.teiid.metadata.Procedure;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.mapping.relational.QueryNode;
+import org.teiid.query.metadata.BasicQueryMetadata;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
+import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.TriggerActionPlanner;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -62,6 +66,8 @@ import org.teiid.query.optimizer.relational.rules.CriteriaCapabilityValidatorVis
 import org.teiid.query.optimizer.relational.rules.RuleCollapseSource;
 import org.teiid.query.optimizer.relational.rules.RuleConstants;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
+import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
+import org.teiid.query.optimizer.relational.rules.RulePushAggregates;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.RelationalPlan;
@@ -104,9 +110,13 @@ import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.TriggerAction;
+import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
@@ -115,6 +125,8 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
+import org.teiid.query.sql.visitor.ElementCollectorVisitor;
+import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
@@ -401,7 +413,7 @@ public class RelationalPlanner {
             rules.push(RuleConstants.PLAN_PROCEDURES);
         }
         if(hints.hasAggregates) {
-            rules.push(RuleConstants.PUSH_AGGREGATES);
+            rules.push(new RulePushAggregates(idGenerator));
         }
         if(hints.hasJoin) {
             rules.push(RuleConstants.CHOOSE_DEPENDENT);
@@ -729,8 +741,17 @@ public class RelationalPlanner {
     		}
 
     		// Attach grouping node on top
-    		if(query.hasAggregates()) {
-    			plan = attachGrouping(plan, query, hints);
+    		Collection<AggregateSymbol> aggs = AggregateSymbolCollectorVisitor.getAggregates(query.getSelect(), true);
+    		boolean hasGrouping = !aggs.isEmpty();
+    		if (query.getHaving() != null) {
+    			AggregateSymbolCollectorVisitor.getAggregates(query.getHaving(), aggs, null);
+    			hasGrouping = true;
+    		}
+    		if (query.getGroupBy() != null) {
+    			hasGrouping = true;
+    		}
+    		if(hasGrouping) {
+    			plan = attachGrouping(plan, query, aggs);
     		}
 
     		// Attach having criteria node on top
@@ -982,7 +1003,7 @@ public class RelationalPlanner {
     public static PlanNode createSelectNode(final Criteria crit, boolean isHaving) {
         PlanNode critNode = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
         critNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, crit);
-        if (isHaving && !AggregateSymbolCollectorVisitor.getAggregates(crit, false).isEmpty()) {
+        if (isHaving && !ElementCollectorVisitor.getAggregates(crit, false).isEmpty()) {
             critNode.setProperty(NodeConstants.Info.IS_HAVING, Boolean.TRUE);
         }
         // Add groups to crit node
@@ -994,19 +1015,29 @@ public class RelationalPlanner {
 	/**
 	 * Attach a grouping node at top of tree.
 	 * @param plan Existing plan
+	 * @param aggs 
 	 * @param groupBy Group by clause, which may be null
 	 * @return Updated plan
+	 * @throws TeiidComponentException 
+	 * @throws QueryMetadataException 
 	 */
-	private static PlanNode attachGrouping(PlanNode plan, Query query, PlanHints hints) {
-		PlanNode groupNode = NodeFactory.getNewNode(NodeConstants.Types.GROUP);
-
+	private PlanNode attachGrouping(PlanNode plan, Query query, Collection<AggregateSymbol> aggs) throws QueryMetadataException, TeiidComponentException {
+		//TODO: correlated agg
+		
 		GroupBy groupBy = query.getGroupBy();
-		if(groupBy != null) {
-			groupNode.setProperty(NodeConstants.Info.GROUP_COLS, groupBy.getSymbols());
-            groupNode.addGroups(GroupsUsedByElementsVisitor.getGroups(groupBy));
+		List<Expression> groupingCols = null;
+		if (groupBy != null) {
+			groupingCols = groupBy.getSymbols();
 		}
+		
+		PlanNode groupNode = NodeFactory.getNewNode(NodeConstants.Types.GROUP);
+		
+		Map<Expression, ElementSymbol> mapping = buildGroupingNode(aggs, groupingCols, groupNode, this.context, this.idGenerator).inserseMapping();
 
 		attachLast(groupNode, plan);
+		ExpressionMappingVisitor.mapExpressions(query.getHaving(), mapping);
+		ExpressionMappingVisitor.mapExpressions(query.getSelect(), mapping);
+		ExpressionMappingVisitor.mapExpressions(query.getOrderBy(), mapping);
         
         // Mark in hints
         hints.hasAggregates = true;
@@ -1014,6 +1045,57 @@ public class RelationalPlanner {
 		return groupNode;
 	}
 
+	/**
+	 * Build a grouping node that introduces a anon group (without a inline view source node)
+	 */
+	public static SymbolMap buildGroupingNode(
+			Collection<AggregateSymbol> aggs, List<? extends Expression> groupingCols,
+			PlanNode groupNode, CommandContext cc, IDGenerator idGenerator) throws QueryMetadataException, TeiidComponentException {
+		SymbolMap map = new SymbolMap();
+		aggs = LanguageObject.Util.deepClone(aggs, AggregateSymbol.class);
+		groupingCols = LanguageObject.Util.deepClone(groupingCols, Expression.class);
+		GroupSymbol group = new GroupSymbol("anon_grp" + idGenerator.nextInt()); //$NON-NLS-1$
+		if (!cc.getGroups().add(group.getName())) {
+			group = RulePlaceAccess.recontextSymbol(group, cc.getGroups());
+		}
+		
+		TempMetadataStore tms = new TempMetadataStore();
+		
+		int i = 0;
+		
+		List<AliasSymbol> symbols = new LinkedList<AliasSymbol>();
+		List<Expression> targets = new LinkedList<Expression>();
+
+		if(groupingCols != null) {
+			groupNode.setProperty(NodeConstants.Info.GROUP_COLS, groupingCols);
+            groupNode.addGroups(GroupsUsedByElementsVisitor.getGroups(groupingCols));
+            for (Expression ex : groupingCols) {
+            	AliasSymbol as = new AliasSymbol("gcol" + i++, new ExpressionSymbol("expr", ex)); //$NON-NLS-1$ //$NON-NLS-2$
+            	targets.add(ex);
+            	symbols.add(as);
+    		}
+		}
+		
+		i = 0;
+		for (AggregateSymbol ex : aggs) {
+			AliasSymbol as = new AliasSymbol("agg" + i++, new ExpressionSymbol("expr", ex)); //$NON-NLS-1$ //$NON-NLS-2$
+        	targets.add(ex);
+        	symbols.add(as);
+		}
+		
+		group.setMetadataID(tms.addTempGroup(group.getName(), symbols, true, false));
+		Iterator<Expression> targetIter = targets.iterator();
+		for (ElementSymbol es : ResolverUtil.resolveElementsInGroup(group, new TempMetadataAdapter(new BasicQueryMetadata(), tms))) {
+			Expression target = targetIter.next();
+			es.setAggregate(target instanceof AggregateSymbol);
+			map.addMapping(es, target);
+		}
+		
+		groupNode.setProperty(NodeConstants.Info.SYMBOL_MAP, map);
+		groupNode.addGroup(group);
+		return map;
+	}
+	
     /**
 	 * Attach SORT node at top of tree.  The SORT may be pushed down to a source (or sources)
 	 * if possible by the optimizer.

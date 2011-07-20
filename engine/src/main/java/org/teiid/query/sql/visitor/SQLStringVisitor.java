@@ -126,6 +126,7 @@ import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.TextLine;
+import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
@@ -133,6 +134,7 @@ import org.teiid.query.sql.symbol.XMLNamespaces;
 import org.teiid.query.sql.symbol.XMLParse;
 import org.teiid.query.sql.symbol.XMLQuery;
 import org.teiid.query.sql.symbol.XMLSerialize;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.XMLNamespaces.NamespaceItem;
 import org.teiid.translator.SourceSystemFunctions;
 
@@ -1123,7 +1125,9 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
 
         if (obj.getExpression() == null) {
-            append(Tokens.ALL_COLS);
+        	if (obj.getAggregateFunction() == Type.COUNT) {
+        		append(Tokens.ALL_COLS);
+        	}
         } else {
             visitNode(obj.getExpression());
         }
@@ -1133,6 +1137,16 @@ public class SQLStringVisitor extends LanguageVisitor {
             visitNode(obj.getOrderBy());
         }
         append(")"); //$NON-NLS-1$
+        
+        if (obj.getCondition() != null) {
+        	append(SPACE);
+        	append(FILTER);
+        	append(Tokens.LPAREN);
+        	append(WHERE);
+        	append(SPACE);
+        	append(obj.getCondition());
+        	append(Tokens.RPAREN);
+        }
     }
 
     public void visit( AliasSymbol obj ) {
@@ -2033,6 +2047,31 @@ public class SQLStringVisitor extends LanguageVisitor {
     	append("\n"); //$NON-NLS-1$
         addTabs(0);
     	append(alterView.getDefinition());
+    }
+    
+    @Override
+    public void visit(WindowFunction windowFunction) {
+    	append(windowFunction.getFunction());
+    	append(SPACE);
+    	append(OVER);
+    	append(SPACE);
+    	append(Tokens.LPAREN);
+    	boolean needsSpace = false;
+    	if (windowFunction.getPartition() != null) {
+    		append(PARTITION);
+    		append(SPACE);
+    		append(BY);
+    		append(SPACE);
+    		registerNodes(windowFunction.getPartition(), 0);
+    		needsSpace = true;
+    	}
+    	if (windowFunction.getOrderBy() != null) {
+    		if (needsSpace) {
+    			append(SPACE);
+    		}
+    		append(windowFunction.getOrderBy());
+    	}
+    	append(Tokens.RPAREN);
     }
 
     public static String escapeSinglePart( String part ) {

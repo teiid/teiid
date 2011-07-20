@@ -35,7 +35,6 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.id.IDGenerator;
-import org.teiid.core.id.IntegerIDFactory;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -113,7 +112,6 @@ public class TestMultiSourcePlanToProcessConverter {
         CapabilitiesFinder finder = new MultiSourceCapabilitiesFinder(fakeFinder, multiSourceModels);
         
         IDGenerator idGenerator = new IDGenerator();
-        idGenerator.setDefaultFactory(new IntegerIDFactory());            
         
         Properties props = new Properties();
         CommandContext context = new CommandContext("0", "test", "user", null, vdb.getName(), vdb.getVersion(), props, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

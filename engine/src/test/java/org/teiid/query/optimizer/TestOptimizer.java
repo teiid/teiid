@@ -6286,7 +6286,7 @@ public class TestOptimizer {
         String sql = "select a.e1 from (select 1 e1) a, (select e1, 1 as a, x from (select e1, CASE WHEN e1 = 'a' THEN e2 ELSE e3 END as x from pm1.g2) y group by e1, x) b where a.e1 = b.x"; //$NON-NLS-1$
         
         ProcessorPlan plan = helpPlan(sql, metadata, null, capFinder, 
-                                      new String[] {"SELECT v_1.c_0 FROM (SELECT v_0.c_1 AS c_0 FROM (SELECT g_0.e1 AS c_0, CASE WHEN g_0.e1 = 'a' THEN g_0.e2 ELSE g_0.e3 END AS c_1 FROM pm1.g2 AS g_0 WHERE CASE WHEN g_0.e1 = 'a' THEN g_0.e2 ELSE g_0.e3 END IN (<dependent values>)) AS v_0 GROUP BY v_0.c_0, v_0.c_1) AS v_1 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+                                      new String[] {"SELECT v_0.c_0 FROM (SELECT CASE WHEN g_0.e1 = 'a' THEN g_0.e2 ELSE g_0.e3 END AS c_0 FROM pm1.g2 AS g_0 GROUP BY g_0.e1, CASE WHEN g_0.e1 = 'a' THEN g_0.e2 ELSE g_0.e3 END) AS v_0 WHERE v_0.c_0 IN (<dependent values>) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
         
         checkNodeTypes(plan, new int[] {
             0,      // Access

@@ -37,9 +37,6 @@ public class ParseInfo implements Serializable{
 	
     public int referenceCount = 0;
 
-	// This gets set according to the current clause
-	public boolean aggregatesAllowed = false;
-        
     // treat a double quoted variable as variable instead of string 
     public boolean ansiQuotedIdentifiers=Boolean.valueOf(System.getProperty("org.teiid.ansiQuotedIdentifiers", Boolean.TRUE.toString())).booleanValue(); //$NON-NLS-1$
     

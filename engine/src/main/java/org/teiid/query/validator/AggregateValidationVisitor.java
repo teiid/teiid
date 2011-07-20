@@ -59,13 +59,9 @@ public class AggregateValidationVisitor extends AbstractValidationVisitor {
     public void visit(AggregateSymbol obj) {
         Expression aggExp = obj.getExpression();
 
-        // Check for any nested aggregates (which are not allowed)
-        if(aggExp != null) {
-            Collection<AggregateSymbol> nestedAggs = AggregateSymbolCollectorVisitor.getAggregates(aggExp, true);
-            if(nestedAggs.size() > 0) {
-                handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0039", nestedAggs), nestedAggs); //$NON-NLS-1$
-            }
-        }
+        validateNoNestedAggs(aggExp);
+        validateNoNestedAggs(obj.getOrderBy());
+        validateNoNestedAggs(obj.getCondition());
         
         // Verify data type of aggregate expression
         Type aggregateFunction = obj.getAggregateFunction();
@@ -91,6 +87,16 @@ public class AggregateValidationVisitor extends AbstractValidationVisitor {
         }
         validateBelow = false;
     }
+
+	private void validateNoNestedAggs(LanguageObject aggExp) {
+		// Check for any nested aggregates (which are not allowed)
+        if(aggExp != null) {
+            Collection<AggregateSymbol> nestedAggs = AggregateSymbolCollectorVisitor.getAggregates(aggExp, true);
+            if(nestedAggs.size() > 0) {
+                handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0039", nestedAggs), nestedAggs); //$NON-NLS-1$
+            }
+        }
+	}
     
     public void visit(ElementSymbol obj) {
         validateExpression(obj);

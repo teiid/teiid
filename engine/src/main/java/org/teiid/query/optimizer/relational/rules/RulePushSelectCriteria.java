@@ -43,6 +43,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.resolver.util.AccessPattern;
 import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Criteria;
@@ -52,7 +53,6 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.util.SymbolMap;
-import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
@@ -113,7 +113,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 	            
                 boolean moved = false;
                 
-                if((critNode.getGroups().isEmpty() && critNode.getSubqueryContainers().isEmpty()) || !atBoundary(critNode, sourceNode)) {
+                if(critNode.hasBooleanProperty(Info.IS_PUSHED) || (critNode.getGroups().isEmpty() && critNode.getSubqueryContainers().isEmpty()) || !atBoundary(critNode, sourceNode)) {
                     deadNodes.add(critNode);
                     continue;
                 }
@@ -131,6 +131,16 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                             moved = handleJoinCriteria(sourceNode, critNode, metadata);
                             break;
         				}
+                    }
+                    case NodeConstants.Types.GROUP:
+                    {
+                    	if (!critNode.hasBooleanProperty(NodeConstants.Info.IS_HAVING)) {
+                        	SymbolMap symbolMap = (SymbolMap) sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
+                        	FrameUtil.convertNode(critNode, null, null, symbolMap.asMap(), metadata, true);
+                        	NodeEditor.removeChildNode(critNode.getParent(), critNode);
+                            sourceNode.getFirstChild().addAsParent(critNode);
+                        	moved = true;
+                    	}
                     }
                 }
                 
@@ -332,8 +342,6 @@ public final class RulePushSelectCriteria implements OptimizerRule {
             
                 satisfyAccessPatterns(critNode, currentNode);
             } else if (FrameUtil.isOrderedLimit(currentNode)) {
-                return currentNode;
-            } else if (currentNode.getType() == NodeConstants.Types.GROUP && critNode.hasBooleanProperty(NodeConstants.Info.IS_HAVING)) {
                 return currentNode;
             }
 		}
@@ -598,7 +606,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                 return false;
             }
             
-            if (!AggregateSymbolCollectorVisitor.getAggregates(converted, false).isEmpty()) {
+            if (!ElementCollectorVisitor.getAggregates(converted, false).isEmpty()) {
                 result = Boolean.TRUE;
             }
         }

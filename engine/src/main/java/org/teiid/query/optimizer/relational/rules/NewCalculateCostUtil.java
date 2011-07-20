@@ -74,7 +74,6 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
-import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
@@ -440,7 +439,7 @@ public class NewCalculateCostUtil {
     			if (stats == null) {
         			if (node.getType() == NodeConstants.Types.PROJECT) {
 	        			Collection<SingleElementSymbol> elems = new HashSet<SingleElementSymbol>();
-	        			AggregateSymbolCollectorVisitor.getAggregates(expr, elems, elems);
+	        			ElementCollectorVisitor.getElements(expr, elems);
 	        			newStats[Stat.NDV.ordinal()] = getStat(Stat.NDV, elems, node, childCardinality, metadata);
 		        		newStats[Stat.NNV.ordinal()] = getStat(Stat.NNV, elems, node, childCardinality, metadata);
         			} else {
@@ -578,9 +577,8 @@ public class NewCalculateCostUtil {
 		if (node.getType() == NodeConstants.Types.PROJECT) {
 			return (List<? extends Expression>) node.getProperty(NodeConstants.Info.PROJECT_COLS);
 		} else if (node.getType() == NodeConstants.Types.GROUP) {
-			LinkedList<Expression> result = new LinkedList<Expression>(RulePushAggregates.collectAggregates(node));
-			result.addAll((Collection<? extends Expression>) node.getProperty(Info.GROUP_COLS));
-			return result;
+			SymbolMap map = (SymbolMap)node.getProperty(Info.SYMBOL_MAP);
+			return map.getKeys();
 		} 
 		LinkedList<ElementSymbol> elements = new LinkedList<ElementSymbol>();
 		for (GroupSymbol group : node.getGroups()) {
@@ -1014,7 +1012,7 @@ public class NewCalculateCostUtil {
         return cost;
     }
     
-    static boolean usesKey(PlanNode planNode, Collection<? extends SingleElementSymbol> allElements, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+    static boolean usesKey(PlanNode planNode, Collection<? extends Expression> allElements, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
     	//TODO: key preserved joins should be marked
     	return isSingleTable(planNode)
     	&& usesKey(allElements, metadata);
@@ -1035,17 +1033,17 @@ public class NewCalculateCostUtil {
      * we are in the plan.
      * if a key column is used after a non 1-1 join or a union all, then it may be non-unique.
      */
-    public static boolean usesKey(Collection<? extends SingleElementSymbol> allElements, QueryMetadataInterface metadata)
+    public static boolean usesKey(Collection<? extends Expression> allElements, QueryMetadataInterface metadata)
         throws QueryMetadataException, TeiidComponentException {
     	return usesKey(allElements, null, metadata, true);
     }
 
-    public static boolean usesKey(Collection<? extends SingleElementSymbol> allElements, Set<GroupSymbol> groups, QueryMetadataInterface metadata, boolean unique)
+    public static boolean usesKey(Collection<? extends Expression> allElements, Set<GroupSymbol> groups, QueryMetadataInterface metadata, boolean unique)
     throws QueryMetadataException, TeiidComponentException {
 		return getKeyUsed(allElements, groups, metadata, unique) != null;
     }
     
-    public static Object getKeyUsed(Collection<? extends SingleElementSymbol> allElements, Set<GroupSymbol> groups, QueryMetadataInterface metadata, Boolean unique)
+    public static Object getKeyUsed(Collection<? extends Expression> allElements, Set<GroupSymbol> groups, QueryMetadataInterface metadata, Boolean unique)
     throws QueryMetadataException, TeiidComponentException {
         
         if(allElements == null || allElements.size() == 0) { 
@@ -1054,7 +1052,7 @@ public class NewCalculateCostUtil {
      
         // Sort elements into groups
         Map<GroupSymbol, List<Object>> groupMap = new HashMap<GroupSymbol, List<Object>>();
-        for (SingleElementSymbol ses : allElements) {
+        for (Expression ses : allElements) {
         	Expression ex = SymbolMap.getExpression(ses); 
         	if (!(ex instanceof ElementSymbol)) {
         		continue; //TODO: function based indexes are possible, but we don't have the metadata
@@ -1337,7 +1335,7 @@ public class NewCalculateCostUtil {
 
 	static float getNDVEstimate(PlanNode indNode,
 			QueryMetadataInterface metadata, float cardinality,
-			Collection<? extends SingleElementSymbol> elems, boolean useCardinalityIfUnknown) throws QueryMetadataException,
+			Collection<? extends Expression> elems, boolean useCardinalityIfUnknown) throws QueryMetadataException,
 			TeiidComponentException {
 		if (elems == null || elems.isEmpty()) {
 			return cardinality;

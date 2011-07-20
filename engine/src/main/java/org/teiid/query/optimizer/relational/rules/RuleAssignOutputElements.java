@@ -57,7 +57,7 @@ import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
-import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
+import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.util.CommandContext;
 
@@ -437,8 +437,6 @@ public final class RuleAssignOutputElements implements OptimizerRule {
      * are any symbols that are required in the processing of this node,
      * for instance to create a new element symbol or sort on it, etc.
      * @param node Node to collect for
-     * @param requiredSymbols Collection<SingleElementSymbol> Place to collect required symbols
-     * @param createdSymbols Set<SingleElementSymbol> Place to collect any symbols created by this node
      */
 	private List<SingleElementSymbol> collectRequiredInputSymbols(PlanNode node) {
 
@@ -459,56 +457,52 @@ public final class RuleAssignOutputElements implements OptimizerRule {
                     }
                     
                     if (ss instanceof ExpressionSymbol && !(ss instanceof AggregateSymbol)) {
-                        ExpressionSymbol exprSymbol = (ExpressionSymbol)ss;
-                        
-                        if (!exprSymbol.isDerivedExpression()) {
-                            createdSymbols.add(ss);
-                        } 
+                        createdSymbols.add(ss);
                     }
-                    AggregateSymbolCollectorVisitor.getAggregates(ss, requiredSymbols, requiredSymbols);                        
+                    ElementCollectorVisitor.getElements(ss, requiredSymbols);
                 }
 				break;
             }
 			case NodeConstants.Types.SELECT:
 				Criteria selectCriteria = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-                AggregateSymbolCollectorVisitor.getAggregates(selectCriteria, requiredSymbols, requiredSymbols);
+				ElementCollectorVisitor.getElements(selectCriteria, requiredSymbols);
 				break;
 			case NodeConstants.Types.JOIN:
 				List<Criteria> crits = (List) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
 				if(crits != null) {
 					for (Criteria joinCriteria : crits) {
-						AggregateSymbolCollectorVisitor.getAggregates(joinCriteria, requiredSymbols, requiredSymbols);
+						ElementCollectorVisitor.getElements(joinCriteria, requiredSymbols);
 					}
 				}
 				break;
 			case NodeConstants.Types.GROUP:
-				List<SingleElementSymbol> groupCols = (List<SingleElementSymbol>) node.getProperty(NodeConstants.Info.GROUP_COLS);
+				List<Expression> groupCols = (List<Expression>) node.getProperty(NodeConstants.Info.GROUP_COLS);
 				if(groupCols != null) {
-				    for (SingleElementSymbol expression : groupCols) {
-                        if(expression instanceof ElementSymbol || expression instanceof AggregateSymbol) {
-                            requiredSymbols.add(expression);
-                        } else {    
-                            ExpressionSymbol exprSymbol = (ExpressionSymbol) expression;
-                            Expression expr = exprSymbol.getExpression();
-                            AggregateSymbolCollectorVisitor.getAggregates(expr, requiredSymbols, requiredSymbols);
-                            createdSymbols.add(exprSymbol);
-                        }
+				    for (Expression expression : groupCols) {
+				    	ElementCollectorVisitor.getElements(expression, requiredSymbols);
                     }
 				}
-
+				
+				SymbolMap symbolMap = (SymbolMap) node.getProperty(NodeConstants.Info.SYMBOL_MAP);
+				
 				// Take credit for creating any aggregates that are needed above
 				for (SingleElementSymbol outputSymbol : outputCols) {
-					if(outputSymbol instanceof AggregateSymbol) {
-					    AggregateSymbol agg = (AggregateSymbol)outputSymbol;
-					    createdSymbols.add(outputSymbol);
+					createdSymbols.add(outputSymbol);
+					Expression ex = symbolMap.getMappedExpression((ElementSymbol) outputSymbol);
+					if(ex instanceof AggregateSymbol) {
+					    AggregateSymbol agg = (AggregateSymbol)ex;
 					    
 	                    Expression aggExpr = agg.getExpression();
 	                    if(aggExpr != null) {
-	                        AggregateSymbolCollectorVisitor.getAggregates(aggExpr, requiredSymbols, requiredSymbols);
+	                    	ElementCollectorVisitor.getElements(aggExpr, requiredSymbols);
 	                    }
 	                    OrderBy orderBy = agg.getOrderBy();
 	                    if(orderBy != null) {
-	                        AggregateSymbolCollectorVisitor.getAggregates(orderBy, requiredSymbols, requiredSymbols);
+	                    	ElementCollectorVisitor.getElements(orderBy, requiredSymbols);
+	                    }
+	                    Expression condition = agg.getCondition();
+	                    if(condition != null) {
+	                    	ElementCollectorVisitor.getElements(condition, requiredSymbols);
 	                    }
 					}
 				}
@@ -519,7 +513,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
         // Gather elements from correlated subquery references;
 		for (SymbolMap refs : node.getAllReferences()) {
         	for (Expression expr : refs.asMap().values()) {
-                AggregateSymbolCollectorVisitor.getAggregates(expr, requiredSymbols, requiredSymbols);
+        		ElementCollectorVisitor.getElements(expr, requiredSymbols);
             }
         }
         

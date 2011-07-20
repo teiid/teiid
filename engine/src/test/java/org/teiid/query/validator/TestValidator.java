@@ -1839,5 +1839,25 @@ public class TestValidator {
     	models.add("MultiModel");
         helpValidate("exec MultiModel.proc('a', (select 1))", new String[] {"MultiModel.proc.source_name"}, new MultiSourceMetadataWrapper(RealMetadataFactory.exampleMultiBinding(), models));  //$NON-NLS-1$
     }
+    
+	@Test public void testFailAggregateInGroupBy() {
+		helpValidate("SELECT max(e1) FROM pm1.g1 GROUP BY count(e2)", new String[] {"COUNT(e2)"}, RealMetadataFactory.example1Cached());		
+	}
+	
+	@Test public void testFailAggregateInWhere() {
+		helpValidate("SELECT e1 FROM pm1.g1 where count(e2) = 1", new String[] {"COUNT(e2)"}, RealMetadataFactory.example1Cached());		
+	}
+
+	@Test public void testFailAggregateInFrom() {
+		helpValidate("SELECT g2.e1 FROM pm1.g1 inner join pm1.g2 on (avg(g1.e2) = g2.e2)", new String[] {"AVG(g1.e2)"}, RealMetadataFactory.example1Cached());		
+	}
+	
+	@Test public void testFailAggregateFilterSubquery() {
+		helpValidate("SELECT min(g1.e1) filter (where (select 1) = 1) from pm1.g1", new String[] {"(SELECT 1) = 1"}, RealMetadataFactory.example1Cached());		
+	}
+
+	@Test public void testNestedAgg() {
+		helpValidate("SELECT min(g1.e1) filter (where max(e2) = 1) from pm1.g1", new String[] {"MAX(e2)"}, RealMetadataFactory.example1Cached());		
+	}
 
 }

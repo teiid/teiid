@@ -860,5 +860,31 @@ public class ExecutionFactory<F, C> {
     public boolean supportsCommonTableExpressions() {
     	return false;
     }
+    
+    /**
+     * @return true if Advanced OLAP operations are supporting
+     *  including the aggregate function filter clause.
+     * @since 7.5
+     */
+    public boolean supportsAdvancedOlapOperations() {
+    	return false;
+    }
+    
+    /**
+     * @return true if Elementary OLAP operations are supporting
+     *  including window functions
+     * @since 7.5
+     */
+    public boolean supportsElementaryOlapOperations() {
+    	return false;
+    }
+    
+    /**
+     * @return true if array_agg is supported
+     * @since 7.5
+     */
+    public boolean supportsArrayAgg() {
+    	return false;
+    }
 
 }

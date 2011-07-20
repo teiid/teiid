@@ -24,9 +24,6 @@ package org.teiid.core.id;
 
 import java.io.Serializable;
 
-import org.teiid.core.CorePlugin;
-import org.teiid.core.util.Assertion;
-
 
 /**
  * <p>This class represents a universally unique identifier, consisting of
@@ -35,10 +32,11 @@ import org.teiid.core.util.Assertion;
  * <p>This identifier is supposed to be unique both spatially and temporally.
  * It is based on version 4 IETF variant random UUIDs. </p>
  */
-public class UUID implements ObjectID, Serializable {
+public class UUID implements Serializable {
+	
+	private static final long serialVersionUID = 4730187208307761197L;
 
-    private static final String NOT_UUID_MESSAGE = CorePlugin.Util.getString("UUID.ID_must_be_of_type_UUID_1"); //$NON-NLS-1$
-    private static final String UNPARSABLE_MESSAGE = CorePlugin.Util.getString("UUID.ID_must_be_of_type_UUID_to_parse_2"); //$NON-NLS-1$
+	char DELIMITER = ':';
     /**
      * The variants allowed by the UUID specification.
      */
@@ -77,42 +75,6 @@ public class UUID implements ObjectID, Serializable {
     	this.uuid = uuid;
     }
     
-    /**
-     * Return the first part of the UUID as a long.
-     * @return first part of the UUID as a long
-     */
-    public static long getPart1(ObjectID id) {
-    	Assertion.assertTrue((id instanceof UUID), UNPARSABLE_MESSAGE);
-    	
-    	UUID uuid = (UUID)id;
-	    return uuid.uuid.getMostSignificantBits();
-    }
-    
-    /**
-     * Return the first part of the UUID as a long.
-     * @return first part of the UUID as a long
-     */
-    public static long getPart2(ObjectID id) {
-    	Assertion.assertTrue((id instanceof UUID), UNPARSABLE_MESSAGE);
-    	
-    	UUID uuid = (UUID)id;
-    	return uuid.uuid.getLeastSignificantBits();
-    }
-    
-    public static int getVariant(ObjectID id ) {
-        Assertion.assertTrue((id instanceof UUID), NOT_UUID_MESSAGE);
-        
-        UUID uuid = (UUID)id;
-        return uuid.uuid.variant();
-    }
-
-    public static int getVersion(ObjectID id ) {
-        Assertion.assertTrue((id instanceof UUID), NOT_UUID_MESSAGE);
-        
-        UUID uuid = (UUID)id;
-        return uuid.uuid.version();
-    }
-
     /**
      * Return the name of the protocol that this factory uses.
      * @return the protocol name
@@ -179,7 +141,7 @@ public class UUID implements ObjectID, Serializable {
      * @return the string representation of this instance.
      */
     public String toString(){
-        return toString(ObjectID.DELIMITER);
+        return toString(DELIMITER);
     }
 
     /**
@@ -204,22 +166,6 @@ public class UUID implements ObjectID, Serializable {
     		this.cachedExportableFormUuidString = this.uuid.toString();
     	}
         return this.cachedExportableFormUuidString;
-    }
-
-    /**
-     * Attempt to convert the specified string to the appropriate ObjectID instance.
-     * @param value the stringified id with the protocol and ObjectID.DELIMITER already
-     * removed, and which is never null or zero length
-     * @return the ObjectID instance for the stringified ID if this factory is able
-     * to parse the string, or null if the factory is unaware of the specified format.
-     */
-    public static ObjectID stringToObject(String value) throws InvalidIDException {
-        try {
-            return new UUID(java.util.UUID.fromString(value));
-        } catch ( IllegalArgumentException e ) {
-            throw new InvalidIDException(
-                CorePlugin.Util.getString("UUID.InvalidFormatForProtocol",value,PROTOCOL)); //$NON-NLS-1$
-        }
     }
 
 }

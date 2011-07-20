@@ -34,14 +34,7 @@ import org.teiid.query.sql.lang.OrderBy;
 
 
 /**
- * <p>An aggregate symbol represents an aggregate function in the SELECT or HAVING clauses.  It
- * extends ExpressionSymbol as they have many things in common.  The aggregate symbol is
- * typically something like <code>SUM(stock.quantity * 2)</code>.  There are five supported
- * aggregate functions: COUNT, SUM, AVG, MIN, and MAX.  Aggregate functions contain an expression -
- * this data is managed by the super class, ExpressionSymbol.  Aggregate functions may also
- * specify a DISTINCT flag to indicate that duplicates should be ignored.  The DISTINCT flag
- * may be set for all five aggregate functions but is ignored for the computation of MIN and MAX.
- * One special use of an aggregate symbol is for the symbol <code>COUNT(*)</code>.  The * expression
+ * <p>An aggregate symbol represents an aggregate function. The * expression
  * is encoded by setting the expression to null.  This may ONLY be used with the COUNT function.</p>
  *
  * <p>The type of an aggregate symbol depends on the function and the type of the underlying
@@ -69,12 +62,16 @@ public class AggregateSymbol extends ExpressionSymbol {
 		STDDEV_POP,
 		STDDEV_SAMP,
 		VAR_POP,
-		VAR_SAMP;
+		VAR_SAMP,
+		RANK,
+		DENSE_RANK,
+		ROW_NUMBER;
 	}
 
 	private Type aggregate;
 	private boolean distinct;
 	private OrderBy orderBy;
+	private Expression condition;
 
 	private static final Class<Integer> COUNT_TYPE = DataTypeManager.DefaultDataClasses.INTEGER;
 	private static final Map<Class<?>, Class<?>> SUM_TYPES;
@@ -179,6 +176,8 @@ public class AggregateSymbol extends ExpressionSymbol {
 			return DataTypeManager.DefaultDataClasses.DOUBLE;
 		} else if (this.aggregate == Type.ARRAY_AGG) {
 			return DataTypeManager.DefaultDataClasses.OBJECT;
+		} else if (this.aggregate == Type.RANK || this.aggregate == Type.ROW_NUMBER || this.aggregate == Type.DENSE_RANK){
+			return DataTypeManager.DefaultDataClasses.INTEGER;
 		} else {
 			return this.getExpression().getType();
 		}
@@ -222,6 +221,9 @@ public class AggregateSymbol extends ExpressionSymbol {
 		if (orderBy != null) {
 			copy.setOrderBy(orderBy.clone());
 		}
+		if (condition != null) {
+			copy.setCondition((Expression) condition.clone());
+		}
 		return copy;
 	}
     
@@ -246,6 +248,7 @@ public class AggregateSymbol extends ExpressionSymbol {
         return this.aggregate.equals(other.aggregate)
                && this.distinct == other.distinct
                && EquivalenceUtil.areEqual(this.getExpression(), other.getExpression())
+               && EquivalenceUtil.areEqual(this.condition, other.condition)
         	   && EquivalenceUtil.areEqual(this.getOrderBy(), other.getOrderBy());
     }
     
@@ -261,10 +264,19 @@ public class AggregateSymbol extends ExpressionSymbol {
 		case VAR_POP:
 		case VAR_SAMP:
 		case SUM:
+		case ARRAY_AGG:
 			return true;
 		}
 		return false;
     }
+    
+    public Expression getCondition() {
+		return condition;
+	}
+    
+    public void setCondition(Expression condition) {
+		this.condition = condition;
+	}
 
 	public static boolean areAggregatesCardinalityDependent(Collection<AggregateSymbol> aggs) {
 		for (AggregateSymbol aggregateSymbol : aggs) {
@@ -273,6 +285,22 @@ public class AggregateSymbol extends ExpressionSymbol {
 			}
 		}
 		return false;
+	}
+	
+	public boolean respectsNulls() {
+		return this.aggregate == Type.ARRAY_AGG;
+	}
+	
+	public boolean canStage() {
+		switch (this.aggregate) {
+		case TEXTAGG:
+			return false;
+		case ARRAY_AGG:
+			return false;
+		case XMLAGG:
+			return orderBy == null;
+		}
+		return true;
 	}
 
 }

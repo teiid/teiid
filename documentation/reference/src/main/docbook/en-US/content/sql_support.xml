@@ -264,11 +264,20 @@
           </para>
         </listitem>
         <listitem>
-          <para>Aggregate functions may only be used in the HAVING or SELECT clauses and may not be nested within another aggregate function.
+          <para>Aggregate functions cannot be used in FROM, GROUP BY, or WHERE clauses without an intervening query expression.
+          </para>
+        </listitem>
+        <listitem>
+          <para>Aggregate functions cannot be nested within another aggregate function without an intervening query expression.
           </para>
         </listitem>
         <listitem>
           <para>Aggregate functions may be nested inside other functions.
+          </para>
+        </listitem>
+        <listitem>
+          <para>Any aggregate function may take an optional FILTER clasue of the form <synopsis label="Usage">FILTER ( WHERE condition )</synopsis>.  The condition may be any boolean value expression that does not contain a subquery or a correlated variable.
+	      The filter will logically be evaluated for each row prior to the grouping operation.  If false the aggregate function will not accumulate a value for the given row.          
           </para>
         </listitem>
       </itemizedlist>

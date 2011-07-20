@@ -321,6 +321,9 @@ public interface SourceCapabilities {
         INSERT_WITH_ITERATOR,
         COMMON_TABLE_EXPRESSIONS,
         MAX_DEPENDENT_PREDICATES,
+        ADVANCED_OLAP, 
+        QUERY_AGGREGATES_ARRAY, 
+        ELEMENTARY_OLAP
     }
 
     public enum Scope {

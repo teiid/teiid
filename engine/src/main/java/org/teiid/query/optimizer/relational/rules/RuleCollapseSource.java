@@ -24,14 +24,19 @@ package org.teiid.query.optimizer.relational.rules;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -72,6 +77,7 @@ import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -80,6 +86,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
+import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
@@ -241,11 +248,12 @@ public final class RuleCollapseSource implements OptimizerRule {
 		if (query.getCriteria() instanceof CompoundCriteria) {
             query.setCriteria(QueryRewriter.optimizeCriteria((CompoundCriteria)query.getCriteria(), metadata));
         }
-		if (!CapabilitiesUtil.useAnsiJoin(RuleRaiseAccess.getModelIDFromAccess(accessRoot, metadata), metadata, capFinder)) {
+		Object modelID = RuleRaiseAccess.getModelIDFromAccess(accessRoot, metadata);
+		if (!CapabilitiesUtil.useAnsiJoin(modelID, metadata, capFinder)) {
 			simplifyFromClause(query);
         }
 		if (columns.isEmpty()) {
-        	if (CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, RuleRaiseAccess.getModelIDFromAccess(accessRoot, metadata), metadata, capFinder)) {
+        	if (CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder)) {
         		select.addSymbol(new ExpressionSymbol("dummy", new Constant(1))); //$NON-NLS-1$
         	} else {
         		//TODO: need to ensure the type is consistent  
@@ -253,6 +261,20 @@ public final class RuleCollapseSource implements OptimizerRule {
         		select.addSymbol(selectOutputElement(query.getFrom().getGroups(), metadata));
         	}
         }
+		PlanNode groupNode = NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE);
+		if (groupNode != null) {
+	        SymbolMap symbolMap = (SymbolMap) groupNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
+	      
+	        //map back to expression form
+	        ExpressionMappingVisitor.mapExpressions(query.getOrderBy(), symbolMap.asMap());
+	        ExpressionMappingVisitor.mapExpressions(query.getSelect(), symbolMap.asMap()); 
+	        ExpressionMappingVisitor.mapExpressions(query.getHaving(), symbolMap.asMap()); 
+	
+			if (!CapabilitiesUtil.supports(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, modelID, metadata, capFinder)) {
+				//if group by expressions are not support, add an inline view to compensate
+				query = RuleCollapseSource.rewriteGroupByExpressionsAsView(query, metadata);
+			}
+		}
 		return query;
 	}		
 	
@@ -273,7 +295,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             
             for (ElementSymbol element : elements) {
                 if(metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.SELECT)) {
-                    element = (ElementSymbol)element.clone();
+                    element = element.clone();
                     element.setGroupSymbol(group);
                     return element;
                 }
@@ -323,10 +345,10 @@ public final class RuleCollapseSource implements OptimizerRule {
                 
                 // Get last two clauses added to the FROM and combine them into a JoinPredicate
                 From from = query.getFrom();
-                List clauses = from.getClauses();
+                List<FromClause> clauses = from.getClauses();
                 int lastClause = clauses.size()-1;
-                FromClause clause1 = (FromClause) clauses.get(lastClause-1);
-                FromClause clause2 = (FromClause) clauses.get(lastClause);
+                FromClause clause1 = clauses.get(lastClause-1);
+                FromClause clause2 = clauses.get(lastClause);
                  
                 //correct the criteria or the join type if necessary
                 if (joinType != JoinType.JOIN_CROSS && crits.isEmpty()) {
@@ -492,13 +514,13 @@ public final class RuleCollapseSource implements OptimizerRule {
     */
     private void simplifyFromClause(Query query) {
         From from = query.getFrom();
-        List clauses = from.getClauses();
-        FromClause rootClause = (FromClause) clauses.get(0);
+        List<FromClause> clauses = from.getClauses();
+        FromClause rootClause = clauses.get(0);
        
         // If all joins are inner joins, move criteria to WHERE and make 
         // FROM a list of groups instead of a tree of JoinPredicates
         if(! hasOuterJoins(rootClause)) {
-            from.setClauses(new ArrayList());
+            from.setClauses(new ArrayList<FromClause>());
             shredJoinTree(rootClause, query);
         } // else leave as is
     }    
@@ -553,5 +575,76 @@ public final class RuleCollapseSource implements OptimizerRule {
     public String toString() {
    		return "CollapseSource"; //$NON-NLS-1$
    	}
+
+	public static Query rewriteGroupByExpressionsAsView(Query query, QueryMetadataInterface metadata) {
+		if (query.getGroupBy() == null) {
+			return query;
+		}
+	    // we check for group by expressions here to create an ANSI SQL plan
+	    boolean hasExpression = false;
+	    for (final Iterator<Expression> iterator = query.getGroupBy().getSymbols().iterator(); !hasExpression && iterator.hasNext();) {
+	        hasExpression = !(iterator.next() instanceof ElementSymbol);
+	    } 
+	    if (!hasExpression) {
+	    	return query;
+	    }
+		Select select = query.getSelect();
+	    GroupBy groupBy = query.getGroupBy();
+	    query.setGroupBy(null);
+	    Criteria having = query.getHaving();
+	    query.setHaving(null);
+	    OrderBy orderBy = query.getOrderBy();
+	    query.setOrderBy(null);
+	    Limit limit = query.getLimit();
+	    query.setLimit(null);
+	    Set<Expression> newSelectColumns = new HashSet<Expression>();
+	    for (final Iterator<Expression> iterator = groupBy.getSymbols().iterator(); iterator.hasNext();) {
+	        newSelectColumns.add(iterator.next());
+	    }
+	    Set<AggregateSymbol> aggs = new HashSet<AggregateSymbol>();
+	    aggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(select, true));
+	    if (having != null) {
+	        aggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(having, true));
+	    }
+	    for (AggregateSymbol aggregateSymbol : aggs) {
+	        if (aggregateSymbol.getExpression() != null) {
+	            Expression expr = aggregateSymbol.getExpression();
+	            newSelectColumns.add(SymbolMap.getExpression(expr));
+	        }
+	    }
+	    Select innerSelect = new Select();
+	    int index = 0;
+	    for (Expression expr : newSelectColumns) {
+	        if (expr instanceof SingleElementSymbol) {
+	            innerSelect.addSymbol((SingleElementSymbol)expr);
+	        } else {
+	            innerSelect.addSymbol(new ExpressionSymbol("EXPR" + index++ , expr)); //$NON-NLS-1$
+	        }
+	    }
+	    query.setSelect(innerSelect);
+	    Query outerQuery = null;
+	    try {
+	        outerQuery = QueryRewriter.createInlineViewQuery(new GroupSymbol("X"), query, metadata, query.getSelect().getProjectedSymbols()); //$NON-NLS-1$
+	    } catch (TeiidException err) {
+	        throw new TeiidRuntimeException(err);
+	    }
+	    Iterator<SingleElementSymbol> iter = outerQuery.getSelect().getProjectedSymbols().iterator();
+	    HashMap<Expression, SingleElementSymbol> expressionMap = new HashMap<Expression, SingleElementSymbol>();
+	    for (SingleElementSymbol symbol : query.getSelect().getProjectedSymbols()) {
+	        expressionMap.put(SymbolMap.getExpression(symbol), iter.next());
+	    }
+	    ExpressionMappingVisitor.mapExpressions(groupBy, expressionMap);
+	    outerQuery.setGroupBy(groupBy);
+	    ExpressionMappingVisitor.mapExpressions(having, expressionMap);
+	    outerQuery.setHaving(having);
+	    ExpressionMappingVisitor.mapExpressions(orderBy, expressionMap);
+	    outerQuery.setOrderBy(orderBy);
+	    outerQuery.setLimit(limit);
+	    ExpressionMappingVisitor.mapExpressions(select, expressionMap);
+	    outerQuery.setSelect(select);
+	    outerQuery.setOption(query.getOption());
+	    query = outerQuery;
+		return query;
+	}
 
 }

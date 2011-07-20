@@ -360,7 +360,7 @@ public class TestProcessor {
 		Properties props = new Properties();
 		props.setProperty("soap_host", "my.host.com"); //$NON-NLS-1$ //$NON-NLS-2$
 		props.setProperty("soap_port", "12345"); //$NON-NLS-1$ //$NON-NLS-2$
-		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", 1, props, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", 1, props, DEBUG); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         context.setProcessorBatchSize(BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE);
         context.setConnectorBatchSize(BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE);
         context.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
@@ -7568,6 +7568,25 @@ public class TestProcessor {
         ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
         
         helpProcess(plan, dataManager, new List[] {Arrays.asList(1, 1)});
+    }
+    
+    @Test public void testOrderByExpression() throws Exception {
+    	String sql = "SELECT pm1.g1.e2 as y FROM pm1.g1 ORDER BY e3 || e1";
+        
+    	List[] expected = new List[] {
+        		Arrays.asList(0),
+        		Arrays.asList(1),
+        		Arrays.asList(3),
+        		Arrays.asList(1),
+        		Arrays.asList(2),
+        		Arrays.asList(0),
+        };
+    	
+    	FakeDataManager dataManager = new FakeDataManager();
+    	sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, expected);
     }
     
     private static final boolean DEBUG = false;

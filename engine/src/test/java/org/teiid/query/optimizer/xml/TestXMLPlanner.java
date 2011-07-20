@@ -30,7 +30,6 @@ import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
-import org.teiid.core.id.IntegerIDFactory;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
@@ -689,7 +688,6 @@ public class TestXMLPlanner {
     public static XMLPlan preparePlan(Command command, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context)
         throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         IDGenerator idGenerator = new IDGenerator();
-        idGenerator.setDefaultFactory(new IntegerIDFactory());
         AnalysisRecord analysis = new AnalysisRecord(false, DEBUG);
         try {
             if (DEBUG) {

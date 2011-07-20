@@ -43,7 +43,6 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
-import org.teiid.core.id.IntegerIDFactory;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
@@ -150,7 +149,6 @@ public class Request implements SecurityFunctionEvaluator {
         this.processorDataManager = processorDataManager;
         this.transactionService = transactionService;
         this.tempTableStore = tempTableStore;
-        idGenerator.setDefaultFactory(new IntegerIDFactory());
         this.workContext = workContext;
         this.requestId = workContext.getRequestID(this.requestMsg.getExecutionId());
         this.connectorManagerRepo = workContext.getVDB().getAttachment(ConnectorManagerRepository.class);

@@ -434,11 +434,10 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	}
 	
 	public Set<String> getGroups() {
+		if (globalState.groups == null) {
+			globalState.groups = new HashSet<String>();
+		}
 		return globalState.groups;
-	}
-	
-	public void setGroups(Set<String> groups) {
-		this.globalState.groups = groups;
 	}
 	
 	public long getTimeSliceEnd() {

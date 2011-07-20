@@ -117,6 +117,7 @@ import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.TestCaseExpression;
 import org.teiid.query.sql.symbol.TestSearchedCaseExpression;
 import org.teiid.query.sql.symbol.TextLine;
+import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
@@ -1413,28 +1414,12 @@ public class TestParser {
 	@Test public void testFailAliasInHaving() {
 		helpException("SELECT a FROM m.g GROUP BY a, b AS x");		 //$NON-NLS-1$
 	}
- 
-	/** SELECT a FROM m.g GROUP BY count(a) */
-	@Test public void testFailAggregateInGroupBy() {
-		helpException("SELECT a FROM m.g GROUP BY count(a)");		 //$NON-NLS-1$
-	}
 	
-	
-	@Test public void testExceptionLength() {
+	@Test(expected=QueryParserException.class) public void testExceptionLength() throws Exception {
         String sql = "SELECT * FROM Customer where Customer.Name = (select lastname from CUSTOMER where acctid = 9"; ////$NON-NLS-1$
-        try {
-            QueryParser.getQueryParser().parseCommand(sql);
-            fail("Expected exception for parsing " + sql); //$NON-NLS-1$
-        } catch (TeiidException e) {
-            //e.printStackTrace();
-            //if (e.getMessage().length() > 1000) {
-            //    fail("Expected max length of message 1000; but received  " + e.getMessage().length()); //$NON-NLS-1$
-            //}
-        }
+        QueryParser.getQueryParser().parseCommand(sql);
     }
 
-	
-    
     @Test public void testFunctionOfAggregates() {
         GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
         From from = new From();
@@ -6425,14 +6410,6 @@ public class TestParser {
         }
     }
     
-    @Test public void testExceptionMessageWithoutLocation() {
-        try {
-            QueryParser.getQueryParser().parseCommand("SELECT COUNT(*) FROM a WHERE COUNT(*) > 1"); //$NON-NLS-1$
-        } catch(QueryParserException e) {
-            assertTrue(e.getMessage().startsWith("Parsing error: Aggregate expressions are allowed only as top level functions in the SELECT and HAVING clauses.")); //$NON-NLS-1$
-        }        
-    }
-    
     @Test public void testEmptyOuterJoinCriteria() {
         helpException("select a from b left outer join c on ()"); //$NON-NLS-1$
     }
@@ -6851,6 +6828,35 @@ public class TestParser {
     	Query query = new Query();
     	query.setSelect(new Select(Arrays.asList(new ExpressionSymbol("foo", new Reference(0)))));
         helpTest(sql, "SELECT ?", query);
+    }
+    
+    @Test public void testNonReserved() throws Exception {
+    	String sql = "select count";
+    	Query query = new Query();
+    	query.setSelect(new Select(Arrays.asList(new ElementSymbol("count"))));
+        helpTest(sql, "SELECT count", query);
+    }
+    
+    @Test public void testAggFilter() throws Exception {
+    	String sql = "select count(*) filter (where x = 1) from g";
+    	Query query = new Query();
+    	AggregateSymbol aggregateSymbol = new AggregateSymbol("count", AggregateSymbol.Type.COUNT.name(), false, null);
+    	aggregateSymbol.setCondition(new CompareCriteria(new ElementSymbol("x"), CompareCriteria.EQ, new Constant(1)));
+    	query.setSelect(new Select(Arrays.asList(aggregateSymbol)));
+    	query.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("g")))));
+        helpTest(sql, "SELECT COUNT(*) FILTER(WHERE x = 1) FROM g", query);
+    }
+    
+    @Test public void testWindowFunction() throws Exception {
+    	String sql = "select row_number() over (partition by x order by y) from g";
+    	Query query = new Query();
+    	WindowFunction wf = new WindowFunction();
+    	wf.setFunction(new AggregateSymbol("expr", "ROW_NUMBER", false, null));
+    	wf.setPartition(new ArrayList<Expression>(Arrays.asList(new ElementSymbol("x"))));
+    	wf.setOrderBy(new OrderBy(Arrays.asList(new ElementSymbol("y"))));
+    	query.setSelect(new Select(Arrays.asList(new ExpressionSymbol("x", wf))));
+    	query.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("g")))));
+        helpTest(sql, "SELECT ROW_NUMBER() OVER (PARTITION BY x ORDER BY y) FROM g", query);
     }
 
 }

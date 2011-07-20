@@ -897,7 +897,7 @@ CriteriaSelector criteriaSelector() :
     CriteriaSelector critSelector = new CriteriaSelector();
     
     String element = null;
-    List elements = new ArrayList();
+    List elements = new ArrayList(2);
     Token operator = null;
 }
 {
@@ -1110,7 +1110,7 @@ TranslateCriteria translateCriteria(ParseInfo info) :
 
         [<WITH>
          {
-            critList = new ArrayList();
+            critList = new ArrayList(2);
          }
          <LPAREN>
         element = id()
@@ -1481,8 +1481,9 @@ Insert insert(ParseInfo info) :
 	}]
 
 	(
-		( <VALUES>
-		  values = rowValues(info)
+		( <VALUES> <LPAREN>
+		  values = expressionList(info)
+		  <RPAREN>
 		  {
 		    // Store each row of values
 		    insert.setValues(values);
@@ -1544,13 +1545,12 @@ List<ElementSymbol> columnList(boolean validate) :
  * @return List of values, never null
  * @throws ParseException if parsing failed
  */
-List rowValues(ParseInfo info) :
+ArrayList<Expression> expressionList(ParseInfo info) :
 {
-	List rowVals = new ArrayList();
+	ArrayList<Expression> rowVals = new ArrayList<Expression>(4);
 	Expression value = null;
 }
 {
-	<LPAREN>
 	value = expression(info)
 	{
         rowVals.add(value);
@@ -1561,8 +1561,6 @@ List rowValues(ParseInfo info) :
             rowVals.add(value);
 	    }
 	)*
-	<RPAREN>
-
 	{
 		return rowVals;
 	}
@@ -1822,7 +1820,6 @@ Select select(ParseInfo info) :
 	boolean isDistinct = false;		// unless DISTINCT keyword in SELECT
 	SelectSymbol symbol = null;
 	Select select = new Select();
-	info.aggregatesAllowed = true;
 }
 {
 	<SELECT>
@@ -1839,7 +1836,6 @@ Select select(ParseInfo info) :
 		)
 	)		
 	{
-		info.aggregatesAllowed = false;	
  		select.setDistinct(isDistinct);
 		return select;
 	}
@@ -1924,54 +1920,29 @@ AllInGroupSymbol allInGroupSymbol() :
 	}
 }
 
-AggregateSymbol xmlAgg(ParseInfo info) :
+AggregateSymbol orderedAgg(ParseInfo info) :
 {
+    Token t = null;
 	Expression expression = null;
 	OrderBy orderBy = null;
+	Expression condition = null;
 }
 {
-	<XMLAGG> <LPAREN>
+	(t=<XMLAGG>|t=<ARRAY_AGG>)
+	<LPAREN>
 	expression = expression(info)
-	[
-		orderBy = orderby(info)
-	]
+	[ orderBy = orderby(info) ]
 	<RPAREN>
+	condition = filterClause(info)
 	{
-		if(! info.aggregatesAllowed) {
-			throw new ParseException(QueryPlugin.Util.getString("SQLParser.Aggregate_only_top_level")); //$NON-NLS-1$
-		}
-		
-		String name = generateFunctionName(info, "XMLAGG");
-		AggregateSymbol	agg = new AggregateSymbol(name, "XMLAGG", false, expression);
+		String aggName = t.image.toUpperCase();
+		String name = generateFunctionName(info, aggName);
+		AggregateSymbol	agg = new AggregateSymbol(name, aggName, false, expression);
 		agg.setOrderBy(orderBy);
+		agg.setCondition(condition);
 		return agg;
 	}
 }
-
-AggregateSymbol arrayAgg(ParseInfo info) :
-{
-	Expression expression = null;
-	OrderBy orderBy = null;
-}
-{
-	<ARRAY_AGG> <LPAREN>
-	expression = expression(info)
-	[
-		orderBy = orderby(info)
-	]
-	<RPAREN>
-	{
-		if(! info.aggregatesAllowed) {
-			throw new ParseException(QueryPlugin.Util.getString("SQLParser.Aggregate_only_top_level")); //$NON-NLS-1$
-		}
-		
-		String name = generateFunctionName(info, "ARRAY_AGG");
-		AggregateSymbol	agg = new AggregateSymbol(name, "ARRAY_AGG", false, expression);
-		agg.setOrderBy(orderBy);
-		return agg;
-	}
-}
-
 
 AggregateSymbol textAgg(ParseInfo info) :
 {
@@ -1982,6 +1953,7 @@ AggregateSymbol textAgg(ParseInfo info) :
 	List<DerivedColumn> expressions = new ArrayList<DerivedColumn>();
 	OrderBy orderBy = null;
 	String encoding = null;
+	Expression condition = null;
 }
 {
 	nonReserved("TEXTAGG") <LPAREN>
@@ -2015,20 +1987,18 @@ AggregateSymbol textAgg(ParseInfo info) :
 		orderBy = orderby(info)
 	]	
 	<RPAREN>
+	condition = filterClause(info)
 	{
-		if(! info.aggregatesAllowed) {
-			throw new ParseException(QueryPlugin.Util.getString("SQLParser.Aggregate_only_top_level")); //$NON-NLS-1$
-		}
-			
 		TextLine tf = new TextLine();
 		tf.setDelimiter(delimiter);
 		tf.setQuote(quote);
 		tf.setIncludeHeader(header);
 		tf.setExpressions(expressions);
 		tf.setEncoding(encoding);
-		String name = generateFunctionName(info, "TEXTAGG");
+        String name = generateFunctionName(info, "TEXTAGG");
 		AggregateSymbol agg = new AggregateSymbol(name, "TEXTAGG", false, tf);
 		agg.setOrderBy(orderBy);
+		agg.setCondition(condition);
 		return agg;		
 	}
 }
@@ -2040,16 +2010,18 @@ AggregateSymbol aggregateSymbol(ParseInfo info) :
 	AggregateSymbol agg = null;
 	boolean isDistinct = false;
 	Expression expression = null;
+	Expression condition = null;
 }
 {
 	(
 		// COUNT(*)
-		LOOKAHEAD(3) (
+		(LOOKAHEAD(3) (
 			func = nonReserved("COUNT")
 			<LPAREN>
 			starToken = <STAR>
 			<RPAREN> )	|
-			
+		LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "rank", "dense_rank", "row_number") != null}) (func = nonReserved("row_number", "rank", "dense_rank", "percent_rank", "cume_dist")
+			<LPAREN> <RPAREN>) |
 		// Remaining aggregates
 		(	(func = nonReserved("COUNT", "SUM", "AVG", "MIN", "MAX", "EVERY", "STDDEV_POP", "STDDEV_SAMP", "VAR_SAMP", "VAR_POP") 
 				|
@@ -2061,12 +2033,10 @@ AggregateSymbol aggregateSymbol(ParseInfo info) :
 			[ <DISTINCT> {isDistinct=true;} | <ALL>]
 			expression = expression(info)
 			<RPAREN>
-		) 
+		)) 
+		condition = filterClause(info)
 	)
 	{
-		if(! info.aggregatesAllowed) {
-			throw new ParseException(QueryPlugin.Util.getString("SQLParser.Aggregate_only_top_level")); //$NON-NLS-1$
-		}
 		func = func.toUpperCase();
 		String name = generateFunctionName(info, func);
 		if(starToken == null) { 
@@ -2076,7 +2046,19 @@ AggregateSymbol aggregateSymbol(ParseInfo info) :
 			// COUNT(*)			
 			agg = new AggregateSymbol(name, func, false, null);
 		}
+		agg.setCondition(condition);
 		return agg;
+	}
+}
+
+Expression filterClause(ParseInfo info) :
+{
+	Expression condition = null;
+}
+{
+	[ <FILTER> <LPAREN> <WHERE> condition = booleanPrimary(info) <RPAREN> ]
+	{
+		return condition;	
 	}
 }
 
@@ -2631,7 +2613,7 @@ Criteria criteria(ParseInfo info) :
  */
 Criteria compoundCritOr(ParseInfo info) :
 {
-    ArrayList logicList = new ArrayList();
+    ArrayList logicList = new ArrayList(2);
     Criteria logicPart = null;
 }
 {
@@ -2654,7 +2636,7 @@ Criteria compoundCritOr(ParseInfo info) :
  */
 Criteria compoundCritAnd(ParseInfo info) :
 {
-    ArrayList logicList = new ArrayList();
+    ArrayList logicList = new ArrayList(2);
     Criteria logicPart = null;
 }
 {
@@ -2677,14 +2659,20 @@ Criteria compoundCritAnd(ParseInfo info) :
  */
 Criteria notCrit(ParseInfo info) :
 {
-    Criteria crit = null;
+    Expression ex = null;
 	boolean isNot = false;
 }
 {
 	[<NOT> {isNot=true;}] 
-	crit=booleanPrimary(info)
+	ex=booleanPrimary(info)
 
 	{
+	    Criteria crit = null;
+	    if (ex instanceof Criteria) {
+	      crit = (Criteria)ex;
+	    } else {
+	      crit = new ExpressionCriteria(ex);
+	    }
   		if(isNot) { 
   			return new NotCriteria(crit);
 		} else {
@@ -2698,38 +2686,30 @@ Criteria notCrit(ParseInfo info) :
  * @return criteria
  * @throws ParseException if parsing failed
  */
-Criteria booleanPrimary(ParseInfo info) :
+Expression booleanPrimary(ParseInfo info) :
 {
     Expression ex = null;
-    Criteria crit = null;
 }
 {
     (
-		LOOKAHEAD(2) crit = translateCriteria(info)
+		LOOKAHEAD(2) ex = translateCriteria(info)
 		|
 	    (ex = commonValueExpression(info)
-	     {
-		  	 if (ex instanceof Criteria) {
-		  	 	crit = (Criteria)ex;
-		  	 } else {
-		     	crit = new ExpressionCriteria(ex);
-		     }
-	     }
 	     [(
-			LOOKAHEAD(2) crit=betweenCrit(info, ex) |
-			LOOKAHEAD(2) crit=matchCrit(info, ex) |
-			crit=setCrit(info, ex) |
-			crit=isNullCrit(info, ex) |
-			LOOKAHEAD(operator() (<ANY>|<SOME>|<ALL>) subquery(info)) crit=subqueryCompareCriteria(info, ex) |
-			crit=compareCrit(info, ex)
+			LOOKAHEAD(2) ex=betweenCrit(info, ex) |
+			LOOKAHEAD(2) ex=matchCrit(info, ex) |
+			ex=setCrit(info, ex) |
+			ex=isNullCrit(info, ex) |
+			LOOKAHEAD(operator() (<ANY>|<SOME>|<ALL>) subquery(info)) ex=subqueryCompareCriteria(info, ex) |
+			ex=compareCrit(info, ex)
 	     )]
 	    )
 	    |
-		crit=existsCriteria(info) |
-		crit = hasCriteria() 
+		ex=existsCriteria(info) |
+		ex = hasCriteria() 
     )
 	{
-		return crit;
+		return ex;
 	}
 }
 
@@ -3018,49 +2998,13 @@ ExistsCriteria existsCriteria(ParseInfo info) :
  */
 GroupBy groupBy(ParseInfo info) :
 {
-	GroupBy groupBy = new GroupBy();
-	SingleElementSymbol symbol = null;
+	List<Expression> expressions = null;
 }
 {
 	<GROUP> <BY>
-	(	symbol = groupByItem(info)
-		{
-			groupBy.addSymbol(symbol);
-		}
-		
-		(<COMMA> symbol = groupByItem(info)
-			{
-				groupBy.addSymbol(symbol);
-			}
-		)*
-	)
+    expressions = expressionList(info)	
 	{
-		return groupBy;
-	}
-}
-
-/**
- * <p>Parse a GROUP BY list item.  </p>
- * @return Parsed group by item
- * @throws ParseException if parsing failed
- */
-SingleElementSymbol groupByItem(ParseInfo info) :
-{
-	Expression expr = null;
-	SingleElementSymbol symbol = null;
-}
-{
-	expr = expression(info)
-	{
-		if(expr instanceof ElementSymbol) {
-			symbol = (ElementSymbol) expr;
-		} else {
-			String exprName = generateFunctionName(info, null);
-			symbol = new ExpressionSymbol(exprName, expr);
-		}
-	}
-	{
-		return symbol;
+		return new GroupBy(expressions);
 	}
 }
 
@@ -3072,14 +3016,11 @@ SingleElementSymbol groupByItem(ParseInfo info) :
 Criteria having(ParseInfo info) :
 {
     Criteria criteria = null;
-	info.aggregatesAllowed = true;
 }
 {
     <HAVING>
 	criteria = criteria(info)
-	
 	{
-		info.aggregatesAllowed = false;
 		return criteria;
 	}
 }
@@ -3438,18 +3379,19 @@ Expression valueExpressionPrimary(ParseInfo info) :
 			<RBRACE>
 		)
 		|
-		LOOKAHEAD(<ID> <LPAREN> <FOR>) (expression=textAgg(info))				
+		LOOKAHEAD(<ID> <LPAREN>, {matchesAny(getToken(1).image, "textagg") != null}) 
+		(expression=textAgg(info) [expression = windowSpecification(expression, info)])				
 		|		
 		// Aggregate function
-		LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "count", "min", "max", "sum", "avg", "every", "STDDEV_POP", "STDDEV_SAMP", "VAR_SAMP", "VAR_POP") != null}) (expression=aggregateSymbol(info))
+		LOOKAHEAD(<ID> <LPAREN>, {matchesAny(getToken(1).image, "count", "min", "max", "sum", "avg", "every", "STDDEV_POP", "STDDEV_SAMP", "VAR_SAMP", "VAR_POP") != null}) 
+		(expression=aggregateSymbol(info) [expression = windowSpecification(expression, info)])
 		|
-		LOOKAHEAD(<ANY>) (expression=aggregateSymbol(info))
+		LOOKAHEAD(<ANY>|<SOME>) (expression=aggregateSymbol(info) [expression = windowSpecification(expression, info)])
 		|
-		LOOKAHEAD(<SOME>) (expression=aggregateSymbol(info))
+		expression=orderedAgg(info) [expression = windowSpecification(expression, info)]
 		|
-		(expression=xmlAgg(info))
-		|
-		(expression=arrayAgg(info))
+		LOOKAHEAD(<ID> <LPAREN>, {matchesAny(getToken(1).image, "rank", "dense_rank", "row_number") != null}) 
+		(expression=aggregateSymbol(info) expression = windowSpecification(expression, info))
 		|
 		// Function
 		LOOKAHEAD(2) (expression=function(info))
@@ -3501,6 +3443,26 @@ Expression valueExpressionPrimary(ParseInfo info) :
 	}
 }
 
+Expression windowSpecification(Expression agg, ParseInfo info) :
+{
+	List<Expression> partitionList = null;
+	OrderBy orderBy = null;
+}
+{
+	<OVER> 
+    <LPAREN> 
+    [<PARTITION> <BY> partitionList = expressionList(info)]
+    [orderBy = orderby(info)]
+    <RPAREN>
+    {
+    	WindowFunction result = new WindowFunction();
+    	result.setFunction((AggregateSymbol)agg);
+    	result.setPartition(partitionList);
+    	result.setOrderBy(orderBy);
+    	return result;
+    }
+}
+
 /**
  * Parse a non-searched CASE expression.
  * @return CaseExpression
@@ -3509,8 +3471,8 @@ Expression valueExpressionPrimary(ParseInfo info) :
 CaseExpression caseExpression(ParseInfo info) :
 {
 	Expression expression = null, whenExpression = null, thenExpression = null, elseExpression = null;
-	ArrayList whenExpressions = new ArrayList();
-	ArrayList thenExpressions = new ArrayList();
+	ArrayList whenExpressions = new ArrayList(2);
+	ArrayList thenExpressions = new ArrayList(2);
 }
 {
 	<CASE>
@@ -3543,8 +3505,8 @@ SearchedCaseExpression searchedCaseExpression(ParseInfo info) :
 {
 	Expression thenExpression = null, elseExpression = null;
 	Criteria whenCriteria = null;
-	ArrayList whenCriteriaList = new ArrayList();
-	ArrayList thenExpressions = new ArrayList();
+	ArrayList whenCriteriaList = new ArrayList(2);
+	ArrayList thenExpressions = new ArrayList(2);
 }
 {
 	<CASE>
@@ -3578,7 +3540,7 @@ Expression function(ParseInfo info) :
 	String funcName = null;
     
 	Expression expression = null;
-	ArrayList args = new ArrayList();
+	ArrayList args = new ArrayList(2);
 	Token funcToken = null;
 }
 {
@@ -3665,61 +3627,15 @@ Expression function(ParseInfo info) :
 		                    | funcToken = <YEAR> | funcToken = <MONTH> | funcToken = <HOUR>
 		                    | funcToken = <MINUTE> | funcToken = <SECOND> | funcToken = <XMLCONCAT>
 		                    | funcToken = <XMLCOMMENT>)
-		<LPAREN>
-		[
-			expression = expression(info)
-			{
-				args.add(expression);	
-				expression = null;
-			}
-				
-			(<COMMA> expression=expression(info)
-			{
-				args.add(expression);
-				expression = null;
-			}
-			)*
-		]
+        <LPAREN>
+		[args = expressionList(info)]
 		<RPAREN>
 	)		
 	|
-	LOOKAHEAD(<INSERT> <LPAREN>) (
-		(funcToken = <INSERT>)
+	LOOKAHEAD(<TRANSLATE>|<INSERT> <LPAREN>) (
+		(funcToken = <TRANSLATE> | funcToken = <INSERT>)
 		<LPAREN>
-		[
-			expression = expression(info)
-			{
-				args.add(expression);	
-				expression = null;
-			}
-				
-			(<COMMA> expression=expression(info)
-			{
-				args.add(expression);
-				expression = null;
-			}
-			)*
-		]
-		<RPAREN>
-	)  			
-	|
-	LOOKAHEAD(<TRANSLATE> <LPAREN>) (
-		(funcToken = <TRANSLATE>)
-		<LPAREN>
-		[
-			expression = expression(info)
-			{
-				args.add(expression);	
-				expression = null;
-			}
-				
-			(<COMMA> expression=expression(info)
-			{
-				args.add(expression);
-				expression = null;
-			}
-			)*
-		]
+		[args = expressionList(info)]
 		<RPAREN>
 	)  
 	| expression = xmlParse(info)
@@ -3765,20 +3681,7 @@ Expression function(ParseInfo info) :
 	|   
 	(	funcName = id()
 		<LPAREN>
-		[
-			expression = expression(info)
-			{
-				args.add(expression);	
-				expression = null;
-			}
-				
-			(<COMMA> expression=expression(info)
-			{
-				args.add(expression);
-				expression = null;
-			}
-			)*
-		]
+		[ args = expressionList(info) ]
 		<RPAREN>
 	))		
 	{
@@ -3830,7 +3733,7 @@ QueryString queryString(ParseInfo info) :
 {
 	Expression path = null;
 	DerivedColumn arg = null;
-	ArrayList<DerivedColumn> args = new ArrayList<DerivedColumn>();
+	ArrayList<DerivedColumn> args = new ArrayList<DerivedColumn>(2);
 }
 {
  	nonReserved("QUERYSTRING") <LPAREN>
@@ -3850,7 +3753,7 @@ QueryString queryString(ParseInfo info) :
 XMLElement xmlElement(ParseInfo info) :
 {
 	String name = null;
-	ArrayList content = new ArrayList();
+	ArrayList content = new ArrayList(2);
 	XMLNamespaces xmlNamespaces = null;
 	XMLAttributes xmlAttributes = null;
 	Expression expression = null;
@@ -3886,7 +3789,7 @@ XMLElement xmlElement(ParseInfo info) :
 XMLAttributes xmlAttributes(ParseInfo info) :
 {
 	DerivedColumn expression = null;
-	ArrayList<DerivedColumn> args = new ArrayList<DerivedColumn>();
+	ArrayList<DerivedColumn> args = new ArrayList<DerivedColumn>(2);
 }
 {
  	<XMLATTRIBUTES> <LPAREN>
@@ -3911,7 +3814,7 @@ XMLForest xmlForest(ParseInfo info) :
 {
 	DerivedColumn expression = null;
 	XMLNamespaces xmlNamespaces = null;
-	ArrayList<DerivedColumn> args = new ArrayList<DerivedColumn>();
+	ArrayList<DerivedColumn> args = new ArrayList<DerivedColumn>(2);
 }
 {
  	<XMLFOREST> <LPAREN>
@@ -3939,7 +3842,7 @@ XMLForest xmlForest(ParseInfo info) :
 		
 XMLNamespaces xmlNamespaces(ParseInfo info) :
 {
-	ArrayList namespaces = new ArrayList();
+	ArrayList namespaces = new ArrayList(2);
 	XMLNamespaces.NamespaceItem item = null;
 }
 {

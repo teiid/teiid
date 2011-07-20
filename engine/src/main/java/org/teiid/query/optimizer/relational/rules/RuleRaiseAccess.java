@@ -163,6 +163,8 @@ public final class RuleRaiseAccess implements OptimizerRule {
             {                
                 Set<AggregateSymbol> aggregates = RulePushAggregates.collectAggregates(parentNode);
                 if (canRaiseOverGroupBy(parentNode, accessNode, aggregates, metadata, capFinder, record)) {
+                	accessNode.getGroups().clear();
+                	accessNode.getGroups().addAll(parentNode.getGroups());
                     return performRaise(rootNode, accessNode, parentNode);
                 }
                 return null;
@@ -302,14 +304,14 @@ public final class RuleRaiseAccess implements OptimizerRule {
         if(modelID == null) {
             return false;
         }
-        List<SingleElementSymbol> groupCols = (List<SingleElementSymbol>)groupNode.getProperty(NodeConstants.Info.GROUP_COLS);
+        List<Expression> groupCols = (List<Expression>)groupNode.getProperty(NodeConstants.Info.GROUP_COLS);
         if(!CapabilitiesUtil.supportsAggregates(groupCols, modelID, metadata, capFinder)) {
         	recordDebug("cannot push group by, since group by is not supported by source", groupNode, record); //$NON-NLS-1$
             return false;
         }
         if (groupCols != null) {
-            for (SingleElementSymbol singleElementSymbol : groupCols) {
-                if (!canPushSymbol(singleElementSymbol, false, modelID, metadata, capFinder, record)) {
+            for (Expression expr : groupCols) {
+                if (!canPushSymbol(expr, false, modelID, metadata, capFinder, record)) {
                     return false;
                 }
             }
@@ -467,7 +469,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
      * @throws QueryMetadataException
      * @since 4.1.2
      */
-    private static boolean canPushSymbol(SingleElementSymbol symbol, boolean inSelectClause, Object modelID, 
+    private static boolean canPushSymbol(Expression symbol, boolean inSelectClause, Object modelID, 
     		QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord record) 
     throws TeiidComponentException, QueryMetadataException {
 

@@ -148,6 +148,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
+import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
@@ -759,83 +760,17 @@ public class QueryRewriter {
 	 * Converts a group by with expressions into a group by with only element symbols and an inline view
 	 * @param query
 	 * @return
-	 * @throws QueryValidatorException
+	 * @throws TeiidProcessingException 
+	 * @throws TeiidComponentException 
 	 */
-	private Query rewriteGroupBy(Query query) throws TeiidComponentException, TeiidProcessingException{
+	private Query rewriteGroupBy(Query query) throws TeiidComponentException, TeiidProcessingException {
 		if (query.getGroupBy() == null) {
 			return query;
 		}
 		if (isDistinctWithGroupBy(query)) {
 			query.getSelect().setDistinct(false);
 		}
-        // we check for group by expressions here to create an ANSI SQL plan
-        boolean hasExpression = false;
-        for (final Iterator iterator = query.getGroupBy().getSymbols().iterator(); !hasExpression && iterator.hasNext();) {
-            hasExpression = iterator.next() instanceof ExpressionSymbol;
-        } 
-        if (!hasExpression) {
-        	return query;
-        }
-        Select select = query.getSelect();
-        GroupBy groupBy = query.getGroupBy();
-        query.setGroupBy(null);
-        Criteria having = query.getHaving();
-        query.setHaving(null);
-        OrderBy orderBy = query.getOrderBy();
-        query.setOrderBy(null);
-        Limit limit = query.getLimit();
-        query.setLimit(null);
-        Into into = query.getInto();
-        query.setInto(null);
-        Set<Expression> newSelectColumns = new HashSet<Expression>();
-        for (final Iterator iterator = groupBy.getSymbols().iterator(); iterator.hasNext();) {
-            newSelectColumns.add(SymbolMap.getExpression((SingleElementSymbol)iterator.next()));
-        }
-        Set<AggregateSymbol> aggs = new HashSet<AggregateSymbol>();
-        aggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(select, true));
-        if (having != null) {
-            aggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(having, true));
-        }
-        for (AggregateSymbol aggregateSymbol : aggs) {
-            if (aggregateSymbol.getExpression() != null) {
-                Expression expr = aggregateSymbol.getExpression();
-                newSelectColumns.add(SymbolMap.getExpression(expr));
-            }
-        }
-        Select innerSelect = new Select();
-        int index = 0;
-        for (Expression expr : newSelectColumns) {
-            if (expr instanceof SingleElementSymbol) {
-                innerSelect.addSymbol((SingleElementSymbol)expr);
-            } else {
-                innerSelect.addSymbol(new ExpressionSymbol("EXPR" + index++ , expr)); //$NON-NLS-1$
-            }
-        }
-        query.setSelect(innerSelect);
-        Query outerQuery = null;
-        try {
-            outerQuery = QueryRewriter.createInlineViewQuery(new GroupSymbol("X"), query, metadata, query.getSelect().getProjectedSymbols()); //$NON-NLS-1$
-        } catch (TeiidException err) {
-            throw new TeiidRuntimeException(err);
-        }
-        Iterator<SingleElementSymbol> iter = outerQuery.getSelect().getProjectedSymbols().iterator();
-        HashMap<Expression, SingleElementSymbol> expressionMap = new HashMap<Expression, SingleElementSymbol>();
-        for (SingleElementSymbol symbol : query.getSelect().getProjectedSymbols()) {
-            expressionMap.put(SymbolMap.getExpression(symbol), iter.next());
-        }
-        ExpressionMappingVisitor.mapExpressions(groupBy, expressionMap);
-        outerQuery.setGroupBy(groupBy);
-        ExpressionMappingVisitor.mapExpressions(having, expressionMap);
-        outerQuery.setHaving(having);
-        ExpressionMappingVisitor.mapExpressions(orderBy, expressionMap);
-        outerQuery.setOrderBy(orderBy);
-        outerQuery.setLimit(limit);
-        ExpressionMappingVisitor.mapExpressions(select, expressionMap);
-        outerQuery.setSelect(select);
-        outerQuery.setInto(into);
-        outerQuery.setOption(query.getOption());
-        query = outerQuery;
-        rewriteExpressions(innerSelect);
+		rewriteExpressions(query.getGroupBy());
 		return query;
 	}
 	
@@ -848,7 +783,7 @@ public class QueryRewriter {
 		for (SingleElementSymbol selectExpr : query.getSelect().getProjectedSymbols()) {
 			selectExpressions.add(SymbolMap.getExpression(selectExpr));
 		}
-		for (SingleElementSymbol groupByExpr :  (List<SingleElementSymbol>)groupBy.getSymbols()) {
+		for (Expression groupByExpr : groupBy.getSymbols()) {
 			if (!selectExpressions.contains(groupByExpr)) {
 				return false;
 			}
@@ -2311,6 +2246,17 @@ public class QueryRewriter {
     			expression.setAggregateFunction(Type.MAX);
     		}
     	}
+    	if (expression.getExpression() != null && expression.getCondition() != null && !expression.respectsNulls()) {
+    		Expression cond = expression.getCondition();
+    		Expression ex = expression.getExpression();
+    		if (!(cond instanceof Criteria)) {
+    			cond = new ExpressionCriteria(cond);
+    		}
+    		SearchedCaseExpression sce = new SearchedCaseExpression(Arrays.asList(cond), Arrays.asList(ex));
+    		sce.setType(ex.getType());
+    		expression.setCondition(null);
+    		expression.setExpression(sce);
+    	}
 		return expression;
 	}
    
@@ -2756,7 +2702,7 @@ public class QueryRewriter {
         
         select.setSymbols(select.getProjectedSymbols());
         
-        List symbols = select.getSymbols();
+        List<SelectSymbol> symbols = select.getSymbols();
         
         HashSet<String> uniqueNames = new HashSet<String>();
         

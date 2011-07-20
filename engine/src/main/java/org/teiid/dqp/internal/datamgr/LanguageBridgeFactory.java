@@ -570,10 +570,12 @@ public class LanguageBridgeFactory {
     }
 
     AggregateFunction translate(AggregateSymbol symbol) {
-        return new AggregateFunction(symbol.getAggregateFunction().name(), 
+    	AggregateFunction af = new AggregateFunction(symbol.getAggregateFunction().name(), 
                                 symbol.isDistinct(), 
                                 translate(symbol.getExpression()),
                                 symbol.getType());
+    	af.setCondition(translate(symbol.getCondition()));
+    	return af;
     }
 
     org.teiid.language.Expression translate(ExpressionSymbol symbol) {

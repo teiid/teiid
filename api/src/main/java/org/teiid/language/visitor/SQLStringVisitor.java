@@ -60,6 +60,7 @@ import org.teiid.language.NamedTable;
 import org.teiid.language.Not;
 import org.teiid.language.OrderBy;
 import org.teiid.language.QueryExpression;
+import org.teiid.language.SQLConstants;
 import org.teiid.language.ScalarSubquery;
 import org.teiid.language.SearchedCase;
 import org.teiid.language.SearchedWhenClause;
@@ -174,11 +175,22 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         }
         
         if (obj.getExpression() == null) {
-             buffer.append(Tokens.ALL_COLS);
+        	if (SQLConstants.NonReserved.COUNT.equalsIgnoreCase(obj.getName())) {
+        		buffer.append(Tokens.ALL_COLS);
+        	}
         } else {
             append(obj.getExpression());
         }
         buffer.append(Tokens.RPAREN);
+        if (obj.getCondition() != null) {
+        	buffer.append(Tokens.SPACE);
+        	buffer.append(FILTER);
+        	buffer.append(Tokens.LPAREN);
+        	buffer.append(WHERE);
+        	buffer.append(Tokens.SPACE);
+        	append(obj.getCondition());
+        	buffer.append(Tokens.RPAREN);
+        }
     }
 
     public void visit(Comparison obj) {

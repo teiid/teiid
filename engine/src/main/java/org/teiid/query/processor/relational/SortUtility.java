@@ -45,6 +45,7 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 
 
 /**
@@ -152,7 +153,7 @@ public class SortUtility {
         this.comparator.setNullOrdering(nullOrderings);
     }
     
-    public SortUtility(TupleSource ts, List expressions, List<Boolean> types,
+    public SortUtility(TupleSource ts, List<? extends SingleElementSymbol> expressions, List<Boolean> types,
 			Mode mode, BufferManager bufferManager, String connectionID, List schema) {
 		this(ts, new OrderBy(expressions, types).getOrderByItems(), mode, bufferManager, connectionID, schema);
 	}

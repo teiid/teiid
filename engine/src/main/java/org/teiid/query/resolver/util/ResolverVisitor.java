@@ -57,6 +57,7 @@ import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.DerivedColumn;
@@ -422,6 +423,17 @@ public class ResolverVisitor extends LanguageVisitor {
 		} catch (QueryResolverException e) {
 			handleException(e);
 		}
+    }
+    
+    @Override
+    public void visit(AggregateSymbol obj) {
+    	if (obj.getCondition() != null) {
+			try {
+				obj.setCondition(ResolverUtil.convertExpression(obj.getCondition(), DataTypeManager.DefaultDataTypes.BOOLEAN, metadata));
+			} catch (QueryResolverException e) {
+				handleException(e);
+			}
+    	}
     }
 
     public TeiidComponentException getComponentException() {

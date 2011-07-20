@@ -25,8 +25,7 @@ package org.teiid.query.optimizer;
 import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataStore;
@@ -59,7 +58,7 @@ import org.teiid.query.processor.relational.UnionAllNode;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
-public class TestLimit extends TestCase {
+public class TestLimit {
 
     private static final int[] FULL_PUSHDOWN = new int[] {
                 1,      // Access
@@ -97,10 +96,6 @@ public class TestLimit extends TestCase {
         UnionAllNode.class
     };
     
-    public TestLimit(String name) {
-        super(name);
-    }
-
     private static TransformationMetadata exampleMetadata() {
     	MetadataStore metadataStore = new MetadataStore();
         // Create models
@@ -157,7 +152,7 @@ public class TestLimit extends TestCase {
 
         return RealMetadataFactory.createTransformationMetadata(metadataStore, "example");
     }
-    public void testLimit() {
+    @Test public void testLimit() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -189,7 +184,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testLimitPushdown() {
+    @Test public void testLimitPushdown() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true); 
@@ -205,7 +200,7 @@ public class TestLimit extends TestCase {
         TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN, NODE_TYPES);
     }
 
-    public void testLimitWithOffset() {
+    @Test public void testLimitWithOffset() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -236,7 +231,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testPushedLimitWithOffset() throws Exception {
+    @Test public void testPushedLimitWithOffset() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true); 
@@ -268,7 +263,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testLimitWithOffsetFullyPushed() {
+    @Test public void testLimitWithOffsetFullyPushed() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true); 
@@ -285,7 +280,7 @@ public class TestLimit extends TestCase {
         TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN, NODE_TYPES);
     }
     
-    public void testSort() {
+    @Test public void testSort() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -316,7 +311,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
 
-    public void testSortPushed() {
+    @Test public void testSortPushed() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
@@ -349,7 +344,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
 
-    public void testSortPushedWithLimit() {
+    @Test public void testSortPushedWithLimit() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
@@ -367,7 +362,7 @@ public class TestLimit extends TestCase {
         TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN, NODE_TYPES);
     }
 
-    public void testSortUnderLimitNotRemoved() {
+    @Test public void testSortUnderLimitNotRemoved() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         // pm3 model supports order by
@@ -400,7 +395,7 @@ public class TestLimit extends TestCase {
     }
     
     //TODO: there is a redundent project node here
-    public void testSortAboveLimitNotPushed() {
+    @Test public void testSortAboveLimitNotPushed() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
@@ -433,7 +428,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testLimitNotPushedWithUnion() {
+    @Test public void testLimitNotPushedWithUnion() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -466,7 +461,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testLimitNotPushedWithDupRemove() {
+    @Test public void testLimitNotPushedWithDupRemove() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -499,7 +494,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testLimitPushedWithUnionAll() {
+    @Test public void testLimitPushedWithUnionAll() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -532,7 +527,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testLimitWithOffsetPushedWithUnion() throws Exception {
+    @Test public void testLimitWithOffsetPushedWithUnion() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -567,7 +562,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testLimitNotPushedWithUnionOrderBy() {
+    @Test public void testLimitNotPushedWithUnionOrderBy() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -601,7 +596,7 @@ public class TestLimit extends TestCase {
         TestOptimizer.checkNodeTypes(plan, new int[] {1}, new Class[]{DupRemoveSortNode.class});
     }
     
-    public void testCombinedLimits() throws Exception {
+    @Test public void testCombinedLimits() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -635,7 +630,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
 
-    public void testCombinedLimitsWithOffset() throws Exception {
+    @Test public void testCombinedLimitsWithOffset() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -654,7 +649,7 @@ public class TestLimit extends TestCase {
         TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN, NODE_TYPES);
     }
 
-    public void testInlineView() {
+    @Test public void testInlineView() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         //caps.setCapabilitySupport(SourceCapabilities.QUERY_ORDERBY, true);
@@ -682,7 +677,7 @@ public class TestLimit extends TestCase {
      * 
      * @since 4.3
      */
-    public void testInlineViewAboveLimitNotMerged() {
+    @Test public void testInlineViewAboveLimitNotMerged() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
@@ -706,7 +701,7 @@ public class TestLimit extends TestCase {
      * since there is no order by with the nested limit, the criteria can be pushed through 
      *
      */
-    public void testCriteriaPushedUnderLimit() {
+    @Test public void testCriteriaPushedUnderLimit() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -724,7 +719,7 @@ public class TestLimit extends TestCase {
         TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN, NODE_TYPES);
     }
     
-    public void testInlineViewJoin() {
+    @Test public void testInlineViewJoin() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
@@ -768,7 +763,7 @@ public class TestLimit extends TestCase {
         });
     }
     
-    public void testDontPushSelectWithOrderedLimit() {
+    @Test public void testDontPushSelectWithOrderedLimit() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -798,7 +793,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testDontPushSelectWithOrderedLimit1() {
+    @Test public void testDontPushSelectWithOrderedLimit1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -828,7 +823,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testLimitWithNoAccessNode() {
+    @Test public void testLimitWithNoAccessNode() {
         String sql = "select 1 limit 1";//$NON-NLS-1$
         String[] expectedSql = new String[] {};
         
@@ -856,7 +851,7 @@ public class TestLimit extends TestCase {
     /**
      * Note here that the criteria made it to the having clause 
      */
-    public void testAggregateCriteriaOverUnSortedLimit() {
+    @Test public void testAggregateCriteriaOverUnSortedLimit() {
         String sql = "select a from (SELECT MAX(e2) as a FROM pm1.g1 GROUP BY e2 LIMIT 1) x where a = 0"; //$NON-NLS-1$
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
@@ -874,7 +869,7 @@ public class TestLimit extends TestCase {
         TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN, NODE_TYPES);
     }
     
-    public void testSortWithLimitInlineView() {
+    @Test public void testSortWithLimitInlineView() {
         String sql = "select e1 from (select pm1.g1.e1, pm1.g1.e2 from pm1.g1 order by pm1.g1.e1, pm1.g1.e2 limit 1) x"; //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0, g_0.e2"}); //$NON-NLS-1$

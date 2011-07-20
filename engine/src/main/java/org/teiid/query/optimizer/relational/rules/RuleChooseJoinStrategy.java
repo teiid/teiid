@@ -71,7 +71,6 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
      * Determines whether this node should be converted to a merge join node
      * @param joinNode The join node
      * @param metadata The metadata
-     * @return True if merge is possible
      */
     static void chooseJoinStrategy(PlanNode joinNode, QueryMetadataInterface metadata) {
         // Check that join is an inner join
@@ -183,7 +182,6 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
             ExpressionSymbol expressionSymbol = uniqueExpressions.get(expression);
             if (expressionSymbol == null) {
                 expressionSymbol = new ExpressionSymbol("$" + EXPRESSION_INDEX.getAndIncrement(), expression); //$NON-NLS-1$
-                expressionSymbol.setDerivedExpression(true);
                 uniqueExpressions.put(expression, expressionSymbol);
             }
             result.add(expressionSymbol);

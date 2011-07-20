@@ -25,6 +25,7 @@ package org.teiid.query.optimizer;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -94,10 +95,8 @@ public class TestInlineView  {
 		String userQuery = "select q1.a from (select count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey) q1 left outer join bqt1.smallb on q1.a = bqt1.smallb.intkey where q1.intkey = 1"; //$NON-NLS-1$
 		String optimizedQuery = "SELECT v_0.c_0 FROM (SELECT COUNT(g_0.intkey) AS c_0 FROM bqt1.smalla AS g_0 WHERE g_0.intkey = 1 GROUP BY g_0.intkey) AS v_0 LEFT OUTER JOIN bqt1.smallb AS g_1 ON v_0.c_0 = g_1.intkey"; //$NON-NLS-1$
 		
-		List expectedResults = new ArrayList();
-		List row1 = new ArrayList();
-        row1.add(new Integer(1)); 
-		expectedResults.add(row1);
+		List<List<?>> expectedResults = new ArrayList<List<?>>();
+		expectedResults.add(Arrays.asList(1));
 				
 		Set<String> sourceQueries = new HashSet<String>();
         sourceQueries.add("oracle"); //$NON-NLS-1$ 
@@ -116,10 +115,8 @@ public class TestInlineView  {
 				"where bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.intkey = 1 and bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa = bqt1.smallb.intkey"; //$NON-NLS-1$
 		String optimizedQuery = "SELECT v_0.c_0 FROM (SELECT COUNT(g_0.intkey) AS c_0 FROM bqt1.smalla AS g_0 WHERE g_0.intkey = 1 GROUP BY g_0.intkey) AS v_0, bqt1.smallb AS g_1 WHERE v_0.c_0 = g_1.intkey"; //$NON-NLS-1$
 		
-		List expectedResults = new ArrayList();
-		List row1 = new ArrayList();
-        row1.add(new Integer(1)); 
-		expectedResults.add(row1);
+		List<List<?>> expectedResults = new ArrayList<List<?>>();
+		expectedResults.add(Arrays.asList(1));
 				
 		Set<String> sourceQueries = new HashSet<String>();
         sourceQueries.add("oracle"); //$NON-NLS-1$ 
@@ -134,12 +131,10 @@ public class TestInlineView  {
 	
 	public static InlineViewCase createInlineViewWithDistinctAndOrderBy() throws Exception {
 		String userQuery = "select Q1.a from (select distinct count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey order by bqt1.smalla.intkey) q1 inner join bqt1.smallb as q2 on q1.intkey = q2.intkey where q1.a = 1 and q1.a + q1.intkey = 2"; //$NON-NLS-1$
-        String optimizedQuery = "SELECT v_0.c_1 FROM (SELECT g_0.intkey AS c_0, COUNT(g_0.intkey) AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.intkey HAVING ((COUNT(g_0.intkey) + g_0.intkey) = 2) AND (COUNT(g_0.intkey) = 1)) AS v_0, bqt1.smallb AS g_1 WHERE v_0.c_0 = g_1.intkey"; //$NON-NLS-1$
+        String optimizedQuery = "SELECT v_0.c_1 FROM (SELECT g_0.intkey AS c_0, COUNT(g_0.intkey) AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.intkey HAVING (COUNT(g_0.intkey) = 1) AND ((COUNT(g_0.intkey) + g_0.intkey) = 2)) AS v_0, bqt1.smallb AS g_1 WHERE v_0.c_0 = g_1.intkey"; //$NON-NLS-1$
 
-		List expectedResults = new ArrayList();
-		List row1 = new ArrayList();
-        row1.add(new Integer(1)); 
-		expectedResults.add(row1);
+        List<List<?>> expectedResults = new ArrayList<List<?>>();
+		expectedResults.add(Arrays.asList(1));
 				
         Set<String> sourceQueries = new HashSet<String>();
         sourceQueries.add("oracle"); //$NON-NLS-1$ 
@@ -157,7 +152,7 @@ public class TestInlineView  {
 		String userQuery = "select q1.A from (select count(intkey) as a, intkey, stringkey from vqt.smalla group by intkey, stringkey) q1 inner join vqt.smallb as q2 on q1.intkey = q2.a12345 where q1.a = 2"; //$NON-NLS-1$
 		String optimizedQuery = "SELECT v_0.c_1 FROM (SELECT g_0.IntKey AS c_0, COUNT(g_0.IntKey) AS c_1 FROM BQT1.SmallA AS g_0 GROUP BY g_0.IntKey, g_0.StringKey HAVING COUNT(g_0.IntKey) = 2) AS v_0, BQT1.SmallA AS g_1 WHERE v_0.c_0 = Concat(g_1.StringKey, g_1.StringNum)"; //$NON-NLS-1$
 
-		List expectedResults = new ArrayList();
+		List<List<?>> expectedResults = new ArrayList<List<?>>();
 				
         Set<String> sourceQueries = new HashSet<String>();
         sourceQueries.add("oracle"); //$NON-NLS-1$ 
@@ -172,12 +167,10 @@ public class TestInlineView  {
 	
 	public static InlineViewCase createInlineViewWithOuterOrderAndGroup() throws Exception {
 		String userQuery = "select count(Q1.a) b from (select distinct count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey order by bqt1.smalla.intkey) q1 inner join bqt1.smallb as q2 on q1.intkey = q2.intkey where q1.a = 1 and q1.a + q1.intkey = 2 group by Q1.a order by b"; //$NON-NLS-1$
-		String optimizedQuery = "SELECT COUNT(v_0.c_1) AS c_0 FROM (SELECT g_0.intkey AS c_0, COUNT(g_0.intkey) AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.intkey HAVING ((COUNT(g_0.intkey) + g_0.intkey) = 2) AND (COUNT(g_0.intkey) = 1)) AS v_0, bqt1.smallb AS g_1 WHERE v_0.c_0 = g_1.intkey GROUP BY v_0.c_1 ORDER BY c_0"; //$NON-NLS-1$
+		String optimizedQuery = "SELECT COUNT(v_0.c_1) AS c_0 FROM (SELECT g_0.intkey AS c_0, COUNT(g_0.intkey) AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.intkey HAVING (COUNT(g_0.intkey) = 1) AND ((COUNT(g_0.intkey) + g_0.intkey) = 2)) AS v_0, bqt1.smallb AS g_1 WHERE v_0.c_0 = g_1.intkey GROUP BY v_0.c_1 ORDER BY c_0"; //$NON-NLS-1$
 
-		List expectedResults = new ArrayList();
-		List row1 = new ArrayList();
-        row1.add(new Integer(1));
-		expectedResults.add(row1);
+		List<List<?>> expectedResults = new ArrayList<List<?>>();
+		expectedResults.add(Arrays.asList(1));
 				
         Set<String> sourceQueries = new HashSet<String>();
         sourceQueries.add("oracle"); //$NON-NLS-1$ 
@@ -192,15 +185,11 @@ public class TestInlineView  {
 	
 	public static InlineViewCase crateInlineViewsInUnions() throws Exception {
 		String userQuery = "select q1.a from (select count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey) q1 left outer join bqt1.smallb on q1.a = bqt1.smallb.intkey where q1.intkey = 1 union all (select count(Q1.a) b from (select distinct count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey order by bqt1.smalla.intkey) q1 inner join bqt1.smallb as q2 on q1.intkey = q2.intkey where q1.a = 1 and q1.a + q1.intkey = 2 group by Q1.a order by b)"; //$NON-NLS-1$
-		String optimizedQuery = "SELECT v_1.c_0 FROM (SELECT COUNT(g_2.intkey) AS c_0 FROM bqt1.smalla AS g_2 WHERE g_2.intkey = 1 GROUP BY g_2.intkey) AS v_1 LEFT OUTER JOIN bqt1.smallb AS g_3 ON v_1.c_0 = g_3.intkey UNION ALL SELECT COUNT(v_0.c_1) AS c_0 FROM (SELECT g_0.IntKey AS c_0, COUNT(g_0.IntKey) AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.IntKey HAVING ((COUNT(g_0.IntKey) + g_0.IntKey) = 2) AND (COUNT(g_0.IntKey) = 1)) AS v_0, bqt1.smallb AS g_1 WHERE v_0.c_0 = g_1.intkey GROUP BY v_0.c_1"; //$NON-NLS-1$
+		String optimizedQuery = "SELECT v_1.c_0 FROM (SELECT COUNT(g_2.intkey) AS c_0 FROM bqt1.smalla AS g_2 WHERE g_2.intkey = 1 GROUP BY g_2.intkey) AS v_1 LEFT OUTER JOIN bqt1.smallb AS g_3 ON v_1.c_0 = g_3.intkey UNION ALL SELECT COUNT(v_0.c_1) AS c_0 FROM (SELECT g_0.IntKey AS c_0, COUNT(g_0.IntKey) AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.IntKey HAVING (COUNT(g_0.IntKey) = 1) AND ((COUNT(g_0.IntKey) + g_0.IntKey) = 2)) AS v_0, bqt1.smallb AS g_1 WHERE v_0.c_0 = g_1.intkey GROUP BY v_0.c_1"; //$NON-NLS-1$
 
-		List expectedResults = new ArrayList();
-		List row1 = new ArrayList();
-        row1.add(new Integer(1)); 
-		expectedResults.add(row1);
-		List row2 = new ArrayList();
-        row2.add(new Integer(1)); 
-        expectedResults.add(row2);
+		List<List<?>> expectedResults = new ArrayList<List<?>>();
+		expectedResults.add(Arrays.asList(1));
+        expectedResults.add(Arrays.asList(2));
 				
         Set<String> sourceQueries = new HashSet<String>();
         sourceQueries.add("oracle"); //$NON-NLS-1$ 
@@ -217,15 +206,11 @@ public class TestInlineView  {
 	public static InlineViewCase createUnionInInlineView() throws Exception{
 		
 	    String userQuery = "select t1.intkey from (select case when q1.a=1 then 2 else 1 end as a from (select count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey) q1 left outer join bqt1.smallb on q1.a = bqt1.smallb.intkey where q1.intkey = 1 union all (select count(Q1.a) b from (select distinct count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey order by bqt1.smalla.intkey) q1 inner join bqt1.smallb as q2 on q1.intkey = q2.intkey where q1.a = 1 and q1.a + q1.intkey = 2 group by Q1.a order by b)) as q3, bqt1.smallb as t1 where q3.a = t1.intkey order by t1.intkey"; //$NON-NLS-1$
-		String optimizedQuery = "SELECT g_4.intkey AS c_0 FROM (SELECT CASE WHEN v_1.c_0 = 1 THEN 2 ELSE 1 END AS c_0 FROM (SELECT COUNT(g_2.intkey) AS c_0 FROM bqt1.smalla AS g_2 WHERE g_2.intkey = 1 GROUP BY g_2.intkey) AS v_1 LEFT OUTER JOIN bqt1.smallb AS g_3 ON v_1.c_0 = g_3.intkey UNION ALL SELECT COUNT(v_0.c_1) AS c_0 FROM (SELECT g_0.IntKey AS c_0, COUNT(g_0.IntKey) AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.IntKey HAVING ((COUNT(g_0.IntKey) + g_0.IntKey) = 2) AND (COUNT(g_0.IntKey) = 1)) AS v_0, bqt1.smallb AS g_1 WHERE v_0.c_0 = g_1.intkey GROUP BY v_0.c_1) AS v_2, bqt1.smallb AS g_4 WHERE v_2.c_0 = g_4.intkey ORDER BY c_0"; //$NON-NLS-1$
+		String optimizedQuery = "SELECT g_4.intkey AS c_0 FROM (SELECT CASE WHEN v_1.c_0 = 1 THEN 2 ELSE 1 END AS c_0 FROM (SELECT COUNT(g_2.intkey) AS c_0 FROM bqt1.smalla AS g_2 WHERE g_2.intkey = 1 GROUP BY g_2.intkey) AS v_1 LEFT OUTER JOIN bqt1.smallb AS g_3 ON v_1.c_0 = g_3.intkey UNION ALL SELECT COUNT(v_0.c_1) AS c_0 FROM (SELECT g_0.IntKey AS c_0, COUNT(g_0.IntKey) AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.IntKey HAVING (COUNT(g_0.IntKey) = 1) AND ((COUNT(g_0.IntKey) + g_0.IntKey) = 2)) AS v_0, bqt1.smallb AS g_1 WHERE v_0.c_0 = g_1.intkey GROUP BY v_0.c_1) AS v_2, bqt1.smallb AS g_4 WHERE v_2.c_0 = g_4.intkey ORDER BY c_0"; //$NON-NLS-1$
 
-		List expectedResults = new ArrayList();
-		List row1 = new ArrayList();
-        row1.add(new Integer(1)); 
-		expectedResults.add(row1);
-		List row2 = new ArrayList();
-        row2.add(new Integer(2)); 
-        expectedResults.add(row2);
+		List<List<?>> expectedResults = new ArrayList<List<?>>();
+		expectedResults.add(Arrays.asList(1));
+        expectedResults.add(Arrays.asList(2));
 				
         Set<String> sourceQueries = new HashSet<String>();
         sourceQueries.add("oracle"); //$NON-NLS-1$ 

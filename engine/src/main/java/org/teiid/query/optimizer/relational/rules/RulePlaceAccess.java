@@ -69,10 +69,6 @@ public final class RulePlaceAccess implements
                                                    QueryPlannerException {
 
         Set<String> groups = context.getGroups();
-        if (groups == null) {
-        	groups = new HashSet<String>();
-        	context.setGroups(groups);
-        }
 
         boolean[] addtionalRules = new boolean[2];
 

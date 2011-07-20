@@ -591,7 +591,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		boolean distinct = false;
 		if (query.getGroupBy() != null) {
 			distinct = true;
-			for (SingleElementSymbol groupByExpr :  (List<SingleElementSymbol>)query.getGroupBy().getSymbols()) {
+			for (Expression groupByExpr : query.getGroupBy().getSymbols()) {
 				if (!expressions.contains(groupByExpr)) {
 					distinct = false;
 					break;

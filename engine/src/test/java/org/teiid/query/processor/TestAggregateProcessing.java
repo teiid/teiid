@@ -266,12 +266,12 @@ public class TestAggregateProcessing {
     	capFinder.addCapabilities("pm2", bac); //$NON-NLS-1$
     	HardcodedDataManager dataManager = new HardcodedDataManager();
     	
-    	dataManager.addData("SELECT v_0.c_1, v_0.c_0, COUNT(*), MAX(v_0.c_2) FROM (SELECT g_0.e2 AS c_0, g_0.e1 AS c_1, g_0.e3 AS c_2 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1", //$NON-NLS-1$ 
+    	dataManager.addData("SELECT v_0.c_0, v_0.c_1, COUNT(*), MAX(v_0.c_2) FROM (SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1", //$NON-NLS-1$ 
     			new List[] {
     				Arrays.asList("2", Integer.valueOf(2), Integer.valueOf(2), Boolean.FALSE), //$NON-NLS-1$
     				Arrays.asList("1", Integer.valueOf(1), Integer.valueOf(3), Boolean.TRUE), //$NON-NLS-1$
     			});
-    	dataManager.addData("SELECT v_0.c_1, v_0.c_0, COUNT(*), MAX(v_0.c_2) FROM (SELECT g_0.e2 AS c_0, convert(g_0.e2, string) AS c_1, g_0.e3 AS c_2 FROM pm2.g2 AS g_0 ORDER BY c_1 LIMIT 10) AS v_0 GROUP BY v_0.c_0, v_0.c_1", //$NON-NLS-1$ 
+    	dataManager.addData("SELECT v_0.c_0, v_0.c_1, COUNT(*), MAX(v_0.c_2) FROM (SELECT convert(g_0.e2, string) AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2 FROM pm2.g2 AS g_0 ORDER BY c_0 LIMIT 10) AS v_0 GROUP BY v_0.c_0, v_0.c_1", //$NON-NLS-1$ 
     			new List[] {
     				Arrays.asList("1", Integer.valueOf(1), Integer.valueOf(4), Boolean.FALSE), //$NON-NLS-1$
     			});
@@ -360,9 +360,9 @@ public class TestAggregateProcessing {
 		List[] expected = new List[] {
 				Arrays.asList(null, "cc"),
 				Arrays.asList(0.0, "bb"),
-				Arrays.asList(1.0, null),
-				Arrays.asList(2.0, "aa"),
-				Arrays.asList(7.0, "aa")
+				Arrays.asList(2.0, null),
+				Arrays.asList(21.0, "aa"),
+				Arrays.asList(24.0, "aa")
 		};
 
 		// Construct data manager with data
@@ -398,6 +398,26 @@ public class TestAggregateProcessing {
 		cc.setBufferManager(impl);
 		// Run query
 		helpProcess(plan, cc, dataManager, expected);
+	}
+	
+	@Test public void testAggFilter() throws Exception {
+		// Create query
+		String sql = "SELECT e2, count(*) filter (where e3) from pm1.g1 group by e2 order by e2"; //$NON-NLS-1$
+
+		// Create expected results
+		List[] expected = new List[] {
+				Arrays.asList(0, 0),
+				Arrays.asList(1, 1),
+				Arrays.asList(2, 0),
+				Arrays.asList(3, 1),
+		};
+
+		// Construct data manager with data
+		FakeDataManager dataManager = new FakeDataManager();
+		sampleData1(dataManager);
+
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+		helpProcess(plan, dataManager, expected);
 	}
 
 }

@@ -51,6 +51,7 @@ import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.ValueIterator;
 
 
@@ -90,11 +91,11 @@ public class DependentCriteriaProcessor {
                 DependentValueSource originalVs = (DependentValueSource)dependentNode.getContext().getVariableContext().getGlobalValue(valueSource);
                 if (!originalVs.isDistinct()) {
 	            	if (sortUtility == null) {
-	            		List<Expression> sortSymbols = new ArrayList<Expression>(dependentSetStates.size());
+	            		List<SingleElementSymbol> sortSymbols = new ArrayList<SingleElementSymbol>(dependentSetStates.size());
 		                List<Boolean> sortDirection = new ArrayList<Boolean>(sortSymbols.size());
 		                for (int i = 0; i < dependentSetStates.size(); i++) {
 		                    sortDirection.add(Boolean.valueOf(OrderBy.ASC));
-		                    sortSymbols.add(dependentSetStates.get(i).valueExpression);
+		                    sortSymbols.add((SingleElementSymbol)dependentSetStates.get(i).valueExpression);
 		                }
 		                this.sortUtility = new SortUtility(originalVs.getTupleBuffer().createIndexedTupleSource(), sortSymbols, sortDirection, Mode.DUP_REMOVE, dependentNode.getBufferManager(), dependentNode.getConnectionID(), originalVs.getTupleBuffer().getSchema());
 	            	}
