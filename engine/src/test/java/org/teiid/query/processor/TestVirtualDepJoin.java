@@ -364,7 +364,7 @@ public class TestVirtualDepJoin {
         List<String> expectedQueries = new ArrayList<String>(6);
         for (int i = 0; i < 3; i++) {
         	expectedQueries.add("SELECT g_0.id AS c_0, g_0.first AS c_1, g_0.last AS c_2 FROM CustomerMaster.Customers AS g_0 WHERE g_0.first = 'Miles' ORDER BY c_0"); //$NON-NLS-1$
-        	expectedQueries.add("SELECT g_0.id AS c_0, g_0.amount AS c_1 FROM Europe.CustAccts AS g_0 WHERE g_0.id = 100 ORDER BY c_0"); //$NON-NLS-1$
+        	expectedQueries.add("SELECT g_0.id, g_0.amount FROM Europe.CustAccts AS g_0 WHERE g_0.id = 100"); //$NON-NLS-1$
         }
         
         assertEquals(expectedQueries, dataManager.getQueries());
