@@ -419,11 +419,11 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			result.type = crit.getClass();
 			result.not = exists.isNegated();
 			//the correlations can only be in where (if no group by or aggregates) or having
-			result.query = (Query)exists.getCommand();
 			result.mergeJoin = exists.getSubqueryHint().isMergeJoin();
 			if (!UNNEST && !result.mergeJoin) {
 				return result;
 			}
+			result.query = (Query)exists.getCommand();
 		}
 		return result;
 	}
