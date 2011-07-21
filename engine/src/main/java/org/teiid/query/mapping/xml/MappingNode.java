@@ -25,8 +25,8 @@ package org.teiid.query.mapping.xml;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -214,7 +214,7 @@ public abstract class MappingNode implements Cloneable, Serializable {
      */
     public Map<MappingNodeConstants.Properties, Object> getNodeProperties(){
         if(nodeProperties == null) {
-            nodeProperties = new HashMap<MappingNodeConstants.Properties, Object>();
+            nodeProperties = new LinkedHashMap<MappingNodeConstants.Properties, Object>();
         }
         return nodeProperties;
     }
