@@ -360,9 +360,9 @@ public class TestAggregateProcessing {
 		List[] expected = new List[] {
 				Arrays.asList(null, "cc"),
 				Arrays.asList(0.0, "bb"),
-				Arrays.asList(1.0, null),
-				Arrays.asList(2.0, "aa"),
-				Arrays.asList(7.0, "aa")
+				Arrays.asList(2.0, null),
+				Arrays.asList(21.0, "aa"),
+				Arrays.asList(24.0, "aa")
 		};
 
 		// Construct data manager with data

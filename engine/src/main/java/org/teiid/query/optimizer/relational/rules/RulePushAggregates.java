@@ -645,7 +645,16 @@ public class RulePushAggregates implements
 
         Set<PlanNode> possibleTargetNodes = new LinkedHashSet<PlanNode>(aggregateMap.keySet());
         possibleTargetNodes.addAll(groupingMap.keySet());
-
+        for (Map.Entry<PlanNode, List<AggregateSymbol>> entry : aggregateMap.entrySet()) {
+    		if (AggregateSymbol.areAggregatesCardinalityDependent(entry.getValue())) {
+        		//can't change the cardinality on the other side of the join - 
+    			//unless it's a 1-1 join, in which case this optimization isn't needed
+    			//TODO: make a better choice if there are multiple targets
+    			possibleTargetNodes.clear();
+    			possibleTargetNodes.add(entry.getKey());
+    			break;
+        	}        		
+    	}
         for (PlanNode planNode : possibleTargetNodes) {
             Set<SingleElementSymbol> stagedGroupingSymbols = new LinkedHashSet<SingleElementSymbol>();
             List<AggregateSymbol> aggregates = aggregateMap.get(planNode);
@@ -853,6 +862,10 @@ public class RulePushAggregates implements
             		return null;
             	}
                 continue;
+            }
+            
+            if (originatingNode.getType() != NodeConstants.Types.ACCESS) {
+            	continue;
             }
             
             if (aggs && ((AggregateSymbol)aggregateSymbol).isDistinct()) {
