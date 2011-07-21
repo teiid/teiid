@@ -28,6 +28,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import junit.framework.TestCase;
+
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.BetweenCriteria;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -48,20 +50,14 @@ import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.proc.CriteriaSelector;
 import org.teiid.query.sql.proc.TranslateCriteria;
 import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.AllInGroupSymbol;
-import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Symbol;
-import org.teiid.query.sql.visitor.ElementCollectorVisitor;
-import org.teiid.query.sql.visitor.GroupCollectorVisitor;
-import org.teiid.query.sql.visitor.StaticSymbolMappingVisitor;
-
-import junit.framework.TestCase;
 
 
 
@@ -209,14 +205,14 @@ public class TestStaticSymbolMappingVisitor extends TestCase {
 
 	public void testVisitSelect2() { 
 		Select select = new Select();
-		AllSymbol all = new AllSymbol();
+		MultipleElementSymbol all = new MultipleElementSymbol();
 		select.addSymbol(all);
 		helpTest(select, getSymbolMap());   
 	}
 
 	public void testVisitSelect3() { 
 		Select select = new Select();
-		AllSymbol all = new AllSymbol();
+		MultipleElementSymbol all = new MultipleElementSymbol();
 		all.addElementSymbol(exampleElement(true, 0));
 		select.addSymbol(all);
 		helpTest(select, getSymbolMap());   
@@ -226,7 +222,7 @@ public class TestStaticSymbolMappingVisitor extends TestCase {
 		Select select = new Select();
 		select.addSymbol( new ExpressionSymbol(
 			"x", new Function("length", new Expression[] {exampleElement(true, 0)})) );    //$NON-NLS-1$ //$NON-NLS-2$
-		select.addSymbol( new AllInGroupSymbol("abc.*") ); //$NON-NLS-1$
+		select.addSymbol( new MultipleElementSymbol("abc.*") ); //$NON-NLS-1$
 		select.addSymbol( exampleElement(true, 1) );
 		helpTest(select,getSymbolMap());
 	}
@@ -266,7 +262,7 @@ public class TestStaticSymbolMappingVisitor extends TestCase {
 	}
 	
  	public void testVisitAllSymbol() {
- 		AllSymbol as = new AllSymbol();
+ 		MultipleElementSymbol as = new MultipleElementSymbol();
  		ArrayList elements = new ArrayList();
  		elements.add(exampleElement(true, 0));    
  		elements.add(exampleElement(true, 1));     		
@@ -274,8 +270,8 @@ public class TestStaticSymbolMappingVisitor extends TestCase {
  		helpTest(as, getSymbolMap());
  	}
  	
- 	public void testVisitAllInGroupSymbol() {
- 		AllInGroupSymbol aigs = new AllInGroupSymbol("OLDG0.*"); //$NON-NLS-1$
+ 	public void testVisitMultipleElementSymbol() {
+ 		MultipleElementSymbol aigs = new MultipleElementSymbol("OLDG0.*"); //$NON-NLS-1$
  		ArrayList elements = new ArrayList();
  		elements.add(exampleElement(true, 0));    
  		elements.add(exampleElement(true, 1));     		
@@ -299,9 +295,9 @@ public class TestStaticSymbolMappingVisitor extends TestCase {
 		helpTest(f2, getSymbolMap()); 	    
  	} 	
 
- 	public void testMapAllInGroupSymbolName() {
- 		AllInGroupSymbol aigs = new AllInGroupSymbol("OLDG0.*"); //$NON-NLS-1$
- 		ArrayList elements = new ArrayList();
+ 	public void testMapMultipleElementSymbolName() {
+ 		MultipleElementSymbol aigs = new MultipleElementSymbol("OLDG0"); //$NON-NLS-1$
+ 		ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
  		elements.add(exampleElement(true, 0));    
  		elements.add(exampleElement(true, 1));     		
  		aigs.setElementSymbols(elements);
@@ -311,7 +307,7 @@ public class TestStaticSymbolMappingVisitor extends TestCase {
         DeepPreOrderNavigator.doVisit(aigs, visitor);
 
 		// Check name of all in group symbol
-		assertEquals("AllInGroupSymbol name did not get mapped correctly: ", "NEWG0.*", aigs.getName()); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals("MultipleElementSymbol name did not get mapped correctly: ", "NEWG0.*", aigs.toString()); //$NON-NLS-1$ //$NON-NLS-2$
  	}
     
     public void testExecName() {

@@ -57,7 +57,7 @@ import org.teiid.query.sql.proc.DeclareStatement;
 import org.teiid.query.sql.proc.HasCriteria;
 import org.teiid.query.sql.proc.IfStatement;
 import org.teiid.query.sql.proc.Statement;
-import org.teiid.query.sql.symbol.AllSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -434,7 +434,7 @@ public class TestOptionsAndHints {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         UnaryFromClause ufc = new UnaryFromClause();
@@ -452,7 +452,7 @@ public class TestOptionsAndHints {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         UnaryFromClause ufc = new UnaryFromClause();
@@ -470,7 +470,7 @@ public class TestOptionsAndHints {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         UnaryFromClause ufc = new UnaryFromClause();
@@ -488,7 +488,7 @@ public class TestOptionsAndHints {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         UnaryFromClause ufc = new UnaryFromClause();
@@ -506,7 +506,7 @@ public class TestOptionsAndHints {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         UnaryFromClause ufc = new UnaryFromClause();
@@ -524,7 +524,7 @@ public class TestOptionsAndHints {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         UnaryFromClause ufc = new UnaryFromClause();
@@ -542,7 +542,7 @@ public class TestOptionsAndHints {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         from.addGroup(new GroupSymbol("t1")); //$NON-NLS-1$
@@ -560,7 +560,7 @@ public class TestOptionsAndHints {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         UnaryFromClause ufc = new UnaryFromClause();
@@ -578,7 +578,7 @@ public class TestOptionsAndHints {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         from.addGroup(new GroupSymbol("t1")); //$NON-NLS-1$
@@ -596,13 +596,13 @@ public class TestOptionsAndHints {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         
         Query query2 = new Query();
         select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query2.setSelect(select);
         From from2 = new From();
         from2.addGroup(new GroupSymbol("t1")); //$NON-NLS-1$
@@ -623,7 +623,7 @@ public class TestOptionsAndHints {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         
@@ -692,7 +692,7 @@ public class TestOptionsAndHints {
         
         Query query2 = new Query();
         select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         From from2 = new From();
         from2.addGroup(new GroupSymbol("t1")); //$NON-NLS-1$
         from2.addGroup(new GroupSymbol("t2")); //$NON-NLS-1$
@@ -1042,7 +1042,7 @@ public class TestOptionsAndHints {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         UnaryFromClause ufc = new UnaryFromClause();
@@ -1058,7 +1058,7 @@ public class TestOptionsAndHints {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         UnaryFromClause ufc = new UnaryFromClause();
@@ -1087,7 +1087,7 @@ public class TestOptionsAndHints {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         UnaryFromClause ufc = new UnaryFromClause();
@@ -1106,7 +1106,7 @@ public class TestOptionsAndHints {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         UnaryFromClause ufc = new UnaryFromClause();
@@ -1116,7 +1116,7 @@ public class TestOptionsAndHints {
         
         Query query1 = new Query();
         select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query1.setSelect(select);
         from = new From();
         ufc = new UnaryFromClause();

@@ -25,13 +25,12 @@ package org.teiid.query.sql.visitor;
 import java.util.ArrayList;
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
-
-import junit.framework.TestCase;
+import org.teiid.query.sql.symbol.Expression;
 
 
 
@@ -46,9 +45,9 @@ public class TestAggregateSymbolCollectorVisitor extends TestCase {
         Command command = QueryParser.getQueryParser().parseCommand(sql);
         
         // Find aggregates
-        List<SingleElementSymbol> foundAggs = new ArrayList<SingleElementSymbol>();
-        List<SingleElementSymbol> foundElements = new ArrayList<SingleElementSymbol>();
-        AggregateSymbolCollectorVisitor.getAggregates(command, foundAggs, foundElements);
+        List<Expression> foundAggs = new ArrayList<Expression>();
+        List<Expression> foundElements = new ArrayList<Expression>();
+        AggregateSymbolCollectorVisitor.getAggregates(command, foundAggs, foundElements, null, null, null);
         
         // Compare
         assertEquals("Incorrect number of aggregates: " + foundAggs, aggs.length, foundAggs.size()); //$NON-NLS-1$

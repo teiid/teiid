@@ -28,7 +28,7 @@ import java.util.List;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.AllSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
 import junit.framework.TestCase;
@@ -50,7 +50,7 @@ public class TestSelect extends TestCase {
 		symbols.add(new ElementSymbol("b")); //$NON-NLS-1$
 
 	    Select select = new Select();
-	    AllSymbol all = new AllSymbol();
+	    MultipleElementSymbol all = new MultipleElementSymbol();
 	    all.setElementSymbols(symbols);
 	    select.addSymbol(all);
 	    return select;	
@@ -69,7 +69,7 @@ public class TestSelect extends TestCase {
 	
 	public void testGetProjectedNoElements() {    
 	    Select select = new Select();
-	    select.addSymbol(new AllSymbol());
+	    select.addSymbol(new MultipleElementSymbol());
 	    
 	    List projectedSymbols = select.getProjectedSymbols();
 	    assertEquals("Did not get empty list for select * with no elements: ", new ArrayList(), projectedSymbols); //$NON-NLS-1$
@@ -81,7 +81,7 @@ public class TestSelect extends TestCase {
 		symbols.add(new ElementSymbol("b")); //$NON-NLS-1$
 
 	    Select select = new Select();
-	    AllSymbol all = new AllSymbol();
+	    MultipleElementSymbol all = new MultipleElementSymbol();
 	    all.setElementSymbols(symbols);
 	    select.addSymbol(all);
 	    

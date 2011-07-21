@@ -34,7 +34,7 @@ import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.SetQuery.Operation;
-import org.teiid.query.sql.symbol.AllSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
@@ -43,7 +43,7 @@ public class TestLimitParsing {
 	
     @Test public void testLimit() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new AllSymbol()));
+        Select select = new Select(Arrays.asList(new MultipleElementSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
@@ -53,7 +53,7 @@ public class TestLimitParsing {
     
     @Test public void testLimitWithOffset() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new AllSymbol()));
+        Select select = new Select(Arrays.asList(new MultipleElementSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
@@ -63,7 +63,7 @@ public class TestLimitParsing {
     
     @Test public void testLimitWithReferences1() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new AllSymbol()));
+        Select select = new Select(Arrays.asList(new MultipleElementSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
@@ -73,7 +73,7 @@ public class TestLimitParsing {
     
     @Test public void testLimitWithReferences2() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new AllSymbol()));
+        Select select = new Select(Arrays.asList(new MultipleElementSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
@@ -83,7 +83,7 @@ public class TestLimitParsing {
     
     @Test public void testLimitWithReferences3() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new AllSymbol()));
+        Select select = new Select(Arrays.asList(new MultipleElementSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
@@ -93,7 +93,7 @@ public class TestLimitParsing {
     
     @Test public void testSetQueryLimit() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new AllSymbol()));
+        Select select = new Select(Arrays.asList(new MultipleElementSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
@@ -104,7 +104,7 @@ public class TestLimitParsing {
     
     @Test public void testOffset() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new AllSymbol()));
+        Select select = new Select(Arrays.asList(new MultipleElementSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
@@ -114,7 +114,7 @@ public class TestLimitParsing {
     
     @Test public void testFetchFirst() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new AllSymbol()));
+        Select select = new Select(Arrays.asList(new MultipleElementSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
@@ -124,7 +124,7 @@ public class TestLimitParsing {
     
     @Test public void testFetchFirstRow() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new AllSymbol()));
+        Select select = new Select(Arrays.asList(new MultipleElementSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
@@ -134,7 +134,7 @@ public class TestLimitParsing {
     
     @Test public void testOffsetFetch() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new AllSymbol()));
+        Select select = new Select(Arrays.asList(new MultipleElementSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);

@@ -1229,7 +1229,7 @@ int count = visitor.getCount();]]></programlisting>
                   <para>GroupBy</para>
                 </entry>
                 <entry>
-                  <para>Not currently used - non-element expressions in the group by create an inline view.</para>
+                  <para>Translator can support non-column reference grouping expressions.</para>
                 </entry>
               </row>
               <row>
@@ -1285,6 +1285,28 @@ int count = visitor.getCount();]]></programlisting>
                 </entry>
                 <entry>
                   <para>Translator supports the WITH clause.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>ElementaryOlapOperations</para>
+                </entry>
+                <entry>
+                  <para/>
+                </entry>
+                <entry>
+                  <para>Translator supports window functions and analytic functions RANK, DENSE_RANK, and ROW_NUMBER.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>AdvancedOlapOperations</para>
+                </entry>
+                <entry>
+                  <para/>
+                </entry>
+                <entry>
+                  <para>Translator supports aggregate conditions.</para>
                 </entry>
               </row>
             </tbody>

@@ -1859,5 +1859,21 @@ public class TestValidator {
 	@Test public void testNestedAgg() {
 		helpValidate("SELECT min(g1.e1) filter (where max(e2) = 1) from pm1.g1", new String[] {"MAX(e2)"}, RealMetadataFactory.example1Cached());		
 	}
+	
+	@Test public void testWindowFunction() {
+		helpValidate("SELECT e1 from pm1.g1 where row_number() over (order by e2) = 1", new String[] {"ROW_NUMBER() OVER (ORDER BY e2)"}, RealMetadataFactory.example1Cached());		
+	}
+	
+	@Test public void testWindowFunction1() {
+		helpValidate("SELECT 1 from pm1.g1 having row_number() over (order by e2) = 1", new String[] {"e2", "ROW_NUMBER() OVER (ORDER BY e2)"}, RealMetadataFactory.example1Cached());		
+	}
+	
+	@Test public void testWindowFunctionWithoutOrdering() {
+		helpValidate("SELECT row_number() over () from pm1.g1", new String[] {"ROW_NUMBER() OVER ()"}, RealMetadataFactory.example1Cached());		
+	}
+
+	@Test public void testWindowFunctionWithNestedOrdering() {
+		helpValidate("SELECT xmlagg(xmlelement(name x, e1) order by e2) over () from pm1.g1", new String[] {"XMLAGG(XMLELEMENT(NAME x, e1) ORDER BY e2)"}, RealMetadataFactory.example1Cached());		
+	}
 
 }

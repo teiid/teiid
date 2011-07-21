@@ -22,29 +22,14 @@
 
 package org.teiid.query.sql.symbol;
 
+import org.teiid.query.sql.LanguageObject;
+
 /** 
  * This is the server's representation of a metadata symbol that can be used
  * in a SELECT statement.  It exists as a typing mechanism and to provide a single
  * additional method to get an ordered list of elements from each symbol.
  */
-public abstract class SelectSymbol extends Symbol {
+public interface SelectSymbol extends LanguageObject {
+	
 
-    /**
-     * Passthrough constructor used for cloning 
-     * @param name
-     * @param canonicalName
-     * @since 4.3
-     */
-    protected SelectSymbol(String name, String canonicalName) {
-        super(name, canonicalName);
-    }
-    
-	/**
-	 * Construct a symbol with a name
-	 * @param name Name of symbol
-	 */
-	public SelectSymbol(String name) {
-		super(name);
-	}
-				
 }

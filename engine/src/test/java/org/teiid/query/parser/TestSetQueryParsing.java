@@ -28,7 +28,7 @@ import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.SetQuery.Operation;
-import org.teiid.query.sql.symbol.AllSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -81,7 +81,7 @@ public class TestSetQueryParsing extends TestCase {
         from.addGroup(g);
 
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         
         Query query1 = new Query();
         query1.setSelect(select);

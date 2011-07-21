@@ -72,6 +72,7 @@ public class AggregateSymbol extends ExpressionSymbol {
 	private boolean distinct;
 	private OrderBy orderBy;
 	private Expression condition;
+	private boolean isWindowed;
 
 	private static final Class<Integer> COUNT_TYPE = DataTypeManager.DefaultDataClasses.INTEGER;
 	private static final Map<Class<?>, Class<?>> SUM_TYPES;
@@ -224,6 +225,7 @@ public class AggregateSymbol extends ExpressionSymbol {
 		if (condition != null) {
 			copy.setCondition((Expression) condition.clone());
 		}
+		copy.isWindowed = this.isWindowed;
 		return copy;
 	}
     
@@ -247,6 +249,7 @@ public class AggregateSymbol extends ExpressionSymbol {
         
         return this.aggregate.equals(other.aggregate)
                && this.distinct == other.distinct
+               && this.isWindowed == other.isWindowed
                && EquivalenceUtil.areEqual(this.getExpression(), other.getExpression())
                && EquivalenceUtil.areEqual(this.condition, other.condition)
         	   && EquivalenceUtil.areEqual(this.getOrderBy(), other.getOrderBy());
@@ -301,6 +304,14 @@ public class AggregateSymbol extends ExpressionSymbol {
 			return orderBy == null;
 		}
 		return true;
+	}
+	
+	public boolean isWindowed() {
+		return isWindowed;
+	}
+	
+	public void setWindowed(boolean isWindowed) {
+		this.isWindowed = isWindowed;
 	}
 
 }

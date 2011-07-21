@@ -112,7 +112,7 @@ import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.AllSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -744,7 +744,7 @@ public class RelationalPlanner {
     		Collection<AggregateSymbol> aggs = AggregateSymbolCollectorVisitor.getAggregates(query.getSelect(), true);
     		boolean hasGrouping = !aggs.isEmpty();
     		if (query.getHaving() != null) {
-    			AggregateSymbolCollectorVisitor.getAggregates(query.getHaving(), aggs, null);
+    			aggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(query.getHaving(), true));
     			hasGrouping = true;
     		}
     		if (query.getGroupBy() != null) {
@@ -1224,7 +1224,7 @@ public class RelationalPlanner {
         	}else{
             	this.context.accessedPlanningObject(matMetadataId);
         		qnode = new QueryNode(null);
-        		Query query = createMatViewQuery(matMetadataId, matTableName, Arrays.asList(new AllSymbol()), isImplicitGlobal);
+        		Query query = createMatViewQuery(matMetadataId, matTableName, Arrays.asList(new MultipleElementSymbol()), isImplicitGlobal);
         		query.setCacheHint(hint);
         		qnode.setCommand(query);
                 cacheString = "matview"; //$NON-NLS-1$

@@ -32,9 +32,8 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
-import org.teiid.query.sql.symbol.AllInGroupSymbol;
-import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 
 
 /**
@@ -81,18 +80,7 @@ public class ElementCollectorVisitor extends LanguageVisitor {
      * called directly.
      * @param obj Language object
      */
-    public void visit(AllInGroupSymbol obj) {
-        if(obj.getElementSymbols() != null) {
-	        this.elements.addAll(obj.getElementSymbols());
-        }
-    }
-
-    /**
-     * Visit a language object and collect symbols.  This method should <b>NOT</b> be
-     * called directly.
-     * @param obj Language object
-     */
-    public void visit(AllSymbol obj) {
+    public void visit(MultipleElementSymbol obj) {
         if(obj.getElementSymbols() != null) {
 	        this.elements.addAll(obj.getElementSymbols());
         }

@@ -180,12 +180,12 @@ public class MetaDataProcessor {
             this.metadata = tempFacade; 
         }
         
-        List projectedSymbols = originalCommand.getProjectedSymbols();
+        List<SingleElementSymbol> projectedSymbols = originalCommand.getProjectedSymbols();
         columnMetadata = new Map[projectedSymbols.size()];
         
-        Iterator symbolIter = projectedSymbols.iterator();
+        Iterator<SingleElementSymbol> symbolIter = projectedSymbols.iterator();
         for(int i=0; symbolIter.hasNext(); i++) {
-            SingleElementSymbol symbol = (SingleElementSymbol) symbolIter.next();
+            SingleElementSymbol symbol = symbolIter.next();
             String shortColumnName = SingleElementSymbol.getShortName(symbol.getOutputName());
             if(symbol instanceof AliasSymbol) {
                 symbol = ((AliasSymbol)symbol).getSymbol();

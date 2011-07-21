@@ -93,7 +93,6 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
@@ -293,11 +292,11 @@ public class TestResolver {
 	
 	private void helpCheckSelect(Query query, String[] elementNames) {
 		Select select = query.getSelect();
-		List elements = select.getSymbols();
+		List<SingleElementSymbol> elements = select.getProjectedSymbols();
 		assertEquals("Wrong number of select symbols: ", elementNames.length, elements.size()); //$NON-NLS-1$
 
 		for(int i=0; i<elements.size(); i++) {
-			SelectSymbol symbol = (SelectSymbol) elements.get(i);
+			SingleElementSymbol symbol = elements.get(i);
 			assertEquals("Element name does not match: ", elementNames[i].toUpperCase(), symbol.getName().toUpperCase()); //$NON-NLS-1$
 		}
 	}
@@ -594,7 +593,6 @@ public class TestResolver {
 	@Test public void testSelectStar() {
 		Query resolvedQuery = (Query) helpResolve("SELECT * FROM pm1.g1"); //$NON-NLS-1$
 		helpCheckFrom(resolvedQuery, new String[] { "pm1.g1" }); //$NON-NLS-1$
-		helpCheckSelect(resolvedQuery, new String[] { "*" }); //$NON-NLS-1$
 		helpCheckElements(resolvedQuery.getSelect(),
 			new String[] { "pm1.g1.e1", "pm1.g1.e2", "pm1.g1.e3", "pm1.g1.e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			new String[] { "pm1.g1.e1", "pm1.g1.e2", "pm1.g1.e3", "pm1.g1.e4" } ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -603,7 +601,6 @@ public class TestResolver {
 	@Test public void testSelectStarFromAliasedGroup() {
 		Query resolvedQuery = (Query) helpResolve("SELECT * FROM pm1.g1 as x"); //$NON-NLS-1$
 		helpCheckFrom(resolvedQuery, new String[] { "pm1.g1" }); //$NON-NLS-1$
-		helpCheckSelect(resolvedQuery, new String[] { "*" }); //$NON-NLS-1$
 		helpCheckElements(resolvedQuery.getSelect(),
 			new String[] { "x.e1", "x.e2", "x.e3", "x.e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			new String[] { "pm1.g1.e1", "pm1.g1.e2", "pm1.g1.e3", "pm1.g1.e4" } ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -612,7 +609,6 @@ public class TestResolver {
 	@Test public void testSelectStarFromMultipleAliasedGroups() {
 		Query resolvedQuery = (Query) helpResolve("SELECT * FROM pm1.g1 as x, pm1.g1 as y"); //$NON-NLS-1$
 		helpCheckFrom(resolvedQuery, new String[] { "pm1.g1", "pm1.g1" }); //$NON-NLS-1$ //$NON-NLS-2$
-		helpCheckSelect(resolvedQuery, new String[] { "*" }); //$NON-NLS-1$
 		helpCheckElements(resolvedQuery.getSelect(),
 			new String[] { "x.e1", "x.e2", "x.e3", "x.e4", "y.e1", "y.e2", "y.e3", "y.e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
 			new String[] { "pm1.g1.e1", "pm1.g1.e2", "pm1.g1.e3", "pm1.g1.e4", "pm1.g1.e1", "pm1.g1.e2", "pm1.g1.e3", "pm1.g1.e4" } ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
@@ -621,7 +617,6 @@ public class TestResolver {
     @Test public void testSelectStarWhereSomeElementsAreNotSelectable() {
         Query resolvedQuery = (Query) helpResolve("SELECT * FROM pm1.g4"); //$NON-NLS-1$
         helpCheckFrom(resolvedQuery, new String[] { "pm1.g4" }); //$NON-NLS-1$
-        helpCheckSelect(resolvedQuery, new String[] { "*" }); //$NON-NLS-1$
         helpCheckElements(resolvedQuery.getSelect(),
             new String[] { "pm1.g4.e1", "pm1.g4.e3" }, //$NON-NLS-1$ //$NON-NLS-2$
             new String[] { "pm1.g4.e1", "pm1.g4.e3" } ); //$NON-NLS-1$ //$NON-NLS-2$
@@ -630,7 +625,6 @@ public class TestResolver {
     @Test public void testSelectGroupStarWhereSomeElementsAreNotSelectable() {
         Query resolvedQuery = (Query) helpResolve("SELECT pm1.g4.* FROM pm1.g4"); //$NON-NLS-1$
         helpCheckFrom(resolvedQuery, new String[] { "pm1.g4" }); //$NON-NLS-1$
-        helpCheckSelect(resolvedQuery, new String[] { "pm1.g4.*" }); //$NON-NLS-1$
         helpCheckElements(resolvedQuery.getSelect(),
             new String[] { "pm1.g4.e1", "pm1.g4.e3" }, //$NON-NLS-1$ //$NON-NLS-2$
             new String[] { "pm1.g4.e1", "pm1.g4.e3" } ); //$NON-NLS-1$ //$NON-NLS-2$
@@ -639,7 +633,6 @@ public class TestResolver {
 	@Test public void testFullyQualifiedSelectStar() {
 		Query resolvedQuery = (Query) helpResolve("SELECT pm1.g1.* FROM pm1.g1"); //$NON-NLS-1$
 		helpCheckFrom(resolvedQuery, new String[] { "pm1.g1" }); //$NON-NLS-1$
-		helpCheckSelect(resolvedQuery, new String[] { "pm1.g1.*" }); //$NON-NLS-1$
 		helpCheckElements(resolvedQuery.getSelect(),
 			new String[] { "pm1.g1.e1", "pm1.g1.e2", "pm1.g1.e3", "pm1.g1.e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			new String[] { "pm1.g1.e1", "pm1.g1.e2", "pm1.g1.e3", "pm1.g1.e4" } ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -648,7 +641,6 @@ public class TestResolver {
 	@Test public void testSelectAllInAliasedGroup() {
 		Query resolvedQuery = (Query) helpResolve("SELECT x.* FROM pm1.g1 as x"); //$NON-NLS-1$
 		helpCheckFrom(resolvedQuery, new String[] { "pm1.g1" }); //$NON-NLS-1$
-		helpCheckSelect(resolvedQuery, new String[] { "x.*" }); //$NON-NLS-1$
 		helpCheckElements(resolvedQuery.getSelect(),
 			new String[] { "x.e1", "x.e2", "x.e3", "x.e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			new String[] { "pm1.g1.e1", "pm1.g1.e2", "pm1.g1.e3", "pm1.g1.e4" } ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$

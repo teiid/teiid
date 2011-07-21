@@ -109,8 +109,6 @@ import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.AllInGroupSymbol;
-import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.DerivedColumn;
@@ -119,6 +117,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
@@ -1157,12 +1156,14 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(escapeSinglePart(obj.getOutputName()));
     }
 
-    public void visit( AllInGroupSymbol obj ) {
-        append(obj.getName());
-    }
-
-    public void visit( AllSymbol obj ) {
-        append(obj.getName());
+    public void visit( MultipleElementSymbol obj ) {
+    	if (obj.getGroup() == null) {
+    		append(Tokens.ALL_COLS);
+    	} else {
+    		visitNode(obj.getGroup());
+    		append(Tokens.DOT);
+    		append(Tokens.ALL_COLS);
+    	}
     }
 
     public void visit( Constant obj ) {

@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -121,6 +122,7 @@ import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.TextLine;
+import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
@@ -752,32 +754,27 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         validateNoAggsInClause(groupBy);
         validateNoAggsInClause(query.getCriteria());
         validateNoAggsInClause(query.getFrom());
-        if(groupBy != null || having != null || !AggregateSymbolCollectorVisitor.getAggregates(select, false).isEmpty()) {
-            Set<Expression> groupSymbols = null;
-            if(groupBy != null) {
-                groupSymbols = new HashSet<Expression>();
-                for (final Iterator<Expression> iterator = groupBy.getSymbols().iterator(); iterator.hasNext();) {
-                    final Expression element = iterator.next();
-                    groupSymbols.add(element);
-                }
-            }
-            
-            // Validate HAVING, if it exists
-            AggregateValidationVisitor visitor = new AggregateValidationVisitor(groupSymbols);
-            if(having != null) {
-                AggregateValidationVisitor.validate(having, visitor);
-            }
-            
-            // Validate SELECT
-            List<SingleElementSymbol> projectedSymbols = select.getProjectedSymbols();
-            for (SingleElementSymbol symbol : projectedSymbols) {
-                AggregateValidationVisitor.validate(symbol, visitor);                                            
-            }
-            
-            // Move items to this report
-            ValidatorReport report = visitor.getReport();
-            Collection<ValidatorFailure> items = report.getItems();
-            super.getReport().addItems(items);        
+        Set<Expression> groupSymbols = null;
+        boolean hasAgg = false;
+        if (groupBy != null) {
+            groupSymbols = new HashSet<Expression>(groupBy.getSymbols());
+            hasAgg = true;
+        }
+        LinkedHashSet<Expression> invalid = new LinkedHashSet<Expression>();
+        LinkedHashSet<Expression> invalidWindowFunctions = new LinkedHashSet<Expression>();
+        LinkedList<AggregateSymbol> aggs = new LinkedList<AggregateSymbol>();
+        if (having != null) {
+        	AggregateSymbolCollectorVisitor.getAggregates(having, aggs, invalid, null, invalidWindowFunctions, groupSymbols);
+        	hasAgg = true;
+        }
+        for (SingleElementSymbol symbol : select.getProjectedSymbols()) {
+        	AggregateSymbolCollectorVisitor.getAggregates(symbol, aggs, invalid, null, null, groupSymbols);                                            
+        }
+        if ((!aggs.isEmpty() || hasAgg) && !invalid.isEmpty()) {
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0037", invalid), invalid); //$NON-NLS-1$
+        }
+        if (!invalidWindowFunctions.isEmpty()) {
+        	handleValidationError(QueryPlugin.Util.getString("SQLParser.window_only_top_level", invalidWindowFunctions), invalidWindowFunctions); //$NON-NLS-1$
         }
     }
 
@@ -785,9 +782,10 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 		if (clause == null) {
         	return;
         }
-		Collection<AggregateSymbol> aggs = AggregateSymbolCollectorVisitor.getAggregates(clause, false);
+		LinkedHashSet<Expression> aggs = new LinkedHashSet<Expression>();
+		AggregateSymbolCollectorVisitor.getAggregates(clause, aggs, null, null, aggs, null);
 		if (!aggs.isEmpty()) {
-			handleValidationError(QueryPlugin.Util.getString("SQLParser.Aggregate_only_top_level", aggs), aggs);
+			handleValidationError(QueryPlugin.Util.getString("SQLParser.Aggregate_only_top_level", aggs), aggs); //$NON-NLS-1$
 		}
 	}
     
@@ -1204,18 +1202,56 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
     
     @Override
+    public void visit(WindowFunction windowFunction) {
+    	AggregateSymbol.Type type = windowFunction.getFunction().getAggregateFunction();
+    	switch (type) {
+    	case RANK:
+    	case DENSE_RANK:
+    	case ROW_NUMBER:
+    		if (windowFunction.getOrderBy() == null) {
+    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.analytical_requires_order_by", windowFunction), windowFunction); //$NON-NLS-1$
+    		}
+    	}
+    	validateNoSubqueriesOrOuterReferences(windowFunction);
+    }
+    
+    @Override
     public void visit(AggregateSymbol obj) {
     	if (obj.getCondition() != null) {
     		Expression condition = obj.getCondition();
-    		if (!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(condition).isEmpty()) {
-    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.filter_subquery", condition), condition); //$NON-NLS-1$
-    		}
-    		for (ElementSymbol es : ElementCollectorVisitor.getElements(condition, false)) {
-    			if (es.isExternalReference()) {
-    				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.filter_subquery", es), es); //$NON-NLS-1$
-    			}
-    		}
+    		validateNoSubqueriesOrOuterReferences(condition);
     	}
+        Expression aggExp = obj.getExpression();
+
+        validateNoNestedAggs(aggExp);
+        validateNoNestedAggs(obj.getOrderBy());
+        validateNoNestedAggs(obj.getCondition());
+        
+        // Verify data type of aggregate expression
+        Type aggregateFunction = obj.getAggregateFunction();
+        if((aggregateFunction == Type.SUM || aggregateFunction == Type.AVG) && obj.getType() == null) {
+            handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0041", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
+        } else if (obj.getType() != DataTypeManager.DefaultDataClasses.NULL) {
+        	if (aggregateFunction == Type.XMLAGG && aggExp.getType() != DataTypeManager.DefaultDataClasses.XML) {
+        		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_xml", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
+        	} else if (obj.isBoolean() && aggExp.getType() != DataTypeManager.DefaultDataClasses.BOOLEAN) {
+        		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_boolean", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
+        	}
+        }
+        if((obj.isDistinct() || aggregateFunction == Type.MIN || aggregateFunction == Type.MAX) && DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(aggExp.getType()))) {
+    		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_comparable", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
+        }
+        if(obj.isEnhancedNumeric()) {
+        	if (!Number.class.isAssignableFrom(aggExp.getType())) {
+        		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0041", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
+        	}
+        	if (obj.isDistinct()) {
+        		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.invalid_distinct", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
+        	}
+        }
+        if (obj.isWindowed() && obj.getOrderBy() != null) {
+        	handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0042", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
+        }
     	if (obj.getAggregateFunction() != Type.TEXTAGG) {
     		return;
     	}
@@ -1235,6 +1271,28 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     		}
     	}
     }
+
+	private void validateNoSubqueriesOrOuterReferences(Expression expr) {
+		if (!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr).isEmpty()) {
+			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.filter_subquery", expr), expr); //$NON-NLS-1$
+		}
+		for (ElementSymbol es : ElementCollectorVisitor.getElements(expr, false)) {
+			if (es.isExternalReference()) {
+				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.filter_subquery", es), es); //$NON-NLS-1$
+			}
+		}
+	}
+    
+	private void validateNoNestedAggs(LanguageObject aggExp) {
+		// Check for any nested aggregates (which are not allowed)
+        if(aggExp != null) {
+        	HashSet<Expression> nestedAggs = new LinkedHashSet<Expression>();
+            AggregateSymbolCollectorVisitor.getAggregates(aggExp, nestedAggs, null, null, nestedAggs, null);
+            if(!nestedAggs.isEmpty()) {
+                handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0039", nestedAggs), nestedAggs); //$NON-NLS-1$
+            }
+        }
+	}
     
 	private String[] validateQName(LanguageObject obj, String name) {
 		try {

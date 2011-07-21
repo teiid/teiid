@@ -29,6 +29,7 @@ import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class WindowFunction implements Expression {
 	
@@ -46,6 +47,7 @@ public class WindowFunction implements Expression {
 	
 	public void setFunction(AggregateSymbol expression) {
 		this.function = expression;
+		this.function.setWindowed(true);
 	}
 	
 	public List<Expression> getPartition() {
@@ -109,6 +111,11 @@ public class WindowFunction implements Expression {
 			clone.setOrderBy(this.orderBy.clone());
 		}
 		return clone;
+	}
+	
+	@Override
+	public String toString() {
+		return SQLStringVisitor.getSQLString(this);
 	}
 	
 }

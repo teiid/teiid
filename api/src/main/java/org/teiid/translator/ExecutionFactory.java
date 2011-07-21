@@ -725,8 +725,6 @@ public class ExecutionFactory<F, C> {
     /**
      * <p>Support indicates that the connector supports functions in GROUP BY, such as:
      *  <code>SELECT dayofmonth(theDate), COUNT(*) FROM table GROUP BY dayofmonth(theDate)</code></p>
-     *  
-     * <br>NOT CURRENTLY USED - group by expressions create an inline view for pushdown
      * @since 5.0
      */
     public boolean supportsFunctionsInGroupBy() {

@@ -68,10 +68,10 @@ import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
@@ -455,7 +455,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 
 	private boolean isSimpleJoin(Query query) {
 		if (query.getFrom() != null) {
-			for (FromClause clause : (List<FromClause>)query.getFrom().getClauses()) {
+			for (FromClause clause : query.getFrom().getClauses()) {
 				if (RuleCollapseSource.hasOuterJoins(clause)) {
 					return false;
 				}
@@ -479,7 +479,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		plannedResult.query.setLimit(null);
 
 		List<GroupSymbol> rightGroups = plannedResult.query.getFrom().getGroups();
-		Set<SingleElementSymbol> requiredExpressions = new LinkedHashSet<SingleElementSymbol>();
+		Set<Expression> requiredExpressions = new LinkedHashSet<Expression>();
 		final SymbolMap refs = plannedResult.query.getCorrelatedReferences();
 		boolean addGroupBy = false;
 		if (refs != null) {
@@ -494,7 +494,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 				return false;
 			}
 			if (plannedResult.query.getGroupBy() == null) {
-				processCriteria(leftGroups, plannedResult, rightGroups, requiredExpressions, refs, where, true);
+				processCriteria(leftGroups, plannedResult, rightGroups, requiredExpressions, refs, where, null, true);
 				if (hasAggregates) {
 					if (!plannedResult.nonEquiJoinCriteria.isEmpty()) {
 						return false;
@@ -502,7 +502,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 					addGroupBy = true;
 				}
 			}
-			processCriteria(leftGroups, plannedResult, rightGroups, requiredExpressions, refs, having, false);
+			processCriteria(leftGroups, plannedResult, rightGroups, requiredExpressions, refs, having, plannedResult.query.getGroupBy(), false);
 		}
 				
 		if (plannedResult.additionalCritieria != null) {
@@ -525,29 +525,29 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		}
 
 		if (addGroupBy) {
-			LinkedHashSet<SingleElementSymbol> groupingSymbols = new LinkedHashSet<SingleElementSymbol>();
-			ArrayList<SingleElementSymbol> aggs = new ArrayList<SingleElementSymbol>();
+			LinkedHashSet<Expression> groupingSymbols = new LinkedHashSet<Expression>();
 			for (Expression expr : (List<Expression>)plannedResult.rightExpressions) {
-				AggregateSymbolCollectorVisitor.getAggregates(expr, aggs, groupingSymbols);
+				AggregateSymbolCollectorVisitor.getAggregates(expr, null, groupingSymbols, null, null, null);
 			}
 			if (!groupingSymbols.isEmpty()) {
-				plannedResult.query.setGroupBy((GroupBy) new GroupBy(new ArrayList<SingleElementSymbol>(groupingSymbols)).clone());
+				plannedResult.query.setGroupBy((GroupBy) new GroupBy(new ArrayList<Expression>(groupingSymbols)).clone());
 			}
 		}
-		HashSet<SingleElementSymbol> projectedSymbols = new HashSet<SingleElementSymbol>();
+		HashSet<Expression> projectedSymbols = new HashSet<Expression>();
 		for (SingleElementSymbol ses : plannedResult.query.getProjectedSymbols()) {
-			if (ses instanceof AliasSymbol) {
-				ses = ((AliasSymbol)ses).getSymbol();
-			}
-			projectedSymbols.add(ses);
+			projectedSymbols.add(SymbolMap.getExpression(ses));
 		}
-		for (SingleElementSymbol ses : requiredExpressions) {
+		for (Expression ses : requiredExpressions) {
 			if (projectedSymbols.add(ses)) {
-				plannedResult.query.getSelect().addSymbol((SingleElementSymbol) ses.clone());
+				if (ses instanceof SingleElementSymbol) {
+					plannedResult.query.getSelect().addSymbol((SingleElementSymbol)ses);
+				} else {
+					plannedResult.query.getSelect().addSymbol(new ExpressionSymbol("expr", (Expression) ses.clone())); //$NON-NLS-1$
+				}
 			}
 		}
 		for (SingleElementSymbol ses : (List<SingleElementSymbol>)plannedResult.rightExpressions) {
-			if (projectedSymbols.add(ses)) {
+			if (projectedSymbols.add(SymbolMap.getExpression(ses))) {
 				plannedResult.query.getSelect().addSymbol((SingleElementSymbol)ses.clone());
 			}
 		}
@@ -556,8 +556,8 @@ public final class RuleMergeCriteria implements OptimizerRule {
 
 	private void processCriteria(Collection<GroupSymbol> leftGroups,
 			PlannedResult plannedResult, List<GroupSymbol> rightGroups,
-			Set<SingleElementSymbol> requiredExpressions, final SymbolMap refs,
-			Criteria joinCriteria, boolean where) {
+			Set<Expression> requiredExpressions, final SymbolMap refs,
+			Criteria joinCriteria, GroupBy groupBy, boolean where) {
 		if (joinCriteria == null) {
 			return;
 		}
@@ -565,9 +565,8 @@ public final class RuleMergeCriteria implements OptimizerRule {
 
 		for (Iterator<Criteria> critIter = crits.iterator(); critIter.hasNext();) {
 			Criteria conjunct = critIter.next();
-			List<SingleElementSymbol> aggregates = new LinkedList<SingleElementSymbol>();
-			List<SingleElementSymbol> elements = new LinkedList<SingleElementSymbol>();
-			AggregateSymbolCollectorVisitor.getAggregates(conjunct, aggregates, elements);
+			List<Expression> additionalRequired = new LinkedList<Expression>();
+			AggregateSymbolCollectorVisitor.getAggregates(conjunct, additionalRequired, additionalRequired, additionalRequired, null, groupBy!=null?groupBy.getSymbols():null);
 			ReferenceReplacementVisitor emv = new ReferenceReplacementVisitor(refs);
 			DeepPostOrderNavigator.doVisit(conjunct, emv);
 			if (!emv.replacedAny) {
@@ -579,8 +578,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 					plannedResult.query.setHaving(Criteria.combineCriteria(plannedResult.query.getHaving(), conjunct));
 				}
 			} else {
-				requiredExpressions.addAll(aggregates);
-				requiredExpressions.addAll(elements);
+				requiredExpressions.addAll(additionalRequired);
 			}
 		}
 		RuleChooseJoinStrategy.separateCriteria(leftGroups, rightGroups, plannedResult.leftExpressions, plannedResult.rightExpressions, crits, plannedResult.nonEquiJoinCriteria);

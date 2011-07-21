@@ -7846,7 +7846,7 @@ public class TestXMLProcessor {
             "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
         
         
-        helpTestProcess("SELECT Catalogs.Catalog.Items.Item.ItemID, Order.* " + //$NON-NLS-1$
+        helpTestProcess("SELECT Catalogs.Catalog.Items.Item.ItemID, \"Order\".* " + //$NON-NLS-1$
             " FROM xmltest.doc9c " + //$NON-NLS-1$
             " WHERE SupplierID > '54' " + //$NON-NLS-1$
             " ORDER BY ItemID DESC, OrderID DESC", //$NON-NLS-1$

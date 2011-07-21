@@ -30,7 +30,6 @@ import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.SelectSymbol;
@@ -85,7 +84,7 @@ public class Select implements LanguageObject {
 	 * @return True if Select * is used
 	 */
     public boolean isStar() {
-		return (symbols.size() == 1 && symbols.get(0) instanceof AllSymbol);
+		return (symbols.size() == 1 && symbols.get(0) instanceof MultipleElementSymbol && ((MultipleElementSymbol)symbols.get(0)).getGroup() == null);
     }
 
     /**

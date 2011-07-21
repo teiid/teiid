@@ -27,7 +27,7 @@ package org.teiid.query.sql.symbol;
 /**
  * <p>This is a subclass of Symbol representing a single output column.</p>
  */
-public abstract class SingleElementSymbol extends SelectSymbol implements Expression {
+public abstract class SingleElementSymbol extends Symbol implements Expression, SelectSymbol {
 
 	/**
      * Character used to delimit name components in a symbol

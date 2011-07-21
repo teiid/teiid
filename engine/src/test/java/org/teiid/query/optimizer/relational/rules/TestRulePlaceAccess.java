@@ -32,7 +32,7 @@ import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
 import org.teiid.query.sql.lang.From;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.symbol.AllSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.unittest.RealMetadataFactory;
 
@@ -67,7 +67,7 @@ public class TestRulePlaceAccess extends TestCase {
         query.setFrom(from);
         
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
 
         group.setMetadataID(METADATA.getGroupID("pm4.g2")); //$NON-NLS-1$

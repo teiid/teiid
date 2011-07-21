@@ -33,11 +33,10 @@ import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.proc.CriteriaSelector;
-import org.teiid.query.sql.symbol.AllInGroupSymbol;
-import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Symbol;
 
 
@@ -124,69 +123,27 @@ public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisi
 	 * Swap each ElementSymbol referenced by AllInGroupSymbol
 	 * @param obj Object to remap
 	 */
-    public void visit(AllInGroupSymbol obj) {   
-        // Discover new group name during course of mapping
-        String newGroupName = null;
-                     
-		List oldSymbols = obj.getElementSymbols();
+    public void visit(MultipleElementSymbol obj) {   
+		List<ElementSymbol> oldSymbols = obj.getElementSymbols();
 		if(oldSymbols != null && oldSymbols.size() > 0) {
-			List newSymbols = new ArrayList(oldSymbols.size());
+			List<ElementSymbol> newSymbols = new ArrayList<ElementSymbol>(oldSymbols.size());
 			
-			Iterator iter = oldSymbols.iterator();
+			Iterator<ElementSymbol> iter = oldSymbols.iterator();
 			while(iter.hasNext()) {
-				ElementSymbol es = (ElementSymbol) iter.next();    
+				ElementSymbol es = iter.next();    
 				ElementSymbol mappedSymbol = getMappedElement(es);
-				
-				// Save group name on first valid mapped element
-				if(newGroupName == null && mappedSymbol != null) { 
-				    GroupSymbol newGroup = mappedSymbol.getGroupSymbol();
-				    if(newGroup != null) { 
-					    newGroupName = newGroup.getName();
-				    }
-				}
-				
 				newSymbols.add( mappedSymbol );
 			}
 			obj.setElementSymbols(newSymbols);
 		} 	
-
-		// If haven't discovered group name yet (if, for instance, stuff isn't resolved),
-		// then fake up a group symbol, map it, and use the name of the mapped group symbol
-		if(newGroupName == null) {
-			String symbolName = obj.getName();
-			String oldGroupName = symbolName.substring(0, symbolName.length()-2);	// cut .* off
-			
-			GroupSymbol fakeSymbol = new GroupSymbol(oldGroupName);
-			GroupSymbol mappedSymbol = getMappedGroup(fakeSymbol);
-			
-			newGroupName = mappedSymbol.getName();
+		
+		if (obj.getGroup() == null) {
+			return;
 		}
 		
-		// Finally, swap name of group, which should be the name of the group
-		// for all of the element symbols
-		obj.setShortName(newGroupName + ".*"); //$NON-NLS-1$
-			
+		obj.setGroup(getMappedGroup(obj.getGroup()));
     }
 
-	/**
-	 * Swap each ElementSymbol referenced by AllSymbol
-	 * @param obj Object to remap
-	 */
-    public void visit(AllSymbol obj) {
-		List oldSymbols = obj.getElementSymbols();
-		if(oldSymbols != null && oldSymbols.size() > 0) {
-			List newSymbols = new ArrayList(oldSymbols.size());
-			
-			Iterator iter = oldSymbols.iterator();
-			while(iter.hasNext()) {
-				ElementSymbol es = (ElementSymbol) iter.next();    
-				newSymbols.add( getMappedElement(es) );
-			}
-
-			obj.setElementSymbols(newSymbols);
-		}		
-    }
-    
 	/**
 	 * Swap group in unary from clause.
 	 * @param obj Object to remap

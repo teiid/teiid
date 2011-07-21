@@ -22,22 +22,23 @@
 
 package org.teiid.query.sql.symbol;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.core.util.HashCodeUtil;
+import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 /**
  * <p>This is a subclass of Symbol representing multiple output columns.</p>
  */
-public abstract class MultipleElementSymbol extends SelectSymbol {
+public class MultipleElementSymbol implements SelectSymbol {
     private List<ElementSymbol> elementSymbols;
+    private GroupSymbol group;
 
-    /**
-     * Passthrough constructor used for cloning 
-     * @param name
-     * @param canonicalName
-     * @since 4.3
-     */
-    protected MultipleElementSymbol(String name, String canonicalName) {
-        super(name, canonicalName);
+    public MultipleElementSymbol() {
     }
     
     /**
@@ -45,7 +46,7 @@ public abstract class MultipleElementSymbol extends SelectSymbol {
      * @param name Name of the symbol
      */
     public MultipleElementSymbol(String name){
-        super(name);
+        this.group = new GroupSymbol(name);
     }
 
     /**
@@ -83,5 +84,60 @@ public abstract class MultipleElementSymbol extends SelectSymbol {
     public boolean isResolved() {
         return(elementSymbols != null);
     }
+    
+    public void acceptVisitor(LanguageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+	/**
+	 * Return a deep copy of this object
+	 * @return Deep copy of this object
+	 */
+	public Object clone() {
+		MultipleElementSymbol copy = new MultipleElementSymbol();
+		if (group != null) {
+			copy.group = group.clone();
+		}
+
+		List<ElementSymbol> elements = getElementSymbols();
+		if(elements != null && elements.size() > 0) {
+			copy.setElementSymbols(LanguageObject.Util.deepClone(elements, ElementSymbol.class));				
+		}	
+
+		return copy;
+	}
+	
+	/**
+	 * @return null if selecting all groups, otherwise the specific group
+	 */
+	public GroupSymbol getGroup() {
+		return group;
+	}
+	
+	public void setGroup(GroupSymbol group) {
+		this.group = group;
+	}
+	
+	@Override
+	public String toString() {
+		return SQLStringVisitor.getSQLString(this);
+	}
+	
+	@Override
+	public int hashCode() {
+		return HashCodeUtil.hashCode(0, group);
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == this) {
+			return true;
+		}
+		if (!(obj instanceof MultipleElementSymbol)) {
+			return false;
+		}
+		MultipleElementSymbol other = (MultipleElementSymbol)obj;
+		return EquivalenceUtil.areEqual(this.group, other.group);
+	}
 
 }

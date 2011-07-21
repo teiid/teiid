@@ -823,6 +823,11 @@ public class TestSubqueryPushdown {
     	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (select max(e2) FROM pm1.g1 WHERE pm3.g1.e1 = e1 HAVING min(e3) < pm3.g1.e3)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1, MIN(e3) AS MIN FROM pm1.g1 GROUP BY e1) AS X__1 WHERE (X__1.MIN < pm3.g1.e3) AND (pm3.g1.e2 < X__1.MAX) AND (pm3.g1.e1 = X__1.e1)", RealMetadataFactory.example4());
     }
+    
+    @Test public void testSubqueryRewriteToJoinWithGroupingExpression() throws Exception {
+    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
+        TestQueryRewriter.helpTestRewriteCommand("Select distinct e1 from pm3.g1 where exists (select 1 FROM pm1.g1 group by e4 || 'x' HAVING min(e3) || (e4 || 'x') = pm3.g1.e3)", "SELECT DISTINCT e1 FROM pm3.g1, (SELECT 1 AS EXPR, MIN(e3) AS MIN, concat(e4, 'x') AS EXPR_0, concat(MIN(e3), concat(e4, 'x')) AS EXPR_1 FROM pm1.g1 GROUP BY concat(e4, 'x')) AS X__1 WHERE pm3.g1.e3 = X__1.EXPR_1", RealMetadataFactory.example4());
+    }
 
     /**
      * A join will not be used here because of the not

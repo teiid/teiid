@@ -58,11 +58,10 @@ import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.AllInGroupSymbol;
-import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
@@ -337,47 +336,38 @@ public class XMLQueryResolver implements CommandResolver {
 
 				// There are other cases of "xml", such as, element name = "xml",
 				// but those are ok because those will be resolved later as normal elements
-				String symbolName = ss.getName();
+				ElementSymbol es = (ElementSymbol)ss;
+				String symbolName = es.getName();
 				if(!subquery && (symbolName.equalsIgnoreCase("xml") || symbolName.equalsIgnoreCase(group.getName() + ".xml"))) { //$NON-NLS-1$ //$NON-NLS-2$
 					if(elements.size() != 1) {
 						throw new QueryResolverException(QueryPlugin.Util.getString("XMLQueryResolver.xml_only_valid_alone")); //$NON-NLS-1$
 					}
 					select.clearSymbols();
-                    AllSymbol all = new AllSymbol();
+                    MultipleElementSymbol all = new MultipleElementSymbol();
                     all.setElementSymbols(validElements.values());
 					select.addSymbol(all);
 					query.setSelect(select);
 					return;
 				}
                 // normal elements
-				resolveElement((ElementSymbol)ss, validElements, externalGroups, metadata);
-			} else if (ss instanceof AllInGroupSymbol) {
+				resolveElement(es, validElements, externalGroups, metadata);
+			} else if (ss instanceof MultipleElementSymbol) {
 				// Resolve the element with "*" case. such as "A.*"
 				// by stripping off the ".*" part,
-				String symbolName = ss.getName();
-				int index = symbolName.indexOf("*"); //$NON-NLS-1$
-				String elementPart = symbolName.substring(0, index-1);
+                MultipleElementSymbol all =  (MultipleElementSymbol)ss;
 
                 // Check for case where we have model.doc.*
-                if(elementPart.equalsIgnoreCase(group.getName())) {
-                    select.clearSymbols();
-                    AllSymbol all = new AllSymbol();
+                if(all.getGroup() == null || all.getGroup().getName().equalsIgnoreCase(group.getName())) {
                     all.setElementSymbols(validElements.values());
-                    select.addSymbol(all);
-                    query.setSelect(select);
-                } else {
-                    // resovlve the node which is specified
-                    ElementSymbol elementSymbol = new ElementSymbol(elementPart);
-                    resolveElement(elementSymbol, validElements, externalGroups, metadata);
-
-                    // now find all the elements under this node and set as elements.
-                    List<ElementSymbol> elementsInNode = getElementsUnderNode(elementSymbol.getMetadataID(), validElements.values(), metadata);
-                    ((AllInGroupSymbol)ss).setElementSymbols(elementsInNode);
+    				return;
                 }
-			} else if (ss instanceof AllSymbol) {
-                AllSymbol all =  (AllSymbol)ss;
-                all.setElementSymbols(validElements.values());
-				return;
+                // resovlve the node which is specified
+                ElementSymbol elementSymbol = new ElementSymbol(all.getGroup().getName());
+                resolveElement(elementSymbol, validElements, externalGroups, metadata);
+
+                // now find all the elements under this node and set as elements.
+                List<ElementSymbol> elementsInNode = getElementsUnderNode(elementSymbol.getMetadataID(), validElements.values(), metadata);
+                all.setElementSymbols(elementsInNode);
 			} else if (ss instanceof ExpressionSymbol) {
                 throw new QueryResolverException(QueryPlugin.Util.getString("XMLQueryResolver.no_expressions_in_select")); //$NON-NLS-1$
             } else if (ss instanceof AliasSymbol) {

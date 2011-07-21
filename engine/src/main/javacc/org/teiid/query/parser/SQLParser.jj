@@ -1740,7 +1740,7 @@ QueryCommand queryPrimary(ParseInfo info) :
         query=query(info) | 
         (<TABLE> name=id() {
            Query q = new Query();
-           q.setSelect(new Select(Arrays.asList(new AllSymbol())));
+           q.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
            q.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol(name)))));
            query = q;
         }) |
@@ -1826,7 +1826,7 @@ Select select(ParseInfo info) :
 	[<ALL> | (<DISTINCT> {isDistinct=true;})]
 	(<STAR>
 		{
-			select.addSymbol(new AllSymbol());
+			select.addSymbol(new MultipleElementSymbol());
 		}
 	|
 		(	symbol=selectSymbol(info)      { select.addSymbol(symbol); }
@@ -1908,7 +1908,7 @@ DerivedColumn derivedColumn(ParseInfo info) :
 	}
 }
 
-AllInGroupSymbol allInGroupSymbol() :
+MultipleElementSymbol allInGroupSymbol() :
 {
 	Token allInGroupToken = null;
 	
@@ -1916,7 +1916,7 @@ AllInGroupSymbol allInGroupSymbol() :
 {
    	allInGroupToken = <ALL_IN_GROUP>    
     {
-		return new AllInGroupSymbol(normalizeId(allInGroupToken.image));
+		return new MultipleElementSymbol(normalizeId(allInGroupToken.image.substring(0, allInGroupToken.image.length() - 2)));
 	}
 }
 
@@ -2773,7 +2773,7 @@ QueryCommand subquery(ParseInfo info) :
 		proc = storedProcedure(info, new StoredProcedure()) //deprecated	  
 	 )
 	 {
-	    subquery = new Query(new Select(Arrays.asList(new AllSymbol())), new From(Arrays.asList(new SubqueryFromClause("x", proc))), null, null, null);
+	    subquery = new Query(new Select(Arrays.asList(new MultipleElementSymbol())), new From(Arrays.asList(new SubqueryFromClause("x", proc))), null, null, null);
 	 }
 	)
 	<RPAREN>

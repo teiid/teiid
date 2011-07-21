@@ -277,7 +277,7 @@ public class RulePushAggregates implements
 			if (ex instanceof AggregateSymbol) {
 				compositeAggs.add((AggregateSymbol) ex);
 			} else {
-				AggregateSymbolCollectorVisitor.getAggregates(ex, compositeAggs, null);
+				compositeAggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(ex, false));
 				hasExpressionMapping = true;
 			}
 		}

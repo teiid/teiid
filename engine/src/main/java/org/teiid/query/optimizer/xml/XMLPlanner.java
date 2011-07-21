@@ -53,9 +53,9 @@ import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
@@ -247,7 +247,7 @@ public final class XMLPlanner implements CommandPlanner{
         SelectSymbol firstSymbol = select.getSymbol(0);
 
         // 0. mark the nodes to be excluded
-        if(firstSymbol instanceof AllSymbol) {
+        if(firstSymbol instanceof MultipleElementSymbol && ((MultipleElementSymbol)firstSymbol).getGroup() == null) {
             return doc;
         }
         

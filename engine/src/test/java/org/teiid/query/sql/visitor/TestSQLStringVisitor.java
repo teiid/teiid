@@ -77,8 +77,6 @@ import org.teiid.query.sql.proc.IfStatement;
 import org.teiid.query.sql.proc.RaiseErrorStatement;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.AllInGroupSymbol;
-import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -86,6 +84,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
@@ -571,7 +570,7 @@ public class TestSQLStringVisitor extends TestCase {
 
 	public void testQuery1() {
 		Select select = new Select();
-		select.addSymbol(new AllSymbol());
+		select.addSymbol(new MultipleElementSymbol());
 		From from = new From();
 		from.addGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
 		Query query = new Query();
@@ -583,7 +582,7 @@ public class TestSQLStringVisitor extends TestCase {
 
 	public void testQuery2() {
 		Select select = new Select();
-		select.addSymbol(new AllSymbol());
+		select.addSymbol(new MultipleElementSymbol());
 		From from = new From();
 		from.addGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
 		CompareCriteria cc = new CompareCriteria(new ElementSymbol("e1"), CompareCriteria.EQ, new Constant(new Integer(5))); //$NON-NLS-1$
@@ -606,7 +605,7 @@ public class TestSQLStringVisitor extends TestCase {
 
 	public void testQuery3() {
 		Select select = new Select();
-		select.addSymbol(new AllSymbol());
+		select.addSymbol(new MultipleElementSymbol());
 		From from = new From();
 		from.addGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
 		GroupBy groupBy = new GroupBy();
@@ -627,7 +626,7 @@ public class TestSQLStringVisitor extends TestCase {
 
 	public void testQuery4() {
 		Select select = new Select();
-		select.addSymbol(new AllSymbol());
+		select.addSymbol(new MultipleElementSymbol());
 		From from = new From();
 		from.addGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
 		CompareCriteria cc = new CompareCriteria(new ElementSymbol("e1"), CompareCriteria.EQ, new Constant(new Integer(5))); //$NON-NLS-1$
@@ -647,7 +646,7 @@ public class TestSQLStringVisitor extends TestCase {
 
 	public void testQuery5() {
 		Select select = new Select();
-		select.addSymbol(new AllSymbol());
+		select.addSymbol(new MultipleElementSymbol());
 		From from = new From();
 		from.addGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
 		CompareCriteria cc = new CompareCriteria(new ElementSymbol("e1"), CompareCriteria.EQ, new Constant(new Integer(5))); //$NON-NLS-1$
@@ -668,7 +667,7 @@ public class TestSQLStringVisitor extends TestCase {
 
 	public void testQuery6() {
 		Select select = new Select();
-		select.addSymbol(new AllSymbol());
+		select.addSymbol(new MultipleElementSymbol());
 		From from = new From();
 		from.addGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
 		CompareCriteria cc = new CompareCriteria(new ElementSymbol("e1"), CompareCriteria.EQ, new Constant(new Integer(5))); //$NON-NLS-1$
@@ -688,7 +687,7 @@ public class TestSQLStringVisitor extends TestCase {
 
 	public void testQuery7() {
 		Select select = new Select();
-		select.addSymbol(new AllSymbol());
+		select.addSymbol(new MultipleElementSymbol());
 		From from = new From();
 		from.addGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
 		CompareCriteria cc = new CompareCriteria(new ElementSymbol("e1"), CompareCriteria.EQ, new Constant(new Integer(5))); //$NON-NLS-1$
@@ -1042,11 +1041,11 @@ public class TestSQLStringVisitor extends TestCase {
 	}
 
 	public void testAllSymbol() {
-		helpTest(new AllSymbol(), "*");     //$NON-NLS-1$
+		helpTest(new MultipleElementSymbol(), "*");     //$NON-NLS-1$
 	}
 	
 	public void testAllInGroupSymbol() {
-	    helpTest(new AllInGroupSymbol("m.g.*"), "m.g.*"); //$NON-NLS-1$ //$NON-NLS-2$
+	    helpTest(new MultipleElementSymbol("m.g"), "m.g.*"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
     public void testConstantNull() { 
@@ -1851,7 +1850,7 @@ public class TestSQLStringVisitor extends TestCase {
 
     public void testLimit() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new AllSymbol()));
+        Select select = new Select(Arrays.asList(new MultipleElementSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
@@ -1861,7 +1860,7 @@ public class TestSQLStringVisitor extends TestCase {
     
     public void testLimitWithOffset() {
         Query query = new Query();
-        Select select = new Select(Arrays.asList(new AllSymbol()));
+        Select select = new Select(Arrays.asList(new MultipleElementSymbol()));
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);

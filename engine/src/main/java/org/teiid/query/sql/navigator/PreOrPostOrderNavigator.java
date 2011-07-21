@@ -87,8 +87,6 @@ import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.AllInGroupSymbol;
-import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.DerivedColumn;
@@ -97,6 +95,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
@@ -154,11 +153,7 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
         visitNode(obj.getSymbol());
         postVisitVisitor(obj);
     }
-    public void visit(AllInGroupSymbol obj) {
-        preVisitVisitor(obj);
-        postVisitVisitor(obj);
-    }
-    public void visit(AllSymbol obj) {
+    public void visit(MultipleElementSymbol obj) {
         preVisitVisitor(obj);
         postVisitVisitor(obj);
     }

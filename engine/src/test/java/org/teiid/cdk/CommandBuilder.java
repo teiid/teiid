@@ -38,7 +38,7 @@ import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.symbol.AllSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 
 
 /**
@@ -90,8 +90,8 @@ public class CommandBuilder {
             List expandedSymbols = new ArrayList();
             for (Iterator i = originalSymbols.iterator(); i.hasNext(); ) {
                 Object next = i.next();
-                if (next instanceof AllSymbol) {
-                    AllSymbol allSymbol = (AllSymbol) next;
+                if (next instanceof MultipleElementSymbol) {
+                    MultipleElementSymbol allSymbol = (MultipleElementSymbol) next;
                     expandedSymbols.addAll(allSymbol.getElementSymbols());
                 } else {
                     expandedSymbols.add(next);
