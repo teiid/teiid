@@ -172,8 +172,6 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
             	joinNode.setProperty(NodeConstants.Info.RIGHT_EXPRESSIONS, rightExpressions);
             }
 
-            Set<SingleElementSymbol> outputSymbols = new LinkedHashSet<SingleElementSymbol>((List<SingleElementSymbol>)joinNode.getProperty(NodeConstants.Info.OUTPUT_COLS));
-
 			boolean pushedLeft = insertSort(joinNode.getFirstChild(), leftExpressions, joinNode, metadata, capabilitiesFinder, pushLeft);	
 			
 	        if (origExpressionCount == 1 
@@ -236,6 +234,8 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 	        }
         }
         
+        boolean sort = true;
+        
         if (sourceNode.getType() == NodeConstants.Types.ACCESS) {
         	if (distinct || NewCalculateCostUtil.usesKey(sourceNode, expressions, metadata)) {
                 joinNode.setProperty(joinNode.getFirstChild() == childNode ? NodeConstants.Info.IS_LEFT_DISTINCT : NodeConstants.Info.IS_RIGHT_DISTINCT, true);
@@ -248,13 +248,18 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 	            }
 	            return true;
 	        }
+        } else if (sourceNode.getType() == NodeConstants.Types.GROUP) {
+        	sourceNode.addAsParent(sortNode);
+        	sort = false; // the grouping columns must contain all of the ordering columns
         }
         
         if (distinct) {
             joinNode.setProperty(joinNode.getFirstChild() == childNode ? NodeConstants.Info.IS_LEFT_DISTINCT : NodeConstants.Info.IS_RIGHT_DISTINCT, true);
     	}
         
-        joinNode.setProperty(joinNode.getFirstChild() == childNode ? NodeConstants.Info.SORT_LEFT : NodeConstants.Info.SORT_RIGHT, SortOption.SORT);
+        if (sort) {
+        	joinNode.setProperty(joinNode.getFirstChild() == childNode ? NodeConstants.Info.SORT_LEFT : NodeConstants.Info.SORT_RIGHT, SortOption.SORT);
+        }        
         
         if (needsCorrection) {
             PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
