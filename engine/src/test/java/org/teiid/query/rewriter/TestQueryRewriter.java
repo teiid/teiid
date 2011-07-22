@@ -2460,4 +2460,10 @@ public class TestQueryRewriter {
     @Test public void testRewriteNestedConvert2() throws Exception {
         helpTestRewriteExpression("cast(cast(pm1.g1.e3 as string) as clob)", "convert(convert(pm1.g1.e3, string), clob)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    @Test public void testRewriteConstantAgg() throws Exception {
+    	helpTestRewriteCommand("select max(1) from pm1.g1 group by e1", "SELECT 1 FROM pm1.g1 GROUP BY e1");
+    }
+    
+    
 }

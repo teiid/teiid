@@ -240,6 +240,7 @@ public class QueryRewriter {
      * @throws QueryValidatorException
      */
 	private Command rewriteCommand(Command command, boolean removeOrderBy) throws TeiidComponentException, TeiidProcessingException{
+		boolean oldRewriteAggs = rewriteAggs;
 		QueryMetadataInterface oldMetadata = metadata;
 		CreateUpdateProcedureCommand oldProcCommand = procCommand;
         
@@ -299,6 +300,7 @@ public class QueryRewriter {
             	break;
 		}
         
+        this.rewriteAggs = oldRewriteAggs;
         this.metadata = oldMetadata;
         this.procCommand = oldProcCommand;
         return command;
@@ -764,6 +766,7 @@ public class QueryRewriter {
 	 */
 	private Query rewriteGroupBy(Query query) throws TeiidComponentException, TeiidProcessingException{
 		if (query.getGroupBy() == null) {
+			rewriteAggs = false;
 			return query;
 		}
 		if (isDistinctWithGroupBy(query)) {
@@ -1664,6 +1667,7 @@ public class QueryRewriter {
     private BigDecimal BIG_DECIMAL_ZERO = new BigDecimal("0"); //$NON-NLS-1$
     private Short SHORT_ZERO = new Short((short)0);
     private Byte BYTE_ZERO = new Byte((byte)0);
+	private boolean rewriteAggs = true;
 
     /**
      * @param criteria
@@ -2357,6 +2361,9 @@ public class QueryRewriter {
     		} else {
     			expression.setAggregateFunction(Type.MAX);
     		}
+    	}
+    	if (rewriteAggs && expression.getExpression() != null && EvaluatableVisitor.willBecomeConstant(expression.getExpression())) {
+    		return expression.getExpression();
     	}
 		return expression;
 	}
