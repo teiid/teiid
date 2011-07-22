@@ -165,6 +165,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	// State during validation
     private boolean isXML = false;	// only used for Query commands
     
+    private boolean inQuery;
+    
     // update procedure being validated
     private CreateUpdateProcedureCommand updateProc;
     
@@ -265,6 +267,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         	this.isXML = true;
 	        validateXMLQuery(obj);
         } else {
+        	this.inQuery = true;
             validateAggregates(obj);
 
             //if it is select with no from, should not have ScalarSubQuery
@@ -1217,6 +1220,10 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     
     @Override
     public void visit(AggregateSymbol obj) {
+    	if (!inQuery) {
+    		handleValidationError(QueryPlugin.Util.getString("SQLParser.Aggregate_only_top_level", obj), obj); //$NON-NLS-1$
+    		return;
+    	}
     	if (obj.getCondition() != null) {
     		Expression condition = obj.getCondition();
     		validateNoSubqueriesOrOuterReferences(condition);

@@ -1709,6 +1709,9 @@ public class TestQueryRewriter {
         helpTestRewriteCriteria("case when 0 = pm1.g1.e2 then null else null end IS NULL", TRUE_STR); //$NON-NLS-1$ 
     }
     
+    @Test public void testRewriteConstantAgg2() throws Exception {
+    	helpTestRewriteCommand("select count(2) from pm1.g1 group by e1", "SELECT COUNT(2) FROM pm1.g1 GROUP BY e1");
+    }
     
     @Test public void testRewriteCaseExprForCase5413a() {
         helpTestRewriteCriteria("pm1.g2.e1 = case when 0 = pm1.g1.e2 then 2 else 2 end", "pm1.g2.e1 = '2'"); //$NON-NLS-1$ //$NON-NLS-2$

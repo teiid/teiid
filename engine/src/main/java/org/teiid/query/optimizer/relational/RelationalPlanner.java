@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -112,16 +113,17 @@ import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
@@ -723,6 +725,8 @@ public class RelationalPlanner {
 
         PlanNode plan = null;
 
+		LinkedHashSet<WindowFunction> windowFunctions = new LinkedHashSet<WindowFunction>();
+
         if(query.getFrom() != null){
             FromClause fromClause = mergeClauseTrees(query.getFrom());
             
@@ -741,7 +745,8 @@ public class RelationalPlanner {
     		}
 
     		// Attach grouping node on top
-    		Collection<AggregateSymbol> aggs = AggregateSymbolCollectorVisitor.getAggregates(query.getSelect(), true);
+    		LinkedHashSet<AggregateSymbol> aggs = new LinkedHashSet<AggregateSymbol>();
+    		AggregateSymbolCollectorVisitor.getAggregates(query.getSelect(), aggs, null, null, windowFunctions, null);
     		boolean hasGrouping = !aggs.isEmpty();
     		if (query.getHaving() != null) {
     			aggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(query.getHaving(), true));
@@ -764,6 +769,12 @@ public class RelationalPlanner {
 
 		// Attach project on top
 		plan = attachProject(plan, query.getSelect());
+		if (query.getOrderBy() != null) {
+			AggregateSymbolCollectorVisitor.getAggregates(query.getOrderBy(), null, null, null, windowFunctions, null);
+		}
+		if (!windowFunctions.isEmpty()) {
+			plan.setProperty(Info.HAS_WINDOW_FUNCTIONS, true);
+		}
 
 		// Attach dup removal on top
 		if(query.getSelect().isDistinct()) {

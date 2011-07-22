@@ -487,4 +487,14 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     	return getDatabaseVersion().compareTo(EIGHT_4) >= 0;
     }
     
+    @Override
+    public boolean supportsArrayAgg() {
+    	return getDatabaseVersion().compareTo(EIGHT_4) >= 0;
+    }
+    
+    @Override
+    public boolean supportsElementaryOlapOperations() {
+    	return getDatabaseVersion().compareTo(EIGHT_4) >= 0;
+    }
+    
 }

@@ -260,17 +260,14 @@ public class AggregateSymbol extends ExpressionSymbol {
     		return false;
     	}
     	switch (getAggregateFunction()) {
-		case COUNT:
-		case AVG:
-		case STDDEV_POP:
-		case STDDEV_SAMP:
-		case VAR_POP:
-		case VAR_SAMP:
-		case SUM:
-		case ARRAY_AGG:
-			return true;
+		case MAX:
+		case MIN:
+		case ANY:
+		case SOME:
+		case EVERY:
+			return false;
 		}
-		return false;
+		return true;
     }
     
     public Expression getCondition() {
@@ -291,13 +288,17 @@ public class AggregateSymbol extends ExpressionSymbol {
 	}
 	
 	public boolean respectsNulls() {
-		return this.aggregate == Type.ARRAY_AGG;
+		switch (this.aggregate) {
+		case TEXTAGG:
+		case ARRAY_AGG:
+			return true;
+		}
+		return false;
 	}
 	
 	public boolean canStage() {
 		switch (this.aggregate) {
 		case TEXTAGG:
-			return false;
 		case ARRAY_AGG:
 			return false;
 		case XMLAGG:

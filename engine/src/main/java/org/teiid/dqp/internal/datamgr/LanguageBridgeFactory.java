@@ -117,6 +117,7 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.translator.TranslatorException;
 
 
@@ -487,8 +488,24 @@ public class LanguageBridgeFactory {
             return translate((SingleElementSymbol)expr);
         } else if (expr instanceof Criteria) {
         	return translate((Criteria)expr);
+        } else if (expr instanceof WindowFunction) {
+        	return translate((WindowFunction)expr);
         }
         throw new AssertionError();
+    }
+    
+    org.teiid.language.WindowFunction translate(WindowFunction windowFunction) {
+    	org.teiid.language.WindowFunction result = new org.teiid.language.WindowFunction();
+    	result.setFunction(translate(windowFunction.getFunction()));
+    	result.setOrderBy(translate(windowFunction.getOrderBy(), false));
+    	if (windowFunction.getPartition() != null) {
+	    	ArrayList<org.teiid.language.Expression> partition = new ArrayList<org.teiid.language.Expression>(windowFunction.getPartition().size());
+	    	for (Expression ex : windowFunction.getPartition()) {
+	    		partition.add(translate(ex));
+	    	}
+	    	result.setPartition(partition);
+    	}
+    	return result;
     }
 
     Literal translate(Constant constant) {

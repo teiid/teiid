@@ -73,7 +73,7 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.JoinType;
 
-
+@SuppressWarnings("nls")
 public class TestSQLStringVisitor  {
 
     public static final RuntimeMetadata metadata = TstLanguageBridgeFactory.metadataFactory;
@@ -424,6 +424,13 @@ public class TestSQLStringVisitor  {
     	
     	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
     	assertEquals("SELECT g_0.IntKey AS c_0 FROM SmallA AS g_0 ORDER BY c_0 NULLS FIRST", command.toString()); //$NON-NLS-1$
+    }
+    
+    @Test public void testWindowFunction() throws Exception {
+    	String sql = "select max(intnum) over (order by intkey nulls first) from bqt1.smalla";
+    	
+    	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
+    	assertEquals("SELECT MAX(g_0.IntNum) OVER (ORDER BY g_0.IntKey NULLS FIRST) FROM SmallA AS g_0", command.toString()); //$NON-NLS-1$
     }
 
 }

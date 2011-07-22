@@ -185,6 +185,13 @@ public class CapabilitiesUtil {
                 return false;
             }
             break;
+        case RANK:
+        case DENSE_RANK:
+        case ROW_NUMBER:
+        	if (!caps.supportsCapability(Capability.ELEMENTARY_OLAP)) {
+        		return false;
+        	}
+        	break;
         default:
         	if (aggregate.isEnhancedNumeric()) { 
         		if (!caps.supportsCapability(Capability.QUERY_AGGREGATES_ENHANCED_NUMERIC)) {

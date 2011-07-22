@@ -22,16 +22,16 @@
 
 package org.teiid.connector.visitor.util;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Comparison;
 import org.teiid.language.Expression;
@@ -41,25 +41,14 @@ import org.teiid.language.NamedTable;
 import org.teiid.language.Select;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.language.visitor.CollectorVisitor;
-
 /**
  */
-public class TestCollectorVisitor extends TestCase {
+public class TestCollectorVisitor {
 
-    /**
-     * Constructor for TestElementCollectorVisitor.
-     * @param name
-     */
-    public TestCollectorVisitor(String name) {
-        super(name);
-    }
-
-    public Set getStringSet(Collection objs) {
-        Set strings = new HashSet();
+    public Set<String> getStringSet(Collection<? extends Object> objs) {
+        Set<String> strings = new HashSet<String>();
         
-        Iterator iter = objs.iterator();
-        while(iter.hasNext()) {
-            Object obj = iter.next();
+        for (Object obj : objs) {
             if(obj == null) {
                 strings.add(null);
             } else {
@@ -90,38 +79,38 @@ public class TestCollectorVisitor extends TestCase {
         return q;   
     }
  
-    public void testCollection1() {
+    @Test public void testCollection1() {
         helpTestCollection(example1(), ColumnReference.class, new String[] {"g1.e1", "g1.e2" }); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testCollection2() {
+    @Test public void testCollection2() {
         helpTestCollection(example1(), Function.class, new String[] {"length(g1.e2)" }); //$NON-NLS-1$
     }
 
-    public void testCollection3() {
+    @Test public void testCollection3() {
         helpTestCollection(example1(), Expression.class, new String[] {"g1.e1", "g1.e2", "length(g1.e2)" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
 
     public void helpTestElementsUsedByGroups(LanguageObject obj, String[] elements, String[] groups) {
-        Set actualElements = getStringSet(CollectorVisitor.collectElements(obj));
-        Set actualGroups = getStringSet(CollectorVisitor.collectGroupsUsedByElements(obj));
+        Set<String> actualElements = getStringSet(CollectorVisitor.collectElements(obj));
+        Set<String> actualGroups = getStringSet(CollectorVisitor.collectGroupsUsedByElements(obj));
         
-        Set expectedElements = new HashSet(Arrays.asList(elements));
-        Set expectedGroups = new HashSet(Arrays.asList(groups));
+        Set<String> expectedElements = new HashSet<String>(Arrays.asList(elements));
+        Set<String> expectedGroups = new HashSet<String>(Arrays.asList(groups));
         
         assertEquals("Did not get expected elements", expectedElements, actualElements); //$NON-NLS-1$
         assertEquals("Did not get expected groups", expectedGroups, actualGroups);         //$NON-NLS-1$
     }
     
-    public void test1() {
+    @Test public void test1() {
         NamedTable g1 = new NamedTable("g1", null, null); //$NON-NLS-1$
         ColumnReference e1 = new ColumnReference(g1, "e1", null, String.class); //$NON-NLS-1$
         
         helpTestElementsUsedByGroups(e1, new String[] {"g1.e1"}, new String[] {"g1"}); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void test2() {
+    @Test public void test2() {
         NamedTable g1 = new NamedTable("g1", null, null); //$NON-NLS-1$
         ColumnReference e1 = new ColumnReference(g1, "e1", null, String.class); //$NON-NLS-1$
         ColumnReference e2 = new ColumnReference(g1, "e2", null, String.class); //$NON-NLS-1$

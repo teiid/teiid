@@ -72,6 +72,7 @@ import org.teiid.language.SubqueryComparison;
 import org.teiid.language.SubqueryIn;
 import org.teiid.language.TableReference;
 import org.teiid.language.Update;
+import org.teiid.language.WindowFunction;
 import org.teiid.language.With;
 import org.teiid.language.WithItem;
 import org.teiid.language.Argument.Direction;
@@ -915,6 +916,31 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
 		buffer.append(Tokens.LPAREN);
 		append(obj.getSubquery());
 		buffer.append(Tokens.RPAREN);
+    }
+    
+    @Override
+    public void visit(WindowFunction windowFunction) {
+    	append(windowFunction.getFunction());
+    	buffer.append(Tokens.SPACE);
+    	buffer.append(OVER);
+    	buffer.append(Tokens.SPACE);
+    	buffer.append(Tokens.LPAREN);
+    	boolean needsSpace = false;
+    	if (windowFunction.getPartition() != null) {
+    		buffer.append(PARTITION);
+    		buffer.append(Tokens.SPACE);
+    		buffer.append(BY);
+    		buffer.append(Tokens.SPACE);
+    		append(windowFunction.getPartition());
+    		needsSpace = true;
+    	}
+    	if (windowFunction.getOrderBy() != null) {
+    		if (needsSpace) {
+    			buffer.append(Tokens.SPACE);
+    		}
+    		append(windowFunction.getOrderBy());
+    	}
+    	buffer.append(Tokens.RPAREN);
     }
  
     /**

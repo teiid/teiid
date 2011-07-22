@@ -60,13 +60,12 @@ import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.TextLine;
+import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
@@ -162,6 +161,13 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
             handleException(new TeiidComponentException(e));
         } catch(TeiidComponentException e) {
             handleException(e);            
+        }
+    }
+    
+    @Override
+    public void visit(WindowFunction windowFunction) {
+    	if(! this.caps.supportsCapability(Capability.ELEMENTARY_OLAP)) {
+            markInvalid(windowFunction, "Window function not supported by source"); //$NON-NLS-1$
         }
     }
     

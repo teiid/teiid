@@ -25,7 +25,7 @@ package org.teiid.query.sql.visitor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
@@ -99,7 +99,7 @@ public class AggregateSymbolCollectorVisitor extends LanguageVisitor {
     		Collection<? super AggregateSymbol> aggregates, 
     		Collection<? super ElementSymbol> otherElements, 
     		Collection<? super Expression> groupingColsUsed, 
-    		Collection<? super Expression> windowFunctions, 
+    		Collection<? super WindowFunction> windowFunctions, 
     		Collection<? extends Expression> groupingCols) {
         AggregateSymbolCollectorVisitor visitor = new AggregateSymbolCollectorVisitor(aggregates, otherElements);
         visitor.windowFunctions = windowFunctions;
@@ -113,7 +113,7 @@ public class AggregateSymbolCollectorVisitor extends LanguageVisitor {
     	}
         Collection<AggregateSymbol> aggregates = null;
         if (removeDuplicates) {
-            aggregates = new HashSet<AggregateSymbol>();
+            aggregates = new LinkedHashSet<AggregateSymbol>();
         } else {
             aggregates = new ArrayList<AggregateSymbol>();    
         }

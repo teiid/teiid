@@ -860,7 +860,7 @@ public class ExecutionFactory<F, C> {
     }
     
     /**
-     * @return true if Advanced OLAP operations are supporting
+     * @return true if Advanced OLAP operations are supported
      *  including the aggregate function filter clause.
      * @since 7.5
      */
@@ -869,8 +869,9 @@ public class ExecutionFactory<F, C> {
     }
     
     /**
-     * @return true if Elementary OLAP operations are supporting
-     *  including window functions
+     * @return true if Elementary OLAP operations are supported
+     *  including window functions and inline window specifications that include 
+     *  simple expressions in partitioning and ordering 
      * @since 7.5
      */
     public boolean supportsElementaryOlapOperations() {

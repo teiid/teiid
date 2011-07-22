@@ -98,6 +98,7 @@ public final class NodeConstants {
         // Project node properties
         PROJECT_COLS,       // List <SingleElementSymbol>
         INTO_GROUP,         // GroupSymbol
+        HAS_WINDOW_FUNCTIONS,		// Boolean
 
         // Select node properties
         SELECT_CRITERIA,    // Criteria

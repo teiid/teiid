@@ -319,6 +319,10 @@ public final class RuleMergeVirtual implements
                                                  GroupSymbol virtualGroup,
                                                  PlanNode parentJoin,
                                                  QueryMetadataInterface metadata) {
+        if (projectNode.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
+        	return false;
+        }
+
         List<SingleElementSymbol> selectSymbols = (List<SingleElementSymbol>)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);
         
         HashSet<GroupSymbol> groups = new HashSet<GroupSymbol>();

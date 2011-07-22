@@ -1515,6 +1515,16 @@ public class TestValidator {
         ValidatorReport report = helpValidateInModeler("pm1.vsp42", sql, metadata);  //$NON-NLS-1$ 
         assertEquals("Expected report to have no validation failures", false, report.hasItems()); //$NON-NLS-1$
     }
+    
+    @Test public void testNonQueryAgg() throws Exception{
+        String sql = "CREATE VIRTUAL PROCEDURE BEGIN IF (max(pm1.vsp42.param1) > 0) SELECT 1 AS x; ELSE SELECT 0 AS x; END"; //$NON-NLS-1$
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        
+        // Validate
+        ValidatorReport report = helpValidateInModeler("pm1.vsp42", sql, metadata);  //$NON-NLS-1$ 
+        examineReport(sql, new String[] {"MAX(pm1.vsp42.param1)"}, report);
+    }
 	
 	@Test public void testDefect14886() throws Exception{        
         String sql = "CREATE VIRTUAL PROCEDURE BEGIN END";  //$NON-NLS-1$        
@@ -1888,5 +1898,13 @@ public class TestValidator {
 	@Test public void testWindowFunctionWithNestedOrdering() {
 		helpValidate("SELECT xmlagg(xmlelement(name x, e1) order by e2) over () from pm1.g1", new String[] {"XMLAGG(XMLELEMENT(NAME x, e1) ORDER BY e2)"}, RealMetadataFactory.example1Cached());		
 	}
+	
+	@Test public void testWindowFunctionWithNestedaggAllowed() {
+		helpValidate("SELECT max(e1) over (order by max(e2)) from pm1.g1 group by e1", new String[] {}, RealMetadataFactory.example1Cached());		
+	}
 
+	@Test public void testWindowFunctionWithNestedaggAllowed1() {
+		helpValidate("SELECT max(min(e1)) over (order by max(e2)) from pm1.g1 group by e1", new String[] {"MIN(e1)"}, RealMetadataFactory.example1Cached());		
+	}
+	
 }
