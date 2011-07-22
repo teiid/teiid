@@ -2362,7 +2362,8 @@ public class QueryRewriter {
     			expression.setAggregateFunction(Type.MAX);
     		}
     	}
-    	if (rewriteAggs && expression.getExpression() != null && EvaluatableVisitor.willBecomeConstant(expression.getExpression())) {
+    	if ((expression.getAggregateFunction() == Type.MAX || expression.getAggregateFunction() == Type.MIN) 
+    			&& rewriteAggs && expression.getExpression() != null && EvaluatableVisitor.willBecomeConstant(expression.getExpression())) {
     		return expression.getExpression();
     	}
 		return expression;

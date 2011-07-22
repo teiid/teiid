@@ -2465,5 +2465,8 @@ public class TestQueryRewriter {
     	helpTestRewriteCommand("select max(1) from pm1.g1 group by e1", "SELECT 1 FROM pm1.g1 GROUP BY e1");
     }
     
+    @Test public void testRewriteConstantAgg2() throws Exception {
+    	helpTestRewriteCommand("select count(2) from pm1.g1 group by e1", "SELECT COUNT(2) FROM pm1.g1 GROUP BY e1");
+    }
     
 }

@@ -254,16 +254,14 @@ public class AggregateSymbol extends ExpressionSymbol {
     		return false;
     	}
     	switch (getAggregateFunction()) {
-		case COUNT:
-		case AVG:
-		case STDDEV_POP:
-		case STDDEV_SAMP:
-		case VAR_POP:
-		case VAR_SAMP:
-		case SUM:
-			return true;
+		case MAX:
+		case MIN:
+		case ANY:
+		case SOME:
+		case EVERY:
+			return false;
 		}
-		return false;
+		return true;
     }
 
 	public static boolean areAggregatesCardinalityDependent(Collection<AggregateSymbol> aggs) {
