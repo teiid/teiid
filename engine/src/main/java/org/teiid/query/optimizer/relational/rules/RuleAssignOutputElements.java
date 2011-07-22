@@ -42,7 +42,9 @@ import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
+import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
@@ -51,6 +53,7 @@ import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
+import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
@@ -218,6 +221,30 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		    	}
 	            
 	            List<SingleElementSymbol> requiredInput = collectRequiredInputSymbols(root);
+	            //targeted optimization for unnecessary aggregation
+	            if (root.getType() == NodeConstants.Types.GROUP && root.hasBooleanProperty(Info.IS_OPTIONAL) && NodeEditor.findParent(root, NodeConstants.Types.ACCESS) == null) {
+	            	PlanNode old = root;
+	            	PlanNode next = root.getFirstChild();
+	            	NodeEditor.removeChildNode(root.getParent(), root);
+	            	
+	            	if (old.hasCollectionProperty(Info.GROUP_COLS)) {
+	    				SymbolMap symbolMap = (SymbolMap) old.getProperty(NodeConstants.Info.SYMBOL_MAP);
+	    				FrameUtil.convertFrame(next.getParent(), symbolMap.asMap().keySet().iterator().next().getGroupSymbol(), null, symbolMap.asMap(), metadata);
+	    				PlanNode limit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
+	    				limit.setProperty(Info.MAX_TUPLE_LIMIT, new Constant(1));
+	    				PlanNode parent = next.getParent();
+	    				while (parent.getParent() != null && parent.getParent().getType() != NodeConstants.Types.SOURCE) {
+	    					parent = parent.getParent();
+	    				}
+	    				if (!rules.contains(RuleConstants.PUSH_LIMIT)) {
+	    					rules.push(RuleConstants.PUSH_LIMIT);
+	    				}
+    					parent.getFirstChild().addAsParent(limit);
+		            	execute(parent, metadata, capFinder, rules, analysisRecord, context);
+		            	return;
+	            	} 
+	            	root = next;
+	            }
 	            
 	            // Call children recursively
 	            if(root.getChildCount() == 1) {
@@ -482,7 +509,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 				    	ElementCollectorVisitor.getElements(expression, requiredSymbols);
                     }
 				}
-				
+				boolean hasAggregate = false;
 				SymbolMap symbolMap = (SymbolMap) node.getProperty(NodeConstants.Info.SYMBOL_MAP);
 				
 				// Take credit for creating any aggregates that are needed above
@@ -491,7 +518,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 					Expression ex = symbolMap.getMappedExpression((ElementSymbol) outputSymbol);
 					if(ex instanceof AggregateSymbol) {
 					    AggregateSymbol agg = (AggregateSymbol)ex;
-					    
+					    hasAggregate = true;					    
 	                    Expression aggExpr = agg.getExpression();
 	                    if(aggExpr != null) {
 	                    	ElementCollectorVisitor.getElements(aggExpr, requiredSymbols);
@@ -506,7 +533,9 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	                    }
 					}
 				}
-
+				if (requiredSymbols.isEmpty() && !hasAggregate) {
+					node.setProperty(Info.IS_OPTIONAL, true);
+				}
 				break;
 		}
 

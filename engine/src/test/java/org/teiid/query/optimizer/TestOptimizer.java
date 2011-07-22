@@ -6607,6 +6607,34 @@ public class TestOptimizer {
         helpPlan("select count(*) from agg3", metadata, new String[] {"SELECT COUNT(*) FROM (SELECT COUNT(*) AS c_0 FROM BQT1.SmallA AS g_0) AS v_0"}, new DefaultCapabilitiesFinder(bac), ComparisonMode.EXACT_COMMAND_STRING);
     }
     
+    
+    @Test public void testMergeGroupBy1() throws Exception {
+    	BasicSourceCapabilities caps = new BasicSourceCapabilities();
+    	caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+    	caps.setFunctionSupport("+", true); //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT a, b FROM (select 1 as a, 2 as b from pm1.g1) as x group by a, b", //$NON-NLS-1$
+                                      RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
+                                      new String[] {
+                                          "SELECT pm1.g1.e1 FROM pm1.g1 LIMIT 1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    
+        checkNodeTypes(plan, new int[] {
+                1,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                0,      // Sort
+                0       // UnionAll
+            });                                    
+    }
+    
 	public static final boolean DEBUG = false;
 
 }
