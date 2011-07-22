@@ -87,7 +87,7 @@ public class TestConnectorWorkItem {
 		int total_columns = 3;
 		StoredProcedure command = (StoredProcedure)helpGetCommand("{call pm2.spTest8(?)}", EXAMPLE_BQT); //$NON-NLS-1$      
 		command.getInputParameters().get(0).setExpression(new Constant(1));
-		Call proc = (Call)new LanguageBridgeFactory(EXAMPLE_BQT).translate(command);
+		Call proc = new LanguageBridgeFactory(EXAMPLE_BQT).translate(command);
 
 		ProcedureBatchHandler pbh = new ProcedureBatchHandler(proc, exec);
 

@@ -26,24 +26,39 @@ import static org.junit.Assert.*;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.jboss.netty.handler.timeout.TimeoutException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.UnitTestUtil;
+import org.teiid.dqp.internal.datamgr.ConnectorManager;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
+import org.teiid.language.Command;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Schema;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
-import org.teiid.query.metadata.TransformationMetadata.Resource;
+import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.Execution;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
 public class TestLocalConnections {
@@ -62,12 +77,14 @@ public class TestLocalConnections {
 	static Condition waiting = lock.newCondition();
 	static Condition wait = lock.newCondition();
 	
+	static Semaphore sourceCounter = new Semaphore(0);
+	
 	public static int blocking() throws InterruptedException {
 		lock.lock();
 		try {
 			waiting.signal();
 			if (!wait.await(2, TimeUnit.SECONDS)) {
-				throw new TimeoutException();
+				throw new RuntimeException();
 			}
 		} finally {
 			lock.unlock();
@@ -77,15 +94,75 @@ public class TestLocalConnections {
 
 	static FakeServer server = new FakeServer();
 	
-	@BeforeClass public static void oneTimeSetup() {
+	@SuppressWarnings("serial")
+	@BeforeClass public static void oneTimeSetup() throws Exception {
     	server.setUseCallingThread(true);
-    	MetadataStore ms = new MetadataStore();
-    	Schema s = new Schema();
-    	s.setName("test");
+    	server.setConnectorManagerRepository(new ConnectorManagerRepository() {
+    		@Override
+    		public ConnectorManager getConnectorManager(String connectorName) {
+    			return new ConnectorManager(connectorName, connectorName) {
+    				@Override
+    				protected ExecutionFactory<Object, Object> getExecutionFactory() {
+    					return new ExecutionFactory<Object, Object>() {
+    						@Override
+    						public Execution createExecution(Command command,
+    								ExecutionContext executionContext,
+    								RuntimeMetadata metadata, Object connection)
+    								throws TranslatorException {
+    						    return new ResultSetExecution() {
+    						    	
+    						    	boolean returnedRow = false;
+    						    	
+									@Override
+									public void execute() throws TranslatorException {
+										lock.lock();
+										try {
+											sourceCounter.release();
+											if (!wait.await(2, TimeUnit.SECONDS)) {
+												throw new RuntimeException();
+											}
+										} catch (InterruptedException e) {
+											throw new RuntimeException(e);
+										} finally {
+											lock.unlock();
+										}
+									}
+									
+									@Override
+									public void close() {
+										
+									}
+									
+									@Override
+									public void cancel() throws TranslatorException {
+										
+									}
+									
+									@Override
+									public List<?> next() throws TranslatorException, DataNotAvailableException {
+										if (returnedRow) {
+											return null;
+										}
+										returnedRow = true;
+										return new ArrayList<Object>(Collections.singleton(null));
+									}
+								};
+    						}
+    					};
+    				}
+    				
+    				@Override
+    				protected Object getConnectionFactory()
+    						throws TranslatorException {
+    					return null;
+    				}
+    			};
+    		}
+    	});
     	FunctionMethod function = new FunctionMethod("foo", null, FunctionCategoryConstants.MISCELLANEOUS, PushDown.CANNOT_PUSHDOWN, TestLocalConnections.class.getName(), "blocking", new FunctionParameter[0], new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER), true, FunctionMethod.Determinism.NONDETERMINISTIC);
-    	s.addFunction(function);
-    	ms.addSchema(s);
-    	server.deployVDB("test", ms, new LinkedHashMap<String, Resource>());
+    	HashMap<String, Collection<FunctionMethod>> udfs = new HashMap<String, Collection<FunctionMethod>>();
+    	udfs.put("test", Arrays.asList(function));
+    	server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb", udfs);
 	}
 	
 	@AfterClass public static void oneTimeTearDown() {
@@ -102,6 +179,7 @@ public class TestLocalConnections {
 	    	    	
 	    	    	Statement s = c.createStatement();
 	    	    	s.execute("select foo()");
+	    	    	s.close();
     			} catch (Exception e) {
     				throw new RuntimeException(e);
     			}
@@ -131,6 +209,126 @@ public class TestLocalConnections {
     	if (t.isAlive()) {
     		fail();
     	}
+    	s.close();
+    	if (handler.t != null) {
+    		throw handler.t;
+    	}
+	}
+	
+	@Test public void testUseInDifferentThreads() throws Throwable {
+		Connection c = server.createConnection("jdbc:teiid:test");
+    	
+    	final Statement s = c.createStatement();
+    	s.execute("select 1");
+    	
+    	assertFalse(server.dqp.getRequests().isEmpty());
+
+    	Thread t = new Thread() {
+    		public void run() {
+    			try {
+					s.close();
+				} catch (SQLException e) {
+					throw new RuntimeException(e);
+				}
+    		}
+    	};
+    	SimpleUncaughtExceptionHandler handler = new SimpleUncaughtExceptionHandler();
+    	t.setUncaughtExceptionHandler(handler);
+    	t.start();
+    	t.join(2000);
+    	if (t.isAlive()) {
+    		fail();
+    	}
+    	
+    	assertTrue(server.dqp.getRequests().isEmpty());
+    	
+    	if (handler.t != null) {
+    		throw handler.t;
+    	}
+	}
+	
+	@Test public void testWait() throws Throwable {
+		final Connection c = server.createConnection("jdbc:teiid:test");
+    	
+		Thread t = new Thread() {
+			public void run() {
+		    	Statement s;
+				try {
+					s = c.createStatement();
+			    	assertTrue(s.execute("select part_id from parts"));
+				} catch (SQLException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		};
+    	t.start();
+    	SimpleUncaughtExceptionHandler handler = new SimpleUncaughtExceptionHandler();
+    	t.setUncaughtExceptionHandler(handler);
+    	
+    	sourceCounter.acquire();
+    	
+    	//t should now be waiting also
+    	
+    	lock.lock();
+    	try {
+    		wait.signal();
+    	} finally {
+    		lock.unlock();
+    	}
+
+    	//t should finish
+    	t.join();
+    	
+    	if (handler.t != null) {
+    		throw handler.t;
+    	}
+	}
+	
+	@Test public void testWaitMultiple() throws Throwable {
+		final Connection c = server.createConnection("jdbc:teiid:test");
+    	
+		Thread t = new Thread() {
+			public void run() {
+		    	Statement s;
+				try {
+					s = c.createStatement();
+			    	assertTrue(s.execute("select part_id from parts union all select part_id from parts"));
+			    	ResultSet r = s.getResultSet();
+			    	
+			    	//wake up the other source thread, should put the requestworkitem into the more work state 
+			    	lock.lock();
+			    	try {
+			    		wait.signal();
+			    	} finally {
+			    		lock.unlock();
+			    	}
+			    	Thread.sleep(1000); //TODO: need a better hook to determine that connector work has finished
+			    	while (r.next()) {
+			    		//will hang unless this thread is allowed to resume processing
+			    	}
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			}
+		};
+    	t.start();
+    	SimpleUncaughtExceptionHandler handler = new SimpleUncaughtExceptionHandler();
+    	t.setUncaughtExceptionHandler(handler);
+    	
+    	sourceCounter.acquire(2);
+    	
+    	//t should now be waiting also
+    	
+    	//wake up 1 source thread
+    	lock.lock();
+    	try {
+    		wait.signal();
+    	} finally {
+    		lock.unlock();
+    	}
+    	
+    	t.join();
+    	
     	if (handler.t != null) {
     		throw handler.t;
     	}

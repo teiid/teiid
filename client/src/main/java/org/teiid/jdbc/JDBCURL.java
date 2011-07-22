@@ -58,7 +58,8 @@ public class JDBCURL {
             ExecutionProperties.PROP_XML_FORMAT,
             ExecutionProperties.PROP_XML_VALIDATION,
             EmbeddedProfile.USE_CALLING_THREAD,
-            ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS)));
+            ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS,
+            ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS)));
     
     public static final Set<String> KNOWN_PROPERTIES = getKnownProperties();
     

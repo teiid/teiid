@@ -160,6 +160,14 @@ public class NodeWrapper implements NodeInfo, VirtualNode, SiblingCountingNode {
 	}
 
 	/**
+	 * Get the real XOM node, to implement the VirtualNode interface
+	 */
+
+	public Object getRealNode() {
+		return node;
+	}
+
+	/**
 	 * Get the name pool for this node
 	 *
 	 * @return the NamePool
@@ -799,7 +807,7 @@ public class NodeWrapper implements NodeInfo, VirtualNode, SiblingCountingNode {
 	 * free-standing orphan node, just return the hashcode.
 	 */
 
-	public int getDocumentNumber() {
+	public long getDocumentNumber() {
 		return docWrapper.getDocumentNumber();
 	}
 

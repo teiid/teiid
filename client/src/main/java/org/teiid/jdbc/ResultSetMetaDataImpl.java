@@ -39,7 +39,9 @@ public class ResultSetMetaDataImpl extends WrapperImpl implements ResultSetMetaD
     
     public ResultSetMetaDataImpl(MetadataProvider provider, String supportBackwardsCompatibility) {
     	this.provider = provider;
-    	this.useJDBC4ColumnNameAndLabelSemantics = (supportBackwardsCompatibility != null && supportBackwardsCompatibility.equalsIgnoreCase("false") ? false : true);
+    	if (supportBackwardsCompatibility != null) {
+    		this.useJDBC4ColumnNameAndLabelSemantics = Boolean.parseBoolean(supportBackwardsCompatibility);
+    	}
     }    
     
     /**

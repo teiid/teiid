@@ -52,6 +52,7 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.Transform;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
@@ -148,7 +149,6 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
-import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
@@ -240,6 +240,7 @@ public class QueryRewriter {
      * @throws QueryValidatorException
      */
 	private Command rewriteCommand(Command command, boolean removeOrderBy) throws TeiidComponentException, TeiidProcessingException{
+		boolean oldRewriteAggs = rewriteAggs;
 		QueryMetadataInterface oldMetadata = metadata;
 		CreateUpdateProcedureCommand oldProcCommand = procCommand;
         
@@ -299,6 +300,7 @@ public class QueryRewriter {
             	break;
 		}
         
+        this.rewriteAggs = oldRewriteAggs;
         this.metadata = oldMetadata;
         this.procCommand = oldProcCommand;
         return command;
@@ -605,9 +607,9 @@ public class QueryRewriter {
         From from = query.getFrom();
         if(from != null){
             List<FromClause> clauses = new ArrayList<FromClause>(from.getClauses().size());
-            Iterator clauseIter = from.getClauses().iterator();
+            Iterator<FromClause> clauseIter = from.getClauses().iterator();
             while(clauseIter.hasNext()) {
-                clauses.add( rewriteFromClause(query, (FromClause) clauseIter.next()) );
+                clauses.add( rewriteFromClause(query, clauseIter.next()) );
             }
             from.setClauses(clauses);
         } else {
@@ -765,6 +767,7 @@ public class QueryRewriter {
 	 */
 	private Query rewriteGroupBy(Query query) throws TeiidComponentException, TeiidProcessingException {
 		if (query.getGroupBy() == null) {
+			rewriteAggs = false;
 			return query;
 		}
 		if (isDistinctWithGroupBy(query)) {
@@ -811,11 +814,11 @@ public class QueryRewriter {
         try {
             PostOrderNavigator.doVisit(obj, visitor);
         } catch (TeiidRuntimeException err) {
-            if (err.getChild() instanceof TeiidComponentException) {
-                throw (TeiidComponentException)err.getChild();
+            if (err.getCause() instanceof TeiidComponentException) {
+                throw (TeiidComponentException)err.getCause();
             } 
-            if (err.getChild() instanceof TeiidProcessingException) {
-                throw (TeiidProcessingException)err.getChild();
+            if (err.getCause() instanceof TeiidProcessingException) {
+                throw (TeiidProcessingException)err.getCause();
             } 
             throw err;
         }
@@ -1552,6 +1555,7 @@ public class QueryRewriter {
     private BigDecimal BIG_DECIMAL_ZERO = new BigDecimal("0"); //$NON-NLS-1$
     private Short SHORT_ZERO = new Short((short)0);
     private Byte BYTE_ZERO = new Byte((byte)0);
+	private boolean rewriteAggs = true;
 
     /**
      * @param criteria
@@ -2246,6 +2250,9 @@ public class QueryRewriter {
     			expression.setAggregateFunction(Type.MAX);
     		}
     	}
+    	if (rewriteAggs && expression.getExpression() != null && EvaluatableVisitor.willBecomeConstant(expression.getExpression())) {
+    		return expression.getExpression();
+    	}
     	if (expression.getExpression() != null && expression.getCondition() != null && !expression.respectsNulls()) {
     		Expression cond = expression.getCondition();
     		Expression ex = expression.getExpression();
@@ -2414,17 +2421,44 @@ public class QueryRewriter {
         }
         function.setArgs(newArgs);
 
-        if( FunctionLibrary.isConvert(function) &&
-            newArgs[1] instanceof Constant) {
-            
-            Class srcType = newArgs[0].getType();
-            String tgtTypeName = (String) ((Constant)newArgs[1]).getValue();
-            Class tgtType = DataTypeManager.getDataTypeClass(tgtTypeName);
+        if( FunctionLibrary.isConvert(function)) {
+            Class<?> srcType = newArgs[0].getType();
+            Class<?> tgtType = function.getType();
 
             if(srcType != null && tgtType != null && srcType.equals(tgtType)) {
-                return newArgs[0];
+                return newArgs[0]; //unnecessary conversion
             }
-
+            
+            if (!(newArgs[0] instanceof Function) || tgtType == DataTypeManager.DefaultDataClasses.OBJECT) {
+            	return function;
+            }
+        	Function nested = (Function) newArgs[0];
+        	if (!FunctionLibrary.isConvert(nested)) {
+        		return function;
+        	}
+    		Class<?> nestedType = nested.getArgs()[0].getType();
+    		
+            Transform t = DataTypeManager.getTransform(nestedType, nested.getType());
+            if (t.isExplicit()) {
+            	//explicit conversions are required
+            	return function;
+            }
+            if (DataTypeManager.getTransform(nestedType, tgtType) == null) {
+            	//no direct conversion exists
+            	return function;
+            }
+    		//can't remove a convert that would alter the lexical form
+    		if (tgtType == DataTypeManager.DefaultDataClasses.STRING &&
+    				(nestedType == DataTypeManager.DefaultDataClasses.BOOLEAN
+    				|| nestedType == DataTypeManager.DefaultDataClasses.DATE
+    				|| nestedType == DataTypeManager.DefaultDataClasses.TIME
+    				|| tgtType == DataTypeManager.DefaultDataClasses.BIG_DECIMAL
+    				|| tgtType == DataTypeManager.DefaultDataClasses.FLOAT
+    				|| (tgtType == DataTypeManager.DefaultDataClasses.DOUBLE && srcType != DataTypeManager.DefaultDataClasses.FLOAT))) {
+    			return function;
+    		}
+        	//nested implicit transform is not needed
+        	return rewriteExpressionDirect(ResolverUtil.getConversion(nested.getArgs()[0], DataTypeManager.getDataTypeName(nestedType), DataTypeManager.getDataTypeName(tgtType), false, funcLibrary));
         }
 
         //convert DECODESTRING function to CASE expression
@@ -2702,7 +2736,7 @@ public class QueryRewriter {
         
         select.setSymbols(select.getProjectedSymbols());
         
-        List<SelectSymbol> symbols = select.getSymbols();
+        List symbols = select.getSymbols();
         
         HashSet<String> uniqueNames = new HashSet<String>();
         

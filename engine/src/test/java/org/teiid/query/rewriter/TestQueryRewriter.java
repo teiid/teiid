@@ -124,11 +124,11 @@ public class TestQueryRewriter {
     }
     
     private Map<ElementSymbol, Integer> elements;
-    private List<List> tuples;
+    private List<List<? extends Object>> tuples;
     
     @Before public void setUp() {
     	elements = null;
-    	tuples = new ArrayList<List>();
+    	tuples = new ArrayList<List<? extends Object>>();
     }
 
     private Criteria helpTestRewriteCriteria(String original, Criteria expectedCrit, QueryMetadataInterface metadata) {
@@ -138,7 +138,7 @@ public class TestQueryRewriter {
         // rewrite
         try { 
         	ArrayList<Boolean> booleanVals = new ArrayList<Boolean>(tuples.size());
-        	for (List<Object> tuple : tuples) {
+        	for (List<?> tuple : tuples) {
             	booleanVals.add(new Evaluator(elements, null, null).evaluate(origCrit, tuple));
 			}
             actual = QueryRewriter.rewriteCriteria(origCrit, null, null, metadata);
@@ -2085,10 +2085,6 @@ public class TestQueryRewriter {
         helpTestRewriteCriteria("concat2('a', pm1.g1.e1) = 'xyz'", "concat('a', ifnull(pm1.g1.e1, '')) = 'xyz'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testRewiteEvaluatableAggregate() {
-    	helpTestRewriteCommand("select max(1) from pm1.g1", "SELECT MAX(1) FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
     @Test public void testRewriteFromUnixTime() throws Exception {
     	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
     	try {
@@ -2448,5 +2444,21 @@ public class TestQueryRewriter {
 		String sql = "parsedate_(pm1.g1.e1) = {d'2001-01-01'}";
         helpTestRewriteCriteria(sql, parseCriteria(sql, metadata), metadata);  		
 	} 
+	
+    @Test public void testRewriteNestedConvert() throws Exception {
+        helpTestRewriteExpression("cast(cast(pm1.g1.e3 as integer) as long)", "cast(pm1.g1.e3 as long)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testRewriteNestedConvert1() throws Exception {
+        helpTestRewriteExpression("cast(cast(pm1.g1.e3 as integer) as string)", "convert(convert(pm1.g1.e3, integer), string)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
+    @Test public void testRewriteNestedConvert2() throws Exception {
+        helpTestRewriteExpression("cast(cast(pm1.g1.e3 as string) as clob)", "convert(convert(pm1.g1.e3, string), clob)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testRewriteConstantAgg() throws Exception {
+    	helpTestRewriteCommand("select max(1) from pm1.g1 group by e1", "SELECT 1 FROM pm1.g1 GROUP BY e1");
+    }
+    
 }

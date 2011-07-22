@@ -29,13 +29,21 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.teiid.language.ColumnReference;
+import org.teiid.language.Command;
+import org.teiid.language.DerivedColumn;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
 import org.teiid.language.Literal;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.Select;
+import org.teiid.language.SortSpecification;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
@@ -107,21 +115,12 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
     	convert.addNumericBooleanConversions();
 		
 		registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
-		registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new SubstrModifier(this.convert)); 
+		registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$	
 		registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("random")); //$NON-NLS-1$				
 		registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("LN")); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.LCASE, new StringOnlyModifier("LOWER", this.convert)); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.UCASE, new StringOnlyModifier("UPPER", this.convert)); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.LENGTH, new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				ArrayList target = new ArrayList();
-				target.add("character_length("); //$NON-NLS-1$
-				target.addAll(expressionToString(function.getParameters().get(0), convert));
-				target.add(")"); //$NON-NLS-1$
-				return target;
-			}
-		});
+		registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("LOWER")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UPPER")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.LENGTH, new AliasModifier("character_length")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("CURRENT_DATE")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier("CURRENT_TIME")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractModifier("YEAR")); //$NON-NLS-1$
@@ -143,9 +142,9 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.LTRIM, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
-				ArrayList target = new ArrayList();
+				ArrayList<Object> target = new ArrayList<Object>();
 				target.add("TRIM(LEADING FROM ");//$NON-NLS-1$
-				target.addAll(expressionToString(function.getParameters().get(0), convert));
+				target.add(function.getParameters().get(0));
 				target.add(")"); //$NON-NLS-1$				
 				return target; 
 			}
@@ -153,9 +152,9 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.RTRIM, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
-				ArrayList target = new ArrayList();
+				ArrayList<Object> target = new ArrayList<Object>();
 				target.add("TRIM(TRAILING FROM ");//$NON-NLS-1$
-				target.addAll(expressionToString(function.getParameters().get(0), convert));
+				target.add(function.getParameters().get(0));
 				target.add(")"); //$NON-NLS-1$
 				return target; 
 			}
@@ -216,7 +215,7 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 	
 	
     @Override
-    public List getSupportedFunctions() {
+    public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getSupportedFunctions());
 
@@ -317,8 +316,37 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
     }
     
     @Override
-    public boolean supportsSetQueryOrderBy() {
-    	return false;
+    public List<?> translateCommand(Command command, ExecutionContext context) {
+    	if (command instanceof QueryExpression) {
+    		QueryExpression qe = (QueryExpression)command;
+    		//teradata prefers positional ordering
+    		if (qe.getOrderBy() != null) {
+    			Select select = qe.getProjectedQuery();
+    			List<DerivedColumn> derivedColumns = select.getDerivedColumns();
+    			Map<String, Integer> positions = new HashMap<String, Integer>();
+    			int i = 1;
+    			for (DerivedColumn derivedColumn : derivedColumns) {
+    				String name = derivedColumn.getAlias();
+    				if (name == null && derivedColumn.getExpression() instanceof ColumnReference) {
+    					ColumnReference cr = (ColumnReference)derivedColumn.getExpression();
+    					name = cr.toString();
+    				}
+					positions.put(name, i++);
+				}
+    			for (SortSpecification ss : qe.getOrderBy().getSortSpecifications()) {
+    				Expression ex = ss.getExpression();
+    				if (!(ex instanceof ColumnReference)) {
+    					continue;
+    				} 
+    				ColumnReference cr = (ColumnReference)ex;
+    				Integer position = positions.get(cr.toString());
+    				if (position != null) {
+    					ss.setExpression(new Literal(position, TypeFacility.RUNTIME_TYPES.INTEGER));
+    				}
+				}
+    		}
+    	}
+    	return super.translateCommand(command, context);
     }
     
     public static class LocateModifier extends FunctionModifier {
@@ -330,67 +358,31 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 		
     	@Override
 		public List<?> translate(Function function) {
-    		ArrayList target = new ArrayList();
+    		ArrayList<Object> target = new ArrayList<Object>();
     		Expression expr1 =  function.getParameters().get(0);
     		Expression expr2 =  function.getParameters().get(1);
     		if (function.getParameters().size() > 2) {
     			Expression expr3 =  function.getParameters().get(2);
 	    		target.add("position("); //$NON-NLS-1$
-	    		target.addAll(expressionToString(expr1, this.convertModifier));
+	    		target.add(expr1);
 	    		target.add( " in "); //$NON-NLS-1$
 	    		target.add("substr("); //$NON-NLS-1$
-	    		target.addAll(expressionToString(expr2, this.convertModifier));
+	    		target.add(expr2);
 	    		target.add(","); //$NON-NLS-1$
 	    		target.add(expr3);
 	    		target.add("))"); //$NON-NLS-1$	    		
     		}
     		else {
 	    		target.add("position("); //$NON-NLS-1$
-	    		target.addAll(expressionToString(expr1, this.convertModifier));
+	    		target.add(expr1);
 	    		target.add( " in "); //$NON-NLS-1$
-	    		target.addAll(expressionToString(expr2, this.convertModifier));
+	    		target.add(expr2);
 	    		target.add(")"); //$NON-NLS-1$
     		}
     		return target;
 		}
 	}
     
-    private static List<?> expressionToString(Expression expr, ConvertModifier modifier) {
-    	Class tgtType = expr.getType();
-		if (tgtType.equals(String.class) && ((expr instanceof Literal) || expr instanceof ColumnReference)) {
-			return Arrays.asList(expr);  
-		}
-		else if (tgtType.equals(String.class) && (expr instanceof Function)) {
-			
-			Function func = (Function)expr;
-			while(true) {
-				Expression arg1 = func.getParameters().get(0);
-				if ((arg1 instanceof Function) && ((Function)arg1).getName().equals("convert")) { //$NON-NLS-1$
-					func = (Function)arg1;
-				}
-				else {
-					break;
-				}
-			}
-			Expression arg1 = func.getParameters().get(0);
-			if (arg1 instanceof ColumnReference) {
-				ColumnReference ref = (ColumnReference)func.getParameters().get(0);
-				if(Number.class.isAssignableFrom(ref.getType())) {
-					ArrayList target = new ArrayList();
-					target.add("cast("); //$NON-NLS-1$
-					target.add(func.getParameters().get(0));
-					target.add(" AS varchar(100))"); //$NON-NLS-1$
-					return target;
-				}
-				else if (String.class.isAssignableFrom(ref.getType())) {
-					return Arrays.asList(ref);
-				}
-			}
-			return modifier.translate(func);	
-		} 
-		return Arrays.asList("cast(" , expr, " AS varchar(100))"); //$NON-NLS-1$ //$NON-NLS-2$ 
-    }
-
 	public static class ExtractModifier extends FunctionModifier {
     	private String type;
     	public ExtractModifier(String type) {
@@ -413,47 +405,6 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 		}
 	}
     
-    public static class StringOnlyModifier extends FunctionModifier {
-    	String funcName;
-    	ConvertModifier convertModifier;
-    	public StringOnlyModifier(String name, ConvertModifier converModifier) {
-    		this.funcName = name;
-    		this.convertModifier = converModifier;
-    	}
-    	@Override
-		public List<?> translate(Function function) {
-			Expression expr = function.getParameters().get(0);
-			ArrayList target = new ArrayList();
-			target.add(this.funcName);
-			target.add("("); //$NON-NLS-1$
-			target.addAll(expressionToString(expr, this.convertModifier));
-			target.add(")"); //$NON-NLS-1$
-			return target;
-		}
-	}
-    
-    public static class SubstrModifier extends FunctionModifier {
-    	ConvertModifier convertModifier;
-    	public SubstrModifier(ConvertModifier converModifier) {
-    		this.convertModifier = converModifier;
-    	}
-    	@Override
-		public List<?> translate(Function function) {
-			Expression expr = function.getParameters().get(0);
-			ArrayList target = new ArrayList();
-			target.add("substr("); //$NON-NLS-1$
-			target.addAll(expressionToString(expr, this.convertModifier));
-			target.add(","); //$NON-NLS-1$
-			target.add(function.getParameters().get(1)); 
-			if (function.getParameters().size() > 2 ) {
-				target.add(","); //$NON-NLS-1$
-				target.add(function.getParameters().get(2)); 
-			}
-			target.add(")"); //$NON-NLS-1$
-			return target;
-		}
-	}    
-    
     public static class LeftOrRightFunctionModifier extends FunctionModifier {
         private LanguageFactory langFactory;
         ConvertModifier convertModifier;
@@ -466,11 +417,11 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
         @Override
         public List<?> translate(Function function) {
             List<Expression> args = function.getParameters();
-            ArrayList target = new ArrayList();
+            ArrayList<Object> target = new ArrayList<Object>();
             if (function.getName().equalsIgnoreCase("left")) { //$NON-NLS-1$
             	//substr(string, 1, length)
             	target.add("substr("); //$NON-NLS-1$
-            	target.addAll(expressionToString(args.get(0), this.convertModifier));
+            	target.add(args.get(0));
             	target.add(","); //$NON-NLS-1$
             	target.add(langFactory.createLiteral(Integer.valueOf(1), TypeFacility.RUNTIME_TYPES.INTEGER));
             	target.add(","); //$NON-NLS-1$
@@ -479,10 +430,10 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
             } else if (function.getName().equalsIgnoreCase("right")) { //$NON-NLS-1$
             	//substr(case_size, character_length(case_size) -4) 
             	target.add("substr("); //$NON-NLS-1$
-            	target.addAll(expressionToString(args.get(0), this.convertModifier));
+            	target.add(args.get(0));
             	
             	target.add(",(character_length("); //$NON-NLS-1$
-            	target.addAll(expressionToString(args.get(0), this.convertModifier));
+            	target.add(args.get(0));
             	target.add(")-"); //$NON-NLS-1$
             	target.add(args.get(1));
             	target.add("+1))"); //$NON-NLS-1$ // offset for 1 based index
@@ -491,22 +442,4 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
         }
     }    
     
-    public static class UpperOrLowerModifier extends FunctionModifier {
-    	String funcName;
-    	ConvertModifier convertModifier;
-    	public UpperOrLowerModifier(String name, ConvertModifier converModifier) {
-    		this.funcName = name;
-    		this.convertModifier = converModifier;
-    	}
-    	@Override
-		public List<?> translate(Function function) {
-			Expression expr = function.getParameters().get(0);
-			ArrayList target = new ArrayList();
-			target.add(this.funcName);
-			target.add("("); //$NON-NLS-1$
-			target.addAll(expressionToString(expr, this.convertModifier));
-			target.add(")"); //$NON-NLS-1$
-			return target;
-		}
-	}    
 }

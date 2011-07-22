@@ -757,6 +757,7 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testSubqueryRewriteToJoinDistinct() throws Exception {
+    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
         TestQueryRewriter.helpTestRewriteCommand("Select distinct e1 from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1)", "SELECT DISTINCT e1 FROM pm1.g1 AS x, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE x.e1 = X__1.e1", RealMetadataFactory.example1Cached());
     }
     
@@ -764,6 +765,7 @@ public class TestSubqueryPushdown {
      * Agg does not depend on cardinality
      */
     @Test public void testSubqueryRewriteToJoinGroupBy() throws Exception {
+    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
         TestQueryRewriter.helpTestRewriteCommand("Select max(e1) from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1) group by e2", "SELECT MAX(e1) FROM pm1.g1 AS x, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE x.e1 = X__1.e1 GROUP BY e2", RealMetadataFactory.example1Cached());
     }
     
@@ -775,6 +777,7 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testSubqueryRewriteToJoin() throws Exception {
+    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.e1", RealMetadataFactory.example4());
     }
     
@@ -919,6 +922,7 @@ public class TestSubqueryPushdown {
      * Same as above, but the source is much larger, so a semi-join is favorable
      */
     @Test public void testSemiJoinExistsCosting() {
+    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
         ProcessorPlan plan = helpPlan("Select e1 from pm2.g2 as o where not exists (select 1 from pm3.g1 where e1 = o.e1 having o.e2 = count(e2))", RealMetadataFactory.example4(),  //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_0, c_1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {

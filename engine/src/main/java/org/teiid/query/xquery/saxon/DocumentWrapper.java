@@ -115,7 +115,7 @@ public class DocumentWrapper extends NodeWrapper implements DocumentInfo {
 	 * @return the unique number identifying this document within the name pool
 	 */
 
-	public int getDocumentNumber() {
+	public long getDocumentNumber() {
 		return documentNumber;
 	}
 
@@ -124,12 +124,16 @@ public class DocumentWrapper extends NodeWrapper implements DocumentInfo {
 	 * 
 	 * @param id
 	 *            the required ID value
+	 * @param getParent
+	 *            true if running the element-with-id() function rather than the id()
+	 *            function; the difference is that in the case of an element of type xs:ID,
+	 *            the parent of the element should be returned, not the element itself.
 	 * @return the element with the given ID, or null if there is no such ID
 	 *         present (or if the parser has not notified attributes as being of
 	 *         type ID).
 	 */
 
-	public NodeInfo selectID(String id) {
+	public NodeInfo selectID(String id, boolean getParent) {
 		if (idIndex == null) {
 			Element elem;
 			switch (nodeKind) {
@@ -145,7 +149,14 @@ public class DocumentWrapper extends NodeWrapper implements DocumentInfo {
 			idIndex = new HashMap(50);
 			buildIDIndex(elem);
 		}
-		return (NodeInfo) idIndex.get(id);
+
+		NodeInfo result = (NodeInfo) idIndex.get(id);
+
+		if (result != null && getParent && result.isId() && result.getStringValue().equals(id)) {
+            result = result.getParent();
+        }
+
+		return result ;
 	}
 	
 	

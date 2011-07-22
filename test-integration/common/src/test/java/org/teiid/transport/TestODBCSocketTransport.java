@@ -222,6 +222,12 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		TestMMDatabaseMetaData.compareResultSet(rs);
 	}	
 	
+	@Test public void testColumnMetadataWithAlias() throws Exception {
+		PreparedStatement stmt = conn.prepareStatement("select ta.attname as x from pg_catalog.pg_attribute ta limit 1");
+		ResultSet rs = stmt.executeQuery();
+		TestMMDatabaseMetaData.compareResultSet(rs);
+	}	
+	
 	@Test public void testPreparedError() throws Exception {
 		PreparedStatement stmt = conn.prepareStatement("select cast(? as integer)");
 		stmt.setString(1, "a");
@@ -254,6 +260,13 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		rs.next();
 		assertEquals("oid", rs.getArray("proargtypes").getBaseTypeName());
 	}
+	
+	// this does not work as JDBC always sends the queries in prepared form
+	public void testPgDeclareCursor() throws Exception {
+		Statement stmt = conn.createStatement();
+		ResultSet rs = stmt.executeQuery("begin;declare \"foo\" cursor for select * from pg_proc;fetch 10 in \"foo\"; close \"foo\"");
+		rs.next();		
+	}	
 	
 	@Test public void testPgProcedure() throws Exception {
 		Statement stmt = conn.createStatement();

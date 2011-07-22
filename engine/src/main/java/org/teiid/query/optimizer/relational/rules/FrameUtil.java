@@ -37,7 +37,6 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.Assertion;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -50,17 +49,21 @@ import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.resolver.util.AccessPattern;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.GroupBy;
 import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
@@ -125,15 +128,15 @@ public class FrameUtil {
 	}
     
     static boolean canConvertAccessPatterns(PlanNode sourceNode) {
-        List accessPatterns = (List)sourceNode.getProperty(NodeConstants.Info.ACCESS_PATTERNS);
+        List<AccessPattern> accessPatterns = (List)sourceNode.getProperty(NodeConstants.Info.ACCESS_PATTERNS);
         if (accessPatterns == null) {
             return true;
         }
         SymbolMap symbolMap = (SymbolMap)sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
-        for (Iterator i = accessPatterns.iterator(); i.hasNext();) {
-            AccessPattern ap = (AccessPattern)i.next();
-            for (Iterator elems = ap.getUnsatisfied().iterator(); elems.hasNext();) {
-                ElementSymbol symbol = (ElementSymbol)elems.next();
+        for (Iterator<AccessPattern> i = accessPatterns.iterator(); i.hasNext();) {
+            AccessPattern ap = i.next();
+            for (Iterator<ElementSymbol> elems = ap.getUnsatisfied().iterator(); elems.hasNext();) {
+                ElementSymbol symbol = elems.next();
                 Expression mapped = convertExpression(symbol, symbolMap.asMap());
                 if (ElementCollectorVisitor.getElements(mapped, true).isEmpty()) {
                     return false;
@@ -154,15 +157,15 @@ public class FrameUtil {
         if (accessPatterns != null) {
         	for (AccessPattern ap : accessPatterns) {
                 Set<ElementSymbol> newElements = new HashSet<ElementSymbol>();
-                for (Iterator elems = ap.getUnsatisfied().iterator(); elems.hasNext();) {
-                    ElementSymbol symbol = (ElementSymbol)elems.next();
+                for (Iterator<ElementSymbol> elems = ap.getUnsatisfied().iterator(); elems.hasNext();) {
+                    ElementSymbol symbol = elems.next();
                     Expression mapped = convertExpression(symbol, symbolMap);
                     newElements.addAll(ElementCollectorVisitor.getElements(mapped, true));
                 }
                 ap.setUnsatisfied(newElements);
                 Set<ElementSymbol> newHistory = new HashSet<ElementSymbol>();
-                for (Iterator elems = ap.getCurrentElements().iterator(); elems.hasNext();) {
-                    ElementSymbol symbol = (ElementSymbol)elems.next();
+                for (Iterator<ElementSymbol> elems = ap.getCurrentElements().iterator(); elems.hasNext();) {
+                    ElementSymbol symbol = elems.next();
                     Expression mapped = convertExpression(symbol, symbolMap);
                     newHistory.addAll(ElementCollectorVisitor.getElements(mapped, true));
                 }
@@ -233,6 +236,11 @@ public class FrameUtil {
             List<SingleElementSymbol> projectedSymbols = (List<SingleElementSymbol>)node.getProperty(NodeConstants.Info.PROJECT_COLS);
             Select select = new Select(projectedSymbols);
             ExpressionMappingVisitor.mapExpressions(select, symbolMap);
+            if (rewrite) {
+            	for (LanguageObject expr : select.getSymbols()) {
+					rewriteSingleElementSymbol(metadata, (SingleElementSymbol) expr);
+				}
+            }
             node.setProperty(NodeConstants.Info.PROJECT_COLS, select.getSymbols());
             if (!singleMapping) {
                 GroupsUsedByElementsVisitor.getGroups(select, groups);
@@ -257,6 +265,11 @@ public class FrameUtil {
         } else if(type == NodeConstants.Types.SORT) { 
         	OrderBy orderBy = (OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER);
             ExpressionMappingVisitor.mapExpressions(orderBy, symbolMap);
+            if (rewrite) {
+            	for (OrderByItem item : orderBy.getOrderByItems()) {
+            		rewriteSingleElementSymbol(metadata, item.getSymbol());
+            	}
+            }
             if (!singleMapping) {
                 GroupsUsedByElementsVisitor.getGroups(orderBy, groups);
             }
@@ -278,6 +291,25 @@ public class FrameUtil {
             convertAccessPatterns(symbolMap, node);
         }
     }
+
+	private static void rewriteSingleElementSymbol(
+			QueryMetadataInterface metadata, SingleElementSymbol ses) throws QueryPlannerException {
+		try {
+			if (ses instanceof AliasSymbol) {
+				ses = ((AliasSymbol)ses).getSymbol();
+			} 
+			if (ses instanceof ExpressionSymbol) {
+				ExpressionSymbol es = (ExpressionSymbol)ses;
+				if (es.getExpression() != null) {
+					es.setExpression(QueryRewriter.rewriteExpression(es.getExpression(), null, null, metadata));
+				}
+			}
+		} catch(TeiidProcessingException e) {
+		    throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0023", ses)); //$NON-NLS-1$
+		} catch (TeiidComponentException e) {
+			throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0023", ses)); //$NON-NLS-1$
+		}
+	}
     
     private static Expression convertExpression(Expression expression, Map symbolMap) {
         
@@ -314,7 +346,7 @@ public class FrameUtil {
         } catch(TeiidProcessingException e) {
             throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0023", criteria)); //$NON-NLS-1$
         } catch (TeiidComponentException e) {
-        	throw new TeiidRuntimeException(e);
+        	throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0023", criteria)); //$NON-NLS-1$
         }
     }
 

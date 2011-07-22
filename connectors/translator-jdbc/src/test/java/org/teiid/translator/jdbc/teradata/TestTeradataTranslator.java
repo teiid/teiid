@@ -31,6 +31,8 @@ import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.cdk.api.TranslationUtility;
+import org.teiid.language.Command;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.In;
@@ -82,34 +84,60 @@ public class TestTeradataTranslator {
     
     @Test public void testIntegerToString() throws Exception {
         String input = "SELECT lcase(bigdecimalvalue) FROM BQT1.SMALLA"; 
-        String output = "SELECT LOWER(cast(SmallA.BigDecimalValue AS varchar(100))) FROM SmallA"; 
+        String output = "SELECT LOWER(cast(SmallA.BigDecimalValue AS varchar(4000))) FROM SmallA"; 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);    	
     }    
     
     @Test public void testSubString() throws Exception {
         String input = "SELECT intkey FROM BQT1.SmallA WHERE SUBSTRING(BQT1.SmallA.IntKey, 1) = '1' ORDER BY intkey"; 
-        String output = "SELECT SmallA.IntKey FROM SmallA WHERE substr(cast(SmallA.IntKey AS varchar(100)),1) = '1' ORDER BY SmallA.IntKey"; 
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE substr(cast(SmallA.IntKey AS varchar(4000)), 1) = '1' ORDER BY 1"; 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);    	
     }  
     
     @Test public void testSubString2() throws Exception {
         String input = "SELECT intkey FROM BQT1.SmallA WHERE SUBSTRING(BQT1.SmallA.IntKey, 1, 2) = '1' ORDER BY intkey"; 
-        String output = "SELECT SmallA.IntKey FROM SmallA WHERE substr(cast(SmallA.IntKey AS varchar(100)),1,2) = '1' ORDER BY SmallA.IntKey"; 
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE substr(cast(SmallA.IntKey AS varchar(4000)), 1, 2) = '1' ORDER BY 1"; 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);    	
     }     
     
     @Test public void testDateToString() throws Exception {
         String input = "SELECT intkey, UPPER(timevalue) AS UPPER FROM BQT1.SmallA ORDER BY intkey"; 
-        String output = "SELECT SmallA.IntKey, UPPER(cast(cast(SmallA.TimeValue AS FORMAT 'HH:MI:SS') AS VARCHAR(9))) AS UPPER FROM SmallA ORDER BY SmallA.IntKey"; 
+        String output = "SELECT SmallA.IntKey, UPPER(cast(cast(SmallA.TimeValue AS FORMAT 'HH:MI:SS') AS VARCHAR(9))) AS UPPER FROM SmallA ORDER BY 1"; 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);    	
     }    
     
     @Test public void testLocate() throws Exception {
         String input = "SELECT INTKEY, BIGDECIMALVALUE FROM BQT1.SmallA WHERE LOCATE('-', BIGDECIMALVALUE) = 1 ORDER BY intkey"; 
-        String output = "SELECT SmallA.IntKey, SmallA.BigDecimalValue FROM SmallA WHERE position('-' in cast(SmallA.BigDecimalValue AS varchar(100))) = 1 ORDER BY SmallA.IntKey"; 
+        String output = "SELECT SmallA.IntKey, SmallA.BigDecimalValue FROM SmallA WHERE position('-' in cast(SmallA.BigDecimalValue AS varchar(4000))) = 1 ORDER BY 1"; 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);    	
     }      
     
+    @Test public void testPositionalOrderBy() throws Exception {
+        String input = "SELECT INTKEY, BIGDECIMALVALUE FROM BQT1.SmallA ORDER BY intkey"; 
+        String output = "SELECT g_0.IntKey AS c_0, g_0.BigDecimalValue AS c_1 FROM SmallA AS g_0 ORDER BY 1"; 
+
+        TranslationUtility tu = TranslationHelper.getTranslationUtility(TranslationHelper.BQT_VDB, null);
+        Command command = tu.parseCommand(input, true, true);
+    	TranslationHelper.helpTestVisitor(output, TRANSLATOR, command);	
+    }
+    
+    @Test public void testPositionalOrderByUnion() throws Exception {
+        String input = "SELECT a as b, b as a from (SELECT intkey as a, stringkey as b from BQT1.smalla union SELECT intkey as a, stringkey as b from BQT1.smalla) as x order by a"; 
+        String output = "SELECT v_0.c_0, v_0.c_1 FROM (SELECT g_1.IntKey AS c_0, g_1.StringKey AS c_1 FROM SmallA AS g_1 UNION SELECT g_0.IntKey AS c_0, g_0.StringKey AS c_1 FROM SmallA AS g_0) AS v_0 ORDER BY 2"; 
+
+        TranslationUtility tu = TranslationHelper.getTranslationUtility(TranslationHelper.BQT_VDB, null);
+        Command command = tu.parseCommand(input, true, true);
+    	TranslationHelper.helpTestVisitor(output, TRANSLATOR, command);	
+    }
+    
+    @Test public void testPositionalOrderByUnion1() throws Exception {
+        String input = "SELECT a as b from (SELECT intkey as a, stringkey as b from BQT1.smalla union SELECT intkey as a, stringkey as b from BQT1.smalla) as x order by x.b"; 
+        String output = "SELECT v_0.c_0 FROM (SELECT g_1.IntKey AS c_0, g_1.StringKey AS c_1 FROM SmallA AS g_1 UNION SELECT g_0.IntKey AS c_0, g_0.StringKey AS c_1 FROM SmallA AS g_0) AS v_0 ORDER BY v_0.c_1"; 
+
+        TranslationUtility tu = TranslationHelper.getTranslationUtility(TranslationHelper.BQT_VDB, null);
+        Command command = tu.parseCommand(input, true, true);
+    	TranslationHelper.helpTestVisitor(output, TRANSLATOR, command);	
+    }
     
     @Test public void testByteToString() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "string", "cast(1 AS varchar(4000))"); 
@@ -194,13 +222,13 @@ public class TestTeradataTranslator {
 	
 	@Test public void testRightFunction() throws Exception {
 		String input = "SELECT INTKEY, FLOATNUM FROM BQT1.SmallA WHERE right(FLOATNUM, 2) <> 0 ORDER BY INTKEY";
-		String out = "SELECT SmallA.IntKey, SmallA.FloatNum FROM SmallA WHERE substr(cast(SmallA.FloatNum AS varchar(100)),(character_length(cast(SmallA.FloatNum AS varchar(100)))-2+1)) <> '0' ORDER BY SmallA.IntKey";
+		String out = "SELECT SmallA.IntKey, SmallA.FloatNum FROM SmallA WHERE substr(cast(SmallA.FloatNum AS varchar(4000)),(character_length(cast(SmallA.FloatNum AS varchar(4000)))-2+1)) <> '0' ORDER BY 1";
 		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null, input, out, TRANSLATOR);		
 	}
 	
 	@Test public void testLocateFunction() throws Exception {
 		String input = "SELECT INTKEY, STRINGKEY, SHORTVALUE FROM BQT1.SmallA WHERE (LOCATE(0, STRINGKEY) = 2) OR (LOCATE(2, SHORTVALUE, 4) = 6) ORDER BY intkey";
-		String out = "SELECT SmallA.IntKey, SmallA.StringKey, SmallA.ShortValue FROM SmallA WHERE position('0' in SmallA.StringKey) = 2 OR position('2' in substr(cast(SmallA.ShortValue AS varchar(100)),4)) = 6 ORDER BY SmallA.IntKey";
+		String out = "SELECT SmallA.IntKey, SmallA.StringKey, SmallA.ShortValue FROM SmallA WHERE position('0' in SmallA.StringKey) = 2 OR position('2' in substr(cast(SmallA.ShortValue AS varchar(4000)),4)) = 6 ORDER BY 1";
 		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null, input, out, TRANSLATOR);		
 	}	
 }

@@ -33,7 +33,7 @@ import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
-@SuppressWarnings("nls")
+@SuppressWarnings({"nls", "unchecked"})
 public class TestSTree {
 	
 	@Test public void testRemoveAll() throws TeiidComponentException {
@@ -42,7 +42,7 @@ public class TestSTree {
 		e1.setType(Integer.class);
 		ElementSymbol e2 = new ElementSymbol("y");
 		e2.setType(String.class);
-		List elements = Arrays.asList(e1, e2);
+		List<ElementSymbol> elements = Arrays.asList(e1, e2);
 		STree map = bm.createSTree(elements, "1", 1);
 		
 		for (int i = 20000; i > 0; i--) {
@@ -83,7 +83,7 @@ public class TestSTree {
 		
 		ElementSymbol e1 = new ElementSymbol("x");
 		e1.setType(Integer.class);
-		List elements = Arrays.asList(e1);
+		List<ElementSymbol> elements = Arrays.asList(e1);
 		STree map = bm.createSTree(elements, "1", 1);
 		
 		int size = (1<<16)+(1<<4)+1;

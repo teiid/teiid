@@ -256,6 +256,7 @@ final class ContentHandlerProxyReceiver extends ProxyReceiver {
 
 	public void close() throws XPathException {
 		reciever.close();
+		super.close();
 	}
 
 	public void comment(CharSequence content, int locationId, int properties)
@@ -265,6 +266,7 @@ final class ContentHandlerProxyReceiver extends ProxyReceiver {
 
 	public void endDocument() throws XPathException {
 		reciever.endDocument();
+		super.endDocument() ;
 	}
 
 	public void endElement() throws XPathException {
@@ -285,6 +287,7 @@ final class ContentHandlerProxyReceiver extends ProxyReceiver {
 	}
 
 	public void open() throws XPathException {
+		super.open();
 		reciever.open();
 	}
 
@@ -295,10 +298,12 @@ final class ContentHandlerProxyReceiver extends ProxyReceiver {
 
 	public void setPipelineConfiguration(PipelineConfiguration config) {
 		reciever.setPipelineConfiguration(config);
+		super.setPipelineConfiguration(config);
 	}
 
 	public void setSystemId(String systemId) {
 		reciever.setSystemId(systemId);
+		super.setSystemId(systemId);
 	}
 
 	public void setUnparsedEntity(String name, String systemID,
@@ -311,6 +316,7 @@ final class ContentHandlerProxyReceiver extends ProxyReceiver {
 	}
 
 	public void startDocument(int properties) throws XPathException {
+		super.startDocument(properties);
 		reciever.startDocument(properties);
 	}
 

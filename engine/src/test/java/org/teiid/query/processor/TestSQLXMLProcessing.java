@@ -202,8 +202,8 @@ public class TestSQLXMLProcessing {
         String sql = "select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"1\">second</b></a>', xml) columns val xml path '.') as x"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<b>first</b>"),
-        		Arrays.asList("<b x=\"1\">second</b>"),
+        		Arrays.asList("<b xmlns=\"\">first</b>"),
+        		Arrays.asList("<b xmlns=\"\" x=\"1\">second</b>"),
         };    
     
         process(sql, expected);
@@ -286,7 +286,7 @@ public class TestSQLXMLProcessing {
     	String sql = "select xmlquery('/a/b' passing xmlparse(document '<a><b x=''1''/><b x=''2''/></a>') null on empty)"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<b x=\"1\"/><b x=\"2\"/>")
+        		Arrays.asList("<b xmlns=\"\" x=\"1\"/><b xmlns=\"\" x=\"2\"/>")
         };    
     
         process(sql, expected);

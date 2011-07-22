@@ -284,8 +284,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         if(elementID != null) {
             elemShortName = getName(elementID);            
         } else {
-            String elementName = obj.getName();
-            elemShortName = getShortName(elementName);
+            elemShortName = obj.getName();
         }
 
         // Check whether a subclass wants to replace the element name to use in special circumstances

@@ -59,6 +59,7 @@ public class JBossCacheFactory implements CacheFactory, Serializable{
 			
 			if (!this.cacheStore.getCacheStatus().allowInvocations()) {
 				this.cacheStore.start();
+				this.cacheStore.getRegion(this.cacheStore.getRoot().getFqn(), true).activate();
 			}
 			
 			Node cacheRoot = this.cacheStore.getRoot().addChild(Fqn.fromString("Teiid")); //$NON-NLS-1$
@@ -67,6 +68,7 @@ public class JBossCacheFactory implements CacheFactory, Serializable{
 			
 			Region cacheRegion = this.cacheStore.getRegion(node.getFqn(), true);
 			cacheRegion.setEvictionRegionConfig(buildEvictionConfig(node.getFqn(), config));
+			cacheRegion.activate();
 						
 			JBossCache jc = null;
 			if (config != null && config.getPolicy().equals(Policy.EXPIRATION)) {

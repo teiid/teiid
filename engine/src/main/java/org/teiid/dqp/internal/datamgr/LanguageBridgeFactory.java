@@ -115,6 +115,7 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
+import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.translator.TranslatorException;
 
@@ -179,9 +180,9 @@ public class LanguageBridgeFactory {
 
     /* Query */
     Select translate(Query query) {
-        List symbols = query.getSelect().getSymbols();
+        List<SelectSymbol> symbols = query.getSelect().getSymbols();
         List<DerivedColumn> translatedSymbols = new ArrayList<DerivedColumn>(symbols.size());
-        for (Iterator i = symbols.iterator(); i.hasNext();) {
+        for (Iterator<SelectSymbol> i = symbols.iterator(); i.hasNext();) {
             SingleElementSymbol symbol = (SingleElementSymbol)i.next();
             String alias = null;
             if(symbol instanceof AliasSymbol) {
@@ -375,7 +376,7 @@ public class LanguageBridgeFactory {
 
     In translate(SetCriteria criteria) {
         Collection expressions = criteria.getValues();
-        List translatedExpressions = new ArrayList();
+        List<org.teiid.language.Expression> translatedExpressions = new ArrayList<org.teiid.language.Expression>();
         for (Iterator i = expressions.iterator(); i.hasNext();) {
             translatedExpressions.add(translate((Expression)i.next()));
         }
@@ -423,13 +424,13 @@ public class LanguageBridgeFactory {
         return new SubqueryComparison(translate(criteria.getLeftExpression()),
                                   operator,
                                   quantifier,
-                                  translate((QueryCommand)criteria.getCommand()));
+                                  translate(criteria.getCommand()));
     }
 
     SubqueryIn translate(SubquerySetCriteria criteria) {
         return new SubqueryIn(translate(criteria.getExpression()),
                                   criteria.isNegated(),
-                                  translate((QueryCommand)criteria.getCommand()));
+                                  translate(criteria.getCommand()));
     }
 
     Not translate(NotCriteria criteria) {
@@ -462,7 +463,7 @@ public class LanguageBridgeFactory {
             if(items.get(i).isUnrelated() || (!set && symbol instanceof ElementSymbol)){
             	orderByItem = new SortSpecification(direction, translate(symbol));                                
             } else {
-            	orderByItem = new SortSpecification(direction, new ColumnReference(null, symbol.getOutputName(), null, symbol.getType()));
+            	orderByItem = new SortSpecification(direction, new ColumnReference(null, SingleElementSymbol.getShortName(symbol.getOutputName()), null, symbol.getType()));
             }
             orderByItem.setNullOrdering(items.get(i).getNullOrdering());
             translatedItems.add(orderByItem);
@@ -558,7 +559,7 @@ public class LanguageBridgeFactory {
     }
 
     ColumnReference translate(ElementSymbol symbol) {
-        ColumnReference element = new ColumnReference(translate(symbol.getGroupSymbol()), symbol.getOutputName(), null, symbol.getType());
+        ColumnReference element = new ColumnReference(translate(symbol.getGroupSymbol()), SingleElementSymbol.getShortName(symbol.getOutputName()), null, symbol.getType());
         if (element.getTable().getMetadataObject() == null) {
             return element;
         }
@@ -746,10 +747,10 @@ public class LanguageBridgeFactory {
     
     /* Batched Updates */
     BatchedUpdates translate(BatchedUpdateCommand command) {
-        List updates = command.getUpdateCommands();
+        List<Command> updates = command.getUpdateCommands();
         List<org.teiid.language.Command> translatedUpdates = new ArrayList<org.teiid.language.Command>(updates.size());
-        for (Iterator i = updates.iterator(); i.hasNext();) {
-            translatedUpdates.add(translate((Command)i.next()));
+        for (Iterator<Command> i = updates.iterator(); i.hasNext();) {
+            translatedUpdates.add(translate(i.next()));
         }
         return new BatchedUpdates(translatedUpdates);
     }

@@ -49,8 +49,12 @@ public class TestSqlServerConversionVisitor {
     private static SQLServerExecutionFactory trans = new SQLServerExecutionFactory();
     
     @BeforeClass
-    public static void setup() throws TranslatorException {
+    public static void oneTimeSetup() throws TranslatorException {
         trans.start();
+    }
+    
+    public void setUp() throws Exception {
+    	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2005);
     }
 
     public String getTestVDB() {
@@ -137,6 +141,25 @@ public class TestSqlServerConversionVisitor {
     @Test public void testConvert() throws Exception {
         String input = "select convert(timestampvalue, date), convert(timestampvalue, string), convert(datevalue, string) from bqt1.smalla"; //$NON-NLS-1$
         String output = "SELECT cast(replace(convert(varchar, SmallA.TimestampValue, 102), '.', '-') AS datetime), convert(varchar, SmallA.TimestampValue, 21), replace(convert(varchar, SmallA.DateValue, 102), '.', '-') FROM SmallA"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(),
+            input, 
+            output);        
+    }
+    
+    @Test public void testConvertDate() throws Exception {
+        String input = "select stringkey from bqt1.smalla where BQT1.SmallA.DateValue IN (convert('2000-01-12', date), convert('2000-02-02', date))"; //$NON-NLS-1$
+        String output = "SELECT SmallA.StringKey FROM SmallA WHERE SmallA.DateValue IN (CAST('2000-01-12 00:00:00.0' AS DATETIME), CAST('2000-02-02 00:00:00.0' AS DATETIME))"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(),
+            input, 
+            output);        
+    }
+    
+    @Test public void testConvertDate2008() throws Exception {
+    	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
+        String input = "select stringkey from bqt1.smalla where BQT1.SmallA.DateValue IN (convert('2000-01-12', date), convert('2000-02-02', date))"; //$NON-NLS-1$
+        String output = "SELECT SmallA.StringKey FROM SmallA WHERE SmallA.DateValue IN (CAST('2000-01-12' AS DATE), CAST('2000-02-02' AS DATE))"; //$NON-NLS-1$
                
         helpTestVisitor(getBQTVDB(),
             input, 

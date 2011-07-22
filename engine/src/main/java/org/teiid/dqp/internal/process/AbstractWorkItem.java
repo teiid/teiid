@@ -26,7 +26,6 @@ import javax.resource.spi.work.Work;
 import javax.resource.spi.work.WorkEvent;
 import javax.resource.spi.work.WorkListener;
 
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.logging.LogManager;
 
 
@@ -43,23 +42,14 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
     
     private ThreadState threadState = ThreadState.MORE_WORK;
     private volatile boolean isProcessing;
-    private Thread callingThread;
-    
-    public AbstractWorkItem(Thread callingThread) {
-    	this.callingThread = callingThread;
-    }
     
     public void run() {
-    	do {
-			startProcessing();
-			try {
-				process();
-			} finally {
-				if (!endProcessing()) {
-					break;
-				}
-			}
-    	} while (!isDoneProcessing());
+		startProcessing();
+		try {
+			process();
+		} finally {
+			endProcessing();
+		}
     }
     
     synchronized ThreadState getThreadState() {
@@ -79,10 +69,7 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
     	this.threadState = ThreadState.WORKING;
 	}
     
-    /**
-     * @return true if processing should be continued
-     */
-    final private synchronized boolean endProcessing() {
+    private synchronized void endProcessing() {
     	isProcessing = false;
     	logTrace("end processing"); //$NON-NLS-1$
     	switch (this.threadState) {
@@ -92,21 +79,20 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
 	        		this.threadState = ThreadState.DONE;
 	        	} else {
 		    		this.threadState = ThreadState.IDLE;
-		    		return pauseProcessing();
+		    		pauseProcessing();
 	        	}
 	    		break;
 	    	case MORE_WORK:
 	    		if (isDoneProcessing()) {
 	    			logTrace("done processing - ignoring more"); //$NON-NLS-1$
 	        		this.threadState = ThreadState.DONE;
-	        	} else if (this.callingThread == null) {
-        			resumeProcessing();
+	        	} else {
+	        		resumeProcessing();
 	        	}
 	    		break;
     		default:
     			throw new IllegalStateException("Should not END on " + this.threadState); //$NON-NLS-1$
     	}
-    	return this.callingThread != null;
     }
     
     protected boolean isIdle() {
@@ -117,8 +103,9 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
     	moreWork(true);
     }
     
-    final protected synchronized void moreWork(boolean ignoreDone) {
+    protected synchronized void moreWork(boolean ignoreDone) {
     	logTrace("more work"); //$NON-NLS-1$
+    	this.notifyAll();
     	switch (this.threadState) {
 	    	case WORKING:
 	    		this.threadState = ThreadState.MORE_WORK;
@@ -127,15 +114,7 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
 	    		break;
 	    	case IDLE:
 	    		this.threadState = ThreadState.MORE_WORK;
-        		if (this.callingThread != null) {
-        			if (this.callingThread == Thread.currentThread()) {
-        				run(); //restart with the calling thread
-        			} else {
-        				this.notifyAll(); //notify the waiting caller
-        			}
-        		} else {
-        			resumeProcessing();
-        		}
+	    		resumeProcessing();
 	    		break;
 			default:
 				if (!ignoreDone) {
@@ -151,32 +130,7 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
     
     protected abstract void process();
 
-	protected boolean pauseProcessing() {
-		if (this.callingThread != null && !shouldPause()) {
-			return false;
-		}
-		while (this.callingThread != null && this.getThreadState() == ThreadState.IDLE) {
-			try {
-				this.wait(); //the lock should already be held
-			} catch (InterruptedException e) {
-				interrupted(e);
-			}
-		}
-		return this.callingThread != null;
-	}
-	
-	/**
-	 * only called for synch processing
-	 */
-	protected boolean shouldPause() {
-		return false;
-	}
-
-	/**
-	 * only called for synch processing
-	 */
-	protected void interrupted(InterruptedException e) {
-		throw new TeiidRuntimeException(e);
+	protected void pauseProcessing() {
 	}
     
     protected abstract void resumeProcessing();

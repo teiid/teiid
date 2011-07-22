@@ -250,10 +250,9 @@
                             <code>boolean</code>
                         </entry>						
                         <entry>
-                            <para>A change was made in JDBC4 so that when an 'Alias' is used it will
-							now be returned as the label.   Prior to this, it was returned as
-							the name.   Setting this property to false will enable
-							backwards compatibility when JDBC3 and older support is still required.
+                           <para>A change was made in JDBC4 to return unaliased column names as the ResultSetMetadata column name. 
+                            Prior to this, if a column alias were used it was returned as the column name.   Setting this property to false will enable
+							backwards compatibility when JDBC3 and older support is still required.  Defaults to true.
 							</para>
                         </entry>
                     </row>						

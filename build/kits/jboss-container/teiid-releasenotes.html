@@ -34,7 +34,9 @@
 	<LI><B>Streaming XQuery</B> - in situations where document projection applies if the XMLQUERY/XMLTABLE path expressions meet certain conditions, then the incoming document will not only be projected, but the independent subtrees will be processed without loading the entire document.  This allows for nearly arbitrarily large XML documents to be processed.  See the Reference for more.
 	<LI><B>Logging Procedures</B> - added SYSADMIN.isLoggable and SYSADMIN.logMsg to aid in debugging procedure logic.
 	<LI><B>ANSI OFFSET/FETCH FIRST</B> - instead of the limit clause, a standard OFFSET and/or FETCH FIRST/NEXT clause can be used to limit results.
+	<LI><B>ODBC Cursors</B> - Capability to use "UseDeclareFetch" with ODBC is added. This enables user to read the results in batches, especially useful when dealing with large row count of results.
 </UL>
+
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
 <ul>
   <li>TRANSLATE/HAS CRITERIA has been deprecated.  An alternative approach to update procedures will be introduced in a subsequent version.
@@ -45,6 +47,8 @@
 <h4>from 7.4</h4>
 <ul>
   <li>OFFSET was added as a keyword. 
+  <li>ColumnReference.getName will always return just the element name.  Previously it inconsistently returned the qualified and unqualified form depending upon where the ColumnReference appeared.
+  <li>As per JDBC4, ResultSetMetadata.getColumnName will return the unaliased column name if available rather than return the alias.  Set useJDBC4ColumnNameAndLabelSemantics to false to use the alias name as the column name.
 </ul>
 
 <h4>from 7.3</h4>

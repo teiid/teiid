@@ -93,15 +93,23 @@ public class DQPCore implements DQP {
 		private long creationTime = System.currentTimeMillis();
 		private DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		private List<CompletionListener<T>> completionListeners = new LinkedList<CompletionListener<T>>();
+		private String parentName;
 
 		public FutureWork(final Callable<T> processor, int priority) {
 			super(processor);
+			this.parentName = Thread.currentThread().getName();
 			this.priority = priority;
 		}
 		
 		public FutureWork(final Runnable processor, T result, int priority) {
 			super(processor, result);
 			this.priority = priority;
+		}
+		
+		@Override
+		public void run() {
+			LogManager.logDetail(LogConstants.CTX_DQP, "Running task for parent thread", parentName); //$NON-NLS-1$
+			super.run();
 		}
 		
 		@Override
@@ -344,6 +352,7 @@ public class DQPCore implements DQP {
 			}
 		}
         if (runInThread) {
+        	workItem.useCallingThread = true;
         	workItem.run();
         }
         return resultsFuture;
@@ -721,6 +730,8 @@ public class DQPCore implements DQP {
         processorDataManager.setMetadataRepository(metadataRepository);
 		dataTierMgr = new TempTableDataManager(processorDataManager, this.bufferManager, this.processWorkerPool, this.rsCache, this.matTables, this.cacheFactory);
         dataTierMgr.setEventDistributor(eventDistributor);
+        
+        LogManager.logDetail(LogConstants.CTX_DQP, "DQPCore started maxThreads", this.config.getMaxThreads(), "maxActivePlans", this.maxActivePlans, "source concurrency", this.userRequestSourceConcurrency); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	
 	public void setBufferService(BufferService service) {
