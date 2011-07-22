@@ -75,6 +75,7 @@
 <h4>from 7.4</h4>
 <ul>
   <li>ColumnReference.getName will always return just the element name.  Previously it inconsistently returned the qualified and unqualified form depending upon where the ColumnReference appeared.
+  <li>As per JDBC4, ResultSetMetadata.getColumnName will return the unaliased column name if available rather than return the alias.  Set useJDBC4ColumnNameAndLabelSemantics to false to use the alias name as the column name.
 </ul>
 
 <h4>from 7.3</h4>

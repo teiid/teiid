@@ -222,6 +222,12 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		TestMMDatabaseMetaData.compareResultSet(rs);
 	}	
 	
+	@Test public void testColumnMetadataWithAlias() throws Exception {
+		PreparedStatement stmt = conn.prepareStatement("select ta.attname as x from pg_catalog.pg_attribute ta limit 1");
+		ResultSet rs = stmt.executeQuery();
+		TestMMDatabaseMetaData.compareResultSet(rs);
+	}	
+	
 	@Test public void testPreparedError() throws Exception {
 		PreparedStatement stmt = conn.prepareStatement("select cast(? as integer)");
 		stmt.setString(1, "a");

@@ -1,0 +1,6 @@
+varchar                                                          
+x                                                                
+PART_ID                                                          
+Row Count : 1
+getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
+x              12                             java.lang.String    x               varchar                                         2147483647            0             0         false            true             false       false                 1           false       true          false     true        
