@@ -984,7 +984,7 @@ public class TestOptimizer {
 
     @Test public void testDefect5282_2() {
         helpPlan("select count(*) FROM vm1.a4", example1(), //$NON-NLS-1$
-            new String[] { "SELECT 1 FROM pm1.g1" } );     //$NON-NLS-1$
+            new String[] { } );     //$NON-NLS-1$
     }
 
     @Test public void testDefect5282_3() {
@@ -6604,9 +6604,8 @@ public class TestOptimizer {
         bac.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
         bac.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         bac.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
-        helpPlan("select count(*) from agg3", metadata, new String[] {"SELECT COUNT(*) FROM (SELECT COUNT(*) AS c_0 FROM BQT1.SmallA AS g_0) AS v_0"}, new DefaultCapabilitiesFinder(bac), ComparisonMode.EXACT_COMMAND_STRING);
+        helpPlan("select count(*) from agg3", metadata, new String[] {}, new DefaultCapabilitiesFinder(bac), ComparisonMode.EXACT_COMMAND_STRING);
     }
-    
     
     @Test public void testMergeGroupBy1() throws Exception {
     	BasicSourceCapabilities caps = new BasicSourceCapabilities();

@@ -165,14 +165,6 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		        assignOutputElements(root.getLastChild(), outputElements, metadata, capFinder, rules, analysisRecord, context);
 		        break;
 		    case NodeConstants.Types.SOURCE: {
-		    	if (outputElements.isEmpty()) {
-		    		//we cannot completely filter an implicit grouping (this is a corner case)
-		            PlanNode grouping = NodeEditor.findNodePreOrder(root.getFirstChild(), NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE | NodeConstants.Types.JOIN);
-		    		if (grouping != null && !grouping.hasCollectionProperty(NodeConstants.Info.GROUP_COLS)) {
-		    			SymbolMap symbolMap = (SymbolMap) root.getProperty(NodeConstants.Info.SYMBOL_MAP);
-		                outputElements.add(symbolMap.getKeys().get(0).clone());
-		    		}
-	            }
 		        outputElements = (List<SingleElementSymbol>)determineSourceOutput(root, outputElements, metadata, capFinder);
 	            root.setProperty(NodeConstants.Info.OUTPUT_COLS, outputElements);
 	            List<SingleElementSymbol> childElements = filterVirtualElements(root, outputElements, metadata);
@@ -227,24 +219,27 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            	PlanNode next = root.getFirstChild();
 	            	NodeEditor.removeChildNode(root.getParent(), root);
 	            	
-	            	if (old.hasCollectionProperty(Info.GROUP_COLS)) {
-	    				SymbolMap symbolMap = (SymbolMap) old.getProperty(NodeConstants.Info.SYMBOL_MAP);
-	    				FrameUtil.convertFrame(next.getParent(), symbolMap.asMap().keySet().iterator().next().getGroupSymbol(), null, symbolMap.asMap(), metadata);
-	    				PlanNode limit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
-	    				limit.setProperty(Info.MAX_TUPLE_LIMIT, new Constant(1));
-	    				PlanNode parent = next.getParent();
-	    				while (parent.getParent() != null && parent.getParent().getType() != NodeConstants.Types.SOURCE) {
-	    					parent = parent.getParent();
-	    				}
+            		SymbolMap symbolMap = (SymbolMap) old.getProperty(NodeConstants.Info.SYMBOL_MAP);
+    				FrameUtil.convertFrame(next.getParent(), symbolMap.asMap().keySet().iterator().next().getGroupSymbol(), null, symbolMap.asMap(), metadata);
+    				PlanNode parent = next.getParent();
+    				while (parent.getParent() != null && parent.getParent().getType() != NodeConstants.Types.SOURCE) {
+    					parent = parent.getParent();
+    				}
+    				if (!old.hasCollectionProperty(Info.GROUP_COLS)) {
+    					//just lob off everything under the projection
+    					PlanNode project = NodeEditor.findNodePreOrder(parent, NodeConstants.Types.PROJECT);
+    					project.removeAllChildren();
+    				} else {
+    					PlanNode limit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
+        				limit.setProperty(Info.MAX_TUPLE_LIMIT, new Constant(1));
 	    				if (!rules.contains(RuleConstants.PUSH_LIMIT)) {
 	    					rules.push(RuleConstants.PUSH_LIMIT);
 	    				}
-    					parent.getFirstChild().addAsParent(limit);
-		            	execute(parent, metadata, capFinder, rules, analysisRecord, context);
-		            	return;
-	            	} 
-	            	root = next;
-	            }
+						parent.getFirstChild().addAsParent(limit);
+    				}
+	            	execute(parent, metadata, capFinder, rules, analysisRecord, context);
+	            	return;
+            	}
 	            
 	            // Call children recursively
 	            if(root.getChildCount() == 1) {
