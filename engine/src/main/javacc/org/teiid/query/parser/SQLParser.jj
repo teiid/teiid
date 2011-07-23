@@ -3456,9 +3456,11 @@ Expression windowSpecification(Expression agg, ParseInfo info) :
     <RPAREN>
     {
     	WindowFunction result = new WindowFunction();
+    	WindowSpecification ws = new WindowSpecification();
     	result.setFunction((AggregateSymbol)agg);
-    	result.setPartition(partitionList);
-    	result.setOrderBy(orderBy);
+    	ws.setPartition(partitionList);
+    	ws.setOrderBy(orderBy);
+    	result.setWindowSpecification(ws);
     	return result;
     }
 }

@@ -58,6 +58,7 @@ import org.teiid.language.SubqueryComparison;
 import org.teiid.language.SubqueryIn;
 import org.teiid.language.Update;
 import org.teiid.language.WindowFunction;
+import org.teiid.language.WindowSpecification;
 import org.teiid.language.With;
 import org.teiid.language.WithItem;
 
@@ -102,4 +103,5 @@ public interface LanguageObjectVisitor {
 	public void visit(With obj);
 	public void visit(WithItem obj);
 	public void visit(WindowFunction windowFunction);
+	public void visit(WindowSpecification windowSpecification);
 }

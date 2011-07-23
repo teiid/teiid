@@ -22,45 +22,38 @@
  
  package org.teiid.query.sql.symbol;
 
+import java.util.List;
+
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
-public class WindowFunction implements Expression {
+public class WindowSpecification implements LanguageObject {
 	
-	private AggregateSymbol function;
-	private WindowSpecification windowSpecification;
+	private List<Expression> partition;
+	private OrderBy orderBy;
 	
-	public WindowFunction() {
+	public WindowSpecification() {
 		
 	}
 	
-	public AggregateSymbol getFunction() {
-		return function;
+	public List<Expression> getPartition() {
+		return partition;
 	}
 	
-	public void setFunction(AggregateSymbol expression) {
-		this.function = expression;
-		this.function.setWindowed(true);
+	public void setPartition(List<Expression> grouping) {
+		this.partition = grouping;
 	}
 	
-	public WindowSpecification getWindowSpecification() {
-		return windowSpecification;
+	public OrderBy getOrderBy() {
+		return orderBy;
 	}
 	
-	public void setWindowSpecification(WindowSpecification windowSpecification) {
-		this.windowSpecification = windowSpecification;
-	}
-	
-	@Override
-	public Class<?> getType() {
-		return function.getType();
-	}
-
-	@Override
-	public boolean isResolved() {
-		return function.isResolved();
+	public void setOrderBy(OrderBy orderBy) {
+		this.orderBy = orderBy;
 	}
 
 	@Override
@@ -70,7 +63,7 @@ public class WindowFunction implements Expression {
 	
 	@Override
 	public int hashCode() {
-		return HashCodeUtil.hashCode(function.hashCode(), windowSpecification);
+		return HashCodeUtil.hashCode(0, partition, orderBy);
 	}
 	
 	@Override
@@ -78,19 +71,23 @@ public class WindowFunction implements Expression {
 		if (obj == this) {
 			return true;
 		}
-		if (!(obj instanceof WindowFunction)) {
+		if (!(obj instanceof WindowSpecification)) {
 			return false;
 		}
-		WindowFunction other = (WindowFunction)obj;
-		return EquivalenceUtil.areEqual(this.function, other.function) &&
-		EquivalenceUtil.areEqual(this.windowSpecification, other.windowSpecification);
+		WindowSpecification other = (WindowSpecification)obj;
+		return EquivalenceUtil.areEqual(this.partition, other.partition) &&
+		EquivalenceUtil.areEqual(this.orderBy, other.orderBy);
 	}
 	
 	@Override
-	public WindowFunction clone() {
-		WindowFunction clone = new WindowFunction();
-		clone.setFunction((AggregateSymbol) this.function.clone());
-		clone.setWindowSpecification(this.windowSpecification.clone());
+	public WindowSpecification clone() {
+		WindowSpecification clone = new WindowSpecification();
+		if (this.partition != null) {
+			clone.setPartition(LanguageObject.Util.deepClone(this.partition, Expression.class));
+		}
+		if (this.orderBy != null) {
+			clone.setOrderBy(this.orderBy.clone());
+		}
 		return clone;
 	}
 	

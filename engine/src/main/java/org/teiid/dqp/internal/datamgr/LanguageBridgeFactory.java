@@ -63,6 +63,7 @@ import org.teiid.language.SortSpecification;
 import org.teiid.language.SubqueryComparison;
 import org.teiid.language.SubqueryIn;
 import org.teiid.language.TableReference;
+import org.teiid.language.WindowSpecification;
 import org.teiid.language.With;
 import org.teiid.language.WithItem;
 import org.teiid.language.Argument.Direction;
@@ -461,7 +462,7 @@ public class LanguageBridgeFactory {
             Ordering direction = items.get(i).isAscending() ? Ordering.ASC: Ordering.DESC;
             
             SortSpecification orderByItem = null;                                
-            if(items.get(i).isUnrelated() || (!set && symbol instanceof ElementSymbol)){
+            if(!set && (items.get(i).isUnrelated() || symbol instanceof ElementSymbol)){
             	orderByItem = new SortSpecification(direction, translate(symbol));                                
             } else {
             	orderByItem = new SortSpecification(direction, new ColumnReference(null, SingleElementSymbol.getShortName(symbol.getOutputName()), null, symbol.getType()));
@@ -497,14 +498,17 @@ public class LanguageBridgeFactory {
     org.teiid.language.WindowFunction translate(WindowFunction windowFunction) {
     	org.teiid.language.WindowFunction result = new org.teiid.language.WindowFunction();
     	result.setFunction(translate(windowFunction.getFunction()));
-    	result.setOrderBy(translate(windowFunction.getOrderBy(), false));
-    	if (windowFunction.getPartition() != null) {
-	    	ArrayList<org.teiid.language.Expression> partition = new ArrayList<org.teiid.language.Expression>(windowFunction.getPartition().size());
-	    	for (Expression ex : windowFunction.getPartition()) {
-	    		partition.add(translate(ex));
+    	WindowSpecification ws = new WindowSpecification();
+    	ws.setOrderBy(translate(windowFunction.getWindowSpecification().getOrderBy(), false));
+    	List<Expression> partition = windowFunction.getWindowSpecification().getPartition();
+    	if (partition != null) {
+	    	ArrayList<org.teiid.language.Expression> partitionList = new ArrayList<org.teiid.language.Expression>(partition.size());
+	    	for (Expression ex : partition) {
+	    		partitionList.add(translate(ex));
 	    	}
-	    	result.setPartition(partition);
+	    	ws.setPartition(partitionList);
     	}
+    	result.setWindowSpecification(ws);
     	return result;
     }
 

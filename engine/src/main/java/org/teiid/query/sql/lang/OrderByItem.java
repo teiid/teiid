@@ -79,7 +79,7 @@ public class OrderByItem implements LanguageObject {
 	 * @return true if the expression does not appear in the select clause
 	 */
 	public boolean isUnrelated() {
-		return expressionPosition == null || expressionPosition == -1;
+		return getExpressionPosition() == -1;
 	}
 
 	@Override

@@ -1211,7 +1211,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	case RANK:
     	case DENSE_RANK:
     	case ROW_NUMBER:
-    		if (windowFunction.getOrderBy() == null) {
+    		if (windowFunction.getWindowSpecification().getOrderBy() == null) {
     			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.analytical_requires_order_by", windowFunction), windowFunction); //$NON-NLS-1$
     		}
     	}

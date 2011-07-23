@@ -126,6 +126,7 @@ import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.TextLine;
 import org.teiid.query.sql.symbol.WindowFunction;
+import org.teiid.query.sql.symbol.WindowSpecification;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
@@ -2056,23 +2057,28 @@ public class SQLStringVisitor extends LanguageVisitor {
     	append(SPACE);
     	append(OVER);
     	append(SPACE);
+    	append(windowFunction.getWindowSpecification());
+    }
+    
+    @Override
+    public void visit(WindowSpecification windowSpecification) {
     	append(Tokens.LPAREN);
     	boolean needsSpace = false;
-    	if (windowFunction.getPartition() != null) {
+    	if (windowSpecification.getPartition() != null) {
     		append(PARTITION);
     		append(SPACE);
     		append(BY);
     		append(SPACE);
-    		registerNodes(windowFunction.getPartition(), 0);
+    		registerNodes(windowSpecification.getPartition(), 0);
     		needsSpace = true;
     	}
-    	if (windowFunction.getOrderBy() != null) {
+    	if (windowSpecification.getOrderBy() != null) {
     		if (needsSpace) {
     			append(SPACE);
     		}
-    		append(windowFunction.getOrderBy());
+    		append(windowSpecification.getOrderBy());
     	}
-    	append(Tokens.RPAREN);
+    	append(Tokens.RPAREN);	
     }
 
     public static String escapeSinglePart( String part ) {

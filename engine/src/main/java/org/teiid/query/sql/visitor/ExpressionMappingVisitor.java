@@ -67,7 +67,7 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.query.sql.symbol.WindowFunction;
+import org.teiid.query.sql.symbol.WindowSpecification;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLParse;
 import org.teiid.query.sql.symbol.XMLSerialize;
@@ -450,11 +450,11 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     }
     
     @Override
-    public void visit(WindowFunction windowFunction) {
-    	if (windowFunction.getPartition() == null) {
+    public void visit(WindowSpecification windowSpecification) {
+    	if (windowSpecification.getPartition() == null) {
     		return;
     	}
-    	List<Expression> partition = windowFunction.getPartition();
+    	List<Expression> partition = windowSpecification.getPartition();
 		for (int i = 0; i < partition.size(); i++) {
     		partition.set(i, replaceExpression(partition.get(i)));
     	}

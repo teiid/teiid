@@ -22,38 +22,35 @@
  
  package org.teiid.language;
 
+import java.util.List;
+
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
-public class WindowFunction extends BaseLanguageObject implements Expression {
+public class WindowSpecification extends BaseLanguageObject {
 	
-	private AggregateFunction function;
-	private WindowSpecification windowSpecification;
+	private List<Expression> partition;
+	private OrderBy orderBy;
 	
-	public WindowFunction() {
+	public WindowSpecification() {
 		
 	}
 	
-	public AggregateFunction getFunction() {
-		return function;
+	public List<Expression> getPartition() {
+		return partition;
 	}
 	
-	public void setFunction(AggregateFunction expression) {
-		this.function = expression;
+	public void setPartition(List<Expression> grouping) {
+		this.partition = grouping;
 	}
 	
-	public WindowSpecification getWindowSpecification() {
-		return windowSpecification;
+	public OrderBy getOrderBy() {
+		return orderBy;
 	}
 	
-	public void setWindowSpecification(WindowSpecification windowSpecification) {
-		this.windowSpecification = windowSpecification;
-	}
-
-	@Override
-	public Class<?> getType() {
-		return function.getType();
+	public void setOrderBy(OrderBy orderBy) {
+		this.orderBy = orderBy;
 	}
 
 	@Override
@@ -63,19 +60,19 @@ public class WindowFunction extends BaseLanguageObject implements Expression {
 	
 	@Override
 	public int hashCode() {
-		return HashCodeUtil.hashCode(function.hashCode(), windowSpecification);
+		return HashCodeUtil.hashCode(partition.hashCode(), orderBy);
 	}
 	
 	public boolean equals(Object obj) {
 		if (obj == this) {
 			return true;
 		}
-		if (!(obj instanceof WindowFunction)) {
+		if (!(obj instanceof WindowSpecification)) {
 			return false;
 		}
-		WindowFunction other = (WindowFunction)obj;
-		return EquivalenceUtil.areEqual(this.function, other.function) &&
-		EquivalenceUtil.areEqual(this.windowSpecification, other.windowSpecification);
+		WindowSpecification other = (WindowSpecification)obj;
+		return EquivalenceUtil.areEqual(this.partition, other.partition) &&
+		EquivalenceUtil.areEqual(this.orderBy, other.orderBy);
 	}
 	
 }

@@ -97,6 +97,7 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.TextLine;
 import org.teiid.query.sql.symbol.WindowFunction;
+import org.teiid.query.sql.symbol.WindowSpecification;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
@@ -224,4 +225,5 @@ public abstract class LanguageVisitor {
     public void visit(AlterTrigger obj) {}
 
 	public void visit(WindowFunction windowFunction) {}
+	public void visit(WindowSpecification windowSpecification) {}
 }
