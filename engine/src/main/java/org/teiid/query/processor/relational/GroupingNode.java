@@ -22,12 +22,10 @@
 
 package org.teiid.query.processor.relational;
 
-import static org.teiid.query.analysis.AnalysisRecord.PROP_GROUP_COLS;
-import static org.teiid.query.analysis.AnalysisRecord.PROP_SORT_MODE;
+import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -42,6 +40,7 @@ import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.aggregate.AggregateFunction;
 import org.teiid.query.function.aggregate.ArrayAgg;
@@ -57,7 +56,6 @@ import org.teiid.query.function.aggregate.XMLAgg;
 import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.relational.SortUtility.Mode;
-import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -72,7 +70,7 @@ public class GroupingNode extends RelationalNode {
 
     // Grouping columns set by the planner 
 	private List sortElements;
-	private List sortTypes;
+	private List<OrderByItem> orderBy;
 	private boolean removeDuplicates;
     
     // Collection phase
@@ -129,10 +127,11 @@ public class GroupingNode extends RelationalNode {
      */
     public void setGroupingElements(List groupingElements) {
         this.sortElements = groupingElements;
-        if(groupingElements != null) {
-            sortTypes = Collections.nCopies(groupingElements.size(), Boolean.valueOf(OrderBy.ASC));
-        }
     }
+    
+    public void setOrderBy(List<OrderByItem> orderBy) {
+		this.orderBy = orderBy;
+	}
 
 	@Override
 	public void initialize(CommandContext context, BufferManager bufferManager,
@@ -305,8 +304,7 @@ public class GroupingNode extends RelationalNode {
             this.groupTupleSource = getCollectionTupleSource();
             this.phase = GROUP;
         } else {
-            this.sortUtility = new SortUtility(getCollectionTupleSource(), sortElements,
-                                                sortTypes, removeDuplicates?Mode.DUP_REMOVE_SORT:Mode.SORT, getBufferManager(),
+            this.sortUtility = new SortUtility(getCollectionTupleSource(), orderBy, removeDuplicates?Mode.DUP_REMOVE_SORT:Mode.SORT, getBufferManager(),
                                                 getConnectionID(), collectedExpressions);
             this.phase = SORT;
         }
@@ -421,8 +419,8 @@ public class GroupingNode extends RelationalNode {
 		GroupingNode clonedNode = new GroupingNode(super.getID());
 		super.copy(this, clonedNode);
 		clonedNode.sortElements = sortElements;
-		clonedNode.sortTypes = sortTypes;
 		clonedNode.removeDuplicates = removeDuplicates;
+		clonedNode.orderBy = orderBy;
 		return clonedNode;
 	}
 
@@ -438,7 +436,9 @@ public class GroupingNode extends RelationalNode {
             }
             props.addProperty(PROP_GROUP_COLS, groupCols);
         }
-        
+        if (orderBy != null) {
+        	props.addProperty(AnalysisRecord.PROP_SORT_COLS, orderBy.toString());
+        }
         props.addProperty(PROP_SORT_MODE, String.valueOf(this.removeDuplicates));
 
         return props;

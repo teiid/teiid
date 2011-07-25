@@ -53,6 +53,7 @@ import org.teiid.query.processor.relational.ArrayTableNode;
 import org.teiid.query.processor.relational.DependentAccessNode;
 import org.teiid.query.processor.relational.DependentProcedureAccessNode;
 import org.teiid.query.processor.relational.DependentProcedureExecutionNode;
+import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
 import org.teiid.query.processor.relational.GroupingNode;
 import org.teiid.query.processor.relational.InsertPlanExecutionNode;
 import org.teiid.query.processor.relational.JoinNode;
@@ -61,7 +62,6 @@ import org.teiid.query.processor.relational.MergeJoinStrategy;
 import org.teiid.query.processor.relational.NestedLoopJoinStrategy;
 import org.teiid.query.processor.relational.NestedTableJoinStrategy;
 import org.teiid.query.processor.relational.NullNode;
-import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
 import org.teiid.query.processor.relational.PlanExecutionNode;
 import org.teiid.query.processor.relational.ProjectIntoNode;
 import org.teiid.query.processor.relational.ProjectNode;
@@ -93,6 +93,7 @@ import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
@@ -377,8 +378,22 @@ public class PlanToProcessConverter {
 				break;
 			case NodeConstants.Types.GROUP:
 				GroupingNode gnode = new GroupingNode(getID());
-				gnode.setGroupingElements( (List) node.getProperty(NodeConstants.Info.GROUP_COLS) );
+				List<SingleElementSymbol> gCols = (List) node.getProperty(NodeConstants.Info.GROUP_COLS);
+				gnode.setGroupingElements( gCols );
 				gnode.setRemoveDuplicates(node.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL));
+				orderBy = (OrderBy) node.getProperty(Info.SORT_ORDER);
+				if (orderBy == null) {
+					if (gCols != null) {
+						orderBy = new OrderBy(gCols);
+					}
+				} else {
+					for (int i = orderBy.getOrderByItems().size(); i < gCols.size(); i++) {
+						orderBy.addVariable(gCols.get(i), OrderBy.ASC);
+					}
+				}
+				if (orderBy != null) {
+					gnode.setOrderBy(orderBy.getOrderByItems());
+				}
 				processNode = gnode;
 				break;
 

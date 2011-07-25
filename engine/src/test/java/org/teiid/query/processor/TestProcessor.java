@@ -7559,5 +7559,19 @@ public class TestProcessor {
         helpProcess(plan, dataManager, new List[] {Arrays.asList("a")});
     }
     
+    @Test public void testSortGroupCombination() throws Exception {
+        String sql = "select e2, max(e1) from pm1.g1 x group by e2 order by e2 desc"; //$NON-NLS-1$
+
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, new List[] {
+        		Arrays.asList(3, "a"), 
+        		Arrays.asList(2, "b"), 
+        		Arrays.asList(1, "c"), 
+        		Arrays.asList(0, "a")});
+    }
+    
     private static final boolean DEBUG = false;
 }

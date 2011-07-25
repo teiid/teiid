@@ -85,7 +85,8 @@ public class RulePlanSorts implements OptimizerRule {
 			} else {
 				root = checkForProjectOptimization(node, root, metadata, capFinder, record);
 			}
-			List<SingleElementSymbol> orderColumns = ((OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER)).getSortKeys();
+			OrderBy orderBy = (OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER);
+			List<SingleElementSymbol> orderColumns = orderBy.getSortKeys();
 			PlanNode possibleSort = NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE | NodeConstants.Types.ACCESS);
 			if (possibleSort != null) {
 				List exprs = (List)possibleSort.getProperty(Info.GROUP_COLS);
@@ -102,6 +103,7 @@ public class RulePlanSorts implements OptimizerRule {
 						NodeEditor.removeChildNode(node.getParent(), node);
 						node = nextNode;
 					}
+					possibleSort.setProperty(Info.SORT_ORDER, orderBy);
 				}
 				break;
 			} 
