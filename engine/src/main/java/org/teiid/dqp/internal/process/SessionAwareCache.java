@@ -32,6 +32,7 @@ import org.teiid.cache.Cachable;
 import org.teiid.cache.Cache;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
+import org.teiid.cache.CacheListener;
 import org.teiid.cache.DefaultCache;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.cache.CacheConfiguration.Policy;
@@ -307,4 +308,14 @@ public class SessionAwareCache<T> {
     public void setBufferManager(BufferManager bufferManager) {
     	this.bufferManager = bufferManager;
     }
+    
+	public void setListener(CacheListener<CacheID, T> listener) {
+		this.localCache.setListener(listener);
+		this.distributedCache.setListener(listener);
+	}
+	
+	public void removeListener() {
+		this.localCache.removeListener();
+		this.distributedCache.removeListener();		
+	}
 }

@@ -130,6 +130,7 @@ public class CachedResults implements Serializable, Cachable {
 				}
 				buffer = bufferManager.createTupleBuffer(schema, "cached", TupleSourceType.FINAL); //$NON-NLS-1$
 				buffer.setBatchSize(this.batchSize);
+				buffer.setId(this.uuid);
 				if (this.hint != null) {
 					buffer.setPrefersMemory(this.hint.getPrefersMemory());
 				}
@@ -142,6 +143,7 @@ public class CachedResults implements Serializable, Cachable {
 						return false;
 					}		
 					buffer.addTupleBatch(batch, true);
+					cache.remove(uuid+","+row); //$NON-NLS-1$
 				}
 				this.results = buffer;	
 				bufferManager.addTupleBuffer(this.results);

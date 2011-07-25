@@ -82,4 +82,14 @@ public interface Cache<K, V>  {
 	 * @return
 	 */
 	Set<K> keys();
+	
+	/**
+	 * set cache listener
+	 * @param listener
+	 */
+	void setListener(CacheListener<K, V> listener);
+	
+	
+	void removeListener();
+	
 }

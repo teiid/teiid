@@ -21,7 +21,11 @@
  */
 package org.teiid.cache.jboss;
 
+import java.util.Set;
+
 import org.jboss.cache.Fqn;
+import org.jboss.cache.Node;
+import org.jboss.cache.eviction.ExpirationAlgorithmConfig;
 import org.jboss.cache.notifications.annotation.NodeCreated;
 import org.jboss.cache.notifications.annotation.NodeEvicted;
 import org.jboss.cache.notifications.annotation.NodeLoaded;
@@ -33,14 +37,18 @@ import org.teiid.cache.CacheListener;
 
 
 @org.jboss.cache.notifications.annotation.CacheListener
-public class JBossCacheListener {
+public class JBossCacheListener<K,V> {
 
 	private CacheListener listener;
 	private Fqn rootFqn;
+	private JBossCache cache;
+	private org.jboss.cache.Cache<K,V> cacheStore;
 
-	public JBossCacheListener(Fqn fqn, CacheListener listener) {
+	public JBossCacheListener(Fqn fqn, org.jboss.cache.Cache cacheStore, JBossCache cache, CacheListener listener) {
 		this.rootFqn = fqn;
 		this.listener = listener;
+		this.cache = cache;
+		this.cacheStore = cacheStore;
 	}
 	
     @NodeCreated
@@ -55,4 +63,61 @@ public class JBossCacheListener {
     		listener.cacheChanged();
     	}
 	}
+    
+    @NodeCreated
+    public synchronized void cacheCreated(NodeEvent ne) {
+    	if (!ne.isPre() && !ne.isOriginLocal()) {
+	    	Fqn fqn = ne.getFqn();
+	    	if (fqn.isChildOrEquals(rootFqn)) {
+	    		Node<K,V> node = this.cacheStore.getNode(fqn);
+	    		if (node != null) {
+		    		Set<K> keys = node.getKeys();
+		    		for (K key:keys) {
+						if ((key instanceof String) && (key.equals(ExpirationAlgorithmConfig.EXPIRATION_KEY))) {
+							continue;
+						}	    			
+		    			listener.cacheCreated(key, cache.get(key));
+		    		}
+	    		}
+	    	}
+    	}
+    }
+    
+    @NodeRemoved
+    public synchronized void cacheRemoved(NodeEvent ne) {
+    	if (!ne.isPre() && !ne.isOriginLocal()) {
+	    	Fqn fqn = ne.getFqn();
+	    	if (fqn.isChildOrEquals(rootFqn)) {
+	    		Node<K,V> node = this.cacheStore.getNode(fqn);
+	    		if (node != null) {
+		    		Set<K> keys = node.getKeys();
+		    		for (K key:keys) {
+						if ((key instanceof String) && (key.equals(ExpirationAlgorithmConfig.EXPIRATION_KEY))) {
+							continue;
+						}	    			
+		    			listener.cacheRemoved(key, cache.get(key));
+		    		}
+	    		}
+	    	}
+    	}
+    }
+
+    @NodeModified
+    public synchronized void cacheModified(NodeEvent ne) {
+    	Fqn fqn = ne.getFqn();
+    	if (!ne.isPre() && !ne.isOriginLocal()) {
+	    	if (fqn.isChildOrEquals(rootFqn)) {
+	    		Node<K,V> node = this.cacheStore.getNode(fqn);
+	    		if (node != null) {
+		    		Set<K> keys = node.getKeys();
+		    		for (K key:keys) {
+						if ((key instanceof String) && (key.equals(ExpirationAlgorithmConfig.EXPIRATION_KEY))) {
+							continue;
+						}
+		    			listener.cacheModified(key, cache.get(key));
+		    		}
+	    		}
+	    	}
+    	}
+    }
 }

@@ -112,11 +112,13 @@ public class JBossCache<K, V> implements Cache<K, V> {
 		}
 	}
 	
-	public synchronized void addListener(CacheListener listener) {
-		this.cacheListener = new JBossCacheListener(this.rootFqn, listener);
+	@Override
+	public synchronized void setListener(CacheListener listener) {
+		this.cacheListener = new JBossCacheListener(this.rootFqn, this.cacheStore, this, listener);
 		this.cacheStore.addCacheListener(this.cacheListener);
 	}
 
+	@Override
 	public synchronized void removeListener() {
 		this.cacheStore.removeCacheListener(this.cacheListener);
 		this.cacheListener = null;	
