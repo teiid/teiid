@@ -7549,5 +7549,15 @@ public class TestProcessor {
         helpProcess(plan, dataManager, new List[] {Arrays.asList(1, 1)});
     }
     
+    @Test public void testUnorderedLimitWithProc() throws Exception {
+    	String sql = "select e1 from (exec pm1.sq1()) x limit 1";
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, new List[] {Arrays.asList("a")});
+    }
+    
     private static final boolean DEBUG = false;
 }
