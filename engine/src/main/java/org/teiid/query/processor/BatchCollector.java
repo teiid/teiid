@@ -150,7 +150,9 @@ public class BatchCollector {
             // Check for termination condition
             if(batch.getTerminationFlag()) {
             	done = true;
-            	buffer.close();
+            	if (!this.sourceNode.hasFinalBuffer()) {
+            		buffer.close();
+            	}
                 break;
             }
         }
