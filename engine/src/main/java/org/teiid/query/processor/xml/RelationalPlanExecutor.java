@@ -87,15 +87,20 @@ class RelationalPlanExecutor implements PlanExecutor {
 
     /**
      * @throws TeiidProcessingException 
-     * @see org.teiid.query.processor.xml.PlanExecutor#execute(java.util.Map)
+     * @see org.teiid.query.processor.xml.PlanExecutor#execute(java.util.Map, boolean)
      */
-    public void execute(Map referenceValues) throws TeiidComponentException, BlockedException, TeiidProcessingException {        
+    public void execute(Map referenceValues, boolean openOnly) throws TeiidComponentException, BlockedException, TeiidProcessingException {        
         if (this.tupleSource == null) {
         	setReferenceValues(referenceValues);
             this.tupleSource = new BatchIterator(internalProcessor);
+            if (openOnly) {
+            	internalProcessor.init();
+            }
         }
-        //force execution
-        this.tupleSource.hasNext();
+        if (!openOnly) {
+	        //force execution
+	        this.tupleSource.hasNext();
+        }
     }    
     
     void setReferenceValues(Map<ElementSymbol, Object> referencesValues) {

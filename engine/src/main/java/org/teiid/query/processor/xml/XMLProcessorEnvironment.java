@@ -26,10 +26,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.mapping.xml.ResultSetInfo;
@@ -84,6 +86,7 @@ public class XMLProcessorEnvironment {
     private static class ProgramState {
         private Program program;
         private int programCounter = 0;
+        private int lookaheadCounter;
         private int recursionCount = NOT_RECURSIVE;
         
         private static final int NOT_RECURSIVE = 0;
@@ -156,7 +159,7 @@ public class XMLProcessorEnvironment {
         this.programStack.addFirst(programState);
     }
 
-    public ProcessorInstruction getCurrentInstruction() {
+    public ProcessorInstruction getCurrentInstruction(XMLContext context) throws TeiidComponentException, TeiidProcessingException {
         ProgramState programState = this.programStack.getFirst();
         
         //Case 5266: account for an empty program on to the stack; 
@@ -169,6 +172,23 @@ public class XMLProcessorEnvironment {
         
         if (programState == null) {
             return null;
+        }
+        
+        //start all siblings
+        List<ProcessorInstruction> instrs = programState.program.getProcessorInstructions();
+        if (programState.programCounter >= programState.lookaheadCounter && instrs.size() > programState.programCounter + 1) {
+        	for (programState.lookaheadCounter = programState.programCounter; programState.lookaheadCounter < instrs.size(); programState.lookaheadCounter++) {
+        		ProcessorInstruction pi = instrs.get(programState.lookaheadCounter);
+        		if (pi instanceof ExecStagingTableInstruction) {
+        			//need to load staging tables prior to source queries
+        			break;
+        		}
+        		if (pi instanceof ExecSqlInstruction) {
+        			ExecSqlInstruction esi = (ExecSqlInstruction)pi;
+        			PlanExecutor pe = esi.getPlanExecutor(this, context);
+        			pe.execute(context.getReferenceValues(), true);
+        		}
+        	}
         }
         
         return programState.program.getInstructionAt(programState.programCounter);
@@ -251,8 +271,6 @@ public class XMLProcessorEnvironment {
         ProgramState initialProgramState = this.programStack.getLast();
         ProgramState newState = new ProgramState();
         newState.program = initialProgramState.program;
-        newState.programCounter = 0;
-        newState.recursionCount = ProgramState.NOT_RECURSIVE;
         clone.programStack.addFirst(newState);
                
         // XML results form and format
