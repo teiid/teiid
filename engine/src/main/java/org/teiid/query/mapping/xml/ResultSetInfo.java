@@ -66,6 +66,8 @@ public class ResultSetInfo {
     //joined source node state
     private int mappingClassNumber = 0;
     private ElementSymbol mappingClassSymbol;
+	private boolean inputSet;
+	private boolean isCritNullDependent;
     
     public ResultSetInfo(String resultName) {
         this(resultName, false);
@@ -176,4 +178,20 @@ public class ResultSetInfo {
     public boolean isStagedResult() {
         return this.stagedResult;
     }
+    
+	public boolean hasInputSet() {
+		return inputSet;
+	}
+
+	public void setInputSet(boolean inputSet) {
+		this.inputSet = inputSet;
+	}
+	
+	public void setCritNullDependent(boolean isCritNullDependent) {
+		this.isCritNullDependent = isCritNullDependent;
+	}
+	
+	public boolean isCritNullDependent(){
+		return this.isCritNullDependent;
+	}
 }

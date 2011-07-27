@@ -154,6 +154,15 @@ public class TestXMLPlanningEnhancements {
         return doc;  
     } 
     
+    @Test public void testThreeWayOrWithNestedSiblings() throws Exception {
+    	QueryMetadataInterface metadata = TestXMLProcessor.exampleMetadataNestedWithSibling();
+    	FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNestedWithSibling(metadata);
+    	String resultFile = "TestXMLPlanningEnhancements-testThreeWayOrWithNestedSiblings.xml"; //$NON-NLS-1$
+        String expectedDoc = TestXMLProcessor.readFile(resultFile);
+        
+        TestXMLProcessor.helpTestProcess("select * from xmltest.doc9c where itemid='003' or supplierid = '600' or orderid = '1'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
+    } 
+    
     @Test public void testBaseballPlayersDocDefect19541() throws Exception {
         
         QueryMetadataInterface metadata = RealMetadataFactory.exampleCase3225();

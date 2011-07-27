@@ -606,7 +606,7 @@ public class TestXMLProcessor {
         return RealMetadataFactory.createTransformationMetadata(metadataStore, "example1");
     }
 
-    public QueryMetadataInterface exampleMetadataNestedWithSibling() {
+    public static QueryMetadataInterface exampleMetadataNestedWithSibling() {
 		MetadataStore metadataStore = new MetadataStore();
         
 		// Create models
@@ -1231,7 +1231,7 @@ public class TestXMLProcessor {
     }
 
 	/** nested with sibling*/
-	private MappingDocument createXMLPlanNested2c() {
+	private static MappingDocument createXMLPlanNested2c() {
         
         MappingDocument doc = new MappingDocument(true);
         MappingElement root = doc.addChildElement(new MappingElement("Catalogs")); //$NON-NLS-1$
@@ -2256,7 +2256,7 @@ public class TestXMLProcessor {
         return dataMgr;
     }                    
 
-	private FakeDataManager exampleDataManagerNestedWithSibling(QueryMetadataInterface metadata) {
+	static FakeDataManager exampleDataManagerNestedWithSibling(QueryMetadataInterface metadata) {
 		FakeDataManager dataMgr = new FakeDataManager();
     
 		try { 

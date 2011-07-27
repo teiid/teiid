@@ -300,9 +300,7 @@ public class XMLQueryPlanner {
         
         Query currentQuery = contextQuery;
         
-        for (Iterator i = resultSets.iterator(); i.hasNext();) {
-            MappingSourceNode rsNode = (MappingSourceNode)i.next();
-            
+        for (MappingSourceNode rsNode : resultSets) {
             ResultSetInfo childRsInfo = rsNode.getResultSetInfo();
             
             QueryNode planNode = QueryUtil.getQueryNode(childRsInfo.getResultSetName(), planEnv.getGlobalMetadata());    
@@ -313,34 +311,18 @@ public class XMLQueryPlanner {
             updateSymbolMap(symbolMap, childRsInfo.getResultSetName(), inlineViewName, planEnv.getGlobalMetadata());
             
             // check if the criteria has been raised, if it is then we can update this as a join.
-            if (childRsInfo.isCriteriaRaised()) {
+            if (!rsInfo.isCritNullDependent() && childRsInfo.hasInputSet() && childRsInfo.isCriteriaRaised()) {
                 Query transformationQuery = (Query) command;
                 SubqueryFromClause sfc = (SubqueryFromClause)transformationQuery.getFrom().getClauses().get(0);
                 
                 Criteria joinCriteria = ((Query)childRsInfo.getCommand()).getCriteria();
-                
-                if (joinCriteria == null) {
-                    joinCriteria = QueryRewriter.TRUE_CRITERIA;
-                }
                 
                 joinCriteria = (Criteria)joinCriteria.clone();
                 
                 //update the from clause
                 FromClause clause = currentQuery.getFrom().getClauses().remove(0);
                 
-                JoinPredicate join = null;
-                
-                if (clause instanceof JoinPredicate) {
-                    join = (JoinPredicate)clause;
-                    
-                    FromClause right = join.getRightClause();
-                    
-                    JoinPredicate newRight = new JoinPredicate(right, sfc, JoinType.JOIN_LEFT_OUTER, Criteria.separateCriteriaByAnd(joinCriteria));
-                    
-                    join.setRightClause(newRight);
-                } else {
-                    join = new JoinPredicate(clause, sfc, JoinType.JOIN_LEFT_OUTER, Criteria.separateCriteriaByAnd(joinCriteria));
-                }
+                JoinPredicate join = new JoinPredicate(clause, sfc, JoinType.JOIN_LEFT_OUTER, Criteria.separateCriteriaByAnd(joinCriteria));
                 
                 currentQuery.getFrom().addClause(join);
                 

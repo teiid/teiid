@@ -122,6 +122,7 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
                         
             MappingSourceNode parent = sourceNode.getParentSourceNode();
             Collection<ElementSymbol> bindings = QueryUtil.getBindingElements(modifiedNode);
+            rsInfo.setInputSet(!bindings.isEmpty());
             // root source nodes do not have any inputset criteria on them; so there is no use in
             // going through the raising the criteria.
             // if the original query is not a select.. we are out of luck. we can expand on this later
