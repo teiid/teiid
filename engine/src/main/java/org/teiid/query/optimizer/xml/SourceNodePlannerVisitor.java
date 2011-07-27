@@ -127,7 +127,7 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
             // going through the raising the criteria.
             // if the original query is not a select.. we are out of luck. we can expand on this later
             // versions. make sure bindings are only to parent.
-            if (parent == null || !canRaiseInputset(command, bindings) || !areBindingsOnlyToNode(modifiedNode, parent)) {
+            if (!rsInfo.hasInputSet() || !canRaiseInputset(command, bindings) || !areBindingsOnlyToNode(modifiedNode, parent)) {
                 return;
             }
             
@@ -151,6 +151,10 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
                 else {
                     inputSetCriteria = Criteria.combineCriteria(inputSetCriteria, conjunct);
                 }
+            }
+            
+            if (inputSetCriteria == null) {
+            	return;
             }
             
             // Keep the criteria which is not reference based.
