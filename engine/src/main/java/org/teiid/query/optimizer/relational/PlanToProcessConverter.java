@@ -379,7 +379,6 @@ public class PlanToProcessConverter {
 			case NodeConstants.Types.GROUP:
 				GroupingNode gnode = new GroupingNode(getID());
 				List<SingleElementSymbol> gCols = (List) node.getProperty(NodeConstants.Info.GROUP_COLS);
-				gnode.setGroupingElements( gCols );
 				gnode.setRemoveDuplicates(node.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL));
 				orderBy = (OrderBy) node.getProperty(Info.SORT_ORDER);
 				if (orderBy == null) {

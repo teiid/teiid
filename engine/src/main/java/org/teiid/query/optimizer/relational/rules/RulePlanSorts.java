@@ -166,8 +166,28 @@ public class RulePlanSorts implements OptimizerRule {
 			if (!node.hasCollectionProperty(NodeConstants.Info.GROUP_COLS)) {
 				break;
 			}
+			List<SingleElementSymbol> output = (List<SingleElementSymbol>)node.getProperty(Info.OUTPUT_COLS);
+			boolean cardinalityDependent = false;
+			for (SingleElementSymbol singleElementSymbol : output) {
+				if (singleElementSymbol instanceof AggregateSymbol) {
+					AggregateSymbol agg = (AggregateSymbol)singleElementSymbol;
+					if (agg.isCardinalityDependent()) {
+						cardinalityDependent = true;
+						break;
+					}
+				}
+			}
 			if (mergeSortWithDupRemovalAcrossSource(node)) {
 				node.setProperty(NodeConstants.Info.IS_DUP_REMOVAL, true);
+				if (cardinalityDependent) {
+					PlanNode source = NodeEditor.findNodePreOrder(node, NodeConstants.Types.SOURCE);
+					List<SingleElementSymbol> sourceOutput = (List<SingleElementSymbol>)source.getProperty(Info.OUTPUT_COLS);
+					PlanNode child = node.getFirstChild();
+					while (child != source) {
+						child.setProperty(Info.OUTPUT_COLS, sourceOutput);
+						child = child.getFirstChild();
+					}
+				}
 			}
 			//TODO: check the join interesting order
 			parentBlocking = true;

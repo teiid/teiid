@@ -179,6 +179,8 @@ public class AggregateSymbol extends ExpressionSymbol {
 			return DataTypeManager.DefaultDataClasses.DOUBLE;
 		} else if (this.aggregate == Type.ARRAY_AGG) {
 			return DataTypeManager.DefaultDataClasses.OBJECT;
+		} else if (this.aggregate == Type.TEXTAGG) {
+			return DataTypeManager.DefaultDataClasses.BLOB;
 		} else {
 			return this.getExpression().getType();
 		}
