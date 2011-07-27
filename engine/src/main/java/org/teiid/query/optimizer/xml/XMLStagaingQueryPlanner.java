@@ -104,7 +104,7 @@ public class XMLStagaingQueryPlanner {
         ResultSetInfo rsInfo = sourceNode.getResultSetInfo();
 
         // If this node has been eligible for raising, it will be eligible for staging.
-        if (!rsInfo.isCriteriaRaised()) {
+        if (rsInfo.hasInputSet() && !rsInfo.isCriteriaRaised()) {
             return false;
         }
         
