@@ -121,4 +121,11 @@ public interface EventDistributor {
 	 */
 	void setViewDefinition(String vdbName, int vdbVersion, String schema, String viewName, String definition);
 	
+	/**
+	 * 
+	 * @param vdbName
+	 * @param vdbVersion
+	 * @param viewName
+	 */
+	void refreshMatView(String vdbName, int vdbVersion, String tableName);
 }

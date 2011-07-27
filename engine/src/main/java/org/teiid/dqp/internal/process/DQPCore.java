@@ -405,7 +405,7 @@ public class DQPCore implements DQP {
     	}
     }
     
-    void addWork(Runnable work) {
+    public void addWork(Runnable work) {
 		this.processWorkerPool.execute(work);
     }
     
