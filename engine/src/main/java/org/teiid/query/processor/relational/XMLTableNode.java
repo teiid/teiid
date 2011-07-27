@@ -266,9 +266,6 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	public void processRow(NodeInfo row) {
 		this.item = row;
 		rowCount++;
-		if (rowCount % 100 == 0) {
-			System.out.println(System.currentTimeMillis() + " " + rowCount);
-		}
 		try {
 			this.buffer.addTuple(processRow());
 		} catch (TeiidException e) {

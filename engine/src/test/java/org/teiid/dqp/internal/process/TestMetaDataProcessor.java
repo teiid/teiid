@@ -155,7 +155,17 @@ public class TestMetaDataProcessor {
         helpCheckNumericAttributes(response, 2, 22, 20, 0);
         helpCheckNumericAttributes(response, 3, 22, 20, 0);
     }
-    
+
+    @Test public void testWindowFunction() throws Exception {
+        QueryMetadataInterface metadata = TestMetaDataProcessor.examplePrivatePhysicalModel(); 
+        String sql = "SELECT min(e1) over () FROM pm1.g2"; //$NON-NLS-1$
+        
+        MetadataResult response = helpTestQuery(metadata, sql, TestMetaDataProcessor.examplePrivatePhysicalModelVDB());
+        helpCheckNumericAttributes(response, 0, 21, 19, 4);
+        assertEquals("e1", response.getColumnMetadata()[0].get(ResultsMetadataConstants.ELEMENT_NAME)); //$NON-NLS-1$
+        assertEquals("win_min", response.getColumnMetadata()[0].get(ResultsMetadataConstants.ELEMENT_LABEL)); //$NON-NLS-1$
+    }
+
     @Test public void testMetadataGenerationForAllTypes() throws Exception {
         Set<String> dataTypes = DataTypeManager.getAllDataTypeNames();
         for (String type : dataTypes) {
@@ -246,7 +256,7 @@ public class TestMetaDataProcessor {
 	    Table pm1g2 = RealMetadataFactory.createPhysicalGroup("g2", pm1); //$NON-NLS-1$
 	    
 	    // Create physical elements
-	    List<Column> pm1g1e = RealMetadataFactory.createElements(pm1g1, 
+	    RealMetadataFactory.createElements(pm1g1, 
 	        new String[] { "e1"}, //$NON-NLS-1$ 
 	        new String[] { DataTypeManager.DefaultDataTypes.SHORT});
 	

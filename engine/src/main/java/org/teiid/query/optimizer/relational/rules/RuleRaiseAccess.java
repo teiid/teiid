@@ -44,6 +44,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
@@ -132,6 +133,12 @@ public final class RuleRaiseAccess implements OptimizerRule {
                  */
                 if (FrameUtil.isProcedure(parentNode)) {
                 	return null;
+                }
+                
+                PlanNode orderBy = NodeEditor.findParent(parentNode, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
+                if (orderBy != null && orderBy.hasBooleanProperty(Info.UNRELATED_SORT) && !canRaiseOverSort(accessNode, metadata, capFinder, orderBy, record, false)) {
+                	//this project node logically has the responsibility of creating the sort keys
+            		return null;
                 }
                                 
                 return performRaise(rootNode, accessNode, parentNode);                

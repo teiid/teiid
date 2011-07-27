@@ -363,6 +363,27 @@ public class TestDQPCore {
     	assertEquals(1, agds.getExecuteCount().get());
     }
     
+    @Test public void testUsingFinalBuffer() throws Exception {
+    	String sql = "select intkey from bqt1.smalla union select 1";
+    	((BufferManagerImpl)core.getBufferManager()).setProcessorBatchSize(2);
+    	agds.sleep = 500;
+        RequestMessage reqMsg = exampleRequestMessage(sql);
+        Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
+        ResultsMessage rm = message.get(500000, TimeUnit.MILLISECONDS);
+        assertNull(rm.getException());
+        assertEquals(1, rm.getResults().length);
+
+        message = core.processCursorRequest(reqMsg.getExecutionId(), 3, 2);
+        rm = message.get(500000, TimeUnit.MILLISECONDS);
+        assertNull(rm.getException());
+        assertEquals(1, rm.getResults().length);
+        
+        message = core.processCursorRequest(reqMsg.getExecutionId(), 3, 2);
+        rm = message.get(500000, TimeUnit.MILLISECONDS);
+        assertNull(rm.getException());
+        assertEquals(0, rm.getResults().length);
+    }
+    
     @Test public void testPreparedPlanInvalidation() throws Exception {
         String sql = "insert into #temp select * FROM vqt.SmallB"; //$NON-NLS-1$
         String userName = "1"; //$NON-NLS-1$

@@ -19,53 +19,56 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+
 package org.teiid.query.function.aggregate;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidProcessingException;
-import org.teiid.query.util.CommandContext;
+import org.teiid.query.processor.relational.GroupingNode;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 
-public class ArrayAgg extends AggregateFunction {
+/**
+ * computes rank/dense_rank
+ */
+public class RankingFunction extends AggregateFunction {
 	
-    private ArrayList<Object> result;
-    private CommandContext context;
-    
-    public ArrayAgg(CommandContext context) {
-    	this.context = context;
-    }
-
-	@Override
-	public void addInputDirect(Object input, List<?> tuple) throws TeiidComponentException, TeiidProcessingException {
-		if (this.result == null) {
-			this.result = new ArrayList<Object>();
-		}
-		this.result.add(input);
-		if (this.result.size() > 1000) {
-			throw new AssertionError("Exceeded the max allowable array size of 1000."); //$NON-NLS-1$
-		}
-	}
-
-	@Override
-	public Object getResult() throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException,TeiidProcessingException {
-		if (this.result == null) {
-			return null;
-		}
-		return this.result.toArray();
+	private int count = 0;
+	private int result = 0;
+	private int[] orderIndexes;
+	private Type type;
+	private List<?> previousTuple;
+	
+	public RankingFunction(Type function, int[] orderIndexes) {
+		this.type = function;
+		this.orderIndexes = orderIndexes;
 	}
 
 	@Override
 	public void reset() {
-		this.result = null;
+		count = 0;
+		result = 0;
 	}
 	
 	@Override
-	public boolean respectsNull() {
-		return true;
+	public void addInputDirect(Object input, List<?> tuple)
+			throws FunctionExecutionException, ExpressionEvaluationException,
+			TeiidComponentException {
+		if (previousTuple == null || !GroupingNode.sameGroup(orderIndexes, tuple, previousTuple)) {
+			count++;
+			result = count;
+		} else if (type == Type.RANK) {
+			count++;
+		}
+		previousTuple = tuple;
+	}
+	
+	@Override
+	public Object getResult() throws FunctionExecutionException,
+			ExpressionEvaluationException, TeiidComponentException {
+		return result;
 	}
 
 }

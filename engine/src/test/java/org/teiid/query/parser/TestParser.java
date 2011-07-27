@@ -6849,13 +6849,13 @@ public class TestParser {
     @Test public void testWindowFunction() throws Exception {
     	String sql = "select row_number() over (partition by x order by y) from g";
     	Query query = new Query();
-    	WindowFunction wf = new WindowFunction();
+    	WindowFunction wf = new WindowFunction("expr");
     	wf.setFunction(new AggregateSymbol("expr", "ROW_NUMBER", false, null));
     	WindowSpecification ws = new WindowSpecification();
     	ws.setPartition(new ArrayList<Expression>(Arrays.asList(new ElementSymbol("x"))));
     	ws.setOrderBy(new OrderBy(Arrays.asList(new ElementSymbol("y"))));
     	wf.setWindowSpecification(ws);
-    	query.setSelect(new Select(Arrays.asList(new ExpressionSymbol("x", wf))));
+    	query.setSelect(new Select(Arrays.asList(wf)));
     	query.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("g")))));
         helpTest(sql, "SELECT ROW_NUMBER() OVER (PARTITION BY x ORDER BY y) FROM g", query);
     }

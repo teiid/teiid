@@ -26,7 +26,6 @@ import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -41,6 +40,7 @@ import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.aggregate.AggregateFunction;
 import org.teiid.query.function.aggregate.ArrayAgg;
@@ -55,12 +55,14 @@ import org.teiid.query.function.aggregate.TextAgg;
 import org.teiid.query.function.aggregate.XMLAgg;
 import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.processor.BatchCollector.BatchProducer;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.TextLine;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
@@ -69,9 +71,34 @@ import org.teiid.query.util.CommandContext;
 
 public class GroupingNode extends RelationalNode {
 
-    // Grouping columns set by the planner 
-	private List<Expression> sortElements;
-	private List<Boolean> sortTypes;
+    static class ProjectingTupleSource extends
+			BatchCollector.BatchProducerTupleSource {
+    	
+    	private Evaluator eval;
+    	private List<Expression> collectedExpressions;
+    	
+		ProjectingTupleSource(BatchProducer sourceNode, Evaluator eval, List<Expression> expressions) {
+			super(sourceNode);
+			this.eval = eval;
+			this.collectedExpressions = expressions;
+		}
+
+		@Override
+		protected List<Object> updateTuple(List<?> tuple) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
+			int columns = collectedExpressions.size();
+		    List<Object> exprTuple = new ArrayList<Object>(columns);
+		    for(int col = 0; col<columns; col++) { 
+		        // The following call may throw BlockedException, but all state to this point
+		        // is saved in class variables so we can start over on building this tuple
+		        Object value = eval.evaluate(collectedExpressions.get(col), tuple);
+		        exprTuple.add(value);
+		    }
+		    return exprTuple;
+		}
+	}
+
+	// Grouping columns set by the planner 
+	private List<OrderByItem> orderBy;
 	private boolean removeDuplicates;
 	private SymbolMap outputMapping;
     
@@ -79,6 +106,7 @@ public class GroupingNode extends RelationalNode {
     private int phase = COLLECTION;
     private Map elementMap;                    // Map of incoming symbol to index in source elements
     private List<Expression> collectedExpressions;         // Collected Expressions
+    private int distinctCols = -1;
        
     // Sort phase
     private SortUtility sortUtility;
@@ -87,14 +115,14 @@ public class GroupingNode extends RelationalNode {
     
     // Group phase
     private AggregateFunction[] functions;
-    private int[] conditions;
-    private List lastRow;
-	private List currentGroupTuple;
+    private List<?> lastRow;
+	private List<?> currentGroupTuple;
 	private Evaluator eval;
 
     private static final int COLLECTION = 1;
     private static final int SORT = 2;
     private static final int GROUP = 3;
+	private int[] indexes;
 
 	public GroupingNode(int nodeID) {
 		super(nodeID);
@@ -122,19 +150,9 @@ public class GroupingNode extends RelationalNode {
 		this.removeDuplicates = removeDuplicates;
 	}
 
-    /**
-     * Called by the planner to initialize the grouping node.  Set the list of grouping
-     * expressions - these may be either elements or expressions and the list itself may
-     * be null to indicate an implied grouping on all columns
-     * @param groupingElements
-     * @since 4.2
-     */
-    public void setGroupingElements(List<Expression> groupingElements) {
-        this.sortElements = groupingElements;
-        if(groupingElements != null) {
-            sortTypes = Collections.nCopies(groupingElements.size(), Boolean.valueOf(OrderBy.ASC));
-        }
-    }
+    public void setOrderBy(List<OrderByItem> orderBy) {
+		this.orderBy = orderBy;
+	}
     
     public void setOutputMapping(SymbolMap outputMapping) {
 		this.outputMapping = outputMapping;
@@ -150,20 +168,28 @@ public class GroupingNode extends RelationalNode {
 		}
 		
         // Incoming elements and lookup map for evaluating expressions
-        List sourceElements = this.getChildren()[0].getElements();
+        List<SingleElementSymbol> sourceElements = this.getChildren()[0].getElements();
         this.elementMap = createLookupMap(sourceElements);
 
     	// List should contain all grouping columns / expressions as we need those for sorting
-        if(this.sortElements != null) {
-            this.collectedExpressions = new ArrayList<Expression>(this.sortElements.size() + getElements().size());
-            this.collectedExpressions.addAll(sortElements);
+        if(this.orderBy != null) {
+            this.collectedExpressions = new ArrayList<Expression>(this.orderBy.size() + getElements().size());
+            for (OrderByItem item : this.orderBy) {
+            	Expression ex = SymbolMap.getExpression(item.getSymbol());
+                this.collectedExpressions.add(ex);
+			}
+            if (removeDuplicates) {
+            	for (SingleElementSymbol ses : sourceElements) {
+            		collectExpression(SymbolMap.getExpression(ses));
+            	}
+            	distinctCols = collectedExpressions.size();
+            }
         } else {
             this.collectedExpressions = new ArrayList<Expression>(getElements().size());
         }
         
         // Construct aggregate function state accumulators
         functions = new AggregateFunction[getElements().size()];
-        conditions = new int[getElements().size()];
         for(int i=0; i<getElements().size(); i++) {
             Expression symbol = (Expression) getElements().get(i);
             if (this.outputMapping != null) {
@@ -171,12 +197,8 @@ public class GroupingNode extends RelationalNode {
             }
             Class<?> outputType = symbol.getType();
             Class<?> inputType = symbol.getType();
-            conditions[i] = -1;
             if(symbol instanceof AggregateSymbol) {
                 AggregateSymbol aggSymbol = (AggregateSymbol) symbol;
-                if (aggSymbol.getCondition() != null) {
-                	conditions[i] = collectExpression(aggSymbol.getCondition());
-                }
                 if(aggSymbol.getExpression() == null) {
                     functions[i] = new Count();
                 } else {
@@ -244,6 +266,9 @@ public class GroupingNode extends RelationalNode {
                 	}
                     functions[i].setExpressionIndex(index);
                 }
+            	if (aggSymbol.getCondition() != null) {
+                	functions[i].setConditionIndex(collectExpression(aggSymbol.getCondition()));
+                }
             } else {
                 functions[i] = new ConstantFunction();
                 functions[i].setExpressionIndex(this.collectedExpressions.indexOf(symbol));
@@ -288,42 +313,39 @@ public class GroupingNode extends RelationalNode {
     }
 	
 	public TupleSource getCollectionTupleSource() {
-		
 		final RelationalNode sourceNode = this.getChildren()[0];
-		
-		return new BatchCollector.BatchProducerTupleSource(sourceNode) {
-			
-			@Override
-			protected List updateTuple(List tuple) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
-				int columns = collectedExpressions.size();
-	            List<Object> exprTuple = new ArrayList<Object>(columns);
-	            for(int col = 0; col<columns; col++) { 
-	                // The following call may throw BlockedException, but all state to this point
-	                // is saved in class variables so we can start over on building this tuple
-	                Object value = eval.evaluate(collectedExpressions.get(col), tuple);
-	                exprTuple.add(value);
-	            }
-	            return exprTuple;
-			}
-		};
-		
+		return new ProjectingTupleSource(sourceNode, eval, collectedExpressions);
 	}
 
     private void collectionPhase() {
     	eval = new Evaluator(elementMap, getDataManager(), getContext());
-        if(this.sortElements == null) {
+        if(this.orderBy == null) {
             // No need to sort
             this.groupTupleSource = getCollectionTupleSource();
             this.phase = GROUP;
         } else {
-        	//create a temporary positional schema
-        	List<ElementSymbol> schema = new ArrayList<ElementSymbol>();
-        	for (int i = 0; i < collectedExpressions.size(); i++) {
-        		schema.add(new ElementSymbol(String.valueOf(i)));
+        	List<NullOrdering> nullOrdering = new ArrayList<NullOrdering>(orderBy.size());
+        	List<Boolean> sortTypes = new ArrayList<Boolean>(orderBy.size());
+        	int size = orderBy.size();
+        	if (this.removeDuplicates) {
+        		//sort on all inputs
+        		size = distinctCols;
         	}
-            this.sortUtility = new SortUtility(getCollectionTupleSource(), schema.subList(0, sortElements.size()),
-                                                sortTypes, removeDuplicates?Mode.DUP_REMOVE_SORT:Mode.SORT, getBufferManager(),
-                                                getConnectionID(), schema);
+        	int[] sortIndexes = new int[size];
+        	for (int i = 0; i < size; i++) {
+        		if (i < this.orderBy.size()) {
+        			OrderByItem item = this.orderBy.get(i);
+        			nullOrdering.add(item.getNullOrdering());
+        			sortTypes.add(item.isAscending());
+        		} else {
+        			nullOrdering.add(null);
+        			sortTypes.add(OrderBy.ASC);
+        		}
+        		sortIndexes[i] = i; 
+        	}
+        	this.indexes = Arrays.copyOf(sortIndexes, orderBy.size());
+            this.sortUtility = new SortUtility(getCollectionTupleSource(), removeDuplicates?Mode.DUP_REMOVE_SORT:Mode.SORT, getBufferManager(),
+                    getConnectionID(), collectedExpressions, sortTypes, nullOrdering, sortIndexes);
             this.phase = SORT;
         }
     }
@@ -349,7 +371,7 @@ public class GroupingNode extends RelationalNode {
                 // First row we've seen
                 lastRow = currentGroupTuple;
 
-            } else if(! sameGroup(currentGroupTuple, lastRow)) {
+            } else if(! sameGroup(indexes, currentGroupTuple, lastRow)) {
                 // Close old group
                 List<Object> row = new ArrayList<Object>(functions.length);
                 for(int i=0; i<functions.length; i++) {
@@ -371,7 +393,7 @@ public class GroupingNode extends RelationalNode {
             updateAggregates(currentGroupTuple);
             currentGroupTuple = null;
         }
-        if(lastRow != null || sortElements == null) {
+        if(lastRow != null || orderBy == null) {
             // Close last group
             List<Object> row = new ArrayList<Object>(functions.length);
             for(int i=0; i<functions.length; i++) {
@@ -385,16 +407,13 @@ public class GroupingNode extends RelationalNode {
         return pullBatch();
     }
 
-    private boolean sameGroup(List newTuple, List oldTuple) {
-        // Check for no grouping columns
-        if(sortElements == null) {
-            return true;
-        }
-
-        // Walk backwards through sort cols as the last columns are most likely to be different
-        for(int i=sortElements.size()-1; i>=0; i--) {
-            Object oldValue = oldTuple.get(i);
-            Object newValue = newTuple.get(i);
+	public static boolean sameGroup(int[] indexes, List<?> newTuple, List<?> oldTuple) {
+		if (indexes == null) {
+			return true;
+		}
+		for(int i=indexes.length-1; i>=0; i--) {
+            Object oldValue = oldTuple.get(indexes[i]);
+            Object newValue = newTuple.get(indexes[i]);
 
             if(oldValue == null) {
                 if(newValue != null) {
@@ -417,9 +436,6 @@ public class GroupingNode extends RelationalNode {
     throws TeiidComponentException, TeiidProcessingException {
 
         for(int i=0; i<functions.length; i++) {
-        	if (conditions[i] != -1 && !Boolean.TRUE.equals(tuple.get(conditions[i]))) {
-    			continue;
-        	}
             functions[i].addInput(tuple);
         }
     }
@@ -433,7 +449,7 @@ public class GroupingNode extends RelationalNode {
 
 	protected void getNodeString(StringBuffer str) {
 		super.getNodeString(str);
-		str.append(sortElements);
+		str.append(orderBy);
 		if (outputMapping != null) {
 			str.append(outputMapping);
 		}
@@ -442,10 +458,9 @@ public class GroupingNode extends RelationalNode {
 	public Object clone(){
 		GroupingNode clonedNode = new GroupingNode(super.getID());
 		super.copy(this, clonedNode);
-		clonedNode.sortElements = sortElements;
-		clonedNode.sortTypes = sortTypes;
 		clonedNode.removeDuplicates = removeDuplicates;
 		clonedNode.outputMapping = outputMapping;
+		clonedNode.orderBy = orderBy;
 		return clonedNode;
 	}
 
@@ -453,15 +468,14 @@ public class GroupingNode extends RelationalNode {
         // Default implementation - should be overridden
     	PlanNode props = super.getDescriptionProperties();
 
-        if(sortElements != null) {
-            int elements = sortElements.size();
+        if(orderBy != null) {
+            int elements = orderBy.size();
             List<String> groupCols = new ArrayList<String>(elements);
             for(int i=0; i<elements; i++) {
-                groupCols.add(this.sortElements.get(i).toString());
+                groupCols.add(this.orderBy.get(i).toString());
             }
             props.addProperty(PROP_GROUP_COLS, groupCols);
         }
-        
         props.addProperty(PROP_SORT_MODE, String.valueOf(this.removeDuplicates));
 
         return props;

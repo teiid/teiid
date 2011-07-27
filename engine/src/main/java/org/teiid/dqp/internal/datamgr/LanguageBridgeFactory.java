@@ -192,24 +192,17 @@ public class LanguageBridgeFactory {
                 symbol = ((AliasSymbol)symbol).getSymbol();
             }
 
-            org.teiid.language.Expression iExp = null;
-            if(symbol instanceof ElementSymbol) {
-                iExp = translate((ElementSymbol)symbol);
-            } else if(symbol instanceof AggregateSymbol) {
-                iExp = translate((AggregateSymbol)symbol);
-            } else if(symbol instanceof ExpressionSymbol) {
-                iExp = translate(((ExpressionSymbol)symbol).getExpression());
-            }
+            org.teiid.language.Expression iExp = translate(symbol);
 
             DerivedColumn selectSymbol = new DerivedColumn(alias, iExp);
             translatedSymbols.add(selectSymbol);
         }
     	List<TableReference> items = null;
     	if (query.getFrom() != null) {
-	    	List clauses = query.getFrom().getClauses();
+	    	List<FromClause> clauses = query.getFrom().getClauses();
 	        items = new ArrayList<TableReference>(clauses.size());
-	        for (Iterator i = clauses.iterator(); i.hasNext();) {
-	            items.add(translate((FromClause)i.next()));
+	        for (Iterator<FromClause> i = clauses.iterator(); i.hasNext();) {
+	            items.add(translate(i.next()));
 	        }
     	}
 		Select q = new Select(translatedSymbols, query
@@ -485,8 +478,12 @@ public class LanguageBridgeFactory {
             return translate((ScalarSubquery)expr);
         } else if (expr instanceof SearchedCaseExpression) {
             return translate((SearchedCaseExpression)expr);
-        } else if (expr instanceof SingleElementSymbol) {
-            return translate((SingleElementSymbol)expr);
+        } else if (expr instanceof ElementSymbol) {
+            return translate((ElementSymbol)expr);
+        } else if (expr instanceof AggregateSymbol) {
+            return translate((AggregateSymbol)expr);
+        } else if (expr instanceof ExpressionSymbol) {
+            return translate((ExpressionSymbol)expr);
         } else if (expr instanceof Criteria) {
         	return translate((Criteria)expr);
         } else if (expr instanceof WindowFunction) {
@@ -563,18 +560,6 @@ public class LanguageBridgeFactory {
         return new org.teiid.language.ScalarSubquery(translate(ss.getCommand()));
     }
 
-    org.teiid.language.Expression translate(SingleElementSymbol symbol) {
-        if (symbol == null) return null;
-        if (symbol instanceof ElementSymbol) {
-            return translate((ElementSymbol)symbol);
-        } else if (symbol instanceof AggregateSymbol) {
-            return translate((AggregateSymbol)symbol);
-        } else if (symbol instanceof ExpressionSymbol) {
-            return translate((ExpressionSymbol)symbol);
-        }
-        throw new AssertionError();
-    }
-
     org.teiid.language.Expression translate(AliasSymbol symbol) {
         return translate(symbol.getSymbol());
     }
@@ -603,7 +588,6 @@ public class LanguageBridgeFactory {
     org.teiid.language.Expression translate(ExpressionSymbol symbol) {
         return translate(symbol.getExpression());
     }
-
 
     /* Insert */
     org.teiid.language.Insert translate(Insert insert) {

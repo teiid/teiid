@@ -169,6 +169,10 @@ public class STree {
 		return null;
 	}
 	
+	public List find(List n) throws TeiidComponentException {
+		return find(n, new LinkedList<SearchResult>());
+	}
+	
 	public List insert(List tuple, InsertMode mode, int sizeHint) throws TeiidComponentException {
 		LinkedList<SearchResult> places = new LinkedList<SearchResult>();
 		List match = null;

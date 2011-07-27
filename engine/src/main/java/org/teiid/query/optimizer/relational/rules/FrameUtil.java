@@ -285,7 +285,10 @@ public class FrameUtil {
             }               
             if (!singleMapping) {
                 //add back the anon group
-                groups.add(((SymbolMap)node.getProperty(Info.SYMBOL_MAP)).asMap().keySet().iterator().next().getGroupSymbol());
+                SymbolMap property = (SymbolMap)node.getProperty(Info.SYMBOL_MAP);
+                if (!property.asMap().isEmpty()) {
+                	groups.add(property.asMap().keySet().iterator().next().getGroupSymbol());
+                }
             }
         } else if (type == NodeConstants.Types.SOURCE || type == NodeConstants.Types.ACCESS) {
             convertAccessPatterns(symbolMap, node);

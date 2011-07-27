@@ -58,6 +58,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.tempdata.TempTableStore;
@@ -231,6 +232,8 @@ public class MetaDataProcessor {
             return createElementMetadata(label, (ElementSymbol) symbol);        
         } else if(symbol instanceof AggregateSymbol) {
             return createAggregateMetadata(label, (AggregateSymbol) symbol);
+        } else if (symbol instanceof WindowFunction) {
+        	return createAggregateMetadata(label, ((WindowFunction) symbol).getFunction());
         }
         return createTypedMetadata(label, symbol);            
     }

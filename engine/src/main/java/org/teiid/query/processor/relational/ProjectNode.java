@@ -22,7 +22,7 @@
 
 package org.teiid.query.processor.relational;
 
-import static org.teiid.query.analysis.AnalysisRecord.PROP_SELECT_COLS;
+import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,26 +37,24 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.util.Assertion;
-import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.processor.ProcessorDataManager;
-import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
-import org.teiid.query.sql.symbol.SelectSymbol;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.util.CommandContext;
 
 
 public class ProjectNode extends SubqueryAwareRelationalNode {
 
-	private List selectSymbols;
+	private List<? extends SingleElementSymbol> selectSymbols;
 
     // Derived element lookup map
     private Map elementMap;
     private boolean needsProject = true;
+    private List<Expression> expressions;
+    private int[] projectionIndexes;
 
     // Saved state when blocked on evaluating a row - must be reset
     private TupleBatch currentBatch;
@@ -81,11 +79,11 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
      * return List of select symbols
      * @return List of select symbols
      */
-    public List getSelectSymbols() {
+    public List<? extends SingleElementSymbol> getSelectSymbols() {
         return this.selectSymbols;
     }
 
-	public void setSelectSymbols(List symbols) {
+	public void setSelectSymbols(List<? extends SingleElementSymbol> symbols) {
 		this.selectSymbols = symbols;
 	}
 	
@@ -95,55 +93,50 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
 		super.initialize(context, bufferManager, dataMgr);
 
         // Do this lazily as the node may be reset and re-used and this info doesn't change
-        if(elementMap == null) {
-            //in the case of select with no from, there is no child node
-            //simply return at this point
-            if(this.getChildren()[0] == null){
-                elementMap = new HashMap();
-                return;
+        if(elementMap != null) {
+        	return;
+        }
+    	this.projectionIndexes = new int[this.selectSymbols.size()];
+    	Arrays.fill(this.projectionIndexes, -1);
+    	
+    	this.expressions = new ArrayList<Expression>(this.selectSymbols.size());
+    	for (SingleElementSymbol ses : this.selectSymbols) {
+			this.expressions.add(SymbolMap.getExpression(ses));
+		}
+        //in the case of select with no from, there is no child node
+        //simply return at this point
+        if(this.getChildren()[0] == null){
+            elementMap = new HashMap();
+            return;
+        }
+
+        // Create element lookup map for evaluating project expressions
+        List childElements = this.getChildren()[0].getElements();
+        this.elementMap = createLookupMap(childElements);
+
+        // Check whether project needed at all - this occurs if:
+        // 1. outputMap == null (see previous block)
+        // 2. project elements are either elements or aggregate symbols (no processing required)
+        // 3. order of input values == order of output values
+        needsProject = childElements.size() != getElements().size();
+        for(int i=0; i<selectSymbols.size(); i++) {
+            SingleElementSymbol symbol = selectSymbols.get(i);
+            
+            if(symbol instanceof AliasSymbol) {
+                Integer index = (Integer) elementMap.get(symbol);
+                if(index != null && index.intValue() == i) {
+                	projectionIndexes[i] = index;
+                    continue;
+                }
+                symbol = ((AliasSymbol)symbol).getSymbol();
             }
 
-            // Create element lookup map for evaluating project expressions
-            List childElements = this.getChildren()[0].getElements();
-            this.elementMap = createLookupMap(childElements);
-
-            // Check whether project needed at all - this occurs if:
-            // 1. outputMap == null (see previous block)
-            // 2. project elements are either elements or aggregate symbols (no processing required)
-            // 3. order of input values == order of output values
-            if(childElements.size() > 0) {
-                // Start by assuming project is not needed
-                needsProject = false;
-                
-                if(childElements.size() != getElements().size()) {
-                    needsProject = true;                    
-                } else {
-                    for(int i=0; i<selectSymbols.size(); i++) {
-                        SelectSymbol symbol = (SelectSymbol) selectSymbols.get(i);
-                        
-                        if(symbol instanceof AliasSymbol) {
-                            Integer index = (Integer) elementMap.get(symbol);
-                            if(index != null && index.intValue() == i) {
-                                continue;
-                            }
-                            symbol = ((AliasSymbol)symbol).getSymbol();
-                        }
-    
-                        if(symbol instanceof ElementSymbol || symbol instanceof AggregateSymbol) {
-                            Integer index = (Integer) elementMap.get(symbol);
-                            if(index == null || index.intValue() != i) {
-                                // input / output element order is not the same
-                                needsProject = true;
-                                break;
-                            }
-    
-                        } else {
-                            // project element is either a constant or a function
-                            needsProject = true;
-                            break;
-                        }
-                    }
-                }
+            Integer index = (Integer) elementMap.get(symbol);
+            if(index == null || index.intValue() != i) {
+                // input / output element order is not the same
+                needsProject = true;
+            } else {
+            	projectionIndexes[i] = index;
             }
         }
     }
@@ -171,14 +164,14 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
         }
 
         while (currentRow <= currentBatch.getEndRow() && !isBatchFull()) {
-    		List tuple = currentBatch.getTuple(currentRow);
+    		List<?> tuple = currentBatch.getTuple(currentRow);
 
-			List projectedTuple = new ArrayList(selectSymbols.size());
+			List<Object> projectedTuple = new ArrayList<Object>(selectSymbols.size());
 
 			// Walk through symbols
-            for(int i=0; i<selectSymbols.size(); i++) {
-				SelectSymbol symbol = (SelectSymbol) selectSymbols.get(i);
-				updateTuple(symbol, tuple, projectedTuple);
+            for(int i=0; i<expressions.size(); i++) {
+				Expression symbol = expressions.get(i);
+				updateTuple(symbol, i, tuple, projectedTuple);
 			}
 
             // Add to batch
@@ -196,28 +189,14 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
     	return pullBatch();
 	}
 
-	private void updateTuple(SelectSymbol symbol, List values, List tuple)
+	private void updateTuple(Expression symbol, int projectionIndex, List<?> values, List<Object> tuple)
 		throws BlockedException, TeiidComponentException, ExpressionEvaluationException {
 
-        if (symbol instanceof AliasSymbol) {
-            // First check AliasSymbol itself
-            Integer index = (Integer) elementMap.get(symbol);
-            if(index != null) {
-                tuple.add(values.get(index.intValue()));
-                return;
-            }   
-            // Didn't find it, so try aliased symbol below
-            symbol = ((AliasSymbol)symbol).getSymbol();
-        }
-        
-        Integer index = (Integer) elementMap.get(symbol);
-        if(index != null) {
-			tuple.add(values.get(index.intValue()));
-        } else if(symbol instanceof ExpressionSymbol) {
-            Expression expression = ((ExpressionSymbol)symbol).getExpression();
-			tuple.add(getEvaluator(this.elementMap).evaluate(expression, values));
-        } else {
-            Assertion.failed(QueryPlugin.Util.getString("ERR.015.006.0034", symbol.getClass().getName())); //$NON-NLS-1$
+        int index = this.projectionIndexes[projectionIndex];
+        if(index != -1) {
+			tuple.add(values.get(index));
+        } else { 
+			tuple.add(getEvaluator(this.elementMap).evaluate(symbol, values));
 		}
 	}
 

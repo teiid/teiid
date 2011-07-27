@@ -78,7 +78,7 @@ public class BatchCollector {
 		}
 
 		@Override
-		public List<?> nextTuple() throws TeiidComponentException,
+		public List<Object> nextTuple() throws TeiidComponentException,
 				TeiidProcessingException {
 			while (true) {
 				if(sourceBatch == null) {
@@ -104,7 +104,7 @@ public class BatchCollector {
 		}
 		
 		@SuppressWarnings("unused")
-		protected List updateTuple(List tuple) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
+		protected List<?> updateTuple(List<?> tuple) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 			return tuple;
 		}
 
@@ -150,7 +150,9 @@ public class BatchCollector {
             // Check for termination condition
             if(batch.getTerminationFlag()) {
             	done = true;
-            	buffer.close();
+            	if (!this.sourceNode.hasFinalBuffer()) {
+            		buffer.close();
+            	}
                 break;
             }
         }

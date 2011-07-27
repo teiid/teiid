@@ -158,4 +158,9 @@ public class SortingFilter extends AggregateFunction {
         // Return
         return this.proxy.getResult();
     }
+    
+    @Override
+    public boolean respectsNull() {
+    	return this.proxy.respectsNull();
+    }
 }

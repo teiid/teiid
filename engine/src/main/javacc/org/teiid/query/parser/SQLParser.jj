@@ -1869,17 +1869,11 @@ SingleElementSymbol selectExpression(ParseInfo info) :
 	)
 	{		
 		SingleElementSymbol es = null;
-		if(expression instanceof ElementSymbol) {
-			es = (ElementSymbol) expression;
+		if(!(expression instanceof SingleElementSymbol)) {
+			String functionName = generateFunctionName(info, null);
+			es = new ExpressionSymbol(functionName, expression);
 		} else {
-			String func = null;
-			if(expression instanceof AggregateSymbol) {
-		    	es = (AggregateSymbol)expression;
-		    	func = ((AggregateSymbol)expression).getAggregateFunction().name();
-			} else {
-				String functionName = generateFunctionName(info, null);
-				es = new ExpressionSymbol(functionName, expression);
-			}
+		    es = (SingleElementSymbol)expression;
 		}
 		if(alias != null) {
 			alias = validateAlias(alias); 
@@ -3455,7 +3449,10 @@ Expression windowSpecification(Expression agg, ParseInfo info) :
     [orderBy = orderby(info)]
     <RPAREN>
     {
-    	WindowFunction result = new WindowFunction();
+        String aggName = "win_" + ((AggregateSymbol)agg).getName();
+		String name = generateFunctionName(info, aggName);
+        
+    	WindowFunction result = new WindowFunction(aggName);
     	WindowSpecification ws = new WindowSpecification();
     	result.setFunction((AggregateSymbol)agg);
     	ws.setPartition(partitionList);

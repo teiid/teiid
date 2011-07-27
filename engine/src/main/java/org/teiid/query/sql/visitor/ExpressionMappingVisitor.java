@@ -391,14 +391,26 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
         }
         final ExpressionMappingVisitor visitor = new ExpressionMappingVisitor(exprMap);
         visitor.elementSymbolsOnly = true;
+        boolean preOrder = true;
+        boolean useReverseMapping = true;
         for (Map.Entry<? extends Expression, ? extends Expression> entry : exprMap.entrySet()) {
         	if (!(entry.getKey() instanceof ElementSymbol)) {
         		visitor.elementSymbolsOnly = false;
         		break;
         	}
 		}
-        boolean useReverseMapping = !Collections.disjoint(GroupsUsedByElementsVisitor.getGroups(exprMap.keySet()),
-        		GroupsUsedByElementsVisitor.getGroups(exprMap.values()));
+        if (!visitor.elementSymbolsOnly) {
+        	for (Map.Entry<? extends Expression, ? extends Expression> entry : exprMap.entrySet()) {
+            	if (!(entry.getValue() instanceof ElementSymbol)) {
+            		useReverseMapping = !Collections.disjoint(GroupsUsedByElementsVisitor.getGroups(exprMap.keySet()),
+                    		GroupsUsedByElementsVisitor.getGroups(exprMap.values()));
+            		break;
+            	}
+    		}
+        } else {
+        	preOrder = false;
+        	useReverseMapping = false;
+        }
         
         if (useReverseMapping) {
 	        final Set<Expression> reverseSet = new HashSet<Expression>(exprMap.values());
@@ -412,7 +424,7 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
 	        };
 	        obj.acceptVisitor(pon);
         } else {
-        	PreOrPostOrderNavigator.doVisit(obj, visitor, PreOrPostOrderNavigator.PRE_ORDER, false);
+        	PreOrPostOrderNavigator.doVisit(obj, visitor, preOrder, false);
         }
     }
     

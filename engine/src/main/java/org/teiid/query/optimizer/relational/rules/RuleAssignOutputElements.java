@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -59,7 +60,9 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
+import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.util.CommandContext;
@@ -210,6 +213,12 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		            	root.addGroups(GroupsUsedByElementsVisitor.getGroups(projectCols));
 		            	root.addGroups(GroupsUsedByElementsVisitor.getGroups(root.getCorrelatedReferenceElements()));
 	            	}
+	            	if (root.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
+	            		Set<WindowFunction> windowFunctions = getWindowFunctions(projectCols);
+	            		if (windowFunctions.isEmpty()) {
+	            			root.setProperty(Info.HAS_WINDOW_FUNCTIONS, false);
+	            		}
+	            	}
 		    	}
 	            
 	            List<SingleElementSymbol> requiredInput = collectRequiredInputSymbols(root);
@@ -220,7 +229,9 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            	NodeEditor.removeChildNode(root.getParent(), root);
 	            	
             		SymbolMap symbolMap = (SymbolMap) old.getProperty(NodeConstants.Info.SYMBOL_MAP);
-    				FrameUtil.convertFrame(next.getParent(), symbolMap.asMap().keySet().iterator().next().getGroupSymbol(), null, symbolMap.asMap(), metadata);
+            		if (!symbolMap.asMap().isEmpty()) {
+            			FrameUtil.convertFrame(next.getParent(), symbolMap.asMap().keySet().iterator().next().getGroupSymbol(), null, symbolMap.asMap(), metadata);
+            		}
     				PlanNode parent = next.getParent();
     				while (parent.getParent() != null && parent.getParent().getType() != NodeConstants.Types.SOURCE) {
     					parent = parent.getParent();
@@ -256,6 +267,15 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            }
 		    }
 		}
+	}
+
+	public static Set<WindowFunction> getWindowFunctions(
+			List<SingleElementSymbol> projectCols) {
+		LinkedHashSet<WindowFunction> windowFunctions = new LinkedHashSet<WindowFunction>();
+		for (SingleElementSymbol singleElementSymbol : projectCols) {
+			AggregateSymbolCollectorVisitor.getAggregates(singleElementSymbol, null, null, null, windowFunctions, null);
+		}
+		return windowFunctions;
 	}
 
     private List<SingleElementSymbol> filterElements(Collection<? extends SingleElementSymbol> requiredInput, Set<GroupSymbol> filterGroups) {
@@ -504,16 +524,18 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 				    	ElementCollectorVisitor.getElements(expression, requiredSymbols);
                     }
 				}
-				boolean hasAggregate = false;
 				SymbolMap symbolMap = (SymbolMap) node.getProperty(NodeConstants.Info.SYMBOL_MAP);
+				Set<ElementSymbol> usedAggregates = new HashSet<ElementSymbol>();
 				
 				// Take credit for creating any aggregates that are needed above
 				for (SingleElementSymbol outputSymbol : outputCols) {
+					if (!(outputSymbol instanceof ElementSymbol)) {
+						continue;
+					}
 					createdSymbols.add(outputSymbol);
 					Expression ex = symbolMap.getMappedExpression((ElementSymbol) outputSymbol);
 					if(ex instanceof AggregateSymbol) {
 					    AggregateSymbol agg = (AggregateSymbol)ex;
-					    hasAggregate = true;					    
 	                    Expression aggExpr = agg.getExpression();
 	                    if(aggExpr != null) {
 	                    	ElementCollectorVisitor.getElements(aggExpr, requiredSymbols);
@@ -526,9 +548,16 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	                    if(condition != null) {
 	                    	ElementCollectorVisitor.getElements(condition, requiredSymbols);
 	                    }
+	                    usedAggregates.add((ElementSymbol) outputSymbol);
 					}
 				}
-				if (requiredSymbols.isEmpty() && !hasAggregate) {
+				//update the aggs in the symbolmap
+				for (Map.Entry<ElementSymbol, Expression> entry : new ArrayList<Map.Entry<ElementSymbol, Expression>>(symbolMap.asMap().entrySet())) {
+					if (entry.getValue() instanceof AggregateSymbol && !usedAggregates.contains(entry.getKey())) {
+						symbolMap.asUpdatableMap().remove(entry.getKey());
+					}
+				}
+				if (requiredSymbols.isEmpty() && usedAggregates.isEmpty()) {
 					node.setProperty(Info.IS_OPTIONAL, true);
 				}
 				break;

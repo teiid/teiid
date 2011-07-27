@@ -532,4 +532,9 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	return true;
     }
     
+    @Override
+    public boolean supportsElementaryOlapOperations() {
+    	return true;
+    }
+    
 }

@@ -756,7 +756,13 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         Criteria having = query.getHaving();
         validateNoAggsInClause(groupBy);
         validateNoAggsInClause(query.getCriteria());
-        validateNoAggsInClause(query.getFrom());
+        if (query.getFrom() == null) {
+        	validateNoAggsInClause(select);
+        	validateNoAggsInClause(query.getOrderBy());
+        } else {
+        	validateNoAggsInClause(query.getFrom());
+        }
+        
         Set<Expression> groupSymbols = null;
         boolean hasAgg = false;
         if (groupBy != null) {
@@ -1212,10 +1218,20 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	case DENSE_RANK:
     	case ROW_NUMBER:
     		if (windowFunction.getWindowSpecification().getOrderBy() == null) {
-    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.analytical_requires_order_by", windowFunction), windowFunction); //$NON-NLS-1$
+    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.ranking_requires_order_by", windowFunction), windowFunction); //$NON-NLS-1$
     		}
+    		break;
+    	case TEXTAGG:
+    	case ARRAY_AGG:
+    		if (windowFunction.getWindowSpecification().getOrderBy() != null) {
+    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.window_order_by", windowFunction), windowFunction); //$NON-NLS-1$
+            }
+    		break;
     	}
     	validateNoSubqueriesOrOuterReferences(windowFunction);
+        if (windowFunction.getFunction().getOrderBy() != null || windowFunction.getFunction().isDistinct()) {
+        	handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0042", new Object[] {windowFunction.getFunction(), windowFunction}), windowFunction); //$NON-NLS-1$
+        }
     }
     
     @Override
@@ -1255,9 +1271,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         	if (obj.isDistinct()) {
         		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.invalid_distinct", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
         	}
-        }
-        if (obj.isWindowed() && obj.getOrderBy() != null) {
-        	handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0042", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
         }
     	if (obj.getAggregateFunction() != Type.TEXTAGG) {
     		return;

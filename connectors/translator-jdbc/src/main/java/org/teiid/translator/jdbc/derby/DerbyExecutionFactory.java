@@ -29,14 +29,14 @@ import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
-import org.teiid.translator.jdbc.db2.DB2ExecutionFactory;
+import org.teiid.translator.jdbc.db2.BaseDB2ExecutionFactory;
 import org.teiid.translator.jdbc.oracle.LeftOrRightFunctionModifier;
 
 /** 
  * @since 4.3
  */
 @Translator(name="derby", description="A translator for Apache Derby Database")
-public class DerbyExecutionFactory extends DB2ExecutionFactory {
+public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
 	
 	public static final String TEN_1 = "10.1"; //$NON-NLS-1$
 	public static final String TEN_2 = "10.2"; //$NON-NLS-1$
@@ -181,8 +181,4 @@ public class DerbyExecutionFactory extends DB2ExecutionFactory {
     	return this.getDatabaseVersion().compareTo(TEN_5) >= 0;
     }
     
-	@Override
-	public boolean supportsFunctionsInGroupBy() {
-		return false;
-	}
 }

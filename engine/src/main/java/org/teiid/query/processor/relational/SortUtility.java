@@ -109,19 +109,12 @@ public class SortUtility {
 	private Collection<List<?>> workingTuples;
     
     public SortUtility(TupleSource sourceID, List<OrderByItem> items, Mode mode, BufferManager bufferMgr,
-                        String groupName, List schema) {
-        this.source = sourceID;
-        this.mode = mode;
-        this.bufferManager = bufferMgr;
-        this.groupName = groupName;
-        this.schema = schema;
-        this.schemaSize = bufferManager.getSchemaSize(this.schema);
-        int distinctIndex = items != null? items.size() - 1:0;
+                        String groupName, List<? extends Expression> schema) {
         List<Expression> sortElements = null;
         List<Boolean> sortTypes = null;
         List<NullOrdering> nullOrderings = null;
         if (items == null) {
-    		sortElements = (List<Expression>) this.schema;
+    		sortElements = (List<Expression>) schema;
     		sortTypes = Collections.nCopies(sortElements.size(), OrderBy.ASC);
         } else {
         	sortElements = new ArrayList(items.size());
@@ -148,7 +141,29 @@ public class SortUtility {
             cols[iter.previousIndex()] = schema.indexOf(elem);
             Assertion.assertTrue(cols[iter.previousIndex()] != -1);
         }
+        init(sourceID, mode, bufferMgr, groupName, schema, sortTypes,
+				nullOrderings, cols);
+    }
+    
+    public SortUtility(TupleSource sourceID, Mode mode, BufferManager bufferMgr,
+			String groupName, List<? extends Expression> schema,
+			List<Boolean> sortTypes, List<NullOrdering> nullOrderings,
+			int[] cols) {
+    	init(sourceID, mode, bufferMgr, groupName, schema, sortTypes, nullOrderings, cols);
+    }
+
+	private void init(TupleSource sourceID, Mode mode, BufferManager bufferMgr,
+			String groupName, List<? extends Expression> schema,
+			List<Boolean> sortTypes, List<NullOrdering> nullOrderings,
+			int[] cols) {
+		this.source = sourceID;
+        this.mode = mode;
+        this.bufferManager = bufferMgr;
+        this.groupName = groupName;
+        this.schema = schema;
+        this.schemaSize = bufferManager.getSchemaSize(this.schema);
         this.comparator = new ListNestedSortComparator(cols, sortTypes);
+        int distinctIndex = cols.length - 1;
         this.comparator.setDistinctIndex(distinctIndex);
         this.comparator.setNullOrdering(nullOrderings);
     }

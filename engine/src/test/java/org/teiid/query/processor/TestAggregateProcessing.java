@@ -400,6 +400,23 @@ public class TestAggregateProcessing {
 		helpProcess(plan, cc, dataManager, expected);
 	}
 	
+	@Test public void testDupGroupCombination() throws Exception {
+        String sql = "select count(e2), e1 from (select distinct e1, e2, e3 from pm1.g1) x group by e1"; //$NON-NLS-1$
+
+        List[] expected = new List[] {
+				Arrays.asList(2, "a"),
+		};
+
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3 FROM pm1.g1", new List[] {
+				Arrays.asList("a", 0, Boolean.TRUE),
+				Arrays.asList("a", 0, Boolean.FALSE),
+		});
+
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+		helpProcess(plan, dataManager, expected);
+	}
+	
 	@Test public void testAggFilter() throws Exception {
 		// Create query
 		String sql = "SELECT e2, count(*) filter (where e3) from pm1.g1 group by e2 order by e2"; //$NON-NLS-1$

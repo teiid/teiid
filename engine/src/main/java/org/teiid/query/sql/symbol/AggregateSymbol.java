@@ -163,25 +163,30 @@ public class AggregateSymbol extends ExpressionSymbol {
 	 * @return Type of the symbol
 	 */
 	public Class<?> getType() {
-		if(this.aggregate == Type.COUNT) {
+		switch (this.aggregate) {
+		case COUNT:
 			return COUNT_TYPE;
-		} else if(this.aggregate == Type.SUM ) {
+		case SUM:
 			Class<?> expressionType = this.getExpression().getType();
 			return SUM_TYPES.get(expressionType);
-        } else if (this.aggregate == Type.AVG) {
-            Class<?> expressionType = this.getExpression().getType();
+		case AVG:
+            expressionType = this.getExpression().getType();
             return AVG_TYPES.get(expressionType);
-		} else if (isBoolean()) {
+		case ARRAY_AGG:
+			return DataTypeManager.DefaultDataClasses.OBJECT;
+		case TEXTAGG:
+			return DataTypeManager.DefaultDataClasses.BLOB;
+		case RANK:
+		case ROW_NUMBER:
+		case DENSE_RANK:
+			return DataTypeManager.DefaultDataClasses.INTEGER;
+		}
+		if (isBoolean()) {
 			return DataTypeManager.DefaultDataClasses.BOOLEAN;
 		} else if (isEnhancedNumeric()) {
 			return DataTypeManager.DefaultDataClasses.DOUBLE;
-		} else if (this.aggregate == Type.ARRAY_AGG) {
-			return DataTypeManager.DefaultDataClasses.OBJECT;
-		} else if (this.aggregate == Type.RANK || this.aggregate == Type.ROW_NUMBER || this.aggregate == Type.DENSE_RANK){
-			return DataTypeManager.DefaultDataClasses.INTEGER;
-		} else {
-			return this.getExpression().getType();
 		}
+		return this.getExpression().getType();
 	}
 
 	public boolean isBoolean() {

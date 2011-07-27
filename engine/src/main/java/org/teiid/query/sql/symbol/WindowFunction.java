@@ -27,13 +27,17 @@ import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
-public class WindowFunction implements Expression {
+public class WindowFunction extends SingleElementSymbol {
 	
 	private AggregateSymbol function;
 	private WindowSpecification windowSpecification;
 	
-	public WindowFunction() {
-		
+	public WindowFunction(String name) {
+		super(name);
+	}
+	
+	protected WindowFunction(String name, String canonical) {
+		super(name, canonical);
 	}
 	
 	public AggregateSymbol getFunction() {
@@ -88,7 +92,7 @@ public class WindowFunction implements Expression {
 	
 	@Override
 	public WindowFunction clone() {
-		WindowFunction clone = new WindowFunction();
+		WindowFunction clone = new WindowFunction(this.getName(), this.getCanonical());
 		clone.setFunction((AggregateSymbol) this.function.clone());
 		clone.setWindowSpecification(this.windowSpecification.clone());
 		return clone;

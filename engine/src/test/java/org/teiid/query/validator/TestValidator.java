@@ -1896,7 +1896,7 @@ public class TestValidator {
 	}
 
 	@Test public void testWindowFunctionWithNestedOrdering() {
-		helpValidate("SELECT xmlagg(xmlelement(name x, e1) order by e2) over () from pm1.g1", new String[] {"XMLAGG(XMLELEMENT(NAME x, e1) ORDER BY e2)"}, RealMetadataFactory.example1Cached());		
+		helpValidate("SELECT xmlagg(xmlelement(name x, e1) order by e2) over () from pm1.g1", new String[] {"XMLAGG(XMLELEMENT(NAME x, e1) ORDER BY e2) OVER ()"}, RealMetadataFactory.example1Cached());		
 	}
 	
 	@Test public void testWindowFunctionWithNestedaggAllowed() {
@@ -1905,6 +1905,10 @@ public class TestValidator {
 
 	@Test public void testWindowFunctionWithNestedaggAllowed1() {
 		helpValidate("SELECT max(min(e1)) over (order by max(e2)) from pm1.g1 group by e1", new String[] {"MIN(e1)"}, RealMetadataFactory.example1Cached());		
+	}
+	
+	@Test public void testWindowFunctionWithoutFrom() {
+		helpValidate("select count(*) over () as y", new String[] {"COUNT(*) OVER ()"}, RealMetadataFactory.example1Cached());
 	}
 	
 }

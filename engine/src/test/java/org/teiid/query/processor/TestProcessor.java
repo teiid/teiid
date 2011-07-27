@@ -4485,6 +4485,30 @@ public class TestProcessor {
        helpProcess(plan, dataManager, expected);
    }
    
+    @Test public void testSortGroupCombination() throws Exception {
+        String sql = "select e2, max(e1) from pm1.g1 x group by e2 order by e2 desc"; //$NON-NLS-1$
+
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, new List[] {
+                        Arrays.asList(3, "a"),
+                        Arrays.asList(2, "b"),
+                        Arrays.asList(1, "c"),
+                        Arrays.asList(0, "a")});
+    }
+    
+    @Test public void testUnorderedLimitWithProc() throws Exception {
+            String sql = "select e1 from (exec pm1.sq1()) x limit 1";
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, new List[] {Arrays.asList("a")});
+    }
+    
    @Test public void testCase3() { 
        // Create query 
        String sql = "SELECT e2, CASE e2 WHEN 1 THEN 2 ELSE null END FROM pm1.g1 WHERE e2 BETWEEN 1 AND 2"; //$NON-NLS-1$
@@ -7574,12 +7598,12 @@ public class TestProcessor {
     	String sql = "SELECT pm1.g1.e2 as y FROM pm1.g1 ORDER BY e3 || e1";
         
     	List[] expected = new List[] {
-        		Arrays.asList(0),
         		Arrays.asList(1),
+        		Arrays.asList(0),
+        		Arrays.asList(0),
+        		Arrays.asList(2),
         		Arrays.asList(3),
         		Arrays.asList(1),
-        		Arrays.asList(2),
-        		Arrays.asList(0),
         };
     	
     	FakeDataManager dataManager = new FakeDataManager();

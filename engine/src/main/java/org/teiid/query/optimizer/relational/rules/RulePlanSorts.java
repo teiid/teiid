@@ -89,7 +89,8 @@ public class RulePlanSorts implements OptimizerRule {
 			} else {
 				root = checkForProjectOptimization(node, root, metadata, capFinder, record);
 			}
-			List<SingleElementSymbol> orderColumns = ((OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER)).getSortKeys();
+			OrderBy orderBy = (OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER);
+			List<SingleElementSymbol> orderColumns = orderBy.getSortKeys();
 			List<Expression> sortExpressions = new ArrayList<Expression>(orderColumns.size());
 			PlanNode possibleSort = NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE | NodeConstants.Types.ACCESS);
 			if (possibleSort != null) {
@@ -118,6 +119,7 @@ public class RulePlanSorts implements OptimizerRule {
 						NodeEditor.removeChildNode(node.getParent(), node);
 						node = nextNode;
 					}
+					possibleSort.setProperty(Info.SORT_ORDER, orderBy);
 				}
 				break;
 			} 
@@ -132,8 +134,33 @@ public class RulePlanSorts implements OptimizerRule {
 			if (!node.hasCollectionProperty(NodeConstants.Info.GROUP_COLS)) {
 				break;
 			}
-			if (mergeSortWithDupRemovalAcrossSource(node)) {
+			SymbolMap map = (SymbolMap)node.getProperty(Info.SYMBOL_MAP);
+			boolean cardinalityDependent = false;
+			boolean canOptimize = true;
+			for (Expression ex : map.asMap().values()) {
+				if (ex instanceof AggregateSymbol) {
+					AggregateSymbol agg = (AggregateSymbol)ex;
+					if (agg.isCardinalityDependent()) {
+						cardinalityDependent = true;
+						break;
+					}
+				} else if (!(ex instanceof ElementSymbol)) {
+					//there is an expression in the grouping columns
+					canOptimize = false;
+					break;
+				}
+			}
+			if (canOptimize && mergeSortWithDupRemovalAcrossSource(node)) {
 				node.setProperty(NodeConstants.Info.IS_DUP_REMOVAL, true);
+				if (cardinalityDependent) {
+					PlanNode source = NodeEditor.findNodePreOrder(node, NodeConstants.Types.SOURCE);
+					List<SingleElementSymbol> sourceOutput = (List<SingleElementSymbol>)source.getProperty(Info.OUTPUT_COLS);
+					PlanNode child = node.getFirstChild();
+					while (child != source) {
+						child.setProperty(Info.OUTPUT_COLS, sourceOutput);
+						child = child.getFirstChild();
+					}
+				}
 			}
 			//TODO: check the join interesting order
 			parentBlocking = true;

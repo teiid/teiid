@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -45,6 +46,8 @@ import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.optimizer.relational.rules.FrameUtil;
+import org.teiid.query.optimizer.relational.rules.RuleAssignOutputElements;
+import org.teiid.query.optimizer.relational.rules.RuleChooseJoinStrategy;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.ArrayTableNode;
@@ -69,6 +72,7 @@ import org.teiid.query.processor.relational.SelectNode;
 import org.teiid.query.processor.relational.SortNode;
 import org.teiid.query.processor.relational.TextTableNode;
 import org.teiid.query.processor.relational.UnionAllNode;
+import org.teiid.query.processor.relational.WindowFunctionProjectNode;
 import org.teiid.query.processor.relational.XMLTableNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
@@ -80,6 +84,7 @@ import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.StoredProcedure;
@@ -90,7 +95,10 @@ import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
@@ -213,11 +221,25 @@ public class PlanToProcessConverter {
                     }
 
                 } else {
-                    List symbols = (List) node.getProperty(NodeConstants.Info.PROJECT_COLS);
+                    List<SingleElementSymbol> symbols = (List) node.getProperty(NodeConstants.Info.PROJECT_COLS);
                     
                     ProjectNode pnode = new ProjectNode(getID());
                     pnode.setSelectSymbols(symbols);
             		processNode = pnode;
+            		
+            		if (node.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
+            			WindowFunctionProjectNode wfpn = new WindowFunctionProjectNode(getID());
+            			Set<WindowFunction> windowFunctions = RuleAssignOutputElements.getWindowFunctions(symbols);
+            			//TODO: check for selecting all window functions
+            			List<SingleElementSymbol> outputElements = new ArrayList<SingleElementSymbol>(windowFunctions);
+            			//collect the other projected expressions
+            			for (SingleElementSymbol singleElementSymbol : (List<SingleElementSymbol>)node.getFirstChild().getProperty(Info.OUTPUT_COLS)) {
+							outputElements.add(singleElementSymbol);
+						}
+            			wfpn.setElements(outputElements);
+            			wfpn.init();
+            			pnode.addChild(wfpn);
+            		}
                 }
                 break;
 
@@ -374,9 +396,32 @@ public class PlanToProcessConverter {
 				break;
 			case NodeConstants.Types.GROUP:
 				GroupingNode gnode = new GroupingNode(getID());
-				gnode.setGroupingElements( (List<Expression>) node.getProperty(NodeConstants.Info.GROUP_COLS) );
-				gnode.setOutputMapping((SymbolMap)node.getProperty(NodeConstants.Info.SYMBOL_MAP));
+				SymbolMap groupingMap = (SymbolMap)node.getProperty(NodeConstants.Info.SYMBOL_MAP);
+				gnode.setOutputMapping(groupingMap);
 				gnode.setRemoveDuplicates(node.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL));
+				List<Expression> gCols = (List) node.getProperty(NodeConstants.Info.GROUP_COLS);
+				orderBy = (OrderBy) node.getProperty(Info.SORT_ORDER);
+				if (orderBy == null) {
+			        if (gCols != null) {
+		                orderBy = new OrderBy(RuleChooseJoinStrategy.createExpressionSymbols(gCols));
+			        }
+				} else {
+			        for (int i = 0; i < gCols.size(); i++) {
+			        	if (i < orderBy.getOrderByItems().size()) {
+			        		OrderByItem orderByItem = orderBy.getOrderByItems().get(i);
+							Expression ex = SymbolMap.getExpression(orderByItem.getSymbol());
+				        	if (ex instanceof ElementSymbol) {
+			            		ex = groupingMap.getMappedExpression((ElementSymbol) ex);
+			            		orderByItem.setSymbol(new ExpressionSymbol("expr", ex)); //$NON-NLS-1$
+			            	}
+			        	} else {
+			        		orderBy.addVariable(new ExpressionSymbol("expr", gCols.get(i)), OrderBy.ASC); //$NON-NLS-1$
+			        	}
+			        }
+				}
+				if (orderBy != null) {
+			        gnode.setOrderBy(orderBy.getOrderByItems());
+				}
 				processNode = gnode;
 				break;
 
