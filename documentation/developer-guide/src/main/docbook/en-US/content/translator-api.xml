@@ -380,8 +380,14 @@ public void setFoo(String value)
 	</listitem>
 	<listitem>
 		<para>
-			<code>Aggregate</code>
-			– represents an aggregate function which holds a single expression
+			<code>AggregateFunction</code>
+			– represents an aggregate function which can hold a single expression
+		</para>
+	</listitem>
+	<listitem>
+		<para>
+			<code>WindowFunction</code>
+			– represents an window function which holds an AggregateFunction (which is also used to represent analytical functions) and a WindowSpecification
 		</para>
 	</listitem>
 	<listitem>
@@ -1296,6 +1302,17 @@ int count = visitor.getCount();]]></programlisting>
                 </entry>
                 <entry>
                   <para>Translator supports window functions and analytic functions RANK, DENSE_RANK, and ROW_NUMBER.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>WindowOrderByWithAggregates</para>
+                </entry>
+                <entry>
+                  <para/>
+                </entry>
+                <entry>
+                  <para>Translator supports windowed aggregates with a window order by clause.</para>
                 </entry>
               </row>
               <row>
