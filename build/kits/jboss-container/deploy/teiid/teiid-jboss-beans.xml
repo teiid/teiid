@@ -102,6 +102,7 @@
         <property name="resultsetCacheConfig"><inject bean="ResultsetCacheConfig"/></property>
         <property name="preparedPlanCacheConfig"><inject bean="PreparedPlanCacheConfig"/></property>
         <property name="authorizationValidator"><inject bean="AuthorizationValidator"/></property>
+        <property name="containerLifeCycleListener"><inject bean="JBossLifeCycleListener"/></property>
         <!-- Process pool maximum thread count. (default 64) -->
         <property name="maxThreads">64</property>
         <!-- Max active plans (default 20).  Increase this value on highly concurrent systems - but ensure that the underlying pools can handle the increased load without timeouts. -->

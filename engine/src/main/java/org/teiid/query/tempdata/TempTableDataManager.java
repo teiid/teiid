@@ -550,7 +550,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			TupleSource ts = null;
 			CacheID cid = null;
 			if (distributedCache != null) {
-				cid = new CacheID(new ParseInfo(), fullName, context.getVdbName(), 
+				cid = new CacheID(new ParseInfo(), viewName, context.getVdbName(), 
 						context.getVdbVersion(), context.getConnectionID(), context.getUserName());
 				if (useCache) {
 					CachedResults cr = this.distributedCache.get(cid);

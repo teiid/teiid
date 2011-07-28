@@ -23,4 +23,10 @@ package org.teiid.deployers;
 
 public interface ContainerLifeCycleListener {
 	boolean isShutdownInProgress();
+	void addListener(LifeCycleEventListener listener);
+	
+	public static interface LifeCycleEventListener{
+		void onStartupFinish();
+		void onShutdownStart();
+	}
 }
