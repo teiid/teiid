@@ -176,17 +176,27 @@ public class AggregateSymbol extends ExpressionSymbol {
 			return DataTypeManager.DefaultDataClasses.OBJECT;
 		case TEXTAGG:
 			return DataTypeManager.DefaultDataClasses.BLOB;
-		case RANK:
-		case ROW_NUMBER:
-		case DENSE_RANK:
-			return DataTypeManager.DefaultDataClasses.INTEGER;
 		}
 		if (isBoolean()) {
 			return DataTypeManager.DefaultDataClasses.BOOLEAN;
-		} else if (isEnhancedNumeric()) {
+		}
+		if (isEnhancedNumeric()) {
 			return DataTypeManager.DefaultDataClasses.DOUBLE;
 		}
+		if (isAnalytical()) {
+			return DataTypeManager.DefaultDataClasses.INTEGER;
+		}
 		return this.getExpression().getType();
+	}
+	
+	public boolean isAnalytical() {
+		switch (this.aggregate) {
+		case RANK:
+		case ROW_NUMBER:
+		case DENSE_RANK:
+			return true;
+		}
+		return false;
 	}
 
 	public boolean isBoolean() {

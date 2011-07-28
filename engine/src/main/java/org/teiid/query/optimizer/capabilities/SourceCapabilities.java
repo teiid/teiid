@@ -323,7 +323,8 @@ public interface SourceCapabilities {
         MAX_DEPENDENT_PREDICATES,
         ADVANCED_OLAP, 
         QUERY_AGGREGATES_ARRAY, 
-        ELEMENTARY_OLAP
+        ELEMENTARY_OLAP, 
+        WINDOW_FUNCTION_ORDER_BY_AGGREGATES
     }
 
     public enum Scope {

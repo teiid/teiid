@@ -168,7 +168,14 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     public void visit(WindowFunction windowFunction) {
     	if(! this.caps.supportsCapability(Capability.ELEMENTARY_OLAP)) {
             markInvalid(windowFunction, "Window function not supported by source"); //$NON-NLS-1$
-        }
+            return;
+        } 
+    	if (!this.caps.supportsCapability(Capability.WINDOW_FUNCTION_ORDER_BY_AGGREGATES) 
+    			&& windowFunction.getWindowSpecification().getOrderBy() != null
+    			&& !windowFunction.getFunction().isAnalytical()) {
+    		markInvalid(windowFunction, "Window function order by with aggregate not supported by source"); //$NON-NLS-1$
+            return;
+    	}
     }
     
     public void visit(CaseExpression obj) {

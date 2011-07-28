@@ -27,7 +27,6 @@ import java.util.List;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.processor.relational.GroupingNode;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 
 /**
@@ -36,38 +35,37 @@ import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 public class RankingFunction extends AggregateFunction {
 	
 	private int count = 0;
-	private int result = 0;
-	private int[] orderIndexes;
+	private int lastCount = 0;
 	private Type type;
-	private List<?> previousTuple;
 	
-	public RankingFunction(Type function, int[] orderIndexes) {
+	public RankingFunction(Type function) {
 		this.type = function;
-		this.orderIndexes = orderIndexes;
 	}
 
 	@Override
 	public void reset() {
 		count = 0;
-		result = 0;
+		lastCount = 0;
 	}
 	
 	@Override
 	public void addInputDirect(Object input, List<?> tuple)
 			throws FunctionExecutionException, ExpressionEvaluationException,
 			TeiidComponentException {
-		if (previousTuple == null || !GroupingNode.sameGroup(orderIndexes, tuple, previousTuple)) {
-			count++;
-			result = count;
-		} else if (type == Type.RANK) {
+		if (type == Type.RANK) {
 			count++;
 		}
-		previousTuple = tuple;
 	}
 	
 	@Override
 	public Object getResult() throws FunctionExecutionException,
 			ExpressionEvaluationException, TeiidComponentException {
+		if (type == Type.DENSE_RANK) {
+			count++;
+			return count;
+		}
+		int result = ++lastCount;
+		lastCount = count;
 		return result;
 	}
 

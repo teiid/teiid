@@ -498,7 +498,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
                         ss = ((AliasSymbol)ss).getSymbol();
                     }
                     
-                    if (ss instanceof ExpressionSymbol && !(ss instanceof AggregateSymbol)) {
+                    if (ss instanceof WindowFunction || (ss instanceof ExpressionSymbol && !(ss instanceof AggregateSymbol))) {
                         createdSymbols.add(ss);
                     }
                     ElementCollectorVisitor.getElements(ss, requiredSymbols);

@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="sql_clauses">
+    <title>SQL Clauses</title>
+    <para>This section describes the clauses that are used in the various <link linkend="sql_commands">SQL commands</link> described in the previous section. Nearly all these features follow standard SQL syntax and functionality, so any SQL reference can be used for more information.</para>
+    <section id="with_clause">
+      <title>WITH Clause</title>
+      <para>
+      Teiid supports non-recursive common table expressions via the WITH clause.  With clause items may be referenced as tables in subsequent with clause items and in the main query.  The WITH clause can be thought of as providing query scoped temporary tables.
+      </para>
+      <para>
+        Usage:
+        <synopsis label="Usage">WITH name [(column, ...)] AS (query expression) ... </synopsis>
+      </para>
+      <itemizedlist>
+        <para>Syntax Rules:</para>
+        <listitem><para>All of the projected column names must be unique.  If they are not unique, then the column name list must be provided.</para></listitem>
+        <listitem><para>If the columns of the WITH clause item are declared, then they must match the number of columns projected by the query expression.</para></listitem>
+        <listitem><para>Each with clause item must have a unique name.</para></listitem>
+      </itemizedlist> 
+    </section>
+    <section id="select_clause">
+      <title>SELECT Clause</title>
+      <para>
+      SQL queries that start with the SELECT keyword and are often referred to as "SELECT statements". Teiid supports most of the standard SQL query constructs.
+      </para>
+      <para>
+        Usage:
+        <synopsis label="Usage">SELECT [DISTINCT|ALL] ((expression [[AS] name])|(group identifier.STAR))*|STAR ...</synopsis>
+      </para>
+      <itemizedlist>
+        <para>Syntax Rules:</para>
+        <listitem><para>Aliased expressions are only used as the output column names and in the ORDER BY clause. They cannot be used in other clauses of the query.</para></listitem>
+        <listitem><para>DISTINCT may only be specified if the SELECT symbols are comparable.</para></listitem>
+      </itemizedlist> 
+    </section>
+    <section id="from_clause">
+      <title>FROM Clause</title>
+      <para>
+      The FROM clause specifies the target table(s) for SELECT, UPDATE, and DELETE statements. 
+      </para>
+      <itemizedlist>
+        <para>Example Syntax:</para>
+        <listitem><para>FROM table [[AS] alias]</para></listitem>
+        <listitem><para>FROM table1 [INNER|LEFT OUTER|RIGHT OUTER|FULL OUTER] JOIN table2 ON join-criteria</para></listitem>
+        <listitem><para>FROM table1 CROSS JOIN table2</para></listitem>
+        <listitem><para>FROM (subquery) [AS] alias</para></listitem>
+        <listitem><para>FROM <link linkend="nested_table">TABLE(subquery)</link> [AS] alias</para></listitem>
+        <listitem><para>FROM table1 JOIN /*+ MAKEDEP */ table2 ON join-criteria</para></listitem>
+        <listitem><para>FROM table1 JOIN /*+ MAKENOTDEP */ table2 ON join-criteria</para></listitem>
+        <listitem><para>FROM /*+ MAKEIND */ table1 JOIN table2 ON join-criteria</para></listitem>
+        <listitem><para>FROM table1 left outer join <link linkend="optional_join">/*+ optional */</link> table2 ON join-criteria</para></listitem>
+        <listitem><para>FROM <link linkend="texttable">TEXTTABLE...</link></para></listitem>
+        <listitem><para>FROM <link linkend="xmltable">XMLTABLE...</link></para></listitem>
+        <listitem><para>FROM <link linkend="arraytable">ARRAYTABLE...</link></para></listitem>
+        <listitem><para>FROM <link linkend="from_subquery">(SELECT ...</link></para></listitem>
+      </itemizedlist> 
+      <note>
+        <title>DEP Hints</title>
+        <para>
+          MAKEIND, MAKEDEP, and MAKENOTDEP are hints used to control
+          <link linkend="dependent_joins">dependent join</link>
+          behavior. They should only be used in situations where the optimizer
+          does not choose the most optimal plan based upon query structure,
+          metadata, and costing information.  The hints may appear in a comment that proceeds the from clause.  
+          The hints can be specified against any from clause, not just a named table.
+        </para>
+      </note>
+      <section id="nested_table">
+		<title>Nested Table Reference</title>
+		<para>Nested tables may appear in the FROM clause with the TABLE
+			keyword. They are an alternative to using a view with normal join
+			semantics.  The columns projected from the command contained in the nested table
+			 may be used just as any of the other FROM clause projected columns in join criteria, the where clause, etc.
+      	</para>
+		<para>A nested table may have correlated references to preceeding FROM
+			clause column references as long as INNER and LEFT OUTER joins are used. This is
+			especially useful in cases where then nested expression is a
+			procedure or function call.</para>
+		<para>Valid example: 
+		<programlisting>select * from t1, TABLE(call proc(t1.x)) t2</programlisting>
+		</para>
+		<para>Invalid example, since t1 appears after the nested table in the from clause: 
+		<programlisting>select * from TABLE(call proc(t1.x)) t2, t1</programlisting>
+		</para>
+		<note>
+			<title>Multiple Execution</title>
+			<para>The usage of a correlated nested table may result in multiple
+				executions of the table expression - once for each correlated row.
+			</para>
+		</note>
+	  </section>
+	  <section id="texttable">
+		<title>TEXTTABLE</title>
+		<para>The TEXTTABLE funciton processes character input to produce tabular ouptut.  It supports both fixed and delimited file format parsing.  
+			The function itself defines what columns it projects.  
+		    The TEXTTABLE function is implicitly a nested table and may be correlated to preceeding FROM clause entries.
+      	</para>
+      	<para>
+        Usage:
+        	<synopsis label="Usage">TEXTTABLE(expression COLUMNS &lt;COLUMN&gt;, ... [DELIMITER char] [(QUOTE|ESCAPE) char] [HEADER [integer]] [SKIP integer]) AS name</synopsis>
+        	<synopsis label="Usage">COLUMN := name datatype [WIDTH integer]</synopsis> 
+      	</para>
+      	<itemizedlist>
+        	<para>Parameters</para>
+        <listitem>
+          <para>expression - the text content to process, which should be convertable to CLOB.
+          </para>
+        </listitem>
+        <listitem>
+        	<para>DELIMITER sets the field delimiter character to use.  Defaults to ','.
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>QUOTE sets the quote, or qualifier, character used to wrap field values.  Defaults to '"'.  
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>ESCAPE sets the escape character to use if no quoting character is in use.  
+        	This is used in situations where the delimiter or new line characters are escaped with a preceding character, e.g. \,  
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>HEADER specifies the text line number (counting every new line) on which the column names occur.  All lines prior to the header will be skipped.
+        	If HEADER is specified, then the header line will be used to determine the TEXTTABLE column position by case-insensitive name matching.  This is especially useful in situations where only a subset of the columns are needed.
+        	If the HEADER value is not specified, it defaults to 1.  
+        	If HEADER is not specified, then columns are expected to match positionally with the text contents. 
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>SKIP specifies the number of text lines (counting every new line) to skip before parsing the contents.  HEADER may still be specified with SKP.
+        	</para>
+        </listitem>
+      	</itemizedlist>
+      	<itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>If width is specified for one column it must be specified for all columns.
+          </para>
+        </listitem>
+        <listitem>
+          <para>If width is specified, then fixed width parsing is used and ESCAPE, QUOTE, and HEADER should not be specified.
+          </para>
+        </listitem>
+        <listitem>
+          <para>The columns names must be not contain duplicates.
+          </para>
+        </listitem>
+        </itemizedlist>
+      	<itemizedlist>
+        	<para>Examples</para>
+        	<listitem>
+		        <para>Use of the HEADER parameter, returns 1 row ['b']: <programlisting>select * from texttable('col1,col2,col3\na,b,c' COLUMNS col2 string HEADER) x</programlisting>
+				</para>		
+        	</listitem>
+        	<listitem>
+		        <para>Use of fixed width, returns 1 row ['a', 'b', 'c']: <programlisting>select * from texttable('abc' COLUMNS col1 string width 1, col2 string width 1, col3 string width 1) x</programlisting>
+				</para>		
+        	</listitem>
+        	<listitem>
+		        <para>Use of ESCAPE parameter, returns 1 row ['a,', 'b']: <programlisting>select * from texttable('a:,,b' COLUMNS col1 string, col2 string ESCAPE ':') x</programlisting>
+				</para>		
+        	</listitem>
+        	<listitem>
+		        <para>As a nested table: <programlisting>select x.* from t, texttable(t.clobcolumn COLUMNS first string, second date SKIP 1) x</programlisting>
+				</para>		
+        	</listitem>
+		</itemizedlist>		
+	  </section>
+	  <section id="xmltable">
+		<title>XMLTABLE</title>
+		<para>The XMLTABLE funciton uses XQuery to produce tabular ouptut.  
+		    The XMLTABLE function is implicitly a nested table and may be correlated to preceeding FROM clause entries.  XMLTABLE is part of the SQL/XML 2006 specification. 
+      	</para>
+      	<para>
+        Usage:
+        	<synopsis label="Usage">XMLTABLE([&lt;NSP&gt;,] xquery-expression [&lt;PASSING&gt;] [COLUMNS &lt;COLUMN&gt;, ... )] AS name</synopsis>
+        	<synopsis label="Usage">COLUMN := name (FOR ORDINALITY | (datatype [DEFAULT expression] [PATH string]))</synopsis> 
+      	</para>
+      	<para>See XMLELEMENT for the definition of NSP - <link linkend="xmlnamespaces">XMLNAMESPACES</link>.</para>
+      	<para>See XMLQUERY for the definition of <link linkend="passing">PASSING</link>.</para>
+      	<para>See also <link linkend="xmlquery">XMLQUERY</link></para>
+      	<note><para>See also <xref linkend="xquery_optimization"/></para></note>
+      	<itemizedlist>
+        	<para>Parameters</para>
+        <listitem>
+        	<para>The optional XMLNAMESPACES clause specifies the namepaces for use in the XQuery and COLUMN path expressions.
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>The xquery-expression should be a valid XQuery.  Each sequence item returned by the xquery will be used to create a row of values as defined by the COLUMNS clause.
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>If COLUMNS is not specified, then that is the same as having the COLUMNS clause: "COLUMNS OBJECT_VALUE XML PATH '.'", which returns the entire item as an XML value.   
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>A FOR ORDINALITY column is typed as integer and will return the 1-based item number as its value.
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>Each non-ordinality column specifies a type and optionally a PATH and a DEFAULT expression.
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>If PATH is not specified, then the path will be the same as the column name.
+        	</para>
+        </listitem>
+      	</itemizedlist>
+      	<itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>Only 1 FOR ORDINALITY column may be specified.
+          </para>
+        </listitem>
+        <listitem>
+          <para>The columns names must be not contain duplicates.
+          </para>
+        </listitem>
+        </itemizedlist>
+      	<itemizedlist>
+        	<para>Examples</para>
+        	<listitem>
+		        <para>Use of passing, returns 1 row [1]: <programlisting>select * from xmltable('/a' PASSING xmlparse(document '&lt;a id="1"/&gt;') COLUMNS id integer PATH '@id') x</programlisting>
+				</para>		
+        	</listitem>
+        	<listitem>
+		        <para>As a nested table: <programlisting>select x.* from t, xmltable('/x/y' PASSING t.doc COLUMNS first string, second FOR ORDINALITY) x</programlisting>
+				</para>		
+        	</listitem>
+		</itemizedlist>		
+	  </section>
+    </section>
+    	  <section id="arraytable">
+		<title>ARRAYTABLE</title>
+		<para>The ARRAYTABLE funciton processes an array input to produce tabular ouptut.  
+			The function itself defines what columns it projects.  
+		    The ARRAYTABLE function is implicitly a nested table and may be correlated to preceeding FROM clause entries.
+      	</para>
+      	<para>
+        Usage:
+        	<synopsis label="Usage">ARRAYTABLE(expression COLUMNS &lt;COLUMN&gt;, ...) AS name</synopsis>
+        	<synopsis label="Usage">COLUMN := name datatype</synopsis> 
+      	</para>
+      	<itemizedlist>
+        	<para>Parameters</para>
+        <listitem>
+          <para>expression - the array to process, which should be a java.sql.Array or java array value.
+          </para>
+        </listitem>
+      	</itemizedlist>
+      	<itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>The columns names must be not contain duplicates.
+          </para>
+        </listitem>
+        </itemizedlist>
+      	<itemizedlist>
+        	<para>Examples</para>
+        	<listitem>
+		        <para>As a nested table: <programlisting>select x.* from (call source.invokeMDX('some query')) r, arraytable(r.tuple COLUMNS first string, second bigdecimal) x</programlisting>
+				</para>		
+        	</listitem>
+		</itemizedlist>
+		<para>ARRAYTABLE is effectively a shortcut for using the <xref linkend="array_get"/> function in a nested table.  For example "ARRAYGET(val COLUMNS col1 string, col2 integer) AS X" is the same as "TABLE(SELECT cast(array_get(val, 1) AS string) AS col1, cast(array_get(val, 2) AS integer) AS col2) AS X".</para>		
+	  </section>
+    <section id="where_clause">
+      <title>WHERE Clause</title>
+      <para>
+      The WHERE clause defines the criteria to limit the records affected by SELECT, UPDATE, and DELETE statements.  
+      </para>
+      <itemizedlist>
+        <para>The general form of the WHERE is:
+        </para>
+        <listitem>
+          <para>WHERE <link linkend="criteria">criteria</link>
+          </para>
+        </listitem>
+      </itemizedlist>
+    </section>
+    <section id="groupby_clause">
+      <title>GROUP BY Clause</title>
+      <para>
+      The GROUP BY clause denotes that rows should be grouped according to the specified expression values. One row will be returned for each group, after optionally filtering those aggregate rows based on a HAVING clause.   
+      </para>
+      <itemizedlist>
+        <para>The general form of the GROUP BY is:
+        </para>
+        <listitem>
+          <para>GROUP BY expression (,expression)*
+          </para>
+        </listitem>
+      </itemizedlist>
+      <itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>Column references in the group by clause must by to unaliased output columns.
+          </para>
+        </listitem>
+        <listitem>
+          <para>Expressions used in the group by must appear in the select clause.
+          </para>
+        </listitem>
+        <listitem>
+          <para>Column references and expessions in the select clause that are not used in the group by clause must appear in aggregate functions. 
+          </para>
+        </listitem>
+        <listitem>
+          <para>If an aggregate function is used in the SELECT clause and no
+            GROUP BY is specified, an implicit GROUP BY will be performed with
+            the entire result set as a single group. In this case, every column
+            in the SELECT must be an aggregate function as no other column value
+            will be fixed across the entire group. 
+          </para>
+        </listitem>
+        <listitem>
+          <para>The group by columns must be of a comparable type.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+    <section id="having_clause">
+      <title>HAVING Clause</title>
+      <para>
+      The HAVING clause operates exactly as a WHERE clause although it operates on the output of a GROUP BY. It supports the same syntax as the WHERE clause.
+      </para>
+      <itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>Expressions used in the group by clause must either
+            contain an aggregate function: COUNT, AVG, SUM, MIN, MAX. or be one
+            of the grouping expressions.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+    <section id="orderby_clause">
+      <title>ORDER BY Clause</title>
+      <para>
+      The ORDER BY clause specifies how records should be sorted. The options are ASC (ascending) and DESC (descending).
+      </para>
+      <para>
+        Usage:
+        <synopsis label="Usage">ORDER BY expression [ASC|DESC] [NULLS (FIRST|LAST)], ...</synopsis>
+      </para>
+      <itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>Sort columns may be specified positionally by a 1-based positional
+	        integer, by SELECT clause alias name, by SELECT clause expression, or by an unrelated expression.</para>
+        </listitem>
+        <listitem>
+          <para>Column references may appear in the SELECT clause as the
+			expression for an aliased column or may reference columns from tables
+			in the FROM clause.
+			If the column reference is not in the SELECT clause the query must not
+			be a set operation, specify SELECT DISTINCT, or contain a GROUP BY
+			clause.</para>
+        </listitem>
+        <listitem>
+          <para>Unrelated expressions, expressions not appearing as an aliased expression in the select clause, 
+          are allowed in the order by clause of a non-set QUERY.  The columns referenced in the expression must come from the
+          from clause table references.  The column references cannot be to alias names or positional.
+          </para>
+        </listitem>
+        <listitem>
+          <para>The ORDER BY columns must be of a comparable type.</para>
+        </listitem>
+        <listitem>
+          <para>If an ORDER BY is used in an inline view or view
+	         definition without a limit clause, it will be removed by the Teiid
+	         optimizer.</para>
+        </listitem>
+        <listitem>
+        	<para>If NULLS FIRST/LAST is specified, then nulls are guaranteed to be sorted either first or last.  If the null ordering is not specified, then results will 
+        	typically be sorted with nulls as low values, which is Teiid's internal default sorting behavior.   
+        	However not all sources return results with nulss sorted as low values by default, and Teiid may return results with different null orderings. 
+        	</para>
+        </listitem>
+      </itemizedlist>
+      <warning>
+		<para>The use of positional ordering is no longer supported by the
+				ANSI SQL standard and is a deprecated feature in Teiid. It is
+				preferable to use alias names in the order by clause.</para>
+	  </warning>
+    </section>
+    <section id="limit_clause">
+      <title>LIMIT Clause</title>
+      <para>
+      The LIMIT clause specifies a limit on the number of records returned from the SELECT command. An optional offset (the number of rows to skip) can be specified.  The LIMIT clause can also be specfied using the SQL 2008 OFFSET/FETCH FIRST clauses.  
+      If an ORDER BY is also specified, it will be applied before the OFFSET/LIMIT are applied.  If an ORDER BY is not specified there is generally no guarantee what subset of rows will be returned.
+      </para>
+      <para>
+        Usage:
+        <synopsis label="Usage">LIMIT [offset,] limit</synopsis>
+        <synopsis label="Usage">[OFFSET offset ROW|ROWS] [FETCH FIRST|NEXT [limit] ROW|ROWS ONLY</synopsis>
+      </para>
+      <itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>The limit/offset expressions must be a non-negative integer or a parameter reference (?).  An offset of 0 is ignored.  A limit of 0 will return no rows.
+          </para>
+        </listitem>
+        <listitem>
+          <para>The terms FIRST/NEXT are interchangable as well as ROW/ROWS.
+          </para>
+        </listitem>
+      </itemizedlist>
+      <itemizedlist>
+        <para>Examples:
+        </para>
+        <listitem>
+          <para>LIMIT 100 - returns the first 100 records (rows 1-100)</para>
+        </listitem>
+        <listitem>
+          <para>LIMIT 500, 100 - skips 500 records and returns the next 100 records (rows 501-600)</para>
+        </listitem>
+        <listitem>
+          <para>OFFSET 500 ROWS - skips 500 records</para>
+        </listitem>
+        <listitem>
+          <para>OFFSET 500 ROWS FETCH NEXT 100 ROWS ONLY - skips 500 records and returns the next 100 records (rows 501-600)</para>
+        </listitem>
+        <listitem>
+          <para>FETCH FIRST ROW ONLY - returns only the first record</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+    <section id="into_clause">
+      <title>INTO Clause</title>
+      <warning>
+      	<para>Usage of the INTO Clause for inserting into a table has been been deprecated.  An <link linkend="insert_command">INSERT</link> with a query command should be used instead.</para>
+      </warning>
+      <para>
+      When the into clause is specified with a SELECT, the results of the query are inserted into the specified table. This is often used to insert records into a temporary table. The INTO clause immediately precedes the FROM clause.   
+      </para>
+      <para>
+        Usage:
+        <synopsis label="Usage">INTO table FROM ...</synopsis>
+      </para>
+      <itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>The INTO clause is logically applied last in processing, after the ORDER BY and LIMIT clauses.</para>
+        </listitem>
+        <listitem>
+          <para>Teiid's support for SELECT INTO is similar to
+            MS SQL Server. The target of the INTO clause is a table where
+            the result of the rest select command will be inserted. SELECT
+            INTO should not be used UNION query.</para>
+        </listitem>
+      </itemizedlist>
+    </section>    
+    <section id="option_clause">
+      <title>OPTION Clause</title>
+      <para>
+      The OPTION keyword denotes options the user can pass in with the command. These options are Teiid-specific and not covered by any SQL specification.  
+      </para>
+      <para>
+        Usage:
+        <synopsis label="Usage">OPTION option, (option)*</synopsis>
+      </para>
+      <itemizedlist>
+        <para>Supported options:
+        </para>
+        <listitem>
+          <para>MAKEDEP table [(,table)*] - specifies source tables that should be made dependent in the join
+          </para>
+        </listitem>
+        <listitem>
+          <para>MAKENOTDEP table [(,table)*] - prevents a dependent join from being used
+          </para>
+        </listitem>
+        <listitem>
+          <para>NOCACHE [table (,table)*] - prevents cache from being used for all tables or for the given tables
+          </para>
+        </listitem>
+      </itemizedlist>
+      <itemizedlist>
+        <para>Examples:
+        </para>
+        <listitem>
+          <para>OPTION MAKEDEP table1</para>
+        </listitem>
+        <listitem>
+          <para>OPTION NOCACHE</para>
+        </listitem>
+      </itemizedlist>
+      <para>All tables specified in the OPTION clause should be fully qualified.</para>
+      <note><para>Previous versions of Teiid accepted the PLANONLY, DEBUG, and SHOWPLAN option arguments.  These are no longer accepted in the OPTION clause.
+      Please see the Client Developers Guide for replacements to those options.
+      </para></note>
+    </section>
+</chapter>

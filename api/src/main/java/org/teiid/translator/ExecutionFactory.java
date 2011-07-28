@@ -879,6 +879,14 @@ public class ExecutionFactory<F, C> {
     }
     
     /**
+     * @return true if all aggregates can have window function order by clauses.
+     * @since 7.5
+     */
+    public boolean supportsWindowOrderByWithAggregates() {
+    	return supportsElementaryOlapOperations();
+    }
+    
+    /**
      * @return true if array_agg is supported
      * @since 7.5
      */

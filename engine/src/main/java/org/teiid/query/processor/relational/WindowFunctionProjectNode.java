@@ -73,6 +73,8 @@ import org.teiid.query.util.CommandContext;
 
 public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	
+	private static final List<Integer> SINGLE_VALUE_ID = Arrays.asList(0);
+
 	private enum Phase {
 		COLLECT,
 		PROCESS,
@@ -92,6 +94,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 		List<NullOrdering> nullOrderings = new ArrayList<NullOrdering>();
 		List<Boolean> orderType = new ArrayList<Boolean>();
 		List<WindowFunctionInfo> functions = new ArrayList<WindowFunctionInfo>();
+		List<WindowFunctionInfo> rowValuefunctions = new ArrayList<WindowFunctionInfo>();
 	}
 	
 	private LinkedHashMap<WindowSpecification, WindowSpecificationInfo> windows = new LinkedHashMap<WindowSpecification, WindowSpecificationInfo>();
@@ -106,6 +109,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	private TupleSource inputTs;
 	private STree[] partitionMapping;
 	private STree[] valueMapping;
+	private STree[] rowValueMapping;
 	private IndexedTupleSource outputTs;
 	
 	public WindowFunctionProjectNode(int nodeId) {
@@ -123,6 +127,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 		this.phase = Phase.COLLECT;
 		this.partitionMapping = null;
 		this.valueMapping = null;
+		this.rowValueMapping = null;
 		this.outputTs = null;
 	}
 	
@@ -132,19 +137,21 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			tb.remove();
 			tb = null;
 		}
-		if (partitionMapping != null) {
-			for (STree tree : partitionMapping) {
+		removeMappings(partitionMapping);
+		partitionMapping = null;
+		removeMappings(valueMapping);
+		valueMapping = null;
+		removeMappings(rowValueMapping);
+		rowValueMapping = null;
+	}
+
+	private void removeMappings(STree[] mappings) {
+		if (mappings != null) {
+			for (STree tree : mappings) {
 				if (tree != null) {
 					tree.remove();
 				}
 			}
-			partitionMapping = null;
-		}
-		if (valueMapping != null) {
-			for (STree tree : valueMapping) {
-				tree.remove();
-			}
-			valueMapping = null;
 		}
 	}
 	
@@ -201,7 +208,11 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 					wfi.conditionIndex = getIndex(ex);
 				}
 				wfi.outputIndex = i;
-				wsi.functions.add(wfi);
+				if (wf.getFunction().getAggregateFunction() == Type.ROW_NUMBER) {
+					wsi.rowValuefunctions.add(wfi);
+				} else {
+					wsi.functions.add(wfi);
+				}
 			} else {
 				int index = getIndex(ex);
 				passThrough.put(i, index);
@@ -218,6 +229,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			phase = Phase.PROCESS;
 			partitionMapping = new STree[this.windows.size()];
 			valueMapping = new STree[this.windows.size()];
+			rowValueMapping = new STree[this.windows.size()];
 		}
 		
 		if (phase == Phase.PROCESS) {
@@ -244,15 +256,27 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 				for (int specIndex = 0; specIndex < specs.size(); specIndex++) {
 					Map.Entry<WindowSpecification, WindowSpecificationInfo> entry = specs.get(specIndex);
 					List<?> idRow = Arrays.asList(rowId);
-					if (partitionMapping[specIndex] != null) {
-						idRow = partitionMapping[specIndex].find(idRow);
-						idRow = idRow.subList(1, 2);
+					List<WindowFunctionInfo> functions = entry.getValue().rowValuefunctions;
+					if (!functions.isEmpty()) {
+						List<?> valueRow = rowValueMapping[specIndex].find(idRow);
+						for (int i = 0; i < functions.size(); i++) {
+							WindowFunctionInfo wfi = functions.get(i);
+							outputRow.set(wfi.outputIndex, valueRow.get(i+1));
+						}
 					}
-					List<?> valueRow = valueMapping[specIndex].find(idRow);
-					List<WindowFunctionInfo> functions = entry.getValue().functions;
-					for (int i = 0; i < functions.size(); i++) {
-						WindowFunctionInfo wfi = functions.get(i);
-						outputRow.set(wfi.outputIndex, valueRow.get(i+1));
+					functions = entry.getValue().functions;
+					if (!functions.isEmpty()) {
+						if (partitionMapping[specIndex] != null) {
+							idRow = partitionMapping[specIndex].find(idRow);
+							idRow = idRow.subList(1, 2);
+						} else {
+							idRow = SINGLE_VALUE_ID;
+						}
+						List<?> valueRow = valueMapping[specIndex].find(idRow);
+						for (int i = 0; i < functions.size(); i++) {
+							WindowFunctionInfo wfi = functions.get(i);
+							outputRow.set(wfi.outputIndex, valueRow.get(i+1));
+						}
 					}
 				}
 				this.addBatchRow(outputRow);
@@ -281,24 +305,20 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			Map.Entry<WindowSpecification, WindowSpecificationInfo> entry = specs.get(specIndex);
 			WindowSpecificationInfo info = entry.getValue();
 			IndexedTupleSource specificationTs = tb.createIndexedTupleSource();
-			int[] groupingIndexes = null;
+			boolean multiGroup = false;
+			int[] partitionIndexes = null;
 			int[] orderIndexes = null;
 
 			//if there is partitioning or ordering, then sort
 			if (!info.orderType.isEmpty()) {
+				multiGroup = true;
 				int[] sortKeys = new int[info.orderType.size()];
 				int i = 0;
 				if (!info.groupIndexes.isEmpty()) {
 					for (Integer sortIndex : info.groupIndexes) {
 						sortKeys[i++] = sortIndex;
 					}
-					groupingIndexes = Arrays.copyOf(sortKeys, info.groupIndexes.size());
-					ElementSymbol key = new ElementSymbol("rowid"); //$NON-NLS-1$
-					key.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-					ElementSymbol value = new ElementSymbol("partitionid"); //$NON-NLS-1$
-					key.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-					List<ElementSymbol> elements = Arrays.asList(key, value);
-					partitionMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
+					partitionIndexes = Arrays.copyOf(sortKeys, info.groupIndexes.size());
 				}
 				if (!info.sortIndexes.isEmpty()) {
 					for (Integer sortIndex : info.sortIndexes) {
@@ -306,73 +326,97 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 					}
 					orderIndexes = Arrays.copyOfRange(sortKeys, info.groupIndexes.size(), info.groupIndexes.size() + info.sortIndexes.size());
 				}
+				if (!info.functions.isEmpty()) {
+					ElementSymbol key = new ElementSymbol("rowId"); //$NON-NLS-1$
+					key.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+					ElementSymbol value = new ElementSymbol("partitionId"); //$NON-NLS-1$
+					key.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+					List<ElementSymbol> elements = Arrays.asList(key, value);
+					partitionMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
+				}
 				SortUtility su = new SortUtility(specificationTs, Mode.SORT, this.getBufferManager(), this.getConnectionID(), tb.getSchema(), info.orderType, info.nullOrderings, sortKeys);
 				TupleBuffer sorted = su.sort();
 				specificationTs = sorted.createIndexedTupleSource(true);
 			}
-			List<AggregateFunction> aggs = initializeAccumulators(info, specIndex, orderIndexes);
+			List<AggregateFunction> aggs = initializeAccumulators(info.functions, specIndex, false);
+			List<AggregateFunction> rowValueAggs = initializeAccumulators(info.rowValuefunctions, specIndex, true);
 
-			int partitionId = 0;
+			int groupId = 0;
 			List<?> lastRow = null;
 			while (specificationTs.hasNext()) {
 				List<?> tuple = specificationTs.nextTuple();
-				boolean sameGroup = true;
-				if (lastRow != null) {
-		        	sameGroup = GroupingNode.sameGroup(groupingIndexes, tuple, lastRow);
-		        	if (!sameGroup || orderIndexes != null) {
-		        		saveValues(specIndex, orderIndexes, aggs, partitionId, lastRow, sameGroup);
+				if (multiGroup) {
+				    if (lastRow != null) {
+				    	boolean samePartition = GroupingNode.sameGroup(partitionIndexes, tuple, lastRow);
+				    	if (!aggs.isEmpty() && (!samePartition || !GroupingNode.sameGroup(orderIndexes, tuple, lastRow))) {
+			        		saveValues(specIndex, aggs, groupId, samePartition, false);
+		        			groupId++;
+				    	}
+		        		saveValues(specIndex, rowValueAggs, lastRow.get(lastRow.size() - 1), samePartition, true);
 		        	}
-				}
-		        if (orderIndexes == null) {
-		        	if (!sameGroup) {
-		        		partitionId++;
-		        	}
-		        	List<Object> partitionTuple = Arrays.asList(tuple.get(tuple.size() - 1), partitionId);
-					partitionMapping[specIndex].insert(partitionTuple, InsertMode.NEW, -1);
+				    if (!aggs.isEmpty()) {
+			        	List<Object> partitionTuple = Arrays.asList(tuple.get(tuple.size() - 1), groupId);
+						partitionMapping[specIndex].insert(partitionTuple, InsertMode.NEW, -1);
+				    }
 		        }
 		        for (AggregateFunction function : aggs) {
+		        	function.addInput(tuple);
+		        }
+		        for (AggregateFunction function : rowValueAggs) {
 		        	function.addInput(tuple);
 		        }
 		        lastRow = tuple;
 			}
 		    if(lastRow != null) {
-		    	saveValues(specIndex, orderIndexes, aggs, partitionId, lastRow, true);
+		    	saveValues(specIndex, aggs, groupId, true, false);
+		    	saveValues(specIndex, rowValueAggs, lastRow.get(lastRow.size() - 1), true, true);
 		    }
 		}
 	}
 
-	private void saveValues(int specIndex, int[] orderIndexes,
-			List<AggregateFunction> aggs, int partitionId, List<?> tuple,
-			boolean sameGroup) throws FunctionExecutionException,
+	private void saveValues(int specIndex,
+			List<AggregateFunction> aggs, Object id,
+			boolean samePartition, boolean rowValue) throws FunctionExecutionException,
 			ExpressionEvaluationException, TeiidComponentException,
 			TeiidProcessingException {
-		List<Object> row = new ArrayList<Object>(aggs.size() + 1);
-		if (orderIndexes == null) {
-			row.add(partitionId);
-		} else {
-			//use the rowid
-			row.add(tuple.get(tuple.size() - 1));
+		if (aggs.isEmpty()) {
+			return;
 		}
+		List<Object> row = new ArrayList<Object>(aggs.size() + 1);
+		row.add(id);
 		for (AggregateFunction function : aggs) {
 			row.add(function.getResult());
-			if (!sameGroup) {
+			if (!samePartition) {
 				function.reset();
 			}
 		}
-		valueMapping[specIndex].insert(row, orderIndexes != null?InsertMode.NEW:InsertMode.ORDERED, -1);
+		if (rowValue) {
+			rowValueMapping[specIndex].insert(row, InsertMode.NEW, -1);
+		} else {
+			valueMapping[specIndex].insert(row, InsertMode.ORDERED, -1);	
+		}
 	}
 
-	private List<AggregateFunction> initializeAccumulators(WindowSpecificationInfo info, int specIndex,
-			int[] orderIndexes) {
-		List<AggregateFunction> aggs = new ArrayList<AggregateFunction>();
+	/**
+	 * TODO: consolidate with {@link GroupingNode}
+	 * @param functions
+	 * @param specIndex
+	 * @param rowValues
+	 * @return
+	 */
+	private List<AggregateFunction> initializeAccumulators(List<WindowFunctionInfo> functions, int specIndex, boolean rowValues) {
+		List<AggregateFunction> aggs = new ArrayList<AggregateFunction>(functions.size());
+		if (functions.isEmpty()) {
+			return aggs;
+		}
 		//initialize the function accumulators
-		List<ElementSymbol> elements = new ArrayList<ElementSymbol>(info.functions.size() + 1);
+		List<ElementSymbol> elements = new ArrayList<ElementSymbol>(functions.size() + 1);
 		ElementSymbol key = new ElementSymbol("id"); //$NON-NLS-1$
 		key.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 		elements.add(key);
 
 		CommandContext context = this.getContext();
-		for (WindowFunctionInfo wfi : info.functions) {
+		for (WindowFunctionInfo wfi : functions) {
 			AggregateSymbol aggSymbol = wfi.function.getFunction();
 		    Class<?> outputType = aggSymbol.getType();
 		    ElementSymbol value = new ElementSymbol("val"); //$NON-NLS-1$
@@ -387,7 +431,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			switch (function) {
 			case RANK:
 			case DENSE_RANK:
-				af = new RankingFunction(function, orderIndexes);
+				af = new RankingFunction(function);
 				break;
 			case ROW_NUMBER: //same as count(*)
 			case COUNT:
@@ -424,7 +468,13 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			aggs.add(af);
 		}
 		
-		valueMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
+		if (!aggs.isEmpty()) {
+			if (!rowValues) {
+				valueMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
+			} else {
+				rowValueMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
+			}
+		}
 
 		return aggs;
 	}
