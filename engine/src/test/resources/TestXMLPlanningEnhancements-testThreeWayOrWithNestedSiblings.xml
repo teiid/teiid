@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Catalogs>
+   <Catalog>
+      <Items>
+         <Item ItemID="001">
+            <Name>Lamp</Name>
+            <Quantity>5</Quantity>
+            <Suppliers>
+               <Supplier SupplierID="51">
+                  <Name>Chucky</Name>
+                  <Zip>11111</Zip>
+               </Supplier>
+               <Supplier SupplierID="52">
+                  <Name>Biff's Stuff</Name>
+                  <Zip>22222</Zip>
+               </Supplier>
+               <Supplier SupplierID="53">
+                  <Name>AAAA</Name>
+                  <Zip>33333</Zip>
+               </Supplier>
+               <Supplier SupplierID="56">
+                  <Name>Microsoft</Name>
+                  <Zip>66666</Zip>
+               </Supplier>
+            </Suppliers>
+            <Orders>
+               <Order OrderID="1">
+                  <Name>KMart</Name>
+                  <Zip>12345</Zip>
+               </Order>
+               <Order OrderID="2">
+                  <Name>Sun</Name>
+                  <Zip>94040</Zip>
+               </Order>
+               <Order OrderID="3">
+                  <Name>Cisco</Name>
+                  <Zip>94041</Zip>
+               </Order>
+               <Order OrderID="4">
+                  <Name>Doc</Name>
+                  <Zip>94042</Zip>
+               </Order>
+            </Orders>
+         </Item>
+         <Item ItemID="003">
+            <Name>Goat</Name>
+            <Quantity>4</Quantity>
+            <Suppliers>
+               <Supplier SupplierID="56">
+                  <Name>Microsoft</Name>
+                  <Zip>66666</Zip>
+               </Supplier>
+            </Suppliers>
+            <Orders>
+               <Order OrderID="7">
+                  <Name>Inktomi</Name>
+                  <Zip>94044</Zip>
+               </Order>
+            </Orders>
+         </Item>
+      </Items>
+   </Catalog>
+</Catalogs>

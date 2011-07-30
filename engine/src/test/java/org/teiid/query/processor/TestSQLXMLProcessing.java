@@ -38,10 +38,16 @@ import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
+import org.teiid.query.mapping.relational.QueryNode;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
@@ -185,6 +191,32 @@ public class TestSQLXMLProcessing {
         };    
     
         process(sql, expected);
+    }
+    
+    @Test public void testXmlTableInView() throws Exception {
+        String sql = "select * from g1"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList(null, "first"),
+        		Arrays.asList("attr", "second"),
+        };    
+        
+		MetadataStore metadataStore = new MetadataStore();
+	    // Create models
+	    Schema vm1 = RealMetadataFactory.createVirtualModel("vm1", metadataStore);  //$NON-NLS-1$
+	
+	    QueryNode vm1g1n1 = new QueryNode("select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path '@x', val string path '/.') as x"); //$NON-NLS-1$ //$NON-NLS-2$
+	    Table vm1g1 = RealMetadataFactory.createVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
+	    
+	    RealMetadataFactory.createElements(vm1g1, 
+	                                new String[] { "x", "val" }, //$NON-NLS-1$
+	                                new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
+	    // Create the facade from the store
+	    TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "example");
+
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(), createCommandContext());
+        
+        helpProcess(plan, createCommandContext(), dataManager, expected);
     }
     
 	@Test public void testXmlTableDefaultAndParent() throws Exception {

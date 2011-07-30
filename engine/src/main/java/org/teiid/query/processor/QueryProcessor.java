@@ -169,7 +169,7 @@ public class QueryProcessor implements BatchProducer {
 		return result;
 	}
 
-	private void init() throws TeiidComponentException, TeiidProcessingException {
+	public void init() throws TeiidComponentException, TeiidProcessingException {
 		// initialize if necessary
 		if(!initialized) {
 			reserved = this.bufferMgr.reserveBuffers(this.bufferMgr.getSchemaSize(this.getOutputElements()), BufferReserveMode.FORCE);
@@ -184,7 +184,6 @@ public class QueryProcessor implements BatchProducer {
 		}
 	}
 
-	                   
     /**
      * Close processing and clean everything up.  Should only be called by the same thread that called process.
      */

@@ -99,7 +99,11 @@ public class TupleBuffer {
 			this.uuid = java.util.UUID.randomUUID().toString();
 		}
 		return this.uuid;
-	}	
+	}
+	
+	public void setId(String uuid) {
+		this.uuid = uuid;
+	}
 	
 	public boolean isLobs() {
 		return lobIndexes != null;

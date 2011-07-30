@@ -1232,6 +1232,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         if (windowFunction.getFunction().getOrderBy() != null || windowFunction.getFunction().isDistinct()) {
         	handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0042", new Object[] {windowFunction.getFunction(), windowFunction}), windowFunction); //$NON-NLS-1$
         }
+        if (windowFunction.getWindowSpecification().getPartition() != null) {
+        	validateSortable(windowFunction.getWindowSpecification().getPartition());
+        }
     }
     
     @Override

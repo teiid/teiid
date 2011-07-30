@@ -39,8 +39,9 @@ public interface PlanExecutor {
     /**
      * Execute the plan   
      * @param referenceValues - values for any external references
+     * @param openOnly
      */
-    public void execute(Map referenceValues) throws TeiidComponentException, BlockedException, TeiidProcessingException;
+    public void execute(Map referenceValues, boolean openOnly) throws TeiidComponentException, BlockedException, TeiidProcessingException;
 
     /**
      * Get the ElementSymbol list which represents the schema of the result set

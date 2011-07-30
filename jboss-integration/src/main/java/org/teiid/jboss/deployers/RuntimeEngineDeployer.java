@@ -60,10 +60,10 @@ import org.jboss.managed.api.annotation.ViewUse;
 import org.jboss.profileservice.spi.ProfileService;
 import org.jboss.util.naming.Util;
 import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.Admin.Cache;
 import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.adminapi.Admin.Cache;
 import org.teiid.adminapi.impl.CacheStatisticsMetadata;
 import org.teiid.adminapi.impl.DQPManagement;
 import org.teiid.adminapi.impl.RequestMetadata;
@@ -81,14 +81,15 @@ import org.teiid.client.util.ExceptionUtil;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.LRUCache;
+import org.teiid.deployers.ContainerLifeCycleListener;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
+import org.teiid.dqp.internal.process.DQPCore.ContextProvider;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.DataTierManagerImpl;
 import org.teiid.dqp.internal.process.TransactionServerImpl;
@@ -109,14 +110,11 @@ import org.teiid.metadata.ColumnStats;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.TableStats;
 import org.teiid.metadata.Table.TriggerEvent;
+import org.teiid.metadata.TableStats;
 import org.teiid.net.TeiidURL;
-import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.TransformationMetadata;
-import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.processor.DdlPlan;
-import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.security.SecurityHelper;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
@@ -153,6 +151,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	private String eventDistributorName;
 	private transient EventDistributor eventDistributor;
 	private transient EventDistributor eventDistributorProxy;
+	private transient ContainerLifeCycleListener lifecycleListener;
 	
     public RuntimeEngineDeployer() {
 		// TODO: this does not belong here
@@ -294,7 +293,9 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 				dqpCore.clearCache(Cache.PREPARED_PLAN_CACHE.toString(), name, version);
 				dqpCore.clearCache(Cache.QUERY_SERVICE_RESULT_SET_CACHE.toString(), name, version);
 			}			
-		});    	
+		});
+		
+		synchronizeMaterializeViews();
 	}	
     
     public void stop() {
@@ -548,21 +549,11 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	@Override
     @ManagementOperation(description="Execute a sql query", params={@ManagementParameter(name="vdbName"),@ManagementParameter(name="vdbVersion"), @ManagementParameter(name="command"), @ManagementParameter(name="timoutInMilli")})	
 	public List<List> executeQuery(final String vdbName, final int version, final String command, final long timoutInMilli) throws AdminException {
-		Properties properties = new Properties();
-		properties.setProperty(TeiidURL.JDBC.VDB_NAME, vdbName);
-		properties.setProperty(TeiidURL.JDBC.VDB_VERSION, String.valueOf(version));
 		
 		String user = "JOPR ADMIN"; //$NON-NLS-1$
 		LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("admin_executing", user, command)); //$NON-NLS-1$
 		
-		SessionMetadata session = null;
-		try {
-			session = this.sessionService.createSession(user, null, "JOPR", properties, false, false); //$NON-NLS-1$
-		} catch (SessionServiceException e1) {
-			throw new AdminProcessingException(e1);
-		} catch (LoginException e1) {
-			throw new AdminProcessingException(e1);
-		}
+		SessionMetadata session = createTemporarySession(vdbName, version, user);
 
 		final long requestID =  0L;
 		
@@ -580,8 +571,12 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 					request.setExecutionId(0L);
 					request.setRowLimit(getMaxRowsFetchSize()); // this would limit the number of rows that are returned.
 					Future<ResultsMessage> message = dqpCore.executeRequest(requestID, request);
-					ResultsMessage rm = message.get(timoutInMilli, TimeUnit.MILLISECONDS);
-					
+					ResultsMessage rm = null;
+					if (timoutInMilli < 0) {
+						rm = message.get();
+					} else {
+						rm = message.get(timoutInMilli, TimeUnit.MILLISECONDS);
+					}
 			        if (rm.getException() != null) {
 			            throw new AdminProcessingException(rm.getException());
 			        }
@@ -616,6 +611,23 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 			} catch (InvalidSessionException e) { //ignore
 			}			
 		}
+	}
+
+	private SessionMetadata createTemporarySession(final String vdbName, final int version, final String user)
+			throws AdminProcessingException {
+		Properties properties = new Properties();
+		properties.setProperty(TeiidURL.JDBC.VDB_NAME, vdbName);
+		properties.setProperty(TeiidURL.JDBC.VDB_VERSION, String.valueOf(version));
+		
+		SessionMetadata session = null;
+		try {
+			session = this.sessionService.createSession(user, null, "JOPR", properties, false, false); //$NON-NLS-1$
+		} catch (SessionServiceException e1) {
+			throw new AdminProcessingException(e1);
+		} catch (LoginException e1) {
+			throw new AdminProcessingException(e1);
+		}
+		return session;
 	}	
 	
 	/**
@@ -669,19 +681,12 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	@Override
 	public void updateMatViewRow(String vdbName, int vdbVersion, String schema,
 			String viewName, List<?> tuple, boolean delete) {
-		VDBMetaData vdb = this.vdbRepository.getVDB(vdbName, vdbVersion);
-		if (vdb == null) {
-			return;
-		}
-		TempTableStore globalStore = vdb.getAttachment(TempTableStore.class);
-		if (globalStore == null) {
-			return;
-		}
-		try {
-			this.dqpCore.getDataTierManager().updateMatViewRow(globalStore, RelationalPlanner.MAT_PREFIX + (schema + '.' + viewName).toUpperCase(), tuple, delete);
-		} catch (TeiidException e) {
-			LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("DQPCore.unable_to_process_event")); //$NON-NLS-1$
-		}
+		this.dqpCore.updateMatViewRow(getcontextProvider(), vdbName, vdbVersion, schema, viewName, tuple, delete);
+	}
+	
+	@Override
+	public void refreshMatView(final String vdbName, final int vdbVersion, final String viewName) {
+		this.dqpCore.refreshMatView(getcontextProvider(), vdbName, vdbVersion, viewName);
 	}
 	
 	@Override
@@ -816,4 +821,38 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		return this.eventDistributorProxy;
 	}
 	
+	private void synchronizeMaterializeViews() {
+		this.lifecycleListener.addListener(new ContainerLifeCycleListener.LifeCycleEventListener() {
+			@Override
+			public void onStartupFinish() {
+				dqpCore.synchronizeInternalMaterializedViews(getcontextProvider());
+			}
+			@Override
+			public void onShutdownStart() {
+			}
+		});
+	}
+
+	private ContextProvider getcontextProvider() {
+		return new DQPCore.ContextProvider() {
+			@Override
+			public DQPWorkContext getContext(final String vdbName, final int vdbVersion) {
+				return new DQPWorkContext() {
+					public VDBMetaData getVDB() {
+						return vdbRepository.getVDB(vdbName, vdbVersion);
+					}
+				    public String getVdbName() {
+				        return vdbName;
+				    }
+				    public int getVdbVersion() {
+				        return vdbVersion;
+				    }					
+				};
+			}
+		};
+	}
+	
+	public void setContainerLifeCycleListener(ContainerLifeCycleListener listener) {
+		this.lifecycleListener = listener;
+	}	
 }

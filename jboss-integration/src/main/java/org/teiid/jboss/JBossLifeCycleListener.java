@@ -21,6 +21,10 @@
  */
 package org.teiid.jboss;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
@@ -39,6 +43,7 @@ public class JBossLifeCycleListener extends ServiceMBeanSupport implements Notif
 	public final String STOP_NOTIFICATION_TYPE = "org.jboss.system.server.stopped"; //$NON-NLS-1$
 	
 	private boolean shutdownInProgress = false;
+	private List<ContainerLifeCycleListener.LifeCycleEventListener> listeners = Collections.synchronizedList(new ArrayList<ContainerLifeCycleListener.LifeCycleEventListener>());
 	
 	public JBossLifeCycleListener() {
 		try {
@@ -56,15 +61,26 @@ public class JBossLifeCycleListener extends ServiceMBeanSupport implements Notif
 	public void handleNotification(Notification msg, Object handback) {
 		String type = msg.getType();
 		if (type.equals(START_NOTIFICATION_TYPE)) {
+			for (ContainerLifeCycleListener.LifeCycleEventListener l:listeners) {
+				l.onStartupFinish();
+			}
 		}
 		
 		if (type.equals(STOP_NOTIFICATION_TYPE)) {
 			shutdownInProgress = true;
+			for (ContainerLifeCycleListener.LifeCycleEventListener l:listeners) {
+				l.onShutdownStart();
+			}			
 		}	
 	}
 
 	@Override
 	public boolean isShutdownInProgress() {
 		return shutdownInProgress;
+	}
+
+	@Override
+	public void addListener(LifeCycleEventListener listener) {
+		listeners.add(listener);
 	}
 }

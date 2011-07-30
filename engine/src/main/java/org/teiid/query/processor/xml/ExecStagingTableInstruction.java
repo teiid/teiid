@@ -73,7 +73,7 @@ public class ExecStagingTableInstruction extends ProcessorInstruction {
             // bound references; they are not part of the document; so they do not know about document
             // details.
             Map referenceValues = null;
-            executor.execute(referenceValues);
+            executor.execute(referenceValues, false);
             env.markStagingTableAsLoaded(this.resultSetName);
             
             // now that we done executing the plan; remove the plan from context

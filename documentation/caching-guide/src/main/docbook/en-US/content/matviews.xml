@@ -120,6 +120,22 @@
 			subsequent refreshes performed with <code>refreshMatView</code> will use dependent materialized view tables if they exist.  Only one load may occur at a time.  If a load is already in progress when
 			the <code>SYSADMIN.refreshMatView</code> procedure is called, it will return -1 immediately rather than preempting the current load.
 			</para>
+            <para>
+            When Teiid is running clustered mode, after of loading of internal materialized view contents, an event will be sent to all
+            the other participating nodes in the cluster to refresh the contents from the original node in asynchronus fashion.
+            During this remote node loading process, if the node that is reading the contents gets a request from user to serve the
+            results of that view, then the current results in cache will be served. If no results were available at that node, then 
+            request will be blocked until load process is finished.
+            </para>
+            <para>
+            When a Teiid node joins the cluster, at the end of start-up cycle, an asynchronus job
+            will be started to fetch all the previously cached internal materialized views at other nodes
+            for the deployed VDBs. The query request behaviour during this load process is same as above. 
+            </para>  
+            <note><para>In the clustered mode, the "invalidate=true" flag in the "SYSADMIN.refreshMatView" procedure
+            will only apply to the node that is refreshing the contents from source. All other nodes, will still serve the 
+            old contents during the refresh process.</para>
+            </note>          
 			<section>
 		   		<title>TTL Snapshot Refresh</title>
 		   		<para>The <link linkend="cache-hint">cache hint</link> may be used to automatically trigger a full snapshot refresh after a specified time to live (ttl).  

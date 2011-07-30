@@ -36,6 +36,12 @@
 	<LI><B>Logging Procedures</B> - added SYSADMIN.isLoggable and SYSADMIN.logMsg to aid in debugging procedure logic.
 	<LI><B>ANSI OFFSET/FETCH FIRST</B> - instead of the limit clause, a standard OFFSET and/or FETCH FIRST/NEXT clause can be used to limit results.
 	<LI><B>ODBC Cursors</B> - Capability to use "UseDeclareFetch" with ODBC is added. This enables user to read the results in batches, especially useful when dealing with large row count of results.
+	<LI><B>Internal Materialized Views</B>
+		<UL>
+			<LI><B>Distributed Refresh</B> - When a internal materialized view is refreshed at one node, an event is issued to all other nodes in the cluster to asynchronously fetch the new contents.
+			<LI><B>Sync at Start</B> - When a node is restarted in a cluster, at end of start cycle Teiid will asynchronously fetch the cached internal materialized view contents from other nodes.
+		</UL>
+	</LI>
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

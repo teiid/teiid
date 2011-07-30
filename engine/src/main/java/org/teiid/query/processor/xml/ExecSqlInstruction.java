@@ -49,14 +49,10 @@ public class ExecSqlInstruction extends ProcessorInstruction {
         throws BlockedException, TeiidComponentException, TeiidProcessingException{
 
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"SQL: Result set DOESN'T exist:",resultSetName}); //$NON-NLS-1$
-        PlanExecutor executor = context.getResultExecutor(resultSetName);
-        if (executor == null) {
-            executor = env.createResultExecutor(resultSetName, info);
-            context.setResultExecutor(resultSetName, executor);
-        }
+        PlanExecutor executor = getPlanExecutor(env, context);
         
         // this execute can throw the blocked exception
-        executor.execute(context.getReferenceValues());
+        executor.execute(context.getReferenceValues(), false);
         
         // now that we done executing the plan; remove the plan from context
         context.removeResultExecutor(resultSetName);
@@ -68,6 +64,16 @@ public class ExecSqlInstruction extends ProcessorInstruction {
         env.incrementCurrentProgramCounter();
         return context;
     }
+
+	public PlanExecutor getPlanExecutor(XMLProcessorEnvironment env,
+			XMLContext context) throws TeiidComponentException {
+		PlanExecutor executor = context.getResultExecutor(resultSetName);
+        if (executor == null) {
+            executor = env.createResultExecutor(resultSetName, info);
+            context.setResultExecutor(resultSetName, executor);
+        }
+		return executor;
+	}
     
     public String toString() {
         return "SQL  " + resultSetName; //$NON-NLS-1$ 

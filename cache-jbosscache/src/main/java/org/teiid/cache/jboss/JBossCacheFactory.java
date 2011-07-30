@@ -59,7 +59,9 @@ public class JBossCacheFactory implements CacheFactory, Serializable{
 			
 			if (!this.cacheStore.getCacheStatus().allowInvocations()) {
 				this.cacheStore.start();
-				this.cacheStore.getRegion(this.cacheStore.getRoot().getFqn(), true).activate();
+				if (this.cacheStore.getRegion(this.cacheStore.getRoot().getFqn(), false) != null) {
+					this.cacheStore.getRegion(this.cacheStore.getRoot().getFqn(), true).activate();	
+				}
 			}
 			
 			Node cacheRoot = this.cacheStore.getRoot().addChild(Fqn.fromString("Teiid")); //$NON-NLS-1$

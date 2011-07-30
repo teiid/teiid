@@ -264,6 +264,7 @@ public class TempTableStore {
 					id = tempMetadataStore.addTempGroup(matTableName, ResolverUtil.resolveElementsInGroup(group, metadata), false, true);
 					id.setQueryNode(metadata.getVirtualPlan(viewId));
 					id.setCardinality(metadata.getCardinality(viewId));
+					id.setOriginalMetadataID(viewId);
 					
 					Object pk = metadata.getPrimaryKey(viewId);
 					if (pk != null) {

@@ -145,7 +145,7 @@
         </property>
         <property name="clusterName">${jboss.partition.name:DefaultPartition}-teiid-events</property>
         <property name="multiplexerStack">${jboss.default.jgroups.stack:udp}</property>        
-        <property name="localEventDistributorName">teiid/runtime-engine</property>
+        <property name="localEventDistributorName">teiid/engine-deployer</property>
     </bean>
 
 </deployment>

@@ -24,6 +24,7 @@ package org.teiid.dqp.internal.process;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -291,6 +292,10 @@ public class SessionAwareCache<T> {
 		void setUserName(String name) {
 			this.userName = name;
 		}
+		
+		public VDBKey getVDBKey() {
+			return vdbInfo;
+		}
 						
 		public boolean equals(Object obj){
 	        if(obj == this) {
@@ -328,4 +333,11 @@ public class SessionAwareCache<T> {
     public void setModTime(long modTime) {
 		this.modTime = modTime;
 	}
+    
+    public Set<CacheID> replicatableKeys() {
+    	if (this.distributedCache == this.localCache) {
+    		return Collections.EMPTY_SET;
+    	}
+    	return this.distributedCache.keys();
+    }
 }

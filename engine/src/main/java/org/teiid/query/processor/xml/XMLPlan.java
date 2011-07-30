@@ -155,7 +155,7 @@ public class XMLPlan extends ProcessorPlan {
         
         while(true){
         	// do the xml processing.
-            ProcessorInstruction inst = env.getCurrentInstruction();
+            ProcessorInstruction inst = env.getCurrentInstruction(this.context);
             while (inst != null){
             	LogManager.logTrace(LogConstants.CTX_XML_PLAN, "Executing instruction", inst); //$NON-NLS-1$
                 this.context = inst.process(this.env, this.context);
@@ -186,7 +186,7 @@ public class XMLPlan extends ProcessorPlan {
         	        TupleBatch batch = new TupleBatch(nextBatchCount++, Arrays.asList(Arrays.asList(xml)));
         	        return batch;
                 }
-                inst = env.getCurrentInstruction();
+                inst = env.getCurrentInstruction(this.context);
             }
             
         	TupleBatch batch = new TupleBatch(nextBatchCount++, Collections.EMPTY_LIST); 
