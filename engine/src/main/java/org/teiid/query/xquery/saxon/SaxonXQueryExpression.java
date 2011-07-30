@@ -242,8 +242,11 @@ public class SaxonXQueryExpression {
     public SaxonXQueryExpression clone() {
     	SaxonXQueryExpression clone = new SaxonXQueryExpression();
     	clone.xQuery = xQuery;
+    	clone.xQueryString = xQueryString;
     	clone.config = config;
     	clone.contextRoot = contextRoot;
+    	clone.namespaceMap = namespaceMap;
+    	clone.streamingPathFilter = streamingPathFilter;
     	return clone;
     }
     
