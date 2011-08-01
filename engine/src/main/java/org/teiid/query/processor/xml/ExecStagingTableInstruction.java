@@ -24,13 +24,10 @@ package org.teiid.query.processor.xml;
 
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
-import java.util.Map;
-
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.logging.LogManager;
 import org.teiid.query.mapping.xml.ResultSetInfo;
 
 
@@ -38,20 +35,14 @@ import org.teiid.query.mapping.xml.ResultSetInfo;
 /** 
  * This instruction is to start loading a staging table. The difference between the loading the 
  * staging table and execute sql node is that sql node will capture the results and save them in
- * the context object, where as staging does not care about the results, beacuse they are actully
+ * the context object, where as staging does not care about the results, because they are actually
  * stored in the temp table store, will be accessed by required query directly from there, as these
  * results are nothing do with producing the document directly.
- * 
- * NOTE: In future we can improve this to load parallelly, if there are more than single 
- * staging table defined on the mapping document
  */
-public class ExecStagingTableInstruction extends ProcessorInstruction {
-    String resultSetName;
-    ResultSetInfo info;
+public class ExecStagingTableInstruction extends ExecSqlInstruction {
     
     public ExecStagingTableInstruction(String resultName, ResultSetInfo info) {
-        this.resultSetName = resultName;
-        this.info = info;
+    	super(resultName, info);
     }
     
     /** 
@@ -61,19 +52,8 @@ public class ExecStagingTableInstruction extends ProcessorInstruction {
         throws BlockedException, TeiidComponentException, TeiidProcessingException {
         
         if (!env.isStagingTableLoaded(this.resultSetName)) {
-            LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"SQL: Result set DOESN'T exist:",resultSetName}); //$NON-NLS-1$
+        	super.execute(env, context);
             
-            PlanExecutor executor = context.getResultExecutor(resultSetName);
-            if (executor == null) {
-                executor = env.createResultExecutor(resultSetName, info);
-                context.setResultExecutor(resultSetName, executor);
-            }
-            
-            // this execute can throw the blocked exception; note that staging tables will not have any
-            // bound references; they are not part of the document; so they do not know about document
-            // details.
-            Map referenceValues = null;
-            executor.execute(referenceValues, false);
             env.markStagingTableAsLoaded(this.resultSetName);
             
             // now that we done executing the plan; remove the plan from context

@@ -249,6 +249,15 @@ public class TempTableDataManager implements ProcessorDataManager {
     		contextStore.removeTempTableByName(tempTableName);
             return CollectionTupleSource.createUpdateCountTupleSource(0);
     	}
+    	if (command instanceof AlterTempTable) {
+    		AlterTempTable att = (AlterTempTable)command;
+    		TempTable tt = contextStore.getOrCreateTempTable(att.getTempTable().toUpperCase(), command, bufferManager, true);
+    		tt.setUpdatable(false);
+    		if (att.getIndexColumns() != null) {
+    			tt.addIndex(att.getIndexColumns(), false);
+    		}
+    		return CollectionTupleSource.createUpdateCountTupleSource(0);
+    	}
         return null;
     }
 

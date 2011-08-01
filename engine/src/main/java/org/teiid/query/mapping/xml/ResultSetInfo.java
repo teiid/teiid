@@ -23,11 +23,13 @@
 package org.teiid.query.mapping.xml;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
@@ -61,21 +63,21 @@ public class ResultSetInfo {
     
     private boolean criteriaRaised = false;
     
-    private boolean stagedResult = false;
-    
-    //joined source node state
-    private int mappingClassNumber = 0;
     private ElementSymbol mappingClassSymbol;
 	private boolean inputSet;
 	private boolean isCritNullDependent;
+
+	//auto-staging related info
+	private String stagingRoot;
+	private String tempTable;
+	private Command tempSelect;
+	private Insert tempInsert;
+	private Command tempDrop;
+	private boolean isAutoStaged;
+	private List<ElementSymbol> fkColumns;
     
     public ResultSetInfo(String resultName) {
-        this(resultName, false);
-    }
-    
-    public ResultSetInfo(String resultName, boolean staged) {
         this.resultSetName = resultName;
-        this.stagedResult = staged;
     }    
     
     public String getResultSetName() {
@@ -144,27 +146,24 @@ public class ResultSetInfo {
     }    
     
     public Object clone() {
-        ResultSetInfo clone = new ResultSetInfo(this.resultSetName, this.stagedResult);
+        ResultSetInfo clone = new ResultSetInfo(this.resultSetName);
         clone.rsPlan = this.rsPlan;
         clone.userRowLimit = this.userRowLimit;
         clone.exceptionOnRowLimit = this.exceptionOnRowLimit;
         clone.rsCommand = (Command)this.rsCommand.clone();
         clone.criteriaRaised = this.criteriaRaised;
-        clone.mappingClassNumber = this.mappingClassNumber;
         clone.mappingClassSymbol = this.mappingClassSymbol;
+        clone.tempInsert = this.tempInsert;
+        clone.tempSelect = this.tempSelect;
+        clone.tempTable = this.tempTable;
+        clone.tempDrop = this.tempDrop;
+        clone.isAutoStaged = this.isAutoStaged;
+        clone.fkColumns = this.fkColumns;
         return clone;
     }
     
     public String toString() {
         return resultSetName + ", resultSetObject " + rsCommand; //$NON-NLS-1$
-    }
-
-    public int getMappingClassNumber() {
-        return this.mappingClassNumber;
-    }
-
-    public void setMappingClassNumber(int mappingClassNumber) {
-        this.mappingClassNumber = mappingClassNumber;
     }
 
     public ElementSymbol getMappingClassSymbol() {
@@ -175,10 +174,6 @@ public class ResultSetInfo {
         this.mappingClassSymbol = mappingClassSymbol;
     }
 
-    public boolean isStagedResult() {
-        return this.stagedResult;
-    }
-    
 	public boolean hasInputSet() {
 		return inputSet;
 	}
@@ -193,5 +188,61 @@ public class ResultSetInfo {
 	
 	public boolean isCritNullDependent(){
 		return this.isCritNullDependent;
+	}
+	
+	public String getStagingRoot() {
+		return stagingRoot;
+	}
+	
+	public void setStagingRoot(String stagingRoot) {
+		this.stagingRoot = stagingRoot;
+	}
+
+	public void setTempSelect(Command tempSelect) {
+		this.tempSelect = tempSelect;
+	}
+	
+	public Command getTempSelect() {
+		return tempSelect;
+	}
+	
+	public void setTempInsert(Insert tempInsert) {
+		this.tempInsert = tempInsert;
+	}
+	
+	public Insert getTempInsert() {
+		return tempInsert;
+	}
+	
+	public Command getTempDrop() {
+		return tempDrop;
+	}
+	
+	public void setTempDrop(Command tempDrop) {
+		this.tempDrop = tempDrop;
+	}
+
+	public String getTempTable() {
+		return tempTable;
+	}
+	
+	public void setTempTable(String rsTempTable) {
+		this.tempTable = rsTempTable;
+	}
+	
+	public boolean isAutoStaged() {
+		return isAutoStaged;
+	}
+	
+	public void setAutoStaged(boolean isAutoStaged) {
+		this.isAutoStaged = isAutoStaged;
+	}
+
+	public void setFkColumns(List<ElementSymbol> fkColumns) {
+		this.fkColumns = fkColumns;
+	}
+
+	public List<ElementSymbol> getFkColumns() {
+		return this.fkColumns;
 	}
 }

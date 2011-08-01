@@ -179,18 +179,25 @@ public class XMLProcessorEnvironment {
         if (programState.programCounter >= programState.lookaheadCounter && instrs.size() > programState.programCounter + 1) {
         	for (programState.lookaheadCounter = programState.programCounter; programState.lookaheadCounter < instrs.size(); programState.lookaheadCounter++) {
         		ProcessorInstruction pi = instrs.get(programState.lookaheadCounter);
+        		boolean staging = false;
         		if (pi instanceof ExecStagingTableInstruction) {
-        			//need to load staging tables prior to source queries
-        			break;
+        			staging = true;
+        			ExecStagingTableInstruction esti = (ExecStagingTableInstruction)pi;
+        			if (!esti.info.isAutoStaged()) {
+        				//need to load staging tables prior to source queries
+        				break;
+        			}
         		}
         		if (pi instanceof ExecSqlInstruction) {
         			ExecSqlInstruction esi = (ExecSqlInstruction)pi;
+        			if (!staging && esi.info.isAutoStaged() && esi.info.getTempTable() == null) {
+        				continue; //derived load
+        			}
         			PlanExecutor pe = esi.getPlanExecutor(this, context);
         			pe.execute(context.getReferenceValues(), true);
         		}
         	}
         }
-        
         return programState.program.getInstructionAt(programState.programCounter);
     }
     

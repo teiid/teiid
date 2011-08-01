@@ -8866,33 +8866,6 @@ public class TestXMLProcessor {
         helpTestProcess("SELECT * FROM xmltest.doc1 WHERE NOT (ItemID IN (SELECT itemNum FROM stock.items WHERE itemNum = '001') )", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void XXXtestSubqueryInXMLQueryCriteria4() throws Exception {
-        QueryMetadataInterface metadata = exampleMetadataCached();
-        FakeDataManager dataMgr = exampleDataManager(metadata);
-        String expectedDoc = 
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
-            "<Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\r\n" + //$NON-NLS-1$
-            "    <Catalog>\r\n" +  //$NON-NLS-1$
-            "        <Items>\r\n" +  //$NON-NLS-1$
-            "            <Item ItemID=\"001\">\r\n" +  //$NON-NLS-1$
-            "                <Name>Lamp</Name>\r\n" +  //$NON-NLS-1$
-            "                <Quantity>5</Quantity>\r\n" +  //$NON-NLS-1$
-            "            </Item>\r\n" +  //$NON-NLS-1$
-            "            <Item ItemID=\"002\">\r\n" +  //$NON-NLS-1$
-            "                <Name>Screwdriver</Name>\r\n" +  //$NON-NLS-1$
-            "                <Quantity>100</Quantity>\r\n" +  //$NON-NLS-1$
-            "            </Item>\r\n" +  //$NON-NLS-1$
-            "            <Item ItemID=\"003\">\r\n" +  //$NON-NLS-1$
-            "                <Name>Goat</Name>\r\n" +  //$NON-NLS-1$
-            "                <Quantity>4</Quantity>\r\n" +  //$NON-NLS-1$
-            "            </Item>\r\n" +  //$NON-NLS-1$
-            "        </Items>\r\n" +  //$NON-NLS-1$
-            "    </Catalog>\r\n" +  //$NON-NLS-1$
-            "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
-        
-        helpTestProcess("SELECT * FROM xmltest.doc1 WHERE EXISTS (SELECT itemNum FROM stock.items WHERE itemNum = '001')", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
-    }
-
     @Test public void testSubqueryInXMLQueryCriteriaNestedSubquery() throws Exception {
         QueryMetadataInterface metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);

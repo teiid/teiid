@@ -325,7 +325,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
             return true;
         }
         
-        if(groupID instanceof TempMetadataID) {                         
+        if(groupID instanceof TempMetadataID && !(actualMetadata instanceof TempMetadataAdapter)) {                         
             return false;
         }   
                 
@@ -347,7 +347,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
             }
         }
         
-        if(groupID instanceof TempMetadataID) {                         
+        if(groupID instanceof TempMetadataID && !(actualMetadata instanceof TempMetadataAdapter)) {                         
             return null;
         }   
 

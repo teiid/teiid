@@ -27,31 +27,52 @@ import java.util.Map;
 
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
-import org.teiid.common.buffer.IndexedTupleSource;
+import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.mapping.xml.ResultSetInfo;
+import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.processor.BatchIterator;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
+import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.util.VariableContext;
+import org.teiid.query.tempdata.AlterTempTable;
 import org.teiid.query.util.CommandContext;
-
-
 
 /** 
  * This is a helper class which can execute a supplied relational plan and supply
  * resulting query results to the caller.
- * Note: in future we would want to replace this class with submitting the requests directly to
- * process worker queue.
  */
 class RelationalPlanExecutor implements PlanExecutor {
     
-    QueryProcessor internalProcessor;
+    private final class TempLoadTupleSource implements TupleSource {
+		@Override
+		public List<?> nextTuple() throws TeiidComponentException,
+				TeiidProcessingException {
+			try {
+				List<?> tuple = tupleSource.nextTuple();
+				if (tuple == null) {
+					doneLoading = true;
+				}
+				return tuple;
+			} catch (BlockedException e) {
+				return null;
+			}
+		}
+
+		@Override
+		public void closeSource() {
+			tupleSource.closeSource();
+		}
+	}
+
+	QueryProcessor internalProcessor;
 
     // information about the result set.
     ResultSetInfo resultInfo;
@@ -60,16 +81,20 @@ class RelationalPlanExecutor implements PlanExecutor {
     // flag to denote the end of rows
     boolean endOfRows = false;
     // results after the execution bucket.
-    IndexedTupleSource tupleSource;
+    TupleSource tupleSource;
     // cached current row of results.
-    List currentRow;
+    List<?> currentRow;
     int currentRowNumber = 0;
+    private ProcessorDataManager dataManager;
+    private boolean executed;
+    private boolean doneLoading;
     
     public RelationalPlanExecutor (ResultSetInfo resultInfo, CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) 
         throws TeiidComponentException{
         
         this.resultInfo = resultInfo;
         this.bufferMgr = bufferMgr;
+        this.dataManager = dataMgr;
         
         ProcessorPlan plan = resultInfo.getPlan();
         CommandContext subContext = context.clone();
@@ -97,9 +122,38 @@ class RelationalPlanExecutor implements PlanExecutor {
             	internalProcessor.init();
             }
         }
-        if (!openOnly) {
-	        //force execution
-	        this.tupleSource.hasNext();
+        if (!openOnly && !executed) {
+	        String tempTable = this.resultInfo.getTempTable();
+			if (tempTable != null && !doneLoading && !this.resultInfo.isAutoStaged()) {
+	        	LogManager.logDetail(LogConstants.CTX_XML_PLAN, "Loading result set temp table", tempTable); //$NON-NLS-1$
+
+	        	Insert insert = this.resultInfo.getTempInsert();
+	        	insert.setTupleSource(new TempLoadTupleSource());
+	        	this.dataManager.registerRequest(this.internalProcessor.getContext(), insert, TempMetadataAdapter.TEMP_MODEL.getName(), null, 0, -1);
+	        	if (!doneLoading) {
+	        		throw BlockedException.block("Blocking on result set load"); //$NON-NLS-1$
+	        	}
+        		internalProcessor.closeProcessing();
+				AlterTempTable att = new AlterTempTable(tempTable);
+				//mark the temp table as non-updatable
+				this.dataManager.registerRequest(this.internalProcessor.getContext(), att, TempMetadataAdapter.TEMP_MODEL.getName(), null, 0, -1);
+        		this.tupleSource = this.dataManager.registerRequest(this.internalProcessor.getContext(), this.resultInfo.getTempSelect(), TempMetadataAdapter.TEMP_MODEL.getName(), null, 0, -1);
+	        }
+			//force execution
+        	currentRow();
+        	
+			if (this.resultInfo.isAutoStaged() && tempTable != null) {
+				AlterTempTable att = new AlterTempTable(tempTable);
+				int size = (Integer)this.currentRow.get(0);
+				if (size > this.bufferMgr.getProcessorBatchSize() * 2) {
+					//TODO: if the parent is small, then this is not necessary
+					att.setIndexColumns(this.resultInfo.getFkColumns());
+				}
+				this.dataManager.registerRequest(this.internalProcessor.getContext(), att, TempMetadataAdapter.TEMP_MODEL.getName(), null, 0, -1);
+			}
+
+			this.currentRowNumber = 0;
+			this.executed = true;
         }
     }    
     
@@ -122,7 +176,9 @@ class RelationalPlanExecutor implements PlanExecutor {
         if (!endOfRows) {
 
             // get the next row
-            this.currentRow = this.tupleSource.nextTuple();     
+        	if (this.currentRow == null || this.currentRowNumber > 0) {
+        		this.currentRow = this.tupleSource.nextTuple();     
+        	}
             this.currentRowNumber++;
 
             // check if we walked over the row limit
@@ -159,6 +215,19 @@ class RelationalPlanExecutor implements PlanExecutor {
      */
     public void close() throws TeiidComponentException {
 		this.internalProcessor.closeProcessing();
+		if (this.tupleSource != null) {
+			this.tupleSource.closeSource();
+		}
+		String rsTempTable = this.resultInfo.getTempTable();
+		if (rsTempTable != null) {
+        	LogManager.logDetail(LogConstants.CTX_XML_PLAN, "Unloading result set temp table", rsTempTable); //$NON-NLS-1$
+        	internalProcessor.closeProcessing();
+        	try {
+				this.tupleSource = this.dataManager.registerRequest(this.internalProcessor.getContext(), this.resultInfo.getTempDrop(), TempMetadataAdapter.TEMP_MODEL.getName(), null, 0, -1);
+			} catch (TeiidProcessingException e) {
+		        LogManager.logDetail(org.teiid.logging.LogConstants.CTX_XML_PLAN, e, "Error dropping result set temp table", rsTempTable); //$NON-NLS-1$
+			}
+        }
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"closed executor", resultInfo.getResultSetName()}); //$NON-NLS-1$
     }
   
