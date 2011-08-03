@@ -53,6 +53,7 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 	private String searchDefaultBaseDN;
 	private boolean restrictToObjectClass;
 	private SearchDefaultScope searchDefaultScope = SearchDefaultScope.ONELEVEL_SCOPE;
+	private boolean usePagination;
 	
 	public LDAPExecutionFactory() {
 		this.setMaxInCriteriaSize(1000);
@@ -89,7 +90,7 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command,ExecutionContext executionContext, RuntimeMetadata metadata, LdapContext context)
 			throws TranslatorException {
-		return new LDAPSyncQueryExecution((Select)command, this, context);
+		return new LDAPSyncQueryExecution((Select)command, this, executionContext, context);
 	}
 	
 	@Override
@@ -142,5 +143,15 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 	@Override
 	public boolean supportsNotCriteria() {
 		return true;
+	}
+
+	@TranslatorProperty(display="Use Pagination", description="Use a PagedResultsControl to page through large results.  This is not supported by all directory servers.")
+	public boolean usePagination() {
+		return usePagination;
 	}	
+	
+	public void setUsePagination(boolean usePagination) {
+		this.usePagination = usePagination;
+	}
+	
 }

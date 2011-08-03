@@ -91,6 +91,8 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.Control;
 import javax.naming.ldap.LdapContext;
+import javax.naming.ldap.PagedResultsControl;
+import javax.naming.ldap.PagedResultsResponseControl;
 import javax.naming.ldap.SortControl;
 import javax.naming.ldap.SortKey;
 
@@ -98,6 +100,7 @@ import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
@@ -119,6 +122,8 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	private IQueryToLdapSearchParser parser;
 	private Select query;
 	private LDAPExecutionFactory executionFactory;
+	private ExecutionContext executionContext;
+	private SearchControls ctrls;
 
 	/** 
 	 * Constructor
@@ -127,10 +132,11 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	 * @param logger the ConnectorLogger
 	 * @param ldapCtx the LDAP Context
 	 */
-	public LDAPSyncQueryExecution(Select query, LDAPExecutionFactory factory, LdapContext ldapCtx) {
+	public LDAPSyncQueryExecution(Select query, LDAPExecutionFactory factory, ExecutionContext context, LdapContext ldapCtx) {
 		this.ldapConnection = ldapCtx;
 		this.query = query;
 		this.executionFactory = factory;
+		this.executionContext = context;
 	}
 
 	/** 
@@ -146,31 +152,40 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 
 		// Create and configure the new search context.
 		createSearchContext();
-		SearchControls ctrls = setSearchControls();
-		setStandardRequestControls();
+		ctrls = setSearchControls();
+		String ctxName = searchDetails.getContextName();
+		String filter = searchDetails.getContextFilter();
+		if (ctxName == null || filter == null || ctrls == null) {
+			throw new TranslatorException(LogConstants.CTX_CONNECTOR, "Search context, filter, or controls were null. Cannot execute search."); //$NON-NLS-1$
+		}
+		setRequestControls(null);
 		// Execute the search.
-		executeSearch(ctrls);
+		executeSearch();
 	}
 
 	/** 
 	 * Set the standard request controls
 	 */
-	private void setStandardRequestControls() throws TranslatorException {
-		Control[] sortCtrl = new Control[1];
+	private void setRequestControls(byte[] cookie) throws TranslatorException {
+		List<Control> ctrl = new ArrayList<Control>();
 		SortKey[] keys = searchDetails.getSortKeys();
-		if (keys != null) {
-			try {
-				sortCtrl[0] = new SortControl(keys, Control.NONCRITICAL);
-				this.ldapCtx.setRequestControls(sortCtrl);
-				LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Sort ordering was requested, and sort control was created successfully."); //$NON-NLS-1$
-			} catch (NamingException ne) {
-	            final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.setControlsError") +  //$NON-NLS-1$
-	            " : "+ne.getExplanation(); //$NON-NLS-1$
-				throw new TranslatorException(msg);
-			} catch(IOException e) {
-	            final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.setControlsError"); //$NON-NLS-1$
-				throw new TranslatorException(e,msg);
+		try {			
+			if (keys != null) {
+				ctrl.add(new SortControl(keys, Control.NONCRITICAL));
 			}
+			if (this.executionFactory.usePagination()) {
+				ctrl.add(new PagedResultsControl(this.executionContext.getBatchSize(), cookie, Control.CRITICAL));
+			}
+			if (!ctrl.isEmpty()) {
+				this.ldapCtx.setRequestControls(ctrl.toArray(new Control[ctrl.size()]));
+				LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Sort/pagination controls were created successfully."); //$NON-NLS-1$
+			}
+		} catch (NamingException ne) {
+            final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.setControlsError") +  //$NON-NLS-1$
+            " : "+ne.getExplanation(); //$NON-NLS-1$
+			throw new TranslatorException(ne, msg);
+		} catch(IOException e) {
+			throw new TranslatorException(e);
 		}
 	}
 
@@ -219,22 +234,14 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	 * Perform the LDAP search against the subcontext, using the filter and 
 	 * search controls appropriate to the query and model metadata.
 	 */
-	private void executeSearch(SearchControls ctrls) throws TranslatorException {
-		String ctxName = searchDetails.getContextName();
+	private void executeSearch() throws TranslatorException {
 		String filter = searchDetails.getContextFilter();
-		if (ctxName == null || filter == null || ctrls == null) {
-			LogManager.logError(LogConstants.CTX_CONNECTOR, "Search context, filter, or controls were null. Cannot execute search."); //$NON-NLS-1$
-		}
 		try {
 			searchEnumeration = this.ldapCtx.search("", filter, ctrls); //$NON-NLS-1$
 		} catch (NamingException ne) {
-			LogManager.logError(LogConstants.CTX_CONNECTOR, "LDAP search failed. Attempted to search context " //$NON-NLS-1$
-					+ ctxName + " using filter " + filter); //$NON-NLS-1$
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.execSearchError"); //$NON-NLS-1$
-			throw new TranslatorException(msg + " : " + ne.getExplanation());  //$NON-NLS-1$ 
+			throw new TranslatorException(ne, msg + " : " + ne.getExplanation());  //$NON-NLS-1$ 
 		} catch(Exception e) {
-			LogManager.logError(LogConstants.CTX_CONNECTOR, "LDAP search failed. Attempted to search context " //$NON-NLS-1$
-					+ ctxName + " using filter " + filter); //$NON-NLS-1$
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.execSearchError"); //$NON-NLS-1$
 			throw new TranslatorException(e, msg); 
 		}
@@ -293,6 +300,27 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 			{
 				SearchResult searchResult = (SearchResult) searchEnumeration.next();
 				result = getRow(searchResult);
+			}
+			
+			if (result == null && this.executionFactory.usePagination()) {
+			    byte[] cookie = null;
+				Control[] controls = ldapCtx.getResponseControls();
+		        if (controls != null) {
+		        	for (int i = 0; i < controls.length; i++) {
+		        		if (controls[i] instanceof PagedResultsResponseControl) {
+		        			PagedResultsResponseControl prrc = (PagedResultsResponseControl)controls[i];
+		                    cookie = prrc.getCookie();
+		        		}
+		        	}
+		        }
+		        
+		        if (cookie == null) {
+		        	return null;
+		        }
+	
+		        setRequestControls(cookie);
+		        executeSearch();
+		        return next();
 			}
 
 			return result;
@@ -451,22 +479,4 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 		}
 	}
 	
-
-	/**
-	 * Active Directory and OpenLDAP supports PagedResultsControls, so I left
-	 * this method in here in case we decide to extend support for this control
-	 * in the future.
-	 */
-//	private void setADRequestControls(int maxBatchSize) {
-//		try {
-//			ldapCtx.setRequestControls(new Control[] { new PagedResultsControl(
-//					maxBatchSize, Control.CRITICAL) });
-//		} catch (NamingException ne) {
-//			logger.logError("Failed to set page size for LDAP results. Please ensure that paged results controls are supported by the LDAP server implementation."); //$NON-NLS-1$
-//			ne.printStackTrace();
-//		} catch (IOException ioe) {
-//			logger.logError("IO Exception while setting paged results control."); //$NON-NLS-1$
-//			ioe.printStackTrace();
-//		}
-//	}
 }
