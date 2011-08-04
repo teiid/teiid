@@ -177,6 +177,7 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.RPAD);
         supportedFunctions.add(SourceSystemFunctions.RTRIM);
         supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
+        supportedFunctions.add(SourceSystemFunctions.TRIM);
         supportedFunctions.add(SourceSystemFunctions.UCASE);
         
         // These are executed within the server and never pushed down

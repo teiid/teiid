@@ -56,6 +56,7 @@ import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.InputStreamFactory.BlobInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.ClobInputStreamFactory;
 import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.util.CommandContext;
@@ -694,14 +695,30 @@ public final class FunctionMethods {
 		return new Integer(str.indexOf(sub, start.intValue() - 1) + 1);
 	}
 
+	public static String trim(String trimSpec, String trimChar, String string) throws FunctionExecutionException {
+		if (trimChar.length() != 1) {
+			throw new FunctionExecutionException(QueryPlugin.Util.getString("SQLParser.Invalid_char", "trim char", trimChar)); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		if (!trimSpec.equalsIgnoreCase(SQLConstants.Reserved.LEADING)) {
+			string = rightTrim(string, trimChar.charAt(0));
+		}
+		if (!trimSpec.equalsIgnoreCase(SQLConstants.Reserved.TRAILING)) {
+			string = leftTrim(string, trimChar.charAt(0));
+		}
+		return string;
+	}
+	
 	// ================== Function = lefttrim =====================
 
 	private static final char SPACE = ' ';
 
-	public static Object leftTrim(String string) {
+	public static String leftTrim(String string, char trimChar) {
 		for(int i=0; i<string.length(); i++) {
-			if(string.charAt(i) != SPACE) {
+			if(string.charAt(i) != trimChar) {
 				// end of trim, return what's left
+				if (i==0) {
+					return string;
+				}
 				return new String(string.substring(i));
 			}
 		}
@@ -709,19 +726,31 @@ public final class FunctionMethods {
 		// All spaces, so trim it all
 		return ""; //$NON-NLS-1$
 	}
+	
+	
+	public static String leftTrim(String string) {
+		return leftTrim(string, SPACE);
+	}
 
 	// ================== Function = righttrim =====================
 
-	public static Object rightTrim(String string) {
+	public static String rightTrim(String string, char trimChar) {
 		for(int i=string.length()-1; i>=0; i--) {
-			if(string.charAt(i) != SPACE) {
+			if(string.charAt(i) != trimChar) {
 				// end of trim, return what's left
+				if (i==string.length()-1) {
+					return string;
+				}
 				return new String(string.substring(0, i+1));
 			}
 		}
 
 		// All spaces, so trim it all
 		return ""; //$NON-NLS-1$
+	}
+	
+	public static Object rightTrim(String string) {
+		return rightTrim(string, SPACE);
 	}
 
 	// ================== Function = replace =====================

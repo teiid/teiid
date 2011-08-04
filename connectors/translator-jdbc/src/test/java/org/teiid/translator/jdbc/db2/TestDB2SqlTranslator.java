@@ -270,5 +270,14 @@ public class TestDB2SqlTranslator {
                 input, output, 
                 TRANSLATOR);
     }
+    
+    @Test public void testTrim() throws Exception {
+        String input = "SELECT trim(leading 'x' from stringnum) FROM BQT1.SMALLA"; //$NON-NLS-1$
+        String output = "SELECT STRIP(SmallA.StringNum, leading, 'x') FROM SmallA";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
 
 }

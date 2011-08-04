@@ -529,11 +529,11 @@ public class ResolverVisitor extends LanguageVisitor {
 	    
 	    if(fd.getName().equalsIgnoreCase(FunctionLibrary.CONVERT) || fd.getName().equalsIgnoreCase(FunctionLibrary.CAST)) {
 	        String dataType = (String) ((Constant)args[1]).getValue();
-	        Class dataTypeClass = DataTypeManager.getDataTypeClass(dataType);
+	        Class<?> dataTypeClass = DataTypeManager.getDataTypeClass(dataType);
 	        fd = library.findTypedConversionFunction(args[0].getType(), dataTypeClass);
 	
 	        // Verify that the type conversion from src to type is even valid
-	        Class srcTypeClass = args[0].getType();
+	        Class<?> srcTypeClass = args[0].getType();
 	        if(srcTypeClass != null && dataTypeClass != null &&
 	           !srcTypeClass.equals(dataTypeClass) &&
 	           !DataTypeManager.isTransformable(srcTypeClass, dataTypeClass)) {
@@ -545,7 +545,6 @@ public class ResolverVisitor extends LanguageVisitor {
 			fd = library.copyFunctionChangeReturnType(fd, lookup.getReturnElement().getType());
 	    } 
 	
-	    // Resolve the function
 	    function.setFunctionDescriptor(fd);
 	    function.setType(fd.getReturnType());
 	}

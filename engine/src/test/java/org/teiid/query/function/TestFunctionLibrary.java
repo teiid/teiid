@@ -1408,4 +1408,16 @@ public class TestFunctionLibrary {
 		assertEquals(1, helpInvokeMethod("array_get", new Class<?>[] {DefaultDataClasses.OBJECT, DefaultDataClasses.INTEGER}, new Object[] {new Object[] {1}, 1}, null)); //$NON-NLS-1$
 	}
 	
+	@Test() public void testTrim() throws Exception {
+		helpInvokeMethod("trim", new Object[] {"leading", "x", "xaxx"}, "axx"); //$NON-NLS-1$
+	}
+
+	@Test() public void testTrim1() throws Exception {
+		helpInvokeMethod("trim", new Object[] {"both", " ", "   a   "}, "a"); //$NON-NLS-1$
+	}
+
+	@Test() public void testTrim2() throws Exception {
+		helpInvokeMethod("trim", new Object[] {"trailing", "x", "xaxx"}, "xa"); //$NON-NLS-1$
+	}
+
 }

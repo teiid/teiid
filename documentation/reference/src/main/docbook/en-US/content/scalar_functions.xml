@@ -1005,6 +1005,7 @@
           <row>
             <entry>
               <para>SUBSTRING(x, y)</para>
+              <para>SUBSTRING(x FROM y)</para>
             </entry>
             <entry>
               <para>Get substring from x, from position y to the end of x
@@ -1017,6 +1018,7 @@
           <row>
             <entry>
               <para>SUBSTRING(x, y, z)</para>
+              <para>SUBSTRING(x FROM y FOR z)</para>
             </entry>
             <entry>
               <para>Get substring from x from position y with length z
@@ -1059,6 +1061,18 @@
             </entry>
             <entry>
               <para>x in {string}</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>TRIM([[LEADING|TRAILING|BOTH] [x] FROM] y)</para>
+            </entry>
+            <entry>
+              <para>Trim the leading, trailing, or both ends of a string y of character x.  
+              If LEADING/TRAILING/BOTH is not specified, BOTH is used.  If no trim character x is specficed then the blank space ' ' is used.</para>
+            </entry>
+            <entry>
+              <para>x in {character}, y in {string}</para>
             </entry>
           </row>
           <row>

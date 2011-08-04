@@ -2464,4 +2464,12 @@ public class TestQueryRewriter {
     	helpTestRewriteCommand("select max(1) from pm1.g1 group by e1", "SELECT 1 FROM pm1.g1 GROUP BY e1");
     }
     
+    @Test public void testRewriteTrim() throws Exception {
+    	helpTestRewriteExpression("trim(pm1.g1.e1)", "rtrim(ltrim(pm1.g1.e1))", RealMetadataFactory.example1Cached());
+    }
+
+    @Test public void testRewriteTrim1() throws Exception {
+    	helpTestRewriteExpression("trim(leading from pm1.g1.e1)", "ltrim(pm1.g1.e1)", RealMetadataFactory.example1Cached());
+    }
+
 }

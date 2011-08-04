@@ -302,6 +302,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("RPAD"); //$NON-NLS-1$
         supportedFunctions.add("RTRIM"); //$NON-NLS-1$
         supportedFunctions.add("SUBSTRING"); //$NON-NLS-1$
+        supportedFunctions.add(SourceSystemFunctions.TRIM);
         supportedFunctions.add("UCASE"); //$NON-NLS-1$
         supportedFunctions.add("UPPER"); //$NON-NLS-1$
         

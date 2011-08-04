@@ -58,6 +58,10 @@ public class SourceSystemFunctions {
 	public static final String SUBSTRING = "substring"; //$NON-NLS-1$
 	public static final String TO_BYTES = "to_bytes"; //$NON-NLS-1$
 	public static final String TO_CHARS = "to_chars"; //$NON-NLS-1$
+	/**
+	 * The trim function is only used for a non-space trim character
+	 */
+	public static final String TRIM = "trim"; //$NON-NLS-1$
 	public static final String UCASE = "ucase"; //$NON-NLS-1$
 	public static final String UNESCAPE = "unescape"; //$NON-NLS-1$
 	

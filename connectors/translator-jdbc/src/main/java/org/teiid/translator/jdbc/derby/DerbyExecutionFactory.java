@@ -40,6 +40,7 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
 	
 	public static final String TEN_1 = "10.1"; //$NON-NLS-1$
 	public static final String TEN_2 = "10.2"; //$NON-NLS-1$
+	public static final String TEN_3 = "10.3"; //$NON-NLS-1$
 	public static final String TEN_4 = "10.4"; //$NON-NLS-1$
 	public static final String TEN_5 = "10.5"; //$NON-NLS-1$
 	
@@ -130,6 +131,9 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
         //supportedFunctions.add("RPAD"); //$NON-NLS-1$
         supportedFunctions.add("RTRIM"); //$NON-NLS-1$
         supportedFunctions.add("SUBSTRING"); //$NON-NLS-1$
+        if (getDatabaseVersion().compareTo(TEN_3) >= 0) {
+        	supportedFunctions.add(SourceSystemFunctions.TRIM);
+        }
         supportedFunctions.add("UCASE"); //$NON-NLS-1$
         
         // These are executed within the server and never pushed down

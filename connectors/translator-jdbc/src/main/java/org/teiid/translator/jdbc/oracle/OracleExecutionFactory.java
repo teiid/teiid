@@ -454,6 +454,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("RTRIM"); //$NON-NLS-1$
         supportedFunctions.add("SUBSTRING"); //$NON-NLS-1$
         supportedFunctions.add("TRANSLATE"); //$NON-NLS-1$
+        supportedFunctions.add(SourceSystemFunctions.TRIM);
         supportedFunctions.add("UCASE"); //$NON-NLS-1$
         supportedFunctions.add("UPPER"); //$NON-NLS-1$
         supportedFunctions.add("HOUR"); //$NON-NLS-1$

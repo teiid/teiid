@@ -432,4 +432,9 @@ public class TestExpressionEvaluator {
     	assertEquals(Boolean.TRUE, Evaluator.evaluate(inc));
     }
     
+    @Test public void testSubstring() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("substring('abcd' from 2 for 2)");
+    	assertEquals("bc", Evaluator.evaluate(ex));
+    }
+    
 }

@@ -2977,4 +2977,14 @@ public class TestResolver {
 
         helpResolveUpdateProcedure(procedure, userQuery);
 	}
+    
+    @Test public void testTrim() {
+    	Query query = (Query)helpResolve("select trim(e1) from pm1.g1");
+    	assertEquals(DataTypeManager.DefaultDataClasses.STRING, query.getProjectedSymbols().get(0).getType());
+    }
+    
+    @Test public void testTrim1() {
+    	helpResolve("select trim('x' from e1) from pm1.g1");
+    }
+
 }

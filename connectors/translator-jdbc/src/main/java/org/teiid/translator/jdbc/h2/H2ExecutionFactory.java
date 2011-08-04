@@ -28,9 +28,9 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
@@ -139,6 +139,7 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.RPAD);
         supportedFunctions.add(SourceSystemFunctions.RTRIM);
         supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
+        supportedFunctions.add(SourceSystemFunctions.TRIM);
         supportedFunctions.add(SourceSystemFunctions.UCASE);
         supportedFunctions.add(SourceSystemFunctions.UNESCAPE);
         

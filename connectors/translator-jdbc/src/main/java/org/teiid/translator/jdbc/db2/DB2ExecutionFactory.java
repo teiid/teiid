@@ -23,9 +23,16 @@
 package org.teiid.translator.jdbc.db2;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.Literal;
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.jdbc.FunctionModifier;
 
 @Translator(name="db2", description="A translator for IBM DB2 Database")
 public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
@@ -80,6 +87,7 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 		supportedFunctions.add("RIGHT"); //$NON-NLS-1$
 		supportedFunctions.add("RTRIM"); //$NON-NLS-1$
 		supportedFunctions.add("SUBSTRING"); //$NON-NLS-1$
+		supportedFunctions.add(SourceSystemFunctions.TRIM);
 		//supportedFunctions.add("TRANSLATE"); //$NON-NLS-1$
 		supportedFunctions.add("UCASE"); //$NON-NLS-1$
 		supportedFunctions.add("UPPER"); //$NON-NLS-1$
@@ -129,5 +137,18 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 	public boolean supportsElementaryOlapOperations() {
 		return getDatabaseVersion().compareTo(NINE_1) >= 0;
 	}
-
+	
+	@Override
+	public void start() throws TranslatorException {
+		super.start();
+		registerFunctionModifier(SourceSystemFunctions.TRIM, new FunctionModifier() {
+			
+			@Override
+			public List<?> translate(Function function) {
+				List<Expression> p = function.getParameters();
+				return Arrays.asList("STRIP(", p.get(2), ", ", ((Literal)p.get(0)).getValue(), ", ", p.get(1), ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+			}
+		});
+	}
+	
 }

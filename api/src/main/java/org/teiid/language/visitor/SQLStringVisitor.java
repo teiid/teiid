@@ -410,7 +410,20 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
                 }
             }
             buffer.append(Tokens.RPAREN);
-
+        } else if (name.equalsIgnoreCase(NonReserved.TRIM)) {
+        	buffer.append(name);
+        	buffer.append(Tokens.LPAREN);
+        	String value = (String)((Literal)args.get(0)).getValue();
+        	if (!value.equalsIgnoreCase(BOTH)) {
+                buffer.append(value);
+                buffer.append(Tokens.SPACE);
+        	}
+            append(args.get(1));
+            buffer.append(" "); //$NON-NLS-1$
+            buffer.append(FROM);
+            buffer.append(" "); //$NON-NLS-1$
+            buffer.append(args.get(2));
+            buffer.append(")"); //$NON-NLS-1$
         } else {
 
             buffer.append(obj.getName())

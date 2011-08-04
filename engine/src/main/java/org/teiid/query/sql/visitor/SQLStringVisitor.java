@@ -1304,6 +1304,20 @@ public class SQLStringVisitor extends LanguageVisitor {
             outputDisplayName((String)((Constant)args[0]).getValue());
             registerNodes(args, 1);
             append(")"); //$NON-NLS-1$
+        } else if (name.equalsIgnoreCase(SourceSystemFunctions.TRIM)) {
+        	append(name);
+        	append(SQLConstants.Tokens.LPAREN);
+        	String value = (String)((Constant)args[0]).getValue();
+        	if (!value.equalsIgnoreCase(BOTH)) {
+	        	append(((Constant)args[0]).getValue());
+	            append(" "); //$NON-NLS-1$
+        	}
+            append(args[1]);
+            append(" "); //$NON-NLS-1$
+            append(FROM);
+            append(" "); //$NON-NLS-1$
+            append(args[2]);
+            append(")"); //$NON-NLS-1$
         } else {
             append(name);
             append("("); //$NON-NLS-1$

@@ -251,6 +251,7 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.SQRT);
         supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
         supportedFunctions.add(SourceSystemFunctions.TAN);
+        supportedFunctions.add(SourceSystemFunctions.TRIM);
         supportedFunctions.add(SourceSystemFunctions.UCASE);
         supportedFunctions.add(SourceSystemFunctions.YEAR);
 

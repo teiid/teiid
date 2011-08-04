@@ -55,6 +55,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Transform;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
@@ -2281,6 +2282,7 @@ public class QueryRewriter {
     	FUNCTION_MAP.put(FunctionLibrary.PARSETIME.toLowerCase(), 7);
     	FUNCTION_MAP.put(FunctionLibrary.FORMATDATE.toLowerCase(), 8);
     	FUNCTION_MAP.put(FunctionLibrary.FORMATTIME.toLowerCase(), 9);
+    	FUNCTION_MAP.put(SourceSystemFunctions.TRIM.toLowerCase(), 10);
     }
     
 	private Expression rewriteFunction(Function function) throws TeiidComponentException, TeiidProcessingException{
@@ -2405,6 +2407,26 @@ public class QueryRewriter {
 				function.setName(SourceSystemFunctions.FORMATTIMESTAMP);
 				function.setFunctionDescriptor(descriptor);
 				function.getArgs()[0] = ResolverUtil.getConversion(function.getArg(0), DataTypeManager.getDataTypeName(function.getArg(0).getType()), DataTypeManager.DefaultDataTypes.TIMESTAMP, false, funcLibrary);
+				break;
+			}
+			case 10: {
+				if (new Constant(" ").equals(function.getArg(1))) { //$NON-NLS-1$
+					String spec = (String)((Constant)function.getArg(0)).getValue();
+					Expression string = function.getArg(2);
+					if (!SQLConstants.Reserved.TRAILING.equalsIgnoreCase(spec)) {
+						function = new Function(SourceSystemFunctions.LTRIM, new Expression[] {string});
+						FunctionDescriptor descriptor = funcLibrary.findFunction(SourceSystemFunctions.LTRIM, new Class[] { DataTypeManager.DefaultDataClasses.STRING });
+						function.setFunctionDescriptor(descriptor);
+						function.setType(DataTypeManager.DefaultDataClasses.STRING);
+						string = function;
+					}
+					if (!SQLConstants.Reserved.LEADING.equalsIgnoreCase(spec)) {
+						function = new Function(SourceSystemFunctions.RTRIM, new Expression[] {string});
+						FunctionDescriptor descriptor = funcLibrary.findFunction(SourceSystemFunctions.RTRIM, new Class[] { DataTypeManager.DefaultDataClasses.STRING });
+						function.setFunctionDescriptor(descriptor);
+						function.setType(DataTypeManager.DefaultDataClasses.STRING);
+					}
+				}
 				break;
 			}
 			}

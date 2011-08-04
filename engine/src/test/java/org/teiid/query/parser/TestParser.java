@@ -6859,5 +6859,9 @@ public class TestParser {
     	query.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("g")))));
         helpTest(sql, "SELECT ROW_NUMBER() OVER (PARTITION BY x ORDER BY y) FROM g", query);
     }
+    
+    @Test public void testTrim1() {
+    	helpException("select trim('xy' from e1) from pm1.g1");
+    }
 
 }

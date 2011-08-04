@@ -432,5 +432,12 @@ public class TestSQLStringVisitor  {
     	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
     	assertEquals("SELECT MAX(g_0.IntNum) OVER (ORDER BY g_0.IntKey NULLS FIRST) FROM SmallA AS g_0", command.toString()); //$NON-NLS-1$
     }
+    
+    @Test public void testTrim() throws Exception {
+    	String sql = "select trim(both 'x' from stringkey) from bqt1.smalla";
+    	
+    	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
+    	assertEquals("SELECT trim('x' FROM g_0.StringKey) FROM SmallA AS g_0", command.toString()); //$NON-NLS-1$
+    }
 
 }

@@ -3548,16 +3548,14 @@ Expression function(ParseInfo info) :
 		expression = expression(info)
 		{
 			args.add(expression);
-			expression = null;
 		}
 		<COMMA>
 		expression = dataType()	
 		{
 			args.add(expression);
-			expression = null;			
 		}
 		<RPAREN> 
-	)	
+	)
 	|
 	(			
 		funcToken = <CAST>
@@ -3565,15 +3563,70 @@ Expression function(ParseInfo info) :
 		expression = expression(info)
 		{
 			args.add(expression);
-			expression = null;
 		} 
 		<AS>
 		expression = dataType()
 		{
 			args.add(expression);
-			expression = null;
 		}
 		<RPAREN>				
+	)
+	|
+	LOOKAHEAD(4, {getToken(1).image.equalsIgnoreCase("SUBSTRING")}) (
+	   funcName = nonReserved("SUBSTRING")
+	   <LPAREN>
+	   expression = expression(info)
+	   {
+	      args.add(expression);
+	   }
+	   <FROM> expression = expression(info)
+	   {
+	      args.add(expression);
+	   }
+  	   [<FOR> expression = expression(info)
+	    {
+	      args.add(expression);
+	    }
+	   ]
+	   <RPAREN>
+	)
+	|
+	LOOKAHEAD(1, {getToken(1).image.equalsIgnoreCase("TRIM")}) (
+	   funcName= nonReserved("TRIM")
+	   <LPAREN>
+	   { funcToken = null; expression = null;}
+	   [
+	    LOOKAHEAD(2) (((funcToken = <LEADING>|
+	      funcToken = <TRAILING>|
+	      funcToken = <BOTH>)
+	    [expression = expression(info)])
+	    |
+	    expression = expression(info))
+		<FROM>
+	   ]
+  	   {
+	      if (funcToken == null) {
+	      	  args.add(new Constant("BOTH"));
+	      } else {
+	          args.add(new Constant(funcToken.image));
+	      }
+	      if (expression == null) {
+	          args.add(new Constant(" "));
+	      } else {
+	          if (expression instanceof Constant) {
+	              Object value = ((Constant)expression).getValue();
+	              if (value instanceof String && ((String)value).length() != 1) {
+				      throw new ParseException(QueryPlugin.Util.getString("SQLParser.Invalid_char", "TRIM CHAR", value)); //$NON-NLS-1$
+	              }
+	          }
+	          args.add(expression);
+	      }
+	   }
+	   expression = expression(info)
+	   {
+	      args.add(expression);
+	   }
+	   <RPAREN>
 	)
 	|
 	LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "to_chars", "to_bytes") != null}) (	
@@ -3582,13 +3635,11 @@ Expression function(ParseInfo info) :
 		expression = expression(info) 
 		{		
 			args.add(expression);
-			expression = null;
 		}
 		<COMMA>
 		expression = stringConstant()
 		{
 			args.add(expression);
-			expression = null;
 		} 
 		<RPAREN>				
 	)
@@ -3599,19 +3650,16 @@ Expression function(ParseInfo info) :
 		expression = intervalType() 
 		{		
 			args.add(expression);
-			expression = null;
 		}
 		<COMMA>
 		expression = expression(info)
 		{
 			args.add(expression);
-			expression = null;
 		} 
 		<COMMA>
 		expression = expression(info)
 		{
 			args.add(expression);
-			expression = null;
 		} 
 		<RPAREN>				
 	)
@@ -3654,13 +3702,11 @@ Expression function(ParseInfo info) :
 		)
 		{
 			args.add(expression);	
-			expression = null;
 		}
 		[
 			<COMMA> expression = expression(info)
 			{
 				args.add(expression);	
-				expression = null;
 			}	
 		]
 		<RPAREN>
@@ -3773,7 +3819,6 @@ XMLElement xmlElement(ParseInfo info) :
 	(<COMMA> expression=expression(info)
 	{
 		content.add(expression);
-		expression = null;
 	}
 	)*
 	<RPAREN>
@@ -3795,12 +3840,10 @@ XMLAttributes xmlAttributes(ParseInfo info) :
 	expression = derivedColumn(info)
 	{
 		args.add(expression);
-		expression = null;
 	}
 	(<COMMA> expression=derivedColumn(info)
 	 {
 		args.add(expression);
-		expression = null;
 	 }
 	)*
 	<RPAREN>  		
@@ -3823,12 +3866,10 @@ XMLForest xmlForest(ParseInfo info) :
 	expression = derivedColumn(info)
 	{
 		args.add(expression);
-		expression = null;
 	}
 	(<COMMA> expression=derivedColumn(info)
 	 {
 		args.add(expression);
-		expression = null;
 	 }
 	)*
 	<RPAREN>  		

@@ -111,6 +111,8 @@ public class SQLConstants {
 		public static final String INSTEAD = "INSTEAD"; //$NON-NLS-1$
 		public static final String ENABLED = "ENABLED"; //$NON-NLS-1$
 		public static final String DISABLED = "DISABLED"; //$NON-NLS-1$
+		
+		public static final String TRIM = "TRIM";
 	}
 	
 	public interface Reserved {
