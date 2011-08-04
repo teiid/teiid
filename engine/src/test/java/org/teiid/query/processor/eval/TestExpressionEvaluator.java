@@ -432,4 +432,9 @@ public class TestExpressionEvaluator {
     	assertEquals(Boolean.TRUE, Evaluator.evaluate(inc));
     }
     
+    @Test public void testLikePlus() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'+' like '+'");
+    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+    }
+    
 }
