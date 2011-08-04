@@ -118,6 +118,7 @@ import org.teiid.query.sql.util.ValueIteratorSource;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
+import org.teiid.query.xquery.saxon.XQueryEvaluator;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.Result;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
 import org.teiid.translator.WSConnection.Util;
@@ -923,7 +924,7 @@ public class Evaluator {
 				parameters.put(passing.getAlias(), value);
 			}
 		}
-		return xquery.evaluateXQuery(contextItem, parameters, processor, context);
+		return XQueryEvaluator.evaluateXQuery(xquery, contextItem, parameters, processor, context);
 	}
 
 	private Evaluator.NameValuePair<Object>[] getNameValuePairs(List<?> tuple, List<DerivedColumn> args, boolean xmlNames)
