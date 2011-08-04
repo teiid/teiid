@@ -41,7 +41,6 @@ import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.parser.QueryParser;
@@ -58,8 +57,6 @@ public class CachedResults implements Serializable, Cachable {
 	private transient Command command;
 	private transient TupleBuffer results;
 
-	private AnalysisRecord analysisRecord;
-
 	private String[] types;
 	private CacheHint hint;
 	private int batchSize;
@@ -71,14 +68,6 @@ public class CachedResults implements Serializable, Cachable {
 	
 	public String getId() {
 		return this.uuid;
-	}
-	
-	public AnalysisRecord getAnalysisRecord() {
-		return analysisRecord;
-	}
-	
-	public void setAnalysisRecord(AnalysisRecord analysisRecord) {
-		this.analysisRecord = analysisRecord;
 	}
 	
 	public TupleBuffer getResults() {
