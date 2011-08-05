@@ -56,6 +56,7 @@ import org.teiid.core.types.Transform;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants;
+import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
@@ -2023,23 +2024,33 @@ public class QueryRewriter {
             Constant constant = (Constant) rightExpr;
             String value = (String) constant.getValue();
 
-            char escape = criteria.getEscapeChar();
-
-            // Check whether escape char is unnecessary and remove it
-            if(escape != MatchCriteria.NULL_ESCAPE_CHAR && value.indexOf(escape) < 0) {
-                criteria.setEscapeChar(MatchCriteria.NULL_ESCAPE_CHAR);
-            }
-
-            // if the value of this string constant is '%', then we know the crit will 
-            // always be true                    
-            if ( value.equals( String.valueOf(MatchCriteria.WILDCARD_CHAR)) ) { 
-                return getSimpliedCriteria(criteria, criteria.getLeftExpression(), !criteria.isNegated(), true);                                        
-            } 
-            
-            // if both left and right expressions are strings, and the LIKE match characters ('*', '_') are not present 
-            //  in the right expression, rewrite the criteria as EQUALs rather than LIKE
-            if(DataTypeManager.DefaultDataClasses.STRING.equals(criteria.getLeftExpression().getType()) && value.indexOf(escape) < 0 && value.indexOf(MatchCriteria.MATCH_CHAR) < 0 && value.indexOf(MatchCriteria.WILDCARD_CHAR) < 0) {
-            	return rewriteCriteria(new CompareCriteria(criteria.getLeftExpression(), criteria.isNegated()?CompareCriteria.NE:CompareCriteria.EQ, criteria.getRightExpression()));
+            if (criteria.getMode() != MatchMode.REGEX) {
+	            char escape = criteria.getEscapeChar();
+	
+	            // Check whether escape char is unnecessary and remove it
+	            if(escape != MatchCriteria.NULL_ESCAPE_CHAR && value.indexOf(escape) < 0) {
+	                criteria.setEscapeChar(MatchCriteria.NULL_ESCAPE_CHAR);
+	            }
+	
+	            // if the value of this string constant is '%', then we know the crit will 
+	            // always be true                    
+	            if ( value.equals( String.valueOf(MatchCriteria.WILDCARD_CHAR)) ) { 
+	                return getSimpliedCriteria(criteria, criteria.getLeftExpression(), !criteria.isNegated(), true);                                        
+	            } 
+	            
+	            if (criteria.getMode() == MatchMode.SIMILAR) {
+	            	//regex is more widely supported
+	            	criteria.setMode(MatchMode.REGEX);
+	            	criteria.setRightExpression(new Constant(Evaluator.SIMILAR_TO_REGEX.getPatternString(value, escape)));
+	            	criteria.setEscapeChar(MatchCriteria.NULL_ESCAPE_CHAR);
+	            } else if(DataTypeManager.DefaultDataClasses.STRING.equals(criteria.getLeftExpression().getType()) 
+	            		&& value.indexOf(escape) < 0 
+	            		&& value.indexOf(MatchCriteria.MATCH_CHAR) < 0 
+	            		&& value.indexOf(MatchCriteria.WILDCARD_CHAR) < 0) {
+	            	// if both left and right expressions are strings, and the LIKE match characters ('*', '_') are not present 
+		            //  in the right expression, rewrite the criteria as EQUALs rather than LIKE
+	            	return rewriteCriteria(new CompareCriteria(criteria.getLeftExpression(), criteria.isNegated()?CompareCriteria.NE:CompareCriteria.EQ, criteria.getRightExpression()));
+	            }
             }
         }
 

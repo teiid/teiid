@@ -57,6 +57,7 @@ import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
 import org.teiid.language.Literal;
 import org.teiid.language.QueryExpression;
+import org.teiid.language.SQLConstants;
 import org.teiid.language.SetQuery;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.SetQuery.Operation;
@@ -1146,6 +1147,10 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         	nameParts.add(current.toString());
         }
         return nameParts;
+	}
+
+	public String getLikeRegexString() {
+		return SQLConstants.Reserved.LIKE_REGEX;
 	}
 	
 }

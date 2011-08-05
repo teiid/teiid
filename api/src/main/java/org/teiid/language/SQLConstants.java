@@ -251,6 +251,7 @@ public class SQLConstants {
 	    public static final String LEADING = "LEADING"; //$NON-NLS-1$
 	    public static final String LEFT = "LEFT"; //$NON-NLS-1$
 	    public static final String LIKE = "LIKE"; //$NON-NLS-1$
+	    public static final String LIKE_REGEX = "LIKE_REGEX"; //$NON-NLS-1$
 	    public static final String LOCAL = "LOCAL"; //$NON-NLS-1$
 	    public static final String LOCALTIME = "LOCALTIME"; //$NON-NLS-1$
 	    public static final String LOCALTIMESTAMP = "LOCALTIMESTAMP"; //$NON-NLS-1$
@@ -318,7 +319,7 @@ public class SQLConstants {
 	    public static final String SESSION_USER = "SESSION_USER"; //$NON-NLS-1$
 	    public static final String SET = "SET"; //$NON-NLS-1$
 	    public static final String SHORT = "SHORT"; //$NON-NLS-1$
-	    public static final String SIILAR = "SIMILAR"; //$NON-NLS-1$
+	    public static final String SIMILAR = "SIMILAR"; //$NON-NLS-1$
 	    public static final String SMALLINT = "SMALLINT"; //$NON-NLS-1$
 	    public static final String SOME = "SOME"; //$NON-NLS-1$
 	    public static final String SPECIFIC = "SPECIFIC"; //$NON-NLS-1$

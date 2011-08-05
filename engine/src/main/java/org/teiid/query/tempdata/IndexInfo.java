@@ -23,6 +23,7 @@
 package org.teiid.query.tempdata;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -32,8 +33,10 @@ import java.util.ListIterator;
 import org.teiid.common.buffer.TupleBrowser;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.language.Like.MatchMode;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.query.eval.Evaluator;
 import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -126,22 +129,45 @@ class IndexInfo {
 						Constant value = (Constant)matchCriteria.getRightExpression();
 						String pattern = (String)value.getValue();
 						boolean escaped = false;
+						char escapeChar = matchCriteria.getEscapeChar();
+						if (matchCriteria.getMode() == MatchMode.REGEX) {
+							escapeChar = '\\';
+						}
 						StringBuilder prefix = new StringBuilder();
-						for (int j = 0; i < pattern.length(); j++) {
+						
+			            if (pattern.length() > 0 && matchCriteria.getMode() == MatchMode.REGEX && pattern.charAt(0) != '^') {
+			            	//make the assumption that we require an anchor
+			            	continue;
+			            }
+
+						for (int j = matchCriteria.getMode() == MatchMode.REGEX?1:0; i < pattern.length(); j++) {
 				            char character = pattern.charAt(j);
 				            
-				            if (character == matchCriteria.getEscapeChar() && character != MatchCriteria.NULL_ESCAPE_CHAR) {
+				            if (character == escapeChar && character != MatchCriteria.NULL_ESCAPE_CHAR) {
 				                if (escaped) {
 				                    prefix.append(character);
 				                    escaped = false;
 				                } else {
 				                    escaped = true;
 				                }
-				            } else if (character == MatchCriteria.WILDCARD_CHAR || character == MatchCriteria.MATCH_CHAR) {
-				            	break;
-				            } else {
-				            	prefix.append(character);
+				                continue;
 				            }
+				            if (!escaped) {
+				            	if (matchCriteria.getMode() == MatchMode.LIKE) {
+					            	if (character == MatchCriteria.WILDCARD_CHAR || character == MatchCriteria.MATCH_CHAR) {
+						            	break;
+					            	}
+				            	} else {
+				            		int index = Arrays.binarySearch(Evaluator.REGEX_RESERVED, character);
+				            		if (index >= 0 && pattern.length() > 0) {
+				            			getRegexPrefix(pattern, escapeChar, prefix, j, character);
+				            			break;
+				            		}
+				            	}
+				            } else {
+					            escaped = false;
+				            }
+				            prefix.append(character);
 						}
 						if (prefix.length() > 0) {
 							this.addCondition(i, new Constant(prefix.toString()), CompareCriteria.GE);
@@ -156,6 +182,32 @@ class IndexInfo {
 					}
 				}
 			}
+		}
+	}
+
+	private void getRegexPrefix(String pattern, char escapeChar,
+			StringBuilder prefix, int j, char character) {
+		boolean escaped = false;
+		//check the rest of the expression for |
+		int level = 0;
+		for (int k = j; k < pattern.length(); k++) {
+			character = pattern.charAt(k);
+		    if (character == escapeChar && character != MatchCriteria.NULL_ESCAPE_CHAR) {
+		        escaped = !escaped;
+		    } else if (!escaped) {
+		    	if (character == '(') {
+		    		level++;
+		    	} else if (character == ')') {
+		    		level--;
+		    	} else if (character == '|' && level == 0) {
+		    		prefix.setLength(0); //TODO: turn this into an IN condition
+		    		return;
+		    	}
+		    }
+		}
+
+		if (character == '{' || character == '?' || character == '*') {
+			prefix.setLength(prefix.length() - 1); 
 		}
 	}
 	

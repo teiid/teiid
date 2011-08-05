@@ -2790,7 +2790,7 @@ public class TestParser {
 	}
 	
     @Test public void testLikeWithEscapeException(){
-        helpException("SELECT a from db.g where b like '#String' escape '#1'", "Parsing error: LIKE ESCAPE value must be a single character: [#1].");  //$NON-NLS-1$ //$NON-NLS-2$
+        helpException("SELECT a from db.g where b like '#String' escape '#1'", "Parsing error: LIKE/SIMILAR TO ESCAPE value must be a single character: [#1].");  //$NON-NLS-1$ //$NON-NLS-2$
     }   
 
 	/** SELECT "date"."time" from db.g */

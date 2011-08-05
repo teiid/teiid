@@ -894,4 +894,20 @@ public class ExecutionFactory<F, C> {
     	return false;
     }
 
+    /**
+     * @return true if the SIMILAR TO predicate is supported
+     * @since 7.5
+     */
+	public boolean supportsSimilarTo() {
+		return false;
+	}
+
+	/**
+	 * @return true if the LIKE_REGEX predicate is supported
+	 * @since 7.4
+	 */
+	public boolean supportsLikeRegex() {
+		return false;
+	}
+
 }

@@ -350,4 +350,9 @@ public class SQLConversionVisitor extends SQLStringVisitor{
 		return executionFactory.useSelectLimit();
 	}
 	
+	@Override
+	protected String getLikeRegexString() {
+		return executionFactory.getLikeRegexString();
+	}
+	
 }

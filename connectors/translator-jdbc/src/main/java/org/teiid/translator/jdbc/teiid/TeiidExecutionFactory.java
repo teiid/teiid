@@ -221,4 +221,14 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsArrayAgg() {
     	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
     }
+    
+    @Override
+    public boolean supportsLikeRegex() {
+    	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
+    }
+    
+    @Override
+    public boolean supportsSimilarTo() {
+    	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
+    }
 }

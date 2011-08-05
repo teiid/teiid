@@ -324,7 +324,9 @@ public interface SourceCapabilities {
         ADVANCED_OLAP, 
         QUERY_AGGREGATES_ARRAY, 
         ELEMENTARY_OLAP, 
-        WINDOW_FUNCTION_ORDER_BY_AGGREGATES
+        WINDOW_FUNCTION_ORDER_BY_AGGREGATES,
+        CRITERIA_SIMILAR,
+        CRITERIA_LIKE_REGEX
     }
 
     public enum Scope {

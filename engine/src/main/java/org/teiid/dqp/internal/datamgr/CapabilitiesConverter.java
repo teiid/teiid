@@ -103,6 +103,9 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, srcCaps.supportsAdvancedOlapOperations());
         tgtCaps.setCapabilitySupport(Capability.WINDOW_FUNCTION_ORDER_BY_AGGREGATES, srcCaps.supportsWindowOrderByWithAggregates());
         tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_ARRAY, srcCaps.supportsArrayAgg());
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_SIMILAR, srcCaps.supportsSimilarTo());
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_LIKE_REGEX, srcCaps.supportsLikeRegex());
+        
         List functions = srcCaps.getSupportedFunctions();
         if(functions != null && functions.size() > 0) {
             Iterator iter = functions.iterator();

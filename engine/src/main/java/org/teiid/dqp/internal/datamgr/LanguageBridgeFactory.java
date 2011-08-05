@@ -363,10 +363,12 @@ public class LanguageBridgeFactory {
         if(criteria.getEscapeChar() != MatchCriteria.NULL_ESCAPE_CHAR) {
             escapeChar = new Character(criteria.getEscapeChar());
         }
-        return new Like(translate(criteria.getLeftExpression()),
+        Like like = new Like(translate(criteria.getLeftExpression()),
                                     translate(criteria.getRightExpression()), 
                                     escapeChar, 
                                     criteria.isNegated());
+        like.setMode(criteria.getMode());
+        return like;
     }
 
     In translate(SetCriteria criteria) {

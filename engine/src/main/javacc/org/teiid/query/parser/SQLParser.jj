@@ -23,6 +23,7 @@ import org.teiid.query.sql.proc.*;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.language.Like.MatchMode;
 
 /** 
  * <p>The SQLParser is a JavaCC-generated parser that reads a SQL string and produces a 
@@ -193,6 +194,7 @@ TOKEN : /* Reserved words */
 |   <LARGE: "large">
 |   <LEADING: "leading">
 |   <LIKE: "like">
+|   <LIKE_REGEX: "like_regex">
 |   <LIMIT: "limit">
 |   <LOCAL: "local">
 |   <LOOP: "loop">
@@ -2692,6 +2694,7 @@ Expression booleanPrimary(ParseInfo info) :
 	     [(
 			LOOKAHEAD(2) ex=betweenCrit(info, ex) |
 			LOOKAHEAD(2) ex=matchCrit(info, ex) |
+			LOOKAHEAD(2) ex=regexMatchCrit(info, ex) |
 			ex=setCrit(info, ex) |
 			ex=isNullCrit(info, ex) |
 			LOOKAHEAD(operator() (<ANY>|<SOME>|<ALL>) subquery(info)) ex=subqueryCompareCriteria(info, ex) |
@@ -2841,13 +2844,14 @@ MatchCriteria matchCrit(ParseInfo info, Expression expression) :
     Character esc = null;
 	Expression value = null;
 	boolean negated = false;
+	boolean similar = false;
 }
 {
 	[<NOT> {negated = true;}]
-    <LIKE>
+    (<LIKE>|(<SIMILAR> <TO> {similar = true;}))
 	value=commonValueExpression(info)
-    [   <ESCAPE> esc = charVal(info, "LIKE ESCAPE") |
-        (<LBRACE> <ESCAPE> esc = charVal(info, "LIKE ESCAPE") <RBRACE>) 
+    [   <ESCAPE> esc = charVal(info, "LIKE/SIMILAR TO ESCAPE") |
+        (<LBRACE> <ESCAPE> esc = charVal(info, "LIKE/SIMILAR TO ESCAPE") <RBRACE>) 
     ]
 	{
     	MatchCriteria matchcriteria = new MatchCriteria(expression, value);
@@ -2855,6 +2859,24 @@ MatchCriteria matchCrit(ParseInfo info, Expression expression) :
 	    if(esc != null) {
 			matchcriteria.setEscapeChar(esc.charValue());
 		}
+		matchcriteria.setMode(similar?MatchMode.SIMILAR:MatchMode.LIKE);
+		return matchcriteria;
+   	}
+}
+
+MatchCriteria regexMatchCrit(ParseInfo info, Expression expression) :
+{
+	Expression value = null;
+	boolean negated = false;
+}
+{
+	[<NOT> {negated = true;}]
+    <LIKE_REGEX>
+	value=commonValueExpression(info)
+	{
+    	MatchCriteria matchcriteria = new MatchCriteria(expression, value);
+		matchcriteria.setNegated(negated);
+		matchcriteria.setMode(MatchMode.REGEX);
 		return matchcriteria;
    	}
 }
@@ -3591,7 +3613,26 @@ Expression function(ParseInfo info) :
 	   <RPAREN>
 	)
 	|
-	LOOKAHEAD(1, {getToken(1).image.equalsIgnoreCase("TRIM")}) (
+	LOOKAHEAD(2, {getToken(1).image.equalsIgnoreCase("EXTRACT")}) (
+	   nonReserved("EXTRACT")
+	   <LPAREN>
+	   (funcToken = <YEAR> | 
+	    funcToken = <MONTH> |
+	    funcToken = <DAY> |
+	    funcToken = <HOUR> |
+	    funcToken = <MINUTE> |
+	    funcToken = <SECOND>)
+	   <FROM> expression = expression(info)
+	   {
+	   	  if (funcToken.image.equalsIgnoreCase("DAY")) {
+	         funcName = "DAYOFMONTH";
+	      }  	      
+	      args.add(expression);
+	   }
+	   <RPAREN>
+	)
+	|
+	LOOKAHEAD(2, {getToken(1).image.equalsIgnoreCase("TRIM")}) (
 	   funcName= nonReserved("TRIM")
 	   <LPAREN>
 	   { funcToken = null; expression = null;}

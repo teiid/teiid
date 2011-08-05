@@ -569,7 +569,19 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(NOT);
             append(SPACE);
         }
-        append(LIKE);
+        switch (obj.getMode()) {
+        case SIMILAR:
+        	append(SIMILAR);
+        	append(SPACE);
+        	append(TO);
+        	break;
+        case LIKE:
+        	append(LIKE);
+        	break;
+        case REGEX:
+        	append(LIKE_REGEX);
+        	break;
+        }
         append(SPACE);
 
         visitNode(obj.getRightExpression());
@@ -578,7 +590,7 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(SPACE);
             append(ESCAPE);
             append(" '"); //$NON-NLS-1$
-            append("" + obj.getEscapeChar()); //$NON-NLS-1$
+            append(String.valueOf(obj.getEscapeChar()));
             append("'"); //$NON-NLS-1$
         }
     }
@@ -593,16 +605,16 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit( Option obj ) {
         append(OPTION);
 
-        Collection groups = obj.getDependentGroups();
+        Collection<String> groups = obj.getDependentGroups();
         if (groups != null && groups.size() > 0) {
             append(" "); //$NON-NLS-1$
             append(MAKEDEP);
             append(" "); //$NON-NLS-1$
 
-            Iterator iter = groups.iterator();
+            Iterator<String> iter = groups.iterator();
 
             while (iter.hasNext()) {
-                outputDisplayName((String)iter.next());
+                outputDisplayName(iter.next());
 
                 if (iter.hasNext()) {
                     append(", ");//$NON-NLS-1$

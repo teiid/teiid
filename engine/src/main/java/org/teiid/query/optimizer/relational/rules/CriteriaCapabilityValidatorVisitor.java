@@ -270,18 +270,32 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     }
 
     public void visit(MatchCriteria obj) {
-        // Check if compares are allowed
-        if(! this.caps.supportsCapability(Capability.CRITERIA_LIKE)) {
-            markInvalid(obj, "Like is not supported by source"); //$NON-NLS-1$
-            return;
-        }
+    	switch (obj.getMode()) {
+    	case LIKE:
+            if(! this.caps.supportsCapability(Capability.CRITERIA_LIKE)) {
+                markInvalid(obj, "Like is not supported by source"); //$NON-NLS-1$
+                return;
+            }
+            break;
+    	case SIMILAR:
+    		if(! this.caps.supportsCapability(Capability.CRITERIA_SIMILAR)) {
+                markInvalid(obj, "Similar to is not supported by source"); //$NON-NLS-1$
+                return;
+            }
+    		break;
+    	case REGEX:
+    		if(! this.caps.supportsCapability(Capability.CRITERIA_LIKE_REGEX)) {
+                markInvalid(obj, "Like_regex is not supported by source"); //$NON-NLS-1$
+                return;
+            }
+    		break;
+    	}
         
         // Check ESCAPE char if necessary
-        if(obj.getEscapeChar() != MatchCriteria.NULL_ESCAPE_CHAR) {
-            if(! this.caps.supportsCapability(Capability.CRITERIA_LIKE_ESCAPE)) {
-                markInvalid(obj, "Like escape is not supported by source"); //$NON-NLS-1$
-                return;
-            }                
+        if(obj.getEscapeChar() != MatchCriteria.NULL_ESCAPE_CHAR 
+        		&& ! this.caps.supportsCapability(Capability.CRITERIA_LIKE_ESCAPE)) {
+            markInvalid(obj, "Like escape is not supported by source"); //$NON-NLS-1$
+            return;
         }
         
         //check NOT

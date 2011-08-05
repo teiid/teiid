@@ -40,7 +40,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import javax.xml.transform.stream.StreamResult;
 
@@ -68,6 +67,7 @@ import org.teiid.core.types.XMLType;
 import org.teiid.core.types.XMLType.Type;
 import org.teiid.core.types.basic.StringToSQLXMLTransform;
 import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.language.Like.MatchMode;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
@@ -203,9 +203,15 @@ public class Evaluator {
 		}
 	}
 
-	private final static char[] REGEX_RESERVED = new char[] {'$', '(', ')', '*', '.', '?', '[', '\\', ']', '^', '{', '|', '}'}; //in sorted order
-    private final static MatchCriteria.PatternTranslator LIKE_TO_REGEX = new MatchCriteria.PatternTranslator(".*", ".", REGEX_RESERVED, '\\');  //$NON-NLS-1$ //$NON-NLS-2$
-
+	public final static char[] REGEX_RESERVED = new char[] {'$', '(', ')', '*', '.', '?', '[', '\\', ']', '^', '{', '|', '}'}; //in sorted order
+    private final static MatchCriteria.PatternTranslator LIKE_TO_REGEX = new MatchCriteria.PatternTranslator(new char[] {'%', '_'}, new String[] {".*", "."},  REGEX_RESERVED, '\\', Pattern.DOTALL);  //$NON-NLS-1$ //$NON-NLS-2$
+    
+    private final static char[] SIMILAR_REGEX_RESERVED = new char[] {'$', '.', '\\', '^'}; //in sorted order
+    public final static MatchCriteria.PatternTranslator SIMILAR_TO_REGEX = new MatchCriteria.PatternTranslator(
+    		new char[] {'%', '(', ')', '*', '?', '+', '[', ']', '_', '{', '|', '}'}, 
+    		new String[] {"([a]|[^a])*", "(", ")", "*", "?", "+", //$NON-NLS-1$ //$NON-NLS-2$  //$NON-NLS-3$ //$NON-NLS-4$  //$NON-NLS-5$ //$NON-NLS-6$
+    				"[", "]", "([a]|[^a])", "{", "|", "}"},  SIMILAR_REGEX_RESERVED, '\\', 0);  //$NON-NLS-1$ //$NON-NLS-2$  //$NON-NLS-3$ //$NON-NLS-4$  //$NON-NLS-5$ //$NON-NLS-6$  
+    
     private Map elements;
     
     protected ProcessorDataManager dataMgr;
@@ -404,27 +410,31 @@ public class Evaluator {
             return null;
         }
         
-        result = match(rightValue, criteria.getEscapeChar(), leftValue);
+        result = match(rightValue, criteria.getEscapeChar(), leftValue, criteria.getMode());
         
         return Boolean.valueOf(result ^ criteria.isNegated());
 	}
 
-	private boolean match(String pattern, char escape, CharSequence search)
+	private boolean match(String pattern, char escape, CharSequence search, MatchMode mode)
 		throws ExpressionEvaluationException {
 
-		StringBuffer rePattern = LIKE_TO_REGEX.translate(pattern, escape);
-		
-		// Insert leading and trailing characters to ensure match of full string
-		rePattern.insert(0, '^');
-		rePattern.append('$');
-
-		try {
-            Pattern patternRegex = Pattern.compile(rePattern.toString(), Pattern.DOTALL);
-            Matcher matcher = patternRegex.matcher(search);
-            return matcher.matches();
-		} catch(PatternSyntaxException e) {
-            throw new ExpressionEvaluationException(e, "ERR.015.006.0014", QueryPlugin.Util.getString("ERR.015.006.0014", new Object[]{pattern, e.getMessage()})); //$NON-NLS-1$ //$NON-NLS-2$
+		Pattern patternRegex = null;
+		switch (mode) {
+		case LIKE:
+			patternRegex = LIKE_TO_REGEX.translate(pattern, escape);
+			break;
+		case SIMILAR:
+			patternRegex = SIMILAR_TO_REGEX.translate(pattern, escape);
+			break;
+		case REGEX:
+			patternRegex = MatchCriteria.getPattern(pattern, pattern, 0);
+			break;
+		default:
+			throw new AssertionError();
 		}
+		
+        Matcher matcher = patternRegex.matcher(search);
+        return matcher.matches();
 	}
 
 	private Boolean evaluate(AbstractSetCriteria criteria, List<?> tuple)

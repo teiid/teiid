@@ -27,6 +27,7 @@
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <UL>
     <LI><B>Window function support</B> - Teiid and pushdown support was added for SQL 2003 OLAP window functions.  The analytical ranking functions RANK, DENSE_RANK, and ROW_NUMBER were also added.  See the reference for more.
+    <LI><B>Additional ANSI support</B> - Teiid and pushdown support was added for SUBSTRING using FROM/FOR syntax, TRIM, EXTRACT, SIMILAR TO, and LIKE_REGEX.  See the reference for more.
 	<LI><B>Subquery optimization control</B> - added the DJ hint to indicate that a subquery should be the independent side of a dependent join.
 	<LI><B>MAKEIND Hint</B> - The MAKEIND hint can be used to indicate that the other side of the join should be made dependent.
     <LI><B>ODBC SSL</B> - added support for SSL encrypted ODBC connections.
@@ -53,7 +54,7 @@
 
 <h4>from 7.4</h4>
 <ul>
-  <li>OFFSET was added as a keyword. 
+  <li>OFFSET and LIKE_REGEX were added as reserved words. 
   <li>ColumnReference.getName will always return just the element name.  Previously it inconsistently returned the qualified and unqualified form depending upon where the ColumnReference appeared.
   <li>As per JDBC4, ResultSetMetadata.getColumnName will return the unaliased column name if available rather than return the alias.  Set useJDBC4ColumnNameAndLabelSemantics to false to use the alias name as the column name.
 </ul>

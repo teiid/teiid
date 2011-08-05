@@ -538,4 +538,14 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	return true;
     }
     
+    @Override
+    public boolean supportsLikeRegex() {
+    	return true;
+    }
+    
+    @Override
+    public String getLikeRegexString() {
+    	return "REGEXP_LIKE"; //$NON-NLS-1$
+    }
+    
 }

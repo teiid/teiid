@@ -437,4 +437,69 @@ public class TestExpressionEvaluator {
     	assertEquals("bc", Evaluator.evaluate(ex));
     }
     
+    @Test public void testExtract() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("extract(year from cast('2011-01-01' as date))");
+    	assertEquals(2011, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testExtract1() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("extract(day from cast('2011-01-01' as date))");
+    	assertEquals(1, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testSimilarTo() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'aaaxy' similar to 'a+%'");
+    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testSimilarTo1() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'xaay' similar to 'xa{2,3}y'");
+    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testSimilarTo2() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'xay' similar to 'xa{2,3}y'");
+    	assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
+    }
+    
+    @Test(expected=ExpressionEvaluationException.class) public void testSimilarTo3() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'xay' similar to '{'");
+    	assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testSimilarTo4() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'xay' similar to 'xa{2,}y'");
+    	assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
+    }
+
+    @Test public void testSimilarTo5() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'x1y' similar to 'x([a-z]+|[0-9])_'");
+    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testSimilarTo6() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'xx' similar to 'x([a-z]+|[0-9])_'");
+    	assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testLikeRegex() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'aaaxy' like_regex 'a+.*'");
+    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testLikeRegex1() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'xaay' similar to 'xa{2,3}y'");
+    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testLikeRegex2() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'xay' like_regex 'xa{2,3}y'");
+    	assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
+    }
+
+    @Test(expected=ExpressionEvaluationException.class) public void testLikeRegex3() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'xay' like_regex '{'");
+    	assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
+    }
+    
 }

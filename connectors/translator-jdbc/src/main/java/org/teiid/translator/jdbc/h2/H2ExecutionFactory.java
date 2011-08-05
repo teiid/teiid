@@ -200,4 +200,14 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsAggregatesEnhancedNumeric() {
     	return true;
     }
+    
+    @Override
+    public boolean supportsLikeRegex() {
+    	return true;
+    }
+    
+    @Override
+    public String getLikeRegexString() {
+    	return "REGEXP"; //$NON-NLS-1$
+    }
 }

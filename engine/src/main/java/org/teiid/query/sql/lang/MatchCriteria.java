@@ -23,10 +23,15 @@
 package org.teiid.query.sql.lang;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.core.util.LRUCache;
+import org.teiid.language.Like.MatchMode;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.PredicateCriteria.Negatable;
@@ -61,7 +66,8 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	private char escapeChar = NULL_ESCAPE_CHAR;
 	
     /** Negation flag. Indicates whether the criteria expression contains a NOT. */
-    private boolean negated = false;
+    private boolean negated;
+    private MatchMode mode = MatchMode.LIKE;
     
     /**
      * Constructs a default instance of this class.
@@ -200,8 +206,12 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 
         MatchCriteria mc = (MatchCriteria)obj;
 
-        if (isNegated() ^ mc.isNegated()) {
+        if (isNegated() != mc.isNegated()) {
             return false;
+        }
+        
+        if (this.mode != mc.mode) {
+        	return false;
         }
         
         return getEscapeChar() == mc.getEscapeChar() &&
@@ -224,18 +234,36 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	    }	
 	    MatchCriteria criteriaCopy = new MatchCriteria(leftCopy, rightCopy, getEscapeChar());
         criteriaCopy.setNegated(isNegated());
+        criteriaCopy.mode = mode;
         return criteriaCopy;
 	}
 	
+    private final static LRUCache<List<?>, Pattern> patternCache = new LRUCache<List<?>, Pattern>(100);
+    
+    public static Pattern getPattern(String newPattern, String originalPattern, int flags) throws ExpressionEvaluationException {
+    	List<?> key = Arrays.asList(newPattern, flags);
+    	Pattern p = patternCache.get(key);
+        if (p == null) {
+            try {	        
+    	        p = Pattern.compile(newPattern, Pattern.DOTALL);
+    	        patternCache.put(key, p);
+    		} catch(PatternSyntaxException e) {
+                throw new ExpressionEvaluationException(e, "ERR.015.006.0014", QueryPlugin.Util.getString("ERR.015.006.0014", new Object[]{originalPattern, e.getMessage()})); //$NON-NLS-1$ //$NON-NLS-2$
+    		}
+        }
+        return p;
+    }
+
 	/**
      * <p>Utility to convert the pattern into a different match syntax</p>
      */
 	public static class PatternTranslator {
-	    
 	    private char[] reserved;
 	    private char newEscape;
-	    private String newWildCard;
-	    private String newSingleMatch;
+	    private char[] toReplace;
+	    private String[] replacements;
+	    private int flags;
+	    private final LRUCache<List<?>, Pattern> cache = new LRUCache<List<?>, Pattern>(100);
 
 	    /**
 	     * @param newWildCard replacement for %
@@ -243,16 +271,28 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	     * @param reserved sorted array of reserved chars in the new match syntax
 	     * @param newEscape escape char in the new syntax
 	     */
-	    public PatternTranslator(String newWildCard, String newSingleMatch, char[] reserved, char newEscape) {
+	    public PatternTranslator(char[] toReplace, String[] replacements, char[] reserved, char newEscape, int flags) {
 	        this.reserved = reserved;
 	        this.newEscape = newEscape;
-	        this.newSingleMatch = newSingleMatch;
-	        this.newWildCard = newWildCard;
+	        this.toReplace = toReplace;
+	        this.replacements = replacements;
+	        this.flags = flags;
 	    }
 	    
-	    public StringBuffer translate(String pattern, char escape) throws ExpressionEvaluationException {
-	        
-	        StringBuffer newPattern = new StringBuffer();
+	    public Pattern translate(String pattern, char escape) throws ExpressionEvaluationException {
+	        List<?> key = Arrays.asList(pattern, escape);
+	        Pattern result = cache.get(key);
+	        if (result == null) {
+		        String newPattern = getPatternString(pattern, escape);
+		        result = getPattern(newPattern, pattern, flags);
+		        cache.put(key, result);
+	        }
+	        return result;
+	    }
+
+		public String getPatternString(String pattern, char escape)
+				throws ExpressionEvaluationException {
+			StringBuffer newPattern = new StringBuffer("^"); //$NON-NLS-1$
 	        
 	        boolean escaped = false;
 	        
@@ -266,25 +306,21 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	                } else {
 	                    escaped = true;
 	                }
-	            } else if (character == MatchCriteria.WILDCARD_CHAR) {
-	                if (escaped) {
-	                    appendCharacter(newPattern, character);
-	                    escaped = false;
-	                } else {
-	                    newPattern.append(newWildCard);
-	                }
-	            } else if (character == MatchCriteria.MATCH_CHAR) {
-	                if (escaped) {
-	                    appendCharacter(newPattern, character);
-	                    escaped = false;
-	                } else {
-	                    newPattern.append(newSingleMatch);
-	                }
 	            } else {
-	                if (escaped) {
-	                    throw new ExpressionEvaluationException(QueryPlugin.Util.getString("MatchCriteria.invalid_escape", new Object[] {pattern, new Character(escape)})); //$NON-NLS-1$
-	                }
-	                appendCharacter(newPattern, character);
+	            	int index = Arrays.binarySearch(toReplace, character);
+	            	if (index >= 0) {
+		                if (escaped) {
+		                    appendCharacter(newPattern, character);
+		                    escaped = false;
+		                } else {
+		                    newPattern.append(replacements[index]);
+		                }
+	            	} else {
+		                if (escaped) {
+		                    throw new ExpressionEvaluationException(QueryPlugin.Util.getString("MatchCriteria.invalid_escape", new Object[] {pattern, new Character(escape)})); //$NON-NLS-1$
+		                }
+		                appendCharacter(newPattern, character);
+	            	}
 	            }
 	        }
 	        
@@ -292,8 +328,9 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	            throw new ExpressionEvaluationException(QueryPlugin.Util.getString("MatchCriteria.invalid_escape", new Object[] {pattern, new Character(escape)})); //$NON-NLS-1$	
 	        }
 	        
-	        return newPattern;
-	    }
+	        newPattern.append('$');
+			return newPattern.toString();
+		}
 	    
 	    private void appendCharacter(StringBuffer newPattern, char character) {
 	        if (Arrays.binarySearch(this.reserved, character) >= 0) {
@@ -302,6 +339,14 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	        newPattern.append(character);
 	    }
 	    
+	}
+	
+	public MatchMode getMode() {
+		return mode;
+	}
+	
+	public void setMode(MatchMode mode) {
+		this.mode = mode;
 	}
 	
 }  // END CLASS

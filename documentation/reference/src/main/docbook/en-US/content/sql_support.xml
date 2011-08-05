@@ -471,46 +471,77 @@
       </listitem>
     </itemizedlist>
     <itemizedlist>
+      <para>Usage:
+      </para>
+      <listitem>
+        <para><synopsis label="Usage">criteria AND|OR criteria</synopsis>
+        </para>
+      </listitem>
+      <listitem>
+        <para><synopsis label="Usage">NOT criteria</synopsis>
+        </para>
+      </listitem>
+      <listitem>
+        <para><synopsis label="Usage">(criteria)</synopsis>
+        </para>
+      </listitem>
+      <listitem>
+        <para><synopsis label="Usage">expression (=|&lt;&gt;|!=|&lt;|>|&lt;=|>=) (expression|((ANY|ALL|SOME) subquery))</synopsis>
+        </para>
+      </listitem>
+      <listitem>
+        <para><synopsis label="Usage">expression [NOT] IS NULL</synopsis>
+        </para>
+      </listitem>
+      <listitem>
+        <para><synopsis label="Usage">expression [NOT] IN (expression[,expression]*)|subquery</synopsis>
+        </para>
+      </listitem>
+      <listitem>
+        <para><synopsis label="Usage">expression [NOT] LIKE pattern [ESCAPE char]</synopsis>
+        Matches the string expression against the given string pattern.  
+        The pattern may contain % to match any number of characters and _ to match any single character.  The escape character can be used to escape the match characters % and _.</para>
+      </listitem>
+      <listitem>
+        <para><synopsis label="Usage">expression [NOT] SIMILAR TO pattern [ESCAPE char]</synopsis>
+        SIMILAR TO is a cross between LIKE and standard regular expression syntax.  % and _ are still used, rather than .* and . respectively.</para>
+        <note><para>Teiid does not exhaustively validate SIMILAR TO pattern values.  Rather the pattern is converted to an equivalent regular expression.  
+        Care should be taken not to rely on general regular expression features when using SIMILAR TO.  If additional features are needed, then LIKE_REGEX should be used.
+        Usage of a non-literal pattern is discouraged as pushdown support is limited.</para></note>
+      </listitem>
+      <listitem>
+        <para><synopsis label="Usage">expression [NOT] LIKE_REGEX pattern</synopsis>
+        LIKE_REGEX allows for standard regular expression syntax to be used for matching.  This differs from SIMILAR TO and LIKE in that the escape character is no longer used (\ is already the 
+        standard escape mechansim in regular expressions and % and _ have no special meaning.  
+        The runtime engine uses the JRE implementation of regular expressions - see the <ulink url="http://download.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">java.util.regex.Pattern</ulink> class for details.
+        <note><para>Teiid does not exhaustively validate LIKE_REGEX pattern values.  It is possible to use JRE only regular expression features that are not specified by the SQL specification.  Additional not all sources support
+        the same regular expression flavor or extensions.  Care should be taken in pushdown situations to ensure that the pattern used will have same meaning in Teiid and across all applicable sources.</para></note>
+        </para>
+      </listitem>
+      <listitem>
+        <para><synopsis label="Usage">EXISTS(subquery)</synopsis>
+        </para>
+      </listitem>
+      <listitem>
+        <para><synopsis label="Usage">expression [NOT] BETWEEN minExpression AND maxExpression</synopsis>
+        Teiid converts BETWEEN into the equivalent form expression &gt;= minExpression AND expression &lt;= maxExpression
+        </para>
+      </listitem>
+      <listitem>
+        <para><synopsis label="Usage">expression</synopsis>
+        Where expression has type boolean.
+        </para>
+      </listitem>
+    </itemizedlist>
+    <itemizedlist>
       <para>Syntax Rules:
       </para>
       <listitem>
-        <para>expression (=|&lt;&gt;|!=|&lt;|>|&lt;=|>=) (expression|((ANY|ALL|SOME) subquery))
+        <para>The precedence ordering from lowest to highest is comparison, NOT, AND, OR 
         </para>
       </listitem>
       <listitem>
-        <para>expression [NOT] IS NULL
-        </para>
-      </listitem>
-      <listitem>
-        <para>expression [NOT] IN (expression[,expression]*)|subquery
-        </para>
-      </listitem>
-      <listitem>
-        <para>expression [NOT] LIKE expression [ESCAPE char]
-        </para>
-      </listitem>
-      <listitem>
-        <para>EXISTS(subquery)
-        </para>
-      </listitem>
-      <listitem>
-        <para>expression BETWEEN minExpression AND maxExpression
-        </para>
-      </listitem>
-      <listitem>
-        <para>criteria AND|OR criteria
-        </para>
-      </listitem>
-      <listitem>
-        <para>NOT criteria
-        </para>
-      </listitem>
-      <listitem>
-        <para>expression
-        </para>
-      </listitem>
-      <listitem>
-        <para>Criteria may be nested using parenthesis.
+        <para>Criteria nested by parenthesis will be logically evaluated prior to evaluating the parent criteria.
         </para>
       </listitem>
     </itemizedlist>

@@ -611,9 +611,19 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
             buffer.append(Tokens.SPACE)
                   .append(NOT);
         }
-        buffer.append(Tokens.SPACE)
-              .append(LIKE)
-              .append(Tokens.SPACE);
+        buffer.append(Tokens.SPACE);
+        switch (obj.getMode()) {
+        case LIKE:
+            buffer.append(LIKE);
+            break;
+        case SIMILAR:
+        	buffer.append(SIMILAR)
+        		  .append(Tokens.SPACE)
+        		  .append(TO);
+        case REGEX:
+        	buffer.append(getLikeRegexString());
+        }
+        buffer.append(Tokens.SPACE);
         append(obj.getRightExpression());
         if (obj.getEscapeCharacter() != null) {
             buffer.append(Tokens.SPACE)
@@ -623,10 +633,13 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
                   .append(obj.getEscapeCharacter().toString())
                   .append(Tokens.QUOTE);
         }
-        
     }
     
-    public void visit(Limit obj) {
+    protected String getLikeRegexString() {
+		return LIKE_REGEX;
+	}
+
+	public void visit(Limit obj) {
         buffer.append(LIMIT)
               .append(Tokens.SPACE);
         if (obj.getRowOffset() > 0) {

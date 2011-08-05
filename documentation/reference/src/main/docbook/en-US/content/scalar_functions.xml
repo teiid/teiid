@@ -1208,6 +1208,21 @@
           </row>
           <row>
             <entry>
+              <para>EXTRACT(YEAR|MONTH|DAY|HOUR|MINUTE|SECOND FROM x)</para>
+            </entry>
+            <entry>
+              <para>Return the given field value from the date value x.
+              Produces the same result as the assoceated YEAR, MONTH, DAYOFMONTH, HOUR, MINUTE, SECOND functions.
+              </para>
+              <para>The SQL specification also allows for TIMEZONE_HOUR and TIMEZONE_MINUTE as extraction targets.  
+              In Teiid all date values are in the timezone of the server.</para>
+            </entry>
+            <entry>
+              <para>x in {date, time, timestamp}, returns integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
               <para>FORMATDATE(x, y)</para>
             </entry>
             <entry>
@@ -1843,100 +1858,44 @@
   <section>
     <title>System Functions</title>
     <para>System functions provide access to information in the Teiid system from within a query. </para>
-    <informaltable frame="all">
-      <tgroup cols="3">
-        <thead>
-          <row>
-            <entry>
-              <para>Function</para>
-            </entry>
-            <entry>
-              <para>Definition</para>
-            </entry>
-            <entry>
-              <para>Datatype Constraint</para>
-            </entry>
-          </row>
-        </thead>
-        <tbody>
-          <row>
-            <entry>
-              <para><code>COMMANDPAYLOAD()</code></para>
-            </entry>
-            <entry>
-              <para>Retrieve the string form of the command payload
+      <section>
+    	<title>COMMANDPAYLOAD</title>
+    	<para>Retrieve a string from the command payload
                 or null if no command payload was specified. The command
                 payload is set by a method on the Teiid JDBC API
                 extensions on a per-query basis.</para>
-            </entry>
-            <entry>
-              <para>Returns a string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para><code>COMMANDPAYLOAD(key)</code></para>
-            </entry>
-            <entry>
-              <para>Cast the command payload object to a
-                java.util.Properties object and look up the specified key in
-                the object</para>
-            </entry>
-            <entry>
-              <para>key in {string}, return is string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para><code>ENV(key)</code></para>
-            </entry>
-            <entry>
-              <para>Retrieve a system environment property. The only key specific to the current session is ‘sessionid’.  
+    	<para><synopsis>COMMANDPAYLOAD([key])</synopsis></para>
+    	<para>If the key parameter is provided, the command payload object is cast to a
+                java.util.Properties object and the corresponding property value for the key is returned.  If the key is not specified the return value is the command payload object toString value.</para>
+    	<para>key, return value are strings</para>
+     </section>
+     <section>
+    	<title>ENV</title>
+    	<para>Retrieve a system environment property.</para>
+    	<para><synopsis>ENV(key)</synopsis></para>
+    	<para>The only key specific to the current session is 'sessionid'.  
                 However the preferred mechanism for getting the session id is with the session_id() function.  
-                To prevent untrusted access to system properties, the use of this function must be specifically enabled in the &jboss-beans; file.
-                </para>
-            </entry>
-            <entry>
-              <para>key in {string}, return is string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para><code>SESSION_ID()</code></para>
-            </entry>
-            <entry>
-              <para>Retrieve the string form of the current session id.</para>
-            </entry>
-            <entry>
-              <para>return is string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para><code>USER()</code></para>
-            </entry>
-            <entry>
-              <para>Retrieve the name of the user executing the
-                query</para>
-            </entry>
-            <entry>
-              <para>return is string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para><code>CURRENT_DATABASE()</code></para>
-            </entry>
-            <entry>
-              <para>Retrieve the catalog name of the database. Currently VDB's name is also the catalog name.</para>
-            </entry>
-            <entry>
-              <para>return is string</para>
-            </entry>
-          </row>          
-        </tbody>
-      </tgroup>
-    </informaltable>
+                To prevent untrusted access to system properties, the use of this function must be specifically enabled in the &jboss-beans; file.</para>
+    	<para>key, return value are strings</para>
+     </section>
+     <section>
+    	<title>SESSION_ID</title>
+    	<para>Retrieve the string form of the current session id.</para>
+    	<para><synopsis>SESSION_ID()</synopsis></para>
+    	<para>return value is string.</para>
+     </section>
+     <section>
+    	<title>USER</title>
+    	<para>Retrieve the name of the user executing the query.</para>
+    	<para><synopsis>USER()</synopsis></para>
+    	<para>return value is string.</para>
+     </section>
+     <section>
+    	<title>CURRENT_DATABASE</title>
+    	<para>Retrieve the catalog name of the database. The VDB name is always the catalog name.</para>
+    	<para><synopsis>CURRENT_DATABASE()</synopsis></para>
+    	<para>return value is string.</para>
+     </section>
   </section>
   <section id="xml_functions">
     <title>XML Functions</title>

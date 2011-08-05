@@ -22,7 +22,7 @@
 
 package org.teiid.translator.jdbc.oracle;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.List;
 
@@ -43,8 +43,8 @@ import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
 
@@ -779,6 +779,15 @@ public class TestOracleTranslator {
     	String sql = "select cot(doublenum) from BQT1.Smalla"; //$NON-NLS-1$       
         String expected = "SELECT (1 / tan(SmallA.DoubleNum)) FROM SmallA"; //$NON-NLS-1$
         helpTestVisitor(RealMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
+    }
+    
+    @Test public void testLikeRegex() throws Exception {
+        String input = "SELECT intkey FROM BQT1.SMALLA where stringkey like_regex 'ab.*c+' and stringkey not like_regex 'ab{3,5}c'"; //$NON-NLS-1$
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE SmallA.StringKey REGEXP_LIKE 'ab.*c+' AND SmallA.StringKey NOT REGEXP_LIKE 'ab{3,5}c'";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
     }
 
 }

@@ -545,4 +545,13 @@ public class TestPostgreSQLTranslator {
                 TRANSLATOR);
     }
     
+    @Test public void testLikeRegex() throws Exception {
+        String input = "SELECT intkey FROM BQT1.SMALLA where stringkey like_regex 'ab.*c+' and stringkey not like_regex 'ab{3,5}c'"; //$NON-NLS-1$
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE SmallA.StringKey ~ 'ab.*c+' AND SmallA.StringKey !~ 'ab{3,5}c'";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
+    
 }

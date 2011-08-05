@@ -423,7 +423,7 @@ public void setFoo(String value)
         <listitem><para><code>SubqueryIn</code> – represents an IN criteria that uses a subquery to produce the value set</para></listitem>
         <listitem><para><code>IsNull</code> – represents an IS NULL criteria</para></listitem>        
         <listitem><para><code>Exists</code> – represents an EXISTS criteria that determines whether a subquery will return any values</para></listitem>
-        <listitem><para><code>Like</code> – represents a LIKE criteria that compares string values</para></listitem>
+        <listitem><para><code>Like</code> – represents a LIKE/SIMILAR TO/LIKE_REGEX criteria that compares string values</para></listitem>
       </itemizedlist>                  
     </section>
     
@@ -875,6 +875,28 @@ int count = visitor.getCount();]]></programlisting>
                 </entry>
                 <entry>
                   <para>Translator can support LIKE criteria with an ESCAPE character clause.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>SimilarTo</para>
+                </entry>
+                <entry>
+                  <para/>
+                </entry>
+                <entry>
+                  <para>Translator can support SIMILAR TO criteria.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>LikeRegexCriteria</para>
+                </entry>
+                <entry>
+                  <para/>
+                </entry>
+                <entry>
+                  <para>Translator can support LIKE_REGEX criteria.</para>
                 </entry>
               </row>
               <row>

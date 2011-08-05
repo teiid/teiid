@@ -43,6 +43,7 @@ import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.Like.MatchMode;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
@@ -917,7 +918,8 @@ public class NewCalculateCostUtil {
         Expression matchExpression = criteria.getRightExpression();
         if(matchExpression instanceof Constant && ((Constant)matchExpression).getType().equals(DataTypeManager.DefaultDataClasses.STRING)) {
             String compareValue = (String) ((Constant)matchExpression).getValue();
-            if(compareValue != null && compareValue.indexOf('%') < 0) {
+            if(criteria.getMode() != MatchMode.REGEX && criteria.getEscapeChar() == MatchCriteria.NULL_ESCAPE_CHAR 
+            		&& compareValue != null && compareValue.indexOf('%') < 0) {
             	return (childCost / 2) * (1 / 3f  + 1 / ndv); //without knowing length constraints we'll make an average guess
             }
         } else if (EvaluatableVisitor.willBecomeConstant(criteria.getLeftExpression())) {

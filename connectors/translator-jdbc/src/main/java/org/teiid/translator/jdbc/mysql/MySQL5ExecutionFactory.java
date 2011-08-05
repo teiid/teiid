@@ -27,9 +27,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.language.Function;
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.jdbc.FunctionModifier;
 
 @Translator(name="mysql5", description="A translator for open source MySQL5 Database")
@@ -64,6 +64,16 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
     	return true;
+    }
+    
+    @Override
+    public boolean supportsLikeRegex() {
+    	return true;
+    }
+    
+    @Override
+    public String getLikeRegexString() {
+    	return "REGEXP"; //$NON-NLS-1$
     }
 	
 }
