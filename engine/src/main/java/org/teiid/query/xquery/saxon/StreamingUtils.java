@@ -32,11 +32,7 @@ import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.ProxyReceiver;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.om.Name11Checker;
-import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.trans.XPathException;
-import nu.xom.DocType;
-import nu.xom.Node;
-import nux.xom.xquery.StreamingPathFilter;
 
 import org.xml.sax.ContentHandler;
 import org.xml.sax.DTDHandler;
@@ -51,28 +47,6 @@ import org.xml.sax.ext.LexicalHandler;
 
 final class StreamingUtils {
 	/**
-	 * Converts a xom node into something readable by Saxon
-	 * @param node
-	 * @param config
-	 * @return
-	 */
-	static NodeInfo wrap(Node node, Configuration config) {
-		if (node == null) 
-			throw new IllegalArgumentException("node must not be null"); //$NON-NLS-1$
-		if (node instanceof DocType)
-			throw new IllegalArgumentException("DocType can't be queried by XQuery/XPath"); //$NON-NLS-1$
-		
-		Node root = node;
-		while (root.getParent() != null) {
-			root = root.getParent();
-		}
-	
-		DocumentWrapper docWrapper = new DocumentWrapper(root, root.getBaseURI(), config);
-		
-		return docWrapper.wrap(node);
-	}
-
-	/**
 	 * Pre-parser that adds validation and handles a default name space
 	 * 
 	 * TODO: add support for more general paths including node tests
@@ -83,7 +57,7 @@ final class StreamingUtils {
 	 * @param prefixMap
 	 * @return
 	 */
-	public static StreamingPathFilter getStreamingPathFilter(String locationPath, Map<String, String> prefixMap) {
+	public static String getStreamingPath(String locationPath, Map<String, String> prefixMap) {
 		if (locationPath.indexOf("//") >= 0) //$NON-NLS-1$
 			throw new IllegalArgumentException("DESCENDANT axis is not supported"); //$NON-NLS-1$
 		
@@ -124,7 +98,7 @@ final class StreamingUtils {
 			}
 			fixedPath += localNames[i];
 		}
-		return new StreamingPathFilter(fixedPath, prefixMap);
+		return fixedPath;
 	}
 
 }

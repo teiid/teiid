@@ -420,6 +420,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			result.not = exists.isNegated();
 			//the correlations can only be in where (if no group by or aggregates) or having
 			result.mergeJoin = exists.getSubqueryHint().isMergeJoin();
+			result.makeInd = exists.getSubqueryHint().isDepJoin();
 			if (!UNNEST && !result.mergeJoin) {
 				return result;
 			}

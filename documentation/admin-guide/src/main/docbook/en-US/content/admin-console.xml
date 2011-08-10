@@ -1,92 +1,199 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0'?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="admin-console">
-   <title>Teiid Admin Console</title>
-   <para>The Teiid Admin Console is a web based administrative and monitoring tool for Teiid. 
-   Teiid's Admin Console is built using the <ulink url="http://www.jboss.org/embjopr">Embedded JOPR</ulink> library and adds a additional plugin into the Embeeded JOPR program already available in the 
-   <ulink url="http://www.jboss.org/jbossas">JBoss AS</ulink>.</para>
-
-    <mediaobject>
-      <imageobject>
-        <imagedata scalefit="1" fileref="../images/admin_console.png"/>
-      </imageobject>
-    </mediaobject>
-    
-   <section>
-     <title>What can be monitored and/or configured?</title>
-     <para>Here are the steps to follow to install Teiid</para>
-
-     <orderedlist>
-        <listitem> <para><emphasis>The Teiid Runtime Engine</emphasis> (Data Services node in the tree)</para> </listitem>
-        <listitem> <para><emphasis>VDBs</emphasis> - Virtual databases</para> 
+  <title>Teiid Admin Console</title>
+  <para>The Teiid Admin Console is a web based administrative and 
+  monitoring tool for Teiid. Teiid&apos;s Admin Console is built using 
+  the <ulink url="http://www.jboss.org/embjopr">Embedded JOPR</ulink> 
+  library and adds a additional plugin into the Embedded JOPR program 
+  already available in the <ulink url="http://www.jboss.org/jbossas">
+  JBoss AS</ulink>.</para>
+  <mediaobject><imageobject>
+  <imagedata fileref="../images/admin_console.png" scalefit="1"/></imageobject></mediaobject>
+  <section>
+    <title>What can be monitored and/or configured?</title>
+    <para>Here are the steps to follow to install Teiid</para>
+    <orderedlist>
+      <listitem>
+        <para><emphasis>The Teiid Runtime Engine</emphasis> (Data 
+        Services node in the tree)</para>
+      </listitem>
+      <listitem>
+        <para><emphasis>VDBs</emphasis> - Virtual databases</para>
+        <orderedlist>
+          <listitem>
+            <para><emphasis>Models</emphasis></para>
             <orderedlist>
-                <listitem> <para><emphasis>Models</emphasis></para> 
-                    <orderedlist>
-                        <listitem> <para><emphasis>Source</emphasis>- these are physical sources</para></listitem>
-                        <listitem> <para><emphasis>Multi-source</emphasis> - these are multiple sourced models</para></listitem>
-                        <listitem> <para><emphasis>Logical</emphasis> - these are virtual sources</para></listitem>
-                    </orderedlist>
-                </listitem>
-                <listitem> <para><emphasis>Translator instances</emphasis>- any Translator instances defined for use by this VDB</para> </listitem>
+              <listitem>
+                <para><emphasis>Source</emphasis>- these are physical 
+                sources</para>
+              </listitem>
+              <listitem>
+                <para><emphasis>Multi-source</emphasis> - these are 
+                multiple sourced models</para>
+              </listitem>
+              <listitem>
+                <para><emphasis>Logical</emphasis> - these are virtual 
+                sources</para>
+              </listitem>
             </orderedlist>
+          </listitem>
+          <listitem>
+            <para><emphasis>Translator instances</emphasis>- any 
+            Translator instances defined for use by this VDB</para>
+          </listitem>
+          <listitem>
+            <para><emphasis>Data Roles</emphasis>- any 
+            data roles defined for use by this VDB</para>
+          </listitem>
+        </orderedlist>
+      </listitem>
+      <listitem>
+        <para>Translators - These are the extensions to supported 
+        datasources that come with Teiid out-of-the-box.</para>
+      </listitem>
+    </orderedlist>
+    <note>
+      <para>The creation/modification of the datasource is managed by 
+      the JBossAS plugin.</para>
+    </note>
+    <section>
+      <title>Configuration</title>
+      <orderedlist>
+        <listitem>
+          <para>Settings for the Data Services plugin</para>
         </listitem>
-        <listitem> <para>Translators - These are the extensions to supported datasources that come with Teiid out-of-the-box.</para> </listitem>
-     </orderedlist>
-     
-     <note>
-        <para>The creation/modification of the datasource is managed by the JBossAS plugin.</para>
-     </note>    
-    
-    <section>
-        <title>Configuration</title>
-        <orderedlist>
-            <listitem> <para>Runtime Engine properties</para> </listitem>
-            <listitem> <para>Buffer Service</para> </listitem>
-            <listitem> <para>Jdbc Socket configuration</para> </listitem>
-            <listitem> <para>Session Service</para> </listitem>
-        </orderedlist>
+        <listitem>
+          <para>Runtime Engine properties</para>
+        </listitem>
+        <listitem>
+          <para>Buffer Service</para>
+        </listitem>
+        <listitem>
+          <para>Jdbc Socket configuration</para>
+        </listitem>
+        <listitem>
+          <para>Session Service</para>
+        </listitem>
+      </orderedlist>
     </section>
-    
     <section>
-        <title>Metrics</title>
-        <orderedlist>
-            <listitem> <para>Long Running Query count</para> </listitem>
-            <listitem> <para>Active Query count</para> </listitem>
-            <listitem> <para>Active Session count</para> </listitem>
-        </orderedlist>
-    </section>    
-   
-    <section>
-        <title>Control (Operations)</title>
-        <orderedlist>
-            <listitem> <para>View Long Running Queries</para> </listitem>
-            <listitem> <para>View Current Sessions</para> </listitem>
-            <listitem> <para>Terminate Session</para> </listitem>
-            <listitem> <para>View Current Requests</para> </listitem>
-            <listitem> <para>Terminate requests</para> </listitem>
-            <listitem> <para>View Current Transactions</para> </listitem>
-            <listitem> <para>Terminate Transaction</para> </listitem>
-        </orderedlist>
+      <title>Metrics</title>
+      <orderedlist>
+        <listitem>
+          <para>Long Running Query count</para>
+        </listitem>
+        <listitem>
+          <para>Active Query count</para>
+        </listitem>
+        <listitem>
+          <para>Active Session count</para>
+        </listitem>
+        <listitem>
+          <para>Prepared Plan Cache Hit Ratio %</para>
+        </listitem>
+        <listitem>
+          <para>Prepared Plan Cache Size</para>
+        </listitem>
+        <listitem>
+          <para>Prepared Plan Cache # of Requests</para>
+        </listitem>
+        <listitem>
+          <para>ResultSet Cache Hit Ratio %</para>
+        </listitem>
+        <listitem>
+          <para>ResultSet Cache Size</para>
+        </listitem>
+        <listitem>
+          <para>ResultSet Cache # of Requests</para>
+        </listitem>
+        <listitem>
+          <para>Used Buffer Space</para>
+        </listitem>
+      </orderedlist>
     </section>
-    
+    <section>
+      <title>Control (Operations)</title>
+      <listitem>
+        <para>Data Services Engine</para>
+        <orderedlist>
+          <listitem>
+            <para>View Long Running Queries</para>
+          </listitem>
+          <listitem>
+            <para>View Current Sessions</para>
+          </listitem>
+          <listitem>
+            <para>Deploy a VDB via URL</para>
+          </listitem>
+          <listitem>
+            <para>Terminate Session</para>
+          </listitem>
+          <listitem>
+            <para>View Current Requests</para>
+          </listitem>
+          <listitem>
+            <para>Terminate requests</para>
+          </listitem>
+          <listitem>
+            <para>View Current Transactions</para>
+          </listitem>
+          <listitem>
+            <para>Terminate Transaction</para>
+          </listitem>
+        </orderedlist>
+      </listitem>
+      <listitem>
+        <para>Virtual Database</para>
+        <orderedlist>
+          <listitem>
+            <para>View VDB Requests</para>
+          </listitem>
+          <listitem>
+            <para>View VDB Sessions</para>
+          </listitem>
+          <listitem>
+            <para>List Materialized View Info</para>
+          </listitem>
+          <listitem>
+            <para>Refresh a Materialized View</para>
+          </listitem>
+          <listitem>
+            <para>Clear Cache</para>
+          </listitem>
+        </orderedlist>
+      </listitem>
+    </section>
     <section id="vdb_deploy">
-        <title>Deploying the VDB</title>
-        <para>VDB archive files created it the Designer Tool or Dynamic VDBs can be deployed into Teiid server using
-        the Admin Console.</para>
-        
-        <orderedlist>
-            <listitem> <para>Select the Virtual Database node in the Admin Console tree and click the Add New Resource button.</para> </listitem>
-            <listitem> <para>Select the VDB archive file from the file system and click continue.</para> </listitem>
-            <listitem> <para>The VDB will deploy if no fatal errors are found in the archive. The status of
-             the VDB will be UP if no errors are found with the models in the VDB.</para> </listitem>
-            <listitem> <para>If there are model errors, the VDB will be deployed with a status of DOWN and the errors will be 
-            listed on the configuration tab of the VDB. VDBs that are not UP will be marked with a red X in the tree.</para> </listitem>
-        </orderedlist>       
-        
-        <para>Only Model's "connection-jndi-name" can be modified using this tool by clicking on the "configuration" 
-        tab, all other proeprties are read-only.</para> 
-    </section>    
-        
-   </section>   
-   
+      <title>Deploying the VDB</title>
+      <para>VDB archive files created it the Designer Tool or Dynamic 
+      VDBs can be deployed into Teiid server using the Admin 
+      Console.</para>
+      <orderedlist>
+        <listitem>
+          <para>Select the Virtual Database node in the Admin Console 
+          tree and click the Add New Resource button.</para>
+        </listitem>
+        <listitem>
+          <para>Select the VDB archive file from the file system and 
+          click continue.</para>
+        </listitem>
+        <listitem>
+          <para>The VDB will deploy if no fatal errors are found in the 
+          archive. The status of the VDB will be UP if no errors are 
+          found with the models in the VDB.</para>
+        </listitem>
+        <listitem>
+          <para>If there are model errors, the VDB will be deployed 
+          with a status of DOWN and the errors will be listed on the 
+          configuration tab of the VDB. VDBs that are not UP will be 
+          marked with a red X in the tree.</para>
+        </listitem>
+      </orderedlist>
+      <para>Only Model&apos;s &quot;connection-jndi-name&quot; can be 
+      modified using this tool by clicking on the 
+      &quot;configuration&quot; tab, all other properties are 
+      read-only.</para>
+    </section>
+  </section>
 </chapter>

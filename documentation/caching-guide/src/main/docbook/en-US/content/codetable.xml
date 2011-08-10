@@ -29,7 +29,7 @@
 		<para>See the Reference for more information on use of the lookup function.</para>
 		<example>
 			<title>Country Code Lookup</title>
-			<programlisting>lookup(‘ISOCountryCodes, ‘CountryName’, ‘CountryCode’, ‘US’)</programlisting>
+			<programlisting>lookup('ISOCountryCodes', 'CountryName', 'CountryCode', 'US')</programlisting>
 		</example>
 	</section>
 	<section>
@@ -47,7 +47,12 @@
 	</section>
 	<section>
 		<title>Materialized View Alternative</title>
-		<para>The lookup function is a shortcut to create an internal materialized view.  In many situations, it may be better to directly create the analogous materialized view rather than to use a code table.</para>
+		<para>The lookup function is a shortcut to create an internal materialized view with an appropriate primary key.  In many situations, it may be better to directly create the analogous materialized view rather than to use a code table.</para>
+		<example>
+			<title>Country Code Lookup Against A Mat View</title>
+			<programlisting>SELECT (SELECT CountryCode From MatISOCountryCodes WHERE CountryName = tbl.CountryName) as cc FROM tbl</programlisting>
+			<para>Here MatISOCountryCodes is a view selecting from ISOCountryCodes that has been marked as materialized and has a primary key or index on CountryName.  The scalar subquery will use the index to lookup the country code for each country name in tbl.</para>
+		</example>
 		<itemizedlist>
 			<title>Reasons to use a materialized view:</title>
 			<listitem>
@@ -63,7 +68,7 @@
 				<para>The ability to use <link linkend="nocache">OPTION NOCACHE</link>.</para>
 			</listitem>
 			<listitem>
-				<para>Usage of a materialized view lookup as an uncorrelated subquery is no different than the use of the lookup function.</para>
+				<para>There is almost no performance difference.</para>
 			</listitem>
 		</itemizedlist>
 		<orderedlist>
@@ -72,7 +77,7 @@
 				<para>Create a view selecting the appropriate columns from the desired table.  In general, this view may have an arbitrarily complicated transformation query.</para>
 			</listitem>
 			<listitem>
-				<para>Designate the appropriate column(s) as the primary key.</para>
+				<para>Designate the appropriate column(s) as the primary key.  Additional indexes can be added if needed.</para>
 				</listitem>
 			<listitem>
 				<para>Set the materialized property to true.</para>

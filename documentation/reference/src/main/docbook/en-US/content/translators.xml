@@ -545,6 +545,11 @@
                         <entry>Restrict Searches to objectClass named in the Name field for a table</entry>
                         <entry>false</entry>
                     </row>
+                    <row>
+                    	<entry>UsePagination</entry>
+                        <entry>Use a PagedResultsControl to page through large results.  This is not supported by all directory servers.</entry>
+                        <entry>false</entry>
+                    </row>
                 </tbody>
             </tgroup>
         </table>

@@ -97,9 +97,9 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         
         if (insert.getVariables().isEmpty()) {
             if (insert.getGroup().isResolved()) {
-                List variables = ResolverUtil.resolveElementsInGroup(insert.getGroup(), metadata);
-                for (Iterator i = variables.iterator(); i.hasNext();) {
-                    insert.addVariable((ElementSymbol)((ElementSymbol)i.next()).clone());
+                List<ElementSymbol> variables = ResolverUtil.resolveElementsInGroup(insert.getGroup(), metadata);
+                for (Iterator<ElementSymbol> i = variables.iterator(); i.hasNext();) {
+                    insert.addVariable(i.next().clone());
                 }
             } else {
                 for (int i = 0; i < values.size(); i++) {
@@ -178,11 +178,11 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         }
         
         Iterator valueIter = values.iterator();
-        Iterator varIter = insert.getVariables().iterator();
+        Iterator<ElementSymbol> varIter = insert.getVariables().iterator();
         while(valueIter.hasNext()) {
             // Walk through both elements and expressions, which should match up
 			Expression expression = (Expression) valueIter.next();
-			ElementSymbol element = (ElementSymbol) varIter.next();
+			ElementSymbol element = varIter.next();
 			
 			if (!usingQuery) {
 				ResolverUtil.setDesiredType(expression, element.getType(), insert);

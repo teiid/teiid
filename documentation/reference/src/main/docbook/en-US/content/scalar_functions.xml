@@ -1824,20 +1824,21 @@
     <para><synopsis>LOOKUP(codeTable, returnColumn, keyColumn, keyValue)</synopsis></para>
     <para>In the lookup table codeTable, find the row where
       keyColumn has the value keyValue and return the
-      associated returnColumn. codeTable must be a fully-qualified string
-      literal containing metadata identifiers, keyValue datatype
-      must match datatype of the keyColumn, return datatype
-      matches that of returnColumn. returnColumn and
-      keyColumn parameters should use their shortened names.
+      associated returnColumn value or null if no matching key is found. codeTable must be a string literal that is the fully-qualified name of the target table.
+      returnColumn and key Column must also be string literals of just the relevant column names.
+      The keyValue can be any expression that must match the datatype of the keyColumn.  The return datatype
+      matches that of returnColumn.
     </para>
-    <para>For example, a StatePostalCodes table used to translate postal codes to
-      complete state names might represent an example of this type of
-      lookup table. One column, PostalCode, represents a key column.
-      Other tables refer to this two-letter code. A
-      second column, StateDisplayName, would represent the complete name
-      of the state. Hence, a query to this lookup table would typically
-      provide the PostalCode and expect the StateDisplayName in response.
-    </para>
+    <example>
+		<title>Country Code Lookup</title>
+		<programlisting>lookup('ISOCountryCodes', 'CountryName', 'CountryCode', 'US')</programlisting>
+		<para>A ISOCountryCodes table used to translate country name to
+      ISO codes. One column, CountryName, represents a key column.
+      A second column, CountryCode, would represent the ISO code of the country. 
+      Hence, a query to this lookup table would
+      provide a CountryName, shown above as 'US', and expect a CountryCode value in response.
+		</para>
+	</example>
     <para>When you call this function for any combination of codeTable, returnColumn, and
       keyColumn for the first time, the Teiid System caches the result. 
       The Teiid System uses this cache for all
@@ -1846,6 +1847,7 @@
       the Teiid System. Thus, you should not use this function for
       data that is subject to updates. Instead, you can use it against
       static data that does not change over time.</para>
+    <para>See the Caching Guide for more on the caching aspects of the lookup function.</para>
     <note>
       <itemizedlist>
         <listitem>

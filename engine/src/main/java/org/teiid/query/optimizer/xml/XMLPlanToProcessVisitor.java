@@ -22,6 +22,8 @@
 
 package org.teiid.query.optimizer.xml;
 
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -70,7 +72,7 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
     Stack<Program> programStack = new Stack<Program>(); 
     XMLPlannerEnvironment planEnv;
     Program originalProgram ;
-    Program cleanupProgram  = new Program();
+    Map<String, List<String>> unloadInstructions = new HashMap<String, List<String>>();
 
     public XMLPlanToProcessVisitor(XMLPlannerEnvironment env) {
         this.planEnv = env;
@@ -85,8 +87,7 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
         // remove the current program from the stack; we no longer need this
         originalProgram=this.programStack.pop();
         
-        // cleanup program will have instructions to unload the staging table.
-        originalProgram.addInstructions(cleanupProgram);
+        addUnloads(originalProgram, null);
     }
         
     public void start(MappingAttribute attribute, Map context){
@@ -289,7 +290,6 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
         Program currentProgram = programStack.peek();        
         
         String source = node.getActualResultSetName();  
-        ResultSetInfo info= node.getResultSetInfo();
         
         // move to next row.
         currentProgram.addInstruction(new MoveCursorInstruction(source));
@@ -327,15 +327,22 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
         }
         
         List<String> stagingTables = node.getStagingTables();
-        for (String table : stagingTables) {
-            Program currentProgram = programStack.peek();
+        Program currentProgram = programStack.peek();
 
+        for (String table : stagingTables) {
             // load staging
-            currentProgram.addInstruction(new ExecStagingTableInstruction(table, planEnv.getStagingTableResultsInfo(table)));
+            ResultSetInfo stagingTableResultsInfo = planEnv.getStagingTableResultsInfo(table);
+			currentProgram.addInstruction(new ExecStagingTableInstruction(table, stagingTableResultsInfo));
             
             // unload staging
             String unloadName = planEnv.unLoadResultName(table);
-            cleanupProgram.addInstruction(new ExecStagingTableInstruction(unloadName, planEnv.getStagingTableResultsInfo(unloadName)));
+            String parent = stagingTableResultsInfo.getStagingRoot();
+            List<String> instructions = this.unloadInstructions.get(parent);
+            if (instructions == null) {
+            	instructions = new LinkedList<String>();
+            	this.unloadInstructions.put(parent, instructions);
+            }
+            instructions.add(unloadName);
         } // for
     }
     
@@ -344,7 +351,22 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
             // stop recording and update the program
             endRootRecursive(node, context);            
         }
+
+        Program currentProgram = programStack.peek();
+        if (node instanceof MappingSourceNode) {
+	        String name = node.getSource();
+	        addUnloads(currentProgram, name);
+        }
     }
+
+	private void addUnloads(Program currentProgram, String name) {
+		List<String> unloads = this.unloadInstructions.get(name);
+        if (unloads != null) {
+        	for (String string : unloads) {
+            	currentProgram.addInstruction(new ExecStagingTableInstruction(string, planEnv.getStagingTableResultsInfo(string)));
+			}
+        }
+	}
     
     public void start(final MappingRecursiveElement element, Map context){
         Program currentProgram = programStack.peek();

@@ -55,7 +55,6 @@ import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
-import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Drop;
@@ -140,10 +139,10 @@ public class XMLQueryPlanner {
                     
                     prepareQuery(sourceNode, planEnv, command);
                     
-                    QueryUtil.rewriteQuery(command, planEnv.getGlobalMetadata(), planEnv.context);
+                    Command cmd = QueryUtil.rewriteQuery(command, planEnv.getGlobalMetadata(), planEnv.context);
                     
                     // Plan the result set.
-                    ProcessorPlan queryPlan = optimizePlan(command, planEnv);
+                    ProcessorPlan queryPlan = optimizePlan(cmd, planEnv);
                     rsInfo.setPlan(queryPlan);                    
                 } catch (Exception e) {
                     throw new TeiidRuntimeException(e);
@@ -441,7 +440,7 @@ public class XMLQueryPlanner {
 		return finder.msn;
 	}
 
-    private static void updateSymbolMap(Map symbolMap, String oldGroup, final String newGroup, QueryMetadataInterface metadata) 
+    static void updateSymbolMap(Map symbolMap, String oldGroup, final String newGroup, QueryMetadataInterface metadata) 
         throws QueryResolverException,QueryMetadataException,TeiidComponentException {
         
         GroupSymbol oldGroupSymbol = new GroupSymbol(oldGroup);
@@ -485,7 +484,7 @@ public class XMLQueryPlanner {
 
         GroupSymbol srcGroup = QueryUtil.createResolvedGroup(srcGroupName, planEnv.getGlobalMetadata());
         
-        String intoGroupName =  "#"+stageGroupName.replace('.', '_'); //$NON-NLS-1$
+        String intoGroupName = getTempTableName(stageGroupName);
         GroupSymbol intoGroupSymbol = new GroupSymbol(intoGroupName); 
                 
         query.setInto(new Into(intoGroupSymbol));
@@ -571,6 +570,11 @@ public class XMLQueryPlanner {
         
         return true;
     }
+
+	static String getTempTableName(String stageGroupName) {
+		String intoGroupName =  "#"+stageGroupName.replace('.', '_'); //$NON-NLS-1$
+		return intoGroupName;
+	}
         
     /**
      * This builds a command in the following form; If staging table name is "FOO"

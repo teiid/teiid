@@ -456,7 +456,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					CachedResults cr = rsCache.get(cacheId);
 					if (cr != null) {
 						this.resultsBuffer = cr.getResults();
-						this.analysisRecord = cr.getAnalysisRecord();
 						request.initMetadata();
 						this.originalCommand = cr.getCommand(requestMsg.getCommandString(), request.metadata, pi);
 						request.validateAccess(this.originalCommand);
@@ -530,7 +529,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     	Determinism determinismLevel = processor.getContext().getDeterminismLevel();
     	CachedResults cr = new CachedResults();
     	cr.setCommand(originalCommand);
-        cr.setAnalysisRecord(analysisRecord);
         cr.setResults(resultsBuffer, processor.getProcessorPlan());
         if (originalCommand.getCacheHint() != null) {
         	LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Using cache hint", originalCommand.getCacheHint()); //$NON-NLS-1$
@@ -659,6 +657,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
             if (requestMsg.getShowPlan() == ShowPlan.DEBUG) {
             	response.setDebugLog(analysisRecord.getDebugLog());
             }
+            this.analysisRecord = null;
         }
 	}
 

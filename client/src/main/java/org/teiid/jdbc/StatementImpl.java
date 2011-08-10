@@ -1060,9 +1060,15 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     }
 
 	protected void setAnalysisInfo(ResultsMessage resultsMsg) {
-        this.debugLog = resultsMsg.getDebugLog();
-        this.currentPlanDescription = resultsMsg.getPlanDescription();
-        this.annotations = resultsMsg.getAnnotations(); 
+		if (resultsMsg.getDebugLog() != null) {
+			this.debugLog = resultsMsg.getDebugLog();
+		}
+		if (resultsMsg.getPlanDescription() != null) {
+			this.currentPlanDescription = resultsMsg.getPlanDescription();
+		}
+		if (resultsMsg.getAnnotations() != null) {
+			this.annotations = resultsMsg.getAnnotations();
+		}
         this.driverConnection.setDebugLog(debugLog);
         this.driverConnection.setCurrentPlanDescription(currentPlanDescription);
         this.driverConnection.setAnnotations(annotations);

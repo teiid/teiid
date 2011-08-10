@@ -2069,7 +2069,7 @@ public class TestQueryRewriter {
     }
     
     @Test public void testRewriteConcat2() {
-        helpTestRewriteCriteria("concat2('a','b') = 'ab'", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("sys.concat2('a','b') = 'ab'", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testRewriteConcat2_1() {

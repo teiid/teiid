@@ -226,8 +226,8 @@ public final class XMLPlanner implements CommandPlanner{
 	}
     
     static void removeExcluded(MappingNode node) {
-        for (Iterator i = node.getChildren().iterator(); i.hasNext();) {
-            MappingNode child = (MappingNode)i.next();
+        for (Iterator<MappingNode> i = node.getChildren().iterator(); i.hasNext();) {
+            MappingNode child = i.next();
             if (!(node instanceof MappingRecursiveElement) && child.isExcluded()) {
                 i.remove();
             } else {
@@ -305,7 +305,7 @@ public final class XMLPlanner implements CommandPlanner{
                 by = new OrderBy();
             }
             ElementSymbol mappedSymbol = (ElementSymbol)sourceNode.getSymbolMap().get(new ElementSymbol(elementNode.getNameInSource()));
-            by.addVariable(mappedSymbol.clone(), ((Boolean)types.get(i)).booleanValue());
+            by.addVariable(mappedSymbol.clone(), types.get(i));
             rs.setOrderBy(by);
 		}
 	}

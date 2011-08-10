@@ -34,9 +34,11 @@ import java.util.Map;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.UnresolvedSymbolDescription;
+import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
+import org.teiid.core.util.StringUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionForm;
@@ -75,7 +77,9 @@ import org.teiid.query.sql.symbol.ElementSymbol.DisplayMode;
 
 public class ResolverVisitor extends LanguageVisitor {
     
-    private static class ElementMatch {
+    private static final String SYS_PREFIX = CoreConstants.SYSTEM_MODEL + '.';
+
+	private static class ElementMatch {
     	ElementSymbol element;
     	GroupSymbol group;
     	
@@ -547,6 +551,9 @@ public class ResolverVisitor extends LanguageVisitor {
 	
 	    function.setFunctionDescriptor(fd);
 	    function.setType(fd.getReturnType());
+	    if (CoreConstants.SYSTEM_MODEL.equals(fd.getSchema()) && StringUtil.startsWithIgnoreCase(function.getName(), SYS_PREFIX)) {
+	    	function.setName(function.getName().substring(SYS_PREFIX.length()));
+	    }
 	}
 
 	/**
