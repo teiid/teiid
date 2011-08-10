@@ -10,7 +10,7 @@
 <P><A HREF="http://www.teiid.org/"><IMG SRC="https://www.jboss.org/dms/teiid/images/teiid-banner.png" NAME="graphics1" ALT="Teiid" ALIGN=BOTTOM WIDTH=800></A>
 
 <H1>Teiid ${project.version} Release Notes</H1>
-<P>Teiid ${project.version} adds performance, integration, and runtime metadata update features. 
+<P>Teiid ${project.version} adds performance and integration features. 
 
 <H2>Overview</H2>
 <UL>
@@ -26,24 +26,6 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <UL>
-    <LI><B>Window function support</B> - Teiid and pushdown support was added for SQL 2003 OLAP window functions.  The analytical ranking functions RANK, DENSE_RANK, and ROW_NUMBER were also added.  See the reference for more.
-    <LI><B>Additional ANSI support</B> - Teiid and pushdown support was added for SUBSTRING using FROM/FOR syntax, TRIM, EXTRACT, SIMILAR TO, and LIKE_REGEX.  See the reference for more.
-	<LI><B>Subquery optimization control</B> - added the DJ hint to indicate that a subquery should be the independent side of a dependent join.
-	<LI><B>MAKEIND Hint</B> - The MAKEIND hint can be used to indicate that the other side of the join should be made dependent.
-    <LI><B>ODBC SSL</B> - added support for SSL encrypted ODBC connections.
-	<LI><B>Reauthentication Statement</B> - SET SESSION AUTHORIZATION can now be used to perform a reauthentication via JDBC or ODBC.
-	<LI><B>Pluggable Authorization</B> - an alternative PolicyDecider can be defined in the teiid-jboss-beans.xml file to customize authorization decisions.
-	<LI><B>Streaming XQuery</B> - in situations where document projection applies if the XMLQUERY/XMLTABLE path expressions meet certain conditions, then the incoming document will not only be projected, but the independent subtrees will be processed without loading the entire document.  This allows for nearly arbitrarily large XML documents to be processed.  See the Reference for more.
-	<LI><B>Logging Procedures</B> - added SYSADMIN.isLoggable and SYSADMIN.logMsg to aid in debugging procedure logic.
-	<LI><B>ANSI OFFSET/FETCH FIRST</B> - instead of the limit clause, a standard OFFSET and/or FETCH FIRST/NEXT clause can be used to limit results.
-	<LI><B>ODBC Cursors</B> - added the capability to use "UseDeclareFetch" with ODBC. This enables users to read results in batches, which is especially useful when dealing with large row counts.
-	<LI><B>Internal Materialized Views</B>
-		<UL>
-			<LI><B>Distributed Refresh</B> - When a internal materialized view is refreshed at one node, an event is issued to all other nodes in the cluster to asynchronously fetch the new contents.
-			<LI><B>Sync at Start</B> - When a node is restarted in a cluster, at end of start cycle Teiid will asynchronously fetch the cached internal materialized view contents from other nodes.
-		</UL>
-	</LI>
-	<LI><B>LDAP Pagination</B> - the ldap translator now supports pagination for retrieving large results from directory servers like Active Directory and OpenLDAP.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
