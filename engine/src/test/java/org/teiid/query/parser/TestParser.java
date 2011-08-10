@@ -86,9 +86,8 @@ import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
-import org.teiid.query.sql.proc.BreakStatement;
+import org.teiid.query.sql.proc.BranchingStatement;
 import org.teiid.query.sql.proc.CommandStatement;
-import org.teiid.query.sql.proc.ContinueStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.CriteriaSelector;
 import org.teiid.query.sql.proc.DeclareStatement;
@@ -99,6 +98,7 @@ import org.teiid.query.sql.proc.RaiseErrorStatement;
 import org.teiid.query.sql.proc.Statement;
 import org.teiid.query.sql.proc.TranslateCriteria;
 import org.teiid.query.sql.proc.WhileStatement;
+import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
@@ -172,7 +172,7 @@ public class TestParser {
     }
     
     private void helpBlockTest(String block, String expectedString, Block expectedBlock) throws ParseException {
-        Block actualBlock = new SQLParser(new StringReader(block)).block(new ParseInfo());
+        Block actualBlock = SQLParserUtil.asBlock(new SQLParser(new StringReader(block)).statement(new ParseInfo()));
         String actualString = actualBlock.toString();
         assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$
         assertEquals("Block does not match: ", expectedBlock, actualBlock);              //$NON-NLS-1$
@@ -3185,32 +3185,6 @@ public class TestParser {
              stmt);     
     }    
 
-    /*@Test public void testIfStatement1(){
-        ElementSymbol a = new ElementSymbol("a");
-        String shortType = new String("short");
-        Statement ifStmt = new DeclareStatement(a, shortType);
-
-        ElementSymbol b = new ElementSymbol("b");
-        Statement elseStmt = new DeclareStatement(b, shortType);
-              
-        Block ifBlock = new Block();
-        ifBlock.addStatement(ifStmt); 
-      
-        Block elseBlock = new Block();
-        elseBlock.addStatement(elseStmt);
-    
-        ElementSymbol c = new ElementSymbol("c");    
-        Criteria crit = new CompareCriteria(c, CompareCriteria.EQ, 
-            new Constant(new Integer(5)));
-            
-        IfStatement stmt = new IfStatement(crit, ifBlock, elseBlock);
-                        
-        helpStmtTest("IF(c = 5) BEGIN DECLARE short a; END ELSE ",
-             "IF(c = 5)"+"\n"+ "BEGIN"+"\n"+"DECLARE short a;"+"\n"+"END"+"\n"+
-             "ELSE"+"\n"+"BEGIN"+"\n"+"DECLARE short b;"+"\n"+"END",
-             stmt);     
-    }*/   
-    
     @Test public void testCriteriaSelector0() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
@@ -5463,14 +5437,39 @@ public class TestParser {
                      +"\n"+"END", whileStmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
+    @Test public void testWhileStatement1() throws Exception {
+        ElementSymbol x = new ElementSymbol("x", false); //$NON-NLS-1$
+        Function f = new Function("+", new Expression[] { x, new Constant(new Integer(1)) }); //$NON-NLS-1$
+        Statement assignmentStmt = new AssignmentStatement(x, f);
+        Block block = new Block();
+        block.setAtomic(true);
+        block.setLabel("1y");
+        block.addStatement(assignmentStmt);
+        BranchingStatement bs = new BranchingStatement(BranchingMode.CONTINUE);
+        bs.setLabel("1y");
+        block.addStatement(bs);
+        Criteria crit = new CompareCriteria(x, CompareCriteria.LT, 
+                    new Constant(new Integer(100)));
+        WhileStatement whileStmt = new WhileStatement(crit, block);
+        helpStmtTest("WHILE (x < 100) \"1y\": BEGIN ATOMIC x=x+1; CONTINUE \"1y\"; END", //$NON-NLS-1$
+                     "WHILE(x < 100)"+"\n"+ "\"1y\" : BEGIN ATOMIC"+"\n"+"x = (x + 1);\nCONTINUE \"1y\";" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+                     +"\n"+"END", whileStmt); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
     @Test public void testBreakStatement() throws Exception {
-        Statement breakStmt = new BreakStatement();
+        Statement breakStmt = new BranchingStatement();
         helpStmtTest("break;", "BREAK;", breakStmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testContinueStatement() throws Exception {
-        Statement contStmt = new ContinueStatement();
+    	BranchingStatement contStmt = new BranchingStatement(BranchingMode.CONTINUE);
         helpStmtTest("continue;", "CONTINUE;", contStmt); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testContinueStatement1() throws Exception {
+    	BranchingStatement contStmt = new BranchingStatement(BranchingMode.CONTINUE);
+	    contStmt.setLabel("x");
+        helpStmtTest("continue x;", "CONTINUE x;", contStmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testVirtualProcedure(){        
@@ -5498,7 +5497,7 @@ public class TestParser {
         block.addStatement(assignmentStmt);
         
         Block ifBlock = new Block();
-        Statement continueStmt = new ContinueStatement();
+        Statement continueStmt = new BranchingStatement(BranchingMode.CONTINUE);
         ifBlock.addStatement(continueStmt);
         Criteria crit = new CompareCriteria(x, CompareCriteria.GT, 
         new Constant(new Integer(5)));

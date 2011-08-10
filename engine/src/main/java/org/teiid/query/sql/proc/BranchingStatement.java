@@ -24,20 +24,72 @@
  */
 package org.teiid.query.sql.proc;
 
+import org.teiid.core.util.HashCodeUtil;
+import org.teiid.core.util.StringUtil;
 import org.teiid.query.sql.LanguageVisitor;
 
 /**
  * <p> This class represents a break statement in the storedprocedure language.
  * It extends the <code>Statement</code> that could part of a block.</p>
  */
-public class BreakStatement extends Statement {
-    
+public class BranchingStatement extends Statement {
+	
+	public enum BranchingMode {
+		/**
+		 * Teiid specific - only allowed to target loops
+		 */
+		BREAK,
+		/**
+		 * Teiid specific - only allowed to target loops
+		 */
+		CONTINUE,
+		/**
+		 * ANSI - allowed to leave any block 
+		 */
+		LEAVE
+	}
+	
+	private String label;
+	private BranchingMode mode;
+	
+	public BranchingStatement() {
+		this(BranchingMode.BREAK);
+	}
+	
+	public BranchingStatement(BranchingMode mode) {
+		this.mode = mode;
+	}
+	
+	public String getLabel() {
+		return label;
+	}
+	
+	public void setLabel(String label) {
+		this.label = label;
+	}
+	
+	public void setMode(BranchingMode mode) {
+		this.mode = mode;
+	}
+	
+	public BranchingMode getMode() {
+		return mode;
+	}
+	
     /**
      * Return the type for this statement, this is one of the types
      * defined on the statement object.
      */
     public int getType() {
-        return Statement.TYPE_BREAK;
+    	switch (mode) {
+    	case BREAK:
+    		return Statement.TYPE_BREAK;
+    	case CONTINUE:
+    		return Statement.TYPE_CONTINUE;
+    	case LEAVE:
+    		return Statement.TYPE_LEAVE;
+    	}
+    	throw new AssertionError();
     }       
 
     // =========================================================================
@@ -52,8 +104,11 @@ public class BreakStatement extends Statement {
      * Deep clone statement to produce a new identical statement.
      * @return Deep clone 
      */
-    public Object clone() {     
-        return new BreakStatement();
+    public BranchingStatement clone() {     
+        BranchingStatement clone = new BranchingStatement();
+        clone.mode = mode;
+        clone.label = label;
+        return clone;
     }
     
     /**
@@ -66,13 +121,16 @@ public class BreakStatement extends Statement {
         if(this == obj) {
             return true;
         }
-
-        return obj instanceof BreakStatement;
+        if (!(obj instanceof BranchingStatement)) {
+        	return false;
+        }
+        BranchingStatement other = (BranchingStatement)obj;
+        return StringUtil.equalsIgnoreCase(label, other.label) 
+        && mode == other.mode;
     } 
     
     public int hashCode() {
-        //the break statement are always equal
-        return 0;
+        return HashCodeUtil.hashCode(mode.hashCode());
     }
       
 }

@@ -29,12 +29,16 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.service.TransactionContext;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
@@ -1648,6 +1652,48 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
+    @Test public void testLoopsWithLabels() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        
+        StringBuffer procedure = new StringBuffer("CREATE VIRTUAL PROCEDURE \n"); //$NON-NLS-1$
+        procedure.append("y: BEGIN\n"); //$NON-NLS-1$
+        procedure.append("declare integer VARIABLES.e2_total=param1;\n"); //$NON-NLS-1$
+        procedure.append("x: loop on (select e2 as x from pm1.g1) as mycursor\n"); //$NON-NLS-1$
+        procedure.append("BEGIN\n"); //$NON-NLS-1$
+        procedure.append("e2_total=e2_total+mycursor.x;\n"); //$NON-NLS-1$
+        procedure.append("loop on (select e2 as x from pm1.g1) as mycursor1\n"); //$NON-NLS-1$
+        procedure.append("BEGIN\n"); //$NON-NLS-1$
+        procedure.append("if (e2_total < 5)\n"); //$NON-NLS-1$
+        procedure.append("break x;\n"); //$NON-NLS-1$
+        procedure.append("else if (e2_total > 50)\n"); //$NON-NLS-1$
+        procedure.append("leave y;\n"); //$NON-NLS-1$
+        procedure.append("e2_total=e2_total+mycursor1.x;"); //$NON-NLS-1$
+        procedure.append("END\n"); //$NON-NLS-1$
+        procedure.append("END\n"); //$NON-NLS-1$
+        procedure.append("SELECT VARIABLES.e2_total;\n"); //$NON-NLS-1$
+        procedure.append("END"); //$NON-NLS-1$
+        
+        addProc(metadata, "sq2", procedure.toString(), new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }, new String[] {"param1"}, new String[] {DataTypeManager.DefaultDataTypes.INTEGER});
+        
+        String userUpdateStr = "EXEC pm1.sq2(1)"; //$NON-NLS-1$
+        
+        FakeDataManager dataMgr = exampleDataManager(metadata);
+
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
+        
+        //Create expected results
+        List[] expected = new List[] {
+            };           
+        helpTestProcess(plan, expected, dataMgr, metadata);
+        
+        expected = new List[] {
+            Arrays.asList(0),  
+            };           
+        userUpdateStr = "EXEC pm1.sq2(-5)"; //$NON-NLS-1$
+        plan = getProcedurePlan(userUpdateStr, metadata);
+        helpTestProcess(plan, expected, dataMgr, metadata);
+    }
+    
     @Test public void testCreateWithoutDrop() throws Exception {
         
         TransformationMetadata metadata = RealMetadataFactory.example1();
@@ -2432,6 +2478,53 @@ public class TestProcedureProcessor {
         		Arrays.asList(null, 1, 10) }; //$NON-NLS-1$
 
         helpTestProcess(plan, expected, dataMgr, metadata);
+    }
+    
+    @Test public void testBeginAtomic() throws Exception {
+        String proc = "CREATE VIRTUAL PROCEDURE " + //$NON-NLS-1$
+        		"BEGIN ATOMIC" + //$NON-NLS-1$
+                " select e1, e2, e3, e4 into #t1 from pm1.g1;\n" + //$NON-NLS-1$
+                " update #t1 set e1 = 1 where e4 < 2;\n" + //$NON-NLS-1$
+                " delete from #t1 where e4 > 2;\n" + //$NON-NLS-1$
+                " select e2/\"in\" from #t1;\n" + //$NON-NLS-1$
+        		"END"; //$NON-NLS-1$
+        TransformationMetadata tm = RealMetadataFactory.example1();
+        addProc(tm, "sq1", proc, new String[] { "e1" }, 
+        		new String[] { DataTypeManager.DefaultDataTypes.INTEGER }, new String[] {"in"}, new String[] {DataTypeManager.DefaultDataTypes.INTEGER});
+        FakeDataManager dataMgr = exampleDataManager(tm);
+        CommandContext context = new CommandContext("pID", null, null, null, 1); //$NON-NLS-1$
+    	QueryMetadataInterface metadata = new TempMetadataAdapter(tm, new TempMetadataStore());
+        context.setMetadata(metadata);
+
+        TransactionContext tc = new TransactionContext();
+        TransactionService ts = Mockito.mock(TransactionService.class);
+        context.setTransactionService(ts);
+        context.setTransactionContext(tc);
+        String userQuery = "EXEC pm1.sq1(1)"; //$NON-NLS-1$
+        ProcessorPlan plan = getProcedurePlan(userQuery, tm, TestOptimizer.getGenericFinder());
+        List[] expected = new List[] {
+                Arrays.asList(5), 
+        };
+    	TestProcessor.helpProcess(plan, context, dataMgr, expected);
+    	Mockito.verify(ts, Mockito.times(3)).begin(tc);
+    	Mockito.verify(ts, Mockito.times(3)).commit(tc);
+    	
+    	tc = new TransactionContext();
+        ts = Mockito.mock(TransactionService.class);
+        context.setTransactionService(ts);
+        context.setTransactionContext(tc);
+        userQuery = "EXEC pm1.sq1(0)"; //$NON-NLS-1$
+        plan = getProcedurePlan(userQuery, tm, TestOptimizer.getGenericFinder());
+        expected = null;
+        try {
+        	TestProcessor.helpProcess(plan, context, dataMgr, expected);
+        	fail();
+        } catch (TeiidProcessingException e) {
+        	
+        }
+    	Mockito.verify(ts).begin(tc);
+    	Mockito.verify(ts, Mockito.times(0)).commit(tc);
+    	Mockito.verify(ts).rollback(tc);
     }
 
     private static final boolean DEBUG = false;

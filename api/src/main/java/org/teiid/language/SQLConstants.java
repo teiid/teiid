@@ -46,6 +46,7 @@ public class SQLConstants {
 		public static final String GE = ">="; //$NON-NLS-1$
 		public static final String LPAREN = "("; //$NON-NLS-1$
 		public static final String RPAREN = ")"; //$NON-NLS-1$
+		public static final String COLON = ":"; //$NON-NLS-1$
 	}
 	
 	public interface NonReserved {
@@ -249,6 +250,7 @@ public class SQLConstants {
 	    public static final String LARGE = "LARGE"; //$NON-NLS-1$
 	    public static final String LATERAL = "LATERAL"; //$NON-NLS-1$
 	    public static final String LEADING = "LEADING"; //$NON-NLS-1$
+	    public static final String LEAVE = "LEAVE"; //$NON-NLS-1$
 	    public static final String LEFT = "LEFT"; //$NON-NLS-1$
 	    public static final String LIKE = "LIKE"; //$NON-NLS-1$
 	    public static final String LIKE_REGEX = "LIKE_REGEX"; //$NON-NLS-1$

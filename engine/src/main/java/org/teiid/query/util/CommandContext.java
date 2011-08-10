@@ -46,6 +46,8 @@ import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.message.RequestID;
+import org.teiid.dqp.service.TransactionContext;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.SecurityFunctionEvaluator;
@@ -129,6 +131,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		private RequestID requestId;
 		
 		private DQPWorkContext dqpWorkContext;
+		private TransactionContext transactionContext;
+		private TransactionService transactionService;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -612,6 +616,22 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	public DQPWorkContext getDQPWorkContext() {
 		return this.globalState.dqpWorkContext;
+	}
+	
+	public TransactionContext getTransactionContext() {
+		return globalState.transactionContext;
+	}
+	
+	public void setTransactionContext(TransactionContext transactionContext) {
+		globalState.transactionContext = transactionContext;
+	}
+	
+	public TransactionService getTransactionServer() {
+		return globalState.transactionService;
+	}
+	
+	public void setTransactionService(TransactionService transactionService) {
+		globalState.transactionService = transactionService;
 	}
 	
 }

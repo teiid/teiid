@@ -26,6 +26,7 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <UL>
+  <LI><B>Procedure language features</B> - Added support for compound/block statements, BEGIN [[NOT] ATOMIC], loop/block labels, and the leave statement.  See the reference for more.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -33,6 +34,11 @@
   <li>TRANSLATE/HAS CRITERIA has been deprecated.  An alternative approach to update procedures will be introduced in a subsequent version.
   <li>Support for named parameter syntax using param=value has been deprecated, since it is ambiguous with a comparison predicate boolean value expression.  param<b>=></b>value should be used instead.  
   <li>Support for using the FROM clause post item hints MAKEDEP/MAKENOTDEP has been deprecated.  Use the pre item comment hint syntax instead, e.g. /*+ MAKEDEP */ tbl
+</ul>
+
+<h4>from 7.4</h4>
+<ul>
+  <li>Leave was added as a reserved word. 
 </ul>
 
 <h4>from 7.4</h4>

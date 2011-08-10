@@ -22,7 +22,7 @@
 
 package org.teiid.query.sql.proc;
 
-import org.teiid.query.sql.*;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 /**
@@ -31,6 +31,11 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  * <code>IfStatement</code>, <code>AssignmentStatement</code> etc.</p>
  */
 public abstract class Statement implements LanguageObject {
+	
+	public interface Labeled {
+		String getLabel();
+		void setLabel(String label);
+	}
 
 	/** 
 	 * Represents an unknown type of statement 
@@ -83,6 +88,10 @@ public abstract class Statement implements LanguageObject {
     public static final int TYPE_BREAK = 9;
     
     public static final int TYPE_UPDATE = 10;
+    
+    public static final int TYPE_COMPOUND = 11;
+    
+    public static final int TYPE_LEAVE = 12;
     
 	/**
 	 * Return type of statement to make it easier to build switch statements by statement type.

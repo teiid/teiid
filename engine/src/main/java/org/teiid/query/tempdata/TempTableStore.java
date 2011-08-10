@@ -217,16 +217,10 @@ public class TempTableStore {
     }
     
     TempTable getOrCreateTempTable(String tempTableID, Command command, BufferManager buffer, boolean delegate) throws QueryProcessingException{
-    	TempTable tsID = groupToTupleSourceID.get(tempTableID);
-        if(tsID != null) {
-            return tsID;
-        }
-        if(delegate && this.parentTempTableStore != null){
-    		tsID = this.parentTempTableStore.groupToTupleSourceID.get(tempTableID);
-    	    if(tsID != null) {
-    	        return tsID;
-    	    }
-        }
+    	TempTable tempTable = getTempTable(tempTableID, command, buffer, delegate);
+    	if (tempTable != null) {
+    		return tempTable;
+    	}
         //allow implicit temp group definition
         List<ElementSymbol> columns = null;
         if (command instanceof Insert) {
@@ -239,11 +233,25 @@ public class TempTableStore {
         if (columns == null) {
         	throw new QueryProcessingException(QueryPlugin.Util.getString("TempTableStore.table_doesnt_exist_error", tempTableID)); //$NON-NLS-1$
         }
+        LogManager.logDetail(LogConstants.CTX_DQP, "Creating temporary table", tempTableID); //$NON-NLS-1$
         Create create = new Create();
         create.setTable(new GroupSymbol(tempTableID));
         create.setElementSymbolsAsColumns(columns);
         return addTempTable(tempTableID, create, buffer, true);       
     }
+
+	private TempTable getTempTable(String tempTableID, Command command,
+			BufferManager buffer, boolean delegate)
+			throws QueryProcessingException {
+		TempTable tsID = groupToTupleSourceID.get(tempTableID);
+        if(tsID != null) {
+            return tsID;
+        }
+        if(delegate && this.parentTempTableStore != null){
+    		return this.parentTempTableStore.getTempTable(tempTableID, command, buffer, delegate);
+        }
+        return null;
+	}
     
     public Set<String> getAllTempTables() {
         return new HashSet<String>(this.groupToTupleSourceID.keySet());

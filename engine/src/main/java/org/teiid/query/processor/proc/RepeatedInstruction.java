@@ -24,9 +24,10 @@ package org.teiid.query.processor.proc;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.sql.proc.Statement.Labeled;
 
 
-public interface RepeatedInstruction {
+public interface RepeatedInstruction extends Labeled {
     
     public boolean testCondition(ProcedurePlan procEnv) throws TeiidComponentException, TeiidProcessingException;
     

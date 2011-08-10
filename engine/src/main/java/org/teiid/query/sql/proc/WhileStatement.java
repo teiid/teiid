@@ -26,8 +26,10 @@ package org.teiid.query.sql.proc;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.core.util.StringUtil;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.proc.Statement.Labeled;
 
 
 /**
@@ -36,16 +38,16 @@ import org.teiid.query.sql.lang.Criteria;
  * a block and a criteria that
  * determines when to exit the while loop.</p>
  */
-public class WhileStatement extends Statement {
+public class WhileStatement extends Statement implements Labeled {
 
     private Block whileBlock;
-    
+    private String label;
     // criteria on the if block
     private Criteria condition;
 
     /**
      * Constructor for IfStatement.
-     * @param criteria The criteria determining which bleck should be executed
+     * @param criteria The criteria determining which block should be executed
      * @param ifBlock The IF <code>Block</code> object.
      * @param ifBlock The ELSE <code>Block</code> object.
      */
@@ -53,6 +55,14 @@ public class WhileStatement extends Statement {
         this.whileBlock = block;
         this.condition = criteria;
     }
+    
+    public void setLabel(String label) {
+		this.label = label;
+	}
+    
+    public String getLabel() {
+		return label;
+	}
 
     /**
      * Get the condition that determines which block needs to be executed.
@@ -106,10 +116,12 @@ public class WhileStatement extends Statement {
      * @return Deep clone 
      */
     public Object clone() {
-        Block otherBlock = (Block)this.whileBlock.clone();
+        Block otherBlock = this.whileBlock.clone();
         Criteria otherCrit = (Criteria) this.condition.clone();     
 
-        return new WhileStatement(otherCrit, otherBlock);
+        WhileStatement ws = new WhileStatement(otherCrit, otherBlock);
+        ws.setLabel(label);
+        return ws;
     }
     
     /**
@@ -135,7 +147,8 @@ public class WhileStatement extends Statement {
             // Compare the condition
             EquivalenceUtil.areEqual(getCondition(), other.getCondition()) &&
             // Compare the if block
-            EquivalenceUtil.areEqual(whileBlock, other.whileBlock);
+            EquivalenceUtil.areEqual(whileBlock, other.whileBlock)
+            && StringUtil.equalsIgnoreCase(this.label, other.label);
     } 
 
     /**

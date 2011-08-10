@@ -40,7 +40,9 @@ import org.teiid.query.sql.lang.Option;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
+import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.CriteriaSelector;
+import org.teiid.query.sql.proc.Statement;
 
 public class SQLParserUtil {
 	
@@ -317,6 +319,16 @@ public class SQLParserUtil {
     SetQuery addQueryToSetOperation(QueryCommand query, QueryCommand rightQuery, SetQuery.Operation type, boolean all) {
         SetQuery setQuery = new SetQuery(type, all, query, rightQuery);
         return setQuery;
+    }
+    
+    static Block asBlock(Statement stmt) {
+    	if (stmt == null) {
+    		return null;
+    	}
+    	if (stmt instanceof Block) {
+    		return (Block)stmt;
+    	}
+    	return new Block(stmt);
     }
     
 }

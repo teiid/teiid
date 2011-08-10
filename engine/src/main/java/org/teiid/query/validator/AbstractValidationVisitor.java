@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Stack;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
@@ -50,6 +51,7 @@ public class AbstractValidationVisitor extends LanguageVisitor {
     private QueryMetadataInterface metadata;
     
     protected Command currentCommand;
+    protected Stack<LanguageObject> stack = new Stack<LanguageObject>();
     
     public AbstractValidationVisitor() {
         this.report = new ValidatorReport();
@@ -69,6 +71,7 @@ public class AbstractValidationVisitor extends LanguageVisitor {
      */
     public void reset() {
         this.currentCommand = null;
+        this.stack.clear();
     }
     
     // ######################### Store results info #########################

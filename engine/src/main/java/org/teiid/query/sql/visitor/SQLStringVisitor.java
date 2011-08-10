@@ -93,9 +93,8 @@ import org.teiid.query.sql.lang.TextTable.TextColumn;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
-import org.teiid.query.sql.proc.BreakStatement;
+import org.teiid.query.sql.proc.BranchingStatement;
 import org.teiid.query.sql.proc.CommandStatement;
-import org.teiid.query.sql.proc.ContinueStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.CriteriaSelector;
 import org.teiid.query.sql.proc.DeclareStatement;
@@ -107,6 +106,7 @@ import org.teiid.query.sql.proc.Statement;
 import org.teiid.query.sql.proc.TranslateCriteria;
 import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.proc.WhileStatement;
+import org.teiid.query.sql.proc.Statement.Labeled;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
@@ -1382,20 +1382,34 @@ public class SQLStringVisitor extends LanguageVisitor {
     // ############ Visitor methods for storedprocedure language objects ####################
 
     public void visit( Block obj ) {
-        List statements = obj.getStatements();
+    	addLabel(obj);
+        List<Statement> statements = obj.getStatements();
         // Add first clause
         append(BEGIN);
+        if (obj.isAtomic()) {
+        	append(SPACE);
+        	append(ATOMIC);
+        }
         append("\n"); //$NON-NLS-1$
-        Iterator stmtIter = statements.iterator();
+        Iterator<Statement> stmtIter = statements.iterator();
         while (stmtIter.hasNext()) {
             // Add each statement
             addTabs(1);
-            visitNode((Statement)stmtIter.next());
+            visitNode(stmtIter.next());
             append("\n"); //$NON-NLS-1$
         }
         addTabs(0);
         append(END);
     }
+
+	private void addLabel(Labeled obj) {
+		if (obj.getLabel() != null) {
+    		outputDisplayName(obj.getLabel());
+    		append(SPACE);
+    		append(Tokens.COLON);
+    		append(SPACE);
+    	}
+	}
 
     protected void addTabs( int level ) {
     }
@@ -1557,17 +1571,27 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(";"); //$NON-NLS-1$
     }
 
-    public void visit( BreakStatement obj ) {
-        append(BREAK);
-        append(";"); //$NON-NLS-1$
-    }
-
-    public void visit( ContinueStatement obj ) {
-        append(CONTINUE);
+    public void visit( BranchingStatement obj ) {
+    	switch (obj.getMode()) {
+    	case CONTINUE:
+    		append(CONTINUE);
+    		break;
+    	case BREAK:
+    		append(BREAK);
+    		break;
+    	case LEAVE:
+    		append(LEAVE);
+    		break;
+    	}
+    	if (obj.getLabel() != null) {
+    		append(SPACE);
+    		outputDisplayName(obj.getLabel());
+    	}
         append(";"); //$NON-NLS-1$
     }
 
     public void visit( LoopStatement obj ) {
+    	addLabel(obj);
         append(LOOP);
         append(" "); //$NON-NLS-1$
         append(ON);
@@ -1583,6 +1607,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit( WhileStatement obj ) {
+    	addLabel(obj);
         append(WHILE);
         append("("); //$NON-NLS-1$
         visitNode(obj.getCondition());

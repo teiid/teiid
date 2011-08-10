@@ -206,7 +206,7 @@ public class TempTableDataManager implements ProcessorDataManager {
         		return null;
         	}
         	final String groupKey = group.getNonCorrelationName().toUpperCase();
-            final TempTable table = contextStore.getOrCreateTempTable(groupKey, command, bufferManager, false);
+            final TempTable table = contextStore.getOrCreateTempTable(groupKey, command, bufferManager, true);
         	if (command instanceof Insert) {
         		Insert insert = (Insert)command;
         		TupleSource ts = insert.getTupleSource();

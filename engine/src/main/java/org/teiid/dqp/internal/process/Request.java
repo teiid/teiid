@@ -253,6 +253,8 @@ public class Request implements SecurityFunctionEvaluator {
         this.context.setSession(workContext.getSession());
         this.context.setRequestId(this.requestId);
         this.context.setDQPWorkContext(this.workContext);
+        this.context.setTransactionService(this.transactionService);
+        this.context.setTransactionContext(this.transactionContext);
     }
     
     @Override

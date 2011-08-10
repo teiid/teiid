@@ -218,12 +218,40 @@ DECLARE INTEGER UPDATED = VARIABLES.ROWCOUNT;
   	  </section>
     </section>
     <section>
+      <title>Compound Statement</title>
+      <para>A compound statement or block logically groups a series of statements.  Temporary tables and variables created in a compound statement are local only to that block are destroyed when exiting the block.</para>
+      <para>
+        Usage:
+        <synopsis label="Usage" >[label :] BEGIN [[NOT] ATOMIC]  
+  statement*
+END</synopsis>
+		<note><para>When a block is expected by a IF, LOOP, WHILE, etc. a single statement is also accepted by the parser.  Even though the block BEGIN/END are not expected, the statement will execute as if wrapped in a BEGIN/END pair.</para></note>
+      </para>
+      <itemizedlist>
+	 	<para>Syntax Rules</para>
+	    <listitem><para>IF NOT ATOMIC or no ATOMIC clause is specificed, the block will be executed non-atomically.</para>
+	    </listitem>
+	    <listitem><para>IF ATOMIC the block must execute atomically.  If a transaction is already associated with the thread, no aditional action will be taken - savepoints and/or sub-transactions are not currrently used.  Otherwise a transaction will be associated with the execution of the block.</para>
+	    </listitem>
+	    <listitem><para>The label must not be the same as any other label used in statements containing this one.</para>
+	    </listitem>
+      </itemizedlist>
+    </section>
+    <section>
       <title>If Statement</title>
       <para>An IF statement evaluates a condition and executes either
-        one of two blocks depending on the result. You can nest IF
+        one of two statements depending on the result. You can nest IF
         statements to create complex branching logic. A dependent ELSE
-        statement will execute its block of code only if the IF statement
+        statement will execute its statement only if the IF statement
         evaluates to false.</para>
+      <para>
+        Usage:
+        <synopsis label="Usage" >IF (criteria) 
+  block
+[ELSE
+  block]
+END</synopsis>
+      </para>
       <example>
         <title>Example If Statement</title>
         <programlisting>IF ( var1 = 'North America') 
@@ -234,45 +262,90 @@ BEGIN
   ...statement... 
 END</programlisting>
       </example>
-      <note>
+      <tip>
         <para>
           NULL values should be considered in the criteria of an IF statement.  IS NULL criteria can be used to detect the presense of a NULL value.  
         </para>
-      </note>
+      </tip>
     </section>
     <section>
       <title>Loop Statement</title>
       <para>A LOOP statement is an iterative control construct that is used to cursor through a result set.</para>
       <para>
         Usage:
-        <synopsis label="Usage" >LOOP ON &lt;select statement&gt; AS &lt;cursorname&gt; 
-BEGIN 
-  ...
-END</synopsis>
+        <synopsis label="Usage" >[label :] LOOP ON &lt;select statement&gt; AS &lt;cursorname&gt; 
+  block</synopsis>
       </para>
+      <itemizedlist>
+	 	<para>Syntax Rules</para>
+	    <listitem><para>The label must not be the same as any other label used in statements containing this one.</para>
+	    </listitem>
+      </itemizedlist>
     </section>
     <section>
       <title>While Statement</title>
-      <para>A WHILE statement is an iterative control construct that is used to execute a set of statements repeatedly whenever a specified condition is met.</para>
+      <para>A WHILE statement is an iterative control construct that is used to execute a block repeatedly whenever a specified condition is met.</para>
       <para>
         Usage:
-        <synopsis label="Usage" >WHILE &lt;criteria&gt; 
-BEGIN 
-  ...
-END</synopsis>
+        <synopsis label="Usage" >[label :] WHILE &lt;criteria&gt; 
+  block</synopsis>
       </para>
+      <itemizedlist>
+	 	<para>Syntax Rules</para>
+	    <listitem><para>The label must not be the same as any other label used in statements containing this one.</para>
+	    </listitem>
+      </itemizedlist>
     </section>
     <section>
       <title>Continue Statement</title>
       <para>A CONTINUE statement is used inside a LOOP or WHILE construct to continue with the next loop by skipping over the rest of the statements in the loop. It must be used inside a LOOP or WHILE statement.</para>
+      <para>
+        Usage:
+        <synopsis label="Usage" >CONTINUE [label];</synopsis>
+      </para>
+      <itemizedlist>
+	 	<para>Syntax Rules</para>
+	    <listitem><para>If the label is specified, it must exist on a containing LOOP or WHILE statement.</para>
+	    </listitem>
+	    <listitem><para>If no label is specified, the statement will affect the closest containing LOOP or WHILE statement.</para>
+	    </listitem>
+      </itemizedlist>
     </section>
     <section>
       <title>Break Statement</title>
       <para>A BREAK statement is used inside a LOOP or WHILE construct to break from the loop. It must be used inside a LOOP or WHILE statement.</para>
+      <para>
+        Usage:
+        <synopsis label="Usage" >BREAK [label];</synopsis>
+      </para>
+      <itemizedlist>
+	 	<para>Syntax Rules</para>
+	    <listitem><para>If the label is specified, it must exist on a containing LOOP or WHILE statement.</para>
+	    </listitem>
+	    <listitem><para>If no label is specified, the statement will affect the closest containing LOOP or WHILE statement.</para>
+	    </listitem>
+      </itemizedlist>
+    </section>
+    <section>
+      <title>Leave Statement</title>
+      <para>A LEAVE statement is used inside a compound, LOOP, or WHILE construct to leave to the specified level.</para>
+      <para>
+        Usage:
+        <synopsis label="Usage" >LEAVE label;</synopsis>
+      </para>
+      <itemizedlist>
+	 	<para>Syntax Rules</para>
+	    <listitem><para>The label must exist on a containing compound statement, LOOP, or WHILE statement.</para>
+	    </listitem>
+      </itemizedlist>
     </section>
     <section>
       <title>Error Statement</title>
       <para>An ERROR statement declares that the procedure has entered an error state and should abort. This statement will also roll back the current transaction, if one exists. Any valid expression can be specified after the ERROR keyword.</para>
+      <para>
+        Usage:
+        <synopsis label="Usage" >ERROR message;</synopsis>
+      </para>
       <example>
         <title>Example Error Statement</title>
         <programlisting>ERROR 'Invalid input value: ' || nvl(Acct.GetBalance.AcctID, 'null');</programlisting>
@@ -292,13 +365,10 @@ END</synopsis>
       <para>
         Usage:
         <synopsis label="Usage" >CREATE VIRTUAL PROCEDURE 
-BEGIN 
-  ...
-END</synopsis>
+block</synopsis>
       </para>
       <para>The CREATE VIRTUAL PROCEDURE line demarcates the beginning of
-        the procedure. The BEGIN and END keywords are used to denote block
-        boundaries. Within the body of the procedure, any valid <link linkend="procedure_language">statement</link> may be used.
+        the procedure. Within the body of the procedure, any valid <link linkend="procedure_language">statement</link> may be used.
       </para>
       <para>There is no explict cursoring or return statement, rather the last command statement executed in the procedure that returns a result set will be
         returned as the result. The output of that statement must match the
@@ -462,7 +532,7 @@ END
     	There may only be 1 FOR EACH ROW procedure for each INSERT, UPDATE, or DELETE operation against a view.  FOR EACH ROW update procedures can also be used to emulate BEFORE/AFTER each row triggers while still retaining the ability to perform an inherent update.  
     	This BEFORE/AFTER trigger behavior with an inherent update can be achieved by creating an additional updatable view over the target view with update proceudres of the form:
 		<programlisting lang="sql">FOR EACH ROW
-	BEGIN
+	BEGIN ATOMIC
 	--before row logic
 	
 	--default insert/update/delete against the target view
@@ -476,13 +546,16 @@ END
 	      <para>
 	        Usage:
 	        <synopsis label="Usage" >FOR EACH ROW 
-	BEGIN 
+	BEGIN ATOMIC
 	  ...
 	END</synopsis>
 	      </para>
 	      <para>The BEGIN and END keywords are used to denote block
 	        boundaries. Within the body of the procedure, any valid <link linkend="procedure_language">statement</link> may be used.
 	      </para>
+	      <note>
+	      <para>The use of the atomic keyword is currently optional for backward compatibility, but unlike a normal block, the default for instead of triggers is atomic.</para>
+	      </note>
 	    </section>
 	    <section>
 	      <title>Special Variables</title>

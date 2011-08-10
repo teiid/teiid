@@ -151,11 +151,11 @@ public class IfStatement extends Statement  {
 	 * @return Deep clone 
 	 */
 	public Object clone() {
-		Block otherIf = (Block)this.ifBlock.clone();
+		Block otherIf = this.ifBlock.clone();
 		Criteria otherCrit = (Criteria) this.condition.clone();		
 		Block otherElse = null;
 		if(this.hasElseBlock()) {
-			otherElse = (Block) this.elseBlock.clone();	
+			otherElse = this.elseBlock.clone();	
 		}
 
 		return new IfStatement(otherCrit, otherIf, otherElse);

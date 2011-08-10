@@ -326,19 +326,14 @@ public class QueryRewriter {
 
 	private Block rewriteBlock(Block block)
 								 throws TeiidComponentException, TeiidProcessingException{
-		List statements = block.getStatements();
-        Iterator stmtIter = statements.iterator();
+		List<Statement> statements = block.getStatements();
+        Iterator<Statement> stmtIter = statements.iterator();
 
-		List newStmts = new ArrayList(statements.size());
+		List<Statement> newStmts = new ArrayList<Statement>(statements.size());
 		// plan each statement in the block
         while(stmtIter.hasNext()) {
-			Statement stmnt = (Statement) stmtIter.next();
-			Object newStmt = rewriteStatement(stmnt);
-			if(newStmt instanceof Statement) {
-				newStmts.add(newStmt);
-			} else if (newStmt instanceof List) {
-			    newStmts.addAll((List)newStmt);
-            }
+			Statement stmnt = stmtIter.next();
+			rewriteStatement(stmnt, newStmts);
         }
 
         block.setStatements(newStmts);
@@ -346,7 +341,7 @@ public class QueryRewriter {
         return block;
 	 }
 
-	private Object rewriteStatement(Statement statement)
+	private void rewriteStatement(Statement statement, List<Statement> newStmts)
 								 throws TeiidComponentException, TeiidProcessingException{
 
         // evaluate the HAS Criteria on the procedure and rewrite
@@ -360,13 +355,15 @@ public class QueryRewriter {
 				ifStmt.setCondition(evalCrit);
 				if(evalCrit.equals(TRUE_CRITERIA)) {
 					Block ifblock = rewriteBlock(ifStmt.getIfBlock());
-					return ifblock.getStatements();
+					newStmts.addAll(ifblock.getStatements());
+					return;
 				} else if(evalCrit.equals(FALSE_CRITERIA) || evalCrit.equals(UNKNOWN_CRITERIA)) {
 					if(ifStmt.hasElseBlock()) {
 						Block elseBlock = rewriteBlock(ifStmt.getElseBlock());
-						return elseBlock.getStatements();
+						newStmts.addAll(elseBlock.getStatements());
+						return;
 					} 
-                    return null;
+                    return;
 				} else {
 					Block ifblock = rewriteBlock(ifStmt.getIfBlock());
 					ifStmt.setIfBlock(ifblock);
@@ -375,7 +372,7 @@ public class QueryRewriter {
 						ifStmt.setElseBlock(elseBlock);
 					}
 				}
-				return ifStmt;
+				break;
             case Statement.TYPE_ERROR: 
             case Statement.TYPE_DECLARE:
             case Statement.TYPE_ASSIGNMENT:
@@ -387,7 +384,7 @@ public class QueryRewriter {
 					expr = rewriteExpressionDirect(expr);
 	                exprStmt.setExpression(expr);
 				}
-				return exprStmt;
+				break;
             case Statement.TYPE_COMMAND:
 				CommandStatement cmdStmt = (CommandStatement) statement;
                 rewriteSubqueryContainer(cmdStmt, false);
@@ -395,10 +392,10 @@ public class QueryRewriter {
 				if(cmdStmt.getCommand().getType() == Command.TYPE_UPDATE) {
                     Update update = (Update)cmdStmt.getCommand();
                     if (update.getChangeList().isEmpty()) {
-                        return null;
+                        return;
                     }
 				}
-                return statement;
+				break;
             case Statement.TYPE_LOOP: 
                 LoopStatement loop = (LoopStatement)statement; 
                 
@@ -407,10 +404,9 @@ public class QueryRewriter {
                 rewriteBlock(loop.getBlock());
                 
                 if (loop.getBlock().getStatements().isEmpty()) {
-                    return null;
+                    return;
                 }
-                
-                return loop;
+                break;
             case Statement.TYPE_WHILE:
                 WhileStatement whileStatement = (WhileStatement) statement;
                 Criteria crit = whileStatement.getCondition();
@@ -420,18 +416,16 @@ public class QueryRewriter {
                 if(crit.equals(TRUE_CRITERIA)) {
                     throw new QueryValidatorException(QueryPlugin.Util.getString("QueryRewriter.infinite_while")); //$NON-NLS-1$
                 } else if(crit.equals(FALSE_CRITERIA) || crit.equals(UNKNOWN_CRITERIA)) {
-                    return null;
+                    return;
                 } 
                 whileStatement.setBlock(rewriteBlock(whileStatement.getBlock()));
                 
                 if (whileStatement.getBlock().getStatements().isEmpty()) {
-                    return null;
+                    return;
                 }
-                
-                return whileStatement;
-			default:
-				return statement;
+                break;
 		}
+		newStmts.add(statement);
 	}
     
     /** 

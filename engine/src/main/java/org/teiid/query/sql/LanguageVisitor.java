@@ -68,9 +68,8 @@ import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
-import org.teiid.query.sql.proc.BreakStatement;
+import org.teiid.query.sql.proc.BranchingStatement;
 import org.teiid.query.sql.proc.CommandStatement;
-import org.teiid.query.sql.proc.ContinueStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.CriteriaSelector;
 import org.teiid.query.sql.proc.DeclareStatement;
@@ -194,8 +193,7 @@ public abstract class LanguageVisitor {
     public void visit(IfStatement obj) {}
     public void visit(RaiseErrorStatement obj) {}
     public void visit(TranslateCriteria obj) {}
-    public void visit(BreakStatement obj) {}
-    public void visit(ContinueStatement obj) {}
+    public void visit(BranchingStatement obj) {}
     public void visit(WhileStatement obj) {}
     public void visit(LoopStatement obj) {}
     public void visit(DynamicCommand obj) {}

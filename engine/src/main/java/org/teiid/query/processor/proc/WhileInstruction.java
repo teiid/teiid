@@ -43,10 +43,22 @@ public class WhileInstruction extends ProgramInstruction implements RepeatedInst
 
     // criteria for the while block
     private Criteria condition;
+    private String label;
 
-    public WhileInstruction(Program program, Criteria condition){
+    public WhileInstruction(Program program, Criteria condition, String label){
         this.whileProgram = program;
         this.condition = condition;
+        this.label = label;
+    }
+    
+    @Override
+    public String getLabel() {
+    	return label;
+    }
+    
+    @Override
+    public void setLabel(String label) {
+    	this.label = label;
     }
 
     public void process(ProcedurePlan env) throws TeiidComponentException {
@@ -61,7 +73,7 @@ public class WhileInstruction extends ProgramInstruction implements RepeatedInst
      * Returns a deep clone
      */
     public WhileInstruction clone(){
-        return new WhileInstruction((Program)this.whileProgram.clone(), this.condition);
+        return new WhileInstruction((Program)this.whileProgram.clone(), this.condition, this.label);
     }
 
     public String toString() {

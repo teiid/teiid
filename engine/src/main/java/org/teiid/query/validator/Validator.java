@@ -72,12 +72,23 @@ public class Validator {
         setTempMetadata(metadata, visitor, object);
         
         PreOrderNavigator nav = new PreOrderNavigator(visitor) {
-            
+        	
         	protected void visitNode(LanguageObject obj) {
         		QueryMetadataInterface previous = visitor.getMetadata();
         		setTempMetadata(metadata, visitor, obj);
         		super.visitNode(obj);
         		visitor.setMetadata(previous);
+        	}
+        	
+        	@Override
+        	protected void preVisitVisitor(LanguageObject obj) {
+        		super.preVisitVisitor(obj);
+        		visitor.stack.add(obj);
+        	}
+        	
+        	@Override
+        	protected void postVisitVisitor(LanguageObject obj) {
+        		visitor.stack.pop();
         	}
         	
         };

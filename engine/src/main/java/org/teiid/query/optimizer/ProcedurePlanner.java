@@ -36,8 +36,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.proc.AssignmentInstruction;
-import org.teiid.query.processor.proc.BreakInstruction;
-import org.teiid.query.processor.proc.ContinueInstruction;
+import org.teiid.query.processor.proc.BranchingInstruction;
 import org.teiid.query.processor.proc.CreateCursorResultSetInstruction;
 import org.teiid.query.processor.proc.ErrorInstruction;
 import org.teiid.query.processor.proc.ExecDynamicSqlInstruction;
@@ -53,6 +52,7 @@ import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
+import org.teiid.query.sql.proc.BranchingStatement;
 import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.IfStatement;
@@ -148,7 +148,8 @@ public final class ProcedurePlanner implements CommandPlanner {
         // Generate program and add instructions
         // this program represents the block on the procedure
         // instruction in the program would correspond to statements in the block
-        Program programBlock = new Program();
+        Program programBlock = new Program(block.isAtomic());
+        programBlock.setLabel(block.getLabel());
 
 		// plan each statement in the block
         for (Statement statement : block.getStatements()) {
@@ -281,19 +282,14 @@ public final class ProcedurePlanner implements CommandPlanner {
 				break;
             }
             case Statement.TYPE_BREAK:
-            {
-                if(debug) {
-                	analysisRecord.println("\tBREAK STATEMENT:\n" + statement); //$NON-NLS-1$
-                }
-                instruction = new BreakInstruction();
-                break;
-            }
             case Statement.TYPE_CONTINUE:
+            case Statement.TYPE_LEAVE:
             {
+            	BranchingStatement bs = (BranchingStatement)statement;
                 if(debug) {
-                	analysisRecord.println("\tCONTINUE STATEMENT:\n" + statement); //$NON-NLS-1$
+                	analysisRecord.println("\t" + statement); //$NON-NLS-1$
                 }
-                instruction = new ContinueInstruction();
+                instruction = new BranchingInstruction(bs);
                 break;
             }
             case Statement.TYPE_LOOP:
@@ -307,7 +303,7 @@ public final class ProcedurePlanner implements CommandPlanner {
                 ProcessorPlan commandPlan = loopStmt.getCommand().getProcessorPlan();
 
                 Program loopProgram = planBlock(parentProcCommand, loopStmt.getBlock(), metadata, debug, idGenerator, capFinder, analysisRecord, context);
-                instruction = new LoopInstruction(loopProgram, rsName, commandPlan);
+                instruction = new LoopInstruction(loopProgram, rsName, commandPlan, loopStmt.getLabel());
                 break;
             }
             case Statement.TYPE_WHILE:
@@ -317,7 +313,7 @@ public final class ProcedurePlanner implements CommandPlanner {
                 if(debug) {
                 	analysisRecord.println("\tWHILE STATEMENT:\n" + statement); //$NON-NLS-1$
                 }
-                instruction = new WhileInstruction(whileProgram, whileStmt.getCondition());
+                instruction = new WhileInstruction(whileProgram, whileStmt.getCondition(), whileStmt.getLabel());
                 break;
             }
 			default:

@@ -193,6 +193,7 @@ TOKEN : /* Reserved words */
 |   <LANGUAGE: "language">
 |   <LARGE: "large">
 |   <LEADING: "leading">
+|   <LEAVE: "leave">
 |   <LIKE: "like">
 |   <LIKE_REGEX: "like_regex">
 |   <LIMIT: "limit">
@@ -409,6 +410,7 @@ TOKEN : /* Punctuation */
 |   <QMARK: "?">
 |   <DOLLAR: "$">
 |   <SEMICOLON: ";">
+|   <COLON: ":">
 |	<CONCAT_OP: "||">
 }
 
@@ -513,7 +515,7 @@ Command alter(ParseInfo info) :
 {
   	String target = null;
   	QueryCommand command = null;
-  	Block block = null;
+  	Statement stmt = null;
   	TriggerAction triggerAction = null;
   	Token comment = null;
   	Token event = null;
@@ -532,9 +534,9 @@ Command alter(ParseInfo info) :
 	 		alterView.setDefinition(command);
 	 		return alterView;	
 	 	}
-		| (<PROCEDURE> target = id() <AS> { comment = getToken(1).specialToken; } block = block(info)) 
+		| (<PROCEDURE> target = id() <AS> { comment = getToken(1).specialToken; } stmt = statement(info)) 
 		{
-			CreateUpdateProcedureCommand cup = new CreateUpdateProcedureCommand(block);
+			CreateUpdateProcedureCommand cup = new CreateUpdateProcedureCommand(asBlock(stmt));
 			cup.setUpdateProcedure(false);
 			if (comment != null) {
 		 	    cup.setCacheHint(getQueryCacheOption(comment.image));
@@ -563,11 +565,29 @@ Command alter(ParseInfo info) :
 
 TriggerAction forEachRowTriggerAction(ParseInfo info) :
 {
-	Block b = null;
+	Block b = new Block();
+	b.setAtomic(true);
+	Statement stmt = null;
 }
 {
 	<FOR> <EACH> <ROW>
-	b = block(info)
+	(
+	 LOOKAHEAD(1) (<BEGIN> [<ATOMIC>]
+      (
+	    stmt = statement(info)
+	    {          
+    	    b.addStatement(stmt);            	                	    
+	    }
+      )*
+      <END> 
+     )
+     |
+     stmt = statement(info)
+     {
+       b = asBlock(stmt);
+       b.setAtomic(true);
+     }
+    ) 
 	{
 		return new TriggerAction(b);
 	}
@@ -716,12 +736,25 @@ RaiseErrorStatement errorStatement(ParseInfo info) :
 Statement statement(ParseInfo info) :
 {
     Statement stmt = null;
+    String label = null;
 }
 {
-    (stmt = ifStatement(info) |
-	 stmt = loopStatement(info) |
-	 stmt = whileStatement(info) |
-	 stmt = delimitedStatement(info)
+    (
+	 LOOKAHEAD(2) ([label = id() <COLON>] 
+	  (
+	   stmt = loopStatement(info) |
+	   stmt = whileStatement(info) |
+	   stmt = compoundStatement(info)
+	  )
+	  {
+	  	((Statement.Labeled)stmt).setLabel(label);
+	  }
+	 )
+	 |
+	 (
+      stmt = ifStatement(info) |
+      stmt = delimitedStatement(info)
+	 )
 	)
     
     {
@@ -738,8 +771,7 @@ Statement delimitedStatement(ParseInfo info) :
 	  stmt = sqlStatement(info) |
       stmt = errorStatement(info) |
 	  stmt = declareStatement(info) |
-	  stmt = continueStatement(info) |
-	  stmt = breakStatement(info)
+	  stmt = branchingStatement(info)
 	 )
 	 <SEMICOLON>
 	 {
@@ -747,32 +779,25 @@ Statement delimitedStatement(ParseInfo info) :
 	 }
 }
 
-/**
- * Parse block
- * @throws ParseException
- */
-Block block(ParseInfo info) :
+Block compoundStatement(ParseInfo info) :
 {
     Statement stmt = null;  
     Block block = new Block();
+    Boolean atomic = null;
 }
 {   
-	(      
-    	stmt = statement(info)
-    	{
-        	block.addStatement(stmt);	
-    	}
-        |
-        (<BEGIN>
-            (
-        	    stmt = statement(info)
-        	    {          
-            	    block.addStatement(stmt);            	                	    
-        	    }
-    	   )*
-        <END>)    
-     )           
+    <BEGIN> [[<NOT> {atomic = Boolean.FALSE;}] <ATOMIC> {if (atomic == null) {atomic = Boolean.TRUE;}}]
+    (
+      stmt = statement(info)
+      {          
+	    block.addStatement(stmt);            	                	    
+	  }
+ 	)*
+    <END>
     {
+        if (atomic != null) {
+        	block.setAtomic(atomic);
+        }
         return block;
     }
 }        
@@ -781,33 +806,24 @@ Block block(ParseInfo info) :
  * Parse break statement 
  * @throws ParseException if parsing failed
  */
-BreakStatement breakStatement(ParseInfo info) :
+BranchingStatement branchingStatement(ParseInfo info) :
 {
-    BreakStatement breakStmt = null;      
+    BranchingStatement breakStmt = new BranchingStatement();
+    Token mode = null;
+    String label = null;
 }
 {
- 	<BREAK>
+ 	(
+ 	 (
+ 	  (mode = <BREAK> | mode = <CONTINUE>) [label = id()] 
+ 	 )
+ 	 | 
+ 	 (mode = <LEAVE> label = id())
+ 	)
  	{
- 		breakStmt = new BreakStatement();
- 		
+ 	    breakStmt.setMode(BranchingStatement.BranchingMode.valueOf(mode.image.toUpperCase()));
+ 	    breakStmt.setLabel(label);
  		return breakStmt;
- 	}
-} 	
-
-/**
- * Parse break statement 
- * @throws ParseException if parsing failed
- */
-ContinueStatement continueStatement(ParseInfo info) :
-{
-    ContinueStatement contStmt = null;      
-}
-{
- 	<CONTINUE>
- 	{
- 		contStmt = new ContinueStatement();
- 		
- 		return contStmt;
  	}
 } 	
 
@@ -819,18 +835,16 @@ WhileStatement whileStatement(ParseInfo info) :
 {
     WhileStatement whileStmt = null;    
     Criteria criteria = null;
-    Block block = null;
+    Statement stmt = null;
 }
 {
     <WHILE>
     <LPAREN>  
     criteria = criteria(info)
     <RPAREN>
-    block = block(info)
-    
+    stmt = statement(info)
     {
-        whileStmt = new WhileStatement(criteria, block);   
-
+        whileStmt = new WhileStatement(criteria, asBlock(stmt));   
         return whileStmt;
     }    
 }    
@@ -844,7 +858,7 @@ LoopStatement loopStatement(ParseInfo info) :
     LoopStatement loopStmt = null;    
     String cursor = null;
     QueryCommand query = null;
-    Block block = null;
+    Statement stmt = null;
 }
 {
     <LOOP>
@@ -854,11 +868,9 @@ LoopStatement loopStatement(ParseInfo info) :
     <RPAREN>
     <AS>
     cursor = id()
-    block = block(info)
-    
+    stmt = statement(info)
     {
-        loopStmt = new LoopStatement(block, query, cursor);   
-
+        loopStmt = new LoopStatement(asBlock(stmt), query, cursor);   
         return loopStmt;
     }    
 }   
@@ -871,21 +883,20 @@ IfStatement ifStatement(ParseInfo info) :
 {
     IfStatement ifStmt = null;    
     Criteria criteria = null;
-    Block ifBlock = null;
-    Block elseBlock = null;
+    Statement ifStatement = null;
+    Statement elseStatement = null;
 }
 {
     <IF>
     <LPAREN>  
     criteria = criteria(info)
     <RPAREN>
-    ifBlock = block(info)
+    ifStatement = statement(info)
     //else blocks will be associated with the closest if block
-    [LOOKAHEAD(1)<ELSE> elseBlock = block(info)]
-    
+    [LOOKAHEAD(1)<ELSE> elseStatement = statement(info)]
     {
-        ifStmt = new IfStatement(criteria, ifBlock);
-        ifStmt.setElseBlock(elseBlock);
+        ifStmt = new IfStatement(criteria, asBlock(ifStatement));
+        ifStmt.setElseBlock(asBlock(elseStatement));
         return ifStmt;
     }    
 }    
@@ -1163,16 +1174,16 @@ CreateUpdateProcedureCommand  createUpdateProcedure(ParseInfo info) :
 {
     CreateUpdateProcedureCommand updateProcCmd = 
         new CreateUpdateProcedureCommand();
-    Block block = null;  
+    Statement stmt = null;  
 }
 { 
     <CREATE> [<VIRTUAL> {updateProcCmd.setUpdateProcedure(false);}] 
     [<UPDATE>] 
     <PROCEDURE>
 
-    block = block(info)
+    stmt = statement(info)
     {        
-        updateProcCmd.setBlock(block);
+        updateProcCmd.setBlock(asBlock(stmt));
         return updateProcCmd;        
     }    
 }   

@@ -103,6 +103,8 @@ import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.AssignmentStatement;
+import org.teiid.query.sql.proc.Block;
+import org.teiid.query.sql.proc.BranchingStatement;
 import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.CriteriaSelector;
@@ -110,6 +112,9 @@ import org.teiid.query.sql.proc.DeclareStatement;
 import org.teiid.query.sql.proc.HasCriteria;
 import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.proc.TranslateCriteria;
+import org.teiid.query.sql.proc.WhileStatement;
+import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
+import org.teiid.query.sql.proc.Statement.Labeled;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.DerivedColumn;
@@ -177,6 +182,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public void reset() {
         super.reset();
         this.isXML = false;
+        this.inQuery = false;
     }
 
     // ############### Visitor methods for language objects ##################
@@ -804,7 +810,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         Collection values = obj.getValues();
         Iterator valIter = values.iterator();
         GroupSymbol insertGroup = obj.getGroup();
-
 
         try {
             // Validate that all elements in variable list are updatable
@@ -1555,6 +1560,46 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 			handleValidationError(e.getMessage(), obj.getDefinition().getBlock());
     	} catch (TeiidComponentException e) {
 			handleException(e);
+		}
+    }
+    
+    public void visit(Block obj) {
+    	if (obj.getLabel() == null) {
+    		return;
+    	}
+		for (LanguageObject lo : stack) {
+			if (lo instanceof Labeled) {
+				Labeled labeled = (Labeled)lo;
+	    		if (obj.getLabel().equalsIgnoreCase(labeled.getLabel())) {
+	    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.duplicate_block_label", obj.getLabel()), obj); //$NON-NLS-1$
+	    		}
+			}
+		}
+    }
+    
+    @Override
+    public void visit(BranchingStatement obj) {
+		boolean matchedLabel = false;
+		boolean inLoop = false;
+		for (LanguageObject lo : stack) {
+			if (lo instanceof LoopStatement || lo instanceof WhileStatement) {
+				inLoop = true;
+				if (obj.getLabel() == null) {
+					break;
+				}
+				matchedLabel |= obj.getLabel().equalsIgnoreCase(((Labeled)lo).getLabel());
+			} else if (obj.getLabel() != null && lo instanceof Block && obj.getLabel().equalsIgnoreCase(((Block)lo).getLabel())) {
+				matchedLabel = true;
+				if (obj.getMode() != BranchingMode.LEAVE) {
+					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.invalid_label", obj.getLabel()), obj); //$NON-NLS-1$
+				}
+			}
+		}
+		if (obj.getMode() != BranchingMode.LEAVE && !inLoop) {
+			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.no_loop"), obj); //$NON-NLS-1$
+		}
+		if (obj.getLabel() != null && !matchedLabel) {
+			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.unknown_block_label", obj.getLabel()), obj); //$NON-NLS-1$
 		}
     }
     

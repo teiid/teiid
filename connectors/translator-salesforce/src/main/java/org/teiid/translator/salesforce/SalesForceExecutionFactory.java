@@ -23,21 +23,17 @@
 package org.teiid.translator.salesforce;
 
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
-import java.util.ArrayList;
+
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import javax.resource.cci.ConnectionFactory;
 
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;

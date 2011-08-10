@@ -1516,6 +1516,36 @@ public class TestValidator {
         assertEquals("Expected report to have no validation failures", false, report.hasItems()); //$NON-NLS-1$
     }
     
+    @Test public void testDupLabel() throws Exception{
+        String sql = "CREATE VIRTUAL PROCEDURE BEGIN IF (pm1.vsp42.param1 > 0) x : begin SELECT 1 AS x; x: begin atomic select 2 as x; end end END"; //$NON-NLS-1$
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        
+        // Validate
+        ValidatorReport report = helpValidateInModeler("pm1.vsp42", sql, metadata);  //$NON-NLS-1$ 
+        examineReport(sql, new String[] {"x : BEGIN ATOMIC\nSELECT 2 AS x;\nEND"}, report);
+    }
+    
+    @Test public void testInvalidContinue() throws Exception{
+        String sql = "CREATE VIRTUAL PROCEDURE BEGIN continue; END"; //$NON-NLS-1$
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        
+        // Validate
+        ValidatorReport report = helpValidateInModeler("pm1.vsp42", sql, metadata);  //$NON-NLS-1$ 
+        examineReport(sql, new String[] {"CONTINUE;"}, report);
+    }
+    
+    @Test public void testInvalidLabel() throws Exception{
+        String sql = "CREATE VIRTUAL PROCEDURE BEGIN IF (pm1.vsp42.param1 > 0) x : begin continue y; end END"; //$NON-NLS-1$
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        
+        // Validate
+        ValidatorReport report = helpValidateInModeler("pm1.vsp42", sql, metadata);  //$NON-NLS-1$ 
+        examineReport(sql, new String[] {"CONTINUE y;"}, report);
+    }
+    
     @Test public void testNonQueryAgg() throws Exception{
         String sql = "CREATE VIRTUAL PROCEDURE BEGIN IF (max(pm1.vsp42.param1) > 0) SELECT 1 AS x; ELSE SELECT 0 AS x; END"; //$NON-NLS-1$
         
