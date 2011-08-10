@@ -23,6 +23,7 @@ package org.teiid.translator;
 
 import java.io.File;
 
+import javax.resource.ResourceException;
 import javax.resource.cci.Connection;
 
 import org.teiid.core.util.FileUtils;
@@ -37,7 +38,7 @@ public interface FileConnection extends Connection {
 	 * @param path
 	 * @return
 	 */
-	File getFile(String path);
+	File getFile(String path) throws ResourceException;
 	
 	public static class Util {
 		
@@ -48,7 +49,7 @@ public interface FileConnection extends Connection {
 		 * @param path
 		 * @return
 		 */
-		public static File[] getFiles(String location, FileConnection fc) {
+		public static File[] getFiles(String location, FileConnection fc) throws ResourceException {
 			File datafile = fc.getFile(location);
 	        
 	        if (datafile.isDirectory()) {

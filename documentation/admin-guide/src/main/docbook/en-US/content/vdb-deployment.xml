@@ -134,6 +134,17 @@
       <rar-name>teiid-connector-file.rar</rar-name>
       <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>      
       <config-property name="ParentDirectory">path-to-the-directory-of-data-file</config-property>
+      
+      <!-- Optional properties -->
+      
+      <!-- Set FileMapping to redirect specific relative paths (case sensitive) to alternative locations.
+           The string value specifies a map in the format key=value(,key=value)*
+           -->
+      <!-- <config-property name="FileMapping" type="java.lang.String">file1.txt=fileX.txt,file2.txt=fileY.txt</config-property> -->
+      
+      <!-- Set AllowParentPaths to false to disallow .. in paths.
+           This prevent requesting files that are not contained in the parent directory -->
+      <config-property name="AllowParentPaths" type="java.lang.Boolean">true</config-property>
    </no-tx-connection-factory>
 </connection-factories>]]></programlisting></example>             
         </section>

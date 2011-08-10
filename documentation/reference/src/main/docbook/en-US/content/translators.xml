@@ -162,6 +162,11 @@
                             <entry>The encoding that should be used for CLOBs returned by the getTextFiles procedure</entry>
                             <entry>The system default encoding</entry>
                         </row>
+                        <row>
+                            <entry>ExceptionIfFileNotFound</entry>
+                            <entry>Throw an exception in getFiles or getTextFiles if the specified file/directory does not exist.</entry>
+                            <entry>false</entry>
+                        </row>
                     </tbody>
                 </tgroup>
             </table>
@@ -178,7 +183,7 @@
                 If the extension path is specified, then it will filter all of the file in the directory referenced by the base path. 
                 If the extension pattern is not specified and the path is a directory, 
                 then all files in the directory will be returned.  Otherwise the single file referenced will be returned.  If the path 
-                doesn't exist, then no results will be returned.
+                doesn't exist, then no results will be returned if ExceptionIfFileNotFound is false, otherwise an exception will be raised.
                 </para>
                 
                 <para>

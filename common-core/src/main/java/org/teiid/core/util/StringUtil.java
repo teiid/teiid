@@ -947,7 +947,9 @@ public final class StringUtil {
      */
     @SuppressWarnings("unchecked")
 	public static <T> T valueOf(String value, Class type){
-    	
+    	if (value == null) {
+    		return null;
+    	}
     	if(type == String.class) {
     		return (T) value;
     	}

@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.resource.ResourceException;
 import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.core.BundleUtil;
@@ -80,7 +81,15 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 
 		@Override
 		public void execute() throws TranslatorException {
-			files = FileConnection.Util.getFiles((String)command.getArguments().get(0).getArgumentValue().getValue(), fc);
+			String path = (String)command.getArguments().get(0).getArgumentValue().getValue();
+			try {
+				files = FileConnection.Util.getFiles(path, fc);
+			} catch (ResourceException e) {
+				throw new TranslatorException(e);
+			}
+			if (files == null && exceptionIfFileNotFound) {
+				throw new TranslatorException(UTIL.getString("file_not_found", path)); //$NON-NLS-1$
+			}
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Getting", files != null ? files.length : 0, "file(s)"); //$NON-NLS-1$ //$NON-NLS-2$
 			String name = command.getProcedureName();
 			if (name.equalsIgnoreCase(GETTEXTFILES)) {
@@ -136,6 +145,7 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 	public static final String SAVEFILE = "saveFile"; //$NON-NLS-1$
 	
 	private Charset encoding = Charset.defaultCharset();
+	private boolean exceptionIfFileNotFound;
 	
 	@TranslatorProperty(display="File Encoding",advanced=true)
 	public String getEncoding() {
@@ -144,6 +154,15 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 	
 	public void setEncoding(String encoding) {
 		this.encoding = Charset.forName(encoding);
+	}
+	
+	@TranslatorProperty(display="Exception if file not found",advanced=true)
+	public boolean isExceptionIfFileNotFound() {
+		return exceptionIfFileNotFound;
+	}
+	
+	public void setExceptionIfFileNotFound(boolean exceptionIfFileNotFound) {
+		this.exceptionIfFileNotFound = exceptionIfFileNotFound;
 	}
 	
 	//@Override
@@ -177,6 +196,8 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 					} catch (IOException e) {
 						throw new TranslatorException(e, UTIL.getString("error_writing")); //$NON-NLS-1$
 					} catch (SQLException e) {
+						throw new TranslatorException(e, UTIL.getString("error_writing")); //$NON-NLS-1$
+					} catch (ResourceException e) {
 						throw new TranslatorException(e, UTIL.getString("error_writing")); //$NON-NLS-1$
 					}
 				}

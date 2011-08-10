@@ -23,6 +23,9 @@
 package org.teiid.resource.adapter.file;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.resource.ResourceException;
 
@@ -36,17 +39,32 @@ import org.teiid.translator.FileConnection;
 public class FileConnectionImpl extends BasicConnection implements FileConnection {
 	
 	private File parentDirectory;
+	private Map<String, String> fileMapping;
+	private boolean allowParentPaths;
+	private static final Pattern parentRef = Pattern.compile("(^\\.\\.(\\\\{2}|/)?.*)|((\\\\{2}|/)\\.\\.)"); //$NON-NLS-1$
 	
-	public FileConnectionImpl(String parentDirectory) {
+	public FileConnectionImpl(String parentDirectory, Map<String, String> fileMapping, boolean allowParentPaths) {
 		this.parentDirectory = new File(parentDirectory);
+		if (fileMapping == null) {
+			fileMapping = Collections.emptyMap();
+		}
+		this.fileMapping = fileMapping;
+		this.allowParentPaths = allowParentPaths;
 	}
 	
 	@Override
-	public File getFile(String path) {
+	public File getFile(String path) throws ResourceException {
     	if (path == null) {
     		return this.parentDirectory;
         }
-    	return new File(parentDirectory, path);	
+		String altPath = fileMapping.get(path);
+		if (altPath != null) {
+			path = altPath;
+		}
+    	if (!allowParentPaths && parentRef.matcher(path).matches()) {	
+			throw new ResourceException(FileManagedConnectionFactory.UTIL.getString("parentpath_not_allowed", path)); //$NON-NLS-1$
+		}
+		return new File(parentDirectory, path);	
     }
 
 	@Override
