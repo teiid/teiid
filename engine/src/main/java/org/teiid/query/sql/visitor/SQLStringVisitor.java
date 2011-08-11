@@ -1277,7 +1277,11 @@ public class SQLStringVisitor extends LanguageVisitor {
                     append(" "); //$NON-NLS-1$
                 }
 
-                append(((Constant)args[1]).getValue());
+                if (args.length < 2 || args[1] == null || !(args[1] instanceof Constant)) {
+                    append(UNDEFINED);
+                } else {
+                    append(((Constant)args[1]).getValue());
+                }
             }
             append(")"); //$NON-NLS-1$
 

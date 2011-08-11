@@ -94,7 +94,7 @@ public class TextTable extends TableFunctionReference {
     private boolean escape;
     private Integer header;
     private Integer skip;
-    private boolean usingRowDelimiter;
+    private boolean usingRowDelimiter = true;
     
     private boolean fixedWidth;
     
