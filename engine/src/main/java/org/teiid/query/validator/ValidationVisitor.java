@@ -1474,6 +1474,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         	if (obj.getHeader() != null && obj.getHeader() < 0) {
 	    		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_negative"), obj); //$NON-NLS-1$
 	    	}
+        	if (!obj.isUsingRowDelimiter()) {
+        		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.fixed_option"), obj); //$NON-NLS-1$
+        	}
     		delimiter = obj.getDelimiter();
     		quote = obj.getQuote();
 			validateTextOptions(obj, delimiter, quote);

@@ -98,14 +98,18 @@
       	</para>
       	<para>
         Usage:
-        	<synopsis label="Usage">TEXTTABLE(expression COLUMNS &lt;COLUMN&gt;, ... [DELIMITER char] [(QUOTE|ESCAPE) char] [HEADER [integer]] [SKIP integer]) AS name</synopsis>
-        	<synopsis label="Usage">COLUMN := name datatype [WIDTH integer]</synopsis> 
+        	<synopsis label="Usage">TEXTTABLE(expression COLUMNS &lt;COLUMN&gt;, ... [NO ROW DELIMITER] [DELIMITER char] [(QUOTE|ESCAPE) char] [HEADER [integer]] [SKIP integer]) AS name</synopsis>
+        	<synopsis label="Usage">COLUMN := name datatype [WIDTH integer [NO TRIM]]</synopsis> 
       	</para>
       	<itemizedlist>
         	<para>Parameters</para>
         <listitem>
           <para>expression - the text content to process, which should be convertable to CLOB.
           </para>
+        </listitem>
+        <listitem>
+        	<para>NO ROW DELIMITER indicates that fixed parsing should not assume the presense of newline row delimiters.
+        	</para>
         </listitem>
         <listitem>
         	<para>DELIMITER sets the field delimiter character to use.  Defaults to ','.
@@ -131,16 +135,28 @@
         	<para>SKIP specifies the number of text lines (counting every new line) to skip before parsing the contents.  HEADER may still be specified with SKP.
         	</para>
         </listitem>
+        <listitem>
+        	<para>WIDTH indicates the fixed-width length of a column in characters - not bytes.  The CR NL newline value counts as a single character.
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>NO TRIM specifies that the text value should not be trimmed of all leading and trailing white space.
+        	</para>
+        </listitem>
       	</itemizedlist>
       	<itemizedlist>
         <para>Syntax Rules:
         </para>
         <listitem>
-          <para>If width is specified for one column it must be specified for all columns.
+          <para>If width is specified for one column it must be specified for all columns and be a non-negative integer.
           </para>
         </listitem>
         <listitem>
           <para>If width is specified, then fixed width parsing is used and ESCAPE, QUOTE, and HEADER should not be specified.
+          </para>
+        </listitem>
+        <listitem>
+          <para>If width is not specified, then NO ROW DELIMITER cannot be used.
           </para>
         </listitem>
         <listitem>
@@ -151,19 +167,23 @@
       	<itemizedlist>
         	<para>Examples</para>
         	<listitem>
-		        <para>Use of the HEADER parameter, returns 1 row ['b']: <programlisting>select * from texttable('col1,col2,col3\na,b,c' COLUMNS col2 string HEADER) x</programlisting>
+		        <para>Use of the HEADER parameter, returns 1 row ['b']: <programlisting>SELECT * FROM TEXTTABLE(UNESCAPE('col1,col2,col3\na,b,c') COLUMNS col2 string HEADER) x</programlisting>
 				</para>		
         	</listitem>
         	<listitem>
-		        <para>Use of fixed width, returns 1 row ['a', 'b', 'c']: <programlisting>select * from texttable('abc' COLUMNS col1 string width 1, col2 string width 1, col3 string width 1) x</programlisting>
+		        <para>Use of fixed width, returns 2 rows ['a', 'b', 'c'], ['d', 'e', 'f']: <programlisting>SELECT * FROM TEXTTABLE(UNESCAPE('abc\ndef') COLUMNS col1 string width 1, col2 string width 1, col3 string width 1) x</programlisting>
 				</para>		
         	</listitem>
         	<listitem>
-		        <para>Use of ESCAPE parameter, returns 1 row ['a,', 'b']: <programlisting>select * from texttable('a:,,b' COLUMNS col1 string, col2 string ESCAPE ':') x</programlisting>
+		        <para>Use of fixed width without a row delimiter, returns 3 rows ['a'], ['b'], ['c']: <programlisting>SELECT * FROM TEXTTABLE('abc' COLUMNS col1 string width 1 NO ROW DELIMITER) x</programlisting>
 				</para>		
         	</listitem>
         	<listitem>
-		        <para>As a nested table: <programlisting>select x.* from t, texttable(t.clobcolumn COLUMNS first string, second date SKIP 1) x</programlisting>
+		        <para>Use of ESCAPE parameter, returns 1 row ['a,', 'b']: <programlisting>SELECT * FROM TEXTTABLE('a:,,b' COLUMNS col1 string, col2 string ESCAPE ':') x</programlisting>
+				</para>		
+        	</listitem>
+        	<listitem>
+		        <para>As a nested table: <programlisting>SELECT x.* FROM t, TEXTTABLE(t.clobcolumn COLUMNS first string, second date SKIP 1) x</programlisting>
 				</para>		
         	</listitem>
 		</itemizedlist>		

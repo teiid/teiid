@@ -1772,6 +1772,10 @@ public class TestValidator {
         helpValidate("SELECT * from texttable(null columns x string width 1 DELIMITER 'z') as x", new String[] {"TEXTTABLE(null COLUMNS x string WIDTH 1 DELIMITER 'z') AS x"}, RealMetadataFactory.exampleBQTCached()); 
 	}
     
+    @Test public void testTextTableNoRowDelimiter() {        
+        helpValidate("SELECT * from texttable(null columns x string NO ROW DELIMITER) as x", new String[] {"TEXTTABLE(null COLUMNS x string NO ROW DELIMITER) AS x"}, RealMetadataFactory.exampleBQTCached()); 
+	}
+    
     @Test public void testXMLNamespaces() {
     	helpValidate("select xmlforest(xmlnamespaces(no default, default 'http://foo'), e1 as \"table\") from pm1.g1", new String[] {"XMLNAMESPACES(NO DEFAULT, DEFAULT 'http://foo')"}, RealMetadataFactory.example1Cached());
     }

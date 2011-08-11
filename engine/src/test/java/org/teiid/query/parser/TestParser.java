@@ -6710,8 +6710,8 @@ public class TestParser {
         TextTable tt = new TextTable();
         tt.setFile(new ElementSymbol("file"));
         List<TextTable.TextColumn> columns = new ArrayList<TextTable.TextColumn>();
-        columns.add(new TextTable.TextColumn("x", "string", 1));
-        columns.add(new TextTable.TextColumn("y", "date", 10));
+        columns.add(new TextTable.TextColumn("x", "string", 1, false));
+        columns.add(new TextTable.TextColumn("y", "date", 10, false));
         tt.setColumns(columns);
         tt.setSkip(10);
         tt.setName("x");

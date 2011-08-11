@@ -51,9 +51,6 @@ import org.teiid.query.util.CommandContext;
 /**
  * Handles text file processing.
  * 
- * TODO: unix style escape handling \t \n, etc. - see also the unescape function
- * TODO: allow for escaping with fixed parsing
- * TODO: allow for fixed parsing without new lines
  * TODO: allow for a configurable line terminator
  */
 public class TextTableNode extends SubqueryAwareRelationalNode {
@@ -211,14 +208,21 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 					if (eof) {
 						return null;
 					}
-					continue; //skip empty lines
+					if (table.isUsingRowDelimiter()) {
+						continue; //skip empty lines
+					}
 				}
-			    if (exact && sb.length() < lineWidth) {
-			    	throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.invalid_width", sb.length(), lineWidth, textLine, systemId)); //$NON-NLS-1$
-			    }
-				return sb.toString();
+				if (table.isUsingRowDelimiter()) {
+				    if (exact && sb.length() < lineWidth) {
+				    	throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.invalid_width", sb.length(), lineWidth, textLine, systemId)); //$NON-NLS-1$
+				    }
+					return sb.toString();
+				}
 		    }
 		    sb.append(c);
+		    if (exact && sb.length() == maxLength && !table.isUsingRowDelimiter()) {
+		    	return sb.toString();
+		    }
 		    if (sb.length() > maxLength) {
 		    	if (exact) {
 		    		sb.deleteCharAt(sb.length() - 1);
@@ -433,7 +437,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		int beginIndex = 0;
 		for (TextColumn col : table.getColumns()) {
 			String val = new String(line.substring(beginIndex, beginIndex + col.getWidth()));
-			addValue(result, false, val);
+			addValue(result, col.isNoTrim(), val);
 			beginIndex += col.getWidth();
 		}
 		return result;

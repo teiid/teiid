@@ -36,10 +36,12 @@ public class TextTable extends TableFunctionReference {
 	
 	public static class TextColumn extends ProjectedColumn {
 		private Integer width;
+		private boolean noTrim;
 		
-		public TextColumn(String name, String type, Integer width) {
+		public TextColumn(String name, String type, Integer width, boolean noTrim) {
 			super(name, type);
 			this.width = width;
+			this.noTrim = noTrim;
 		}
 		
 		protected TextColumn() {
@@ -54,6 +56,14 @@ public class TextTable extends TableFunctionReference {
 			this.width = width;
 		}
 		
+		public boolean isNoTrim() {
+			return noTrim;
+		}
+		
+		public void setNoTrim(boolean noTrim) {
+			this.noTrim = noTrim;
+		}
+		
 		@Override
 		public boolean equals(Object obj) {
 			if (obj == this) {
@@ -63,13 +73,15 @@ public class TextTable extends TableFunctionReference {
 				return false;
 			}
 			TextColumn other = (TextColumn)obj;
-			return EquivalenceUtil.areEqual(width, other.width);
+			return EquivalenceUtil.areEqual(width, other.width)
+			&& noTrim == other.noTrim;
 		}
 		
 		@Override
 		public TextColumn clone() {
 			TextColumn clone = new TextColumn();
 			clone.width = this.width;
+			clone.noTrim = this.noTrim;
 			this.copyTo(clone);
 			return clone;
 		}
@@ -82,6 +94,7 @@ public class TextTable extends TableFunctionReference {
     private boolean escape;
     private Integer header;
     private Integer skip;
+    private boolean usingRowDelimiter;
     
     private boolean fixedWidth;
     
@@ -148,6 +161,14 @@ public class TextTable extends TableFunctionReference {
     public void setFile(Expression file) {
 		this.file = file;
 	}
+    
+    public boolean isUsingRowDelimiter() {
+		return usingRowDelimiter;
+	}
+    
+    public void setUsingRowDelimiter(boolean usingRowDelimiter) {
+		this.usingRowDelimiter = usingRowDelimiter;
+	}
 
 	@Override
 	public void acceptVisitor(LanguageVisitor visitor) {
@@ -168,6 +189,7 @@ public class TextTable extends TableFunctionReference {
 			clone.getColumns().add(column.clone());
 		}
 		clone.fixedWidth = this.fixedWidth;
+		clone.usingRowDelimiter = this.usingRowDelimiter;
 		return clone;
 	}
 
@@ -186,7 +208,8 @@ public class TextTable extends TableFunctionReference {
 			&& EquivalenceUtil.areEqual(escape, other.escape)
 			&& EquivalenceUtil.areEqual(quote, other.quote)
 			&& EquivalenceUtil.areEqual(header, other.header)
-			&& EquivalenceUtil.areEqual(skip, other.skip);
+			&& EquivalenceUtil.areEqual(skip, other.skip)
+			&& usingRowDelimiter == other.usingRowDelimiter;
 	}
 	
 }

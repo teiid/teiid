@@ -664,11 +664,11 @@
 <row>
 <entry align="right" valign="top"><para><anchor id="prod76" xreflabel="textTable"/>textTable</para></entry>
 <entry align="left" valign="top"><para>::= 
-&lt;ID&gt; &lt;LPAREN&gt; <link linkend="prod24">expression</link> <link linkend="prod11">nonReserved</link> <link linkend="prod82">textColumn</link> ( &lt;COMMA&gt; <link linkend="prod82">textColumn</link> )* ( &lt;ID&gt; <link linkend="prod68">charVal</link> )? ( ( &lt;ESCAPE&gt; <link linkend="prod68">charVal</link> ) | ( &lt;ID&gt; <link linkend="prod68">charVal</link> ) )? ( &lt;ID&gt; ( <link linkend="prod83">intVal</link> )? )? ( &lt;ID&gt; <link linkend="prod83">intVal</link> )? &lt;RPAREN&gt; ( &lt;AS&gt; )? <link linkend="prod2">id</link></para></entry></row>
+&lt;ID&gt; &lt;LPAREN&gt; <link linkend="prod24">expression</link> <link linkend="prod11">nonReserved</link> <link linkend="prod82">textColumn</link> ( &lt;COMMA&gt; <link linkend="prod82">textColumn</link> )* ( &lt;NO&gt; &lt;ROW&gt; <link linkend="prod11">nonReserved</link> )? ( &lt;ID&gt; <link linkend="prod68">charVal</link> )? ( ( &lt;ESCAPE&gt; <link linkend="prod68">charVal</link> ) | ( &lt;ID&gt; <link linkend="prod68">charVal</link> ) )? ( &lt;ID&gt; ( <link linkend="prod83">intVal</link> )? )? ( &lt;ID&gt; <link linkend="prod83">intVal</link> )? &lt;RPAREN&gt; ( &lt;AS&gt; )? <link linkend="prod2">id</link></para></entry></row>
 <row>
 <entry align="right" valign="top"><para><anchor id="prod82" xreflabel="textColumn"/>textColumn</para></entry>
 <entry align="left" valign="top"><para>::= 
-<link linkend="prod2">id</link> <link linkend="prod37">dataType</link> ( &lt;ID&gt; <link linkend="prod83">intVal</link> )?</para></entry></row>
+<link linkend="prod2">id</link> <link linkend="prod37">dataType</link> ( &lt;ID&gt; <link linkend="prod83">intVal</link> ( &lt;NO&gt; <link linkend="prod11">nonReserved</link> )? )?</para></entry></row>
 <row>
 <entry align="right" valign="top"><para><anchor id="prod84" xreflabel="xmlQuery"/>xmlQuery</para></entry>
 <entry align="left" valign="top"><para>::= 

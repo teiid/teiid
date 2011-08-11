@@ -1277,11 +1277,7 @@ public class SQLStringVisitor extends LanguageVisitor {
                     append(" "); //$NON-NLS-1$
                 }
 
-                if (args.length < 2 || args[1] == null || !(args[1] instanceof Constant)) {
-                    append(UNDEFINED);
-                } else {
-                    append(((Constant)args[1]).getValue());
-                }
+                append(((Constant)args[1]).getValue());
             }
             append(")"); //$NON-NLS-1$
 
@@ -1811,9 +1807,23 @@ public class SQLStringVisitor extends LanguageVisitor {
                 append(SPACE);
                 append(col.getWidth());
             }
+            if (col.isNoTrim()) {
+            	append(SPACE);
+                append(NO);
+                append(SPACE);
+                append(NonReserved.TRIM);
+            }
             if (cols.hasNext()) {
                 append(","); //$NON-NLS-1$
             }
+        }
+        if (!obj.isUsingRowDelimiter()) {
+        	append(SPACE);
+            append(NO);
+        	append(SPACE);
+            append(ROW);
+        	append(SPACE);
+            append(NonReserved.DELIMITER);
         }
         if (obj.getDelimiter() != null) {
             append(SPACE);

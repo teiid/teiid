@@ -1901,5 +1901,10 @@ public class TestSQLStringVisitor {
     @Test public void testSimilar() throws Exception {
     	helpTestExpression("x similar to 'b' escape 'c'", "x SIMILAR TO 'b' ESCAPE 'c'");
     }
+    
+    @Test public void testTextTable() throws Exception {
+    	String sql = "SELECT * from texttable(file columns x string WIDTH 1 NO TRIM NO ROW DELIMITER) as x"; //$NON-NLS-1$
+        helpTest(QueryParser.getQueryParser().parseCommand(sql), "SELECT * FROM TEXTTABLE(file COLUMNS x string WIDTH 1 NO TRIM NO ROW DELIMITER) AS x");
+    }
 
 }

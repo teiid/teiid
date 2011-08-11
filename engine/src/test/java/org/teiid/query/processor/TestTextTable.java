@@ -159,6 +159,29 @@ public class TestTextTable {
         process(sql, expected);
     }
 	
+	@Test public void testNoRowDelimiter() throws Exception {
+    	String sql = "select * from texttable('abcdef' COLUMNS c1 string width 1, c2 string width 1 no row delimiter) x"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("a","b"),
+        		Arrays.asList("c","d"),
+        		Arrays.asList("e","f"),
+        };    
+    
+        process(sql, expected);
+    }
+	
+	@Test public void testNoTrim() throws Exception {
+    	String sql = "select * from texttable('a b \nc  d' COLUMNS c1 string width 2, c2 string width 2 no trim) x"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("a","b "),
+        		Arrays.asList("c"," d"),
+        };    
+    
+        process(sql, expected);
+    }
+	
 	@Test public void testNoRows() throws Exception {
     	String sql = "select * from texttable('' COLUMNS c1 string, c2 string SKIP 3) x"; //$NON-NLS-1$
     	

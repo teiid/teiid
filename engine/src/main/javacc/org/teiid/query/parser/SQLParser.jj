@@ -2287,6 +2287,7 @@ TextTable textTable(ParseInfo info) :
 	Expression file = null;
 	TextTable.TextColumn column = null;
 	List<TextTable.TextColumn> columns = new ArrayList<TextTable.TextColumn>();
+	boolean useRowDelimiter = true;
 	Character delimiter = null;
 	boolean escape = false;
 	Character quote = null;
@@ -2307,6 +2308,12 @@ TextTable textTable(ParseInfo info) :
 			columns.add(column);
 		}
 	)* 
+	[
+	  <NO> <ROW> nonReserved("DELIMITER")
+	  {
+	    useRowDelimiter = false;
+	  }
+	]
 	[
 	  LOOKAHEAD(<ID>, { "delimiter".equalsIgnoreCase(getToken(1).image) }) <ID>
 	  delimiter = charVal(info, "DELMITER")
@@ -2344,6 +2351,7 @@ TextTable textTable(ParseInfo info) :
  		result.setSkip(skip);
  		result.setName(validateAlias(aliasID));
  		result.setQuote(quote);
+ 		result.setUsingRowDelimiter(useRowDelimiter);
  		return result;
  	}
 }
@@ -2353,6 +2361,7 @@ TextTable.TextColumn textColumn(ParseInfo info):
 	String name = null;
 	Constant datatype = null;
 	Integer width = null;
+	boolean noTrim = false;
 }
 {
 	name = id()
@@ -2360,9 +2369,15 @@ TextTable.TextColumn textColumn(ParseInfo info):
 	[ 
 	  	LOOKAHEAD(<ID>, { "width".equalsIgnoreCase(getToken(1).image) }) <ID>
 	  	width = intVal() 
+	  	[ LOOKAHEAD(2)
+		  	<NO> nonReserved("TRIM")
+		  	{
+				noTrim = true;	  	
+		  	}
+		]
 	]
 	{
-		return new TextTable.TextColumn(validateElementName(name), (String)datatype.getValue(), width);
+		return new TextTable.TextColumn(validateElementName(name), (String)datatype.getValue(), width, noTrim);
 	}
 }
 
