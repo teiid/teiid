@@ -108,6 +108,11 @@ public class RelationalNodeUtil {
                     }
                     return true;
                 }
+                
+                if (query.hasAggregates() && query.getGroupBy() == null) {
+                	return true;
+                }
+
                 break;
             case Command.TYPE_INSERT:
             	Insert insert = (Insert) command;
