@@ -22,6 +22,7 @@
 
 package org.teiid.query.processor;
 
+import static org.junit.Assert.*;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 import static org.teiid.query.processor.TestProcessor.*;
 
@@ -43,6 +44,9 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.query.processor.relational.JoinNode;
+import org.teiid.query.processor.relational.NestedTableJoinStrategy;
+import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings({"unchecked", "nls"})
@@ -243,7 +247,25 @@ public class TestTextTable {
         };    
 
         process(sql, expected);
-    }   
+    }
+	
+	@Test public void testTextTableJoin() throws Exception {
+		String sql = "select z.* from (select x.* from (select * from pm1.g1 where e1 = 'c') y, texttable(e1 || '\n' || e2 || '\n' || e3 COLUMNS x string) x) as z, " +
+				"(select x.* from (select * from pm1.g1 where e1 = 'c') y, texttable(e1 || '\n' || e2 || '\n' || e3 COLUMNS x string) x) as z1 where z.x = z1.x";
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("c"),
+        		Arrays.asList("1"),
+        		Arrays.asList("true"),
+        };    
+
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        RelationalPlan plan = (RelationalPlan)helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
+        JoinNode join = (JoinNode) plan.getRootNode().getChildren()[0];
+        assertTrue(!(join.getJoinStrategy() instanceof NestedTableJoinStrategy));
+        helpProcess(plan, createCommandContext(), dataManager, expected);
+    } 
 	
 	public static void process(String sql, List[] expectedResults) throws Exception {    
     	FakeDataManager dataManager = new FakeDataManager();
