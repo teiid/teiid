@@ -108,7 +108,7 @@ public class FunctionMethod extends AbstractMetadataRecord {
     private Determinism determinism = Determinism.DETERMINISTIC;
     
     @XmlElement(name="inputParameters")
-    protected List<FunctionParameter> inParameters = new ArrayList<FunctionParameter>();
+    protected List<FunctionParameter> inParameters = new ArrayList<FunctionParameter>(2);
     private FunctionParameter outputParameter;
     private Schema parent;
         
