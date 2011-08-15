@@ -137,7 +137,7 @@ public class TeiidLoginContext {
 		return null;
 	}
 
-	protected LoginContext createLoginContext(String domain, CallbackHandler handler) throws LoginException {
+	public LoginContext createLoginContext(String domain, CallbackHandler handler) throws LoginException {
     	return new LoginContext(domain, handler);
     }
 	

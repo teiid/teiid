@@ -244,7 +244,9 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	
     	if (this.odbcSocketConfiguration.getEnabled()) {
     		this.vdbRepository.odbcEnabled();
-	    	this.odbcSocket = new ODBCSocketListener(this.odbcSocketConfiguration, this.dqpCore.getBufferManager(), offset, getMaxODBCLobSizeAllowed());
+    		ODBCSocketListener odbc = new ODBCSocketListener(this.odbcSocketConfiguration, this.dqpCore.getBufferManager(), offset, getMaxODBCLobSizeAllowed(), this.logon);
+    		odbc.setAuthenticationType(sessionService.getAuthType());
+	    	this.odbcSocket = odbc;
 	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("odbc_enabled","Teiid ODBC - SSL=", (this.odbcSocketConfiguration.getSSLConfiguration().isSslEnabled()?"ON":"OFF")+" Host = "+this.odbcSocketConfiguration.getHostAddress().getHostName()+" Port = "+(this.odbcSocketConfiguration.getPortNumber()+offset))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
     	} else {
     		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("odbc_not_enabled")); //$NON-NLS-1$

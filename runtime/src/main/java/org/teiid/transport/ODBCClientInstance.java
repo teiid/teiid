@@ -28,12 +28,14 @@ import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.teiid.client.security.ILogon;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.net.CommunicationException;
+import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
 import org.teiid.net.socket.ObjectChannel;
 import org.teiid.net.socket.ServiceInvocationStruct;
 import org.teiid.odbc.ODBCClientRemote;
@@ -48,7 +50,7 @@ public class ODBCClientInstance implements ChannelListener{
 	private ReflectionHelper serverProxy = new ReflectionHelper(ODBCServerRemote.class);
 	private ConcurrentLinkedQueue<PGRequest> messageQueue = new ConcurrentLinkedQueue<PGRequest>();
 	
-	public ODBCClientInstance(final ObjectChannel channel, ODBCServerRemote.AuthenticationType authType, TeiidDriver driver) {
+	public ODBCClientInstance(final ObjectChannel channel, AuthenticationType authType, TeiidDriver driver, ILogon logonService) {
 		this.client = (ODBCClientRemote)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {ODBCClientRemote.class}, new InvocationHandler() {
 			@Override
 			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -60,7 +62,7 @@ public class ODBCClientInstance implements ChannelListener{
 				return null;
 			}
 		});
-		this.server = new ODBCServerRemoteImpl(this, authType, driver) {
+		this.server = new ODBCServerRemoteImpl(this, authType, driver, logonService) {
 			@Override
 			protected synchronized void doneExecuting() {
 				super.doneExecuting();

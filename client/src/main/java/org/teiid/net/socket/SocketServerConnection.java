@@ -49,12 +49,14 @@ import org.teiid.client.util.ExceptionUtil;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
+import org.teiid.gss.MakeGSS;
 import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.HostInfo;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.TeiidURL;
+import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
 
 
 /**
@@ -166,8 +168,18 @@ public class SocketServerConnection implements ServerConnection {
 
 	private void logon(ILogon newLogon, boolean logoff) throws LogonException,
 			TeiidComponentException, CommunicationException {
-		LogonResult newResult = newLogon.logon(connProps);
+
 		SocketServerInstance instance = this.serverInstance;
+		LogonResult newResult = null;
+
+		AuthenticationType authType  = getAuthenticationType();
+		if (AuthenticationType.CLEARTEXT.equals(authType)) {
+			newResult = newLogon.logon(connProps);
+		}
+		else if (AuthenticationType.KRB5.equals(authType)) {
+			newResult = MakeGSS.authenticate(newLogon, connProps);
+		}
+		
 		if (logoff) {
 			if ("7.3".compareTo(this.serverInstance.getServerVersion()) <= 0) { //$NON-NLS-1$
 				//just remove the current instance - the server has already logged off the current user
@@ -176,9 +188,18 @@ public class SocketServerConnection implements ServerConnection {
 			}
 			logoffAll();
 		}
+		
 		this.logonResult = newResult;
 		this.logonResults.put(instance.getHostInfo(), this.logonResult);
 		this.connectionFactory.connected(instance, this.logonResult.getSessionToken());
+	}
+	
+	private AuthenticationType getAuthenticationType() {
+		String authStr = this.connProps.getProperty(TeiidURL.CONNECTION.AUTHENTICATION_TYPE);
+		if (authStr == null) {
+			return AuthenticationType.CLEARTEXT;
+		}
+		return AuthenticationType.valueOf(authStr);
 	}
 
 	private ILogon connect(HostInfo hostInfo) throws CommunicationException,

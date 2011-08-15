@@ -39,6 +39,12 @@ public interface ODBCClientRemote {
 	//	AuthenticationCleartextPassword (B)
 	void useClearTextAuthentication();
 
+	// AuthenticationGSS (B)
+	void useAuthenticationGSS();
+	
+	// AuthenticationGSSContinue (B)
+	void authenticationGSSContinue(byte[] serviceToken);
+	
 	//	AuthenticationOk (B)
 	//	BackendKeyData (B)
 	//	ParameterStatus (B)
@@ -101,9 +107,7 @@ public interface ODBCClientRemote {
 	//	AuthenticationKerberosV5 (B)
 	//	AuthenticationMD5Password (B)
 	//	AuthenticationSCMCredential (B)
-	//	AuthenticationGSS (B)
 	//	AuthenticationSSPI (B)
-	//	AuthenticationGSSContinue (B)
 	
 	//	CloseComplete (B)
 

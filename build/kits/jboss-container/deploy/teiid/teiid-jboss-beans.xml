@@ -13,6 +13,10 @@
         <property name="sessionMaxLimit">5000</property>
         <!-- Max allowed time before the session is terminated by the system, 0 indicates unlimited (default 0) -->
         <property name="sessionExpirationTimeLimit">0</property>
+        <!-- authentication type are CLEARTEXT, KRB5 (default:CLEARTEXT) -->
+        <property name="authenticationType">CLEARTEXT</property>
+        <!-- When authenticationType=KRB5, then it requires a kerberos security domain to authorize first before teiid-security takes over -->
+        <property name="krb5SecurityDomain">teiid-krb5</property>
     </bean>
     
     <bean name="BufferService" class="org.teiid.services.BufferServiceImpl">
@@ -256,7 +260,33 @@
         <property name="authenticationMode">1-way</property>
     </bean>    
             
-    <!-- teiid's default security domain, replace this with your own if needs to be any other JAAS domain  -->
+    <!-- un-comment and edit for Kerberos login configuration (comment the original login config below)
+    <application-policy xmlns="urn:jboss:security-beans:1.0" name="teiid-krb5">
+        <authentication>
+            <login-module code="com.sun.security.auth.module.Krb5LoginModule" flag="required">
+                <module-option name="storeKey">true</module-option>
+                <module-option name="useKeyTab">true</module-option>
+                <module-option  name="principal">demo@EXAMPLE.COM</module-option>
+                <module-option  name="keyTab">/path/to/krb5.keytab</module-option>
+                <module-option name="doNotPrompt">true</module-option>
+                <module-option name="debug">true</module-option>
+            </login-module>  
+        </authentication>
+    </application-policy>      
+    
+    <application-policy xmlns="urn:jboss:security-beans:1.0" name="teiid-security">
+        <authentication>
+            <login-module code="org.teiid.jboss.AssosiateCallerIdentityLoginModule" flag="required"/>
+            <login-module code="org.jboss.security.auth.spi.UsersRolesLoginModule" flag="required">
+                <module-option name="password-stacking">useFirstPass</module-option>
+                <module-option name="usersProperties">props/teiid-security-users.properties</module-option>
+                <module-option name="rolesProperties">props/teiid-security-roles.properties</module-option>
+            </login-module>
+        </authentication>
+    </application-policy>     
+    
+     -->
+    <!-- teiid's default security domain, replace this with your own if needs to be any other JAAS domain  --> 
     <application-policy xmlns="urn:jboss:security-beans:1.0" name="teiid-security">
         <authentication>
             <login-module code="org.jboss.security.auth.spi.UsersRolesLoginModule" flag="required">

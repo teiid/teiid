@@ -193,6 +193,13 @@ public class TestSocketRemoting {
 					TeiidComponentException {
 				}
 
+				@Override
+				public LogonResult neogitiateGssLogin(
+						Properties connectionProperties, byte[] serviceToken, boolean createSession)
+						throws LogonException {
+					return null;
+				}
+
 			}, "foo"); //$NON-NLS-1$
 		csr.registerClientService(FakeService.class, new FakeServiceImpl(), "foo"); //$NON-NLS-1$
 		final FakeClientServerInstance serverInstance = new FakeClientServerInstance(csr);

@@ -40,6 +40,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.teiid.client.security.ILogon;
+import org.teiid.client.security.LogonException;
+import org.teiid.client.security.LogonResult;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.StringUtil;
@@ -50,9 +53,11 @@ import org.teiid.jdbc.StatementImpl;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
 import org.teiid.odbc.PGUtil.PgColInfo;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.ODBCClientInstance;
+import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStream;
 
 /**
  * While executing the multiple prepared statements I see this bug currently
@@ -165,11 +170,13 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private Map<String, Prepared> preparedMap = Collections.synchronizedMap(new HashMap<String, Prepared>());
 	private Map<String, Portal> portalMap = Collections.synchronizedMap(new HashMap<String, Portal>());
 	private Map<String, Cursor> cursorMap = Collections.synchronizedMap(new HashMap<String, Cursor>());
+	private ILogon logon;
 	
-	public ODBCServerRemoteImpl(ODBCClientInstance client, AuthenticationType authType, TeiidDriver driver) {
+	public ODBCServerRemoteImpl(ODBCClientInstance client, AuthenticationType authType, TeiidDriver driver, ILogon logon) {
 		this.driver = driver;
 		this.client = client.getClient();
 		this.authType = authType;
+		this.logon = logon;
 	}
 	
 	@Override
@@ -181,18 +188,39 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		if (this.authType.equals(AuthenticationType.CLEARTEXT)) {
 			this.client.useClearTextAuthentication();
 		}
-		else if (this.authType.equals(AuthenticationType.MD5)) {
-			// TODO: implement MD5 auth type
+		else if (this.authType.equals(AuthenticationType.KRB5)) {
+			this.client.useAuthenticationGSS();
 		}
 	}
 	
 	@Override
-	public void logon(String databaseName, String user, String password) {
+	public void logon(String databaseName, String user, NullTerminatedStringDataInputStream data) {
 		try {
-			 java.util.Properties info = new java.util.Properties();
-			String url = "jdbc:teiid:"+databaseName+";ApplicationName=ODBC"; //$NON-NLS-1$ //$NON-NLS-2$
+			java.util.Properties info = new java.util.Properties();
 			info.put("user", user); //$NON-NLS-1$
-			info.put("password", password); //$NON-NLS-1$
+			
+			String password = null; 
+			String passthroughAuthentication = ""; //$NON-NLS-1$
+			if (authType.equals(AuthenticationType.CLEARTEXT)) {
+				password = data.readString();
+			}
+			else if (authType.equals(AuthenticationType.KRB5)) {
+				byte[] serviceToken = data.readServiceToken();
+            	LogonResult result = this.logon.neogitiateGssLogin(this.props, serviceToken, false);
+            	if ((Boolean)result.getProperty(ILogon.KRB5_ESTABLISHED)) {
+	            	serviceToken = (byte[])result.getProperty(ILogon.KRB5TOKEN);
+	            	this.client.authenticationGSSContinue(serviceToken);
+	            	return;
+            	}
+            	passthroughAuthentication = ";PassthroughAuthentication=true"; //$NON-NLS-1$
+			}
+			
+			String url = "jdbc:teiid:"+databaseName+";ApplicationName=ODBC"+passthroughAuthentication; //$NON-NLS-1$ //$NON-NLS-2$
+
+			if (password != null) {
+				info.put("password", password); //$NON-NLS-1$
+			}
+			
 			this.connection =  (ConnectionImpl)driver.connect(url, info);
 			int hash = this.connection.getConnectionId().hashCode();
 			Enumeration keys = this.props.propertyNames();
@@ -207,7 +235,13 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		} catch (SQLException e) {
 			errorOccurred(e);
 			terminate();
-		} 
+		} catch(LogonException e) {
+			errorOccurred(e);
+			terminate();
+		} catch (IOException e) {
+			errorOccurred(e);
+			terminate();			
+		}
 	}	
 	
 	private void cursorExecute(final String cursorName, final String sql, final ResultsFuture<Integer> completion) {

@@ -255,7 +255,45 @@
 							backwards compatibility when JDBC3 and older support is still required.  Defaults to true.
 							</para>
                         </entry>
-                    </row>						
+                    </row>
+                    <row>
+                        <entry>
+                            <code>authenticationType</code>
+                        </entry>
+                        <entry>
+                            <code>String</code>
+                        </entry>                        
+                        <entry>
+                           <para>Type of authentication to use. Valid values are CLEARTEXT (default) and KRB5 (kerberos). See 
+                           Admin Guide for configuration required for kerberos
+                            </para>
+                        </entry>
+                    </row>                      
+                    <row>
+                        <entry>
+                            <code>jaasName</code>
+                        </entry>
+                        <entry>
+                            <code>String</code>
+                        </entry>                        
+                        <entry>
+                           <para>JAAS configuration name. Only applies when configuring a kerberos authentication.
+                           See Admin Guide for configuration required for kerberos</para>
+                        </entry>
+                    </row>                      
+                    <row>
+                        <entry>
+                            <code>kerberosServicePrincipleName</code>
+                        </entry>
+                        <entry>
+                            <code>String</code>
+                        </entry>                        
+                        <entry>
+                           <para>Kerberos authenticated principle name. Only applies when configuring a kerberos authentication.
+                           See Admin Guide for configuration required for kerberos</para>
+                        </entry>
+                    </row>                      
+                    						
                 </tbody>
             </tgroup>
         </table> 

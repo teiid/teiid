@@ -254,6 +254,24 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	}
 	
 	@Override
+	public void useAuthenticationGSS() {
+		try {
+			sendAuthenticationGSS();
+		} catch (IOException e) {
+			terminate(e);
+		}		
+	}
+	
+	@Override
+	public void authenticationGSSContinue(byte[] serviceToken) {
+		try {
+			sendAuthenticationGSSContinue(serviceToken);
+		} catch (IOException e) {
+			terminate(e);
+		}		
+	}
+	
+	@Override
 	public void authenticationSucess(int processId, int screctKey) {
 		try {
 			sendAuthenticationOk();
@@ -749,7 +767,20 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		writeInt(3);
 		sendMessage();
 	}
-
+	
+	private void sendAuthenticationGSS()  throws IOException {
+		startMessage('R');
+		writeInt(7);
+		sendMessage();
+	}
+	
+	private void sendAuthenticationGSSContinue(byte[] serviceToken) throws IOException  {
+		startMessage('R');
+		writeInt(8);
+		write(serviceToken);
+		sendMessage();
+	}	
+	
 	private void sendAuthenticationOk() throws IOException {
 		startMessage('R');
 		writeInt(0);
@@ -918,6 +949,5 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
         default:
             return PG_TYPE_UNKNOWN;
         }
-    }
-	
+    }	
 }

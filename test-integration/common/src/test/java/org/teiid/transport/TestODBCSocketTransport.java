@@ -47,7 +47,9 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.postgresql.Driver;
+import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
@@ -127,7 +129,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			addr = new InetSocketAddress(0);
 			config.setBindAddress(addr.getHostName());
 			config.setPortNumber(0);
-			odbcTransport = new ODBCSocketListener(config, BufferManagerFactory.getStandaloneBufferManager(), 0, 100000);
+			odbcTransport = new ODBCSocketListener(config, BufferManagerFactory.getStandaloneBufferManager(), 0, 100000, Mockito.mock(ILogon.class));
 			
 			FakeServer server = new FakeServer();
 			server.setUseCallingThread(false);

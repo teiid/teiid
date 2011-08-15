@@ -22,6 +22,8 @@
 
 package org.teiid.services;
 
+import java.io.IOException;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -33,6 +35,12 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.security.auth.Subject;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.NameCallback;
+import javax.security.auth.callback.PasswordCallback;
+import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
@@ -55,6 +63,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.TeiidURL;
+import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.Credentials;
 import org.teiid.security.SecurityHelper;
@@ -72,6 +81,8 @@ public class SessionServiceImpl implements SessionService {
 	 */
     private long sessionMaxLimit = DEFAULT_MAX_SESSIONS;
 	private long sessionExpirationTimeLimit = DEFAULT_SESSION_EXPIRATION;
+	private String authenticationType = AuthenticationType.CLEARTEXT.name();
+	private String krb5SecurityDomain;
 	
 	/*
 	 * Injected state
@@ -249,6 +260,31 @@ public class SessionServiceImpl implements SessionService {
 	}
 	
 	@Override
+	public LoginContext createLoginContext(final String securityDomain, final String user, final String password) throws LoginException{
+		CallbackHandler handler = new CallbackHandler() {
+			@Override
+			public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+				for (int i = 0; i < callbacks.length; i++) {
+					if (callbacks[i] instanceof NameCallback) {
+						NameCallback nc = (NameCallback)callbacks[i];
+						nc.setName(user);
+					} else if (callbacks[i] instanceof PasswordCallback) {
+						PasswordCallback pc = (PasswordCallback)callbacks[i];
+						if (password != null) {
+							pc.setPassword(password.toCharArray());
+						}
+					} else {
+						throw new UnsupportedCallbackException(callbacks[i], "Unrecognized Callback"); //$NON-NLS-1$
+					}
+				}
+			}
+		}; 		
+		
+		TeiidLoginContext context = new TeiidLoginContext(this.securityHelper);
+		return context.createLoginContext(securityDomain, handler);
+	}
+	
+	@Override
 	public Collection<SessionMetadata> getActiveSessions() throws SessionServiceException {
 		return new ArrayList<SessionMetadata>(this.sessionCache.values());
 	}
@@ -333,7 +369,17 @@ public class SessionServiceImpl implements SessionService {
 	
 	public void setSessionExpirationTimeLimit(long limit) {
 		this.sessionExpirationTimeLimit = limit;
-	}	
+	}
+	
+	@Override
+	public AuthenticationType getAuthType() {
+		return AuthenticationType.valueOf(this.authenticationType);
+	}
+	
+	public void setAuthenticationType(String flag) {
+		this.authenticationType = flag;
+		LogManager.logInfo(LogConstants.CTX_SECURITY, "Authentication Type set to: "+flag); //$NON-NLS-1$
+	}
 	
 	public void setSecurityDomains(String domainNameOrder) {
         if (domainNameOrder != null && domainNameOrder.trim().length()>0) {
@@ -345,7 +391,7 @@ public class SessionServiceImpl implements SessionService {
 	        }
         }		
 	}
-	
+		
 	public void setAdminSecurityDomain(String domain) {
 		this.adminSecurityDomains.add(domain);
 		LogManager.logInfo(LogConstants.CTX_SECURITY, "Admin Security Enabled: true"); //$NON-NLS-1$
@@ -376,4 +422,23 @@ public class SessionServiceImpl implements SessionService {
 	public void setDqp(DQPCore dqp) {
 		this.dqp = dqp;
 	}
+	
+	@Override
+	public void assosiateSubjectInContext(String securityDomain, Subject subject) {
+    	Principal principal = null;
+    	for(Principal p:subject.getPrincipals()) {
+			principal = p;
+			break;
+    	}
+    	this.securityHelper.assosiateSecurityContext(securityDomain, this.securityHelper.createSecurityContext(securityDomain, principal, null, subject));		
+	}
+	
+	public void setKrb5SecurityDomain(String domain) {
+		this.krb5SecurityDomain = domain;
+	}
+	
+	@Override
+	public String getKrb5SecurityDomain(){
+		return this.krb5SecurityDomain;
+	}	
 }

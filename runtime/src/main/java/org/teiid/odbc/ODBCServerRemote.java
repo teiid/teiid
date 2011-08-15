@@ -23,12 +23,13 @@ package org.teiid.odbc;
 
 import java.util.Properties;
 
+import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStream;
+
 public interface ODBCServerRemote {
-	enum AuthenticationType {CLEARTEXT, MD5};
 	
 	void initialize(Properties props);
 	
-	void logon(String databaseName, String userid, String password);
+	void logon(String databaseName, String userid, NullTerminatedStringDataInputStream data);
 	
 	void prepare(String prepareName, String sql, int[] paramType);
 

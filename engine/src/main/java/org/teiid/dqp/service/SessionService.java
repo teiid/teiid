@@ -23,13 +23,17 @@
 package org.teiid.dqp.service;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
 
+import javax.security.auth.Subject;
+import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.client.security.InvalidSessionException;
 import org.teiid.dqp.internal.process.DQPCore;
+import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
 import org.teiid.security.Credentials;
 
 
@@ -138,5 +142,12 @@ public interface SessionService {
     SessionMetadata getActiveSession(String sessionID);
     
 	void setDqp(DQPCore dqp);
+	
+	LoginContext createLoginContext(String securityDomain, String user, String password) throws LoginException;
 
+	AuthenticationType getAuthType();
+	
+	String getKrb5SecurityDomain();
+	
+	void assosiateSubjectInContext(String securityDomain, Subject subject); 
 }

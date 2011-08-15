@@ -26,7 +26,11 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TimeZone;
+
+import org.teiid.core.util.ExternalizeUtil;
 
 
 
@@ -44,8 +48,9 @@ public class LogonResult implements Externalizable {
     private SessionToken sessionToken;
     private String vdbName;
     private int vdbVersion;
+    private Map<Object, Object> addtionalProperties;
 
-    public LogonResult() {
+	public LogonResult() {
 	}
     
     public LogonResult(SessionToken token, String vdbName, int vdbVersion, String clusterName) {
@@ -89,6 +94,20 @@ public class LogonResult implements Externalizable {
 		return vdbVersion;
 	}
 	
+    public Object getProperty(String key) {
+		if (this.addtionalProperties == null) {
+			return null;
+		}
+		return addtionalProperties.get(key);
+    }
+
+	public void addProperty(String key, Object value) {
+		if (this.addtionalProperties == null) {
+			this.addtionalProperties = new HashMap<Object, Object>();
+		}
+		this.addtionalProperties.put(key, value);
+	}	
+	
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
@@ -97,6 +116,7 @@ public class LogonResult implements Externalizable {
 		timeZone = (TimeZone)in.readObject();
 		clusterName = (String)in.readObject();
 		vdbVersion = in.readInt();
+		addtionalProperties = ExternalizeUtil.readMap(in);
 	}
 	
 	@Override
@@ -106,6 +126,7 @@ public class LogonResult implements Externalizable {
 		out.writeObject(timeZone);
 		out.writeObject(clusterName);
 		out.writeInt(vdbVersion);
+		ExternalizeUtil.writeMap(out, addtionalProperties);
 	}
     
 }
