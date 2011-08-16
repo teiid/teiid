@@ -171,6 +171,17 @@ public class TestTextTable {
         process(sql, expected);
     }
 	
+	@Test public void testMissingValues() throws Exception {
+    	String sql = "select * from texttable('a,b\nc' COLUMNS c1 string, c2 string) x"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("a", "b"),
+        		Arrays.asList("c", null),
+        };
+        
+        process(sql, expected);
+    }
+	
 	@Test public void testQuote() throws Exception {
     	String sql = "select * from texttable('  \" a\", \" \"\" \"' COLUMNS c1 string, c2 string) x"; //$NON-NLS-1$
     	
