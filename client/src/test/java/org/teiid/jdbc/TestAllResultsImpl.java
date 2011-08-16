@@ -34,14 +34,13 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
@@ -709,30 +708,27 @@ public class TestAllResultsImpl {
         cs.next();
     }
 	
-	static ResultSetImpl helpTestBatching(StatementImpl statement, int fetchSize, int batchLength,
-			int totalLength) throws InterruptedException, ExecutionException,
-			TeiidProcessingException, SQLException, TimeoutException {
+	static ResultSetImpl helpTestBatching(StatementImpl statement, final int fetchSize, final int batchLength,
+			final int totalLength) throws TeiidProcessingException, SQLException {
 		DQP dqp = statement.getDQP();
 		if (dqp == null) {
 			dqp = mock(DQP.class);
 			stub(statement.getDQP()).toReturn(dqp);
 		}
 		stub(statement.getFetchSize()).toReturn(fetchSize);
-		for (int i = batchLength; i < totalLength; i += batchLength) {
-			//forward requests
-			ResultsFuture<ResultsMessage> nextBatch = mock(ResultsFuture.class);
-			stub(nextBatch.get(Matchers.anyLong(), (TimeUnit)Matchers.anyObject())).toReturn(exampleResultsMsg4(i + 1, Math.min(batchLength, totalLength - i), fetchSize, i + batchLength >= totalLength));
-			stub(dqp.processCursorRequest(REQUEST_ID, i + 1, fetchSize)).toReturn(nextBatch);
-			
-			if (i + batchLength < totalLength) {
-				//backward requests
-				ResultsFuture<ResultsMessage> previousBatch = mock(ResultsFuture.class);
-				stub(previousBatch.get(Matchers.anyLong(), (TimeUnit)Matchers.anyObject())).toReturn(exampleResultsMsg4(i - batchLength + 1, i, fetchSize, false));
-				stub(dqp.processCursorRequest(REQUEST_ID, i, fetchSize)).toReturn(previousBatch);
+		stub(dqp.processCursorRequest(Matchers.eq(REQUEST_ID), Matchers.anyInt(), Matchers.eq(fetchSize))).toAnswer(new Answer<ResultsFuture<ResultsMessage>>() {
+			@Override
+			public ResultsFuture<ResultsMessage> answer(
+					InvocationOnMock invocation) throws Throwable {
+				ResultsFuture<ResultsMessage> nextBatch = new ResultsFuture<ResultsMessage>();
+				int begin = Math.min(totalLength, (Integer)invocation.getArguments()[1]);
+				int length = Math.min(totalLength - begin + 1, batchLength);
+				nextBatch.getResultsReceiver().receiveResults(exampleResultsMsg4(begin, length, begin + length - 1>= totalLength));
+				return nextBatch;
 			}
-		}
+		});
 		
-		ResultsMessage msg = exampleResultsMsg4(1, batchLength, fetchSize, batchLength == totalLength);
+		ResultsMessage msg = exampleResultsMsg4(1, batchLength, batchLength == totalLength);
 		return new ResultSetImpl(msg, statement, new ResultSetMetaDataImpl(new MetadataProvider(DeferredMetadataProvider.loadPartialMetadata(msg.getColumnNames(), msg.getDataTypes())), null), 0);
 	}
 
@@ -835,7 +831,7 @@ public class TestAllResultsImpl {
 		return exampleMessage(new List[0], new String[] { "IntNum", "StringNum" }, new String[] { JDBCSQLTypeInfo.INTEGER, JDBCSQLTypeInfo.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
-	private static ResultsMessage exampleResultsMsg4(int begin, int length, int fetchSize, boolean lastBatch) {
+	private static ResultsMessage exampleResultsMsg4(int begin, int length, boolean lastBatch) {
 		RequestMessage request = new RequestMessage();
 		request.setExecutionId(REQUEST_ID);
 		ResultsMessage resultsMsg = new ResultsMessage(request);

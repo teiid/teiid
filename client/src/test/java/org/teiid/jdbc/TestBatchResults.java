@@ -41,13 +41,13 @@ public class TestBatchResults {
 	
 	static class MockBatchFetcher implements BatchFetcher {
 
-		private int totalRows = 50;
+		private int totalRows;
 		private boolean throwException;
 		private boolean useLastRow;
 		List<Integer> batchCalls = new ArrayList<Integer>();
 		
 		public MockBatchFetcher() {
-			
+			this(50);
 		}
 		
 		public MockBatchFetcher(int totalRows) {
@@ -68,7 +68,11 @@ public class TestBatchResults {
 	        if (beginRow%10==0) {
 	        	endRow = beginRow - 9;
 	        }
-	        if(beginRow > endRow) {
+	        if (beginRow > totalRows) {
+        		beginRow = totalRows + 1;
+        		endRow = totalRows;
+        		isLast = true;
+        	} else if(beginRow > endRow) {
 	            if(endRow < 1) {
 	                endRow = 1;
 	            }
@@ -76,7 +80,7 @@ public class TestBatchResults {
 	            beginRow = endRow;
 	            endRow = i;
 	        } else if(endRow > totalRows) {
-	            endRow = totalRows;
+        		endRow = totalRows;
 	            isLast = true;
 	        }
 			Batch batch = new Batch(createBatch(beginRow, endRow), beginRow, endRow, isLast);
