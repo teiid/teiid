@@ -174,7 +174,7 @@ public class LogonImpl implements ILogon {
 			
 			LogManager.logDetail(LogConstants.CTX_SECURITY, "Kerberos context established"); //$NON-NLS-1$
 			//connProps.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$
-			service.assosiateSubjectInContext(securityDomain, subject);
+			service.associateSubjectInContext(securityDomain, subject);
 			return logon(connProps, result.serviceTicket);
 		} catch (LoginException e) {
 			throw new LogonException(e, RuntimePlugin.Util.getString("krb5_login_failed")); //$NON-NLS-1$

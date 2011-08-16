@@ -21,7 +21,7 @@
  */
 package org.teiid.odbc;
 
-import static org.teiid.odbc.PGUtil.convertType;
+import static org.teiid.odbc.PGUtil.*;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -207,7 +207,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			else if (authType.equals(AuthenticationType.KRB5)) {
 				byte[] serviceToken = data.readServiceToken();
             	LogonResult result = this.logon.neogitiateGssLogin(this.props, serviceToken, false);
-            	if ((Boolean)result.getProperty(ILogon.KRB5_ESTABLISHED)) {
+            	if (!Boolean.TRUE.equals(result.getProperty(ILogon.KRB5_ESTABLISHED))) {
 	            	serviceToken = (byte[])result.getProperty(ILogon.KRB5TOKEN);
 	            	this.client.authenticationGSSContinue(serviceToken);
 	            	return;

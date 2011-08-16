@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
+%CustomDTD;
+]>
 <chapter id="custom_security">
 	<title>Teiid Security</title>
 	<para>The Teiid system provides a range of built-in and extensible security features to enable the
@@ -106,23 +109,21 @@
         <section>
             <title>Kerberos support through GSSAPI</title>
             <para>Teiid supports kerberos authentication using GSSAPI, to be used with single sign-on applications.
-            This service ticket negotiation based authentication is supported through remote JDBC and ODBC drivers and as 
-            well as in LocalConnections. However, configuration is varies for local connections vs remote connections</para>
+            This service ticket negotiation based authentication is supported through remote JDBC and ODBC drivers and LocalConnections. 
+            Client configuration is different for all connection types.</para>
             
             <section>
                 <title>LocalConnection</title>
-                <para>For supporting kerberos through local connections, provide JDBC URL property <emphasis>PassthroughAuthentication</emphasis> 
-                as true and use the <ulink url="http://community.jboss.org/docs/DOC-10680">JBoss Negotiation</ulink> as 
-                authentication configure your web-application for kerberos. When the web application authenticates with the provided
+                <para>Set the JDBC URL property <emphasis>PassthroughAuthentication</emphasis> 
+                as true and use <ulink url="http://community.jboss.org/docs/DOC-10680">JBoss Negotiation</ulink> for 
+                authentication of your web-application with kerberos. When the web application authenticates with the provided
                 kerberos token, the same subject authenticated will be used in Teiid. For details about configuration, check the 
                 JBoss Negotiation documentation.</para>
             </section>
             
             <section>
-                <title>Remote JDBC Connection</title>
-                <para>Server: For supporting the kerberos through jdbc from a remote client application, follow the below configuration.
-                On the server, edit "{jboss-as}/server/{profile}/deploy/teiid/teiid-jboss-beans.xml" file, and make sure under 
-                "SessionService" bean definition the following properties are set.
+                <title>Remote Connections</title>
+                <para>On the server, edit the &jboss-beans; under the "SessionService" bean definition, as follows:
                 <programlisting><![CDATA[   
     <!-- Sets the authentication Type -->         
     <property name="authenticationType">KRB5</property>
@@ -130,12 +131,11 @@
     <property name="krb5SecurityDomain">teiid-krb5</property>    
                 ]]></programlisting>    
                 
-                Now we need to define security domain context for kerberos with name mentioned in above, and since the kerberos 
-                authorization can not define authorization roles, we need devise a way to define them using another login context. 
-                Given below is sample configuration to define roles using UserRolesLoginModule. 
-                Note that the below configuration replaces the default Teiid login configuration. Note to change the principal 
-                and key tab locations accordingly.
-                
+                Now we need to define a security domain context for kerberos with the name mentioned in above.
+                Since kerberos authorization cannot define authorization roles, we'll define them using another login context. 
+                Given below is a sample configuration to define roles using a UserRolesLoginModule. 
+                <note><para>This configuration replaces the default Teiid login configuration, and you should change the principal 
+                and key tab locations accordingly.</para></note>
                 <programlisting><![CDATA[   
     <!--login module that negotiates the login conext for kerberos --> 
     <application-policy xmlns="urn:jboss:security-beans:1.0" name="teiid-krb5">
@@ -166,51 +166,59 @@
         </authentication>
     </application-policy>    
                 ]]></programlisting>
-               Edit "run.conf" or "run.conf.bat"file depending upon the environment in "${jboss-as}/bin" directory 
-               and add the following JVM options to startup script (note to change the realm and KDC settings according to your environment)
+               Edit the "run.conf" or "run.conf.bat" file depending upon the environment in the "${jboss-as}/bin" directory 
+               and add the following JVM options (changing the realm and KDC settings according to your environment)
                <programlisting><![CDATA[   
                JAVA_OPTS = "$JAVA_OPTS -Djava.security.krb5.realm=EXAMPLE.COM -Djava.security.krb5.kdc=kerberos.example.com -Djavax.security.auth.useSubjectCredsOnly=false"
                 ]]></programlisting>                                          
             This finishes the configuration on the server side, restart the server and make sure that there were no errors during startup. 
             </para>
             
-            <para>Client: The following configuration needs to be done on the Teiid client application VM. For client VM, JAAS 
-            configuration for kerberos authentication needs to be written. A sample configuration file (client.conf) is show below
-            
-           <programlisting><![CDATA[   
-    Client {
-        com.sun.security.auth.module.Krb5LoginModule required
-        useTicketCache=true
-        storeKey=true
-        useKeyTab=true 
-        keyTab="/path/to/krb5.keytab" 
-        doNotPrompt=false 
-        debug=false
-        principal="demo@EXAMPLE.COM";
-    };
-            ]]></programlisting>                                          
-            
-            Add the following JVM options to your client's startup script, note the change Realm and KDC settings according to 
-            your environment
-           <programlisting><![CDATA[   
-        -Djava.security.krb5.realm=EXAMPLE.COM
-        -Djava.security.krb5.kdc=kerberos.example.com
-        -Djavax.security.auth.useSubjectCredsOnly=false
-        -Dsun.security.krb5.debug=false
-        -Djava.security.auth.login.config=/path/to/client.conf
-            ]]></programlisting>              
-            
-            Add the following URL connection properties to Teiid JDBC connection string
-            <programlisting><![CDATA[
-            authenticationType=KRB5;jaasName=Client;kerberosServicePrincipleName=demo@EXAMPLE.COM
-            ]]></programlisting>
-            There is no need to provide the user name and password, when the application is trying to make JDBC connection it
-            will authenticate locally and use the same user credetinals to neogitiate service token with server and grant the
-            connection. See Client Developer's guide for information on connection properties and how to configure data sources.
-            </para>
-            </section>
-
-        </section>        
+            <section>
+				<title>JDBC Client Configuration</title>                        
+	            <para>In you client VM the JAAS 
+	            configuration for kerberos authentication needs to be written. A sample configuration file (client.conf) is show below
+	            
+	           <programlisting><![CDATA[   
+	    Client {
+	        com.sun.security.auth.module.Krb5LoginModule required
+	        useTicketCache=true
+	        storeKey=true
+	        useKeyTab=true 
+	        keyTab="/path/to/krb5.keytab" 
+	        doNotPrompt=false 
+	        debug=false
+	        principal="demo@EXAMPLE.COM";
+	    };
+	            ]]></programlisting>                                          
+	            
+	            Add the following JVM options to your client's startup script - change Realm and KDC settings according to 
+	            your environment
+	           <programlisting><![CDATA[   
+	        -Djava.security.krb5.realm=EXAMPLE.COM
+	        -Djava.security.krb5.kdc=kerberos.example.com
+	        -Djavax.security.auth.useSubjectCredsOnly=false
+	        -Dsun.security.krb5.debug=false
+	        -Djava.security.auth.login.config=/path/to/client.conf
+	            ]]></programlisting>              
+	            
+	            Add the following URL connection properties to Teiid JDBC connection string
+	            <programlisting><![CDATA[
+	            authenticationType=KRB5;jaasName=Client;kerberosServicePrincipleName=demo@EXAMPLE.COM
+	            ]]></programlisting>
+	            There is no need to provide the user name and password, when the application is trying to make JDBC connection it
+	            will authenticate locally and use the same user credetinals to neogitiate service token with server and grant the
+	            connection. See Client Developer's guide for information on connection properties and how to configure data sources.
+	            </para>
+	            </section>
+	
+	        </section>        
+        </section>
+        
+        <section>
+        	<title>ODBC Client Configuration</title>
+        	<para>Consult the PostgreSQL ODBC client documentation.</para>
+        </section>
 		
         <section>
             <title>Security at Data Source level</title>
