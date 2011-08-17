@@ -68,7 +68,7 @@ public abstract class AggregateFunction {
     	}
     }
     
-    boolean filter(Object value) {
+    public boolean filter(Object value) {
     	return value == null; 
     }
     

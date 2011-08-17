@@ -64,7 +64,7 @@ public class ArrayAgg extends AggregateFunction {
 	}
 
 	@Override
-    boolean filter(Object value) {
+    public boolean filter(Object value) {
 		// handle the null values too.
     	return false; 
     }	

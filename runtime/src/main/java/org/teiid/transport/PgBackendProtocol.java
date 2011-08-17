@@ -513,11 +513,13 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			    		else {
 			    			first = false;
 			    		}
-			    		if (col.type == PG_TYPE_TEXTARRAY) {
-			    			escapeQuote(writer, o.toString());
-			    		}
-			    		else {
-			    			writer.append(o.toString());
+			    		if (o != null) {
+				    		if (col.type == PG_TYPE_TEXTARRAY) {
+				    			escapeQuote(writer, o.toString());
+				    		}
+				    		else {
+				    			writer.append(o.toString());
+				    		}
 			    		}
 			    	}
 			    	writer.append("}");
@@ -537,7 +539,9 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			    		else {
 			    			first = false;
 			    		}
-			    		writer.append(o.toString());
+			    		if (o != null) {
+			    			writer.append(o.toString());
+			    		}
 			    	}
 		    	}	
 		    	}

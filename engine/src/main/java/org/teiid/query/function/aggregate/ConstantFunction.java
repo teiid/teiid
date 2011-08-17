@@ -40,7 +40,7 @@ public class ConstantFunction extends AggregateFunction {
     }
     
     @Override
-    boolean filter(Object input) {
+    public boolean filter(Object input) {
     	return false;
     }
 
