@@ -34,6 +34,8 @@ import org.teiid.net.socket.ObjectChannel;
 import org.teiid.odbc.ODBCServerRemote;
 
 public class ODBCSocketListener extends SocketListener {
+	
+	private int maxBufferSize = Integer.parseInt(System.getProperty("org.teiid.ODBCPacketSize", "307200")); //$NON-NLS-1$ //$NON-NLS-2$
 	private ODBCServerRemote.AuthenticationType authType = ODBCServerRemote.AuthenticationType.CLEARTEXT;
 	private int maxLobSize;
 	private TeiidDriver driver;
@@ -56,6 +58,10 @@ public class ODBCSocketListener extends SocketListener {
 	public void setDriver(TeiidDriver driver) {
 		this.driver = driver;
 	}
+	
+	public void setMaxBufferSize(int maxBufferSize) {
+		this.maxBufferSize = maxBufferSize;
+	}
 
 	@Override
 	protected SSLAwareChannelHandler createChannelPipelineFactory(final SSLConfiguration config, final StorageManager storageManager) {
@@ -64,7 +70,7 @@ public class ODBCSocketListener extends SocketListener {
 				ChannelPipeline pipeline = new DefaultChannelPipeline();
 
 			    pipeline.addLast("odbcFrontendProtocol", new PgFrontendProtocol(1 << 20)); //$NON-NLS-1$
-			    pipeline.addLast("odbcBackendProtocol", new PgBackendProtocol(maxLobSize, config)); //$NON-NLS-1$
+			    pipeline.addLast("odbcBackendProtocol", new PgBackendProtocol(maxLobSize, maxBufferSize, config)); //$NON-NLS-1$
 			    pipeline.addLast("handler", this); //$NON-NLS-1$
 			    return pipeline;
 			}			

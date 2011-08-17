@@ -1,40 +1,42 @@
 integer      string                                                             integer       short   char     integer      integer      integer      integer    
 oid          typname                                                            typnamespace  typlen  typtype  typbasetype  typtypmod    typrelid     typelem    
 16           boolean                                                            3             1       b        0            -1           0            0          
-20           long                                                               3             8       b        0            -1           0            0          
-21           short                                                              3             2       b        0            -1           0            0          
-23           integer                                                            3             4       b        0            -1           0            0          
+1043         string                                                             3             -1      b        0            -1           0            0          
 25           text                                                               3             -1      b        0            -1           0            0          
+1042         char                                                               3             1       b        0            -1           0            0          
+21           short                                                              3             2       b        0            -1           0            0          
+20           long                                                               3             8       b        0            -1           0            0          
+23           integer                                                            3             4       b        0            -1           0            0          
 26           oid                                                                3             4       b        0            -1           0            0          
-30           oidvector                                                          3             -1      b        0            -1           0            26         
-142          xml                                                                3             -1      b        0            -1           0            0          
 700          float                                                              3             4       b        0            -1           0            0          
 701          double                                                             3             8       b        0            -1           0            0          
+705          unknown                                                            3             -2      b        0            -1           0            0          
+1082         date                                                               3             4       b        0            -1           0            0          
+1083         datetime                                                           3             8       b        0            -1           0            0          
+1114         timestamp                                                          3             8       b        0            -1           0            0          
+1700         decimal                                                            3             -1      b        0            -1           0            0          
+142          xml                                                                3             -1      b        0            -1           0            0          
+14939        lo                                                                 3             -1      b        0            -1           0            0          
+2278         void                                                               3             4       p        0            -1           0            0          
+2249         record                                                             3             -1      p        0            -1           0            0          
+30           oidvector                                                          3             -1      b        0            -1           0            26         
 1000         _bool                                                              3             -1      b        0            -1           0            16         
 1002         _char                                                              3             -1      b        0            -1           0            18         
 1005         _int2                                                              3             -1      b        0            -1           0            21         
 1007         _int4                                                              3             -1      b        0            -1           0            23         
 1009         _text                                                              3             -1      b        0            -1           0            25         
+1028         _oid                                                               3             -1      b        0            -1           0            26         
 1014         _bpchar                                                            3             -1      b        0            -1           0            1042       
 1015         _varchar                                                           3             -1      b        0            -1           0            1043       
 1016         _int8                                                              3             -1      b        0            -1           0            20         
 1021         _float4                                                            3             -1      b        0            -1           0            700        
 1022         _float8                                                            3             -1      b        0            -1           0            701        
-1028         _oid                                                               3             -1      b        0            -1           0            26         
-1042         char                                                               3             1       b        0            -1           0            0          
-1043         string                                                             3             -1      b        0            -1           0            0          
-1082         date                                                               3             4       b        0            -1           0            0          
-1083         datetime                                                           3             8       b        0            -1           0            0          
-1114         timestamp                                                          3             8       b        0            -1           0            0          
 1115         _timestamp                                                         3             -1      b        0            -1           0            1114       
 1182         _date                                                              3             -1      b        0            -1           0            1082       
 1183         _time                                                              3             -1      b        0            -1           0            1083       
-1700         decimal                                                            3             -1      b        0            -1           0            0          
-2249         record                                                             3             -1      p        0            -1           0            0          
-2278         void                                                               3             4       p        0            -1           0            0          
 2287         _record                                                            3             -1      b        0            -1           0            2249       
-14939        lo                                                                 3             -1      b        0            -1           0            0          
-Row Count : 34
+2283         anyelement                                                         3             4       p        0            -1           0            0          
+Row Count : 36
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 oid            4              PartsSupplier   java.lang.Integer   oid             integer            pg_catalog     pg_type       11                    10            0         false            false            false       false                 2           true        true          false     false       
 typname        12             PartsSupplier   java.lang.String    typname         string             pg_catalog     pg_type       4000                  4000          0         false            false            false       false                 2           true        true          false     false       

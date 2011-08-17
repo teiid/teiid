@@ -466,7 +466,9 @@ public class RulePlanJoins implements OptimizerRule {
                 }
                 JoinType jt = (JoinType)root.getProperty(NodeConstants.Info.JOIN_TYPE);
                 
-                boolean treatJoinAsSource = jt.isOuter() || root.getProperty(NodeConstants.Info.ACCESS_PATTERNS) != null || root.hasProperty(NodeConstants.Info.MAKE_DEP) || root.hasProperty(NodeConstants.Info.MAKE_IND);
+                boolean treatJoinAsSource = jt.isOuter() || root.getProperty(NodeConstants.Info.ACCESS_PATTERNS) != null 
+                || root.hasProperty(NodeConstants.Info.MAKE_DEP) || root.hasProperty(NodeConstants.Info.MAKE_IND)
+                || !root.getExportedCorrelatedReferences().isEmpty();
                 
                 if (treatJoinAsSource) {
                     currentRegion.addJoinSourceNode(root);

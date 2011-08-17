@@ -203,21 +203,21 @@
                 Description = PostgreSQL Data Source
                 Servername = <Teiid Host name or ip>
                 Port = 35432 
-                Protocol = 7.4
+                Protocol = 7.4-1
                 UserName = <user-name> 
                 Password = <password>
                 Database = <vdb-name>
                 ReadOnly = no
                 ServerType = Postgres
                 ConnSettings = 
-                UseServerSidePrepare=0
+                UseServerSidePrepare=1
                 ByteaAsLongVarBinary=1
                 Optimizer=0
                 Ksqo=0
-                Trace = No
-                TraceFile = /var/log/trace.log
-                Debug = No
-                DebugFile = /var/log/debug.log                
+                Debug=0
+                Fetch = 10000
+                # enable below when dealing large resultsets
+                #UseDeclareFetch=1                
             ]]></programlisting>     
             
             <para>Note that you need "sudo" permissions to edit the "/etc/odbc.ini" file. 

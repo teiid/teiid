@@ -302,9 +302,12 @@ public class VDBRepository implements Serializable{
 		if (target == null) {
 			throw new AdminProcessingException(RuntimePlugin.Util.getString("vdb_not_found", sourceVDBName, sourceVDBVersion)); //$NON-NLS-1$
 		}		
-		
+
+		notifyRemove(targetVDBName, targetVDBVersion);
 		// merge them
 		target.addChild(source);
+		
+		notifyAdd(targetVDBName, targetVDBVersion);
 	}
 	
 	// this is called by mc
