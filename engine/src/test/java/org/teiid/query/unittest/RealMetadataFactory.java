@@ -1742,6 +1742,7 @@ public class RealMetadataFactory {
     public static Procedure createStoredProcedure(String name, Schema model, List<ProcedureParameter> params) {
     	Procedure proc = new Procedure();
     	proc.setName(name);
+    	proc.setNameInSource(name);
     	if (params != null) {
     		int index = 1;
 	    	for (ProcedureParameter procedureParameter : params) {
