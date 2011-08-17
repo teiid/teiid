@@ -278,6 +278,21 @@ public class TestTextTable {
         helpProcess(plan, createCommandContext(), dataManager, expected);
     } 
 	
+	@Test public void testTextTableJoin1() throws Exception {
+		String sql = "select e1, e2 from texttable('a' COLUMNS col string) x, pm1.g1 where col = e1";
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("a", 0),
+        		Arrays.asList("a", 3),
+        		Arrays.asList("a", 0),
+        };    
+
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        RelationalPlan plan = (RelationalPlan)helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
+        helpProcess(plan, createCommandContext(), dataManager, expected);
+    } 
+	
 	public static void process(String sql, List[] expectedResults) throws Exception {    
     	FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
