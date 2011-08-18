@@ -606,6 +606,12 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	}
 	
 	private void sendRowDescription(List<PgColInfo> cols) {
+		if (cols == null) {
+			//send NoData
+			startMessage('n');
+			sendMessage();
+			return;
+		}
 		startMessage('T');
 		writeShort(cols.size());
 		for (PgColInfo info : cols) {

@@ -313,15 +313,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     			try {
     				ResultsFuture<Integer> result = new ResultsFuture<Integer>();
 	                if (future.get()) {
-	                	if (stmt.getResultSet() != null) {
-	                		List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
-                            client.sendResults(sql, stmt.getResultSet(), cols, result, true);
-	                	}
-	                	else {
-	                		// handles the "SET" commands.
-		                	client.sendUpdateCount(sql, 0);
-		                	result.getResultsReceiver().receiveResults(1);
-	                	}					                	
+                		List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
+                        client.sendResults(sql, stmt.getResultSet(), cols, result, true);
 	                } else {
 	                	client.sendUpdateCount(sql, stmt.getUpdateCount());
 	                	setEncoding();
@@ -930,6 +923,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     
 	private List<PgColInfo> getPgColInfo(ResultSetMetaData meta)
 			throws SQLException {
+		if (meta == null) {
+			return null;
+		}
 		int columns = meta.getColumnCount();
 		final ArrayList<PgColInfo> result = new ArrayList<PgColInfo>(columns);
 		for (int i = 1; i < columns + 1; i++) {

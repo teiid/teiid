@@ -188,7 +188,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			i++;
 			rs.getString(1);
 		}
-		assertEquals(7827, i);
+		assertEquals(7812, i);
 	}
 	
 	@Test public void testBlob() throws Exception {
@@ -294,6 +294,14 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		Statement stmt = conn.createStatement();
 		ResultSet rs = stmt.executeQuery("select has_function_privilege(100, 'foo')");
 		rs.next();
+	}
+	
+	@Test public void testPreparedUpdate() throws Exception {
+		Statement stmt = conn.createStatement();
+		assertFalse(stmt.execute("create local temporary table x (y string)"));
+		PreparedStatement ps = conn.prepareStatement("delete from x");
+		assertFalse(ps.execute());
+		assertNull(ps.getMetaData());
 	}
 	
 	@Test public void testSelectSsl() throws Exception {

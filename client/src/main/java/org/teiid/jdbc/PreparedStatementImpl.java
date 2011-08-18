@@ -236,14 +236,6 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
     	return message;
     }
 
-    /**
-     * <p>Retreives a ResultSetMetaData object with information about the numbers,
-     * types, and properties of columns in the ResultSet object that will be returned
-     * when this preparedstatement object is executed.
-     * @return ResultSetMetaData object
-     * @throws SQLException, currently there is no means of getting results
-     * metadata before getting results.
-     */
     public ResultSetMetaData getMetaData() throws SQLException {
 
         // check if the statement is open
