@@ -191,8 +191,8 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
         throw new TeiidSQLException(msg);
     }
     
-    public ResultsFuture<Boolean> submitExecute() throws SQLException {
-        return executeSql(new String[] {this.prepareSql}, false, ResultsMode.EITHER, false);
+    public ResultsFuture<Boolean> submitExecute(ResultsMode mode) throws SQLException {
+        return executeSql(new String[] {this.prepareSql}, false, mode, false);
     }
 
 	@Override

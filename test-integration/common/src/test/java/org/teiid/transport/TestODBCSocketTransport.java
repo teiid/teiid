@@ -128,7 +128,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			config.setBindAddress(addr.getHostName());
 			config.setPortNumber(0);
 			odbcTransport = new ODBCSocketListener(config, BufferManagerFactory.getStandaloneBufferManager(), 0, 100000);
-			odbcTransport.setMaxBufferSize(100); //set to a small size to ensure buffering over the limit works
+			odbcTransport.setMaxBufferSize(1000); //set to a small size to ensure buffering over the limit works
 			FakeServer server = new FakeServer();
 			server.setUseCallingThread(false);
 			server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
@@ -179,6 +179,18 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		TestMMDatabaseMetaData.compareResultSet(s.getResultSet());
 	}
 	
+	@Test public void testMultibatchSelect() throws Exception {
+		Statement s = conn.createStatement();
+		assertTrue(s.execute("select * from tables, columns"));
+		ResultSet rs = s.getResultSet();
+		int i = 0;
+		while (rs.next()) {
+			i++;
+			rs.getString(1);
+		}
+		assertEquals(7827, i);
+	}
+	
 	@Test public void testBlob() throws Exception {
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select to_bytes('abc', 'UTF-16')"));
@@ -196,6 +208,16 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		//getting as a clob is unsupported, since it uses the lo logic
 		String clob = rs.getString(1);
 		assertEquals("abc", clob);
+	}
+	
+	@Test public void testLargeClob() throws Exception {
+		Statement s = conn.createStatement();
+		assertTrue(s.execute("select cast(repeat('_', 3000) as clob)"));
+		ResultSet rs = s.getResultSet();
+		assertTrue(rs.next());
+		//getting as a clob is unsupported, since it uses the lo logic
+		String clob = rs.getString(1);
+		assertEquals(3000, clob.length());
 	}
 
 	@Test public void testTransactionCycle() throws Exception {

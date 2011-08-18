@@ -245,6 +245,7 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
     		public void onCompletion(ResultsFuture<ResultsMessage> future) {
     			try {
 					batchResults.setBatch(processBatch(future.get()));
+					result.getResultsReceiver().receiveResults(batchResults.hasNext());
 				} catch (Throwable t) {
 					result.getResultsReceiver().exceptionOccurred(t);
 				}

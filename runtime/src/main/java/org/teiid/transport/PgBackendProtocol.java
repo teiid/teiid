@@ -97,6 +97,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		private int rows2Send;
 		private int rowsSent = 0;
 		private int rowsInBuffer = 0;
+		String sql;
 
 		private ResultsWorkItem(List<PgColInfo> cols, ResultSetImpl rs, ResultsFuture<Integer> result, int rows2Send) {
 			this.cols = cols;
@@ -150,6 +151,9 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
     				}
     			} else {
     				sendContents();
+    				if (sql != null) {
+		    			sendCommandComplete(sql, 0);
+		    		}
     				result.getResultsReceiver().receiveResults(rowsSent);
     				processNext = false;
     			}
@@ -355,8 +359,8 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
     		sendRowDescription(cols);
     	}
     	ResultsWorkItem r = new ResultsWorkItem(cols, rs, result, -1);
+    	r.sql = sql;
     	r.run();    
-    	sendCommandComplete(sql, 0);
 	}
 
 	@Override
@@ -785,6 +789,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	private void sendContents() {
 		ChannelBuffer cb = this.dataOut;
 		this.dataOut = null;
+		this.writer = null;
 		Channels.write(this.ctx, this.message.getFuture(), cb, this.message.getRemoteAddress());
 	}
 
