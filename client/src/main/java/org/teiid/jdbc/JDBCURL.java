@@ -57,7 +57,9 @@ public class JDBCURL {
             ExecutionProperties.PROP_FETCH_SIZE,
             ExecutionProperties.PROP_XML_FORMAT,
             ExecutionProperties.PROP_XML_VALIDATION,
-            ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS)));
+            EmbeddedProfile.USE_CALLING_THREAD,
+            ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS,
+            ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS)));
     
     public static final Set<String> KNOWN_PROPERTIES = getKnownProperties();
     
@@ -71,7 +73,10 @@ public class JDBCURL {
     	        BaseDataSource.PASSWORD,
     	        TeiidURL.CONNECTION.AUTO_FAILOVER,
     	        TeiidURL.CONNECTION.DISCOVERY_STRATEGY,
-    	        TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION));
+    	        TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION,
+    	        TeiidURL.CONNECTION.AUTHENTICATION_TYPE,
+    	        TeiidURL.CONNECTION.JAAS_NAME,
+    	        TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME));
     	props.addAll(EXECUTION_PROPERTIES);
     	return Collections.unmodifiableSet(props);
     }

@@ -91,7 +91,7 @@ public class TestLocalBufferService {
         svc.start();
         
         BufferManager mgr = svc.getBufferManager();
-        assertEquals(16261, mgr.getSchemaSize(schema));
+        assertEquals(13141, mgr.getSchemaSize(schema));
     }
     
 }

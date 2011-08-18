@@ -24,6 +24,7 @@ package org.teiid.query.processor.relational;
 
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.client.plan.PlanNode;
@@ -112,7 +113,10 @@ public class SortNode extends RelationalNode {
 		try {
 			while ((tuple = this.outputTs.nextTuple()) != null) {
 				//resize to remove unrelated columns
-				addBatchRow(tuple.subList(0, this.getElements().size()));
+				if (this.getElements().size() < tuple.size()) {
+					tuple = new ArrayList<Object>(tuple.subList(0, this.getElements().size()));
+				}
+				addBatchRow(tuple);
 				if (this.isBatchFull()) {
 					return pullBatch();
 				}

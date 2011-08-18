@@ -43,6 +43,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.resolver.util.AccessPattern;
 import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Criteria;
@@ -51,6 +52,7 @@ import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
@@ -113,7 +115,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 	            
                 boolean moved = false;
                 
-                if((critNode.getGroups().isEmpty() && critNode.getSubqueryContainers().isEmpty()) || !atBoundary(critNode, sourceNode)) {
+                if(critNode.hasBooleanProperty(Info.IS_PUSHED) || (critNode.getGroups().isEmpty() && critNode.getSubqueryContainers().isEmpty()) || !atBoundary(critNode, sourceNode)) {
                     deadNodes.add(critNode);
                     continue;
                 }
@@ -131,6 +133,16 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                             moved = handleJoinCriteria(sourceNode, critNode, metadata);
                             break;
         				}
+                    }
+                    case NodeConstants.Types.GROUP:
+                    {
+                    	if (!critNode.hasBooleanProperty(NodeConstants.Info.IS_HAVING)) {
+                        	SymbolMap symbolMap = (SymbolMap) sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
+                        	FrameUtil.convertNode(critNode, null, null, symbolMap.asMap(), metadata, true);
+                        	NodeEditor.removeChildNode(critNode.getParent(), critNode);
+                            sourceNode.getFirstChild().addAsParent(critNode);
+                        	moved = true;
+                    	}
                     }
                 }
                 
@@ -332,8 +344,6 @@ public final class RulePushSelectCriteria implements OptimizerRule {
             
                 satisfyAccessPatterns(critNode, currentNode);
             } else if (FrameUtil.isOrderedLimit(currentNode)) {
-                return currentNode;
-            } else if (currentNode.getType() == NodeConstants.Types.GROUP && critNode.hasBooleanProperty(NodeConstants.Info.IS_HAVING)) {
                 return currentNode;
             }
 		}
@@ -552,17 +562,21 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         if(projectNode.getChildCount() == 0) {
             return false;
         }
+        List<WindowFunction> windowFunctions = null;
+        if (projectNode.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
+        	windowFunctions = new LinkedList<WindowFunction>();
+        }
 
         Criteria crit = (Criteria) critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
 
-        Boolean conversionResult = checkConversion(symbolMap, ElementCollectorVisitor.getElements(crit, true));
+        Boolean conversionResult = checkConversion(symbolMap, ElementCollectorVisitor.getElements(crit, true), windowFunctions);
         
         if (conversionResult == Boolean.FALSE) {
         	return false; //not convertable
         }
         
         if (!critNode.getSubqueryContainers().isEmpty() 
-        		&& checkConversion(symbolMap, critNode.getCorrelatedReferenceElements()) != null) {
+        		&& checkConversion(symbolMap, critNode.getCorrelatedReferenceElements(), windowFunctions) != null) {
     		return false; //not convertable, or has an aggregate for a correlated reference
         }
         
@@ -583,7 +597,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
     }
 
 	private Boolean checkConversion(SymbolMap symbolMap,
-			Collection<ElementSymbol> elements) {
+			Collection<ElementSymbol> elements, List<WindowFunction> windowFunctions) {
 		Boolean result = null;
         
         for (ElementSymbol element : elements) {
@@ -598,8 +612,15 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                 return false;
             }
             
-            if (!AggregateSymbolCollectorVisitor.getAggregates(converted, false).isEmpty()) {
+            if (!ElementCollectorVisitor.getAggregates(converted, false).isEmpty()) {
                 result = Boolean.TRUE;
+            }
+            
+            if (windowFunctions != null) {
+            	AggregateSymbolCollectorVisitor.getAggregates(converted, null, null, null, windowFunctions, null);
+            	if (!windowFunctions.isEmpty()) {
+            		return false;
+            	}
             }
         }
 		return result;

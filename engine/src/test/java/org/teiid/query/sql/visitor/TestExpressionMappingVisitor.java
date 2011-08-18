@@ -45,7 +45,6 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.TestCaseExpression;
 import org.teiid.query.sql.symbol.TestSearchedCaseExpression;
-import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.translator.SourceSystemFunctions;
 
 
@@ -196,13 +195,13 @@ public class TestExpressionMappingVisitor {
      * a function.
      */
     @Test public void testRecursionDetection() {
-    	ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
+    	ElementSymbol e1 = new ElementSymbol("g1.e1"); //$NON-NLS-1$
     	AggregateSymbol a1 = new AggregateSymbol("x", NonReserved.SUM, false, e1); //$NON-NLS-1$
     	Function f = new Function(SourceSystemFunctions.ADD_OP, new Expression[] {a1, a1});
     	HashMap<AggregateSymbol, AggregateSymbol> map = new HashMap<AggregateSymbol, AggregateSymbol>();
     	map.put(a1, new AggregateSymbol("x", NonReserved.SUM, false, a1)); //$NON-NLS-1$
     	ExpressionMappingVisitor.mapExpressions(f, map);
-        assertEquals("(SUM(SUM(e1)) + SUM(SUM(e1)))", f.toString()); //$NON-NLS-1$
+        assertEquals("(SUM(SUM(g1.e1)) + SUM(SUM(g1.e1)))", f.toString()); //$NON-NLS-1$
     }
     
 }

@@ -33,8 +33,10 @@ import org.teiid.language.AggregateFunction;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
+import org.teiid.language.Like;
 import org.teiid.language.Limit;
 import org.teiid.language.Literal;
+import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
@@ -230,6 +232,11 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
             		agg.setName("bool_or"); //$NON-NLS-1$
             	}
             }
+    	} else if (obj instanceof Like) {
+    		Like like = (Like)obj;
+    		if (like.getMode() == MatchMode.REGEX) {
+    			return Arrays.asList(like.getLeftExpression(), like.isNegated()?" !~ ":" ~ ", like.getRightExpression()); //$NON-NLS-1$ //$NON-NLS-2$
+    		}
     	}
     	return super.translate(obj, context);
     }
@@ -302,6 +309,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("RPAD"); //$NON-NLS-1$
         supportedFunctions.add("RTRIM"); //$NON-NLS-1$
         supportedFunctions.add("SUBSTRING"); //$NON-NLS-1$
+        supportedFunctions.add(SourceSystemFunctions.TRIM);
         supportedFunctions.add("UCASE"); //$NON-NLS-1$
         supportedFunctions.add("UPPER"); //$NON-NLS-1$
         
@@ -485,6 +493,26 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsCommonTableExpressions() {
     	return getDatabaseVersion().compareTo(EIGHT_4) >= 0;
+    }
+    
+    @Override
+    public boolean supportsArrayAgg() {
+    	return getDatabaseVersion().compareTo(EIGHT_4) >= 0;
+    }
+    
+    @Override
+    public boolean supportsElementaryOlapOperations() {
+    	return getDatabaseVersion().compareTo(EIGHT_4) >= 0;
+    }
+    
+    @Override
+    public boolean supportsSimilarTo() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsLikeRegex() {
+    	return true;
     }
     
 }

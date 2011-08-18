@@ -79,7 +79,7 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
     }
 
 	public Table getGroup(Object groupId) throws QueryMetadataException, TeiidComponentException {
-		if (!metadata.isVirtualGroup(groupId) && groupId instanceof Table) {
+		if (groupId instanceof Table && !metadata.isVirtualGroup(groupId)) {
 			return (Table)groupId;
 		}
 		return null;

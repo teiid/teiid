@@ -32,7 +32,7 @@ import org.teiid.query.eval.Evaluator;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 import junit.framework.TestCase;
 
@@ -90,7 +90,7 @@ public class TestResolvedFunctions extends TestCase {
                                               BlockedException,
                                               TeiidComponentException, QueryResolverException {
         Expression expr = QueryParser.getQueryParser().parseExpression(sql);
-        ResolverVisitor.resolveLanguageObject(expr, FakeMetadataFactory.example1Cached());
+        ResolverVisitor.resolveLanguageObject(expr, RealMetadataFactory.example1Cached());
         return Evaluator.evaluate(expr);
     }
     

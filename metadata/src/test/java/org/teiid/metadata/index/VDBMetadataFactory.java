@@ -24,20 +24,22 @@ package org.teiid.metadata.index;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.concurrent.Executors;
 
 import javax.xml.bind.JAXBException;
 
+import org.jboss.vfs.TempFileProvider;
+import org.jboss.vfs.VFS;
+import org.jboss.vfs.VirtualFile;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.LRUCache;
-import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.function.FunctionTree;
@@ -56,7 +58,8 @@ public class VDBMetadataFactory {
 	
 	public static TransformationMetadata getVDBMetadata(String vdbFile) {
 		try {
-			return getVDBMetadata(new File(vdbFile).toURI().toURL(), null);
+			File f = new File(vdbFile);
+			return getVDBMetadata(f.getName(), f.toURI().toURL(), null);
 		} catch (IOException e) {
 			throw new TeiidRuntimeException(e);
 		}
@@ -65,7 +68,7 @@ public class VDBMetadataFactory {
 	public static MetadataStore getSystem() {
 		try {
 			if (system == null) {
-				system = loadMetadata(Thread.currentThread().getContextClassLoader().getResource(CoreConstants.SYSTEM_VDB)).getMetadataStore(null);
+				system = loadMetadata( CoreConstants.SYSTEM_VDB, Thread.currentThread().getContextClassLoader().getResource(CoreConstants.SYSTEM_VDB)).getMetadataStore(null);
 			}
 			return system;
 		} catch (Exception e) {
@@ -73,14 +76,14 @@ public class VDBMetadataFactory {
 		}
     }
 	
-	public static TransformationMetadata getVDBMetadata(URL vdbURL, URL udfFile) throws IOException {
+	public static TransformationMetadata getVDBMetadata(String vdbName, URL vdbURL, URL udfFile) throws IOException {
 		TransformationMetadata vdbmetadata = VDB_CACHE.get(vdbURL);
 		if (vdbmetadata != null) {
 			return vdbmetadata;
 		}
 
 		try {
-			IndexMetadataFactory imf = loadMetadata(vdbURL);
+			IndexMetadataFactory imf = loadMetadata(vdbName, vdbURL);
 			
 			Collection <FunctionMethod> methods = null;
 			Collection<FunctionTree> trees = null;
@@ -100,17 +103,14 @@ public class VDBMetadataFactory {
 		}
     }
 
-	public static IndexMetadataFactory loadMetadata(URL vdbURL)
-			throws IOException, MalformedURLException, URISyntaxException {
-		//vfs has a problem with vdbs embedded in jars in the classpath, so we'll create a temp version
-		if (vdbURL.getProtocol().equals("jar")) {
-			InputStream is = vdbURL.openStream();
-			File temp = File.createTempFile("temp", ".vdb", new File(UnitTestUtil.getTestScratchPath()));
-			temp.deleteOnExit();
-			FileUtils.write(is, temp);
-			vdbURL = temp.toURI().toURL();
-		}
-		return new IndexMetadataFactory(vdbURL);
+	public static IndexMetadataFactory loadMetadata(String vdbName, URL url) throws IOException, MalformedURLException, URISyntaxException {
+    	VirtualFile root = VFS.getChild(vdbName);
+    	if (!root.exists()) {
+    		VFS.mountZip(url.openStream(), vdbName, root, TempFileProvider.create("vdbs", Executors.newScheduledThreadPool(2)));
+    		// once done this mount should be closed, since this class is only used testing
+    		// it is hard to event when the test is done, otherwise we need to elevate the VFS to top
+    	}
+    	return new IndexMetadataFactory(root);
 	}
 
 }

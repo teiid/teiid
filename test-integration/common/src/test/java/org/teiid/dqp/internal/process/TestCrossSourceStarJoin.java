@@ -44,7 +44,7 @@ import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
 @SuppressWarnings("nls")
 public class TestCrossSourceStarJoin {
 	
-    @Test public void testCrossSourceStartJoin() throws Exception {
+    @Test public void testCrossSourceStarJoin() throws Exception {
         String sql = "select p.Description, sum(AMOUNT) from s3 p, s2 c, s1 b, o1 f " +
         		"where p.PRODUCTID = f.PRODUCT and c.CurrencyCode = f.CURRENCY and b.BOOKID = f.BOOK and b.Name = 'xyz' and c.Name = 'abc' Group by p.Description";
         
@@ -106,7 +106,7 @@ public class TestCrossSourceStarJoin {
         		"SELECT g_0.CurrencyCode AS c_0 FROM sybase.s2 AS g_0 WHERE g_0.Name = 'abc' ORDER BY c_0", 
         		"SELECT g_0.BOOKID AS c_0 FROM sybase.s1 AS g_0 WHERE g_0.Name = 'xyz' ORDER BY c_0", 
         		"SELECT g_0.PRODUCTID AS c_0, g_0.Description AS c_1 FROM sybase.s3 AS g_0 ORDER BY c_0", 
-        		"SELECT g_0.BOOK AS c_0, g_0.CURRENCY AS c_1, g_0.PRODUCT AS c_2, SUM(g_0.AMOUNT) AS c_3 FROM oracle.o1 AS g_0 WHERE (g_0.BOOK IN (<dependent values>)) AND (g_0.CURRENCY IN (<dependent values>)) AND (g_0.PRODUCT IN (<dependent values>)) GROUP BY g_0.BOOK, g_0.CURRENCY, g_0.PRODUCT ORDER BY c_0 NULLS FIRST"
+        		"SELECT g_0.BOOK, g_0.CURRENCY, g_0.PRODUCT, SUM(g_0.AMOUNT) FROM oracle.o1 AS g_0 WHERE (g_0.BOOK IN (<dependent values>)) AND (g_0.CURRENCY IN (<dependent values>)) AND (g_0.PRODUCT IN (<dependent values>)) GROUP BY g_0.BOOK, g_0.CURRENCY, g_0.PRODUCT"
         }, finder, ComparisonMode.EXACT_COMMAND_STRING);
         
         //test that aggregate will not be staged
@@ -115,7 +115,7 @@ public class TestCrossSourceStarJoin {
         		"SELECT g_0.CurrencyCode AS c_0 FROM sybase.s2 AS g_0 WHERE g_0.Name = 'abc' ORDER BY c_0", 
         		"SELECT g_0.BOOKID AS c_0 FROM sybase.s1 AS g_0 WHERE g_0.Name = 'xyz' ORDER BY c_0", 
         		"SELECT g_0.PRODUCTID AS c_0, g_0.Description AS c_1 FROM sybase.s3 AS g_0 ORDER BY c_0", 
-        		"SELECT g_0.BOOK AS c_0, g_0.CURRENCY AS c_1, g_0.PRODUCT AS c_2, g_0.AMOUNT AS c_3 FROM oracle.o1 AS g_0 WHERE (g_0.BOOK IN (<dependent values>)) AND (g_0.CURRENCY IN (<dependent values>)) AND (g_0.PRODUCT IN (<dependent values>)) ORDER BY c_0 NULLS FIRST"
+        		"SELECT g_0.BOOK, g_0.CURRENCY, g_0.PRODUCT, g_0.AMOUNT FROM oracle.o1 AS g_0 WHERE (g_0.BOOK IN (<dependent values>)) AND (g_0.CURRENCY IN (<dependent values>)) AND (g_0.PRODUCT IN (<dependent values>))"
         }, finder, ComparisonMode.EXACT_COMMAND_STRING);
     } 
 

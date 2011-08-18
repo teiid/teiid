@@ -41,9 +41,13 @@ import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.RequestMessage.StatementType;
+import org.teiid.client.lob.LobChunk;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.BlobType;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.internal.process.AbstractWorkItem.ThreadState;
@@ -52,19 +56,52 @@ import org.teiid.dqp.service.BufferService;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
-import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
 public class TestDQPCore {
 
-    private DQPCore core;
+    private final class LobThread extends Thread {
+		BlobType bt;
+		private final RequestMessage reqMsg;
+		volatile ResultsFuture<LobChunk> chunkFuture;
+		protected DQPWorkContext workContext;
+
+		private LobThread(RequestMessage reqMsg) {
+			this.reqMsg = reqMsg;
+		}
+		
+		@Override
+		public void run() {
+			synchronized (this) {
+				while (workContext == null) {
+					try {
+						this.wait();
+					} catch (InterruptedException e) {
+					}
+				}
+			}
+			workContext.runInContext(new Runnable() {
+				
+				@Override
+				public void run() {
+					try {
+						chunkFuture = core.requestNextLobChunk(1, reqMsg.getExecutionId(), bt.getReferenceStreamId());
+					} catch (TeiidProcessingException e) {
+						e.printStackTrace();
+					}
+				}
+			});
+		}
+	}
+
+	private DQPCore core;
     private DQPConfiguration config;
     private AutoGenDataService agds;
 
     @Before public void setUp() throws Exception {
     	agds = new AutoGenDataService();
-        DQPWorkContext context = FakeMetadataFactory.buildWorkContext(RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.exampleBQTCached().getMetadataStore(), "bqt"));
+        DQPWorkContext context = RealMetadataFactory.buildWorkContext(RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.exampleBQTCached().getMetadataStore(), "bqt"));
         context.getVDB().getModel("BQT3").setVisible(false); //$NON-NLS-1$
         context.getVDB().getModel("VQT").setVisible(false); //$NON-NLS-1$
 
@@ -326,6 +363,27 @@ public class TestDQPCore {
     	assertEquals(1, agds.getExecuteCount().get());
     }
     
+    @Test public void testUsingFinalBuffer() throws Exception {
+    	String sql = "select intkey from bqt1.smalla union select 1";
+    	((BufferManagerImpl)core.getBufferManager()).setProcessorBatchSize(2);
+    	agds.sleep = 500;
+        RequestMessage reqMsg = exampleRequestMessage(sql);
+        Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
+        ResultsMessage rm = message.get(500000, TimeUnit.MILLISECONDS);
+        assertNull(rm.getException());
+        assertEquals(1, rm.getResults().length);
+
+        message = core.processCursorRequest(reqMsg.getExecutionId(), 3, 2);
+        rm = message.get(500000, TimeUnit.MILLISECONDS);
+        assertNull(rm.getException());
+        assertEquals(1, rm.getResults().length);
+        
+        message = core.processCursorRequest(reqMsg.getExecutionId(), 3, 2);
+        rm = message.get(500000, TimeUnit.MILLISECONDS);
+        assertNull(rm.getException());
+        assertEquals(0, rm.getResults().length);
+    }
+    
     @Test public void testPreparedPlanInvalidation() throws Exception {
         String sql = "insert into #temp select * FROM vqt.SmallB"; //$NON-NLS-1$
         String userName = "1"; //$NON-NLS-1$
@@ -410,6 +468,34 @@ public class TestDQPCore {
         assertEquals(10, rm.getResults().length); //$NON-NLS-1$
         
         assertEquals(1, this.core.getRsCache().getCacheHitCount());
+    }
+    
+    @Test public void testLobConcurrency() throws Exception {
+    	RequestMessage reqMsg = exampleRequestMessage("select to_bytes(stringkey, 'utf-8') FROM BQT1.SmallA"); 
+        reqMsg.setTxnAutoWrapMode(RequestMessage.TXN_WRAP_OFF);
+        agds.setSleep(100);
+        ResultsFuture<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
+        final LobThread t = new LobThread(reqMsg);
+        t.start();
+        message.addCompletionListener(new ResultsFuture.CompletionListener<ResultsMessage>() {
+        	@Override
+        	public void onCompletion(ResultsFuture<ResultsMessage> future) {
+        		try {
+        			final BlobType bt = (BlobType)future.get().getResults()[0].get(0);
+        			t.bt = bt;
+        			t.workContext = DQPWorkContext.getWorkContext();
+        			synchronized (t) {
+            			t.notify();
+					}
+        			Thread.sleep(100); //give the Thread a chance to run
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+        	}
+		});
+        message.get();
+        t.join();
+        assertNotNull(t.chunkFuture.get().getBytes());
     }
     
 	public void helpTestVisibilityFails(String sql) throws Exception {

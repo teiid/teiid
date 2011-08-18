@@ -59,7 +59,7 @@
     </management>
 
     <profile>
-        <subsystem xmlns="urn:jboss:domain:logging:1.0">
+        <subsystem xmlns="urn:jboss:domain:logging:1.1">
             <console-handler name="CONSOLE">
                 <level name="INFO"/>
                 <formatter>
@@ -104,9 +104,6 @@
                         <user-name>sa</user-name>
                         <password>sa</password>
                     </security>
-                    <validation></validation>
-                    <timeout></timeout>
-                    <statement></statement>
                 </datasource>
                 <drivers>
                     <driver name="h2" module="com.h2database.h2">
@@ -119,7 +116,23 @@
             <deployment-scanner scan-interval="5000" relative-to="jboss.server.base.dir" path="deployments" />
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:ee:1.0" />
-        <subsystem xmlns="urn:jboss:domain:ejb3:1.0" />
+        <subsystem xmlns="urn:jboss:domain:ejb3:1.1" lite="true">
+            <!-- EJB3 pools -->
+            <pools>
+                <bean-instance-pools>
+                    <strict-max-pool name="slsb-strict-max-pool" max-pool-size="20" instance-acquisition-timeout="5"
+                                     instance-acquisition-timeout-unit="MINUTES"/>
+                </bean-instance-pools>
+            </pools>
+
+            <!-- Session bean configurations -->
+            <session-bean>
+                <stateless>
+                    <bean-instance-pool-ref pool-name="slsb-strict-max-pool"/>
+                </stateless>
+            </session-bean>
+
+        </subsystem>
         <subsystem xmlns="urn:jboss:domain:infinispan:1.0" default-cache-container="hibernate">
             <cache-container name="hibernate" default-cache="local-query">
                 <local-cache name="entity">
@@ -141,7 +154,7 @@
             <bean-validation enabled="false" />
             <default-workmanager>
                 <short-running-threads blocking="true">
-                <core-threads count="10" per-cpu="20"/>
+                        <core-threads count="10" per-cpu="20"/>
                         <queue-length count="10" per-cpu="20"/>
                         <max-threads count="10" per-cpu="20"/>
                         <keepalive-time time="10" unit="seconds"/>
@@ -230,7 +243,7 @@
             <security-domains>
                 <security-domain name="other" cache-type="default">
                     <authentication>
-                        <login-module code="UsersRoles" flag="required"/>
+                        <login-module code="Disabled" flag="required"/>
                     </authentication>
                 </security-domain>
                 <security-domain name="teiid-security" cache-type="default">
@@ -270,10 +283,11 @@
             </core-environment>
             <coordinator-environment default-timeout="300"/>
         </subsystem>
-        <subsystem xmlns="urn:jboss:domain:web:1.0">
+        <subsystem xmlns="urn:jboss:domain:web:1.0" default-virtual-server="default-host">
             <connector name="http" scheme="http" protocol="HTTP/1.1" socket-binding="http"/>
-            <virtual-server name="localhost" enable-welcome-root="true">
-                <alias name="example.com" />
+            <virtual-server name="default-host" enable-welcome-root="true">
+               <alias name="localhost" />
+               <alias name="example.com" />
             </virtual-server>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:weld:1.0" />

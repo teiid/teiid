@@ -107,6 +107,12 @@ public class TestSocketServerConnection {
 				throws TeiidComponentException, CommunicationException {
 			return ping();
 		}
+
+		@Override
+		public LogonResult neogitiateGssLogin(Properties connectionProperties,
+				byte[] serviceToken, boolean createSession) throws LogonException {
+			return null;
+		}
 	}
 
 	/**

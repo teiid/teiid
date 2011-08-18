@@ -1,5 +1,7 @@
 package org.teiid.jdbc;
 
+import java.sql.SQLException;
+
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 
@@ -66,7 +68,7 @@ public class TestVDBMerge extends AbstractMMQueryTestCase {
        executeTest("select * from tables where schemaname ='PartsSupplier'", expected); //$NON-NLS-1$
     }
 	
-    private void executeTest(String sql, String[] expected){
+    private void executeTest(String sql, String[] expected) throws SQLException{
     	execute(sql);
     	if (expected != null) {
     		assertResults(expected);

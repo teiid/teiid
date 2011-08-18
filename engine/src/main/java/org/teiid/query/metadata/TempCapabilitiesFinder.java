@@ -52,6 +52,8 @@ public class TempCapabilitiesFinder implements CapabilitiesFinder {
 	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_ISNULL, true);
 	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
 	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE_ESCAPE, true);
+	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE_REGEX, true);
+	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_SIMILAR, true);
 	    		tempCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
     		}
     		return tempCaps;

@@ -24,11 +24,9 @@ package org.teiid.query.optimizer.relational.rules;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
@@ -71,7 +69,6 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
      * Determines whether this node should be converted to a merge join node
      * @param joinNode The join node
      * @param metadata The metadata
-     * @return True if merge is possible
      */
     static void chooseJoinStrategy(PlanNode joinNode, QueryMetadataInterface metadata) {
         // Check that join is an inner join
@@ -170,23 +167,14 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
         }
 	}
     
-    private static AtomicInteger EXPRESSION_INDEX = new AtomicInteger(0);
-    
     public static List<SingleElementSymbol> createExpressionSymbols(List<? extends Expression> expressions) {
-        HashMap<Expression, ExpressionSymbol> uniqueExpressions = new HashMap<Expression, ExpressionSymbol>();
         List<SingleElementSymbol> result = new ArrayList<SingleElementSymbol>();
         for (Expression expression : expressions) {
             if (expression instanceof SingleElementSymbol) {
                 result.add((SingleElementSymbol)expression);
                 continue;
             } 
-            ExpressionSymbol expressionSymbol = uniqueExpressions.get(expression);
-            if (expressionSymbol == null) {
-                expressionSymbol = new ExpressionSymbol("$" + EXPRESSION_INDEX.getAndIncrement(), expression); //$NON-NLS-1$
-                expressionSymbol.setDerivedExpression(true);
-                uniqueExpressions.put(expression, expressionSymbol);
-            }
-            result.add(expressionSymbol);
+            result.add(new ExpressionSymbol("expr", expression)); //$NON-NLS-1$
         }
         return result;
     }

@@ -23,25 +23,24 @@ package org.teiid.transport;
 
 import java.util.Properties;
 
-import javax.net.ssl.SSLEngine;
-
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.DefaultChannelPipeline;
-import org.jboss.netty.handler.ssl.SslHandler;
+import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.StorageManager;
 import org.teiid.core.TeiidException;
 import org.teiid.jdbc.EmbeddedProfile;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.net.ServerConnection;
+import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
 import org.teiid.net.socket.ObjectChannel;
-import org.teiid.odbc.ODBCServerRemote;
 
 public class ODBCSocketListener extends SocketListener {
-	private ODBCServerRemote.AuthenticationType authType = ODBCServerRemote.AuthenticationType.CLEARTEXT;
+	private AuthenticationType authType = AuthenticationType.CLEARTEXT;
 	private int maxLobSize;
 	private TeiidDriver driver;
+	private ILogon logonService;
 	
-	public ODBCSocketListener(SocketConfiguration config, StorageManager storageManager, int portOffset, int maxLobSize) {
+	public ODBCSocketListener(SocketConfiguration config, StorageManager storageManager, int portOffset, int maxLobSize, ILogon logon) {
 		//the clientserviceregistry isn't actually used by ODBC 
 		super(config, new ClientServiceRegistryImpl(ClientServiceRegistry.Type.ODBC), storageManager, portOffset);
 		this.maxLobSize = maxLobSize;
@@ -54,6 +53,7 @@ public class ODBCSocketListener extends SocketListener {
 				return new LocalServerConnection(info, false);
 			}
 		});
+		this.logonService = logon;
 	}
 	
 	public void setDriver(TeiidDriver driver) {
@@ -66,12 +66,8 @@ public class ODBCSocketListener extends SocketListener {
 			public ChannelPipeline getPipeline() throws Exception {
 				ChannelPipeline pipeline = new DefaultChannelPipeline();
 
-				SSLEngine engine = config.getServerSSLEngine();
-			    if (engine != null) {
-			        pipeline.addLast("ssl", new SslHandler(engine)); //$NON-NLS-1$
-			    }
 			    pipeline.addLast("odbcFrontendProtocol", new PgFrontendProtocol(1 << 20)); //$NON-NLS-1$
-			    pipeline.addLast("odbcBackendProtocol", new PgBackendProtocol(maxLobSize)); //$NON-NLS-1$
+			    pipeline.addLast("odbcBackendProtocol", new PgBackendProtocol(maxLobSize, config)); //$NON-NLS-1$
 			    pipeline.addLast("handler", this); //$NON-NLS-1$
 			    return pipeline;
 			}			
@@ -80,11 +76,11 @@ public class ODBCSocketListener extends SocketListener {
 	
 	@Override
 	public ChannelListener createChannelListener(ObjectChannel channel) {
-		return new ODBCClientInstance(channel, this.authType, driver);
+		return new ODBCClientInstance(channel, this.authType, driver, logonService);
 	}
 
-	public void setAuthenticationType(String value) {
-		this.authType = ODBCServerRemote.AuthenticationType.valueOf(value);
+	public void setAuthenticationType(AuthenticationType value) {
+		this.authType = value;
 	}
 
 }

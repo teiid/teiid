@@ -46,7 +46,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
 
@@ -212,7 +212,7 @@ public class TestProjectNode extends TestCase {
         elements.add(es1);
         
         Function func = new Function("concat", new Expression[] { es1, new Constant("abc")}); //$NON-NLS-1$ //$NON-NLS-2$
-        FunctionDescriptor fd = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("concat", new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING }); //$NON-NLS-1$
+        FunctionDescriptor fd = RealMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("concat", new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING }); //$NON-NLS-1$
         func.setFunctionDescriptor(fd);
         func.setType(DataTypeManager.DefaultDataClasses.STRING);
         ExpressionSymbol expr = new ExpressionSymbol("expr", func); //$NON-NLS-1$
@@ -236,7 +236,7 @@ public class TestProjectNode extends TestCase {
         elements.add(es1);
         
         Function func = new Function("convert", new Expression[] { es1, new Constant("integer")}); //$NON-NLS-1$ //$NON-NLS-2$
-        FunctionDescriptor fd = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("convert", new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING }); //$NON-NLS-1$
+        FunctionDescriptor fd = RealMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("convert", new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING }); //$NON-NLS-1$
         func.setFunctionDescriptor(fd);
         func.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         ExpressionSymbol expr = new ExpressionSymbol("expr", func); //$NON-NLS-1$
@@ -259,7 +259,7 @@ public class TestProjectNode extends TestCase {
         elements.add(es1);
 
         Function func = new Function("lookup", new Expression[] { new Constant("pm1.g1"), new Constant("e2"), new Constant("e1"), es1 }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        FunctionDescriptor desc = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, String.class } ); //$NON-NLS-1$
+        FunctionDescriptor desc = RealMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, String.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
         func.setType(DataTypeManager.DefaultDataClasses.STRING);
         

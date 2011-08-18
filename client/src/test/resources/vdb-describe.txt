@@ -24,7 +24,7 @@
             "description" : "The Virtual Database Status",
             "required" : true
         },
-        "version" : {
+        "vdb-version" : {
             "type" : {
                 "TYPE_MODEL_VALUE" : "INT"
             },

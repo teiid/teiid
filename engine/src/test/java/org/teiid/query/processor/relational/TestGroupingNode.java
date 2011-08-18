@@ -22,7 +22,7 @@
 
 package org.teiid.query.processor.relational;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -45,15 +45,16 @@ import org.teiid.query.function.aggregate.AggregateFunction;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.FakeTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
-
+@SuppressWarnings("unchecked")
 public class TestGroupingNode {
 
 	public static FakeTupleSource createTupleSource1() { 
@@ -153,7 +154,7 @@ public class TestGroupingNode {
 		
 		List groupingElements = new ArrayList();
 		groupingElements.add(col1);
-		node.setGroupingElements(groupingElements);	  
+		node.setOrderBy(new OrderBy(groupingElements).getOrderByItems());
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         List[] expected = new List[] {
@@ -231,8 +232,6 @@ public class TestGroupingNode {
         outputElements.add(new AggregateSymbol("bigAvg", "AVG", false, bigDecimal)); //$NON-NLS-1$ //$NON-NLS-2$
         node.setElements(outputElements);
         
-        // Set grouping elements to null 
-        node.setGroupingElements(null);         
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         List[] data = new List[] {
@@ -272,7 +271,7 @@ public class TestGroupingNode {
         // Set grouping elements to null 
         List groupingElements = new ArrayList();
         groupingElements.add(col1); 
-        node.setGroupingElements(groupingElements);         
+        node.setOrderBy(new OrderBy(groupingElements).getOrderByItems());         
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         List[] data = new List[] {
@@ -308,7 +307,7 @@ public class TestGroupingNode {
         col2.setType(Integer.class);
         
         Function func = new Function("lookup", new Expression[] { new Constant("pm1.g1"), new Constant("e2"), new Constant("e1"), col2 }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        FunctionDescriptor desc = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, Integer.class } ); //$NON-NLS-1$
+        FunctionDescriptor desc = RealMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, Integer.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
         func.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         
@@ -320,7 +319,7 @@ public class TestGroupingNode {
         
         List groupingElements = new ArrayList();
         groupingElements.add(col1); 
-        node.setGroupingElements(groupingElements);   
+        node.setOrderBy(new OrderBy(groupingElements).getOrderByItems());   
         CommandContext context = new CommandContext("pid", "test", null, null, 1);    //$NON-NLS-1$ //$NON-NLS-2$
         
         FakeDataManager dataMgr = new FakeDataManager();
@@ -366,7 +365,7 @@ public class TestGroupingNode {
         if (groupBy) {
             List groupingElements = new ArrayList();
             groupingElements.add(new ElementSymbol("col1")); //$NON-NLS-1$
-            node.setGroupingElements(groupingElements);
+            node.setOrderBy(new OrderBy(groupingElements).getOrderByItems());
         }
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
@@ -434,7 +433,7 @@ public class TestGroupingNode {
         
         List groupingElements = new ArrayList();
         groupingElements.add(col1); 
-        node.setGroupingElements(groupingElements);
+        node.setOrderBy(new OrderBy(groupingElements).getOrderByItems());
 		return node;
 	}
     

@@ -40,6 +40,9 @@ public class MappingVisitor {
         return abort;
     }    
     
+    /**
+	 * @param node  
+	 */
     public void visit(MappingNode node) {}
     
     public void visit(MappingDocument doc) {
@@ -80,14 +83,14 @@ public class MappingVisitor {
      */
     protected void walkChildNodes(MappingNode element) {
 
-        List children = element.getNodeChildren();
-        for(Iterator i=children.iterator(); i.hasNext();) {
+        List<MappingNode> children = element.getNodeChildren();
+        for(Iterator<MappingNode> i=children.iterator(); i.hasNext();) {
             
             if (shouldAbort()) {
                 break;
             }
             
-            MappingNode node = (MappingNode)i.next();            
+            MappingNode node = i.next();            
             node.acceptVisitor(this);
         }
     }    

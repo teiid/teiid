@@ -54,9 +54,6 @@ class QueryEngineDescription implements DescriptionProvider {
 		addAttribute(node, Configuration.TIME_SLICE_IN_MILLI, type, bundle.getString(Configuration.TIME_SLICE_IN_MILLI+DESC), ModelType.INT, false, "2000"); //$NON-NLS-1$		
 		addAttribute(node, Configuration.MAX_ROWS_FETCH_SIZE, type, bundle.getString(Configuration.MAX_ROWS_FETCH_SIZE+DESC), ModelType.INT, false, "20480"); //$NON-NLS-1$
 		addAttribute(node, Configuration.LOB_CHUNK_SIZE_IN_KB, type, bundle.getString(Configuration.LOB_CHUNK_SIZE_IN_KB+DESC), ModelType.INT, false, "100"); //$NON-NLS-1$
-		addAttribute(node, Configuration.USE_DATA_ROLES, type, bundle.getString(Configuration.USE_DATA_ROLES+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
-		addAttribute(node, Configuration.ALLOW_CREATE_TEMPORY_TABLES_BY_DEFAULT, type, bundle.getString(Configuration.ALLOW_CREATE_TEMPORY_TABLES_BY_DEFAULT+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
-		addAttribute(node, Configuration.ALLOW_FUNCTION_CALLS_BY_DEFAULT, type, bundle.getString(Configuration.ALLOW_FUNCTION_CALLS_BY_DEFAULT+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
 		addAttribute(node, Configuration.QUERY_THRESHOLD_IN_SECS, type, bundle.getString(Configuration.QUERY_THRESHOLD_IN_SECS+DESC), ModelType.INT, false, "600"); //$NON-NLS-1$		
 		addAttribute(node, Configuration.MAX_SOURCE_ROWS, type, bundle.getString(Configuration.MAX_SOURCE_ROWS+DESC), ModelType.INT, false, "-1"); //$NON-NLS-1$
 		addAttribute(node, Configuration.EXCEPTION_ON_MAX_SOURCE_ROWS, type, bundle.getString(Configuration.EXCEPTION_ON_MAX_SOURCE_ROWS+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
@@ -135,10 +132,10 @@ class QueryEngineDescription implements DescriptionProvider {
 		addAttribute(node, Configuration.USE_DISK, type, bundle.getString(Configuration.USE_DISK+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
 		addAttribute(node, Configuration.PROCESSOR_BATCH_SIZE, type, bundle.getString(Configuration.PROCESSOR_BATCH_SIZE+DESC), ModelType.INT, false, "512"); //$NON-NLS-1$
 		addAttribute(node, Configuration.CONNECTOR_BATCH_SIZE, type, bundle.getString(Configuration.CONNECTOR_BATCH_SIZE+DESC), ModelType.INT, false, "1024"); //$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_RESERVE_BATCH_COLUMNS, type, bundle.getString(Configuration.MAX_RESERVE_BATCH_COLUMNS+DESC), ModelType.INT, false, "-1"); //$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_PROCESSING_BATCH_COLUMNS, type, bundle.getString(Configuration.MAX_PROCESSING_BATCH_COLUMNS+DESC), ModelType.INT, false, "-1"); //$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_FILE_SIZE, type, bundle.getString(Configuration.MAX_FILE_SIZE+DESC), ModelType.INT, false, "2048"); //$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_BUFFER_SPACE, type, bundle.getString(Configuration.MAX_BUFFER_SPACE+DESC), ModelType.INT, false, "51200"); //$NON-NLS-1$
+		addAttribute(node, Configuration.MAX_PROCESSING_KB, type, bundle.getString(Configuration.MAX_PROCESSING_KB+DESC), ModelType.INT, false, "-1"); //$NON-NLS-1$
+		addAttribute(node, Configuration.MAX_RESERVED_KB, type, bundle.getString(Configuration.MAX_RESERVED_KB+DESC), ModelType.INT, false, "-1"); //$NON-NLS-1$
+		addAttribute(node, Configuration.MAX_FILE_SIZE, type, bundle.getString(Configuration.MAX_FILE_SIZE+DESC), ModelType.LONG, false, "2048"); //$NON-NLS-1$
+		addAttribute(node, Configuration.MAX_BUFFER_SPACE, type, bundle.getString(Configuration.MAX_BUFFER_SPACE+DESC), ModelType.LONG, false, "51200"); //$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_OPEN_FILES, type, bundle.getString(Configuration.MAX_OPEN_FILES+DESC), ModelType.INT, false, "64"); //$NON-NLS-1$
 	}	
 

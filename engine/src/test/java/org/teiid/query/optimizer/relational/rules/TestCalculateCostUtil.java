@@ -31,7 +31,9 @@ import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.metadata.Column;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
@@ -45,8 +47,7 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings("nls")
@@ -94,21 +95,21 @@ public class TestCalculateCostUtil {
     // =====================================================================
     
     @Test public void testEstimateCostOfCriteria() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm2.g3.e1 = '3' or pm2.g3.e2 = 2"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, NewCalculateCostUtil.UNKNOWN_VALUE, metadata);
     }
 
     @Test public void testEstimateCostOfCompareCriteria() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm1.g1.e1 = '3'"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, 1, metadata);    
     }  
     
     @Test public void testEstimateCostOfCompareCriteria1() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm1.g1.e1 < '3'"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, NewCalculateCostUtil.UNKNOWN_VALUE, metadata);    
@@ -119,7 +120,7 @@ public class TestCalculateCostUtil {
      * NOT = false
      */
     @Test public void testEstimateCostOfMatchCriteria1() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm2.g3.e1 LIKE '#%'"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 300, 100, metadata);
@@ -130,7 +131,7 @@ public class TestCalculateCostUtil {
      * NOT = true
      */
     @Test public void testEstimateCostOfMatchCriteria2() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm2.g3.e1 NOT LIKE '#_'"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 300, 233, metadata);
@@ -141,7 +142,7 @@ public class TestCalculateCostUtil {
      * NOT = false
      */
     @Test public void testEstimateCostOfMatchCriteria3() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm1.g1.e1 LIKE '#_'"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 300, 50, metadata);
@@ -152,7 +153,7 @@ public class TestCalculateCostUtil {
      * NOT = true
      */
     @Test public void testEstimateCostOfMatchCriteria4() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm1.g1.e1 NOT LIKE '#_'"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 300, 249, metadata);
@@ -163,7 +164,7 @@ public class TestCalculateCostUtil {
      * NOT = false
      */
     @Test public void testEstimateCostOfIsNullCriteria1() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm2.g3.e1 IS NULL"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 300, 33, metadata);
@@ -174,7 +175,7 @@ public class TestCalculateCostUtil {
      * NOT = true
      */
     @Test public void testEstimateCostOfIsNullCriteria2() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm2.g3.e1 IS NOT NULL"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 300, 266, metadata);
@@ -185,7 +186,7 @@ public class TestCalculateCostUtil {
      * NOT = false
      */
     @Test public void testEstimateCostOfIsNullCriteria3() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm1.g1.e1 IS NULL"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 300, 1, metadata);
@@ -196,7 +197,7 @@ public class TestCalculateCostUtil {
      * NOT = true
      */
     @Test public void testEstimateCostOfIsNullCriteria4() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm1.g1.e1 IS NOT NULL"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 300, 299, metadata);
@@ -208,7 +209,7 @@ public class TestCalculateCostUtil {
      * NOT = false
      */
     @Test public void testEstimateCostOfSetCriteria1() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm2.g3.e1 IN ('2', '3')"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, NewCalculateCostUtil.UNKNOWN_VALUE, metadata);
@@ -220,7 +221,7 @@ public class TestCalculateCostUtil {
      * NOT = true
      */
     @Test public void testEstimateCostOfSetCriteria2() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm2.g3.e1 NOT IN ('2', '3')"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, NewCalculateCostUtil.UNKNOWN_VALUE, metadata);
@@ -232,7 +233,7 @@ public class TestCalculateCostUtil {
      * NOT = false
      */
     @Test public void testEstimateCostOfSetCriteria3() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm2.g3.e1 IN ('2', '3')"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 300, 66, metadata);
@@ -244,7 +245,7 @@ public class TestCalculateCostUtil {
      * NOT = true
      */
     @Test public void testEstimateCostOfSetCriteria4() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm2.g3.e1 NOT IN ('2', '3')"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 300, 233, metadata);
@@ -256,7 +257,7 @@ public class TestCalculateCostUtil {
      * NOT = false
      */
     @Test public void testEstimateCostOfSetCriteria5() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm1.g1.e1 IN ('2', '3')"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, NewCalculateCostUtil.UNKNOWN_VALUE, metadata);
@@ -268,7 +269,7 @@ public class TestCalculateCostUtil {
      * NOT = true
      */
     @Test public void testEstimateCostOfSetCriteria6() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm1.g1.e1 NOT IN ('2', '3')"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, NewCalculateCostUtil.UNKNOWN_VALUE, metadata);
@@ -280,7 +281,7 @@ public class TestCalculateCostUtil {
      * NOT = false
      */
     @Test public void testEstimateCostOfSetCriteria7() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm1.g1.e1 IN ('2', '3')"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 200, 2, metadata);
@@ -292,14 +293,14 @@ public class TestCalculateCostUtil {
      * NOT = true
      */
     @Test public void testEstimateCostOfSetCriteria8() throws Exception{
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm1.g1.e1 NOT IN ('2', '3')"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 200, 198, metadata);
     }
     
     @Test public void testEstimateJoinNodeCost() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         PlanNode joinNode = helpGetJoinNode(NewCalculateCostUtil.UNKNOWN_VALUE, NewCalculateCostUtil.UNKNOWN_VALUE, JoinType.JOIN_CROSS);
         
         float cost = NewCalculateCostUtil.computeCostForTree(joinNode, metadata);
@@ -308,7 +309,7 @@ public class TestCalculateCostUtil {
     
     @Ignore("this logic needs to be refined to work better")
     @Test public void testEstimateJoinNodeCostOneUnknown() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         PlanNode joinNode = helpGetJoinNode(NewCalculateCostUtil.UNKNOWN_VALUE, 500, JoinType.JOIN_INNER);
         joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, Arrays.asList(helpGetCriteria("pm1.g1.e1 = pm1.g2.e1", metadata)));
         float cost = NewCalculateCostUtil.computeCostForTree(joinNode, metadata);
@@ -327,7 +328,7 @@ public class TestCalculateCostUtil {
      * e1 and e2 make up a single compound key 
      */
     @Test public void testEstimateCostOfCriteriaCompoundKey() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm4.g1.e1 = '3' and pm4.g1.e2 = 2"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, 1, metadata);
@@ -340,7 +341,7 @@ public class TestCalculateCostUtil {
      * predicted to reduce the cost of the join
      */
     @Test public void testEstimateCostOfCriteriaCompoundKey2() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm4.g1.e1 = '3' or pm4.g1.e2 = 2"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, NewCalculateCostUtil.UNKNOWN_VALUE, metadata);
@@ -353,7 +354,7 @@ public class TestCalculateCostUtil {
      * lower the cost due to the NOT
      */
     @Test public void testEstimateCostOfCriteriaCompoundKey3() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm4.g1.e1 = '3' and not pm4.g1.e2 = 2"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, NewCalculateCostUtil.UNKNOWN_VALUE, metadata);
@@ -366,7 +367,7 @@ public class TestCalculateCostUtil {
      * lower the cost due to the 0R
      */
     @Test public void testEstimateCostOfCriteriaCompoundKey4() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "(pm4.g1.e1 = '3' or pm4.g1.e4 = 2.0) and not pm4.g1.e2 = 2"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, NewCalculateCostUtil.UNKNOWN_VALUE, metadata);
@@ -379,7 +380,7 @@ public class TestCalculateCostUtil {
      * lower the cost due to the OR
      */
     @Test public void testEstimateCostOfCriteriaCompoundKey5() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "(pm4.g1.e1 = '3' or pm4.g1.e4 = 2.0) and pm4.g1.e2 = 2"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, NewCalculateCostUtil.UNKNOWN_VALUE, metadata);
@@ -392,7 +393,7 @@ public class TestCalculateCostUtil {
      * lower the cost due to the OR
      */
     @Test public void testEstimateCostOfCriteriaCompoundKey6() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "(pm4.g1.e1 = '3' and pm4.g1.e2 = 2) or pm4.g1.e4 = 2.0"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, NewCalculateCostUtil.UNKNOWN_VALUE, metadata);
@@ -405,7 +406,7 @@ public class TestCalculateCostUtil {
      * key so the cost should be low
      */
     @Test public void testEstimateCostOfCriteriaCompoundKey8() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm4.g1.e1 LIKE '3%' and pm4.g1.e2 = 2"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, 1, metadata);
@@ -418,7 +419,7 @@ public class TestCalculateCostUtil {
      * lower the cost due to the NOT
      */
     @Test public void testEstimateCostOfCriteriaCompoundKey9() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm4.g1.e1 NOT LIKE '3%' and pm4.g1.e2 = 2"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, NewCalculateCostUtil.UNKNOWN_VALUE, metadata);
@@ -431,7 +432,7 @@ public class TestCalculateCostUtil {
      * key so the cost should be low
      */
     @Test public void testEstimateCostOfCriteriaCompoundKey10() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "'3' LIKE pm4.g1.e1 and pm4.g1.e2 = 2"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, 1, metadata);
@@ -444,7 +445,7 @@ public class TestCalculateCostUtil {
      * key so the cost should be low
      */
     @Test public void testEstimateCostOfCriteriaCompoundKey11() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm4.g1.e1 IS NULL and pm4.g1.e2 = 2"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, 1, metadata);
@@ -457,7 +458,7 @@ public class TestCalculateCostUtil {
      * lower the cost due to the NOT
      */
     @Test public void testEstimateCostOfCriteriaCompoundKey12() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm4.g1.e1 IS NOT NULL and pm4.g1.e2 = 2"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, NewCalculateCostUtil.UNKNOWN_VALUE, metadata);
@@ -470,7 +471,7 @@ public class TestCalculateCostUtil {
      * key so the cost should be low
      */
     @Test public void testEstimateCostOfCriteriaCompoundKey13() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm4.g1.e1 IN ('3', '4') and pm4.g1.e2 = 2"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, 1, metadata);
@@ -483,14 +484,14 @@ public class TestCalculateCostUtil {
      * lower the cost due to the NOT
      */
     @Test public void testEstimateCostOfCriteriaCompoundKey14() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm4.g1.e1 NOT IN ('3', '4') and pm4.g1.e2 = 2"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, NewCalculateCostUtil.UNKNOWN_VALUE, metadata);
     } 
     
     @Test public void testEstimateCostOfCriteriaCompoundKey15() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "(pm4.g1.e1 = '3' or pm4.g1.e1 = '2') and (pm4.g1.e2 = 2 or pm4.g1.e2 = 1)"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, 1, metadata);
@@ -500,7 +501,7 @@ public class TestCalculateCostUtil {
      *  usesKey true
      */
     @Test public void testEstimateCostOfCriteriaMultiGroup() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm4.g1.e1 = pm1.g1.e1"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, NewCalculateCostUtil.UNKNOWN_VALUE, metadata);
@@ -510,7 +511,7 @@ public class TestCalculateCostUtil {
      *  usesKey false
      */
     @Test public void testEstimateCostOfCriteriaMultiGroup1() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm2.g3.e1 = pm4.g1.e1"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, NewCalculateCostUtil.UNKNOWN_VALUE, metadata);
@@ -520,7 +521,7 @@ public class TestCalculateCostUtil {
      *  usesKey true
      */
     @Test public void testEstimateCostOfCriteriaMultiGroup2() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm4.g1.e1 = pm1.g1.e1"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 100, 10, metadata);
@@ -530,7 +531,7 @@ public class TestCalculateCostUtil {
      *  usesKey false
      */
     @Test public void testEstimateCostOfCriteriaMultiGroup3() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm2.g3.e1 = pm4.g1.e1"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 100, 33, metadata);
@@ -541,10 +542,10 @@ public class TestCalculateCostUtil {
      *  the valid strings are timestamp format - since that is what our costing sets them as.
      */
     @Test public void testEstimateCostOfCriteriaDate1() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject e2 = (FakeMetadataObject)metadata.getElementID("pm3.g1.e2"); //$NON-NLS-1$
-        e2.putProperty(FakeMetadataObject.Props.MIN_VALUE,"2007-04-03 12:12:12.10"); //$NON-NLS-1$
-        e2.putProperty(FakeMetadataObject.Props.MAX_VALUE,"2007-06-03 12:12:12.10"); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        Column e2 = metadata.getElementID("pm3.g1.e2"); //$NON-NLS-1$
+        e2.setMinimumValue("2007-04-03 12:12:12.10"); //$NON-NLS-1$
+        e2.setMaximumValue("2007-06-03 12:12:12.10"); //$NON-NLS-1$
         String critString = "pm3.g1.e2 <= {d'2008-04-03'}"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 100, 100, metadata);
@@ -555,10 +556,10 @@ public class TestCalculateCostUtil {
      *  one example of invalid strings is date format - since our costing sets them to timestamp.
      */
     @Test public void testEstimateCostOfCriteriaDate2() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject e2 = (FakeMetadataObject)metadata.getElementID("pm3.g1.e2"); //$NON-NLS-1$
-        e2.putProperty(FakeMetadataObject.Props.MIN_VALUE,"2007-04-03"); //$NON-NLS-1$
-        e2.putProperty(FakeMetadataObject.Props.MAX_VALUE,"2007-06-03"); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        Column e2 = metadata.getElementID("pm3.g1.e2"); //$NON-NLS-1$
+        e2.setMinimumValue("2007-04-03"); //$NON-NLS-1$
+        e2.setMaximumValue("2007-06-03"); //$NON-NLS-1$
         String critString = "pm3.g1.e2 <= {d'2008-04-03'}"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 100, 33, metadata);
@@ -568,10 +569,10 @@ public class TestCalculateCostUtil {
      *  Time Criteria - case using valid max and min time strings.
      */
     @Test public void testEstimateCostOfCriteriaTime1() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject e3 = (FakeMetadataObject)metadata.getElementID("pm3.g1.e3"); //$NON-NLS-1$
-        e3.putProperty(FakeMetadataObject.Props.MIN_VALUE,"12:12:12"); //$NON-NLS-1$
-        e3.putProperty(FakeMetadataObject.Props.MAX_VALUE,"12:13:14"); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        Column e3 = metadata.getElementID("pm3.g1.e3"); //$NON-NLS-1$
+        e3.setMinimumValue("12:12:12"); //$NON-NLS-1$
+        e3.setMaximumValue("12:13:14"); //$NON-NLS-1$
         String critString = "pm3.g1.e3 <= {t'11:11:11'}"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 100, 1, metadata);
@@ -581,10 +582,10 @@ public class TestCalculateCostUtil {
      *  Time Criteria - case using invalid max and min time strings
      */
     @Test public void testEstimateCostOfCriteriaTime2() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject e3 = (FakeMetadataObject)metadata.getElementID("pm3.g1.e3"); //$NON-NLS-1$
-        e3.putProperty(FakeMetadataObject.Props.MIN_VALUE,"2007-04-03 12:12:12.10"); //$NON-NLS-1$
-        e3.putProperty(FakeMetadataObject.Props.MAX_VALUE,"2007-06-03 12:12:12.10"); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        Column e3 = metadata.getElementID("pm3.g1.e3"); //$NON-NLS-1$
+        e3.setMinimumValue("2007-04-03 12:12:12.10"); //$NON-NLS-1$
+        e3.setMaximumValue("2007-06-03 12:12:12.10"); //$NON-NLS-1$
         String critString = "pm3.g1.e3 <= {t'11:11:11'}"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 100, 33, metadata);
@@ -594,10 +595,10 @@ public class TestCalculateCostUtil {
      *  Timestamp Criteria - case using valid max and min timestamp strings
      */
     @Test public void testEstimateCostOfCriteriaTimestamp1() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject e4 = (FakeMetadataObject)metadata.getElementID("pm3.g1.e4"); //$NON-NLS-1$
-        e4.putProperty(FakeMetadataObject.Props.MIN_VALUE,"2007-04-03 12:12:12.10"); //$NON-NLS-1$
-        e4.putProperty(FakeMetadataObject.Props.MAX_VALUE,"2007-04-03 12:12:12.10"); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        Column e4 = metadata.getElementID("pm3.g1.e4"); //$NON-NLS-1$
+        e4.setMinimumValue("2007-04-03 12:12:12.10"); //$NON-NLS-1$
+        e4.setMaximumValue("2007-04-03 12:12:12.10"); //$NON-NLS-1$
         String critString = "pm3.g1.e4 <= {ts'2007-04-03 12:12:12.10'}"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 100, 1, metadata);
@@ -607,10 +608,10 @@ public class TestCalculateCostUtil {
      *  Timestamp Criteria - case using invalid max and min timestamp strings
      */
     @Test public void testEstimateCostOfCriteriaTimestamp2() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject e4 = (FakeMetadataObject)metadata.getElementID("pm3.g1.e4"); //$NON-NLS-1$
-        e4.putProperty(FakeMetadataObject.Props.MIN_VALUE,"2007-04-03"); //$NON-NLS-1$
-        e4.putProperty(FakeMetadataObject.Props.MAX_VALUE,"2007-06-03"); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        Column e4 = metadata.getElementID("pm3.g1.e4"); //$NON-NLS-1$
+        e4.setMinimumValue("2007-04-03"); //$NON-NLS-1$
+        e4.setMaximumValue("2007-06-03"); //$NON-NLS-1$
         String critString = "pm3.g1.e4 <= {ts'2007-04-03 12:12:12.10'}"; //$NON-NLS-1$
         
         helpTestEstimateCost(critString, 100, 33, metadata);
@@ -739,7 +740,7 @@ public class TestCalculateCostUtil {
     @Test public void testLimitWithUnknownChildCardinality() throws Exception {
         String query = "select e1 from pm1.g1 limit 2"; //$NON-NLS-1$
         
-        RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlan(query, FakeMetadataFactory.example1Cached(), new String[] {"SELECT e1 FROM pm1.g1"}); //$NON-NLS-1$
+        RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlan(query, RealMetadataFactory.example1Cached(), new String[] {"SELECT e1 FROM pm1.g1"}); //$NON-NLS-1$
         
         assertEquals(new Float(2), plan.getRootNode().getEstimateNodeCardinality());
     }

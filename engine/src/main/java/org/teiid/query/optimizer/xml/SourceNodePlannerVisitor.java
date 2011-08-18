@@ -122,11 +122,12 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
                         
             MappingSourceNode parent = sourceNode.getParentSourceNode();
             Collection<ElementSymbol> bindings = QueryUtil.getBindingElements(modifiedNode);
+            rsInfo.setInputSet(!bindings.isEmpty());
             // root source nodes do not have any inputset criteria on them; so there is no use in
             // going through the raising the criteria.
             // if the original query is not a select.. we are out of luck. we can expand on this later
-            // versions. make ure bindings are only to parent.
-            if (parent == null || !canRaiseInputset(command, bindings) || !areBindingsOnlyToNode(modifiedNode, parent)) {
+            // versions. make sure bindings are only to parent.
+            if (!rsInfo.hasInputSet() || !canRaiseInputset(command, bindings) || !areBindingsOnlyToNode(modifiedNode, parent)) {
                 return;
             }
             
@@ -150,6 +151,10 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
                 else {
                     inputSetCriteria = Criteria.combineCriteria(inputSetCriteria, conjunct);
                 }
+            }
+            
+            if (inputSetCriteria == null) {
+            	return;
             }
             
             // Keep the criteria which is not reference based.
@@ -229,7 +234,7 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
         throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
         
         // get elements in the old group
-        List elements = ResolverUtil.resolveElementsInGroup(oldSymbol, planEnv.getGlobalMetadata());
+        List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(oldSymbol, planEnv.getGlobalMetadata());
         
         TempMetadataStore store = planEnv.getGlobalMetadata().getMetadataStore();
         
@@ -280,7 +285,7 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
         }
     }
     
-    private boolean canRaiseInputset(Command command, Collection<ElementSymbol> bindings) throws TeiidComponentException {
+    private boolean canRaiseInputset(Command command, Collection<ElementSymbol> bindings) {
         // check to see if this is query.
         if (!(command instanceof Query)) {
             return false;
@@ -311,14 +316,13 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
      * @param criteria - criteria on which the elements need to modified
      * @return true if converted; false otherwise
      */
-    private boolean convertCriteria(GroupSymbol newGroupSymbol, Query transformationQuery, Criteria criteria, TempMetadataAdapter metadata, Map symbolMap) 
-        throws QueryMetadataException, TeiidComponentException {
+    private boolean convertCriteria(GroupSymbol newGroupSymbol, Query transformationQuery, Criteria criteria, TempMetadataAdapter metadata, Map symbolMap) {
         
         String groupName = newGroupSymbol.getName();
         Collection<ElementSymbol> elementsInCriteria = ElementCollectorVisitor.getElements(criteria, true);
-        Map mappedElements = new HashMap();
+        Map<ElementSymbol, ElementSymbol> mappedElements = new HashMap<ElementSymbol, ElementSymbol>();
 
-        List projectedSymbols = transformationQuery.getProjectedSymbols();
+        List<SingleElementSymbol> projectedSymbols = transformationQuery.getProjectedSymbols();
         
         boolean addedProjectedSymbol = false;
         
@@ -383,10 +387,8 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
      * If the element has alias wrapping, then return the matching alias element.
      * @return matched alias symbol; null otherwise.
      */
-    private AliasSymbol getMachingAlias(List elementsInGroup, ElementSymbol symbol) {
-        
-        for(Iterator i = elementsInGroup.iterator(); i.hasNext();) {
-            final SingleElementSymbol element = (SingleElementSymbol)i.next();
+    private AliasSymbol getMachingAlias(List<SingleElementSymbol> elementsInGroup, ElementSymbol symbol) {
+    	for (SingleElementSymbol element : elementsInGroup) {
             if (element instanceof AliasSymbol) {
                 AliasSymbol alias = (AliasSymbol)element;
                 if (alias.getSymbol().equals(symbol)) {
@@ -421,14 +423,14 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
                  */
                 @Override
                 protected void walkChildNodes(MappingNode element) {
-                    List children = new ArrayList(element.getNodeChildren());
-                    for(Iterator i=children.iterator(); i.hasNext();) {
+                    List<MappingNode> children = new ArrayList<MappingNode>(element.getNodeChildren());
+                    for(Iterator<MappingNode> i=children.iterator(); i.hasNext();) {
                         
                         if (shouldAbort()) {
                             break;
                         }
                         
-                        MappingNode node = (MappingNode)i.next();            
+                        MappingNode node = i.next();            
                         node.acceptVisitor(this);
                     }
                 }

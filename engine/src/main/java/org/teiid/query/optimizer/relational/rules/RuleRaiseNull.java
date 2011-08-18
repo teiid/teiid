@@ -44,6 +44,8 @@ import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.symbol.AliasSymbol;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
@@ -277,7 +279,7 @@ public final class RuleRaiseNull implements OptimizerRule {
         NodeEditor.removeChildNode(joinNode.getParent(), joinNode);
         
         for (GroupSymbol group : nullNode.getGroups()) {
-            Map nullSymbolMap = FrameUtil.buildSymbolMap(group, null, metadata);
+            Map<ElementSymbol, Expression> nullSymbolMap = FrameUtil.buildSymbolMap(group, null, metadata);
             FrameUtil.convertFrame(frameStart, group, null, nullSymbolMap, metadata);
         }
         

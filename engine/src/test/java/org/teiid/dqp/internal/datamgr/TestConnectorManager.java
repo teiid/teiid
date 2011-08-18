@@ -50,7 +50,7 @@ public final class TestConnectorManager extends TestCase {
 				return c;
 			}
 			protected Object getConnectionFactory(){
-				return c.getConnection();
+				return c;
 			}
 		};
 		cm.start();

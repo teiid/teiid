@@ -12,7 +12,7 @@ import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings({"nls", "unchecked"})
 public class TestWithClauseProcessing {
@@ -30,7 +30,7 @@ public class TestWithClauseProcessing {
 	    FakeDataManager dataManager = new FakeDataManager();
 	    sampleData1(dataManager);
 	    
-	    ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
 	    
 	    helpProcess(plan, dataManager, expected);
 	}
@@ -50,7 +50,7 @@ public class TestWithClauseProcessing {
 	    FakeDataManager dataManager = new FakeDataManager();
 	    sampleData1(dataManager);
 	    
-	    ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
 	    
 	    helpProcess(plan, dataManager, expected);
 	}
@@ -67,7 +67,22 @@ public class TestWithClauseProcessing {
 	    FakeDataManager dataManager = new FakeDataManager();
 	    sampleData1(dataManager);
 	    
-	    TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, y, z) AS (SELECT g_0.e1, g_0.e2, g_0.e3 FROM pm1.g1 AS g_0) SELECT g_0.x FROM a AS g_0, a AS g_1"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, y, z) AS (SELECT g_0.e1, g_0.e2, g_0.e3 FROM pm1.g1 AS g_0) SELECT g_0.x FROM a AS g_0, a AS g_1"}, ComparisonMode.EXACT_COMMAND_STRING);
+	}
+	
+	@Test public void testWithPushdownWithConstants() throws TeiidException {
+		 FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+       
+	    String sql = "with a (x, y) as (select 1, 2 from pm1.g1) SELECT a.x from a, a z"; //$NON-NLS-1$
+	    
+	    FakeDataManager dataManager = new FakeDataManager();
+	    sampleData1(dataManager);
+	    
+	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, y) AS (SELECT 1, 2 FROM pm1.g1 AS g_0) SELECT g_0.x FROM a AS g_0, a AS g_1"}, ComparisonMode.EXACT_COMMAND_STRING);
 	}
 
 }

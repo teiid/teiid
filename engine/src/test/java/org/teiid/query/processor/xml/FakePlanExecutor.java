@@ -56,7 +56,7 @@ class FakePlanExecutor implements PlanExecutor{
         return this.currentRow;
     }
 
-    public void execute(Map values) throws TeiidComponentException, BlockedException {
+    public void execute(Map values, boolean openOnly) throws TeiidComponentException, BlockedException {
         tupleSource.openSource();
     }
 

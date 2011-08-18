@@ -119,31 +119,31 @@ public class TestProcessorEnvironment extends TestCase {
         env.pushProgram(p1, true); //simulate recursion
         
         assertEquals(p1, env.getCurrentProgram());
-        assertEquals(i1, env.getCurrentInstruction());
+        assertEquals(i1, env.getCurrentInstruction(null));
         assertEquals(p1, env.getCurrentProgram());
         i1.process(env, context);
         assertEquals(p1, env.getCurrentProgram());
-        assertEquals(i2, env.getCurrentInstruction());
+        assertEquals(i2, env.getCurrentInstruction(null));
         assertEquals(p1, env.getCurrentProgram());
         i2.process(env, context);
         assertEquals(p2, env.getCurrentProgram());
-        assertEquals(i3, env.getCurrentInstruction());
+        assertEquals(i3, env.getCurrentInstruction(null));
         assertEquals(p2, env.getCurrentProgram());
         i3.process(env, context);
         assertEquals(p2, env.getCurrentProgram());
-        assertEquals(i4, env.getCurrentInstruction());
+        assertEquals(i4, env.getCurrentInstruction(null));
         assertEquals(p2, env.getCurrentProgram());
         i4.process(env, context);
         assertEquals(p1, env.getCurrentProgram());
-        assertEquals(i1, env.getCurrentInstruction());
+        assertEquals(i1, env.getCurrentInstruction(null));
         assertEquals(p1, env.getCurrentProgram());
         i1.process(env, context);
         assertEquals(p1, env.getCurrentProgram());
-        assertEquals(i2, env.getCurrentInstruction());
+        assertEquals(i2, env.getCurrentInstruction(null));
         assertEquals(p1, env.getCurrentProgram());
         i2.process(env, context);
         assertEquals(p1, env.getCurrentProgram());
-        assertEquals(null, env.getCurrentInstruction());
+        assertEquals(null, env.getCurrentInstruction(null));
         assertEquals(p1, env.getCurrentProgram());
     }
     
@@ -173,31 +173,31 @@ public class TestProcessorEnvironment extends TestCase {
         env.pushProgram(p2);
         
         assertEquals(p2, env.getCurrentProgram());
-        assertEquals(i3, env.getCurrentInstruction());
+        assertEquals(i3, env.getCurrentInstruction(null));
         assertEquals(p2, env.getCurrentProgram());
         i3.process(env, context);
         assertEquals(p2, env.getCurrentProgram());
-        assertEquals(i4, env.getCurrentInstruction());
+        assertEquals(i4, env.getCurrentInstruction(null));
         assertEquals(p2, env.getCurrentProgram());
         i4.process(env, context);
         assertEquals(p1, env.getCurrentProgram());
-        assertEquals(i1, env.getCurrentInstruction());
+        assertEquals(i1, env.getCurrentInstruction(null));
         assertEquals(p1, env.getCurrentProgram());
         i1.process(env, context);
         assertEquals(p1, env.getCurrentProgram());
-        assertEquals(i2, env.getCurrentInstruction());
+        assertEquals(i2, env.getCurrentInstruction(null));
         assertEquals(p1, env.getCurrentProgram());
         i2.process(env, context);
         assertEquals(p1, env.getCurrentProgram());
-        assertEquals(i1, env.getCurrentInstruction());
+        assertEquals(i1, env.getCurrentInstruction(null));
         assertEquals(p1, env.getCurrentProgram());
         i1.process(env, context);
         assertEquals(p1, env.getCurrentProgram());
-        assertEquals(i2, env.getCurrentInstruction());
+        assertEquals(i2, env.getCurrentInstruction(null));
         assertEquals(p1, env.getCurrentProgram());
         i2.process(env, context);
         assertEquals(p1, env.getCurrentProgram());
-        assertEquals(null, env.getCurrentInstruction());
+        assertEquals(null, env.getCurrentInstruction(null));
         assertEquals(p1, env.getCurrentProgram());
     }    
     

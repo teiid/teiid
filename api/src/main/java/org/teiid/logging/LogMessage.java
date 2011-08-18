@@ -27,6 +27,8 @@ import java.io.Serializable;
 
 public class LogMessage implements Serializable{
 
+	private static final long serialVersionUID = -134503344442009940L;
+	
 	private Object[] msgParts;
 
 	public LogMessage(Object[] msgParts) {

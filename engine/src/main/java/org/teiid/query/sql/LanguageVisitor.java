@@ -68,9 +68,8 @@ import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
-import org.teiid.query.sql.proc.BreakStatement;
+import org.teiid.query.sql.proc.BranchingStatement;
 import org.teiid.query.sql.proc.CommandStatement;
-import org.teiid.query.sql.proc.ContinueStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.CriteriaSelector;
 import org.teiid.query.sql.proc.DeclareStatement;
@@ -83,8 +82,6 @@ import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.AllInGroupSymbol;
-import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.DerivedColumn;
@@ -92,11 +89,14 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.TextLine;
+import org.teiid.query.sql.symbol.WindowFunction;
+import org.teiid.query.sql.symbol.WindowSpecification;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
@@ -171,8 +171,7 @@ public abstract class LanguageVisitor {
     // Visitor methods for symbol objects
     public void visit(AggregateSymbol obj) {}
     public void visit(AliasSymbol obj) {}
-    public void visit(AllInGroupSymbol obj) {}
-    public void visit(AllSymbol obj) {}
+    public void visit(MultipleElementSymbol obj) {}
     public void visit(Constant obj) {}
     public void visit(ElementSymbol obj) {}
     public void visit(ExpressionSymbol obj) {}
@@ -194,8 +193,7 @@ public abstract class LanguageVisitor {
     public void visit(IfStatement obj) {}
     public void visit(RaiseErrorStatement obj) {}
     public void visit(TranslateCriteria obj) {}
-    public void visit(BreakStatement obj) {}
-    public void visit(ContinueStatement obj) {}
+    public void visit(BranchingStatement obj) {}
     public void visit(WhileStatement obj) {}
     public void visit(LoopStatement obj) {}
     public void visit(DynamicCommand obj) {}
@@ -223,4 +221,7 @@ public abstract class LanguageVisitor {
 	public void visit(AlterView obj) {}
 	public void visit(AlterProcedure obj) {}
     public void visit(AlterTrigger obj) {}
+
+	public void visit(WindowFunction windowFunction) {}
+	public void visit(WindowSpecification windowSpecification) {}
 }

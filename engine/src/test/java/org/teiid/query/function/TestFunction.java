@@ -1000,9 +1000,10 @@ public class TestFunction {
     }
 
     @Test public void testTimestampDiffTimeStamp_Day_1() throws Exception {
+    	// Moving to June, March fails because of DST
         helpTestTimestampDiff(NonReserved.SQL_TSI_DAY,
-                              TimestampUtil.createTimestamp((2004-1900), 2, 1, 0, 0, 0, 0),
-                              TimestampUtil.createTimestamp((2004-1900), 3, 1, 0, 0, 0, 0),
+                              TimestampUtil.createTimestamp((2004-1900), 4, 1, 0, 0, 0, 0),
+                              TimestampUtil.createTimestamp((2004-1900), 5, 1, 0, 0, 0, 0),
                               new Long(31));
     }
 

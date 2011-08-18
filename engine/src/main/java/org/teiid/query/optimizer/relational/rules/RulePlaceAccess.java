@@ -69,10 +69,6 @@ public final class RulePlaceAccess implements
                                                    QueryPlannerException {
 
         Set<String> groups = context.getGroups();
-        if (groups == null) {
-        	groups = new HashSet<String>();
-        	context.setGroups(groups);
-        }
 
         boolean[] addtionalRules = new boolean[2];
 
@@ -285,6 +281,10 @@ public final class RulePlaceAccess implements
         hint = node.getProperty(NodeConstants.Info.MAKE_NOT_DEP);
         if (hint != null) {
             copyTo.setProperty(NodeConstants.Info.MAKE_NOT_DEP, hint);
+        }
+        hint = node.getProperty(NodeConstants.Info.MAKE_IND);
+        if (hint != null) {
+            copyTo.setProperty(NodeConstants.Info.MAKE_IND, hint);
         }
     }
 

@@ -209,7 +209,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
             		update = true;
             		GroupingNode groupNode = new GroupingNode(getID());                    
             		AggregateSymbol sumCount = new AggregateSymbol("SumCount", NonReserved.SUM, false, (Expression)accessNode.getElements().get(0)); //$NON-NLS-1$          		
-            		List<Expression> outputElements = new ArrayList<Expression>(1);            		
+            		List<SingleElementSymbol> outputElements = new ArrayList<SingleElementSymbol>(1);            		
             		outputElements.add(sumCount); 
             		groupNode.setElements(outputElements);
             		groupNode.addChild(unionNode);
@@ -218,8 +218,8 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
             		
             		Expression intSum = ResolverUtil.getConversion(sumCount, DataTypeManager.getDataTypeName(sumCount.getType()), DataTypeManager.DefaultDataTypes.INTEGER, false, metadata.getFunctionLibrary());
             		
-            		Expression rowCount = new ExpressionSymbol("RowCount", intSum); //$NON-NLS-1$            		
-            		outputElements = new ArrayList<Expression>(1);            		
+            		ExpressionSymbol rowCount = new ExpressionSymbol("RowCount", intSum); //$NON-NLS-1$            		
+            		outputElements = new ArrayList<SingleElementSymbol>(1);            		
             		outputElements.add(rowCount);             		
             		projectNode.setElements(outputElements);
             		projectNode.setSelectSymbols(outputElements);

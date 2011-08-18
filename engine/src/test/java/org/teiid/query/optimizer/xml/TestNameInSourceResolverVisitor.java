@@ -29,7 +29,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.core.TeiidComponentException;
+import junit.framework.TestCase;
+
 import org.teiid.query.mapping.xml.MappingAttribute;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingElement;
@@ -38,9 +39,6 @@ import org.teiid.query.mapping.xml.MappingVisitor;
 import org.teiid.query.mapping.xml.Navigator;
 import org.teiid.query.mapping.xml.ResultSetInfo;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.optimizer.xml.NameInSourceResolverVisitor;
-import org.teiid.query.optimizer.xml.SourceNodeGenaratorVisitor;
-import org.teiid.query.optimizer.xml.XMLPlannerEnvironment;
 import org.teiid.query.processor.xml.TestXMLProcessor;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.Command;
@@ -48,9 +46,6 @@ import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
-import org.teiid.query.unittest.FakeMetadataFacade;
-
-import junit.framework.TestCase;
 
 
 
@@ -61,14 +56,14 @@ public class TestNameInSourceResolverVisitor extends TestCase {
     static HashMap infos = new HashMap();
     
     XMLPlannerEnvironment getEnv(String sql) throws Exception{
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
+        QueryMetadataInterface metadata = TestXMLProcessor.exampleMetadataCached();
         Query query = (Query)TestXMLProcessor.helpGetCommand(sql, metadata); 
 
-        Collection groups = GroupCollectorVisitor.getGroups(query, true);
-        GroupSymbol group = (GroupSymbol) groups.iterator().next();
+        Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(query, true);
+        GroupSymbol group = groups.iterator().next();
         
         MappingDocument docOrig = (MappingDocument)metadata.getMappingNode(metadata.getGroupID(group.getName())); 
-        MappingDocument doc = (MappingDocument)docOrig.clone(); 
+        MappingDocument doc = docOrig.clone(); 
 
         XMLPlannerEnvironment env = new XMLPlannerEnvironment(metadata);
         env.mappingDoc = doc;

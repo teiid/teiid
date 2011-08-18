@@ -75,6 +75,8 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     private Map combinedElementMap;
     private int[] projectionIndexes;
     
+    private DependentValueSource dvs;
+    
     public JoinNode(int nodeID) {
         super(nodeID);
     }
@@ -182,7 +184,9 @@ public class JoinNode extends SubqueryAwareRelationalNode {
             this.joinStrategy.loadLeft();
             if (isDependent()) { 
                 TupleBuffer buffer = this.joinStrategy.leftSource.getTupleBuffer();
-                this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, new DependentValueSource(buffer));
+                dvs = new DependentValueSource(buffer);
+                dvs.setDistinct(this.joinStrategy.leftSource.isDistinct());
+                this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, dvs);
             }
             state = State.LOAD_RIGHT;
         }
@@ -270,12 +274,23 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         this.dependentValueSource = dependentValueSource;
     }
     
+    public String getDependentValueSourceName() {
+		return dependentValueSource;
+	}
+    
     public void closeDirect() {
         super.closeDirect();
         joinStrategy.close();
         if (this.getContext() != null && this.dependentValueSource != null) {
         	this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, null);
         }
+        this.dvs = null;
+    }
+    
+    @Override
+    public void reset() {
+    	super.reset();
+    	this.dvs = null;
     }
 
     public JoinType getJoinType() {
@@ -310,5 +325,9 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         	throw BATCH_AVILABLE;
         }
     }
+    
+    public DependentValueSource getDependentValueSource() {
+		return dvs;
+	}
 
 }

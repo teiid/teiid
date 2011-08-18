@@ -42,6 +42,7 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
 	public static final String SEVEN_2 = "7.2"; //$NON-NLS-1$
 	public static final String SEVEN_3 = "7.3"; //$NON-NLS-1$
 	public static final String SEVEN_4 = "7.4"; //$NON-NLS-1$
+	public static final String SEVEN_5 = "7.5"; //$NON-NLS-1$
 	
 	public TeiidExecutionFactory() {
 		setDatabaseVersion(SEVEN_0);
@@ -144,12 +145,16 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
         
         if (getDatabaseVersion().compareTo(SEVEN_3) >= 0) {
         	supportedFunctions.add(SourceSystemFunctions.UNESCAPE);
-        	
-            if (getDatabaseVersion().compareTo(SEVEN_4) >= 0) {
-            	supportedFunctions.add(SourceSystemFunctions.UUID);
-            	supportedFunctions.add(SourceSystemFunctions.ARRAY_GET);
-            	supportedFunctions.add(SourceSystemFunctions.ARRAY_LENGTH);
-            }
+        }
+        
+        if (getDatabaseVersion().compareTo(SEVEN_4) >= 0) {
+        	supportedFunctions.add(SourceSystemFunctions.UUID);
+        	supportedFunctions.add(SourceSystemFunctions.ARRAY_GET);
+        	supportedFunctions.add(SourceSystemFunctions.ARRAY_LENGTH);
+        }
+        
+        if (getDatabaseVersion().compareTo(SEVEN_5) >= 0) {
+        	supportedFunctions.add(SourceSystemFunctions.TRIM);
         }
         
         return supportedFunctions;
@@ -200,5 +205,30 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsCommonTableExpressions() {
     	return getDatabaseVersion().compareTo(SEVEN_2) >= 0;
+    }
+    
+    @Override
+    public boolean supportsAdvancedOlapOperations() {
+    	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
+    }
+    
+    @Override
+    public boolean supportsElementaryOlapOperations() {
+    	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
+    }
+    
+    @Override
+    public boolean supportsArrayAgg() {
+    	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
+    }
+    
+    @Override
+    public boolean supportsLikeRegex() {
+    	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
+    }
+    
+    @Override
+    public boolean supportsSimilarTo() {
+    	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
     }
 }

@@ -239,8 +239,8 @@ public class TestLimitNode {
         assertTrue(batch.getTerminationFlag());
     }
     
-    static List[] getRows(int rows) {
-        List[] data = new List[rows];
+    static List<?>[] getRows(int rows) {
+        List<?>[] data = new List[rows];
         for (int i = 0; i < rows; i++) {
             data[i] = Arrays.asList(new Object[] {new Integer(i+1)});
         }

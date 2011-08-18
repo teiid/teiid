@@ -18,12 +18,10 @@
 			accessing the Teiid server simultaneously.  
 		</para>
 		<para>
-			The <code>maxReserveBatchColumns</code>
-			setting determines the total size of batches that can be held by the BufferManager in memory.
-			This number does not include persistent batches held by soft (such as
+			The <code>maxReserveKb</code>
+			setting determines the total size in kilobytes of batches that can be held by the BufferManager in memory.
+			This number does not account for persistent batches held by soft (such as
 			index pages) or weak references. 
-			The value is treated internally as an approximation of bytes using the conversion
-			<code>maxReserveBatchColumns</code> * <code>processorBatchSize</code> * (64bytes per column value).
 			The default value of -1 will auto-calculate a typical max based upon the max heap available to the VM.  
 			The auto-calculated value assumes a 64bit architecture and will limit buffer usage to 50% of the first 
 			gigabyte of memory beyond the first 300 megabytes (which are assumed for use by the AS and other Teiid purposes) 
@@ -39,22 +37,21 @@
 		</para>
 		<note>
 			<para>Memory consumption can be significantly more or less than the nominal target
-	            depending upon actual column values and whether value caching is enabled.  Large strings, bigintegers, bigdecimals, or values typed as object can exceed their default size estimate.
-	            If an out of memory errors occur, then set a lower the maxReserveBatchColumns value.
+	            depending upon actual column values and whether value caching is enabled.  Large non built-in type objects can exceed their default size estimate.
+	            If an out of memory errors occur, then set a lower the maxReserveKb value.  Also note that source lob values are held by memory references that are not cleared when a batch is persisted.  
+	            With heavy lob usage you should ensure that buffers of other memory associated with lob references are appropiately sized.
 			</para>
 		</note>
 		<para>
-			The <code>maxProcessingBatchesColumns</code>
-			setting determines the total size of batches that can be used by active plans regardless of the memory held based on <code>maxReserveBatchColumns</code>.
-			The value is treated internally as an approximation of bytes using the conversion
-			<code>maxProcessingBatchesColumns</code> * <code>processorBatchSize</code> * (64bytes per column value).
+			The <code>maxProcessingKb</code>
+			setting determines the total size in kilobytes of batches that can be used by active plans regardless of the memory held based on <code>maxReserveKb</code>.
 			The default value of -1 will auto-calculate a typical max based upon the max heap available to the VM and max active plans.  
 			The auto-calculated value assumes a 64bit architecture and will limit processing batch usage to 10% of memory 
 			beyond the first 300 megabytes (which are assumed for use by the AS and other Teiid purposes).
 		</para>
 		<para>
-			In systems where large intermediate results are normal (scrolling cursors or sorting over millions of rows) you can consider increasing the <code>maxProcessingBatchColumns</code> and decreasing
-			the <code>maxReserveBatchColumns</code> so that each request has access to an effectively smaller buffer space.
+			In systems where large intermediate results are normal (scrolling cursors or sorting over millions of rows) you can consider increasing the <code>maxProcessingKb</code> and decreasing
+			the <code>maxReserveKb</code> so that each request has access to an effectively smaller buffer space.
 		</para>
 		<para>
 			Each intermediate result buffer, temporary LOB, and temporary table

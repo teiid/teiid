@@ -31,20 +31,23 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestAggregatePushdown;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
 import org.teiid.translator.SourceSystemFunctions;
 
-@SuppressWarnings("nls")
+@SuppressWarnings({"nls", "unchecked"})
 public class TestAggregateProcessing {
 
 	static void sampleDataBQT3(FakeDataManager dataMgr) throws Exception {
-		QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+		QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
 
 		// Group bqt1.smalla
 
@@ -74,7 +77,7 @@ public class TestAggregateProcessing {
 	}
 
 	private void sampleDataBQT_defect9842(FakeDataManager dataMgr) throws Exception {
-		QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+		QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
 
 		List[] tuples = new List[5];
 		for (int i = 0; i < tuples.length; i++) {
@@ -123,7 +126,7 @@ public class TestAggregateProcessing {
 		sampleDataBQT3(dataManager);
 
 		// Plan query
-		ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory
 				.exampleBQTCached());
 
 		// Run query
@@ -162,7 +165,7 @@ public class TestAggregateProcessing {
 		sampleDataBQT3(dataManager);
 
 		// Plan query
-		ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory
 				.exampleBQTCached());
 
 		// Run query
@@ -187,7 +190,7 @@ public class TestAggregateProcessing {
 		sampleDataBQT_defect9842(dataManager);
 
 		// Plan query
-		ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory
 				.exampleBQTCached());
 
 		// Run query
@@ -213,13 +216,12 @@ public class TestAggregateProcessing {
         sampleData1(dataManager);
         
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         // Run query
         helpProcess(plan, dataManager, expected);
     }
     
-    @SuppressWarnings("unchecked")
 	@Test public void testAggregatePushdown() {
     	Command command = helpParse("select e1, count(e2), max(e2) from (select e1, e2, e3 from pm1.g1 union all select e1, e2, e3 from pm1.g2 union all select e1, e2, e3 from pm2.g1) z group by e1"); //$NON-NLS-1$
     	
@@ -243,7 +245,7 @@ public class TestAggregateProcessing {
     				Arrays.asList(null, Integer.valueOf(5)),
     			});
     	
-    	ProcessorPlan plan = helpGetPlan(command, FakeMetadataFactory.example1Cached(), capFinder);
+    	ProcessorPlan plan = helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
     	
     	List[] expected = new List[] { 
                 Arrays.asList(null, Integer.valueOf(1), Integer.valueOf(5)),
@@ -264,17 +266,17 @@ public class TestAggregateProcessing {
     	capFinder.addCapabilities("pm2", bac); //$NON-NLS-1$
     	HardcodedDataManager dataManager = new HardcodedDataManager();
     	
-    	dataManager.addData("SELECT v_0.c_1, v_0.c_0, COUNT(*), MAX(v_0.c_2) FROM (SELECT g_0.e2 AS c_0, g_0.e1 AS c_1, g_0.e3 AS c_2 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1", //$NON-NLS-1$ 
+    	dataManager.addData("SELECT v_0.c_0, v_0.c_1, COUNT(*), MAX(v_0.c_2) FROM (SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1", //$NON-NLS-1$ 
     			new List[] {
     				Arrays.asList("2", Integer.valueOf(2), Integer.valueOf(2), Boolean.FALSE), //$NON-NLS-1$
     				Arrays.asList("1", Integer.valueOf(1), Integer.valueOf(3), Boolean.TRUE), //$NON-NLS-1$
     			});
-    	dataManager.addData("SELECT v_0.c_1, v_0.c_0, COUNT(*), MAX(v_0.c_2) FROM (SELECT g_0.e2 AS c_0, convert(g_0.e2, string) AS c_1, g_0.e3 AS c_2 FROM pm2.g2 AS g_0 ORDER BY c_1 LIMIT 10) AS v_0 GROUP BY v_0.c_0, v_0.c_1", //$NON-NLS-1$ 
+    	dataManager.addData("SELECT v_0.c_0, v_0.c_1, COUNT(*), MAX(v_0.c_2) FROM (SELECT convert(g_0.e2, string) AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2 FROM pm2.g2 AS g_0 ORDER BY c_0 LIMIT 10) AS v_0 GROUP BY v_0.c_0, v_0.c_1", //$NON-NLS-1$ 
     			new List[] {
     				Arrays.asList("1", Integer.valueOf(1), Integer.valueOf(4), Boolean.FALSE), //$NON-NLS-1$
     			});
     	
-    	ProcessorPlan plan = helpGetPlan(command, FakeMetadataFactory.example1Cached(), capFinder);
+    	ProcessorPlan plan = helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
     	
     	List[] expected = new List[] { 
                 Arrays.asList(Integer.valueOf(7), Boolean.TRUE),
@@ -292,7 +294,7 @@ public class TestAggregateProcessing {
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", TestOptimizer.getTypicalCapabilities()); //$NON-NLS-1$
         
-        ProcessorPlan plan = helpGetPlan(helpParse("select max(e2), count(*), stddev_pop(e2), var_samp(e2) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm2.g2) z"), FakeMetadataFactory.example1Cached(), capFinder); //$NON-NLS-1$
+        ProcessorPlan plan = helpGetPlan(helpParse("select max(e2), count(*), stddev_pop(e2), var_samp(e2) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm2.g2) z"), RealMetadataFactory.example1Cached(), capFinder); //$NON-NLS-1$
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
         dataManager.addData("SELECT g_0.e2 FROM pm1.g1 AS g_0", new List[] {Arrays.asList(1), Arrays.asList(2)});
@@ -315,7 +317,7 @@ public class TestAggregateProcessing {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
         
         helpProcess(plan, dataManager, expected);
     }
@@ -330,7 +332,7 @@ public class TestAggregateProcessing {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
         
         helpProcess(plan, dataManager, expected);
     }
@@ -345,9 +347,94 @@ public class TestAggregateProcessing {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
         
         helpProcess(plan, dataManager, expected);
     }
+    
+	@Test public void testJira1621() throws Exception {
+		// Create query
+		String sql = "SELECT sum(t2.e4) as s, max(t1.e1 || t2.e1) FROM pm1.g1 as t1, pm1.g2 as t2, pm1.g3 as t3 WHERE t1.e1 = coalesce(t2.e1, 'b') AND t2.e2 = t3.e2 GROUP BY t2.e2, t2.e3, t3.e2 ORDER BY s"; //$NON-NLS-1$
+
+		// Create expected results
+		List[] expected = new List[] {
+				Arrays.asList(null, "cc"),
+				Arrays.asList(0.0, "bb"),
+				Arrays.asList(2.0, null),
+				Arrays.asList(21.0, "aa"),
+				Arrays.asList(24.0, "aa")
+		};
+
+		// Construct data manager with data
+		FakeDataManager dataManager = new FakeDataManager();
+		sampleData1(dataManager);
+
+		// Plan query
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+		// Run query
+		helpProcess(plan, dataManager, expected);
+	}
+	
+	@Test public void testArrayAggOrderByPersistence() throws Exception {
+		// Create query
+		String sql = "SELECT array_agg(e2 order by e1) from pm1.g1 group by e3"; //$NON-NLS-1$
+
+		// Create expected results
+		List[] expected = new List[] {
+				Arrays.asList((Object)new Integer[] {1, 0, 0, 2}),
+				Arrays.asList((Object)new Integer[] {3, 1}),
+		};
+
+		// Construct data manager with data
+		FakeDataManager dataManager = new FakeDataManager();
+		sampleData1(dataManager);
+
+		// Plan query
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+		CommandContext cc = TestProcessor.createCommandContext();
+		BufferManagerImpl impl = BufferManagerFactory.getTestBufferManager(0, 2);
+		impl.setUseWeakReferences(false);
+		cc.setBufferManager(impl);
+		// Run query
+		helpProcess(plan, cc, dataManager, expected);
+	}
+	
+	@Test public void testDupGroupCombination() throws Exception {
+        String sql = "select count(e2), e1 from (select distinct e1, e2, e3 from pm1.g1) x group by e1"; //$NON-NLS-1$
+
+        List[] expected = new List[] {
+				Arrays.asList(2, "a"),
+		};
+
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3 FROM pm1.g1", new List[] {
+				Arrays.asList("a", 0, Boolean.TRUE),
+				Arrays.asList("a", 0, Boolean.FALSE),
+		});
+
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+		helpProcess(plan, dataManager, expected);
+	}
+	
+	@Test public void testAggFilter() throws Exception {
+		// Create query
+		String sql = "SELECT e2, count(*) filter (where e3) from pm1.g1 group by e2 order by e2"; //$NON-NLS-1$
+
+		// Create expected results
+		List[] expected = new List[] {
+				Arrays.asList(0, 0),
+				Arrays.asList(1, 1),
+				Arrays.asList(2, 0),
+				Arrays.asList(3, 1),
+		};
+
+		// Construct data manager with data
+		FakeDataManager dataManager = new FakeDataManager();
+		sampleData1(dataManager);
+
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+		helpProcess(plan, dataManager, expected);
+	}
 
 }

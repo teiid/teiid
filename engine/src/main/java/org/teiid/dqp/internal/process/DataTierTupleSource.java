@@ -244,7 +244,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 							workItem.moreWork();
     					}
     				}, 10, e.getRetryDelay());
-    				throw BlockedException.INSTANCE;
+    				throw BlockedException.block(aqr.getAtomicRequestID(), "Blocking on DataNotAvailableException"); //$NON-NLS-1$
     			} 
     			receiveResults(results);
     		}
@@ -295,7 +295,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 			addWork();
 		}
 		if (!futureResult.isDone()) {
-			throw BlockedException.INSTANCE;
+			throw BlockedException.block(aqr.getAtomicRequestID(), "Blocking on source query"); //$NON-NLS-1$
 		}
 		FutureWork<AtomicResultsMessage> currentResults = futureResult;
 		futureResult = null;
@@ -409,7 +409,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		if (exception.getCause() instanceof TeiidProcessingException) {
 			throw (TeiidProcessingException)exception.getCause();
 		}
-		throw new TeiidProcessingException(exception);
+		throw new TeiidProcessingException(exception, this.getConnectorName() + ": " + exception.getMessage()); //$NON-NLS-1$
 	}
 
 	void receiveResults(AtomicResultsMessage response) {

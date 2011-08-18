@@ -58,6 +58,7 @@ import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionService;
 import org.teiid.dqp.service.TransactionContext.Scope;
+import org.teiid.jdbc.SQLStates;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -161,8 +162,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     /**The time when command begins processing on the server.*/
     private long processingTimestamp = System.currentTimeMillis();
     
+    protected boolean useCallingThread;
+    private volatile boolean hasThread;
+    
     public RequestWorkItem(DQPCore dqpCore, RequestMessage requestMsg, Request request, ResultsReceiver<ResultsMessage> receiver, RequestID requestID, DQPWorkContext workContext) {
-    	super(workContext.useCallingThread() || requestMsg.isSync());
         this.requestMsg = requestMsg;
         this.requestID = requestID;
         this.processorTimeslice = dqpCore.getProcessorTimeSlice();
@@ -195,24 +198,65 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	protected boolean isDoneProcessing() {
 		return isClosed;
 	}
+		
+	@Override
+	public void run() {
+		hasThread = true;
+		try {
+			while (!isDoneProcessing()) {
+				super.run();
+				if (!useCallingThread) {
+					break;
+				}
+				//should use the calling thread
+				synchronized (this) {
+					if (this.resultsReceiver == null) {
+						break; //allow results to be processed by calling thread
+					}
+					if (this.getThreadState() == ThreadState.MORE_WORK) {
+						continue;
+					}
+					try {
+						wait();
+					} catch (InterruptedException e) {
+						try {
+							requestCancel();
+						} catch (TeiidComponentException e1) {
+							throw new TeiidRuntimeException(e1);
+						}
+					}
+				}
+			}
+		} finally {
+			hasThread = false;
+		}
+	}
 
 	@Override
 	protected void resumeProcessing() {
-		if (doneProducingBatches && !closeRequested && !isCanceled) {
-			this.run(); // just run in the IO thread
-		} else {
+		if (!this.useCallingThread) {
 			dqpCore.addWork(this);
 		}
 	}
 	
-	@Override
-	protected void interrupted(InterruptedException e) {
-		try {
-			this.requestCancel();
-		} catch (TeiidComponentException e1) {
-			throw new TeiidRuntimeException(e1);
+	/**
+	 * Special call from request threads to allow resumption of processing by
+	 * the calling thread.
+	 */
+	public void doMoreWork() {
+		boolean run = false;
+		synchronized (this) {
+			moreWork();
+			if (!useCallingThread || this.getThreadState() != ThreadState.MORE_WORK) {
+				return;
+			}
+			run = !hasThread;
 		}
-		super.interrupted(e);
+		if (run) {
+			//run outside of the lock
+			LogManager.logDetail(LogConstants.CTX_DQP, "Restarting processing using the calling thread", requestID); //$NON-NLS-1$
+			run();
+		}
 	}
 	
 	@Override
@@ -223,7 +267,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
                 state = ProcessingState.PROCESSING;
         		processNew();
                 if (isCanceled) {
-                	this.processingException = new TeiidProcessingException(QueryPlugin.Util.getString("QueryProcessor.request_cancelled", this.requestID)); //$NON-NLS-1$
+                	this.processingException = new TeiidProcessingException(SQLStates.QUERY_CANCELED, QueryPlugin.Util.getString("QueryProcessor.request_cancelled", this.requestID)); //$NON-NLS-1$
                     state = ProcessingState.CLOSE;
                 } 
         	}
@@ -292,10 +336,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	}
 
 	private void suspend() {
-		try {
-			this.transactionService.suspend(this.transactionContext);
-		} catch (XATransactionException e) {
-			LogManager.logDetail(LogConstants.CTX_DQP, e, "Error suspending active transaction"); //$NON-NLS-1$
+		if ((this.transactionState != TransactionState.NONE) && this.transactionContext.getTransaction() != null) {
+			try {
+				this.transactionService.suspend(this.transactionContext);
+			} catch (XATransactionException e) {
+				LogManager.logDetail(LogConstants.CTX_DQP, e, "Error suspending active transaction"); //$NON-NLS-1$
+			}
 		}
 	}
 
@@ -410,7 +456,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					CachedResults cr = rsCache.get(cacheId);
 					if (cr != null) {
 						this.resultsBuffer = cr.getResults();
-						this.analysisRecord = cr.getAnalysisRecord();
 						request.initMetadata();
 						this.originalCommand = cr.getCommand(requestMsg.getCommandString(), request.metadata, pi);
 						request.validateAccess(this.originalCommand);
@@ -442,15 +487,17 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					doneProducingBatches();
 				}
 				addToCache();
-				add = sendResultsIfNeeded(batch);
-				if (!added) {
-					super.flushBatchDirect(batch, add);
-					//restrict the buffer size for forward only results
-					if (add && !processor.hasFinalBuffer()
-							&& !batch.getTerminationFlag() 
-							&& this.getTupleBuffer().getManagedRowCount() >= 20 * this.getTupleBuffer().getBatchSize()) {
-						//requestMore will trigger more processing
-						throw BlockedException.INSTANCE;
+				synchronized (lobStreams) {
+					add = sendResultsIfNeeded(batch);
+					if (!added) {
+						super.flushBatchDirect(batch, add);
+						//restrict the buffer size for forward only results
+						if (add && !processor.hasFinalBuffer()
+								&& !batch.getTerminationFlag() 
+								&& this.getTupleBuffer().getManagedRowCount() >= 20 * this.getTupleBuffer().getBatchSize()) {
+							//requestMore will trigger more processing
+							throw BlockedException.block(requestID, "Blocking due to full results buffer."); //$NON-NLS-1$
+						}
 					}
 				}
 			}
@@ -482,7 +529,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     	Determinism determinismLevel = processor.getContext().getDeterminismLevel();
     	CachedResults cr = new CachedResults();
     	cr.setCommand(originalCommand);
-        cr.setAnalysisRecord(analysisRecord);
         cr.setResults(resultsBuffer, processor.getProcessorPlan());
         if (originalCommand.getCacheHint() != null) {
         	LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Using cache hint", originalCommand.getCacheHint()); //$NON-NLS-1$
@@ -611,6 +657,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
             if (requestMsg.getShowPlan() == ShowPlan.DEBUG) {
             	response.setDebugLog(analysisRecord.getDebugLog());
             }
+            this.analysisRecord = null;
         }
 	}
 
@@ -626,17 +673,25 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     	}
 		LogManager.logDetail(LogConstants.CTX_DQP, processingException, "Sending error to client", requestID); //$NON-NLS-1$
         ResultsMessage response = new ResultsMessage(requestMsg);
-        response.setException(processingException);
+        Throwable exception = this.processingException;
+        if (isCanceled) {
+        	exception = addCancelCode(exception); 
+        }
+        response.setException(exception);
         setAnalysisRecords(response);
         receiver.receiveResults(response);
     }
-    
-    @Override
-    protected boolean shouldPause() {
-    	//if we are waiting on results it's ok to pause
-    	return this.resultsReceiver != null;
-    }
 
+	private Throwable addCancelCode(Throwable exception) {
+		if (exception instanceof TeiidException) {
+			TeiidException te = (TeiidException)exception;
+			if (SQLStates.QUERY_CANCELED.equals(te.getCode())) {
+				return exception;
+			}
+		}
+		return new TeiidProcessingException(exception, SQLStates.QUERY_CANCELED, exception.getMessage());
+	}
+    
     private static List<ParameterInfo> getParameterInfo(StoredProcedure procedure) {
         List<ParameterInfo> paramInfos = new ArrayList<ParameterInfo>();
         
@@ -651,10 +706,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     public void processLobChunkRequest(String id, int streamRequestId, ResultsReceiver<LobChunk> chunckReceiver) {
     	LobWorkItem workItem = null;
     	synchronized (lobStreams) {
-            workItem = this.lobStreams.get(new Integer(streamRequestId));
+            workItem = this.lobStreams.get(streamRequestId);
             if (workItem == null) {
             	workItem = new LobWorkItem(this, dqpCore, id, streamRequestId);
-            	lobStreams.put(new Integer(streamRequestId), workItem);
+            	lobStreams.put(streamRequestId, workItem);
             }
 		}
     	workItem.setResultsReceiver(chunckReceiver);
@@ -666,7 +721,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     }
     
     public void removeLobStream(int streamRequestId) {
-        this.lobStreams.remove(new Integer(streamRequestId));
+        this.lobStreams.remove(streamRequestId);
     } 
     
     public boolean requestCancel() throws TeiidComponentException {
@@ -731,12 +786,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     	if (!this.doneProducingBatches) {
     		this.requestCancel(); //pending work should be canceled for fastest clean up
     	}
-    	this.moreWork();
+    	this.doMoreWork();
     }
     
     public void requestMore(int batchFirst, int batchLast, ResultsReceiver<ResultsMessage> receiver) {
     	this.requestResults(batchFirst, batchLast, receiver);
-    	this.moreWork(); 
+    	this.doMoreWork(); 
     }
     
     public void closeAtomicRequest(AtomicRequestID atomicRequestId) {

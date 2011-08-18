@@ -22,10 +22,16 @@
 
 package org.teiid;
 
+import java.io.Serializable;
+import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 
 import javax.security.auth.Subject;
+
+import org.teiid.adminapi.DataPolicy;
+import org.teiid.adminapi.Session;
+import org.teiid.adminapi.VDB;
 
 /**
  * Context information for the currently executing command.
@@ -33,24 +39,98 @@ import javax.security.auth.Subject;
  */
 public interface CommandContext {
 	
+	/**
+	 * Get the current user name
+	 * @return
+	 */
 	String getUserName();
 	
+	/**
+	 * Get the current vdb name
+	 * @return
+	 */
 	String getVdbName();
 	
+	/**
+	 * Get the current vdb version
+	 * @return
+	 */
 	int getVdbVersion();
 	
+	/**
+	 * Get the connection id
+	 * @return
+	 */
 	String getConnectionID();
 	
+	/**
+	 * Get the environment properties.  The returned properties are associated only with the currently executing command.
+	 * The only built-in key/value in the properties is the key "sessionid" with the same value as getConnectionID()
+	 * @return
+	 * @deprecated
+	 */
 	Properties getEnvironmentProperties();
 	
+	/**
+	 * Get the next random double value 
+	 * @return
+	 */
 	double getNextRand();
 	
+	/**
+	 * Sets the seed value and returns the next random double value.  
+	 * Additional calls to {@link #getNextRand()} will be based upon the seed value.
+	 * @param seed
+	 * @return
+	 */
 	double getNextRand(long seed);
 	
+	/**
+	 * Get the processor batch size set on the BufferManager
+	 * @return
+	 */
 	int getProcessorBatchSize();
 	
+	/**
+	 * Get the server {@link TimeZone}
+	 * @return
+	 */
 	TimeZone getServerTimeZone();
 	
+	/**
+	 * Get the current subject
+	 * @return
+	 */
 	Subject getSubject();
+
+	/**
+	 * Get the current session
+	 * @return
+	 */
+	Session getSession();
+
+	/**
+	 * Get the current command payload
+	 * @return may be null if the client did not set a payload
+	 */
+	Serializable getCommandPayload();
+
+	/**
+	 * Get the current request id 
+	 * @return
+	 */
+	String getRequestId();
+	
+	/**
+	 * Get the user's data policies, never null
+	 * @return
+	 */
+	Map<String, DataPolicy> getAllowedDataPolicies();
+	
+	/**
+	 * Get the current vdb
+	 * @return
+	 */
+	VDB getVdb();
 
 }

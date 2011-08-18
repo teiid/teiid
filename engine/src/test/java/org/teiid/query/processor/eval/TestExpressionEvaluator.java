@@ -60,7 +60,7 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.TestCaseExpression;
 import org.teiid.query.sql.symbol.TestSearchedCaseExpression;
 import org.teiid.query.sql.util.ValueIterator;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings("nls")
@@ -194,7 +194,7 @@ public class TestExpressionEvaluator {
         e2.setType(String.class);
         
         Function func = new Function("concat", new Expression[] { e1, e2 }); //$NON-NLS-1$
-        FunctionDescriptor desc = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("concat", new Class[] { String.class, String.class } ); //$NON-NLS-1$
+        FunctionDescriptor desc = RealMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("concat", new Class[] { String.class, String.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
 
         SingleElementSymbol[] elements = new SingleElementSymbol[] {
@@ -216,7 +216,7 @@ public class TestExpressionEvaluator {
         e2.setType(String.class);
         
         Function func = new Function("concat", new Expression[] { e2, e1 }); //$NON-NLS-1$
-        FunctionDescriptor desc = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("concat", new Class[] { String.class, String.class } ); //$NON-NLS-1$
+        FunctionDescriptor desc = RealMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("concat", new Class[] { String.class, String.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
 
         SingleElementSymbol[] elements = new SingleElementSymbol[] {
@@ -237,7 +237,7 @@ public class TestExpressionEvaluator {
         e1.setType(Integer.class);        
         
         Function func = new Function("lookup", new Expression[] { new Constant("pm1.g1"), new Constant("e2"), new Constant("e1"), e1 }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        FunctionDescriptor desc = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, String.class } ); //$NON-NLS-1$
+        FunctionDescriptor desc = RealMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, String.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
 
         SingleElementSymbol[] elements = new SingleElementSymbol[] {
@@ -309,7 +309,7 @@ public class TestExpressionEvaluator {
 
     @Test public void testUser() throws Exception {
         Function func = new Function("user", new Expression[] {}); //$NON-NLS-1$
-        FunctionDescriptor desc = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("user", new Class[] {} );         //$NON-NLS-1$
+        FunctionDescriptor desc = RealMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("user", new Class[] {} );         //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
 
         FakeDataManager dataMgr = new FakeDataManager();
@@ -326,7 +326,7 @@ public class TestExpressionEvaluator {
      */
     @Test public void testEnv() throws Exception {
         Function func = new Function("env", new Expression[] {}); //$NON-NLS-1$
-        FunctionDescriptor desc = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("env", new Class[] {String.class} );         //$NON-NLS-1$
+        FunctionDescriptor desc = RealMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("env", new Class[] {String.class} );         //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
         
         FakeDataManager dataMgr = new FakeDataManager();
@@ -352,7 +352,7 @@ public class TestExpressionEvaluator {
         } else {
             parameterSignature = new Class[] { String.class };
         }        
-        FunctionDescriptor desc = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("commandpayload", parameterSignature );         //$NON-NLS-1$
+        FunctionDescriptor desc = RealMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("commandpayload", parameterSignature );         //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
         
         FakeDataManager dataMgr = new FakeDataManager();       
@@ -430,6 +430,81 @@ public class TestExpressionEvaluator {
     	IsNullCriteria inc = new IsNullCriteria(new Constant(Boolean.TRUE, DataTypeManager.DefaultDataClasses.BOOLEAN));
     	inc.setNegated(true);
     	assertEquals(Boolean.TRUE, Evaluator.evaluate(inc));
+    }
+    
+    @Test public void testSubstring() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("substring('abcd' from 2 for 2)");
+    	assertEquals("bc", Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testExtract() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("extract(year from cast('2011-01-01' as date))");
+    	assertEquals(2011, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testExtract1() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("extract(day from cast('2011-01-01' as date))");
+    	assertEquals(1, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testSimilarTo() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'aaaxy' similar to 'a+%'");
+    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testSimilarTo1() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'xaay' similar to 'xa{2,3}y'");
+    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testSimilarTo2() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'xay' similar to 'xa{2,3}y'");
+    	assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
+    }
+    
+    @Test(expected=ExpressionEvaluationException.class) public void testSimilarTo3() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'xay' similar to '{'");
+    	assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testSimilarTo4() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'xay' similar to 'xa{2,}y'");
+    	assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
+    }
+
+    @Test public void testSimilarTo5() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'x1y' similar to 'x([a-z]+|[0-9])_'");
+    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testSimilarTo6() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'xx' similar to 'x([a-z]+|[0-9])_'");
+    	assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testLikeRegex() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'aaaxy' like_regex 'a+.*'");
+    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testLikeRegex1() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'xaay' similar to 'xa{2,3}y'");
+    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testLikeRegex2() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'xay' like_regex 'xa{2,3}y'");
+    	assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
+    }
+
+    @Test(expected=ExpressionEvaluationException.class) public void testLikeRegex3() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'xay' like_regex '{'");
+    	assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testLikePlus() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'+' like '+'");
+    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
     }
     
 }

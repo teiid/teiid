@@ -45,14 +45,14 @@ import org.teiid.query.sql.navigator.PreOrderNavigator;
  */
 public class PredicateCollectorVisitor extends LanguageVisitor {
 
-    private Collection predicates;
+    private Collection<Criteria> predicates;
 
     /**
      * Construct a new visitor with the default collection type, which is a
      * {@link java.util.ArrayList}.
      */
     public PredicateCollectorVisitor() {
-        this.predicates = new ArrayList();
+        this.predicates = new ArrayList<Criteria>();
     }
 
     /**
@@ -136,7 +136,7 @@ public class PredicateCollectorVisitor extends LanguageVisitor {
      * Get a collection of predicates discovered while visiting.
      * @return Collection of {@link org.teiid.query.sql.lang.PredicateCriteria} subclasses.
      */
-    public Collection getPredicates() {
+    public Collection<Criteria> getPredicates() {
         return this.predicates;
     }
 
@@ -144,7 +144,7 @@ public class PredicateCollectorVisitor extends LanguageVisitor {
      * Helper to quickly get the predicates from obj
      * @param obj Language object
      */
-    public static final Collection getPredicates(LanguageObject obj) {
+    public static final Collection<Criteria> getPredicates(LanguageObject obj) {
         PredicateCollectorVisitor visitor = new PredicateCollectorVisitor();
         if(obj != null) {
             PreOrderNavigator.doVisit(obj, visitor);

@@ -31,6 +31,7 @@ import java.util.List;
 import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -40,9 +41,7 @@ import org.teiid.query.processor.relational.JoinNode;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings({"unchecked", "nls"})
@@ -62,7 +61,7 @@ public class TestDependentJoins {
         
         // Plan query
         ProcessorPlan plan = TestProcessor.helpGetPlan(TestProcessor.helpParse(sql),
-                                                       FakeMetadataFactory.example1Cached(),
+                                                       RealMetadataFactory.example1Cached(),
                                                        capFinder);
         return plan;
     }
@@ -88,7 +87,7 @@ public class TestDependentJoins {
        TestProcessor.sampleData1(dataManager);
        
        // Plan query
-       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
        // Run query
        TestProcessor.helpProcess(plan, dataManager, expected);
@@ -141,7 +140,7 @@ public class TestDependentJoins {
        TestProcessor.sampleData1(dataManager);
        
        // Plan query
-       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
        // Run query
        TestProcessor.helpProcess(plan, dataManager, expected);
@@ -168,7 +167,7 @@ public class TestDependentJoins {
        TestProcessor.sampleData1(dataManager);
        
        // Plan query
-       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
        // Run query
        TestProcessor.helpProcess(plan, dataManager, expected);
@@ -195,7 +194,7 @@ public class TestDependentJoins {
        TestProcessor.sampleData1(dataManager);
        
        // Plan query
-       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
        // Run query
        TestProcessor.helpProcess(plan, dataManager, expected);
@@ -221,7 +220,7 @@ public class TestDependentJoins {
         TestProcessor.sampleData1(dataManager);
        
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -246,7 +245,7 @@ public class TestDependentJoins {
        TestProcessor.sampleData1(dataManager);
        
        // Plan query
-       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
        // Run query
        TestProcessor.helpProcess(plan, dataManager, expected);
@@ -273,7 +272,7 @@ public class TestDependentJoins {
        TestProcessor.sampleData1(dataManager);
        
        // Plan query
-       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
        // Run query
        TestProcessor.helpProcess(plan, dataManager, expected);
@@ -300,7 +299,7 @@ public class TestDependentJoins {
        TestProcessor.sampleData1(dataManager);
        
        // Plan query
-       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
        // Run query
        TestProcessor.helpProcess(plan, dataManager, expected);
@@ -370,7 +369,7 @@ public class TestDependentJoins {
        TestProcessor.sampleData1(dataManager);
        
        // Plan query
-       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
        // Run query
        TestProcessor.helpProcess(plan, dataManager, expected);
@@ -395,7 +394,7 @@ public class TestDependentJoins {
        TestProcessor.sampleData1(dataManager);
        
        // Plan query
-       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
        // Run query
        TestProcessor.helpProcess(plan, dataManager, expected);
@@ -419,10 +418,6 @@ public class TestDependentJoins {
              Arrays.asList(new Object[] { "cc  ", "cc  ", new Integer(2)}) //$NON-NLS-1$ //$NON-NLS-2$
         };    
 
-        // Construct data manager with data
-        FakeDataManager dataManager = new FakeDataManager();
-        TestProcessor.sampleData2b(dataManager);
-
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities depcaps = new BasicSourceCapabilities();
@@ -442,7 +437,7 @@ public class TestDependentJoins {
 
         // Slightly modify metadata to set max set size to just a few rows - this
         // will allow us to test the dependent overflow case
-        FakeMetadataFacade fakeMetadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface fakeMetadata = RealMetadataFactory.example1Cached();
         
         Command command = TestProcessor.helpParse(sql);   
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, fakeMetadata, capFinder);
@@ -453,6 +448,10 @@ public class TestDependentJoins {
         RelationalNode project = relationalPlan.getRootNode();
         RelationalNode join = project.getChildren()[0];
         assertTrue("Expected instance of JoinNode (for dep join) but got " + join.getClass(), join instanceof JoinNode); //$NON-NLS-1$
+
+        // Construct data manager with data
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData2b(dataManager, fakeMetadata);
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);          
@@ -467,7 +466,7 @@ public class TestDependentJoins {
         String sql = "select a.intkey from bqt1.smalla a, bqt1.smallb b where concat(a.stringkey, 't') = b.stringkey option makedep a"; //$NON-NLS-1$ 
          
         // Plan query 
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), null, capFinder, new String[] {"SELECT a.stringkey, a.intkey FROM bqt1.smalla AS a", "SELECT b.stringkey FROM bqt1.smallb AS b"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ //$NON-NLS-2$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, new String[] {"SELECT a.stringkey, a.intkey FROM bqt1.smalla AS a", "SELECT b.stringkey FROM bqt1.smallb AS b"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ //$NON-NLS-2$
  
         TestOptimizer.checkNodeTypes(plan, new int[] { 
             2,      // Access 
@@ -527,7 +526,7 @@ public class TestDependentJoins {
         String sql = "select a.intkey from bqt1.smalla a, bqt2.smallb b where concat(a.stringkey, 't') = b.stringkey and a.intkey = b.intkey option makedep a"; //$NON-NLS-1$ 
          
         // Plan query 
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), null, capFinder, 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
                                                     new String[] {"SELECT g_0.stringkey, g_0.intkey FROM bqt1.smalla AS g_0 WHERE g_0.intkey IN (<dependent values>)", "SELECT g_0.stringkey, g_0.intkey FROM bqt2.smallb AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
  
         TestOptimizer.checkNodeTypes(plan, new int[] { 
@@ -564,37 +563,23 @@ public class TestDependentJoins {
 	}
     
     static void sampleData4(FakeDataManager dataMgr) throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-    
-        // Group pm1.g1
-        FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g1"); //$NON-NLS-1$
-        List elementIDs = metadata.getElementIDsInGroupID(groupID);
-        List elementSymbols = FakeDataStore.createElements(elementIDs);
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
     
         dataMgr.registerTuples(
-            groupID,
-            elementSymbols,
+        		metadata,
+            "pm1.g1", new List[] { 
+				    Arrays.asList(new Object[] { "a",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { "b",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { "c",   new Integer(2),     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
+				    } );       
             
-            new List[] { 
-                Arrays.asList(new Object[] { "a",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
-                Arrays.asList(new Object[] { "b",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
-                Arrays.asList(new Object[] { "c",   new Integer(2),     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
-                } );       
-            
-        // Group pm6.g1
-        groupID = (FakeMetadataObject) metadata.getGroupID("pm6.g1"); //$NON-NLS-1$
-        elementIDs = metadata.getElementIDsInGroupID(groupID);
-        elementSymbols = FakeDataStore.createElements(elementIDs);
-    
         dataMgr.registerTuples(
-            groupID,
-            elementSymbols,
-            
-            new List[] { 
-                Arrays.asList(new Object[] { "b",   new Integer(0) }), //$NON-NLS-1$
-                Arrays.asList(new Object[] { "d",   new Integer(3) }), //$NON-NLS-1$
-                Arrays.asList(new Object[] { "e",   new Integer(1) }), //$NON-NLS-1$
-                } );      
+        		metadata,
+            "pm6.g1", new List[] { 
+				    Arrays.asList(new Object[] { "b",   new Integer(0) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { "d",   new Integer(3) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { "e",   new Integer(1) }), //$NON-NLS-1$
+				    } );      
     }
 
     /** SELECT pm1.g1.e1 FROM pm1.g1, pm6.g1 WHERE pm1.g1.e1=pm6.g1.e1 OPTION MAKEDEP pm6.g1 */
@@ -608,7 +593,7 @@ public class TestDependentJoins {
 
         // Slightly modify metadata to set max set size to just a few rows - this
         // will allow us to test the dependent overflow case
-        FakeMetadataFacade fakeMetadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface fakeMetadata = RealMetadataFactory.example1Cached();
 
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -665,7 +650,7 @@ public class TestDependentJoins {
 
         // Slightly modify metadata to set max set size to just a few rows - this
         // will allow us to test the dependent overflow case
-        FakeMetadataFacade fakeMetadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface fakeMetadata = RealMetadataFactory.example1Cached();
 
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -722,10 +707,6 @@ public class TestDependentJoins {
                 "cc  ", "cc  ", new Integer(2)}) //$NON-NLS-1$ //$NON-NLS-2$
         };
 
-        // Construct data manager with data
-        FakeDataManager dataManager = new FakeDataManager();
-        TestProcessor.sampleData2b(dataManager);
-
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities depcaps = new BasicSourceCapabilities();
@@ -740,7 +721,7 @@ public class TestDependentJoins {
         capFinder.addCapabilities("pm4", depcaps); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade fakeMetadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface fakeMetadata = RealMetadataFactory.example1Cached();
 
         Command command = TestProcessor.helpParse(sql);
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, fakeMetadata, capFinder);
@@ -751,6 +732,10 @@ public class TestDependentJoins {
         RelationalNode project = relationalPlan.getRootNode();
         RelationalNode join = project.getChildren()[0];
         assertTrue("Expected instance of JoinNode (for dep join) but got " + join.getClass(), join instanceof JoinNode); //$NON-NLS-1$
+
+        // Construct data manager with data
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData2b(dataManager, fakeMetadata);
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -770,7 +755,7 @@ public class TestDependentJoins {
        TestProcessor.sampleData1(dataManager);
         
        // Plan query
-       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+       ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
        // Run query
        TestProcessor.helpProcess(plan, dataManager, expected);
@@ -806,7 +791,7 @@ public class TestDependentJoins {
        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
        
        Command command = TestProcessor.helpParse(sql);   
-       ProcessorPlan plan = TestProcessor.helpGetPlan(command, FakeMetadataFactory.example1Cached(), capFinder);
+       ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
 
        // Run query
        TestProcessor.helpProcess(plan, dataManager, expected);
@@ -820,10 +805,10 @@ public class TestDependentJoins {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData4(dataManager);
 
-        FakeMetadataFacade fakeMetadata = FakeMetadataFactory.example1();
+        QueryMetadataInterface fakeMetadata = RealMetadataFactory.example1();
 
-        FakeMetadataFactory.setCardinality("pm1.g1", 1, fakeMetadata);
-        FakeMetadataFactory.setCardinality("pm6.g1", 1000, fakeMetadata);
+        RealMetadataFactory.setCardinality("pm1.g1", 1, fakeMetadata);
+        RealMetadataFactory.setCardinality("pm6.g1", 1000, fakeMetadata);
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities depcaps = new BasicSourceCapabilities();
@@ -852,6 +837,58 @@ public class TestDependentJoins {
         //note that the dependent join was not actually performed
         assertEquals(new HashSet<String>(Arrays.asList("SELECT pm1.g1.e1 FROM pm1.g1", "SELECT pm6.g1.e1 FROM pm6.g1 ORDER BY pm6.g1.e1")), 
         		new HashSet<String>(dataManager.getQueries()));
+    }
+    
+    @Test public void testDjHint() { 
+        // Create query 
+        String sql = "SELECT pm1.g1.e1 FROM pm1.g1 WHERE e1 IN /*+ DJ */ (select e1 from pm2.g1) order by pm1.g1.e1"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "b" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "c" }) //$NON-NLS-1$
+        };    
+        
+        // Construct data manager with data
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);
+        
+        // Plan query
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        TestOptimizer.checkDependentJoinCount(plan, 1);
+
+        // Run query
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testMakeIndHint() { 
+        // Create query 
+        String sql = "SELECT pm1.g1.e1 FROM /*+ MAKEIND */ pm1.g1, pm2.g1 WHERE pm1.g1.e1 = pm2.g1.e1 AND pm1.g1.e2=pm2.g1.e2 order by pm1.g1.e1"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "b" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "c" }) //$NON-NLS-1$
+        };    
+        
+        // Construct data manager with data
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);
+        
+        // Plan query
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        TestOptimizer.checkDependentJoinCount(plan, 1);
+
+        // Run query
+        TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
 }

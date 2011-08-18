@@ -32,6 +32,7 @@ import java.sql.SQLException;
 import org.teiid.client.ProcedureErrorInstructionException;
 import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.security.LogonException;
+import org.teiid.client.util.ExceptionUtil;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
@@ -102,10 +103,13 @@ public class TeiidSQLException extends SQLException {
 			return new TeiidSQLException((SQLException) exception, message, true);
 		}
 		String sqlState = SQLStates.DEFAULT;
-
-		exception = findRootException(exception);
-
-		sqlState = determineSQLState(exception, sqlState);
+		TeiidException te = ExceptionUtil.getExceptionOfType(exception, TeiidException.class);
+		if (te != null && te.getCode() != null) {
+			sqlState = te.getCode();
+		} else {
+			exception = findRootException(exception);
+			sqlState = determineSQLState(exception, sqlState);
+		}
 		return new TeiidSQLException(origException, message, sqlState);
 	}
 

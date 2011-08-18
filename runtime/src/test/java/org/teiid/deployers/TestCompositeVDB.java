@@ -21,6 +21,8 @@
  */
 package org.teiid.deployers;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,19 +40,26 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionFactory;
+import org.teiid.vdb.runtime.VDBKey;
 
 @SuppressWarnings("nls")
 public class TestCompositeVDB {
 	
 	public static TransformationMetadata createTransformationMetadata(MetadataStore metadataStore, String vdbName) throws Exception {
-    	VDBMetaData vdbMetaData = new VDBMetaData();
+    	CompositeVDB cvdb = createCompositeVDB(metadataStore, vdbName);
+    	VDBMetaData vdb = cvdb.getVDB();
+    	return vdb.getAttachment(TransformationMetadata.class);
+	}
+
+	private static CompositeVDB createCompositeVDB(MetadataStore metadataStore,
+			String vdbName) {
+		VDBMetaData vdbMetaData = new VDBMetaData();
     	vdbMetaData.setName(vdbName); //$NON-NLS-1$
     	vdbMetaData.setVersion(1);
     	for (Schema schema : metadataStore.getSchemas().values()) {
-			vdbMetaData.addModel(FakeMetadataFactory.createModel(schema.getName(), schema.isPhysical()));
+			vdbMetaData.addModel(RealMetadataFactory.createModel(schema.getName(), schema.isPhysical()));
 		}
     	MetadataStoreGroup metaGroup = new MetadataStoreGroup();
     	metaGroup.addStore(metadataStore);
@@ -59,9 +68,8 @@ public class TestCompositeVDB {
     	cmr.addConnectorManager("source", getConnectorManager("bqt1", "FakeTranslator", "FakeConnection", getFuncsOne()));
     	cmr.addConnectorManager("source2", getConnectorManager("bqt2", "FakeTranslator2", "FakeConnection2", getFuncsTwo()));
     	
-    	CompositeVDB cvdb = new CompositeVDB(vdbMetaData, metaGroup, null, null, FakeMetadataFactory.SFM.getSystemFunctions(),cmr);
-    	VDBMetaData vdb = cvdb.getVDB();
-    	return vdb.getAttachment(TransformationMetadata.class);
+    	CompositeVDB cvdb = new CompositeVDB(vdbMetaData, metaGroup, null, null, RealMetadataFactory.SFM.getSystemFunctions(),cmr);
+		return cvdb;
 	}
 	
 	private static ConnectorManager getConnectorManager(String modelName, String translatorName, String connectionName,  List<FunctionMethod> funcs) {
@@ -104,7 +112,7 @@ public class TestCompositeVDB {
 	
 	
 	private void helpResolve(String sql) throws Exception {
-		TransformationMetadata metadata = createTransformationMetadata(RealMetadataFactory.exampleBQTStore(), "bqt");
+		TransformationMetadata metadata = createTransformationMetadata(RealMetadataFactory.exampleBQTCached().getMetadataStore(), "bqt");
 		Command command = QueryParser.getQueryParser().parseCommand(sql);
 		QueryResolver.resolveCommand(command, metadata);		
 	}
@@ -138,5 +146,11 @@ public class TestCompositeVDB {
 	public void testNonQualifiedDuplicate() throws Exception {
 		helpResolve("SELECT duplicate_func(BQT1.SmallA.INTKEY) FROM BQT1.SmallA");
 	}		
+	
+	@Test public void testRemoveChild() throws Exception {
+		CompositeVDB vdb = createCompositeVDB(RealMetadataFactory.exampleBQTStore(), "bqt");
+		vdb.removeChild(new VDBKey("foo", 1));
+		assertNotNull(vdb.getVDB());
+	}
 	
 }

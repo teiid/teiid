@@ -41,6 +41,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
+import org.teiid.query.resolver.util.AccessPattern;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
@@ -126,9 +127,6 @@ public final class RuleMergeVirtual implements
         		for (ElementSymbol elementSymbol : elements) {
 					if (virtualGroup.equals(elementSymbol.getGroupSymbol())) {
 						unrelated = true;
-						if (!(symbolMap.getMappedExpression(elementSymbol) instanceof ElementSymbol)) {
-							return root;
-						}
 					}
 				}
 			}
@@ -164,13 +162,7 @@ public final class RuleMergeVirtual implements
             return root;
         }
         
-        PlanNode parentGroup = NodeEditor.findParent(frame, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE);
-        List<SingleElementSymbol> groupCols = null;
-        if (parentGroup != null) {
-        	groupCols = (List<SingleElementSymbol>)parentGroup.getProperty(NodeConstants.Info.GROUP_COLS);
-        }
-
-        if (!checkProjectedSymbols(projectNode, virtualGroup, parentJoin, groupCols, symbolMap, metadata)) {
+        if (!checkProjectedSymbols(projectNode, virtualGroup, parentJoin, metadata)) {
             return root;
         }
 
@@ -193,9 +185,9 @@ public final class RuleMergeVirtual implements
         // find the new root of the frame so that access patterns can be propagated
         PlanNode newRoot = FrameUtil.findJoinSourceNode(frame.getFirstChild());
         if (newRoot != null) {
-            Collection ap = (Collection)frame.getProperty(NodeConstants.Info.ACCESS_PATTERNS);
+            Collection<AccessPattern> ap = (Collection)frame.getProperty(NodeConstants.Info.ACCESS_PATTERNS);
             if (ap != null) {
-                Collection newAp = (Collection)newRoot.getProperty(NodeConstants.Info.ACCESS_PATTERNS);
+                Collection<AccessPattern> newAp = (Collection)newRoot.getProperty(NodeConstants.Info.ACCESS_PATTERNS);
                 if (newAp == null) {
                     newRoot.setProperty(NodeConstants.Info.ACCESS_PATTERNS, ap);
                 } else {
@@ -326,9 +318,11 @@ public final class RuleMergeVirtual implements
     private static boolean checkProjectedSymbols(PlanNode projectNode,
                                                  GroupSymbol virtualGroup,
                                                  PlanNode parentJoin,
-                                                 List<SingleElementSymbol> parentGroupingCols,
-                                                 SymbolMap symbolMap,
                                                  QueryMetadataInterface metadata) {
+        if (projectNode.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
+        	return false;
+        }
+
         List<SingleElementSymbol> selectSymbols = (List<SingleElementSymbol>)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);
         
         HashSet<GroupSymbol> groups = new HashSet<GroupSymbol>();
@@ -354,7 +348,6 @@ public final class RuleMergeVirtual implements
             }
         }
 
-        List<ElementSymbol> virtualElements = symbolMap.getKeys();
         for (int i = 0; i < selectSymbols.size(); i++) {
         	SingleElementSymbol symbol = selectSymbols.get(i);
             Collection scalarSubqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(symbol);
@@ -362,9 +355,6 @@ public final class RuleMergeVirtual implements
                 return false;
             }
             if (checkForNullDependent && JoinUtil.isNullDependent(metadata, groups, SymbolMap.getExpression(symbol))) {
-                return false;
-            }
-            if (parentGroupingCols != null && !(SymbolMap.getExpression(symbol) instanceof SingleElementSymbol) && parentGroupingCols.contains(virtualElements.get(i))) {
                 return false;
             }
             // TEIID-16: We do not want to merge a non-deterministic scalar function

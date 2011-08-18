@@ -2,7 +2,6 @@ package org.teiid.query.sql.lang;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 import net.sf.saxon.sxpath.XPathExpression;
@@ -170,7 +169,7 @@ public class XMLTable extends TableFunctionReference {
 	}
 
 	@Override
-	public XMLTable clone() {
+	protected XMLTable cloneDirect() {
 		XMLTable clone = new XMLTable();
 		this.copy(clone);
 		for (XMLColumn column : columns) {
@@ -194,11 +193,6 @@ public class XMLTable extends TableFunctionReference {
 		return clone;
 	}
 
-	@Override
-	public void collectGroups(Collection groups) {
-		groups.add(getGroupSymbol());
-	}
-	
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {

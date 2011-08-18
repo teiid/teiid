@@ -26,10 +26,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.core.util.EquivalenceUtil;
-import org.teiid.query.sql.LanguageObject;
+import org.teiid.core.util.StringUtil;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.proc.Statement.Labeled;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
@@ -38,10 +39,12 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  * <p> This class represents a group of <code>Statement</code> objects. The
  * statements are stored on this object in the order in which they are added.</p>
  */
-public class Block implements LanguageObject {
+public class Block extends Statement implements Labeled {
 
 	// list of statements on this block
 	private List<Statement> statements;
+	private boolean atomic;
+	private String label;
 
 	/**
 	 * Constructor for Block.
@@ -57,6 +60,14 @@ public class Block implements LanguageObject {
 	public Block(Statement statement) {
 		this();
 		statements.add(statement);
+	}
+	
+	public String getLabel() {
+		return label;
+	}
+	
+	public void setLabel(String label) {
+		this.label = label;
 	}
 
 	/**
@@ -112,9 +123,11 @@ public class Block implements LanguageObject {
 	 */
 	public Block clone() {		
 		Block copy = new Block();
+		copy.setAtomic(atomic);
 		for (Statement statement : statements) {
 			copy.addStatement((Statement)statement.clone());
 		}
+		copy.setLabel(label);
 		return copy;
 	}
 	
@@ -134,9 +147,13 @@ public class Block implements LanguageObject {
     	if(!(obj instanceof Block)) {
     		return false;
 		}
-
+    	
+    	Block other = (Block)obj;
+    	
 		// Compare the statements on the block
-        return EquivalenceUtil.areEqual(getStatements(), ((Block)obj).getStatements());
+        return this.atomic == other.atomic 
+        && StringUtil.equalsIgnoreCase(label, other.label)
+        && EquivalenceUtil.areEqual(getStatements(), other.getStatements());
     }    
 
     /**
@@ -156,6 +173,19 @@ public class Block implements LanguageObject {
      */
     public String toString() {
     	return SQLStringVisitor.getSQLString(this);
+    }
+    
+    public boolean isAtomic() {
+		return atomic;
+	}
+    
+    public void setAtomic(boolean atomic) {
+		this.atomic = atomic;
+	}
+    
+    @Override
+    public int getType() {
+    	return Statement.TYPE_COMPOUND;
     }
 
 }// END CLASS

@@ -29,8 +29,8 @@ import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.FunctionParameter;
-import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionMetadataSource;
@@ -196,6 +196,17 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         addUuidFunction();
         addArrayGet();
         addArrayLength();
+        addTrimFunction();
+    }
+    
+    private void addTrimFunction() {
+        functions.add(
+            new FunctionMethod(SourceSystemFunctions.TRIM, QueryPlugin.Util.getString("SystemSource.trim_desc"), STRING, FUNCTION_CLASS, SourceSystemFunctions.TRIM,//$NON-NLS-1$ 
+                new FunctionParameter[] {
+            		new FunctionParameter("spec", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.trim_arg1")),//$NON-NLS-1$ //$NON-NLS-2$
+            		new FunctionParameter("trimChar", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.trim_arg2")),//$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.trim_arg3")) }, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.trim_result")) ) );   //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     private void addArrayLength() {

@@ -21,13 +21,14 @@
  */
 package org.teiid.odbc;
 
+import java.io.IOException;
 import java.sql.ParameterMetaData;
-import java.sql.ResultSetMetaData;
-import java.sql.Statement;
+import java.util.List;
 import java.util.Properties;
 
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.jdbc.ResultSetImpl;
+import org.teiid.odbc.PGUtil.PgColInfo;
 
 public interface ODBCClientRemote {
 	
@@ -38,6 +39,12 @@ public interface ODBCClientRemote {
 	//	AuthenticationCleartextPassword (B)
 	void useClearTextAuthentication();
 
+	// AuthenticationGSS (B)
+	void useAuthenticationGSS();
+	
+	// AuthenticationGSSContinue (B)
+	void authenticationGSSContinue(byte[] serviceToken);
+	
 	//	AuthenticationOk (B)
 	//	BackendKeyData (B)
 	//	ParameterStatus (B)
@@ -62,11 +69,19 @@ public interface ODBCClientRemote {
 
 	//	RowDescription (B)
 	//	NoData (B)
-	void sendResultSetDescription(ResultSetMetaData metaData, Statement stmt);
+	void sendResultSetDescription(List<PgColInfo> cols);
 	
 	//	DataRow (B)
 	//	CommandComplete (B)
-	void sendResults(String sql, ResultSetImpl rs, ResultsFuture<Void> result, boolean describeRows);
+	void sendResults(String sql, ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, boolean describeRows);
+	
+	void sendCursorResults(ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, int rowCount);
+	
+	void sendPortalResults(String sql, ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, int rowCount, boolean portal);
+	
+	void sendMoveCursor(ResultSetImpl rs, int rowCount, ResultsFuture<Integer> results);
+	
+	void sendCommandComplete(String sql, int updateCount) throws IOException;	
 
 	//	CommandComplete (B)
 	void sendUpdateCount(String sql, int updateCount);
@@ -85,16 +100,14 @@ public interface ODBCClientRemote {
 	void functionCallResponse(byte[] data);
 	void functionCallResponse(int data);
 	
-	void sslDenied();
+	void sendSslResponse();
 	
 	// unimplemented backend messages
 	
 	//	AuthenticationKerberosV5 (B)
 	//	AuthenticationMD5Password (B)
 	//	AuthenticationSCMCredential (B)
-	//	AuthenticationGSS (B)
 	//	AuthenticationSSPI (B)
-	//	AuthenticationGSSContinue (B)
 	
 	//	CloseComplete (B)
 
@@ -106,8 +119,5 @@ public interface ODBCClientRemote {
 	//	NoticeResponse (B)
 	//	NotificationResponse (B)
 	
-	//	PortalSuspended (B)
-	
-		
-
+	void sendPortalSuspended();
 }

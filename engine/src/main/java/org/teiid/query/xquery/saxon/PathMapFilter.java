@@ -184,5 +184,13 @@ class PathMapFilter extends ProxyReceiver {
 			super.endElement();
 		}
 	}
+	
+	@Override
+	public void startContent() throws XPathException {
+		MatchContext context = matchContext.getLast();
+		if (context.matchedElement) {
+			super.startContent();
+		}
+	}
 
 }

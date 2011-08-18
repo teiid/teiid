@@ -29,6 +29,7 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
@@ -41,8 +42,7 @@ import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
@@ -54,9 +54,9 @@ public class TestProcedurePlanner {
 
 	private ProcessorPlan helpPlanProcedure(String userQuery,
                                             String procedure,
-                                            String procedureType) throws TeiidComponentException,
+                                            TriggerEvent procedureType) throws TeiidComponentException,
                                                                  QueryMetadataException, TeiidProcessingException {
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleUpdateProc(procedureType, procedure);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(procedureType, procedure);
 
         QueryParser parser = QueryParser.getQueryParser();
         Command userCommand = userQuery != null ? parser.parseCommand(userQuery) : parser.parseCommand(procedure);
@@ -105,7 +105,7 @@ public class TestProcedurePlanner {
         String userUpdateStr = "INSERT into vm1.g1 (e1) values('x')"; //$NON-NLS-1$
         
 		helpPlanProcedure(userUpdateStr, procedure,
-									 FakeMetadataObject.Props.INSERT_PROCEDURE);
+									 TriggerEvent.INSERT);
     }
     
 	// special variable CHANGING used with declared variable
@@ -124,7 +124,7 @@ public class TestProcedurePlanner {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpPlanProcedure(userUpdateStr, procedure,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 TriggerEvent.UPDATE);
     }
     
 	// special variable CHANGING and INPUT used in conpound criteria
@@ -143,7 +143,7 @@ public class TestProcedurePlanner {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpPlanProcedure(userUpdateStr, procedure,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 TriggerEvent.UPDATE);
     }
     
 	// special variable CHANGING and INPUT used in conpound criteria, with declared variables
@@ -162,7 +162,7 @@ public class TestProcedurePlanner {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpPlanProcedure(userUpdateStr, procedure,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 TriggerEvent.UPDATE);
     }
     
 	// virtual group elements used in procedure(HAS CRITERIA)
@@ -177,7 +177,7 @@ public class TestProcedurePlanner {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpPlanProcedure(userUpdateStr, procedure,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 TriggerEvent.UPDATE);
     }
     
 	// virtual group elements used in procedure in if statement(HAS CRITERIA)
@@ -195,7 +195,7 @@ public class TestProcedurePlanner {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpPlanProcedure(userUpdateStr, procedure,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 TriggerEvent.UPDATE);
     }
     
 	// testing rows updated incremented, Input and assignment statements
@@ -210,7 +210,7 @@ public class TestProcedurePlanner {
         String userUpdateStr = "UPDATE vm1.g1 SET e2=40"; //$NON-NLS-1$
         
 		helpPlanProcedure(userUpdateStr, procedure,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
+									 TriggerEvent.UPDATE);
     }      
     
     // testing select into with virtual group in from clause
@@ -222,7 +222,7 @@ public class TestProcedurePlanner {
         procedure = procedure + "END\n"; //$NON-NLS-1$
         
         helpPlanProcedure(null, procedure,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                                     TriggerEvent.UPDATE);
     }  
     
     // testing select into with function in select clause
@@ -234,7 +234,7 @@ public class TestProcedurePlanner {
         procedure = procedure + "END\n"; //$NON-NLS-1$
         
         helpPlanProcedure(null, procedure,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                                     TriggerEvent.UPDATE);
     }      
     
     // testing select into with function in select clause
@@ -246,7 +246,7 @@ public class TestProcedurePlanner {
         procedure = procedure + "END\n"; //$NON-NLS-1$
         
         helpPlanProcedure(null, procedure,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                                     TriggerEvent.UPDATE);
     }
     
     @Test public void testCase4504() throws Exception { 
@@ -260,7 +260,7 @@ public class TestProcedurePlanner {
         procedure = procedure + "END\n"; //$NON-NLS-1$ 
          
         helpPlanProcedure(null, procedure, 
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE); 
+                                     TriggerEvent.UPDATE); 
     }
 
     // =============================================================================

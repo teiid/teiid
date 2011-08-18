@@ -26,6 +26,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
@@ -33,13 +34,20 @@ import java.util.TimeZone;
 
 import javax.security.auth.Subject;
 
+import org.teiid.adminapi.DataPolicy;
+import org.teiid.adminapi.Session;
+import org.teiid.adminapi.VDB;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.ArgCheck;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
+import org.teiid.dqp.message.RequestID;
+import org.teiid.dqp.service.TransactionContext;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.SecurityFunctionEvaluator;
@@ -117,6 +125,14 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    private int userRequestSourceConcurrency;
 	    private Subject subject;
 	    private HashSet<Object> dataObjects;
+
+		private Session session;
+
+		private RequestID requestId;
+		
+		private DQPWorkContext dqpWorkContext;
+		private TransactionContext transactionContext;
+		private TransactionService transactionService;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -422,11 +438,10 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	}
 	
 	public Set<String> getGroups() {
+		if (globalState.groups == null) {
+			globalState.groups = new HashSet<String>();
+		}
 		return globalState.groups;
-	}
-	
-	public void setGroups(Set<String> groups) {
-		this.globalState.groups = groups;
 	}
 	
 	public long getTimeSliceEnd() {
@@ -565,6 +580,58 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	public void setDataObjects(HashSet<Object> dataObjectsAccessed) {
 		this.dataObjects = dataObjectsAccessed;
+	}
+	
+	@Override
+	public Session getSession() {
+		return this.globalState.session;
+	}
+	
+	public void setSession(Session session) {
+		this.globalState.session = session;
+	}
+	
+	@Override
+	public String getRequestId() {
+		return this.globalState.requestId != null ? this.globalState.requestId.toString() : null;
+	}
+	
+	public void setRequestId(RequestID requestId) {
+		this.globalState.requestId = requestId;
+	}
+	
+	public void setDQPWorkContext(DQPWorkContext workContext) {
+		this.globalState.dqpWorkContext = workContext;
+	}
+	
+	@Override
+	public Map<String, DataPolicy> getAllowedDataPolicies() {
+		return this.globalState.dqpWorkContext.getAllowedDataPolicies();
+	}
+	
+	@Override
+	public VDB getVdb() {
+		return this.globalState.dqpWorkContext.getVDB();
+	}
+	
+	public DQPWorkContext getDQPWorkContext() {
+		return this.globalState.dqpWorkContext;
+	}
+	
+	public TransactionContext getTransactionContext() {
+		return globalState.transactionContext;
+	}
+	
+	public void setTransactionContext(TransactionContext transactionContext) {
+		globalState.transactionContext = transactionContext;
+	}
+	
+	public TransactionService getTransactionServer() {
+		return globalState.transactionService;
+	}
+	
+	public void setTransactionService(TransactionService transactionService) {
+		globalState.transactionService = transactionService;
 	}
 	
 }

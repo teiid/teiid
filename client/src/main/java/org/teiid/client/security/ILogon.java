@@ -34,9 +34,14 @@ import org.teiid.net.CommunicationException;
  * Generic logon interface.
  */
 public interface ILogon {
+	static final String KRB5TOKEN = "KRB5TOKEN"; //$NON-NLS-1$
+	static final String KRB5_ESTABLISHED = "KRB5_CONTEXT_ESTABLISHED"; //$NON-NLS-1$
+	
     LogonResult logon(Properties connectionProperties)
     throws LogonException, TeiidComponentException, CommunicationException;
-   
+
+    LogonResult neogitiateGssLogin(Properties connectionProperties, byte[] serviceToken, boolean createSession) throws LogonException;
+    
    /**
     * Ping the server to see if the client-server connection is alive.
     * @throws InvalidSessionException if the sessionID is invalid

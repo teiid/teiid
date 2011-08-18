@@ -45,10 +45,22 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
     private Program loopProgram;
     
     private List elements;
+    private String label;
     
-    public LoopInstruction(Program loopProgram, String rsName, ProcessorPlan plan) {
+    public LoopInstruction(Program loopProgram, String rsName, ProcessorPlan plan, String label) {
         super(rsName, plan, false);
         this.loopProgram = loopProgram;
+        this.label = label;
+    }
+    
+    @Override
+    public String getLabel() {
+    	return label;
+    }
+    
+    @Override
+    public void setLabel(String label) {
+    	this.label = label;
     }
 
     public void process(ProcedurePlan procEnv) throws TeiidComponentException {
@@ -74,7 +86,7 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
      */
     public LoopInstruction clone(){
         ProcessorPlan clonedPlan = this.plan.clone();
-        return new LoopInstruction((Program)this.loopProgram.clone(), this.rsName, clonedPlan);
+        return new LoopInstruction((Program)this.loopProgram.clone(), this.rsName, clonedPlan, label);
     }
     
     public String toString() {

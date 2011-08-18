@@ -180,7 +180,7 @@ public class TestUpdateValidator {
         // Stored queries
         ColumnSet<Procedure> rs1 = RealMetadataFactory.createResultSet("rs1", new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         QueryNode sq1n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$
-        Procedure sq1 = RealMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Collections.EMPTY_LIST, sq1n1);  //$NON-NLS-1$
+        Procedure sq1 = RealMetadataFactory.createVirtualProcedure("sq1", pm1, Collections.EMPTY_LIST, sq1n1);  //$NON-NLS-1$
         sq1.setResultSet(rs1);
 		// Create the facade from the store
 		return RealMetadataFactory.createTransformationMetadata(metadataStore, "example");

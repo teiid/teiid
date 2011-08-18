@@ -24,12 +24,11 @@ package org.teiid.adminapi;
 
 
 /**
- * A Session is a lasting connection between a client and a Teiid System.
+ * A Session represents a single connection between a client and the server.
  * 
- * A user may be allowed to have multiple sessions active simultaneously.
- * 
+ * A user is allowed to have multiple sessions active simultaneously.
  */
-public interface Session extends  AdminObject {
+public interface Session extends AdminObject {
     
     /**
      * Get the Last time Client has check to see if the server is still available
@@ -88,6 +87,12 @@ public interface Session extends  AdminObject {
      * @return 
      */
     public String getClientHostName();
+    
+    /**
+     * Get the client hardware (typically MAC) address. Note this value is reported from the client.
+     * @return the hardware address as a hex string or null if not available.
+     */
+    public String getClientHardwareAddress();
     
     /**
      * Get the time the {@link Session} was created.

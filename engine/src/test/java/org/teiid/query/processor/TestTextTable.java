@@ -37,13 +37,13 @@ import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings({"unchecked", "nls"})
 public class TestTextTable {
@@ -72,7 +72,7 @@ public class TestTextTable {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         
-        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), Arrays.asList(clobFromFile("text/cdm_dos.txt")));
+        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(clobFromFile("text/cdm_dos.txt")));
     }
 	
 	@Test public void testTextTableFixedWin() throws Exception {
@@ -85,7 +85,7 @@ public class TestTextTable {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         
-        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), Arrays.asList(clobFromFile("text/cdm_dos_win.txt")));
+        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(clobFromFile("text/cdm_dos_win.txt")));
     }
 	
 	@Test public void testTextTableFixedPartial() throws Exception {
@@ -98,7 +98,7 @@ public class TestTextTable {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         
-        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), Arrays.asList(clobFromFile("text/cdm_dos.txt")));
+        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(clobFromFile("text/cdm_dos.txt")));
     }
 	
 	@Test public void testNamedMultilineHeader() throws Exception {
@@ -114,7 +114,7 @@ public class TestTextTable {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         
-        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), Arrays.asList(clobFromFile("text/test-file.txt.csv")));
+        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(clobFromFile("text/test-file.txt.csv")));
     }
 	
 	@Test public void testHeaderWithSkip() throws Exception {
@@ -127,7 +127,7 @@ public class TestTextTable {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         
-        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), Arrays.asList(clobFromFile("text/TextParts_HeaderRow2.csv")));
+        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(clobFromFile("text/TextParts_HeaderRow2.csv")));
     }
 	
 	@Test public void testEscape() throws Exception {
@@ -154,6 +154,29 @@ public class TestTextTable {
     	
         List[] expected = new List[] {
         		Arrays.asList("a\\,", ",c"),
+        };    
+    
+        process(sql, expected);
+    }
+	
+	@Test public void testNoRowDelimiter() throws Exception {
+    	String sql = "select * from texttable('abcdef' COLUMNS c1 string width 1, c2 string width 1 no row delimiter) x"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("a","b"),
+        		Arrays.asList("c","d"),
+        		Arrays.asList("e","f"),
+        };    
+    
+        process(sql, expected);
+    }
+	
+	@Test public void testNoTrim() throws Exception {
+    	String sql = "select * from texttable('a b \nc  d' COLUMNS c1 string width 2, c2 string width 2 no trim) x"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("a","b "),
+        		Arrays.asList("c"," d"),
         };    
     
         process(sql, expected);
@@ -248,7 +271,7 @@ public class TestTextTable {
 	public static void process(String sql, List[] expectedResults) throws Exception {    
     	FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
-    	ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+    	ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
         helpProcess(plan, createCommandContext(), dataManager, expectedResults);
     }
 	
@@ -258,7 +281,7 @@ public class TestTextTable {
 	
     @Test public void testTextAgg() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, false);
@@ -285,7 +308,7 @@ public class TestTextTable {
     
     @Test public void testTextAggOrderByUnrelated() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, false);
@@ -317,7 +340,7 @@ public class TestTextTable {
         sampleData1(dataManager);
         
         char[] data = new char[5000];
-        processPreparedStatement(sql, null, dataManager, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), Arrays.asList(new ClobType(new SerialClob(data))));
+        processPreparedStatement(sql, null, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(new ClobType(new SerialClob(data))));
     }
 	
 }

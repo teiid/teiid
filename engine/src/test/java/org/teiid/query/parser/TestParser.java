@@ -61,7 +61,6 @@ import org.teiid.query.sql.lang.Into;
 import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.JoinPredicate;
 import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.Limit;
 import org.teiid.query.sql.lang.MatchCriteria;
 import org.teiid.query.sql.lang.NotCriteria;
 import org.teiid.query.sql.lang.OrderBy;
@@ -87,9 +86,8 @@ import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
-import org.teiid.query.sql.proc.BreakStatement;
+import org.teiid.query.sql.proc.BranchingStatement;
 import org.teiid.query.sql.proc.CommandStatement;
-import org.teiid.query.sql.proc.ContinueStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.CriteriaSelector;
 import org.teiid.query.sql.proc.DeclareStatement;
@@ -100,10 +98,9 @@ import org.teiid.query.sql.proc.RaiseErrorStatement;
 import org.teiid.query.sql.proc.Statement;
 import org.teiid.query.sql.proc.TranslateCriteria;
 import org.teiid.query.sql.proc.WhileStatement;
+import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.AllInGroupSymbol;
-import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.DerivedColumn;
@@ -112,12 +109,15 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.TestCaseExpression;
 import org.teiid.query.sql.symbol.TestSearchedCaseExpression;
 import org.teiid.query.sql.symbol.TextLine;
+import org.teiid.query.sql.symbol.WindowFunction;
+import org.teiid.query.sql.symbol.WindowSpecification;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
@@ -172,7 +172,7 @@ public class TestParser {
     }
     
     private void helpBlockTest(String block, String expectedString, Block expectedBlock) throws ParseException {
-        Block actualBlock = new SQLParser(new StringReader(block)).block(new ParseInfo());
+        Block actualBlock = SQLParserUtil.asBlock(new SQLParser(new StringReader(block)).statement(new ParseInfo()));
         String actualString = actualBlock.toString();
         assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$
         assertEquals("Block does not match: ", expectedBlock, actualBlock);              //$NON-NLS-1$
@@ -217,7 +217,7 @@ public class TestParser {
 		From from = new From();
 		from.addClause(jp);
 
-		AllSymbol all = new AllSymbol();
+		MultipleElementSymbol all = new MultipleElementSymbol();
 		Select select = new Select();
 		select.addSymbol(all);
 
@@ -237,7 +237,7 @@ public class TestParser {
 		From from = new From();
 		from.addClause(jp);	
 
-		AllSymbol all = new AllSymbol();
+		MultipleElementSymbol all = new MultipleElementSymbol();
 		Select select = new Select();
 		select.addSymbol(all);
 
@@ -259,7 +259,7 @@ public class TestParser {
 		from.addClause(jp);	
 		from.addClause(new UnaryFromClause(new GroupSymbol("g3"))); //$NON-NLS-1$
 
-		AllSymbol all = new AllSymbol();
+		MultipleElementSymbol all = new MultipleElementSymbol();
 		Select select = new Select();
 		select.addSymbol(all);
 
@@ -286,7 +286,7 @@ public class TestParser {
 		From from = new From();
 		from.addClause(jp2);	
 
-		AllSymbol all = new AllSymbol();
+		MultipleElementSymbol all = new MultipleElementSymbol();
 		Select select = new Select();
 		select.addSymbol(all);
 
@@ -311,7 +311,7 @@ public class TestParser {
 		From from = new From();
 		from.addClause(jp3);	
 
-		AllSymbol all = new AllSymbol();
+		MultipleElementSymbol all = new MultipleElementSymbol();
 		Select select = new Select();
 		select.addSymbol(all);
 
@@ -334,7 +334,7 @@ public class TestParser {
 		From from = new From();
 		from.addClause(jp2);	
 
-		AllSymbol all = new AllSymbol();
+		MultipleElementSymbol all = new MultipleElementSymbol();
 		Select select = new Select();
 		select.addSymbol(all);
 
@@ -358,7 +358,7 @@ public class TestParser {
 		from.addClause(jp2);
 		from.addClause(new UnaryFromClause(new GroupSymbol("g4")));	 //$NON-NLS-1$
 
-		AllSymbol all = new AllSymbol();
+		MultipleElementSymbol all = new MultipleElementSymbol();
 		Select select = new Select();
 		select.addSymbol(all);
 
@@ -387,7 +387,7 @@ public class TestParser {
 		from.addClause(g4);
 		from.addClause(jp3);	
 
-		AllSymbol all = new AllSymbol();
+		MultipleElementSymbol all = new MultipleElementSymbol();
 		Select select = new Select();
 		select.addSymbol(all);
 
@@ -416,7 +416,7 @@ public class TestParser {
 		from.addClause(g1);
 		from.addClause(jp);
 
-		AllSymbol all = new AllSymbol();
+		MultipleElementSymbol all = new MultipleElementSymbol();
 		Select select = new Select();
 		select.addSymbol(all);
 
@@ -1414,28 +1414,12 @@ public class TestParser {
 	@Test public void testFailAliasInHaving() {
 		helpException("SELECT a FROM m.g GROUP BY a, b AS x");		 //$NON-NLS-1$
 	}
- 
-	/** SELECT a FROM m.g GROUP BY count(a) */
-	@Test public void testFailAggregateInGroupBy() {
-		helpException("SELECT a FROM m.g GROUP BY count(a)");		 //$NON-NLS-1$
-	}
 	
-	
-	@Test public void testExceptionLength() {
+	@Test(expected=QueryParserException.class) public void testExceptionLength() throws Exception {
         String sql = "SELECT * FROM Customer where Customer.Name = (select lastname from CUSTOMER where acctid = 9"; ////$NON-NLS-1$
-        try {
-            QueryParser.getQueryParser().parseCommand(sql);
-            fail("Expected exception for parsing " + sql); //$NON-NLS-1$
-        } catch (TeiidException e) {
-            //e.printStackTrace();
-            //if (e.getMessage().length() > 1000) {
-            //    fail("Expected max length of message 1000; but received  " + e.getMessage().length()); //$NON-NLS-1$
-            //}
-        }
+        QueryParser.getQueryParser().parseCommand(sql);
     }
 
-	
-    
     @Test public void testFunctionOfAggregates() {
         GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
         From from = new From();
@@ -1934,7 +1918,7 @@ public class TestParser {
 		from.addGroup(h);
 
 		Select select = new Select();
-		AllInGroupSymbol myG = new AllInGroupSymbol("myG.*"); //$NON-NLS-1$
+		MultipleElementSymbol myG = new MultipleElementSymbol("myG"); //$NON-NLS-1$
 		select.addSymbol(myG);
 		select.addSymbol(new ElementSymbol("myH.b")); //$NON-NLS-1$
 
@@ -1955,7 +1939,7 @@ public class TestParser {
 		from.addGroup(h);
 
 		Select select = new Select();
-		AllInGroupSymbol myG = new AllInGroupSymbol("myG.*"); //$NON-NLS-1$
+		MultipleElementSymbol myG = new MultipleElementSymbol("myG"); //$NON-NLS-1$
 		select.addSymbol(myG);
 		select.addSymbol(new ElementSymbol("myH.b")); //$NON-NLS-1$
 
@@ -2325,7 +2309,7 @@ public class TestParser {
         from.addGroup(g);
 
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
 
         Query query = new Query();
         query.setSelect(select);
@@ -2343,7 +2327,7 @@ public class TestParser {
         from.addGroup(g);
 
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
 
         Query query = new Query();
         query.setSelect(select);
@@ -2361,7 +2345,7 @@ public class TestParser {
         from.addGroup(g);
 
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
 
         Query query = new Query();
         query.setSelect(select);
@@ -2692,10 +2676,10 @@ public class TestParser {
 
 	/** SELECT a FROM db.g WHERE b = aString order by c desc,d desc*/
 	@Test public void testOrderBysDesc(){
-		ArrayList elements = new ArrayList();
+		ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
 		elements.add(new ElementSymbol("c")); //$NON-NLS-1$
 		elements.add(new ElementSymbol("d")); //$NON-NLS-1$
-		ArrayList orderTypes = new ArrayList();
+		ArrayList<Boolean> orderTypes = new ArrayList<Boolean>();
 		orderTypes.add(Boolean.FALSE);
 		orderTypes.add(Boolean.FALSE);
 		OrderBy orderBy = new OrderBy(elements, orderTypes);
@@ -2708,10 +2692,10 @@ public class TestParser {
 	
 	/** SELECT a FROM db.g WHERE b = aString order by c desc,d*/
 	@Test public void testMixedOrderBys(){
-		ArrayList elements = new ArrayList();
+		ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
 		elements.add(new ElementSymbol("c")); //$NON-NLS-1$
 		elements.add(new ElementSymbol("d")); //$NON-NLS-1$
-		ArrayList orderTypes = new ArrayList();
+		ArrayList<Boolean> orderTypes = new ArrayList<Boolean>();
 		orderTypes.add(Boolean.FALSE);
 		orderTypes.add(Boolean.TRUE);
 		OrderBy orderBy = new OrderBy(elements, orderTypes);
@@ -2806,7 +2790,7 @@ public class TestParser {
 	}
 	
     @Test public void testLikeWithEscapeException(){
-        helpException("SELECT a from db.g where b like '#String' escape '#1'", "Parsing error: LIKE ESCAPE value must be a single character: [#1].");  //$NON-NLS-1$ //$NON-NLS-2$
+        helpException("SELECT a from db.g where b like '#String' escape '#1'", "Parsing error: LIKE/SIMILAR TO ESCAPE value must be a single character: [#1].");  //$NON-NLS-1$ //$NON-NLS-2$
     }   
 
 	/** SELECT "date"."time" from db.g */
@@ -3201,32 +3185,6 @@ public class TestParser {
              stmt);     
     }    
 
-    /*@Test public void testIfStatement1(){
-        ElementSymbol a = new ElementSymbol("a");
-        String shortType = new String("short");
-        Statement ifStmt = new DeclareStatement(a, shortType);
-
-        ElementSymbol b = new ElementSymbol("b");
-        Statement elseStmt = new DeclareStatement(b, shortType);
-              
-        Block ifBlock = new Block();
-        ifBlock.addStatement(ifStmt); 
-      
-        Block elseBlock = new Block();
-        elseBlock.addStatement(elseStmt);
-    
-        ElementSymbol c = new ElementSymbol("c");    
-        Criteria crit = new CompareCriteria(c, CompareCriteria.EQ, 
-            new Constant(new Integer(5)));
-            
-        IfStatement stmt = new IfStatement(crit, ifBlock, elseBlock);
-                        
-        helpStmtTest("IF(c = 5) BEGIN DECLARE short a; END ELSE ",
-             "IF(c = 5)"+"\n"+ "BEGIN"+"\n"+"DECLARE short a;"+"\n"+"END"+"\n"+
-             "ELSE"+"\n"+"BEGIN"+"\n"+"DECLARE short b;"+"\n"+"END",
-             stmt);     
-    }*/   
-    
     @Test public void testCriteriaSelector0() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
@@ -3374,7 +3332,7 @@ public class TestParser {
             
     @Test public void testHasEQCriteria() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
-        List elements = new ArrayList();
+        List<ElementSymbol> elements = new ArrayList<ElementSymbol>();
         elements.add(a);
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3407,7 +3365,7 @@ public class TestParser {
     /**HAS IN CRITERIA ON (a)*/    
     @Test public void testHasInCriteria() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
-        List elements = new ArrayList();
+        List<ElementSymbol> elements = new ArrayList<ElementSymbol>();
         elements.add(a);
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3424,7 +3382,7 @@ public class TestParser {
     /**HAS COMPARE_LT CRITERIA ON (a)*/    
     @Test public void testHasLTCriteria() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
-        List elements = new ArrayList();
+        List<ElementSymbol> elements = new ArrayList<ElementSymbol>();
         elements.add(a);
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3441,7 +3399,7 @@ public class TestParser {
     /**HAS COMPARE_LE CRITERIA ON (a)*/    
     @Test public void testHasLECriteria() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
-        List elements = new ArrayList();
+        List<ElementSymbol> elements = new ArrayList<ElementSymbol>();
         elements.add(a);
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3620,7 +3578,7 @@ public class TestParser {
      * @return
      */
     private Query sampleQuery() {
-        List symbols = new ArrayList();
+        List<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
         symbols.add(new ElementSymbol("a1"));  //$NON-NLS-1$
         Select select = new Select(symbols);
            
@@ -3661,7 +3619,7 @@ public class TestParser {
     
     //sql is a variable, also uses the as, into, and update clauses
     @Test public void testDynamicCommandStatement1() throws Exception {
-        List symbols = new ArrayList();
+        List<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
         
         ElementSymbol a1 = new ElementSymbol("a1"); //$NON-NLS-1$
         a1.setType(DataTypeManager.DefaultDataClasses.STRING);
@@ -3753,7 +3711,7 @@ public class TestParser {
         Statement declStmt = new DeclareStatement(var1, shortType);
         
         //ifblock
-        List symbols = new ArrayList();
+        List<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
         symbols.add(new ElementSymbol("a1"));  //$NON-NLS-1$
         Select select = new Select(symbols);       
         
@@ -3777,7 +3735,7 @@ public class TestParser {
         ElementSymbol var2 = new ElementSymbol("var2"); //$NON-NLS-1$
         Statement elseDeclStmt = new DeclareStatement(var2, shortType);     
         
-        List elseSymbols = new ArrayList();
+        List<ElementSymbol> elseSymbols = new ArrayList<ElementSymbol>();
         elseSymbols.add(new ElementSymbol("b1"));  //$NON-NLS-1$
         Select elseSelect = new Select(elseSymbols); 
     
@@ -3786,7 +3744,6 @@ public class TestParser {
         elseQuery.setFrom(from);
         elseQuery.setCriteria(criteria);
         
-        Command elseQueryCmd = elseQuery;
         AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQuery);
         
         Block elseBlock = new Block();
@@ -3883,7 +3840,7 @@ public class TestParser {
         ElementSymbol var2 = new ElementSymbol("var2"); //$NON-NLS-1$
         Statement elseDeclStmt = new DeclareStatement(var2, shortType);     
         
-        List elseSymbols = new ArrayList();
+        List<ElementSymbol> elseSymbols = new ArrayList<ElementSymbol>();
         elseSymbols.add(new ElementSymbol("b1"));  //$NON-NLS-1$
         Select elseSelect = new Select(elseSymbols); 
 
@@ -5027,7 +4984,7 @@ public class TestParser {
               
         StoredProcedure exec = new StoredProcedure();
         exec.setProcedureName("m.sq1");               //$NON-NLS-1$
-        Query query = new Query(new Select(Arrays.asList(new AllSymbol())), new From(Arrays.asList(new SubqueryFromClause("x", exec))), null, null, null);
+        Query query = new Query(new Select(Arrays.asList(new MultipleElementSymbol())), new From(Arrays.asList(new SubqueryFromClause("x", exec))), null, null, null);
         SubquerySetCriteria subCrit = new SubquerySetCriteria(expr, query);
        
         Query outer = new Query();
@@ -5095,7 +5052,7 @@ public class TestParser {
     @Test public void testExecSubquery(){
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         from.addClause(new UnaryFromClause(new GroupSymbol("newModel2.Table1")));         //$NON-NLS-1$
@@ -5118,7 +5075,7 @@ public class TestParser {
 
             Query query = new Query();
             Select select = new Select();
-            select.addSymbol(new AllSymbol());
+            select.addSymbol(new MultipleElementSymbol());
             query.setSelect(select);
             From from = new From();
             from.addGroup(new GroupSymbol("TestDocument.TestDocument")); //$NON-NLS-1$
@@ -5138,7 +5095,7 @@ public class TestParser {
 
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         from.addGroup(new GroupSymbol("TestDocument.TestDocument")); //$NON-NLS-1$
@@ -5181,7 +5138,7 @@ public class TestParser {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         from.addGroup(new GroupSymbol("a.thing")); //$NON-NLS-1$
@@ -5200,7 +5157,7 @@ public class TestParser {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         from.addGroup(new GroupSymbol("a.thing")); //$NON-NLS-1$
@@ -5219,7 +5176,7 @@ public class TestParser {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         from.addGroup(new GroupSymbol("a.thing")); //$NON-NLS-1$
@@ -5236,7 +5193,7 @@ public class TestParser {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         from.addGroup(new GroupSymbol("a.thing")); //$NON-NLS-1$
@@ -5281,7 +5238,7 @@ public class TestParser {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         
@@ -5323,7 +5280,7 @@ public class TestParser {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         
@@ -5369,7 +5326,7 @@ public class TestParser {
         
         Query query = new Query();
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
         From from = new From();
         
@@ -5480,14 +5437,39 @@ public class TestParser {
                      +"\n"+"END", whileStmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
+    @Test public void testWhileStatement1() throws Exception {
+        ElementSymbol x = new ElementSymbol("x", false); //$NON-NLS-1$
+        Function f = new Function("+", new Expression[] { x, new Constant(new Integer(1)) }); //$NON-NLS-1$
+        Statement assignmentStmt = new AssignmentStatement(x, f);
+        Block block = new Block();
+        block.setAtomic(true);
+        block.setLabel("1y");
+        block.addStatement(assignmentStmt);
+        BranchingStatement bs = new BranchingStatement(BranchingMode.CONTINUE);
+        bs.setLabel("1y");
+        block.addStatement(bs);
+        Criteria crit = new CompareCriteria(x, CompareCriteria.LT, 
+                    new Constant(new Integer(100)));
+        WhileStatement whileStmt = new WhileStatement(crit, block);
+        helpStmtTest("WHILE (x < 100) \"1y\": BEGIN ATOMIC x=x+1; CONTINUE \"1y\"; END", //$NON-NLS-1$
+                     "WHILE(x < 100)"+"\n"+ "\"1y\" : BEGIN ATOMIC"+"\n"+"x = (x + 1);\nCONTINUE \"1y\";" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+                     +"\n"+"END", whileStmt); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
     @Test public void testBreakStatement() throws Exception {
-        Statement breakStmt = new BreakStatement();
+        Statement breakStmt = new BranchingStatement();
         helpStmtTest("break;", "BREAK;", breakStmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testContinueStatement() throws Exception {
-        Statement contStmt = new ContinueStatement();
+    	BranchingStatement contStmt = new BranchingStatement(BranchingMode.CONTINUE);
         helpStmtTest("continue;", "CONTINUE;", contStmt); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testContinueStatement1() throws Exception {
+    	BranchingStatement contStmt = new BranchingStatement(BranchingMode.CONTINUE);
+	    contStmt.setLabel("x");
+        helpStmtTest("continue x;", "CONTINUE x;", contStmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testVirtualProcedure(){        
@@ -5515,7 +5497,7 @@ public class TestParser {
         block.addStatement(assignmentStmt);
         
         Block ifBlock = new Block();
-        Statement continueStmt = new ContinueStatement();
+        Statement continueStmt = new BranchingStatement(BranchingMode.CONTINUE);
         ifBlock.addStatement(continueStmt);
         Criteria crit = new CompareCriteria(x, CompareCriteria.GT, 
         new Constant(new Integer(5)));
@@ -6014,7 +5996,7 @@ public class TestParser {
 
     @Test public void testAndOrPrecedence_1575() {
         Select s = new Select();
-        s.addSymbol(new AllSymbol());
+        s.addSymbol(new MultipleElementSymbol());
         From f = new From();
         f.addGroup(new GroupSymbol("m.g1")); //$NON-NLS-1$
         CompareCriteria c1 = new CompareCriteria(new ElementSymbol("e1"), CompareCriteria.EQ, new Constant(new Integer(0))); //$NON-NLS-1$
@@ -6033,7 +6015,7 @@ public class TestParser {
 
     @Test public void testAndOrPrecedence2_1575() {
         Select s = new Select();
-        s.addSymbol(new AllSymbol());
+        s.addSymbol(new MultipleElementSymbol());
         From f = new From();
         f.addGroup(new GroupSymbol("m.g1")); //$NON-NLS-1$
         CompareCriteria c1 = new CompareCriteria(new ElementSymbol("e1"), CompareCriteria.EQ, new Constant(new Integer(0))); //$NON-NLS-1$
@@ -6056,7 +6038,7 @@ public class TestParser {
      */
     private void helpTestCompoundNonJoinCriteria(String sqlPred, PredicateCriteria predCrit) {
         Select s = new Select();
-        s.addSymbol(new AllSymbol());
+        s.addSymbol(new MultipleElementSymbol());
         From f = new From();
         
         CompareCriteria c1 = new CompareCriteria(new ElementSymbol("e1"), CompareCriteria.EQ, new Constant(new Integer(0))); //$NON-NLS-1$
@@ -6426,64 +6408,6 @@ public class TestParser {
         }
     }
     
-    @Test public void testExceptionMessageWithoutLocation() {
-        try {
-            QueryParser.getQueryParser().parseCommand("SELECT COUNT(*) FROM a WHERE COUNT(*) > 1"); //$NON-NLS-1$
-        } catch(QueryParserException e) {
-            assertTrue(e.getMessage().startsWith("Parsing error: Aggregate expressions are allowed only as top level functions in the SELECT and HAVING clauses.")); //$NON-NLS-1$
-        }        
-    }
-    
-    @Test public void testLimit() {
-        Query query = new Query();
-        Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
-        From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
-        query.setSelect(select);
-        query.setFrom(from);
-        query.setLimit(new Limit(null, new Constant(new Integer(100))));
-        helpTest("Select * from a limit 100", "SELECT * FROM a LIMIT 100", query); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testLimitWithOffset() {
-        Query query = new Query();
-        Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
-        From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
-        query.setSelect(select);
-        query.setFrom(from);
-        query.setLimit(new Limit(new Constant(new Integer(50)), new Constant(new Integer(100))));
-        helpTest("Select * from a limit 50,100", "SELECT * FROM a LIMIT 50, 100", query); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testLimitWithReferences1() {
-        Query query = new Query();
-        Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
-        From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
-        query.setSelect(select);
-        query.setFrom(from);
-        query.setLimit(new Limit(new Reference(0), new Constant(new Integer(100))));
-        helpTest("Select * from a limit ?,100", "SELECT * FROM a LIMIT ?, 100", query); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testLimitWithReferences2() {
-        Query query = new Query();
-        Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
-        From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
-        query.setSelect(select);
-        query.setFrom(from);
-        query.setLimit(new Limit(new Constant(new Integer(50)), new Reference(0)));
-        helpTest("Select * from a limit 50,?", "SELECT * FROM a LIMIT 50, ?", query); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testLimitWithReferences3() {
-        Query query = new Query();
-        Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
-        From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
-        query.setSelect(select);
-        query.setFrom(from);
-        query.setLimit(new Limit(new Reference(0), new Reference(1)));
-        helpTest("Select * from a limit ?,?", "SELECT * FROM a LIMIT ?, ?", query); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
     @Test public void testEmptyOuterJoinCriteria() {
         helpException("select a from b left outer join c on ()"); //$NON-NLS-1$
     }
@@ -6560,7 +6484,7 @@ public class TestParser {
         Query query = new Query();
         Select select = new Select();
         query.setSelect(select);
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         From from = new From();
         query.setFrom(from);
         Criteria compareCriteria = new CompareCriteria(new ElementSymbol("A.x"), CompareCriteria.EQ, new ElementSymbol("B.x")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -6596,7 +6520,7 @@ public class TestParser {
         String expected = "SELECT * FROM pm1.g1 UNION JOIN pm1.g2 WHERE g1.e1 = 1"; //$NON-NLS-1$
         
         Select select = new Select();
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         
         From from = new From();
         from.addClause(new JoinPredicate(new UnaryFromClause(new GroupSymbol("pm1.g1")), new UnaryFromClause(new GroupSymbol("pm1.g2")), JoinType.JOIN_UNION)); //$NON-NLS-1$ //$NON-NLS-2$
@@ -6618,9 +6542,9 @@ public class TestParser {
         String expected = "CREATE PROCEDURE\nBEGIN\nIF(x > 1)\nBEGIN\nSELECT 1;\nEND\nIF(x > 1)\nBEGIN\nSELECT 1;\nEND\nELSE\nBEGIN\nSELECT 1;\nEND\nEND"; //$NON-NLS-1$
         
         Query query = new Query();
-        query.setSelect(new Select(Arrays.asList(new Object[] {new ExpressionSymbol("expr", new Constant(new Integer(1)))}))); //$NON-NLS-1$
+        query.setSelect(new Select(Arrays.asList(new ExpressionSymbol("expr", new Constant(1))))); //$NON-NLS-1$
         CommandStatement commandStmt = new CommandStatement(query);
-        CompareCriteria criteria = new CompareCriteria(new ElementSymbol("x"), CompareCriteria.GT, new Constant(new Integer(1))); //$NON-NLS-1$
+        CompareCriteria criteria = new CompareCriteria(new ElementSymbol("x"), CompareCriteria.GT, new Constant(1)); //$NON-NLS-1$
         Block block = new Block();
         block.addStatement(commandStmt);
         IfStatement ifStmt = new IfStatement(criteria, block);
@@ -6648,7 +6572,7 @@ public class TestParser {
         Function convert = new Function("convert", new Expression[] {new Constant(null), new Constant("blob")}); //$NON-NLS-1$ //$NON-NLS-2$
         Function convert1 = new Function("convert", new Expression[] {new Constant(null), new Constant("clob")}); //$NON-NLS-1$ //$NON-NLS-2$
         Function convert2 = new Function("convert", new Expression[] {new Constant(null), new Constant("xml")}); //$NON-NLS-1$ //$NON-NLS-2$
-        Select select = new Select(Arrays.asList(new Object[] {new ExpressionSymbol("expr", convert), new ExpressionSymbol("expr1", convert1), new ExpressionSymbol("expr2", convert2)})); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        Select select = new Select(Arrays.asList(new ExpressionSymbol("expr", convert), new ExpressionSymbol("expr1", convert1), new ExpressionSymbol("expr2", convert2))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         Query query = new Query();
         query.setSelect(select);
         
@@ -6770,7 +6694,7 @@ public class TestParser {
     @Test public void testNestedTable() throws Exception {
         String sql = "SELECT * from TABLE(exec foo()) as x"; //$NON-NLS-1$
         Query query = new Query();
-        query.setSelect(new Select(Arrays.asList(new AllSymbol())));
+        query.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
         StoredProcedure sp = new StoredProcedure();
         sp.setProcedureName("foo");
         SubqueryFromClause sfc = new SubqueryFromClause("x", sp);
@@ -6782,12 +6706,12 @@ public class TestParser {
     @Test public void testTextTable() throws Exception {
     	String sql = "SELECT * from texttable(file columns x string WIDTH 1, y date width 10 skip 10) as x"; //$NON-NLS-1$
         Query query = new Query();
-        query.setSelect(new Select(Arrays.asList(new AllSymbol())));
+        query.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
         TextTable tt = new TextTable();
         tt.setFile(new ElementSymbol("file"));
         List<TextTable.TextColumn> columns = new ArrayList<TextTable.TextColumn>();
-        columns.add(new TextTable.TextColumn("x", "string", 1));
-        columns.add(new TextTable.TextColumn("y", "date", 10));
+        columns.add(new TextTable.TextColumn("x", "string", 1, false));
+        columns.add(new TextTable.TextColumn("y", "date", 10, false));
         tt.setColumns(columns);
         tt.setSkip(10);
         tt.setName("x");
@@ -6812,7 +6736,7 @@ public class TestParser {
     @Test public void testXMLTable() throws Exception {
     	String sql = "SELECT * from xmltable(xmlnamespaces(no default), '/' columns x for ordinality, y date default {d'2000-01-01'} path '@date') as x"; //$NON-NLS-1$
         Query query = new Query();
-        query.setSelect(new Select(Arrays.asList(new AllSymbol())));
+        query.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
         XMLTable xt = new XMLTable();
         xt.setName("x");
         xt.setNamespaces(new XMLNamespaces(Arrays.asList(new XMLNamespaces.NamespaceItem())));
@@ -6876,7 +6800,7 @@ public class TestParser {
     	Query query = new Query();
         Select select = new Select();
         query.setSelect(select);
-        select.addSymbol(new AllSymbol());
+        select.addSymbol(new MultipleElementSymbol());
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("X"))));
         query.setFrom(from);
     	helpTest("TABLE X", "SELECT * FROM X", query);
@@ -6885,7 +6809,7 @@ public class TestParser {
     @Test public void testArrayTable() throws Exception {
     	String sql = "SELECT * from arraytable(null columns x string, y date) as x"; //$NON-NLS-1$
         Query query = new Query();
-        query.setSelect(new Select(Arrays.asList(new AllSymbol())));
+        query.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
         ArrayTable tt = new ArrayTable();
         tt.setArrayValue(new Constant(null, DataTypeManager.DefaultDataClasses.OBJECT));
         List<TableFunctionReference.ProjectedColumn> columns = new ArrayList<TableFunctionReference.ProjectedColumn>();
@@ -6902,6 +6826,41 @@ public class TestParser {
     	Query query = new Query();
     	query.setSelect(new Select(Arrays.asList(new ExpressionSymbol("foo", new Reference(0)))));
         helpTest(sql, "SELECT ?", query);
+    }
+    
+    @Test public void testNonReserved() throws Exception {
+    	String sql = "select count";
+    	Query query = new Query();
+    	query.setSelect(new Select(Arrays.asList(new ElementSymbol("count"))));
+        helpTest(sql, "SELECT count", query);
+    }
+    
+    @Test public void testAggFilter() throws Exception {
+    	String sql = "select count(*) filter (where x = 1) from g";
+    	Query query = new Query();
+    	AggregateSymbol aggregateSymbol = new AggregateSymbol("count", AggregateSymbol.Type.COUNT.name(), false, null);
+    	aggregateSymbol.setCondition(new CompareCriteria(new ElementSymbol("x"), CompareCriteria.EQ, new Constant(1)));
+    	query.setSelect(new Select(Arrays.asList(aggregateSymbol)));
+    	query.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("g")))));
+        helpTest(sql, "SELECT COUNT(*) FILTER(WHERE x = 1) FROM g", query);
+    }
+    
+    @Test public void testWindowFunction() throws Exception {
+    	String sql = "select row_number() over (partition by x order by y) from g";
+    	Query query = new Query();
+    	WindowFunction wf = new WindowFunction("expr");
+    	wf.setFunction(new AggregateSymbol("expr", "ROW_NUMBER", false, null));
+    	WindowSpecification ws = new WindowSpecification();
+    	ws.setPartition(new ArrayList<Expression>(Arrays.asList(new ElementSymbol("x"))));
+    	ws.setOrderBy(new OrderBy(Arrays.asList(new ElementSymbol("y"))));
+    	wf.setWindowSpecification(ws);
+    	query.setSelect(new Select(Arrays.asList(wf)));
+    	query.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("g")))));
+        helpTest(sql, "SELECT ROW_NUMBER() OVER (PARTITION BY x ORDER BY y) FROM g", query);
+    }
+    
+    @Test public void testTrim1() {
+    	helpException("select trim('xy' from e1) from pm1.g1");
     }
 
 }

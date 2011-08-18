@@ -113,7 +113,7 @@ public class ConnectorManager  {
     public MetadataStore getMetadata(String modelName, Map<String, Datatype> datatypes, Properties importProperties) throws TranslatorException {
 		MetadataFactory factory = new MetadataFactory(modelName, datatypes, importProperties);
 		Object connectionFactory = getConnectionFactory();
-		Object connection = executionFactory.getConnection(connectionFactory);
+		Object connection = executionFactory.getConnection(connectionFactory, null);
 		Object unwrapped = null;
 		
 		if (connection instanceof WrappedConnection) {

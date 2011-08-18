@@ -126,8 +126,8 @@ public class TestTeiidConfiguration {
 
         ModelNode subsystem = model.require("profile").require("test").require("subsystem").require("teiid");
         ModelNode bufferService = subsystem.require("buffer-service");
-        assertEquals(9, bufferService.keys().size());
-        assertEquals("true", bufferService.require("useDisk").asString());
+        assertEquals(8, bufferService.keys().size());
+        assertEquals("true", bufferService.require("use-disk").asString());
     }	
     
     @Test

@@ -32,9 +32,8 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
-import org.teiid.query.sql.symbol.AllInGroupSymbol;
-import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 
 
 /**
@@ -49,7 +48,8 @@ import org.teiid.query.sql.symbol.ElementSymbol;
  */
 public class ElementCollectorVisitor extends LanguageVisitor {
 
-    private Collection<ElementSymbol> elements;
+    private Collection<? super ElementSymbol> elements;
+    private boolean aggsOnly;
 
     /**
      * Construct a new visitor with the specified collection, which should
@@ -57,20 +57,11 @@ public class ElementCollectorVisitor extends LanguageVisitor {
      * @param elements Collection to use for elements
      * @throws IllegalArgumentException If elements is null
      */
-	public ElementCollectorVisitor(Collection<ElementSymbol> elements) {
+	public ElementCollectorVisitor(Collection<? super ElementSymbol> elements) {
         if(elements == null) {
             throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0021")); //$NON-NLS-1$
         }
         this.elements = elements;
-    }
-
-    /**
-     * Get the elements collected by the visitor.  This should best be called
-     * after the visitor has been run on the language object tree.
-     * @return Collection of {@link org.teiid.query.sql.symbol.ElementSymbol}
-     */
-    public Collection<ElementSymbol> getElements() {
-        return this.elements;
     }
 
     /**
@@ -79,7 +70,9 @@ public class ElementCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      */
     public void visit(ElementSymbol obj) {
-        this.elements.add(obj);
+    	if (!aggsOnly || obj.isAggregate()) {
+            this.elements.add(obj);
+    	}
     }
 
     /**
@@ -87,18 +80,7 @@ public class ElementCollectorVisitor extends LanguageVisitor {
      * called directly.
      * @param obj Language object
      */
-    public void visit(AllInGroupSymbol obj) {
-        if(obj.getElementSymbols() != null) {
-	        this.elements.addAll(obj.getElementSymbols());
-        }
-    }
-
-    /**
-     * Visit a language object and collect symbols.  This method should <b>NOT</b> be
-     * called directly.
-     * @param obj Language object
-     */
-    public void visit(AllSymbol obj) {
+    public void visit(MultipleElementSymbol obj) {
         if(obj.getElementSymbols() != null) {
 	        this.elements.addAll(obj.getElementSymbols());
         }
@@ -109,7 +91,7 @@ public class ElementCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      * @param elements Collection to collect elements in
      */
-    public static final void getElements(LanguageObject obj, Collection<ElementSymbol> elements) {
+    public static final void getElements(LanguageObject obj, Collection<? super ElementSymbol> elements) {
     	if(obj == null) {
     		return;
     	}
@@ -150,6 +132,10 @@ public class ElementCollectorVisitor extends LanguageVisitor {
      * @return Collection of {@link org.teiid.query.sql.symbol.ElementSymbol}
      */
     public static final Collection<ElementSymbol> getElements(LanguageObject obj, boolean removeDuplicates, boolean useDeepIteration) {
+    	return getElements(obj, removeDuplicates, useDeepIteration, false);
+    }
+    
+    public static final Collection<ElementSymbol> getElements(LanguageObject obj, boolean removeDuplicates, boolean useDeepIteration, boolean aggsOnly) {
         if(obj == null) {
             return Collections.emptyList();
         }
@@ -159,16 +145,20 @@ public class ElementCollectorVisitor extends LanguageVisitor {
         } else {
             elements = new ArrayList<ElementSymbol>();
         }
-        ElementCollectorVisitor visitor = null;
+        ElementCollectorVisitor visitor = new ElementCollectorVisitor(elements);
+        visitor.aggsOnly = aggsOnly;
         if (useDeepIteration){
-            visitor = new ElementCollectorVisitor(elements);
             DeepPreOrderNavigator.doVisit(obj, visitor);
         } else {
-            visitor = new ElementCollectorVisitor(elements);
             PreOrderNavigator.doVisit(obj, visitor);
         }
         
         return elements;
     }
+    
+    public static final Collection<ElementSymbol> getAggregates(LanguageObject obj, boolean removeDuplicates) {
+    	return getElements(obj, removeDuplicates, false, true);
+    }
+
 
 }

@@ -32,7 +32,7 @@ import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 import junit.framework.TestCase;
 
@@ -70,7 +70,7 @@ public class TestRuleValidateWhereAll extends TestCase {
     public void testDefect21982_3() {
         TestOptimizer.helpPlan(
                  "SELECT * FROM vm1.g38",   //$NON-NLS-1$
-                 FakeMetadataFactory.example1Cached(),
+                 RealMetadataFactory.example1Cached(),
                  null, getWhereAllCapabilities(),
                  new String[0],
                  false);       
@@ -79,7 +79,7 @@ public class TestRuleValidateWhereAll extends TestCase {
     public void testWhereAll1() {
     	TestOptimizer.helpPlan(
             "SELECT * FROM pm6.g1",   //$NON-NLS-1$
-            FakeMetadataFactory.example1Cached(),
+            RealMetadataFactory.example1Cached(),
             null, getWhereAllCapabilities(),
             new String[0],
             false);
@@ -88,7 +88,7 @@ public class TestRuleValidateWhereAll extends TestCase {
     public void testWhereAll2() throws Exception {
     	TestOptimizer.helpPlan(
             "SELECT pm1.g1.e1 FROM pm1.g1, pm6.g1 WHERE pm1.g1.e1=pm6.g1.e1 OPTION MAKEDEP pm6.g1",   //$NON-NLS-1$
-            FakeMetadataFactory.example1Cached(),
+            RealMetadataFactory.example1Cached(),
             null, getWhereAllCapabilities(),
             new String[] {
                 "SELECT g_0.e1 AS c_0 FROM pm6.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0" //$NON-NLS-1$ //$NON-NLS-2$

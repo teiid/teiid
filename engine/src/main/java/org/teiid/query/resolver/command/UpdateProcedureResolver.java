@@ -194,7 +194,7 @@ public class UpdateProcedureResolver implements CommandResolver {
             			switch (param.getParameterType()) {
         	            case ParameterInfo.OUT:
         	            case ParameterInfo.RETURN_VALUE:
-        	            	if (!isAssignable(metadata, param)) {
+        	            	if (param.getExpression() != null && !isAssignable(metadata, param)) {
         	                    throw new QueryResolverException(QueryPlugin.Util.getString("UpdateProcedureResolver.only_variables", param.getExpression())); //$NON-NLS-1$
         	            	}
         	            	sp.setCallableStatement(true);
@@ -312,11 +312,6 @@ public class UpdateProcedureResolver implements CommandResolver {
                 
                 resolveBlock(command, loopStmt.getBlock(), externalGroups, metadata);
                 break;
-            case Statement.TYPE_BREAK:
-            case Statement.TYPE_CONTINUE:
-                break;
-            default:
-                throw new QueryResolverException("ERR.015.008.0015", QueryPlugin.Util.getString("ERR.015.008.0015", statement.getType())); //$NON-NLS-1$ //$NON-NLS-2$
         }
     }
 

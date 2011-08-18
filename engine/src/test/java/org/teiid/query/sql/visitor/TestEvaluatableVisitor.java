@@ -26,14 +26,14 @@ import org.junit.Test;
 import org.teiid.query.resolver.TestResolver;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 import static org.junit.Assert.*;
 
 public class TestEvaluatableVisitor {
 
 	@Test public void testNestedNeedsEvaluation() throws Exception {
-		Query command = (Query)TestResolver.helpResolve("select * from pm1.g1 where e1 in (select e1 from pm1.g2 where e2 = ?)", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+		Query command = (Query)TestResolver.helpResolve("select * from pm1.g1 where e1 in (select e1 from pm1.g2 where e2 = ?)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
 		assertTrue(EvaluatableVisitor.needsProcessingEvaluation(command));
 	}
 	

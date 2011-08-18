@@ -1005,6 +1005,7 @@
           <row>
             <entry>
               <para>SUBSTRING(x, y)</para>
+              <para>SUBSTRING(x FROM y)</para>
             </entry>
             <entry>
               <para>Get substring from x, from position y to the end of x
@@ -1017,6 +1018,7 @@
           <row>
             <entry>
               <para>SUBSTRING(x, y, z)</para>
+              <para>SUBSTRING(x FROM y FOR z)</para>
             </entry>
             <entry>
               <para>Get substring from x from position y with length z
@@ -1059,6 +1061,18 @@
             </entry>
             <entry>
               <para>x in {string}</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>TRIM([[LEADING|TRAILING|BOTH] [x] FROM] y)</para>
+            </entry>
+            <entry>
+              <para>Trim the leading, trailing, or both ends of a string y of character x.  
+              If LEADING/TRAILING/BOTH is not specified, BOTH is used.  If no trim character x is specficed then the blank space ' ' is used.</para>
+            </entry>
+            <entry>
+              <para>x in {character}, y in {string}</para>
             </entry>
           </row>
           <row>
@@ -1190,6 +1204,21 @@
             </entry>
             <entry>
               <para>x in {date, timestamp}, returns integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>EXTRACT(YEAR|MONTH|DAY|HOUR|MINUTE|SECOND FROM x)</para>
+            </entry>
+            <entry>
+              <para>Return the given field value from the date value x.
+              Produces the same result as the assoceated YEAR, MONTH, DAYOFMONTH, HOUR, MINUTE, SECOND functions.
+              </para>
+              <para>The SQL specification also allows for TIMEZONE_HOUR and TIMEZONE_MINUTE as extraction targets.  
+              In Teiid all date values are in the timezone of the server.</para>
+            </entry>
+            <entry>
+              <para>x in {date, time, timestamp}, returns integer</para>
             </entry>
           </row>
           <row>
@@ -1795,20 +1824,21 @@
     <para><synopsis>LOOKUP(codeTable, returnColumn, keyColumn, keyValue)</synopsis></para>
     <para>In the lookup table codeTable, find the row where
       keyColumn has the value keyValue and return the
-      associated returnColumn. codeTable must be a fully-qualified string
-      literal containing metadata identifiers, keyValue datatype
-      must match datatype of the keyColumn, return datatype
-      matches that of returnColumn. returnColumn and
-      keyColumn parameters should use their shortened names.
+      associated returnColumn value or null if no matching key is found. codeTable must be a string literal that is the fully-qualified name of the target table.
+      returnColumn and key Column must also be string literals of just the relevant column names.
+      The keyValue can be any expression that must match the datatype of the keyColumn.  The return datatype
+      matches that of returnColumn.
     </para>
-    <para>For example, a StatePostalCodes table used to translate postal codes to
-      complete state names might represent an example of this type of
-      lookup table. One column, PostalCode, represents a key column.
-      Other tables refer to this two-letter code. A
-      second column, StateDisplayName, would represent the complete name
-      of the state. Hence, a query to this lookup table would typically
-      provide the PostalCode and expect the StateDisplayName in response.
-    </para>
+    <example>
+		<title>Country Code Lookup</title>
+		<programlisting>lookup('ISOCountryCodes', 'CountryName', 'CountryCode', 'US')</programlisting>
+		<para>A ISOCountryCodes table used to translate country name to
+      ISO codes. One column, CountryName, represents a key column.
+      A second column, CountryCode, would represent the ISO code of the country. 
+      Hence, a query to this lookup table would
+      provide a CountryName, shown above as 'US', and expect a CountryCode value in response.
+		</para>
+	</example>
     <para>When you call this function for any combination of codeTable, returnColumn, and
       keyColumn for the first time, the Teiid System caches the result. 
       The Teiid System uses this cache for all
@@ -1817,6 +1847,7 @@
       the Teiid System. Thus, you should not use this function for
       data that is subject to updates. Instead, you can use it against
       static data that does not change over time.</para>
+    <para>See the Caching Guide for more on the caching aspects of the lookup function.</para>
     <note>
       <itemizedlist>
         <listitem>
@@ -1829,100 +1860,44 @@
   <section>
     <title>System Functions</title>
     <para>System functions provide access to information in the Teiid system from within a query. </para>
-    <informaltable frame="all">
-      <tgroup cols="3">
-        <thead>
-          <row>
-            <entry>
-              <para>Function</para>
-            </entry>
-            <entry>
-              <para>Definition</para>
-            </entry>
-            <entry>
-              <para>Datatype Constraint</para>
-            </entry>
-          </row>
-        </thead>
-        <tbody>
-          <row>
-            <entry>
-              <para><code>COMMANDPAYLOAD()</code></para>
-            </entry>
-            <entry>
-              <para>Retrieve the string form of the command payload
+      <section>
+    	<title>COMMANDPAYLOAD</title>
+    	<para>Retrieve a string from the command payload
                 or null if no command payload was specified. The command
                 payload is set by a method on the Teiid JDBC API
                 extensions on a per-query basis.</para>
-            </entry>
-            <entry>
-              <para>Returns a string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para><code>COMMANDPAYLOAD(key)</code></para>
-            </entry>
-            <entry>
-              <para>Cast the command payload object to a
-                java.util.Properties object and look up the specified key in
-                the object</para>
-            </entry>
-            <entry>
-              <para>key in {string}, return is string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para><code>ENV(key)</code></para>
-            </entry>
-            <entry>
-              <para>Retrieve a system environment property. The only key specific to the current session is ‘sessionid’.  
+    	<para><synopsis>COMMANDPAYLOAD([key])</synopsis></para>
+    	<para>If the key parameter is provided, the command payload object is cast to a
+                java.util.Properties object and the corresponding property value for the key is returned.  If the key is not specified the return value is the command payload object toString value.</para>
+    	<para>key, return value are strings</para>
+     </section>
+     <section>
+    	<title>ENV</title>
+    	<para>Retrieve a system environment property.</para>
+    	<para><synopsis>ENV(key)</synopsis></para>
+    	<para>The only key specific to the current session is 'sessionid'.  
                 However the preferred mechanism for getting the session id is with the session_id() function.  
-                To prevent untrusted access to system properties, the use of this function must be specifically enabled in the &jboss-beans; file.
-                </para>
-            </entry>
-            <entry>
-              <para>key in {string}, return is string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para><code>SESSION_ID()</code></para>
-            </entry>
-            <entry>
-              <para>Retrieve the string form of the current session id.</para>
-            </entry>
-            <entry>
-              <para>return is string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para><code>USER()</code></para>
-            </entry>
-            <entry>
-              <para>Retrieve the name of the user executing the
-                query</para>
-            </entry>
-            <entry>
-              <para>return is string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para><code>CURRENT_DATABASE()</code></para>
-            </entry>
-            <entry>
-              <para>Retrieve the catalog name of the database. Currently VDB's name is also the catalog name.</para>
-            </entry>
-            <entry>
-              <para>return is string</para>
-            </entry>
-          </row>          
-        </tbody>
-      </tgroup>
-    </informaltable>
+                To prevent untrusted access to system properties, the use of this function must be specifically enabled in the &jboss-beans; file.</para>
+    	<para>key, return value are strings</para>
+     </section>
+     <section>
+    	<title>SESSION_ID</title>
+    	<para>Retrieve the string form of the current session id.</para>
+    	<para><synopsis>SESSION_ID()</synopsis></para>
+    	<para>return value is string.</para>
+     </section>
+     <section>
+    	<title>USER</title>
+    	<para>Retrieve the name of the user executing the query.</para>
+    	<para><synopsis>USER()</synopsis></para>
+    	<para>return value is string.</para>
+     </section>
+     <section>
+    	<title>CURRENT_DATABASE</title>
+    	<para>Retrieve the catalog name of the database. The VDB name is always the catalog name.</para>
+    	<para><synopsis>CURRENT_DATABASE()</synopsis></para>
+    	<para>return value is string.</para>
+     </section>
   </section>
   <section id="xml_functions">
     <title>XML Functions</title>
@@ -2036,9 +2011,7 @@
              <para>xquery in string. Return value is xml.</para>
              <para>XMLQUERY is part of the SQL/XML 2006 specification.</para>
              <para>See also <link linkend="xmltable">XMLTABLE</link></para>
-             <note><para>A technique known as document projection is used to reduce the memory footprint of the context item document.  
-             Only the parts of the document needed by the XQuery path expressions will be loaded into memory.  Since document projection analysis uses all relevant path expressions, even 1 expression that could potentially use many nodes, e.g. //x rather than /a/b/x will cause a larger memory footprint.</para></note>
-             
+             <note><para>See also <xref linkend="xquery_optimization"/></para></note>
     </section>
     <section id="xmlserialize">
     	<title>XMLSERIALIZE</title>

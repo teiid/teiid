@@ -49,14 +49,14 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 
 
 public class TestConnectorWorkItem {
 
-	private static final QueryMetadataInterface EXAMPLE_BQT = FakeMetadataFactory.exampleBQTCached();
+	private static final QueryMetadataInterface EXAMPLE_BQT = RealMetadataFactory.exampleBQTCached();
 
 	private static Command helpGetCommand(String sql,
 			QueryMetadataInterface metadata) throws Exception {
@@ -68,7 +68,7 @@ public class TestConnectorWorkItem {
 	static AtomicRequestMessage createNewAtomicRequestMessage(int requestid, int nodeid) throws Exception {
 		RequestMessage rm = new RequestMessage();
 		
-		DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(EXAMPLE_BQT, FakeMetadataFactory.exampleBQTVDB());
+		DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(EXAMPLE_BQT, RealMetadataFactory.exampleBQTVDB());
 		workContext.getSession().setSessionId(String.valueOf(1));
 		workContext.getSession().setUserName("foo"); //$NON-NLS-1$
 		
@@ -87,7 +87,7 @@ public class TestConnectorWorkItem {
 		int total_columns = 3;
 		StoredProcedure command = (StoredProcedure)helpGetCommand("{call pm2.spTest8(?)}", EXAMPLE_BQT); //$NON-NLS-1$      
 		command.getInputParameters().get(0).setExpression(new Constant(1));
-		Call proc = (Call)new LanguageBridgeFactory(EXAMPLE_BQT).translate(command);
+		Call proc = new LanguageBridgeFactory(EXAMPLE_BQT).translate(command);
 
 		ProcedureBatchHandler pbh = new ProcedureBatchHandler(proc, exec);
 

@@ -51,6 +51,8 @@ import org.teiid.language.SetQuery;
 import org.teiid.language.SubqueryComparison;
 import org.teiid.language.SubqueryIn;
 import org.teiid.language.Update;
+import org.teiid.language.WindowFunction;
+import org.teiid.language.WindowSpecification;
 import org.teiid.language.With;
 import org.teiid.language.WithItem;
 
@@ -79,6 +81,7 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     
     public void visit(AggregateFunction obj) {
         visitNode(obj.getExpression());
+        visitNode(obj.getCondition());
     }
     
     public void visit(BatchedUpdates obj) {
@@ -248,5 +251,16 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     	}
     }
     
-
+    @Override
+    public void visit(WindowFunction windowFunction) {
+    	visitNode(windowFunction.getFunction());
+    	visitNode(windowFunction.getWindowSpecification());
+    }
+    
+    @Override
+    public void visit(WindowSpecification windowSpecification) {
+    	visitNodes(windowSpecification.getPartition());
+    	visitNode(windowSpecification.getOrderBy());
+    }
+    
 }

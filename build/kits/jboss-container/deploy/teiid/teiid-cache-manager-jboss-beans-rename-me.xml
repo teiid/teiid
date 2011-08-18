@@ -85,7 +85,7 @@
                             <!-- Hibernate 2LC can replicate custom types, so we use marshalling -->
                             <property name="useRegionBasedMarshalling">true</property>
                             <!-- Must match the value of "useRegionBasedMarshalling" -->
-                            <property name="inactiveOnStartup">true</property>
+                            <property name="inactiveOnStartup">false</property>
 
                             <!-- Disable asynchronous RPC marshalling/sending -->
                             <property name="serializationExecutorPoolSize">0</property>
@@ -145,7 +145,7 @@
         </property>
         <property name="clusterName">${jboss.partition.name:DefaultPartition}-teiid-events</property>
         <property name="multiplexerStack">${jboss.default.jgroups.stack:udp}</property>        
-        <property name="localEventDistributorName">teiid/runtime-engine</property>
+        <property name="localEventDistributorName">teiid/engine-deployer</property>
     </bean>
 
 </deployment>

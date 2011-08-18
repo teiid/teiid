@@ -321,6 +321,12 @@ public interface SourceCapabilities {
         INSERT_WITH_ITERATOR,
         COMMON_TABLE_EXPRESSIONS,
         MAX_DEPENDENT_PREDICATES,
+        ADVANCED_OLAP, 
+        QUERY_AGGREGATES_ARRAY, 
+        ELEMENTARY_OLAP, 
+        WINDOW_FUNCTION_ORDER_BY_AGGREGATES,
+        CRITERIA_SIMILAR,
+        CRITERIA_LIKE_REGEX
     }
 
     public enum Scope {
@@ -354,8 +360,7 @@ public interface SourceCapabilities {
      * used if the capability FUNCTION is true.
      * 
      * @param functionName
-     *            The function that may be supported (see MetaMatrix documentation for further definition of the functions and
-     *            their parameters.)
+     *            The function that may be supported
      * @return True if function is supported.
      */
     public boolean supportsFunction(String functionName);

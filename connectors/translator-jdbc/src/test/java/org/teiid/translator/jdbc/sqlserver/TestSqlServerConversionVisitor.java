@@ -37,7 +37,6 @@ import org.teiid.metadata.Table;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
-import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
@@ -50,8 +49,12 @@ public class TestSqlServerConversionVisitor {
     private static SQLServerExecutionFactory trans = new SQLServerExecutionFactory();
     
     @BeforeClass
-    public static void setup() throws TranslatorException {
+    public static void oneTimeSetup() throws TranslatorException {
         trans.start();
+    }
+    
+    public void setUp() throws Exception {
+    	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2005);
     }
 
     public String getTestVDB() {
@@ -144,6 +147,25 @@ public class TestSqlServerConversionVisitor {
             output);        
     }
     
+    @Test public void testConvertDate() throws Exception {
+        String input = "select stringkey from bqt1.smalla where BQT1.SmallA.DateValue IN (convert('2000-01-12', date), convert('2000-02-02', date))"; //$NON-NLS-1$
+        String output = "SELECT SmallA.StringKey FROM SmallA WHERE SmallA.DateValue IN (CAST('2000-01-12 00:00:00.0' AS DATETIME), CAST('2000-02-02 00:00:00.0' AS DATETIME))"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(),
+            input, 
+            output);        
+    }
+    
+    @Test public void testConvertDate2008() throws Exception {
+    	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
+        String input = "select stringkey from bqt1.smalla where BQT1.SmallA.DateValue IN (convert('2000-01-12', date), convert('2000-02-02', date))"; //$NON-NLS-1$
+        String output = "SELECT SmallA.StringKey FROM SmallA WHERE SmallA.DateValue IN (CAST('2000-01-12' AS DATE), CAST('2000-02-02' AS DATE))"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(),
+            input, 
+            output);        
+    }
+    
     @Test public void testUniqueidentifier() throws Exception {
     	MetadataStore metadataStore = new MetadataStore();
     	Schema foo = RealMetadataFactory.createPhysicalModel("foo", metadataStore); //$NON-NLS-1$
@@ -160,7 +182,7 @@ public class TestSqlServerConversionVisitor {
         obj.setNativeType("uniqueidentifier"); //$NON-NLS-1$
         
         CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
-        QueryMetadataInterface metadata = new TransformationMetadata(null, store, null, FakeMetadataFactory.SFM.getSystemFunctions(), null);
+        QueryMetadataInterface metadata = new TransformationMetadata(null, store, null, RealMetadataFactory.SFM.getSystemFunctions(), null);
         
         TranslationUtility tu = new TranslationUtility(metadata);
         Command command = tu.parseCommand("select max(x) from bar"); //$NON-NLS-1$
@@ -174,7 +196,7 @@ public class TestSqlServerConversionVisitor {
         String input = "select intkey from (select intkey from bqt1.smalla) as x order by intkey limit 100"; //$NON-NLS-1$
         String output = "SELECT TOP 100 v_0.c_0 FROM (SELECT g_0.IntKey AS c_0 FROM SmallA g_0) v_0 ORDER BY v_0.c_0"; //$NON-NLS-1$
                
-		CommandBuilder commandBuilder = new CommandBuilder(FakeMetadataFactory.exampleBQTCached());
+		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);
         TranslationHelper.helpTestVisitor(output, trans, obj);
     }

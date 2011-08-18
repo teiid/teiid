@@ -58,7 +58,7 @@ public class TeiidException extends Exception {
 
     public TeiidException(Throwable e, String message) {
         super(message, e);
-        setCode(e);
+        setCode(getCode(e));
     }
     
     public TeiidException(Throwable e, String errorCode, String message) {
@@ -82,14 +82,15 @@ public class TeiidException extends Exception {
 		this.originalType = originalType;
 	}
     
-    private void setCode(Throwable e) {
+    static String getCode(Throwable e) {
         if (e instanceof TeiidException) {
-            this.code = (((TeiidException) e).getCode());
+            return (((TeiidException) e).getCode());
         } else if (e instanceof TeiidRuntimeException) {
-        	this.code = ((TeiidRuntimeException) e).getCode();
+        	return ((TeiidRuntimeException) e).getCode();
         } else if (e instanceof SQLException) {
-        	this.code = Integer.toString(((SQLException)e).getErrorCode());
+        	return ((SQLException)e).getSQLState();
         }
+        return null;
     }
     
 	public String getMessage() {

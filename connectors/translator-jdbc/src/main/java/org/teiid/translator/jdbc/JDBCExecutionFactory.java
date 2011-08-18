@@ -41,6 +41,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.sql.DataSource;
@@ -56,6 +57,7 @@ import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
 import org.teiid.language.Literal;
 import org.teiid.language.QueryExpression;
+import org.teiid.language.SQLConstants;
 import org.teiid.language.SetQuery;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.SetQuery.Operation;
@@ -144,7 +146,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     	}
     };
     
-    private Map<String, FunctionModifier> functionModifiers = new HashMap<String, FunctionModifier>();
+    private Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
 	
 	private boolean useBindVariables = true;
 	private String databaseTimeZone;
@@ -511,9 +513,18 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     	if (obj instanceof Function) {
     		Function function = (Function)obj;
     		if (functionModifiers != null) {
-    			FunctionModifier modifier = functionModifiers.get(function.getName().toLowerCase());
-    			if (modifier != null) {
-    				parts = modifier.translate(function);
+    			String name = function.getName();
+    			while (true) {
+	    			FunctionModifier modifier = functionModifiers.get(name);
+	    			if (modifier != null) {
+	    				parts = modifier.translate(function);
+	    				break;
+	    			}
+	    			int index = name.indexOf('.');
+	    			if (index < 0 || index == name.length() - 1) {
+	    				break;
+	    			}
+    				name = name.substring(index + 1);
     			}
     		}
     	} else if (obj instanceof Command) {
@@ -553,7 +564,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     }
     
     /**
-     * Return a map of function name in lower case to FunctionModifier.
+     * Return a map of function name to FunctionModifier.
      * @return Map of function name to FunctionModifier.
      */
     public Map<String, FunctionModifier> getFunctionModifiers() {
@@ -566,7 +577,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @param modifier
      */
     public void registerFunctionModifier(String name, FunctionModifier modifier) {
-    	this.functionModifiers.put(name.toLowerCase(), modifier);
+    	this.functionModifiers.put(name, modifier);
     }
     
     /**
@@ -1136,6 +1147,10 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         	nameParts.add(current.toString());
         }
         return nameParts;
+	}
+
+	public String getLikeRegexString() {
+		return SQLConstants.Reserved.LIKE_REGEX;
 	}
 	
 }

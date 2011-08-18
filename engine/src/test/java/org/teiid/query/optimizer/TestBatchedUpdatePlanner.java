@@ -49,7 +49,7 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorReport;
 
@@ -156,7 +156,7 @@ public class TestBatchedUpdatePlanner extends TestCase {
     }
     
     private void helpTestPlanner(String[] sql, boolean[] expectedBatching) throws QueryMetadataException, TeiidComponentException, TeiidProcessingException {
-        BatchedUpdatePlan plan = helpPlan(sql, FakeMetadataFactory.example1Cached());
+        BatchedUpdatePlan plan = helpPlan(sql, RealMetadataFactory.example1Cached());
         List plans = plan.getUpdatePlans();
         assertEquals("Number of child plans did not match expected", expectedBatching.length, plans.size()); //$NON-NLS-1$
         for (int i = 0; i < expectedBatching.length; i++) {
@@ -165,7 +165,7 @@ public class TestBatchedUpdatePlanner extends TestCase {
     }    
     
     private void helpTestPlanner(String[] sql, boolean[] expectedBatching, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException, TeiidProcessingException {
-        BatchedUpdatePlan plan = helpPlan(sql, FakeMetadataFactory.example1Cached(), capFinder, true);
+        BatchedUpdatePlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), capFinder, true);
         List plans = plan.getUpdatePlans();
         assertEquals("Number of child plans did not match expected", expectedBatching.length, plans.size()); //$NON-NLS-1$
         for (int i = 0; i < expectedBatching.length; i++) {

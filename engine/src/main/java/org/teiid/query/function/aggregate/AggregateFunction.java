@@ -39,9 +39,14 @@ import org.teiid.core.TeiidProcessingException;
 public abstract class AggregateFunction {
 
 	private int expressionIndex = -1;
+	private int conditionIndex = -1;
 	
 	public void setExpressionIndex(int expressionIndex) {
 		this.expressionIndex = expressionIndex;
+	}
+	
+	public void setConditionIndex(int conditionIndex) {
+		this.conditionIndex = conditionIndex;
 	}
 
     /**
@@ -58,18 +63,21 @@ public abstract class AggregateFunction {
     public abstract void reset();
 
     public void addInput(List<?> tuple) throws TeiidComponentException, TeiidProcessingException {
+    	if (conditionIndex != -1 && !Boolean.TRUE.equals(tuple.get(conditionIndex))) {
+			return;
+    	}
     	if (expressionIndex == -1) {
     		addInputDirect(null, tuple);
     		return;
     	}
     	Object input = tuple.get(expressionIndex);
-    	if (!filter(input)) {
+    	if (input != null || respectsNull()) {
     		addInputDirect(input, tuple);
     	}
     }
     
-    boolean filter(Object value) {
-    	return value == null; 
+    public boolean respectsNull() {
+    	return false;
     }
     
     /**

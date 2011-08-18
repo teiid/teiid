@@ -23,7 +23,6 @@
 package org.teiid.query.optimizer.relational.rules;
 
 import java.util.Arrays;
-import java.util.Collection;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
@@ -62,11 +61,11 @@ import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.TextLine;
+import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
@@ -77,7 +76,6 @@ import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
-import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 
 
 /**
@@ -164,6 +162,20 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         } catch(TeiidComponentException e) {
             handleException(e);            
         }
+    }
+    
+    @Override
+    public void visit(WindowFunction windowFunction) {
+    	if(! this.caps.supportsCapability(Capability.ELEMENTARY_OLAP)) {
+            markInvalid(windowFunction, "Window function not supported by source"); //$NON-NLS-1$
+            return;
+        } 
+    	if (!this.caps.supportsCapability(Capability.WINDOW_FUNCTION_ORDER_BY_AGGREGATES) 
+    			&& windowFunction.getWindowSpecification().getOrderBy() != null
+    			&& !windowFunction.getFunction().isAnalytical()) {
+    		markInvalid(windowFunction, "Window function order by with aggregate not supported by source"); //$NON-NLS-1$
+            return;
+    	}
     }
     
     public void visit(CaseExpression obj) {
@@ -258,18 +270,32 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     }
 
     public void visit(MatchCriteria obj) {
-        // Check if compares are allowed
-        if(! this.caps.supportsCapability(Capability.CRITERIA_LIKE)) {
-            markInvalid(obj, "Like is not supported by source"); //$NON-NLS-1$
-            return;
-        }
+    	switch (obj.getMode()) {
+    	case LIKE:
+            if(! this.caps.supportsCapability(Capability.CRITERIA_LIKE)) {
+                markInvalid(obj, "Like is not supported by source"); //$NON-NLS-1$
+                return;
+            }
+            break;
+    	case SIMILAR:
+    		if(! this.caps.supportsCapability(Capability.CRITERIA_SIMILAR)) {
+                markInvalid(obj, "Similar to is not supported by source"); //$NON-NLS-1$
+                return;
+            }
+    		break;
+    	case REGEX:
+    		if(! this.caps.supportsCapability(Capability.CRITERIA_LIKE_REGEX)) {
+                markInvalid(obj, "Like_regex is not supported by source"); //$NON-NLS-1$
+                return;
+            }
+    		break;
+    	}
         
         // Check ESCAPE char if necessary
-        if(obj.getEscapeChar() != MatchCriteria.NULL_ESCAPE_CHAR) {
-            if(! this.caps.supportsCapability(Capability.CRITERIA_LIKE_ESCAPE)) {
-                markInvalid(obj, "Like escape is not supported by source"); //$NON-NLS-1$
-                return;
-            }                
+        if(obj.getEscapeChar() != MatchCriteria.NULL_ESCAPE_CHAR 
+        		&& ! this.caps.supportsCapability(Capability.CRITERIA_LIKE_ESCAPE)) {
+            markInvalid(obj, "Like escape is not supported by source"); //$NON-NLS-1$
+            return;
         }
         
         //check NOT
@@ -464,17 +490,17 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
      * @return
      * @throws TeiidComponentException
      */
-    public static Object validateSubqueryPushdown(SubqueryContainer subqueryContainer, Object critNodeModelID, 
+    public static Object validateSubqueryPushdown(SubqueryContainer<?> subqueryContainer, Object critNodeModelID, 
     		QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord) throws TeiidComponentException {
     	ProcessorPlan plan = subqueryContainer.getCommand().getProcessorPlan();
     	if (plan != null) {
-    		QueryCommand queryCommand = getQueryCommand(plan);
+    		AccessNode aNode = getAccessNode(plan);
     		
-    		if (queryCommand == null) {
+    		if (aNode == null) {
     			return null;
     		}
     		
-    		critNodeModelID = validateCommandPushdown(critNodeModelID, metadata, capFinder,	queryCommand);  
+    		critNodeModelID = validateCommandPushdown(critNodeModelID, metadata, capFinder,	aNode);  
     	}
     	if (critNodeModelID == null) {
     		return null;
@@ -502,20 +528,13 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 
 	public static Object validateCommandPushdown(Object critNodeModelID,
 			QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
-			QueryCommand queryCommand) throws TeiidComponentException {
+			AccessNode aNode) throws TeiidComponentException {
 		// Check that query in access node is for the same model as current node
 		try {                
-		    Collection<GroupSymbol> subQueryGroups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(queryCommand, false);
-		    if(subQueryGroups.size() == 0) {
-		        // No FROM?
-		        return null;
-		    }
-		    GroupSymbol subQueryGroup = subQueryGroups.iterator().next();
-
-		    Object modelID = subQueryGroup.getModelMetadataId();
-		    if (modelID == null) {
-		    	modelID = metadata.getModelID(subQueryGroup.getMetadataID());
-		    }
+			if (!(aNode.getCommand() instanceof QueryCommand)) {
+				return null;
+			}
+		    Object modelID = aNode.getModelId();
 		    if (critNodeModelID == null) {
 		    	critNodeModelID = modelID;
 		    } else if(!CapabilitiesUtil.isSameConnector(critNodeModelID, modelID, metadata, capFinder)) {
@@ -527,7 +546,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 		return critNodeModelID;
 	}
 
-	public static QueryCommand getQueryCommand(ProcessorPlan plan) {
+	public static AccessNode getAccessNode(ProcessorPlan plan) {
 		if(!(plan instanceof RelationalPlan)) {
 		    return null;
 		}
@@ -545,17 +564,27 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 			accessNode = ln.getChildren()[0];
 		}
 		
-		if (! (accessNode instanceof AccessNode) || accessNode.getChildren()[0] != null) {
+		if (! (accessNode instanceof AccessNode)) {
 			return null;
 		}
-		
-		// Check that command in access node is a query
-		Command command = ((AccessNode)accessNode).getCommand();
-		if(command == null || !(command instanceof QueryCommand) || ((command instanceof Query) && ((Query)command).getIsXML())) {
+		return (AccessNode)accessNode;
+	}
+	
+	public static QueryCommand getQueryCommand(AccessNode aNode) {
+		if (aNode == null) {
+			return null;
+		}
+		Command command = aNode.getCommand();
+		if(!(command instanceof QueryCommand)) {
 		    return null;
 		}
 		
 		QueryCommand queryCommand = (QueryCommand)command;
+		if (aNode.getProjection() != null && aNode.getProjection().length > 0) {
+			Query newCommand = (Query)queryCommand.clone();
+			newCommand.getSelect().setSymbols(aNode.getOriginalSelect());
+			return newCommand;
+		}
 		return queryCommand;
 	}
         

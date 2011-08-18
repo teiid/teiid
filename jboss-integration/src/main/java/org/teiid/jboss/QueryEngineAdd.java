@@ -22,6 +22,7 @@
 package org.teiid.jboss;
 
 import java.util.List;
+import java.util.ServiceLoader;
 import java.util.concurrent.Executor;
 
 import javax.resource.spi.XATerminator;
@@ -43,14 +44,32 @@ import org.jboss.as.server.DeploymentProcessorTarget;
 import org.jboss.as.server.deployment.Phase;
 import org.jboss.as.server.services.path.RelativePathService;
 import org.jboss.dmr.ModelNode;
+import org.jboss.modules.Module;
+import org.jboss.modules.ModuleIdentifier;
+import org.jboss.modules.ModuleLoadException;
 import org.jboss.msc.inject.ConcurrentMapInjector;
-import org.jboss.msc.service.*;
+import org.jboss.msc.service.AbstractServiceListener;
+import org.jboss.msc.service.ServiceBuilder;
+import org.jboss.msc.service.ServiceContainer;
+import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.ServiceTarget;
 import org.jboss.msc.value.InjectedValue;
+import org.teiid.PolicyDecider;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
 import org.teiid.cache.DefaultCacheFactory;
-import org.teiid.deployers.*;
+import org.teiid.deployers.ObjectSerializer;
+import org.teiid.deployers.SystemVDBDeployer;
+import org.teiid.deployers.VDBDependencyProcessor;
+import org.teiid.deployers.VDBDeployer;
+import org.teiid.deployers.VDBParserDeployer;
+import org.teiid.deployers.VDBRepository;
+import org.teiid.deployers.VDBStructure;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
+import org.teiid.dqp.internal.process.AuthorizationValidator;
+import org.teiid.dqp.internal.process.DataRolePolicyDecider;
+import org.teiid.dqp.internal.process.DefaultAuthorizationValidator;
 import org.teiid.jboss.deployers.RuntimeEngineDeployer;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -101,6 +120,29 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler {
     	bufferServiceBuilder.addDependency(TeiidServiceNames.BUFFER_DIR, String.class, bufferService.pathInjector);
     	newControllers.add(bufferServiceBuilder.install());
 
+    	PolicyDecider policyDecider;
+    	if (queryEngineNode.hasDefined(Configuration.POLICY_DECIDER_MODULE)) {
+    		policyDecider = buildService(PolicyDecider.class, queryEngineNode.get(Configuration.POLICY_DECIDER_MODULE).asString());    		
+    	}
+    	else {
+    		DataRolePolicyDecider drpd = new DataRolePolicyDecider();
+    		drpd.setAllowCreateTemporaryTablesByDefault(true);
+    		drpd.setAllowFunctionCallsByDefault(true);
+    		policyDecider = drpd;
+    	}
+    	
+    	AuthorizationValidator authValidator;
+    	if (queryEngineNode.hasDefined(Configuration.AUTHORIZATION_VALIDATOR_MODULE)) {
+    		authValidator = buildService(AuthorizationValidator.class, queryEngineNode.get(Configuration.AUTHORIZATION_VALIDATOR_MODULE).asString());
+    		authValidator.setEnabled(true);
+    	}
+    	else {
+    		DefaultAuthorizationValidator dap = new DefaultAuthorizationValidator();
+    		dap.setPolicyDecider(policyDecider);
+    		dap.setEnabled(true);
+    		authValidator = dap;
+    	}    	
+
     	CacheFactory cacheFactory = getCacheFactory(queryEngineNode.get(Configuration.CACHE_FACORY));
     	CacheConfiguration resultsetCache = buildCacheConfig(queryEngineNode.get(Configuration.RESULTSET_CACHE));
     	CacheConfiguration preparePlanCache = buildCacheConfig(queryEngineNode.get(Configuration.PREPAREDPLAN_CACHE));
@@ -130,6 +172,8 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler {
     	engine.setPreparedPlanCacheConfig(preparePlanCache);
     	engine.setSecurityHelper(new JBossSecurityHelper());
     	engine.setTranslatorRepository(translatorRepo);
+    	engine.setAuthorizationValidator(authValidator);
+    	engine.setContainerLifeCycleListener(shutdownListener);
     	
         
         ServiceBuilder<ClientServiceRegistry> serviceBuilder = target.addService(TeiidServiceNames.ENGINE, engine);
@@ -232,15 +276,6 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler {
     	if (node.hasDefined(Configuration.LOB_CHUNK_SIZE_IN_KB)) {
     		engine.setLobChunkSizeInKB(node.get(Configuration.LOB_CHUNK_SIZE_IN_KB).asInt());
     	}
-    	if (node.hasDefined(Configuration.USE_DATA_ROLES)) {
-    		engine.setUseDataRoles(node.get(Configuration.USE_DATA_ROLES).asBoolean());
-    	}
-    	if (node.hasDefined(Configuration.ALLOW_CREATE_TEMPORY_TABLES_BY_DEFAULT)) {
-    		engine.setAllowCreateTemporaryTablesByDefault(node.get(Configuration.ALLOW_CREATE_TEMPORY_TABLES_BY_DEFAULT).asBoolean());
-    	}
-    	if (node.hasDefined(Configuration.ALLOW_FUNCTION_CALLS_BY_DEFAULT)) {
-    		engine.setAllowFunctionCallsByDefault(node.get(Configuration.ALLOW_FUNCTION_CALLS_BY_DEFAULT).asBoolean());
-    	}
     	if (node.hasDefined(Configuration.QUERY_THRESHOLD_IN_SECS)) {
     		engine.setQueryThresholdInSecs(node.get(Configuration.QUERY_THRESHOLD_IN_SECS).asInt());
     	}
@@ -300,22 +335,35 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler {
     	if (node.hasDefined(Configuration.CONNECTOR_BATCH_SIZE)) {
     		bufferManger.setConnectorBatchSize(node.get(Configuration.CONNECTOR_BATCH_SIZE).asInt());
     	}	
-    	if (node.hasDefined(Configuration.MAX_RESERVE_BATCH_COLUMNS)) {
-    		bufferManger.setMaxReserveBatchColumns(node.get(Configuration.MAX_RESERVE_BATCH_COLUMNS).asInt());
+    	if (node.hasDefined(Configuration.MAX_PROCESSING_KB)) {
+    		bufferManger.setMaxProcessingKb(node.get(Configuration.MAX_PROCESSING_KB).asInt());
     	}
-    	if (node.hasDefined(Configuration.MAX_PROCESSING_BATCH_COLUMNS)) {
-    		bufferManger.setMaxProcessingBatchesColumns(node.get(Configuration.MAX_PROCESSING_BATCH_COLUMNS).asInt());
-    	}	
+    	if (node.hasDefined(Configuration.MAX_RESERVED_KB)) {
+    		bufferManger.setMaxReserveKb(node.get(Configuration.MAX_RESERVED_KB).asInt());
+    	}
     	if (node.hasDefined(Configuration.MAX_FILE_SIZE)) {
-    		bufferManger.setMaxFileSize(node.get(Configuration.MAX_FILE_SIZE).asInt());
+    		bufferManger.setMaxFileSize(node.get(Configuration.MAX_FILE_SIZE).asLong());
     	}
     	if (node.hasDefined(Configuration.MAX_BUFFER_SPACE)) {
-    		bufferManger.setMaxBufferSpace(node.get(Configuration.MAX_BUFFER_SPACE).asInt());
+    		bufferManger.setMaxBufferSpace(node.get(Configuration.MAX_BUFFER_SPACE).asLong());
     	}
     	if (node.hasDefined(Configuration.MAX_OPEN_FILES)) {
     		bufferManger.setMaxOpenFiles(node.get(Configuration.MAX_OPEN_FILES).asInt());
     	}	                	
     	return bufferManger;
+    }
+    
+    private <T> T buildService(Class<T> type, String moduleName) throws OperationFailedException {
+        final ModuleIdentifier moduleId;
+        final Module module;
+        try {
+            moduleId = ModuleIdentifier.create(moduleName);
+            module = Module.getCallerModuleLoader().loadModule(moduleId);
+        } catch (ModuleLoadException e) {
+            throw new OperationFailedException(e, new ModelNode().set(IntegrationPlugin.Util.getString("failed_load_module", moduleName))); //$NON-NLS-1$
+        }
+        ServiceLoader<T> services = module.loadService(type);
+        return services.iterator().next();
     }
     
     private CacheFactory getCacheFactory(ModelNode node) {

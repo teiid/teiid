@@ -30,7 +30,6 @@ import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.id.IDGenerator;
-import org.teiid.core.id.IntegerID;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -142,9 +141,9 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                     }
                     // If two or more contiguous commands made on the same model were found, then batch them
                     if (batch.size() > 1) {
-                        ProjectNode projectNode = new ProjectNode(((IntegerID)idGenerator.create()).getValue());
+                        ProjectNode projectNode = new ProjectNode(idGenerator.nextInt());
                         // Create a BatchedUpdateNode that creates a batched request for the connector
-                        BatchedUpdateNode batchNode = new BatchedUpdateNode(((IntegerID)idGenerator.create()).getValue(),
+                        BatchedUpdateNode batchNode = new BatchedUpdateNode(idGenerator.nextInt(),
                                                                             batch, contexts, shouldEvaluate,
                                                                             modelName);
                         List symbols = batchedUpdateCommand.getProjectedSymbols();

@@ -22,6 +22,8 @@
 
 package org.teiid.jdbc;
 
+import static org.junit.Assert.*;
+
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.MalformedURLException;
@@ -31,23 +33,21 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.teiid.client.ProcedureErrorInstructionException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.TeiidException;
-import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 
 
-public class TestSQLException extends TestCase {
+public class TestSQLException {
   
 	/*
 	 * Test method for 'com.metamatrix.jdbc.MMSQLException.MMSQLException()'
 	 */
-	public void testMMSQLException() {
+	@Test public void testMMSQLException() {
 		TeiidSQLException e = new TeiidSQLException();
 		String sqlState = e.getSQLState();
 		Throwable cause = e.getCause();
@@ -82,7 +82,7 @@ public class TestSQLException extends TestCase {
 	 * Tests various simple exceptions to see if the expected SQLState is
 	 * returend.
 	 */
-	public void testCreateThrowable_01() {
+	@Test public void testCreateThrowable_01() {
 		testCreateThrowable(new CommunicationException(
 				"A test MM Communication Exception"), //$NON-NLS-1$
 				SQLStates.CONNECTION_EXCEPTION_STALE_CONNECTION);
@@ -133,7 +133,7 @@ public class TestSQLException extends TestCase {
 	 * Tests various nested exceptions to see if the expected SQLState is
 	 * returend.
 	 */
-	public void testCreateThrowable_02() {
+	@Test public void testCreateThrowable_02() {
 		testCreateThrowable(
 				new CommunicationException(new ConnectException(
 						"A test java.net.ConnectException"), //$NON-NLS-1$
@@ -150,7 +150,7 @@ public class TestSQLException extends TestCase {
 				SQLStates.CONNECTION_EXCEPTION_STALE_CONNECTION);
 	}
     
-    public void testCreateThrowable3() {
+    @Test public void testCreateThrowable3() {
         TeiidSQLException e = testCreateThrowable(
                             new TeiidException(
                                     new TeiidRuntimeException(
@@ -180,31 +180,15 @@ public class TestSQLException extends TestCase {
 		Throwable nestedException = e.getCause();
 		SQLException nextException = e.getNextException();
 
-		assertTrue("Expected MMSQLException.getSQLState() to return \"" //$NON-NLS-1$
-				+ esqlState + "\" but got \"" + sqlState + "\" instead.", //$NON-NLS-1$ //$NON-NLS-2$
-				sqlState.compareTo(esqlState) == 0);
-		assertTrue("Expected MMSQLException.getCause() to return [" //$NON-NLS-1$
-				+ (ecause != null ? ecause.getClass().getName() : "<null>") //$NON-NLS-1$
-				+ "] but got [" //$NON-NLS-1$
-				+ (cause != null ? cause.getClass().getName() : "<unknown>") //$NON-NLS-1$
-				+ "] instead.", cause == ecause); //$NON-NLS-1$
-		assertTrue(
-				"Expected MMSQLException.getErrorCode() to return [0] but got [" //$NON-NLS-1$
-						+ errorCode + "] instead.", errorCode == 0); //$NON-NLS-1$
-		assertTrue("Expected MMSQLException.getNestedException() to return [" //$NON-NLS-1$
-				+ (ecause != null ? ecause.getClass().getName() : "<null>") //$NON-NLS-1$
-				+ "] but got [" //$NON-NLS-1$
-				+ (nestedException != null ? nestedException.getClass()
-						.getName() : "<unknown>") + "] instead.", //$NON-NLS-1$ //$NON-NLS-2$
-				nestedException == ecause);
-		assertTrue(
-				"Expected MMSQLException.getNextException() to return <null> but got a SQLException with message \"" //$NON-NLS-1$
-						+ (nextException != null ? nextException.getMessage()
-								: "") + "\" instead.", nextException == null); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals(esqlState, sqlState);
+		assertEquals(ecause, cause);
+		assertEquals(0, errorCode);
+		assertEquals(nestedException, ecause);
+		assertNull(nextException);
 		return e;
     }
     
-    public void testCreate() {
+    @Test public void testCreate() {
         TeiidSQLException exception = TeiidSQLException.create(new Exception());
         
         assertEquals(exception.getMessage(), Exception.class.getName());
@@ -214,7 +198,7 @@ public class TestSQLException extends TestCase {
         assertEquals(exception, TeiidSQLException.create(exception));
     }
     
-    public void testCreateFromSQLException() {
+    @Test public void testCreateFromSQLException() {
         SQLException sqlexception = new SQLException("foo", "21"); //$NON-NLS-1$ //$NON-NLS-2$
         
         SQLException nested = new SQLException("bar"); //$NON-NLS-1$
@@ -229,6 +213,16 @@ public class TestSQLException extends TestCase {
         assertEquals(exception.getSQLState(), sqlexception.getSQLState());        
         assertEquals(exception.getNextException().getMessage(), sqlexception.getMessage());
         assertEquals(exception.getNextException().getNextException().getMessage(), nested.getMessage());
+    }
+    
+    @Test public void testCodeAsSQLState() {
+        TeiidException sqlexception = new TeiidException("foo", "21"); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        String message = "top level message"; //$NON-NLS-1$
+        
+        TeiidSQLException exception = TeiidSQLException.create(sqlexception, message);
+        
+        assertEquals(sqlexception.getCode(), exception.getSQLState());        
     }
 
 }

@@ -22,30 +22,23 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import org.teiid.query.optimizer.relational.plantree.*;
-import org.teiid.query.optimizer.relational.rules.RuleAssignOutputElements;
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeFactory;
+import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.sql.lang.SetQuery.Operation;
-
-import junit.framework.*;
-
 /**
  */
-public class TestRuleAssignOutputElements extends TestCase {
-
-    /**
-     * Constructor for TestRuleAssignOutputElements.
-     * @param arg0
-     */
-    public TestRuleAssignOutputElements(String arg0) {
-        super(arg0);
-    }
+public class TestRuleAssignOutputElements {
 
     public void helpTestIsUnionNoAll(PlanNode node, boolean expected) {
         boolean actual = RuleAssignOutputElements.hasDupRemoval(node);
         assertEquals("Got incorrect answer finding no all union", expected, actual); //$NON-NLS-1$
     }
 
-    public void testFindNoAllUnion1() {
+    @Test public void testFindNoAllUnion1() {
         PlanNode projNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);        
         PlanNode accessNode = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);        
         projNode.addLastChild(accessNode);
@@ -53,7 +46,7 @@ public class TestRuleAssignOutputElements extends TestCase {
         helpTestIsUnionNoAll(projNode, false);
     }    
 
-    public void testFindNoAllUnion2() {
+    @Test public void testFindNoAllUnion2() {
         PlanNode unionNode = NodeFactory.getNewNode(NodeConstants.Types.SET_OP);
         unionNode.setProperty(NodeConstants.Info.SET_OPERATION, Operation.UNION);
         unionNode.setProperty(NodeConstants.Info.USE_ALL, Boolean.TRUE);
@@ -70,7 +63,7 @@ public class TestRuleAssignOutputElements extends TestCase {
         helpTestIsUnionNoAll(unionNode, false);
     }    
     
-    public void testFindNoAllUnion3() {
+    @Test public void testFindNoAllUnion3() {
         PlanNode unionNode = NodeFactory.getNewNode(NodeConstants.Types.SET_OP);
         unionNode.setProperty(NodeConstants.Info.SET_OPERATION, Operation.UNION);
         unionNode.setProperty(NodeConstants.Info.USE_ALL, Boolean.FALSE);
@@ -87,7 +80,7 @@ public class TestRuleAssignOutputElements extends TestCase {
         helpTestIsUnionNoAll(unionNode, true);
     }    
 
-    public void testFindNoAllUnion4() {
+    @Test public void testFindNoAllUnion4() {
         PlanNode unionNode1 = NodeFactory.getNewNode(NodeConstants.Types.SET_OP);
         unionNode1.setProperty(NodeConstants.Info.SET_OPERATION, Operation.UNION);
         unionNode1.setProperty(NodeConstants.Info.USE_ALL, Boolean.TRUE);

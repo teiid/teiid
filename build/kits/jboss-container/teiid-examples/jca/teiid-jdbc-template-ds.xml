@@ -21,7 +21,7 @@
     <connection-url>jdbc:teiid:(vdb)@mm://localhost:31000</connection-url>
 
     <driver-class>org.teiid.jdbc.TeiidDriver</driver-class>
-    <user>user</user>
+    <user-name>user</user-name>
     <password>user</password>
 
       <metadata>

@@ -34,7 +34,6 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.id.IDGenerator;
-import org.teiid.core.id.IntegerIDFactory;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.FunctionMethod.Determinism;
@@ -99,7 +98,6 @@ public class QueryOptimizer {
         // Create an ID generator that can be used for all plans to generate unique data node IDs
         if(idGenerator == null) {
             idGenerator = new IDGenerator();
-            idGenerator.setDefaultFactory(new IntegerIDFactory());
         }
         
 		if(debug) {

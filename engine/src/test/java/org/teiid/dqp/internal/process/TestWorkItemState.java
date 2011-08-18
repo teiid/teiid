@@ -40,7 +40,6 @@ public class TestWorkItemState {
 		}
 		
 		private TestWorkItem(boolean done, boolean callMoreWork) {
-			super(false);
 			this.isDone = done;
 			this.callMoreWork = callMoreWork;
 		}
@@ -152,5 +151,5 @@ public class TestWorkItemState {
     		
     	}
     }
-        
+    
 }

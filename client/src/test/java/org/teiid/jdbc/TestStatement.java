@@ -50,6 +50,7 @@ public class TestStatement {
 		results.getResultsReceiver().receiveResults(rm);
 		Mockito.stub(conn.getDQP()).toReturn(dqp);
 		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		statement.clearBatch(); //previously caused npe
 		statement.addBatch("delete from table"); //$NON-NLS-1$
 		statement.addBatch("delete from table1"); //$NON-NLS-1$
 		assertTrue(Arrays.equals(new int[] {1, 2}, statement.executeBatch()));
@@ -62,6 +63,18 @@ public class TestStatement {
 		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		assertFalse(statement.execute("set foo bar")); //$NON-NLS-1$
 		assertEquals("bar", p.get("foo")); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		assertFalse(statement.execute("set foo 'b''ar'")); //$NON-NLS-1$
+		assertEquals("b'ar", p.get("foo")); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	@Test public void testSetAuthorizationStatement() throws Exception {
+		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+		Properties p = new Properties();
+		Mockito.stub(conn.getExecutionProperties()).toReturn(p);
+		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		assertFalse(statement.execute("set session authorization bar")); //$NON-NLS-1$
+		Mockito.verify(conn).changeUser("bar", null);
 	}
 	
 	@Test public void testPropertiesOverride() throws Exception {
@@ -115,8 +128,32 @@ public class TestStatement {
 		ResultsFuture<ResultsMessage> future = new ResultsFuture<ResultsMessage>();
 		Mockito.stub(dqp.executeRequest(Mockito.anyLong(), (RequestMessage) Mockito.anyObject())).toReturn(future);
 		statement.submitExecute("select 'hello world'");
-		Thread.sleep(100);
+		Thread.sleep(300);
 		Mockito.verify(dqp).cancelRequest(0);
+		statement.setQueryTimeoutMS(1);
+		statement.submitExecute("select 'hello world'");
+		Thread.sleep(300);
+		Mockito.verify(dqp, Mockito.times(2)).cancelRequest(0);
 	}
+	
+	@Test public void testTimeoutProperty() throws Exception {
+		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+		Properties p = new Properties();
+		p.setProperty(ExecutionProperties.QUERYTIMEOUT, "2");
+		Mockito.stub(conn.getExecutionProperties()).toReturn(p);
+		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		assertEquals(2, statement.getQueryTimeout());
+	}
+	
+	@Test public void testUseJDBC4ColumnNameAndLabelSemantics() throws Exception {
+		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+		Properties p = new Properties();
+		p.setProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS, "false");
+
+		Mockito.stub(conn.getExecutionProperties()).toReturn(p);
+		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		assertEquals(Boolean.FALSE.toString(), statement.getExecutionProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS));
+		
+	}	
 	
 }

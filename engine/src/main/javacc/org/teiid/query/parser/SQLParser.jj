@@ -23,6 +23,7 @@ import org.teiid.query.sql.proc.*;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.language.Like.MatchMode;
 
 /** 
  * <p>The SQLParser is a JavaCC-generated parser that reads a SQL string and produces a 
@@ -192,7 +193,9 @@ TOKEN : /* Reserved words */
 |   <LANGUAGE: "language">
 |   <LARGE: "large">
 |   <LEADING: "leading">
+|   <LEAVE: "leave">
 |   <LIKE: "like">
+|   <LIKE_REGEX: "like_regex">
 |   <LIMIT: "limit">
 |   <LOCAL: "local">
 |   <LOOP: "loop">
@@ -213,6 +216,7 @@ TOKEN : /* Reserved words */
 |   <NOT: "not">
 |   <NULL: "null">
 |   <OF: "of">
+|   <OFFSET: "offset">
 |   <OLD: "old">
 |   <ON: "on">
 |   <ONLY: "only">
@@ -406,6 +410,7 @@ TOKEN : /* Punctuation */
 |   <QMARK: "?">
 |   <DOLLAR: "$">
 |   <SEMICOLON: ";">
+|   <COLON: ":">
 |	<CONCAT_OP: "||">
 }
 
@@ -510,7 +515,7 @@ Command alter(ParseInfo info) :
 {
   	String target = null;
   	QueryCommand command = null;
-  	Block block = null;
+  	Statement stmt = null;
   	TriggerAction triggerAction = null;
   	Token comment = null;
   	Token event = null;
@@ -529,9 +534,9 @@ Command alter(ParseInfo info) :
 	 		alterView.setDefinition(command);
 	 		return alterView;	
 	 	}
-		| (<PROCEDURE> target = id() <AS> { comment = getToken(1).specialToken; } block = block(info)) 
+		| (<PROCEDURE> target = id() <AS> { comment = getToken(1).specialToken; } stmt = statement(info)) 
 		{
-			CreateUpdateProcedureCommand cup = new CreateUpdateProcedureCommand(block);
+			CreateUpdateProcedureCommand cup = new CreateUpdateProcedureCommand(asBlock(stmt));
 			cup.setUpdateProcedure(false);
 			if (comment != null) {
 		 	    cup.setCacheHint(getQueryCacheOption(comment.image));
@@ -560,11 +565,29 @@ Command alter(ParseInfo info) :
 
 TriggerAction forEachRowTriggerAction(ParseInfo info) :
 {
-	Block b = null;
+	Block b = new Block();
+	b.setAtomic(true);
+	Statement stmt = null;
 }
 {
 	<FOR> <EACH> <ROW>
-	b = block(info)
+	(
+	 LOOKAHEAD(1) (<BEGIN> [<ATOMIC>]
+      (
+	    stmt = statement(info)
+	    {          
+    	    b.addStatement(stmt);            	                	    
+	    }
+      )*
+      <END> 
+     )
+     |
+     stmt = statement(info)
+     {
+       b = asBlock(stmt);
+       b.setAtomic(true);
+     }
+    ) 
 	{
 		return new TriggerAction(b);
 	}
@@ -713,12 +736,25 @@ RaiseErrorStatement errorStatement(ParseInfo info) :
 Statement statement(ParseInfo info) :
 {
     Statement stmt = null;
+    String label = null;
 }
 {
-    (stmt = ifStatement(info) |
-	 stmt = loopStatement(info) |
-	 stmt = whileStatement(info) |
-	 stmt = delimitedStatement(info)
+    (
+	 LOOKAHEAD(2) ([label = id() <COLON>] 
+	  (
+	   stmt = loopStatement(info) |
+	   stmt = whileStatement(info) |
+	   stmt = compoundStatement(info)
+	  )
+	  {
+	  	((Statement.Labeled)stmt).setLabel(label);
+	  }
+	 )
+	 |
+	 (
+      stmt = ifStatement(info) |
+      stmt = delimitedStatement(info)
+	 )
 	)
     
     {
@@ -735,8 +771,7 @@ Statement delimitedStatement(ParseInfo info) :
 	  stmt = sqlStatement(info) |
       stmt = errorStatement(info) |
 	  stmt = declareStatement(info) |
-	  stmt = continueStatement(info) |
-	  stmt = breakStatement(info)
+	  stmt = branchingStatement(info)
 	 )
 	 <SEMICOLON>
 	 {
@@ -744,32 +779,25 @@ Statement delimitedStatement(ParseInfo info) :
 	 }
 }
 
-/**
- * Parse block
- * @throws ParseException
- */
-Block block(ParseInfo info) :
+Block compoundStatement(ParseInfo info) :
 {
     Statement stmt = null;  
     Block block = new Block();
+    Boolean atomic = null;
 }
 {   
-	(      
-    	stmt = statement(info)
-    	{
-        	block.addStatement(stmt);	
-    	}
-        |
-        (<BEGIN>
-            (
-        	    stmt = statement(info)
-        	    {          
-            	    block.addStatement(stmt);            	                	    
-        	    }
-    	   )*
-        <END>)    
-     )           
+    <BEGIN> [[<NOT> {atomic = Boolean.FALSE;}] <ATOMIC> {if (atomic == null) {atomic = Boolean.TRUE;}}]
+    (
+      stmt = statement(info)
+      {          
+	    block.addStatement(stmt);            	                	    
+	  }
+ 	)*
+    <END>
     {
+        if (atomic != null) {
+        	block.setAtomic(atomic);
+        }
         return block;
     }
 }        
@@ -778,33 +806,24 @@ Block block(ParseInfo info) :
  * Parse break statement 
  * @throws ParseException if parsing failed
  */
-BreakStatement breakStatement(ParseInfo info) :
+BranchingStatement branchingStatement(ParseInfo info) :
 {
-    BreakStatement breakStmt = null;      
+    BranchingStatement breakStmt = new BranchingStatement();
+    Token mode = null;
+    String label = null;
 }
 {
- 	<BREAK>
+ 	(
+ 	 (
+ 	  (mode = <BREAK> | mode = <CONTINUE>) [label = id()] 
+ 	 )
+ 	 | 
+ 	 (mode = <LEAVE> label = id())
+ 	)
  	{
- 		breakStmt = new BreakStatement();
- 		
+ 	    breakStmt.setMode(BranchingStatement.BranchingMode.valueOf(mode.image.toUpperCase()));
+ 	    breakStmt.setLabel(label);
  		return breakStmt;
- 	}
-} 	
-
-/**
- * Parse break statement 
- * @throws ParseException if parsing failed
- */
-ContinueStatement continueStatement(ParseInfo info) :
-{
-    ContinueStatement contStmt = null;      
-}
-{
- 	<CONTINUE>
- 	{
- 		contStmt = new ContinueStatement();
- 		
- 		return contStmt;
  	}
 } 	
 
@@ -816,18 +835,16 @@ WhileStatement whileStatement(ParseInfo info) :
 {
     WhileStatement whileStmt = null;    
     Criteria criteria = null;
-    Block block = null;
+    Statement stmt = null;
 }
 {
     <WHILE>
     <LPAREN>  
     criteria = criteria(info)
     <RPAREN>
-    block = block(info)
-    
+    stmt = statement(info)
     {
-        whileStmt = new WhileStatement(criteria, block);   
-
+        whileStmt = new WhileStatement(criteria, asBlock(stmt));   
         return whileStmt;
     }    
 }    
@@ -841,7 +858,7 @@ LoopStatement loopStatement(ParseInfo info) :
     LoopStatement loopStmt = null;    
     String cursor = null;
     QueryCommand query = null;
-    Block block = null;
+    Statement stmt = null;
 }
 {
     <LOOP>
@@ -851,11 +868,9 @@ LoopStatement loopStatement(ParseInfo info) :
     <RPAREN>
     <AS>
     cursor = id()
-    block = block(info)
-    
+    stmt = statement(info)
     {
-        loopStmt = new LoopStatement(block, query, cursor);   
-
+        loopStmt = new LoopStatement(asBlock(stmt), query, cursor);   
         return loopStmt;
     }    
 }   
@@ -868,21 +883,20 @@ IfStatement ifStatement(ParseInfo info) :
 {
     IfStatement ifStmt = null;    
     Criteria criteria = null;
-    Block ifBlock = null;
-    Block elseBlock = null;
+    Statement ifStatement = null;
+    Statement elseStatement = null;
 }
 {
     <IF>
     <LPAREN>  
     criteria = criteria(info)
     <RPAREN>
-    ifBlock = block(info)
+    ifStatement = statement(info)
     //else blocks will be associated with the closest if block
-    [LOOKAHEAD(1)<ELSE> elseBlock = block(info)]
-    
+    [LOOKAHEAD(1)<ELSE> elseStatement = statement(info)]
     {
-        ifStmt = new IfStatement(criteria, ifBlock);
-        ifStmt.setElseBlock(elseBlock);
+        ifStmt = new IfStatement(criteria, asBlock(ifStatement));
+        ifStmt.setElseBlock(asBlock(elseStatement));
         return ifStmt;
     }    
 }    
@@ -896,7 +910,7 @@ CriteriaSelector criteriaSelector() :
     CriteriaSelector critSelector = new CriteriaSelector();
     
     String element = null;
-    List elements = new ArrayList();
+    List elements = new ArrayList(2);
     Token operator = null;
 }
 {
@@ -1109,7 +1123,7 @@ TranslateCriteria translateCriteria(ParseInfo info) :
 
         [<WITH>
          {
-            critList = new ArrayList();
+            critList = new ArrayList(2);
          }
          <LPAREN>
         element = id()
@@ -1160,16 +1174,16 @@ CreateUpdateProcedureCommand  createUpdateProcedure(ParseInfo info) :
 {
     CreateUpdateProcedureCommand updateProcCmd = 
         new CreateUpdateProcedureCommand();
-    Block block = null;  
+    Statement stmt = null;  
 }
 { 
     <CREATE> [<VIRTUAL> {updateProcCmd.setUpdateProcedure(false);}] 
     [<UPDATE>] 
     <PROCEDURE>
 
-    block = block(info)
+    stmt = statement(info)
     {        
-        updateProcCmd.setBlock(block);
+        updateProcCmd.setBlock(asBlock(stmt));
         return updateProcCmd;        
     }    
 }   
@@ -1480,8 +1494,9 @@ Insert insert(ParseInfo info) :
 	}]
 
 	(
-		( <VALUES>
-		  values = rowValues(info)
+		( <VALUES> <LPAREN>
+		  values = expressionList(info)
+		  <RPAREN>
 		  {
 		    // Store each row of values
 		    insert.setValues(values);
@@ -1543,13 +1558,12 @@ List<ElementSymbol> columnList(boolean validate) :
  * @return List of values, never null
  * @throws ParseException if parsing failed
  */
-List rowValues(ParseInfo info) :
+ArrayList<Expression> expressionList(ParseInfo info) :
 {
-	List rowVals = new ArrayList();
+	ArrayList<Expression> rowVals = new ArrayList<Expression>(4);
 	Expression value = null;
 }
 {
-	<LPAREN>
 	value = expression(info)
 	{
         rowVals.add(value);
@@ -1560,8 +1574,6 @@ List rowValues(ParseInfo info) :
             rowVals.add(value);
 	    }
 	)*
-	<RPAREN>
-
 	{
 		return rowVals;
 	}
@@ -1741,7 +1753,7 @@ QueryCommand queryPrimary(ParseInfo info) :
         query=query(info) | 
         (<TABLE> name=id() {
            Query q = new Query();
-           q.setSelect(new Select(Arrays.asList(new AllSymbol())));
+           q.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
            q.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol(name)))));
            query = q;
         }) |
@@ -1821,14 +1833,13 @@ Select select(ParseInfo info) :
 	boolean isDistinct = false;		// unless DISTINCT keyword in SELECT
 	SelectSymbol symbol = null;
 	Select select = new Select();
-	info.aggregatesAllowed = true;
 }
 {
 	<SELECT>
 	[<ALL> | (<DISTINCT> {isDistinct=true;})]
 	(<STAR>
 		{
-			select.addSymbol(new AllSymbol());
+			select.addSymbol(new MultipleElementSymbol());
 		}
 	|
 		(	symbol=selectSymbol(info)      { select.addSymbol(symbol); }
@@ -1838,7 +1849,6 @@ Select select(ParseInfo info) :
 		)
 	)		
 	{
-		info.aggregatesAllowed = false;	
  		select.setDistinct(isDistinct);
 		return select;
 	}
@@ -1872,17 +1882,11 @@ SingleElementSymbol selectExpression(ParseInfo info) :
 	)
 	{		
 		SingleElementSymbol es = null;
-		if(expression instanceof ElementSymbol) {
-			es = (ElementSymbol) expression;
+		if(!(expression instanceof SingleElementSymbol)) {
+			String functionName = generateFunctionName(info, null);
+			es = new ExpressionSymbol(functionName, expression);
 		} else {
-			String func = null;
-			if(expression instanceof AggregateSymbol) {
-		    	es = (AggregateSymbol)expression;
-		    	func = ((AggregateSymbol)expression).getAggregateFunction().name();
-			} else {
-				String functionName = generateFunctionName(info, null);
-				es = new ExpressionSymbol(functionName, expression);
-			}
+		    es = (SingleElementSymbol)expression;
 		}
 		if(alias != null) {
 			alias = validateAlias(alias); 
@@ -1911,7 +1915,7 @@ DerivedColumn derivedColumn(ParseInfo info) :
 	}
 }
 
-AllInGroupSymbol allInGroupSymbol() :
+MultipleElementSymbol allInGroupSymbol() :
 {
 	Token allInGroupToken = null;
 	
@@ -1919,58 +1923,33 @@ AllInGroupSymbol allInGroupSymbol() :
 {
    	allInGroupToken = <ALL_IN_GROUP>    
     {
-		return new AllInGroupSymbol(normalizeId(allInGroupToken.image));
+		return new MultipleElementSymbol(normalizeId(allInGroupToken.image.substring(0, allInGroupToken.image.length() - 2)));
 	}
 }
 
-AggregateSymbol xmlAgg(ParseInfo info) :
+AggregateSymbol orderedAgg(ParseInfo info) :
 {
+    Token t = null;
 	Expression expression = null;
 	OrderBy orderBy = null;
+	Expression condition = null;
 }
 {
-	<XMLAGG> <LPAREN>
+	(t=<XMLAGG>|t=<ARRAY_AGG>)
+	<LPAREN>
 	expression = expression(info)
-	[
-		orderBy = orderby(info)
-	]
+	[ orderBy = orderby(info) ]
 	<RPAREN>
+	condition = filterClause(info)
 	{
-		if(! info.aggregatesAllowed) {
-			throw new ParseException(QueryPlugin.Util.getString("SQLParser.Aggregate_only_top_level")); //$NON-NLS-1$
-		}
-		
-		String name = generateFunctionName(info, "XMLAGG");
-		AggregateSymbol	agg = new AggregateSymbol(name, "XMLAGG", false, expression);
+		String aggName = t.image.toUpperCase();
+		String name = generateFunctionName(info, aggName);
+		AggregateSymbol	agg = new AggregateSymbol(name, aggName, false, expression);
 		agg.setOrderBy(orderBy);
+		agg.setCondition(condition);
 		return agg;
 	}
 }
-
-AggregateSymbol arrayAgg(ParseInfo info) :
-{
-	Expression expression = null;
-	OrderBy orderBy = null;
-}
-{
-	<ARRAY_AGG> <LPAREN>
-	expression = expression(info)
-	[
-		orderBy = orderby(info)
-	]
-	<RPAREN>
-	{
-		if(! info.aggregatesAllowed) {
-			throw new ParseException(QueryPlugin.Util.getString("SQLParser.Aggregate_only_top_level")); //$NON-NLS-1$
-		}
-		
-		String name = generateFunctionName(info, "ARRAY_AGG");
-		AggregateSymbol	agg = new AggregateSymbol(name, "ARRAY_AGG", false, expression);
-		agg.setOrderBy(orderBy);
-		return agg;
-	}
-}
-
 
 AggregateSymbol textAgg(ParseInfo info) :
 {
@@ -1981,6 +1960,7 @@ AggregateSymbol textAgg(ParseInfo info) :
 	List<DerivedColumn> expressions = new ArrayList<DerivedColumn>();
 	OrderBy orderBy = null;
 	String encoding = null;
+	Expression condition = null;
 }
 {
 	nonReserved("TEXTAGG") <LPAREN>
@@ -2014,20 +1994,18 @@ AggregateSymbol textAgg(ParseInfo info) :
 		orderBy = orderby(info)
 	]	
 	<RPAREN>
+	condition = filterClause(info)
 	{
-		if(! info.aggregatesAllowed) {
-			throw new ParseException(QueryPlugin.Util.getString("SQLParser.Aggregate_only_top_level")); //$NON-NLS-1$
-		}
-			
 		TextLine tf = new TextLine();
 		tf.setDelimiter(delimiter);
 		tf.setQuote(quote);
 		tf.setIncludeHeader(header);
 		tf.setExpressions(expressions);
 		tf.setEncoding(encoding);
-		String name = generateFunctionName(info, "TEXTAGG");
+        String name = generateFunctionName(info, "TEXTAGG");
 		AggregateSymbol agg = new AggregateSymbol(name, "TEXTAGG", false, tf);
 		agg.setOrderBy(orderBy);
+		agg.setCondition(condition);
 		return agg;		
 	}
 }
@@ -2039,16 +2017,18 @@ AggregateSymbol aggregateSymbol(ParseInfo info) :
 	AggregateSymbol agg = null;
 	boolean isDistinct = false;
 	Expression expression = null;
+	Expression condition = null;
 }
 {
 	(
 		// COUNT(*)
-		LOOKAHEAD(3) (
+		(LOOKAHEAD(3) (
 			func = nonReserved("COUNT")
 			<LPAREN>
 			starToken = <STAR>
 			<RPAREN> )	|
-			
+		LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "rank", "dense_rank", "row_number") != null}) (func = nonReserved("row_number", "rank", "dense_rank", "percent_rank", "cume_dist")
+			<LPAREN> <RPAREN>) |
 		// Remaining aggregates
 		(	(func = nonReserved("COUNT", "SUM", "AVG", "MIN", "MAX", "EVERY", "STDDEV_POP", "STDDEV_SAMP", "VAR_SAMP", "VAR_POP") 
 				|
@@ -2060,12 +2040,10 @@ AggregateSymbol aggregateSymbol(ParseInfo info) :
 			[ <DISTINCT> {isDistinct=true;} | <ALL>]
 			expression = expression(info)
 			<RPAREN>
-		) 
+		)) 
+		condition = filterClause(info)
 	)
 	{
-		if(! info.aggregatesAllowed) {
-			throw new ParseException(QueryPlugin.Util.getString("SQLParser.Aggregate_only_top_level")); //$NON-NLS-1$
-		}
 		func = func.toUpperCase();
 		String name = generateFunctionName(info, func);
 		if(starToken == null) { 
@@ -2075,7 +2053,19 @@ AggregateSymbol aggregateSymbol(ParseInfo info) :
 			// COUNT(*)			
 			agg = new AggregateSymbol(name, func, false, null);
 		}
+		agg.setCondition(condition);
 		return agg;
+	}
+}
+
+Expression filterClause(ParseInfo info) :
+{
+	Expression condition = null;
+}
+{
+	[ <FILTER> <LPAREN> <WHERE> condition = booleanPrimary(info) <RPAREN> ]
+	{
+		return condition;	
 	}
 }
 
@@ -2297,6 +2287,7 @@ TextTable textTable(ParseInfo info) :
 	Expression file = null;
 	TextTable.TextColumn column = null;
 	List<TextTable.TextColumn> columns = new ArrayList<TextTable.TextColumn>();
+	boolean useRowDelimiter = true;
 	Character delimiter = null;
 	boolean escape = false;
 	Character quote = null;
@@ -2317,6 +2308,12 @@ TextTable textTable(ParseInfo info) :
 			columns.add(column);
 		}
 	)* 
+	[
+	  <NO> <ROW> nonReserved("DELIMITER")
+	  {
+	    useRowDelimiter = false;
+	  }
+	]
 	[
 	  LOOKAHEAD(<ID>, { "delimiter".equalsIgnoreCase(getToken(1).image) }) <ID>
 	  delimiter = charVal(info, "DELMITER")
@@ -2354,6 +2351,7 @@ TextTable textTable(ParseInfo info) :
  		result.setSkip(skip);
  		result.setName(validateAlias(aliasID));
  		result.setQuote(quote);
+ 		result.setUsingRowDelimiter(useRowDelimiter);
  		return result;
  	}
 }
@@ -2363,6 +2361,7 @@ TextTable.TextColumn textColumn(ParseInfo info):
 	String name = null;
 	Constant datatype = null;
 	Integer width = null;
+	boolean noTrim = false;
 }
 {
 	name = id()
@@ -2370,9 +2369,15 @@ TextTable.TextColumn textColumn(ParseInfo info):
 	[ 
 	  	LOOKAHEAD(<ID>, { "width".equalsIgnoreCase(getToken(1).image) }) <ID>
 	  	width = intVal() 
+	  	[ LOOKAHEAD(2)
+		  	<NO> nonReserved("TRIM")
+		  	{
+				noTrim = true;	  	
+		  	}
+		]
 	]
 	{
-		return new TextTable.TextColumn(validateElementName(name), (String)datatype.getValue(), width);
+		return new TextTable.TextColumn(validateElementName(name), (String)datatype.getValue(), width, noTrim);
 	}
 }
 
@@ -2630,7 +2635,7 @@ Criteria criteria(ParseInfo info) :
  */
 Criteria compoundCritOr(ParseInfo info) :
 {
-    ArrayList logicList = new ArrayList();
+    ArrayList logicList = new ArrayList(2);
     Criteria logicPart = null;
 }
 {
@@ -2653,7 +2658,7 @@ Criteria compoundCritOr(ParseInfo info) :
  */
 Criteria compoundCritAnd(ParseInfo info) :
 {
-    ArrayList logicList = new ArrayList();
+    ArrayList logicList = new ArrayList(2);
     Criteria logicPart = null;
 }
 {
@@ -2676,14 +2681,20 @@ Criteria compoundCritAnd(ParseInfo info) :
  */
 Criteria notCrit(ParseInfo info) :
 {
-    Criteria crit = null;
+    Expression ex = null;
 	boolean isNot = false;
 }
 {
 	[<NOT> {isNot=true;}] 
-	crit=booleanPrimary(info)
+	ex=booleanPrimary(info)
 
 	{
+	    Criteria crit = null;
+	    if (ex instanceof Criteria) {
+	      crit = (Criteria)ex;
+	    } else {
+	      crit = new ExpressionCriteria(ex);
+	    }
   		if(isNot) { 
   			return new NotCriteria(crit);
 		} else {
@@ -2697,38 +2708,31 @@ Criteria notCrit(ParseInfo info) :
  * @return criteria
  * @throws ParseException if parsing failed
  */
-Criteria booleanPrimary(ParseInfo info) :
+Expression booleanPrimary(ParseInfo info) :
 {
     Expression ex = null;
-    Criteria crit = null;
 }
 {
     (
-		LOOKAHEAD(2) crit = translateCriteria(info)
+		LOOKAHEAD(2) ex = translateCriteria(info)
 		|
 	    (ex = commonValueExpression(info)
-	     {
-		  	 if (ex instanceof Criteria) {
-		  	 	crit = (Criteria)ex;
-		  	 } else {
-		     	crit = new ExpressionCriteria(ex);
-		     }
-	     }
 	     [(
-			LOOKAHEAD(2) crit=betweenCrit(info, ex) |
-			LOOKAHEAD(2) crit=matchCrit(info, ex) |
-			crit=setCrit(info, ex) |
-			crit=isNullCrit(info, ex) |
-			LOOKAHEAD(operator() (<ANY>|<SOME>|<ALL>) subquery(info)) crit=subqueryCompareCriteria(info, ex) |
-			crit=compareCrit(info, ex)
+			LOOKAHEAD(2) ex=betweenCrit(info, ex) |
+			LOOKAHEAD(2) ex=matchCrit(info, ex) |
+			LOOKAHEAD(2) ex=regexMatchCrit(info, ex) |
+			ex=setCrit(info, ex) |
+			ex=isNullCrit(info, ex) |
+			LOOKAHEAD(operator() (<ANY>|<SOME>|<ALL>) subquery(info)) ex=subqueryCompareCriteria(info, ex) |
+			ex=compareCrit(info, ex)
 	     )]
 	    )
 	    |
-		crit=existsCriteria(info) |
-		crit = hasCriteria() 
+		ex=existsCriteria(info) |
+		ex = hasCriteria() 
     )
 	{
-		return crit;
+		return ex;
 	}
 }
 
@@ -2792,7 +2796,7 @@ QueryCommand subquery(ParseInfo info) :
 		proc = storedProcedure(info, new StoredProcedure()) //deprecated	  
 	 )
 	 {
-	    subquery = new Query(new Select(Arrays.asList(new AllSymbol())), new From(Arrays.asList(new SubqueryFromClause("x", proc))), null, null, null);
+	    subquery = new Query(new Select(Arrays.asList(new MultipleElementSymbol())), new From(Arrays.asList(new SubqueryFromClause("x", proc))), null, null, null);
 	 }
 	)
 	<RPAREN>
@@ -2866,13 +2870,14 @@ MatchCriteria matchCrit(ParseInfo info, Expression expression) :
     Character esc = null;
 	Expression value = null;
 	boolean negated = false;
+	boolean similar = false;
 }
 {
 	[<NOT> {negated = true;}]
-    <LIKE>
+    (<LIKE>|(<SIMILAR> <TO> {similar = true;}))
 	value=commonValueExpression(info)
-    [   <ESCAPE> esc = charVal(info, "LIKE ESCAPE") |
-        (<LBRACE> <ESCAPE> esc = charVal(info, "LIKE ESCAPE") <RBRACE>) 
+    [   <ESCAPE> esc = charVal(info, "LIKE/SIMILAR TO ESCAPE") |
+        (<LBRACE> <ESCAPE> esc = charVal(info, "LIKE/SIMILAR TO ESCAPE") <RBRACE>) 
     ]
 	{
     	MatchCriteria matchcriteria = new MatchCriteria(expression, value);
@@ -2880,6 +2885,24 @@ MatchCriteria matchCrit(ParseInfo info, Expression expression) :
 	    if(esc != null) {
 			matchcriteria.setEscapeChar(esc.charValue());
 		}
+		matchcriteria.setMode(similar?MatchMode.SIMILAR:MatchMode.LIKE);
+		return matchcriteria;
+   	}
+}
+
+MatchCriteria regexMatchCrit(ParseInfo info, Expression expression) :
+{
+	Expression value = null;
+	boolean negated = false;
+}
+{
+	[<NOT> {negated = true;}]
+    <LIKE_REGEX>
+	value=commonValueExpression(info)
+	{
+    	MatchCriteria matchcriteria = new MatchCriteria(expression, value);
+		matchcriteria.setNegated(negated);
+		matchcriteria.setMode(MatchMode.REGEX);
 		return matchcriteria;
    	}
 }
@@ -3017,49 +3040,13 @@ ExistsCriteria existsCriteria(ParseInfo info) :
  */
 GroupBy groupBy(ParseInfo info) :
 {
-	GroupBy groupBy = new GroupBy();
-	SingleElementSymbol symbol = null;
+	List<Expression> expressions = null;
 }
 {
 	<GROUP> <BY>
-	(	symbol = groupByItem(info)
-		{
-			groupBy.addSymbol(symbol);
-		}
-		
-		(<COMMA> symbol = groupByItem(info)
-			{
-				groupBy.addSymbol(symbol);
-			}
-		)*
-	)
+    expressions = expressionList(info)	
 	{
-		return groupBy;
-	}
-}
-
-/**
- * <p>Parse a GROUP BY list item.  </p>
- * @return Parsed group by item
- * @throws ParseException if parsing failed
- */
-SingleElementSymbol groupByItem(ParseInfo info) :
-{
-	Expression expr = null;
-	SingleElementSymbol symbol = null;
-}
-{
-	expr = expression(info)
-	{
-		if(expr instanceof ElementSymbol) {
-			symbol = (ElementSymbol) expr;
-		} else {
-			String exprName = generateFunctionName(info, null);
-			symbol = new ExpressionSymbol(exprName, expr);
-		}
-	}
-	{
-		return symbol;
+		return new GroupBy(expressions);
 	}
 }
 
@@ -3071,14 +3058,11 @@ SingleElementSymbol groupByItem(ParseInfo info) :
 Criteria having(ParseInfo info) :
 {
     Criteria criteria = null;
-	info.aggregatesAllowed = true;
 }
 {
     <HAVING>
 	criteria = criteria(info)
-	
 	{
-		info.aggregatesAllowed = false;
 		return criteria;
 	}
 }
@@ -3157,39 +3141,61 @@ SingleElementSymbol sortKey(ParseInfo info) :
     }
 }
 
+Expression intParam(ParseInfo info) :
+{
+   Integer val = null;
+}
+{
+   (val = intVal() | <QMARK>)
+   {
+     if (val == null) {
+       return new Reference(info.referenceCount++);
+     } 
+     return new Constant(val, DataTypeManager.DefaultDataClasses.INTEGER);
+   }
+}
+
 /** 
  * <p>Parse an LIMIT clause.</p>
  * @return Parsed LIMIT
-  * @throws ParseException if parsing failed
+ * @throws ParseException if parsing failed
  */
 Limit limit(ParseInfo info) :
 {
-	Token val = null;
-	Token rowLimit = null;
-	Token ref = null;
-	Expression expr1 = null;
-	Expression expr2 = null;
+	Expression limit = null;
+	Expression offset = null;
 }
 {
-	<LIMIT>
-	(val=<INTEGERVAL> | <QMARK>)
-	[<COMMA> (rowLimit=<INTEGERVAL> | ref=<QMARK>)]
+    ((<LIMIT> offset = intParam(info)
+	[<COMMA> limit = intParam(info)])
 	{
-	    if (val == null) {
-	        expr1 = new Reference(info.referenceCount++);
-	    } else {
-	        expr1 = new Constant(Integer.valueOf(val.image), DataTypeManager.DefaultDataClasses.INTEGER);
-	    }
-		if (rowLimit == null && ref == null) {
-		    return new Limit(null, expr1);
-		}
-		if (rowLimit == null) {
-		    expr2 = new Reference(info.referenceCount++);
-		} else {
-	        expr2 = new Constant(Integer.valueOf(rowLimit.image), DataTypeManager.DefaultDataClasses.INTEGER);
-		}
-		return new Limit(expr1, expr2);
+	  if (limit == null) {
+	    limit = offset;
+	    offset = null;
+	  }
 	}
+	|
+	(<OFFSET> offset = intParam(info) (<ROW>|<ROWS>) 
+    [limit = fetchLimit(info)])
+    |
+    (limit = fetchLimit(info)))
+	{
+		return new Limit(offset, limit);
+	}
+}
+
+Expression fetchLimit(ParseInfo info) :
+{
+    Expression limit = null;
+}
+{
+    <FETCH> nonReserved("FIRST", "NEXT") [limit = intParam(info)] (<ROW>|<ROWS>) <ONLY>
+    {
+      if (limit == null) {
+        return new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER); 
+      }
+      return limit;
+    }
 }
 
 /** 
@@ -3415,18 +3421,19 @@ Expression valueExpressionPrimary(ParseInfo info) :
 			<RBRACE>
 		)
 		|
-		LOOKAHEAD(<ID> <LPAREN> <FOR>) (expression=textAgg(info))				
+		LOOKAHEAD(<ID> <LPAREN>, {matchesAny(getToken(1).image, "textagg") != null}) 
+		(expression=textAgg(info) [expression = windowSpecification(expression, info)])				
 		|		
 		// Aggregate function
-		LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "count", "min", "max", "sum", "avg", "every", "STDDEV_POP", "STDDEV_SAMP", "VAR_SAMP", "VAR_POP") != null}) (expression=aggregateSymbol(info))
+		LOOKAHEAD(<ID> <LPAREN>, {matchesAny(getToken(1).image, "count", "min", "max", "sum", "avg", "every", "STDDEV_POP", "STDDEV_SAMP", "VAR_SAMP", "VAR_POP") != null}) 
+		(expression=aggregateSymbol(info) [expression = windowSpecification(expression, info)])
 		|
-		LOOKAHEAD(<ANY>) (expression=aggregateSymbol(info))
+		LOOKAHEAD(<ANY>|<SOME>) (expression=aggregateSymbol(info) [expression = windowSpecification(expression, info)])
 		|
-		LOOKAHEAD(<SOME>) (expression=aggregateSymbol(info))
+		expression=orderedAgg(info) [expression = windowSpecification(expression, info)]
 		|
-		(expression=xmlAgg(info))
-		|
-		(expression=arrayAgg(info))
+		LOOKAHEAD(<ID> <LPAREN>, {matchesAny(getToken(1).image, "rank", "dense_rank", "row_number") != null}) 
+		(expression=aggregateSymbol(info) expression = windowSpecification(expression, info))
 		|
 		// Function
 		LOOKAHEAD(2) (expression=function(info))
@@ -3478,6 +3485,31 @@ Expression valueExpressionPrimary(ParseInfo info) :
 	}
 }
 
+Expression windowSpecification(Expression agg, ParseInfo info) :
+{
+	List<Expression> partitionList = null;
+	OrderBy orderBy = null;
+}
+{
+	<OVER> 
+    <LPAREN> 
+    [<PARTITION> <BY> partitionList = expressionList(info)]
+    [orderBy = orderby(info)]
+    <RPAREN>
+    {
+        String aggName = "win_" + ((AggregateSymbol)agg).getName();
+		String name = generateFunctionName(info, aggName);
+        
+    	WindowFunction result = new WindowFunction(aggName);
+    	WindowSpecification ws = new WindowSpecification();
+    	result.setFunction((AggregateSymbol)agg);
+    	ws.setPartition(partitionList);
+    	ws.setOrderBy(orderBy);
+    	result.setWindowSpecification(ws);
+    	return result;
+    }
+}
+
 /**
  * Parse a non-searched CASE expression.
  * @return CaseExpression
@@ -3486,8 +3518,8 @@ Expression valueExpressionPrimary(ParseInfo info) :
 CaseExpression caseExpression(ParseInfo info) :
 {
 	Expression expression = null, whenExpression = null, thenExpression = null, elseExpression = null;
-	ArrayList whenExpressions = new ArrayList();
-	ArrayList thenExpressions = new ArrayList();
+	ArrayList whenExpressions = new ArrayList(2);
+	ArrayList thenExpressions = new ArrayList(2);
 }
 {
 	<CASE>
@@ -3520,8 +3552,8 @@ SearchedCaseExpression searchedCaseExpression(ParseInfo info) :
 {
 	Expression thenExpression = null, elseExpression = null;
 	Criteria whenCriteria = null;
-	ArrayList whenCriteriaList = new ArrayList();
-	ArrayList thenExpressions = new ArrayList();
+	ArrayList whenCriteriaList = new ArrayList(2);
+	ArrayList thenExpressions = new ArrayList(2);
 }
 {
 	<CASE>
@@ -3555,7 +3587,7 @@ Expression function(ParseInfo info) :
 	String funcName = null;
     
 	Expression expression = null;
-	ArrayList args = new ArrayList();
+	ArrayList args = new ArrayList(2);
 	Token funcToken = null;
 }
 {
@@ -3564,16 +3596,14 @@ Expression function(ParseInfo info) :
 		expression = expression(info)
 		{
 			args.add(expression);
-			expression = null;
 		}
 		<COMMA>
 		expression = dataType()	
 		{
 			args.add(expression);
-			expression = null;			
 		}
 		<RPAREN> 
-	)	
+	)
 	|
 	(			
 		funcToken = <CAST>
@@ -3581,15 +3611,89 @@ Expression function(ParseInfo info) :
 		expression = expression(info)
 		{
 			args.add(expression);
-			expression = null;
 		} 
 		<AS>
 		expression = dataType()
 		{
 			args.add(expression);
-			expression = null;
 		}
 		<RPAREN>				
+	)
+	|
+	LOOKAHEAD(4, {getToken(1).image.equalsIgnoreCase("SUBSTRING")}) (
+	   funcName = nonReserved("SUBSTRING")
+	   <LPAREN>
+	   expression = expression(info)
+	   {
+	      args.add(expression);
+	   }
+	   <FROM> expression = expression(info)
+	   {
+	      args.add(expression);
+	   }
+  	   [<FOR> expression = expression(info)
+	    {
+	      args.add(expression);
+	    }
+	   ]
+	   <RPAREN>
+	)
+	|
+	LOOKAHEAD(2, {getToken(1).image.equalsIgnoreCase("EXTRACT")}) (
+	   nonReserved("EXTRACT")
+	   <LPAREN>
+	   (funcToken = <YEAR> | 
+	    funcToken = <MONTH> |
+	    funcToken = <DAY> |
+	    funcToken = <HOUR> |
+	    funcToken = <MINUTE> |
+	    funcToken = <SECOND>)
+	   <FROM> expression = expression(info)
+	   {
+	   	  if (funcToken.image.equalsIgnoreCase("DAY")) {
+	         funcName = "DAYOFMONTH";
+	      }  	      
+	      args.add(expression);
+	   }
+	   <RPAREN>
+	)
+	|
+	LOOKAHEAD(2, {getToken(1).image.equalsIgnoreCase("TRIM")}) (
+	   funcName= nonReserved("TRIM")
+	   <LPAREN>
+	   { funcToken = null; expression = null;}
+	   [
+	    LOOKAHEAD(2) (((funcToken = <LEADING>|
+	      funcToken = <TRAILING>|
+	      funcToken = <BOTH>)
+	    [expression = expression(info)])
+	    |
+	    expression = expression(info))
+		<FROM>
+	   ]
+  	   {
+	      if (funcToken == null) {
+	      	  args.add(new Constant("BOTH"));
+	      } else {
+	          args.add(new Constant(funcToken.image));
+	      }
+	      if (expression == null) {
+	          args.add(new Constant(" "));
+	      } else {
+	          if (expression instanceof Constant) {
+	              Object value = ((Constant)expression).getValue();
+	              if (value instanceof String && ((String)value).length() != 1) {
+				      throw new ParseException(QueryPlugin.Util.getString("SQLParser.Invalid_char", "TRIM CHAR", value)); //$NON-NLS-1$
+	              }
+	          }
+	          args.add(expression);
+	      }
+	   }
+	   expression = expression(info)
+	   {
+	      args.add(expression);
+	   }
+	   <RPAREN>
 	)
 	|
 	LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "to_chars", "to_bytes") != null}) (	
@@ -3598,13 +3702,11 @@ Expression function(ParseInfo info) :
 		expression = expression(info) 
 		{		
 			args.add(expression);
-			expression = null;
 		}
 		<COMMA>
 		expression = stringConstant()
 		{
 			args.add(expression);
-			expression = null;
 		} 
 		<RPAREN>				
 	)
@@ -3615,19 +3717,16 @@ Expression function(ParseInfo info) :
 		expression = intervalType() 
 		{		
 			args.add(expression);
-			expression = null;
 		}
 		<COMMA>
 		expression = expression(info)
 		{
 			args.add(expression);
-			expression = null;
 		} 
 		<COMMA>
 		expression = expression(info)
 		{
 			args.add(expression);
-			expression = null;
 		} 
 		<RPAREN>				
 	)
@@ -3642,61 +3741,15 @@ Expression function(ParseInfo info) :
 		                    | funcToken = <YEAR> | funcToken = <MONTH> | funcToken = <HOUR>
 		                    | funcToken = <MINUTE> | funcToken = <SECOND> | funcToken = <XMLCONCAT>
 		                    | funcToken = <XMLCOMMENT>)
-		<LPAREN>
-		[
-			expression = expression(info)
-			{
-				args.add(expression);	
-				expression = null;
-			}
-				
-			(<COMMA> expression=expression(info)
-			{
-				args.add(expression);
-				expression = null;
-			}
-			)*
-		]
+        <LPAREN>
+		[args = expressionList(info)]
 		<RPAREN>
 	)		
 	|
-	LOOKAHEAD(<INSERT> <LPAREN>) (
-		(funcToken = <INSERT>)
+	LOOKAHEAD(<TRANSLATE>|<INSERT> <LPAREN>) (
+		(funcToken = <TRANSLATE> | funcToken = <INSERT>)
 		<LPAREN>
-		[
-			expression = expression(info)
-			{
-				args.add(expression);	
-				expression = null;
-			}
-				
-			(<COMMA> expression=expression(info)
-			{
-				args.add(expression);
-				expression = null;
-			}
-			)*
-		]
-		<RPAREN>
-	)  			
-	|
-	LOOKAHEAD(<TRANSLATE> <LPAREN>) (
-		(funcToken = <TRANSLATE>)
-		<LPAREN>
-		[
-			expression = expression(info)
-			{
-				args.add(expression);	
-				expression = null;
-			}
-				
-			(<COMMA> expression=expression(info)
-			{
-				args.add(expression);
-				expression = null;
-			}
-			)*
-		]
+		[args = expressionList(info)]
 		<RPAREN>
 	)  
 	| expression = xmlParse(info)
@@ -3716,13 +3769,11 @@ Expression function(ParseInfo info) :
 		)
 		{
 			args.add(expression);	
-			expression = null;
 		}
 		[
 			<COMMA> expression = expression(info)
 			{
 				args.add(expression);	
-				expression = null;
 			}	
 		]
 		<RPAREN>
@@ -3742,20 +3793,7 @@ Expression function(ParseInfo info) :
 	|   
 	(	funcName = id()
 		<LPAREN>
-		[
-			expression = expression(info)
-			{
-				args.add(expression);	
-				expression = null;
-			}
-				
-			(<COMMA> expression=expression(info)
-			{
-				args.add(expression);
-				expression = null;
-			}
-			)*
-		]
+		[ args = expressionList(info) ]
 		<RPAREN>
 	))		
 	{
@@ -3807,7 +3845,7 @@ QueryString queryString(ParseInfo info) :
 {
 	Expression path = null;
 	DerivedColumn arg = null;
-	ArrayList<DerivedColumn> args = new ArrayList<DerivedColumn>();
+	ArrayList<DerivedColumn> args = new ArrayList<DerivedColumn>(2);
 }
 {
  	nonReserved("QUERYSTRING") <LPAREN>
@@ -3827,7 +3865,7 @@ QueryString queryString(ParseInfo info) :
 XMLElement xmlElement(ParseInfo info) :
 {
 	String name = null;
-	ArrayList content = new ArrayList();
+	ArrayList content = new ArrayList(2);
 	XMLNamespaces xmlNamespaces = null;
 	XMLAttributes xmlAttributes = null;
 	Expression expression = null;
@@ -3848,7 +3886,6 @@ XMLElement xmlElement(ParseInfo info) :
 	(<COMMA> expression=expression(info)
 	{
 		content.add(expression);
-		expression = null;
 	}
 	)*
 	<RPAREN>
@@ -3863,19 +3900,17 @@ XMLElement xmlElement(ParseInfo info) :
 XMLAttributes xmlAttributes(ParseInfo info) :
 {
 	DerivedColumn expression = null;
-	ArrayList<DerivedColumn> args = new ArrayList<DerivedColumn>();
+	ArrayList<DerivedColumn> args = new ArrayList<DerivedColumn>(2);
 }
 {
  	<XMLATTRIBUTES> <LPAREN>
 	expression = derivedColumn(info)
 	{
 		args.add(expression);
-		expression = null;
 	}
 	(<COMMA> expression=derivedColumn(info)
 	 {
 		args.add(expression);
-		expression = null;
 	 }
 	)*
 	<RPAREN>  		
@@ -3888,7 +3923,7 @@ XMLForest xmlForest(ParseInfo info) :
 {
 	DerivedColumn expression = null;
 	XMLNamespaces xmlNamespaces = null;
-	ArrayList<DerivedColumn> args = new ArrayList<DerivedColumn>();
+	ArrayList<DerivedColumn> args = new ArrayList<DerivedColumn>(2);
 }
 {
  	<XMLFOREST> <LPAREN>
@@ -3898,12 +3933,10 @@ XMLForest xmlForest(ParseInfo info) :
 	expression = derivedColumn(info)
 	{
 		args.add(expression);
-		expression = null;
 	}
 	(<COMMA> expression=derivedColumn(info)
 	 {
 		args.add(expression);
-		expression = null;
 	 }
 	)*
 	<RPAREN>  		
@@ -3916,7 +3949,7 @@ XMLForest xmlForest(ParseInfo info) :
 		
 XMLNamespaces xmlNamespaces(ParseInfo info) :
 {
-	ArrayList namespaces = new ArrayList();
+	ArrayList namespaces = new ArrayList(2);
 	XMLNamespaces.NamespaceItem item = null;
 }
 {

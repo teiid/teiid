@@ -24,11 +24,10 @@
  */
 package org.teiid.query.sql.proc;
 
-import org.teiid.core.util.UnitTestUtil;
-import org.teiid.query.sql.proc.BreakStatement;
-import org.teiid.query.sql.proc.ContinueStatement;
+import junit.framework.TestCase;
 
-import junit.framework.*;
+import org.teiid.core.util.UnitTestUtil;
+import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
 
 public class TestBreakStatement  extends TestCase{
 
@@ -41,32 +40,32 @@ public class TestBreakStatement  extends TestCase{
     
     // ################################## TEST HELPERS ################################ 
 
-    public static final BreakStatement sample1() { 
-        return new BreakStatement();
+    public static final BranchingStatement sample1() { 
+        return new BranchingStatement();
     }
     
-    public static final BreakStatement sample2() { 
-        return new BreakStatement();
+    public static final BranchingStatement sample2() { 
+        return new BranchingStatement();
     }
     
     // ################################## ACTUAL TESTS ################################ 
     
     public void testSelfEquivalence(){
-        BreakStatement s1 = sample1();
+        BranchingStatement s1 = sample1();
         int equals = 0;
         UnitTestUtil.helpTestEquivalence(equals, s1, s1);
     }
 
     public void testEquivalence(){
-        BreakStatement s1 = sample1();
-        BreakStatement s1a = sample2();
+        BranchingStatement s1 = sample1();
+        BranchingStatement s1a = sample2();
         int equals = 0;
         UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
     }
     
     public void testNonEquivalence(){
-        BreakStatement s1 = sample1();
+        BranchingStatement s1 = sample1();
         int equals = -1;
-        UnitTestUtil.helpTestEquivalence(equals, s1, new ContinueStatement());
+        UnitTestUtil.helpTestEquivalence(equals, s1, new BranchingStatement(BranchingMode.CONTINUE));
     }
 }

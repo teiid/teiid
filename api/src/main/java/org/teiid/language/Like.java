@@ -25,11 +25,21 @@ package org.teiid.language;
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
 public class Like extends Condition implements Predicate {
+	
+	public enum MatchMode {
+		LIKE,
+		SIMILAR,
+		/**
+		 * The escape char is typically not used in regex mode.
+		 */
+		REGEX
+	}
         
     private Expression leftExpression;
     private Expression rightExpression;
     private Character escapeCharacter;
     private boolean isNegated;
+    private MatchMode mode = MatchMode.LIKE;
     
     public Like(Expression left, Expression right, Character escapeCharacter, boolean negated) {
         leftExpression = left;
@@ -74,5 +84,13 @@ public class Like extends Condition implements Predicate {
     public void setNegated(boolean negated) {
         this.isNegated = negated;
     }
+    
+    public MatchMode getMode() {
+		return mode;
+	}
+    
+    public void setMode(MatchMode mode) {
+		this.mode = mode;
+	}
 
 }

@@ -67,8 +67,8 @@ public interface BufferManager extends StorageManager {
 
 	public static int DEFAULT_CONNECTOR_BATCH_SIZE = 1024;
 	public static int DEFAULT_PROCESSOR_BATCH_SIZE = 512;
-	public static int DEFAULT_MAX_PROCESSING_BATCHES = -1;
-	public static int DEFAULT_RESERVE_BUFFERS = -1;
+	public static int DEFAULT_MAX_PROCESSING_KB = -1;
+	public static int DEFAULT_RESERVE_BUFFER_KB = -1;
 	
     /**
      * Get the batch size to use during query processing.  

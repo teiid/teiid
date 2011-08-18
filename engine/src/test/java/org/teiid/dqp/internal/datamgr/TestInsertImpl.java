@@ -67,10 +67,10 @@ public class TestInsertImpl extends TestCase {
     
     public static org.teiid.query.sql.lang.Insert helpExample2(String groupName) {
         GroupSymbol group = TestGroupImpl.helpExample(groupName);
-        ArrayList elements = new ArrayList();
+        ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
         elements.add(TestElementImpl.helpExample(groupName, "e1")); //$NON-NLS-1$
         
-        ArrayList values = new ArrayList();
+        ArrayList<org.teiid.query.sql.symbol.Expression> values = new ArrayList<org.teiid.query.sql.symbol.Expression>();
         values.add(TestSearchedCaseExpressionImpl.helpExample());
         
         return new org.teiid.query.sql.lang.Insert(group,
@@ -94,9 +94,6 @@ public class TestInsertImpl extends TestCase {
         Insert insert = example("a.b"); //$NON-NLS-1$
         assertNotNull(insert.getColumns());
         assertEquals(4, insert.getColumns().size());
-        for (Iterator i = insert.getColumns().iterator(); i.hasNext();) {
-            assertTrue(i.next() instanceof ColumnReference);
-        }
 
         // verify that elements are not qualified by group
         String sInsertSQL = insert.toString();

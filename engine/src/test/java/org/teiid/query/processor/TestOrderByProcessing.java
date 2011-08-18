@@ -28,12 +28,12 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionFactory.NullOrder;
 
 @SuppressWarnings({"nls", "unchecked"})
@@ -49,7 +49,7 @@ public class TestOrderByProcessing {
 	    FakeDataManager dataManager = new FakeDataManager();
 	    sampleData1(dataManager);
 	    
-	    ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
 	    
 	    helpProcess(plan, dataManager, expected);
 	}
@@ -74,7 +74,7 @@ public class TestOrderByProcessing {
 	    sampleData1(dataManager);
 	    
 	    // Plan query
-	    ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
 	    
 	    // Run query
 	    helpProcess(plan, dataManager, expected);
@@ -90,7 +90,7 @@ public class TestOrderByProcessing {
 	    FakeDataManager dataManager = new FakeDataManager();
 	    sampleData1(dataManager);
 	    
-	    ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
 	    
 	    helpProcess(plan, dataManager, expected);
 	}
@@ -101,7 +101,7 @@ public class TestOrderByProcessing {
 	@Test public void testOrderByWithDuplicateExpressions() throws Exception {
 	    String sql = "select e1 as x, e1 as y from pm1.g1 order by y ASC"; //$NON-NLS-1$
 	    
-	    FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+	    QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 	    
 	    ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata);
 	    
@@ -122,7 +122,7 @@ public class TestOrderByProcessing {
 	@Test public void testExplicitNullOrdering() throws Exception {
 		String sql = "select e1, case when e4 = 2.0 then null else e4 end as x from pm1.g1 order by e1 ASC NULLS LAST, x DESC NULLS FIRST"; //$NON-NLS-1$
 
-		FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 		ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata);
 
 		List[] expected = new List[] { Arrays.asList("a", null),
@@ -145,7 +145,7 @@ public class TestOrderByProcessing {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         ProcessorPlan plan = TestOptimizer.helpPlan("select e1 from pm1.g1 order by e1 desc, e2 asc", //$NON-NLS-1$ 
-        		FakeMetadataFactory.example1Cached(), null, capFinder, 
+        		RealMetadataFactory.example1Cached(), null, capFinder, 
     			new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0 DESC NULLS LAST, g_0.e2 NULLS FIRST"},  //$NON-NLS-1$
     			TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);
         
@@ -160,7 +160,7 @@ public class TestOrderByProcessing {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         ProcessorPlan plan = TestOptimizer.helpPlan("select e1 from pm1.g1 order by e1 desc, e2 asc", //$NON-NLS-1$ 
-        		FakeMetadataFactory.example1Cached(), null, capFinder, 
+        		RealMetadataFactory.example1Cached(), null, capFinder, 
     			new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0 DESC, g_0.e2 NULLS FIRST"},  //$NON-NLS-1$
     			TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);
         
@@ -174,7 +174,7 @@ public class TestOrderByProcessing {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         ProcessorPlan plan = TestOptimizer.helpPlan("select e1 from pm1.g1 order by e1 desc NULLS FIRST, e2 asc NULLS LAST", //$NON-NLS-1$ 
-        		FakeMetadataFactory.example1Cached(), null, capFinder, 
+        		RealMetadataFactory.example1Cached(), null, capFinder, 
     			new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0 DESC NULLS FIRST, g_0.e2 NULLS LAST"},  //$NON-NLS-1$
     			TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);
         
@@ -192,7 +192,7 @@ public class TestOrderByProcessing {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         ProcessorPlan plan = TestOptimizer.helpPlan("select e1 from pm1.g1 order by e1 desc, e2 asc NULLS LAST", //$NON-NLS-1$ 
-        		FakeMetadataFactory.example1Cached(), null, capFinder, 
+        		RealMetadataFactory.example1Cached(), null, capFinder, 
     			new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0 DESC, g_0.e2"},  //$NON-NLS-1$
     			TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);
         

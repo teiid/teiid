@@ -333,7 +333,7 @@ public class ResolverUtil {
     	List<SingleElementSymbol> knownElements = command.getProjectedQuery().getSelect().getProjectedSymbols();
     	
     	boolean isSimpleQuery = false;
-    	List fromClauseGroups = Collections.emptyList();
+    	List<GroupSymbol> fromClauseGroups = Collections.emptyList();
         
         if (command instanceof Query) {
         	Query query = (Query)command;
@@ -938,7 +938,7 @@ public class ResolverUtil {
 			return;
 		}
 		if (query.getFrom().getClauses().size() == 1) {
-			findKeyPreserved((FromClause)query.getFrom().getClauses().get(0), keyPreservingGroups, metadata);
+			findKeyPreserved(query.getFrom().getClauses().get(0), keyPreservingGroups, metadata);
 			return;
 		}
 		//non-ansi join

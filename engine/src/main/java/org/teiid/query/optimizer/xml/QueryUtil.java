@@ -51,10 +51,10 @@ import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
-import org.teiid.query.sql.symbol.AllInGroupSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
@@ -135,7 +135,7 @@ public class QueryUtil {
     
     static Query wrapQuery(FromClause fromClause, String groupName) {
         Select select = new Select();
-        select.addSymbol(new AllInGroupSymbol(groupName + ".*")); //$NON-NLS-1$
+        select.addSymbol(new MultipleElementSymbol(groupName));
         Query query = new Query();
         query.setSelect(select);
         From from = new From();

@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.common.buffer.BufferManager;
@@ -33,27 +35,16 @@ import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingNodeConstants;
 import org.teiid.query.mapping.xml.ResultSetInfo;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.TestProcessor;
-import org.teiid.query.processor.xml.AddNodeInstruction;
-import org.teiid.query.processor.xml.Condition;
-import org.teiid.query.processor.xml.CriteriaCondition;
-import org.teiid.query.processor.xml.EndDocumentInstruction;
-import org.teiid.query.processor.xml.ExecSqlInstruction;
-import org.teiid.query.processor.xml.IfInstruction;
-import org.teiid.query.processor.xml.InitializeDocumentInstruction;
-import org.teiid.query.processor.xml.MoveCursorInstruction;
-import org.teiid.query.processor.xml.MoveDocInstruction;
-import org.teiid.query.processor.xml.NodeDescriptor;
-import org.teiid.query.processor.xml.ProcessorInstruction;
-import org.teiid.query.processor.xml.Program;
-import org.teiid.query.processor.xml.WhileInstruction;
-import org.teiid.query.processor.xml.XMLPlan;
-import org.teiid.query.processor.xml.XMLProcessorEnvironment;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.rewriter.QueryRewriter;
@@ -61,17 +52,13 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
-import org.teiid.query.unittest.FakeMetadataStore;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
-
-import junit.framework.TestCase;
 
 
 /**
  */
+@SuppressWarnings("nls")
 public class TestInstructions extends TestCase {
 
     public TestInstructions(String name) {
@@ -92,43 +79,34 @@ public class TestInstructions extends TestCase {
      *     itemName (string)
      *     itemQuantity (integer)
      */
-    public FakeMetadataFacade exampleMetadata() { 
+    public QueryMetadataInterface exampleMetadata() { 
+    	MetadataStore metadataStore = new MetadataStore();
         // Create models
-        FakeMetadataObject stock = FakeMetadataFactory.createPhysicalModel("stock"); //$NON-NLS-1$
-        FakeMetadataObject xmltest = FakeMetadataFactory.createVirtualModel("xmltest");     //$NON-NLS-1$
+        Schema stock = RealMetadataFactory.createPhysicalModel("stock", metadataStore); //$NON-NLS-1$
+        Schema xmltest = RealMetadataFactory.createVirtualModel("xmltest", metadataStore);     //$NON-NLS-1$
 
         // Create physical groups
-        FakeMetadataObject items = FakeMetadataFactory.createPhysicalGroup("stock.items", stock); //$NON-NLS-1$
+        Table items = RealMetadataFactory.createPhysicalGroup("items", stock); //$NON-NLS-1$
                 
         // Create physical elements
-        List itemElements = FakeMetadataFactory.createElements(items, 
+        RealMetadataFactory.createElements(items, 
             new String[] { "itemNum", "itemName", "itemQuantity" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
 
         // Create virtual groups
         QueryNode rsQuery = new QueryNode("SELECT itemNum, itemName, itemQuantity FROM stock.items"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs = FakeMetadataFactory.createVirtualGroup("xmltest.rs", xmltest, rsQuery); //$NON-NLS-1$
+        Table rs = RealMetadataFactory.createVirtualGroup("rs", xmltest, rsQuery); //$NON-NLS-1$
 
         // Create virtual elements
-        List rsElements = FakeMetadataFactory.createElements(rs, 
+        RealMetadataFactory.createElements(rs, 
             new String[] { "itemNum", "itemName", "itemQuantity" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });        
             
-        // Add all objects to the store
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(stock);
-        store.addObject(items);
-        store.addObjects(itemElements);
-
-        store.addObject(xmltest);
-        store.addObject(rs);
-        store.addObjects(rsElements);
-                        
         // Create the facade from the store
-        return new FakeMetadataFacade(store);
+        return RealMetadataFactory.createTransformationMetadata(metadataStore, "example");
     }
     
-    private Command helpGetCommand(String sql, FakeMetadataFacade metadata) throws TeiidComponentException, TeiidProcessingException {
+    private Command helpGetCommand(String sql, QueryMetadataInterface metadata) throws TeiidComponentException, TeiidProcessingException {
         // parse
         QueryParser parser = new QueryParser();
         Command command = parser.parseCommand(sql);
@@ -139,7 +117,7 @@ public class TestInstructions extends TestCase {
         return command;        
     }
 
-    private Criteria helpGetCriteria(String sql, FakeMetadataFacade metadata) throws QueryParserException, QueryResolverException, TeiidComponentException {
+    private Criteria helpGetCriteria(String sql, QueryMetadataInterface metadata) throws QueryParserException, QueryResolverException, TeiidComponentException {
         QueryParser parser = new QueryParser();
         Criteria crit = parser.parseCriteria(sql);
    
@@ -154,7 +132,7 @@ public class TestInstructions extends TestCase {
     	TestProcessor.doProcess(plan, new FakeDataManager(), new List[] {Arrays.asList(expected)}, new CommandContext());
     }
     
-    public Program exampleProgram(FakeMetadataFacade metadata, XMLProcessorEnvironment env) throws Exception{
+    public Program exampleProgram() throws Exception{
 
         ProcessorInstruction i0 = new InitializeDocumentInstruction("UTF-8", true);         //$NON-NLS-1$
         NodeDescriptor descriptor = NodeDescriptor.createNodeDescriptor("Catalogs", null, AddNodeInstruction.ELEMENT, null, null, null,false, null, MappingNodeConstants.NORMALIZE_TEXT_PRESERVE);//$NON-NLS-1$
@@ -223,7 +201,7 @@ public class TestInstructions extends TestCase {
         return program;        
     }
 
-    public Program exampleProgram2(Criteria crit, FakeMetadataFacade metadata, XMLProcessorEnvironment env) throws Exception{
+    public Program exampleProgram2(Criteria crit) throws Exception{
         ProcessorInstruction i0 = new InitializeDocumentInstruction("UTF-8", true);         //$NON-NLS-1$
         NodeDescriptor descriptor = NodeDescriptor.createNodeDescriptor("Catalogs", null, AddNodeInstruction.ELEMENT, null, null, null,false, null, MappingNodeConstants.NORMALIZE_TEXT_PRESERVE);//$NON-NLS-1$
         ProcessorInstruction i1 = new AddNodeInstruction(descriptor);
@@ -304,18 +282,18 @@ public class TestInstructions extends TestCase {
     
             
     public void testProcess1() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadata();
+        QueryMetadataInterface metadata = exampleMetadata();
         String resultSetName = "xmltest.rs"; //$NON-NLS-1$
         
         FakeXMLProcessorEnvironment env = new FakeXMLProcessorEnvironment();
-        Program program = exampleProgram(metadata, env);
+        Program program = exampleProgram();
         
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
         XMLPlan temp = new XMLPlan(env);
         CommandContext context = new CommandContext("pid", null, null, null, 1); //$NON-NLS-1$
         temp.initialize(context,null,bufferMgr);
 
-        List schema = new ArrayList();
+        List<ElementSymbol> schema = new ArrayList<ElementSymbol>();
         schema.add(new ElementSymbol(resultSetName + ElementSymbol.SEPARATOR + "itemNum")); //$NON-NLS-1$
         schema.add(new ElementSymbol(resultSetName + ElementSymbol.SEPARATOR + "itemName")); //$NON-NLS-1$
         schema.add(new ElementSymbol(resultSetName + ElementSymbol.SEPARATOR + "itemQuantity")); //$NON-NLS-1$
@@ -348,7 +326,7 @@ public class TestInstructions extends TestCase {
     }
     
     public void testProcess2() throws Exception {
-        FakeMetadataFacade metadata = exampleMetadata();
+        QueryMetadataInterface metadata = exampleMetadata();
 
         String resultSetName = "xmltest.rs"; //$NON-NLS-1$
         
@@ -357,7 +335,7 @@ public class TestInstructions extends TestCase {
         
         Criteria crit = helpGetCriteria("xmltest.rs.itemName = 'Screwdriver'", metadata);  //$NON-NLS-1$ 
         FakeXMLProcessorEnvironment env = new FakeXMLProcessorEnvironment();
-        Program program = exampleProgram2(crit, metadata, env);
+        Program program = exampleProgram2(crit);
                 
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
         XMLPlan temp = new XMLPlan(env);

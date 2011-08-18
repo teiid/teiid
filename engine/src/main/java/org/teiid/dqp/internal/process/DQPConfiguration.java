@@ -23,7 +23,6 @@ package org.teiid.dqp.internal.process;
 
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.client.RequestMessage;
-import org.teiid.metadata.MetadataRepository;
 
 
 public class DQPConfiguration{
@@ -123,38 +122,15 @@ public class DQPConfiguration{
      * @return <code>true</code> if server-side role checking is enabled.
      */
     public boolean getUseDataRoles() {
-        return useDataRoles;
+        return this.authorizationValidator != null && this.authorizationValidator.isEnabled();
     }
 
 	public void setUseDataRoles(boolean useEntitlements) {
-		this.useDataRoles = useEntitlements;
+		if (this.authorizationValidator != null) {
+			this.authorizationValidator.setEnabled(useEntitlements);
+		}
 	}
 
-	/**
-     * Whether temporary table usage is enabled by default.
-     * @return <code>true</code> if temporary table usage is enabled by default.
-     */
-    public boolean isAllowCreateTemporaryTablesByDefault() {
-		return allowCreateTemporaryTablesByDefault;
-	}
-	
-	public void setAllowCreateTemporaryTablesByDefault(
-			boolean allowCreateTemporaryTablesByDefault) {
-		this.allowCreateTemporaryTablesByDefault = allowCreateTemporaryTablesByDefault;
-	}
-	
-	/**
-     * Whether functions are callable by default
-     * @return <code>true</code> if function usage is enabled by default.
-     */
-    public boolean isAllowFunctionCallsByDefault() {
-		return allowFunctionCallsByDefault;
-	}
-	
-    public void setAllowFunctionCallsByDefault(boolean allowFunctionCallsDefault) {
-		this.allowFunctionCallsByDefault = allowFunctionCallsDefault;
-	}
-	
 	public int getQueryThresholdInSecs() {
 		return queryThresholdInSecs;
 	}
@@ -202,10 +178,6 @@ public class DQPConfiguration{
 	public void setAuthorizationValidator(
 			AuthorizationValidator authorizationValidator) {
 		this.authorizationValidator = authorizationValidator;
-	}
-	
-	public MetadataRepository getMetadataRepository() {
-		return null;
 	}
 	
 	public CacheConfiguration getPreparedPlanCacheConfig() {

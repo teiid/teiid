@@ -40,13 +40,10 @@ class Configuration {
 	public static final String ASYNC_THREAD_GROUP = "async-thread-group";//$NON-NLS-1$
 	public static final String MAX_THREADS = "max-threads";//$NON-NLS-1$
 	public static final String MAX_ACTIVE_PLANS = "max-active-plans";//$NON-NLS-1$
-	public static final String USER_REQUEST_SOURCE_CONCURRENCY = "userRequestSourceConcurrency";//$NON-NLS-1$
+	public static final String USER_REQUEST_SOURCE_CONCURRENCY = "thread-count-for-source-concurrency";//$NON-NLS-1$
 	public static final String TIME_SLICE_IN_MILLI = "time-slice-in-millseconds";//$NON-NLS-1$
 	public static final String MAX_ROWS_FETCH_SIZE = "max-row-fetch-size";//$NON-NLS-1$
 	public static final String LOB_CHUNK_SIZE_IN_KB = "lob-chunk-size-in-kb";//$NON-NLS-1$
-	public static final String USE_DATA_ROLES = "use-dataroles";//$NON-NLS-1$
-	public static final String ALLOW_CREATE_TEMPORY_TABLES_BY_DEFAULT = "allow-creation-of-temporary-tables";//$NON-NLS-1$
-	public static final String ALLOW_FUNCTION_CALLS_BY_DEFAULT = "allow-function-calls";//$NON-NLS-1$
 	public static final String QUERY_THRESHOLD_IN_SECS = "query-threshold-in-seconds";//$NON-NLS-1$
 	public static final String MAX_SOURCE_ROWS = "max-source-rows-allowed";//$NON-NLS-1$
 	public static final String EXCEPTION_ON_MAX_SOURCE_ROWS = "exception-on-max-source-rows";//$NON-NLS-1$
@@ -57,16 +54,20 @@ class Configuration {
 	public static final String MAX_SESSIONS_ALLOWED = "max-sessions-allowed";//$NON-NLS-1$
 	public static final String SESSION_EXPIRATION_TIME_LIMIT = "sessions-expiration-timelimit";//$NON-NLS-1$
 	public static final String ALLOW_ENV_FUNCTION = "allow-env-function";//$NON-NLS-1$
+	public static final String AUTHORIZATION_VALIDATOR_MODULE = "authorization-validator-module"; //$NON-NLS-1$
+	public static final String POLICY_DECIDER_MODULE = "policy-decider-module"; //$NON-NLS-1$
 	
+	
+	// Buffer Manager
 	public static final String USE_DISK = "use-disk";//$NON-NLS-1$
 	public static final String PROCESSOR_BATCH_SIZE = "processor-batch-size";//$NON-NLS-1$
 	public static final String CONNECTOR_BATCH_SIZE = "connector-batch-size";//$NON-NLS-1$
-	public static final String MAX_RESERVE_BATCH_COLUMNS = "maxReserveBatchColumns";//$NON-NLS-1$
-	public static final String MAX_PROCESSING_BATCH_COLUMNS = "maxProcessingBatchesColumns";//$NON-NLS-1$
-	public static final String MAX_FILE_SIZE = "maxFileSize";//$NON-NLS-1$
-	public static final String MAX_BUFFER_SPACE = "maxBufferSpace";//$NON-NLS-1$
-	public static final String MAX_OPEN_FILES = "maxOpenFiles";//$NON-NLS-1$
-		
+	public static final String MAX_PROCESSING_KB = "max-processing-kb";//$NON-NLS-1$
+	public static final String MAX_RESERVED_KB = "max-reserve-kb";//$NON-NLS-1$
+	public static final String MAX_FILE_SIZE = "max-file-size";//$NON-NLS-1$
+	public static final String MAX_BUFFER_SPACE = "max-buffer-space";//$NON-NLS-1$
+	public static final String MAX_OPEN_FILES = "max-open-files";//$NON-NLS-1$
+	
 	//cache-config
 	public static final String MAX_ENTRIES = "maxEntries";//$NON-NLS-1$
 	public static final String MAX_AGE_IN_SECS = "maxAgeInSeconds";//$NON-NLS-1$
@@ -112,6 +113,9 @@ class Configuration {
         	else if (ModelType.BOOLEAN.equals(dataType)) {
         		node.get(type, name, DEFAULT).set(Boolean.parseBoolean(defaultValue));
         	}
+        	else if (ModelType.LONG.equals(dataType)) {
+        		node.get(type, name, DEFAULT).set(Long.parseLong(defaultValue));
+        	}        	
         	else {
         		node.get(type, name, DEFAULT).set(defaultValue);
         	}

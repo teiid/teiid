@@ -25,7 +25,6 @@ package org.teiid.query.optimizer.relational.rules;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -208,19 +207,14 @@ public class RuleDecomposeJoin implements OptimizerRule {
 			throws TeiidComponentException, QueryPlannerException,
 			QueryMetadataException {
 		Set<String> groups = context.getGroups();
-        if (groups == null) {
-        	groups = new HashSet<String>();
-        	context.setGroups(groups);
-        }
 		
 		group = RulePlaceAccess.recontextSymbol(group, groups);
 		
 		PlanNode projectNode = NodeEditor.findNodePreOrder(newUnion, NodeConstants.Types.PROJECT);
 		List<? extends SingleElementSymbol> projectedSymbols = (List<? extends SingleElementSymbol>)projectNode.getProperty(Info.PROJECT_COLS);
 
-		PlanNode view = RulePushAggregates.createView(group, projectedSymbols, newUnion, metadata);
-		
-		SymbolMap newSymbolMap = (SymbolMap)view.getProperty(Info.SYMBOL_MAP);
+    	SymbolMap newSymbolMap = RulePushAggregates.createSymbolMap(group, projectedSymbols, newUnion, metadata);
+	    PlanNode view = RuleDecomposeJoin.createSource(group, newUnion, newSymbolMap);
 		
 		Map<Expression, ElementSymbol> inverseMap = newSymbolMap.inserseMapping();
 		toReplace.getParent().replaceChild(toReplace, view);

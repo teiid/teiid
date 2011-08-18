@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -42,7 +43,9 @@ import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
+import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
@@ -51,13 +54,16 @@ import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
+import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
+import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.util.CommandContext;
 
@@ -207,9 +213,44 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		            	root.addGroups(GroupsUsedByElementsVisitor.getGroups(projectCols));
 		            	root.addGroups(GroupsUsedByElementsVisitor.getGroups(root.getCorrelatedReferenceElements()));
 	            	}
+	            	if (root.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
+	            		Set<WindowFunction> windowFunctions = getWindowFunctions(projectCols);
+	            		if (windowFunctions.isEmpty()) {
+	            			root.setProperty(Info.HAS_WINDOW_FUNCTIONS, false);
+	            		}
+	            	}
 		    	}
 	            
 	            List<SingleElementSymbol> requiredInput = collectRequiredInputSymbols(root);
+	            //targeted optimization for unnecessary aggregation
+	            if (root.getType() == NodeConstants.Types.GROUP && root.hasBooleanProperty(Info.IS_OPTIONAL) && NodeEditor.findParent(root, NodeConstants.Types.ACCESS) == null) {
+	            	PlanNode old = root;
+	            	PlanNode next = root.getFirstChild();
+	            	NodeEditor.removeChildNode(root.getParent(), root);
+	            	
+            		SymbolMap symbolMap = (SymbolMap) old.getProperty(NodeConstants.Info.SYMBOL_MAP);
+            		if (!symbolMap.asMap().isEmpty()) {
+            			FrameUtil.convertFrame(next.getParent(), symbolMap.asMap().keySet().iterator().next().getGroupSymbol(), null, symbolMap.asMap(), metadata);
+            		}
+    				PlanNode parent = next.getParent();
+    				while (parent.getParent() != null && parent.getParent().getType() != NodeConstants.Types.SOURCE) {
+    					parent = parent.getParent();
+    				}
+    				if (!old.hasCollectionProperty(Info.GROUP_COLS)) {
+    					//just lob off everything under the projection
+    					PlanNode project = NodeEditor.findNodePreOrder(parent, NodeConstants.Types.PROJECT);
+    					project.removeAllChildren();
+    				} else {
+    					PlanNode limit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
+        				limit.setProperty(Info.MAX_TUPLE_LIMIT, new Constant(1));
+	    				if (!rules.contains(RuleConstants.PUSH_LIMIT)) {
+	    					rules.push(RuleConstants.PUSH_LIMIT);
+	    				}
+						parent.getFirstChild().addAsParent(limit);
+    				}
+	            	execute(parent, metadata, capFinder, rules, analysisRecord, context);
+	            	return;
+            	}
 	            
 	            // Call children recursively
 	            if(root.getChildCount() == 1) {
@@ -226,6 +267,15 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            }
 		    }
 		}
+	}
+
+	public static Set<WindowFunction> getWindowFunctions(
+			List<SingleElementSymbol> projectCols) {
+		LinkedHashSet<WindowFunction> windowFunctions = new LinkedHashSet<WindowFunction>();
+		for (SingleElementSymbol singleElementSymbol : projectCols) {
+			AggregateSymbolCollectorVisitor.getAggregates(singleElementSymbol, null, null, null, windowFunctions, null);
+		}
+		return windowFunctions;
 	}
 
     private List<SingleElementSymbol> filterElements(Collection<? extends SingleElementSymbol> requiredInput, Set<GroupSymbol> filterGroups) {
@@ -429,8 +479,6 @@ public final class RuleAssignOutputElements implements OptimizerRule {
      * are any symbols that are required in the processing of this node,
      * for instance to create a new element symbol or sort on it, etc.
      * @param node Node to collect for
-     * @param requiredSymbols Collection<SingleElementSymbol> Place to collect required symbols
-     * @param createdSymbols Set<SingleElementSymbol> Place to collect any symbols created by this node
      */
 	private List<SingleElementSymbol> collectRequiredInputSymbols(PlanNode node) {
 
@@ -450,68 +498,75 @@ public final class RuleAssignOutputElements implements OptimizerRule {
                         ss = ((AliasSymbol)ss).getSymbol();
                     }
                     
-                    if (ss instanceof ExpressionSymbol && !(ss instanceof AggregateSymbol)) {
-                        ExpressionSymbol exprSymbol = (ExpressionSymbol)ss;
-                        
-                        if (!exprSymbol.isDerivedExpression()) {
-                            createdSymbols.add(ss);
-                        } 
+                    if (ss instanceof WindowFunction || (ss instanceof ExpressionSymbol && !(ss instanceof AggregateSymbol))) {
+                        createdSymbols.add(ss);
                     }
-                    AggregateSymbolCollectorVisitor.getAggregates(ss, requiredSymbols, requiredSymbols);                        
+                    ElementCollectorVisitor.getElements(ss, requiredSymbols);
                 }
 				break;
             }
 			case NodeConstants.Types.SELECT:
 				Criteria selectCriteria = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-                AggregateSymbolCollectorVisitor.getAggregates(selectCriteria, requiredSymbols, requiredSymbols);
+				ElementCollectorVisitor.getElements(selectCriteria, requiredSymbols);
 				break;
 			case NodeConstants.Types.JOIN:
 				List<Criteria> crits = (List) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
 				if(crits != null) {
 					for (Criteria joinCriteria : crits) {
-						AggregateSymbolCollectorVisitor.getAggregates(joinCriteria, requiredSymbols, requiredSymbols);
+						ElementCollectorVisitor.getElements(joinCriteria, requiredSymbols);
 					}
 				}
 				break;
 			case NodeConstants.Types.GROUP:
-				List<SingleElementSymbol> groupCols = (List<SingleElementSymbol>) node.getProperty(NodeConstants.Info.GROUP_COLS);
+				List<Expression> groupCols = (List<Expression>) node.getProperty(NodeConstants.Info.GROUP_COLS);
 				if(groupCols != null) {
-				    for (SingleElementSymbol expression : groupCols) {
-                        if(expression instanceof ElementSymbol || expression instanceof AggregateSymbol) {
-                            requiredSymbols.add(expression);
-                        } else {    
-                            ExpressionSymbol exprSymbol = (ExpressionSymbol) expression;
-                            Expression expr = exprSymbol.getExpression();
-                            AggregateSymbolCollectorVisitor.getAggregates(expr, requiredSymbols, requiredSymbols);
-                            createdSymbols.add(exprSymbol);
-                        }
+				    for (Expression expression : groupCols) {
+				    	ElementCollectorVisitor.getElements(expression, requiredSymbols);
                     }
 				}
-
+				SymbolMap symbolMap = (SymbolMap) node.getProperty(NodeConstants.Info.SYMBOL_MAP);
+				Set<ElementSymbol> usedAggregates = new HashSet<ElementSymbol>();
+				
 				// Take credit for creating any aggregates that are needed above
 				for (SingleElementSymbol outputSymbol : outputCols) {
-					if(outputSymbol instanceof AggregateSymbol) {
-					    AggregateSymbol agg = (AggregateSymbol)outputSymbol;
-					    createdSymbols.add(outputSymbol);
-					    
+					if (!(outputSymbol instanceof ElementSymbol)) {
+						continue;
+					}
+					createdSymbols.add(outputSymbol);
+					Expression ex = symbolMap.getMappedExpression((ElementSymbol) outputSymbol);
+					if(ex instanceof AggregateSymbol) {
+					    AggregateSymbol agg = (AggregateSymbol)ex;
 	                    Expression aggExpr = agg.getExpression();
 	                    if(aggExpr != null) {
-	                        AggregateSymbolCollectorVisitor.getAggregates(aggExpr, requiredSymbols, requiredSymbols);
+	                    	ElementCollectorVisitor.getElements(aggExpr, requiredSymbols);
 	                    }
 	                    OrderBy orderBy = agg.getOrderBy();
 	                    if(orderBy != null) {
-	                        AggregateSymbolCollectorVisitor.getAggregates(orderBy, requiredSymbols, requiredSymbols);
+	                    	ElementCollectorVisitor.getElements(orderBy, requiredSymbols);
 	                    }
+	                    Expression condition = agg.getCondition();
+	                    if(condition != null) {
+	                    	ElementCollectorVisitor.getElements(condition, requiredSymbols);
+	                    }
+	                    usedAggregates.add((ElementSymbol) outputSymbol);
 					}
 				}
-
+				//update the aggs in the symbolmap
+				for (Map.Entry<ElementSymbol, Expression> entry : new ArrayList<Map.Entry<ElementSymbol, Expression>>(symbolMap.asMap().entrySet())) {
+					if (entry.getValue() instanceof AggregateSymbol && !usedAggregates.contains(entry.getKey())) {
+						symbolMap.asUpdatableMap().remove(entry.getKey());
+					}
+				}
+				if (requiredSymbols.isEmpty() && usedAggregates.isEmpty()) {
+					node.setProperty(Info.IS_OPTIONAL, true);
+				}
 				break;
 		}
 
         // Gather elements from correlated subquery references;
 		for (SymbolMap refs : node.getAllReferences()) {
         	for (Expression expr : refs.asMap().values()) {
-                AggregateSymbolCollectorVisitor.getAggregates(expr, requiredSymbols, requiredSymbols);
+        		ElementCollectorVisitor.getElements(expr, requiredSymbols);
             }
         }
         

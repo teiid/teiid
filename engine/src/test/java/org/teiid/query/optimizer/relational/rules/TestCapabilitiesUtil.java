@@ -22,15 +22,18 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.metadata.Schema;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
@@ -45,27 +48,18 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 
 /**
  */
-public class TestCapabilitiesUtil extends TestCase {
+@SuppressWarnings("nls")
+public class TestCapabilitiesUtil {
 
-    /**
-     * Constructor for TestCapabilitiesUtil.
-     * @param name
-     */
-    public TestCapabilitiesUtil(String name) {
-        super(name);
-    }
-    
     public void helpTestSupportsSelfJoin(boolean supportsSelfJoin, boolean supportsGroupAlias, boolean expectedValue) throws QueryMetadataException, TeiidComponentException {
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        Schema modelID = metadata.getMetadataStore().getSchema("PM1");
 
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -79,22 +73,22 @@ public class TestCapabilitiesUtil extends TestCase {
         assertEquals("Got wrong answer for supports", expectedValue, actual); //$NON-NLS-1$
     }
     
-    public void testSupportsSelfJoin1() throws Exception {
+    @Test public void testSupportsSelfJoin1() throws Exception {
         helpTestSupportsSelfJoin(false, true, false);
     }
 
-    public void testSupportsSelfJoin2() throws Exception {
+    @Test public void testSupportsSelfJoin2() throws Exception {
         helpTestSupportsSelfJoin(true, false, false);
     }
 
-    public void testSupportsSelfJoin3() throws Exception {
+    @Test public void testSupportsSelfJoin3() throws Exception {
         helpTestSupportsSelfJoin(true, true, true);
     }
 
-    public void testSupportsSelfJoin4() throws Exception {        
+    @Test public void testSupportsSelfJoin4() throws Exception {        
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        Schema modelID = metadata.getMetadataStore().getSchema("PM1");
         
         // Test capabilities util
         boolean actual = CapabilitiesUtil.supportsSelfJoins(modelID, metadata, new DefaultCapabilitiesFinder());
@@ -104,8 +98,8 @@ public class TestCapabilitiesUtil extends TestCase {
     
     public void helpTestSupportsOuterJoin(boolean capsSupportsOuterJoin, boolean capsSupportsFullOuterJoin, JoinType joinType, boolean expectedValue) throws QueryMetadataException, TeiidComponentException {
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        Schema modelID = metadata.getMetadataStore().getSchema("PM1");
         
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -120,29 +114,29 @@ public class TestCapabilitiesUtil extends TestCase {
     }
     
     // Test where capabilities don't support outer joins
-    public void testSupportsOuterJoinFail1() throws Exception {        
+    @Test public void testSupportsOuterJoinFail1() throws Exception {        
         helpTestSupportsOuterJoin(false, false, JoinType.JOIN_RIGHT_OUTER, false); 
     }
 
     // Test where capabilities don't support full outer joins 
-    public void testSupportsOuterJoinFail3() throws Exception {        
+    @Test public void testSupportsOuterJoinFail3() throws Exception {        
         helpTestSupportsOuterJoin(true, false, JoinType.JOIN_FULL_OUTER, false); 
     }
 
     // Test where capabilities support outer joins 
-    public void testSupportsOuterJoin1() throws Exception {        
+    @Test public void testSupportsOuterJoin1() throws Exception {        
         helpTestSupportsOuterJoin(true, false, JoinType.JOIN_RIGHT_OUTER, true); 
     }
 
     // Test where capabilities support full outer joins 
-    public void testSupportsOuterJoin2() throws Exception {        
+    @Test public void testSupportsOuterJoin2() throws Exception {        
         helpTestSupportsOuterJoin(true, true, JoinType.JOIN_FULL_OUTER, true); 
     }
 
     public void helpTestSupportsAggregates(boolean capsSupportsAggregates, boolean supportsFunctionInGroupBy, List groupCols) throws QueryMetadataException, TeiidComponentException {
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        Schema modelID = metadata.getMetadataStore().getSchema("PM1");
         
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -157,7 +151,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }
     
     // Test where capabilities supports aggregates
-    public void testSupportsAggregates1() throws Exception {        
+    @Test public void testSupportsAggregates1() throws Exception {        
         helpTestSupportsAggregates(true, true, null); 
     }
         
@@ -166,7 +160,7 @@ public class TestCapabilitiesUtil extends TestCase {
      * be called supports expression in group by.  Thus the example below
      * is not supported.
      */
-    public void testSupportsFunctionInGroupBy() throws Exception {
+    @Test public void testSupportsFunctionInGroupBy() throws Exception {
         Function f = new Function("concat", new Expression[] { new Constant("a"), new Constant("b") }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ExpressionSymbol expr = new ExpressionSymbol("e", f); //$NON-NLS-1$
         List cols = new ArrayList();
@@ -176,8 +170,8 @@ public class TestCapabilitiesUtil extends TestCase {
 
     public void helpTestSupportsAggregateFunction(SourceCapabilities caps, AggregateSymbol aggregate, boolean expectedValue) throws QueryMetadataException, TeiidComponentException {
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        Schema modelID = metadata.getMetadataStore().getSchema("PM1");
         
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -189,7 +183,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }
     
     // Test where capabilities don't support aggregate functions
-    public void testSupportsAggregate1() throws Exception {        
+    @Test public void testSupportsAggregate1() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, false);
         
@@ -199,7 +193,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
     
     // Test where capabilities don't support COUNT
-    public void testSupportsAggregate2() throws Exception {        
+    @Test public void testSupportsAggregate2() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, false);
@@ -211,7 +205,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities support only COUNT(*)
-    public void testSupportsAggregate3() throws Exception {        
+    @Test public void testSupportsAggregate3() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, false);
@@ -223,7 +217,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities support only COUNT(*)
-    public void testSupportsAggregate4() throws Exception {        
+    @Test public void testSupportsAggregate4() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, false);
@@ -235,7 +229,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities support only COUNT
-    public void testSupportsAggregate5() throws Exception {        
+    @Test public void testSupportsAggregate5() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
@@ -247,7 +241,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities support only COUNT
-    public void testSupportsAggregate6() throws Exception {        
+    @Test public void testSupportsAggregate6() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
@@ -259,7 +253,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities don't support SUM
-    public void testSupportsAggregate7() throws Exception {        
+    @Test public void testSupportsAggregate7() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, false);
@@ -270,7 +264,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities support SUM
-    public void testSupportsAggregate8() throws Exception {        
+    @Test public void testSupportsAggregate8() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
@@ -281,7 +275,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities don't support AVG
-    public void testSupportsAggregate9() throws Exception {        
+    @Test public void testSupportsAggregate9() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, false);
@@ -292,7 +286,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities support AVG
-    public void testSupportsAggregate10() throws Exception {        
+    @Test public void testSupportsAggregate10() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, true);
@@ -303,7 +297,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities don't support MIN
-    public void testSupportsAggregate11() throws Exception {        
+    @Test public void testSupportsAggregate11() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MIN, false);
@@ -314,7 +308,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities support MIN
-    public void testSupportsAggregate12() throws Exception {        
+    @Test public void testSupportsAggregate12() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MIN, true);
@@ -325,7 +319,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities don't support MAX
-    public void testSupportsAggregate13() throws Exception {        
+    @Test public void testSupportsAggregate13() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, false);
@@ -336,7 +330,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities support MAX
-    public void testSupportsAggregate14() throws Exception {        
+    @Test public void testSupportsAggregate14() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
@@ -347,7 +341,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
     
     // Test where capabilities don't support DISTINCT
-    public void testSupportsAggregate15() throws Exception {        
+    @Test public void testSupportsAggregate15() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
@@ -359,7 +353,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities support DISTINCT
-    public void testSupportsAggregate16() throws Exception {        
+    @Test public void testSupportsAggregate16() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
@@ -372,8 +366,8 @@ public class TestCapabilitiesUtil extends TestCase {
 
     public void helpTestSupportsScalar(SourceCapabilities caps, Function function, boolean expectedValue) throws QueryMetadataException, TeiidComponentException, QueryResolverException {
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        Schema modelID = metadata.getMetadataStore().getSchema("PM1");
         
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -385,7 +379,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }
 
     // Test where capabilities don't support scalar functions
-    public void testSupportsScalar1() throws Exception {        
+    @Test public void testSupportsScalar1() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
 
         Function func = new Function("+", new Expression[] { new Constant(1), new Constant(2) }); //$NON-NLS-1$
@@ -393,7 +387,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities doesn't support function
-    public void testSupportsScalar3() throws Exception {        
+    @Test public void testSupportsScalar3() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setFunctionSupport("now", false); //$NON-NLS-1$
 
@@ -402,7 +396,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities do support function
-    public void testSupportsScalar4() throws Exception {        
+    @Test public void testSupportsScalar4() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setFunctionSupport("now", true); //$NON-NLS-1$
 
@@ -410,10 +404,10 @@ public class TestCapabilitiesUtil extends TestCase {
         helpTestSupportsScalar(caps, func, true);        
     }    
 
-    public void testSupportsDistinct1() throws Exception {        
+    @Test public void testSupportsDistinct1() throws Exception {        
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        Schema modelID = metadata.getMetadataStore().getSchema("PM1");
 
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -424,10 +418,10 @@ public class TestCapabilitiesUtil extends TestCase {
         assertTrue(CapabilitiesUtil.supportsSelectDistinct(modelID, metadata, finder));
     }    
 
-    public void testSupportsDistinct2() throws Exception {        
+    @Test public void testSupportsDistinct2() throws Exception {        
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        Schema modelID = metadata.getMetadataStore().getSchema("PM1");
 
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -440,10 +434,10 @@ public class TestCapabilitiesUtil extends TestCase {
         assertEquals("Got wrong answer for supports", false, actual); //$NON-NLS-1$
     }    
     
-    public void testSupportsOrderBy1() throws Exception {        
+    @Test public void testSupportsOrderBy1() throws Exception {        
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        Schema modelID = metadata.getMetadataStore().getSchema("PM1");
 
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -456,10 +450,10 @@ public class TestCapabilitiesUtil extends TestCase {
         assertEquals("Got wrong answer for supports", true, actual); //$NON-NLS-1$
     }    
 
-    public void testSupportsOrderBy2() throws Exception {        
+    @Test public void testSupportsOrderBy2() throws Exception {        
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        Schema modelID = metadata.getMetadataStore().getSchema("PM1");
 
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -474,8 +468,8 @@ public class TestCapabilitiesUtil extends TestCase {
     
     public void helpTestSupportsUnion(boolean supports) throws QueryMetadataException, TeiidComponentException {        
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        Schema modelID = metadata.getMetadataStore().getSchema("PM1");
 
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -488,18 +482,18 @@ public class TestCapabilitiesUtil extends TestCase {
         assertEquals("Got wrong answer for supports", supports, actual); //$NON-NLS-1$
     }    
     
-    public void testSupportsUnionTrue() throws Exception {
+    @Test public void testSupportsUnionTrue() throws Exception {
         helpTestSupportsUnion(true);
     }
 
-    public void testSupportsUnionFalse() throws Exception {
+    @Test public void testSupportsUnionFalse() throws Exception {
         helpTestSupportsUnion(false);
     }
 
     public void helpTestSupportsLiterals(boolean supports) throws QueryMetadataException, TeiidComponentException {        
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        Schema modelID = metadata.getMetadataStore().getSchema("PM1");
 
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -512,18 +506,18 @@ public class TestCapabilitiesUtil extends TestCase {
         assertEquals("Got wrong answer for supports", supports, actual); //$NON-NLS-1$
     }    
     
-    public void testSupportsLiteralsTrue() throws Exception {
+    @Test public void testSupportsLiteralsTrue() throws Exception {
         helpTestSupportsLiterals(true);
     }
 
-    public void testSupportsLiteralsFalse() throws Exception {
+    @Test public void testSupportsLiteralsFalse() throws Exception {
         helpTestSupportsLiterals(false);
     }
 
     public void helpTtestSupportsCaseExpression(boolean supports, boolean searched) throws QueryMetadataException, TeiidComponentException {        
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        Schema modelID = metadata.getMetadataStore().getSchema("PM1");
 
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -545,19 +539,19 @@ public class TestCapabilitiesUtil extends TestCase {
         assertEquals("Got wrong answer for supports", supports, actual); //$NON-NLS-1$
     }    
     
-    public void testSupportsCaseTrue() throws Exception {
+    @Test public void testSupportsCaseTrue() throws Exception {
         helpTtestSupportsCaseExpression(true, false);
     }
 
-    public void testSupportsCaseFalse() throws Exception {
+    @Test public void testSupportsCaseFalse() throws Exception {
         helpTtestSupportsCaseExpression(false, false);
     }
 
-    public void testSupportsSearchedCaseTrue() throws Exception {
+    @Test public void testSupportsSearchedCaseTrue() throws Exception {
         helpTtestSupportsCaseExpression(true, true);
     }
 
-    public void testSupportsSearchedCaseFalse() throws Exception {
+    @Test public void testSupportsSearchedCaseFalse() throws Exception {
         helpTtestSupportsCaseExpression(false, true);
     }
     
@@ -570,10 +564,10 @@ public class TestCapabilitiesUtil extends TestCase {
         return finder;
     }
 
-    public void testSupportRowLimit() throws Exception {
+    @Test public void testSupportRowLimit() throws Exception {
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        Schema modelID = metadata.getMetadataStore().getSchema("PM1");
         // Set up capabilities
         FakeCapabilitiesFinder finder = getFinder(Capability.ROW_LIMIT, false);
         // Test capabilities util
@@ -584,10 +578,10 @@ public class TestCapabilitiesUtil extends TestCase {
         assertEquals(true, CapabilitiesUtil.supportsRowLimit(modelID, metadata, finder));
     }
     
-    public void testSupportRowOffset() throws Exception {
+    @Test public void testSupportRowOffset() throws Exception {
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        Schema modelID = metadata.getMetadataStore().getSchema("PM1");
         // Set up capabilities
         FakeCapabilitiesFinder finder = getFinder(Capability.ROW_OFFSET, false);
         // Test capabilities util

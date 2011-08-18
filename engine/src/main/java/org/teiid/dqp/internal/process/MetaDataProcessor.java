@@ -58,6 +58,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.tempdata.TempTableStore;
@@ -180,12 +181,12 @@ public class MetaDataProcessor {
             this.metadata = tempFacade; 
         }
         
-        List projectedSymbols = originalCommand.getProjectedSymbols();
+        List<SingleElementSymbol> projectedSymbols = originalCommand.getProjectedSymbols();
         columnMetadata = new Map[projectedSymbols.size()];
         
-        Iterator symbolIter = projectedSymbols.iterator();
+        Iterator<SingleElementSymbol> symbolIter = projectedSymbols.iterator();
         for(int i=0; symbolIter.hasNext(); i++) {
-            SingleElementSymbol symbol = (SingleElementSymbol) symbolIter.next();
+            SingleElementSymbol symbol = symbolIter.next();
             String shortColumnName = SingleElementSymbol.getShortName(symbol.getOutputName());
             if(symbol instanceof AliasSymbol) {
                 symbol = ((AliasSymbol)symbol).getSymbol();
@@ -231,6 +232,8 @@ public class MetaDataProcessor {
             return createElementMetadata(label, (ElementSymbol) symbol);        
         } else if(symbol instanceof AggregateSymbol) {
             return createAggregateMetadata(label, (AggregateSymbol) symbol);
+        } else if (symbol instanceof WindowFunction) {
+        	return createAggregateMetadata(label, ((WindowFunction) symbol).getFunction());
         }
         return createTypedMetadata(label, symbol);            
     }
@@ -387,6 +390,10 @@ public class MetaDataProcessor {
 
     public Map<Integer, Object> getDefaultColumn(String tableName, String columnName, 
         Class<?> javaType) {
+    	return getDefaultColumn(tableName, columnName, columnName, javaType);
+    }
+    
+    public Map<Integer, Object> getDefaultColumn(String tableName, String columnName, String columnLabel, Class<?> javaType ) {
             
         Map<Integer, Object> column = new HashMap<Integer, Object>();
         
@@ -395,7 +402,7 @@ public class MetaDataProcessor {
         column.put(ResultsMetadataConstants.VIRTUAL_DATABASE_VERSION, vdbVersion);
         column.put(ResultsMetadataConstants.GROUP_NAME, tableName);
         column.put(ResultsMetadataConstants.ELEMENT_NAME, columnName);
-        column.put(ResultsMetadataConstants.ELEMENT_LABEL, columnName);
+        column.put(ResultsMetadataConstants.ELEMENT_LABEL, columnLabel);
         column.put(ResultsMetadataConstants.AUTO_INCREMENTING, Boolean.FALSE);
         column.put(ResultsMetadataConstants.CASE_SENSITIVE, Boolean.FALSE);
         column.put(ResultsMetadataConstants.NULLABLE, ResultsMetadataConstants.NULL_TYPES.NULLABLE);  

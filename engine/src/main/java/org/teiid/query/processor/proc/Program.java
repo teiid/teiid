@@ -27,6 +27,8 @@ import java.util.List;
 
 import org.teiid.client.plan.PlanNode;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.sql.proc.Statement.Labeled;
+import org.teiid.query.tempdata.TempTableStore;
 
 
 /**
@@ -34,16 +36,46 @@ import org.teiid.query.processor.ProcessorPlan;
  * ProgramInstructions, such as {@link IfInstruction} and {@link WhileInstruction} may 
  * have pointers to sub programs.
  */
-public class Program implements Cloneable {
+public class Program implements Cloneable, Labeled {
 
     private List<ProgramInstruction> programInstructions;
     private int counter = 0;
+    private boolean atomic;
+    private String label;
+    private TempTableStore tempTables;
+    private boolean startedTxn;
 
 	/**
 	 * Constructor for Program.
 	 */
-	public Program() {
-		super();
+	public Program(boolean atomic) {
+		this.atomic = atomic;
+	}
+	
+	public void setStartedTxn(boolean startedTxn) {
+		this.startedTxn = startedTxn;
+	}
+	
+	public boolean startedTxn() {
+		return startedTxn;
+	}
+	
+    @Override
+    public String getLabel() {
+    	return label;
+    }
+    
+    @Override
+    public void setLabel(String label) {
+    	this.label = label;
+    }
+    
+	public boolean isAtomic() {
+		return atomic;
+	}
+	
+	public TempTableStore getTempTableStore() {
+		return tempTables;
 	}
 
     /**
@@ -79,8 +111,10 @@ public class Program implements Cloneable {
     /**
      * Resets this program, so it can be run through again.
      */
-    public void resetProgramCounter(){
+    public void reset(String sessionId){
         counter = 0;
+        this.tempTables = new TempTableStore(sessionId);
+        this.startedTxn = false;
     }
 
     int getProgramCounter(){
@@ -115,7 +149,7 @@ public class Program implements Cloneable {
      * Produces a deep clone.
      */
     public Object clone(){
-        Program program = new Program();
+        Program program = new Program(atomic);
         program.counter = this.counter;
         
         if (this.programInstructions != null){
@@ -125,7 +159,7 @@ public class Program implements Cloneable {
             }
             program.programInstructions = clonedInstructions;
         }
-        
+        program.label = label;
         return program;
     }
 

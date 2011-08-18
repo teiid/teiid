@@ -22,8 +22,9 @@
 
 package org.teiid.query.resolver;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 
+import org.junit.Test;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Command;
@@ -35,26 +36,26 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 
-public class TestXMLResolver extends TestCase {
+public class TestXMLResolver {
     
     public Command helpResolve(String sql) {
-        Command cmd = TestResolver.helpResolve(sql, FakeMetadataFactory.example1Cached());
+        Command cmd = TestResolver.helpResolve(sql, RealMetadataFactory.example1Cached());
         ResolverUtil.fullyQualifyElements(cmd);
         return cmd;
     }
     
     public void helpResolveException(String sql) {
-        TestResolver.helpResolveException(sql, FakeMetadataFactory.example1Cached());
+        TestResolver.helpResolveException(sql, RealMetadataFactory.example1Cached());
     }
     
     public void helpResolveException(String sql, String expectedMessage) {
-        TestResolver.helpResolveException(sql, FakeMetadataFactory.example1Cached(), expectedMessage);
+        TestResolver.helpResolveException(sql, RealMetadataFactory.example1Cached(), expectedMessage);
     }
 
-    public void testXMLCriteriaShortElement() {
+    @Test public void testXMLCriteriaShortElement() {
         CompareCriteria expected = new CompareCriteria();
         GroupSymbol gs = new GroupSymbol("xmltest.doc1"); //$NON-NLS-1$
         ElementSymbol es = new ElementSymbol("root.node1", null, gs); //$NON-NLS-1$
@@ -67,7 +68,7 @@ public class TestXMLResolver extends TestCase {
         assertEquals("Did not match expected criteria", expected, actual);     //$NON-NLS-1$
     }   
 
-    public void testXMLCriteriaLongElement1() {
+    @Test public void testXMLCriteriaLongElement1() {
         CompareCriteria expected = new CompareCriteria();
         GroupSymbol gs = new GroupSymbol("xmltest.doc1"); //$NON-NLS-1$
         ElementSymbol es = new ElementSymbol("root.node1", null, gs); //$NON-NLS-1$
@@ -81,7 +82,7 @@ public class TestXMLResolver extends TestCase {
         assertEquals("Did not match expected criteria", expected, actual);     //$NON-NLS-1$
     }
     
-    public void testXMLCriteriaLongElement2() {
+    @Test public void testXMLCriteriaLongElement2() {
         CompareCriteria expected1 = new CompareCriteria();
         GroupSymbol gs = new GroupSymbol("xmltest.doc4"); //$NON-NLS-1$
         ElementSymbol es1 = new ElementSymbol("root.node1", null, gs); //$NON-NLS-1$
@@ -94,7 +95,7 @@ public class TestXMLResolver extends TestCase {
         assertEquals("Did not match expected criteria", expected1, actual); //$NON-NLS-1$
     }
     
-    public void testXMLCriteriaLongElement3() {
+    @Test public void testXMLCriteriaLongElement3() {
         GroupSymbol gs = new GroupSymbol("xmltest.doc4"); //$NON-NLS-1$
         CompareCriteria expected2 = new CompareCriteria();
         ElementSymbol es2 = new ElementSymbol("root.node1.@node2", null, gs); //$NON-NLS-1$
@@ -108,7 +109,7 @@ public class TestXMLResolver extends TestCase {
         assertEquals("Did not match expected criteria", expected2, actual); //$NON-NLS-1$
     }
         
-    public void testXMLCriteriaLongElement4() {
+    @Test public void testXMLCriteriaLongElement4() {
         GroupSymbol gs = new GroupSymbol("xmltest.doc4"); //$NON-NLS-1$
         CompareCriteria expected3 = new CompareCriteria();
         ElementSymbol es3 = new ElementSymbol("root.node3", null, gs); //$NON-NLS-1$
@@ -121,76 +122,76 @@ public class TestXMLResolver extends TestCase {
         assertEquals("Did not match expected criteria", expected3, actual);                 //$NON-NLS-1$
     }
     
-    public void testXMLCriteriaLongElement5() {
+    @Test public void testXMLCriteriaLongElement5() {
         helpResolve("select * from xmltest.doc4 where root.node1 = 'yyz'"); //$NON-NLS-1$
     }
     
-    public void testXMLCriteriaLongElement6() {
+    @Test public void testXMLCriteriaLongElement6() {
         helpResolve("select * from xmltest.doc4 where root.node1.@node2 = 'yyz'"); //$NON-NLS-1$
     } 
 
-    public void testXMLCriteriaLongElement7() {    
+    @Test public void testXMLCriteriaLongElement7() {    
         helpResolve("select * from xmltest.doc4 where root.node3 = 'yyz'"); //$NON-NLS-1$
     }
     
-    public void testXMLCriteriaLongElement8() {    
+    @Test public void testXMLCriteriaLongElement8() {    
         helpResolve("select * from xmltest.doc4 where node3 = 'yyz'");         //$NON-NLS-1$
     }
     
-    public void testXMLCriteriaLongElementFail1() {    
+    @Test public void testXMLCriteriaLongElementFail1() {    
         helpResolveException("select * from xmltest.doc4 where node3.node1.node2 = 'xyz'"); //$NON-NLS-1$
     }
     
-    public void testXMLCriteriaLongElementFail2() {    
+    @Test public void testXMLCriteriaLongElementFail2() {    
         helpResolveException("select * from xmltest.doc4 where root.node1.node2.node3 = 'xyz'"); //$NON-NLS-1$
     }
     
-    public void testXMLCriteriaLongElementFail3() {    
+    @Test public void testXMLCriteriaLongElementFail3() {    
         helpResolveException("select * from xmltest.doc4 where root.node1.node3 = 'xyz'"); //$NON-NLS-1$
     }
     
-    public void testXMLCriteriaLongElementFail4() {    
+    @Test public void testXMLCriteriaLongElementFail4() {    
         helpResolveException("select * from xmltest.doc4 where node2.node1.node2 = 'xyz'");                              //$NON-NLS-1$
     }
     
-    public void testXMLCriteriaTempElement1() {
+    @Test public void testXMLCriteriaTempElement1() {
         helpResolve("select * from xmltest.doc4 where tm1.g1.e1 = 'x'"); //$NON-NLS-1$
     } 
     
-    public void testXMLCriteriaTempElement2() {
+    @Test public void testXMLCriteriaTempElement2() {
         helpResolve("select * from xmltest.doc4 where root.node1.@node2 = 'yyz' and tm1.g1.e2 = 'y'"); //$NON-NLS-1$
     }
     
-    public void testXMLCriteriaTempElement3() {
+    @Test public void testXMLCriteriaTempElement3() {
         helpResolve("select * from xmltest.doc4 where tm1.g1.e1 = 'x' and tm1.g1.e2 = 'y'"); //$NON-NLS-1$
     }
 
-    public void testXMLCriteriaTempElementFail1() {    
+    @Test public void testXMLCriteriaTempElementFail1() {    
         helpResolveException("select * from xmltest.doc4 where tm1.g2.e1 = 'xyz'"); //$NON-NLS-1$
     } 
     
-    public void testXMLCriteriaTempElementFail2() {
+    @Test public void testXMLCriteriaTempElementFail2() {
         helpResolveException("select * from xmltest.doc4 where root.node1.node2.node3 = 'xyz' and e1 = 'x'"); //$NON-NLS-1$
     }
     
-    public void testXMLCriteriaTempElementFail3() {
+    @Test public void testXMLCriteriaTempElementFail3() {
         helpResolveException("select * from xmltest.doc4 where e3 = 'xyz' and tm1.g2.e4='m'"); //$NON-NLS-1$
     }
 
     //tests ambiguously-named elements in both root temp group and document
-    public void testXMLAmbiguousName1() {
+    @Test public void testXMLAmbiguousName1() {
         helpResolve("select * from xmltest.doc4 where root.node1 is null"); //$NON-NLS-1$
     }
     
-    public void testXMLAmbiguousName2() {
+    @Test public void testXMLAmbiguousName2() {
         helpResolve("select * from xmltest.doc4 where tm1.g1.node1 = 'yyz'"); //$NON-NLS-1$
     }
     
-    public void testXMLAmbiguousName3() {
+    @Test public void testXMLAmbiguousName3() {
         helpResolveException("select * from xmltest.doc4 where node1 = 'yyz'"); //$NON-NLS-1$
     }    
 
-    public void testXMLCriteriaLongElementInAnonymous() {                  
+    @Test public void testXMLCriteriaLongElementInAnonymous() {                  
         CompareCriteria expected = new CompareCriteria();
         GroupSymbol gs = new GroupSymbol("xmltest.doc2"); //$NON-NLS-1$
         ElementSymbol es = new ElementSymbol("root.node1.node3", null, gs); //$NON-NLS-1$
@@ -203,7 +204,7 @@ public class TestXMLResolver extends TestCase {
         assertEquals("Did not match expected criteria", expected, actual);     //$NON-NLS-1$
     }    
 
-    public void testXMLAmbiguousShortName() {                  
+    @Test public void testXMLAmbiguousShortName() {                  
         CompareCriteria expected = new CompareCriteria();
         ElementSymbol es = new ElementSymbol("node2"); //$NON-NLS-1$
         GroupSymbol gs = new GroupSymbol("doc3"); //$NON-NLS-1$
@@ -218,95 +219,95 @@ public class TestXMLResolver extends TestCase {
     /**
      * defect 9745
      */
-    public void testXMLAttributeInCriteria() {
+    @Test public void testXMLAttributeInCriteria() {
         helpResolve("select * from xmltest.doc4 where root.node1.@node2 = 'x'"); //$NON-NLS-1$
     }
 
     /**
      * defect 9745
      */
-    public void testXMLAttributeInCriteria2() {
+    @Test public void testXMLAttributeInCriteria2() {
         helpResolve("select * from xmltest.doc4 where root.node1.node2 = 'x'"); //$NON-NLS-1$
     }
 
     /**
      * defect 9745
      */
-    public void testXMLAttributeInCriteria3() {
+    @Test public void testXMLAttributeInCriteria3() {
         helpResolve("select * from xmltest.doc4 where node2 = 'x'"); //$NON-NLS-1$
     }
 
-    public void testXMLAttributeElementAmbiguity1() {
+    @Test public void testXMLAttributeElementAmbiguity1() {
         helpResolve("select * from xmltest.doc4 where root.node3.node4 = 'x'"); //$NON-NLS-1$
     }
     
-    public void testXMLAttributeElementAmbiguity2() {        
+    @Test public void testXMLAttributeElementAmbiguity2() {        
         helpResolve("select * from xmltest.doc4 where root.node3.@node4 = 'x'"); //$NON-NLS-1$
     }
     
-    public void testXMLAttributeElementAmbiguity3() {
+    @Test public void testXMLAttributeElementAmbiguity3() {
         helpResolve("select * from xmltest.doc4 where root.node3.node4 = 'x' and root.node3.@node4='y'"); //$NON-NLS-1$
     }       
 
     /*
      * This should resolve to the XML element root.node3.root.node6
      */
-    public void testXMLAttributeElementAmbiguity4() {
+    @Test public void testXMLAttributeElementAmbiguity4() {
         helpResolve("select * from xmltest.doc4 where root.node6 = 'x'"); //$NON-NLS-1$
     }       
 
     /*
      * This should resolve to the XML attribute root.@node6
      */
-    public void testXMLAttributeElementAmbiguity5() {
+    @Test public void testXMLAttributeElementAmbiguity5() {
         helpResolve("select * from xmltest.doc4 where root.@node6 = 'x'"); //$NON-NLS-1$
     }       
 
-    public void testXMLAttributeFullPath() {
+    @Test public void testXMLAttributeFullPath() {
         helpResolve("select * from xmltest.doc4 where xmltest.doc4.root.@node6 = 'x'"); //$NON-NLS-1$
     }       
     
-    public void testXMLCriteriaLongElementWithGroup1() {
+    @Test public void testXMLCriteriaLongElementWithGroup1() {
         helpResolve("select * from xmltest.doc4 where xmltest.doc4.root.node1 = 'yyz'"); //$NON-NLS-1$
     }
     
-    public void testXMLCriteriaLongElementWithGroup2() {
+    @Test public void testXMLCriteriaLongElementWithGroup2() {
         helpResolve("select * from xmltest.doc4 where xmltest.doc4.root.node1.@node2 = 'yyz'"); //$NON-NLS-1$
     } 
 
-    public void testXMLCriteriaLongElementWithGroup3() {    
+    @Test public void testXMLCriteriaLongElementWithGroup3() {    
         helpResolve("select * from xmltest.doc4 where xmltest.doc4.root.node3 = 'yyz'"); //$NON-NLS-1$
     }
 
-    /*public void testXMLElementPotentialAmbiguous() {    
+    /*@Test public void testXMLElementPotentialAmbiguous() {    
         helpResolve("select * from xmltest.doc6 where node = 'yyz'");
     }*/
 
-    public void testXMLSelect() {        
+    @Test public void testXMLSelect() {        
         helpResolve("select root.node3.@node4 from xmltest.doc4"); //$NON-NLS-1$
     }        
 
-    public void testXMLSelect2() {        
+    @Test public void testXMLSelect2() {        
         helpResolve("select root.node3.node4 from xmltest.doc4"); //$NON-NLS-1$
     }        
 
-    public void testXMLSelect3() {        
+    @Test public void testXMLSelect3() {        
         helpResolve("select root.@node6 from xmltest.doc4"); //$NON-NLS-1$
     }    
 
-    public void testXMLSelect4() {        
+    @Test public void testXMLSelect4() {        
         helpResolve("select root.node6 from xmltest.doc4"); //$NON-NLS-1$
     }    
 
-    public void testXMLSelect5() {        
+    @Test public void testXMLSelect5() {        
         helpResolve("select node2 from xmltest.doc4"); //$NON-NLS-1$
     }
     
-    public void testDEFECT_19771() {
+    @Test public void testDEFECT_19771() {
         helpResolveException("select node2 AS NODE2 from xmltest.doc4"); //$NON-NLS-1$
     }
         
-    public void testContext() {                  
+    @Test public void testContext() {                  
         GroupSymbol gs1 = new GroupSymbol("xmltest.doc1"); //$NON-NLS-1$
         ElementSymbol es1 = new ElementSymbol("root.node1.node2.node3", null, gs1); //$NON-NLS-1$
         ElementSymbol es2 = new ElementSymbol("root.node1", null, gs1); //$NON-NLS-1$
@@ -324,7 +325,7 @@ public class TestXMLResolver extends TestCase {
         assertEquals("Did not match expected criteria", expected, actual);         //$NON-NLS-1$
     }    
 
-    public void testRowLimit() {                  
+    @Test public void testRowLimit() {                  
     	GroupSymbol gs1 = new GroupSymbol("xmltest.doc1"); //$NON-NLS-1$
         ElementSymbol es1 = new ElementSymbol("root.node1.node2.node3", null, gs1); //$NON-NLS-1$
         es1.setGroupSymbol(gs1);
@@ -342,7 +343,7 @@ public class TestXMLResolver extends TestCase {
         assertEquals("Did not match expected criteria", expected, actual);         //$NON-NLS-1$
     }    
 
-    public void testRowLimitException() {                  
+    @Test public void testRowLimitException() {                  
     	GroupSymbol gs1 = new GroupSymbol("xmltest.doc1"); //$NON-NLS-1$
         ElementSymbol es1 = new ElementSymbol("root.node1.node2.node3", null, gs1); //$NON-NLS-1$
         Expression[] exprs = new Expression[]{es1};
@@ -359,23 +360,23 @@ public class TestXMLResolver extends TestCase {
         assertEquals("Did not match expected criteria", expected, actual);         //$NON-NLS-1$
     }     
     
-    public void testXMLQueryFail1() {
+    @Test public void testXMLQueryFail1() {
         helpResolveException("SELECT DISTINCT * FROM vm1.doc1"); //$NON-NLS-1$
     }
 
-    public void testXMLQueryFail2() {
+    @Test public void testXMLQueryFail2() {
         helpResolveException("SELECT a2 FROM vm1.doc1"); //$NON-NLS-1$
     }
 
-    public void testXMLQueryFail3() {
+    @Test public void testXMLQueryFail3() {
         helpResolveException("SELECT * FROM vm1.doc1, vm1.doc2"); //$NON-NLS-1$
     }
     
-    public void testXMLWithOrderBy1() {
+    @Test public void testXMLWithOrderBy1() {
         helpResolveException("select * from xmltest.doc4 order by node1");             //$NON-NLS-1$
     }
     
-    public void testConversionInXML() {
+    @Test public void testConversionInXML() {
         // Expected left expression
     	GroupSymbol gs1 = new GroupSymbol("xmltest.doc1"); //$NON-NLS-1$
         ElementSymbol es1 = new ElementSymbol("root.node1", null, gs1); //$NON-NLS-1$
@@ -397,7 +398,7 @@ public class TestXMLResolver extends TestCase {
         assertNotNull("Failed to resolve function", actualRightExpr.getFunctionDescriptor()); //$NON-NLS-1$
     }
 
-    public void testXMLWithSelect1() throws Exception {
+    @Test public void testXMLWithSelect1() throws Exception {
         CompareCriteria expected = new CompareCriteria();
         GroupSymbol gs = new GroupSymbol("xmltest.doc1"); //$NON-NLS-1$
         ElementSymbol es = new ElementSymbol("root.node1", null, gs); //$NON-NLS-1$
@@ -405,16 +406,16 @@ public class TestXMLResolver extends TestCase {
         expected.setOperator(CompareCriteria.EQ);
         expected.setRightExpression(new Constant("yyz")); //$NON-NLS-1$
     
-        Query query = (Query) TestResolver.helpResolve(QueryParser.getQueryParser().parseCommand("select \"xml\" from xmltest.doc1 where node1 = 'yyz'"), FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+        Query query = (Query) TestResolver.helpResolve(QueryParser.getQueryParser().parseCommand("select \"xml\" from xmltest.doc1 where node1 = 'yyz'"), RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         Criteria actual = query.getCriteria();
         assertEquals("Did not match expected criteria", expected, actual);     //$NON-NLS-1$
     } 
     
-    public void testXMLWithSelect1a() {
+    @Test public void testXMLWithSelect1a() {
         helpResolveException("select 'a' from xmltest.doc1 where node1 = 'yyz'", "Expressions cannot be selected by XML Queries"); //$NON-NLS-1$ //$NON-NLS-2$
     } 
 
-    public void testXMLWithSelect2() {
+    @Test public void testXMLWithSelect2() {
         CompareCriteria expected = new CompareCriteria();
         GroupSymbol gs = new GroupSymbol("xmltest.doc1"); //$NON-NLS-1$
         ElementSymbol es = new ElementSymbol("root.node1", null, gs); //$NON-NLS-1$

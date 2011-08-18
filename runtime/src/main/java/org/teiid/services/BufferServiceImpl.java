@@ -57,8 +57,8 @@ public class BufferServiceImpl implements BufferService, Serializable {
 	private int connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
     private int maxOpenFiles = FileStorageManager.DEFAULT_MAX_OPEN_FILES;
     private long maxFileSize = FileStorageManager.DEFAULT_MAX_FILESIZE; // 2GB
-    private int maxProcessingBatchesColumns = BufferManager.DEFAULT_MAX_PROCESSING_BATCHES;
-    private int maxReserveBatchColumns = BufferManager.DEFAULT_RESERVE_BUFFERS;
+    private int maxProcessingKb = BufferManager.DEFAULT_MAX_PROCESSING_KB;
+    private int maxReserveKb = BufferManager.DEFAULT_RESERVE_BUFFER_KB;
     private long maxBufferSpace = FileStorageManager.DEFAULT_MAX_BUFFERSPACE;
 	private FileStorageManager fsm;
 	
@@ -81,8 +81,8 @@ public class BufferServiceImpl implements BufferService, Serializable {
             this.bufferMgr = new BufferManagerImpl();
             this.bufferMgr.setConnectorBatchSize(Integer.valueOf(connectorBatchSize));
             this.bufferMgr.setProcessorBatchSize(Integer.valueOf(processorBatchSize));
-            this.bufferMgr.setMaxReserveBatchColumns(this.maxReserveBatchColumns);
-            this.bufferMgr.setMaxProcessingBatchColumns(this.maxProcessingBatchesColumns);
+            this.bufferMgr.setMaxReserveKB(this.maxReserveKb);
+            this.bufferMgr.setMaxProcessingKB(this.maxProcessingKb);
             
             this.bufferMgr.initialize();
             
@@ -160,14 +160,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
     	this.maxFileSize = maxFileSize;
 	}
     
-    public void setMaxReserveBatchColumns(int value) {
-		this.maxReserveBatchColumns = value;
-	}    
-    
-    public void setMaxProcessingBatchesColumns(int value) {
-    	this.maxProcessingBatchesColumns  = value;
-    }
-
 	public long getMaxFileSize() {
 		return maxFileSize;
 	}
@@ -176,12 +168,20 @@ public class BufferServiceImpl implements BufferService, Serializable {
 		this.maxOpenFiles = maxOpenFiles;
 	}
 
-	public int getMaxProcessingBatchesColumns() {
-		return maxProcessingBatchesColumns;
+    public int getMaxProcessingKb() {
+		return maxProcessingKb;
 	}
 
-	public int getMaxReserveBatchColumns() {
-		return maxReserveBatchColumns;
+    public int getMaxReservedKb() {
+		return maxReserveKb;
+	}
+    
+    public void setMaxProcessingKb(int maxProcessingKb) {
+		this.maxProcessingKb = maxProcessingKb;
+	}
+    
+    public void setMaxReserveKb(int maxReserveKb) {
+		this.maxReserveKb = maxReserveKb;
 	}
     
 	public long getMaxBufferSpace() {

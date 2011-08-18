@@ -102,6 +102,115 @@
             If you want write your own Custom Login module, check out the Developer's Guide for instructions.
 	        </para>
 		</section>
+        
+        <section>
+            <title>Kerberos support through GSSAPI</title>
+            <para>Teiid supports kerberos authentication using GSSAPI, to be used with single sign-on applications.
+            This service ticket negotiation based authentication is supported through remote JDBC and ODBC drivers and as 
+            well as in LocalConnections. However, configuration is varies for local connections vs remote connections</para>
+            
+            <section>
+                <title>LocalConnection</title>
+                <para>For supporting kerberos through local connections, provide JDBC URL property <emphasis>PassthroughAuthentication</emphasis> 
+                as true and use the <ulink url="http://community.jboss.org/docs/DOC-10680">JBoss Negotiation</ulink> as 
+                authentication configure your web-application for kerberos. When the web application authenticates with the provided
+                kerberos token, the same subject authenticated will be used in Teiid. For details about configuration, check the 
+                JBoss Negotiation documentation.</para>
+            </section>
+            
+            <section>
+                <title>Remote JDBC Connection</title>
+                <para>Server: For supporting the kerberos through jdbc from a remote client application, follow the below configuration.
+                On the server, edit "{jboss-as}/server/{profile}/deploy/teiid/teiid-jboss-beans.xml" file, and make sure under 
+                "SessionService" bean definition the following properties are set.
+                <programlisting><![CDATA[   
+    <!-- Sets the authentication Type -->         
+    <property name="authenticationType">KRB5</property>
+    <!-- Security domain used for kerberos authentication -->
+    <property name="krb5SecurityDomain">teiid-krb5</property>    
+                ]]></programlisting>    
+                
+                Now we need to define security domain context for kerberos with name mentioned in above, and since the kerberos 
+                authorization can not define authorization roles, we need devise a way to define them using another login context. 
+                Given below is sample configuration to define roles using UserRolesLoginModule. 
+                Note that the below configuration replaces the default Teiid login configuration. Note to change the principal 
+                and key tab locations accordingly.
+                
+                <programlisting><![CDATA[   
+    <!--login module that negotiates the login conext for kerberos --> 
+    <application-policy xmlns="urn:jboss:security-beans:1.0" name="teiid-krb5">
+        <authentication>
+            <login-module code="com.sun.security.auth.module.Krb5LoginModule" flag="required">
+                <module-option name="storeKey">true</module-option>
+                <module-option name="useKeyTab">true</module-option>
+                <module-option  name="principal">demo@EXAMPLE.COM</module-option>
+                <module-option  name="keyTab">path/to/krb5.keytab</module-option>
+                <module-option name="doNotPrompt">true</module-option>
+                <module-option name="debug">false</module-option>
+            </login-module>  
+        </authentication>
+    </application-policy>      
+    
+    <!-- teiid's default security domain, replace this with your own if needs to be any other JAAS domain  -->
+    <application-policy xmlns="urn:jboss:security-beans:1.0" name="teiid-security">
+        <authentication>
+            <!-- This module assosiates kerberos user with this login set of login modules -->
+            <login-module code="org.teiid.jboss.AssosiateCallerIdentityLoginModule" flag="required"/>
+            <!-- Login module used for defining roles for user authencated using kerberos, keep the users file empty
+            but provide roles in the roles file for users -->
+            <login-module code="org.jboss.security.auth.spi.UsersRolesLoginModule" flag="required">
+                <module-option name="password-stacking">useFirstPass</module-option>
+                <module-option name="usersProperties">props/teiid-security-users.properties</module-option>
+                <module-option name="rolesProperties">props/teiid-security-roles.properties</module-option>
+            </login-module>
+        </authentication>
+    </application-policy>    
+                ]]></programlisting>
+               Edit "run.conf" or "run.conf.bat"file depending upon the environment in "${jboss-as}/bin" directory 
+               and add the following JVM options to startup script (note to change the realm and KDC settings according to your environment)
+               <programlisting><![CDATA[   
+               JAVA_OPTS = "$JAVA_OPTS -Djava.security.krb5.realm=EXAMPLE.COM -Djava.security.krb5.kdc=kerberos.example.com -Djavax.security.auth.useSubjectCredsOnly=false"
+                ]]></programlisting>                                          
+            This finishes the configuration on the server side, restart the server and make sure that there were no errors during startup. 
+            </para>
+            
+            <para>Client: The following configuration needs to be done on the Teiid client application VM. For client VM, JAAS 
+            configuration for kerberos authentication needs to be written. A sample configuration file (client.conf) is show below
+            
+           <programlisting><![CDATA[   
+    Client {
+        com.sun.security.auth.module.Krb5LoginModule required
+        useTicketCache=true
+        storeKey=true
+        useKeyTab=true 
+        keyTab="/path/to/krb5.keytab" 
+        doNotPrompt=false 
+        debug=false
+        principal="demo@EXAMPLE.COM";
+    };
+            ]]></programlisting>                                          
+            
+            Add the following JVM options to your client's startup script, note the change Realm and KDC settings according to 
+            your environment
+           <programlisting><![CDATA[   
+        -Djava.security.krb5.realm=EXAMPLE.COM
+        -Djava.security.krb5.kdc=kerberos.example.com
+        -Djavax.security.auth.useSubjectCredsOnly=false
+        -Dsun.security.krb5.debug=false
+        -Djava.security.auth.login.config=/path/to/client.conf
+            ]]></programlisting>              
+            
+            Add the following URL connection properties to Teiid JDBC connection string
+            <programlisting><![CDATA[
+            authenticationType=KRB5;jaasName=Client;kerberosServicePrincipleName=demo@EXAMPLE.COM
+            ]]></programlisting>
+            There is no need to provide the user name and password, when the application is trying to make JDBC connection it
+            will authenticate locally and use the same user credetinals to neogitiate service token with server and grant the
+            connection. See Client Developer's guide for information on connection properties and how to configure data sources.
+            </para>
+            </section>
+
+        </section>        
 		
         <section>
             <title>Security at Data Source level</title>

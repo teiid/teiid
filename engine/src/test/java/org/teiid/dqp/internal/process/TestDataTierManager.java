@@ -41,7 +41,7 @@ import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
 public class TestDataTierManager {
@@ -72,8 +72,8 @@ public class TestDataTierManager {
     }
     
     private void helpSetup(String sql, int nodeId) throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
-        DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, FakeMetadataFactory.exampleBQTVDB());
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+        DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, RealMetadataFactory.exampleBQTVDB());
         
         rm = new DQPCore();
         rm.setTransactionService(new FakeTransactionService());

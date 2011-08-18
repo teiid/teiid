@@ -41,9 +41,11 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.Request;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.Column;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -54,6 +56,7 @@ import org.teiid.query.resolver.util.ResolveVirtualGroupCriteriaVisitor;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Create;
 import org.teiid.query.sql.lang.DynamicCommand;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Query;
@@ -202,13 +205,22 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 				}
 			};
 
-            dynamicProgram = new Program();
+            dynamicProgram = new Program(false);
             dynamicProgram.addInstruction(inst);
 
             if (dynamicCommand.getIntoGroup() != null) {
                 String groupName = dynamicCommand.getIntoGroup().getCanonicalName();
                 if (!procEnv.getTempTableStore().getAllTempTables().contains(groupName)) {
-                    procEnv.getTempContext().add(groupName);
+                	//create the temp table in the parent scope
+                	Create create = new Create();
+                	create.setTable(new GroupSymbol(groupName));
+                	for (ElementSymbol es : ((Insert)command).getVariables()) {
+                		Column c = new Column();
+                		c.setName(es.getShortName());
+                		c.setRuntimeType(DataTypeManager.getDataTypeName(es.getType()));
+                		create.getColumns().add(c);
+                	}
+                    procEnv.getDataManager().registerRequest(procEnv.getContext(), create, TempMetadataAdapter.TEMP_MODEL.getName(), null, 0, -1);
                 }
             }
 

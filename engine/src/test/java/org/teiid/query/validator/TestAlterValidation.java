@@ -41,7 +41,7 @@ public class TestAlterValidation {
 	}
 	
 	@Test public void testValidateAlterTrigger() {
-		TestValidator.helpValidate("alter trigger on SmallA_2589 instead of insert as for each row select 1;", new String[] {"SmallA_2589"}, RealMetadataFactory.exampleBQTCached());
+		TestValidator.helpValidate("alter trigger on SmallA_2589 instead of insert as for each row begin atomic select 1; end", new String[] {"SmallA_2589"}, RealMetadataFactory.exampleBQTCached());
 	}
 	
 	@Test public void testValidateAlterProcedure() {

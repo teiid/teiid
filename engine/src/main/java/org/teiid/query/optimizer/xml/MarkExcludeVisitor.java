@@ -40,13 +40,13 @@ import org.teiid.query.mapping.xml.Navigator;
 
 
 /** 
- * This vistor marks all the nodes in the Mapping Document to 
+ * This visitor marks all the nodes in the Mapping Document to 
  * "exclude".
  */
 public class MarkExcludeVisitor extends MappingVisitor{
-    HashSet keepNodes;
+    HashSet<String> keepNodes;
     
-    public MarkExcludeVisitor(HashSet keppNodes) {
+    public MarkExcludeVisitor(HashSet<String> keppNodes) {
         this.keepNodes = keppNodes;
     }
 
@@ -132,7 +132,7 @@ public class MarkExcludeVisitor extends MappingVisitor{
         }
     }
         
-    public static MappingDocument markExcludedNodes(MappingDocument doc, HashSet keepNodes) {
+    public static MappingDocument markExcludedNodes(MappingDocument doc, HashSet<String> keepNodes) {
         MarkExcludeVisitor visitor = new MarkExcludeVisitor(keepNodes);
         doc.acceptVisitor(new Navigator(true, visitor));
         return doc;

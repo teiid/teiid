@@ -30,6 +30,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -323,8 +325,19 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 			InetAddress addr = InetAddress.getLocalHost();
 			connectionProperties.put(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS, addr.getHostAddress());
 			connectionProperties.put(TeiidURL.CONNECTION.CLIENT_HOSTNAME, addr.getCanonicalHostName());
+			NetworkInterface ni = NetworkInterface.getByInetAddress(addr);
+			if (ni != null && ni.getHardwareAddress() != null) {
+				StringBuilder sb = new StringBuilder();
+				for (byte b : ni.getHardwareAddress()) {
+					sb.append(PropertiesUtils.toHex(b >> 4));
+					sb.append(PropertiesUtils.toHex(b));
+				}
+				connectionProperties.put(TeiidURL.CONNECTION.CLIENT_MAC, sb.toString());
+			}
         } catch (UnknownHostException err1) {
         	connectionProperties.put(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS, "UnknownClientAddress"); //$NON-NLS-1$
+        } catch (SocketException e) {
+        	
         }
 	}
 

@@ -32,7 +32,7 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 
 
@@ -43,7 +43,7 @@ public class TestMultiSourceElementReplacementVisitor extends TestCase {
 
     public QueryMetadataInterface getMetadata() throws Exception {
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleMultiBinding();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
         Set<String> multiSourceModels = new HashSet<String>();
         multiSourceModels.add("MultiModel"); //$NON-NLS-1$
         MultiSourceMetadataWrapper wrapper = new MultiSourceMetadataWrapper(metadata, multiSourceModels);  

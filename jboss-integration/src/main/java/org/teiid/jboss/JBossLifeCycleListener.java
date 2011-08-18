@@ -21,12 +21,17 @@
  */
 package org.teiid.jboss;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.jboss.msc.service.ServiceContainer.TerminateListener;
 import org.teiid.deployers.ContainerLifeCycleListener;
 
 class JBossLifeCycleListener implements TerminateListener, ContainerLifeCycleListener{
 
 	private boolean shutdownInProgress = false;
+	private List<ContainerLifeCycleListener.LifeCycleEventListener> listeners = Collections.synchronizedList(new ArrayList<ContainerLifeCycleListener.LifeCycleEventListener>());
 	
 	@Override
 	public boolean isShutdownInProgress() {
@@ -38,5 +43,10 @@ class JBossLifeCycleListener implements TerminateListener, ContainerLifeCycleLis
 		if (info.getShutdownInitiated() > 0) {
 			this.shutdownInProgress = true;
 		}
+	}
+
+	@Override
+	public void addListener(LifeCycleEventListener listener) {
+		listeners.add(listener);
 	}
 }

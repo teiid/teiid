@@ -83,7 +83,7 @@ public abstract class TableFunctionReference extends FromClause {
 		public ProjectedColumn copyTo(ProjectedColumn copy) {
 			copy.name = this.name;
 			copy.type = this.type;
-			copy.symbol = (ElementSymbol)this.symbol.clone();
+			copy.symbol = this.symbol.clone();
 			return copy;
 		}
 		
@@ -101,14 +101,14 @@ public abstract class TableFunctionReference extends FromClause {
 	}
     
 	public void copy(TableFunctionReference copy) {
-		copy.symbol = (GroupSymbol)this.symbol.clone();
+		copy.symbol = this.symbol.clone();
 		if (correlatedReferences != null) {
 			copy.correlatedReferences = correlatedReferences.clone();
 		}
 	}
 
 	@Override
-	public void collectGroups(Collection groups) {
+	public void collectGroups(Collection<GroupSymbol> groups) {
 		groups.add(getGroupSymbol());
 	}
 	

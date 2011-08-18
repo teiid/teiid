@@ -30,6 +30,7 @@ import java.util.List;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.symbol.GroupSymbol;
 
 
 /**
@@ -165,7 +166,7 @@ public class JoinPredicate extends FromClause {
      * Collect all GroupSymbols for this from clause.
      * @param groups Groups to add to
      */
-    public void collectGroups(Collection groups) {
+    public void collectGroups(Collection<GroupSymbol> groups) {
         if(this.leftClause != null) { 
             this.leftClause.collectGroups(groups);
         } 
@@ -223,15 +224,15 @@ public class JoinPredicate extends FromClause {
 	 * Return deep clone for object
 	 * @return Deep clone
 	 */
-	public Object clone() {
+	protected FromClause cloneDirect() {
 	    FromClause copyLeft = null;
 	    if(this.leftClause != null) { 
-	        copyLeft = (FromClause) this.leftClause.clone();
+	        copyLeft = this.leftClause.clone();
 	    }	
 
 	    FromClause copyRight = null;
 	    if(this.rightClause != null) { 
-	        copyRight = (FromClause) this.rightClause.clone();
+	        copyRight = this.rightClause.clone();
 	    }	
 	    
 		List copyCrits = null;
@@ -245,9 +246,6 @@ public class JoinPredicate extends FromClause {
 		}
 	    	    
         JoinPredicate clonedJoinPredicate = new JoinPredicate(copyLeft, copyRight, this.joinType, copyCrits);
-        clonedJoinPredicate.setOptional(this.isOptional());
-        clonedJoinPredicate.setMakeDep(this.isMakeDep());
-        clonedJoinPredicate.setMakeNotDep(this.isMakeNotDep());
         return clonedJoinPredicate;
 	}
 

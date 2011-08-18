@@ -161,7 +161,7 @@
 				<para>Code Requirements</para>
 				<listitem>
 					<para>The java class containing the function method must be defined
-						public.
+						public.  <note><para>As many UDF methods as you want can be declared on the same class.</para></note>
             </para>
 				</listitem>
 				<listitem>
@@ -184,7 +184,7 @@
 			</itemizedlist>
 			<para>You may optionally add an additional <code>org.teiid.CommandContext</code> argument as the first parameter.  
 			The <code>CommandContext</code> interface provides access to information about the current command, such as the executing user, Subject, the vdb, the session id, etc.  
-			This <code>CommandContext</code> parameter does not need to be delared in the function metadata.</para>
+			This <code>CommandContext</code> parameter should not be delared in the function metadata.</para>
 			<example>
 				<title>Sample code</title>
 				<programlisting language="Java" role="JAVA"><![CDATA[package org.something;
@@ -206,6 +206,23 @@ public class TempConv
       return (doubleCelsiusTemp)*9/5 + 32;
    }
 }]]></programlisting>
+			</example>
+			<example>
+				<title>Sample CommandContext Usage</title>
+				<programlisting language="Java" role="JAVA"><![CDATA[package org.something;
+
+public class SessionInfo 
+{
+   /**
+   * @param context 
+   * @return the created Timestamp 
+   */
+   public static Timestamp sessionCreated(CommandContext context)
+   {
+      return new Timestamp(context.getSession().getCreatedTime());
+   }
+}]]></programlisting>
+            <para>The corresponding UDF would be declared as Timestamp sessionCreated().</para>
 			</example>
 		</section>
 		<section>

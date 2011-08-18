@@ -23,13 +23,10 @@
 package org.teiid.query.sql.lang;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
-import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.Expression;
@@ -46,7 +43,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 public class GroupBy implements LanguageObject {
 
     /** The set of expressions for the data elements to be group. */
-    private List symbols;     // List<Expression>
+    private List<Expression> symbols; 
 
     // =========================================================================
     //                         C O N S T R U C T O R S
@@ -56,15 +53,15 @@ public class GroupBy implements LanguageObject {
      * Constructs a default instance of this class.
      */
     public GroupBy() {
-        symbols = new ArrayList();
+        symbols = new ArrayList<Expression>();
     }
 
     /**
      * Constructs an instance of this class from an ordered set of symbols.
      * @param symbols The ordered list of {@link org.teiid.query.sql.symbol.ElementSymbol}s
      */
-    public GroupBy( List symbols ) {
-        this.symbols = new ArrayList( symbols );
+    public GroupBy( List<? extends Expression> symbols ) {
+        this.symbols = new ArrayList<Expression>( symbols );
     }
 
     // =========================================================================
@@ -83,7 +80,7 @@ public class GroupBy implements LanguageObject {
      * Returns an ordered list of the symbols in the GROUP BY
      * @return List of {@link org.teiid.query.sql.symbol.ElementSymbol}s
      */
-    public List getSymbols() {
+    public List<Expression> getSymbols() {
         return symbols;
     }
 
@@ -95,19 +92,6 @@ public class GroupBy implements LanguageObject {
     	if(symbol != null) {
 	        symbols.add(symbol);
         }
-    }
-
-	/**
-     * Replaces the existing set of symbols with a new collection of symbols
-     * @param symbols Collection of {@link org.teiid.query.sql.symbol.ElementSymbol}s
-     * to replace current symbols with
-     */
-    public void replaceSymbols( Collection symbols ) {
-		if(symbols == null) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0003")); //$NON-NLS-1$
-		}
-
-		this.symbols = new ArrayList(symbols);
     }
 
     public void acceptVisitor(LanguageVisitor visitor) {
@@ -123,15 +107,7 @@ public class GroupBy implements LanguageObject {
 	 * @return Deep copy of object
 	 */
 	public Object clone() {
-	    List thisSymbols = getSymbols();
-	    List copySymbols = new ArrayList(thisSymbols.size());
-	    Iterator iter = thisSymbols.iterator();
-	    while(iter.hasNext()) {
-	    	Expression es = (Expression) iter.next();
-	    	copySymbols.add(es.clone());
-	    }
-
-		return new GroupBy(copySymbols);
+		return new GroupBy(LanguageObject.Util.deepClone(this.symbols, Expression.class));
 	}
 
 	/**

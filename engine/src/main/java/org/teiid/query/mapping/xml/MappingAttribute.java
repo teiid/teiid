@@ -26,15 +26,12 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 
 
 /** 
- * A Mapping node which denotes a attribuite node.
+ * A Mapping node which denotes a attribute node.
  */
 public class MappingAttribute extends MappingNode {
     // Element symbol in the resultset source
     ElementSymbol symbol;
     
-    // Position of the element in the resultset source
-    int position = -1;  
-
     // namespace of the attribute
     Namespace namespace;
     

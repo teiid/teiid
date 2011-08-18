@@ -74,18 +74,14 @@ public class TestXMLTypeTranslations extends BaseQueryTest {
         Timestamp ts = new Timestamp(-2106305630000l);
         ts.setNanos(3000000);
         
-        dataMgr.addData("SELECT g_0.\"timestamp\", g_0.\"double\", g_0.\"float\", convert(g_0.\"double\", biginteger), convert(g_0.\"double\", biginteger), convert(g_0.\"date\", timestamp), convert(g_0.\"double\", biginteger), convert(g_0.\"date\", timestamp), '1' FROM sample.RUNTIMEVALUE AS g_0", //$NON-NLS-1$ 
+        dataMgr.addData("SELECT g_0.\"timestamp\", g_0.\"double\", g_0.\"float\", convert(g_0.\"double\", biginteger), convert(g_0.\"date\", timestamp) FROM sample.RUNTIMEVALUE AS g_0", //$NON-NLS-1$ 
                         
                         new List[] { Arrays.asList(new Object[] { 
                             ts, 
                             new Double(Double.NEGATIVE_INFINITY), 
                             new Float(Float.POSITIVE_INFINITY), 
                             new BigInteger("100"), //$NON-NLS-1$
-                            new BigInteger("100"), //$NON-NLS-1$
                             ts, 
-                            new BigInteger("100"), //$NON-NLS-1$
-                            ts,
-                            "1" //$NON-NLS-1$
                                                    })});
         
         

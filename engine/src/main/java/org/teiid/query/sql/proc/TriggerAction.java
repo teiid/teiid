@@ -36,7 +36,7 @@ public class TriggerAction extends Command {
 	private Block block;
 	
 	public TriggerAction(Block b) {
-		this.block = b;
+		this.setBlock(b);
 	}
 	
 	public Block getBlock() {
@@ -44,6 +44,7 @@ public class TriggerAction extends Command {
 	}
 	
 	public void setBlock(Block block) {
+		block.setAtomic(true);
 		this.block = block;
 	}
 	

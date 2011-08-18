@@ -156,6 +156,10 @@ public class TupleBatch implements Externalizable {
         this.types = types;
     }
     
+    public String[] getDataTypes() {
+		return types;
+	}
+    
     public boolean containsRow(int row) {
     	return rowOffset <= row && getEndRow() >= row;
     }

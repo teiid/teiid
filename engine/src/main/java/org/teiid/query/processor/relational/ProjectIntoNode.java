@@ -222,7 +222,7 @@ public class ProjectIntoNode extends RelationalNode {
     	}
         // RESPONSE_PROCESSING: process tuple sources
         if (tupleSourcesProcessed < requestsRegistered) {
-            throw BlockedException.INSTANCE;
+        	throw BlockedException.block(getContext().getRequestId(), "Blocking on insert update count"); //$NON-NLS-1$
         }
                 
     }

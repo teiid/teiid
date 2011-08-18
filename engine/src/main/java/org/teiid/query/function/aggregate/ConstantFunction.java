@@ -40,8 +40,8 @@ public class ConstantFunction extends AggregateFunction {
     }
     
     @Override
-    boolean filter(Object input) {
-    	return false;
+    public boolean respectsNull() {
+    	return true;
     }
 
     /**

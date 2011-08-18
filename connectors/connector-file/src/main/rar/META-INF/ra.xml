@@ -46,6 +46,19 @@
                <config-property-type>java.lang.String</config-property-type>
             </config-property>
             
+            <config-property>
+               <description>{$display:"File Mapping"}</description>
+               <config-property-name>FileMapping</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>
+            
+             <config-property>
+               <description>{$display:"Allow Parent Paths"}</description>
+               <config-property-name>AllowParentPaths</config-property-name>
+               <config-property-type>java.lang.Boolean</config-property-type>
+               <config-property-value>true</config-property-value>
+            </config-property>
+            
             <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
             <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>
             <connection-interface>javax.resource.cci.Connection</connection-interface>

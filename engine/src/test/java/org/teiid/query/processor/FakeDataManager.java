@@ -49,6 +49,7 @@ import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SetQuery;
+import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.TranslatableProcedureContainer;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.symbol.AliasSymbol;
@@ -61,7 +62,9 @@ import org.teiid.query.util.CommandContext;
 
 
 public class FakeDataManager implements ProcessorDataManager {
-	private Map tuples = new HashMap();
+	private Map<String, Object[]> tuples = new HashMap<String, Object[]>();
+	private Map<String, List<List<?>>[]> procTuples = new HashMap<String, List<List<?>>[]>();
+	
     private static final String LOG_CONTEXT = "FAKE_DATA_MANAGER"; //$NON-NLS-1$
     
     //used to test blocked exception. If true,
@@ -72,13 +75,13 @@ public class FakeDataManager implements ProcessorDataManager {
     // ---- Cached code table stuff ---- 
     	
     // upper table name + upper key col name + upper ret col name -> map of values
-    private Map codeTableValues = new HashMap();
+    private Map<String, Map> codeTableValues = new HashMap<String, Map>();
     
     // throw Blocked on first request
     private boolean throwBlocked = false;
     
     // upper table name + upper key col name + upper ret col name -> flag of whether this table has blocked yet
-    private Map blockedState = new HashMap();
+    private Map<String, Boolean> blockedState = new HashMap<String, Boolean>();
 
     // Track history to verify it later
     private List<String> queries = new ArrayList<String>();
@@ -101,11 +104,11 @@ public class FakeDataManager implements ProcessorDataManager {
     	this.queries.clear();
     	return rc;
     }
-	        
-	public void registerTuples(Object groupID, List elements, List[] data) {
-		tuples.put(groupID, new Object[] { elements, data });
+    
+	public void registerProcTuples(String proc, List[] data) {
+		procTuples.put(proc, data);
 	}
-	
+	        
 	public TupleSource registerRequest(CommandContext context, Command command, String modelName, String connectorBindingId, int nodeID, int limit)
 		throws TeiidComponentException {
         
@@ -127,6 +130,17 @@ public class FakeDataManager implements ProcessorDataManager {
         }else if(command instanceof SetQuery) {
             SetQuery union = (SetQuery) command;            
             group = getQueryGroup(union.getProjectedQuery());
+        } else if (command instanceof StoredProcedure) {
+        	Object id = ((StoredProcedure) command).getProcedureID();
+        	List<List<?>>[] data = procTuples.get(id);
+        	if (data == null) {
+        		throw new AssertionError("Undefined results for " + command); //$NON-NLS-1$
+        	}
+            FakeTupleSource ts= new FakeTupleSource(command.getProjectedSymbols(), data);
+    		if(this.blockOnce){
+                ts.setBlockOnce();
+    		}
+    		return ts;
 		} else if (command instanceof ProcedureContainer) {
 			group = ((ProcedureContainer) command).getGroup();
 		} else if ( command instanceof BatchedUpdateCommand ) {
@@ -141,13 +155,11 @@ public class FakeDataManager implements ProcessorDataManager {
     		}
 		}
 		
-		Object groupID = group.getMetadataID();
-		
-		Object[] tupleInfo = (Object[]) tuples.get(groupID);
-		List elements = (List) tupleInfo[0];
+		Object[] tupleInfo = tuples.get(group.getNonCorrelationName().toUpperCase());
+		List<SingleElementSymbol> elements = (List) tupleInfo[0];
 		List[] tuples = (List[]) tupleInfo[1];
 		
-		List projectedSymbols = command.getProjectedSymbols();
+		List<SingleElementSymbol> projectedSymbols = command.getProjectedSymbols();
 		int[] columnMap = getColumnMap(elements, projectedSymbols);
 		
 		/* 
@@ -164,12 +176,12 @@ public class FakeDataManager implements ProcessorDataManager {
 			    // Build lookupMap from BOTH all the elements and the projected symbols - both may be needed here
 	            Map lookupMap = new HashMap();
 	            for(int i=0; i<elements.size(); i++) { 
-	                Object element = elements.get(i);
-                    mapElementToIndex(lookupMap, element, new Integer(i), group);        
+	                SingleElementSymbol element = elements.get(i);
+                    mapElementToIndex(lookupMap, element, i, group);        
 	            }
 	            for(int i=0; i<projectedSymbols.size(); i++) { 
-	            	Object element = projectedSymbols.get(i);
-                    mapElementToIndex(lookupMap, element, new Integer(columnMap[i]), group);
+	            	SingleElementSymbol element = projectedSymbols.get(i);
+                    mapElementToIndex(lookupMap, element, columnMap[i], group);
 	            }
 			    
 			    List filteredTuples = new ArrayList();
@@ -205,11 +217,11 @@ public class FakeDataManager implements ProcessorDataManager {
 					    // Build lookupMap from BOTH all the elements and the projected symbols - both may be needed here
 			            Map<Object, Integer> lookupMap = new HashMap<Object, Integer>();
 			            for(int i=0; i<elements.size(); i++) { 
-			                Object element = elements.get(i);
+			            	SingleElementSymbol element = elements.get(i);
 		                    mapElementToIndex(lookupMap, element, new Integer(i), group);        
 			            }
 			            for(int i=0; i<projectedSymbols.size(); i++) { 
-			            	Object element = projectedSymbols.get(i);
+			            	SingleElementSymbol element = projectedSymbols.get(i);
 		                    mapElementToIndex(lookupMap, element, new Integer(columnMap[i]), group);
 			            }
 					    
@@ -233,7 +245,7 @@ public class FakeDataManager implements ProcessorDataManager {
 			}
 		    tuples = new List[filteredTuples.size()];
 		    filteredTuples.toArray(tuples);
-		    elements = new ArrayList<Object>(projectedSymbols);
+		    elements = new ArrayList<SingleElementSymbol>(projectedSymbols);
 		    columnMap[0] = 0;
 		}		
 				
@@ -277,16 +289,14 @@ public class FakeDataManager implements ProcessorDataManager {
      * @param integer
      * @param group
      */
-    private void mapElementToIndex(Map lookupMap, Object element, Integer index, GroupSymbol group) {
+    private void mapElementToIndex(Map lookupMap, SingleElementSymbol element, Integer index, GroupSymbol group) {
+    	ElementSymbol elementSymbol = (ElementSymbol)SymbolMap.getExpression(element);
         if (group.getDefinition() != null){
             String groupAlias = group.getCanonicalName();
-            ElementSymbol elementSymbol = (ElementSymbol)SymbolMap.getExpression((SingleElementSymbol)element);
-            ElementSymbol aliasedElement = (ElementSymbol)elementSymbol.clone();
-            aliasedElement.getGroupSymbol().setName(groupAlias);
-            lookupMap.put(aliasedElement, index);
-        } else {
-            lookupMap.put(element, index);
+            elementSymbol = elementSymbol.clone();
+            elementSymbol.getGroupSymbol().setName(groupAlias);
         }
+        lookupMap.put(elementSymbol, index);
     }    
 	
 	//   columnMap[expectedElementIndex] = allElementIndex
@@ -352,7 +362,7 @@ public class FakeDataManager implements ProcessorDataManager {
                 }
             }
         
-            Map values = (Map) codeTableValues.get(tableKey);
+            Map values = codeTableValues.get(tableKey);
             return values.get(keyValue);
     }
 
@@ -384,11 +394,11 @@ public class FakeDataManager implements ProcessorDataManager {
 		this.recordingCommands = shouldRecord;
 	}
 
-	public void registerTuples(QueryMetadataInterface metadata, String groupName, List[] tuples) throws QueryResolverException, TeiidComponentException {
+	public void registerTuples(QueryMetadataInterface metadata, String groupName, List[] data) throws QueryResolverException, TeiidComponentException {
 	    GroupSymbol group = new GroupSymbol(groupName);
 	    ResolverUtil.resolveGroup(group, metadata);
 	    List<ElementSymbol> elementSymbols = ResolverUtil.resolveElementsInGroup(group, metadata);
-		this.registerTuples(group.getMetadataID(), elementSymbols, tuples);
+		tuples.put(group.getName().toUpperCase(), new Object[] { elementSymbols, data });
 	}
 
 	@Override

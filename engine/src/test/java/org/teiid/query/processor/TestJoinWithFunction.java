@@ -31,7 +31,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 import junit.framework.TestCase;
 
@@ -57,7 +57,7 @@ public class TestJoinWithFunction extends TestCase {
 	 * @throws TeiidComponentException 
 	 * @throws QueryMetadataException 
 	 */
-	public void testNonDeterministicPostJoin() throws QueryMetadataException, TeiidComponentException {
+	public void testNonDeterministicPostJoin() throws Exception {
 		// source query for one side of a JOIN
 		String leftQuery = "SELECT pm1.g1.e1 as ID, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 " //$NON-NLS-1$
 				+ "FROM pm1.g1"; //$NON-NLS-1$
@@ -105,7 +105,7 @@ public class TestJoinWithFunction extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         Command command = TestProcessor.helpParse(sql);   
-        ProcessorPlan plan = TestProcessor.helpGetPlan(command, FakeMetadataFactory.example1Cached(), capFinder);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -127,7 +127,7 @@ public class TestJoinWithFunction extends TestCase {
 	 * @throws TeiidComponentException 
 	 * @throws QueryMetadataException 
 	 */
-	public void testNonDeterministicPreJoin() throws QueryMetadataException, TeiidComponentException {
+	public void testNonDeterministicPreJoin() throws Exception {
 		// source query for one side of a JOIN
 		String leftQuery = "SELECT pm1.g1.e1 as ID, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4, RAND() AS RandomLeft " //$NON-NLS-1$
 				+ "FROM pm1.g1"; //$NON-NLS-1$
@@ -176,7 +176,7 @@ public class TestJoinWithFunction extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         Command command = TestProcessor.helpParse(sql);   
-        ProcessorPlan plan = TestProcessor.helpGetPlan(command, FakeMetadataFactory.example1Cached(), capFinder);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -192,7 +192,7 @@ public class TestJoinWithFunction extends TestCase {
 	 * @throws TeiidComponentException 
 	 * @throws QueryMetadataException 
 	 */
-	public void testNonDeterministicPrePostJoin() throws TeiidComponentException, QueryMetadataException {
+	public void testNonDeterministicPrePostJoin() throws Exception {
 		// source query for one side of a JOIN
 		String leftQuery = "SELECT pm1.g1.e1 as ID, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4, RAND() AS RandomLeft " //$NON-NLS-1$
 				+ "FROM pm1.g1"; //$NON-NLS-1$
@@ -241,7 +241,7 @@ public class TestJoinWithFunction extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         Command command = TestProcessor.helpParse(sql);   
-        ProcessorPlan plan = TestProcessor.helpGetPlan(command, FakeMetadataFactory.example1Cached(), capFinder);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -256,7 +256,7 @@ public class TestJoinWithFunction extends TestCase {
 	 * @throws TeiidComponentException
 	 * @throws QueryMetadataException
 	 */
-	public void testDeterministicPostJoin() throws TeiidComponentException, QueryMetadataException {
+	public void testDeterministicPostJoin() throws Exception {
 		// source query for one side of a JOIN
 		String leftQuery = "SELECT pm1.g1.e1 as ID, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 " //$NON-NLS-1$
 				+ "FROM pm1.g1"; //$NON-NLS-1$
@@ -303,7 +303,7 @@ public class TestJoinWithFunction extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         Command command = TestProcessor.helpParse(sql);   
-        ProcessorPlan plan = TestProcessor.helpGetPlan(command, FakeMetadataFactory.example1Cached(), capFinder);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -322,7 +322,7 @@ public class TestJoinWithFunction extends TestCase {
 	 * @throws TeiidComponentException 
 	 * @throws QueryMetadataException 
 	 */
-	public void testDeterministicPreJoin() throws QueryMetadataException, TeiidComponentException {
+	public void testDeterministicPreJoin() throws Exception {
 		// source query for one side of a JOIN
 		String leftQuery = "SELECT pm1.g1.e1 as ID, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4, SQRT(100) AS SqrtLeft " //$NON-NLS-1$
 				+ "FROM pm1.g1"; //$NON-NLS-1$
@@ -368,7 +368,7 @@ public class TestJoinWithFunction extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         Command command = TestProcessor.helpParse(sql);   
-        ProcessorPlan plan = TestProcessor.helpGetPlan(command, FakeMetadataFactory.example1Cached(), capFinder);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -384,7 +384,7 @@ public class TestJoinWithFunction extends TestCase {
 	 * @see #testDeterministicPostJoin
 	 * @see #testDeterministicPreJoin
 	 */
-	public void testDeterministicPrePostJoin() throws QueryMetadataException, TeiidComponentException {
+	public void testDeterministicPrePostJoin() throws Exception {
 		// sub-query for one side of a JOIN
 		String leftQuery = "SELECT pm1.g1.e1 as ID, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4, SQRT(100) AS SqrtLeft " //$NON-NLS-1$
 				+ "FROM pm1.g1"; //$NON-NLS-1$
@@ -431,7 +431,7 @@ public class TestJoinWithFunction extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         Command command = TestProcessor.helpParse(sql);   
-        ProcessorPlan plan = TestProcessor.helpGetPlan(command, FakeMetadataFactory.example1Cached(), capFinder);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);

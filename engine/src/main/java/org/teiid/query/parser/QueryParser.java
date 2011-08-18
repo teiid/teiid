@@ -23,6 +23,11 @@
 package org.teiid.query.parser;
 
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
 
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.query.QueryPlugin;
@@ -186,7 +191,82 @@ public class QueryParser {
     }
 
     private QueryParserException convertParserException(ParseException pe) {
-        return new QueryParserException(QueryPlugin.Util.getString("QueryParser.parsingError", pe.getMessage())); //$NON-NLS-1$                        
+        QueryParserException qpe = new QueryParserException(QueryPlugin.Util.getString("QueryParser.parsingError", getMessage(pe, 1, 10))); //$NON-NLS-1$
+        qpe.setParseException(pe);
+        if (pe.currentToken == null) {
+        	pe.currentToken = parser.token;
+        }
+        return qpe;
+    }
+        
+    public static String getMessage(ParseException pe, int maxTokenSequence, int maxExpansions) {
+		if (!pe.specialConstructor) {
+			return pe.getMessage();
+		}
+		StringBuffer expected = new StringBuffer();
+		int[][] expectedTokenSequences = pe.expectedTokenSequences;
+		String[] tokenImage = pe.tokenImage;
+		String eol = pe.eol;
+		Token currentToken = pe.currentToken;
+		HashSet<List<Integer>> expansions = new HashSet<List<Integer>>();
+		Arrays.sort(expectedTokenSequences, new Comparator<int[]>() {
+			@Override
+			public int compare(int[] o1, int[] o2) {
+				return o2.length - o1.length;
+			}
+		});
+		int maxSize = expectedTokenSequences[0].length;
+		StringBuilder retval = new StringBuilder("Encountered \""); //$NON-NLS-1$
+		Token tok = currentToken.next;
+		for (int i = 0; i < maxSize; i++) {
+			if (i != 0)
+				retval.append(" "); //$NON-NLS-1$
+			if (tok.kind == 0) {
+				retval.append(tokenImage[0]);
+				break;
+			}
+			retval.append(pe.add_escapes(tok.image));
+			tok = tok.next;
+		}
+		retval.append("\" at line " + currentToken.next.beginLine + ", column " //$NON-NLS-1$ //$NON-NLS-2$
+				+ currentToken.next.beginColumn);
+		retval.append("." + eol); //$NON-NLS-1$
+		for (int i = 0; i < expectedTokenSequences.length; i++) {
+			boolean truncateStart = expectedTokenSequences[i].length == maxSize && maxSize > 1 && maxSize > maxTokenSequence;
+			int start = 0;
+			if (truncateStart) {
+				start = expectedTokenSequences[i].length - maxTokenSequence;
+			}
+			List<Integer> expansion = new ArrayList<Integer>(Math.min(maxTokenSequence, expectedTokenSequences[i].length));
+			for (int j = start; j < start+maxTokenSequence; j++) {
+				expansion.add(expectedTokenSequences[i][j]);
+			}
+			if (!expansions.add(expansion) || (!truncateStart && expectedTokenSequences[i][start] == currentToken.next.kind)) {
+				continue;
+			}
+			if (expansions.size() > maxExpansions) {
+				expected.append("...").append(eol).append("    "); //$NON-NLS-1$ //$NON-NLS-2$
+				break;
+			}
+			if (truncateStart) {
+				expected.append("... "); //$NON-NLS-1$
+			}
+			for (int j = start; j < expectedTokenSequences[i].length && j < start+maxTokenSequence; j++) {
+				expected.append(tokenImage[expectedTokenSequences[i][j]])
+						.append(" "); //$NON-NLS-1$
+			}
+			if (expectedTokenSequences[i][Math.min(maxTokenSequence, expectedTokenSequences[i].length - 1)] != 0) {
+				expected.append("..."); //$NON-NLS-1$
+			}
+			expected.append(eol).append("    "); //$NON-NLS-1$
+		}
+		if (expansions.size() == 1) {
+			retval.append("Was expecting:" + eol + "    "); //$NON-NLS-1$ //$NON-NLS-2$
+		} else {
+			retval.append("Was expecting one of:" + eol + "    "); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		retval.append(expected.toString());
+		return retval.toString();
     }
 
     /**

@@ -34,7 +34,6 @@ import org.teiid.query.sql.*;
  */
 public class ExpressionSymbol extends SingleElementSymbol {
 	private Expression expression;
-	private boolean derivedExpression;
 
     /**
      * Constructor used for cloning 
@@ -101,19 +100,9 @@ public class ExpressionSymbol extends SingleElementSymbol {
 			clonedExpr = (Expression) getExpression().clone();		
 	    }
 	    ExpressionSymbol copy = new ExpressionSymbol(getName(), getCanonical(), clonedExpr);
-	    copy.setDerivedExpression(this.derivedExpression);
 	    return copy;
 	}
 
-    public boolean isDerivedExpression() {
-        return this.derivedExpression;
-    }
-
-    public void setDerivedExpression(boolean derivedExpression) {
-        this.derivedExpression = derivedExpression;
-    }
-    
-    
     /** 
      * @see org.teiid.query.sql.symbol.Symbol#hashCode()
      */

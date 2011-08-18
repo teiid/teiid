@@ -48,13 +48,13 @@ public class TupleBuffer {
      * @return
      * @since 4.2
      */
-    public static String[] getTypeNames(List expressions) {
+    public static String[] getTypeNames(List<? extends Expression> expressions) {
     	if (expressions == null) {
     		return null;
     	}
         String[] types = new String[expressions.size()];
-        for (ListIterator i = expressions.listIterator(); i.hasNext();) {
-            Expression expr = (Expression)i.next();
+        for (ListIterator<? extends Expression> i = expressions.listIterator(); i.hasNext();) {
+            Expression expr = i.next();
             types[i.previousIndex()] = DataTypeManager.getDataTypeName(expr.getType());
         }
         return types;
@@ -63,7 +63,7 @@ public class TupleBuffer {
 	//construction state
 	private BatchManager manager;
 	private String tupleSourceID;
-	private List<?> schema;
+	private List<? extends Expression> schema;
 	private String[] types;
 	private int batchSize;
 	
@@ -80,7 +80,7 @@ public class TupleBuffer {
 	private String uuid;
 	private FileStore lobStore;
 	
-	public TupleBuffer(BatchManager manager, String id, List<?> schema, int[] lobIndexes, int batchSize) {
+	public TupleBuffer(BatchManager manager, String id, List<? extends Expression> schema, int[] lobIndexes, int batchSize) {
 		this.manager = manager;
 		this.tupleSourceID = id;
 		this.schema = schema;
@@ -99,7 +99,11 @@ public class TupleBuffer {
 			this.uuid = java.util.UUID.randomUUID().toString();
 		}
 		return this.uuid;
-	}	
+	}
+	
+	public void setId(String uuid) {
+		this.uuid = uuid;
+	}
 	
 	public boolean isLobs() {
 		return lobIndexes != null;
@@ -276,7 +280,7 @@ public class TupleBuffer {
 		this.isFinal = isFinal;
 	}
 	
-	public List<?> getSchema() {
+	public List<? extends Expression> getSchema() {
 		return schema;
 	}
 	
@@ -318,7 +322,7 @@ public class TupleBuffer {
 				if(isFinal) {
 		            return null;
 		        } 
-		        throw BlockedException.INSTANCE;
+		        throw BlockedException.block("Blocking on non-final TupleBuffer", tupleSourceID); //$NON-NLS-1$
 			}
 			
 			@Override
@@ -363,6 +367,10 @@ public class TupleBuffer {
 	
 	public boolean isPrefersMemory() {
 		return prefersMemory;
+	}
+	
+	public String[] getTypes() {
+		return types;
 	}
 	
 }

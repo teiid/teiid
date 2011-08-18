@@ -76,20 +76,17 @@ import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.AllInGroupSymbol;
-import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 
 public class SimpleQueryResolver implements CommandResolver {
-
-    private static final String ALL_IN_GROUP_SUFFIX = ".*"; //$NON-NLS-1$
 
     /** 
      * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter, boolean)
@@ -107,14 +104,14 @@ public class SimpleQueryResolver implements CommandResolver {
             ResolverVisitor visitor = (ResolverVisitor)qrv.getVisitor();
 			visitor.throwException(true);
         } catch (TeiidRuntimeException e) {
-            if (e.getChild() instanceof QueryMetadataException) {
-                throw (QueryMetadataException)e.getChild();
+            if (e.getCause() instanceof QueryMetadataException) {
+                throw (QueryMetadataException)e.getCause();
             }
-            if (e.getChild() instanceof QueryResolverException) {
-                throw (QueryResolverException)e.getChild();
+            if (e.getCause() instanceof QueryResolverException) {
+                throw (QueryResolverException)e.getCause();
             }
-            if (e.getChild() instanceof TeiidComponentException) {
-                throw (TeiidComponentException)e.getChild();
+            if (e.getCause() instanceof TeiidComponentException) {
+                throw (TeiidComponentException)e.getCause();
             }
             throw e;
         }
@@ -127,7 +124,7 @@ public class SimpleQueryResolver implements CommandResolver {
         	ResolverUtil.resolveOrderBy(query.getOrderBy(), query, metadata);
         }
         
-        List symbols = query.getSelect().getProjectedSymbols();
+        List<SingleElementSymbol> symbols = query.getSelect().getProjectedSymbols();
         
         if (query.getInto() != null) {
             GroupSymbol symbol = query.getInto().getGroup();
@@ -185,18 +182,18 @@ public class SimpleQueryResolver implements CommandResolver {
         }
 	}
 
-    private static GroupSymbol resolveAllInGroup(AllInGroupSymbol allInGroupSymbol, Set<GroupSymbol> groups, QueryMetadataInterface metadata) throws QueryResolverException, QueryMetadataException, TeiidComponentException {       
-        String name = allInGroupSymbol.getName();
-        int index = name.lastIndexOf(ALL_IN_GROUP_SUFFIX);
-        String groupAlias = name.substring(0, index);
-        List<GroupSymbol> groupSymbols = ResolverUtil.findMatchingGroups(groupAlias.toUpperCase(), groups, metadata);
+    private static GroupSymbol resolveAllInGroup(MultipleElementSymbol allInGroupSymbol, Set<GroupSymbol> groups, QueryMetadataInterface metadata) throws QueryResolverException, QueryMetadataException, TeiidComponentException {       
+        String groupAlias = allInGroupSymbol.getGroup().getCanonicalName();
+        List<GroupSymbol> groupSymbols = ResolverUtil.findMatchingGroups(groupAlias, groups, metadata);
         if(groupSymbols.isEmpty() || groupSymbols.size() > 1) {
             String msg = QueryPlugin.Util.getString(groupSymbols.isEmpty()?"ERR.015.008.0047":"SimpleQueryResolver.ambiguous_all_in_group", allInGroupSymbol);  //$NON-NLS-1$ //$NON-NLS-2$
             QueryResolverException qre = new QueryResolverException(msg);
             qre.addUnresolvedSymbol(new UnresolvedSymbolDescription(allInGroupSymbol.toString(), msg));
             throw qre;
         }
-
+        GroupSymbol gs = allInGroupSymbol.getGroup();
+        allInGroupSymbol.setGroup(groupSymbols.get(0).clone());
+        allInGroupSymbol.getGroup().setOutputName(gs.getOutputName());
         return groupSymbols.get(0);
     }
     
@@ -260,14 +257,19 @@ public class SimpleQueryResolver implements CommandResolver {
             }
         }
         
-        public void visit(AllSymbol obj) {
+        public void visit(MultipleElementSymbol obj) {
+        	// Determine group that this symbol is for
             try {
                 List<ElementSymbol> elementSymbols = new ArrayList<ElementSymbol>();
-                for (GroupSymbol group : currentGroups) {
+                Collection<GroupSymbol> groups = currentGroups;
+                if (obj.getGroup() != null) {
+                	groups = Arrays.asList(resolveAllInGroup(obj, currentGroups, metadata));
+                }
+                for (GroupSymbol group : groups) {
                     elementSymbols.addAll(resolveSelectableElements(group));
                 }
                 obj.setElementSymbols(elementSymbols);
-            } catch (TeiidComponentException err) {
+            } catch (TeiidException err) {
                 throw new TeiidRuntimeException(err);
             } 
         }
@@ -281,25 +283,12 @@ public class SimpleQueryResolver implements CommandResolver {
             // Look for elements that are not selectable and remove them
             for (ElementSymbol element : elements) {
                 if(metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.SELECT)) {
-                    element = (ElementSymbol)element.clone();
+                    element = element.clone();
                     element.setGroupSymbol(group);
                 	result.add(element);
                 }
             }
             return result;
-        }
-        
-        public void visit(AllInGroupSymbol obj) {
-            // Determine group that this symbol is for
-            try {
-                GroupSymbol group = resolveAllInGroup(obj, currentGroups, metadata);
-                
-                List<ElementSymbol> elements = resolveSelectableElements(group);
-                
-                obj.setElementSymbols(elements);
-            } catch (TeiidException err) {
-                throw new TeiidRuntimeException(err);
-            } 
         }
         
         public void visit(ScalarSubquery obj) {
@@ -368,6 +357,9 @@ public class SimpleQueryResolver implements CommandResolver {
 			}
         }
         
+        /**
+		 * @param tfr  
+		 */
         public LinkedHashSet<GroupSymbol> preTableFunctionReference(TableFunctionReference tfr) {
         	LinkedHashSet<GroupSymbol> saved = new LinkedHashSet<GroupSymbol>(this.currentGroups);
         	if (allowImplicit) {
@@ -468,7 +460,7 @@ public class SimpleQueryResolver implements CommandResolver {
 			from.addClause(new SubqueryFromClause("X", storedProcedureCommand)); //$NON-NLS-1$
 			procQuery.setFrom(from);
 			Select select = new Select();
-			select.addSymbol(new AllInGroupSymbol("X.*")); //$NON-NLS-1$
+			select.addSymbol(new MultipleElementSymbol("X")); //$NON-NLS-1$
 			procQuery.setSelect(select);
 			
 			List<String> accessPatternElementNames = new LinkedList<String>();
@@ -571,7 +563,7 @@ public class SimpleQueryResolver implements CommandResolver {
                 
         public void visit(From obj) {
             assert currentGroups.isEmpty();
-            for (FromClause clause : (List<FromClause>)obj.getClauses()) {
+            for (FromClause clause : obj.getClauses()) {
 				checkImplicit(clause);
 			}
             super.visit(obj);

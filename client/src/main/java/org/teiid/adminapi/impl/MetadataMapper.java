@@ -884,6 +884,7 @@ public class MetadataMapper {
 		private static final String CLIENT_HOST_NAME = "client-host-address"; //$NON-NLS-1$
 		private static final String CREATED_TIME = "created-time"; //$NON-NLS-1$
 		private static final String APPLICATION_NAME = "application-name"; //$NON-NLS-1$
+		private static final String CLIENT_HARDWARE_ADRESS = "client-hardware-address"; //$NON-NLS-1$
 		
 		
 		public static ModelNode wrap(SessionMetadata session, ModelNode node) {
@@ -906,6 +907,9 @@ public class MetadataMapper {
 			if (session.getSecurityDomain() != null){
 				node.get(SECURITY_DOMAIN).set(session.getSecurityDomain());
 			}
+			if (session.getClientHardwareAddress() != null) {
+				node.get(CLIENT_HARDWARE_ADRESS).set(session.getClientHardwareAddress());
+			}
 			return node;
 		}
 
@@ -927,6 +931,9 @@ public class MetadataMapper {
 			session.setVDBVersion(node.get(VDB_VERSION).asInt());
 			if (node.has(SECURITY_DOMAIN)) {
 				session.setSecurityDomain(node.get(SECURITY_DOMAIN).asString());
+			}
+			if (node.has(CLIENT_HARDWARE_ADRESS)) {
+				session.setClientHardwareAddress(node.get(CLIENT_HARDWARE_ADRESS).asString());
 			}
 			return session;
 		}

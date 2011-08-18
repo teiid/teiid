@@ -64,9 +64,8 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	writeElement(writer, Element.TIME_SLICE_IN_MILLI_ELEMENT, node);
     	writeElement(writer, Element.MAX_ROWS_FETCH_SIZE_ELEMENT, node);
     	writeElement(writer, Element.LOB_CHUNK_SIZE_IN_KB_ELEMENT, node);
-    	writeElement(writer, Element.USE_DATA_ROLES_ELEMENT, node);
-    	writeElement(writer, Element.ALLOW_CREATE_TEMPORY_TABLES_BY_DEFAULT_ELEMENT, node);
-    	writeElement(writer, Element.ALLOW_FUNCTION_CALLS_BY_DEFAULT_ELEMENT, node);
+    	writeElement(writer, Element.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT, node);
+    	writeElement(writer, Element.POLICY_DECIDER_MODULE_ELEMENT, node);
     	writeElement(writer, Element.QUERY_THRESHOLD_IN_SECS_ELEMENT, node);
     	writeElement(writer, Element.MAX_SOURCE_ROWS_ELEMENT, node);
     	writeElement(writer, Element.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT, node);
@@ -146,8 +145,8 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 		writeElement(writer, Element.USE_DISK_ELEMENT, node);
 		writeElement(writer, Element.PROCESSOR_BATCH_SIZE_ELEMENT, node);
 		writeElement(writer, Element.CONNECTOR_BATCH_SIZE_ELEMENT, node);
-		writeElement(writer, Element.MAX_RESERVE_BATCH_COLUMNS_ELEMENT, node);
-		writeElement(writer, Element.MAX_PROCESSING_BATCH_COLUMNS_ELEMENT, node);
+		writeElement(writer, Element.MAX_PROCESSING_KB_ELEMENT, node);
+		writeElement(writer, Element.MAX_RESERVED_KB_ELEMENT, node);
 		writeElement(writer, Element.MAX_FILE_SIZE_ELEMENT, node);
 		writeElement(writer, Element.MAX_BUFFER_SPACE_ELEMENT, node);
 		writeElement(writer, Element.MAX_OPEN_FILES_ELEMENT, node);
@@ -246,9 +245,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 					break;
 	
 				// booleans
-				case USE_DATA_ROLES_ELEMENT:
-				case ALLOW_CREATE_TEMPORY_TABLES_BY_DEFAULT_ELEMENT:
-				case ALLOW_FUNCTION_CALLS_BY_DEFAULT_ELEMENT:
 				case EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT:
 				case DETECTING_CHANGE_EVENTS_ELEMENT:
 				case ALLOW_ENV_FUNCTION_ELEMENT:
@@ -259,6 +255,8 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 				case EVENT_DISTRIBUTOR_NAME_ELEMENT:
 				case JDBC_SECURITY_DOMAIN_ELEMENT:
 				case ASYNC_THREAD_GROUP_ELEMENT:
+				case AUTHORIZATION_VALIDATOR_MODULE_ELEMENT:
+				case POLICY_DECIDER_MODULE_ELEMENT:
 					node.get(reader.getLocalName()).set(reader.getElementText());
 					break;
 	
@@ -299,12 +297,14 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 				break;
 			case PROCESSOR_BATCH_SIZE_ELEMENT:
 			case CONNECTOR_BATCH_SIZE_ELEMENT:
-			case MAX_RESERVE_BATCH_COLUMNS_ELEMENT:
-			case MAX_PROCESSING_BATCH_COLUMNS_ELEMENT:
-			case MAX_FILE_SIZE_ELEMENT:
-			case MAX_BUFFER_SPACE_ELEMENT:
+			case MAX_PROCESSING_KB_ELEMENT:
+			case MAX_RESERVED_KB_ELEMENT:
 			case MAX_OPEN_FILES_ELEMENT:
 				node.get(reader.getLocalName()).set(Integer.parseInt(reader.getElementText()));
+				break;
+			case MAX_FILE_SIZE_ELEMENT:				
+			case MAX_BUFFER_SPACE_ELEMENT:
+				node.get(reader.getLocalName()).set(Long.parseLong(reader.getElementText()));
 				break;
 			default:
 				throw ParseUtils.unexpectedElement(reader);

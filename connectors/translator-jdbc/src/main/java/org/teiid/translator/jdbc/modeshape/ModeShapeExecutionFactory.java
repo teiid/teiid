@@ -22,6 +22,8 @@
 
 package org.teiid.translator.jdbc.modeshape;
 
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -29,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Comparison;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
@@ -38,8 +39,6 @@ import org.teiid.language.Not;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionParameter;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -47,7 +46,6 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
-
 /** 
  * Translator class for accessing the ModeShape JCR repository.  
  */
@@ -78,6 +76,12 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 		registerFunctionModifier(JCR_ISSAMENODE, new IdentifierFunctionModifier()); 
 		registerFunctionModifier(JCR_REFERENCE, new IdentifierFunctionModifier()); 
 		registerFunctionModifier(JCR_CONTAINS, new IdentifierFunctionModifier());
+		
+		addPushDownFunction(JCR, JCR_ISCHILDNODE, BOOLEAN, STRING, STRING);
+		addPushDownFunction(JCR, JCR_ISDESCENDANTNODE, BOOLEAN, STRING, STRING);
+		addPushDownFunction(JCR, JCR_ISSAMENODE, BOOLEAN, STRING, STRING);
+		addPushDownFunction(JCR, JCR_CONTAINS, BOOLEAN, STRING, STRING);
+		addPushDownFunction(JCR, JCR_REFERENCE, BOOLEAN, STRING);
 		
     	LogManager.logTrace(LogConstants.CTX_CONNECTOR, "ModeShape Translator Started"); //$NON-NLS-1$
      }    
@@ -111,41 +115,6 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 		supportedFunctions.add(SourceSystemFunctions.LENGTH);
 		return supportedFunctions;
     }
-    
-    
-    @Override
-    public List<FunctionMethod> getPushDownFunctions(){
-    	List<FunctionMethod> pushdownFunctions = new ArrayList<FunctionMethod>();
-		pushdownFunctions.add(new FunctionMethod(JCR + '.' + JCR_ISCHILDNODE, JCR_ISCHILDNODE, JCR, 
-            new FunctionParameter[] {
-				new FunctionParameter("path1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("path2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		pushdownFunctions.add(new FunctionMethod(JCR + '.' + JCR_ISDESCENDANTNODE, JCR_ISDESCENDANTNODE, JCR, 
-                new FunctionParameter[] {
-				new FunctionParameter("path1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("path2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-
-		pushdownFunctions.add(new FunctionMethod(JCR + '.' + JCR_ISSAMENODE, JCR_ISSAMENODE, JCR, 
-                new FunctionParameter[] {
-					new FunctionParameter("path1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("path2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		pushdownFunctions.add(new FunctionMethod(JCR + '.' + JCR_CONTAINS, JCR_CONTAINS, JCR, 
-                new FunctionParameter[] {
-                    new FunctionParameter("selectorOrProperty", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("searchExpr", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		pushdownFunctions.add(new FunctionMethod(JCR + '.' + JCR_REFERENCE, JCR_REFERENCE, JCR, 
-                new FunctionParameter[] {
-                    new FunctionParameter("selectorOrProperty", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-    	return pushdownFunctions;    	
-    }    
     
     @Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {

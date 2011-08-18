@@ -60,6 +60,7 @@ import org.teiid.language.NamedTable;
 import org.teiid.language.Not;
 import org.teiid.language.OrderBy;
 import org.teiid.language.QueryExpression;
+import org.teiid.language.SQLConstants;
 import org.teiid.language.ScalarSubquery;
 import org.teiid.language.SearchedCase;
 import org.teiid.language.SearchedWhenClause;
@@ -71,6 +72,8 @@ import org.teiid.language.SubqueryComparison;
 import org.teiid.language.SubqueryIn;
 import org.teiid.language.TableReference;
 import org.teiid.language.Update;
+import org.teiid.language.WindowFunction;
+import org.teiid.language.WindowSpecification;
 import org.teiid.language.With;
 import org.teiid.language.WithItem;
 import org.teiid.language.Argument.Direction;
@@ -174,11 +177,22 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         }
         
         if (obj.getExpression() == null) {
-             buffer.append(Tokens.ALL_COLS);
+        	if (SQLConstants.NonReserved.COUNT.equalsIgnoreCase(obj.getName())) {
+        		buffer.append(Tokens.ALL_COLS);
+        	}
         } else {
             append(obj.getExpression());
         }
         buffer.append(Tokens.RPAREN);
+        if (obj.getCondition() != null) {
+        	buffer.append(Tokens.SPACE);
+        	buffer.append(FILTER);
+        	buffer.append(Tokens.LPAREN);
+        	buffer.append(WHERE);
+        	buffer.append(Tokens.SPACE);
+        	append(obj.getCondition());
+        	buffer.append(Tokens.RPAREN);
+        }
     }
 
     public void visit(Comparison obj) {
@@ -272,8 +286,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         if(elementID != null) {
             elemShortName = getName(elementID);            
         } else {
-            String elementName = obj.getName();
-            elemShortName = getShortName(elementName);
+            elemShortName = obj.getName();
         }
 
         // Check whether a subclass wants to replace the element name to use in special circumstances
@@ -397,7 +410,20 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
                 }
             }
             buffer.append(Tokens.RPAREN);
-
+        } else if (name.equalsIgnoreCase(NonReserved.TRIM)) {
+        	buffer.append(name);
+        	buffer.append(Tokens.LPAREN);
+        	String value = (String)((Literal)args.get(0)).getValue();
+        	if (!value.equalsIgnoreCase(BOTH)) {
+                buffer.append(value);
+                buffer.append(Tokens.SPACE);
+        	}
+            append(args.get(1));
+            buffer.append(" "); //$NON-NLS-1$
+            buffer.append(FROM);
+            buffer.append(" "); //$NON-NLS-1$
+            buffer.append(args.get(2));
+            buffer.append(")"); //$NON-NLS-1$
         } else {
 
             buffer.append(obj.getName())
@@ -585,9 +611,19 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
             buffer.append(Tokens.SPACE)
                   .append(NOT);
         }
-        buffer.append(Tokens.SPACE)
-              .append(LIKE)
-              .append(Tokens.SPACE);
+        buffer.append(Tokens.SPACE);
+        switch (obj.getMode()) {
+        case LIKE:
+            buffer.append(LIKE);
+            break;
+        case SIMILAR:
+        	buffer.append(SIMILAR)
+        		  .append(Tokens.SPACE)
+        		  .append(TO);
+        case REGEX:
+        	buffer.append(getLikeRegexString());
+        }
+        buffer.append(Tokens.SPACE);
         append(obj.getRightExpression());
         if (obj.getEscapeCharacter() != null) {
             buffer.append(Tokens.SPACE)
@@ -597,10 +633,13 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
                   .append(obj.getEscapeCharacter().toString())
                   .append(Tokens.QUOTE);
         }
-        
     }
     
-    public void visit(Limit obj) {
+    protected String getLikeRegexString() {
+		return LIKE_REGEX;
+	}
+
+	public void visit(Limit obj) {
         buffer.append(LIMIT)
               .append(Tokens.SPACE);
         if (obj.getRowOffset() > 0) {
@@ -904,6 +943,36 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
 		buffer.append(Tokens.LPAREN);
 		append(obj.getSubquery());
 		buffer.append(Tokens.RPAREN);
+    }
+    
+    @Override
+    public void visit(WindowFunction windowFunction) {
+    	append(windowFunction.getFunction());
+    	buffer.append(Tokens.SPACE);
+    	buffer.append(OVER);
+    	buffer.append(Tokens.SPACE);
+    	append(windowFunction.getWindowSpecification());
+    }
+    
+    @Override
+    public void visit(WindowSpecification windowSpecification) {
+    	buffer.append(Tokens.LPAREN);
+    	boolean needsSpace = false;
+    	if (windowSpecification.getPartition() != null) {
+    		buffer.append(PARTITION);
+    		buffer.append(Tokens.SPACE);
+    		buffer.append(BY);
+    		buffer.append(Tokens.SPACE);
+    		append(windowSpecification.getPartition());
+    		needsSpace = true;
+    	}
+    	if (windowSpecification.getOrderBy() != null) {
+    		if (needsSpace) {
+    			buffer.append(Tokens.SPACE);
+    		}
+    		append(windowSpecification.getOrderBy());
+    	}
+    	buffer.append(Tokens.RPAREN);    	
     }
  
     /**

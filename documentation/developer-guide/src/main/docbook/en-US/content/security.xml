@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-<chapter id="custom_login_modules">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
+%CustomDTD;
+]>
+<chapter>
+<title>Custom Security</title>
+<section id="custom_login_modules">
     <title>Login Modules</title>
     <para>The Teiid system provides a range of built-in and extensible security features to enable the
         secure access of data.  For details about how to configure the available security features check out
@@ -92,4 +97,27 @@
             <para>If you are extending one of the built-in LoginModules, refer to  
             <ulink url="http://community.jboss.org/docs/DOC-9466"/>.</para>
 		</section>
+</section>
+<section>
+	<title>Custom Authorization</title>
+	<para>In situations where Teiid's built-in role mechanism is not sufficient, a custom 
+	<code>org.teiid.PolicyDecider</code> can be installed via the &jboss-beans; configuration file under the "AuthorizationValidator" bean.
+	<example>
+		<title>Example Configuration Snippet</title>
+		<programlisting role="XML" language="XML"><![CDATA[
+	<bean name="AuthorizationValidator" class="org.teiid.dqp.internal.process.DefaultAuthorizationValidator">
+        <property name="enabled">true</property>
+        <property name="policyDecider"><inject bean="PolicyDecider"/></property>
+    </bean>
+   
+    <bean name="PolicyDecider" class="com.company.CustomPolicyDecider">
+        <property name="someProperty">some value</property>
+    </bean>]]>
+		</programlisting>
+	</example>  
+	Your custom <code>PolicyDecider</code> should be installed in a jar that is made available to the same classloader as Teiid, typically the profile lib directory.  
+	A <code>PolicyDecider</code> may be consulted many times for a single user command, but it is only called to make decisions based upon resources that 
+	appear in user queries.  Any further access of resources through views or stored procedures, just as with data roles, is not checked against a <code>PolicyDecider.</code>
+	</para>
+</section>
 </chapter>

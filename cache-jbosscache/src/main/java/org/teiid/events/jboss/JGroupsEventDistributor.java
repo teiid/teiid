@@ -35,7 +35,7 @@ import javax.naming.NamingException;
 import org.jboss.util.naming.Util;
 import org.jgroups.Address;
 import org.jgroups.Channel;
-import org.jgroups.JChannelFactory;
+import org.jgroups.ChannelFactory;
 import org.jgroups.ReceiverAdapter;
 import org.jgroups.View;
 import org.jgroups.blocks.GroupRequest;
@@ -45,9 +45,20 @@ import org.teiid.events.EventDistributor;
 
 public class JGroupsEventDistributor extends ReceiverAdapter implements Serializable {
 	
+	private final class ProxyHandler implements InvocationHandler, Serializable {
+		private static final long serialVersionUID = 3879554695890338832L;
+
+		@Override
+		public Object invoke(Object proxy, Method method, Object[] args)
+				throws Throwable {
+			rpcDispatcher.callRemoteMethods(members, new MethodCall(method, args), GroupRequest.GET_NONE, 0);
+			return null;
+		}
+	}
+
 	private static final long serialVersionUID = -1140683411842561358L;
 	
-	private transient JChannelFactory channelFactory;
+	private transient ChannelFactory channelFactory;
 	private String multiplexerStack;
 	private String clusterName;
 	private String jndiName;
@@ -60,7 +71,7 @@ public class JGroupsEventDistributor extends ReceiverAdapter implements Serializ
 	private transient RpcDispatcher rpcDispatcher;
 	private transient Vector<Address> members;
 	
-	public JChannelFactory getChannelFactory() {
+	public ChannelFactory getChannelFactory() {
 		return channelFactory;
 	}
 	
@@ -88,7 +99,7 @@ public class JGroupsEventDistributor extends ReceiverAdapter implements Serializ
 		return clusterName;
 	}
 	
-	public void setChannelFactory(JChannelFactory channelFactory) {
+	public void setChannelFactory(ChannelFactory channelFactory) {
 		this.channelFactory = channelFactory;
 	}
 	
@@ -104,18 +115,12 @@ public class JGroupsEventDistributor extends ReceiverAdapter implements Serializ
 		if (this.channelFactory == null) {
 			return; //no need to distribute events
 		}
-		channel = this.channelFactory.createMultiplexerChannel(this.multiplexerStack, null);
+		channel = this.channelFactory.createMultiplexerChannel(this.multiplexerStack, "teiid-events"); //$NON-NLS-1$
 		channel.connect(this.clusterName);
-		
-		proxyEventDistributor = (EventDistributor) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {EventDistributor.class}, new InvocationHandler() {
-			
-			@Override
-			public Object invoke(Object proxy, Method method, Object[] args)
-					throws Throwable {
-				rpcDispatcher.callRemoteMethods(members, new MethodCall(method, args), GroupRequest.GET_NONE, 0);
-				return null;
-			}
-		});
+		if (channel.getView() != null) {
+			viewAccepted(channel.getView());
+		}
+		proxyEventDistributor = (EventDistributor) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {EventDistributor.class}, new ProxyHandler());
 		//wrap the local in a proxy to prevent unintended methods from being called
 		rpcDispatcher = new RpcDispatcher(channel, this, this, Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {EventDistributor.class}, new InvocationHandler() {
 			

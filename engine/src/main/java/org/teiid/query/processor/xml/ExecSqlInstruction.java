@@ -36,7 +36,7 @@ import org.teiid.query.mapping.xml.ResultSetInfo;
  * Executes a SQL statement, defines a result set.
  */
 public class ExecSqlInstruction extends ProcessorInstruction {
-    private String resultSetName;
+    String resultSetName;
     ResultSetInfo info;
     
     public ExecSqlInstruction(String resultSetName, ResultSetInfo info) {
@@ -48,15 +48,20 @@ public class ExecSqlInstruction extends ProcessorInstruction {
     public XMLContext process(XMLProcessorEnvironment env, XMLContext context)
         throws BlockedException, TeiidComponentException, TeiidProcessingException{
 
-        LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"SQL: Result set DOESN'T exist:",resultSetName}); //$NON-NLS-1$
-        PlanExecutor executor = context.getResultExecutor(resultSetName);
-        if (executor == null) {
-            executor = env.createResultExecutor(resultSetName, info);
-            context.setResultExecutor(resultSetName, executor);
-        }
+        execute(env, context);
+        
+        env.incrementCurrentProgramCounter();
+        return context;
+    }
+
+	protected void execute(XMLProcessorEnvironment env, XMLContext context)
+			throws TeiidComponentException, BlockedException,
+			TeiidProcessingException {
+		LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"SQL: Result set DOESN'T exist:",resultSetName}); //$NON-NLS-1$
+        PlanExecutor executor = getPlanExecutor(env, context);
         
         // this execute can throw the blocked exception
-        executor.execute(context.getReferenceValues());
+        executor.execute(context.getReferenceValues(), false);
         
         // now that we done executing the plan; remove the plan from context
         context.removeResultExecutor(resultSetName);
@@ -64,10 +69,17 @@ public class ExecSqlInstruction extends ProcessorInstruction {
         // save this executioner in the context, so that all the nodes
         // below can access the data.
         context.setResultSet(this.resultSetName, executor);
-        
-        env.incrementCurrentProgramCounter();
-        return context;
-    }
+	}
+
+	public PlanExecutor getPlanExecutor(XMLProcessorEnvironment env,
+			XMLContext context) throws TeiidComponentException {
+		PlanExecutor executor = context.getResultExecutor(resultSetName);
+        if (executor == null) {
+            executor = env.createResultExecutor(resultSetName, info);
+            context.setResultExecutor(resultSetName, executor);
+        }
+		return executor;
+	}
     
     public String toString() {
         return "SQL  " + resultSetName; //$NON-NLS-1$ 

@@ -53,7 +53,7 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
  * <li>Debug trace information, if requested</LI>
  * </ul>
  */
-public class AnalysisRecord implements Serializable {
+public class AnalysisRecord {
 	
     // Common 
     public static final String PROP_OUTPUT_COLS = "Output Columns"; //$NON-NLS-1$

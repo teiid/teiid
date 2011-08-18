@@ -131,7 +131,7 @@ public class PgFrontendProtocol extends FrameDecoder {
 
         byte[] data = createByteArray(this.dataLength - 4);
         buffer.readBytes(data);
-		createRequestMessage(this.messageType, new NullTerminatedStringDataInputStream(new DataInputStream(new ByteArrayInputStream(data, 0, this.dataLength-4)), this.encoding));
+		createRequestMessage(this.messageType, new NullTerminatedStringDataInputStream(data, new DataInputStream(new ByteArrayInputStream(data, 0, this.dataLength-4)), this.encoding));
 		this.dataLength = null;
 		this.messageType = null;
 		return message;
@@ -223,8 +223,7 @@ public class PgFrontendProtocol extends FrameDecoder {
 	}
 	
 	private Object buildLogin(NullTerminatedStringDataInputStream data) throws IOException{
-        String password = data.readString();
-        this.odbcProxy.logon(this.databaseName, this.user, password);
+        this.odbcProxy.logon(this.databaseName, this.user, data);
         return message;
 	}	
 
@@ -403,12 +402,14 @@ public class PgFrontendProtocol extends FrameDecoder {
 		ServiceInvocationStruct struct;
 	}
 	
-	static class NullTerminatedStringDataInputStream extends DataInputStream{
+	public static class NullTerminatedStringDataInputStream extends DataInputStream{
 		private Charset encoding;
+		private byte[] rawData;
 		
-		public NullTerminatedStringDataInputStream(DataInputStream in, Charset encoding) {
+		public NullTerminatedStringDataInputStream(byte[] rawData, DataInputStream in, Charset encoding) {
 			super(in);
 			this.encoding = encoding;
+			this.rawData = rawData;
 		}
 
 	    public String readString() throws IOException {
@@ -421,6 +422,10 @@ public class PgFrontendProtocol extends FrameDecoder {
 	            buff.write(x);
 	        }
 	        return new String(buff.toByteArray(), this.encoding);
+	    }
+	    
+	    public byte[] readServiceToken() {
+	    	return this.rawData;
 	    }
 	}
 	

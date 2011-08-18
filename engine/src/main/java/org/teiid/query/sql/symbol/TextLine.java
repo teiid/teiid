@@ -88,7 +88,7 @@ public class TextLine implements Expression {
 	
 	@Override
 	public Class<?> getType() {
-		return DataTypeManager.DefaultDataClasses.BLOB;
+		return DataTypeManager.DefaultDataClasses.STRING;
 	}
 
 	@Override

@@ -42,42 +42,42 @@
 
     <xs:complexType name="buffer-service-type">
         <xs:sequence>
-            <xs:element name="useDisk" type="xs:string" minOccurs="0" maxOccurs="1">
+            <xs:element name="use-disk" type="xs:string" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>Use disk for buffer management</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="processorBatchSize" type="xs:int" minOccurs="0" maxOccurs="1">
+            <xs:element name="processor-batch-size" type="xs:int" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>The max row count of a batch sent internally within the query processor. Should be &lt;= the connectorBatchSize. (default 512)</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="connectorBatchSize" type="xs:int" minOccurs="0" maxOccurs="1">
+            <xs:element name="connector-batch-size" type="xs:int" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation> The max row count of a batch from a connector. Should be even multiple of processorBatchSize. (default 1024) </xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="maxReserveBatchColumns" type="xs:int" minOccurs="0" maxOccurs="1">
+            <xs:element name="max-processing-kb" type="xs:int" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
-                    <xs:documentation> The number of batch columns to allow in buffer memory. -1 means to automatically calculate a value (default -1). See the admin guide for more. </xs:documentation>
+                    <xs:documentation>The approximate amount of memory in kilobytes allowed to be held by the buffer manager. -1 means to automatically calculate a value (default -1). See the admin guide for more.</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="maxProcessingBatchesColumns" type="xs:int" minOccurs="0" maxOccurs="1">
+            <xs:element name="max-reserve-kb" type="xs:int" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
-                    <xs:documentation>The number of batch columns guaranteed to a processing operation. -1 means to automatically calculate a value (default -1).See the admin guide for more.</xs:documentation>
+                    <xs:documentation>The approximate amount of buffer memory in kilobytes allowable for a single processing operation (sort, grouping, etc.) regardless of existing memory commitments. -1 means to automatically calculate a value (default -1).  See the admin guide for more</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="maxFileSize" type="xs:int" minOccurs="0" maxOccurs="1">
+            <xs:element name="max-file-size" type="xs:int" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>Max File size in MB (default 2GB)</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="maxBufferSpace" type="xs:int" minOccurs="0" maxOccurs="1">
+            <xs:element name="max-buffer-space" type="xs:int" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>Max storage space, in MB, to be used for buffer files (default 50G) </xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="maxOpenFiles" type="xs:int" minOccurs="0" maxOccurs="1">
+            <xs:element name="max-open-files" type="xs:int" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>Max open buffer files (default 64)</xs:documentation>
                 </xs:annotation>
@@ -136,22 +136,22 @@
     </xs:complexType>
     <xs:complexType name="runtime-engine-type">
         <xs:sequence>
-            <xs:element name="thread-group-async" type="xs:string" minOccurs="0" maxOccurs="1" default="teiid-async">
+            <xs:element name="async-thread-group" type="xs:string" minOccurs="0" maxOccurs="1" default="teiid-async">
                 <xs:annotation>
                     <xs:documentation>Thread group to use for Async Processing</xs:documentation>
                 </xs:annotation>
             </xs:element>        
-            <xs:element name="maxThreads" type="xs:int" minOccurs="0" maxOccurs="1" default="64">
+            <xs:element name="max-threads" type="xs:int" minOccurs="0" maxOccurs="1" default="64">
                 <xs:annotation>
                     <xs:documentation>Process pool maximum thread count. (default 64)</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="maxActivePlans" type="xs:int" minOccurs="0" maxOccurs="1" default="20">
+            <xs:element name="max-active-plans" type="xs:int" minOccurs="0" maxOccurs="1" default="20">
                 <xs:annotation>
                     <xs:documentation>Max active plans (default 20). Increase this value on highly concurrent systems - but ensure that the underlying pools can handle the increased load without timeouts.</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="userRequestSourceConcurrency" type="xs:int" minOccurs="0" maxOccurs="1" default="0">
+            <xs:element name="thread-count-for-source-concurrency" type="xs:int" minOccurs="0" maxOccurs="1" default="0">
                 <xs:annotation>
                     <xs:documentation> Max source query concurrency per user request (default 0).
                         0 indicates use the default calculated value based on max active plans and max threads - approximately 2*(max threads)/(max active plans).
@@ -159,62 +159,47 @@
                         Any number greater than 1 limits the maximum number of concurrently executing source requests accordingly.</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="timeSliceInMilli" type="xs:int" minOccurs="0" maxOccurs="1" default="2000">
+            <xs:element name="time-slice-in-millseconds" type="xs:int" minOccurs="0" maxOccurs="1" default="2000">
                 <xs:annotation>
                     <xs:documentation>Query processor time slice, in milliseconds. (default 2000)</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="maxRowsFetchSize" type="xs:int" minOccurs="0" maxOccurs="1" default="20480">
+            <xs:element name="max-row-fetch-size" type="xs:int" minOccurs="0" maxOccurs="1" default="20480">
                 <xs:annotation>
                     <xs:documentation>Maximum allowed fetch size, set via JDBC. User requested value ignored above this value. (default 20480)</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="lobChunkSizeInKB" type="xs:int" minOccurs="0" maxOccurs="1" default="100">
+            <xs:element name="lob-chunk-size-in-kb" type="xs:int" minOccurs="0" maxOccurs="1" default="100">
                 <xs:annotation>
                     <xs:documentation>The max lob chunk size in KB transferred each time when processing blobs, clobs (100KB default)</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="useDataRoles" type="xs:boolean" minOccurs="0" maxOccurs="1" default="true">
-                <xs:annotation>
-                    <xs:documentation>Turn on role checking based upon the data roles defined in VDBs. (default true)</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="allowCreateTemporaryTablesByDefault" type="xs:boolean" minOccurs="0" maxOccurs="1" default="true">
-                <xs:annotation>
-                    <xs:documentation>Sets whether temporary table usage is allowed by default with data roles enabled. If false, the user must have a role that grants creates temporary table rights to use temporary tables. (default true)</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="allowFunctionCallsByDefault" type="xs:boolean" minOccurs="0" maxOccurs="1" default="true">
-                <xs:annotation>
-                    <xs:documentation>Sets whether functions may be called by default with data roles enabled. If false, a specific permission must exist to call the function. (default true)</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="queryThresholdInSecs" type="xs:int" minOccurs="0" maxOccurs="1" default="600">
+            <xs:element name="query-threshold-in-seconds" type="xs:int" minOccurs="0" maxOccurs="1" default="600">
                 <xs:annotation>
                     <xs:documentation>Long running query threshold, after which a alert can be generated by tooling if configured (600 secs)</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="maxSourceRows" type="xs:int" minOccurs="0" maxOccurs="1" default="-1">
+            <xs:element name="max-source-rows-allowed" type="xs:int" minOccurs="0" maxOccurs="1" default="-1">
                 <xs:annotation>
                     <xs:documentation>Maximum rows allowed from a source query. -1 indicates no limit. (default -1)</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="exceptionOnMaxSourceRows" type="xs:boolean" minOccurs="0" maxOccurs="1" default="true">
+            <xs:element name="exception-on-max-source-rows" type="xs:boolean" minOccurs="0" maxOccurs="1" default="true">
                 <xs:annotation>
                     <xs:documentation>Indicates if an exception should be thrown if the specified value for Maximum Source Rows is exceeded; only up to the maximum rows will be consumed. (default true)</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="maxODBCLobSizeAllowed" type="xs:int" minOccurs="0" maxOccurs="1" default="5242880">
+            <xs:element name="max-odbc-lob-size-allowed" type="xs:int" minOccurs="0" maxOccurs="1" default="5242880">
                 <xs:annotation>
                     <xs:documentation>Maximum size of lob allowed through ODBC connection in bytes (default 5MB)</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="eventDistributorName" type="xs:string" minOccurs="1" maxOccurs="1">
+            <xs:element name="event-distributor-name" type="xs:string" minOccurs="1" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>The JNDI name of the Teiid Event Distributor</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="detectingChangeEvents" type="xs:boolean" minOccurs="0" maxOccurs="1" default="true">
+            <xs:element name="detect-change-events" type="xs:boolean" minOccurs="0" maxOccurs="1" default="true">
                 <xs:annotation>
                     <xs:documentation>Set to true for the engine to detect local change events. Should be disabled if using external change data capture tools. (default true)</xs:documentation>
                 </xs:annotation>
@@ -245,6 +230,19 @@
                     <xs:documentation>Buffer manager information</xs:documentation>
                 </xs:annotation>
             </xs:element>
+            
+            <xs:element name="authorization-validator-module" type="xs:string" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>An authorization validator that by default uses data role information stored in VDBs. Provide module name.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            
+            <xs:element name="policy-decider-module" type="xs:string" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>A policy decider that uses data role information stored in VDBs, Provide module name.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+
 
             <xs:element name="distributed-cache-factory" type="cache-factory-type" maxOccurs="1" minOccurs="1">
                 <xs:annotation>
@@ -278,6 +276,19 @@
             </xs:element>
         </xs:sequence>
     </xs:complexType>
+
+    <xs:complexType name="authorization-validator-type">
+        <xs:sequence>
+            <xs:element name="maxSocketThreads" type="xs:int" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Max number of threads dedicated to initial request processing.
+                        Zero indicates the system default of max available processors. (default 0)
+                        Setting this value above the max available processors is not recommended.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
 
     <xs:complexType name="socket-config">
         <xs:sequence>

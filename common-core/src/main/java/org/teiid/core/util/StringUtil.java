@@ -947,7 +947,9 @@ public final class StringUtil {
      */
     @SuppressWarnings("unchecked")
 	public static <T> T valueOf(String value, Class type){
-    	
+    	if (value == null) {
+    		return null;
+    	}
     	if(type == String.class) {
     		return (T) value;
     	}
@@ -1011,7 +1013,7 @@ public final class StringUtil {
 	public static String[] getLines(final String value) {
 	    StringReader stringReader = new StringReader(value);
 	    BufferedReader reader = new BufferedReader(stringReader);
-	    ArrayList result = new ArrayList();
+	    ArrayList<String> result = new ArrayList<String>();
 	    try {
 	        String line = reader.readLine();
 	        while (line != null) {
@@ -1021,7 +1023,16 @@ public final class StringUtil {
 	    } catch (IOException e) {
 	        throw new TeiidRuntimeException(e);
 	    }
-	    return (String[]) result.toArray(new String[result.size()]);
+	    return result.toArray(new String[result.size()]);
+	}
+	
+	public static boolean equalsIgnoreCase(String s1, String s2) {
+		if (s1 != null) {
+			return s1.equalsIgnoreCase(s2);
+		} else if (s2 != null) {
+			return false;
+		}
+		return true;
 	}
 	
 }

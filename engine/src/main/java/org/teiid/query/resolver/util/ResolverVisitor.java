@@ -34,9 +34,11 @@ import java.util.Map;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.UnresolvedSymbolDescription;
+import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
+import org.teiid.core.util.StringUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionForm;
@@ -57,6 +59,7 @@ import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.DerivedColumn;
@@ -74,7 +77,9 @@ import org.teiid.query.sql.symbol.ElementSymbol.DisplayMode;
 
 public class ResolverVisitor extends LanguageVisitor {
     
-    private static class ElementMatch {
+    private static final String SYS_PREFIX = CoreConstants.SYSTEM_MODEL + '.';
+
+	private static class ElementMatch {
     	ElementSymbol element;
     	GroupSymbol group;
     	
@@ -423,6 +428,17 @@ public class ResolverVisitor extends LanguageVisitor {
 			handleException(e);
 		}
     }
+    
+    @Override
+    public void visit(AggregateSymbol obj) {
+    	if (obj.getCondition() != null) {
+			try {
+				obj.setCondition(ResolverUtil.convertExpression(obj.getCondition(), DataTypeManager.DefaultDataTypes.BOOLEAN, metadata));
+			} catch (QueryResolverException e) {
+				handleException(e);
+			}
+    	}
+    }
 
     public TeiidComponentException getComponentException() {
         return this.componentException;
@@ -517,11 +533,11 @@ public class ResolverVisitor extends LanguageVisitor {
 	    
 	    if(fd.getName().equalsIgnoreCase(FunctionLibrary.CONVERT) || fd.getName().equalsIgnoreCase(FunctionLibrary.CAST)) {
 	        String dataType = (String) ((Constant)args[1]).getValue();
-	        Class dataTypeClass = DataTypeManager.getDataTypeClass(dataType);
+	        Class<?> dataTypeClass = DataTypeManager.getDataTypeClass(dataType);
 	        fd = library.findTypedConversionFunction(args[0].getType(), dataTypeClass);
 	
 	        // Verify that the type conversion from src to type is even valid
-	        Class srcTypeClass = args[0].getType();
+	        Class<?> srcTypeClass = args[0].getType();
 	        if(srcTypeClass != null && dataTypeClass != null &&
 	           !srcTypeClass.equals(dataTypeClass) &&
 	           !DataTypeManager.isTransformable(srcTypeClass, dataTypeClass)) {
@@ -533,9 +549,11 @@ public class ResolverVisitor extends LanguageVisitor {
 			fd = library.copyFunctionChangeReturnType(fd, lookup.getReturnElement().getType());
 	    } 
 	
-	    // Resolve the function
 	    function.setFunctionDescriptor(fd);
 	    function.setType(fd.getReturnType());
+	    if (CoreConstants.SYSTEM_MODEL.equals(fd.getSchema()) && StringUtil.startsWithIgnoreCase(function.getName(), SYS_PREFIX)) {
+	    	function.setName(function.getName().substring(SYS_PREFIX.length()));
+	    }
 	}
 
 	/**

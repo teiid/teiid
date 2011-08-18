@@ -716,7 +716,7 @@ public final class PropertiesUtils {
      * Convert a nibble to a hex character
      * @param   nibble  the nibble to convert.
      */
-    private static char toHex(int nibble) {
+    public static char toHex(int nibble) {
     return hexDigit[(nibble & 0xF)];
     }
 

@@ -22,10 +22,6 @@
 
 package org.teiid.query.optimizer.xml;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -40,8 +36,6 @@ import org.teiid.query.mapping.xml.Navigator;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.sql.visitor.StaticSymbolMappingVisitor;
 
 
@@ -60,9 +54,7 @@ public class ValidateMappedCriteriaVisitor extends MappingVisitor {
         Map symbolMap = element.getSourceNode().buildFullSymbolMap();
         Criteria criteria = resolveCriteria(criteriaStr, symbolMap);
         if (criteria != null) {
-            List groupNames = getCriteriaGroups(criteria);
             element.setCriteriaNode(criteria);
-            element.setGroupsInCriteria(groupNames);
         }
     }
 
@@ -71,9 +63,7 @@ public class ValidateMappedCriteriaVisitor extends MappingVisitor {
         Map symbolMap = element.getSourceNode().buildFullSymbolMap();
         Criteria criteria = resolveCriteria(criteriaStr, symbolMap);
         if (criteria != null) {
-            List groupNames = getCriteriaGroups(criteria);
             element.setCriteriaNode(criteria);
-            element.setGroupsInCriteria(groupNames);
         }
     }
 
@@ -90,17 +80,6 @@ public class ValidateMappedCriteriaVisitor extends MappingVisitor {
         }
         return null;
     }
-    
-    private static List getCriteriaGroups(Criteria criteria) {
-        Collection criteriaGroups = GroupsUsedByElementsVisitor.getGroups(criteria);
-        List names = new ArrayList(criteriaGroups.size());
-        Iterator iter = criteriaGroups.iterator();
-        while(iter.hasNext()) {
-            names.add( ((GroupSymbol)iter.next()).getName().toUpperCase() );
-        }
-        return names;
-    }     
-    
     
     public static void validateAndCollectCriteriaElements(MappingDocument doc, XMLPlannerEnvironment planEnv) 
         throws QueryPlannerException, QueryMetadataException, TeiidComponentException {

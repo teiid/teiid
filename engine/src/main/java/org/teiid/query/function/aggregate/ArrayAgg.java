@@ -62,10 +62,10 @@ public class ArrayAgg extends AggregateFunction {
 	public void reset() {
 		this.result = null;
 	}
-
+	
 	@Override
-    boolean filter(Object value) {
-		// handle the null values too.
-    	return false; 
-    }	
+	public boolean respectsNull() {
+		return true;
+	}
+
 }

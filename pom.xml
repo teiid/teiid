@@ -5,12 +5,12 @@
 	<artifactId>teiid-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>Teiid</name>
-	<version>7.5.0.Alpha1-SNAPSHOT</version>
+	<version>7.6.0.Alpha1-SNAPSHOT</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 		<ant.version>1.7.0</ant.version>
 		<site.url>http://www.jboss.org/teiid</site.url>
-        <jbossas-version>7.0.0.CR1</jbossas-version>
+        <jbossas-version>7.0.1.Final</jbossas-version>
 	</properties>
 	<scm>
         <connection>scm:svn:https://anonsvn.jboss.org/repos/teiid/trunk</connection>
@@ -377,19 +377,19 @@
             <dependency>
                 <groupId>org.jboss</groupId>
                 <artifactId>staxmapper</artifactId>
-                <version>1.0.0.Beta4</version>
+                <version>1.0.0.Final</version>
             </dependency>
     
             <dependency>
                 <groupId>org.jboss</groupId>
                 <artifactId>jboss-dmr</artifactId>
-                <version>1.0.0.Beta6</version>
+                <version>1.0.0.Final</version>
             </dependency>
             
             <dependency>
                 <groupId>org.jboss.msc</groupId>
                 <artifactId>jboss-msc</artifactId>
-                <version>1.0.0.CR2</version>
+                <version>1.0.0.GA</version>
             </dependency> 
             <dependency>
                 <groupId>org.jboss</groupId>
@@ -409,7 +409,7 @@
             <dependency>
                 <groupId>org.picketbox</groupId>
                 <artifactId>picketbox</artifactId>
-                <version>4.0.0.CR1</version>
+                <version>4.0.1</version>
             </dependency>           
             <dependency>
                 <groupId>org.jboss.as</groupId>
@@ -435,7 +435,12 @@
                 <groupId>org.jboss.as</groupId>
                 <artifactId>jboss-as-cli</artifactId>  
                 <version>${jbossas-version}</version>          
-            </dependency>      
+            </dependency>   
+            <dependency>
+                <groupId>org.jboss.logging</groupId>
+                <artifactId>jboss-logging</artifactId>
+                <version>3.0.0.CR1</version>
+            </dependency>               
                      
             <!-- 
 			<dependency>
@@ -473,19 +478,13 @@
              -->    
 			<dependency>
 				<groupId>net.sourceforge.saxon</groupId>
-				<artifactId>saxon</artifactId>
-				<version>9.1.0.8</version>
-			</dependency>
-			<dependency>
-				<groupId>net.sourceforge.saxon</groupId>
-				<artifactId>saxon</artifactId>
-				<classifier>dom</classifier>
-				<version>9.1.0.8</version>
+				<artifactId>saxonhe</artifactId>
+				<version>9.2.1.5</version>
 			</dependency>
 			<dependency>
 				<groupId>org.jboss.netty</groupId>
 				<artifactId>netty</artifactId>
-				<version>3.2.1.Final</version>
+				<version>3.2.3.Final</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.ant</groupId>

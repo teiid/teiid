@@ -26,6 +26,8 @@ import java.io.Serializable;
 
 import javax.security.auth.Subject;
 
+import org.teiid.adminapi.Session;
+
 
 
 /**
@@ -138,4 +140,10 @@ public interface ExecutionContext {
      * @return
      */
     boolean isTransactional();
+    
+    /**
+     * Get the current session.
+     * @return
+     */
+    Session getSession();
 }

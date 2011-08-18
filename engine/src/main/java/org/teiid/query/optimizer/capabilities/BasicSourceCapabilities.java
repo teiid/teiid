@@ -29,10 +29,12 @@ import java.util.*;
  */
 public class BasicSourceCapabilities implements SourceCapabilities, Serializable {
 
-    private Scope scope = Scope.SCOPE_GLOBAL;
-    private Map capabilityMap = new HashMap();
-    private Map functionMap = new HashMap();
-    private Map propertyMap = new HashMap();
+	private static final long serialVersionUID = -1779069588746365579L;
+	
+	private Scope scope = Scope.SCOPE_GLOBAL;
+    private Map<Capability, Boolean> capabilityMap = new HashMap<Capability, Boolean>();
+    private Map<String, Boolean> functionMap = new TreeMap<String, Boolean>(String.CASE_INSENSITIVE_ORDER);
+    private Map<Capability, Object> propertyMap = new HashMap<Capability, Object>();
 
     /**
      * Construct a basic capabilities object.
@@ -41,12 +43,12 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
     }
 
     public boolean supportsCapability(Capability capability) {
-        Boolean supports = (Boolean) capabilityMap.get(capability);
+        Boolean supports = capabilityMap.get(capability);
         return (supports == null) ? false : supports.booleanValue();
     }
 
     public boolean supportsFunction(String functionName) {
-        Boolean supports = (Boolean) functionMap.get(functionName);
+        Boolean supports = functionMap.get(functionName);
         return (supports == null) ? false : supports.booleanValue();
     }
     

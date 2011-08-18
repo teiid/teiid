@@ -93,7 +93,8 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 	public enum Type {
 		VIRTUAL,
 		TEMP,
-		SCALAR
+		SCALAR,
+		XML
 	}
 	
     private String ID;      // never null, upper cased fully-qualified string

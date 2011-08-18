@@ -22,12 +22,16 @@
 
 package org.teiid.api.exception.query;
 
+import org.teiid.query.parser.ParseException;
+
 
 /**
  * Thrown when a query cannot be parsed.  This is most likely due to not 
  * following the Query Parser grammar, which defines how queries are parsed.
  */
 public class QueryParserException extends QueryProcessingException {
+	
+	private ParseException parseException;
 
     /**
      * No-arg constructor required by Externalizable semantics.
@@ -76,4 +80,12 @@ public class QueryParserException extends QueryProcessingException {
     public QueryParserException( Throwable e, String code, String message ) {
         super( e, code, message );
     }
+    
+    public ParseException getParseException() {
+		return parseException;
+	}
+    
+    public void setParseException(ParseException parseException) {
+		this.parseException = parseException;
+	}
 }

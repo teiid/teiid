@@ -22,10 +22,26 @@
 
 package org.teiid.services;
 
-import java.util.*;
+
+import java.io.IOException;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.security.auth.Subject;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.NameCallback;
+import javax.security.auth.callback.PasswordCallback;
+import javax.security.auth.callback.UnsupportedCallbackException;
+import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 import org.jboss.as.security.plugins.SecurityDomainContext;
@@ -44,6 +60,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.TeiidURL;
+import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.Credentials;
 import org.teiid.security.SecurityHelper;
@@ -58,6 +75,8 @@ public class SessionServiceImpl implements SessionService {
 	 */
     private long sessionMaxLimit = DEFAULT_MAX_SESSIONS;
 	private long sessionExpirationTimeLimit = DEFAULT_SESSION_EXPIRATION;
+	private String authenticationType = AuthenticationType.CLEARTEXT.name();
+	private String krb5SecurityDomain;
 	
 	/*
 	 * Injected state
@@ -162,6 +181,7 @@ public class SessionServiceImpl implements SessionService {
         newSession.setApplicationName(applicationName);
         newSession.setClientHostName(properties.getProperty(TeiidURL.CONNECTION.CLIENT_HOSTNAME));
         newSession.setIPAddress(properties.getProperty(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS));
+        newSession.setClientHardwareAddress(properties.getProperty(TeiidURL.CONNECTION.CLIENT_MAC));
         newSession.setSecurityDomain(securityDomain);
         if (vdb != null) {
 	        newSession.setVDBName(vdb.getName());
@@ -172,7 +192,7 @@ public class SessionServiceImpl implements SessionService {
         newSession.setSubject(subject);
         newSession.setSecurityContext(securityContext);
         newSession.setVdb(vdb);
-        LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", userName, "\" - created SessionID \"", newSession.getSessionToken().getSessionID(), "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful, created", newSession }); //$NON-NLS-1$ 
         this.sessionCache.put(newSession.getSessionId(), newSession);
         return newSession;
 	}
@@ -222,6 +242,31 @@ public class SessionServiceImpl implements SessionService {
 		TeiidLoginContext membership = new TeiidLoginContext(helper);
         membership.authenticateUser(userName, credentials, applicationName, domains, securityDomainMap, onlyallowPassthrough);                        
 		return membership;
+	}
+	
+	@Override
+	public LoginContext createLoginContext(final String securityDomain, final String user, final String password) throws LoginException{
+		CallbackHandler handler = new CallbackHandler() {
+			@Override
+			public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+				for (int i = 0; i < callbacks.length; i++) {
+					if (callbacks[i] instanceof NameCallback) {
+						NameCallback nc = (NameCallback)callbacks[i];
+						nc.setName(user);
+					} else if (callbacks[i] instanceof PasswordCallback) {
+						PasswordCallback pc = (PasswordCallback)callbacks[i];
+						if (password != null) {
+							pc.setPassword(password.toCharArray());
+						}
+					} else {
+						throw new UnsupportedCallbackException(callbacks[i], "Unrecognized Callback"); //$NON-NLS-1$
+					}
+				}
+			}
+		}; 		
+		
+		TeiidLoginContext context = new TeiidLoginContext(this.securityHelper);
+		return context.createLoginContext(securityDomain, handler);
 	}
 	
 	@Override
@@ -307,7 +352,17 @@ public class SessionServiceImpl implements SessionService {
 	
 	public void setSessionExpirationTimeLimit(long limit) {
 		this.sessionExpirationTimeLimit = limit;
-	}	
+	}
+	
+	@Override
+	public AuthenticationType getAuthType() {
+		return AuthenticationType.valueOf(this.authenticationType);
+	}
+	
+	public void setAuthenticationType(String flag) {
+		this.authenticationType = flag;
+		LogManager.logInfo(LogConstants.CTX_SECURITY, "Authentication Type set to: "+flag); //$NON-NLS-1$
+	}
 	
 	public void start() {
         this.sessionMonitor.schedule(new TimerTask() {
@@ -334,4 +389,23 @@ public class SessionServiceImpl implements SessionService {
 	public void setDqp(DQPCore dqp) {
 		this.dqp = dqp;
 	}
+	
+	@Override
+	public void assosiateSubjectInContext(String securityDomain, Subject subject) {
+    	Principal principal = null;
+    	for(Principal p:subject.getPrincipals()) {
+			principal = p;
+			break;
+    	}
+    	this.securityHelper.assosiateSecurityContext(securityDomain, this.securityHelper.createSecurityContext(securityDomain, principal, null, subject));		
+	}
+	
+	public void setKrb5SecurityDomain(String domain) {
+		this.krb5SecurityDomain = domain;
+	}
+	
+	@Override
+	public String getKrb5SecurityDomain(){
+		return this.krb5SecurityDomain;
+	}	
 }

@@ -37,6 +37,7 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.relational.RuleStack;
@@ -44,6 +45,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
+import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.CompoundCriteria;
@@ -59,9 +61,7 @@ import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings("unchecked")
@@ -74,11 +74,11 @@ public class TestRuleChooseDependent {
     /* Make Neither Side Dependent */
     private static final int NEITHER_SIDE = 3;
 
-    private FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+    private QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
     
     // ################################## TEST HELPERS ################################
     
-    public PlanNode createAccessNode(Collection groupSymbols) {
+    public PlanNode createAccessNode(Collection groupSymbols) throws Exception {
         PlanNode accessNode = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);                        
         PlanNode joinNode = NodeFactory.getNewNode(NodeConstants.Types.JOIN);        
         PlanNode sourceNode = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);        
@@ -97,58 +97,58 @@ public class TestRuleChooseDependent {
         return accessNode;
     }
     
-    public GroupSymbol getVirtualGroup() { 
+    public GroupSymbol getVirtualGroup() throws Exception { 
         GroupSymbol gs = new GroupSymbol("vm1.g1"); //$NON-NLS-1$
-        gs.setMetadataID(this.metadata.getStore().findObject("vm1.g1", FakeMetadataObject.GROUP));   //$NON-NLS-1$
+        ResolverUtil.resolveGroup(gs, metadata);
         return gs;
     }
 
-    public GroupSymbol getPhysicalGroup(int num) { 
+    public GroupSymbol getPhysicalGroup(int num) throws Exception { 
         String id = "pm1.g" + num; //$NON-NLS-1$
         GroupSymbol gs = new GroupSymbol(id);
-        gs.setMetadataID(this.metadata.getStore().findObject(id, FakeMetadataObject.GROUP));  
+        ResolverUtil.resolveGroup(gs, metadata);
         return gs;
     }
     
-    public GroupSymbol getPhysicalGroup(int modelNum, int num) { 
+    public GroupSymbol getPhysicalGroup(int modelNum, int num) throws Exception { 
         String id = "pm" + modelNum + ".g" + num; //$NON-NLS-1$ //$NON-NLS-2$
         GroupSymbol gs = new GroupSymbol(id);
-        gs.setMetadataID(this.metadata.getStore().findObject(id, FakeMetadataObject.GROUP));  
+        ResolverUtil.resolveGroup(gs, metadata);
         return gs;
     }    
 
-    public GroupSymbol getPhysicalGroupWithAlias(int num, String alias) { 
+    public GroupSymbol getPhysicalGroupWithAlias(int num, String alias) throws Exception { 
         String id = "pm1.g" + num; //$NON-NLS-1$
         GroupSymbol gs = new GroupSymbol(alias, id);
-        gs.setMetadataID(this.metadata.getStore().findObject(id, FakeMetadataObject.GROUP));  
+        ResolverUtil.resolveGroup(gs, metadata);
         return gs;
     }
     
-    public ElementSymbol getElementSymbol(int groupNum, int elementNum) {
+    public ElementSymbol getElementSymbol(int groupNum, int elementNum) throws Exception {
         String id = "pm1.g" + groupNum + ".e" + elementNum; //$NON-NLS-1$ //$NON-NLS-2$
          ElementSymbol es = new ElementSymbol(id);
-         es.setMetadataID(this.metadata.getStore().findObject(id, FakeMetadataObject.ELEMENT));
+         es.setMetadataID(this.metadata.getElementID(id));
          es.setGroupSymbol(getPhysicalGroup(groupNum));
          return es;
     }
 
-    public ElementSymbol getElementSymbol(int modelNum, int groupNum, int elementNum) {
+    public ElementSymbol getElementSymbol(int modelNum, int groupNum, int elementNum) throws Exception {
         String id = "pm" + modelNum + ".g" + groupNum + ".e" + elementNum; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ElementSymbol es = new ElementSymbol(id);
-        es.setMetadataID(this.metadata.getStore().findObject(id, FakeMetadataObject.ELEMENT));
+        es.setMetadataID(this.metadata.getElementID(id));
         es.setGroupSymbol(getPhysicalGroup(modelNum, groupNum));
         return es;
     }
 
-    public ElementSymbol getElementSymbolWithGroupAlias(int groupNum, int elementNum, String alias) {
+    public ElementSymbol getElementSymbolWithGroupAlias(int groupNum, int elementNum, String alias) throws Exception {
         String id = "pm1.g" + groupNum + ".e" + elementNum; //$NON-NLS-1$ //$NON-NLS-2$
          ElementSymbol es = new ElementSymbol(id);
-         es.setMetadataID(this.metadata.getStore().findObject(id, FakeMetadataObject.ELEMENT));
+         es.setMetadataID(this.metadata.getElementID(id));
          es.setGroupSymbol(getPhysicalGroupWithAlias(groupNum, alias));
          return es;
     }
     
-    public Query createBaseQuery() {
+    public Query createBaseQuery() throws Exception {
         Query query = new Query();
         
         Select select = new Select();
@@ -404,7 +404,7 @@ public class TestRuleChooseDependent {
     
     // ################################## ACTUAL TESTS ################################
     
-    @Test public void testValidJoin1() {
+    @Test public void testValidJoin1() throws Exception {
         PlanNode accessNode = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);                       
         accessNode.addGroup(getPhysicalGroup(1));
                         
@@ -415,7 +415,7 @@ public class TestRuleChooseDependent {
         helpTestValidJoin(joinNode, accessNode, false);
     }
 
-    @Test public void testValidJoin2() {
+    @Test public void testValidJoin2() throws Exception {
         PlanNode accessNode = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);                       
         accessNode.addGroup(getPhysicalGroup(1));
                         
@@ -427,7 +427,7 @@ public class TestRuleChooseDependent {
         helpTestValidJoin(joinNode, accessNode, false);
     }
 
-    @Test public void testValidJoin3() {
+    @Test public void testValidJoin3() throws Exception {
         PlanNode accessNode1 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);                       
         PlanNode accessNode2 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);                       
         accessNode1.addGroup(getPhysicalGroup(1));                
@@ -444,7 +444,7 @@ public class TestRuleChooseDependent {
         helpTestValidJoin(joinNode, accessNode1, true);
     }
 
-    @Test public void testValidJoin4() {
+    @Test public void testValidJoin4() throws Exception {
         PlanNode accessNode1 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);                       
         PlanNode accessNode2 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);                       
                         
@@ -459,7 +459,7 @@ public class TestRuleChooseDependent {
         helpTestValidJoin(joinNode, accessNode2, false);
     }
 
-    @Test public void testValidJoin5() {
+    @Test public void testValidJoin5() throws Exception {
         PlanNode accessNode1 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);                       
         PlanNode accessNode2 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);                       
                         
@@ -474,7 +474,7 @@ public class TestRuleChooseDependent {
         helpTestValidJoin(joinNode, accessNode1, false);
     }
 
-    @Test public void testValidJoin6() {
+    @Test public void testValidJoin6() throws Exception {
         PlanNode accessNode1 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);                       
         PlanNode accessNode2 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
         accessNode1.addGroup(getPhysicalGroup(1));                
@@ -497,7 +497,7 @@ public class TestRuleChooseDependent {
      */
     @Test public void testChooseKey() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(2,3);                    
         GroupSymbol group2 = getPhysicalGroup(3,3);                    
@@ -522,7 +522,7 @@ public class TestRuleChooseDependent {
      */
     @Test public void testChooseKey2() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(2,3); //no key                 
         GroupSymbol group1a = null;                 
@@ -576,7 +576,7 @@ public class TestRuleChooseDependent {
      */
     @Test public void testCardinality() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(1,2);                    
         GroupSymbol group2 = getPhysicalGroup(2,2);                    
@@ -607,7 +607,7 @@ public class TestRuleChooseDependent {
      */
     @Test public void testCardinalityAndKey() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(1,2);                    
         GroupSymbol group2 = getPhysicalGroup(2,2);                    
@@ -633,7 +633,7 @@ public class TestRuleChooseDependent {
     
     @Test public void testCardinalityAndKeyNestedLoop() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(1,2);                    
         GroupSymbol group2 = getPhysicalGroup(2,2);                    
@@ -659,7 +659,7 @@ public class TestRuleChooseDependent {
     
     @Test public void testRejectDependentJoin() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(3,1);                    
         GroupSymbol group2 = getPhysicalGroup(3,2);                    
@@ -685,7 +685,7 @@ public class TestRuleChooseDependent {
      */
     @Test public void testCardinalityWithKeyCrit() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(1,2);                    
         ElementSymbol g1e2 = getElementSymbol(1,2,2);
@@ -713,7 +713,7 @@ public class TestRuleChooseDependent {
      */
     @Test public void testCardinalityWithKeyCompoundCritAND() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(1,2);                    
         ElementSymbol g1e2 = getElementSymbol(1,2,2);
@@ -745,7 +745,7 @@ public class TestRuleChooseDependent {
      */
     @Test public void testCardinalityWithKeyCompoundCritOR() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(1,2);                    
         ElementSymbol g1e2 = getElementSymbol(1,2,2);
@@ -775,7 +775,7 @@ public class TestRuleChooseDependent {
      */
     @Test public void testCardinalityWithKeySetCrit() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(1,2);                    
         ElementSymbol g1e2 = getElementSymbol(1,2,2);
@@ -806,7 +806,7 @@ public class TestRuleChooseDependent {
      */
     @Test public void testCardinalityWithKeyMatchCrit() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(1,2);                    
         ElementSymbol g1e2 = getElementSymbol(1,2,2);
@@ -833,7 +833,7 @@ public class TestRuleChooseDependent {
      */
     @Test public void testCardinalityWithKeyIsNullCrit() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(1,2);                    
         ElementSymbol g1e2 = getElementSymbol(1,2,2);
@@ -860,7 +860,7 @@ public class TestRuleChooseDependent {
      */
     @Test public void testCardinalityWithKeyNotCrit() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(1,2);                    
         ElementSymbol g1e2 = getElementSymbol(1,2,2);
@@ -889,7 +889,7 @@ public class TestRuleChooseDependent {
      */
     @Test public void testCardinalityWithKeyComplexCrit() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(1,2);                    
         ElementSymbol g1e2 = getElementSymbol(1,2,2);
@@ -918,7 +918,7 @@ public class TestRuleChooseDependent {
 
     @Test public void testCardinalityWithKeyComplexCrit2() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(1,2);                    
         ElementSymbol g1e2 = getElementSymbol(1,2,2);
@@ -948,7 +948,7 @@ public class TestRuleChooseDependent {
 
     @Test public void testCardinalityWithKeyComplexCrit3() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(1,2);                    
         ElementSymbol g1e2 = getElementSymbol(1,2,2);
@@ -982,7 +982,7 @@ public class TestRuleChooseDependent {
      */
     @Test public void testCardinalityWithNonKeyCrit() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(1,2);                    
         ElementSymbol g1e1 = getElementSymbol(1,2,1);
@@ -1011,7 +1011,7 @@ public class TestRuleChooseDependent {
      */
     @Test public void testCardinalityWithCriteriaAndJoin() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(2,2); //no key                 
         GroupSymbol group1a = null;                 
@@ -1062,7 +1062,7 @@ public class TestRuleChooseDependent {
 
     @Test public void testCardinalityWithAtomicCrossJoin() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(2,2); //no key                 
         GroupSymbol group1a = null;                 
@@ -1108,7 +1108,7 @@ public class TestRuleChooseDependent {
     
     @Test public void testCardinalityWithAtomicCrossJoin2() throws Exception {
         //override default metadata
-        this.metadata = FakeMetadataFactory.example4();
+        this.metadata = RealMetadataFactory.example4();
         
         GroupSymbol group1 = getPhysicalGroup(2,2); //no key                 
         GroupSymbol group1a = null;                 

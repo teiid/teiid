@@ -54,7 +54,7 @@ public class TestParseAlter {
 		alterTrigger.setTarget(new GroupSymbol("x"));
 		alterTrigger.setEvent(TriggerEvent.UPDATE);
 		alterTrigger.setDefinition((TriggerAction) QueryParser.getQueryParser().parseUpdateProcedure("for each row begin end"));
-		helpTest("alter trigger on x instead of update as for each row begin end", "ALTER TRIGGER ON x INSTEAD OF UPDATE AS\nFOR EACH ROW\nBEGIN\nEND", alterTrigger);
+		helpTest("alter trigger on x instead of update as for each row begin end", "ALTER TRIGGER ON x INSTEAD OF UPDATE AS\nFOR EACH ROW\nBEGIN ATOMIC\nEND", alterTrigger);
 	}
 	
 	@Test public void testAlterDisabled() throws Exception {
@@ -71,7 +71,7 @@ public class TestParseAlter {
 		alterTrigger.setTarget(new GroupSymbol("x"));
 		alterTrigger.setEvent(TriggerEvent.UPDATE);
 		alterTrigger.setDefinition((TriggerAction) QueryParser.getQueryParser().parseUpdateProcedure("for each row begin end"));
-		helpTest("create trigger on x instead of update as for each row begin end", "CREATE TRIGGER ON x INSTEAD OF UPDATE AS\nFOR EACH ROW\nBEGIN\nEND", alterTrigger);
+		helpTest("create trigger on x instead of update as for each row begin end", "CREATE TRIGGER ON x INSTEAD OF UPDATE AS\nFOR EACH ROW\nBEGIN ATOMIC\nEND", alterTrigger);
 	}
 	
 }

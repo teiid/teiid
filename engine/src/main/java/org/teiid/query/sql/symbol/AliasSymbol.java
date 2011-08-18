@@ -82,7 +82,7 @@ public class AliasSymbol extends SingleElementSymbol {
 	 * Get the type of the symbol
 	 * @return Type of the symbol
 	 */
-	public Class getType() {
+	public Class<?> getType() {
 		return this.symbol.getType();
 	}
 

@@ -48,8 +48,8 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.metadata.Table;
 import org.teiid.query.eval.Evaluator;
-import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.FakeFunctionMetadataSource;
@@ -79,9 +79,7 @@ import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.ContextProperties;
 
@@ -116,7 +114,7 @@ public class TestQueryRewriter {
     }   
     
     private Criteria helpTestRewriteCriteria(String original, String expected, boolean rewrite) throws QueryMetadataException, TeiidComponentException, TeiidProcessingException {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached(); 
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached(); 
         Criteria expectedCrit = parseCriteria(expected, metadata);
         if (rewrite) {
             QueryResolver.resolveCriteria(expectedCrit, metadata);
@@ -126,11 +124,11 @@ public class TestQueryRewriter {
     }
     
     private Map<ElementSymbol, Integer> elements;
-    private List<List> tuples;
+    private List<List<? extends Object>> tuples;
     
     @Before public void setUp() {
     	elements = null;
-    	tuples = new ArrayList<List>();
+    	tuples = new ArrayList<List<? extends Object>>();
     }
 
     private Criteria helpTestRewriteCriteria(String original, Criteria expectedCrit, QueryMetadataInterface metadata) {
@@ -140,7 +138,7 @@ public class TestQueryRewriter {
         // rewrite
         try { 
         	ArrayList<Boolean> booleanVals = new ArrayList<Boolean>(tuples.size());
-        	for (List<Object> tuple : tuples) {
+        	for (List<?> tuple : tuples) {
             	booleanVals.add(new Evaluator(elements, null, null).evaluate(origCrit, tuple));
 			}
             actual = QueryRewriter.rewriteCriteria(origCrit, null, null, metadata);
@@ -168,8 +166,8 @@ public class TestQueryRewriter {
     	return actualExp;
     }
     
-	private String getRewritenProcedure(String procedure, String userUpdateStr, String procedureType) throws TeiidComponentException, TeiidProcessingException {
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleUpdateProc(procedureType, procedure);
+	private String getRewritenProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType) throws TeiidComponentException, TeiidProcessingException {
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(procedureType, procedure);
 
         return getRewritenProcedure(userUpdateStr, metadata);
 	}
@@ -187,7 +185,7 @@ public class TestQueryRewriter {
 	
     static Command helpTestRewriteCommand(String original, String expected) { 
         try {
-            return helpTestRewriteCommand(original, expected, FakeMetadataFactory.example1Cached());
+            return helpTestRewriteCommand(original, expected, RealMetadataFactory.example1Cached());
         } catch(TeiidException e) { 
             throw new TeiidRuntimeException(e);
         }
@@ -438,7 +436,7 @@ public class TestQueryRewriter {
     
     @Ignore(value="Should be moved to the validator")
     @Test public void testRewriteCrit_invalidParseDate() {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         Criteria origCrit = parseCriteria("PARSEDATE(pm3.g1.e1, '''') = {d'2003-05-01'}", metadata); //$NON-NLS-1$
         
         try { 
@@ -600,7 +598,7 @@ public class TestQueryRewriter {
         String original = "formatBigInteger(convert(pm1.g1.e2, biginteger), '#,##0') = '1,234,567,890'"; //$NON-NLS-1$
         String expected = "pm1.g1.e2 = 1234567890"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached(); 
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached(); 
         Criteria origCrit = parseCriteria(original, metadata);
         Criteria expectedCrit = parseCriteria(expected, metadata);
         
@@ -614,7 +612,7 @@ public class TestQueryRewriter {
         String original = "formatFloat(convert(pm1.g1.e4, float), '#,##0.###') = '1,234.123'"; //$NON-NLS-1$
         String expected = "pm1.g1.e4 = 1234.123046875"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached(); 
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached(); 
         Criteria origCrit = parseCriteria(original, metadata);
         
         // rewrite
@@ -627,7 +625,7 @@ public class TestQueryRewriter {
         String original = "formatDouble(convert(pm1.g1.e4, double), '$#,##0.00') = '$1,234.50'"; //$NON-NLS-1$
         String expected = "pm1.g1.e4 = '1234.5'"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached(); 
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached(); 
         Criteria origCrit = parseCriteria(original, metadata);
         Criteria expectedCrit = parseCriteria(expected, metadata);
         ((CompareCriteria)expectedCrit).setRightExpression(new Constant(new Double(1234.5)));
@@ -642,7 +640,7 @@ public class TestQueryRewriter {
         String original = "formatBigDecimal(convert(pm1.g1.e4, bigdecimal), '#,##0.###') = '1,234.5'"; //$NON-NLS-1$
         String expected = "pm1.g1.e4 = 1234.5"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached(); 
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached(); 
         Criteria origCrit = parseCriteria(original, metadata);
         Criteria expectedCrit = parseCriteria(expected, metadata);
         
@@ -868,7 +866,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 		
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.INSERT_PROCEDURE);
+				Table.TriggerEvent.INSERT);
 				
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
@@ -896,7 +894,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.INSERT_PROCEDURE);
+				Table.TriggerEvent.INSERT);
 				
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
@@ -924,7 +922,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.INSERT_PROCEDURE);
+				Table.TriggerEvent.INSERT);
 				
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
@@ -947,7 +945,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 		
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.INSERT_PROCEDURE);
+				Table.TriggerEvent.INSERT);
 				
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }    
@@ -970,7 +968,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 		
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
@@ -992,7 +990,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 		
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }     
@@ -1016,7 +1014,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END";		 //$NON-NLS-1$
 		
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
@@ -1040,7 +1038,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 		
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
@@ -1063,12 +1061,12 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "DECLARE String var1;\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "IF(var1 IN ('y', 'x'))\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n"; //$NON-NLS-1$
-		rewritProc = rewritProc + "SELECT pm1.g1.e2, null, FALSE, TRUE FROM pm1.g1;\n"; //$NON-NLS-1$
+		rewritProc = rewritProc + "SELECT pm1.g1.e2, 123, FALSE, TRUE FROM pm1.g1;\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "END\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.INSERT_PROCEDURE);
+				Table.TriggerEvent.INSERT);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
@@ -1090,7 +1088,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
@@ -1112,7 +1110,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
@@ -1135,7 +1133,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
@@ -1158,7 +1156,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
@@ -1180,7 +1178,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
 	}
@@ -1202,7 +1200,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
 	}
@@ -1220,7 +1218,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
 	}
@@ -1237,7 +1235,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
 	}
@@ -1254,7 +1252,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
 	}
@@ -1278,7 +1276,7 @@ public class TestQueryRewriter {
         String userQuery = "UPDATE vm1.g3 SET x='x' where e4= 1"; //$NON-NLS-1$
 
 		this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 	}
 	
 	// Bug 8212 elements in INPUT and CHANGING special groups are cese sensitive
@@ -1296,7 +1294,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.INSERT_PROCEDURE);
+				Table.TriggerEvent.INSERT);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
 	}
@@ -1317,7 +1315,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.INSERT_PROCEDURE);
+				Table.TriggerEvent.INSERT);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
 	}
@@ -1338,7 +1336,7 @@ public class TestQueryRewriter {
         rewritProc = rewritProc + "UPDATE pm1.g1 SET e3 = TRUE;\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
-		this.getRewritenProcedure(procedure, userQuery, FakeMetadataObject.Props.INSERT_PROCEDURE);
+		this.getRewritenProcedure(procedure, userQuery, Table.TriggerEvent.INSERT);
 	}
     
     @Test public void testRewriteProcedure21a() throws Exception {
@@ -1351,11 +1349,11 @@ public class TestQueryRewriter {
 
         String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
         rewritProc = rewritProc + "BEGIN\n"; //$NON-NLS-1$
-        rewritProc = rewritProc + "UPDATE pm1.g1 SET e1 = null, e2 = null, e3 = TRUE;\n"; //$NON-NLS-1$
+        rewritProc = rewritProc + "UPDATE pm1.g1 SET e1 = '124', e2 = 123, e3 = TRUE;\n"; //$NON-NLS-1$
         rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
         String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-                                                        FakeMetadataObject.Props.INSERT_PROCEDURE);
+                                                        Table.TriggerEvent.INSERT);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
@@ -1374,7 +1372,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
 	}
@@ -1393,7 +1391,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
 	}
@@ -1409,11 +1407,11 @@ public class TestQueryRewriter {
 
         String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
         rewritProc = rewritProc + "BEGIN\n"; //$NON-NLS-1$
-        rewritProc = rewritProc + "UPDATE pm1.g1 SET e2 = null, e3 = TRUE;\n"; //$NON-NLS-1$
+        rewritProc = rewritProc + "UPDATE pm1.g1 SET e2 = 123, e3 = TRUE;\n"; //$NON-NLS-1$
         rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
         String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-                FakeMetadataObject.Props.INSERT_PROCEDURE);
+                Table.TriggerEvent.INSERT);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
@@ -1427,7 +1425,7 @@ public class TestQueryRewriter {
         String userQuery = "UPDATE vm1.g1 set E2=1 where e2 = 1 and e1 LIKE 'mnopxyz_'"; //$NON-NLS-1$
 
 		this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
     }
 
 	// INPUT vars in insert statements replaced by default variable when user's inser ignores values
@@ -1445,7 +1443,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.INSERT_PROCEDURE);
+				Table.TriggerEvent.INSERT);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
 	}
@@ -1467,7 +1465,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 
 		assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
 	}
@@ -1482,7 +1480,7 @@ public class TestQueryRewriter {
 		String userQuery = "UPDATE vm1.g1 SET e1='x' where e2 LIKE 'xyz'"; //$NON-NLS-1$
         
 		this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+				Table.TriggerEvent.UPDATE);
 	}
 
     /**
@@ -1516,7 +1514,7 @@ public class TestQueryRewriter {
         rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
         String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-                FakeMetadataObject.Props.UPDATE_PROCEDURE);
+                Table.TriggerEvent.UPDATE);
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
@@ -1524,8 +1522,8 @@ public class TestQueryRewriter {
     //base test.  no change is expected
     @Test public void testRewriteLookupFunction1() {
         String criteria = "lookup('pm1.g1','e1', 'e2', 1) = 'ab'"; //$NON-NLS-1$
-        CompareCriteria expected = (CompareCriteria)parseCriteria(criteria, FakeMetadataFactory.example1Cached()); 
-        helpTestRewriteCriteria(criteria, expected, FakeMetadataFactory.example1Cached());
+        CompareCriteria expected = (CompareCriteria)parseCriteria(criteria, RealMetadataFactory.example1Cached()); 
+        helpTestRewriteCriteria(criteria, expected, RealMetadataFactory.example1Cached());
     }
     
     @Test public void testRewriteLookupFunction1b() {
@@ -1535,8 +1533,8 @@ public class TestQueryRewriter {
     /** defect 11630 1 should still get rewritten as '1'*/
     @Test public void testRewriteLookupFunctionCompoundCriteria() {
         String criteria = "LOOKUP('pm1.g1','e1', 'e2', 1) IS NULL AND pm1.g1.e1='1'"; //$NON-NLS-1$
-        CompoundCriteria expected = (CompoundCriteria)parseCriteria(criteria, FakeMetadataFactory.example1Cached()); 
-        helpTestRewriteCriteria("LOOKUP('pm1.g1','e1', 'e2', 1) IS NULL AND pm1.g1.e1=1", expected, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ 
+        CompoundCriteria expected = (CompoundCriteria)parseCriteria(criteria, RealMetadataFactory.example1Cached()); 
+        helpTestRewriteCriteria("LOOKUP('pm1.g1','e1', 'e2', 1) IS NULL AND pm1.g1.e1=1", expected, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ 
     }
 
     @Test public void testSelectWithNoFrom() {
@@ -1550,7 +1548,7 @@ public class TestQueryRewriter {
         Command command = parser.parseCommand("exec pm1.sp4(5)");             //$NON-NLS-1$
         
         // resolve
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         QueryResolver.resolveCommand(command, metadata);
         
         // rewrite
@@ -1566,7 +1564,7 @@ public class TestQueryRewriter {
     }
     
     @Test public void testRewriteFunctionThrowsEvaluationError() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached(); 
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached(); 
         Criteria origCrit = parseCriteria("5 / 0 = 5", metadata); //$NON-NLS-1$
         
         // rewrite
@@ -1580,7 +1578,7 @@ public class TestQueryRewriter {
     }
     
     @Test public void testRewriteConvertThrowsEvaluationError() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached(); 
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached(); 
         Criteria origCrit = parseCriteria("convert('x', integer) = 0", metadata); //$NON-NLS-1$
         
         // rewrite
@@ -1610,7 +1608,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 		
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.DELETE_PROCEDURE);				
+				Table.TriggerEvent.DELETE);				
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
     
@@ -1623,7 +1621,7 @@ public class TestQueryRewriter {
     }
 
     @Test public void testRewriteCase1954b() throws Exception{
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached(); 
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached(); 
 
         CompareCriteria expected = new CompareCriteria();
         ElementSymbol leftElement = new ElementSymbol("pm1.g1.e4"); //$NON-NLS-1$
@@ -1711,6 +1709,9 @@ public class TestQueryRewriter {
         helpTestRewriteCriteria("case when 0 = pm1.g1.e2 then null else null end IS NULL", TRUE_STR); //$NON-NLS-1$ 
     }
     
+    @Test public void testRewriteConstantAgg2() throws Exception {
+    	helpTestRewriteCommand("select count(2) from pm1.g1 group by e1", "SELECT COUNT(2) FROM pm1.g1 GROUP BY e1");
+    }
     
     @Test public void testRewriteCaseExprForCase5413a() {
         helpTestRewriteCriteria("pm1.g2.e1 = case when 0 = pm1.g1.e2 then 2 else 2 end", "pm1.g2.e1 = '2'"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -1736,8 +1737,8 @@ public class TestQueryRewriter {
     
     @Test public void testRewriteSearchedCaseExpr4() {
         String criteria = "lookup('pm1.g1', 'e2', 'e1', '2') = 0"; //$NON-NLS-1$
-        CompareCriteria expected = (CompareCriteria)parseCriteria(criteria, FakeMetadataFactory.example1Cached()); 
-        helpTestRewriteCriteria("lookup('pm1.g1', 'e2', 'e1', case 0 when 1 then pm1.g1.e1 else 2 end) = 0", expected, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+        CompareCriteria expected = (CompareCriteria)parseCriteria(criteria, RealMetadataFactory.example1Cached()); 
+        helpTestRewriteCriteria("lookup('pm1.g1', 'e2', 'e1', case 0 when 1 then pm1.g1.e1 else 2 end) = 0", expected, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
 
     // First WHEN always false, so remove it
@@ -1788,13 +1789,13 @@ public class TestQueryRewriter {
     @Test public void testRewriteExecEnv() throws Exception {
         Command command = QueryParser.getQueryParser().parseCommand("exec pm1.sq2(env('sessionid'))");             //$NON-NLS-1$
         
-        QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());
+        QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());
         
         CommandContext context = new CommandContext();
         Properties props = new Properties();
         props.setProperty(ContextProperties.SESSION_ID, "1"); //$NON-NLS-1$
         context.setEnvironmentProperties(props);
-        Command rewriteCommand = QueryRewriter.rewrite(command, FakeMetadataFactory.example1Cached(), context);
+        Command rewriteCommand = QueryRewriter.rewrite(command, RealMetadataFactory.example1Cached(), context);
         
         assertEquals("EXEC pm1.sq2('1')", rewriteCommand.toString()); //$NON-NLS-1$
     }
@@ -1830,7 +1831,7 @@ public class TestQueryRewriter {
         String userQuery = "Insert into vm1.g1 (e1, e2) values ('String', 1)"; //$NON-NLS-1$
 
         try {       
-            getRewritenProcedure(procedure, userQuery, FakeMetadataObject.Props.INSERT_PROCEDURE);
+            getRewritenProcedure(procedure, userQuery, Table.TriggerEvent.INSERT);
             fail("exception expected"); //$NON-NLS-1$
         } catch (QueryValidatorException e) {
             assertEquals("Infinite loop detected, procedure will not be executed.", e.getMessage()); //$NON-NLS-1$
@@ -1854,7 +1855,7 @@ public class TestQueryRewriter {
         rewritProc = rewritProc + "END"; //$NON-NLS-1$
         
         String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-                FakeMetadataObject.Props.INSERT_PROCEDURE);
+                Table.TriggerEvent.INSERT);
                 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
@@ -1877,7 +1878,7 @@ public class TestQueryRewriter {
         rewritProc = rewritProc + "END"; //$NON-NLS-1$
         
         String procReturned = this.getRewritenProcedure(procedure, userQuery, 
-                FakeMetadataObject.Props.INSERT_PROCEDURE);
+                Table.TriggerEvent.INSERT);
                 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
@@ -1903,7 +1904,7 @@ public class TestQueryRewriter {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1 = 'x' WHERE e2 = 5"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure1, procedure2);
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure1, procedure2);
         
         String rewriten = getRewritenProcedure(userUpdateStr, metadata);
         
@@ -2013,9 +2014,9 @@ public class TestQueryRewriter {
 
     private void verifyProjectedTypesOnUnionBranches(String unionQuery, Class<?>[] types) throws TeiidComponentException, TeiidProcessingException {
         SetQuery union = (SetQuery)QueryParser.getQueryParser().parseCommand(unionQuery);
-        QueryResolver.resolveCommand(union, FakeMetadataFactory.example1Cached());
+        QueryResolver.resolveCommand(union, RealMetadataFactory.example1Cached());
         
-        union = (SetQuery)QueryRewriter.rewrite(union, FakeMetadataFactory.example1Cached(), null);
+        union = (SetQuery)QueryRewriter.rewrite(union, RealMetadataFactory.example1Cached(), null);
         
         for (QueryCommand query : union.getQueryCommands()) {
             List<SingleElementSymbol> projSymbols = query.getProjectedSymbols();
@@ -2056,7 +2057,7 @@ public class TestQueryRewriter {
      */
     @Test public void testVirtualRightOuterJoinSwap() throws Exception {
         String sql = "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (select * from BQT1.smalla) sa RIGHT OUTER JOIN (select BQT1.mediumb.intkey from BQT1.mediumb) mb ON sa.IntKey = mb.IntKey"; //$NON-NLS-1$
-        helpTestRewriteCommand(sql, "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (SELECT BQT1.mediumb.intkey FROM BQT1.mediumb) AS mb LEFT OUTER JOIN (SELECT * FROM BQT1.smalla) AS sa ON sa.IntKey = mb.IntKey", FakeMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
+        helpTestRewriteCommand(sql, "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (SELECT BQT1.mediumb.intkey FROM BQT1.mediumb) AS mb LEFT OUTER JOIN (SELECT * FROM BQT1.smalla) AS sa ON sa.IntKey = mb.IntKey", RealMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
     }
     
     /**
@@ -2064,11 +2065,11 @@ public class TestQueryRewriter {
      */
     @Test public void testVirtualRightOuterJoinSwap1() throws Exception {
         String sql = "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM ((select * from BQT1.smalla) sa inner join BQT1.smallb on sa.intkey = smallb.intkey) RIGHT OUTER JOIN (select BQT1.mediumb.intkey from BQT1.mediumb) mb ON sa.IntKey = mb.IntKey"; //$NON-NLS-1$
-        helpTestRewriteCommand(sql, "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (SELECT BQT1.mediumb.intkey FROM BQT1.mediumb) AS mb LEFT OUTER JOIN ((SELECT * FROM BQT1.smalla) AS sa INNER JOIN BQT1.smallb ON sa.intkey = smallb.intkey) ON sa.IntKey = mb.IntKey", FakeMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
+        helpTestRewriteCommand(sql, "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (SELECT BQT1.mediumb.intkey FROM BQT1.mediumb) AS mb LEFT OUTER JOIN ((SELECT * FROM BQT1.smalla) AS sa INNER JOIN BQT1.smallb ON sa.intkey = smallb.intkey) ON sa.IntKey = mb.IntKey", RealMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
     }
     
     @Test public void testRewriteConcat2() {
-        helpTestRewriteCriteria("concat2('a','b') = 'ab'", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("sys.concat2('a','b') = 'ab'", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testRewriteConcat2_1() {
@@ -2085,10 +2086,6 @@ public class TestQueryRewriter {
 
     @Test public void testRewriteConcat2_4() throws Exception {
         helpTestRewriteCriteria("concat2('a', pm1.g1.e1) = 'xyz'", "concat('a', ifnull(pm1.g1.e1, '')) = 'xyz'"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testRewiteEvaluatableAggregate() {
-    	helpTestRewriteCommand("select pm1.g1.e1, max(1) from pm1.g1", "SELECT pm1.g1.e1, 1 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testRewriteFromUnixTime() throws Exception {
@@ -2321,7 +2318,7 @@ public class TestQueryRewriter {
     @Test public void testRewriteBigDecimal() {
     	String original = "convert(BQT1.SmallA.LongNum, bigdecimal) = '22.0'"; //$NON-NLS-1$
     	CompareCriteria crit = new CompareCriteria(new ElementSymbol("BQT1.SmallA.LongNum"), CompareCriteria.EQ, new Constant(new Long(22))); //$NON-NLS-1$
-    	helpTestRewriteCriteria(original, crit, FakeMetadataFactory.exampleBQTCached()); 
+    	helpTestRewriteCriteria(original, crit, RealMetadataFactory.exampleBQTCached()); 
     }
 
     /**
@@ -2329,54 +2326,54 @@ public class TestQueryRewriter {
      */
     @Test public void testRewriteWideningIn() {
     	String original = "convert(BQT1.SmallA.TimestampValue, time) in ({t'10:00:00'}, {t'11:00:00'})"; //$NON-NLS-1$
-    	helpTestRewriteCriteria(original, parseCriteria("convert(BQT1.SmallA.TimestampValue, time) in ({t'10:00:00'}, {t'11:00:00'})", FakeMetadataFactory.exampleBQTCached()), FakeMetadataFactory.exampleBQTCached()); //$NON-NLS-1$ 
+    	helpTestRewriteCriteria(original, parseCriteria("convert(BQT1.SmallA.TimestampValue, time) in ({t'10:00:00'}, {t'11:00:00'})", RealMetadataFactory.exampleBQTCached()), RealMetadataFactory.exampleBQTCached()); //$NON-NLS-1$ 
     }
     
     @Test public void testRewriteParseDate() {
     	String original = "parsedate(BQT1.SmallA.stringkey, 'yymmdd') = {d'1970-01-01'}"; //$NON-NLS-1$
-    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
     	helpTestRewriteCriteria(original, parseCriteria("convert(parsetimestamp(BQT1.SmallA.stringkey, 'yymmdd'), date) = {d'1970-01-01'}", metadata), metadata); //$NON-NLS-1$
     }
 
     @Test public void testRewriteFormatTime() {
     	String original = "formattime(BQT1.SmallA.timevalue, 'hh:mm') = '08:02'"; //$NON-NLS-1$
-    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
     	helpTestRewriteCriteria(original, parseCriteria("formattimestamp(convert(BQT1.SmallA.timevalue, timestamp), 'hh:mm') = '08:02'", metadata), metadata); //$NON-NLS-1$
     }
     
     @Test public void testRewriteTimestampAdd() {
     	String original = "timestampadd(SQL_TSI_SECOND, 1, BQT1.SmallA.timevalue) = {t'08:02:00'}"; //$NON-NLS-1$
-    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
     	helpTestRewriteCriteria(original, parseCriteria("convert(timestampadd(SQL_TSI_SECOND, 1, convert(BQT1.SmallA.timevalue, timestamp)), time) = {t'08:02:00'}", metadata), metadata); //$NON-NLS-1$
     }
     
     @Test public void testRewriteXmlElement() throws Exception {
     	String original = "xmlserialize(document xmlelement(name a, xmlattributes('b' as c)) as string)"; //$NON-NLS-1$
-    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
     	helpTestRewriteExpression(original, "'<a c=\"b\"></a>'", metadata);
     }
     
     @Test public void testRewriteXmlElement1() throws Exception {
     	String original = "xmlelement(name a, xmlattributes(1+1 as c), BQT1.SmallA.timevalue)"; //$NON-NLS-1$
-    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
     	helpTestRewriteExpression(original, "XMLELEMENT(NAME a, XMLATTRIBUTES(2 AS c), BQT1.SmallA.timevalue)", metadata);
     }
     
     @Test public void testRewriteXmlSerialize() throws Exception {
     	String original = "xmlserialize(document xmlelement(name a, xmlattributes('b' as c)) as string)"; //$NON-NLS-1$
-    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
     	helpTestRewriteExpression(original, "'<a c=\"b\"></a>'", metadata);
     }
     
     @Test public void testRewriteXmlTable() throws Exception {
     	String original = "select * from xmltable('/' passing 1 + 1 as a columns x string default curdate()) as x"; //$NON-NLS-1$
-    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
     	helpTestRewriteCommand(original, "SELECT * FROM XMLTABLE('/' PASSING 2 AS a COLUMNS x string DEFAULT curdate()) AS x", metadata);
     }
     
     @Test public void testRewriteQueryString() throws Exception {
     	String original = "querystring('path', 'value' as \"&x\", ' & ' as y, null as z)"; //$NON-NLS-1$
-    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
     	helpTestRewriteExpression(original, "'path?%26x=value&y=%20%26%20'", metadata);
     }
     
@@ -2446,10 +2443,33 @@ public class TestQueryRewriter {
     }
     
 	@Test public void testUDFParse() throws Exception {     
-        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new FakeFunctionMetadataSource()));
-        FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
+        QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Cached().getMetadataStore(), "example1", new FunctionTree("foo", new FakeFunctionMetadataSource()));
 		String sql = "parsedate_(pm1.g1.e1) = {d'2001-01-01'}";
         helpTestRewriteCriteria(sql, parseCriteria(sql, metadata), metadata);  		
 	} 
+	
+    @Test public void testRewriteNestedConvert() throws Exception {
+        helpTestRewriteExpression("cast(cast(pm1.g1.e3 as integer) as long)", "cast(pm1.g1.e3 as long)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testRewriteNestedConvert1() throws Exception {
+        helpTestRewriteExpression("cast(cast(pm1.g1.e3 as integer) as string)", "convert(convert(pm1.g1.e3, integer), string)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    @Test public void testRewriteNestedConvert2() throws Exception {
+        helpTestRewriteExpression("cast(cast(pm1.g1.e3 as string) as clob)", "convert(convert(pm1.g1.e3, string), clob)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testRewriteConstantAgg() throws Exception {
+    	helpTestRewriteCommand("select max(1) from pm1.g1 group by e1", "SELECT 1 FROM pm1.g1 GROUP BY e1");
+    }
+    
+    @Test public void testRewriteTrim() throws Exception {
+    	helpTestRewriteExpression("trim(pm1.g1.e1)", "rtrim(ltrim(pm1.g1.e1))", RealMetadataFactory.example1Cached());
+    }
+
+    @Test public void testRewriteTrim1() throws Exception {
+    	helpTestRewriteExpression("trim(leading from pm1.g1.e1)", "ltrim(pm1.g1.e1)", RealMetadataFactory.example1Cached());
+    }
 
 }

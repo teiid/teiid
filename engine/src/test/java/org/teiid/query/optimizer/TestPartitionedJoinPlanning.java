@@ -27,19 +27,18 @@ import static org.teiid.query.optimizer.TestOptimizer.*;
 
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
+import org.teiid.query.unittest.RealMetadataFactory;
 
-
+@SuppressWarnings("nls")
 public class TestPartitionedJoinPlanning {
 	
-    @Test public void testUsePartitionedMergeJoin(){
+    @Test public void testUsePartitionedMergeJoin() throws Exception {
         // Create query
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1 = pm1.g2.e1";//$NON-NLS-1$
 
@@ -51,11 +50,9 @@ public class TestPartitionedJoinPlanning {
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 100);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE * 2);
-        FakeMetadataObject g2 = metadata.getStore().findObject("pm1.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE * 16);
+        QueryMetadataInterface metadata = RealMetadataFactory.example1();
+        RealMetadataFactory.setCardinality("pm1.g1", BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE * 2, metadata);
+        RealMetadataFactory.setCardinality("pm1.g2", BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE * 16, metadata);
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,

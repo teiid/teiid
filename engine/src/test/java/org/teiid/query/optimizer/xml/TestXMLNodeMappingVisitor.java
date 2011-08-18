@@ -22,21 +22,19 @@
 
 package org.teiid.query.optimizer.xml;
 
+import junit.framework.TestCase;
+
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.optimizer.xml.SourceNodeGenaratorVisitor;
-import org.teiid.query.optimizer.xml.XMLNodeMappingVisitor;
 import org.teiid.query.processor.xml.TestXMLProcessor;
+import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.unittest.FakeMetadataFacade;
-
-import junit.framework.TestCase;
 
 
 /**
@@ -59,19 +57,17 @@ public class TestXMLNodeMappingVisitor extends TestCase {
 	}	
 			
 	public void testMappingCriteria() throws Exception {
-        FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadata();
+        QueryMetadataInterface metadata = TestXMLProcessor.exampleMetadata();
 
         GroupSymbol doc = new GroupSymbol("xmltest.doc1"); //$NON-NLS-1$
         doc.setMetadataID(metadata.getGroupID(doc.getName()));
             
-
         MappingDocument mappingDoc = (MappingDocument)metadata.getMappingNode(doc.getMetadataID());
         mappingDoc = SourceNodeGenaratorVisitor.extractSourceNodes(mappingDoc);
     
 		// Create criteria
-       	ElementSymbol es = new ElementSymbol("Catalogs.Catalog.Items.Item.Name"); //$NON-NLS-1$
-        es.setGroupSymbol(doc);
-        es.setMetadataID(metadata.getElementID("xmltest.doc1.Catalogs.Catalog.Items.Item.Name")); //$NON-NLS-1$
+       	ElementSymbol es = new ElementSymbol("Catalogs.Catalog.Items.Item.Name", null, doc); //$NON-NLS-1$
+        ResolverVisitor.resolveLanguageObject(es, metadata);
 		CompareCriteria crit = new CompareCriteria(es, CompareCriteria.EQ, new Constant("abc")); //$NON-NLS-1$
 	
 		helpTestMapping(crit, "xmltest.\"group\".items.itemName = 'abc'", mappingDoc, metadata); //$NON-NLS-1$

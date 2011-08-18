@@ -124,7 +124,7 @@ public final class XMLPlannerEnvironment{
     public ResultSetInfo getStagingTableResultsInfo(String groupName) {
         ResultSetInfo info = (ResultSetInfo)this.stagingResultsInfo.get(groupName.toUpperCase());
         if (info == null) {
-            info = new ResultSetInfo(groupName, true);            
+            info = new ResultSetInfo(groupName);            
             this.stagingResultsInfo.put(info.getResultSetName().toUpperCase(), info);
         }
         return info;

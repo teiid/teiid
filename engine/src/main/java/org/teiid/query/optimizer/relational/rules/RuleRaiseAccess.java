@@ -44,6 +44,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
@@ -133,6 +134,12 @@ public final class RuleRaiseAccess implements OptimizerRule {
                 if (FrameUtil.isProcedure(parentNode)) {
                 	return null;
                 }
+                
+                PlanNode orderBy = NodeEditor.findParent(parentNode, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
+                if (orderBy != null && orderBy.hasBooleanProperty(Info.UNRELATED_SORT) && !canRaiseOverSort(accessNode, metadata, capFinder, orderBy, record, false)) {
+                	//this project node logically has the responsibility of creating the sort keys
+            		return null;
+                }
                                 
                 return performRaise(rootNode, accessNode, parentNode);                
             }
@@ -163,6 +170,8 @@ public final class RuleRaiseAccess implements OptimizerRule {
             {                
                 Set<AggregateSymbol> aggregates = RulePushAggregates.collectAggregates(parentNode);
                 if (canRaiseOverGroupBy(parentNode, accessNode, aggregates, metadata, capFinder, record)) {
+                	accessNode.getGroups().clear();
+                	accessNode.getGroups().addAll(parentNode.getGroups());
                     return performRaise(rootNode, accessNode, parentNode);
                 }
                 return null;
@@ -302,14 +311,14 @@ public final class RuleRaiseAccess implements OptimizerRule {
         if(modelID == null) {
             return false;
         }
-        List<SingleElementSymbol> groupCols = (List<SingleElementSymbol>)groupNode.getProperty(NodeConstants.Info.GROUP_COLS);
+        List<Expression> groupCols = (List<Expression>)groupNode.getProperty(NodeConstants.Info.GROUP_COLS);
         if(!CapabilitiesUtil.supportsAggregates(groupCols, modelID, metadata, capFinder)) {
         	recordDebug("cannot push group by, since group by is not supported by source", groupNode, record); //$NON-NLS-1$
             return false;
         }
         if (groupCols != null) {
-            for (SingleElementSymbol singleElementSymbol : groupCols) {
-                if (!canPushSymbol(singleElementSymbol, false, modelID, metadata, capFinder, record)) {
+            for (Expression expr : groupCols) {
+                if (!canPushSymbol(expr, false, modelID, metadata, capFinder, record)) {
                     return false;
                 }
             }
@@ -344,7 +353,6 @@ public final class RuleRaiseAccess implements OptimizerRule {
         
         List<OrderByItem> sortCols = ((OrderBy)parentNode.getProperty(NodeConstants.Info.SORT_ORDER)).getOrderByItems();
         for (OrderByItem symbol : sortCols) {
-            //TODO: this check shouldn't be necessary, since the order by is not introducing new expressions
             if(! canPushSymbol(symbol.getSymbol(), true, modelID, metadata, capFinder, record)) {
                 return false;
             }
@@ -468,7 +476,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
      * @throws QueryMetadataException
      * @since 4.1.2
      */
-    private static boolean canPushSymbol(SingleElementSymbol symbol, boolean inSelectClause, Object modelID, 
+    private static boolean canPushSymbol(Expression symbol, boolean inSelectClause, Object modelID, 
     		QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord record) 
     throws TeiidComponentException, QueryMetadataException {
 
@@ -764,15 +772,8 @@ public final class RuleRaiseAccess implements OptimizerRule {
 		newAccess.addGroups(leftAccess.getGroups());
         
         // Combine hints if necessary
-        Object leftHint = leftAccess.getProperty(NodeConstants.Info.MAKE_DEP);
-        if(leftHint != null) {
-            newAccess.setProperty(NodeConstants.Info.MAKE_DEP, leftHint);
-        } else {
-            Object rightHint = rightAccess.getProperty(NodeConstants.Info.MAKE_DEP);
-            if(rightHint != null) {
-                newAccess.setProperty(NodeConstants.Info.MAKE_DEP, rightHint);
-            }    
-        }
+        combineHint(leftAccess, rightAccess, newAccess, NodeConstants.Info.MAKE_DEP);
+        combineHint(leftAccess, rightAccess, newAccess, NodeConstants.Info.MAKE_IND);
         RulePlaceAccess.copyDependentHints(leftAccess, newAccess);
         RulePlaceAccess.copyDependentHints(rightAccess, newAccess);
         RulePlaceAccess.copyDependentHints(joinNode, newAccess);
@@ -784,6 +785,19 @@ public final class RuleRaiseAccess implements OptimizerRule {
         }
         
         return newAccess;
+	}
+
+	private static void combineHint(PlanNode leftAccess, PlanNode rightAccess,
+			PlanNode newAccess, NodeConstants.Info info) {
+		Object leftHint = leftAccess.getProperty(info);
+        if(leftHint != null) {
+            newAccess.setProperty(info, leftHint);
+        } else {
+            Object rightHint = rightAccess.getProperty(info);
+            if(rightHint != null) {
+                newAccess.setProperty(info, rightHint);
+            }    
+        }
 	}
 
     /**

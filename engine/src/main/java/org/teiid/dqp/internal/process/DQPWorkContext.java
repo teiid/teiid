@@ -188,11 +188,8 @@ public class DQPWorkContext implements Serializable {
 	}
 	
 	public void runInContext(final Runnable runnable) {
-		DQPWorkContext.setWorkContext(this);
-		boolean associated = false;
-		if (securityHelper != null && this.getSubject() != null) {
-			associated = securityHelper.assosiateSecurityContext(this.getSecurityDomain(), this.getSecurityContext());			
-		}
+		DQPWorkContext previous = DQPWorkContext.getWorkContext();
+		boolean associated = attachDQPWorkContext();
 		try {
 			runnable.run();
 		} finally {
@@ -200,7 +197,19 @@ public class DQPWorkContext implements Serializable {
 				securityHelper.clearSecurityContext(this.getSecurityDomain());			
 			}
 			DQPWorkContext.releaseWorkContext();
+			if (previous != null) {
+				previous.attachDQPWorkContext();
+			}
 		}
+	}
+
+	private boolean attachDQPWorkContext() {
+		DQPWorkContext.setWorkContext(this);
+		boolean associated = false;
+		if (securityHelper != null && this.getSubject() != null) {
+			associated = securityHelper.assosiateSecurityContext(this.getSecurityDomain(), this.getSecurityContext());			
+		}
+		return associated;
 	}
 
 	public HashMap<String, DataPolicy> getAllowedDataPolicies() {
@@ -217,6 +226,10 @@ public class DQPWorkContext implements Serializable {
 		}
         return this.policies;
     }
+	
+	public void setPolicies(HashMap<String, DataPolicy> policies) {
+		this.policies = policies;
+	}
     
 	private boolean matchesPrincipal(Set<String> userRoles, DataPolicy policy) {
 		if (policy.isAnyAuthenticated()) {

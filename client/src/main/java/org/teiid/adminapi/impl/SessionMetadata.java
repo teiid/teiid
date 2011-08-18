@@ -32,7 +32,10 @@ import org.teiid.client.security.SessionToken;
 
 /**
  * Add and delete properties also in the Mapper class for correct wrapping for profile service.
+ * 
  */
+/* TODO: it would probably be good to let ipAddress denote the connecting address 
+ and add clientIpAdress as the client reported value */
 public class SessionMetadata extends AdminObjectImpl implements Session {
 
 	private static final long serialVersionUID = 918638989081830034L;
@@ -41,6 +44,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
     private long createdTime;
     private String ipAddress;
     private String clientHostName;    
+    private String clientHardwareAddress;
     private String userName;
     private String vdbName;
     private int vdbVersion;
@@ -154,6 +158,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
     	str.append("; createdTime=").append(new Date(createdTime));
     	str.append("; applicationName=").append(applicationName);
     	str.append("; clientHostName=").append(clientHostName);
+    	str.append("; clientHardwareAddress=").append(clientHardwareAddress);
     	str.append("; IPAddress=").append(ipAddress);
     	str.append("; securityDomain=").append(securityDomain); 
     	str.append("; lastPingTime=").append(new Date(lastPingTime));
@@ -198,6 +203,15 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 
 	public boolean isEmbedded() {
 		return embedded;
+	}
+	
+	@Override
+	public String getClientHardwareAddress() {
+		return this.clientHardwareAddress;
+	}
+	
+	public void setClientHardwareAddress(String clientHardwareAddress) {
+		this.clientHardwareAddress = clientHardwareAddress;
 	}
 	
 }

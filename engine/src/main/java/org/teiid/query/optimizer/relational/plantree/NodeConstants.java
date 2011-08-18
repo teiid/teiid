@@ -43,7 +43,6 @@ public final class NodeConstants {
         public static final int SET_OP = 1<<8;
         public static final int NULL = 1<<9;
         public static final int TUPLE_LIMIT = 1<<10;
-        public static final int WITH = 1<<11;
     }
 
     /**
@@ -64,7 +63,6 @@ public final class NodeConstants {
             case NodeConstants.Types.SET_OP:        return "SetOperation"; //$NON-NLS-1$
             case NodeConstants.Types.NULL:          return "Null"; //$NON-NLS-1$
             case NodeConstants.Types.TUPLE_LIMIT:   return "TupleLimit"; //$NON-NLS-1$
-            case NodeConstants.Types.WITH:   		return "With"; //$NON-NLS-1$
             default:                                return "Unknown: " + type; //$NON-NLS-1$
         }
     }
@@ -95,10 +93,12 @@ public final class NodeConstants {
         IS_OPTIONAL,          // Boolean
         IS_LEFT_DISTINCT, 	// Boolean
         IS_RIGHT_DISTINCT, 	// Boolean
+        IS_SEMI_DEP,		// Boolean
 
         // Project node properties
         PROJECT_COLS,       // List <SingleElementSymbol>
         INTO_GROUP,         // GroupSymbol
+        HAS_WINDOW_FUNCTIONS,		// Boolean
 
         // Select node properties
         SELECT_CRITERIA,    // Criteria
@@ -119,16 +119,17 @@ public final class NodeConstants {
         SYMBOL_MAP,         // SymbolMap
         PARTITION_INFO,		// Map<ElementSymbol, List<Set<Constant>>> - it will only be consistent in the initial stages of planning
         VIRTUAL_COMMAND,    // Command
-        MAKE_DEP,           // ??? List of Groups ???
+        MAKE_DEP,           // Boolean
         PROCESSOR_PLAN,     // ProcessorPlan for non-relational sub plan
         NESTED_COMMAND,     // Command for nested processor plan
         TABLE_FUNCTION,     // Table Function
         CORRELATED_REFERENCES,  // SymbolMap
-        MAKE_NOT_DEP,       // Source should not be dependent
+        MAKE_NOT_DEP,       // Boolean
         INLINE_VIEW,        // If the source node represents an inline view
+        MAKE_IND,
         
         // Group node properties
-        GROUP_COLS,         // List <SingleElementSymbol>
+        GROUP_COLS,         // List <Expression>
 
         // Special constant used in converting plan to process for all nodes
         OUTPUT_COLS,        // List <SingleElementSymbol>

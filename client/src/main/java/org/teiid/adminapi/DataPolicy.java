@@ -25,7 +25,19 @@ import java.util.List;
 
 public interface DataPolicy {
 	
-	public enum PermissionType {CREATE, READ, UPDATE, DELETE, ALTER, EXECUTE};
+	public enum Context {
+		CREATE,
+		DROP,
+		QUERY,
+		INSERT,
+		UPDATE,
+		DELETE,
+		FUNCTION,
+		ALTER,
+		STORED_PROCEDURE;
+    }
+	
+	public enum PermissionType {CREATE, READ, UPDATE, DELETE, ALTER, EXECUTE, DROP};
 	
 	/**
 	 * Get the Name of the Data Policy

@@ -22,20 +22,30 @@
 package org.teiid.jdbc;
 
 import java.io.File;
+import java.security.Principal;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Properties;
 
+import javax.security.auth.Subject;
+
+import org.jboss.as.security.plugins.SecurityDomainContext;
+import org.jboss.security.AuthenticationManager;
 import org.mockito.Mockito;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.cache.CacheConfiguration;
-import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.cache.CacheConfiguration.Policy;
+import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.deployers.MetadataStoreGroup;
+import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
@@ -44,6 +54,7 @@ import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.service.FakeBufferService;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
@@ -55,13 +66,14 @@ import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
+import org.teiid.security.SecurityHelper;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
 import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.LogonImpl;
 
-@SuppressWarnings("nls")
+@SuppressWarnings({"nls", "serial"})
 public class FakeServer extends ClientServiceRegistryImpl implements ConnectionProfile {
 
 	SessionServiceImpl sessionService = new SessionServiceImpl();
@@ -72,6 +84,44 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 	private boolean useCallingThread = true;
 	
 	public FakeServer() {
+		this(new DQPConfiguration());
+	}
+	
+	public FakeServer(DQPConfiguration config) {
+		
+		Map<String, SecurityDomainContext> securityDomainMap = new HashMap<String, SecurityDomainContext>();
+        SecurityDomainContext securityContext = Mockito.mock(SecurityDomainContext.class);
+        AuthenticationManager authManager = new AuthenticationManager() {
+			@Override
+			public String getSecurityDomain() {
+				return null;
+			}
+			@Override
+			public boolean isValid(Principal principal, Object credential) {
+				return true;
+			}
+			@Override
+			public boolean isValid(Principal principal, Object credential,Subject activeSubject) {
+				return true;
+			}
+			@Override
+			public Subject getActiveSubject() {
+				return null;
+			}
+			@Override
+			public Principal getTargetPrincipal(
+					Principal anotherDomainPrincipal,
+					Map<String, Object> contextMap) {
+				return null;
+			}
+        	
+        };
+        Mockito.stub(securityContext.getAuthenticationManager()).toReturn(authManager);
+        securityDomainMap.put("somedomain", securityContext); //$NON-NLS-1$
+        sessionService.setSecurityHelper(Mockito.mock(SecurityHelper.class));
+		
+        sessionService.setSecurityDomains(Arrays.asList("somedomain"), securityDomainMap);		
+		
 		this.logon = new LogonImpl(sessionService, null);
 		
 		this.repo.setSystemStore(VDBMetadataFactory.getSystem());
@@ -92,14 +142,22 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         	}
         });
         
-        DQPConfiguration config = new DQPConfiguration();
         config.setResultsetCacheConfig(new CacheConfiguration(Policy.LRU, 60, 250, "resultsetcache")); //$NON-NLS-1$
-        this.dqp.setCacheFactory(new DefaultCacheFactory());
+        this.dqp.setCacheFactory(new DefaultCacheFactory() {
+        	@Override
+        	public boolean isReplicated() {
+        		return true; //pretend to be replicated for matview tests
+        	}
+        });
         this.dqp.start(config);
         this.sessionService.setDqp(this.dqp);
         
         registerClientService(ILogon.class, logon, null);
         registerClientService(DQP.class, dqp, null);
+	}
+	
+	public void setConnectorManagerRepository(ConnectorManagerRepository cmr) {
+		this.cmr = cmr;
 	}
 	
 	public void stop() {
@@ -114,18 +172,25 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 	public void setUseCallingThread(boolean useCallingThread) {
 		this.useCallingThread = useCallingThread;
 	}
-	
+
 	public void deployVDB(String vdbName, String vdbPath) throws Exception {
-		
-		IndexMetadataFactory imf = VDBMetadataFactory.loadMetadata(new File(vdbPath).toURI().toURL());
+		deployVDB(vdbName, vdbPath, null);
+	}
+	
+	public void deployVDB(String vdbName, String vdbPath, Map<String, Collection<FunctionMethod>> udfs) throws Exception {
+		IndexMetadataFactory imf = VDBMetadataFactory.loadMetadata(vdbName, new File(vdbPath).toURI().toURL());
 		MetadataStore metadata = imf.getMetadataStore(repo.getSystemStore().getDatatypes());
 		LinkedHashMap<String, Resource> entries = imf.getEntriesPlusVisibilities();
-		
-        deployVDB(vdbName, metadata, entries);		
+        deployVDB(vdbName, metadata, entries, udfs);		
+	}
+	
+	public void deployVDB(String vdbName, MetadataStore metadata,
+			LinkedHashMap<String, Resource> entries) {
+		deployVDB(vdbName, metadata, entries, null);
 	}
 
 	public void deployVDB(String vdbName, MetadataStore metadata,
-			LinkedHashMap<String, Resource> entries) {
+			LinkedHashMap<String, Resource> entries, Map<String, Collection<FunctionMethod>> udfs) {
 		VDBMetaData vdbMetaData = new VDBMetaData();
         vdbMetaData.setName(vdbName);
         vdbMetaData.setStatus(VDB.Status.ACTIVE);
@@ -145,7 +210,14 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         try {
         	MetadataStoreGroup stores = new MetadataStoreGroup();
         	stores.addStore(metadata);
-			this.repo.addVDB(vdbMetaData, stores, entries, null, cmr);
+        	UDFMetaData udfMetaData = null;
+        	if (udfs != null) {
+        		udfMetaData = new UDFMetaData();
+        		for (Map.Entry<String, Collection<FunctionMethod>> entry : udfs.entrySet()) {
+        			udfMetaData.addFunctions(entry.getKey(), entry.getValue());
+        		}
+        	}
+			this.repo.addVDB(vdbMetaData, stores, entries, udfMetaData, cmr);
 			this.repo.finishDeployment(vdbName, 1);
 		} catch (VirtualDatabaseException e) {
 			throw new RuntimeException(e);

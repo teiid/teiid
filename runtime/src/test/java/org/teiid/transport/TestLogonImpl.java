@@ -34,12 +34,14 @@ import org.teiid.client.security.SessionToken;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.net.TeiidURL;
+import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
 
 
 public class TestLogonImpl extends TestCase {
 
 	public void testLogonResult() throws Exception {
 		SessionService ssi = Mockito.mock(SessionService.class);
+		Mockito.stub(ssi.getAuthType()).toReturn(AuthenticationType.CLEARTEXT);
 		DQPWorkContext.setWorkContext(new DQPWorkContext());
 		String userName = "Fred"; //$NON-NLS-1$
 		String applicationName = "test"; //$NON-NLS-1$

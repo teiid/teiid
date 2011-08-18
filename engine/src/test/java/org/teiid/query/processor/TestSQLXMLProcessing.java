@@ -38,12 +38,18 @@ import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
+import org.teiid.query.mapping.relational.QueryNode;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
 
 @SuppressWarnings({"nls", "unchecked"})
@@ -187,6 +193,32 @@ public class TestSQLXMLProcessing {
         process(sql, expected);
     }
     
+    @Test public void testXmlTableInView() throws Exception {
+        String sql = "select * from g1"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList(null, "first"),
+        		Arrays.asList("attr", "second"),
+        };    
+        
+		MetadataStore metadataStore = new MetadataStore();
+	    // Create models
+	    Schema vm1 = RealMetadataFactory.createVirtualModel("vm1", metadataStore);  //$NON-NLS-1$
+	
+	    QueryNode vm1g1n1 = new QueryNode("select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path '@x', val string path '/.') as x"); //$NON-NLS-1$ //$NON-NLS-2$
+	    Table vm1g1 = RealMetadataFactory.createVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
+	    
+	    RealMetadataFactory.createElements(vm1g1, 
+	                                new String[] { "x", "val" }, //$NON-NLS-1$
+	                                new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
+	    // Create the facade from the store
+	    TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "example");
+
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(), createCommandContext());
+        
+        helpProcess(plan, createCommandContext(), dataManager, expected);
+    }
+    
 	@Test public void testXmlTableDefaultAndParent() throws Exception {
         String sql = "select * from xmltable('/a/b' passing convert('<a y=\"rev\"><b>first</b><b x=\"1\">second</b></a>', xml) columns x integer default -1 path '@x' , val string path '../@y') as x"; //$NON-NLS-1$
         
@@ -202,8 +234,8 @@ public class TestSQLXMLProcessing {
         String sql = "select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"1\">second</b></a>', xml) columns val xml path '.') as x"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<b>first</b>"),
-        		Arrays.asList("<b x=\"1\">second</b>"),
+        		Arrays.asList("<b xmlns=\"\">first</b>"),
+        		Arrays.asList("<b xmlns=\"\" x=\"1\">second</b>"),
         };    
     
         process(sql, expected);
@@ -267,6 +299,26 @@ public class TestSQLXMLProcessing {
         
         List<?>[] expected = new List<?>[] {
         		Arrays.asList((String)null)
+        };    
+    
+        process(sql, expected);
+    }
+
+    @Test public void testXmlQueryEmptyNullString() throws Exception {
+    	String sql = "select xmlquery('/a/b' passing xmlparse(document '<x/>') null on empty)"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList((String)null)
+        };    
+    
+        process(sql, expected);
+    }
+    
+    @Test public void testXmlQueryStreaming() throws Exception {
+    	String sql = "select xmlquery('/a/b' passing xmlparse(document '<a><b x=''1''/><b x=''2''/></a>') null on empty)"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("<b xmlns=\"\" x=\"1\"/><b xmlns=\"\" x=\"2\"/>")
         };    
     
         process(sql, expected);
@@ -338,7 +390,7 @@ public class TestSQLXMLProcessing {
         		Arrays.asList(ObjectConverterUtil.convertToString(new FileInputStream(UnitTestUtil.getTestDataFile("udf.xmi")))),
         };    
     
-        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), Arrays.asList(TestTextTable.clobFromFile("udf.xmi")));
+        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(TestTextTable.clobFromFile("udf.xmi")));
     }
 	
 	@Test public void testXmlParseBlob() throws Exception {
@@ -348,7 +400,7 @@ public class TestSQLXMLProcessing {
         		Arrays.asList(ObjectConverterUtil.convertToString(new FileInputStream(UnitTestUtil.getTestDataFile("udf.xmi")))),
         };    
     
-        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), Arrays.asList(blobFromFile("udf.xmi")));
+        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(blobFromFile("udf.xmi")));
     }
 	
 	@Test public void testXmlParseBlobWithEncoding() throws Exception {
@@ -358,7 +410,7 @@ public class TestSQLXMLProcessing {
         		Arrays.asList(ObjectConverterUtil.convertToString(new InputStreamReader(new FileInputStream(UnitTestUtil.getTestDataFile("encoding.xml")), Charset.forName("ISO-8859-1")))),
         };    
     
-        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), Arrays.asList(blobFromFile("encoding.xml")));
+        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(blobFromFile("encoding.xml")));
     }
 	
     @Test public void testXmlTableTypes() throws Exception {
@@ -368,6 +420,27 @@ public class TestSQLXMLProcessing {
         		Arrays.asList(ts, ts),
         };    
     
+        process(sql, expected);
+    }
+    
+    @Test public void testXmlTableStreamingParentAttributes() throws Exception {
+        String sql = "select * from xmltable('/a/b' passing xmlparse(document '<a x=''1''><b>foo</b></a>') columns y string path '.', x integer path '../@x') as x"; //$NON-NLS-1$
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("foo", 1),
+        };    
+        process(sql, expected);
+    }
+    
+    /**
+     * Highlights that the PathMapFilter needs to be selective in calling startContent
+     * @throws Exception
+     */
+    @Test public void testXmlStreamingError() throws Exception {
+        String sql = "select * from xmltable('/a/a' passing xmlparse(document '<a><a>2000-01-01T01:01:00.2-06:00<a></a></a></a>') columns x timestamp path 'xs:dateTime(./text())') as x"; //$NON-NLS-1$
+        Timestamp ts = TimestampUtil.createTimestamp(100, 0, 1, 1, 1, 0, 200000000);
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList(ts),
+        };    
         process(sql, expected);
     }
     
@@ -393,7 +466,7 @@ public class TestSQLXMLProcessing {
     }
     
 	private void process(String sql, List<?>[] expected) throws Exception {
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), createCommandContext());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), createCommandContext());
         
         helpProcess(plan, createCommandContext(), dataManager, expected);
 	}

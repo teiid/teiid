@@ -51,6 +51,7 @@ import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.util.CommandContext;
@@ -168,6 +169,13 @@ public class RulePushLimit implements OptimizerRule {
             }
             case NodeConstants.Types.SOURCE:
             {
+                GroupSymbol virtualGroup = child.getGroups().iterator().next();
+                if (virtualGroup.isProcedure()) {
+                        return false;
+                }
+                if (FrameUtil.isProcedure(child.getFirstChild())) {
+                    return false;
+                }
                 return true;
             }
             default:

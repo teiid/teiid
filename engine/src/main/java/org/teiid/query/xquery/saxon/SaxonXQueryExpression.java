@@ -24,8 +24,8 @@ package org.teiid.query.xquery.saxon;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.sql.SQLXML;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -38,9 +38,7 @@ import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 
-import net.sf.saxon.AugmentedSource;
 import net.sf.saxon.Configuration;
-import net.sf.saxon.event.ProxyReceiver;
 import net.sf.saxon.expr.AxisExpression;
 import net.sf.saxon.expr.ContextItemExpression;
 import net.sf.saxon.expr.Expression;
@@ -51,16 +49,15 @@ import net.sf.saxon.expr.PathMap.PathMapNode;
 import net.sf.saxon.expr.PathMap.PathMapNodeSet;
 import net.sf.saxon.expr.PathMap.PathMapRoot;
 import net.sf.saxon.om.Axis;
-import net.sf.saxon.om.DocumentInfo;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.pattern.AnyNodeTest;
 import net.sf.saxon.pattern.NodeKindTest;
-import net.sf.saxon.query.DynamicQueryContext;
 import net.sf.saxon.query.QueryResult;
 import net.sf.saxon.query.StaticQueryContext;
+import net.sf.saxon.query.XQueryExpression;
 import net.sf.saxon.sxpath.IndependentContext;
 import net.sf.saxon.sxpath.XPathEvaluator;
 import net.sf.saxon.sxpath.XPathExpression;
@@ -92,6 +89,19 @@ import org.teiid.translator.WSConnection.Util;
 
 @SuppressWarnings("serial")
 public class SaxonXQueryExpression {
+	
+	public static final Properties DEFAULT_OUTPUT_PROPERTIES = new Properties();
+	{
+		DEFAULT_OUTPUT_PROPERTIES.setProperty(OutputKeys.METHOD, "xml"); //$NON-NLS-1$
+	    //props.setProperty(OutputKeys.INDENT, "yes"); //$NON-NLS-1$
+		DEFAULT_OUTPUT_PROPERTIES.setProperty(OutputKeys.OMIT_XML_DECLARATION, "yes"); //$NON-NLS-1$
+	}
+	
+	public interface RowProcessor {
+		
+		void processRow(NodeInfo row);
+
+	}
 	
 	public static class Result {
 		public SequenceIterator iter;
@@ -147,16 +157,20 @@ public class SaxonXQueryExpression {
         }       
     };
 
-	private net.sf.saxon.query.XQueryExpression xQuery;    
-	private Configuration config = new Configuration();
-	private PathMapRoot contextRoot;
+	XQueryExpression xQuery;
+	String xQueryString;
+	Map<String, String> namespaceMap = new HashMap<String, String>();
+	Configuration config = new Configuration();
+	PathMapRoot contextRoot;
+	String streamingPath;
 
     public SaxonXQueryExpression(String xQueryString, XMLNamespaces namespaces, List<DerivedColumn> passing, List<XMLTable.XMLColumn> columns) 
     throws QueryResolverException {
         config.setErrorListener(ERROR_LISTENER);
+        this.xQueryString = xQueryString;
         StaticQueryContext context = new StaticQueryContext(config);
         IndependentContext ic = new IndependentContext(config);
-        
+        namespaceMap.put("", ""); //$NON-NLS-1$ //$NON-NLS-2$
         if (namespaces != null) {
         	for (NamespaceItem item : namespaces.getNamespaceItems()) {
         		if (item.getPrefix() == null) {
@@ -166,10 +180,12 @@ public class SaxonXQueryExpression {
         			} else {
         				context.setDefaultElementNamespace(item.getUri());
         				ic.setDefaultElementNamespace(item.getUri());
+        				namespaceMap.put("", item.getUri()); //$NON-NLS-1$
         			}
         		} else {
     				context.declareNamespace(item.getPrefix(), item.getUri());
     				ic.declareNamespace(item.getPrefix(), item.getUri());
+    				namespaceMap.put(item.getPrefix(), item.getUri());
         		}
 			}
         }
@@ -201,8 +217,11 @@ public class SaxonXQueryExpression {
     public SaxonXQueryExpression clone() {
     	SaxonXQueryExpression clone = new SaxonXQueryExpression();
     	clone.xQuery = xQuery;
+    	clone.xQueryString = xQueryString;
     	clone.config = config;
     	clone.contextRoot = contextRoot;
+    	clone.namespaceMap = namespaceMap;
+    	clone.streamingPath = streamingPath;
     	return clone;
     }
     
@@ -211,6 +230,13 @@ public class SaxonXQueryExpression {
     }
     
 	public void useDocumentProjection(List<XMLTable.XMLColumn> columns, AnalysisRecord record) {
+		try {
+			streamingPath = StreamingUtils.getStreamingPath(xQueryString, namespaceMap);
+		} catch (IllegalArgumentException e) {
+			if (record.recordDebug()) {
+				record.println("Document streaming will not be used: " + e.getMessage()); //$NON-NLS-1$
+			}
+		}
 		this.contextRoot = null;
 		PathMap map = this.xQuery.getPathMap();
 		PathMapRoot parentRoot;
@@ -246,8 +272,8 @@ public class SaxonXQueryExpression {
 					return;
 				}
 			} else {
-				for (Iterator iter = finalNodes.iterator(); iter.hasNext(); ) {
-	                PathMapNode subNode = (PathMapNode)iter.next();
+				for (Iterator<PathMapNode> iter = finalNodes.iterator(); iter.hasNext(); ) {
+	                PathMapNode subNode = iter.next();
 	                subNode.createArc(new AxisExpression(Axis.DESCENDANT_OR_SELF, AnyNodeTest.getInstance()));
 	            }
 			}
@@ -265,6 +291,24 @@ public class SaxonXQueryExpression {
 		}
 		this.contextRoot = parentRoot;
 	}
+	
+    public static final boolean[] isValidAncestorAxis =
+    {
+        false,          // ANCESTOR
+        false,          // ANCESTOR_OR_SELF;
+        true,           // ATTRIBUTE;
+        false,           // CHILD;
+        false,           // DESCENDANT;
+        false,           // DESCENDANT_OR_SELF;
+        false,          // FOLLOWING;
+        false,          // FOLLOWING_SIBLING;
+        true,           // NAMESPACE;
+        true,          // PARENT;
+        false,          // PRECEDING;
+        false,          // PRECEDING_SIBLING;
+        true,           // SELF;
+        false,          // PRECEDING_OR_ANCESTOR;
+    };
 
 	private PathMapRoot projectColumns(PathMapRoot parentRoot, List<XMLTable.XMLColumn> columns, PathMapNode finalNode, AnalysisRecord record) {
 		for (XMLColumn xmlColumn : columns) {
@@ -293,6 +337,9 @@ public class SaxonXQueryExpression {
 	    		continue;
 	    	}
 	    	for (PathMapArc arc : subContextRoot.getArcs()) {
+	    		if (streamingPath != null && !validateColumnForStreaming(record, xmlColumn, arc)) {
+	    			streamingPath = null;
+	    		}
 				finalNode.createArc(arc.getStep(), arc.getTarget());
 			}
 	    	HashSet<PathMapNode> subFinalNodes = new HashSet<PathMapNode>();
@@ -317,6 +364,54 @@ public class SaxonXQueryExpression {
 			newRoot.createArc(arc.getStep(), arc.getTarget());
 		}
 		return newMap.reduceToDownwardsAxes(newRoot);
+	}
+
+	private boolean validateColumnForStreaming(AnalysisRecord record,
+			XMLColumn xmlColumn, PathMapArc arc) {
+		boolean ancestor = false;
+		LinkedList<PathMapArc> arcStack = new LinkedList<PathMapArc>();
+		arcStack.add(arc);
+		while (!arcStack.isEmpty()) {
+			PathMapArc current = arcStack.removeFirst();
+			byte axis = current.getStep().getAxis();
+			if (ancestor) {
+				if (current.getTarget().isReturnable()) {
+					if (axis != Axis.NAMESPACE && axis != Axis.ATTRIBUTE) {
+						if (record.recordDebug()) {
+							record.println("Document streaming will not be used, since the column path contains an invalid reverse axis " + xmlColumn.getPath()); //$NON-NLS-1$
+						}
+						return false;
+					}
+				}
+				if (!isValidAncestorAxis[axis]) {
+					if (record.recordDebug()) {
+						record.println("Document streaming will not be used, since the column path contains an invalid reverse axis " + xmlColumn.getPath()); //$NON-NLS-1$
+					}
+					return false;
+				}
+			} else if (!Axis.isSubtreeAxis[axis]) {
+				if (axis == Axis.PARENT 
+						|| axis == Axis.ANCESTOR
+						|| axis == Axis.ANCESTOR_OR_SELF) {
+					if (current.getTarget().isReturnable()) {
+						if (record.recordDebug()) {
+							record.println("Document streaming will not be used, since the column path contains an invalid reverse axis " + xmlColumn.getPath()); //$NON-NLS-1$
+						}
+						return false;
+					}
+					ancestor = true; 
+				} else {
+					if (record.recordDebug()) {
+						record.println("Document streaming will not be used, since the column path may not reference an ancestor or subtree " + xmlColumn.getPath()); //$NON-NLS-1$
+					}
+					return false;
+				}
+			}
+	    	for (PathMapArc pathMapArc : current.getTarget().getArcs()) {
+	    		arcStack.add(pathMapArc);
+			}
+		}
+		return true;
 	}
 
 	private void addReturnedArcs(XMLColumn xmlColumn, PathMapNode subNode) {
@@ -371,57 +466,7 @@ public class SaxonXQueryExpression {
 		}
 	}
 	
-    public Result evaluateXQuery(Object context, Map<String, Object> parameterValues) throws TeiidProcessingException {
-        DynamicQueryContext dynamicContext = new DynamicQueryContext(config);
-
-        Result result = new Result();
-        try {
-	        try {
-		        for (Map.Entry<String, Object> entry : parameterValues.entrySet()) {
-		            Object value = entry.getValue();
-		            if(value instanceof SQLXML) {                    
-		            	value = XMLSystemFunctions.convertToSource(value);
-		            	result.sources.add((Source)value);
-		            } else if (value instanceof java.util.Date) {
-		            	value = XMLSystemFunctions.convertToAtomicValue(value);
-		            }
-		            dynamicContext.setParameter(entry.getKey(), value);                
-		        }
-	        } catch (TransformerException e) {
-	        	throw new TeiidProcessingException(e);
-	        }
-	        if (context != null) {
-	        	Source source = XMLSystemFunctions.convertToSource(context);
-	        	result.sources.add(source);
-	            if (contextRoot != null) {
-	            	//create our own filter as this logic is not provided in the free saxon
-	                ProxyReceiver filter = new PathMapFilter(contextRoot);
-	                AugmentedSource sourceInput = AugmentedSource.makeAugmentedSource(source);
-	                sourceInput.addFilter(filter);
-	                source = sourceInput;
-	            }
-	            DocumentInfo doc;
-				try {
-					doc = config.buildDocument(source);
-				} catch (XPathException e) {
-					throw new TeiidProcessingException(e, QueryPlugin.Util.getString("SaxonXQueryExpression.bad_context")); //$NON-NLS-1$
-				}
-		        dynamicContext.setContextItem(doc);
-	        }
-	        try {
-	        	result.iter = xQuery.iterator(dynamicContext);
-	        	return result;
-	        } catch (TransformerException e) {
-	        	throw new TeiidProcessingException(e, QueryPlugin.Util.getString("SaxonXQueryExpression.bad_xquery")); //$NON-NLS-1$
-	        }       
-        } finally {
-        	if (result.iter == null) {
-        		result.close();
-        	}
-        }
-    }
-    
-	public XMLType createXMLType(final SequenceIterator iter, BufferManager bufferManager, boolean emptyOnEmpty) throws XPathException, TeiidComponentException, TeiidProcessingException {
+    public XMLType createXMLType(final SequenceIterator iter, BufferManager bufferManager, boolean emptyOnEmpty) throws XPathException, TeiidComponentException, TeiidProcessingException {
 		Item item = iter.next();
 		if (item == null && !emptyOnEmpty) {
 			return null;
@@ -429,17 +474,7 @@ public class SaxonXQueryExpression {
 		XMLType.Type type = Type.CONTENT;
 		if (item instanceof NodeInfo) {
 			NodeInfo info = (NodeInfo)item;
-			switch (info.getNodeKind()) {
-				case net.sf.saxon.type.Type.DOCUMENT:
-					type = Type.DOCUMENT;
-					break;
-				case net.sf.saxon.type.Type.ELEMENT:
-					type = Type.ELEMENT;
-					break;
-				case net.sf.saxon.type.Type.TEXT:
-					type = Type.TEXT;
-					break;
-			}
+			type = getType(info);
 		}
 		Item next = iter.next();
 		if (next != null) {
@@ -450,16 +485,28 @@ public class SaxonXQueryExpression {
 			@Override
 			public void translate(Writer writer) throws TransformerException,
 					IOException {
-				Properties props = new Properties();
-			    props.setProperty(OutputKeys.METHOD, "xml"); //$NON-NLS-1$
-			    //props.setProperty(OutputKeys.INDENT, "yes"); //$NON-NLS-1$
-			    props.setProperty(OutputKeys.OMIT_XML_DECLARATION, "yes"); //$NON-NLS-1$
-			    QueryResult.serializeSequence(iter.getAnother(), config, writer, props);
+			    QueryResult.serializeSequence(iter.getAnother(), config, writer, DEFAULT_OUTPUT_PROPERTIES);
 			}
 		});
 		XMLType value = new XMLType(xml);
 		value.setType(type);
 		return value;
+	}
+
+	public static XMLType.Type getType(NodeInfo info) {
+		switch (info.getNodeKind()) {
+			case net.sf.saxon.type.Type.DOCUMENT:
+				return Type.DOCUMENT;
+			case net.sf.saxon.type.Type.ELEMENT:
+				return Type.ELEMENT;
+			case net.sf.saxon.type.Type.TEXT:
+				return Type.TEXT;
+			case net.sf.saxon.type.Type.COMMENT:
+				return Type.COMMENT;
+			case net.sf.saxon.type.Type.PROCESSING_INSTRUCTION:
+				return Type.PI;
+		}
+		return Type.CONTENT;
 	}
     
     public Configuration getConfig() {
@@ -476,6 +523,10 @@ public class SaxonXQueryExpression {
 			node = pathMapArc.getTarget();
 			showArcs(sb, node, level + 1);
 		}
+	}
+	
+	public boolean isStreaming() {
+		return streamingPath != null;
 	}
 
 }

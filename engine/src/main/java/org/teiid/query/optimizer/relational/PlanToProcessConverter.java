@@ -26,14 +26,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.id.IDGenerator;
-import org.teiid.core.id.IntegerID;
-import org.teiid.core.id.IntegerIDFactory;
 import org.teiid.core.util.Assertion;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -47,12 +46,15 @@ import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.optimizer.relational.rules.FrameUtil;
+import org.teiid.query.optimizer.relational.rules.RuleAssignOutputElements;
+import org.teiid.query.optimizer.relational.rules.RuleChooseJoinStrategy;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.ArrayTableNode;
 import org.teiid.query.processor.relational.DependentAccessNode;
 import org.teiid.query.processor.relational.DependentProcedureAccessNode;
 import org.teiid.query.processor.relational.DependentProcedureExecutionNode;
+import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
 import org.teiid.query.processor.relational.GroupingNode;
 import org.teiid.query.processor.relational.InsertPlanExecutionNode;
 import org.teiid.query.processor.relational.JoinNode;
@@ -61,7 +63,6 @@ import org.teiid.query.processor.relational.MergeJoinStrategy;
 import org.teiid.query.processor.relational.NestedLoopJoinStrategy;
 import org.teiid.query.processor.relational.NestedTableJoinStrategy;
 import org.teiid.query.processor.relational.NullNode;
-import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
 import org.teiid.query.processor.relational.PlanExecutionNode;
 import org.teiid.query.processor.relational.ProjectIntoNode;
 import org.teiid.query.processor.relational.ProjectNode;
@@ -71,6 +72,7 @@ import org.teiid.query.processor.relational.SelectNode;
 import org.teiid.query.processor.relational.SortNode;
 import org.teiid.query.processor.relational.TextTableNode;
 import org.teiid.query.processor.relational.UnionAllNode;
+import org.teiid.query.processor.relational.WindowFunctionProjectNode;
 import org.teiid.query.processor.relational.XMLTableNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
@@ -82,6 +84,7 @@ import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.StoredProcedure;
@@ -92,7 +95,10 @@ import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
@@ -169,8 +175,7 @@ public class PlanToProcessConverter {
 	}
 
     protected int getID() {
-        IntegerIDFactory intFactory = (IntegerIDFactory) idGenerator.getDefaultFactory();
-        return ((IntegerID) intFactory.create()).getValue();
+        return idGenerator.nextInt();
     }
     
 	protected RelationalNode convertNode(PlanNode node)
@@ -216,11 +221,25 @@ public class PlanToProcessConverter {
                     }
 
                 } else {
-                    List symbols = (List) node.getProperty(NodeConstants.Info.PROJECT_COLS);
+                    List<SingleElementSymbol> symbols = (List) node.getProperty(NodeConstants.Info.PROJECT_COLS);
                     
                     ProjectNode pnode = new ProjectNode(getID());
                     pnode.setSelectSymbols(symbols);
             		processNode = pnode;
+            		
+            		if (node.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
+            			WindowFunctionProjectNode wfpn = new WindowFunctionProjectNode(getID());
+            			Set<WindowFunction> windowFunctions = RuleAssignOutputElements.getWindowFunctions(symbols);
+            			//TODO: check for selecting all window functions
+            			List<SingleElementSymbol> outputElements = new ArrayList<SingleElementSymbol>(windowFunctions);
+            			//collect the other projected expressions
+            			for (SingleElementSymbol singleElementSymbol : (List<SingleElementSymbol>)node.getFirstChild().getProperty(Info.OUTPUT_COLS)) {
+							outputElements.add(singleElementSymbol);
+						}
+            			wfpn.setElements(outputElements);
+            			wfpn.init();
+            			pnode.addChild(wfpn);
+            		}
                 }
                 break;
 
@@ -238,7 +257,9 @@ public class PlanToProcessConverter {
                 if(stype == JoinStrategyType.MERGE || stype == JoinStrategyType.ENHANCED_SORT) {
                 	MergeJoinStrategy mjStrategy = null;
                 	if (stype.equals(JoinStrategyType.ENHANCED_SORT)) { 
-                		mjStrategy = new EnhancedSortMergeJoinStrategy(leftSort, (SortOption)node.getProperty(NodeConstants.Info.SORT_RIGHT));
+                		EnhancedSortMergeJoinStrategy esmjStrategy = new EnhancedSortMergeJoinStrategy(leftSort, (SortOption)node.getProperty(NodeConstants.Info.SORT_RIGHT));
+                		esmjStrategy.setSemiDep(node.hasBooleanProperty(Info.IS_SEMI_DEP));
+                		mjStrategy = esmjStrategy;
                 	} else {
                 		mjStrategy = new MergeJoinStrategy(leftSort, (SortOption)node.getProperty(NodeConstants.Info.SORT_RIGHT), false);
                 	}
@@ -341,7 +362,10 @@ public class PlanToProcessConverter {
 	                    }
                     }
                     aNode.setCommand(command);
-                    aNode.setModelName(getRoutingName(node));
+                    if (!aNode.isShouldEvaluate()) {
+                    	aNode.minimizeProject(command);
+                    }
+                    setRoutingName(aNode, node);
                 }
                 break;
 
@@ -372,8 +396,32 @@ public class PlanToProcessConverter {
 				break;
 			case NodeConstants.Types.GROUP:
 				GroupingNode gnode = new GroupingNode(getID());
-				gnode.setGroupingElements( (List) node.getProperty(NodeConstants.Info.GROUP_COLS) );
+				SymbolMap groupingMap = (SymbolMap)node.getProperty(NodeConstants.Info.SYMBOL_MAP);
+				gnode.setOutputMapping(groupingMap);
 				gnode.setRemoveDuplicates(node.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL));
+				List<Expression> gCols = (List) node.getProperty(NodeConstants.Info.GROUP_COLS);
+				orderBy = (OrderBy) node.getProperty(Info.SORT_ORDER);
+				if (orderBy == null) {
+			        if (gCols != null) {
+		                orderBy = new OrderBy(RuleChooseJoinStrategy.createExpressionSymbols(gCols));
+			        }
+				} else {
+			        for (int i = 0; i < gCols.size(); i++) {
+			        	if (i < orderBy.getOrderByItems().size()) {
+			        		OrderByItem orderByItem = orderBy.getOrderByItems().get(i);
+							Expression ex = SymbolMap.getExpression(orderByItem.getSymbol());
+				        	if (ex instanceof ElementSymbol) {
+			            		ex = groupingMap.getMappedExpression((ElementSymbol) ex);
+			            		orderByItem.setSymbol(new ExpressionSymbol("expr", ex)); //$NON-NLS-1$
+			            	}
+			        	} else {
+			        		orderBy.addVariable(new ExpressionSymbol("expr", gCols.get(i)), OrderBy.ASC); //$NON-NLS-1$
+			        	}
+			        }
+				}
+				if (orderBy != null) {
+			        gnode.setOrderBy(orderBy.getOrderByItems());
+				}
 				processNode = gnode;
 				break;
 
@@ -540,7 +588,7 @@ public class PlanToProcessConverter {
         return processNode;
     }
 
-	private String getRoutingName(PlanNode node)
+	private void setRoutingName(AccessNode accessNode, PlanNode node)
 		throws QueryPlannerException, TeiidComponentException {
 
 		// Look up connector binding name
@@ -558,7 +606,8 @@ public class PlanToProcessConverter {
 				}
 			}
 			String cbName = metadata.getFullName(modelID);
-			return cbName;
+			accessNode.setModelName(cbName);
+			accessNode.setModelId(modelID);
 		} catch(QueryMetadataException e) {
             throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0009")); //$NON-NLS-1$
 		}

@@ -41,7 +41,6 @@ import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.parser.QueryParser;
@@ -58,8 +57,6 @@ public class CachedResults implements Serializable, Cachable {
 	private transient Command command;
 	private transient TupleBuffer results;
 
-	private AnalysisRecord analysisRecord;
-
 	private String[] types;
 	private CacheHint hint;
 	private int batchSize;
@@ -71,14 +68,6 @@ public class CachedResults implements Serializable, Cachable {
 	
 	public String getId() {
 		return this.uuid;
-	}
-	
-	public AnalysisRecord getAnalysisRecord() {
-		return analysisRecord;
-	}
-	
-	public void setAnalysisRecord(AnalysisRecord analysisRecord) {
-		this.analysisRecord = analysisRecord;
 	}
 	
 	public TupleBuffer getResults() {
@@ -125,39 +114,48 @@ public class CachedResults implements Serializable, Cachable {
 
 	@Override
 	public synchronized boolean restore(Cache cache, BufferManager bufferManager) {
-		try {
-			if (this.results == null) {
-				if (this.hasLobs) {
-					return false;
-				}
+		if (this.results == null) {
+			if (this.hasLobs) {
+				return false; //the lob store is local only and not distributed
+			}
+			TupleBuffer buffer = null;
+			try {
 				List<ElementSymbol> schema = new ArrayList<ElementSymbol>(types.length);
 				for (String type : types) {
 					ElementSymbol es = new ElementSymbol("x"); //$NON-NLS-1$
 					es.setType(DataTypeManager.getDataTypeClass(type));
 					schema.add(es);
 				}
-				TupleBuffer buffer = bufferManager.createTupleBuffer(schema, "cached", TupleSourceType.FINAL); //$NON-NLS-1$
+				buffer = bufferManager.createTupleBuffer(schema, "cached", TupleSourceType.FINAL); //$NON-NLS-1$
 				buffer.setBatchSize(this.batchSize);
+				buffer.setId(this.uuid);
 				if (this.hint != null) {
 					buffer.setPrefersMemory(this.hint.getPrefersMemory());
 				}
 				
 				for (int row = 1; row <= this.rowCount; row+=this.batchSize) {
 					TupleBatch batch = (TupleBatch)cache.get(uuid+","+row); //$NON-NLS-1$
-					if (batch != null) {					
-						buffer.addTupleBatch(batch, true);
-					}					
+					if (batch == null) {					
+						LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.getString("not_found_cache")); //$NON-NLS-1$
+						buffer.remove();
+						return false;
+					}		
+					buffer.addTupleBatch(batch, true);
+					cache.remove(uuid+","+row); //$NON-NLS-1$
 				}
 				this.results = buffer;	
 				bufferManager.addTupleBuffer(this.results);
 				this.results.close();
+				this.accessInfo.restore();
+			} catch (TeiidException e) {
+				LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("unexpected_exception_restoring_results")); //$NON-NLS-1$
+				if (buffer != null) {
+					buffer.remove();
+				}
+				return false;
 			}
-			this.accessInfo.restore();
-			return true;
-		} catch (TeiidException e) {
-			LogManager.logDetail(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("not_found_cache")); //$NON-NLS-1$
 		}
-		return false;
+		return true;
 	}	
 	
 	@Override

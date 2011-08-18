@@ -34,7 +34,6 @@ public final class RuleConstants {
 	public static final OptimizerRule MERGE_VIRTUAL = new RuleMergeVirtual();
     public static final OptimizerRule CHOOSE_JOIN_STRATEGY = new RuleChooseJoinStrategy();
 	public static final OptimizerRule RAISE_ACCESS = new RuleRaiseAccess();
-    public static final OptimizerRule PUSH_AGGREGATES = new RulePushAggregates();
     public static final OptimizerRule CHOOSE_DEPENDENT = new RuleChooseDependent();
 	public static final OptimizerRule COLLAPSE_SOURCE = new RuleCollapseSource();
 	public static final OptimizerRule ASSIGN_OUTPUT_ELEMENTS = new RuleAssignOutputElements();

@@ -26,10 +26,12 @@ package org.teiid.query.sql.proc;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.core.util.StringUtil;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SubqueryContainer;
+import org.teiid.query.sql.proc.Statement.Labeled;
 
 
 /**
@@ -39,16 +41,25 @@ import org.teiid.query.sql.lang.SubqueryContainer;
  * a block, a select statement and a cursor. 
  * determines which block should be executed..</p>
  */
-public class LoopStatement extends Statement implements SubqueryContainer {
+public class LoopStatement extends Statement implements SubqueryContainer, Labeled {
     private String cursorName;
     private Block loopBlock;
     private Command query;
+    private String label;
     
     public LoopStatement(Block block, Command query, String cursorName){
         this.loopBlock = block;
         this.query = query;
         this.cursorName = cursorName;
     }    
+    
+    public String getLabel() {
+		return label;
+	}
+    
+    public void setLabel(String label) {
+		this.label = label;
+	}
     
     /**
      * @return
@@ -121,10 +132,12 @@ public class LoopStatement extends Statement implements SubqueryContainer {
      * @return Deep clone 
      */
     public Object clone() {
-        Block otherBlock = (Block)this.loopBlock.clone();    
+        Block otherBlock = this.loopBlock.clone();    
         Query otherQuery = (Query)this.query.clone();
 
-        return new LoopStatement(otherBlock, otherQuery, this.cursorName);
+        LoopStatement ls = new LoopStatement(otherBlock, otherQuery, this.cursorName);
+        ls.setLabel(label);
+        return ls;
     }
     
     /**
@@ -152,7 +165,8 @@ public class LoopStatement extends Statement implements SubqueryContainer {
             // Compare the if block
             EquivalenceUtil.areEqual(loopBlock, other.loopBlock) &&
             // Compare the else block
-            EquivalenceUtil.areEqual(cursorName, other.cursorName);
+            EquivalenceUtil.areEqual(cursorName, other.cursorName)
+            && StringUtil.equalsIgnoreCase(this.label, other.label);
     } 
 
     /**

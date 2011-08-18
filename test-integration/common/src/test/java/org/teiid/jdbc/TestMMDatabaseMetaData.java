@@ -615,6 +615,12 @@ public class TestMMDatabaseMetaData {
         ResultSet rs = dbmd.getTables(null, "SYSTEM", "VIRTUALDATABASES", null); //$NON-NLS-1$ //$NON-NLS-2$
         compareResultSet(rs);
     }
+    
+    @Test
+    public void testGetTables_noTypes() throws Exception {
+        ResultSet rs = dbmd.getTables(null, "SYSTEM", "VIRTUALDATABASES", new String[0]); //$NON-NLS-1$ //$NON-NLS-2$
+        assertFalse(rs.next());
+    }
 
     @Test
     public void testGetTables_specificTableTypes() throws Exception {
@@ -909,7 +915,7 @@ public class TestMMDatabaseMetaData {
         expected.put("getSystemFunctions", DatabaseMetaDataImpl.SYSTEM_FUNCTIONS); //$NON-NLS-1$
         expected.put("getTimeDateFunctions", DatabaseMetaDataImpl.DATE_FUNCTIONS); //$NON-NLS-1$
         //expected.put("getUrl", primaryUrl + serverUrl); //$NON-NLS-1$
-        expected.put("getUserName", CoreConstants.DEFAULT_ANON_USERNAME); //$NON-NLS-1$
+        expected.put("getUserName", CoreConstants.DEFAULT_ANON_USERNAME+"@somedomain"); //$NON-NLS-1$
 
         // return type - Object
         expected.put("getConnection", conn); //$NON-NLS-1$

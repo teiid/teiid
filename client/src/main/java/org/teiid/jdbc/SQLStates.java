@@ -82,6 +82,8 @@ public class SQLStates {
 	 * conforms to the subclass DataDirect uses for SocketExceptions.
 	 */
 	public static final String CONNECTION_EXCEPTION_STALE_CONNECTION = "08S01"; //$NON-NLS-1$
+	
+	public static final String QUERY_CANCELED = "57014"; //$NON-NLS-1$
 
 	// Class 28 - invalid authorization specification
 

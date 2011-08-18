@@ -51,6 +51,7 @@ public class TeiidURL {
 	public static interface CONNECTION {
 		public static final String CLIENT_IP_ADDRESS = "clientIpAddress"; //$NON-NLS-1$
 		public static final String CLIENT_HOSTNAME = "clientHostName"; //$NON-NLS-1$
+		public static final String CLIENT_MAC = "clientMAC"; //$NON-NLS-1$
 		/**
 		 * If true, will automatically select a new server instance after a communication exception.
 		 * @since 5.6
@@ -79,6 +80,16 @@ public class TeiidURL {
 		public static final String PASSWORD = "password"; //$NON-NLS-1$
 		
 		public static final String PASSTHROUGH_AUTHENTICATION = "PassthroughAuthentication"; //$NON-NLS-1$
+		
+		public static final String AUTHENTICATION_TYPE = "authenticationType"; //$NON-NLS-1$
+		
+		public static final String JAAS_NAME = "jaasName"; //$NON-NLS-1$
+		
+		public static final String KERBEROS_SERVICE_PRINCIPLE_NAME = "kerberosServicePrincipleName"; //$NON-NLS-1$
+        
+		public enum AuthenticationType {
+			CLEARTEXT,KRB5
+		};
 	}
 
 	public static final String DOT_DELIMITER = "."; //$NON-NLS-1$

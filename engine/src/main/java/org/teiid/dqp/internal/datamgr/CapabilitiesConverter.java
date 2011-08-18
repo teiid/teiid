@@ -99,11 +99,18 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.QUERY_ORDERBY_NULL_ORDERING, srcCaps.supportsOrderByNullOrdering());
         tgtCaps.setCapabilitySupport(Capability.INSERT_WITH_ITERATOR, srcCaps.supportsInsertWithIterator());
         tgtCaps.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, srcCaps.supportsCommonTableExpressions());
-        List functions = srcCaps.getSupportedFunctions();
+        tgtCaps.setCapabilitySupport(Capability.ADVANCED_OLAP, srcCaps.supportsAdvancedOlapOperations());
+        tgtCaps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, srcCaps.supportsAdvancedOlapOperations());
+        tgtCaps.setCapabilitySupport(Capability.WINDOW_FUNCTION_ORDER_BY_AGGREGATES, srcCaps.supportsWindowOrderByWithAggregates());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_ARRAY, srcCaps.supportsArrayAgg());
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_SIMILAR, srcCaps.supportsSimilarTo());
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_LIKE_REGEX, srcCaps.supportsLikeRegex());
+        
+        List<String> functions = srcCaps.getSupportedFunctions();
         if(functions != null && functions.size() > 0) {
-            Iterator iter = functions.iterator();
+            Iterator<String> iter = functions.iterator();
             while(iter.hasNext()) {
-                String func = (String) iter.next();
+                String func = iter.next();
                 tgtCaps.setFunctionSupport(func.toLowerCase(), true);
             }
         }

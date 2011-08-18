@@ -46,6 +46,7 @@ public class SQLConstants {
 		public static final String GE = ">="; //$NON-NLS-1$
 		public static final String LPAREN = "("; //$NON-NLS-1$
 		public static final String RPAREN = ")"; //$NON-NLS-1$
+		public static final String COLON = ":"; //$NON-NLS-1$
 	}
 	
 	public interface NonReserved {
@@ -111,6 +112,8 @@ public class SQLConstants {
 		public static final String INSTEAD = "INSTEAD"; //$NON-NLS-1$
 		public static final String ENABLED = "ENABLED"; //$NON-NLS-1$
 		public static final String DISABLED = "DISABLED"; //$NON-NLS-1$
+		
+		public static final String TRIM = "TRIM";
 	}
 	
 	public interface Reserved {
@@ -247,8 +250,10 @@ public class SQLConstants {
 	    public static final String LARGE = "LARGE"; //$NON-NLS-1$
 	    public static final String LATERAL = "LATERAL"; //$NON-NLS-1$
 	    public static final String LEADING = "LEADING"; //$NON-NLS-1$
+	    public static final String LEAVE = "LEAVE"; //$NON-NLS-1$
 	    public static final String LEFT = "LEFT"; //$NON-NLS-1$
 	    public static final String LIKE = "LIKE"; //$NON-NLS-1$
+	    public static final String LIKE_REGEX = "LIKE_REGEX"; //$NON-NLS-1$
 	    public static final String LOCAL = "LOCAL"; //$NON-NLS-1$
 	    public static final String LOCALTIME = "LOCALTIME"; //$NON-NLS-1$
 	    public static final String LOCALTIMESTAMP = "LOCALTIMESTAMP"; //$NON-NLS-1$
@@ -273,6 +278,7 @@ public class SQLConstants {
 	    public static final String NUMERIC = "NUMERIC"; //$NON-NLS-1$
 	    public static final String OBJECT = "OBJECT"; //$NON-NLS-1$
 		public static final String OF = "OF"; //$NON-NLS-1$
+		public static final String OFFSET = "OFFSET"; //$NON-NLS-1$
 		public static final String OLD = "OLD"; //$NON-NLS-1$
 		public static final String ON = "ON"; //$NON-NLS-1$
 		public static final String ONLY = "ONLY"; //$NON-NLS-1$
@@ -315,7 +321,7 @@ public class SQLConstants {
 	    public static final String SESSION_USER = "SESSION_USER"; //$NON-NLS-1$
 	    public static final String SET = "SET"; //$NON-NLS-1$
 	    public static final String SHORT = "SHORT"; //$NON-NLS-1$
-	    public static final String SIILAR = "SIMILAR"; //$NON-NLS-1$
+	    public static final String SIMILAR = "SIMILAR"; //$NON-NLS-1$
 	    public static final String SMALLINT = "SMALLINT"; //$NON-NLS-1$
 	    public static final String SOME = "SOME"; //$NON-NLS-1$
 	    public static final String SPECIFIC = "SPECIFIC"; //$NON-NLS-1$

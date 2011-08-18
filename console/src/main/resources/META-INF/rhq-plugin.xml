@@ -387,16 +387,16 @@
 					displayName="Connector Batch Size"
 					description="The max row count of a batch from a connector. Should be even multiple of processorBatchSize. (default 1024)"
 					required="false" readOnly="false" />
-				<c:simple-property name="BufferService.maxProcessingBatchesColumns"
-					displayName="Max Processing Batches Columns"
-					description="The number of batch columns guarenteed to a processing operation.  Set this value lower if the workload typically processes larger numbers of concurrent queries with large intermediate results from operations such as sorting, grouping, etc. (default 128)"
+				<c:simple-property name="BufferService.maxProcessingKb"
+					displayName="Max Processing Memory"
+					description="The approximate amount of buffer memory in kilobytes allowable for a single processing operation (sort, grouping, etc.) regardless of existing memory commitments. -1 means to automatically calculate a value (default -1)."
 					required="false" readOnly="false" />
 				<c:simple-property name="BufferService.maxFileSize" displayName="Max File Size"
 					description="Max file size for buffer files (default 2GB)"
 					required="false" readOnly="false" />
-				<c:simple-property name="BufferService.maxReserveBatchColumns"
-					displayName="Max Reserve Batch Columns"
-					description="The number of batch columns to allow in memory (default 16384).  This value should be set lower or higher depending on the available memory to Teiid in the VM.  16384 is considered a good default for a dedicated 32-bit VM running Teiid with a 1 gig heap."
+				<c:simple-property name="BufferService.maxReserveKb"
+					displayName="Max Reserve Memory"
+					description="The approximate amount of memory in kilobytes allowed to be held by the buffer manager. -1 means to automatically calculate a value (default -1)."
 					required="false" readOnly="false" />
 			</c:group>
 			<c:group name="JdbcSocketConfiguration"	displayName="Jdbc Socket Configuration Properties" hiddenByDefault="false">

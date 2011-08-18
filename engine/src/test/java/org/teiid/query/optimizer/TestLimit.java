@@ -25,8 +25,14 @@ package org.teiid.query.optimizer;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Test;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.query.mapping.relational.QueryNode;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.DependentProjectNode;
 import org.teiid.query.optimizer.TestOptimizer.DependentSelectNode;
 import org.teiid.query.optimizer.TestOptimizer.DupRemoveNode;
@@ -49,15 +55,10 @@ import org.teiid.query.processor.relational.ProjectNode;
 import org.teiid.query.processor.relational.SelectNode;
 import org.teiid.query.processor.relational.SortNode;
 import org.teiid.query.processor.relational.UnionAllNode;
-import org.teiid.query.unittest.FakeMetadataFacade;
-import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.query.unittest.FakeMetadataObject;
-import org.teiid.query.unittest.FakeMetadataStore;
-
-import junit.framework.TestCase;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
-public class TestLimit extends TestCase {
+public class TestLimit {
 
     private static final int[] FULL_PUSHDOWN = new int[] {
                 1,      // Access
@@ -95,89 +96,63 @@ public class TestLimit extends TestCase {
         UnionAllNode.class
     };
     
-    public TestLimit(String name) {
-        super(name);
-    }
-
-    private static FakeMetadataFacade exampleMetadata() {
+    private static TransformationMetadata exampleMetadata() {
+    	MetadataStore metadataStore = new MetadataStore();
         // Create models
-        FakeMetadataObject pm1 = FakeMetadataFactory.createPhysicalModel("pm1"); //$NON-NLS-1$
-        FakeMetadataObject vm1 = FakeMetadataFactory.createVirtualModel("vm1");  //$NON-NLS-1$
+        Schema pm1 = RealMetadataFactory.createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
+        Schema vm1 = RealMetadataFactory.createVirtualModel("vm1", metadataStore);  //$NON-NLS-1$
 
         // Create physical groups
-        FakeMetadataObject pm1g1 = FakeMetadataFactory.createPhysicalGroup("pm1.g1", pm1); //$NON-NLS-1$
-        FakeMetadataObject pm1g2 = FakeMetadataFactory.createPhysicalGroup("pm1.g2", pm1); //$NON-NLS-1$
-        FakeMetadataObject pm1g3 = FakeMetadataFactory.createPhysicalGroup("pm1.g3", pm1); //$NON-NLS-1$
-        FakeMetadataObject pm1g4 = FakeMetadataFactory.createPhysicalGroup("pm1.g4", pm1); //$NON-NLS-1$
-        FakeMetadataObject pm1g5 = FakeMetadataFactory.createPhysicalGroup("pm1.g5", pm1); //$NON-NLS-1$
-        FakeMetadataObject pm1g6 = FakeMetadataFactory.createPhysicalGroup("pm1.g6", pm1); //$NON-NLS-1$
+        Table pm1g1 = RealMetadataFactory.createPhysicalGroup("g1", pm1); //$NON-NLS-1$
+        Table pm1g2 = RealMetadataFactory.createPhysicalGroup("g2", pm1); //$NON-NLS-1$
+        Table pm1g3 = RealMetadataFactory.createPhysicalGroup("g3", pm1); //$NON-NLS-1$
+        Table pm1g4 = RealMetadataFactory.createPhysicalGroup("g4", pm1); //$NON-NLS-1$
+        Table pm1g5 = RealMetadataFactory.createPhysicalGroup("g5", pm1); //$NON-NLS-1$
+        Table pm1g6 = RealMetadataFactory.createPhysicalGroup("g6", pm1); //$NON-NLS-1$
                 
         // Create physical elements
-        List pm1g1e = FakeMetadataFactory.createElements(pm1g1, 
+        RealMetadataFactory.createElements(pm1g1, 
             new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-        List pm1g2e = FakeMetadataFactory.createElements(pm1g2, 
+        RealMetadataFactory.createElements(pm1g2, 
             new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-        List pm1g3e = FakeMetadataFactory.createElements(pm1g3, 
+        RealMetadataFactory.createElements(pm1g3, 
             new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-        List pm1g4e = FakeMetadataFactory.createElements(pm1g4,
+        List<Column> pm1g4e = RealMetadataFactory.createElements(pm1g4,
             new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-        ((FakeMetadataObject)pm1g4e.get(1)).putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
-        ((FakeMetadataObject)pm1g4e.get(3)).putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
-        List pm1g5e = FakeMetadataFactory.createElements(pm1g5,
+        pm1g4e.get(1).setSelectable(false);
+        pm1g4e.get(3).setSelectable(false);
+        List<Column> pm1g5e = RealMetadataFactory.createElements(pm1g5,
             new String[] { "e1" }, //$NON-NLS-1$
             new String[] { DataTypeManager.DefaultDataTypes.STRING });
-        ((FakeMetadataObject)pm1g5e.get(0)).putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
-        List pm1g6e = FakeMetadataFactory.createElements(pm1g6,
+        pm1g5e.get(0).setSelectable(false);
+        RealMetadataFactory.createElements(pm1g6,
             new String[] { "in", "in3" }, //$NON-NLS-1$ //$NON-NLS-2$ 
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
          
         // Create virtual groups
         QueryNode vm1g1n1 = new QueryNode("SELECT * FROM pm1.g1 LIMIT 100"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vm1g1 = FakeMetadataFactory.createVirtualGroup("vm1.g1", vm1, vm1g1n1); //$NON-NLS-1$
+        Table vm1g1 = RealMetadataFactory.createVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
 
         // Create virtual elements
-        List vm1g1e = FakeMetadataFactory.createElements(vm1g1, 
+        RealMetadataFactory.createElements(vm1g1, 
             new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
 
         QueryNode vm1g2n1 = new QueryNode("SELECT * FROM vm1.g1 ORDER BY e1"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vm1g2 = FakeMetadataFactory.createVirtualGroup("vm1.g2", vm1, vm1g2n1); //$NON-NLS-1$
+        Table vm1g2 = RealMetadataFactory.createVirtualGroup("g2", vm1, vm1g2n1); //$NON-NLS-1$
 
         // Create virtual elements
-        List vm1g2e = FakeMetadataFactory.createElements(vm1g2, 
+        RealMetadataFactory.createElements(vm1g2, 
             new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
 
-        // Add all objects to the store
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(pm1);
-        store.addObject(pm1g1);     
-        store.addObjects(pm1g1e);
-        store.addObject(pm1g2);     
-        store.addObjects(pm1g2e);
-        store.addObject(pm1g3); 
-        store.addObjects(pm1g3e);
-        store.addObject(pm1g4);
-        store.addObjects(pm1g4e);
-        store.addObject(pm1g5);
-        store.addObjects(pm1g5e);
-        store.addObject(pm1g6);
-        store.addObjects(pm1g6e);
-        
-        store.addObject(vm1);
-        store.addObject(vm1g1);
-        store.addObjects(vm1g1e);
-        store.addObject(vm1g2);
-        store.addObjects(vm1g2e);
-
-        // Create the facade from the store
-        return new FakeMetadataFacade(store);
+        return RealMetadataFactory.createTransformationMetadata(metadataStore, "example");
     }
-    public void testLimit() {
+    @Test public void testLimit() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -186,7 +161,7 @@ public class TestLimit extends TestCase {
         String[] expectedSql = new String[] {
             "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1" //$NON-NLS-1$
             };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -209,7 +184,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testLimitPushdown() {
+    @Test public void testLimitPushdown() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true); 
@@ -219,13 +194,13 @@ public class TestLimit extends TestCase {
         String[] expectedSql = new String[] {
             "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 LIMIT 100" //$NON-NLS-1$
             };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN, NODE_TYPES);
     }
 
-    public void testLimitWithOffset() {
+    @Test public void testLimitWithOffset() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -234,7 +209,7 @@ public class TestLimit extends TestCase {
         String[] expectedSql = new String[] {
             "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1" //$NON-NLS-1$
             };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -256,7 +231,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testPushedLimitWithOffset() throws Exception {
+    @Test public void testPushedLimitWithOffset() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true); 
@@ -266,7 +241,7 @@ public class TestLimit extends TestCase {
         String[] expectedSql = new String[] {
             "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 LIMIT 150" //$NON-NLS-1$
             };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);  
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -288,7 +263,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testLimitWithOffsetFullyPushed() {
+    @Test public void testLimitWithOffsetFullyPushed() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true); 
@@ -299,13 +274,13 @@ public class TestLimit extends TestCase {
         String[] expectedSql = new String[] {
             "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 LIMIT 50, 100" //$NON-NLS-1$
             };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN, NODE_TYPES);
     }
     
-    public void testSort() {
+    @Test public void testSort() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -314,7 +289,7 @@ public class TestLimit extends TestCase {
         String[] expectedSql = new String[] {
             "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1" //$NON-NLS-1$
             };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -336,7 +311,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
 
-    public void testSortPushed() {
+    @Test public void testSortPushed() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
@@ -347,7 +322,7 @@ public class TestLimit extends TestCase {
         String[] expectedSql = new String[] {
             "SELECT pm3.g1.e1, pm3.g1.e2, pm3.g1.e3, pm3.g1.e4 FROM pm3.g1 ORDER BY pm3.g1.e1" //$NON-NLS-1$
             };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -369,7 +344,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
 
-    public void testSortPushedWithLimit() {
+    @Test public void testSortPushedWithLimit() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
@@ -381,13 +356,13 @@ public class TestLimit extends TestCase {
         String[] expectedSql = new String[] {
             "SELECT pm3.g1.e1, pm3.g1.e2, pm3.g1.e3, pm3.g1.e4 FROM pm3.g1 ORDER BY pm3.g1.e1 LIMIT 100" //$NON-NLS-1$
             };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN, NODE_TYPES);
     }
 
-    public void testSortUnderLimitNotRemoved() {
+    @Test public void testSortUnderLimitNotRemoved() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         // pm3 model supports order by
@@ -397,7 +372,7 @@ public class TestLimit extends TestCase {
         String[] expectedSql = new String[] {
             "SELECT pm3.g1.e1, pm3.g1.e2, pm3.g1.e3, pm3.g1.e4 FROM pm3.g1" //$NON-NLS-1$
             };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -420,7 +395,7 @@ public class TestLimit extends TestCase {
     }
     
     //TODO: there is a redundent project node here
-    public void testSortAboveLimitNotPushed() {
+    @Test public void testSortAboveLimitNotPushed() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
@@ -453,7 +428,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testLimitNotPushedWithUnion() {
+    @Test public void testLimitNotPushedWithUnion() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -464,7 +439,7 @@ public class TestLimit extends TestCase {
         String[] expectedSql = new String[] {
             "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1", "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM PM1.g2" //$NON-NLS-1$
             };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -486,7 +461,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testLimitNotPushedWithDupRemove() {
+    @Test public void testLimitNotPushedWithDupRemove() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -497,7 +472,7 @@ public class TestLimit extends TestCase {
         String[] expectedSql = new String[] {
             "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1" //$NON-NLS-1$
             };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -519,7 +494,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testLimitPushedWithUnionAll() {
+    @Test public void testLimitPushedWithUnionAll() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -530,7 +505,7 @@ public class TestLimit extends TestCase {
         String[] expectedSql = new String[] {
             "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM PM1.g2 LIMIT 100", "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 LIMIT 100" //$NON-NLS-1$ //$NON-NLS-2$
             };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -552,7 +527,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testLimitWithOffsetPushedWithUnion() throws Exception {
+    @Test public void testLimitWithOffsetPushedWithUnion() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -565,7 +540,7 @@ public class TestLimit extends TestCase {
         String[] expectedSql = new String[] {
             "SELECT PM1.g2.e1 AS c_0, PM1.g2.e2 AS c_1, PM1.g2.e3 AS c_2, PM1.g2.e4 AS c_3 FROM PM1.g2 LIMIT 150", "SELECT pm1.g1.e1 AS c_0, pm1.g1.e2 AS c_1, pm1.g1.e3 AS c_2, pm1.g1.e4 AS c_3 FROM pm1.g1 LIMIT 150" //$NON-NLS-1$ //$NON-NLS-2$
             };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);  
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -587,7 +562,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testLimitNotPushedWithUnionOrderBy() {
+    @Test public void testLimitNotPushedWithUnionOrderBy() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -598,7 +573,7 @@ public class TestLimit extends TestCase {
         String[] expectedSql = new String[] {
             "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM PM1.g2", "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1" //$NON-NLS-1$ //$NON-NLS-2$
             };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -621,7 +596,7 @@ public class TestLimit extends TestCase {
         TestOptimizer.checkNodeTypes(plan, new int[] {1}, new Class[]{DupRemoveSortNode.class});
     }
     
-    public void testCombinedLimits() throws Exception {
+    @Test public void testCombinedLimits() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -633,7 +608,7 @@ public class TestLimit extends TestCase {
         String[] expectedSql = new String[] {
             "SELECT pm1.g1.e1 AS c_0 FROM pm1.g1 LIMIT 105" //$NON-NLS-1$
             };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);  
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -655,7 +630,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
 
-    public void testCombinedLimitsWithOffset() throws Exception {
+    @Test public void testCombinedLimitsWithOffset() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -668,13 +643,13 @@ public class TestLimit extends TestCase {
         String[] expectedSql = new String[] {
             "SELECT pm1.g1.e1 AS c_0 FROM pm1.g1 LIMIT 10, 60" //$NON-NLS-1$
             };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);  
 
         TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN, NODE_TYPES);
     }
 
-    public void testInlineView() {
+    @Test public void testInlineView() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         //caps.setCapabilitySupport(SourceCapabilities.QUERY_ORDERBY, true);
@@ -687,7 +662,7 @@ public class TestLimit extends TestCase {
         String[] expectedSql = new String[] {
             "SELECT pm3.g1.e1, pm3.g1.e2, pm3.g1.e3, pm3.g1.e4 FROM pm3.g1 LIMIT 100" //$NON-NLS-1$
             };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN, NODE_TYPES);
@@ -702,7 +677,7 @@ public class TestLimit extends TestCase {
      * 
      * @since 4.3
      */
-    public void testInlineViewAboveLimitNotMerged() {
+    @Test public void testInlineViewAboveLimitNotMerged() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
@@ -716,7 +691,7 @@ public class TestLimit extends TestCase {
         String[] expectedSql = new String[] {
             "SELECT v_0.c_0, v_0.c_1, v_0.c_2, v_0.c_3 FROM (SELECT pm3.g1.e1 AS c_0, pm3.g1.e2 AS c_1, pm3.g1.e3 AS c_2, pm3.g1.e4 AS c_3 FROM pm3.g1 LIMIT 100) AS v_0 ORDER BY c_0" //$NON-NLS-1$
             };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
@@ -726,7 +701,7 @@ public class TestLimit extends TestCase {
      * since there is no order by with the nested limit, the criteria can be pushed through 
      *
      */
-    public void testCriteriaPushedUnderLimit() {
+    @Test public void testCriteriaPushedUnderLimit() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -738,13 +713,13 @@ public class TestLimit extends TestCase {
         String[] expectedSql = new String[] {
             "SELECT pm3.g1.e1, pm3.g1.e2, pm3.g1.e3, pm3.g1.e4 FROM pm3.g1 WHERE pm3.g1.e1 = '1' LIMIT 100" //$NON-NLS-1$
             };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN, NODE_TYPES);
     }
     
-    public void testInlineViewJoin() {
+    @Test public void testInlineViewJoin() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
@@ -755,7 +730,7 @@ public class TestLimit extends TestCase {
         String sql = "SELECT x FROM ((SELECT e1 as x FROM pm1.g1 LIMIT 700) c INNER JOIN (SELECT e1 FROM pm1.g2) d ON d.e1 = c.x) order by x LIMIT 5";//$NON-NLS-1$
         String[] expectedSql = new String[] {"SELECT e1 FROM pm1.g1 LIMIT 700", "SELECT e1 FROM pm1.g2"};//$NON-NLS-1$ //$NON-NLS-2$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                       null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -788,7 +763,7 @@ public class TestLimit extends TestCase {
         });
     }
     
-    public void testDontPushSelectWithOrderedLimit() {
+    @Test public void testDontPushSelectWithOrderedLimit() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -796,7 +771,7 @@ public class TestLimit extends TestCase {
         String sql = "select * from (SELECT e1 as x FROM pm1.g1 order by x LIMIT 700) y where x = 1";//$NON-NLS-1$
         String[] expectedSql = new String[] {"SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0"};//$NON-NLS-1$ 
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                       null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -818,7 +793,7 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testDontPushSelectWithOrderedLimit1() {
+    @Test public void testDontPushSelectWithOrderedLimit1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -826,7 +801,7 @@ public class TestLimit extends TestCase {
         String sql = "select * from (SELECT e1 as x FROM pm1.g1 order by x LIMIT 10, 700) y where x = 1";//$NON-NLS-1$
         String[] expectedSql = new String[] {"SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0"};//$NON-NLS-1$ 
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                       null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -848,11 +823,11 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
-    public void testLimitWithNoAccessNode() {
+    @Test public void testLimitWithNoAccessNode() {
         String sql = "select 1 limit 1";//$NON-NLS-1$
         String[] expectedSql = new String[] {};
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), expectedSql);  
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), expectedSql);  
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
                                         0,      // Access
@@ -876,7 +851,7 @@ public class TestLimit extends TestCase {
     /**
      * Note here that the criteria made it to the having clause 
      */
-    public void testAggregateCriteriaOverUnSortedLimit() {
+    @Test public void testAggregateCriteriaOverUnSortedLimit() {
         String sql = "select a from (SELECT MAX(e2) as a FROM pm1.g1 GROUP BY e2 LIMIT 1) x where a = 0"; //$NON-NLS-1$
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
@@ -889,15 +864,15 @@ public class TestLimit extends TestCase {
         
         String[] expectedSql = new String[] {"SELECT MAX(e2) FROM pm1.g1 GROUP BY e2 HAVING MAX(e2) = 0 LIMIT 1"};//$NON-NLS-1$ 
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, expectedSql, true);  
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN, NODE_TYPES);
     }
     
-    public void testSortWithLimitInlineView() {
+    @Test public void testSortWithLimitInlineView() {
         String sql = "select e1 from (select pm1.g1.e1, pm1.g1.e2 from pm1.g1 order by pm1.g1.e1, pm1.g1.e2 limit 1) x"; //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0, g_0.e2"}); //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0, g_0.e2"}); //$NON-NLS-1$
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
                 1,      // Access

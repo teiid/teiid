@@ -72,9 +72,8 @@ import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
-import org.teiid.query.sql.proc.BreakStatement;
+import org.teiid.query.sql.proc.BranchingStatement;
 import org.teiid.query.sql.proc.CommandStatement;
-import org.teiid.query.sql.proc.ContinueStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.CriteriaSelector;
 import org.teiid.query.sql.proc.DeclareStatement;
@@ -87,8 +86,6 @@ import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.AllInGroupSymbol;
-import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.DerivedColumn;
@@ -97,11 +94,14 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.TextLine;
+import org.teiid.query.sql.symbol.WindowFunction;
+import org.teiid.query.sql.symbol.WindowSpecification;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
@@ -140,12 +140,12 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
             visitVisitor(obj);
         }
     }
-
     
     public void visit(AggregateSymbol obj) {
         preVisitVisitor(obj);
         visitNode(obj.getExpression());
         visitNode(obj.getOrderBy());
+        visitNode(obj.getCondition());
         postVisitVisitor(obj);
     }
     public void visit(AliasSymbol obj) {
@@ -153,11 +153,7 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
         visitNode(obj.getSymbol());
         postVisitVisitor(obj);
     }
-    public void visit(AllInGroupSymbol obj) {
-        preVisitVisitor(obj);
-        postVisitVisitor(obj);
-    }
-    public void visit(AllSymbol obj) {
+    public void visit(MultipleElementSymbol obj) {
         preVisitVisitor(obj);
         postVisitVisitor(obj);
     }
@@ -184,7 +180,7 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
         visitNodes(obj.getStatements());
         postVisitVisitor(obj);
     }
-    public void visit(BreakStatement obj) {
+    public void visit(BranchingStatement obj) {
         preVisitVisitor(obj);
         postVisitVisitor(obj);
     }
@@ -217,10 +213,6 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
         postVisitVisitor(obj);
     }
     public void visit(Constant obj) {
-        preVisitVisitor(obj);
-        postVisitVisitor(obj);
-    }
-    public void visit(ContinueStatement obj) {
         preVisitVisitor(obj);
         postVisitVisitor(obj);
     }
@@ -697,6 +689,22 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
         if (deep) {
         	visitNode(obj.getDefinition());
         }
+        postVisitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(WindowFunction obj) {
+    	preVisitVisitor(obj);
+        visitNode(obj.getFunction());
+        visitNode(obj.getWindowSpecification());
+        postVisitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(WindowSpecification obj) {
+    	preVisitVisitor(obj);
+    	visitNodes(obj.getPartition());
+        visitNode(obj.getOrderBy());
         postVisitVisitor(obj);
     }
     

@@ -43,7 +43,6 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
-import org.teiid.core.id.IntegerIDFactory;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
@@ -150,7 +149,6 @@ public class Request implements SecurityFunctionEvaluator {
         this.processorDataManager = processorDataManager;
         this.transactionService = transactionService;
         this.tempTableStore = tempTableStore;
-        idGenerator.setDefaultFactory(new IntegerIDFactory());
         this.workContext = workContext;
         this.requestId = workContext.getRequestID(this.requestMsg.getExecutionId());
         this.connectorManagerRepo = workContext.getVDB().getAttachment(ConnectorManagerRepository.class);
@@ -205,9 +203,9 @@ public class Request implements SecurityFunctionEvaluator {
         this.metadata = tma;
     }
     
-    protected void createCommandContext() throws QueryValidatorException {
-    	boolean returnsResultSet = userCommand.returnsResultSet();
-    	this.returnsUpdateCount = !(userCommand instanceof StoredProcedure) && !returnsResultSet;
+    protected void createCommandContext(Command command) throws QueryValidatorException {
+    	boolean returnsResultSet = command.returnsResultSet();
+    	this.returnsUpdateCount = !(command instanceof StoredProcedure) && !returnsResultSet;
     	if ((this.requestMsg.getResultsMode() == ResultsMode.UPDATECOUNT && !returnsUpdateCount) 
     			|| (this.requestMsg.getResultsMode() == ResultsMode.RESULTSET && !returnsResultSet)) {
         	throw new QueryValidatorException(QueryPlugin.Util.getString(this.requestMsg.getResultsMode()==ResultsMode.RESULTSET?"Request.no_result_set":"Request.result_set")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -252,6 +250,11 @@ public class Request implements SecurityFunctionEvaluator {
         context.setResultSetCacheEnabled(this.resultSetCacheEnabled);
         context.setUserRequestSourceConcurrency(this.userRequestConcurrency);
         context.setSubject(workContext.getSubject());
+        this.context.setSession(workContext.getSession());
+        this.context.setRequestId(this.requestId);
+        this.context.setDQPWorkContext(this.workContext);
+        this.context.setTransactionService(this.transactionService);
+        this.context.setTransactionContext(this.transactionContext);
     }
     
     @Override
@@ -260,7 +263,10 @@ public class Request implements SecurityFunctionEvaluator {
         if (!DATA_ROLE.equalsIgnoreCase(roleType)) {
             return false;
         }
-        return authorizationValidator.hasRole(roleName, workContext);
+        if (this.authorizationValidator == null) {
+        	return true;
+        }
+        return authorizationValidator.hasRole(roleName, context);
     }
     
     public void setUserRequestConcurrency(int userRequestConcurrency) {
@@ -381,11 +387,9 @@ public class Request implements SecurityFunctionEvaluator {
         this.analysisRecord = new AnalysisRecord(requestMsg.getShowPlan() != ShowPlan.OFF, requestMsg.getShowPlan() == ShowPlan.DEBUG);
                 
         resolveCommand(command);
-        
+
         validateAccess(userCommand);
         
-        createCommandContext();
-
         Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(command, true);
         for (GroupSymbol groupSymbol : groups) {
 			if (groupSymbol.isTempTable()) {
@@ -464,7 +468,10 @@ public class Request implements SecurityFunctionEvaluator {
 	}
 
 	protected void validateAccess(Command command) throws QueryValidatorException, TeiidComponentException {
-		this.authorizationValidator.validate(command, metadata, workContext);
+		createCommandContext(command);
+		if (this.authorizationValidator != null) {
+			this.authorizationValidator.validate(command, metadata, context);
+		}
 	}
 	
 }

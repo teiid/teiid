@@ -46,7 +46,8 @@ public class ElementSymbol extends SingleElementSymbol {
     private GroupSymbol groupSymbol;
     private Object metadataID;
 	private Class<?> type;
-    private boolean isExternalReference = false;
+    private boolean isExternalReference;
+    private boolean isAggregate;
         
     private DisplayMode displayMode = DisplayMode.OUTPUT_NAME;
 	
@@ -262,7 +263,16 @@ public class ElementSymbol extends SingleElementSymbol {
 		copy.setIsExternalReference(isExternalReference());
 		copy.outputName = this.outputName;
 		copy.setDisplayMode(this.getDisplayMode());
+		copy.isAggregate = isAggregate;
 		return copy;
+	}
+	
+	public boolean isAggregate() {
+		return isAggregate;
+	}
+	
+	public void setAggregate(boolean isAggregate) {
+		this.isAggregate = isAggregate;
 	}
 	
 }

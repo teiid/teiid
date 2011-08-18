@@ -52,8 +52,11 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.Transform;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.language.SQLConstants;
+import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
@@ -64,7 +67,6 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
-import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
 import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria.PlannedResult;
@@ -240,6 +242,7 @@ public class QueryRewriter {
      * @throws QueryValidatorException
      */
 	private Command rewriteCommand(Command command, boolean removeOrderBy) throws TeiidComponentException, TeiidProcessingException{
+		boolean oldRewriteAggs = rewriteAggs;
 		QueryMetadataInterface oldMetadata = metadata;
 		CreateUpdateProcedureCommand oldProcCommand = procCommand;
         
@@ -299,6 +302,7 @@ public class QueryRewriter {
             	break;
 		}
         
+        this.rewriteAggs = oldRewriteAggs;
         this.metadata = oldMetadata;
         this.procCommand = oldProcCommand;
         return command;
@@ -322,19 +326,14 @@ public class QueryRewriter {
 
 	private Block rewriteBlock(Block block)
 								 throws TeiidComponentException, TeiidProcessingException{
-		List statements = block.getStatements();
-        Iterator stmtIter = statements.iterator();
+		List<Statement> statements = block.getStatements();
+        Iterator<Statement> stmtIter = statements.iterator();
 
-		List newStmts = new ArrayList(statements.size());
+		List<Statement> newStmts = new ArrayList<Statement>(statements.size());
 		// plan each statement in the block
         while(stmtIter.hasNext()) {
-			Statement stmnt = (Statement) stmtIter.next();
-			Object newStmt = rewriteStatement(stmnt);
-			if(newStmt instanceof Statement) {
-				newStmts.add(newStmt);
-			} else if (newStmt instanceof List) {
-			    newStmts.addAll((List)newStmt);
-            }
+			Statement stmnt = stmtIter.next();
+			rewriteStatement(stmnt, newStmts);
         }
 
         block.setStatements(newStmts);
@@ -342,7 +341,7 @@ public class QueryRewriter {
         return block;
 	 }
 
-	private Object rewriteStatement(Statement statement)
+	private void rewriteStatement(Statement statement, List<Statement> newStmts)
 								 throws TeiidComponentException, TeiidProcessingException{
 
         // evaluate the HAS Criteria on the procedure and rewrite
@@ -356,13 +355,15 @@ public class QueryRewriter {
 				ifStmt.setCondition(evalCrit);
 				if(evalCrit.equals(TRUE_CRITERIA)) {
 					Block ifblock = rewriteBlock(ifStmt.getIfBlock());
-					return ifblock.getStatements();
+					newStmts.addAll(ifblock.getStatements());
+					return;
 				} else if(evalCrit.equals(FALSE_CRITERIA) || evalCrit.equals(UNKNOWN_CRITERIA)) {
 					if(ifStmt.hasElseBlock()) {
 						Block elseBlock = rewriteBlock(ifStmt.getElseBlock());
-						return elseBlock.getStatements();
+						newStmts.addAll(elseBlock.getStatements());
+						return;
 					} 
-                    return null;
+                    return;
 				} else {
 					Block ifblock = rewriteBlock(ifStmt.getIfBlock());
 					ifStmt.setIfBlock(ifblock);
@@ -371,7 +372,7 @@ public class QueryRewriter {
 						ifStmt.setElseBlock(elseBlock);
 					}
 				}
-				return ifStmt;
+				break;
             case Statement.TYPE_ERROR: 
             case Statement.TYPE_DECLARE:
             case Statement.TYPE_ASSIGNMENT:
@@ -383,7 +384,7 @@ public class QueryRewriter {
 					expr = rewriteExpressionDirect(expr);
 	                exprStmt.setExpression(expr);
 				}
-				return exprStmt;
+				break;
             case Statement.TYPE_COMMAND:
 				CommandStatement cmdStmt = (CommandStatement) statement;
                 rewriteSubqueryContainer(cmdStmt, false);
@@ -391,10 +392,10 @@ public class QueryRewriter {
 				if(cmdStmt.getCommand().getType() == Command.TYPE_UPDATE) {
                     Update update = (Update)cmdStmt.getCommand();
                     if (update.getChangeList().isEmpty()) {
-                        return null;
+                        return;
                     }
 				}
-                return statement;
+				break;
             case Statement.TYPE_LOOP: 
                 LoopStatement loop = (LoopStatement)statement; 
                 
@@ -403,10 +404,9 @@ public class QueryRewriter {
                 rewriteBlock(loop.getBlock());
                 
                 if (loop.getBlock().getStatements().isEmpty()) {
-                    return null;
+                    return;
                 }
-                
-                return loop;
+                break;
             case Statement.TYPE_WHILE:
                 WhileStatement whileStatement = (WhileStatement) statement;
                 Criteria crit = whileStatement.getCondition();
@@ -416,18 +416,16 @@ public class QueryRewriter {
                 if(crit.equals(TRUE_CRITERIA)) {
                     throw new QueryValidatorException(QueryPlugin.Util.getString("QueryRewriter.infinite_while")); //$NON-NLS-1$
                 } else if(crit.equals(FALSE_CRITERIA) || crit.equals(UNKNOWN_CRITERIA)) {
-                    return null;
+                    return;
                 } 
                 whileStatement.setBlock(rewriteBlock(whileStatement.getBlock()));
                 
                 if (whileStatement.getBlock().getStatements().isEmpty()) {
-                    return null;
+                    return;
                 }
-                
-                return whileStatement;
-			default:
-				return statement;
+                break;
 		}
+		newStmts.add(statement);
 	}
     
     /** 
@@ -605,9 +603,9 @@ public class QueryRewriter {
         From from = query.getFrom();
         if(from != null){
             List<FromClause> clauses = new ArrayList<FromClause>(from.getClauses().size());
-            Iterator clauseIter = from.getClauses().iterator();
+            Iterator<FromClause> clauseIter = from.getClauses().iterator();
             while(clauseIter.hasNext()) {
-                clauses.add( rewriteFromClause(query, (FromClause) clauseIter.next()) );
+                clauses.add( rewriteFromClause(query, clauseIter.next()) );
             }
             from.setClauses(clauses);
         } else {
@@ -634,7 +632,7 @@ public class QueryRewriter {
         }
         
         if (from != null && !query.getIsXML()) {
-        	writeSubqueriesAsJoins(query);
+        	rewriteSubqueriesAsJoins(query);
         }
 
         query = rewriteGroupBy(query);
@@ -667,7 +665,7 @@ public class QueryRewriter {
         return query;
     }
 
-	private void writeSubqueriesAsJoins(Query query)
+	private void rewriteSubqueriesAsJoins(Query query)
 			throws TeiidComponentException, QueryMetadataException,
 			QueryResolverException {
 		if (query.getCriteria() == null) {
@@ -704,16 +702,6 @@ public class QueryRewriter {
 			if (!rmc.planQuery(groups, requiresDistinct, plannedResult)) {
 				continue;
 			}
-			if (requiresDistinct) {
-				//check for key preservation
-				HashSet<GroupSymbol> keyPreservingGroups = new HashSet<GroupSymbol>();
-				ResolverUtil.findKeyPreserved(query, keyPreservingGroups, metadata);
-				if (NewCalculateCostUtil.usesKey(plannedResult.leftExpressions, keyPreservingGroups, metadata, true) && plannedResult.madeDistinct) {
-					//if key perserved then the semi-join will remain in-tact without make the other query distinct
-					plannedResult.madeDistinct = false;
-					plannedResult.query.getSelect().setDistinct(false);
-				}
-			}
 			crits.remove();
 			
 			GroupSymbol viewName = RulePlaceAccess.recontextSymbol(new GroupSymbol("X"), names); //$NON-NLS-1$
@@ -722,9 +710,9 @@ public class QueryRewriter {
 			Query q = createInlineViewQuery(viewName, plannedResult.query, metadata, plannedResult.query.getSelect().getProjectedSymbols());
 			
 			Iterator<SingleElementSymbol> iter = q.getSelect().getProjectedSymbols().iterator();
-		    HashMap<Expression, SingleElementSymbol> expressionMap = new HashMap<Expression, SingleElementSymbol>();
+		    HashMap<Expression, Expression> expressionMap = new HashMap<Expression, Expression>();
 		    for (SingleElementSymbol symbol : plannedResult.query.getSelect().getProjectedSymbols()) {
-		        expressionMap.put(SymbolMap.getExpression(symbol), iter.next());
+		        expressionMap.put(SymbolMap.getExpression(symbol), SymbolMap.getExpression(iter.next()));
 		    }
 			for (int i = 0; i < plannedResult.leftExpressions.size(); i++) {
 				plannedResult.nonEquiJoinCriteria.add(new CompareCriteria(SymbolMap.getExpression((Expression)plannedResult.leftExpressions.get(i)), CompareCriteria.EQ, (Expression)plannedResult.rightExpressions.get(i)));
@@ -732,7 +720,11 @@ public class QueryRewriter {
 			Criteria mappedCriteria = Criteria.combineCriteria(plannedResult.nonEquiJoinCriteria);
 			ExpressionMappingVisitor.mapExpressions(mappedCriteria, expressionMap);
 			query.setCriteria(Criteria.combineCriteria(query.getCriteria(), mappedCriteria));
-		    query.getFrom().addClause((FromClause) q.getFrom().getClauses().get(0));
+			FromClause clause = q.getFrom().getClauses().get(0);
+			if (plannedResult.makeInd) {
+				clause.setMakeInd(true);
+			}
+		    query.getFrom().addClause(clause);
 		    query.getTemporaryMetadata().putAll(q.getTemporaryMetadata());
 			//transform the query into an inner join 
 		}
@@ -766,83 +758,18 @@ public class QueryRewriter {
 	 * Converts a group by with expressions into a group by with only element symbols and an inline view
 	 * @param query
 	 * @return
-	 * @throws QueryValidatorException
+	 * @throws TeiidProcessingException 
+	 * @throws TeiidComponentException 
 	 */
-	private Query rewriteGroupBy(Query query) throws TeiidComponentException, TeiidProcessingException{
+	private Query rewriteGroupBy(Query query) throws TeiidComponentException, TeiidProcessingException {
 		if (query.getGroupBy() == null) {
+			rewriteAggs = false;
 			return query;
 		}
 		if (isDistinctWithGroupBy(query)) {
 			query.getSelect().setDistinct(false);
 		}
-        // we check for group by expressions here to create an ANSI SQL plan
-        boolean hasExpression = false;
-        for (final Iterator iterator = query.getGroupBy().getSymbols().iterator(); !hasExpression && iterator.hasNext();) {
-            hasExpression = iterator.next() instanceof ExpressionSymbol;
-        } 
-        if (!hasExpression) {
-        	return query;
-        }
-        Select select = query.getSelect();
-        GroupBy groupBy = query.getGroupBy();
-        query.setGroupBy(null);
-        Criteria having = query.getHaving();
-        query.setHaving(null);
-        OrderBy orderBy = query.getOrderBy();
-        query.setOrderBy(null);
-        Limit limit = query.getLimit();
-        query.setLimit(null);
-        Into into = query.getInto();
-        query.setInto(null);
-        Set<Expression> newSelectColumns = new HashSet<Expression>();
-        for (final Iterator iterator = groupBy.getSymbols().iterator(); iterator.hasNext();) {
-            newSelectColumns.add(SymbolMap.getExpression((SingleElementSymbol)iterator.next()));
-        }
-        Set<AggregateSymbol> aggs = new HashSet<AggregateSymbol>();
-        aggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(select, true));
-        if (having != null) {
-            aggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(having, true));
-        }
-        for (AggregateSymbol aggregateSymbol : aggs) {
-            if (aggregateSymbol.getExpression() != null) {
-                Expression expr = aggregateSymbol.getExpression();
-                newSelectColumns.add(SymbolMap.getExpression(expr));
-            }
-        }
-        Select innerSelect = new Select();
-        int index = 0;
-        for (Expression expr : newSelectColumns) {
-            if (expr instanceof SingleElementSymbol) {
-                innerSelect.addSymbol((SingleElementSymbol)expr);
-            } else {
-                innerSelect.addSymbol(new ExpressionSymbol("EXPR" + index++ , expr)); //$NON-NLS-1$
-            }
-        }
-        query.setSelect(innerSelect);
-        Query outerQuery = null;
-        try {
-            outerQuery = QueryRewriter.createInlineViewQuery(new GroupSymbol("X"), query, metadata, query.getSelect().getProjectedSymbols()); //$NON-NLS-1$
-        } catch (TeiidException err) {
-            throw new TeiidRuntimeException(err);
-        }
-        Iterator<SingleElementSymbol> iter = outerQuery.getSelect().getProjectedSymbols().iterator();
-        HashMap<Expression, SingleElementSymbol> expressionMap = new HashMap<Expression, SingleElementSymbol>();
-        for (SingleElementSymbol symbol : query.getSelect().getProjectedSymbols()) {
-            expressionMap.put(SymbolMap.getExpression(symbol), iter.next());
-        }
-        ExpressionMappingVisitor.mapExpressions(groupBy, expressionMap);
-        outerQuery.setGroupBy(groupBy);
-        ExpressionMappingVisitor.mapExpressions(having, expressionMap);
-        outerQuery.setHaving(having);
-        ExpressionMappingVisitor.mapExpressions(orderBy, expressionMap);
-        outerQuery.setOrderBy(orderBy);
-        outerQuery.setLimit(limit);
-        ExpressionMappingVisitor.mapExpressions(select, expressionMap);
-        outerQuery.setSelect(select);
-        outerQuery.setInto(into);
-        outerQuery.setOption(query.getOption());
-        query = outerQuery;
-        rewriteExpressions(innerSelect);
+		rewriteExpressions(query.getGroupBy());
 		return query;
 	}
 	
@@ -855,7 +782,7 @@ public class QueryRewriter {
 		for (SingleElementSymbol selectExpr : query.getSelect().getProjectedSymbols()) {
 			selectExpressions.add(SymbolMap.getExpression(selectExpr));
 		}
-		for (SingleElementSymbol groupByExpr :  (List<SingleElementSymbol>)groupBy.getSymbols()) {
+		for (Expression groupByExpr : groupBy.getSymbols()) {
 			if (!selectExpressions.contains(groupByExpr)) {
 				return false;
 			}
@@ -883,11 +810,11 @@ public class QueryRewriter {
         try {
             PostOrderNavigator.doVisit(obj, visitor);
         } catch (TeiidRuntimeException err) {
-            if (err.getChild() instanceof TeiidComponentException) {
-                throw (TeiidComponentException)err.getChild();
+            if (err.getCause() instanceof TeiidComponentException) {
+                throw (TeiidComponentException)err.getCause();
             } 
-            if (err.getChild() instanceof TeiidProcessingException) {
-                throw (TeiidProcessingException)err.getChild();
+            if (err.getCause() instanceof TeiidProcessingException) {
+                throw (TeiidProcessingException)err.getCause();
             } 
             throw err;
         }
@@ -910,57 +837,14 @@ public class QueryRewriter {
         
         LinkedList<OrderByItem> unrelatedItems = new LinkedList<OrderByItem>();
         
-        boolean hasUnrelatedExpression = rewriteOrderBy(queryCommand, orderBy,
-				projectedSymbols, unrelatedItems);
+        rewriteOrderBy(queryCommand, orderBy, projectedSymbols, unrelatedItems);
         
-        if (orderBy.getVariableCount() == 0 || !hasUnrelatedExpression) {
-        	return queryCommand;
-        } 
-        
-        int originalSymbolCount = select.getProjectedSymbols().size();
-
-        //add unrelated to select
-        for (OrderByItem orderByItem : unrelatedItems) {
-            select.addSymbol(orderByItem.getSymbol());				
-		}
-        makeSelectUnique(select, false);
-        
-        Query query = queryCommand.getProjectedQuery();
-        
-        Into into = query.getInto();
-        query.setInto(null);
-        Limit limit = query.getLimit();
-        query.setLimit(null);
-        query.setOrderBy(null);
-        
-        Query top = null;
-        
-        try {
-        	top = createInlineViewQuery(new GroupSymbol("X"), query, metadata, select.getProjectedSymbols()); //$NON-NLS-1$
-			Iterator<SingleElementSymbol> iter = top.getSelect().getProjectedSymbols().iterator();
-		    HashMap<Expression, SingleElementSymbol> expressionMap = new HashMap<Expression, SingleElementSymbol>();
-		    for (SingleElementSymbol symbol : select.getProjectedSymbols()) {
-		    	SingleElementSymbol ses = iter.next();
-		        expressionMap.put(SymbolMap.getExpression(symbol), ses);
-		        expressionMap.put(new ElementSymbol(symbol.getName()), ses);
-		    }
-		    ExpressionMappingVisitor.mapExpressions(orderBy, expressionMap);
-		    //now the order by should only contain element symbols
-		} catch (TeiidException err) {
-            throw new TeiidRuntimeException(err);
-        }
-		List symbols = top.getSelect().getSymbols();
-		top.getSelect().setSymbols(symbols.subList(0, originalSymbolCount));
-		top.setInto(into);
-		top.setLimit(limit);
-		top.setOrderBy(orderBy);
-		return top;
+    	return queryCommand;
     }
 
-	public static boolean rewriteOrderBy(QueryCommand queryCommand,
+	public static void rewriteOrderBy(QueryCommand queryCommand,
 			final OrderBy orderBy, final List projectedSymbols,
 			LinkedList<OrderByItem> unrelatedItems) {
-		boolean hasUnrelatedExpression = false;
 		HashSet<Expression> previousExpressions = new HashSet<Expression>();
         for (int i = 0; i < orderBy.getVariableCount(); i++) {
         	SingleElementSymbol querySymbol = orderBy.getVariable(i);
@@ -977,14 +861,11 @@ public class QueryRewriter {
                 orderBy.removeOrderByItem(i--);
         	} else if (!isUnrelated) {
         		orderBy.getOrderByItems().get(i).setSymbol((SingleElementSymbol)querySymbol.clone());
-        	} else {
-        		hasUnrelatedExpression = true;
         	}
         }
         if (orderBy.getVariableCount() == 0) {
         	queryCommand.setOrderBy(null);
         } 
-		return hasUnrelatedExpression;
 	}
     
     /**
@@ -1589,26 +1470,29 @@ public class QueryRewriter {
      */
     private Criteria rewriteCriteria(SubqueryCompareCriteria criteria) throws TeiidComponentException, TeiidProcessingException{
     	
-    	if (criteria.getCommand().getProcessorPlan() == null && criteria.getPredicateQuantifier() != SubqueryCompareCriteria.ALL) {
-    		if (criteria.getOperator() == CompareCriteria.EQ || criteria.getOperator() == CompareCriteria.NE) {
+    	if (criteria.getCommand().getProcessorPlan() == null) {
+    		if ((criteria.getOperator() == CompareCriteria.EQ && criteria.getPredicateQuantifier() != SubqueryCompareCriteria.ALL)
+    				|| (criteria.getOperator() == CompareCriteria.NE && criteria.getPredicateQuantifier() == SubqueryCompareCriteria.ALL)) {
     			SubquerySetCriteria result = new SubquerySetCriteria(criteria.getLeftExpression(), criteria.getCommand());
     			result.setNegated(criteria.getOperator() == CompareCriteria.NE);
     			return rewriteCriteria(result);
     		}
-    		CompareCriteria cc = new CompareCriteria();
-    		cc.setLeftExpression(criteria.getLeftExpression());
-    		Query q = createInlineViewQuery(new GroupSymbol("X"), criteria.getCommand(), metadata, criteria.getCommand().getProjectedSymbols()); //$NON-NLS-1$
-    		SingleElementSymbol ses = q.getProjectedSymbols().get(0);
-    		Expression expr = SymbolMap.getExpression(ses);
-    		q.getSelect().clearSymbols();
-    		AggregateSymbol.Type type = Type.MAX;
-    		if (criteria.getOperator() == CompareCriteria.GT || criteria.getOperator() == CompareCriteria.GE) {
-    			type = Type.MIN;
+    		if (criteria.getPredicateQuantifier() != SubqueryCompareCriteria.ALL && criteria.getOperator() != CompareCriteria.EQ && criteria.getOperator() != CompareCriteria.NE) {
+	    		CompareCriteria cc = new CompareCriteria();
+	    		cc.setLeftExpression(criteria.getLeftExpression());
+	    		Query q = createInlineViewQuery(new GroupSymbol("X"), criteria.getCommand(), metadata, criteria.getCommand().getProjectedSymbols()); //$NON-NLS-1$
+	    		SingleElementSymbol ses = q.getProjectedSymbols().get(0);
+	    		Expression expr = SymbolMap.getExpression(ses);
+	    		q.getSelect().clearSymbols();
+	    		AggregateSymbol.Type type = Type.MAX;
+	    		if (criteria.getOperator() == CompareCriteria.GT || criteria.getOperator() == CompareCriteria.GE) {
+	    			type = Type.MIN;
+	    		}
+	    		q.getSelect().addSymbol(new AggregateSymbol(ses.getName(), type.name(), false, expr));
+	    		cc.setRightExpression(new ScalarSubquery(q));
+				cc.setOperator(criteria.getOperator());
+	    		return rewriteCriteria(cc);
     		}
-    		q.getSelect().addSymbol(new AggregateSymbol(ses.getName(), type.name(), false, expr));
-    		cc.setRightExpression(new ScalarSubquery(q));
-			cc.setOperator(criteria.getOperator());
-    		return rewriteCriteria(cc);
     	}
 
         Expression leftExpr = rewriteExpressionDirect(criteria.getLeftExpression());
@@ -1667,6 +1551,7 @@ public class QueryRewriter {
     private BigDecimal BIG_DECIMAL_ZERO = new BigDecimal("0"); //$NON-NLS-1$
     private Short SHORT_ZERO = new Short((short)0);
     private Byte BYTE_ZERO = new Byte((byte)0);
+	private boolean rewriteAggs = true;
 
     /**
      * @param criteria
@@ -2133,23 +2018,33 @@ public class QueryRewriter {
             Constant constant = (Constant) rightExpr;
             String value = (String) constant.getValue();
 
-            char escape = criteria.getEscapeChar();
-
-            // Check whether escape char is unnecessary and remove it
-            if(escape != MatchCriteria.NULL_ESCAPE_CHAR && value.indexOf(escape) < 0) {
-                criteria.setEscapeChar(MatchCriteria.NULL_ESCAPE_CHAR);
-            }
-
-            // if the value of this string constant is '%', then we know the crit will 
-            // always be true                    
-            if ( value.equals( String.valueOf(MatchCriteria.WILDCARD_CHAR)) ) { 
-                return getSimpliedCriteria(criteria, criteria.getLeftExpression(), !criteria.isNegated(), true);                                        
-            } 
-            
-            // if both left and right expressions are strings, and the LIKE match characters ('*', '_') are not present 
-            //  in the right expression, rewrite the criteria as EQUALs rather than LIKE
-            if(DataTypeManager.DefaultDataClasses.STRING.equals(criteria.getLeftExpression().getType()) && value.indexOf(escape) < 0 && value.indexOf(MatchCriteria.MATCH_CHAR) < 0 && value.indexOf(MatchCriteria.WILDCARD_CHAR) < 0) {
-            	return rewriteCriteria(new CompareCriteria(criteria.getLeftExpression(), criteria.isNegated()?CompareCriteria.NE:CompareCriteria.EQ, criteria.getRightExpression()));
+            if (criteria.getMode() != MatchMode.REGEX) {
+	            char escape = criteria.getEscapeChar();
+	
+	            // Check whether escape char is unnecessary and remove it
+	            if(escape != MatchCriteria.NULL_ESCAPE_CHAR && value.indexOf(escape) < 0) {
+	                criteria.setEscapeChar(MatchCriteria.NULL_ESCAPE_CHAR);
+	            }
+	
+	            // if the value of this string constant is '%', then we know the crit will 
+	            // always be true                    
+	            if ( value.equals( String.valueOf(MatchCriteria.WILDCARD_CHAR)) ) { 
+	                return getSimpliedCriteria(criteria, criteria.getLeftExpression(), !criteria.isNegated(), true);                                        
+	            } 
+	            
+	            if (criteria.getMode() == MatchMode.SIMILAR) {
+	            	//regex is more widely supported
+	            	criteria.setMode(MatchMode.REGEX);
+	            	criteria.setRightExpression(new Constant(Evaluator.SIMILAR_TO_REGEX.getPatternString(value, escape)));
+	            	criteria.setEscapeChar(MatchCriteria.NULL_ESCAPE_CHAR);
+	            } else if(DataTypeManager.DefaultDataClasses.STRING.equals(criteria.getLeftExpression().getType()) 
+	            		&& value.indexOf(escape) < 0 
+	            		&& value.indexOf(MatchCriteria.MATCH_CHAR) < 0 
+	            		&& value.indexOf(MatchCriteria.WILDCARD_CHAR) < 0) {
+	            	// if both left and right expressions are strings, and the LIKE match characters ('*', '_') are not present 
+		            //  in the right expression, rewrite the criteria as EQUALs rather than LIKE
+	            	return rewriteCriteria(new CompareCriteria(criteria.getLeftExpression(), criteria.isNegated()?CompareCriteria.NE:CompareCriteria.EQ, criteria.getRightExpression()));
+	            }
             }
         }
 
@@ -2361,16 +2256,21 @@ public class QueryRewriter {
     			expression.setAggregateFunction(Type.MAX);
     		}
     	}
-    	if ((expression.getAggregateFunction() == Type.MAX || expression.getAggregateFunction() == Type.MIN)
-				&& EvaluatableVisitor.willBecomeConstant(expression.getExpression())) {
-			try {
-				return new ExpressionSymbol(expression.getName(), ResolverUtil
-						.convertExpression(expression.getExpression(),DataTypeManager.getDataTypeName(expression.getType()), metadata));
-			} catch (QueryResolverException e) {
-				//should not happen, so throw as a runtime
-				throw new TeiidRuntimeException(e);
-			}
-		}
+    	if ((expression.getAggregateFunction() == Type.MAX || expression.getAggregateFunction() == Type.MIN) 
+    			&& rewriteAggs && expression.getExpression() != null && EvaluatableVisitor.willBecomeConstant(expression.getExpression())) {
+    		return expression.getExpression();
+    	}
+    	if (expression.getExpression() != null && expression.getCondition() != null && !expression.respectsNulls()) {
+    		Expression cond = expression.getCondition();
+    		Expression ex = expression.getExpression();
+    		if (!(cond instanceof Criteria)) {
+    			cond = new ExpressionCriteria(cond);
+    		}
+    		SearchedCaseExpression sce = new SearchedCaseExpression(Arrays.asList(cond), Arrays.asList(ex));
+    		sce.setType(ex.getType());
+    		expression.setCondition(null);
+    		expression.setExpression(sce);
+    	}
 		return expression;
 	}
    
@@ -2387,6 +2287,7 @@ public class QueryRewriter {
     	FUNCTION_MAP.put(FunctionLibrary.PARSETIME.toLowerCase(), 7);
     	FUNCTION_MAP.put(FunctionLibrary.FORMATDATE.toLowerCase(), 8);
     	FUNCTION_MAP.put(FunctionLibrary.FORMATTIME.toLowerCase(), 9);
+    	FUNCTION_MAP.put(SourceSystemFunctions.TRIM.toLowerCase(), 10);
     }
     
 	private Expression rewriteFunction(Function function) throws TeiidComponentException, TeiidProcessingException{
@@ -2513,6 +2414,26 @@ public class QueryRewriter {
 				function.getArgs()[0] = ResolverUtil.getConversion(function.getArg(0), DataTypeManager.getDataTypeName(function.getArg(0).getType()), DataTypeManager.DefaultDataTypes.TIMESTAMP, false, funcLibrary);
 				break;
 			}
+			case 10: {
+				if (new Constant(" ").equals(function.getArg(1))) { //$NON-NLS-1$
+					String spec = (String)((Constant)function.getArg(0)).getValue();
+					Expression string = function.getArg(2);
+					if (!SQLConstants.Reserved.TRAILING.equalsIgnoreCase(spec)) {
+						function = new Function(SourceSystemFunctions.LTRIM, new Expression[] {string});
+						FunctionDescriptor descriptor = funcLibrary.findFunction(SourceSystemFunctions.LTRIM, new Class[] { DataTypeManager.DefaultDataClasses.STRING });
+						function.setFunctionDescriptor(descriptor);
+						function.setType(DataTypeManager.DefaultDataClasses.STRING);
+						string = function;
+					}
+					if (!SQLConstants.Reserved.LEADING.equalsIgnoreCase(spec)) {
+						function = new Function(SourceSystemFunctions.RTRIM, new Expression[] {string});
+						FunctionDescriptor descriptor = funcLibrary.findFunction(SourceSystemFunctions.RTRIM, new Class[] { DataTypeManager.DefaultDataClasses.STRING });
+						function.setFunctionDescriptor(descriptor);
+						function.setType(DataTypeManager.DefaultDataClasses.STRING);
+					}
+				}
+				break;
+			}
 			}
 		}
 						
@@ -2528,17 +2449,44 @@ public class QueryRewriter {
         }
         function.setArgs(newArgs);
 
-        if( FunctionLibrary.isConvert(function) &&
-            newArgs[1] instanceof Constant) {
-            
-            Class srcType = newArgs[0].getType();
-            String tgtTypeName = (String) ((Constant)newArgs[1]).getValue();
-            Class tgtType = DataTypeManager.getDataTypeClass(tgtTypeName);
+        if( FunctionLibrary.isConvert(function)) {
+            Class<?> srcType = newArgs[0].getType();
+            Class<?> tgtType = function.getType();
 
             if(srcType != null && tgtType != null && srcType.equals(tgtType)) {
-                return newArgs[0];
+                return newArgs[0]; //unnecessary conversion
             }
-
+            
+            if (!(newArgs[0] instanceof Function) || tgtType == DataTypeManager.DefaultDataClasses.OBJECT) {
+            	return function;
+            }
+        	Function nested = (Function) newArgs[0];
+        	if (!FunctionLibrary.isConvert(nested)) {
+        		return function;
+        	}
+    		Class<?> nestedType = nested.getArgs()[0].getType();
+    		
+            Transform t = DataTypeManager.getTransform(nestedType, nested.getType());
+            if (t.isExplicit()) {
+            	//explicit conversions are required
+            	return function;
+            }
+            if (DataTypeManager.getTransform(nestedType, tgtType) == null) {
+            	//no direct conversion exists
+            	return function;
+            }
+    		//can't remove a convert that would alter the lexical form
+    		if (tgtType == DataTypeManager.DefaultDataClasses.STRING &&
+    				(nestedType == DataTypeManager.DefaultDataClasses.BOOLEAN
+    				|| nestedType == DataTypeManager.DefaultDataClasses.DATE
+    				|| nestedType == DataTypeManager.DefaultDataClasses.TIME
+    				|| tgtType == DataTypeManager.DefaultDataClasses.BIG_DECIMAL
+    				|| tgtType == DataTypeManager.DefaultDataClasses.FLOAT
+    				|| (tgtType == DataTypeManager.DefaultDataClasses.DOUBLE && srcType != DataTypeManager.DefaultDataClasses.FLOAT))) {
+    			return function;
+    		}
+        	//nested implicit transform is not needed
+        	return rewriteExpressionDirect(ResolverUtil.getConversion(nested.getArgs()[0], DataTypeManager.getDataTypeName(nestedType), DataTypeManager.getDataTypeName(tgtType), false, funcLibrary));
         }
 
         //convert DECODESTRING function to CASE expression

@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.resource.ResourceException;
 import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.core.BundleUtil;
@@ -46,6 +47,8 @@ import org.teiid.core.types.InputStreamFactory.FileInputStreamFactory;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.language.Call;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
@@ -78,7 +81,16 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 
 		@Override
 		public void execute() throws TranslatorException {
-			files = FileConnection.Util.getFiles((String)command.getArguments().get(0).getArgumentValue().getValue(), fc);
+			String path = (String)command.getArguments().get(0).getArgumentValue().getValue();
+			try {
+				files = FileConnection.Util.getFiles(path, fc);
+			} catch (ResourceException e) {
+				throw new TranslatorException(e);
+			}
+			if (files == null && exceptionIfFileNotFound) {
+				throw new TranslatorException(UTIL.getString("file_not_found", path)); //$NON-NLS-1$
+			}
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Getting", files != null ? files.length : 0, "file(s)"); //$NON-NLS-1$ //$NON-NLS-2$
 			String name = command.getProcedureName();
 			if (name.equalsIgnoreCase(GETTEXTFILES)) {
 				isText = true;
@@ -104,6 +116,7 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 			}
 			ArrayList<Object> result = new ArrayList<Object>(2);
 			final File file = files[index++];
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Getting", file); //$NON-NLS-1$
 			FileInputStreamFactory isf = new FileInputStreamFactory(file);
 			isf.setLength(file.length());
 			Object value = null;
@@ -132,6 +145,7 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 	public static final String SAVEFILE = "saveFile"; //$NON-NLS-1$
 	
 	private Charset encoding = Charset.defaultCharset();
+	private boolean exceptionIfFileNotFound;
 	
 	@TranslatorProperty(display="File Encoding",advanced=true)
 	public String getEncoding() {
@@ -140,6 +154,15 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 	
 	public void setEncoding(String encoding) {
 		this.encoding = Charset.forName(encoding);
+	}
+	
+	@TranslatorProperty(display="Exception if file not found",advanced=true)
+	public boolean isExceptionIfFileNotFound() {
+		return exceptionIfFileNotFound;
+	}
+	
+	public void setExceptionIfFileNotFound(boolean exceptionIfFileNotFound) {
+		this.exceptionIfFileNotFound = exceptionIfFileNotFound;
 	}
 	
 	//@Override
@@ -156,6 +179,7 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 					if (file == null || filePath == null) {
 						throw new TranslatorException(UTIL.getString("non_null")); //$NON-NLS-1$
 					}
+					LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Saving", filePath); //$NON-NLS-1$
 					InputStream is = null;
 					try {
 						if (file instanceof SQLXML) {
@@ -172,6 +196,8 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 					} catch (IOException e) {
 						throw new TranslatorException(e, UTIL.getString("error_writing")); //$NON-NLS-1$
 					} catch (SQLException e) {
+						throw new TranslatorException(e, UTIL.getString("error_writing")); //$NON-NLS-1$
+					} catch (ResourceException e) {
 						throw new TranslatorException(e, UTIL.getString("error_writing")); //$NON-NLS-1$
 					}
 				}
@@ -201,24 +227,24 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, FileConnection connection) throws TranslatorException {
 		Procedure p = metadataFactory.addProcedure(GETTEXTFILES);
-		p.setAnnotation("Returns text files that match the given path and pattern as CLOBs");
+		p.setAnnotation("Returns text files that match the given path and pattern as CLOBs"); //$NON-NLS-1$
 		ProcedureParameter param = metadataFactory.addProcedureParameter("pathAndPattern", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
-		param.setAnnotation("The path and pattern of what files to return.  Currently the only pattern supported is *.<ext>, which returns only the files matching the given extension at the given path.");
+		param.setAnnotation("The path and pattern of what files to return.  Currently the only pattern supported is *.<ext>, which returns only the files matching the given extension at the given path."); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("file", TypeFacility.RUNTIME_NAMES.CLOB, p); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("filePath", TypeFacility.RUNTIME_NAMES.STRING, p); //$NON-NLS-1$
 		
 		Procedure p1 = metadataFactory.addProcedure(GETFILES);
-		p1.setAnnotation("Returns text files that match the given path and pattern as BLOBs");
+		p1.setAnnotation("Returns text files that match the given path and pattern as BLOBs"); //$NON-NLS-1$
 		param = metadataFactory.addProcedureParameter("pathAndPattern", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p1); //$NON-NLS-1$
-		param.setAnnotation("The path and pattern of what files to return.  Currently the only pattern supported is *.<ext>, which returns only the files matching the given extension at the given path.");
+		param.setAnnotation("The path and pattern of what files to return.  Currently the only pattern supported is *.<ext>, which returns only the files matching the given extension at the given path."); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("file", TypeFacility.RUNTIME_NAMES.BLOB, p1); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("filePath", TypeFacility.RUNTIME_NAMES.STRING, p1); //$NON-NLS-1$
 		
 		Procedure p2 = metadataFactory.addProcedure(SAVEFILE);
-		p2.setAnnotation("Saves the given vale to the given path.  Any existing file will be overriden.");
+		p2.setAnnotation("Saves the given vale to the given path.  Any existing file will be overriden."); //$NON-NLS-1$
 		metadataFactory.addProcedureParameter("filePath", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p2); //$NON-NLS-1$
 		param = metadataFactory.addProcedureParameter("file", TypeFacility.RUNTIME_NAMES.OBJECT, Type.In, p2); //$NON-NLS-1$
-		param.setAnnotation("The contents to save.  Can be one of CLOB, BLOB, or XML");
+		param.setAnnotation("The contents to save.  Can be one of CLOB, BLOB, or XML"); //$NON-NLS-1$
 	} 
 	
 	@Override

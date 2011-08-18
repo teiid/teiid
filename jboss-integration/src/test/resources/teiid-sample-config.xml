@@ -1,21 +1,18 @@
 <subsystem xmlns="urn:jboss:domain:teiid:1.0">
     <query-engine>
-        <thread-group-async>teiid-async</thread-group-async>
-        <maxThreads>64</maxThreads>
-        <maxActivePlans>20</maxActivePlans>
-        <userRequestSourceConcurrency>0</userRequestSourceConcurrency>
-        <timeSliceInMilli>2000</timeSliceInMilli>
-        <maxRowsFetchSize>20480</maxRowsFetchSize>
-        <lobChunkSizeInKB>100</lobChunkSizeInKB>
-        <useDataRoles>true</useDataRoles>
-        <allowCreateTemporaryTablesByDefault>true</allowCreateTemporaryTablesByDefault>
-        <allowFunctionCallsByDefault>true</allowFunctionCallsByDefault>
-        <queryThresholdInSecs>600</queryThresholdInSecs>
-        <maxSourceRows>-1</maxSourceRows>
-        <exceptionOnMaxSourceRows>true</exceptionOnMaxSourceRows>
-        <maxODBCLobSizeAllowed>5242880</maxODBCLobSizeAllowed>
-        <eventDistributorName>teiid/event-distributor</eventDistributorName>
-        <detectingChangeEvents>true</detectingChangeEvents>
+        <async-thread-group>teiid-async</async-thread-group>
+        <max-threads>64</max-threads>
+        <max-active-plans>20</max-active-plans>
+        <thread-count-for-source-concurrency>0</thread-count-for-source-concurrency>
+        <time-slice-in-millseconds>2000</time-slice-in-millseconds>
+        <max-row-fetch-size>20480</max-row-fetch-size>
+        <lob-chunk-size-in-kb>100</lob-chunk-size-in-kb>
+        <query-threshold-in-seconds>600</query-threshold-in-seconds>
+        <max-source-rows-allowed>-1</max-source-rows-allowed>
+        <exception-on-max-source-rows>true</exception-on-max-source-rows>
+        <max-odbc-lob-size-allowed>5242880</max-odbc-lob-size-allowed>
+        <event-distributor-name>teiid/event-distributor</event-distributor-name>
+        <detect-change-events>true</detect-change-events>
 
         <security-domain>teiid-security</security-domain>
         <max-sessions-allowed>5000</max-sessions-allowed>
@@ -23,15 +20,14 @@
         <allow-env-function>false</allow-env-function>
 
         <buffer-service>
-            <useDisk>true</useDisk>
-            <diskDirectory>${jboss.server.temp.dir}/teiid</diskDirectory>
-            <processorBatchSize>512</processorBatchSize>
-            <connectorBatchSize>1024</connectorBatchSize>
-            <maxReserveBatchColumns>-1</maxReserveBatchColumns>
-            <maxProcessingBatchesColumns>-1</maxProcessingBatchesColumns>
-            <maxFileSize>2048</maxFileSize>
-            <maxBufferSpace>51200</maxBufferSpace>
-            <maxOpenFiles>64</maxOpenFiles>
+            <use-disk>true</use-disk>
+            <processor-batch-size>512</processor-batch-size>
+            <connector-batch-size>1024</connector-batch-size>
+            <max-processing-kb>-1</max-processing-kb>
+            <max-reserve-kb>-1</max-reserve-kb>
+            <max-file-size>2048</max-file-size>
+            <max-buffer-space>51200</max-buffer-space>
+            <max-open-files>64</max-open-files>
         </buffer-service>
         
         <distributed-cache-factory>

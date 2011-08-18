@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <parent>
-        <artifactId>teiid-parent</artifactId>
-        <groupId>org.jboss.teiid</groupId>
-        <version>7.5.0.Alpha1-SNAPSHOT</version>
-    </parent>
-    <modelVersion>4.0.0</modelVersion>
-    <artifactId>teiid-engine</artifactId>
-    <name>Engine</name>
-    <description>Relational, procedural, and xml core engine.</description>
+	<parent>
+		<artifactId>teiid-parent</artifactId>
+		<groupId>org.jboss.teiid</groupId>
+		<version>7.6.0.Alpha1-SNAPSHOT</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>teiid-engine</artifactId>
+	<name>Engine</name>
+	<description>Relational, procedural, and xml core engine.</description>
 
     <build>
         <plugins>
@@ -83,22 +83,33 @@
 			<scope>provided</scope>
 		</dependency>
          -->
-        <dependency>
-            <groupId>net.sourceforge.saxon</groupId>
-            <artifactId>saxon</artifactId>
+		<dependency>
+			<groupId>net.sourceforge.saxon</groupId>
+			<artifactId>saxonhe</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.googlecode.json-simple</groupId>
+			<artifactId>json-simple</artifactId>
+		</dependency>
+		
+		<dependency>
+            <groupId>nux</groupId>
+            <artifactId>nux</artifactId>
+            <version>1.6</version>
         </dependency>
 
         <dependency>
-            <groupId>net.sourceforge.saxon</groupId>
-            <classifier>dom</classifier>
-            <artifactId>saxon</artifactId>
+            <groupId>xom</groupId>
+            <artifactId>xom</artifactId>
+            <version>1.2</version>
         </dependency>
-
+        
         <dependency>
-            <groupId>com.googlecode.json-simple</groupId>
-            <artifactId>json-simple</artifactId>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging</artifactId>
+            <scope>test</scope>        
         </dependency>
 
-    </dependencies>
+	</dependencies>
 
 </project>

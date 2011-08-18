@@ -22,20 +22,18 @@
 
 package org.teiid.translator.salesforce;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+
+import java.util.Arrays;
 import java.util.List;
 
 import javax.resource.cci.ConnectionFactory;
 
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
@@ -88,7 +86,9 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Started"); //$NON-NLS-1$
+		addPushDownFunction(SALESFORCE, INCLUDES, BOOLEAN, STRING, STRING);
+		addPushDownFunction(SALESFORCE, EXCLUDES, BOOLEAN, STRING, STRING);
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Salesforce ExecutionFactory Started"); //$NON-NLS-1$
 	}
 
 
@@ -124,27 +124,10 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 	}	
 	
     @Override
-    public List getSupportedFunctions() {
-        return Collections.EMPTY_LIST;
+    public List<String> getSupportedFunctions() {
+        return Arrays.asList(INCLUDES, EXCLUDES);
     }
     
-    @Override
-    public List<FunctionMethod> getPushDownFunctions(){
-    	List<FunctionMethod> pushdownFunctions = new ArrayList<FunctionMethod>();
-		pushdownFunctions.add(new FunctionMethod(SALESFORCE + '.' +INCLUDES, INCLUDES, SALESFORCE, 
-            new FunctionParameter[] {
-                new FunctionParameter("columnName", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("param", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		pushdownFunctions.add(new FunctionMethod(SALESFORCE + '.' + EXCLUDES, EXCLUDES, SALESFORCE, 
-                new FunctionParameter[] {
-                    new FunctionParameter("columnName", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("param", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$    		
-    	return pushdownFunctions;    	
-    }
-
     @Override
     public boolean supportsCompareCriteriaEquals() {
         return true;

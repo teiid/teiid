@@ -159,16 +159,13 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
 	 * Get deep clone of object
 	 * @return Deep copy of the object
 	 */
-	public Object clone() {
+	public FromClause cloneDirect() {
         Command commandCopy = null;        
         if(this.command != null) {
             commandCopy = (Command) this.command.clone();
         }
         
-        SubqueryFromClause clause = new SubqueryFromClause((GroupSymbol)this.symbol.clone(), commandCopy);
-        clause.setOptional(this.isOptional());
-        clause.setMakeDep(this.isMakeDep());
-        clause.setMakeNotDep(this.isMakeNotDep());
+        SubqueryFromClause clause = new SubqueryFromClause(this.symbol.clone(), commandCopy);
         clause.setTable(this.isTable());
         return clause;
 	}

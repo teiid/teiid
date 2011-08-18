@@ -30,6 +30,7 @@ import java.util.List;
 
 import javax.security.auth.Subject;
 
+import org.teiid.adminapi.Session;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.translator.ExecutionContext;
@@ -64,6 +65,7 @@ public class ExecutionContextImpl implements ExecutionContext {
     
     private int batchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
 	private List<Exception> warnings = new LinkedList<Exception>();
+	private Session session;
     
     public ExecutionContextImpl(String vdbName, int vdbVersion,  Serializable executionPayload, 
                                 String originalConnectionID, String connectorName, String requestId, String partId, String execCount) {
@@ -203,5 +205,14 @@ public class ExecutionContextImpl implements ExecutionContext {
 		List<Exception> result = new ArrayList<Exception>(warnings);
 		warnings.clear();
 		return result;
+	}
+	
+	@Override
+	public Session getSession() {
+		return this.session;
+	}
+	
+	public void setSession(Session session) {
+		this.session = session;
 	}
 }

@@ -21,10 +21,13 @@
  */
 package org.teiid.resource.adapter.file;
 
+import java.util.Map;
+
 import javax.resource.ResourceException;
 import javax.resource.spi.InvalidPropertyException;
 
 import org.teiid.core.BundleUtil;
+import org.teiid.core.util.StringUtil;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
@@ -35,17 +38,20 @@ public class FileManagedConnectionFactory extends BasicManagedConnectionFactory{
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(FileManagedConnectionFactory.class);
 
 	private String parentDirectory;
+	private String fileMapping;
+	private boolean allowParentPaths = true;
 	
 	@Override
 	public BasicConnectionFactory createConnectionFactory() throws ResourceException {
 		if (this.parentDirectory == null) {
 			throw new InvalidPropertyException(UTIL.getString("parentdirectory_not_set")); //$NON-NLS-1$
 		}
+		final Map<String, String> map = StringUtil.valueOf(this.fileMapping, Map.class);
 		return new BasicConnectionFactory() {
 			
 			@Override
 			public BasicConnection getConnection() throws ResourceException {
-				return new FileConnectionImpl(parentDirectory);
+				return new FileConnectionImpl(parentDirectory, map, allowParentPaths);
 			}
 		};
 	}
@@ -56,6 +62,22 @@ public class FileManagedConnectionFactory extends BasicManagedConnectionFactory{
 	
 	public void setParentDirectory(String parentDirectory) {
 		this.parentDirectory = parentDirectory;
+	}
+	
+	public String getFileMapping() {
+		return fileMapping;
+	}
+	
+	public void setFileMapping(String fileMapping) {
+		this.fileMapping = fileMapping;
+	}
+	
+	public boolean isAllowParentPaths() {
+		return allowParentPaths;
+	}
+	
+	public void setAllowParentPaths(boolean allowParentPaths) {
+		this.allowParentPaths = allowParentPaths;
 	}
 	
 }
