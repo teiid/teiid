@@ -38,6 +38,7 @@ import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.Assertion;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.logging.LogConstants;
@@ -238,6 +239,7 @@ public class SessionAwareCache<T> {
 		}
 		
 		public CacheID(ParseInfo pi, String sql, String vdbName, int vdbVersion, String sessionId, String userName){
+			Assertion.isNotNull(sql);
 			this.sql = sql;
 			this.vdbInfo = new VDBKey(vdbName, vdbVersion);
 			this.pi = pi;

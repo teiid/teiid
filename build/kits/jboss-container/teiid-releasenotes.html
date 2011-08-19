@@ -10,7 +10,7 @@
 <P><A HREF="http://www.teiid.org/"><IMG SRC="https://www.jboss.org/dms/teiid/images/teiid-banner.png" NAME="graphics1" ALT="Teiid" ALIGN=BOTTOM WIDTH=800></A>
 
 <H1>Teiid ${project.version} Release Notes</H1>
-<P>Teiid ${project.version} adds performance, integration, and runtime metadata update features. 
+<P>Teiid ${project.version} adds XML streaming, additional ANSI SQL, and integration features. 
 
 <H2>Overview</H2>
 <UL>
@@ -224,6 +224,220 @@ The following components have been updated:
 
 <h2><a name="Details">Detailed Release Notes</a></h2>
         Detailed Release Notes - Teiid - Version ${project.version}
+<h2>        Bug
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-97'>TEIID-97</a>] -         add proper SQLState for timeout/cancel
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1443'>TEIID-1443</a>] -         SalesForce connector execution of procedure fails with NPE
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1528'>TEIID-1528</a>] -         ruleimplementjoin strategy may generate an order by that does not use a relevant index
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1591'>TEIID-1591</a>] -         Error thrown when attempting to use clustered cache in teiid 7.4
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1592'>TEIID-1592</a>] -         EventDistributor is not initialized correctly
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1593'>TEIID-1593</a>] -         Creating a temp table gets error that Cannot create temporary table &quot;dddd&quot;. A table with the same name already exists.
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1595'>TEIID-1595</a>] -         User without required role is able to explicitly create a temporary table
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1597'>TEIID-1597</a>] -         Index metadata issues
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1603'>TEIID-1603</a>] -         BQT Query not returning expected row count
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1605'>TEIID-1605</a>] -         Unable to call a function that is defined within a package in oracle
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1612'>TEIID-1612</a>] -         Tried a custom log appended, but the LoggingEvent.getMessage() returns org.teiid.logging.LogMessage and not org.teiid.logging.CommandLogMessage
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1613'>TEIID-1613</a>] -         Cannot define an implicit temp table with columns and a query value expression
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1614'>TEIID-1614</a>] -         Embedded connections using the calling thread can hang
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1616'>TEIID-1616</a>] -         ORDER BY not ordering query results  on Teradata query:  SELECT DoubleNum AS E FROM VQT.U5 ORDER BY E 
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1617'>TEIID-1617</a>] -         Incorrect rewrite of subquery
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1618'>TEIID-1618</a>] -         Designer (JBDS 4.1 CR1) not able to preview: NPE
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1621'>TEIID-1621</a>] -         Unexpected grouping for SELECT queries on views that include a GROUP BY
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1623'>TEIID-1623</a>] -         ODBC numeric and string precision issues
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1625'>TEIID-1625</a>] -         SalesForce INCLUDE function not being pushed to source
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1626'>TEIID-1626</a>] -         Subsequent usage of a statement cannot be timed out
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1628'>TEIID-1628</a>] -         Mondrian not returning the correct row values for the &quot;ROW&quot; dimention
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1630'>TEIID-1630</a>] -         XQT queries failing with:  [TeiidProcessingException] 1054: Error Code:1054 Message:Source: Error Code:1054 Message:&#39;Unknown column &#39;c_2&#39; in &#39;order clause&#39;
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1631'>TEIID-1631</a>] -         ODBC SQLDescribeCol does not work, When used with the Prepare Statement
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1634'>TEIID-1634</a>] -         For file connector-based queries, please provide a DEBUG warning if no files are found
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1635'>TEIID-1635</a>] -         Error resolving a procedure invocation w/o a resultset in a procedure
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1639'>TEIID-1639</a>] -         Unable to build on a file system that isn&#39;t formatted to support case-sensitivity
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1640'>TEIID-1640</a>] -         QueryTimeout connection parameter does not cancel long-running queries
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1641'>TEIID-1641</a>] -         In org.teiid.jdbc.StatementImpl, as there have been no batched updates the batchedUpdates member hasn&#39;t been instantiated so clearBatch() throws a NPE. 
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1642'>TEIID-1642</a>] -         ModeShape translator needs to be changed to move the supported functions to the pushdown functions so that the function def. file isn&#39;t needed to be updated
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1645'>TEIID-1645</a>] -         SELECT COUNT(*) FROM VQT.Agg3 is expecting a result of 1 but 50 is being returned
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1647'>TEIID-1647</a>] -         TeiidComponentException from generated web service
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1650'>TEIID-1650</a>] -         hsql does not generally support catalog identifier parts
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1651'>TEIID-1651</a>] -         Due to a change in the JDBC spec on how the use of &quot;AS&quot; in the select statement will now be returned in the getColumnLabel of the ResultSetMetadata, Teiid must provide backwards support 
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1654'>TEIID-1654</a>] -         CLONE - EDS - Node returns 0 rows for cached view when other node had it loaded and leaves cluster
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1657'>TEIID-1657</a>] -         CLONE - EDS - refreshMatView does not work correctly for an internal materialized view when clustering is enabled
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1658'>TEIID-1658</a>] -         teiid-jdbc-template-ds.xml jca example is in trunk, but also needs to be on 7.4.x branch
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1660'>TEIID-1660</a>] -         EDS BQT Queries failing on SqlServer 2005 with SQLServerException &quot;Type DATE is not a defined system type&quot;
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1661'>TEIID-1661</a>] -         Not all expression types are validated for grouping columns
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1662'>TEIID-1662</a>] -         Teiid fails when calling databasemetadata.getTables and passing in a empty array for table types
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1663'>TEIID-1663</a>] -         Local Transactions not working
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1664'>TEIID-1664</a>] -         Teiid - Teradata queries containing LTRIM and RTRIM on the BQT booleanvalue column are returning unexpected BQT results
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1676'>TEIID-1676</a>] -         Decomposed aggregates results can be wrong
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1677'>TEIID-1677</a>] -         Exists subqueries will unnest by default
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1678'>TEIID-1678</a>] -         Order by may be applied incorrectly with pushed aggregate
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1681'>TEIID-1681</a>] -         Limit not working as expected
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1682'>TEIID-1682</a>] -         Sort optimization with grouping does not preserve descending/null ordering
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1683'>TEIID-1683</a>] -         Error Code:0 Message: Remote org.teiid.core.TeiidException:Error Code: 0 Message:Symbol EMAIL.EMAILDOCUMENT.MAPPINGCLASSES.EMAIL_1.id is specified with an unknown group context
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1686'>TEIID-1686</a>] -         Assertion failure when using a plan result buffer
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1688'>TEIID-1688</a>] -         Derby is inappropriately picking up capabilities
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1690'>TEIID-1690</a>] -         NPE with xmltable in view
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1695'>TEIID-1695</a>] -         CLONE - java.lang.ClassNotFoundException: nu.xom.ParsingException via Import &gt; Teiid Designer &gt; WSDL into Relational Source Model
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1696'>TEIID-1696</a>] -         Issues with function schema qualification
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1697'>TEIID-1697</a>] -         CLONE - java.io.NotSerializableException: java.io.PrintWriter when SHOWPLAN is DEBUG in a clustered configuration
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1698'>TEIID-1698</a>] -         + is not properly handled in like patterns
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1704'>TEIID-1704</a>] -         if where clause contains more than one equal condition on the same column, no rows are returned for the count query
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1706'>TEIID-1706</a>] -         JOIN between two text file data sources extremely slow
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1708'>TEIID-1708</a>] -         Teiid Designer Preview Feature does not refresh if a transformation is changed on a procedure
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1713'>TEIID-1713</a>] -         default xmlnamespace fails to match root element when streaming 
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1717'>TEIID-1717</a>] -         NPE with texttable join
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1718'>TEIID-1718</a>] -         Object type is not handled well in ODBC
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1719'>TEIID-1719</a>] -         Executing an SQL statement over ODBC interface does not respond
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1721'>TEIID-1721</a>] -         ODBC metadata handling does not account for update statements
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1722'>TEIID-1722</a>] -         NPE with lookup function
+</li>
+</ul>
+                
+<h2>        Enhancement
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1586'>TEIID-1586</a>] -         Increase audit information
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1587'>TEIID-1587</a>] -         Minimize final project columns
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1601'>TEIID-1601</a>] -         When the webservice translator cannot reach the endpoint url, the exception message should include the endpoint 
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1602'>TEIID-1602</a>] -         Add support for like_regex and other regex functions
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1611'>TEIID-1611</a>] -         Add reauthentication support for ODBC
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1637'>TEIID-1637</a>] -         In the Reference guide - Query Timeouts section - add a reference to the Client Developers guide
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1652'>TEIID-1652</a>] -         ODBC Data Row results should be batched
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1656'>TEIID-1656</a>] -         Add pushdown support for grouping expression over a UNION
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1671'>TEIID-1671</a>] -         Add Translator for Netzza
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1691'>TEIID-1691</a>] -         Improve xml staging table planning
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1694'>TEIID-1694</a>] -         Add additional ansi sql function support
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1712'>TEIID-1712</a>] -         Support different length records in files for modeling 
+</li>
+</ul>
+        
+<h2>        Feature Request
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-993'>TEIID-993</a>] -         Enhance XML processing to execute relational queries in parallel when possible
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1448'>TEIID-1448</a>] -         XMLTABLE processing should support streaming when possible
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1460'>TEIID-1460</a>] -         Have teiid emulate a native postgresql database connection
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1585'>TEIID-1585</a>] -         Make payload available in ExecutionFactory.getConnection
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1607'>TEIID-1607</a>] -         Provide a data role injection point where a different implementation could be used for role validation
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1615'>TEIID-1615</a>] -         Add features to support relate planning
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1620'>TEIID-1620</a>] -         Fetch keyword not handled
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1632'>TEIID-1632</a>] -         Provide something like an ECHO statement in the procedure language that can assist a user in debugging their procedure logic 
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1653'>TEIID-1653</a>] -         Support Cursoring over ODBC protocol ( support UseDeclareFetch = 1)
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1659'>TEIID-1659</a>] -         Support pagination of LDAP results when retrieving from Active Directory
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1665'>TEIID-1665</a>] -         Optimize SELECT of all constants
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1667'>TEIID-1667</a>] -         Add support for sql olap functionality
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1689'>TEIID-1689</a>] -         Load internal mateirlized view cached contents when node joins the cluster
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1692'>TEIID-1692</a>] -         Include an example of the LOOKUP function in the Ref Guide
+</li>
+</ul>
+            
+<h2>        Quality Risk
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1619'>TEIID-1619</a>] -         Deprecate MAKEDEP/MAKENOTDEP keyword hints
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1624'>TEIID-1624</a>] -         Remove the buffer space configuration settings that deal with batch columns
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1715'>TEIID-1715</a>] -         Simplify ODBC buffers
+</li>
+</ul>
+                
+<h2>        Task
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1594'>TEIID-1594</a>] -         Add to the sandox the example Coherence translator and connector
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1655'>TEIID-1655</a>] -         CLONE - Error messages displayed in the transformation editor are often too generic or too long to be useful
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1693'>TEIID-1693</a>] -         Update Teiid Admin Console Documentation
+</li>
+</ul>
             
 <h2><a name="Documentation">Documentation and Help</a></h2>
 
