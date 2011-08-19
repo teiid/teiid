@@ -21,7 +21,6 @@
  */
 package org.teiid.odbc;
 
-import java.io.IOException;
 import java.sql.ParameterMetaData;
 import java.util.List;
 import java.util.Properties;
@@ -81,7 +80,7 @@ public interface ODBCClientRemote {
 	
 	void sendMoveCursor(ResultSetImpl rs, int rowCount, ResultsFuture<Integer> results);
 	
-	void sendCommandComplete(String sql, int updateCount) throws IOException;	
+	void sendCommandComplete(String sql, int updateCount);	
 
 	//	CommandComplete (B)
 	void sendUpdateCount(String sql, int updateCount);

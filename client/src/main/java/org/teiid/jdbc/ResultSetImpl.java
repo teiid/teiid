@@ -245,6 +245,7 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
     		public void onCompletion(ResultsFuture<ResultsMessage> future) {
     			try {
 					batchResults.setBatch(processBatch(future.get()));
+					result.getResultsReceiver().receiveResults(next());
 				} catch (Throwable t) {
 					result.getResultsReceiver().exceptionOccurred(t);
 				}
@@ -253,13 +254,6 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
     	return result;
     }
 
-    /**
-     * Move row pointer forward one row.  This may cause the cursor
-     * to fetch more rows.
-     * @return True if the current index is on a valid row, false if
-     * the pointer is past the end of the rows
-     * @throws SQLException if this result set has an exception
-     */
     public boolean next() throws SQLException {
         checkClosed();
         if (hasNext()) {
@@ -269,24 +263,12 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
     	return false;
     }
 
-    /**
-     * Move row pointer backward one row.  This may cause the cursor
-     * to fetch more rows.
-     * @return True if the current index is on a valid row, false if
-     * the pointer is before the beginning of the rows
-     * @throws SQLException if this result set has an exception
-     */
     public boolean previous() throws SQLException {
         checkClosed();
         checkNotForwardOnly();
         return batchResults.previous();
     }
 
-    /**
-     * Get current row pointer.
-     * @return Index of current row
-     * @throws SQLException if this result set has an exception
-     */
     public int getRow() throws SQLException {
         checkClosed();
         if (isAfterLast()) {

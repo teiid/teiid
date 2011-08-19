@@ -40,6 +40,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.LogonException;
 import org.teiid.client.security.LogonResult;
@@ -245,121 +246,88 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	}	
 	
 	private void cursorExecute(final String cursorName, final String sql, final ResultsFuture<Integer> completion) {
-		if (this.connection != null) {
-			if (sql != null) {
-				try {
-					// close if the name is already used or the unnamed prepare; otherwise
-					// stmt is alive until session ends.
-					Prepared previous = this.preparedMap.remove(cursorName);
-					if (previous != null) {
-						previous.stmt.close();
-					}
-					
-					final PreparedStatementImpl stmt = this.connection.prepareStatement(sql);
-	                this.executionFuture = stmt.submitExecute();
-	                this.executionFuture.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
-		        		@Override
-		        		public void onCompletion(ResultsFuture<Boolean> future) {
-		        			executionFuture = null;
-	                        try {
-				                if (future.get()) {
-				                	List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
-		                            cursorMap.put(cursorName, new Cursor(cursorName, sql, stmt, null, stmt.getResultSet(), cols));
-		        					client.sendCommandComplete("DECLARE CURSOR", 0); //$NON-NLS-1$		                            
-				                }
-				                else {
-				                	errorOccurred(RuntimePlugin.Util.getString("execution_failed")); //$NON-NLS-1$
-				                }
-	                        } catch (Throwable e) {
-	                            errorOccurred(e);
-	                        }
-			                completion.getResultsReceiver().receiveResults(1);			                	                        
-		        		}
-					});					
-				} catch (SQLException e) {
-					errorOccurred(e);
-					completion.getResultsReceiver().receiveResults(1);
-				} 
-			}
+		if (sql != null) {
+			try {
+				// close if the name is already used or the unnamed prepare; otherwise
+				// stmt is alive until session ends.
+				Prepared previous = this.preparedMap.remove(cursorName);
+				if (previous != null) {
+					previous.stmt.close();
+				}
+				
+				final PreparedStatementImpl stmt = this.connection.prepareStatement(sql);
+                this.executionFuture = stmt.submitExecute(ResultsMode.RESULTSET);
+                this.executionFuture.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
+	        		@Override
+	        		public void onCompletion(ResultsFuture<Boolean> future) {
+	        			executionFuture = null;
+                        try {
+		                	List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
+                            cursorMap.put(cursorName, new Cursor(cursorName, sql, stmt, null, stmt.getResultSet(), cols));
+        					client.sendCommandComplete("DECLARE CURSOR", 0); //$NON-NLS-1$		                            
+    						completion.getResultsReceiver().receiveResults(0);
+    					} catch (Throwable e) {
+    						completion.getResultsReceiver().exceptionOccurred(e);
+    					}
+	        		}
+				});					
+			} catch (SQLException e) {
+				completion.getResultsReceiver().exceptionOccurred(e);
+			} 
 		}
-		else {
-			errorOccurred(RuntimePlugin.Util.getString("no_active_connection")); //$NON-NLS-1$
-			completion.getResultsReceiver().receiveResults(1);
-		}
-		
 	}
 	
-	private void cursorFetch(String cursorName, int rows, final ResultsFuture<Integer> completion) {
+	private void cursorFetch(String cursorName, int rows, final ResultsFuture<Integer> completion) throws SQLException {
 		Cursor cursor = this.cursorMap.get(cursorName);
-		if (cursor != null) {
-			cursor.fetchSize = rows;
-			ResultsFuture<Integer> result = new ResultsFuture<Integer>();
-			this.client.sendCursorResults(cursor.rs, cursor.columnMetadata, result, rows);
-			result.addCompletionListener(new ResultsFuture.CompletionListener<Integer>() {
-            	public void onCompletion(ResultsFuture<Integer> future) {
-            		int rowsSent = 0;
-            		try {
-						rowsSent = future.get();
-						client.sendCommandComplete("FETCH", rowsSent); //$NON-NLS-1$						
-					} catch (InterruptedException e) {
-						throw new AssertionError(e);
-					} catch (ExecutionException e) {
-						errorOccurred(e.getCause());
-					} catch (IOException e) {
-						errorOccurred(e);
-					}
+		if (cursor == null) {
+			throw new SQLException(RuntimePlugin.Util.getString("not_bound", cursorName)); //$NON-NLS-1$
+		}
+		cursor.fetchSize = rows;
+		ResultsFuture<Integer> result = new ResultsFuture<Integer>();
+		this.client.sendCursorResults(cursor.rs, cursor.columnMetadata, result, rows);
+		result.addCompletionListener(new ResultsFuture.CompletionListener<Integer>() {
+        	public void onCompletion(ResultsFuture<Integer> future) {
+        		try {
+					int rowsSent = future.get();
+					client.sendCommandComplete("FETCH", rowsSent); //$NON-NLS-1$						
 					completion.getResultsReceiver().receiveResults(rowsSent);
-            	};
-			});
-		}
-		else {
-			errorOccurred(RuntimePlugin.Util.getString("not_bound", cursorName)); //$NON-NLS-1$
-			completion.getResultsReceiver().receiveResults(1);
-		}
+				} catch (Throwable e) {
+					completion.getResultsReceiver().exceptionOccurred(e);
+				}
+        	};
+		});
 	}
 	
-	private void cursorMove(String prepareName, int rows, final ResultsFuture<Integer> completion) {
+	private void cursorMove(String prepareName, int rows, final ResultsFuture<Integer> completion) throws SQLException {
 		
 		// win odbc driver sending a move after close; and error is ending up in failure; since the below
 		// is not harmful it is ok to send empty move.
 		if (rows == 0) {
-			try {
-				client.sendCommandComplete("MOVE", 0); //$NON-NLS-1$
-			} catch (IOException e) {
-				errorOccurred(e);
-			}
+			client.sendCommandComplete("MOVE", 0); //$NON-NLS-1$
 			completion.getResultsReceiver().receiveResults(0);
 			return;			
 		}
 		
 		Cursor cursor = this.cursorMap.get(prepareName);
-		if (cursor != null) {
-			ResultsFuture<Integer> result = new ResultsFuture<Integer>();
-			this.client.sendMoveCursor(cursor.rs, rows, result);
-			result.addCompletionListener(new ResultsFuture.CompletionListener<Integer>() {
-            	public void onCompletion(ResultsFuture<Integer> future) {
-            		int rowsMoved = 0;
-            		try {
-						rowsMoved = future.get();
-						client.sendCommandComplete("MOVE", rowsMoved); //$NON-NLS-1$						
-					} catch (InterruptedException e) {
-						throw new AssertionError(e);
-					} catch (ExecutionException e) {
-						errorOccurred(e.getCause());
-					} catch (IOException e) {
-						errorOccurred(e);
-					}
+		if (cursor == null) {
+			throw new SQLException(RuntimePlugin.Util.getString("not_bound", prepareName)); //$NON-NLS-1$
+		}
+		ResultsFuture<Integer> result = new ResultsFuture<Integer>();
+		this.client.sendMoveCursor(cursor.rs, rows, result);
+		result.addCompletionListener(new ResultsFuture.CompletionListener<Integer>() {
+        	public void onCompletion(ResultsFuture<Integer> future) {
+        		try {
+					int rowsMoved = future.get();
+					client.sendCommandComplete("MOVE", rowsMoved); //$NON-NLS-1$						
 					completion.getResultsReceiver().receiveResults(rowsMoved);
-            	};
-			});			
-		}
-		else {
-			errorOccurred(RuntimePlugin.Util.getString("not_bound", prepareName)); //$NON-NLS-1$
-			completion.getResultsReceiver().receiveResults(1);
-		}
+				} catch (Throwable e) {
+					completion.getResultsReceiver().exceptionOccurred(e);
+				}
+        	};
+		});			
 	}	
 	
-	private void cursorClose(String prepareName) throws SQLException, IOException {
+	private void cursorClose(String prepareName) throws SQLException {
 		Cursor cursor = this.cursorMap.remove(prepareName);
 		if (cursor != null) {
 			cursor.rs.close();
@@ -379,15 +347,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     			try {
     				ResultsFuture<Integer> result = new ResultsFuture<Integer>();
 	                if (future.get()) {
-	                	if (stmt.getResultSet() != null) {
-	                		List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
-                            client.sendResults(sql, stmt.getResultSet(), cols, result, true);
-	                	}
-	                	else {
-	                		// handles the "SET" commands.
-		                	client.sendUpdateCount(sql, 0);
-		                	result.getResultsReceiver().receiveResults(1);
-	                	}					                	
+                		List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
+                        client.sendResults(sql, stmt.getResultSet(), cols, result, true);
 	                } else {
 	                	client.sendUpdateCount(sql, stmt.getUpdateCount());
 	                	setEncoding();
@@ -396,16 +357,20 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	                result.addCompletionListener(new ResultsFuture.CompletionListener<Integer>() {
 	                	public void onCompletion(ResultsFuture<Integer> future) {
 							try {
-								stmt.close();
-							} catch (SQLException e) {
-								LogManager.logDetail(LogConstants.CTX_ODBC, e, "Error closing statement"); //$NON-NLS-1$
+		                		try {
+									stmt.close();
+								} catch (SQLException e) {
+									LogManager.logDetail(LogConstants.CTX_ODBC, e, "Error closing statement"); //$NON-NLS-1$
+								}
+								future.get();
+								completion.getResultsReceiver().receiveResults(1);
+							} catch (Throwable e) {
+								completion.getResultsReceiver().exceptionOccurred(e);
 							}
-							completion.getResultsReceiver().receiveResults(1);
 	                	}
 	                });
     			} catch (Throwable e) {
-    				errorOccurred(e);
-    				completion.getResultsReceiver().receiveResults(1);
+    				completion.getResultsReceiver().exceptionOccurred(e);
     			}
     		}
 		});    	
@@ -413,32 +378,26 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	
 	@Override
 	public void prepare(String prepareName, String sql, int[] paramType) {
-		if (this.connection != null) {
-			
-			if (prepareName == null || prepareName.length() == 0) {
-				prepareName  = UNNAMED;
-			}
-						
-			if (sql != null) {
-				String modfiedSQL = fixSQL(sql);
-				try {
-					// close if the name is already used or the unnamed prepare; otherwise
-					// stmt is alive until session ends.
-					Prepared previous = this.preparedMap.remove(prepareName);
-					if (previous != null) {
-						previous.stmt.close();
-					}
-					
-					PreparedStatementImpl stmt = this.connection.prepareStatement(modfiedSQL);
-					this.preparedMap.put(prepareName, new Prepared(prepareName, sql, stmt, paramType));
-					this.client.prepareCompleted(prepareName);
-				} catch (SQLException e) {
-					errorOccurred(e);
-				}
-			}
+		if (prepareName == null || prepareName.length() == 0) {
+			prepareName  = UNNAMED;
 		}
-		else {
-			errorOccurred(RuntimePlugin.Util.getString("no_active_connection")); //$NON-NLS-1$
+					
+		if (sql != null) {
+			String modfiedSQL = fixSQL(sql);
+			try {
+				// close if the name is already used or the unnamed prepare; otherwise
+				// stmt is alive until session ends.
+				Prepared previous = this.preparedMap.remove(prepareName);
+				if (previous != null) {
+					previous.stmt.close();
+				}
+				
+				PreparedStatementImpl stmt = this.connection.prepareStatement(modfiedSQL);
+				this.preparedMap.put(prepareName, new Prepared(prepareName, sql, stmt, paramType));
+				this.client.prepareCompleted(prepareName);
+			} catch (SQLException e) {
+				errorOccurred(e);
+			}
 		}
 	}	
 	
@@ -518,7 +477,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
         		stmt.setMaxRows(maxRows);
         	}
         	
-            this.executionFuture = stmt.submitExecute();
+            this.executionFuture = stmt.submitExecute(ResultsMode.EITHER);
             executionFuture.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
         		@Override
         		public void onCompletion(ResultsFuture<Boolean> future) {
@@ -573,8 +532,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 					throw new AssertionError(e);
 				} catch (ExecutionException e) {
 					errorOccurred(e.getCause());
-				} catch (IOException e) {
-					errorOccurred(e);
 				}
 			};
 		});
@@ -936,7 +893,11 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		    						client.errorOccurred(e);
 		    						return;
 		    					} catch (ExecutionException e) {
-		    						client.errorOccurred(e.getCause());
+		    						Throwable cause = e;
+		    						while (cause instanceof ExecutionException && cause.getCause() != null && cause != cause.getCause()) {
+		    							cause = cause.getCause();
+		    						}
+		    						client.errorOccurred(cause);
 		    						return;
 		    					}
 		            			QueryWorkItem.this.run(); //continue processing
@@ -996,6 +957,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     
 	private List<PgColInfo> getPgColInfo(ResultSetMetaData meta)
 			throws SQLException {
+		if (meta == null) {
+			return null;
+		}
 		int columns = meta.getColumnCount();
 		final ArrayList<PgColInfo> result = new ArrayList<PgColInfo>(columns);
 		for (int i = 1; i < columns + 1; i++) {

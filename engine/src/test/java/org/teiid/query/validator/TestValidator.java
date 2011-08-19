@@ -1779,6 +1779,10 @@ public class TestValidator {
     @Test public void testXMLNamespaces() {
     	helpValidate("select xmlforest(xmlnamespaces(no default, default 'http://foo'), e1 as \"table\") from pm1.g1", new String[] {"XMLNAMESPACES(NO DEFAULT, DEFAULT 'http://foo')"}, RealMetadataFactory.example1Cached());
     }
+    
+    @Test public void testXMLNamespacesInvalid() {
+    	helpValidate("select xmlforest(xmlnamespaces('http://foo' as \"1\"), e1 as \"table\") from pm1.g1", new String[] {"XMLNAMESPACES('http://foo' AS \"1\")"}, RealMetadataFactory.example1Cached());
+    }
 
     @Test public void testXMLNamespacesReserved() {
     	helpValidate("select xmlforest(xmlnamespaces('http://foo' as xmlns), e1 as \"table\") from pm1.g1", new String[] {"XMLNAMESPACES('http://foo' AS xmlns)"}, RealMetadataFactory.example1Cached());

@@ -21,6 +21,7 @@
  */
 package org.teiid.transport;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -90,6 +91,7 @@ public class ODBCClientInstance implements ChannelListener{
 
 	@Override
 	public void exceptionOccurred(Throwable t) {
+		LogManager.log(t instanceof IOException?MessageLevel.DETAIL:MessageLevel.ERROR, LogConstants.CTX_ODBC, t, "Unhandled exception, closing client instance"); //$NON-NLS-1$
 		server.terminate();
 	}
 	

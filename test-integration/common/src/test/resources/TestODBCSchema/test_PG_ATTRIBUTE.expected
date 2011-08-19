@@ -209,10 +209,10 @@ oid          attrelid     attname                                               
 207          25           proretset                                                          16           1       3       4            false       false         false    
 208          25           prorettype                                                         23           4       4       4            false       false         false    
 209          25           pronargs                                                           21           2       5       4            false       false         false    
-210          25           proargtypes                                                        <null>       <null>  6       4            false       false         false    
-211          25           proargnames                                                        <null>       <null>  7       4            false       false         false    
-212          25           proargmodes                                                        <null>       <null>  8       4            false       false         false    
-213          25           proallargtypes                                                     <null>       <null>  9       4            false       false         false    
+210          25           proargtypes                                                        705          -2      6       4            false       false         false    
+211          25           proargnames                                                        705          -2      7       4            false       false         false    
+212          25           proargmodes                                                        705          -2      8       4            false       false         false    
+213          25           proallargtypes                                                     705          -2      9       4            false       false         false    
 214          25           pronamespace                                                       23           4       10      4            false       false         false    
 215          26           oid                                                                23           4       1       4            false       false         false    
 216          26           tgconstrrelid                                                      23           4       2       4            false       false         false    
@@ -232,8 +232,8 @@ oid          attrelid     attname                                               
 230          28           encoding                                                           23           4       3       4            false       false         false    
 231          28           datlastsysoid                                                      23           4       4       4            false       false         false    
 232          28           datallowconn                                                       1042         1       5       4            false       false         false    
-233          28           datconfig                                                          <null>       <null>  6       4            false       false         false    
-234          28           datacl                                                             <null>       <null>  7       4            false       false         false    
+233          28           datconfig                                                          705          -2      6       4            false       false         false    
+234          28           datacl                                                             705          -2      7       4            false       false         false    
 235          28           datdba                                                             23           4       8       4            false       false         false    
 236          28           dattablespace                                                      23           4       9       4            false       false         false    
 237          29           oid                                                                23           4       1       4            false       false         false    

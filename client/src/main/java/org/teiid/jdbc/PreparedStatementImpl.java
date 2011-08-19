@@ -191,8 +191,8 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
         throw new TeiidSQLException(msg);
     }
     
-    public ResultsFuture<Boolean> submitExecute() throws SQLException {
-        return executeSql(new String[] {this.prepareSql}, false, ResultsMode.EITHER, false);
+    public ResultsFuture<Boolean> submitExecute(ResultsMode mode) throws SQLException {
+        return executeSql(new String[] {this.prepareSql}, false, mode, false);
     }
 
 	@Override
@@ -236,14 +236,6 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
     	return message;
     }
 
-    /**
-     * <p>Retreives a ResultSetMetaData object with information about the numbers,
-     * types, and properties of columns in the ResultSet object that will be returned
-     * when this preparedstatement object is executed.
-     * @return ResultSetMetaData object
-     * @throws SQLException, currently there is no means of getting results
-     * metadata before getting results.
-     */
     public ResultSetMetaData getMetaData() throws SQLException {
 
         // check if the statement is open

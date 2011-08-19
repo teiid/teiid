@@ -82,7 +82,7 @@ final class StreamingUtils {
 					"QName must not contain more than one colon: " //$NON-NLS-1$
 					+ "qname='" + localNames[i] + "', path='" + path + "'"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			if (k <= 0) {
-				fixedPath += " :"; //$NON-NLS-1$
+				fixedPath += SaxonXQueryExpression.DEFAULT_PREFIX+":"; //$NON-NLS-1$
 			} else {
 				String prefix = localNames[i].substring(0, k).trim();
 				if (k >= localNames[i].length() - 1)

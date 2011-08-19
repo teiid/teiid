@@ -474,5 +474,17 @@ public class TestSQLXMLProcessing {
 	public static BlobType blobFromFile(final String file) {
 		return new BlobType(new BlobImpl(new InputStreamFactory.FileInputStreamFactory(UnitTestUtil.getTestDataFile(file))));
 	}
+	
+    @Test public void testXmlTableWithDefault() throws Exception {
+        String sql = "select * from xmltable(XMLNAMESPACES(default 'http://x.y.com'), '/a/b' passing convert('<a xmlns=\"http://x.y.com\"><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path '@x', val string path '/.') as x"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList(null, "first"),
+        		Arrays.asList("attr", "second"),
+        };    
+    
+        process(sql, expected);
+    }
+
 
 }
