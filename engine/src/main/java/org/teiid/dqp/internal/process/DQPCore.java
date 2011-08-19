@@ -750,7 +750,9 @@ public class DQPCore implements DQP {
         }
         Set<CacheID> keys = this.matTables.replicatableKeys();
         for (final CacheID key:keys) {
-        	refreshMatView(contextProvider, key.getVDBKey().getName(), key.getVDBKey().getVersion(), key.getSql());
+        	if (key.getSql().startsWith(RelationalPlanner.MAT_PREFIX)) {
+        		refreshMatView(contextProvider, key.getVDBKey().getName(), key.getVDBKey().getVersion(), key.getSql().substring(RelationalPlanner.MAT_PREFIX.length()));
+        	}
         }
 	}
 	
