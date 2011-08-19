@@ -14,6 +14,7 @@
 	<scm>
         <connection>scm:svn:https://anonsvn.jboss.org/repos/teiid/branches/7.5.x</connection>
 		<developerConnection>scm:svn:https://svn.jboss.org/repos/teiid/branches/7.5.x</developerConnection>
+		<url>https://anonsvn.jboss.org/repos/teiid/branches/7.5.x</url>
 	</scm>
 	<licenses>
 		<license>
