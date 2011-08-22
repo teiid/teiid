@@ -100,6 +100,8 @@ class Configuration {
 	public static final String TRANSLATOR_NAME = "name";//$NON-NLS-1$
 	public static final String TRANSLATOR_MODULE = "module";//$NON-NLS-1$
 	
+	public static final String ENGINE_NAME = "name";//$NON-NLS-1$
+	
 	public static final String DESC = ".describe"; //$NON-NLS-1$
 	static void addAttribute(ModelNode node, String name, String type, String description, ModelType dataType, boolean required, String defaultValue) {
 		node.get(type, name, TYPE).set(dataType);

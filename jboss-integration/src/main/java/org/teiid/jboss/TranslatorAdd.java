@@ -54,8 +54,10 @@ public class TranslatorAdd extends AbstractAddStepHandler implements Description
         final ModelNode operation = new ModelNode();
         operation.get(OPERATION_NAME).set(ADD);
         operation.get(DESCRIPTION).set(bundle.getString("translator.add")); //$NON-NLS-1$
-        addAttribute(operation, Configuration.TRANSLATOR_NAME, REQUEST_PROPERTIES, bundle.getString(Configuration.TRANSLATOR_NAME+Configuration.DESC), ModelType.STRING, true, null);
-        addAttribute(operation, Configuration.TRANSLATOR_MODULE, REQUEST_PROPERTIES, bundle.getString(Configuration.TRANSLATOR_MODULE+Configuration.DESC), ModelType.STRING, true, null);
+        
+        ModelNode translator = operation.get(REQUEST_PROPERTIES, Configuration.TRANSLATOR);
+        addAttribute(translator, Configuration.TRANSLATOR_NAME, ATTRIBUTES, bundle.getString(Configuration.TRANSLATOR_NAME+Configuration.DESC), ModelType.STRING, true, null);
+        addAttribute(translator, Configuration.TRANSLATOR_MODULE, ATTRIBUTES, bundle.getString(Configuration.TRANSLATOR_MODULE+Configuration.DESC), ModelType.STRING, true, null);
         return operation;
     }
     
@@ -64,11 +66,10 @@ public class TranslatorAdd extends AbstractAddStepHandler implements Description
         final ModelNode address = operation.require(OP_ADDR);
         final PathAddress pathAddress = PathAddress.pathAddress(address);
 
-		final String name = operation.require(Configuration.TRANSLATOR_NAME).asString();
-        final String moduleName = operation.require(Configuration.TRANSLATOR_MODULE).asString();
+        ModelNode translator = operation.require(Configuration.TRANSLATOR);
+        final String moduleName = translator.require(Configuration.TRANSLATOR_MODULE).asString();
 
         model.get(NAME).set(pathAddress.getLastElement().getValue());
-        model.get(Configuration.TRANSLATOR_NAME).set(name);
         model.get(Configuration.TRANSLATOR_MODULE).set(moduleName);
 	}
 	
@@ -76,8 +77,9 @@ public class TranslatorAdd extends AbstractAddStepHandler implements Description
     protected void performRuntime(final OperationContext context, final ModelNode operation, final ModelNode model,
             final ServiceVerificationHandler verificationHandler, final List<ServiceController<?>> newControllers) throws OperationFailedException {
 
-		final String name = operation.require(Configuration.TRANSLATOR_NAME).asString();
-        final String moduleName = operation.require(Configuration.TRANSLATOR_MODULE).asString();
+		ModelNode translator = operation.require(Configuration.TRANSLATOR);
+		final String name = translator.require(Configuration.TRANSLATOR_NAME).asString();
+        final String moduleName = translator.require(Configuration.TRANSLATOR_MODULE).asString();
 		
         final ServiceTarget target = context.getServiceTarget();
 

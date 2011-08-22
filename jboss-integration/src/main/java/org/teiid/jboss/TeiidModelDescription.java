@@ -22,32 +22,18 @@
 package org.teiid.jboss;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
-import static org.teiid.jboss.Configuration.*;
+import static org.teiid.jboss.Configuration.DESC;
+import static org.teiid.jboss.Configuration.addAttribute;
 
-import java.util.Locale;
 import java.util.ResourceBundle;
 
-import org.jboss.as.controller.descriptions.DescriptionProvider;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 
-class QueryEngineDescription implements DescriptionProvider {
-	
-	
-	@Override
-	public ModelNode getModelDescription(Locale locale) {
-		final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
-		
-        final ModelNode node = new ModelNode();
-        node.get(OPERATION_NAME).set(ADD);
-        node.get(DESCRIPTION).set("susbsystem.add"); //$NON-NLS-1$
-        
-        getQueryEngineDescription(node.get(CHILDREN, Configuration.QUERY_ENGINE), REQUEST_PROPERTIES, bundle);
-        return node;
-	}
-		
+class TeiidModelDescription {
+			
 	static void getQueryEngineDescription(ModelNode node, String type, ResourceBundle bundle) {
-		addAttribute(node, Configuration.ASYNC_THREAD_GROUP, type, bundle.getString(Configuration.ASYNC_THREAD_GROUP+DESC), ModelType.STRING, false, "teiid-async"); //$NON-NLS-1$
+		addAttribute(node, Configuration.ENGINE_NAME, type, bundle.getString(Configuration.ENGINE_NAME+Configuration.DESC), ModelType.STRING, true, null);		
 		addAttribute(node, Configuration.MAX_THREADS, type, bundle.getString(Configuration.MAX_THREADS+DESC), ModelType.INT, false, "64"); //$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_ACTIVE_PLANS, type, bundle.getString(Configuration.MAX_ACTIVE_PLANS+DESC), ModelType.INT, false, "20"); //$NON-NLS-1$
 		addAttribute(node, Configuration.USER_REQUEST_SOURCE_CONCURRENCY, type, bundle.getString(Configuration.USER_REQUEST_SOURCE_CONCURRENCY+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
@@ -65,44 +51,6 @@ class QueryEngineDescription implements DescriptionProvider {
 		addAttribute(node, Configuration.SECURITY_DOMAIN, type, bundle.getString(Configuration.SECURITY_DOMAIN+DESC), ModelType.STRING, false, null);
 		addAttribute(node, Configuration.MAX_SESSIONS_ALLOWED, type, bundle.getString(Configuration.MAX_SESSIONS_ALLOWED+DESC), ModelType.INT, false, "5000"); //$NON-NLS-1$
 		addAttribute(node, Configuration.SESSION_EXPIRATION_TIME_LIMIT, type, bundle.getString(Configuration.SESSION_EXPIRATION_TIME_LIMIT+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
-		
-		addAttribute(node, Configuration.ALLOW_ENV_FUNCTION, type, bundle.getString(Configuration.ALLOW_ENV_FUNCTION+DESC), ModelType.BOOLEAN, false, "false"); //$NON-NLS-1$
-		
-		//Buffer Manager stuff
-		ModelNode bufferNode = node.get(CHILDREN, Configuration.BUFFER_SERVICE);
-		bufferNode.get(TYPE).set(ModelType.OBJECT);
-		bufferNode.get(DESCRIPTION).set(bundle.getString(Configuration.BUFFER_SERVICE+DESC));
-		bufferNode.get(REQUIRED).set(false);
-		bufferNode.get(MAX_OCCURS).set(1);
-		bufferNode.get(MIN_OCCURS).set(1);
-		getBufferDescription(bufferNode, type, bundle);
-		
-		// result-set-cache
-		ModelNode rsCacheNode = node.get(CHILDREN, Configuration.RESULTSET_CACHE);
-		rsCacheNode.get(TYPE).set(ModelType.OBJECT);
-		rsCacheNode.get(DESCRIPTION).set(bundle.getString(Configuration.RESULTSET_CACHE+DESC));
-		rsCacheNode.get(REQUIRED).set(false);
-		rsCacheNode.get(MAX_OCCURS).set(1);
-		rsCacheNode.get(MIN_OCCURS).set(1);
-		getResultsetCacheDescription(rsCacheNode, type, bundle);
-		
-		// preparedplan-set-cache
-		ModelNode preparedPlanCacheNode = node.get(CHILDREN, Configuration.PREPAREDPLAN_CACHE);
-		preparedPlanCacheNode.get(TYPE).set(ModelType.OBJECT);
-		preparedPlanCacheNode.get(DESCRIPTION).set(bundle.getString(Configuration.PREPAREDPLAN_CACHE+DESC));
-		preparedPlanCacheNode.get(REQUIRED).set(false);
-		preparedPlanCacheNode.get(MAX_OCCURS).set(1);
-		preparedPlanCacheNode.get(MIN_OCCURS).set(1);
-		getResultsetCacheDescription(preparedPlanCacheNode, type, bundle);
-		
-		//distributed-cache
-		ModelNode distributedCacheNode = node.get(CHILDREN, Configuration.CACHE_FACORY);
-		distributedCacheNode.get(TYPE).set(ModelType.OBJECT);
-		distributedCacheNode.get(DESCRIPTION).set(bundle.getString(Configuration.CACHE_FACORY+DESC));
-		distributedCacheNode.get(REQUIRED).set(false);
-		distributedCacheNode.get(MAX_OCCURS).set(1);
-		distributedCacheNode.get(MIN_OCCURS).set(1);
-		getDistributedCacheDescription(preparedPlanCacheNode, type, bundle);
 		
 		//jdbc
 		ModelNode jdbcSocketNode = node.get(CHILDREN, Configuration.JDBC);
@@ -123,39 +71,8 @@ class QueryEngineDescription implements DescriptionProvider {
 		getSocketConfig(odbcSocketNode, type, bundle);			
 	}
 	
-	private static void getDistributedCacheDescription(ModelNode node, String type, ResourceBundle bundle) {
-		addAttribute(node, Configuration.CACHE_SERVICE_JNDI_NAME, type, bundle.getString(Configuration.CACHE_SERVICE_JNDI_NAME+DESC), ModelType.STRING, false, "java:TeiidCacheManager"); //$NON-NLS-1$
-		addAttribute(node, Configuration.RESULTSET_CACHE_NAME, type, bundle.getString(Configuration.RESULTSET_CACHE_NAME+DESC), ModelType.STRING, false, "teiid-resultset-cache"); //$NON-NLS-1$
-	}
 	
-	private static void getBufferDescription(ModelNode node, String type, ResourceBundle bundle) {
-		addAttribute(node, Configuration.USE_DISK, type, bundle.getString(Configuration.USE_DISK+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
-		addAttribute(node, Configuration.PROCESSOR_BATCH_SIZE, type, bundle.getString(Configuration.PROCESSOR_BATCH_SIZE+DESC), ModelType.INT, false, "512"); //$NON-NLS-1$
-		addAttribute(node, Configuration.CONNECTOR_BATCH_SIZE, type, bundle.getString(Configuration.CONNECTOR_BATCH_SIZE+DESC), ModelType.INT, false, "1024"); //$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_PROCESSING_KB, type, bundle.getString(Configuration.MAX_PROCESSING_KB+DESC), ModelType.INT, false, "-1"); //$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_RESERVED_KB, type, bundle.getString(Configuration.MAX_RESERVED_KB+DESC), ModelType.INT, false, "-1"); //$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_FILE_SIZE, type, bundle.getString(Configuration.MAX_FILE_SIZE+DESC), ModelType.LONG, false, "2048"); //$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_BUFFER_SPACE, type, bundle.getString(Configuration.MAX_BUFFER_SPACE+DESC), ModelType.LONG, false, "51200"); //$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_OPEN_FILES, type, bundle.getString(Configuration.MAX_OPEN_FILES+DESC), ModelType.INT, false, "64"); //$NON-NLS-1$
-	}	
-
-	static void getResultsetCacheDescription(ModelNode node, String type, ResourceBundle bundle) {
-		addAttribute(node, Configuration.MAX_ENTRIES, type, bundle.getString(Configuration.MAX_ENTRIES+DESC), ModelType.INT, false, "1024"); //$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_AGE_IN_SECS, type, bundle.getString(Configuration.MAX_AGE_IN_SECS+DESC), ModelType.INT, false, "7200");//$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_STALENESS, type, bundle.getString(Configuration.MAX_STALENESS+DESC), ModelType.INT, false, "60");//$NON-NLS-1$
-		addAttribute(node, Configuration.CACHE_TYPE, type, bundle.getString(Configuration.CACHE_TYPE+DESC), ModelType.STRING, false, "EXPIRATION"); //$NON-NLS-1$
-		addAttribute(node, Configuration.CACHE_LOCATION, type, bundle.getString(Configuration.CACHE_LOCATION+DESC), ModelType.STRING, false, "resultset");	//$NON-NLS-1$	
-	}
-	
-	static void getPreparedPalnCacheDescription(ModelNode node, String type, ResourceBundle bundle) {
-		addAttribute(node, Configuration.MAX_ENTRIES, type, bundle.getString(Configuration.MAX_ENTRIES+DESC), ModelType.INT, false, "512"); //$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_AGE_IN_SECS, type, bundle.getString(Configuration.MAX_AGE_IN_SECS+DESC), ModelType.INT, false, "28800");//$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_STALENESS, type, bundle.getString(Configuration.MAX_STALENESS+DESC), ModelType.INT, false, "0");//$NON-NLS-1$
-		addAttribute(node, Configuration.CACHE_TYPE, type, bundle.getString(Configuration.CACHE_TYPE+DESC), ModelType.STRING, false, "LRU"); //$NON-NLS-1$
-		addAttribute(node, Configuration.CACHE_LOCATION, type, bundle.getString(Configuration.CACHE_LOCATION+DESC), ModelType.STRING, false, "preparedplan");	//$NON-NLS-1$	
-	}
-	
-	static void getSocketConfig(ModelNode node, String type, ResourceBundle bundle) {
+	private static void getSocketConfig(ModelNode node, String type, ResourceBundle bundle) {
 		addAttribute(node, Configuration.SOCKET_ENABLED, type, bundle.getString(Configuration.SOCKET_ENABLED+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_SOCKET_THREAD_SIZE, type, bundle.getString(Configuration.MAX_SOCKET_THREAD_SIZE+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
 		addAttribute(node, Configuration.IN_BUFFER_SIZE, type, bundle.getString(Configuration.IN_BUFFER_SIZE+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.deployers;
+package org.teiid.jboss;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -31,6 +31,7 @@ import org.jboss.as.server.deployment.module.ResourceRoot;
 import org.jboss.as.server.deployment.module.TempFileProviderService;
 import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
+import org.teiid.deployers.TeiidAttachments;
 import org.teiid.metadata.VdbConstants;
 
 

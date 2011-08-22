@@ -21,10 +21,10 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
 import static org.jboss.as.controller.parsing.ParseUtils.requireNoAttributes;
 
 import java.util.List;
@@ -57,6 +57,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     
     // write the elements according to the schema defined.
     private void writeQueryEngine( XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+    	writeAttribute(writer, Element.ENGINE_NAME_ATTRIBUTE, node);
     	writeElement(writer, Element.ASYNC_THREAD_GROUP_ELEMENT, node);
     	writeElement(writer, Element.MAX_THREADS_ELEMENT, node);
     	writeElement(writer, Element.MAX_ACTIVE_PLANS_ELEMENT, node);
@@ -176,17 +177,23 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 	        writer.writeEndElement();
     	}
     }        
+    
+    private void writeAttribute(final XMLExtendedStreamWriter writer, final Element element, final ModelNode node) throws XMLStreamException {
+    	if (has(node, element.getLocalName())) {
+	        writer.writeAttribute(element.getLocalName(), node.get(element.getLocalName()).asString());
+    	}
+    }     
 
     @Override
     public void readElement(final XMLExtendedStreamReader reader, final List<ModelNode> list) throws XMLStreamException {
         final ModelNode address = new ModelNode();
-        address.add(SUBSYSTEM, TeiidExtension.SUBSYSTEM_NAME);
+        address.add(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM);
         address.protect();
-            	 
-        final ModelNode subsystem = new ModelNode();
-        subsystem.get(OP).set(ADD);
-        subsystem.get(OP_ADDR).set(address);
-        list.add(subsystem);
+        
+        final ModelNode bootServices = new ModelNode();
+        bootServices.get(OP).set(ADD);
+        bootServices.get(OP_ADDR).set(address);
+        list.add(bootServices);  
         
     	// no attributes 
     	requireNoAttributes(reader);
@@ -198,9 +205,30 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
                     Element element = Element.forName(reader.getLocalName());
                     switch (element) {
                         case QUERY_ENGINE_ELEMENT:
-                        	ModelNode node = parseQueryEngine(reader);
-                        	subsystem.get(Configuration.QUERY_ENGINE).set(node);
+                            ModelNode engineNode = parseQueryEngine(reader, new ModelNode());
+                            
+                            final ModelNode engineAddress = address.clone();
+                            engineAddress.add(Configuration.QUERY_ENGINE, engineNode.require(Configuration.ENGINE_NAME).asString());
+                            engineAddress.protect();
+                            engineNode.get(OP).set(ADD);
+                            engineNode.get(OP_ADDR).set(engineAddress);
+                            
+                            list.add(engineNode);  
+                            break;
+                            
+                        case TRANSLATOR_ELEMENT:
+                        	ModelNode translatorNode = parseTranslator(reader, new ModelNode());
+
+                            final ModelNode translatorAddress = address.clone();
+                            translatorAddress.add(Configuration.QUERY_ENGINE, translatorNode.require(Configuration.TRANSLATOR_NAME).asString());
+                            translatorAddress.protect();
+                            
+                            translatorNode.get(OP).set(ADD);
+                            translatorNode.get(OP_ADDR).set(translatorAddress);
+                        	
+                            list.add(translatorNode);  
                             break;                            
+                            
                         default: 
                             throw ParseUtils.unexpectedElement(reader);
                     }
@@ -211,12 +239,9 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
                 }
             }
         }  
-        
-        
     }
     
-    private ModelNode parseQueryEngine(XMLExtendedStreamReader reader) throws XMLStreamException {
-    	ModelNode node = new ModelNode();
+    private ModelNode parseQueryEngine(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
     	
     	if (reader.getAttributeCount() > 0) {
     		for(int i=0; i<reader.getAttributeCount(); i++) {
@@ -414,5 +439,28 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
             }
         }
     	return node;
-    }    
+    }
+    
+    private ModelNode parseTranslator(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
+    	if (reader.getAttributeCount() > 0) {
+    		for(int i=0; i<reader.getAttributeCount(); i++) {
+    			String attrName = reader.getAttributeLocalName(i);
+    			String attrValue = reader.getAttributeValue(i);
+    			
+    			Element element = Element.forName(attrName);
+    			switch(element) {
+    			case TRANSLATOR_NAME_ATTRIBUTE:
+    			case TRANSLATOR_MODULE_ATTRIBUTE:
+    				node.get(attrName).set(attrValue);
+    				break;
+    			default: 
+                	throw ParseUtils.unexpectedElement(reader);
+    			}
+    		}
+    	}      	
+    	while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
+    		throw ParseUtils.unexpectedElement(reader);
+    	}
+    	return node;
+    }
 }

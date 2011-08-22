@@ -369,7 +369,7 @@ public class TestTeiidConfiguration {
     @Test
     public void testSubSystemDescription() throws IOException {
     	ModelNode node = new ModelNode();
-    	QueryEngineDescription.getQueryEngineDescription(node, ATTRIBUTES, IntegrationPlugin.getResourceBundle(null));
+    	TeiidModelDescription.getQueryEngineDescription(node, ATTRIBUTES, IntegrationPlugin.getResourceBundle(null));
     	assertEquals(ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-model-config.txt")), node.toString());
     }
 }

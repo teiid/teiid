@@ -28,6 +28,7 @@ import java.io.File;
 
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.jboss.ObjectSerializer;
 
 
 @SuppressWarnings("nls")

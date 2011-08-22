@@ -1,6 +1,8 @@
 <subsystem xmlns="urn:jboss:domain:teiid:1.0">
+    <async-thread-group>teiid-async</async-thread-group>
+    <allow-env-function>false</allow-env-function>
+    
     <query-engine>
-        <async-thread-group>teiid-async</async-thread-group>
         <max-threads>64</max-threads>
         <max-active-plans>20</max-active-plans>
         <thread-count-for-source-concurrency>0</thread-count-for-source-concurrency>
@@ -13,11 +15,10 @@
         <max-odbc-lob-size-allowed>5242880</max-odbc-lob-size-allowed>
         <event-distributor-name>teiid/event-distributor</event-distributor-name>
         <detect-change-events>true</detect-change-events>
-
         <security-domain>teiid-security</security-domain>
         <max-sessions-allowed>5000</max-sessions-allowed>
         <sessions-expiration-timelimit>0</sessions-expiration-timelimit>
-        <allow-env-function>false</allow-env-function>
+        
 
         <buffer-service>
             <use-disk>true</use-disk>

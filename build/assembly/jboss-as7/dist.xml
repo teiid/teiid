@@ -8,7 +8,7 @@
   </formats>
   
   <includeBaseDirectory>false</includeBaseDirectory>
-  <baseDirectory>teiid-${version}</baseDirectory>
+  <baseDirectory>teiid-${project.version}</baseDirectory>
 
   <fileSets>
           
@@ -59,32 +59,32 @@
   
     <files>
         <file>
-            <source>target/teiid-${version}-docs/admin-guide/en-US/pdf/teiid_admin_guide.pdf</source>
+            <source>target/teiid-${project.version}-docs/admin-guide/en-US/pdf/teiid_admin_guide.pdf</source>
             <outputDirectory>docs/teiid</outputDirectory>
             <fileMode>0644</fileMode>
         </file>
         <file>
-            <source>target/teiid-${version}-docs/reference/en-US/pdf/teiid_reference.pdf</source>
+            <source>target/teiid-${project.version}-docs/reference/en-US/pdf/teiid_reference.pdf</source>
             <outputDirectory>docs/teiid</outputDirectory>
             <fileMode>0644</fileMode>
         </file>
         <file>
-            <source>target/teiid-${version}-docs/quick-start-example/en-US/pdf/teiid_quick_start_example.pdf</source>
+            <source>target/teiid-${project.version}-docs/quick-start-example/en-US/pdf/teiid_quick_start_example.pdf</source>
             <outputDirectory>docs/teiid</outputDirectory>
             <fileMode>0644</fileMode>
         </file>
         <file>
-            <source>target/teiid-${version}-docs/developer-guide/en-US/pdf/teiid_developer_guide.pdf</source>
+            <source>target/teiid-${project.version}-docs/developer-guide/en-US/pdf/teiid_developer_guide.pdf</source>
             <outputDirectory>docs/teiid</outputDirectory>
             <fileMode>0644</fileMode>
         </file>
         <file>
-            <source>target/teiid-${version}-docs/client-developers-guide/en-US/pdf/teiid_client_developers_guide.pdf</source>
+            <source>target/teiid-${project.version}-docs/client-developers-guide/en-US/pdf/teiid_client_developers_guide.pdf</source>
             <outputDirectory>docs/teiid</outputDirectory>
             <fileMode>0644</fileMode>
         </file>
         <file>
-            <source>target/teiid-${version}-docs/caching-guide/en-US/pdf/teiid_caching_guide.pdf</source>
+            <source>target/teiid-${project.version}-docs/caching-guide/en-US/pdf/teiid_caching_guide.pdf</source>
             <outputDirectory>docs/teiid</outputDirectory>
             <fileMode>0644</fileMode>
         </file>        

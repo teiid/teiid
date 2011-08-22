@@ -21,32 +21,30 @@
  */
 package org.teiid.jboss;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import org.jboss.msc.service.Service;
+import org.jboss.msc.service.StartContext;
+import org.jboss.msc.service.StartException;
+import org.jboss.msc.service.StopContext;
+import org.teiid.dqp.internal.process.AuthorizationValidator;
 
-import org.jboss.msc.service.ServiceContainer.TerminateListener;
-import org.teiid.deployers.ContainerLifeCycleListener;
-
-class JBossLifeCycleListener implements TerminateListener, ContainerLifeCycleListener {
-
-	private boolean shutdownInProgress = false;
-	private List<ContainerLifeCycleListener.LifeCycleEventListener> listeners = Collections.synchronizedList(new ArrayList<ContainerLifeCycleListener.LifeCycleEventListener>());
+public class AuthorizationValidatorService implements Service<AuthorizationValidator> {
+	private AuthorizationValidator validator;
+	
+	public AuthorizationValidatorService(AuthorizationValidator value){
+		this.validator = value;
+	}
 	
 	@Override
-	public boolean isShutdownInProgress() {
-		return shutdownInProgress;
+	public void start(StartContext context) throws StartException {
 	}
 
 	@Override
-	public void handleTermination(Info info) {
-		if (info.getShutdownInitiated() > 0) {
-			this.shutdownInProgress = true;
-		}
+	public void stop(StopContext context) {
 	}
 
 	@Override
-	public void addListener(LifeCycleEventListener listener) {
-		listeners.add(listener);
+	public AuthorizationValidator getValue() throws IllegalStateException, IllegalArgumentException {
+		return validator;
 	}
+
 }

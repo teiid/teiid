@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 
 
@@ -41,8 +40,8 @@ public class TranslatorRepository implements Serializable {
 		this.translatorRepo.put(name, factory);
 	}	
 	
-	public Translator getTranslatorMetaData(String name) {
-		Translator factory = this.translatorRepo.get(name);
+	public VDBTranslatorMetaData getTranslatorMetaData(String name) {
+		VDBTranslatorMetaData factory = this.translatorRepo.get(name);
 		return factory;
 	}
 	

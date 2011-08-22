@@ -24,14 +24,31 @@ package org.teiid.jboss;
 import org.jboss.msc.service.ServiceName;
 
 public class TeiidServiceNames {
-	public static ServiceName ENGINE = ServiceName.JBOSS.append("teiid", "query-engine");
-	public static ServiceName TRANSLATOR_REPO = ServiceName.JBOSS.append("teiid", "translator-repository");
-	static ServiceName TRANSLATOR_BASE = ServiceName.JBOSS.append("teiid", "translator");
-	public static ServiceName BUFFER_DIR = ServiceName.JBOSS.append("teiid", "buffer.dir");
-	public static ServiceName BUFFER_MGR = ServiceName.JBOSS.append("teiid", "buffer-mgr");
-	public static ServiceName SYSTEM_VDB = ServiceName.JBOSS.append("teiid", "system.vdb");
+	private static ServiceName ENGINE = ServiceName.JBOSS.append("teiid", "query-engine"); //$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName TRANSLATOR_REPO = ServiceName.JBOSS.append("teiid", "translator-repository");//$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName VDB_REPO = ServiceName.JBOSS.append("teiid", "vdb-repository");//$NON-NLS-1$ //$NON-NLS-2$
+	private static ServiceName TRANSLATOR_BASE = ServiceName.JBOSS.append("teiid", "translator");//$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName BUFFER_DIR = ServiceName.JBOSS.append("teiid", "buffer.dir");//$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName DATA_DIR = ServiceName.JBOSS.append("teiid", "data.dir");//$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName BUFFER_MGR = ServiceName.JBOSS.append("teiid", "buffer-mgr");//$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName SYSTEM_VDB = ServiceName.JBOSS.append("teiid", "system.vdb");//$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName AUTHORIZATION_VALIDATOR = ServiceName.JBOSS.append("teiid", "authorization-validator");//$NON-NLS-1$ //$NON-NLS-2$
+	private static ServiceName VDB_SVC_BASE = ServiceName.JBOSS.append("teiid", "vdb"); //$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName OBJECT_SERIALIZER = ServiceName.JBOSS.append("teiid", "object-serializer"); //$NON-NLS-1$ //$NON-NLS-2$
 	
 	public static ServiceName translatorServiceName(String name) {
 		return TRANSLATOR_BASE.append(name);
+	}
+	
+	public static ServiceName engineServiceName(String name) {
+		return ENGINE.append(name);
+	}
+	
+	public static ServiceName vdbServiceName(String vdbName, int version) {
+		return VDB_SVC_BASE.append(vdbName, ".", String.valueOf(version)); //$NON-NLS-1$
+	}
+	
+	public static ServiceName executorServiceName(String poolName) {
+		return ServiceName.JBOSS.append("thread", "executor", poolName);
 	}
 }

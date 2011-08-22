@@ -29,7 +29,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
-import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
+import org.jboss.modules.Module;
+import org.jboss.modules.ModuleIdentifier;
+import org.jboss.modules.ModuleLoadException;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.core.TeiidException;
@@ -88,29 +90,36 @@ public class TranslatorUtil {
 		}
 	}	
 	
-	public static ExecutionFactory buildExecutionFactory(Translator data) throws DeploymentUnitProcessingException {
+	public static ExecutionFactory buildExecutionFactory(VDBTranslatorMetaData data) throws TeiidException {
 		ExecutionFactory executionFactory;
+		
+        final ModuleIdentifier moduleId;
+        final Module module;
+        try {
+            moduleId = ModuleIdentifier.create(data.getModuleName());
+            module = Module.getCallerModuleLoader().loadModule(moduleId);
+        } catch (ModuleLoadException e) {
+            throw new TeiidException(e, RuntimePlugin.Util.getString("failed_load_module", data.getModuleName(), data.getName())); //$NON-NLS-1$
+        }		
+		
 		try {
 			String executionClass = data.getPropertyValue(VDBTranslatorMetaData.EXECUTION_FACTORY_CLASS);
-			Object o = ReflectionHelper.create(executionClass, null, Thread.currentThread().getContextClassLoader());
+			Object o = ReflectionHelper.create(executionClass, null, module.getClassLoader());
 			if(!(o instanceof ExecutionFactory)) {
-				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("invalid_class", executionClass));//$NON-NLS-1$	
+				throw new TeiidException(RuntimePlugin.Util.getString("invalid_class", executionClass));//$NON-NLS-1$	
 			}
-			
 			executionFactory = (ExecutionFactory)o;
 			injectProperties(executionFactory, data);
 			executionFactory.start();
 			return executionFactory;
-		} catch (TeiidException e) {
-			throw new DeploymentUnitProcessingException(e);
 		} catch (InvocationTargetException e) {
-			throw new DeploymentUnitProcessingException(e);
+			throw new TeiidException(e);
 		} catch (IllegalAccessException e) {
-			throw new DeploymentUnitProcessingException(e);
+			throw new TeiidException(e);
 		}
 	}
 	
-	private static void injectProperties(ExecutionFactory ef, final Translator data) throws InvocationTargetException, IllegalAccessException, DeploymentUnitProcessingException{
+	private static void injectProperties(ExecutionFactory ef, final Translator data) throws InvocationTargetException, IllegalAccessException, TeiidException{
 		Map<Method, TranslatorProperty> props = TranslatorUtil.getTranslatorProperties(ef.getClass());
 		Map p = data.getProperties();
 		TreeMap<String, String> caseInsensitivProps = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
@@ -124,7 +133,7 @@ public class TranslatorUtil {
 				Method setterMethod = getSetter(ef.getClass(), method);
 				setterMethod.invoke(ef, convert(value, method.getReturnType()));
 			} else if (tp.required()) {
-				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("required_property_not_exists", tp.display())); //$NON-NLS-1$
+				throw new TeiidException(RuntimePlugin.Util.getString("required_property_not_exists", tp.display())); //$NON-NLS-1$
 			}
 		}
 		caseInsensitivProps.remove(Translator.EXECUTION_FACTORY_CLASS);
@@ -144,7 +153,7 @@ public class TranslatorUtil {
 		return result;
 	}
 	
-	public static Method getSetter(Class<?> clazz, Method method) throws SecurityException, DeploymentUnitProcessingException {
+	public static Method getSetter(Class<?> clazz, Method method) throws SecurityException, TeiidException {
 		String setter = method.getName();
 		if (method.getName().startsWith("get")) { //$NON-NLS-1$
 			setter = "set"+setter.substring(3);//$NON-NLS-1$
@@ -161,7 +170,7 @@ public class TranslatorUtil {
 			try {
 				return clazz.getMethod(method.getName(), method.getReturnType());
 			} catch (NoSuchMethodException e1) {
-				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("no_set_method", setter, method.getName())); //$NON-NLS-1$
+				throw new TeiidException(RuntimePlugin.Util.getString("no_set_method", setter, method.getName())); //$NON-NLS-1$
 			}
 		}
 	}

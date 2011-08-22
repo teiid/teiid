@@ -21,9 +21,11 @@
  */
 package org.teiid.jboss;
 
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+
 import java.util.List;
-import java.util.ServiceLoader;
-import java.util.concurrent.Executor;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
@@ -33,55 +35,45 @@ import org.jboss.as.controller.AbstractBoottimeAddStepHandler;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.ServiceVerificationHandler;
+import org.jboss.as.controller.descriptions.DescriptionProvider;
 import org.jboss.as.naming.ManagedReferenceFactory;
 import org.jboss.as.naming.ManagedReferenceInjector;
 import org.jboss.as.naming.NamingStore;
 import org.jboss.as.naming.service.BinderService;
 import org.jboss.as.network.SocketBinding;
 import org.jboss.as.security.plugins.SecurityDomainContext;
-import org.jboss.as.server.AbstractDeploymentChainStep;
-import org.jboss.as.server.DeploymentProcessorTarget;
-import org.jboss.as.server.deployment.Phase;
-import org.jboss.as.server.services.path.RelativePathService;
 import org.jboss.dmr.ModelNode;
-import org.jboss.modules.Module;
-import org.jboss.modules.ModuleIdentifier;
-import org.jboss.modules.ModuleLoadException;
 import org.jboss.msc.inject.ConcurrentMapInjector;
-import org.jboss.msc.service.AbstractServiceListener;
-import org.jboss.msc.service.ServiceBuilder;
-import org.jboss.msc.service.ServiceContainer;
-import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceName;
-import org.jboss.msc.service.ServiceTarget;
+import org.jboss.msc.service.*;
 import org.jboss.msc.value.InjectedValue;
-import org.teiid.PolicyDecider;
-import org.teiid.cache.CacheConfiguration;
-import org.teiid.cache.CacheFactory;
-import org.teiid.cache.DefaultCacheFactory;
-import org.teiid.deployers.ObjectSerializer;
 import org.teiid.deployers.SystemVDBDeployer;
-import org.teiid.deployers.VDBDependencyProcessor;
-import org.teiid.deployers.VDBDeployer;
-import org.teiid.deployers.VDBParserDeployer;
 import org.teiid.deployers.VDBRepository;
-import org.teiid.deployers.VDBStructure;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.process.AuthorizationValidator;
-import org.teiid.dqp.internal.process.DataRolePolicyDecider;
-import org.teiid.dqp.internal.process.DefaultAuthorizationValidator;
 import org.teiid.jboss.deployers.RuntimeEngineDeployer;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.SSLConfiguration;
 import org.teiid.transport.SocketConfiguration;
 
-class QueryEngineAdd extends AbstractBoottimeAddStepHandler {
+class QueryEngineAdd extends AbstractBoottimeAddStepHandler implements DescriptionProvider {
 
+	@Override
+	public ModelNode getModelDescription(Locale locale) {
+		final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
+		
+        final ModelNode node = new ModelNode();
+        node.get(OPERATION_NAME).set(ADD);
+        node.get(DESCRIPTION).set("engine.add"); //$NON-NLS-1$
+        
+        ModelNode engine = node.get(REQUEST_PROPERTIES, Configuration.QUERY_ENGINE);
+        TeiidModelDescription.getQueryEngineDescription(engine, ATTRIBUTES, bundle);
+        return node;
+	}
+	
 	@Override
 	protected void populateModel(ModelNode operation, ModelNode model) {
 		final ModelNode queryEngineNode = operation.require(Configuration.QUERY_ENGINE);
@@ -95,58 +87,8 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler {
     	final ModelNode queryEngineNode = operation.require(Configuration.QUERY_ENGINE);
     	ServiceTarget target = context.getServiceTarget();
     	
-    	final VDBRepository vdbRepo = buildVDBRepository(queryEngineNode);
     	final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener();
-    	
-    	SystemVDBDeployer systemVDB = new SystemVDBDeployer();
-    	systemVDB.setVDBRepository(vdbRepo);
-    	SystemVDBService systemVDBService = new SystemVDBService(systemVDB);
-    	newControllers.add(target.addService(TeiidServiceNames.SYSTEM_VDB, systemVDBService).install());
-    	
-    	//FIXME *******************
-    	final ObjectSerializer serializer = new ObjectSerializer("/tmp");
-    	//FIXME *******************
-    	
-    	final TranslatorRepository translatorRepo = new TranslatorRepository();
-    	TranslatorRepositoryService translatorService = new TranslatorRepositoryService(translatorRepo);
-    	newControllers.add(target.addService(TeiidServiceNames.TRANSLATOR_REPO, translatorService).install());
-
-    	newControllers.add(RelativePathService.addService(TeiidServiceNames.BUFFER_DIR, "teiid-buffer", "jboss.server.temp.dir", target)); //$NON-NLS-1$ //$NON-NLS-2$
-    	
-    	// TODO: remove verbose service by moving the buffer service from runtime project
-    	final BufferServiceImpl bufferManager = buildBufferManager(queryEngineNode.get(Configuration.BUFFER_SERVICE));
-    	BufferManagerService bufferService = new BufferManagerService(bufferManager);
-    	ServiceBuilder<BufferServiceImpl> bufferServiceBuilder = target.addService(TeiidServiceNames.BUFFER_MGR, bufferService);
-    	bufferServiceBuilder.addDependency(TeiidServiceNames.BUFFER_DIR, String.class, bufferService.pathInjector);
-    	newControllers.add(bufferServiceBuilder.install());
-
-    	PolicyDecider policyDecider;
-    	if (queryEngineNode.hasDefined(Configuration.POLICY_DECIDER_MODULE)) {
-    		policyDecider = buildService(PolicyDecider.class, queryEngineNode.get(Configuration.POLICY_DECIDER_MODULE).asString());    		
-    	}
-    	else {
-    		DataRolePolicyDecider drpd = new DataRolePolicyDecider();
-    		drpd.setAllowCreateTemporaryTablesByDefault(true);
-    		drpd.setAllowFunctionCallsByDefault(true);
-    		policyDecider = drpd;
-    	}
-    	
-    	AuthorizationValidator authValidator;
-    	if (queryEngineNode.hasDefined(Configuration.AUTHORIZATION_VALIDATOR_MODULE)) {
-    		authValidator = buildService(AuthorizationValidator.class, queryEngineNode.get(Configuration.AUTHORIZATION_VALIDATOR_MODULE).asString());
-    		authValidator.setEnabled(true);
-    	}
-    	else {
-    		DefaultAuthorizationValidator dap = new DefaultAuthorizationValidator();
-    		dap.setPolicyDecider(policyDecider);
-    		dap.setEnabled(true);
-    		authValidator = dap;
-    	}    	
-
-    	CacheFactory cacheFactory = getCacheFactory(queryEngineNode.get(Configuration.CACHE_FACORY));
-    	CacheConfiguration resultsetCache = buildCacheConfig(queryEngineNode.get(Configuration.RESULTSET_CACHE));
-    	CacheConfiguration preparePlanCache = buildCacheConfig(queryEngineNode.get(Configuration.PREPAREDPLAN_CACHE));
-    	
+       	
     	SocketConfiguration jdbc = null;
     	if (queryEngineNode.hasDefined(Configuration.JDBC)) {
     		jdbc = buildSocketConfiguration(queryEngineNode.get(Configuration.JDBC));
@@ -157,33 +99,25 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler {
     		odbc = buildSocketConfiguration(queryEngineNode.get(Configuration.ODBC));
     	}
     	
-    	String asyncExecutor = "teiid-async"; //$NON-NLS-1$
-    	if (queryEngineNode.hasDefined(Configuration.ASYNC_THREAD_GROUP)) {
-    		asyncExecutor = queryEngineNode.get(Configuration.ASYNC_THREAD_GROUP).asString();
-    	}	                	
-    	
     	// now build the engine
     	final RuntimeEngineDeployer engine = buildQueryEngine(queryEngineNode);
     	engine.setJdbcSocketConfiguration(jdbc);
     	engine.setOdbcSocketConfiguration(odbc);
-    	engine.setVDBRepository(vdbRepo);
-    	engine.setCacheFactory(cacheFactory);
-    	engine.setResultsetCacheConfig(resultsetCache);
-    	engine.setPreparedPlanCacheConfig(preparePlanCache);
     	engine.setSecurityHelper(new JBossSecurityHelper());
-    	engine.setTranslatorRepository(translatorRepo);
-    	engine.setAuthorizationValidator(authValidator);
     	engine.setContainerLifeCycleListener(shutdownListener);
+    	// TODO: none of the caching is configured..
     	
         
-        ServiceBuilder<ClientServiceRegistry> serviceBuilder = target.addService(TeiidServiceNames.ENGINE, engine);
+        ServiceBuilder<ClientServiceRegistry> serviceBuilder = target.addService(TeiidServiceNames.engineServiceName(engine.getName()), engine);
         
         serviceBuilder.addDependency(ServiceName.JBOSS.append("connector", "workmanager"), WorkManager.class, engine.workManagerInjector); //$NON-NLS-1$ //$NON-NLS-2$
         serviceBuilder.addDependency(ServiceName.JBOSS.append("txn", "XATerminator"), XATerminator.class, engine.xaTerminatorInjector); //$NON-NLS-1$ //$NON-NLS-2$
         serviceBuilder.addDependency(ServiceName.JBOSS.append("txn", "TransactionManager"), TransactionManager.class, engine.txnManagerInjector); //$NON-NLS-1$ //$NON-NLS-2$
-        serviceBuilder.addDependency(ServiceName.JBOSS.append("thread", "executor", asyncExecutor), Executor.class, engine.threadPoolInjector); //$NON-NLS-1$ //$NON-NLS-2$
         serviceBuilder.addDependency(TeiidServiceNames.BUFFER_MGR, BufferServiceImpl.class, engine.bufferServiceInjector);
         serviceBuilder.addDependency(TeiidServiceNames.SYSTEM_VDB, SystemVDBDeployer.class,  new InjectedValue<SystemVDBDeployer>());
+        serviceBuilder.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class, engine.translatorRepositoryInjector);
+        serviceBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, engine.vdbRepositoryInjector);
+        serviceBuilder.addDependency(TeiidServiceNames.AUTHORIZATION_VALIDATOR, AuthorizationValidator.class, engine.authorizationValidatorInjector);
         
         if (jdbc != null) {
         	serviceBuilder.addDependency(ServiceName.JBOSS.append("binding", jdbc.getSocketBinding()), SocketBinding.class, engine.jdbcSocketBindingInjector); //$NON-NLS-1$
@@ -198,7 +132,7 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler {
         BinderService binder = new BinderService(LocalServerConnection.TEIID_RUNTIME);
         ServiceBuilder<ManagedReferenceFactory> namingBuilder = target.addService(javaContext.append(LocalServerConnection.TEIID_RUNTIME), binder);
         namingBuilder.addDependency(javaContext, NamingStore.class, binder.getNamingStoreInjector());
-        namingBuilder.addDependency(TeiidServiceNames.ENGINE, RuntimeEngineDeployer.class, new ManagedReferenceInjector<RuntimeEngineDeployer>(binder.getManagedObjectInjector()));
+        namingBuilder.addDependency(TeiidServiceNames.engineServiceName(engine.getName()), RuntimeEngineDeployer.class, new ManagedReferenceInjector<RuntimeEngineDeployer>(binder.getManagedObjectInjector()));
         namingBuilder.setInitialMode(ServiceController.Mode.ON_DEMAND);
         newControllers.add(namingBuilder.install());
         
@@ -215,49 +149,18 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler {
 		        }
 	        }
         }
-        
-        serviceBuilder.addListener(new AbstractServiceListener<Object>() {
-            @Override
-            public void transition(ServiceController<?> serviceController, ServiceController.Transition transition) {
-            	
-            	if (transition.equals(ServiceController.Transition.START_INITIATING_to_STARTING)) {
-            		vdbRepo.start();
-            		bufferManager.start();            		
-            	}
-            	
-            	if (transition.equals(ServiceController.Transition.STOPPING_to_DOWN)) {
-            		bufferManager.stop();
-            	}
-            }
-            
-            @Override
-            public void serviceRemoveRequested(ServiceController<?> serviceController) {
-                serviceController.removeListener(this);
-            }                     
-        });
                   
         serviceBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
         ServiceController<ClientServiceRegistry> controller = serviceBuilder.install(); 
         newControllers.add(controller);
         ServiceContainer container =  controller.getServiceContainer();
         container.addTerminateListener(shutdownListener);    	
-    	
-        context.addStep(new AbstractDeploymentChainStep() {
-			@Override
-			public void execute(DeploymentProcessorTarget processorTarget) {
-				processorTarget.addDeploymentProcessor(Phase.STRUCTURE, Phase.STRUCTURE_WAR_DEPLOYMENT_INIT|0x0001,new VDBStructure());
-				processorTarget.addDeploymentProcessor(Phase.PARSE, Phase.PARSE_WEB_DEPLOYMENT|0x0001, new VDBParserDeployer(vdbRepo, serializer));
-				processorTarget.addDeploymentProcessor(Phase.DEPENDENCIES, Phase.DEPENDENCIES_WAR_MODULE|0x0001, new VDBDependencyProcessor());
-				processorTarget.addDeploymentProcessor(Phase.INSTALL, Phase.INSTALL_WAR_DEPLOYMENT|0x0001, new VDBDeployer(vdbRepo, engine.threadPoolInjector, translatorRepo, serializer, shutdownListener));            			
-			}
-        	
-        }, OperationContext.Stage.RUNTIME);
     }
 
 	
 	private RuntimeEngineDeployer buildQueryEngine(ModelNode node) {
-		RuntimeEngineDeployer engine = new RuntimeEngineDeployer();
-		
+		RuntimeEngineDeployer engine = new RuntimeEngineDeployer(node.require(Configuration.ENGINE_NAME).asString());
+    	
     	if (node.hasDefined(Configuration.MAX_THREADS)) {
     		engine.setMaxThreads(node.get(Configuration.MAX_THREADS).asInt());
     	}
@@ -303,112 +206,7 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler {
     	
 		return engine;
 	}
-
-
-    private VDBRepository buildVDBRepository(ModelNode node) {
-    	SystemFunctionManager systemFunctionManager = new SystemFunctionManager();
-    	if (node.hasDefined(Configuration.ALLOW_ENV_FUNCTION)) {
-    		systemFunctionManager.setAllowEnvFunction(node.get(Configuration.ALLOW_ENV_FUNCTION).asBoolean());
-    	}
-    	else {
-    		systemFunctionManager.setAllowEnvFunction(false);
-    	}
-    	
-    	VDBRepository vdbRepository = new VDBRepository();
-    	vdbRepository.setSystemFunctionManager(systemFunctionManager);	
-    	return vdbRepository;               	
-    }
-    
-    private BufferServiceImpl  buildBufferManager(ModelNode node) {
-    	BufferServiceImpl bufferManger = new BufferServiceImpl();
-    	
-    	if (node == null) {
-    		return bufferManger;
-    	}
-    	
-    	if (node.hasDefined(Configuration.USE_DISK)) {
-    		bufferManger.setUseDisk(node.get(Configuration.USE_DISK).asBoolean());
-    	}	                	
-    	if (node.hasDefined(Configuration.PROCESSOR_BATCH_SIZE)) {
-    		bufferManger.setProcessorBatchSize(node.get(Configuration.PROCESSOR_BATCH_SIZE).asInt());
-    	}	
-    	if (node.hasDefined(Configuration.CONNECTOR_BATCH_SIZE)) {
-    		bufferManger.setConnectorBatchSize(node.get(Configuration.CONNECTOR_BATCH_SIZE).asInt());
-    	}	
-    	if (node.hasDefined(Configuration.MAX_PROCESSING_KB)) {
-    		bufferManger.setMaxProcessingKb(node.get(Configuration.MAX_PROCESSING_KB).asInt());
-    	}
-    	if (node.hasDefined(Configuration.MAX_RESERVED_KB)) {
-    		bufferManger.setMaxReserveKb(node.get(Configuration.MAX_RESERVED_KB).asInt());
-    	}
-    	if (node.hasDefined(Configuration.MAX_FILE_SIZE)) {
-    		bufferManger.setMaxFileSize(node.get(Configuration.MAX_FILE_SIZE).asLong());
-    	}
-    	if (node.hasDefined(Configuration.MAX_BUFFER_SPACE)) {
-    		bufferManger.setMaxBufferSpace(node.get(Configuration.MAX_BUFFER_SPACE).asLong());
-    	}
-    	if (node.hasDefined(Configuration.MAX_OPEN_FILES)) {
-    		bufferManger.setMaxOpenFiles(node.get(Configuration.MAX_OPEN_FILES).asInt());
-    	}	                	
-    	return bufferManger;
-    }
-    
-    private <T> T buildService(Class<T> type, String moduleName) throws OperationFailedException {
-        final ModuleIdentifier moduleId;
-        final Module module;
-        try {
-            moduleId = ModuleIdentifier.create(moduleName);
-            module = Module.getCallerModuleLoader().loadModule(moduleId);
-        } catch (ModuleLoadException e) {
-            throw new OperationFailedException(e, new ModelNode().set(IntegrationPlugin.Util.getString("failed_load_module", moduleName))); //$NON-NLS-1$
-        }
-        ServiceLoader<T> services = module.loadService(type);
-        return services.iterator().next();
-    }
-    
-    private CacheFactory getCacheFactory(ModelNode node) {
-    	CacheFactory cacheFactory = new DefaultCacheFactory();	
-    	/*
-    	if (node.hasDefined(Configuration.CLASS)) {
-    		String className = node.get(Configuration.CLASS).asString();
-    	}
-    	
-    	if (node.hasDefined(Configuration.ENABLED)) {
-    		cacheFactory.setEnabled(node.get(Configuration.ENABLED).asBoolean());
-    	}
-    	else {
-    		cacheFactory.setEnabled(true);
-    	}
-    	if (node.hasDefined(Configuration.CACHE_SERVICE_JNDI_NAME)) {
-    		cacheFactory.setCacheManager(node.get(Configuration.CACHE_SERVICE_JNDI_NAME).asString());
-    	}	                	
-    	if (node.hasDefined(Configuration.RESULTSET_CACHE_NAME)) {
-    		cacheFactory.setResultsetCacheName(node.get(Configuration.RESULTSET_CACHE_NAME).asString());
-    	}
-    	*/		                	
-    	return cacheFactory;
-    }
-    
-    private CacheConfiguration buildCacheConfig(ModelNode node) {
-    	CacheConfiguration cacheConfig = new CacheConfiguration();
-    	
-    	if (node.hasDefined(Configuration.MAX_ENTRIES)) {
-    		cacheConfig.setMaxEntries(node.get(Configuration.MAX_ENTRIES).asInt());
-    	}
-    	if (node.hasDefined(Configuration.MAX_AGE_IN_SECS)) {
-    		cacheConfig.setMaxAgeInSeconds(node.get(Configuration.MAX_AGE_IN_SECS).asInt());
-    	}
-    	if (node.hasDefined(Configuration.MAX_STALENESS)) {
-    		cacheConfig.setMaxStaleness(node.get(Configuration.MAX_STALENESS).asInt());
-    	}
-    	if (node.hasDefined(Configuration.CACHE_TYPE)) {
-    		cacheConfig.setType(node.get(Configuration.CACHE_TYPE).asString());
-    	}
-    	if (node.hasDefined(Configuration.CACHE_LOCATION)) {
-    		cacheConfig.setLocation(node.get(Configuration.CACHE_LOCATION).asString());
-    	}	   	                	
-    	return cacheConfig;
-	}	                
+        
     
 	private SocketConfiguration buildSocketConfiguration(ModelNode node) {
 		SocketConfiguration socket = new SocketConfiguration();

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.deployers;
+package org.teiid.jboss;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -38,6 +38,7 @@ import org.jboss.vfs.VisitorAttributes;
 import org.jboss.vfs.util.SuffixMatchFilter;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.deployers.TeiidAttachments;
 
 public class VDBDependencyProcessor implements DeploymentUnitProcessor {
 	public static final String LIB = "/lib"; //$NON-NLS-1$

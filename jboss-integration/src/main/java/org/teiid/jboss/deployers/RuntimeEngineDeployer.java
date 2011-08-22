@@ -30,20 +30,8 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -64,14 +52,7 @@ import org.teiid.adminapi.Admin.Cache;
 import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.adminapi.impl.CacheStatisticsMetadata;
-import org.teiid.adminapi.impl.DQPManagement;
-import org.teiid.adminapi.impl.RequestMetadata;
-import org.teiid.adminapi.impl.SessionMetadata;
-import org.teiid.adminapi.impl.TransactionMetadata;
-import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
+import org.teiid.adminapi.impl.*;
 import org.teiid.cache.CacheFactory;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
@@ -89,11 +70,7 @@ import org.teiid.deployers.ContainerLifeCycleListener;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
-import org.teiid.dqp.internal.process.DQPConfiguration;
-import org.teiid.dqp.internal.process.DQPCore;
-import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.dqp.internal.process.DataTierManagerImpl;
-import org.teiid.dqp.internal.process.TransactionServerImpl;
+import org.teiid.dqp.internal.process.*;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.dqp.service.SessionServiceException;
@@ -101,30 +78,18 @@ import org.teiid.dqp.service.TransactionService;
 import org.teiid.events.EventDistributor;
 import org.teiid.events.EventDistributorFactory;
 import org.teiid.jboss.IntegrationPlugin;
-import org.teiid.logging.Log4jListener;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnStats;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.metadata.Table.TriggerEvent;
-import org.teiid.metadata.TableStats;
 import org.teiid.net.TeiidURL;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.processor.DdlPlan;
 import org.teiid.security.SecurityHelper;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.services.SessionServiceImpl;
-import org.teiid.transport.ClientServiceRegistry;
-import org.teiid.transport.ClientServiceRegistryImpl;
-import org.teiid.transport.LogonImpl;
-import org.teiid.transport.ODBCSocketListener;
-import org.teiid.transport.SocketConfiguration;
-import org.teiid.transport.SocketListener;
+import org.teiid.transport.*;
 import org.teiid.vdb.runtime.VDBKey;
 
 
@@ -156,17 +121,24 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	public final InjectedValue<WorkManager> workManagerInjector = new InjectedValue<WorkManager>();
 	public final InjectedValue<XATerminator> xaTerminatorInjector = new InjectedValue<XATerminator>();
 	public final InjectedValue<TransactionManager> txnManagerInjector = new InjectedValue<TransactionManager>();
-	public final InjectedValue<Executor> threadPoolInjector = new InjectedValue<Executor>();
 	public final InjectedValue<SocketBinding> jdbcSocketBindingInjector = new InjectedValue<SocketBinding>();
 	public final InjectedValue<BufferServiceImpl> bufferServiceInjector = new InjectedValue<BufferServiceImpl>();
 	public final InjectedValue<SocketBinding> odbcSocketBindingInjector = new InjectedValue<SocketBinding>();
+	public final InjectedValue<TranslatorRepository> translatorRepositoryInjector = new InjectedValue<TranslatorRepository>();
+	public final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
+	public final InjectedValue<AuthorizationValidator> authorizationValidatorInjector = new InjectedValue<AuthorizationValidator>();
+	
+	
 	public final ConcurrentMap<String, SecurityDomainContext> securityDomains = new ConcurrentHashMap<String, SecurityDomainContext>();
 	private LinkedList<String> securityDomainNames = new LinkedList<String>();
-
+	private String instanceName;
 	
-    public RuntimeEngineDeployer() {
-		// TODO: this does not belong here
-		LogManager.setLogListener(new Log4jListener());
+    public RuntimeEngineDeployer(String name) {
+		this.instanceName = name;
+    }
+    
+    public String getName() {
+    	return this.instanceName;
     }
 	
 	@Override
@@ -185,6 +157,9 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		setWorkManager(this.workManagerInjector.getValue());
 		setXATerminator(xaTerminatorInjector.getValue());
 		setTransactionManager(txnManagerInjector.getValue());
+		setTranslatorRepository(translatorRepositoryInjector.getValue());
+		setVDBRepository(vdbRepositoryInjector.getValue());
+		setAuthorizationValidator(authorizationValidatorInjector.getValue());
 		
 		this.sessionService = new SessionServiceImpl();
 		if (!this.securityDomainNames.isEmpty()) {
@@ -222,7 +197,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		this.dqpCore.setMetadataRepository(this.vdbRepository.getMetadataRepository());
 		this.dqpCore.setEventDistributor(this.eventDistributor);
 		this.dqpCore.start(this);
-		this.eventDistributorProxy = (EventDistributor)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {EventDistributor.class}, new InvocationHandler() {
+		this.eventDistributorProxy = (EventDistributor)Proxy.newProxyInstance(Module.getCallerModule().getClassLoader(), new Class[] {EventDistributor.class}, new InvocationHandler() {
 			
 			@Override
 			public Object invoke(Object proxy, Method method, Object[] args)
@@ -826,7 +801,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	}
 
 	public VDBTranslatorMetaData getTranslator(String translatorName) {
-		return (VDBTranslatorMetaData)this.translatorRepository.getTranslatorMetaData(translatorName);
+		return this.translatorRepository.getTranslatorMetaData(translatorName);
 	}
 	
 	public void setTranslatorRepository(TranslatorRepository translatorRepo) {

@@ -41,31 +41,31 @@ import org.jboss.dmr.ModelType;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceRegistry;
 
-public class TranslatorRemove extends AbstractAddStepHandler implements DescriptionProvider {
+public class QueryEngineRemove extends AbstractAddStepHandler implements DescriptionProvider {
 
 	@Override
 	public ModelNode getModelDescription(Locale locale) {
         final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
         final ModelNode operation = new ModelNode();
         operation.get(OPERATION_NAME).set(REMOVE);
-        operation.get(DESCRIPTION).set(bundle.getString("translator.remove")); //$NON-NLS-1$  
-        addAttribute(operation, Configuration.TRANSLATOR_NAME, REQUEST_PROPERTIES, bundle.getString(Configuration.TRANSLATOR_NAME+Configuration.DESC), ModelType.STRING, true, null);
+        operation.get(DESCRIPTION).set(bundle.getString("engine.remove")); //$NON-NLS-1$    
+        addAttribute(operation, Configuration.ENGINE_NAME, REQUEST_PROPERTIES, bundle.getString(Configuration.ENGINE_NAME+Configuration.DESC), ModelType.STRING, true, null);
         return operation;
 	}
 	
 	@Override
 	protected void populateModel(final ModelNode operation, final ModelNode model) throws OperationFailedException {
-		final String translatorName = model.require(Configuration.TRANSLATOR_NAME).asString();
-		model.get(Configuration.TRANSLATOR_NAME).set(translatorName);
+		final String name = model.require(Configuration.ENGINE_NAME).asString();
+		model.get(Configuration.ENGINE_NAME).set(name);
 	}
 	
 	@Override
     protected void performRuntime(final OperationContext context, final ModelNode operation, final ModelNode model,
             final ServiceVerificationHandler verificationHandler, final List<ServiceController<?>> newControllers) throws OperationFailedException {
 		
-		final String translatorName = model.require(Configuration.TRANSLATOR_NAME).asString();
+		final String engineName = model.require(Configuration.ENGINE_NAME).asString();
         final ServiceRegistry registry = context.getServiceRegistry(true);
-        final ServiceController<?> controller = registry.getService(TeiidServiceNames.translatorServiceName(translatorName));
+        final ServiceController<?> controller = registry.getService(TeiidServiceNames.translatorServiceName(engineName));
         if (controller != null) {
             controller.setMode(ServiceController.Mode.REMOVE);
         }

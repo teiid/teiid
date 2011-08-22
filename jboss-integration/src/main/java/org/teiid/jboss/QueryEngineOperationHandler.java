@@ -22,6 +22,7 @@
 package org.teiid.jboss;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.teiid.jboss.Configuration.addAttribute;
 
 import java.util.Collection;
 import java.util.List;
@@ -56,7 +57,7 @@ abstract class QueryEngineOperationHandler extends AbstractAddStepHandler implem
     protected void performRuntime(final OperationContext context, final ModelNode operation, final ModelNode model,
             final ServiceVerificationHandler verificationHandler, final List<ServiceController<?>> newControllers) throws OperationFailedException {
 		
-        ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.ENGINE);
+        ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.engineServiceName(operation.require(Configuration.ENGINE_NAME).asString()));
         RuntimeEngineDeployer engine = RuntimeEngineDeployer.class.cast(sc.getValue());
         executeOperation(engine, operation, model);
     }
@@ -68,6 +69,7 @@ abstract class QueryEngineOperationHandler extends AbstractAddStepHandler implem
         final ModelNode operation = new ModelNode();
         operation.get(OPERATION_NAME).set(this.operationName);
         operation.get(DESCRIPTION).set(bundle.getString(getBundleOperationName()+DESCRIBE));
+        addAttribute(operation, Configuration.ENGINE_NAME, REQUEST_PROPERTIES, bundle.getString(Configuration.ENGINE_NAME+Configuration.DESC), ModelType.STRING, true, null);
         describeParameters(operation, bundle);
         return operation;
     }	

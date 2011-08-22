@@ -7,7 +7,7 @@
   </formats>
   
   <includeBaseDirectory>true</includeBaseDirectory>
-  <baseDirectory>teiid-adminshell-${version}</baseDirectory>
+  <baseDirectory>teiid-adminshell-${project.version}</baseDirectory>
 
   <moduleSets>
     <moduleSet>
@@ -60,7 +60,7 @@
     <fileSet>
       <directory>target</directory>
       <includes>
-        <include>teiid-${version}-client.jar</include>
+        <include>teiid-${project.version}-client.jar</include>
       </includes>
       <outputDirectory>lib</outputDirectory>
       <fileMode>0644</fileMode>      
@@ -70,7 +70,7 @@
   
   <files>
         <file>
-            <source>target/teiid-${version}-docs/admin-guide/en-US/pdf/teiid_admin_guide.pdf</source>
+            <source>target/teiid-${project.version}-docs/admin-guide/en-US/pdf/teiid_admin_guide.pdf</source>
             <fileMode>0644</fileMode>
         </file>
     </files>

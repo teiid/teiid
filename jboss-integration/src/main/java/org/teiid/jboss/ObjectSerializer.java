@@ -19,12 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.deployers;
+package org.teiid.jboss;
 
 import java.io.*;
 
 import org.jboss.logging.Logger;
-import org.jboss.vfs.VirtualFile;
 import org.teiid.core.util.FileUtils;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -79,14 +78,14 @@ public class ObjectSerializer {
 		return (cacheFile.exists() && timeAfter > cacheFile.lastModified());
 	}
 	
-	public void removeAttachments(VirtualFile vf) {
-		String dirName = baseDirectory(vf);
+	public void removeAttachments(String fileName) {
+		String dirName = baseDirectory(fileName);
 		FileUtils.removeDirectoryAndChildren(new File(dirName));
 	}
 
-	public File getAttachmentPath(VirtualFile vf, String baseName) {
+	public File getAttachmentPath(String fileName, String baseName) {
 		
-		String dirName = baseDirectory(vf);
+		String dirName = baseDirectory(fileName);
 
 		final String vfsPath = baseName + ATTACHMENT_SUFFIX;
 		File f = new File(dirName, vfsPath);
@@ -96,8 +95,7 @@ public class ObjectSerializer {
 		return f;
 	}
 
-	private String baseDirectory(VirtualFile vf) {
-		String fileName = vf.getName();
+	private String baseDirectory(String fileName) {
 		String dirName = this.storagePath + File.separator + fileName + File.separator;
 		return dirName;
 	}

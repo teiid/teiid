@@ -42,8 +42,6 @@ public class DQPConfiguration{
 	private int timeSliceInMilli = DEFAULT_PROCESSOR_TIMESLICE;
 	private int maxRowsFetchSize = DEFAULT_FETCH_SIZE;
 	private int lobChunkSizeInKB = 100;
-	private boolean useDataRoles = true;
-	private boolean allowCreateTemporaryTablesByDefault = true;
 	private int queryThresholdInSecs = DEFAULT_QUERY_THRESHOLD;
 	private boolean exceptionOnMaxSourceRows = true;
 	private int maxSourceRows = -1;
@@ -55,7 +53,6 @@ public class DQPConfiguration{
     private boolean detectingChangeEvents = true;
     
     private transient AuthorizationValidator authorizationValidator;
-	private boolean allowFunctionCallsByDefault;
 
 	public int getMaxActivePlans() {
 		return maxActivePlans;
