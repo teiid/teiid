@@ -35,6 +35,8 @@ public class TeiidServiceNames {
 	public static ServiceName AUTHORIZATION_VALIDATOR = ServiceName.JBOSS.append("teiid", "authorization-validator");//$NON-NLS-1$ //$NON-NLS-2$
 	private static ServiceName VDB_SVC_BASE = ServiceName.JBOSS.append("teiid", "vdb"); //$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName OBJECT_SERIALIZER = ServiceName.JBOSS.append("teiid", "object-serializer"); //$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName CACHE_FACTORY = ServiceName.JBOSS.append("teiid", "cache-factory"); //$NON-NLS-1$ //$NON-NLS-2$
+	
 	
 	public static ServiceName translatorServiceName(String name) {
 		return TRANSLATOR_BASE.append(name);
@@ -49,6 +51,6 @@ public class TeiidServiceNames {
 	}
 	
 	public static ServiceName executorServiceName(String poolName) {
-		return ServiceName.JBOSS.append("thread", "executor", poolName);
+		return ServiceName.JBOSS.append("thread", "executor", poolName); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }

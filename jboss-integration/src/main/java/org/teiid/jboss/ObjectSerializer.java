@@ -24,6 +24,7 @@ package org.teiid.jboss;
 import java.io.*;
 
 import org.jboss.logging.Logger;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.util.FileUtils;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -58,41 +59,42 @@ public class ObjectSerializer {
 		}
 	}
 
-	public void saveAttachment(File attachmentsStore, Object attachment) throws IOException {
+	public boolean saveAttachment(File attachmentsStore, Object attachment, boolean force) throws IOException {
 		if (log.isTraceEnabled()) {
 			log.trace("saveAttachment, attachmentsStore=" + attachmentsStore + ", attachment=" + attachment); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
-		ObjectOutputStream oos = null;
-		try {
-			oos = new ObjectOutputStream(new FileOutputStream(attachmentsStore));
-			oos.writeObject(attachment);
-		} finally {
-			if (oos != null) {
-				oos.close();
+		if (!attachmentsStore.exists() || force) {
+			ObjectOutputStream oos = null;
+			try {
+				oos = new ObjectOutputStream(new FileOutputStream(attachmentsStore));
+				oos.writeObject(attachment);
+				return true;
+			} finally {
+				if (oos != null) {
+					oos.close();
+				}
 			}
 		}
+		return false;
 	}
 	
-	public boolean isStale(File cacheFile, long timeAfter) {
+	public File buildVDBFile(VDBMetaData vdb) {
+		return new File(baseDirectory(vdb.getName()+"_"+vdb.getVersion()), vdb.getName()+"_"+vdb.getVersion()+ATTACHMENT_SUFFIX); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
+	public File buildModelFile(VDBMetaData vdb, String modelName) {
+		return new File(baseDirectory(vdb.getName()+"_"+vdb.getVersion()), vdb.getName()+"_"+vdb.getVersion()+"_"+modelName+ATTACHMENT_SUFFIX); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	}
+	
+	public boolean isStale(VDBMetaData vdb, long timeAfter) {
+		File cacheFile = buildVDBFile(vdb);
 		return (cacheFile.exists() && timeAfter > cacheFile.lastModified());
 	}
 	
-	public void removeAttachments(String fileName) {
-		String dirName = baseDirectory(fileName);
+	public void removeAttachments(VDBMetaData vdb) {
+		String dirName = baseDirectory(vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
 		FileUtils.removeDirectoryAndChildren(new File(dirName));
-	}
-
-	public File getAttachmentPath(String fileName, String baseName) {
-		
-		String dirName = baseDirectory(fileName);
-
-		final String vfsPath = baseName + ATTACHMENT_SUFFIX;
-		File f = new File(dirName, vfsPath);
-		if (!f.getParentFile().exists()) {
-			f.getParentFile().mkdirs();
-		}
-		return f;
 	}
 
 	private String baseDirectory(String fileName) {

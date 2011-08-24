@@ -45,10 +45,10 @@ public class ObjectsSerializerService implements Service<ObjectSerializer> {
 
 	@Override
 	public ObjectSerializer getValue() throws IllegalStateException, IllegalArgumentException {
-		return serializer;
+		return this.serializer;
 	}
 	
 	public InjectedValue<String> getPathInjector() {
-		return pathInjector;
+		return this.pathInjector;
 	}
 }

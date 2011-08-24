@@ -34,7 +34,6 @@ public final class TeiidAttachments {
     public static final AttachmentKey<VDBMetaData> VDB_METADATA = AttachmentKey.create(VDBMetaData.class);
     public static final AttachmentKey<UDFMetaData> UDF_METADATA = AttachmentKey.create(UDFMetaData.class);
     public static final AttachmentKey<IndexMetadataFactory> INDEX_METADATA = AttachmentKey.create(IndexMetadataFactory.class);
-    public static final AttachmentKey<MetadataStoreGroup> METADATA_STORE = AttachmentKey.create(MetadataStoreGroup.class);
     
     public static final AttachmentKey<DeploymentType> DEPLOYMENT_TYPE = AttachmentKey.create(DeploymentType.class);
     
@@ -53,5 +52,4 @@ public final class TeiidAttachments {
     public static void setAsDynamicVDBDeployment(final DeploymentUnit deploymentUnit) {
         deploymentUnit.putAttachment(DEPLOYMENT_TYPE, DeploymentType.DYNAMIC_VDB);
     }
-    
 }

@@ -1,1 +1,1 @@
-org.teiid.translator.ldap.LdapExecutionFactory
+org.teiid.translator.ldap.LDAPExecutionFactory

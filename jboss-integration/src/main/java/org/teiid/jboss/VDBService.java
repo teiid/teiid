@@ -1,3 +1,24 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
 package org.teiid.jboss;
 
 import java.io.File;
@@ -6,16 +27,9 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executor;
 
-import javax.resource.spi.work.WorkManager;
-
-import org.jboss.as.server.deployment.Attachments;
-import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
-import org.jboss.msc.service.Service;
-import org.jboss.msc.service.StartContext;
-import org.jboss.msc.service.StartException;
-import org.jboss.msc.service.StopContext;
+import org.jboss.msc.service.*;
+import org.jboss.msc.service.ServiceContainer.TerminateListener;
 import org.jboss.msc.value.InjectedValue;
-import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
@@ -39,6 +53,7 @@ import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
 public class VDBService implements Service<VDBMetaData> {
+	public static final String VDB_LASTMODIFIED_TIME = "VDB_LASTMODIFIED_TIME"; //$NON-NLS-1$
 	private VDBMetaData vdb;
 	private final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
 	private final InjectedValue<TranslatorRepository> translatorRepositoryInjector = new InjectedValue<TranslatorRepository>();
@@ -53,9 +68,14 @@ public class VDBService implements Service<VDBMetaData> {
 	public void start(StartContext context) throws StartException {
 		ConnectorManagerRepository cmr = new ConnectorManagerRepository();
 		TranslatorRepository repo = new TranslatorRepository();
+
+		// check if this is a VDB with index files, if there are then build the TransformationMetadata
+		UDFMetaData udf = this.vdb.getAttachment(UDFMetaData.class);
+		IndexMetadataFactory indexFactory = this.vdb.getAttachment(IndexMetadataFactory.class);
+		long vdbModifiedTime = Long.parseLong(vdb.getPropertyValue(VDBService.VDB_LASTMODIFIED_TIME));
 		
 		// add required connector managers; if they are not already there
-		for (Translator t: vdb.getOverrideTranslators()) {
+		for (Translator t: this.vdb.getOverrideTranslators()) {
 			VDBTranslatorMetaData data = (VDBTranslatorMetaData)t;
 			
 			String type = data.getType();
@@ -70,19 +90,36 @@ public class VDBService implements Service<VDBMetaData> {
 			repo.addTranslatorMetadata(data.getName(), data);
 		}
 
-		createConnectorManagers(cmr, repo, vdb);
-
-		// check if this is a VDB with index files, if there are then build the TransformationMetadata
-		UDFMetaData udf = vdb.getAttachment(UDFMetaData.class);
-		MetadataStoreGroup store = vdb.getAttachment(MetadataStoreGroup.class);
-		
+		createConnectorManagers(cmr, repo, this.vdb);
+				
+		// check to see if the vdb has been modified when server is down; if it is then clear the old files
+		if (getSerializer().isStale(this.vdb, vdbModifiedTime)) {
+			getSerializer().removeAttachments(this.vdb);
+			LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB ", vdb.getName(), " old cached metadata has been removed"); //$NON-NLS-1$ //$NON-NLS-2$				
+		}
+				
 		boolean asynchLoad = false;
-		boolean preview = vdb.isPreview();
+		boolean preview = this.vdb.isPreview();
 		
 		// if store is null and vdb dynamic vdb then try to get the metadata
-		if (store == null && vdb.isDynamic()) {
+		MetadataStoreGroup store  = null;
+		if (this.vdb.isDynamic()) {
 			store = new MetadataStoreGroup();
-			asynchLoad = buildDynamicMetadataStore(vdb, store, cmr);
+			asynchLoad = buildDynamicMetadataStore(this.vdb, store, cmr);
+		}
+		else if (indexFactory != null){
+			store = getSerializer().loadSafe(getSerializer().buildVDBFile(this.vdb), MetadataStoreGroup.class);
+			if (store == null) {
+				store = new MetadataStoreGroup();
+				try {
+					store.addStore(indexFactory.getMetadataStore(getVDBRepository().getSystemStore().getDatatypes()));
+				} catch (IOException e) {
+					throw new StartException(e);
+				}
+			}
+			else {
+				LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB ", vdb.getName(), " was loaded from cached metadata"); //$NON-NLS-1$ //$NON-NLS-2$				
+			}
 		}
 		
 		// allow empty vdbs for enabling the preview functionality
@@ -91,27 +128,29 @@ public class VDBService implements Service<VDBMetaData> {
 		}
 		
 		if (store == null) {
-			LogManager.logError(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("failed_matadata_load", vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
+			LogManager.logError(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("failed_matadata_load", this.vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
 		}
 		
 		LinkedHashMap<String, Resource> visibilityMap = null;
-		IndexMetadataFactory indexFactory = vdb.getAttachment(IndexMetadataFactory.class);		
+				
 		if (indexFactory != null) {
 			visibilityMap = indexFactory.getEntriesPlusVisibilities();
 		}
 				
 		try {
 			// add transformation metadata to the repository.
-			getVDBRepository().addVDB(vdb, store, visibilityMap, udf, cmr);
+			getVDBRepository().addVDB(this.vdb, store, visibilityMap, udf, cmr);
 		} catch (VirtualDatabaseException e) {
 			throw new StartException(e);
 		}
 		
 		boolean valid = true;
-		synchronized (vdb) {
+		synchronized (this.vdb) {
 			if (indexFactory != null) {
 				try {
-					saveMetadataStore(vdb, store);
+					if (getSerializer().saveAttachment(getSerializer().buildVDBFile(this.vdb),store, false)) {
+						LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB ", vdb.getName(), " metadata has been cached to data folder"); //$NON-NLS-1$ //$NON-NLS-2$
+					}
 				} catch (IOException e1) {
 					LogManager.logWarning(LogConstants.CTX_RUNTIME, e1, RuntimePlugin.Util.getString("vdb_save_failed", vdb.getName()+"."+vdb.getVersion())); //$NON-NLS-1$ //$NON-NLS-2$			
 				}
@@ -142,13 +181,19 @@ public class VDBService implements Service<VDBMetaData> {
 	@Override
 	public void stop(StopContext context) {
 		
-		getVDBRepository().removeVDB(vdb.getName(), vdb.getVersion());
-		vdb.setRemoved(true);
-		
-		deleteMetadataStore(vdb);
+		getVDBRepository().removeVDB(this.vdb.getName(), this.vdb.getVersion());
+		this.vdb.setRemoved(true);
 
-		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_undeployed", vdb)); //$NON-NLS-1$
-		
+		context.getController().getServiceContainer().addTerminateListener(new TerminateListener() {
+			@Override
+			public void handleTermination(Info info) {
+				if (info.getShutdownInitiated() < 0) {
+					getSerializer().removeAttachments(vdb); 
+					LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+vdb.getName()+" metadata removed"); //$NON-NLS-1$ //$NON-NLS-2$
+				}
+			}			
+		});
+		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_undeployed", this.vdb)); //$NON-NLS-1$
 	}
 
 	@Override
@@ -239,7 +284,7 @@ public class VDBService implements Service<VDBMetaData> {
 	    	}
 			    	
 	    	final boolean cache = "cached".equalsIgnoreCase(vdb.getPropertyValue("UseConnectorMetadata")); //$NON-NLS-1$ //$NON-NLS-2$
-	    	final File cacheFile = buildCachedModelFileName(vdb, model.getName());
+	    	final File cacheFile = getSerializer().buildModelFile(this.vdb, model.getName());
 	    	boolean loaded = false;
 	    	if (cache) {
 				MetadataStore store = getSerializer().loadSafe(cacheFile, MetadataStore.class);
@@ -297,7 +342,7 @@ public class VDBService implements Service<VDBMetaData> {
     		try {
     			MetadataStore store = cm.getMetadata(model.getName(), getVDBRepository().getBuiltinDatatypes(), model.getProperties());
     			if (cache) {
-    				getSerializer().saveAttachment(cacheFile, store);
+    				getSerializer().saveAttachment(cacheFile, store, false);
     			}
     			vdbStore.addStore(store);
     			loaded = true;
@@ -336,31 +381,7 @@ public class VDBService implements Service<VDBMetaData> {
     	
     	return loaded;
     }
-    
-	private void saveMetadataStore(VDBMetaData vdb, MetadataStoreGroup store) throws IOException {
-		File cacheFileName = buildCachedVDBFileName(getSerializer(), vdb);
-		if (!cacheFileName.exists()) {
-			getSerializer().saveAttachment(cacheFileName,store);
-			LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+vdb.getName()+" metadata has been cached to "+ cacheFileName); //$NON-NLS-1$ //$NON-NLS-2$
-		}		
-	}
-	
-	private void deleteMetadataStore(VDBMetaData vdb) {
-		if (!unit.exists() || !shutdownListener.isShutdownInProgress()) {
-			getSerializer().removeAttachments(vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
-			LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+vdb.getName()+" metadata removed"); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-	}
-	
-    
-	private File buildCachedModelFileName(VDBMetaData vdb, String modelName) {
-		return getSerializer().getAttachmentPath(vdb.getName()+"_"+vdb.getVersion(), vdb.getName()+"_"+vdb.getVersion()+"_"+modelName); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	}    
-	
-	static File buildCachedVDBFileName(ObjectSerializer serializer, VDBMetaData vdb) {
-		return serializer.getAttachmentPath(vdb.getName()+"_"+vdb.getVersion(), vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$ //$NON-NLS-2$
-	} 	
-	
+		
 	public InjectedValue<VDBRepository> getVDBRepositoryInjector(){
 		return this.vdbRepositoryInjector;
 	}

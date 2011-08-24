@@ -68,6 +68,7 @@ public class TeiidExtension implements Extension {
 	private static QueryEngineRemove ENGINE_REMOVE = new QueryEngineRemove();
 	private static TranslatorAdd TRANSLATOR_ADD = new TranslatorAdd();
 	private static TranslatorRemove TRANSLATOR_REMOVE = new TranslatorRemove();
+	private static TeiidBootServicesAdd TEIID_BOOT_ADD = new TeiidBootServicesAdd();
 	
 	@Override
 	public void initialize(ExtensionContext context) {
@@ -89,17 +90,18 @@ public class TeiidExtension implements Extension {
 		        node.get(ModelDescriptionConstants.TAIL_COMMENT_ALLOWED).set(true);
 		        node.get(ModelDescriptionConstants.NAMESPACE).set(Namespace.CURRENT.getUri());
 		        
-		        node.get(CHILDREN, Configuration.QUERY_ENGINE, DESCRIPTION).set(bundle.getString(Configuration.QUERY_ENGINE)); 
+		        TeiidBootServicesAdd.describeTeiidRoot(bundle, ATTRIBUTES, node);
+		        node.get(CHILDREN, Configuration.QUERY_ENGINE, DESCRIPTION).set(bundle.getString(Configuration.QUERY_ENGINE+Configuration.DESC)); 
 		        node.get(CHILDREN, Configuration.QUERY_ENGINE, REQUIRED).set(false);
 		        
-		        node.get(CHILDREN, Configuration.TRANSLATOR, DESCRIPTION).set(bundle.getString(Configuration.TRANSLATOR));
+		        node.get(CHILDREN, Configuration.TRANSLATOR, DESCRIPTION).set(bundle.getString(Configuration.TRANSLATOR+Configuration.DESC));
 		        node.get(CHILDREN, Configuration.TRANSLATOR, REQUIRED).set(false);
 
 		        return node;
 		    }
 		});
-		teiidSubsystem.registerOperationHandler(ADD, ENGINE_ADD, ENGINE_ADD, false);
-		teiidSubsystem.registerOperationHandler(REMOVE, ENGINE_REMOVE, ENGINE_REMOVE, false);     
+		teiidSubsystem.registerOperationHandler(ADD, TEIID_BOOT_ADD, TEIID_BOOT_ADD, false);
+		//teiidSubsystem.registerOperationHandler(REMOVE, ENGINE_REMOVE, ENGINE_REMOVE, false);     
 				
 		// Translator Subsystem
         final ManagementResourceRegistration translatorSubsystem = teiidSubsystem.registerSubModel(PathElement.pathElement(Configuration.TRANSLATOR), new DescriptionProvider() {
@@ -108,7 +110,7 @@ public class TeiidExtension implements Extension {
 				final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
 
 				final ModelNode node = new ModelNode();
-	            node.get(DESCRIPTION).set(bundle.getString(Configuration.TRANSLATOR));
+	            node.get(DESCRIPTION).set(bundle.getString(Configuration.TRANSLATOR+Configuration.DESC));
 	            node.get(HEAD_COMMENT_ALLOWED).set(true);
 	            node.get(TAIL_COMMENT_ALLOWED).set(true);
 
@@ -128,10 +130,10 @@ public class TeiidExtension implements Extension {
 				final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
 				
 				final ModelNode node = new ModelNode();
-	            node.get(DESCRIPTION).set(bundle.getString(Configuration.QUERY_ENGINE));
+	            node.get(DESCRIPTION).set(bundle.getString(Configuration.QUERY_ENGINE+Configuration.DESC));
 	            node.get(HEAD_COMMENT_ALLOWED).set(true);
 	            node.get(TAIL_COMMENT_ALLOWED).set(true);
-	            TeiidModelDescription.getQueryEngineDescription(node, ATTRIBUTES, bundle);
+	            QueryEngineAdd.describeQueryEngine(node, ATTRIBUTES, bundle);
 	            return node;
 			}
 		});

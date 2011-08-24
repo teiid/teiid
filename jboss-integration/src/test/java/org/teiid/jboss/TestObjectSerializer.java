@@ -19,32 +19,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+
 package org.teiid.jboss;
 
-import org.jboss.msc.service.Service;
-import org.jboss.msc.service.StartContext;
-import org.jboss.msc.service.StartException;
-import org.jboss.msc.service.StopContext;
-import org.teiid.dqp.internal.datamgr.TranslatorRepository;
+import static org.junit.Assert.*;
 
-public class TranslatorRepositoryService implements Service<TranslatorRepository> {
-	private TranslatorRepository repo;
+import java.io.File;
+
+import org.junit.Test;
+import org.teiid.core.util.UnitTestUtil;
+import org.teiid.jboss.ObjectSerializer;
+
+
+@SuppressWarnings("nls")
+public class TestObjectSerializer {
 	
-	public TranslatorRepositoryService(TranslatorRepository repo) {
-		this.repo = repo;
+	@Test public void testLoadSafe() throws Exception {
+		ObjectSerializer os = new ObjectSerializer(System.getProperty("java.io.tmpdir"));
+		File f = UnitTestUtil.getTestScratchFile("foo");
+		os.saveAttachment(f, new Long(2), false);
+		assertNotNull(os.loadAttachment(f, Long.class));
+		assertNull(os.loadSafe(f, Integer.class));
 	}
 	
-	@Override
-	public void start(StartContext context) throws StartException {
-	}
-
-	@Override
-	public void stop(StopContext context) {
-	}
-
-	@Override
-	public TranslatorRepository getValue() throws IllegalStateException, IllegalArgumentException {
-		return repo;
-	}
-
 }

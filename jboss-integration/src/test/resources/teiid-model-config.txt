@@ -1,11 +1,10 @@
 {
     "attributes" => {
-        "async-thread-group" => {
+        "name" => {
             "type" => STRING,
-            "description" => "Thread Pool to be used with Asynchronous operations in Teiid",
-            "required" => false,
-            "max-occurs" => 1,
-            "default" => "teiid-async"
+            "description" => "Name of the subsystem",
+            "required" => true,
+            "max-occurs" => 1
         },
         "max-threads" => {
             "type" => INT,
@@ -110,190 +109,9 @@
             "required" => false,
             "max-occurs" => 1,
             "default" => 0
-        },
-        "allow-env-function" => {
-            "type" => BOOLEAN,
-            "description" => "Allow the execution of ENV function. (default false)",
-            "required" => false,
-            "max-occurs" => 1,
-            "default" => false
         }
     },
     "children" => {
-        "buffer-service" => {
-            "type" => OBJECT,
-            "description" => "Buffer Manager Configuration",
-            "required" => false,
-            "max-occurs" => 1,
-            "min-occurs" => 1,
-            "attributes" => {
-                "use-disk" => {
-                    "type" => BOOLEAN,
-                    "description" => "Use disk for buffer management",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => true
-                },
-                "processor-batch-size" => {
-                    "type" => INT,
-                    "description" => "The max row count of a batch sent internally within the query processor. Should be <= the connectorBatchSize. (default 512)",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => 512
-                },
-                "connector-batch-size" => {
-                    "type" => INT,
-                    "description" => "The max row count of a batch from a connector. Should be even multiple of processorBatchSize. (default 1024)",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => 1024
-                },
-                "max-processing-kb" => {
-                    "type" => INT,
-                    "description" => "The approximate amount of buffer memory in kilobytes allowable for a single processing operation (sort, grouping, etc.) regardless of existing memory commitments. -1 means to automatically calculate a value (default -1)",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => -1
-                },
-                "max-reserve-kb" => {
-                    "type" => INT,
-                    "description" => "The approximate amount of memory in kilobytes allowed to be held by the buffer manager. -1 means to automatically calculate a value (default -1)",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => -1
-                },
-                "max-file-size" => {
-                    "type" => LONG,
-                    "description" => "Max File size in MB (default 2GB)",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => 2048L
-                },
-                "max-buffer-space" => {
-                    "type" => LONG,
-                    "description" => "Max storage space, in MB, to be used for buffer files (default 50G)",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => 51200L
-                },
-                "max-open-files" => {
-                    "type" => INT,
-                    "description" => "Max open buffer files (default 64)",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => 64
-                }
-            }
-        },
-        "resultset-cache" => {
-            "type" => OBJECT,
-            "description" => "Configuration for result set caching.	 There will be 2 caches with these settings. One cache holds results that are specific to sessions. The other cache holds vdb scoped results and can be replicated",
-            "required" => false,
-            "max-occurs" => 1,
-            "min-occurs" => 1,
-            "attributes" => {
-                "maxEntries" => {
-                    "type" => INT,
-                    "description" => "Max Entries allowed",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => 1024
-                },
-                "maxAgeInSeconds" => {
-                    "type" => INT,
-                    "description" => "Max age in seconds",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => 7200
-                },
-                "maxStaleness" => {
-                    "type" => INT,
-                    "description" => "Max staleness in seconds.  Modifications are based upon data updates -1 indicates no max. (default 60 - 1 minute)",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => 60
-                },
-                "type" => {
-                    "type" => STRING,
-                    "description" => "Allowed values are LRU, EXPIRATION.   ",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => "EXPIRATION"
-                },
-                "location" => {
-                    "type" => STRING,
-                    "description" => "location",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => "resultset"
-                }
-            }
-        },
-        "preparedplan-cache" => {
-            "type" => OBJECT,
-            "description" => "PreparedPlan Cache Configuration",
-            "required" => false,
-            "max-occurs" => 1,
-            "min-occurs" => 1,
-            "attributes" => {
-                "maxEntries" => {
-                    "type" => INT,
-                    "description" => "Max Entries allowed",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => 1024
-                },
-                "maxAgeInSeconds" => {
-                    "type" => INT,
-                    "description" => "Max age in seconds",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => 7200
-                },
-                "maxStaleness" => {
-                    "type" => INT,
-                    "description" => "Max staleness in seconds.  Modifications are based upon data updates -1 indicates no max. (default 60 - 1 minute)",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => 60
-                },
-                "type" => {
-                    "type" => STRING,
-                    "description" => "Allowed values are LRU, EXPIRATION.   ",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => "EXPIRATION"
-                },
-                "location" => {
-                    "type" => STRING,
-                    "description" => "location",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => "resultset"
-                },
-                "cache-service-jndi-name" => {
-                    "type" => STRING,
-                    "description" => "cache service for the distributed cache",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => "java:TeiidCacheManager"
-                },
-                "resultsetCacheName" => {
-                    "type" => STRING,
-                    "description" => "resultset cache node name",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => "teiid-resultset-cache"
-                }
-            }
-        },
-        "distributed-cache-factory" => {
-            "type" => OBJECT,
-            "description" => "Distributed Cache Configuration",
-            "required" => false,
-            "max-occurs" => 1,
-            "min-occurs" => 1
-        },
         "jdbc" => {
             "type" => OBJECT,
             "description" => "Remote JDBC Access Configuration ",

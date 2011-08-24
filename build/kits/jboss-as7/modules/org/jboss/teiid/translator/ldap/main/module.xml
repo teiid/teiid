@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module xmlns="urn:jboss:module:1.0" name="org.jboss.teiid.translator.file">
+<module xmlns="urn:jboss:module:1.0" name="org.jboss.teiid.translator.ldap">
     <resources>
-        <resource-root path="translator-file-${project.version}.jar" />
+        <resource-root path="translator-ldap-${project.version}.jar" />
         <!-- Insert resources here -->
     </resources>
 
 
     <dependencies>
+        <module name="javax.api"/>
         <module name="javax.resource.api"/>
         <module name="org.apache.commons.logging" />
         <module name="org.apache.log4j"/>

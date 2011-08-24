@@ -30,9 +30,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.ServiceLoader;
-import java.util.concurrent.Executor;
 
-import org.jboss.as.controller.*;
+import org.jboss.as.controller.AbstractAddStepHandler;
+import org.jboss.as.controller.OperationContext;
+import org.jboss.as.controller.OperationFailedException;
+import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
 import org.jboss.as.server.AbstractDeploymentChainStep;
 import org.jboss.as.server.DeploymentProcessorTarget;
@@ -44,12 +46,12 @@ import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
 import org.jboss.msc.service.*;
-import org.jboss.msc.value.InjectedValue;
 import org.teiid.PolicyDecider;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
 import org.teiid.cache.DefaultCacheFactory;
-import org.teiid.deployers.*;
+import org.teiid.deployers.SystemVDBDeployer;
+import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.process.AuthorizationValidator;
 import org.teiid.dqp.internal.process.DataRolePolicyDecider;
@@ -58,7 +60,6 @@ import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.services.BufferServiceImpl;
 
 public class TeiidBootServicesAdd extends AbstractAddStepHandler implements DescriptionProvider {
-
 	@Override
 	public ModelNode getModelDescription(Locale locale) {
         final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
@@ -66,40 +67,44 @@ public class TeiidBootServicesAdd extends AbstractAddStepHandler implements Desc
         node.get(OPERATION_NAME).set(ADD);
         node.get(DESCRIPTION).set(bundle.getString("teiid-boot.add")); //$NON-NLS-1$
         
-        addAttribute(node, Configuration.ALLOW_ENV_FUNCTION, REQUEST_PROPERTIES, bundle.getString(Configuration.ALLOW_ENV_FUNCTION+DESC), ModelType.BOOLEAN, false, "false"); //$NON-NLS-1$
-        addAttribute(node, Configuration.ASYNC_THREAD_GROUP, REQUEST_PROPERTIES, bundle.getString(Configuration.ASYNC_THREAD_GROUP+DESC), ModelType.STRING, false, "teiid-async-threads"); //$NON-NLS-1$
+        describeTeiidRoot(bundle, REQUEST_PROPERTIES,  node);
+		
+        return node;
+	}
 
-        addAttribute(node, Configuration.AUTHORIZATION_VALIDATOR_MODULE, REQUEST_PROPERTIES, bundle.getString(Configuration.AUTHORIZATION_VALIDATOR_MODULE+DESC), ModelType.BOOLEAN, false, "false"); //$NON-NLS-1$
-        addAttribute(node, Configuration.POLICY_DECIDER_MODULE, REQUEST_PROPERTIES, bundle.getString(Configuration.POLICY_DECIDER_MODULE+DESC), ModelType.STRING, false, "teiid-async-threads"); //$NON-NLS-1$
+	static void describeTeiidRoot(final ResourceBundle bundle, String type, final ModelNode node) {
+		addAttribute(node, Configuration.ALLOW_ENV_FUNCTION, type, bundle.getString(Configuration.ALLOW_ENV_FUNCTION+DESC), ModelType.BOOLEAN, false, "false"); //$NON-NLS-1$
+        addAttribute(node, Configuration.ASYNC_THREAD_GROUP, type, bundle.getString(Configuration.ASYNC_THREAD_GROUP+DESC), ModelType.STRING, true, "teiid-async-threads"); //$NON-NLS-1$
+
+        addAttribute(node, Configuration.AUTHORIZATION_VALIDATOR_MODULE, type, bundle.getString(Configuration.AUTHORIZATION_VALIDATOR_MODULE+DESC), ModelType.BOOLEAN, false, "false"); //$NON-NLS-1$
+        addAttribute(node, Configuration.POLICY_DECIDER_MODULE, type, bundle.getString(Configuration.POLICY_DECIDER_MODULE+DESC), ModelType.STRING, false, "teiid-async-threads"); //$NON-NLS-1$
         
 		ModelNode bufferNode = node.get(CHILDREN, Configuration.BUFFER_SERVICE);
 		bufferNode.get(TYPE).set(ModelType.OBJECT);
 		bufferNode.get(DESCRIPTION).set(bundle.getString(Configuration.BUFFER_SERVICE+DESC));
 		bufferNode.get(REQUIRED).set(false);
-		getBufferManagerDesciption(bufferNode, ATTRIBUTES, bundle);		
+		describeBufferManager(bufferNode, ATTRIBUTES, bundle);		
         
 		// result-set-cache
 		ModelNode rsCacheNode = node.get(CHILDREN, Configuration.RESULTSET_CACHE);
 		rsCacheNode.get(TYPE).set(ModelType.OBJECT);
 		rsCacheNode.get(DESCRIPTION).set(bundle.getString(Configuration.RESULTSET_CACHE+DESC));
 		rsCacheNode.get(REQUIRED).set(false);
-		getResultsetCacheDescription(rsCacheNode, ATTRIBUTES, bundle);
+		describeResultsetcache(rsCacheNode, ATTRIBUTES, bundle);
 		
 		// preparedplan-set-cache
 		ModelNode preparedPlanCacheNode = node.get(CHILDREN, Configuration.PREPAREDPLAN_CACHE);
 		preparedPlanCacheNode.get(TYPE).set(ModelType.OBJECT);
 		preparedPlanCacheNode.get(DESCRIPTION).set(bundle.getString(Configuration.PREPAREDPLAN_CACHE+DESC));
 		preparedPlanCacheNode.get(REQUIRED).set(false);
-		getResultsetCacheDescription(preparedPlanCacheNode, ATTRIBUTES, bundle);
+		describePreparedPlanCache(preparedPlanCacheNode, ATTRIBUTES, bundle);
 		
 		//distributed-cache
 		ModelNode distributedCacheNode = node.get(CHILDREN, Configuration.CACHE_FACORY);
 		distributedCacheNode.get(TYPE).set(ModelType.OBJECT);
 		distributedCacheNode.get(DESCRIPTION).set(bundle.getString(Configuration.CACHE_FACORY+DESC));
 		distributedCacheNode.get(REQUIRED).set(false);
-		getDistributedCacheDescription(preparedPlanCacheNode, ATTRIBUTES, bundle);
-		
-        return node;
+		describeDistributedCache(preparedPlanCacheNode, ATTRIBUTES, bundle);
 	}
 
 	@Override
@@ -111,7 +116,7 @@ public class TeiidBootServicesAdd extends AbstractAddStepHandler implements Desc
 			model.get(Configuration.ASYNC_THREAD_GROUP).set(operation.get(Configuration.ASYNC_THREAD_GROUP).asString());
 		}
 		populateBufferManager(operation, model);
-		
+		//TODO: add cache model descriptions
 	}
 	
 	@Override
@@ -119,12 +124,18 @@ public class TeiidBootServicesAdd extends AbstractAddStepHandler implements Desc
             final ServiceVerificationHandler verificationHandler, final List<ServiceController<?>> newControllers) throws OperationFailedException {
 		ServiceTarget target = context.getServiceTarget();
 		
+		final String asyncThreadPoolName = operation.require(Configuration.ASYNC_THREAD_GROUP).asString(); 
+		
 		// translator repository
     	final TranslatorRepository translatorRepo = new TranslatorRepository();
-    	TranslatorRepositoryService translatorService = new TranslatorRepositoryService(translatorRepo);
+    	ValueService<TranslatorRepository> translatorService = new ValueService<TranslatorRepository>(new org.jboss.msc.value.Value<TranslatorRepository>() {
+			@Override
+			public TranslatorRepository getValue() throws IllegalStateException, IllegalArgumentException {
+				return translatorRepo;
+			}
+    	});
     	ServiceController<TranslatorRepository> service = target.addService(TeiidServiceNames.TRANSLATOR_REPO, translatorService).install();
     	newControllers.add(service);
-    	ServiceContainer serviceContainer = service.getServiceContainer();
     	
     	// system function tree
     	SystemFunctionManager systemFunctionManager = new SystemFunctionManager();
@@ -149,7 +160,9 @@ public class TeiidBootServicesAdd extends AbstractAddStepHandler implements Desc
     	
     	newControllers.add(RelativePathService.addService(TeiidServiceNames.DATA_DIR, "teiid-data", "jboss.server.data.dir", target)); //$NON-NLS-1$ //$NON-NLS-2$
     	final ObjectsSerializerService serializer = new ObjectsSerializerService();
-    	newControllers.add(target.addService(TeiidServiceNames.OBJECT_SERIALIZER, serializer).install());
+    	ServiceBuilder<ObjectSerializer> objectSerializerService = target.addService(TeiidServiceNames.OBJECT_SERIALIZER, serializer);
+    	objectSerializerService.addDependency(TeiidServiceNames.DATA_DIR, String.class, serializer.getPathInjector());
+    	newControllers.add(objectSerializerService.install());
 
     	// TODO: remove verbose service by moving the buffer service from runtime project
     	newControllers.add(RelativePathService.addService(TeiidServiceNames.BUFFER_DIR, "teiid-buffer", "jboss.server.temp.dir", target)); //$NON-NLS-1$ //$NON-NLS-2$
@@ -170,7 +183,7 @@ public class TeiidBootServicesAdd extends AbstractAddStepHandler implements Desc
     		policyDecider = drpd;
     	}
     	
-    	AuthorizationValidator authValidator;
+    	final AuthorizationValidator authValidator;
     	if (operation.hasDefined(Configuration.AUTHORIZATION_VALIDATOR_MODULE)) {
     		authValidator = buildService(AuthorizationValidator.class, operation.get(Configuration.AUTHORIZATION_VALIDATOR_MODULE).asString());
     		authValidator.setEnabled(true);
@@ -181,24 +194,38 @@ public class TeiidBootServicesAdd extends AbstractAddStepHandler implements Desc
     		dap.setEnabled(true);
     		authValidator = dap;
     	}
-    	target.addService(TeiidServiceNames.AUTHORIZATION_VALIDATOR, new AuthorizationValidatorService(authValidator));
     	
-    	CacheFactory cacheFactory = getCacheFactory(operation.get(Configuration.CACHE_FACORY));
+    	ValueService<AuthorizationValidator> authValidatorService = new ValueService<AuthorizationValidator>(new org.jboss.msc.value.Value<AuthorizationValidator>() {
+			@Override
+			public AuthorizationValidator getValue() throws IllegalStateException, IllegalArgumentException {
+				return authValidator;
+			}
+    	});    	
+    	newControllers.add(target.addService(TeiidServiceNames.AUTHORIZATION_VALIDATOR, authValidatorService).install());
+    	
+    	//cache factory
+    	final CacheFactory cacheFactory = getCacheFactory(operation.get(Configuration.CACHE_FACORY));
+    	ValueService<CacheFactory> cacheFactoryService = new ValueService<CacheFactory>(new org.jboss.msc.value.Value<CacheFactory>() {
+			@Override
+			public CacheFactory getValue() throws IllegalStateException, IllegalArgumentException {
+				return cacheFactory;
+			}
+    	});
+    	newControllers.add(target.addService(TeiidServiceNames.CACHE_FACTORY, cacheFactoryService).install());
+    	
     	CacheConfiguration resultsetCache = buildCacheConfig(operation.get(Configuration.RESULTSET_CACHE));
     	CacheConfiguration preparePlanCache = buildCacheConfig(operation.get(Configuration.PREPAREDPLAN_CACHE));
     	
     	
-    	final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener();
-    	serviceContainer.addTerminateListener(shutdownListener);
-
-        serviceBuilder.addDependency(ServiceName.JBOSS.append("thread", "executor", asyncExecutor), Executor.class, engine.threadPoolInjector); //$NON-NLS-1$ //$NON-NLS-2$
-
+    	// add translators
+    	
+    	
     	// Register VDB deployer
         context.addStep(new AbstractDeploymentChainStep() {
 			@Override
 			public void execute(DeploymentProcessorTarget processorTarget) {
 				processorTarget.addDeploymentProcessor(Phase.STRUCTURE, Phase.STRUCTURE_WAR_DEPLOYMENT_INIT|0x0001,new VDBStructure());
-				processorTarget.addDeploymentProcessor(Phase.PARSE, Phase.PARSE_WEB_DEPLOYMENT|0x0001, new VDBParserDeployer(vdbRepository, serializer));
+				processorTarget.addDeploymentProcessor(Phase.PARSE, Phase.PARSE_WEB_DEPLOYMENT|0x0001, new VDBParserDeployer());
 				processorTarget.addDeploymentProcessor(Phase.DEPENDENCIES, Phase.DEPENDENCIES_WAR_MODULE|0x0001, new VDBDependencyProcessor());
 				processorTarget.addDeploymentProcessor(Phase.INSTALL, Phase.INSTALL_WAR_DEPLOYMENT|0x0001, new VDBDeployer(translatorRepo, asyncThreadPoolName));            			
 			}
@@ -220,7 +247,7 @@ public class TeiidBootServicesAdd extends AbstractAddStepHandler implements Desc
     }
 	
 	
-	static void getBufferManagerDesciption(ModelNode node, String type, ResourceBundle bundle) {
+	static void describeBufferManager(ModelNode node, String type, ResourceBundle bundle) {
 		addAttribute(node, Configuration.USE_DISK, type, bundle.getString(Configuration.USE_DISK+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
 		addAttribute(node, Configuration.PROCESSOR_BATCH_SIZE, type, bundle.getString(Configuration.PROCESSOR_BATCH_SIZE+DESC), ModelType.INT, false, "512"); //$NON-NLS-1$
 		addAttribute(node, Configuration.CONNECTOR_BATCH_SIZE, type, bundle.getString(Configuration.CONNECTOR_BATCH_SIZE+DESC), ModelType.INT, false, "1024"); //$NON-NLS-1$
@@ -301,12 +328,12 @@ public class TeiidBootServicesAdd extends AbstractAddStepHandler implements Desc
 		}
     }
     
-	private static void getDistributedCacheDescription(ModelNode node, String type, ResourceBundle bundle) {
+	private static void describeDistributedCache(ModelNode node, String type, ResourceBundle bundle) {
 		addAttribute(node, Configuration.CACHE_SERVICE_JNDI_NAME, type, bundle.getString(Configuration.CACHE_SERVICE_JNDI_NAME+DESC), ModelType.STRING, false, "java:TeiidCacheManager"); //$NON-NLS-1$
 		addAttribute(node, Configuration.RESULTSET_CACHE_NAME, type, bundle.getString(Configuration.RESULTSET_CACHE_NAME+DESC), ModelType.STRING, false, "teiid-resultset-cache"); //$NON-NLS-1$
 	}
 	
-	private static void getResultsetCacheDescription(ModelNode node, String type, ResourceBundle bundle) {
+	private static void describeResultsetcache(ModelNode node, String type, ResourceBundle bundle) {
 		addAttribute(node, Configuration.MAX_ENTRIES, type, bundle.getString(Configuration.MAX_ENTRIES+DESC), ModelType.INT, false, "1024"); //$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_AGE_IN_SECS, type, bundle.getString(Configuration.MAX_AGE_IN_SECS+DESC), ModelType.INT, false, "7200");//$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_STALENESS, type, bundle.getString(Configuration.MAX_STALENESS+DESC), ModelType.INT, false, "60");//$NON-NLS-1$
@@ -314,13 +341,14 @@ public class TeiidBootServicesAdd extends AbstractAddStepHandler implements Desc
 		addAttribute(node, Configuration.CACHE_LOCATION, type, bundle.getString(Configuration.CACHE_LOCATION+DESC), ModelType.STRING, false, "resultset");	//$NON-NLS-1$	
 	}
 	
-	private static void getPreparedPalnCacheDescription(ModelNode node, String type, ResourceBundle bundle) {
+	private static void describePreparedPlanCache(ModelNode node, String type, ResourceBundle bundle) {
 		addAttribute(node, Configuration.MAX_ENTRIES, type, bundle.getString(Configuration.MAX_ENTRIES+DESC), ModelType.INT, false, "512"); //$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_AGE_IN_SECS, type, bundle.getString(Configuration.MAX_AGE_IN_SECS+DESC), ModelType.INT, false, "28800");//$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_STALENESS, type, bundle.getString(Configuration.MAX_STALENESS+DESC), ModelType.INT, false, "0");//$NON-NLS-1$
 		addAttribute(node, Configuration.CACHE_TYPE, type, bundle.getString(Configuration.CACHE_TYPE+DESC), ModelType.STRING, false, "LRU"); //$NON-NLS-1$
 		addAttribute(node, Configuration.CACHE_LOCATION, type, bundle.getString(Configuration.CACHE_LOCATION+DESC), ModelType.STRING, false, "preparedplan");	//$NON-NLS-1$	
 	}
+	
     private CacheFactory getCacheFactory(ModelNode node) {
     	CacheFactory cacheFactory = new DefaultCacheFactory();	
     	/*

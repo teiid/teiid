@@ -257,8 +257,9 @@
             </security-domains>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:teiid:1.0">
+            <async-thread-group>teiid-async</async-thread-group>
+            
             <query-engine name = "default">
-                <async-thread-group>teiid-async</async-thread-group>
                 <event-distributor-name>teiid/event-distributor</event-distributor-name>
                 <security-domain>teiid-security</security-domain>
                 <jdbc>
@@ -268,7 +269,34 @@
                     <socket-binding>teiid-odbc</socket-binding>
                 </odbc>
             </query-engine>
+            <translator name="jdbc-simple" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="jdbc-ansi" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="access" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="db2" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="derby" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="h2" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="hsql" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="informix" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="metamatrix" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="mysql" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="mysql5" module="org.jboss.teiid.translator.jdbc"/>
             <translator name="oracle" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="postgresql" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="sqlserver" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="sybase" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="teiid" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="teradata" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="modeshape" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="ingres" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="ingres93" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="intersystems-cache" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="netezza" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="file" module="org.jboss.teiid.translator.file"/>
+            <translator name="ldap" module="org.jboss.teiid.translator.ldap"/>
+            <translator name="loopback" module="org.jboss.teiid.translator.loopback"/>
+            <translator name="olap" module="org.jboss.teiid.translator.olap"/>
+            <translator name="ws" module="org.jboss.teiid.translator.ws"/>
+            
         </subsystem>       
         <subsystem xmlns="urn:jboss:domain:threads:1.0">
             <queueless-thread-pool name="teiid-async">

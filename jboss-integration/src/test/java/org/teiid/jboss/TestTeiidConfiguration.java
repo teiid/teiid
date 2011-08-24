@@ -31,10 +31,9 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.*;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
@@ -50,6 +49,7 @@ import org.jboss.as.controller.operations.common.Util;
 import org.jboss.as.controller.operations.global.GlobalOperationHandlers;
 import org.jboss.as.controller.persistence.ConfigurationPersistenceException;
 import org.jboss.as.controller.persistence.ConfigurationPersister;
+import org.jboss.as.controller.persistence.ModelMarshallingContext;
 import org.jboss.as.controller.persistence.SubsystemMarshallingContext;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.Resource;
@@ -58,10 +58,12 @@ import org.jboss.dmr.ModelType;
 import org.jboss.dmr.Property;
 import org.jboss.msc.service.*;
 import org.jboss.staxmapper.XMLElementWriter;
+import org.jboss.staxmapper.XMLExtendedStreamWriter;
 import org.jboss.staxmapper.XMLMapper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
@@ -115,7 +117,7 @@ public class TestTeiidConfiguration {
     @Test
     public void testTeiidConfiguration() throws Exception {
         List<ModelNode> updates = createSubSystem(ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config.xml")));
-        assertEquals(1, updates.size());
+        assertEquals(3, updates.size());
         for (ModelNode update : updates) {
             try {
                 executeForResult(update);
@@ -125,18 +127,23 @@ public class TestTeiidConfiguration {
         }
 
         ModelNode subsystem = model.require("profile").require("test").require("subsystem").require("teiid");
-        ModelNode bufferService = subsystem.require("buffer-service");
-        assertEquals(8, bufferService.keys().size());
-        assertEquals("true", bufferService.require("use-disk").asString());
+        ModelNode engine = subsystem.require("query-engine");
+        assertEquals(2, engine.keys().size());
+        ModelNode defaultEngine = engine.get("default");
+        assertEquals("default", defaultEngine.require("name").asString());
+        
+        ModelNode alternateEngine = engine.get("alternate");
+        assertEquals("alternate", alternateEngine.require("name").asString());        
     }	
     
     @Test
     public void testSimpleTeiidConfiguration() throws Exception {
         List<ModelNode> updates = createSubSystem("<subsystem xmlns=\"urn:jboss:domain:teiid:1.0\">" +
-        		" <query-engine jndi-name=\"teiid/engine-deployer\">" +
+        		"<async-thread-group>async</async-thread-group>"+
+        		" <query-engine name=\"default\">" +
         		" </query-engine>" +
         		"</subsystem>");
-        assertEquals(1, updates.size());
+        assertEquals(2, updates.size());
         for (ModelNode update : updates) {
             try {
                 executeForResult(update);
@@ -194,7 +201,7 @@ public class TestTeiidConfiguration {
 
         List<ModelNode> updates = new ArrayList<ModelNode>();
         xmlMapper.parseDocument(updates, xmlReader);
-
+        
         // Process subsystems
         for(final ModelNode update : updates) {
             // Process relative subsystem path address
@@ -366,10 +373,26 @@ public class TestTeiidConfiguration {
         return rsp.get(RESULT);
     }
     
+    public void susbsytemParserDeparser(String xmlContent) throws Exception {
+        XMLMapper xmlMapper = XMLMapper.Factory.create();
+        List<ModelNode> updates = createSubSystem(xmlContent);
+        
+        StringWriter sw = new StringWriter();
+        XMLStreamWriter streamWriter = XMLOutputFactory.newInstance().createXMLStreamWriter(sw);        
+        xmlMapper.deparseDocument(new TeiidSubsystemParser(), new SubsystemMarshallingContext(updates.get(1), new MockXMLExtendedWriter(streamWriter)), streamWriter);
+        
+        System.out.println(sw.toString());
+    }
+    
+    //@Test
+    public void testXMLPersistence() throws Exception {
+    	susbsytemParserDeparser(ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config.xml")));
+    }
+    
     @Test
     public void testSubSystemDescription() throws IOException {
     	ModelNode node = new ModelNode();
-    	TeiidModelDescription.getQueryEngineDescription(node, ATTRIBUTES, IntegrationPlugin.getResourceBundle(null));
+    	QueryEngineAdd.describeQueryEngine(node, ATTRIBUTES, IntegrationPlugin.getResourceBundle(null));
     	assertEquals(ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-model-config.txt")), node.toString());
     }
 }

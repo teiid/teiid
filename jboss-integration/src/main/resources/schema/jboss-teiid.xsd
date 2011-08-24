@@ -83,7 +83,7 @@
                 </xs:annotation>
             </xs:element>
         
-            <xs:element name="query-engine" type="runtime-engine-type" maxOccurs="1" minOccurs="1">
+            <xs:element name="query-engine" type="runtime-engine-type" maxOccurs="2" minOccurs="1">
                 <xs:annotation>
                     <xs:documentation>Main Teiid runtime engine configuration</xs:documentation>
                 </xs:annotation>
@@ -240,7 +240,7 @@
                     <xs:documentation>Maximum size of lob allowed through ODBC connection in bytes (default 5MB)</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="event-distributor-name" type="xs:string" minOccurs="1" maxOccurs="1">
+            <xs:element name="event-distributor-name" type="xs:string" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>The JNDI name of the Teiid Event Distributor</xs:documentation>
                 </xs:annotation>
@@ -276,6 +276,7 @@
                 </xs:annotation>
             </xs:element>
         </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required"/>
     </xs:complexType>
 
     <xs:complexType name="authorization-validator-type">

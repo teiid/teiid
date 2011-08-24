@@ -21,7 +21,6 @@
  */
 package org.teiid.jboss;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -37,7 +36,8 @@ import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.deployers.*;
+import org.teiid.deployers.TeiidAttachments;
+import org.teiid.deployers.UDFMetaData;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.VdbConstants;
@@ -50,12 +50,8 @@ import org.xml.sax.SAXException;
  * This file loads the "vdb.xml" file inside a ".vdb" file, along with all the metadata in the .INDEX files
  */
 public class VDBParserDeployer implements DeploymentUnitProcessor {
-	private ObjectSerializer serializer;
-	private VDBRepository vdbRepository;
 	
-	public VDBParserDeployer(VDBRepository repo, ObjectSerializer serializer) {
-		this.vdbRepository = repo;
-		this.serializer = serializer;
+	public VDBParserDeployer() {
 	}
 	
 	public void deploy(final DeploymentPhaseContext phaseContext)  throws DeploymentUnitProcessingException {
@@ -157,24 +153,9 @@ public class VDBParserDeployer implements DeploymentUnitProcessor {
 			// build the metadata store
 			if (imf != null) {
 				imf.addEntriesPlusVisibilities(file, vdb);
-								
-				// add the cached store.
-				File cacheFile = VDBDeployer.buildCachedVDBFileName(this.serializer, file, vdb);
-				// check to see if the vdb has been modified when server is down; if it is then clear the old files
-				if (this.serializer.isStale(cacheFile, file.getLastModified())) {
-					this.serializer.removeAttachments(file);
-					LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB", file.getName(), "old cached metadata has been removed"); //$NON-NLS-1$ //$NON-NLS-2$				
-				}
-				MetadataStoreGroup stores = this.serializer.loadSafe(cacheFile, MetadataStoreGroup.class);
-				if (stores == null) {				
-					// start to build the new metadata 
-					stores = new MetadataStoreGroup();
-					stores.addStore(imf.getMetadataStore(vdbRepository.getSystemStore().getDatatypes()));
-				}
-				else {
-					LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB", file.getName(), "was loaded from cached metadata"); //$NON-NLS-1$ //$NON-NLS-2$
-				}
-				deploymentUnit.putAttachment(TeiidAttachments.METADATA_STORE, stores);				
+					
+				// This time stamp is used to check if the VDB is modified after the metadata is written to disk
+				vdb.addProperty(VDBService.VDB_LASTMODIFIED_TIME, String.valueOf(file.getLastModified()));
 			}
 			
 			if (udf != null) {

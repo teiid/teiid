@@ -22,6 +22,8 @@
 package org.teiid.jboss;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.teiid.jboss.Configuration.DESC;
+import static org.teiid.jboss.Configuration.addAttribute;
 
 import java.util.List;
 import java.util.Locale;
@@ -43,9 +45,11 @@ import org.jboss.as.naming.service.BinderService;
 import org.jboss.as.network.SocketBinding;
 import org.jboss.as.security.plugins.SecurityDomainContext;
 import org.jboss.dmr.ModelNode;
+import org.jboss.dmr.ModelType;
 import org.jboss.msc.inject.ConcurrentMapInjector;
 import org.jboss.msc.service.*;
 import org.jboss.msc.value.InjectedValue;
+import org.teiid.cache.CacheFactory;
 import org.teiid.deployers.SystemVDBDeployer;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
@@ -55,7 +59,6 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.transport.ClientServiceRegistry;
-import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.SSLConfiguration;
 import org.teiid.transport.SocketConfiguration;
 
@@ -70,76 +73,72 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler implements Descripti
         node.get(DESCRIPTION).set("engine.add"); //$NON-NLS-1$
         
         ModelNode engine = node.get(REQUEST_PROPERTIES, Configuration.QUERY_ENGINE);
-        TeiidModelDescription.getQueryEngineDescription(engine, ATTRIBUTES, bundle);
+        describeQueryEngine(engine, ATTRIBUTES, bundle);
         return node;
 	}
 	
 	@Override
 	protected void populateModel(ModelNode operation, ModelNode model) {
-		final ModelNode queryEngineNode = operation.require(Configuration.QUERY_ENGINE);
-		model.set(Configuration.QUERY_ENGINE).set(queryEngineNode.clone());
-
+		populateQueryEngine(operation, model);
 	}
 	
 	@Override
     protected void performBoottime(OperationContext context, ModelNode operation, ModelNode model, ServiceVerificationHandler verificationHandler, List<ServiceController<?>> newControllers) throws OperationFailedException {
 
-    	final ModelNode queryEngineNode = operation.require(Configuration.QUERY_ENGINE);
     	ServiceTarget target = context.getServiceTarget();
     	
     	final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener();
-       	
-    	SocketConfiguration jdbc = null;
-    	if (queryEngineNode.hasDefined(Configuration.JDBC)) {
-    		jdbc = buildSocketConfiguration(queryEngineNode.get(Configuration.JDBC));
-    	}
-    	
-    	SocketConfiguration odbc = null;
-    	if (queryEngineNode.hasDefined(Configuration.ODBC)) {
-    		odbc = buildSocketConfiguration(queryEngineNode.get(Configuration.ODBC));
-    	}
-    	
+       	    	
     	// now build the engine
-    	final RuntimeEngineDeployer engine = buildQueryEngine(queryEngineNode);
-    	engine.setJdbcSocketConfiguration(jdbc);
-    	engine.setOdbcSocketConfiguration(odbc);
+    	final RuntimeEngineDeployer engine = buildQueryEngine(operation);
     	engine.setSecurityHelper(new JBossSecurityHelper());
     	engine.setContainerLifeCycleListener(shutdownListener);
     	// TODO: none of the caching is configured..
     	
+    	SocketConfiguration jdbc = null;
+    	if (operation.hasDefined(Configuration.JDBC)) {
+    		jdbc = buildSocketConfiguration(operation.get(Configuration.JDBC));
+    		engine.setJdbcSocketConfiguration(jdbc);
+    	}
+    	
+    	SocketConfiguration odbc = null;
+    	if (operation.hasDefined(Configuration.ODBC)) {
+    		odbc = buildSocketConfiguration(operation.get(Configuration.ODBC));
+    		engine.setOdbcSocketConfiguration(odbc);
+    	}    	
         
         ServiceBuilder<ClientServiceRegistry> serviceBuilder = target.addService(TeiidServiceNames.engineServiceName(engine.getName()), engine);
-        
-        serviceBuilder.addDependency(ServiceName.JBOSS.append("connector", "workmanager"), WorkManager.class, engine.workManagerInjector); //$NON-NLS-1$ //$NON-NLS-2$
-        serviceBuilder.addDependency(ServiceName.JBOSS.append("txn", "XATerminator"), XATerminator.class, engine.xaTerminatorInjector); //$NON-NLS-1$ //$NON-NLS-2$
-        serviceBuilder.addDependency(ServiceName.JBOSS.append("txn", "TransactionManager"), TransactionManager.class, engine.txnManagerInjector); //$NON-NLS-1$ //$NON-NLS-2$
-        serviceBuilder.addDependency(TeiidServiceNames.BUFFER_MGR, BufferServiceImpl.class, engine.bufferServiceInjector);
+        serviceBuilder.addDependency(ServiceName.JBOSS.append("connector", "workmanager"), WorkManager.class, engine.getWorkManagerInjector()); //$NON-NLS-1$ //$NON-NLS-2$
+        serviceBuilder.addDependency(ServiceName.JBOSS.append("txn", "XATerminator"), XATerminator.class, engine.getXaTerminatorInjector()); //$NON-NLS-1$ //$NON-NLS-2$
+        serviceBuilder.addDependency(ServiceName.JBOSS.append("txn", "TransactionManager"), TransactionManager.class, engine.getTxnManagerInjector()); //$NON-NLS-1$ //$NON-NLS-2$
+        serviceBuilder.addDependency(TeiidServiceNames.BUFFER_MGR, BufferServiceImpl.class, engine.getBufferServiceInjector());
         serviceBuilder.addDependency(TeiidServiceNames.SYSTEM_VDB, SystemVDBDeployer.class,  new InjectedValue<SystemVDBDeployer>());
-        serviceBuilder.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class, engine.translatorRepositoryInjector);
-        serviceBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, engine.vdbRepositoryInjector);
-        serviceBuilder.addDependency(TeiidServiceNames.AUTHORIZATION_VALIDATOR, AuthorizationValidator.class, engine.authorizationValidatorInjector);
+        serviceBuilder.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class, engine.getTranslatorRepositoryInjector());
+        serviceBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, engine.getVdbRepositoryInjector());
+        serviceBuilder.addDependency(TeiidServiceNames.AUTHORIZATION_VALIDATOR, AuthorizationValidator.class, engine.getAuthorizationValidatorInjector());
+        serviceBuilder.addDependency(TeiidServiceNames.CACHE_FACTORY, CacheFactory.class, engine.getCachefactoryInjector());
         
         if (jdbc != null) {
-        	serviceBuilder.addDependency(ServiceName.JBOSS.append("binding", jdbc.getSocketBinding()), SocketBinding.class, engine.jdbcSocketBindingInjector); //$NON-NLS-1$
+        	serviceBuilder.addDependency(ServiceName.JBOSS.append("binding", jdbc.getSocketBinding()), SocketBinding.class, engine.getJdbcSocketBindingInjector()); //$NON-NLS-1$
         }
         
         if (odbc != null) {
-        	serviceBuilder.addDependency(ServiceName.JBOSS.append("binding", odbc.getSocketBinding()), SocketBinding.class, engine.odbcSocketBindingInjector); //$NON-NLS-1$
+        	serviceBuilder.addDependency(ServiceName.JBOSS.append("binding", odbc.getSocketBinding()), SocketBinding.class, engine.getOdbcSocketBindingInjector()); //$NON-NLS-1$
         }
         
         // register JNDI Name
-        ServiceName javaContext = ServiceName.JBOSS.append("naming", "context", "java"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        BinderService binder = new BinderService(LocalServerConnection.TEIID_RUNTIME);
-        ServiceBuilder<ManagedReferenceFactory> namingBuilder = target.addService(javaContext.append(LocalServerConnection.TEIID_RUNTIME), binder);
-        namingBuilder.addDependency(javaContext, NamingStore.class, binder.getNamingStoreInjector());
+        ServiceName teiidContext = ServiceName.JBOSS.append("naming", "context", "teiid"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        BinderService binder = new BinderService(engine.getName());
+        ServiceBuilder<ManagedReferenceFactory> namingBuilder = target.addService(teiidContext.append(engine.getName()), binder);
+        namingBuilder.addDependency(teiidContext, NamingStore.class, binder.getNamingStoreInjector());
         namingBuilder.addDependency(TeiidServiceNames.engineServiceName(engine.getName()), RuntimeEngineDeployer.class, new ManagedReferenceInjector<RuntimeEngineDeployer>(binder.getManagedObjectInjector()));
         namingBuilder.setInitialMode(ServiceController.Mode.ON_DEMAND);
         newControllers.add(namingBuilder.install());
         
         
         // add security domains
-        if ( queryEngineNode.hasDefined(Configuration.SECURITY_DOMAIN)) {
-	        String domainNameOrder = queryEngineNode.get(Configuration.SECURITY_DOMAIN).asString();
+        if ( operation.hasDefined(Configuration.SECURITY_DOMAIN)) {
+	        String domainNameOrder = operation.get(Configuration.SECURITY_DOMAIN).asString();
 	        if (domainNameOrder != null && domainNameOrder.trim().length()>0) {
 	        	LogManager.logInfo(LogConstants.CTX_SECURITY, "Security Enabled: true"); //$NON-NLS-1$
 		        String[] domainNames = domainNameOrder.split(","); //$NON-NLS-1$
@@ -269,5 +268,177 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler implements Descripti
     	socket.setSSLConfiguration(ssl);
     	
 		return socket;
+	}	
+	
+	static void describeQueryEngine(ModelNode node, String type, ResourceBundle bundle) {
+		addAttribute(node, Configuration.ENGINE_NAME, type, bundle.getString(Configuration.ENGINE_NAME+Configuration.DESC), ModelType.STRING, true, null);		
+		addAttribute(node, Configuration.MAX_THREADS, type, bundle.getString(Configuration.MAX_THREADS+DESC), ModelType.INT, false, "64"); //$NON-NLS-1$
+		addAttribute(node, Configuration.MAX_ACTIVE_PLANS, type, bundle.getString(Configuration.MAX_ACTIVE_PLANS+DESC), ModelType.INT, false, "20"); //$NON-NLS-1$
+		addAttribute(node, Configuration.USER_REQUEST_SOURCE_CONCURRENCY, type, bundle.getString(Configuration.USER_REQUEST_SOURCE_CONCURRENCY+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
+		addAttribute(node, Configuration.TIME_SLICE_IN_MILLI, type, bundle.getString(Configuration.TIME_SLICE_IN_MILLI+DESC), ModelType.INT, false, "2000"); //$NON-NLS-1$		
+		addAttribute(node, Configuration.MAX_ROWS_FETCH_SIZE, type, bundle.getString(Configuration.MAX_ROWS_FETCH_SIZE+DESC), ModelType.INT, false, "20480"); //$NON-NLS-1$
+		addAttribute(node, Configuration.LOB_CHUNK_SIZE_IN_KB, type, bundle.getString(Configuration.LOB_CHUNK_SIZE_IN_KB+DESC), ModelType.INT, false, "100"); //$NON-NLS-1$
+		addAttribute(node, Configuration.QUERY_THRESHOLD_IN_SECS, type, bundle.getString(Configuration.QUERY_THRESHOLD_IN_SECS+DESC), ModelType.INT, false, "600"); //$NON-NLS-1$		
+		addAttribute(node, Configuration.MAX_SOURCE_ROWS, type, bundle.getString(Configuration.MAX_SOURCE_ROWS+DESC), ModelType.INT, false, "-1"); //$NON-NLS-1$
+		addAttribute(node, Configuration.EXCEPTION_ON_MAX_SOURCE_ROWS, type, bundle.getString(Configuration.EXCEPTION_ON_MAX_SOURCE_ROWS+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
+		addAttribute(node, Configuration.MAX_ODBC_LOB_SIZE_ALLOWED, type, bundle.getString(Configuration.MAX_ODBC_LOB_SIZE_ALLOWED+DESC), ModelType.INT, false, "5242880"); //$NON-NLS-1$
+		addAttribute(node, Configuration.EVENT_DISTRIBUTOR_NAME, type, bundle.getString(Configuration.EVENT_DISTRIBUTOR_NAME+DESC), ModelType.STRING, false, "teiid/event-distributor"); //$NON-NLS-1$
+		addAttribute(node, Configuration.DETECTING_CHANGE_EVENTS, type, bundle.getString(Configuration.DETECTING_CHANGE_EVENTS+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
+		
+		//session stuff
+		addAttribute(node, Configuration.SECURITY_DOMAIN, type, bundle.getString(Configuration.SECURITY_DOMAIN+DESC), ModelType.STRING, false, null);
+		addAttribute(node, Configuration.MAX_SESSIONS_ALLOWED, type, bundle.getString(Configuration.MAX_SESSIONS_ALLOWED+DESC), ModelType.INT, false, "5000"); //$NON-NLS-1$
+		addAttribute(node, Configuration.SESSION_EXPIRATION_TIME_LIMIT, type, bundle.getString(Configuration.SESSION_EXPIRATION_TIME_LIMIT+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
+		
+		//jdbc
+		ModelNode jdbcSocketNode = node.get(CHILDREN, Configuration.JDBC);
+		jdbcSocketNode.get(TYPE).set(ModelType.OBJECT);
+		jdbcSocketNode.get(DESCRIPTION).set(bundle.getString(Configuration.JDBC+DESC));
+		jdbcSocketNode.get(REQUIRED).set(false);
+		jdbcSocketNode.get(MAX_OCCURS).set(1);
+		jdbcSocketNode.get(MIN_OCCURS).set(1);	
+		describeSocketConfig(jdbcSocketNode, type, bundle);
+		
+		//odbc
+		ModelNode odbcSocketNode = node.get(CHILDREN, Configuration.ODBC);
+		odbcSocketNode.get(TYPE).set(ModelType.OBJECT);
+		odbcSocketNode.get(DESCRIPTION).set(bundle.getString(Configuration.ODBC+DESC));
+		odbcSocketNode.get(REQUIRED).set(false);
+		odbcSocketNode.get(MAX_OCCURS).set(1);
+		odbcSocketNode.get(MIN_OCCURS).set(1);	
+		describeSocketConfig(odbcSocketNode, type, bundle);			
+	}
+	
+	
+	private static void describeSocketConfig(ModelNode node, String type, ResourceBundle bundle) {
+		addAttribute(node, Configuration.SOCKET_ENABLED, type, bundle.getString(Configuration.SOCKET_ENABLED+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
+		addAttribute(node, Configuration.MAX_SOCKET_THREAD_SIZE, type, bundle.getString(Configuration.MAX_SOCKET_THREAD_SIZE+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
+		addAttribute(node, Configuration.IN_BUFFER_SIZE, type, bundle.getString(Configuration.IN_BUFFER_SIZE+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
+		addAttribute(node, Configuration.OUT_BUFFER_SIZE, type, bundle.getString(Configuration.OUT_BUFFER_SIZE+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
+		addAttribute(node, Configuration.SOCKET_BINDING, type, bundle.getString(Configuration.SOCKET_BINDING+DESC), ModelType.INT, true, null);
+		
+		ModelNode sslNode = node.get(CHILDREN, Configuration.SSL);
+		sslNode.get(TYPE).set(ModelType.OBJECT);
+		sslNode.get(DESCRIPTION).set(bundle.getString(Configuration.SSL+DESC));
+		sslNode.get(REQUIRED).set(false);
+		sslNode.get(MAX_OCCURS).set(1);
+		sslNode.get(MIN_OCCURS).set(0);
+		addAttribute(node, Configuration.SSL_MODE, type, bundle.getString(Configuration.SSL_MODE+DESC), ModelType.STRING, false, "login");	//$NON-NLS-1$
+		addAttribute(node, Configuration.KEY_STORE_FILE, type, bundle.getString(Configuration.KEY_STORE_FILE+DESC), ModelType.STRING, false, null);	
+		addAttribute(node, Configuration.KEY_STORE_PASSWD, type, bundle.getString(Configuration.KEY_STORE_PASSWD+DESC), ModelType.STRING, false, null);
+		addAttribute(node, Configuration.KEY_STORE_TYPE, type, bundle.getString(Configuration.KEY_STORE_TYPE+DESC), ModelType.STRING, false, "JKS"); //$NON-NLS-1$
+		addAttribute(node, Configuration.SSL_PROTOCOL, type, bundle.getString(Configuration.SSL_PROTOCOL+DESC), ModelType.BOOLEAN, false, "SSLv3");	//$NON-NLS-1$
+		addAttribute(node, Configuration.KEY_MANAGEMENT_ALG, type, bundle.getString(Configuration.KEY_MANAGEMENT_ALG+DESC), ModelType.STRING, false, "false");	//$NON-NLS-1$
+		addAttribute(node, Configuration.TRUST_FILE, type, bundle.getString(Configuration.TRUST_FILE+DESC), ModelType.STRING, false, null);	
+		addAttribute(node, Configuration.TRUST_PASSWD, type, bundle.getString(Configuration.TRUST_PASSWD+DESC), ModelType.STRING, false, null);	
+		addAttribute(node, Configuration.AUTH_MODE, type, bundle.getString(Configuration.AUTH_MODE+DESC), ModelType.STRING, false, "anonymous");	//$NON-NLS-1$
+	}	
+	
+	private void populateQueryEngine(ModelNode operation, ModelNode model) {
+		model.get(Configuration.ENGINE_NAME).set(operation.require(Configuration.ENGINE_NAME).asString());
+		
+    	if (operation.hasDefined(Configuration.MAX_THREADS)) {
+    		model.get(Configuration.MAX_THREADS).set(operation.get(Configuration.MAX_THREADS).asInt());
+    	}
+    	if (operation.hasDefined(Configuration.MAX_ACTIVE_PLANS)) {
+    		model.get(Configuration.MAX_ACTIVE_PLANS).set(operation.get(Configuration.MAX_ACTIVE_PLANS).asInt());
+    	}
+    	if (operation.hasDefined(Configuration.USER_REQUEST_SOURCE_CONCURRENCY)) {
+    		model.get(Configuration.USER_REQUEST_SOURCE_CONCURRENCY).set(operation.get(Configuration.USER_REQUEST_SOURCE_CONCURRENCY).asInt());
+    	}	
+    	if (operation.hasDefined(Configuration.TIME_SLICE_IN_MILLI)) {
+    		model.get(Configuration.TIME_SLICE_IN_MILLI).set(operation.get(Configuration.TIME_SLICE_IN_MILLI).asInt());
+    	}
+    	if (operation.hasDefined(Configuration.MAX_ROWS_FETCH_SIZE)) {
+    		model.get(Configuration.MAX_ROWS_FETCH_SIZE).set(operation.get(Configuration.MAX_ROWS_FETCH_SIZE).asInt());
+    	}
+    	if (operation.hasDefined(Configuration.LOB_CHUNK_SIZE_IN_KB)) {
+    		model.get(Configuration.LOB_CHUNK_SIZE_IN_KB).set(operation.get(Configuration.LOB_CHUNK_SIZE_IN_KB).asInt());
+    	}
+    	if (operation.hasDefined(Configuration.QUERY_THRESHOLD_IN_SECS)) {
+    		model.get(Configuration.QUERY_THRESHOLD_IN_SECS).set(operation.get(Configuration.QUERY_THRESHOLD_IN_SECS).asInt());
+    	}
+    	if (operation.hasDefined(Configuration.MAX_SOURCE_ROWS)) {
+    		model.get(Configuration.MAX_SOURCE_ROWS).set(operation.get(Configuration.MAX_SOURCE_ROWS).asInt());
+    	}
+    	if (operation.hasDefined(Configuration.EXCEPTION_ON_MAX_SOURCE_ROWS)) {
+    		model.get(Configuration.EXCEPTION_ON_MAX_SOURCE_ROWS).set(operation.get(Configuration.EXCEPTION_ON_MAX_SOURCE_ROWS).asBoolean());
+    	}
+    	if (operation.hasDefined(Configuration.MAX_ODBC_LOB_SIZE_ALLOWED)) {
+    		model.get(Configuration.MAX_ODBC_LOB_SIZE_ALLOWED).set(operation.get(Configuration.MAX_ODBC_LOB_SIZE_ALLOWED).asInt());
+    	}
+    	if (operation.hasDefined(Configuration.EVENT_DISTRIBUTOR_NAME)) {
+    		model.get(Configuration.EVENT_DISTRIBUTOR_NAME).set(operation.get(Configuration.EVENT_DISTRIBUTOR_NAME).asString());
+    	}
+    	if (operation.hasDefined(Configuration.DETECTING_CHANGE_EVENTS)) {
+    		model.get(Configuration.DETECTING_CHANGE_EVENTS).set(operation.get(Configuration.DETECTING_CHANGE_EVENTS).asBoolean());
+    	}	             
+    	if (operation.hasDefined(Configuration.SESSION_EXPIRATION_TIME_LIMIT)) {
+    		model.get(Configuration.SESSION_EXPIRATION_TIME_LIMIT).set(operation.get(Configuration.SESSION_EXPIRATION_TIME_LIMIT).asInt());
+    	}
+    	if (operation.hasDefined(Configuration.MAX_SESSIONS_ALLOWED)) {
+    		model.get(Configuration.MAX_SESSIONS_ALLOWED).set(operation.get(Configuration.MAX_SESSIONS_ALLOWED).asInt());
+    	}		 
+    	
+    	if (operation.hasDefined(Configuration.JDBC)) {
+    		populateSocketConfiguration(operation.get(Configuration.JDBC), model.get(Configuration.JDBC));
+    	}
+    	
+    	if (operation.hasDefined(Configuration.ODBC)) {
+    		populateSocketConfiguration(operation.get(Configuration.ODBC), model.get(Configuration.ODBC));
+    	}     	
+	}
+
+	private void populateSocketConfiguration(ModelNode operation, ModelNode model) {
+		if (operation.hasDefined(Configuration.SOCKET_BINDING)) {
+			model.get(Configuration.SOCKET_BINDING).set(operation.get(Configuration.SOCKET_BINDING).asString());
+		}
+   		if (operation.hasDefined(Configuration.MAX_SOCKET_THREAD_SIZE)) {
+    		model.get(Configuration.MAX_SOCKET_THREAD_SIZE).set(operation.get(Configuration.MAX_SOCKET_THREAD_SIZE).asInt());
+    	}
+    	if (operation.hasDefined(Configuration.IN_BUFFER_SIZE)) {
+    		model.get(Configuration.IN_BUFFER_SIZE).set(operation.get(Configuration.IN_BUFFER_SIZE).asInt());
+    	}	
+    	if (operation.hasDefined(Configuration.OUT_BUFFER_SIZE)) {
+    		model.get(Configuration.OUT_BUFFER_SIZE).set(operation.get(Configuration.OUT_BUFFER_SIZE).asInt());
+    	}		   
+    	
+    	
+    	if (operation.hasDefined(Configuration.SSL)) {
+    		operation = operation.get(Configuration.SSL);
+    		model = model.get(Configuration.SSL);
+    		
+        	if (operation.hasDefined(Configuration.SSL_MODE)) {
+        		model.get(Configuration.SSL_MODE).set(operation.get(Configuration.SSL_MODE).asString());
+        	}
+        	
+        	if (operation.hasDefined(Configuration.KEY_STORE_FILE)) {
+        		model.get(Configuration.KEY_STORE_FILE).set(operation.get(Configuration.KEY_STORE_FILE).asString());
+        	}	
+        	
+        	if (operation.hasDefined(Configuration.KEY_STORE_PASSWD)) {
+        		model.get(Configuration.KEY_STORE_PASSWD).set(operation.get(Configuration.KEY_STORE_PASSWD).asString());
+        	}	
+        	
+        	if (operation.hasDefined(Configuration.KEY_STORE_TYPE)) {
+        		model.get(Configuration.KEY_STORE_TYPE).set(operation.get(Configuration.KEY_STORE_TYPE).asString());
+        	}		
+        	
+        	if (operation.hasDefined(Configuration.SSL_PROTOCOL)) {
+        		model.get(Configuration.SSL_PROTOCOL).set(operation.get(Configuration.SSL_PROTOCOL).asString());
+        	}	
+        	if (operation.hasDefined(Configuration.KEY_MANAGEMENT_ALG)) {
+        		model.get(Configuration.KEY_MANAGEMENT_ALG).set(operation.get(Configuration.KEY_MANAGEMENT_ALG).asString());
+        	}
+        	if (operation.hasDefined(Configuration.TRUST_FILE)) {
+        		model.get(Configuration.TRUST_FILE).set(operation.get(Configuration.TRUST_FILE).asString());
+        	}
+        	if (operation.hasDefined(Configuration.TRUST_PASSWD)) {
+        		model.get(Configuration.TRUST_PASSWD).set(operation.get(Configuration.TRUST_PASSWD).asString());
+        	}
+        	if (operation.hasDefined(Configuration.AUTH_MODE)) {
+        		model.get(Configuration.AUTH_MODE).set(operation.get(Configuration.AUTH_MODE).asString());
+        	}
+    	}
 	}	
 }

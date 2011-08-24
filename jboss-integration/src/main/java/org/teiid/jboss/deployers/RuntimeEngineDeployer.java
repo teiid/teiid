@@ -107,7 +107,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	private transient ILogon logon;
 	private transient ClientServiceRegistryImpl csr = new ClientServiceRegistryImpl();	
 	private transient VDBRepository vdbRepository;
-	private transient TranslatorRepository translatorRepository;
 
     private long sessionMaxLimit = SessionService.DEFAULT_MAX_SESSIONS;
 	private long sessionExpirationTimeLimit = SessionService.DEFAULT_SESSION_EXPIRATION;
@@ -117,17 +116,16 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	private transient EventDistributor eventDistributorProxy;
 	private transient ContainerLifeCycleListener lifecycleListener;
 
-	// TODO: remove public?
-	public final InjectedValue<WorkManager> workManagerInjector = new InjectedValue<WorkManager>();
-	public final InjectedValue<XATerminator> xaTerminatorInjector = new InjectedValue<XATerminator>();
-	public final InjectedValue<TransactionManager> txnManagerInjector = new InjectedValue<TransactionManager>();
-	public final InjectedValue<SocketBinding> jdbcSocketBindingInjector = new InjectedValue<SocketBinding>();
-	public final InjectedValue<BufferServiceImpl> bufferServiceInjector = new InjectedValue<BufferServiceImpl>();
-	public final InjectedValue<SocketBinding> odbcSocketBindingInjector = new InjectedValue<SocketBinding>();
-	public final InjectedValue<TranslatorRepository> translatorRepositoryInjector = new InjectedValue<TranslatorRepository>();
-	public final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
-	public final InjectedValue<AuthorizationValidator> authorizationValidatorInjector = new InjectedValue<AuthorizationValidator>();
-	
+	private final InjectedValue<WorkManager> workManagerInjector = new InjectedValue<WorkManager>();
+	private final InjectedValue<XATerminator> xaTerminatorInjector = new InjectedValue<XATerminator>();
+	private final InjectedValue<TransactionManager> txnManagerInjector = new InjectedValue<TransactionManager>();
+	private final InjectedValue<SocketBinding> jdbcSocketBindingInjector = new InjectedValue<SocketBinding>();
+	private final InjectedValue<BufferServiceImpl> bufferServiceInjector = new InjectedValue<BufferServiceImpl>();
+	private final InjectedValue<SocketBinding> odbcSocketBindingInjector = new InjectedValue<SocketBinding>();
+	private final InjectedValue<TranslatorRepository> translatorRepositoryInjector = new InjectedValue<TranslatorRepository>();
+	private final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
+	private final InjectedValue<AuthorizationValidator> authorizationValidatorInjector = new InjectedValue<AuthorizationValidator>();
+	private final InjectedValue<CacheFactory> cachefactoryInjector = new InjectedValue<CacheFactory>();
 	
 	public final ConcurrentMap<String, SecurityDomainContext> securityDomains = new ConcurrentHashMap<String, SecurityDomainContext>();
 	private LinkedList<String> securityDomainNames = new LinkedList<String>();
@@ -154,12 +152,12 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	
 	@Override
     public void start(StartContext context) {
-		setWorkManager(this.workManagerInjector.getValue());
-		setXATerminator(xaTerminatorInjector.getValue());
-		setTransactionManager(txnManagerInjector.getValue());
-		setTranslatorRepository(translatorRepositoryInjector.getValue());
+		this.transactionServerImpl.setWorkManager(getWorkManagerInjector().getValue());
+		this.transactionServerImpl.setXaTerminator(getXaTerminatorInjector().getValue());
+		this.transactionServerImpl.setTransactionManager(getTxnManagerInjector().getValue());
+		
 		setVDBRepository(vdbRepositoryInjector.getValue());
-		setAuthorizationValidator(authorizationValidatorInjector.getValue());
+		setAuthorizationValidator(getAuthorizationValidatorInjector().getValue());
 		
 		this.sessionService = new SessionServiceImpl();
 		if (!this.securityDomainNames.isEmpty()) {
@@ -196,6 +194,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		}
 		this.dqpCore.setMetadataRepository(this.vdbRepository.getMetadataRepository());
 		this.dqpCore.setEventDistributor(this.eventDistributor);
+		this.dqpCore.setCacheFactory(getCachefactoryInjector().getValue());
 		this.dqpCore.start(this);
 		this.eventDistributorProxy = (EventDistributor)Proxy.newProxyInstance(Module.getCallerModule().getClassLoader(), new Class[] {EventDistributor.class}, new InvocationHandler() {
 			
@@ -353,18 +352,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		this.odbcSocketConfiguration = socketConfig;
 	}
     
-    public void setXATerminator(XATerminator xaTerminator){
-    	this.transactionServerImpl.setXaTerminator(xaTerminator);
-    }   
     
-    public void setTransactionManager(TransactionManager transactionManager) {
-    	this.transactionServerImpl.setTransactionManager(transactionManager);
-    }
-    
-    public void setWorkManager(WorkManager mgr) {
-    	this.transactionServerImpl.setWorkManager(mgr);
-    }
-		
 	public void setBufferService(BufferService service) {
 		this.dqpCore.setBufferService(service);
 	}
@@ -481,10 +469,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 			String targetVDBName, int targetVDBVersion) throws AdminException {
 		this.vdbRepository.mergeVDBs(sourceVDBName, sourceVDBVersion, targetVDBName, targetVDBVersion);
 	}	
-	
-	public void setCacheFactory(CacheFactory factory) {
-		this.dqpCore.setCacheFactory(factory);
-	}
 	
 	@Override
 	public List<List> executeQuery(final String vdbName, final int version, final String command, final long timoutInMilli) throws AdminException {
@@ -620,12 +604,12 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	@Override
 	public void updateMatViewRow(String vdbName, int vdbVersion, String schema,
 			String viewName, List<?> tuple, boolean delete) {
-		this.dqpCore.updateMatViewRow(getcontextProvider(), vdbName, vdbVersion, schema, viewName, tuple, delete);
+		this.dqpCore.updateMatViewRow(getContextProvider(), vdbName, vdbVersion, schema, viewName, tuple, delete);
 	}
 	
 	@Override
 	public void refreshMatView(final String vdbName, final int vdbVersion, final String viewName) {
-		this.dqpCore.refreshMatView(getcontextProvider(), vdbName, vdbVersion, viewName);
+		this.dqpCore.refreshMatView(getContextProvider(), vdbName, vdbVersion, viewName);
 	}
 	
 	@Override
@@ -764,7 +748,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		this.lifecycleListener.addListener(new ContainerLifeCycleListener.LifeCycleEventListener() {
 			@Override
 			public void onStartupFinish() {
-				dqpCore.synchronizeInternalMaterializedViews(getcontextProvider());
+				dqpCore.synchronizeInternalMaterializedViews(getContextProvider());
 			}
 			@Override
 			public void onShutdownStart() {
@@ -797,18 +781,14 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	}	
 	
 	public List<VDBTranslatorMetaData> getTranslators(){
-		return this.translatorRepository.getTranslators();
+		return getTranslatorRepositoryInjector().getValue().getTranslators();
 	}
 
 	public VDBTranslatorMetaData getTranslator(String translatorName) {
-		return this.translatorRepository.getTranslatorMetaData(translatorName);
+		return getTranslatorRepositoryInjector().getValue().getTranslatorMetaData(translatorName);
 	}
 	
-	public void setTranslatorRepository(TranslatorRepository translatorRepo) {
-		this.translatorRepository = translatorRepo;
-	}
-
-	private DQPCore.ContextProvider getcontextProvider() {
+	private DQPCore.ContextProvider getContextProvider() {
 		return new DQPCore.ContextProvider() {
 			@Override
 			public DQPWorkContext getContext(final String vdbName, final int vdbVersion) {
@@ -829,5 +809,45 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	
 	public void setContainerLifeCycleListener(ContainerLifeCycleListener listener) {
 		this.lifecycleListener = listener;
+	}	
+	
+	public InjectedValue<CacheFactory> getCachefactoryInjector() {
+		return cachefactoryInjector;
+	}
+
+	public InjectedValue<TranslatorRepository> getTranslatorRepositoryInjector() {
+		return translatorRepositoryInjector;
+	}
+
+	public InjectedValue<VDBRepository> getVdbRepositoryInjector() {
+		return vdbRepositoryInjector;
+	}
+
+	public InjectedValue<AuthorizationValidator> getAuthorizationValidatorInjector() {
+		return authorizationValidatorInjector;
+	}
+
+	public InjectedValue<BufferServiceImpl> getBufferServiceInjector() {
+		return bufferServiceInjector;
+	}
+
+	public InjectedValue<SocketBinding> getJdbcSocketBindingInjector() {
+		return jdbcSocketBindingInjector;
+	}
+
+	public InjectedValue<TransactionManager> getTxnManagerInjector() {
+		return txnManagerInjector;
+	}
+
+	public InjectedValue<XATerminator> getXaTerminatorInjector() {
+		return xaTerminatorInjector;
+	}
+
+	public InjectedValue<WorkManager> getWorkManagerInjector() {
+		return workManagerInjector;
+	}
+
+	public InjectedValue<SocketBinding> getOdbcSocketBindingInjector() {
+		return odbcSocketBindingInjector;
 	}	
 }

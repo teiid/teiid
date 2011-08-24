@@ -21,13 +21,14 @@
  */
 package org.teiid.jboss;
 
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
 import static org.jboss.as.controller.parsing.ParseUtils.requireNoAttributes;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -49,35 +50,12 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         if (!node.isDefined()) {
         	return;
         }
-        writer.writeStartElement(Element.QUERY_ENGINE_ELEMENT.getLocalName());
-        writeQueryEngine(writer, node);
-        writer.writeEndElement();
-        writer.writeEndElement(); // End of subsystem element
-    }
-    
-    // write the elements according to the schema defined.
-    private void writeQueryEngine( XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
-    	writeAttribute(writer, Element.ENGINE_NAME_ATTRIBUTE, node);
-    	writeElement(writer, Element.ASYNC_THREAD_GROUP_ELEMENT, node);
-    	writeElement(writer, Element.MAX_THREADS_ELEMENT, node);
-    	writeElement(writer, Element.MAX_ACTIVE_PLANS_ELEMENT, node);
-    	writeElement(writer, Element.USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT, node);
-    	writeElement(writer, Element.TIME_SLICE_IN_MILLI_ELEMENT, node);
-    	writeElement(writer, Element.MAX_ROWS_FETCH_SIZE_ELEMENT, node);
-    	writeElement(writer, Element.LOB_CHUNK_SIZE_IN_KB_ELEMENT, node);
-    	writeElement(writer, Element.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT, node);
-    	writeElement(writer, Element.POLICY_DECIDER_MODULE_ELEMENT, node);
-    	writeElement(writer, Element.QUERY_THRESHOLD_IN_SECS_ELEMENT, node);
-    	writeElement(writer, Element.MAX_SOURCE_ROWS_ELEMENT, node);
-    	writeElement(writer, Element.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT, node);
-    	writeElement(writer, Element.MAX_ODBC_LOB_SIZE_ALLOWED_ELEMENT, node);
-    	writeElement(writer, Element.EVENT_DISTRIBUTOR_NAME_ELEMENT, node);
-    	writeElement(writer, Element.DETECTING_CHANGE_EVENTS_ELEMENT, node);
-    	writeElement(writer, Element.JDBC_SECURITY_DOMAIN_ELEMENT, node);
-    	writeElement(writer, Element.MAX_SESSIONS_ALLOWED_ELEMENT, node);
-    	writeElement(writer, Element.SESSION_EXPIRATION_TIME_LIMIT_ELEMENT, node);
-    	writeElement(writer, Element.ALLOW_ENV_FUNCTION_ELEMENT, node);
-
+        
+        writeElement(writer, Element.ASYNC_THREAD_GROUP_ELEMENT, node);
+        writeElement(writer, Element.ALLOW_ENV_FUNCTION_ELEMENT, node);
+        writeElement(writer, Element.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT, node);
+        writeElement(writer, Element.POLICY_DECIDER_MODULE_ELEMENT, node);
+        
     	if (has(node, Element.BUFFER_SERVICE_ELEMENT.getLocalName())){
     		writer.writeStartElement(Element.BUFFER_SERVICE_ELEMENT.getLocalName());
     		writeBufferService(writer, node.get(Element.BUFFER_SERVICE_ELEMENT.getLocalName()));
@@ -102,6 +80,53 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     		writer.writeEndElement();
     	}
     	
+    	Set<String> engines = node.get(Element.QUERY_ENGINE_ELEMENT.getLocalName()).keys();
+    	if (engines != null && !engines.isEmpty()) {
+    		for (String engine:engines) {
+    	        writer.writeStartElement(Element.QUERY_ENGINE_ELEMENT.getLocalName());
+    	        writeQueryEngine(writer, node.get(Element.QUERY_ENGINE_ELEMENT.getLocalName(), engine));
+    	        writer.writeEndElement();    			
+    		}
+    	}
+    	
+    	Set<String> translators = node.get(Element.TRANSLATOR_ELEMENT.getLocalName()).keys();
+    	if (translators != null && !translators.isEmpty()) {
+    		for (String translator:translators) {
+    	        writer.writeStartElement(Element.TRANSLATOR_ELEMENT.getLocalName());
+    	        writeTranslator(writer, node.get(Element.TRANSLATOR_ELEMENT.getLocalName(), translator));
+    	        writer.writeEndElement();    			
+    		}
+    	}        
+        writer.writeEndElement(); // End of subsystem element
+    }
+    
+    private void writeTranslator(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+    	writeAttribute(writer, Element.TRANSLATOR_NAME_ATTRIBUTE, node);
+    	writeAttribute(writer, Element.TRANSLATOR_MODULE_ATTRIBUTE, node);
+    }
+    
+    // write the elements according to the schema defined.
+    private void writeQueryEngine( XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+    	writeAttribute(writer, Element.ENGINE_NAME_ATTRIBUTE, node);
+    	
+    	writeElement(writer, Element.MAX_THREADS_ELEMENT, node);
+    	writeElement(writer, Element.MAX_ACTIVE_PLANS_ELEMENT, node);
+    	writeElement(writer, Element.USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT, node);
+    	writeElement(writer, Element.TIME_SLICE_IN_MILLI_ELEMENT, node);
+    	writeElement(writer, Element.MAX_ROWS_FETCH_SIZE_ELEMENT, node);
+    	writeElement(writer, Element.LOB_CHUNK_SIZE_IN_KB_ELEMENT, node);
+    	writeElement(writer, Element.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT, node);
+    	writeElement(writer, Element.POLICY_DECIDER_MODULE_ELEMENT, node);
+    	writeElement(writer, Element.QUERY_THRESHOLD_IN_SECS_ELEMENT, node);
+    	writeElement(writer, Element.MAX_SOURCE_ROWS_ELEMENT, node);
+    	writeElement(writer, Element.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT, node);
+    	writeElement(writer, Element.MAX_ODBC_LOB_SIZE_ALLOWED_ELEMENT, node);
+    	writeElement(writer, Element.EVENT_DISTRIBUTOR_NAME_ELEMENT, node);
+    	writeElement(writer, Element.DETECTING_CHANGE_EVENTS_ELEMENT, node);
+    	writeElement(writer, Element.JDBC_SECURITY_DOMAIN_ELEMENT, node);
+    	writeElement(writer, Element.MAX_SESSIONS_ALLOWED_ELEMENT, node);
+    	writeElement(writer, Element.SESSION_EXPIRATION_TIME_LIMIT_ELEMENT, node);
+    	    	
     	//jdbc
     	if (has(node, Element.JDBC_ELEMENT.getLocalName())){
     		writer.writeStartElement(Element.JDBC_ELEMENT.getLocalName());
@@ -204,33 +229,57 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
                 case TEIID_1_0: {
                     Element element = Element.forName(reader.getLocalName());
                     switch (element) {
-                        case QUERY_ENGINE_ELEMENT:
-                            ModelNode engineNode = parseQueryEngine(reader, new ModelNode());
-                            
-                            final ModelNode engineAddress = address.clone();
-                            engineAddress.add(Configuration.QUERY_ENGINE, engineNode.require(Configuration.ENGINE_NAME).asString());
-                            engineAddress.protect();
-                            engineNode.get(OP).set(ADD);
-                            engineNode.get(OP_ADDR).set(engineAddress);
-                            
-                            list.add(engineNode);  
-                            break;
-                            
-                        case TRANSLATOR_ELEMENT:
-                        	ModelNode translatorNode = parseTranslator(reader, new ModelNode());
+    				case ALLOW_ENV_FUNCTION_ELEMENT:
+    					bootServices.get(reader.getLocalName()).set(Boolean.parseBoolean(reader.getElementText()));
+    					break;
 
-                            final ModelNode translatorAddress = address.clone();
-                            translatorAddress.add(Configuration.QUERY_ENGINE, translatorNode.require(Configuration.TRANSLATOR_NAME).asString());
-                            translatorAddress.protect();
+    				case AUTHORIZATION_VALIDATOR_MODULE_ELEMENT:
+    				case POLICY_DECIDER_MODULE_ELEMENT:
+    				case ASYNC_THREAD_GROUP_ELEMENT:
+    					bootServices.get(reader.getLocalName()).set(reader.getElementText());
+    					break;
+    					
+    					// complex types
+    				case BUFFER_SERVICE_ELEMENT:
+    					bootServices.get(reader.getLocalName()).set(parseBufferConfiguration(reader));
+    					break;
+    				case RESULTSET_CACHE_ELEMENT:
+    					bootServices.get(reader.getLocalName()).set(parseCacheConfiguration(reader));
+    					break;
+    				case PREPAREDPLAN_CACHE_ELEMENT:
+    					bootServices.get(reader.getLocalName()).set(parseCacheConfiguration(reader));
+    					break;
+    				case CACHE_FACORY_ELEMENT:
+    					bootServices.get(reader.getLocalName()).set(parseCacheFacoryConfiguration(reader));
+    					break;
+
+                    case QUERY_ENGINE_ELEMENT:
+                        ModelNode engineNode = parseQueryEngine(reader, new ModelNode());
+                        
+                        final ModelNode engineAddress = address.clone();
+                        engineAddress.add(Configuration.QUERY_ENGINE, engineNode.require(Configuration.ENGINE_NAME).asString());
+                        engineAddress.protect();
+                        engineNode.get(OP).set(ADD);
+                        engineNode.get(OP_ADDR).set(engineAddress);
+                        
+                        list.add(engineNode);  
+                        break;
+                        
+                    case TRANSLATOR_ELEMENT:
+                    	ModelNode translatorNode = parseTranslator(reader, new ModelNode());
+
+                        final ModelNode translatorAddress = address.clone();
+                        translatorAddress.add(Configuration.TRANSLATOR, translatorNode.require(Configuration.TRANSLATOR_NAME).asString());
+                        translatorAddress.protect();
+                        
+                        translatorNode.get(OP).set(ADD);
+                        translatorNode.get(OP_ADDR).set(translatorAddress);
+                    	
+                        list.add(translatorNode);  
+                        break;                            
                             
-                            translatorNode.get(OP).set(ADD);
-                            translatorNode.get(OP_ADDR).set(translatorAddress);
-                        	
-                            list.add(translatorNode);  
-                            break;                            
-                            
-                        default: 
-                            throw ParseUtils.unexpectedElement(reader);
+                     default: 
+                        throw ParseUtils.unexpectedElement(reader);
                     }
                     break;
                 }
@@ -279,25 +328,9 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 				//Strings
 				case EVENT_DISTRIBUTOR_NAME_ELEMENT:
 				case JDBC_SECURITY_DOMAIN_ELEMENT:
-				case ASYNC_THREAD_GROUP_ELEMENT:
-				case AUTHORIZATION_VALIDATOR_MODULE_ELEMENT:
-				case POLICY_DECIDER_MODULE_ELEMENT:
 					node.get(reader.getLocalName()).set(reader.getElementText());
 					break;
 	
-				// complex types
-				case BUFFER_SERVICE_ELEMENT:
-					node.get(reader.getLocalName()).set(parseBufferConfiguration(reader));
-					break;
-				case RESULTSET_CACHE_ELEMENT:
-					node.get(reader.getLocalName()).set(parseCacheConfiguration(reader));
-					break;
-				case PREPAREDPLAN_CACHE_ELEMENT:
-					node.get(reader.getLocalName()).set(parseCacheConfiguration(reader));
-					break;
-				case CACHE_FACORY_ELEMENT:
-					node.get(reader.getLocalName()).set(parseCacheFacoryConfiguration(reader));
-					break;
 				case JDBC_ELEMENT:
 					node.get(reader.getLocalName()).set(parseSocketConfiguration(reader));
 					break;

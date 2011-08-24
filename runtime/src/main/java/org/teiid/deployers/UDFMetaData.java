@@ -45,7 +45,7 @@ public class UDFMetaData {
 	}
 	
 	
-	void buildFunctionModelFile(String name, String path) throws IOException, JAXBException {
+	public void buildFunctionModelFile(String name, String path) throws IOException, JAXBException {
 		for (String f:files.keySet()) {
 			if (f.endsWith(path)) {
 				path = f;

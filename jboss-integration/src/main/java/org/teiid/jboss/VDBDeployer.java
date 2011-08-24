@@ -33,7 +33,6 @@ import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.deployers.MetadataStoreGroup;
 import org.teiid.deployers.TeiidAttachments;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBRepository;
@@ -94,21 +93,14 @@ public class VDBDeployer implements DeploymentUnitProcessor {
 			deployment.addAttchment(UDFMetaData.class, udf);
 		}
 
-		// get the metadata store of the VDB (this is build in parse stage)
-		MetadataStoreGroup store = deploymentUnit.getAttachment(TeiidAttachments.METADATA_STORE);
-		if (store != null) {
-			deployment.addAttchment(MetadataStoreGroup.class, store);
-		}
-		
 		IndexMetadataFactory indexFactory = deploymentUnit.getAttachment(TeiidAttachments.INDEX_METADATA);
 		if (indexFactory != null) {
 			deployment.addAttchment(IndexMetadataFactory.class, indexFactory);
 		}
 
-		// removethe metadata objects as attachments
+		// remove the metadata objects as attachments
 		deploymentUnit.removeAttachment(TeiidAttachments.INDEX_METADATA);
 		deploymentUnit.removeAttachment(TeiidAttachments.UDF_METADATA);
-		deploymentUnit.removeAttachment(TeiidAttachments.METADATA_STORE);
 		
 		// build a VDB service
 		VDBService vdb = new VDBService(deployment);
