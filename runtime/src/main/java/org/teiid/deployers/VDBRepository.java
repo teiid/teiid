@@ -270,7 +270,13 @@ public class VDBRepository implements Serializable{
 		if (removed != null) {
 			// if this VDB was part of another VDB; then remove them.
 			for (CompositeVDB other:this.vdbRepo.values()) {
-				other.removeChild(key);
+				if (other.hasChildVdb(key)) {
+					notifyRemove(other.getVDB().getName(), other.getVDB().getVersion());
+	
+					other.removeChild(key);
+	
+					notifyAdd(other.getVDB().getName(), other.getVDB().getVersion());
+				}
 			}
 			notifyRemove(key.getName(), key.getVersion());
 			return true;

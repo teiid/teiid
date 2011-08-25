@@ -149,7 +149,12 @@ public class TestCompositeVDB {
 	
 	@Test public void testRemoveChild() throws Exception {
 		CompositeVDB vdb = createCompositeVDB(RealMetadataFactory.exampleBQTStore(), "bqt");
-		vdb.removeChild(new VDBKey("foo", 1));
+		VDBKey child = new VDBKey("foo", 1);
+		vdb.removeChild(child);
+		assertNotNull(vdb.getVDB());
+		assertFalse(vdb.hasChildVdb(child));
+		vdb.addChild(createCompositeVDB(RealMetadataFactory.example1Store(), "foo"));
+		assertTrue(vdb.hasChildVdb(child));
 		assertNotNull(vdb.getVDB());
 	}
 	

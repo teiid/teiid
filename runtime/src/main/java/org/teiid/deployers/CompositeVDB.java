@@ -134,6 +134,13 @@ public class CompositeVDB {
 		return this.mergedVDB;
 	}
 	
+	public boolean hasChildVdb(VDBKey child) {
+		if (this.children != null) {
+			return this.children.containsKey(child);
+		}
+		return false;
+	}
+	
 	private VDBMetaData buildVDB() {
 		VDBMetaData newMergedVDB = new VDBMetaData();
 		newMergedVDB.setName(this.vdb.getName());
