@@ -35,6 +35,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jgroups.JChannelFactory;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
@@ -50,6 +51,10 @@ public class TestMatViewReplication {
 	
     private static final String MATVIEWS = "matviews";
     private static final boolean DEBUG = false;
+    
+    @BeforeClass public static void oneTimeSetup() {
+    	System.setProperty("jgroups.bind_addr", "127.0.0.1");
+    }
     
     @Test public void testReplication() throws Exception {
     	if (DEBUG) {
