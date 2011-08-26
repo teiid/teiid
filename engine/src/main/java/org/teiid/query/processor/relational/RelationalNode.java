@@ -46,7 +46,6 @@ import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.util.CommandContext;
 
 
@@ -358,7 +357,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	/**
 	 * Helper method for all the node that will filter the elements needed for the next node.
 	 */
-	public static int[] getProjectionIndexes(Map<SingleElementSymbol, Integer> tupleElements, List<? extends Expression> projectElements) {
+	public static int[] getProjectionIndexes(Map<? extends Expression, Integer> tupleElements, List<? extends Expression> projectElements) {
 		int[] result = new int[projectElements.size()];
 
 		int i = 0;

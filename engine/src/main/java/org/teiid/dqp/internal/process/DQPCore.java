@@ -28,7 +28,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.FutureTask;
@@ -43,11 +42,10 @@ import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.Request.ThreadState;
 import org.teiid.adminapi.impl.CacheStatisticsMetadata;
 import org.teiid.adminapi.impl.RequestMetadata;
-import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.cache.CacheConfiguration;
-import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.cache.CacheFactory;
+import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
@@ -59,29 +57,24 @@ import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.Streamable;
-import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.TransactionContext;
-import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.dqp.service.TransactionService;
+import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.events.EventDistributor;
 import org.teiid.logging.CommandLogMessage;
-import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.metadata.TempMetadataAdapter;
-import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
 
@@ -738,96 +731,12 @@ public class DQPCore implements DQP {
         DataTierManagerImpl processorDataManager = new DataTierManagerImpl(this,this.bufferService, this.config.isDetectingChangeEvents());
         processorDataManager.setEventDistributor(eventDistributor);
         processorDataManager.setMetadataRepository(metadataRepository);
-		dataTierMgr = new TempTableDataManager(processorDataManager, this.bufferManager, this.processWorkerPool, this.rsCache, this.matTables, this.cacheFactory);
+		dataTierMgr = new TempTableDataManager(processorDataManager, this.bufferManager, this.processWorkerPool, this.rsCache);
         dataTierMgr.setEventDistributor(eventDistributor);
                 
         LogManager.logDetail(LogConstants.CTX_DQP, "DQPCore started maxThreads", this.config.getMaxThreads(), "maxActivePlans", this.maxActivePlans, "source concurrency", this.userRequestSourceConcurrency); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	
-	public void synchronizeInternalMaterializedViews(final ContextProvider contextProvider) {
-        if (!cacheFactory.isReplicated() || matTables == null) {
-        	return;
-        }
-        Set<CacheID> keys = this.matTables.replicatableKeys();
-        for (final CacheID key:keys) {
-        	if (key.getSql().startsWith(RelationalPlanner.MAT_PREFIX)) {
-        		refreshMatView(contextProvider, key.getVDBKey().getName(), key.getVDBKey().getVersion(), key.getSql().substring(RelationalPlanner.MAT_PREFIX.length()));
-        	}
-        }
-	}
-	
-	public void refreshMatView(final ContextProvider contextProvider, final String vdbName, final int vdbVersion, final String viewName) {
-        if (!cacheFactory.isReplicated() || matTables == null) {
-        	return;
-        }
-        
-        final DQPWorkContext context = contextProvider.getContext(vdbName, vdbVersion); 
-        
-		final VDBMetaData vdb = context.getVDB();
-		if (vdb == null) {
-			return;
-		}
-		
-		final TempTableStore globalStore = vdb.getAttachment(TempTableStore.class);
-		if (globalStore == null) {
-			return;
-		}        
-		DQPWorkContext.setWorkContext(context);
-		
-		Runnable work = new Runnable() {
-			@Override
-			public void run() {
-				QueryMetadataInterface metadata = vdb.getAttachment(QueryMetadataInterface.class);
-				TempTableStore tempStore = new TempTableStore("internal"); //$NON-NLS-1$
-				TempMetadataAdapter tma = new TempMetadataAdapter(metadata, tempStore.getMetadataStore());
-				try {
-					dataTierMgr.refreshMatView(vdb.getName(), vdb.getVersion(), viewName, tma, globalStore);
-				} catch (TeiidException e) {
-					LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("error_refresh", viewName )); //$NON-NLS-1$
-				}						
-			}
-		};
-		addWork(work);
-	}
-	
-	public void updateMatViewRow(final ContextProvider contextProvider, final String vdbName, final int vdbVersion, final String schema,
-			final String viewName, final List<?> tuple, final boolean delete) {
-		
-        if (!cacheFactory.isReplicated() || matTables == null) {
-        	return;
-        }
-        
-        final DQPWorkContext context = contextProvider.getContext(vdbName, vdbVersion); 
-        
-		final VDBMetaData vdb = context.getVDB();
-		if (vdb == null) {
-			return;
-		}
-		
-		final TempTableStore globalStore = vdb.getAttachment(TempTableStore.class);
-		if (globalStore == null) {
-			return;
-		}        
-		
-		Runnable work = new Runnable() {
-			@Override
-			public void run() {
-				context.runInContext(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							dataTierMgr.updateMatViewRow(globalStore, RelationalPlanner.MAT_PREFIX + (schema + '.' + viewName).toUpperCase(), tuple, delete);
-						} catch (TeiidException e) {
-							LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("DQPCore.unable_to_process_event")); //$NON-NLS-1$
-						}					
-					}
-				});
-			}
-		};
-		addWork(work);		
-		
-	}
-
 	public void setBufferService(BufferService service) {
 		this.bufferService = service;
 	}

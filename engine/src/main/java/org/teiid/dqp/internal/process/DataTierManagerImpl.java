@@ -89,8 +89,8 @@ import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
-import org.teiid.query.tempdata.TempTableStore;
-import org.teiid.query.tempdata.TempTableStore.MatTableInfo;
+import org.teiid.query.tempdata.GlobalTableStore;
+import org.teiid.query.tempdata.GlobalTableStoreImpl.MatTableInfo;
 import org.teiid.query.util.CommandContext;
 
 /**
@@ -243,13 +243,13 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 							Integer cardinaltity = null;
 							Boolean valid = null;
 							if (table.getMaterializedTable() == null) {
-								TempTableStore globalStore = context.getGlobalTableStore();
+								GlobalTableStore globalStore = context.getGlobalTableStore();
 								matTableName = RelationalPlanner.MAT_PREFIX+table.getFullName().toUpperCase();
 								MatTableInfo info = globalStore.getMatTableInfo(matTableName);
 								valid = info.isValid();
 								state = info.getState().name();
 								updated = info.getUpdateTime()==-1?null:new Timestamp(info.getUpdateTime());
-								TempMetadataID id = globalStore.getMetadataStore().getTempGroupID(matTableName);
+								TempMetadataID id = globalStore.getTempTableStore().getMetadataStore().getTempGroupID(matTableName);
 								if (id != null) {
 									cardinaltity = id.getCardinality();
 								}

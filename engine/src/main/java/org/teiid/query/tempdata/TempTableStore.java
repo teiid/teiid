@@ -23,31 +23,20 @@
 package org.teiid.query.tempdata;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryProcessingException;
-import org.teiid.api.exception.query.QueryResolverException;
-import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.common.buffer.BufferManager;
-import org.teiid.core.TeiidComponentException;
-import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
-import org.teiid.query.optimizer.relational.RelationalPlanner;
-import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.command.TempTableResolver;
-import org.teiid.query.resolver.util.ResolverUtil;
-import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Create;
 import org.teiid.query.sql.lang.Insert;
@@ -56,91 +45,8 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 
 public class TempTableStore {
 	
-	public enum MatState {
-		NEEDS_LOADING,
-		LOADING,
-		FAILED_LOAD,
-		LOADED
-	}
-	
-	public static class MatTableInfo {
-		private long updateTime = -1;
-		private MatState state = MatState.NEEDS_LOADING;
-		private long ttl = -1;
-		private boolean valid;
-		
-		synchronized boolean shouldLoad() throws TeiidComponentException {
-    		for (;;) {
-			switch (state) {
-			case NEEDS_LOADING:
-			case FAILED_LOAD:
-				setState(MatState.LOADING);
-				return true;
-			case LOADING:
-				if (valid) {
-					return false;
-				}
-				try {
-					wait();
-				} catch (InterruptedException e) {
-					throw new TeiidComponentException(e);
-				}
-				continue;
-			case LOADED:
-				if (ttl >= 0 && System.currentTimeMillis() - updateTime - ttl > 0) {
-					setState(MatState.LOADING);
-					return true;
-				}
-				return false;
-			}
-    		}
-		}
-		
-		public synchronized MatState setState(MatState state, Boolean valid, Long timestamp) {
-			MatState oldState = this.state;
-			LogManager.logDetail(LogConstants.CTX_MATVIEWS, this, "setting matState to", state, valid, timestamp, "old values", oldState, this.valid); //$NON-NLS-1$ //$NON-NLS-2$
-			if (valid != null) {
-				this.valid = valid;
-			}
-			setState(state);
-			if (timestamp != null) {
-				this.updateTime = timestamp;
-			}
-			notifyAll();
-			return oldState;
-		}
-		
-		private void setState(MatState state) {
-			this.state = state;
-			this.updateTime = System.currentTimeMillis();
-		}
-		
-		public synchronized void setTtl(long ttl) {
-			this.ttl = ttl;
-		}
-		
-		public synchronized long getUpdateTime() {
-			return updateTime;
-		}
-		
-		public synchronized MatState getState() {
-			return state;
-		}
-		
-		public synchronized boolean isValid() {
-			return valid;
-		}
-		
-		public synchronized long getTtl() {
-			return ttl;
-		}
-		
-	}
-	
-	private ConcurrentHashMap<String, MatTableInfo> matTables = new ConcurrentHashMap<String, MatTableInfo>();
-	
-    private TempMetadataStore tempMetadataStore = new TempMetadataStore(new ConcurrentHashMap<String, TempMetadataID>());
-    private Map<String, TempTable> groupToTupleSourceID = new ConcurrentHashMap<String, TempTable>();
+    TempMetadataStore tempMetadataStore = new TempMetadataStore(new ConcurrentHashMap<String, TempMetadataID>());
+    private Map<String, TempTable> tempTables = new ConcurrentHashMap<String, TempTable>();
     private String sessionID;
     private TempTableStore parentTempTableStore;
     
@@ -148,21 +54,12 @@ public class TempTableStore {
         this.sessionID = sessionID;
     }
     
-	public MatTableInfo getMatTableInfo(final String tableName) {
-		MatTableInfo newInfo = new MatTableInfo();
-		MatTableInfo info = matTables.putIfAbsent(tableName, newInfo);
-		if (info == null) {
-			info = newInfo;
-		}
-		return info;
-	}
-    
     public void setParentTempTableStore(TempTableStore parentTempTableStore) {
 		this.parentTempTableStore = parentTempTableStore;
 	}
     
     public boolean hasTempTable(String tempTableName) {
-    	return groupToTupleSourceID.containsKey(tempTableName);
+    	return tempTables.containsKey(tempTableName);
     }
 
     TempTable addTempTable(String tempTableName, Create create, BufferManager buffer, boolean add) {
@@ -182,18 +79,18 @@ public class TempTableStore {
     	}
         TempTable tempTable = new TempTable(id, buffer, columns, create.getPrimaryKey().size(), sessionID);
         if (add) {
-        	groupToTupleSourceID.put(tempTableName, tempTable);
+        	tempTables.put(tempTableName, tempTable);
         }
         return tempTable;
     }
     
     void swapTempTable(String tempTableName, TempTable tempTable) {
-    	groupToTupleSourceID.put(tempTableName, tempTable);
+    	tempTables.put(tempTableName, tempTable);
     }
 
     public void removeTempTableByName(String tempTableName) {
         tempMetadataStore.removeTempGroup(tempTableName);
-        TempTable table = this.groupToTupleSourceID.remove(tempTableName);
+        TempTable table = this.tempTables.remove(tempTableName);
         if(table != null) {
             table.remove();
         }      
@@ -204,16 +101,20 @@ public class TempTableStore {
     }
             
     public void removeTempTables() {
-        for (String name : groupToTupleSourceID.keySet()) {
+        for (String name : tempTables.keySet()) {
             removeTempTableByName(name);
         }
     }
     
     public void setUpdatable(String name, boolean updatable) {
-    	TempTable table = groupToTupleSourceID.get(name);
+    	TempTable table = tempTables.get(name);
     	if (table != null) {
     		table.setUpdatable(updatable);
     	}
+    }
+    
+    TempTable getTempTable(String tempTableID) {
+        return this.tempTables.get(tempTableID);
     }
     
     TempTable getOrCreateTempTable(String tempTableID, Command command, BufferManager buffer, boolean delegate) throws QueryProcessingException{
@@ -243,7 +144,7 @@ public class TempTableStore {
 	private TempTable getTempTable(String tempTableID, Command command,
 			BufferManager buffer, boolean delegate)
 			throws QueryProcessingException {
-		TempTable tsID = groupToTupleSourceID.get(tempTableID);
+		TempTable tsID = tempTables.get(tempTableID);
         if(tsID != null) {
             return tsID;
         }
@@ -254,66 +155,11 @@ public class TempTableStore {
 	}
     
     public Set<String> getAllTempTables() {
-        return new HashSet<String>(this.groupToTupleSourceID.keySet());
+        return new HashSet<String>(this.tempTables.keySet());
     }
-
-	public TempMetadataID getGlobalTempTableMetadataId(Object viewId, QueryMetadataInterface metadata)
-			throws QueryMetadataException, TeiidComponentException, QueryResolverException, QueryValidatorException {
-		String matViewName = metadata.getFullName(viewId);
-		String matTableName = RelationalPlanner.MAT_PREFIX+matViewName.toUpperCase();
-		GroupSymbol group = new GroupSymbol(matViewName);
-		group.setMetadataID(viewId);
-		TempMetadataID id = tempMetadataStore.getTempGroupID(matTableName);
-		//define the table preserving the key/index information and ensure that only a single instance exists
-		if (id == null) {
-			synchronized (viewId) {
-				id = tempMetadataStore.getTempGroupID(matTableName);
-				if (id == null) {
-					id = tempMetadataStore.addTempGroup(matTableName, ResolverUtil.resolveElementsInGroup(group, metadata), false, true);
-					id.setQueryNode(metadata.getVirtualPlan(viewId));
-					id.setCardinality(metadata.getCardinality(viewId));
-					id.setOriginalMetadataID(viewId);
-					
-					Object pk = metadata.getPrimaryKey(viewId);
-					if (pk != null) {
-						ArrayList<TempMetadataID> primaryKey = resolveIndex(metadata, id, pk);
-						id.setPrimaryKey(primaryKey);
-					}
-					Collection keys = metadata.getUniqueKeysInGroup(viewId);
-					for (Object key : keys) {
-						id.addUniqueKey(resolveIndex(metadata, id, key));
-					}
-					Collection indexes = metadata.getIndexesInGroup(viewId);
-					for (Object index : indexes) {
-						id.addIndex(resolveIndex(metadata, id, index));
-					}
-				}
-			}
-		}
-		updateCacheHint(viewId, metadata, group, id);
-		return id;
-	}
-
-	private void updateCacheHint(Object viewId,
-			QueryMetadataInterface metadata, GroupSymbol group,
-			TempMetadataID id) throws TeiidComponentException,
-			QueryMetadataException, QueryResolverException,
-			QueryValidatorException {
-		Command c = QueryResolver.resolveView(group, metadata.getVirtualPlan(viewId), SQLConstants.Reserved.SELECT, metadata).getCommand();
-		CacheHint hint = c.getCacheHint();
-		id.setCacheHint(hint);
-	}
-	
-	static ArrayList<TempMetadataID> resolveIndex(
-			QueryMetadataInterface metadata, TempMetadataID id, Object pk)
-			throws TeiidComponentException, QueryMetadataException {
-		List cols = metadata.getElementIDsInKey(pk);
-		ArrayList<TempMetadataID> primaryKey = new ArrayList<TempMetadataID>(cols.size());
-		for (Object coldId : cols) {
-			int pos = metadata.getPosition(coldId) - 1;
-			primaryKey.add(id.getElements().get(pos));
-		}
-		return primaryKey;
+    
+    Map<String, TempTable> getTempTables() {
+		return tempTables;
 	}
     
 }

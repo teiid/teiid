@@ -19,9 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.deployers;
 
-public interface VDBLifeCycleListener {
-	void added(String name, int version, CompositeVDB vdb);
-	void removed(String name, int version, CompositeVDB vdb);
+package org.teiid.query;
+
+public interface ObjectReplicator {
+	
+	public <T, S> T replicate(String id, Class<T> iface, S object, long startTimeout) throws Exception;
+	
+	public void stop(Object o);
+
 }

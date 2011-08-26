@@ -101,7 +101,7 @@ public class VDBRepository implements Serializable{
 			cvdb = new CompositeVDB(vdb, stores, visibilityMap, udf, this.systemFunctionManager.getSystemFunctions(), cmr, this.systemStore, odbcStore);
 		}
 		this.vdbRepo.put(vdbId(vdb), cvdb); 
-		notifyAdd(vdb.getName(), vdb.getVersion());
+		notifyAdd(vdb.getName(), vdb.getVersion(), cvdb);
 	}
 
 	private void updateFromMetadataRepository(CompositeVDB cvdb) {
@@ -270,9 +270,15 @@ public class VDBRepository implements Serializable{
 		if (removed != null) {
 			// if this VDB was part of another VDB; then remove them.
 			for (CompositeVDB other:this.vdbRepo.values()) {
-				other.removeChild(key);
+				if (other.hasChildVdb(key)) {
+					notifyRemove(other.getVDB().getName(), other.getVDB().getVersion(), other);
+	
+					other.removeChild(key);
+	
+					notifyAdd(other.getVDB().getName(), other.getVDB().getVersion(), other);
+				}
 			}
-			notifyRemove(key.getName(), key.getVersion());
+			notifyRemove(key.getName(), key.getVersion(), removed);
 			return true;
 		}
 		return false;
@@ -303,11 +309,11 @@ public class VDBRepository implements Serializable{
 			throw new AdminProcessingException(RuntimePlugin.Util.getString("vdb_not_found", sourceVDBName, sourceVDBVersion)); //$NON-NLS-1$
 		}		
 
-		notifyRemove(targetVDBName, targetVDBVersion);
+		notifyRemove(targetVDBName, targetVDBVersion, target);
 		// merge them
 		target.addChild(source);
 		
-		notifyAdd(targetVDBName, targetVDBVersion);
+		notifyAdd(targetVDBName, targetVDBVersion, target);
 	}
 	
 	// this is called by mc
@@ -333,15 +339,15 @@ public class VDBRepository implements Serializable{
 		this.listeners.remove(listener);
 	}
 	
-	private void notifyAdd(String name, int version) {
+	private void notifyAdd(String name, int version, CompositeVDB vdb) {
 		for(VDBLifeCycleListener l:this.listeners) {
-			l.added(name, version);
+			l.added(name, version, vdb);
 		}
 	}
 	
-	private void notifyRemove(String name, int version) {
+	private void notifyRemove(String name, int version, CompositeVDB vdb) {
 		for(VDBLifeCycleListener l:this.listeners) {
-			l.removed(name, version);
+			l.removed(name, version, vdb);
 		}
 	}
 	

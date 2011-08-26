@@ -23,6 +23,8 @@
 package org.teiid.common.buffer;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -31,6 +33,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.teiid.client.BatchSerializer;
 import org.teiid.common.buffer.SPage.SearchResult;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.processor.relational.ListNestedSortComparator;
@@ -86,6 +89,29 @@ public class STree {
 		this.keyLength = keyLength;
 		this.types = types;
 		this.keytypes = Arrays.copyOf(types, keyLength);
+	}
+	
+	public void writeValuesTo(ObjectOutputStream oos) throws TeiidComponentException, IOException {
+		SPage page = header[0];
+		oos.writeInt(this.rowCount.get());
+		while (true) {
+			TupleBatch batch = page.getValues();
+			BatchSerializer.writeBatch(oos, types, batch.getAllTuples());
+			if (page.next == null) {
+				break;
+			}
+		}
+	}
+	
+	public void readValuesFrom(ObjectInputStream ois) throws IOException, ClassNotFoundException, TeiidComponentException {
+		int size = ois.readInt();
+		int sizeHint = this.getExpectedHeight(size);
+		while (this.getRowCount() < size) {
+			List[] batch = BatchSerializer.readBatch(ois, types);
+			for (List list : batch) {
+				this.insert(list, InsertMode.ORDERED, sizeHint);
+			}
+		}
 	}
 	
 	protected SPage findChildTail(SPage page) {

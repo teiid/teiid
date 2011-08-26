@@ -83,6 +83,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
+import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.ContextProperties;
@@ -128,7 +129,7 @@ public class Request implements SecurityFunctionEvaluator {
     
     protected Command userCommand;
     protected boolean returnsUpdateCount;
-	private TempTableStore globalTables;
+	private GlobalTableStore globalTables;
 	private SessionAwareCache<PreparedPlan> planCache;
 	private boolean resultSetCacheEnabled = true;
 	private int userRequestConcurrency;
@@ -185,7 +186,7 @@ public class Request implements SecurityFunctionEvaluator {
 
         VDBMetaData vdbMetadata = workContext.getVDB();
         metadata = vdbMetadata.getAttachment(QueryMetadataInterface.class);
-        globalTables = vdbMetadata.getAttachment(TempTableStore.class);
+        globalTables = vdbMetadata.getAttachment(GlobalTableStore.class);
 
         if (metadata == null) {
             throw new TeiidComponentException(QueryPlugin.Util.getString("DQPCore.Unable_to_load_metadata_for_VDB_name__{0},_version__{1}", this.vdbName, this.vdbVersion)); //$NON-NLS-1$

@@ -287,10 +287,6 @@ public class SessionAwareCache<T> {
 			return true;
 		}
 		
-		public String getSql() {
-			return sql;
-		}
-		
 		void setUserName(String name) {
 			this.userName = name;
 		}

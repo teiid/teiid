@@ -22,10 +22,8 @@
 
 package org.teiid.query.tempdata;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -37,10 +35,6 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
-import org.teiid.cache.Cache;
-import org.teiid.cache.CacheConfiguration;
-import org.teiid.cache.CacheFactory;
-import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBuffer;
@@ -49,7 +43,6 @@ import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.util.HashCodeUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.SessionAwareCache;
@@ -62,7 +55,6 @@ import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
-import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
@@ -92,10 +84,8 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
-import org.teiid.query.tempdata.TempTableStore.MatState;
-import org.teiid.query.tempdata.TempTableStore.MatTableInfo;
+import org.teiid.query.tempdata.GlobalTableStoreImpl.MatTableInfo;
 import org.teiid.query.util.CommandContext;
-import org.teiid.vdb.runtime.VDBKey;
 
 /**
  * This proxy ProcessorDataManager is used to handle temporary tables.
@@ -107,57 +97,21 @@ public class TempTableDataManager implements ProcessorDataManager {
 	
     private static final String REFRESHMATVIEWROW = ".refreshmatviewrow"; //$NON-NLS-1$
 	private static final String REFRESHMATVIEW = ".refreshmatview"; //$NON-NLS-1$
-	private static final String CODE_PREFIX = "#CODE_"; //$NON-NLS-1$
+	public static final String CODE_PREFIX = "#CODE_"; //$NON-NLS-1$
 	
 	private ProcessorDataManager processorDataManager;
     private BufferManager bufferManager;
 	private SessionAwareCache<CachedResults> cache;
     private Executor executor;
     
-    private static class MatTableKey implements Serializable {
-		private static final long serialVersionUID = 5481692896572663992L;
-		String name;
-    	VDBKey vdb;
-    	
-    	@Override
-    	public int hashCode() {
-    		return HashCodeUtil.hashCode(name.hashCode(), vdb);
-    	}
-    	
-    	@Override
-    	public boolean equals(Object obj) {
-    		if (obj == this) {
-    			return true;
-    		}
-    		if (!(obj instanceof MatTableKey)) {
-    			return false;
-    		}
-    		MatTableKey other = (MatTableKey)obj;
-    		return this.name.equals(other.name) && this.vdb.equals(other.vdb);
-    	}
-    }
-    
-    private static class MatTableEntry implements Serializable {
-		private static final long serialVersionUID = 8559613701442751579L;
-    	long lastUpdate = System.currentTimeMillis();
-    	boolean valid;
-    }
-    
-    private Cache<MatTableKey, MatTableEntry> tables;
-    private SessionAwareCache<CachedResults> distributedCache;
     private EventDistributor eventDistributor;
 
     public TempTableDataManager(ProcessorDataManager processorDataManager, BufferManager bufferManager, 
-    		Executor executor, SessionAwareCache<CachedResults> cache, SessionAwareCache<CachedResults> distibutedCache, CacheFactory cacheFactory){
+    		Executor executor, SessionAwareCache<CachedResults> cache){
         this.processorDataManager = processorDataManager;
         this.bufferManager = bufferManager;
         this.executor = executor;
         this.cache = cache;
-        this.distributedCache = distibutedCache;
-        if (distibutedCache != null) {
-	        CacheConfiguration cc = new CacheConfiguration(Policy.LRU, -1, -1, "MaterializationUpdates"); //$NON-NLS-1$
-	        tables = cacheFactory.get(cc.getLocation(), cc);
-        }
     }
     
     public void setEventDistributor(EventDistributor eventDistributor) {
@@ -316,37 +270,21 @@ public class TempTableDataManager implements ProcessorDataManager {
 			QueryValidatorException, TeiidProcessingException,
 			ExpressionEvaluationException {
 		QueryMetadataInterface metadata = context.getMetadata();
-		TempTableStore globalStore = context.getGlobalTableStore();
+		GlobalTableStore globalStore = context.getGlobalTableStore();
 		if (StringUtil.endsWithIgnoreCase(proc.getProcedureCallableName(), REFRESHMATVIEW)) {
 			Object groupID = validateMatView(metadata, (String)((Constant)proc.getParameter(1).getExpression()).getValue());
-			Object matTableId = context.getGlobalTableStore().getGlobalTempTableMetadataId(groupID, metadata);
+			Object matTableId = globalStore.getGlobalTempTableMetadataId(groupID);
 			String matViewName = metadata.getFullName(groupID);
 			String matTableName = metadata.getFullName(matTableId);
 			LogManager.logDetail(LogConstants.CTX_MATVIEWS, "processing refreshmatview for", matViewName); //$NON-NLS-1$
-			MatTableInfo info = globalStore.getMatTableInfo(matTableName);
-			Long loadTime = null;
-			boolean useCache = false;
-			if (this.distributedCache != null) {
-				MatTableKey key = new MatTableKey();
-				key.name = matTableName;
-				key.vdb = new VDBKey(context.getVdbName(),context.getVdbVersion());
-				MatTableEntry entry = this.tables.get(key);
-				useCache = (entry != null && entry.valid && entry.lastUpdate > info.getUpdateTime());
-				if (useCache) {
-					loadTime = entry.lastUpdate;
-				}
-			}			
 			boolean invalidate = Boolean.TRUE.equals(((Constant)proc.getParameter(2).getExpression()).getValue());
-			if (invalidate) {
-				touchTable(context, matTableName, false, System.currentTimeMillis());
-			}
-			MatState oldState = info.setState(MatState.NEEDS_LOADING, invalidate?Boolean.FALSE:null, null);
-			if (oldState == MatState.LOADING) {
+			boolean needsLoading = globalStore.needsLoading(matTableName, globalStore.getLocalAddress(), true, true, invalidate);
+			if (!needsLoading) {
 				return CollectionTupleSource.createUpdateCountTupleSource(-1);
 			}
 			GroupSymbol matTable = new GroupSymbol(matTableName);
 			matTable.setMetadataID(matTableId);
-			int rowCount = loadGlobalTable(context, matTable, matTableName, matViewName, globalStore, info, invalidate?null:loadTime, !invalidate && useCache);
+			int rowCount = loadGlobalTable(context, matTable, matTableName, globalStore);
 			return CollectionTupleSource.createUpdateCountTupleSource(rowCount);
 		} else if (StringUtil.endsWithIgnoreCase(proc.getProcedureCallableName(), REFRESHMATVIEWROW)) {
 			Object groupID = validateMatView(metadata, (String)((Constant)proc.getParameter(1).getExpression()).getValue());
@@ -364,7 +302,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			if (!info.isValid()) {
 				return CollectionTupleSource.createUpdateCountTupleSource(-1);
 			}
-			TempTable tempTable = globalStore.getOrCreateTempTable(matTableName, new Query(), bufferManager, false);
+			TempTable tempTable = globalStore.getTempTableStore().getTempTable(matTableName);
 			if (!tempTable.isUpdatable()) {
 				throw new QueryProcessingException(QueryPlugin.Util.getString("TempTableDataManager.row_refresh_updatable", matViewName)); //$NON-NLS-1$
 			}
@@ -381,46 +319,17 @@ public class TempTableDataManager implements ProcessorDataManager {
 			if (tuple == null) {
 				delete = true;
 				tuple = Arrays.asList(key.getValue());
+			} else {
+				tuple = new ArrayList<Object>(tuple); //ensure the list is serializable 
 			}
-			List<?> result = updateMatViewRow(globalStore, matTableName, tuple, delete);
-			if (result != null && eventDistributor != null) {
-				result = new ArrayList<Object>(result); //ensure the list is serializable
+			List<?> result = globalStore.updateMatViewRow(matTableName, tuple, delete);
+			if (eventDistributor != null) {
 				this.eventDistributor.updateMatViewRow(context.getVdbName(), context.getVdbVersion(), metadata.getName(metadata.getModelID(groupID)), metadata.getName(groupID), tuple, delete);
 			}
 			return CollectionTupleSource.createUpdateCountTupleSource(result != null ? 1 : 0);
 		}
 		return null;
 	}
-
-	public List<?> updateMatViewRow(TempTableStore globalStore,
-			String matTableName, List<?> tuple, boolean delete)
-			throws QueryProcessingException, TeiidComponentException {
-		TempTable tempTable = globalStore.getOrCreateTempTable(matTableName, new Query(), bufferManager, false);
-		return tempTable.updateTuple(tuple, delete);
-	}
-	
-	public void refreshMatView(String vdbName, int vdbVersion, String viewName, 
-			QueryMetadataInterface metadata, TempTableStore globalStore) 
-			throws QueryProcessingException, TeiidComponentException, TeiidProcessingException {
-			
-		Object groupID = validateMatView(metadata, viewName);
-		Object matTableId = globalStore.getGlobalTempTableMetadataId(groupID, metadata);
-		String matViewName = metadata.getFullName(groupID);
-		String matTableName = metadata.getFullName(matTableId);
-		LogManager.logDetail(LogConstants.CTX_MATVIEWS, "processing refreshmatview for", matViewName); //$NON-NLS-1$
-		MatTableInfo info = globalStore.getMatTableInfo(matTableName);
-
-		MatState oldState = info.setState(MatState.NEEDS_LOADING, Boolean.FALSE, null);
-		if (oldState == MatState.LOADING) {
-			return;
-		}
-		GroupSymbol matTable = new GroupSymbol(matTableName);
-		matTable.setMetadataID(matTableId);
-		CommandContext context = new CommandContext(new Object(), "internal", "internal", vdbName, vdbVersion); //$NON-NLS-1$ //$NON-NLS-2$
-		context.setMetadata(metadata);
-		context.setGlobalTableStore(globalStore);
-		loadGlobalTable(context, matTable, matTableName, matViewName, globalStore, info, null, true);		
-	}	
 
 	private Object validateMatView(QueryMetadataInterface metadata,	String viewName) throws TeiidComponentException,
 			TeiidProcessingException {
@@ -444,44 +353,38 @@ public class TempTableDataManager implements ProcessorDataManager {
 		if (!group.isTempGroupSymbol()) {
 			return null;
 		}
-		String viewName = null;
 		final String tableName = group.getNonCorrelationName().toUpperCase();
 		boolean remapColumns = !tableName.equalsIgnoreCase(group.getName());
-		TempMetadataID groupID = (TempMetadataID)group.getMetadataID();
-		if (groupID.getOriginalMetadataID() != null) {
-			viewName = context.getMetadata().getFullName(groupID.getOriginalMetadataID());
-		}		
 		TempTable table = null;
 		if (group.isGlobalTable()) {
-			final TempTableStore globalStore = context.getGlobalTableStore();
+			final GlobalTableStore globalStore = context.getGlobalTableStore();
 			final MatTableInfo info = globalStore.getMatTableInfo(tableName);
-			Long loadTime = null;
-			if (this.distributedCache != null) {
-				MatTableKey key = new MatTableKey();
-				key.name = tableName;
-				key.vdb = new VDBKey(context.getVdbName(), context.getVdbVersion());
-				
-				MatTableEntry entry = this.tables.get(key);
-				boolean notValid = !info.isValid();
-				if (entry != null && entry.lastUpdate > info.getUpdateTime() 
-						&& info.getState() != MatState.LOADING
-						//TODO: use extension metadata or a config parameter to make this skew configurable
-						&& !(!notValid && entry.valid && info.getState() == MatState.LOADED && entry.lastUpdate < info.getUpdateTime() + 30000)) {
-					//trigger a remote load due to the cache being more up to date than the local copy
-					info.setState(MatState.NEEDS_LOADING, notValid?false:entry.valid, null);
-					loadTime = entry.lastUpdate;
+			boolean load = false;
+			while (!info.isUpToDate()) {
+				load = globalStore.needsLoading(tableName, globalStore.getLocalAddress(), true, false, false);
+				if (load) {
+					load = globalStore.needsLoading(tableName, globalStore.getLocalAddress(), false, false, false);
+					if (load) {
+						break;
+					}
+				}
+				synchronized (info) {
+					try {
+						info.wait(30000);
+					} catch (InterruptedException e) {
+						throw new TeiidComponentException(e);
+					}
 				}
 			}
-			boolean load = info.shouldLoad();
 			if (load) {
 				if (!info.isValid()) {
 					//blocking load
-					loadGlobalTable(context, group, tableName, viewName, globalStore, info, loadTime, true);
+					loadGlobalTable(context, group, tableName, globalStore);
 				} else {
-					loadAsynch(context, group, tableName, viewName, globalStore, info, loadTime);
+					loadAsynch(context, group, tableName, globalStore);
 				}
 			} 
-			table = globalStore.getOrCreateTempTable(tableName, query, bufferManager, false);
+			table = globalStore.getTempTableStore().getOrCreateTempTable(tableName, query, bufferManager, false);
 			context.accessedDataObject(group.getMetadataID());
 		} else {
 			table = contextStore.getOrCreateTempTable(tableName, query, bufferManager, true);
@@ -511,13 +414,11 @@ public class TempTableDataManager implements ProcessorDataManager {
 	}
 
 	private void loadAsynch(final CommandContext context,
-			final GroupSymbol group, final String tableName, final String viewName,
-			final TempTableStore globalStore, final MatTableInfo info,
-			final Long loadTime) {
+			final GroupSymbol group, final String tableName, final GlobalTableStore globalStore) {
 		Callable<Integer> toCall = new Callable<Integer>() {
 			@Override
 			public Integer call() throws Exception {
-				return loadGlobalTable(context, group, tableName, viewName, globalStore, info, loadTime, true);
+				return loadGlobalTable(context, group, tableName, globalStore);
 			}
 		};
 		FutureTask<Integer> task = new FutureTask<Integer>(toCall);
@@ -525,89 +426,39 @@ public class TempTableDataManager implements ProcessorDataManager {
 	}
 
 	private int loadGlobalTable(CommandContext context,
-			GroupSymbol group, final String tableName, final String viewName,
-			TempTableStore globalStore, MatTableInfo info, Long loadTime, boolean useCache)
+			GroupSymbol group, final String tableName, GlobalTableStore globalStore)
 			throws TeiidComponentException, TeiidProcessingException {
 		LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.getString("TempTableDataManager.loading", tableName)); //$NON-NLS-1$
 		QueryMetadataInterface metadata = context.getMetadata();
-		Create create = new Create();
-		create.setTable(group);
 		List<ElementSymbol> allColumns = ResolverUtil.resolveElementsInGroup(group, metadata); 
-		create.setElementSymbolsAsColumns(allColumns);
-		Object pk = metadata.getPrimaryKey(group.getMetadataID());
-		if (pk != null) {
-			List<ElementSymbol> pkColumns = resolveIndex(metadata, allColumns, pk);
-			create.getPrimaryKey().addAll(pkColumns);
-		}
-		TempTable table = globalStore.addTempTable(tableName, create, bufferManager, false);
+		TempTable table = globalStore.createMatTable(tableName, group);
 		table.setUpdatable(false);
-		CacheHint hint = table.getCacheHint();
-		boolean updatable = false;
-		if (hint != null) {
-			table.setPreferMemory(hint.getPrefersMemory());
-			if (hint.getTtl() != null) {
-				info.setTtl(hint.getTtl());
-			}
-			if (pk != null) {
-				updatable = hint.isUpdatable();
-			}
-		}
 		int rowCount = -1;
-		boolean viewFetched = false;
 		try {
 			String fullName = metadata.getFullName(group.getMetadataID());
-			TupleSource ts = null;
-			CacheID cid = null;
-			if (distributedCache != null) {
-				cid = new CacheID(new ParseInfo(), fullName, context.getVdbName(), 
-						context.getVdbVersion(), context.getConnectionID(), context.getUserName());
-				if (useCache) {
-					CachedResults cr = this.distributedCache.get(cid);
-					if (cr != null) {
-						ts = cr.getResults().createIndexedTupleSource();
-						LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.getString("TempTableDataManager.cache_load", tableName)); //$NON-NLS-1$
-					}
-				}
-			}
-			
-			List<ElementSymbol> variables = table.getColumns();
-			
-			if (ts == null) {
-				variables = allColumns;
-				//TODO: coordinate a distributed load
-				//TODO: order by primary key nulls first - then have an insert ordered optimization
-				String transformation = metadata.getVirtualPlan(group.getMetadataID()).getQuery();
-				QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(transformation, fullName, context);
-				qp.setNonBlocking(true);
-				qp.getContext().setDataObjects(null);
-				if (distributedCache != null) {
-					CachedResults cr = new CachedResults();
-					BatchCollector bc = qp.createBatchCollector();
-					TupleBuffer tb = bc.collectTuples();
-					cr.setResults(tb, qp.getProcessorPlan());
-					touchTable(context, fullName, true, info.getUpdateTime());
-					this.distributedCache.put(cid, Determinism.VDB_DETERMINISTIC, cr, info.getTtl());
-					ts = tb.createIndexedTupleSource();
-					viewFetched = true;
-				} else {
-					ts = new BatchCollector.BatchProducerTupleSource(qp);
-				}
-			}
+			String transformation = metadata.getVirtualPlan(group.getMetadataID()).getQuery();
+			QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(transformation, fullName, context);
+			qp.setNonBlocking(true);
+			qp.getContext().setDataObjects(null);
+			TupleSource ts = new BatchCollector.BatchProducerTupleSource(qp);
 			
 			//TODO: if this insert fails, it's unnecessary to do the undo processing
-			table.insert(ts, variables);
+			table.insert(ts, allColumns);
 			table.getTree().compact();
 			rowCount = table.getRowCount();
 			//TODO: could pre-process indexes to remove overlap
 			for (Object index : metadata.getIndexesInGroup(group.getMetadataID())) {
-				List<ElementSymbol> columns = resolveIndex(metadata, allColumns, index);
+				List<ElementSymbol> columns = GlobalTableStoreImpl.resolveIndex(metadata, allColumns, index);
 				table.addIndex(columns, false);
 			}
 			for (Object key : metadata.getUniqueKeysInGroup(group.getMetadataID())) {
-				List<ElementSymbol> columns = resolveIndex(metadata, allColumns, key);
+				List<ElementSymbol> columns = GlobalTableStoreImpl.resolveIndex(metadata, allColumns, key);
 				table.addIndex(columns, true);
 			}
-			table.setUpdatable(updatable);
+			CacheHint hint = table.getCacheHint();
+			if (hint != null && table.getPkLength() > 0) {
+				table.setUpdatable(hint.isUpdatable());
+			}
 		} catch (TeiidComponentException e) {
 			LogManager.logError(LogConstants.CTX_MATVIEWS, e, QueryPlugin.Util.getString("TempTableDataManager.failed_load", tableName)); //$NON-NLS-1$
 			throw e;
@@ -616,41 +467,13 @@ public class TempTableDataManager implements ProcessorDataManager {
 			throw e;
 		} finally {
 			if (rowCount == -1) {
-				info.setState(MatState.FAILED_LOAD, null, null);
+				globalStore.failedLoad(tableName);
 			} else {
-				globalStore.swapTempTable(tableName, table);
-				info.setState(MatState.LOADED, true, loadTime);
-				if (viewFetched & viewName != null && this.eventDistributor != null) {
-					this.eventDistributor.refreshMatView(context.getVdbName(), context.getVdbVersion(), viewName);
-				}
+				globalStore.loaded(tableName, table);
 				LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.getString("TempTableDataManager.loaded", tableName, rowCount)); //$NON-NLS-1$
 			}
 		}
 		return rowCount;
-	}
-
-	private void touchTable(CommandContext context, String fullName, boolean valid, long loadtime) {
-		MatTableKey key = new MatTableKey();
-		key.name = fullName;
-		key.vdb = new VDBKey(context.getVdbName(), context.getVdbVersion());
-		MatTableEntry matTableEntry = new MatTableEntry();
-		matTableEntry.valid = valid;
-		matTableEntry.lastUpdate = loadtime;
-		tables.put(key, matTableEntry, null);
-	}
-
-	/**
-	 * Return a list of ElementSymbols for the given index/key object
-	 */
-	private List<ElementSymbol> resolveIndex(QueryMetadataInterface metadata,
-			List<ElementSymbol> allColumns, Object pk)
-			throws TeiidComponentException, QueryMetadataException {
-		Collection<?> pkIds = metadata.getElementIDsInKey(pk);
-		List<ElementSymbol> pkColumns = new ArrayList<ElementSymbol>(pkIds.size());
-		for (Object col : pkIds) {
-			pkColumns.add(allColumns.get(metadata.getPosition(col)-1));
-		}
-		return pkColumns;
 	}
 
 	public Object lookupCodeValue(CommandContext context, String codeTableName,
@@ -658,24 +481,16 @@ public class TempTableDataManager implements ProcessorDataManager {
 			throws BlockedException, TeiidComponentException,
 			TeiidProcessingException {
     	String matTableName = CODE_PREFIX + (codeTableName + ElementSymbol.SEPARATOR + keyElementName + ElementSymbol.SEPARATOR + returnElementName).toUpperCase(); 
+    	QueryMetadataInterface metadata = context.getMetadata();
 
+    	TempMetadataID id = context.getGlobalTableStore().getCodeTableMetadataId(codeTableName,
+				returnElementName, keyElementName, matTableName);
+    	
     	ElementSymbol keyElement = new ElementSymbol(matTableName + ElementSymbol.SEPARATOR + keyElementName);
     	ElementSymbol returnElement = new ElementSymbol(matTableName + ElementSymbol.SEPARATOR + returnElementName);
-    	
-    	QueryMetadataInterface metadata = context.getMetadata();
-    	
     	keyElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + keyElementName))));
     	returnElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + returnElementName))));
     	
-    	TempMetadataID id = context.getGlobalTableStore().getMetadataStore().getTempGroupID(matTableName);
-    	if (id == null) {
-	    	id = context.getGlobalTableStore().getMetadataStore().addTempGroup(matTableName, Arrays.asList(keyElement, returnElement), false, true);
-	    	String queryString = Reserved.SELECT + ' ' + keyElementName + " ," + returnElementName + ' ' + Reserved.FROM + ' ' + codeTableName; //$NON-NLS-1$ 
-	    	id.setQueryNode(new QueryNode(queryString));
-	    	id.setPrimaryKey(id.getElements().subList(0, 1));
-	    	CacheHint hint = new CacheHint(true, null);
-	    	id.setCacheHint(hint);
-    	}
     	Query query = RelationalPlanner.createMatViewQuery(id, matTableName, Arrays.asList(returnElement), true);
     	query.setCriteria(new CompareCriteria(keyElement, CompareCriteria.EQ, new Constant(keyValue)));
     	

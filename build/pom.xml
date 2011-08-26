@@ -12,7 +12,7 @@
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-client-jdk15</artifactId>
-            <version>${version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>net.sf.retrotranslator</groupId>
@@ -119,9 +119,9 @@
                             <mainClass>net.sf.retrotranslator.transformer.Retrotranslator</mainClass>
                             <arguments>                     
                                 <argument>-srcjar</argument>
-                                <argument>${pom.basedir}/target/teiid-${pom.version}-client.jar</argument>
+                                <argument>${project.basedir}/target/teiid-${project.version}-client.jar</argument>
                                 <argument>-destjar</argument>
-                                <argument>${pom.basedir}/target/teiid-${pom.version}-client-jdk15.jar</argument>            
+                                <argument>${project.basedir}/target/teiid-${project.version}-client-jdk15.jar</argument>            
                                 <argument>-embed</argument>
                                 <argument>org.teiid.retroruntime</argument>                    
                             </arguments>

@@ -1216,7 +1216,7 @@ public class RelationalPlanner {
         	CacheHint hint = null;
         	boolean isImplicitGlobal = matMetadataId == null;
             if (isImplicitGlobal) {
-        		TempMetadataID tid = context.getGlobalTableStore().getGlobalTempTableMetadataId(metadataID, metadata);
+        		TempMetadataID tid = context.getGlobalTableStore().getGlobalTempTableMetadataId(metadataID);
         		matTableName = tid.getID();
         		hint = tid.getCacheHint();
         		if (hint != null) {

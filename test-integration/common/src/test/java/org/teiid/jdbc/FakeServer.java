@@ -38,8 +38,10 @@ import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
+import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.MetadataStoreGroup;
 import org.teiid.deployers.UDFMetaData;
+import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
@@ -55,10 +57,14 @@ import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.metadata.index.VDBMetadataFactory;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
+import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
+import org.teiid.query.tempdata.GlobalTableStore;
+import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
@@ -74,14 +80,38 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 	VDBRepository repo = new VDBRepository();
 	private ConnectorManagerRepository cmr;
 	private boolean useCallingThread = true;
+	private ObjectReplicator replicator;
 	
 	public FakeServer() {
 		this(new DQPConfiguration());
 	}
 	
+	public void setReplicator(ObjectReplicator replicator) {
+		this.replicator = replicator;
+	}
+	
 	public FakeServer(DQPConfiguration config) {
 		this.logon = new LogonImpl(sessionService, null);
-		
+		this.repo.addListener(new VDBLifeCycleListener() {
+			
+			@Override
+			public void removed(String name, int version, CompositeVDB vdb) {
+				
+			}
+			
+			@Override
+			public void added(String name, int version, CompositeVDB vdb) {
+				GlobalTableStore gts = new GlobalTableStoreImpl(dqp.getBufferManager(), vdb.getVDB().getAttachment(TransformationMetadata.class));
+				if (replicator != null) {
+					try {
+						gts = replicator.replicate(name + version, GlobalTableStore.class, gts, 300000);
+					} catch (Exception e) {
+						throw new RuntimeException(e);
+					}
+				}
+				vdb.getVDB().addAttchment(GlobalTableStore.class, gts);
+			}
+		});
 		this.repo.setSystemStore(VDBMetadataFactory.getSystem());
 		this.repo.setSystemFunctionManager(new SystemFunctionManager());
 		this.repo.odbcEnabled();

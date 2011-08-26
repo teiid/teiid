@@ -25,24 +25,29 @@ package org.teiid.query.processor;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executor;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.QueryProcessorFactoryImpl;
 import org.teiid.dqp.internal.process.SessionAwareCache;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import org.teiid.query.optimizer.relational.RelationalPlanner;
+import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
+import org.teiid.query.tempdata.GlobalTableStoreImpl.MatTableInfo;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
@@ -52,20 +57,21 @@ public class TestMaterialization {
 	private TempMetadataAdapter metadata;
 	private TempTableDataManager dataManager;
 	private TempTableStore tempStore;
-	private TempTableStore globalStore;
+	private GlobalTableStoreImpl globalStore;
 	private ProcessorPlan previousPlan;
 	private HardcodedDataManager hdm;
 	
 	@Before public void setUp() {
 		tempStore = new TempTableStore("1"); //$NON-NLS-1$
-		globalStore  = new TempTableStore("SYSTEM");
-		metadata = new TempMetadataAdapter(RealMetadataFactory.exampleMaterializedView(), tempStore.getMetadataStore());
+	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+	    QueryMetadataInterface actualMetadata = RealMetadataFactory.exampleMaterializedView();
+	    globalStore = new GlobalTableStoreImpl(bm, actualMetadata);
+		metadata = new TempMetadataAdapter(actualMetadata, tempStore.getMetadataStore());
 		hdm = new HardcodedDataManager();
 		hdm.addData("SELECT matsrc.x FROM matsrc", new List[] {Arrays.asList((String)null), Arrays.asList("one"), Arrays.asList("two"), Arrays.asList("three")});
 		hdm.addData("SELECT mattable.info.e1, mattable.info.e2 FROM mattable.info", new List[] {Arrays.asList("a", 1), Arrays.asList("a", 2)});
 		hdm.addData("SELECT mattable.info.e2, mattable.info.e1 FROM mattable.info", new List[] {Arrays.asList(1, "a"), Arrays.asList(2, "a")});
 		
-	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
 	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
 	    cache.setBufferManager(bm);
 	    Executor executor = new Executor() {
@@ -74,7 +80,7 @@ public class TestMaterialization {
 				command.run();
 			}
 	    };
-		dataManager = new TempTableDataManager(hdm, bm, executor, cache, cache, new DefaultCacheFactory());
+		dataManager = new TempTableDataManager(hdm, bm, executor, cache);
 	}
 	
 	private void execute(String sql, List<?>... expectedResults) throws Exception {
@@ -93,6 +99,25 @@ public class TestMaterialization {
 		assertEquals(1, hdm.getCommandHistory().size());
 		execute("SELECT * from vgroup3 where x is null", Arrays.asList(null, null));
 		assertEquals(1, hdm.getCommandHistory().size());
+	}
+	
+	@Test public void testReadWrite() throws Exception {
+		execute("SELECT * from vgroup3 where x = 'one'", Arrays.asList("one", "zne"));
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		String matTableName = RelationalPlanner.MAT_PREFIX + "MATVIEW.VGROUP3";
+		this.globalStore.getState(matTableName, baos);
+		MatTableInfo matTableInfo = this.globalStore.getMatTableInfo(matTableName);
+		long time = matTableInfo.getUpdateTime();
+		this.globalStore.failedLoad(matTableName);
+		this.globalStore.setState(matTableName, new ByteArrayInputStream(baos.toByteArray()));
+		assertEquals(time, matTableInfo.getUpdateTime());
+		execute("SELECT * from vgroup3 where x = 'one'", Arrays.asList("one", "zne"));
+		
+		execute("select lookup('mattable.info', 'e1', 'e2', 5)", Arrays.asList((String)null));
+		baos = new ByteArrayOutputStream();
+		String codeTableName = "#CODE_MATTABLE.INFO.E2.E1";
+		this.globalStore.getState(codeTableName, baos);
+		this.globalStore.setState(codeTableName, new ByteArrayInputStream(baos.toByteArray()));
 	}
 	
     @Test(expected=TeiidProcessingException.class) public void testCodeTableResponseException() throws Exception {

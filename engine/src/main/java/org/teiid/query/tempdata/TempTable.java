@@ -22,6 +22,9 @@
 
 package org.teiid.query.tempdata;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -72,7 +75,7 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
  * TODO: in this implementation blocked exceptions will not happen
  *       allowing for subquery evaluation though would cause pauses
  */
-class TempTable {
+public class TempTable {
 	
 	private final class InsertUpdateProcessor extends UpdateProcessor {
 		
@@ -275,7 +278,7 @@ class TempTable {
 	
 	private int keyBatchSize;
 	private int leafBatchSize;
-	private Map columnMap;
+	private Map<ElementSymbol, Integer> columnMap;
 	
 	private List<Integer> notNull = new LinkedList<Integer>();
 	private Map<Integer, AtomicInteger> sequences;
@@ -326,8 +329,17 @@ class TempTable {
 		if (keyColumns.equals(indexColumns) || (indexTables != null && indexTables.containsKey(indexColumns))) {
 			return;
 		}
+		TempTable indexTable = createIndexTable(indexColumns, unique);
+		//TODO: ordered insert optimization
+		TupleSource ts = createTupleSource(indexTable.getColumns(), null, null);
+		indexTable.insert(ts, indexTable.getColumns());
+		indexTable.getTree().compact();
+	}
+
+	private TempTable createIndexTable(List<ElementSymbol> indexColumns,
+			boolean unique) {
 		List<ElementSymbol> allColumns = new ArrayList<ElementSymbol>(indexColumns);
-		for (ElementSymbol elementSymbol : keyColumns) {
+		for (ElementSymbol elementSymbol : columns.subList(0, tree.getKeyLength())) {
 			if (allColumns.indexOf(elementSymbol) < 0) {
 				allColumns.add(elementSymbol);
 			}
@@ -342,10 +354,8 @@ class TempTable {
 			indexTables = new LinkedHashMap<List<ElementSymbol>, TempTable>();
 			indexTables.put(indexColumns, indexTable);
 		}
-		//TODO: ordered insert optimization
-		TupleSource ts = createTupleSource(allColumns, null, null);
-		indexTable.insert(ts, allColumns);
-		indexTable.getTree().compact();
+		indexTable.setUpdatable(this.updatable);
+		return indexTable;
 	}
 	
 	private int reserveBuffers() {
@@ -531,7 +541,7 @@ class TempTable {
 					BlockedException, TeiidComponentException {
 				List<Object> newTuple = new ArrayList<Object>(tuple);
     			for (Map.Entry<ElementSymbol, Expression> entry : update.getClauseMap().entrySet()) {
-    				newTuple.set((Integer)columnMap.get(entry.getKey()), eval.evaluate(entry.getValue(), tuple));
+    				newTuple.set(columnMap.get(entry.getKey()), eval.evaluate(entry.getValue(), tuple));
     			}
     			if (primaryKeyChangePossible) {
     				browser.removed();
@@ -628,6 +638,44 @@ class TempTable {
 		}
 	}
 	
+	void writeTo(ObjectOutputStream oos) throws TeiidComponentException, IOException {
+		this.lock.readLock().lock();
+		try {
+			this.tree.writeValuesTo(oos);
+			if (this.indexTables == null) {
+				oos.writeInt(0);
+			} else {
+				oos.writeInt(this.indexTables.size());
+				for (Map.Entry<List<ElementSymbol>, TempTable> entry : this.indexTables.entrySet()) {
+					oos.writeBoolean(entry.getValue().uniqueColIndex > 0);
+					oos.writeInt(entry.getKey().size());
+					for (ElementSymbol es : entry.getKey()) {
+						oos.writeInt(this.columnMap.get(es));
+					}
+					entry.getValue().writeTo(oos);
+				}
+			}
+		} finally {
+			this.lock.readLock().unlock();
+		}
+	}
+	
+	void readFrom(ObjectInputStream ois) throws TeiidComponentException, IOException, ClassNotFoundException {
+		this.tree.readValuesFrom(ois);
+		int numIdx = ois.readInt();
+		for (int i = 0; i < numIdx; i++) {
+			boolean unique = ois.readBoolean();
+			int numCols = ois.readInt();
+			ArrayList<ElementSymbol> indexColumns = new ArrayList<ElementSymbol>(numCols);
+			for (int j = 0; j < numCols; j++) {
+				int colIndex = ois.readInt();
+				indexColumns.add(this.columns.get(colIndex));
+			}
+			TempTable tt = this.createIndexTable(indexColumns, unique);
+			tt.readFrom(ois);
+		}
+	}
+	
 	List<?> updateTuple(List<?> tuple, boolean remove) throws TeiidComponentException {
 		try {
 			lock.writeLock().lock();
@@ -698,7 +746,7 @@ class TempTable {
 		return tid.getID() + " (" + columns + ")\n"; //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	Map getColumnMap() {
+	Map<ElementSymbol, Integer> getColumnMap() {
 		return this.columnMap;
 	}
 	
