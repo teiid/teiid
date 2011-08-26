@@ -171,7 +171,7 @@ public class SaxonXQueryExpression {
     throws QueryResolverException {
         config.setErrorListener(ERROR_LISTENER);
         this.xQueryString = xQueryString;
-        StaticQueryContext context = new StaticQueryContext(config);
+        StaticQueryContext context = config.newStaticQueryContext();
         IndependentContext ic = new IndependentContext(config);
         namespaceMap.put(EMPTY_STRING, EMPTY_STRING);
         if (namespaces != null) {
@@ -242,7 +242,13 @@ public class SaxonXQueryExpression {
 			}
 		}
 		this.contextRoot = null;
-		PathMap map = this.xQuery.getPathMap();
+		//we'll use a new pathmap, since we don't want to modify the one associated with the xquery.
+		PathMap map = null;
+		if (columns == null) {
+			map = this.xQuery.getPathMap();
+		} else {
+			map = new PathMap(this.xQuery.getExpression());
+		}
 		PathMapRoot parentRoot;
 		try {
 			parentRoot = map.getContextRoot();

@@ -216,7 +216,11 @@ public class TestSQLXMLProcessing {
 
 	    ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(), createCommandContext());
         
-        helpProcess(plan, createCommandContext(), dataManager, expected);
+	    helpProcess(plan, createCommandContext(), dataManager, expected);
+        
+	    plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(), createCommandContext());
+        
+	    doProcess(plan, dataManager, expected, createCommandContext());
     }
     
 	@Test public void testXmlTableDefaultAndParent() throws Exception {
