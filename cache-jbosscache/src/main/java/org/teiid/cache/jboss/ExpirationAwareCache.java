@@ -35,6 +35,12 @@ public class ExpirationAwareCache<K, V> extends JBossCache<K, V> {
 	public ExpirationAwareCache(Cache cacheStore, Fqn fqn) {
 		super(cacheStore, fqn);
 	}
+	
+	@Override
+	protected boolean validateNode(Node node) {
+		Long future = (Long) node.get(ExpirationAlgorithmConfig.EXPIRATION_KEY);
+		return future == null || future > System.currentTimeMillis();
+	}
 
 	@Override
 	public V put(K key, V value) {
