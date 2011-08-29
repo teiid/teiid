@@ -45,7 +45,6 @@ import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
-import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
@@ -204,8 +203,6 @@ public class DQPCore implements DQP {
     private LinkedList<RequestWorkItem> waitingPlans = new LinkedList<RequestWorkItem>();
     private CacheFactory cacheFactory;
 
-	private SessionAwareCache<CachedResults> matTables;
-	
 	private AuthorizationValidator authorizationValidator;
     
     /**
@@ -621,9 +618,6 @@ public class DQPCore implements DQP {
 			clearResultSetCache(vdbName, version);
 			break;
 		}
-		if (this.matTables != null) {
-			this.matTables.clearForVDB(vdbName, version);
-		}
 	}	
     
 	public Collection<org.teiid.adminapi.Transaction> getTransactions() {
@@ -721,11 +715,6 @@ public class DQPCore implements DQP {
         this.userRequestSourceConcurrency = config.getUserRequestSourceConcurrency();
         if (this.userRequestSourceConcurrency < 1) {
         	this.userRequestSourceConcurrency = Math.min(config.getMaxThreads(), 2*config.getMaxThreads()/this.maxActivePlans);
-        }
-        
-        if (cacheFactory.isReplicated()) {
-        	matTables = new SessionAwareCache<CachedResults>(this.cacheFactory, SessionAwareCache.Type.RESULTSET, new CacheConfiguration(Policy.EXPIRATION, -1, -1, "MaterilizationTables")); //$NON-NLS-1$
-        	matTables.setBufferManager(this.bufferManager);
         }
         
         DataTierManagerImpl processorDataManager = new DataTierManagerImpl(this,this.bufferService, this.config.isDetectingChangeEvents());
