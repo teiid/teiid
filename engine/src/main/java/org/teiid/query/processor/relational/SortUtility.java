@@ -324,7 +324,7 @@ public class SortUtility {
 	            while (sublists.size() > 0) {
 	            	SortedSublist sortedSublist = sublists.remove(sublists.size() - 1);
 	        		merged.addTuple(sortedSublist.tuple);
-	                if (this.output != null && sortedSublist.index > masterSortIndex) {
+	                if (this.output != null && masterSortIndex < maxSortIndex && sortedSublist.index != masterSortIndex) {
 	                	this.output.addTuple(sortedSublist.tuple); //a new distinct row
 	            	}
 	            	incrementWorkingTuple(sublists, sortedSublist);
@@ -339,7 +339,7 @@ public class SortUtility {
 	            }
 	            merged.saveBatch();
 	            this.activeTupleBuffers.add(merged);           
-	            masterSortIndex = masterSortIndex - maxSortIndex + 1;
+	            masterSortIndex = masterSortIndex - maxSortIndex;
 	            if (masterSortIndex < 0) {
 	            	masterSortIndex = this.activeTupleBuffers.size() - 1;
 	            }
