@@ -59,12 +59,16 @@ public class AutoGenDataService extends ConnectorManager{
 	public int sleep;
     private final AtomicInteger executeCount = new AtomicInteger();
     private final AtomicInteger closeCount = new AtomicInteger();
+    private boolean useIntCounter;
 
-    
     public AutoGenDataService() {
     	super("FakeConnector","FakeConnector"); //$NON-NLS-1$ //$NON-NLS-2$
         caps = TestOptimizer.getTypicalCapabilities();
     }
+    
+    public void setUseIntCounter(boolean useIntCounter) {
+		this.useIntCounter = useIntCounter;
+	}
     
     public void setSleep(int sleep) {
 		this.sleep = sleep;
@@ -151,7 +155,7 @@ public class AutoGenDataService extends ConnectorManager{
             while(iter.hasNext()) {
                 SingleElementSymbol symbol = (SingleElementSymbol) iter.next();
                 Class type = symbol.getType();
-                row.add( getValue(type) );
+                row.add( getValue(type, i) );
             }
             rows[i] = row;
         }   
@@ -174,11 +178,11 @@ public class AutoGenDataService extends ConnectorManager{
     private static final java.sql.Time TIME_VAL = new java.sql.Time(0);
     private static final java.sql.Timestamp TIMESTAMP_VAL = new java.sql.Timestamp(0);
     
-    private Object getValue(Class<?> type) {
+    private Object getValue(Class<?> type, int row) {
         if(type.equals(DataTypeManager.DefaultDataClasses.STRING)) {
             return STRING_VAL;
         } else if(type.equals(DataTypeManager.DefaultDataClasses.INTEGER)) {
-            return INTEGER_VAL;
+            return useIntCounter?row:INTEGER_VAL;
         } else if(type.equals(DataTypeManager.DefaultDataClasses.SHORT)) { 
             return SHORT_VAL;    
         } else if(type.equals(DataTypeManager.DefaultDataClasses.LONG)) {

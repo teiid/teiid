@@ -95,7 +95,9 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	public void closeDirect() {
 		super.closeDirect();
 		if(this.buffer != null) {
-    		this.buffer.remove();
+			if (!usingOutput) {
+				this.buffer.remove();
+			}
         	this.buffer = null;
         }
 		reset();

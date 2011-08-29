@@ -120,11 +120,12 @@ public class BatchCollector {
     private TupleBuffer buffer;
     private boolean forwardOnly;
     
-    public BatchCollector(BatchProducer sourceNode, BufferManager bm, CommandContext context, boolean fowardOnly) throws TeiidComponentException {
+    public BatchCollector(BatchProducer sourceNode, BufferManager bm, CommandContext context, boolean forwardOnly) throws TeiidComponentException {
         this.sourceNode = sourceNode;
+        this.forwardOnly = forwardOnly;
         if (!this.sourceNode.hasFinalBuffer()) {
             this.buffer = bm.createTupleBuffer(sourceNode.getOutputElements(), context.getConnectionID(), TupleSourceType.PROCESSOR);
-            this.buffer.setForwardOnly(fowardOnly);
+            this.buffer.setForwardOnly(forwardOnly);
         }
     }
 
