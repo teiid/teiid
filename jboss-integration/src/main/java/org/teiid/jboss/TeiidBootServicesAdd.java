@@ -138,13 +138,19 @@ public class TeiidBootServicesAdd extends AbstractAddStepHandler implements Desc
     	newControllers.add(service);
     	
     	// system function tree
-    	SystemFunctionManager systemFunctionManager = new SystemFunctionManager();
-    	if (operation.hasDefined(Configuration.ALLOW_ENV_FUNCTION)) {
-    		systemFunctionManager.setAllowEnvFunction(operation.get(Configuration.ALLOW_ENV_FUNCTION).asBoolean());
-    	}
-    	else {
-    		systemFunctionManager.setAllowEnvFunction(false);
-    	}    	
+		SystemFunctionManager systemFunctionManager = null;
+		try {
+			systemFunctionManager = new SystemFunctionManager();
+			if (operation.hasDefined(Configuration.ALLOW_ENV_FUNCTION)) {
+				systemFunctionManager.setAllowEnvFunction(operation.get(Configuration.ALLOW_ENV_FUNCTION).asBoolean());
+			}
+			else {
+				systemFunctionManager.setAllowEnvFunction(false);
+			}
+			systemFunctionManager.setClassloader(Module.getCallerModule().getModule(ModuleIdentifier.create("org.jboss.teiid")).getClassLoader()); //$NON-NLS-1$
+		} catch (ModuleLoadException e) {
+			throw new OperationFailedException(e, operation);
+		}
     	
     	// VDB repository
     	final VDBRepository vdbRepository = new VDBRepository();

@@ -34,6 +34,7 @@ public class SystemFunctionManager {
 
 	private FunctionTree systemFunctionTree;
 	private boolean allowEnvFunction = true;
+	private ClassLoader classLoader;
 	
 	public FunctionTree getSystemFunctions() {
     	if(systemFunctionTree == null) { 
@@ -47,7 +48,7 @@ public class SystemFunctionManager {
 			    // Should never happen as SystemSourcTe doesn't change
 			    System.err.println(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$
 			}
-			systemFunctionTree = new FunctionTree(CoreConstants.SYSTEM_MODEL, systemSource, true);
+			systemFunctionTree = new FunctionTree(CoreConstants.SYSTEM_MODEL, systemSource, true, this.classLoader);
     	}
     	return systemFunctionTree;
     }
@@ -74,4 +75,12 @@ public class SystemFunctionManager {
 	public void setAllowEnvFunction(boolean allowEnvFunction) {
 		this.allowEnvFunction = allowEnvFunction;
 	}    
+	
+    public ClassLoader getClassLoader() {
+    	return this.classLoader;
+    }
+    
+    public void setClassloader(ClassLoader classloader) {
+    	this.classLoader = classloader;
+    }	
 }

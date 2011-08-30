@@ -1101,7 +1101,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
      * @return Class reference  
      * @throws ClassNotFoundException If class could not be found
      */
-    public Class<?> getInvocationClass(String className) throws ClassNotFoundException {
-        return Class.forName(className);    
+    public Class<?> getInvocationClass(String className, ClassLoader classloader) throws ClassNotFoundException {
+        return Class.forName(className, true, classloader);    
     }
 }

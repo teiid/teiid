@@ -65,7 +65,7 @@ public class TestVDBMetaData {
 		StringWriter sw = new StringWriter();
 		marshell.marshal(vdb, sw);
 				
-		//System.out.println(sw.toString());
+		System.out.println(sw.toString());
 
 		// UnMarshell
 		Unmarshaller un = jc.createUnmarshaller();
@@ -75,7 +75,7 @@ public class TestVDBMetaData {
 		validateVDB(vdb);
 	}
 
-	private void validateVDB(VDBMetaData vdb) {
+	static void validateVDB(VDBMetaData vdb) {
 		ModelMetaData modelOne;
 		ModelMetaData modelTwo;
 		assertEquals("myVDB", vdb.getName()); //$NON-NLS-1$

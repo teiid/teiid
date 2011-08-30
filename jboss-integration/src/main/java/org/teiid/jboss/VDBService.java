@@ -72,7 +72,10 @@ public class VDBService implements Service<VDBMetaData> {
 		// check if this is a VDB with index files, if there are then build the TransformationMetadata
 		UDFMetaData udf = this.vdb.getAttachment(UDFMetaData.class);
 		IndexMetadataFactory indexFactory = this.vdb.getAttachment(IndexMetadataFactory.class);
-		long vdbModifiedTime = Long.parseLong(vdb.getPropertyValue(VDBService.VDB_LASTMODIFIED_TIME));
+		long vdbModifiedTime = -1L;
+		if (vdb.getPropertyValue(VDBService.VDB_LASTMODIFIED_TIME) != null) {
+			vdbModifiedTime = Long.parseLong(vdb.getPropertyValue(VDBService.VDB_LASTMODIFIED_TIME));
+		}
 		
 		// add required connector managers; if they are not already there
 		for (Translator t: this.vdb.getOverrideTranslators()) {
@@ -93,7 +96,7 @@ public class VDBService implements Service<VDBMetaData> {
 		createConnectorManagers(cmr, repo, this.vdb);
 				
 		// check to see if the vdb has been modified when server is down; if it is then clear the old files
-		if (getSerializer().isStale(this.vdb, vdbModifiedTime)) {
+		if (vdbModifiedTime != -1L && getSerializer().isStale(this.vdb, vdbModifiedTime)) {
 			getSerializer().removeAttachments(this.vdb);
 			LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB ", vdb.getName(), " old cached metadata has been removed"); //$NON-NLS-1$ //$NON-NLS-2$				
 		}

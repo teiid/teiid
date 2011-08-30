@@ -49,6 +49,7 @@
         <event-distributor-name>teiid/event-distributor</event-distributor-name>
         <detect-change-events>true</detect-change-events>
         <security-domain>teiid-security</security-domain>
+        <security-domain>teiid-security2</security-domain>
         <max-sessions-allowed>5000</max-sessions-allowed>
         <sessions-expiration-timelimit>0</sessions-expiration-timelimit>
                 

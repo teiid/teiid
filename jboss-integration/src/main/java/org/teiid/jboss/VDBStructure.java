@@ -21,15 +21,7 @@
  */
 package org.teiid.jboss;
 
-import java.io.Closeable;
-import java.io.IOException;
-
 import org.jboss.as.server.deployment.*;
-import org.jboss.as.server.deployment.module.ModuleRootMarker;
-import org.jboss.as.server.deployment.module.MountHandle;
-import org.jboss.as.server.deployment.module.ResourceRoot;
-import org.jboss.as.server.deployment.module.TempFileProviderService;
-import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
 import org.teiid.deployers.TeiidAttachments;
 import org.teiid.metadata.VdbConstants;
@@ -50,28 +42,19 @@ public class VDBStructure  implements DeploymentUnitProcessor {
         	return;
         }
         
-        if(file.getLowerCaseName().endsWith(VDB_EXTENSION)) {
-
-        	try {
-				final Closeable closable = VFS.mountZip(file, file, TempFileProviderService.provider());
-				final ResourceRoot vdbArchiveRoot = new ResourceRoot(file.getName(), file, new MountHandle(closable));
-				ModuleRootMarker.mark(vdbArchiveRoot);
-				
-				VirtualFile metainf = file.getChild("META-INF"); //$NON-NLS-1$
-				if (metainf == null) {
-					return;
-				}
-				
-				if (metainf.getChild(VdbConstants.DEPLOYMENT_FILE) == null) {
-					return;
-				}
-				// adds a TYPE attachment.
-				TeiidAttachments.setAsVDBDeployment(deploymentUnit);
-			} catch (IOException e) {
-				throw new DeploymentUnitProcessingException("failed to process " + file, e); //$NON-NLS-1$
-			}			
+        if(file.getName().toLowerCase().endsWith(VDB_EXTENSION)) {
+			VirtualFile metainf = file.getChild("META-INF"); //$NON-NLS-1$
+			if (metainf == null) {
+				return;
+			}
+			
+			if (metainf.getChild(VdbConstants.DEPLOYMENT_FILE) == null) {
+				return;
+			}
+			// adds a TYPE attachment.
+			TeiidAttachments.setAsVDBDeployment(deploymentUnit);
         }
-        else if (file.getLowerCaseName().endsWith(DYNAMIC_VDB_STRUCTURE)) {
+        else if (file.getName().toLowerCase().endsWith(DYNAMIC_VDB_STRUCTURE)) {
 	        TeiidAttachments.setAsDynamicVDBDeployment(deploymentUnit);			        	
         }
 	}
@@ -79,7 +62,6 @@ public class VDBStructure  implements DeploymentUnitProcessor {
 	
 	@Override
 	public void undeploy(final DeploymentUnit context) {
-		
 	}
 
 }

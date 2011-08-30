@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.*;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.stream.XMLStreamException;
 
 import org.jboss.vfs.VirtualFile;
 import org.teiid.metadata.FunctionMethod;
@@ -45,7 +46,7 @@ public class UDFMetaData {
 	}
 	
 	
-	public void buildFunctionModelFile(String name, String path) throws IOException, JAXBException {
+	public void buildFunctionModelFile(String name, String path) throws IOException, XMLStreamException {
 		for (String f:files.keySet()) {
 			if (f.endsWith(path)) {
 				path = f;

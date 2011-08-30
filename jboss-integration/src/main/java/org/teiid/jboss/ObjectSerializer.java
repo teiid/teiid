@@ -67,6 +67,7 @@ public class ObjectSerializer {
 		if (!attachmentsStore.exists() || force) {
 			ObjectOutputStream oos = null;
 			try {
+				attachmentsStore.getParentFile().mkdirs();
 				oos = new ObjectOutputStream(new FileOutputStream(attachmentsStore));
 				oos.writeObject(attachment);
 				return true;

@@ -167,6 +167,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		this.sessionService.setSessionMaxLimit(this.sessionMaxLimit);
 		this.sessionService.setDqp(this.dqpCore);
 		this.sessionService.setVDBRepository(this.vdbRepository);
+		this.sessionService.setSecurityHelper(getSecurityHelper());
 		this.sessionService.start();
 		
 		this.setBufferService(bufferServiceInjector.getValue());

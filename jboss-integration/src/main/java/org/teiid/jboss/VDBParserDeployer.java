@@ -24,18 +24,14 @@ package org.teiid.jboss;
 import java.io.IOException;
 import java.util.List;
 
-import javax.xml.XMLConstants;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
+import javax.xml.stream.XMLStreamException;
 
 import org.jboss.as.server.deployment.*;
 import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.deployers.TeiidAttachments;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.logging.LogConstants;
@@ -43,7 +39,6 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.VdbConstants;
 import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.runtime.RuntimePlugin;
-import org.xml.sax.SAXException;
 
 
 /**
@@ -84,10 +79,10 @@ public class VDBParserDeployer implements DeploymentUnitProcessor {
 			}
 		}
 		else {
-			if (file.getLowerCaseName().equals(VdbConstants.DEPLOYMENT_FILE)) {
+			if (file.getName().toLowerCase().equals(VdbConstants.DEPLOYMENT_FILE)) {
 				parseVDBXML(file, deploymentUnit);
 			}
-			else if (file.getLowerCaseName().endsWith(VdbConstants.INDEX_EXT)) {
+			else if (file.getName().endsWith(VdbConstants.INDEX_EXT)) {
 				IndexMetadataFactory imf = deploymentUnit.getAttachment(TeiidAttachments.INDEX_METADATA);
 				if (imf == null) {
 					imf = new IndexMetadataFactory();
@@ -95,7 +90,7 @@ public class VDBParserDeployer implements DeploymentUnitProcessor {
 				}
 				imf.addIndexFile(file);
 			}
-			else if (file.getLowerCaseName().endsWith(VdbConstants.MODEL_EXT)) {
+			else if (file.getName().toLowerCase().endsWith(VdbConstants.MODEL_EXT)) {
 				UDFMetaData udf = deploymentUnit.getAttachment(TeiidAttachments.UDF_METADATA);
 				if (udf == null) {
 					udf = new UDFMetaData();
@@ -103,20 +98,15 @@ public class VDBParserDeployer implements DeploymentUnitProcessor {
 				}
 				udf.addModelFile(file);				
 			}
-			
 		}
 	}
 
-	private void parseVDBXML(VirtualFile file, DeploymentUnit deploymentUnit)
-			throws DeploymentUnitProcessingException {
+	private void parseVDBXML(VirtualFile file, DeploymentUnit deploymentUnit) throws DeploymentUnitProcessingException {
 		try {
-			Unmarshaller un = getUnMarsheller();
-			VDBMetaData vdb = (VDBMetaData)un.unmarshal(file.openStream());
+			VDBMetaData vdb = VDBMetadataParser.unmarshell(file.openStream());
 			deploymentUnit.putAttachment(TeiidAttachments.VDB_METADATA, vdb);
 			LogManager.logDetail(LogConstants.CTX_RUNTIME,"VDB "+file.getName()+" has been parsed.");  //$NON-NLS-1$ //$NON-NLS-2$
-		} catch (JAXBException e) {
-			throw new DeploymentUnitProcessingException(e);
-		} catch (SAXException e) {
+		} catch (XMLStreamException e) {
 			throw new DeploymentUnitProcessingException(e);
 		} catch (IOException e) {
 			throw new DeploymentUnitProcessingException(e);
@@ -126,16 +116,6 @@ public class VDBParserDeployer implements DeploymentUnitProcessor {
     public void undeploy(final DeploymentUnit context) {
     }	
     
-
-	static Unmarshaller getUnMarsheller() throws JAXBException, SAXException {
-		JAXBContext jc = JAXBContext.newInstance(new Class<?>[] {VDBMetaData.class});
-		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-		Schema schema = schemaFactory.newSchema(VDBMetaData.class.getResource("/vdb-deployer.xsd")); //$NON-NLS-1$
-		Unmarshaller un = jc.createUnmarshaller();
-		un.setSchema(schema);
-		return un;
-	}
-	
 	protected VDBMetaData mergeMetaData(DeploymentUnit deploymentUnit) throws DeploymentUnitProcessingException {
 		VDBMetaData vdb = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
 		UDFMetaData udf = deploymentUnit.getAttachment(TeiidAttachments.UDF_METADATA);
@@ -172,7 +152,7 @@ public class VDBParserDeployer implements DeploymentUnitProcessor {
 			}
 		} catch(IOException e) {
 			throw new DeploymentUnitProcessingException(e); 
-		} catch (JAXBException e) {
+		} catch (XMLStreamException e) {
 			throw new DeploymentUnitProcessingException(e);
 		}
 				

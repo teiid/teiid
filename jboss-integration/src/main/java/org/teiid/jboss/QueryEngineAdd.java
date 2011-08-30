@@ -138,14 +138,10 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler implements Descripti
         
         // add security domains
         if ( operation.hasDefined(Configuration.SECURITY_DOMAIN)) {
-	        String domainNameOrder = operation.get(Configuration.SECURITY_DOMAIN).asString();
-	        if (domainNameOrder != null && domainNameOrder.trim().length()>0) {
+	        List<ModelNode> domains = operation.get(Configuration.SECURITY_DOMAIN).asList();
+	        for (ModelNode domain:domains) {
 	        	LogManager.logInfo(LogConstants.CTX_SECURITY, "Security Enabled: true"); //$NON-NLS-1$
-		        String[] domainNames = domainNameOrder.split(","); //$NON-NLS-1$
-		        for (String domainName : domainNames) {
-		        	engine.addSecurityDomain(domainName);
-		            serviceBuilder.addDependency(ServiceName.JBOSS.append("security", "security-domain", domainName), SecurityDomainContext.class, new ConcurrentMapInjector<String,SecurityDomainContext>(engine.securityDomains, domainName)); //$NON-NLS-1$ //$NON-NLS-2$
-		        }
+	            serviceBuilder.addDependency(ServiceName.JBOSS.append("security", "security-domain", domain.asString()), SecurityDomainContext.class, new ConcurrentMapInjector<String,SecurityDomainContext>(engine.securityDomains, domain.asString())); //$NON-NLS-1$ //$NON-NLS-2$
 	        }
         }
                   
@@ -201,8 +197,13 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler implements Descripti
     	}
     	if (node.hasDefined(Configuration.MAX_SESSIONS_ALLOWED)) {
     		engine.setSessionMaxLimit(node.get(Configuration.MAX_SESSIONS_ALLOWED).asInt());
-    	}		                	
-    	
+    	}
+    	if (node.hasDefined(Configuration.SECURITY_DOMAIN)) {
+    		List<ModelNode> securityDomains = node.get(Configuration.SECURITY_DOMAIN).asList();
+    		for (ModelNode domain:securityDomains) {
+    			engine.addSecurityDomain(domain.asString());	
+    		}
+    	}	    	
 		return engine;
 	}
         
@@ -286,7 +287,7 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler implements Descripti
 		addAttribute(node, Configuration.DETECTING_CHANGE_EVENTS, type, bundle.getString(Configuration.DETECTING_CHANGE_EVENTS+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
 		
 		//session stuff
-		addAttribute(node, Configuration.SECURITY_DOMAIN, type, bundle.getString(Configuration.SECURITY_DOMAIN+DESC), ModelType.STRING, false, null);
+		addAttribute(node, Configuration.SECURITY_DOMAIN, type, bundle.getString(Configuration.SECURITY_DOMAIN+DESC), ModelType.LIST, false, null);
 		addAttribute(node, Configuration.MAX_SESSIONS_ALLOWED, type, bundle.getString(Configuration.MAX_SESSIONS_ALLOWED+DESC), ModelType.INT, false, "5000"); //$NON-NLS-1$
 		addAttribute(node, Configuration.SESSION_EXPIRATION_TIME_LIMIT, type, bundle.getString(Configuration.SESSION_EXPIRATION_TIME_LIMIT+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
 		
@@ -369,6 +370,12 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler implements Descripti
     	}
     	if (operation.hasDefined(Configuration.EVENT_DISTRIBUTOR_NAME)) {
     		model.get(Configuration.EVENT_DISTRIBUTOR_NAME).set(operation.get(Configuration.EVENT_DISTRIBUTOR_NAME).asString());
+    	}
+    	if (operation.hasDefined(Configuration.SECURITY_DOMAIN)) {
+    		List<ModelNode> domains = operation.get(Configuration.SECURITY_DOMAIN).asList();
+    		for (ModelNode domain: domains) {
+    			model.get(Configuration.SECURITY_DOMAIN).add(domain.asString());	
+    		}
     	}
     	if (operation.hasDefined(Configuration.DETECTING_CHANGE_EVENTS)) {
     		model.get(Configuration.DETECTING_CHANGE_EVENTS).set(operation.get(Configuration.DETECTING_CHANGE_EVENTS).asBoolean());

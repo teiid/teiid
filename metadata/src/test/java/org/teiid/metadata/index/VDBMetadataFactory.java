@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.concurrent.Executors;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.stream.XMLStreamException;
 
 import org.jboss.vfs.TempFileProvider;
 import org.jboss.vfs.VFS;
@@ -98,7 +99,7 @@ public class VDBMetadataFactory {
 			return vdbmetadata;
 		} catch (URISyntaxException e) {
 			throw new IOException(e);
-		} catch (JAXBException e) {
+		} catch (XMLStreamException e) {
 			throw new IOException(e);
 		}
     }

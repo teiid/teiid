@@ -123,9 +123,15 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	writeElement(writer, Element.MAX_ODBC_LOB_SIZE_ALLOWED_ELEMENT, node);
     	writeElement(writer, Element.EVENT_DISTRIBUTOR_NAME_ELEMENT, node);
     	writeElement(writer, Element.DETECTING_CHANGE_EVENTS_ELEMENT, node);
-    	writeElement(writer, Element.JDBC_SECURITY_DOMAIN_ELEMENT, node);
+    	
+    	if (node.hasDefined(Element.SECURITY_DOMAIN_ELEMENT.getLocalName())) {
+    		List<ModelNode> domains = node.get(Element.SECURITY_DOMAIN_ELEMENT.getLocalName()).asList();
+    		writeElement(writer, Element.SECURITY_DOMAIN_ELEMENT, domains);
+    	}
+    	
     	writeElement(writer, Element.MAX_SESSIONS_ALLOWED_ELEMENT, node);
     	writeElement(writer, Element.SESSION_EXPIRATION_TIME_LIMIT_ELEMENT, node);
+    	
     	    	
     	//jdbc
     	if (has(node, Element.JDBC_ELEMENT.getLocalName())){
@@ -201,7 +207,15 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 	        writer.writeCharacters(node.get(element.getLocalName()).asString());
 	        writer.writeEndElement();
     	}
-    }        
+    }     
+    
+    private void writeElement(final XMLExtendedStreamWriter writer, final Element element, final List<ModelNode> nodes) throws XMLStreamException {
+    	for (ModelNode node:nodes) {
+	    	writer.writeStartElement(element.getLocalName());
+	        writer.writeCharacters(node.asString());
+	        writer.writeEndElement();
+    	}
+    }      
     
     private void writeAttribute(final XMLExtendedStreamWriter writer, final Element element, final ModelNode node) throws XMLStreamException {
     	if (has(node, element.getLocalName())) {
@@ -327,9 +341,14 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 
 				//Strings
 				case EVENT_DISTRIBUTOR_NAME_ELEMENT:
-				case JDBC_SECURITY_DOMAIN_ELEMENT:
 					node.get(reader.getLocalName()).set(reader.getElementText());
 					break;
+				
+					//List
+				case SECURITY_DOMAIN_ELEMENT:
+					node.get(reader.getLocalName()).add(reader.getElementText());
+					break;
+					
 	
 				case JDBC_ELEMENT:
 					node.get(reader.getLocalName()).set(parseSocketConfiguration(reader));

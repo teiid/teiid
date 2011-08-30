@@ -80,7 +80,7 @@ public class FunctionTree {
      * @param source The metadata source
      */
     public FunctionTree(String name, FunctionMetadataSource source) {
-    	this(name, source, false);
+    	this(name, source, false, null);
     }
     
     /**
@@ -88,12 +88,19 @@ public class FunctionTree {
      * @param source The metadata source
      */
     public FunctionTree(String name, FunctionMetadataSource source, boolean validateClass) {
+    	this(name, source, validateClass, null);
+    }
+    
+    public FunctionTree(String name, FunctionMetadataSource source, boolean validateClass, ClassLoader defaultClassloader) {
         // Load data structures
     	this.validateClass = validateClass;
 
         Collection<FunctionMethod> functions = source.getFunctionMethods();
     	for (FunctionMethod method : functions) {
 			if (!containsIndistinguishableFunction(method)){
+				if (method.getClassLoader() == null) {
+					method.setClassloader(defaultClassloader);
+				}
                 // Add to tree
                 addFunction(name, source, method);
 			} else if (!CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(name)) {
@@ -288,7 +295,7 @@ public class FunctionTree {
         // Defect 20007 - Ignore the invocation method if pushdown is not required.
         if (validateClass && (method.getPushdown() == PushDown.CAN_PUSHDOWN || method.getPushdown() == PushDown.CANNOT_PUSHDOWN)) {
             try {
-                Class<?> methodClass = source.getInvocationClass(method.getInvocationClass());
+                Class<?> methodClass = source.getInvocationClass(method.getInvocationClass(), method.getClassLoader());
                 ReflectionHelper helper = new ReflectionHelper(methodClass);
                 try {
                 	invocationMethod = helper.findBestMethodWithSignature(method.getInvocationMethod(), inputTypes);

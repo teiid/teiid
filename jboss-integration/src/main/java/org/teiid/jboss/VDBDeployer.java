@@ -22,6 +22,7 @@
 package org.teiid.jboss;
 
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import org.jboss.as.server.deployment.*;
 import org.jboss.msc.service.ServiceBuilder;
@@ -110,11 +111,19 @@ public class VDBDeployer implements DeploymentUnitProcessor {
 				vdbService.addDependency(ServiceName.JBOSS.append("data-source", model.getSourceConnectionJndiName(sourceName)));	//$NON-NLS-1$
 			}
 		}
+		
+		// adding the translator services is redundant, however if one is removed then it is an issue.
+		for (Translator t: deployment.getOverrideTranslators()) {
+			VDBTranslatorMetaData data = (VDBTranslatorMetaData)t;
+			String type = data.getType();
+			vdbService.addDependency(TeiidServiceNames.translatorServiceName(type));
+		}	
+		
 		vdbService.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class,  vdb.getVDBRepositoryInjector());
 		vdbService.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class,  vdb.getTranslatorRepositoryInjector());
-		vdbService.addDependency(TeiidServiceNames.executorServiceName(this.asyncThreadPoolName), TranslatorRepository.class,  vdb.getTranslatorRepositoryInjector());
+		vdbService.addDependency(TeiidServiceNames.executorServiceName(this.asyncThreadPoolName), Executor.class,  vdb.getExecutorInjector());
 		vdbService.addDependency(TeiidServiceNames.OBJECT_SERIALIZER, ObjectSerializer.class, vdb.getSerializerInjector());
-		vdbService.setInitialMode(Mode.ACTIVE).install();
+		vdbService.setInitialMode(Mode.PASSIVE).install();
 	}
 
 

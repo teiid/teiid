@@ -47,7 +47,7 @@ public class TeiidServiceNames {
 	}
 	
 	public static ServiceName vdbServiceName(String vdbName, int version) {
-		return VDB_SVC_BASE.append(vdbName, ".", String.valueOf(version)); //$NON-NLS-1$
+		return VDB_SVC_BASE.append(vdbName, String.valueOf(version)); 
 	}
 	
 	public static ServiceName executorServiceName(String poolName) {

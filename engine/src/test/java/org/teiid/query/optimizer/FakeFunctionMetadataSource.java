@@ -60,8 +60,8 @@ public class FakeFunctionMetadataSource implements FunctionMetadataSource {
         return methods;
     }
     
-    public Class getInvocationClass(String className) throws ClassNotFoundException { 
-        return Class.forName(className); 
+    public Class getInvocationClass(String className, ClassLoader cl) throws ClassNotFoundException { 
+        return Class.forName(className, true, cl); 
     }
     
     // dummy function

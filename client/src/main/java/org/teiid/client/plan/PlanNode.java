@@ -22,23 +22,20 @@
 
 package org.teiid.client.plan;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.stream.FactoryConfigurationError;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ExternalizeUtil;
@@ -171,17 +168,49 @@ public class PlanNode implements Externalizable {
      */
     public String toXml() {
     	try {
-	    	JAXBContext jc = JAXBContext.newInstance(new Class<?>[] {PlanNode.class});
-			Marshaller marshaller = jc.createMarshaller();
-			marshaller.setProperty("jaxb.formatted.output", Boolean.TRUE); //$NON-NLS-1$
-			StringWriter writer = new StringWriter();
-			marshaller.marshal(this, writer);
-			return writer.toString();
-    	} catch (JAXBException e) {
-    		//shouldn't happen
-    		throw new TeiidRuntimeException(e);
-    	}
+			XMLOutputFactory outputFactory = XMLOutputFactory.newFactory();
+			StringWriter stringWriter = new StringWriter();
+			XMLStreamWriter writer = outputFactory.createXMLStreamWriter(stringWriter);
+			writer.writeStartDocument("UTF-8", "1.0"); //$NON-NLS-1$ //$NON-NLS-2$
+			writePlanNode(this, writer);
+			writer.writeEndDocument();
+			return stringWriter.toString();
+		} catch (FactoryConfigurationError e) {
+			throw new TeiidRuntimeException(e);
+		} catch (XMLStreamException e) {
+			throw new TeiidRuntimeException(e);
+		}
     }
+    
+    private void writeProperty(Property property, XMLStreamWriter writer) throws XMLStreamException {
+    	writer.writeStartElement("property"); //$NON-NLS-1$
+    	writer.writeAttribute("name", property.getName()); //$NON-NLS-1$
+    	if (property.getValues() != null) {
+	    	for (String value:property.getValues()) {
+	    		writeElement(writer, "value", value); //$NON-NLS-1$
+	    	}
+    	}
+    	PlanNode node = property.getPlanNode();
+    	if (node != null) {
+    		writePlanNode(node, writer);
+    	}
+    	writer.writeEndElement();
+    }
+    
+    private void writePlanNode(PlanNode node, XMLStreamWriter writer) throws XMLStreamException {
+		writer.writeStartElement("node"); //$NON-NLS-1$
+		writer.writeAttribute("name", node.getName()); //$NON-NLS-1$
+		for (Property p:node.getProperties()) {
+			writeProperty(p, writer);
+		}
+		writer.writeEndElement();
+    }
+    
+    private void writeElement(final XMLStreamWriter writer, String name, String value) throws XMLStreamException {
+        writer.writeStartElement(name);
+        writer.writeCharacters(value);
+        writer.writeEndElement();
+    }    
     
     @Override
     public String toString() {

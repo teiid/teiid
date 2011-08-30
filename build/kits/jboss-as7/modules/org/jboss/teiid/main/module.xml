@@ -10,8 +10,8 @@
         <resource-root path="teiid-runtime-${project.version}.jar" />
         <resource-root path="teiid-engine-${project.version}.jar" />
         <resource-root path="saxonhe-9.2.1.5.jar" />
-        <resource-root path="json-simple-1.1.jar" />        
-        <!-- Insert resources here -->
+        <resource-root path="json-simple-1.1.jar" />
+        <resource-root path="conf" />
     </resources>
 
 
@@ -37,6 +37,7 @@
         <module name="org.jboss.as.naming"/>
         <module name="javax.xml.bind.api"/>
         <module name="javax.transaction.api"/>
+        <module name="javax.activation.api"/>
     </dependencies>
 
 </module>

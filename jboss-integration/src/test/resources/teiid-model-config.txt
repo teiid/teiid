@@ -91,7 +91,7 @@
             "default" => true
         },
         "security-domain" => {
-            "type" => STRING,
+            "type" => LIST,
             "description" => "Comma separated list of domains to be used to login into Teiid",
             "required" => false,
             "max-occurs" => 1

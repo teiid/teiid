@@ -29,6 +29,9 @@ import java.util.Properties;
 import java.util.Random;
 import java.util.UUID;
 
+import org.jboss.modules.Module;
+import org.jboss.modules.ModuleIdentifier;
+import org.jboss.modules.ModuleLoadException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
@@ -550,16 +553,21 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	private FunctionMethod addHasFunctionPrivilage() throws TranslatorException  {
 		FunctionMethod func = addFunction("has_function_privilege"); //$NON-NLS-1$
 		
-		ArrayList<FunctionParameter> inParams = new ArrayList<FunctionParameter>();
-		inParams.add(new FunctionParameter("oid", DataTypeManager.DefaultDataTypes.INTEGER, ""));//$NON-NLS-1$ //$NON-NLS-2$
-		inParams.add(new FunctionParameter("permission", DataTypeManager.DefaultDataTypes.STRING, "")); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		func.setInputParameters(inParams);
-		func.setOutputParameter(new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, ""));  //$NON-NLS-1$ //$NON-NLS-2$
-		
-		func.setInvocationClass(ReturnTrue.class.getName());
-		func.setInvocationMethod("result"); //$NON-NLS-1$
-		func.setPushdown(PushDown.CANNOT_PUSHDOWN);
+		try {
+			ArrayList<FunctionParameter> inParams = new ArrayList<FunctionParameter>();
+			inParams.add(new FunctionParameter("oid", DataTypeManager.DefaultDataTypes.INTEGER, ""));//$NON-NLS-1$ //$NON-NLS-2$
+			inParams.add(new FunctionParameter("permission", DataTypeManager.DefaultDataTypes.STRING, "")); //$NON-NLS-1$ //$NON-NLS-2$
+			
+			func.setInputParameters(inParams);
+			func.setOutputParameter(new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, ""));  //$NON-NLS-1$ //$NON-NLS-2$
+			
+			func.setInvocationClass(ReturnTrue.class.getName());
+			func.setInvocationMethod("result"); //$NON-NLS-1$
+			func.setPushdown(PushDown.CANNOT_PUSHDOWN);
+			func.setClassloader(Module.getModuleFromCallerModuleLoader(ModuleIdentifier.create("org.jboss.teiid")).getClassLoader()); //$NON-NLS-1$
+		} catch (ModuleLoadException e) {
+			throw new TranslatorException(e);
+		}
 		return func;
 	}
 	

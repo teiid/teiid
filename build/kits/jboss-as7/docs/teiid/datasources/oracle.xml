@@ -1,0 +1,13 @@
+<datasource jndi-name="java:/Oracle11_PushDS" pool-name="OracleDS" enabled="true" jta="true" use-java-context="true" use-ccm="true">
+    <connection-url>jdbc:oracle:thin:@englxdbs11.mw.lab.eng.bos.redhat.com:1521:orcl</connection-url>
+    <driver>oracle</driver>
+    <pool>
+        <prefill>false</prefill>
+        <use-strict-min>false</use-strict-min>
+        <flush-strategy>FailingConnectionOnly</flush-strategy>
+    </pool>
+    <security>
+        <user-name>bqt2_ro</user-name>
+        <password>mm</password>
+    </security>
+</datasource>
