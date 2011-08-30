@@ -25,6 +25,7 @@ package org.teiid.query.optimizer.capabilities;
 public interface SourceCapabilities {
 
     public enum Capability {
+    	
         /**
          * Support indicates connector can accept queries with SELECT DISTINCT
          */
@@ -38,7 +39,7 @@ public interface SourceCapabilities {
          * 
          * @since 3.1 SP2
          */
-        QUERY_FROM_GROUP_ALIAS,
+        QUERY_FROM_GROUP_ALIAS("TableAlias"), //$NON-NLS-1$
         /**
          * Max number of groups appearing in a from clause
          */
@@ -64,7 +65,7 @@ public interface SourceCapabilities {
          * 
          * @since 3.1 SP2
          */
-        QUERY_FROM_JOIN_SELFJOIN,
+        QUERY_FROM_JOIN_SELFJOIN("SelfJoins"), //$NON-NLS-1$
         /**
          * Support indicates connector can accept right or left outer joins
          * 
@@ -76,7 +77,7 @@ public interface SourceCapabilities {
          * 
          * @since 4.1
          */
-        QUERY_FROM_INLINE_VIEWS,
+        QUERY_FROM_INLINE_VIEWS("InlineViews"), //$NON-NLS-1$
         /**
          * Support indicates connector can accept full outer joins
          * 
@@ -101,13 +102,13 @@ public interface SourceCapabilities {
          * 
          * @since 3.1 SP2
          */
-        CRITERIA_LIKE,
+        CRITERIA_LIKE("LikeCriteria"), //$NON-NLS-1$
         /**
          * Support indicates connector accepts criteria of form (element LIKE constant ESCAPE char) - CURRENTLY NOT USED
          * 
          * @since 3.1 SP2
          */
-        CRITERIA_LIKE_ESCAPE,
+        CRITERIA_LIKE_ESCAPE("LikeCriteriaEscapeCharacter"), //$NON-NLS-1$
         /**
          * Support indicates connector accepts criteria of form (element IN set)
          * 
@@ -226,7 +227,7 @@ public interface SourceCapabilities {
          * 
          * @since 3.1 SP2
          */
-        QUERY_AGGREGATES_DISTINCT,
+        QUERY_AGGREGATES_DISTINCT("AggregatesDistinct"),
         /**
          * Support indicates connector can accept scalar subqueries in the SELECT, WHERE, and HAVING clauses
          * 
@@ -321,12 +322,29 @@ public interface SourceCapabilities {
         INSERT_WITH_ITERATOR,
         COMMON_TABLE_EXPRESSIONS,
         MAX_DEPENDENT_PREDICATES,
-        ADVANCED_OLAP, 
+        ADVANCED_OLAP("AdvancedOLAP"), //$NON-NLS-1$ 
         QUERY_AGGREGATES_ARRAY, 
-        ELEMENTARY_OLAP, 
-        WINDOW_FUNCTION_ORDER_BY_AGGREGATES,
+        ELEMENTARY_OLAP("ElementaryOLAP"), //$NON-NLS-1$ 
+        WINDOW_FUNCTION_ORDER_BY_AGGREGATES("WindowOrderByAggregates"), //$NON-NLS-1$
         CRITERIA_SIMILAR,
-        CRITERIA_LIKE_REGEX
+        CRITERIA_LIKE_REGEX, 
+        WINDOW_FUNCTION_DISTINCT_AGGREGATES("WindowDistinctAggregates"); //$NON-NLS-1$
+        
+        
+        private final String toString;
+        
+    	Capability(String toString) {
+    		this.toString = toString;
+		}
+    	
+    	Capability() {
+    		this.toString = name();
+		}
+    	
+    	public String toString() {
+    		return toString;
+    	}
+
     }
 
     public enum Scope {

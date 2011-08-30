@@ -1234,7 +1234,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     		break;
     	}
     	validateNoSubqueriesOrOuterReferences(windowFunction);
-        if (windowFunction.getFunction().getOrderBy() != null || windowFunction.getFunction().isDistinct()) {
+        if (windowFunction.getFunction().getOrderBy() != null || (windowFunction.getFunction().isDistinct() && windowFunction.getWindowSpecification().getOrderBy() != null)) {
         	handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0042", new Object[] {windowFunction.getFunction(), windowFunction}), windowFunction); //$NON-NLS-1$
         }
         if (windowFunction.getWindowSpecification().getPartition() != null) {

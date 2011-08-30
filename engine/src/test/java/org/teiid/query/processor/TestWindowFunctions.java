@@ -34,6 +34,9 @@ import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.query.processor.relational.AccessNode;
+import org.teiid.query.processor.relational.ProjectNode;
+import org.teiid.query.processor.relational.WindowFunctionProjectNode;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings({"nls", "unchecked"})
@@ -90,6 +93,49 @@ public class TestWindowFunctions {
                 0       // UnionAll
             });                                     
     }
+    
+    @Test public void testWindowFunctionPushdown2() throws Exception {
+    	BasicSourceCapabilities caps = getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
+    	caps.setCapabilitySupport(Capability.WINDOW_FUNCTION_ORDER_BY_AGGREGATES, true);
+    	caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+        ProcessorPlan plan = TestOptimizer.helpPlan("select max(e1) over (order by e1 nulls first) as y from pm1.g1", //$NON-NLS-1$
+                                      RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
+                                      new String[] {
+                                          "SELECT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    
+        checkNodeTypes(plan, new int[] {1, 1, 1}, new Class<?>[] {AccessNode.class, WindowFunctionProjectNode.class, ProjectNode.class});                                    
+        
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY_NULL_ORDERING, true);
+        plan = TestOptimizer.helpPlan("select max(e1) over (order by e1 nulls first) as y from pm1.g1", //$NON-NLS-1$
+                RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
+                new String[] {
+                    "SELECT MAX(g_0.e1) OVER (ORDER BY g_0.e1 NULLS FIRST) FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
+        checkNodeTypes(plan, FULL_PUSHDOWN);
+    }
+    
+    @Test public void testWindowFunctionPushdown3() throws Exception {
+    	BasicSourceCapabilities caps = getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
+    	caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
+    	caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_DISTINCT, true);
+        ProcessorPlan plan = TestOptimizer.helpPlan("select count(distinct e1) over (partition by e2) as y from pm1.g1", //$NON-NLS-1$
+                                      RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
+                                      new String[] {
+                                          "SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    
+        checkNodeTypes(plan, new int[] {1, 1, 1}, new Class<?>[] {AccessNode.class, WindowFunctionProjectNode.class, ProjectNode.class});                                    
+        
+        caps.setCapabilitySupport(Capability.WINDOW_FUNCTION_DISTINCT_AGGREGATES, true);
+        plan = TestOptimizer.helpPlan("select count(distinct e1) over (partition by e2) as y from pm1.g1", //$NON-NLS-1$
+                RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
+                new String[] {
+                    "SELECT COUNT(DISTINCT g_0.e1) OVER (PARTITION BY g_0.e2) FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
+        checkNodeTypes(plan, FULL_PUSHDOWN);
+    }
+
     
 	@Test public void testRanking() throws Exception {
     	String sql = "select e1, row_number() over (order by e1), rank() over (order by e1), dense_rank() over (order by e1 nulls last) from pm1.g1";
@@ -235,5 +281,25 @@ public class TestWindowFunctions {
         
         helpProcess(plan, dataManager, expected);
     }
+    
+    @Test public void testPartitionedDistinctCount() throws Exception {
+    	String sql = "select e1, e3, count(distinct e1) over (partition by e3) as r from pm1.g1 order by e1, e3";
+        
+    	List<?>[] expected = new List[] {
+    			Arrays.asList(null, Boolean.FALSE, 2),
+        		Arrays.asList("a", Boolean.FALSE, 2),
+        		Arrays.asList("a", Boolean.FALSE, 2),
+        		Arrays.asList("a", Boolean.TRUE, 2),
+        		Arrays.asList("b", Boolean.FALSE, 2),
+        		Arrays.asList("c", Boolean.TRUE, 2),
+        };
+    	
+    	FakeDataManager dataManager = new FakeDataManager();
+    	sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+
     
 }

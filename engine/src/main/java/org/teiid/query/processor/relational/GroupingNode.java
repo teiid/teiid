@@ -39,7 +39,6 @@ import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.aggregate.AggregateFunction;
@@ -235,12 +234,8 @@ public class GroupingNode extends RelationalNode {
                 		functions[i] = new StatsFunction(function);
                 	}
 
-                    if(aggSymbol.isDistinct() && !function.equals(NonReserved.MIN) && !function.equals(NonReserved.MAX)) {
-                        SortingFilter filter = new SortingFilter(functions[i], getBufferManager(), getConnectionID(), true);
-                        ElementSymbol element = new ElementSymbol("val"); //$NON-NLS-1$
-                        element.setType(inputType);
-                        filter.setElements(Arrays.asList(element));
-                        functions[i] = filter;
+                    if(aggSymbol.isDistinct()) {
+                    	functions[i] = handleDistinct(functions[i], inputType, getBufferManager(), getConnectionID());
                     } else if (aggSymbol.getOrderBy() != null) { //handle the xmlagg case
                 		int[] orderIndecies = new int[aggSymbol.getOrderBy().getOrderByItems().size()];
                 		List<OrderByItem> orderByItems = new ArrayList<OrderByItem>(orderIndecies.length);
@@ -276,6 +271,14 @@ public class GroupingNode extends RelationalNode {
             functions[i].initialize(outputType, inputType);
         }
     }
+
+	static SortingFilter handleDistinct(AggregateFunction af, Class<?> inputType, BufferManager bm, String cid) {
+		SortingFilter filter = new SortingFilter(af, bm, cid, true);
+		ElementSymbol element = new ElementSymbol("val"); //$NON-NLS-1$
+		element.setType(inputType);
+		filter.setElements(Arrays.asList(element));
+		return filter;
+	}
 
 	private int collectExpression(Expression ex) {
 		int index = this.collectedExpressions.indexOf(ex);

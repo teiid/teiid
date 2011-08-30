@@ -233,6 +233,11 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     }
     
     @Override
+    public boolean supportsWindowDistinctAggregates() {
+    	return false;
+    }
+    
+    @Override
     public boolean supportsWindowOrderByWithAggregates() {
     	return false;
     }

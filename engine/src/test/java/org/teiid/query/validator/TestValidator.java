@@ -1949,4 +1949,8 @@ public class TestValidator {
 		helpValidate("select count(*) over () as y", new String[] {"COUNT(*) OVER ()"}, RealMetadataFactory.example1Cached());
 	}
 	
+	@Test public void testWindowFunctionOrderedDistinct() {
+		helpValidate("select count(distinct e1) over (order by e2) as y from pm1.g1", new String[] {"COUNT(DISTINCT e1) OVER (ORDER BY e2)"}, RealMetadataFactory.example1Cached());
+	}
+	
 }

@@ -462,6 +462,10 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 				af = new StatsFunction(function);
 			}
 
+            if(aggSymbol.isDistinct()) {
+                af = GroupingNode.handleDistinct(af, inputType, getBufferManager(), getConnectionID());
+            }
+            
 			af.setExpressionIndex(wfi.expressionIndex);
 			af.setConditionIndex(wfi.conditionIndex);
 			af.initialize(outputType, inputType);

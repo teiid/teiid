@@ -887,6 +887,14 @@ public class ExecutionFactory<F, C> {
     }
     
     /**
+     * @return true if distinct aggregates can be windowed function.
+     * @since 7.6
+     */
+    public boolean supportsWindowDistinctAggregates() {
+    	return supportsElementaryOlapOperations();
+    }
+    
+    /**
      * @return true if array_agg is supported
      * @since 7.5
      */

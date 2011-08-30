@@ -32,7 +32,6 @@ import java.util.Set;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
@@ -58,7 +57,6 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.util.CommandContext;
-import org.teiid.translator.ExecutionFactory.NullOrder;
 import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
 
 
@@ -356,30 +354,8 @@ public final class RuleRaiseAccess implements OptimizerRule {
             if(! canPushSymbol(symbol.getSymbol(), true, modelID, metadata, capFinder, record)) {
                 return false;
             }
-            boolean supportsNullOrdering = CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_NULL_ORDERING, modelID, metadata, capFinder);
-            NullOrder defaultNullOrder = CapabilitiesUtil.getDefaultNullOrder(modelID, metadata, capFinder);
-            if (symbol.getNullOrdering() != null) {
-        		if (!supportsNullOrdering) {
-        			if (symbol.getNullOrdering() == NullOrdering.FIRST) {
-        				if (defaultNullOrder != NullOrder.FIRST && !(symbol.isAscending() && defaultNullOrder == NullOrder.LOW) 
-        						&& !(!symbol.isAscending() && defaultNullOrder == NullOrder.HIGH)) {
-        					return false;
-        				}
-        			} else if (defaultNullOrder != NullOrder.LAST && !(symbol.isAscending() && defaultNullOrder == NullOrder.HIGH) 
-        					&& !(!symbol.isAscending() && defaultNullOrder == NullOrder.LOW)) {
-    					return false;
-    				} 
-    				symbol.setNullOrdering(null);
-        		} 
-            } else if (supportsNullOrdering && defaultNullOrder != NullOrder.LOW) {
-            	//try to match the expected default of low
-        		if (symbol.isAscending()) {
-        			if (defaultNullOrder != NullOrder.FIRST) {
-        				symbol.setNullOrdering(NullOrdering.FIRST);
-        			}
-        		} else if (defaultNullOrder != NullOrder.LAST) {
-        			symbol.setNullOrdering(NullOrdering.LAST);
-        		}
+            if (!CapabilitiesUtil.supportsNullOrdering(metadata, capFinder, modelID, symbol)) {
+            	return false;
             }
         }
         

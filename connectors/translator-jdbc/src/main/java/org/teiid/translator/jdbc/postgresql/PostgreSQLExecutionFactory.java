@@ -506,6 +506,11 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     }
     
     @Override
+    public boolean supportsWindowDistinctAggregates() {
+    	return false;
+    }
+    
+    @Override
     public boolean supportsSimilarTo() {
     	return true;
     }
