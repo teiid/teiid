@@ -100,7 +100,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.INSERT_WITH_ITERATOR, srcCaps.supportsInsertWithIterator());
         tgtCaps.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, srcCaps.supportsCommonTableExpressions());
         tgtCaps.setCapabilitySupport(Capability.ADVANCED_OLAP, srcCaps.supportsAdvancedOlapOperations());
-        tgtCaps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, srcCaps.supportsAdvancedOlapOperations());
+        tgtCaps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, srcCaps.supportsElementaryOlapOperations());
         tgtCaps.setCapabilitySupport(Capability.WINDOW_FUNCTION_ORDER_BY_AGGREGATES, srcCaps.supportsWindowOrderByWithAggregates());
         tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_ARRAY, srcCaps.supportsArrayAgg());
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_SIMILAR, srcCaps.supportsSimilarTo());
