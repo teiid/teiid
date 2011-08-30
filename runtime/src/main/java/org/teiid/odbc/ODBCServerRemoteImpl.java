@@ -592,7 +592,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	}
 
 	@Override
-	public void executeQuery(final String query) {
+	public void executeQuery(String query) {
 		if (beginExecution()) {
 			errorOccurred("Awaiting asynch result"); //$NON-NLS-1$
 			ready();
@@ -601,6 +601,11 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		//46.2.3 Note that a simple Query message also destroys the unnamed portal.
 		this.portalMap.remove(UNNAMED);
 		this.preparedMap.remove(UNNAMED);
+		query = query.trim();
+		if (query.length() == 0) {
+    		client.emptyQueryReceived();
+    		ready();
+    	}
 		
         QueryWorkItem r = new QueryWorkItem(query);
 		r.run();
@@ -848,11 +853,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 					sql = reader.readStatement();
 				}
 		        while (sql != null) {
-		    		if (sql.trim().length() == 0) {
-		    			sql = reader.readStatement();
-		        		client.emptyQueryReceived();
-		        		continue;
-		        	}
 		            try {
 		    			
 		            	ResultsFuture<Integer> results = new ResultsFuture<Integer>();
