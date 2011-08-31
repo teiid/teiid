@@ -39,8 +39,8 @@ import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
 import org.jboss.as.naming.ManagedReferenceFactory;
-import org.jboss.as.naming.ManagedReferenceInjector;
 import org.jboss.as.naming.NamingStore;
+import org.jboss.as.naming.deployment.ContextNames;
 import org.jboss.as.naming.service.BinderService;
 import org.jboss.as.network.SocketBinding;
 import org.jboss.as.security.plugins.SecurityDomainContext;
@@ -59,6 +59,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.transport.ClientServiceRegistry;
+import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.SSLConfiguration;
 import org.teiid.transport.SocketConfiguration;
 
@@ -107,49 +108,56 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler implements Descripti
     		engine.setOdbcSocketConfiguration(odbc);
     	}    	
         
-        ServiceBuilder<ClientServiceRegistry> serviceBuilder = target.addService(TeiidServiceNames.engineServiceName(engine.getName()), engine);
-        serviceBuilder.addDependency(ServiceName.JBOSS.append("connector", "workmanager"), WorkManager.class, engine.getWorkManagerInjector()); //$NON-NLS-1$ //$NON-NLS-2$
-        serviceBuilder.addDependency(ServiceName.JBOSS.append("txn", "XATerminator"), XATerminator.class, engine.getXaTerminatorInjector()); //$NON-NLS-1$ //$NON-NLS-2$
-        serviceBuilder.addDependency(ServiceName.JBOSS.append("txn", "TransactionManager"), TransactionManager.class, engine.getTxnManagerInjector()); //$NON-NLS-1$ //$NON-NLS-2$
-        serviceBuilder.addDependency(TeiidServiceNames.BUFFER_MGR, BufferServiceImpl.class, engine.getBufferServiceInjector());
-        serviceBuilder.addDependency(TeiidServiceNames.SYSTEM_VDB, SystemVDBDeployer.class,  new InjectedValue<SystemVDBDeployer>());
-        serviceBuilder.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class, engine.getTranslatorRepositoryInjector());
-        serviceBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, engine.getVdbRepositoryInjector());
-        serviceBuilder.addDependency(TeiidServiceNames.AUTHORIZATION_VALIDATOR, AuthorizationValidator.class, engine.getAuthorizationValidatorInjector());
-        serviceBuilder.addDependency(TeiidServiceNames.CACHE_FACTORY, CacheFactory.class, engine.getCachefactoryInjector());
+        ServiceBuilder<ClientServiceRegistry> engineBuilder = target.addService(TeiidServiceNames.engineServiceName(engine.getName()), engine);
+        engineBuilder.addDependency(ServiceName.JBOSS.append("connector", "workmanager"), WorkManager.class, engine.getWorkManagerInjector()); //$NON-NLS-1$ //$NON-NLS-2$
+        engineBuilder.addDependency(ServiceName.JBOSS.append("txn", "XATerminator"), XATerminator.class, engine.getXaTerminatorInjector()); //$NON-NLS-1$ //$NON-NLS-2$
+        engineBuilder.addDependency(ServiceName.JBOSS.append("txn", "TransactionManager"), TransactionManager.class, engine.getTxnManagerInjector()); //$NON-NLS-1$ //$NON-NLS-2$
+        engineBuilder.addDependency(TeiidServiceNames.BUFFER_MGR, BufferServiceImpl.class, engine.getBufferServiceInjector());
+        engineBuilder.addDependency(TeiidServiceNames.SYSTEM_VDB, SystemVDBDeployer.class,  new InjectedValue<SystemVDBDeployer>());
+        engineBuilder.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class, engine.getTranslatorRepositoryInjector());
+        engineBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, engine.getVdbRepositoryInjector());
+        engineBuilder.addDependency(TeiidServiceNames.AUTHORIZATION_VALIDATOR, AuthorizationValidator.class, engine.getAuthorizationValidatorInjector());
+        engineBuilder.addDependency(TeiidServiceNames.CACHE_FACTORY, CacheFactory.class, engine.getCachefactoryInjector());
         
         if (jdbc != null) {
-        	serviceBuilder.addDependency(ServiceName.JBOSS.append("binding", jdbc.getSocketBinding()), SocketBinding.class, engine.getJdbcSocketBindingInjector()); //$NON-NLS-1$
+        	engineBuilder.addDependency(ServiceName.JBOSS.append("binding", jdbc.getSocketBinding()), SocketBinding.class, engine.getJdbcSocketBindingInjector()); //$NON-NLS-1$
         }
         
         if (odbc != null) {
-        	serviceBuilder.addDependency(ServiceName.JBOSS.append("binding", odbc.getSocketBinding()), SocketBinding.class, engine.getOdbcSocketBindingInjector()); //$NON-NLS-1$
+        	engineBuilder.addDependency(ServiceName.JBOSS.append("binding", odbc.getSocketBinding()), SocketBinding.class, engine.getOdbcSocketBindingInjector()); //$NON-NLS-1$
         }
+              
+        // register a JNDI name, this looks hard.
+        final QueryEngineReferenceFactoryService referenceFactoryService = new QueryEngineReferenceFactoryService();
+        final ServiceName referenceFactoryServiceName = TeiidServiceNames.engineServiceName(engine.getName()).append("reference-factory"); //$NON-NLS-1$
+        final ServiceBuilder<?> referenceBuilder = target.addService(referenceFactoryServiceName,referenceFactoryService);
+        referenceBuilder.addDependency(TeiidServiceNames.engineServiceName(engine.getName()), RuntimeEngineDeployer.class, referenceFactoryService.getQueryEngineInjector());
+        referenceBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
         
-        // register JNDI Name
-        ServiceName teiidContext = ServiceName.JBOSS.append("naming", "context", "teiid"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        BinderService binder = new BinderService(engine.getName());
-        ServiceBuilder<ManagedReferenceFactory> namingBuilder = target.addService(teiidContext.append(engine.getName()), binder);
-        namingBuilder.addDependency(teiidContext, NamingStore.class, binder.getNamingStoreInjector());
-        namingBuilder.addDependency(TeiidServiceNames.engineServiceName(engine.getName()), RuntimeEngineDeployer.class, new ManagedReferenceInjector<RuntimeEngineDeployer>(binder.getManagedObjectInjector()));
-        namingBuilder.setInitialMode(ServiceController.Mode.ON_DEMAND);
-        newControllers.add(namingBuilder.install());
-        
+        final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(LocalServerConnection.TEIID_RUNTIME_CONTEXT+engine.getName());
+        final BinderService engineBinderService = new BinderService(bindInfo.getBindName());
+        final ServiceBuilder<?> engineBinderBuilder = target.addService(bindInfo.getBinderServiceName(), engineBinderService);
+        engineBinderBuilder.addDependency(referenceFactoryServiceName, ManagedReferenceFactory.class, engineBinderService.getManagedObjectInjector());
+        engineBinderBuilder.addDependency(bindInfo.getParentContextServiceName(), NamingStore.class, engineBinderService.getNamingStoreInjector());        
+        engineBinderBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
         
         // add security domains
         if ( operation.hasDefined(Configuration.SECURITY_DOMAIN)) {
 	        List<ModelNode> domains = operation.get(Configuration.SECURITY_DOMAIN).asList();
 	        for (ModelNode domain:domains) {
 	        	LogManager.logInfo(LogConstants.CTX_SECURITY, "Security Enabled: true"); //$NON-NLS-1$
-	            serviceBuilder.addDependency(ServiceName.JBOSS.append("security", "security-domain", domain.asString()), SecurityDomainContext.class, new ConcurrentMapInjector<String,SecurityDomainContext>(engine.securityDomains, domain.asString())); //$NON-NLS-1$ //$NON-NLS-2$
+	            engineBuilder.addDependency(ServiceName.JBOSS.append("security", "security-domain", domain.asString()), SecurityDomainContext.class, new ConcurrentMapInjector<String,SecurityDomainContext>(engine.securityDomains, domain.asString())); //$NON-NLS-1$ //$NON-NLS-2$
 	        }
         }
                   
-        serviceBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
-        ServiceController<ClientServiceRegistry> controller = serviceBuilder.install(); 
+        engineBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
+        ServiceController<ClientServiceRegistry> controller = engineBuilder.install(); 
         newControllers.add(controller);
         ServiceContainer container =  controller.getServiceContainer();
-        container.addTerminateListener(shutdownListener);    	
+        container.addTerminateListener(shutdownListener);
+        
+        newControllers.add(referenceBuilder.install());
+        newControllers.add(engineBinderBuilder.install());
     }
 
 	

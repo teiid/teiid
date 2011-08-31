@@ -159,7 +159,7 @@ public class SessionServiceImpl implements SessionService {
             throw new SessionServiceException(RuntimePlugin.Util.getString("SessionServiceImpl.reached_max_sessions", new Object[] {new Long(sessionMaxLimit)})); //$NON-NLS-1$
         }
         
-        if (!domains.isEmpty() && authenticate) {
+        if (domains!= null && !domains.isEmpty() && authenticate) {
 	        // Authenticate user...
 	        // if not authenticated, this method throws exception
         	boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
@@ -168,7 +168,9 @@ public class SessionServiceImpl implements SessionService {
 	        securityDomain = membership.getSecurityDomain();
 	        securityContext = membership.getSecurityContext();
 	        subject = membership.getSubject();
-        }        
+        } else {
+        	LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"No Security Domain configured for Teiid for authentication"}); //$NON-NLS-1$
+        }
         
         long creationTime = System.currentTimeMillis();
 
