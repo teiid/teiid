@@ -64,6 +64,7 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.parser.ParseInfo;
@@ -185,6 +186,9 @@ public class TempTableDataManager implements ProcessorDataManager {
     	TempTableStore contextStore = context.getTempTableStore();
         if (command instanceof Query) {
             Query query = (Query)command;
+            if (modelName != null && !modelName.equals(TempMetadataAdapter.TEMP_MODEL.getID())) {
+            	return null;
+            }
             return registerQuery(context, contextStore, query);
         }
         if (command instanceof ProcedureContainer) {
