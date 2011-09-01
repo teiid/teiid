@@ -52,9 +52,16 @@ public class JBossCache<K, V> implements Cache<K, V> {
 		Node<K, V> node = getRootNode();
 		Node child = node.getChild(getFqn(key));
 		if (child != null) {
-			return (V)child.get(key);
+			if (validateNode(child)) {
+				return (V)child.get(key);
+			}
+			remove(key);
 		}
 		return null;
+	}
+	
+	protected boolean validateNode(Node node) {
+		return true;
 	}
 
 	protected Fqn<String> getFqn(K key) {

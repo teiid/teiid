@@ -488,7 +488,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		                	List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
                             client.sendResults(query.sql, stmt.getResultSet(), cols, result, true);
 		                } else {
-		                	// null future
 		                	client.sendUpdateCount(query.sql, stmt.getUpdateCount());
 		                	setEncoding();
 		                	result.getResultsReceiver().receiveResults(1);
@@ -627,7 +626,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	}
 
 	@Override
-	public void executeQuery(final String query) {
+	public void executeQuery(String query) {
 		if (beginExecution()) {
 			errorOccurred("Awaiting asynch result"); //$NON-NLS-1$
 			ready();
@@ -636,12 +635,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		//46.2.3 Note that a simple Query message also destroys the unnamed portal.
 		this.portalMap.remove(UNNAMED);
 		this.preparedMap.remove(UNNAMED);
-		
-		if (query.trim().length() == 0) {
-    		this.client.emptyQueryReceived();
+		query = query.trim();
+		if (query.length() == 0) {
+    		client.emptyQueryReceived();
     		ready();
-    		return;
     	}
+		
         QueryWorkItem r = new QueryWorkItem(query);
 		r.run();
 	}
@@ -871,6 +870,15 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		private QueryWorkItem(String query) {
 			this.reader = new ScriptReader(new StringReader(query));		
 		}
+		
+		private void done(Throwable error) {
+			if (error != null) {
+				errorOccurred(error);
+			} else {
+				doneExecuting();
+			}
+			ready();
+		}
 
 		@Override
 		public void run() {
@@ -890,14 +898,14 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		    					} catch (InterruptedException e) {
 		    						throw new AssertionError(e);
 		    					} catch (IOException e) {
-		    						client.errorOccurred(e);
+		    						done(e);
 		    						return;
 		    					} catch (ExecutionException e) {
 		    						Throwable cause = e;
 		    						while (cause instanceof ExecutionException && cause.getCause() != null && cause != cause.getCause()) {
 		    							cause = cause.getCause();
 		    						}
-		    						client.errorOccurred(cause);
+		    						done(cause);
 		    						return;
 		    					}
 		            			QueryWorkItem.this.run(); //continue processing
@@ -943,15 +951,15 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		    			}
 		                return; //wait for the execution to finish
 		            } catch (SQLException e) {
-		                errorOccurred(e);
-		                break;
+		            	done(e);
+		            	return;
 		            } 
 		        }
 			} catch(IOException e) {
-				errorOccurred(e);
+				done(e);
+				return;
 			}
-			doneExecuting();
-			ready();
+			done(null);
 		}
 	}
     

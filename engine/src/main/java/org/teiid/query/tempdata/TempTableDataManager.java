@@ -56,6 +56,7 @@ import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.parser.ParseInfo;
@@ -139,6 +140,9 @@ public class TempTableDataManager implements ProcessorDataManager {
     	TempTableStore contextStore = context.getTempTableStore();
         if (command instanceof Query) {
             Query query = (Query)command;
+            if (modelName != null && !modelName.equals(TempMetadataAdapter.TEMP_MODEL.getID())) {
+            	return null;
+            }
             return registerQuery(context, contextStore, query);
         }
         if (command instanceof ProcedureContainer) {
@@ -171,7 +175,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 					}
         			ts = new CollectionTupleSource(Arrays.asList(values).iterator());
         		}
-        		return table.insert(ts, insert.getVariables());
+        		return table.insert(ts, insert.getVariables(), true);
         	}
         	if (command instanceof Update) {
         		final Update update = (Update)command;
@@ -442,8 +446,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			qp.getContext().setDataObjects(null);
 			TupleSource ts = new BatchCollector.BatchProducerTupleSource(qp);
 			
-			//TODO: if this insert fails, it's unnecessary to do the undo processing
-			table.insert(ts, allColumns);
+			table.insert(ts, allColumns, false);
 			table.getTree().compact();
 			rowCount = table.getRowCount();
 			//TODO: could pre-process indexes to remove overlap

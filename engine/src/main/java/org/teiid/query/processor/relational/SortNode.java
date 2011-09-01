@@ -133,7 +133,9 @@ public class SortNode extends RelationalNode {
 
     public void closeDirect() {
         if(this.output != null) {
-    		this.output.remove();
+        	if (!usingOutput) {
+        		this.output.remove();
+        	}
         	this.output = null;
         }
         this.outputTs = null;
