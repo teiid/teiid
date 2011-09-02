@@ -230,6 +230,7 @@ public class LanguageBridgeFactory {
 		        }
 			}
 			item.setSubquery(translate(withQueryCommand.getCommand()));
+			items.add(item);
 		}
     	result.setItems(items);
     	return result;

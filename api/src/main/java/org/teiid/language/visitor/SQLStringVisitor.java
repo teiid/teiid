@@ -927,6 +927,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     	buffer.append(WITH);
     	buffer.append(Tokens.SPACE);
     	append(obj.getItems());
+    	buffer.append(Tokens.SPACE);
     }
     
     @Override
@@ -940,6 +941,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     		buffer.append(Tokens.SPACE);
     	}
     	buffer.append(AS);
+    	buffer.append(Tokens.SPACE);
 		buffer.append(Tokens.LPAREN);
 		append(obj.getSubquery());
 		buffer.append(Tokens.RPAREN);
