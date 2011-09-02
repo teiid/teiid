@@ -348,11 +348,11 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 				case SECURITY_DOMAIN_ELEMENT:
 					node.get(reader.getLocalName()).add(reader.getElementText());
 					break;
-					
 	
 				case JDBC_ELEMENT:
 					node.get(reader.getLocalName()).set(parseSocketConfiguration(reader));
 					break;
+					
 				case ODBC_ELEMENT:
 					node.get(reader.getLocalName()).set(parseSocketConfiguration(reader));
 					break;                   

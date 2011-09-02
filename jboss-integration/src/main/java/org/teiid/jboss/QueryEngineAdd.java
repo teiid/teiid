@@ -33,10 +33,7 @@ import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
 import javax.transaction.TransactionManager;
 
-import org.jboss.as.controller.AbstractBoottimeAddStepHandler;
-import org.jboss.as.controller.OperationContext;
-import org.jboss.as.controller.OperationFailedException;
-import org.jboss.as.controller.ServiceVerificationHandler;
+import org.jboss.as.controller.*;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
 import org.jboss.as.naming.ManagedReferenceFactory;
 import org.jboss.as.naming.NamingStore;
@@ -63,7 +60,7 @@ import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.SSLConfiguration;
 import org.teiid.transport.SocketConfiguration;
 
-class QueryEngineAdd extends AbstractBoottimeAddStepHandler implements DescriptionProvider {
+class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvider {
 
 	@Override
 	public ModelNode getModelDescription(Locale locale) {
@@ -80,18 +77,27 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler implements Descripti
 	
 	@Override
 	protected void populateModel(ModelNode operation, ModelNode model) {
-		populateQueryEngine(operation, model);
+        final ModelNode address = operation.require(OP_ADDR);
+        final PathAddress pathAddress = PathAddress.pathAddress(address);
+    	final String engineName = pathAddress.getLastElement().getValue();
+
+		populateQueryEngine(engineName, operation, model);
 	}
 	
 	@Override
-    protected void performBoottime(OperationContext context, ModelNode operation, ModelNode model, ServiceVerificationHandler verificationHandler, List<ServiceController<?>> newControllers) throws OperationFailedException {
+	protected void performRuntime(final OperationContext context, final ModelNode operation, final ModelNode model,
+            final ServiceVerificationHandler verificationHandler, final List<ServiceController<?>> newControllers) throws OperationFailedException {
 
     	ServiceTarget target = context.getServiceTarget();
     	
     	final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener();
-       	    	
+       	
+        final ModelNode address = operation.require(OP_ADDR);
+        final PathAddress pathAddress = PathAddress.pathAddress(address);
+    	final String engineName = pathAddress.getLastElement().getValue();
+    	
     	// now build the engine
-    	final RuntimeEngineDeployer engine = buildQueryEngine(operation);
+    	final RuntimeEngineDeployer engine = buildQueryEngine(engineName, operation);
     	engine.setSecurityHelper(new JBossSecurityHelper());
     	engine.setContainerLifeCycleListener(shutdownListener);
     	// TODO: none of the caching is configured..
@@ -161,8 +167,8 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler implements Descripti
     }
 
 	
-	private RuntimeEngineDeployer buildQueryEngine(ModelNode node) {
-		RuntimeEngineDeployer engine = new RuntimeEngineDeployer(node.require(Configuration.ENGINE_NAME).asString());
+	private RuntimeEngineDeployer buildQueryEngine(String engineName, ModelNode node) {
+		RuntimeEngineDeployer engine = new RuntimeEngineDeployer(engineName);
     	
     	if (node.hasDefined(Configuration.MAX_THREADS)) {
     		engine.setMaxThreads(node.get(Configuration.MAX_THREADS).asInt());
@@ -280,7 +286,6 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler implements Descripti
 	}	
 	
 	static void describeQueryEngine(ModelNode node, String type, ResourceBundle bundle) {
-		addAttribute(node, Configuration.ENGINE_NAME, type, bundle.getString(Configuration.ENGINE_NAME+Configuration.DESC), ModelType.STRING, true, null);		
 		addAttribute(node, Configuration.MAX_THREADS, type, bundle.getString(Configuration.MAX_THREADS+DESC), ModelType.INT, false, "64"); //$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_ACTIVE_PLANS, type, bundle.getString(Configuration.MAX_ACTIVE_PLANS+DESC), ModelType.INT, false, "20"); //$NON-NLS-1$
 		addAttribute(node, Configuration.USER_REQUEST_SOURCE_CONCURRENCY, type, bundle.getString(Configuration.USER_REQUEST_SOURCE_CONCURRENCY+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
@@ -343,10 +348,10 @@ class QueryEngineAdd extends AbstractBoottimeAddStepHandler implements Descripti
 		addAttribute(node, Configuration.AUTH_MODE, type, bundle.getString(Configuration.AUTH_MODE+DESC), ModelType.STRING, false, "anonymous");	//$NON-NLS-1$
 	}	
 	
-	private void populateQueryEngine(ModelNode operation, ModelNode model) {
-		model.get(Configuration.ENGINE_NAME).set(operation.require(Configuration.ENGINE_NAME).asString());
+	private void populateQueryEngine(String engineName, ModelNode operation, ModelNode model) {
+		model.get(Configuration.ENGINE_NAME).set(engineName);
 		
-    	if (operation.hasDefined(Configuration.MAX_THREADS)) {
+		if (operation.hasDefined(Configuration.MAX_THREADS)) {
     		model.get(Configuration.MAX_THREADS).set(operation.get(Configuration.MAX_THREADS).asInt());
     	}
     	if (operation.hasDefined(Configuration.MAX_ACTIVE_PLANS)) {

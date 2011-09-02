@@ -45,22 +45,6 @@ public class TeiidExtension implements Extension {
 	
 	private static final String ACTIVE_SESSION_COUNT = "active-session-count"; //$NON-NLS-1$
 	private static final String RUNTIME_VERSION = "runtime-version"; //$NON-NLS-1$
-	private static final String REQUESTS_PER_SESSION = "requests-per-session"; //$NON-NLS-1$
-	private static final String ACTIVE_SESSIONS = "active-sessions"; //$NON-NLS-1$
-	private static final String REQUESTS_PER_VDB = "requests-per-vdb"; //$NON-NLS-1$
-	private static final String LONG_RUNNING_QUERIES = "long-running-queries"; //$NON-NLS-1$
-	private static final String TERMINATE_SESSION = "terminate-session";//$NON-NLS-1$
-	private static final String CANCEL_QUERY = "cancel-query";//$NON-NLS-1$
-	private static final String CACHE_TYPES = "cache-types";//$NON-NLS-1$
-	private static final String CLEAR_CACHE = "clear-cache";//$NON-NLS-1$
-	private static final String CACHE_STATISTICS = "cache-statistics";//$NON-NLS-1$
-	private static final String WORKERPOOL_STATISTICS = "workerpool-statistics";//$NON-NLS-1$
-	private static final String ACTIVE_TRANSACTIONS = "active-transactions";//$NON-NLS-1$
-	private static final String TERMINATE_TRANSACTION = "terminate-transaction";//$NON-NLS-1$
-	private static final String MERGE_VDBS = "merge-vdbs";//$NON-NLS-1$
-	private static final String EXECUTE_QUERY = "execute-query";//$NON-NLS-1$
-	private static final String GETVDBS = "getVDBs";//$NON-NLS-1$
-	private static final String GETVDB = "getVDB";//$NON-NLS-1$
 	
 	public static final String TEIID_SUBSYSTEM = "teiid"; //$NON-NLS-1$
 	private static TeiidSubsystemParser parser = new TeiidSubsystemParser();
@@ -92,10 +76,10 @@ public class TeiidExtension implements Extension {
 		        
 		        TeiidBootServicesAdd.describeTeiidRoot(bundle, ATTRIBUTES, node);
 		        node.get(CHILDREN, Configuration.QUERY_ENGINE, DESCRIPTION).set(bundle.getString(Configuration.QUERY_ENGINE+Configuration.DESC)); 
-		        node.get(CHILDREN, Configuration.QUERY_ENGINE, REQUIRED).set(false);
+		        node.get(CHILDREN, Configuration.QUERY_ENGINE, REQUIRED).set(true);
 		        
 		        node.get(CHILDREN, Configuration.TRANSLATOR, DESCRIPTION).set(bundle.getString(Configuration.TRANSLATOR+Configuration.DESC));
-		        node.get(CHILDREN, Configuration.TRANSLATOR, REQUIRED).set(false);
+		        node.get(CHILDREN, Configuration.TRANSLATOR, REQUIRED).set(true);
 
 		        return node;
 		    }
@@ -113,8 +97,6 @@ public class TeiidExtension implements Extension {
 	            node.get(DESCRIPTION).set(bundle.getString(Configuration.TRANSLATOR+Configuration.DESC));
 	            node.get(HEAD_COMMENT_ALLOWED).set(true);
 	            node.get(TAIL_COMMENT_ALLOWED).set(true);
-
-	            addAttribute(node, Configuration.TRANSLATOR_NAME, ATTRIBUTES, bundle.getString(Configuration.TRANSLATOR_NAME+Configuration.DESC), ModelType.STRING, true, null);
 	            addAttribute(node, Configuration.TRANSLATOR_MODULE, ATTRIBUTES, bundle.getString(Configuration.TRANSLATOR_MODULE+Configuration.DESC), ModelType.STRING, true, null);
 	            return node;
 			}
@@ -141,57 +123,30 @@ public class TeiidExtension implements Extension {
         engineSubsystem.registerOperationHandler(REMOVE, ENGINE_REMOVE, ENGINE_REMOVE, false);     
         
 		
-		QueryEngineOperationHandler op;
 		engineSubsystem.registerReadOnlyAttribute(RUNTIME_VERSION, new GetRuntimeVersion(RUNTIME_VERSION), Storage.RUNTIME); 
 		engineSubsystem.registerReadOnlyAttribute(ACTIVE_SESSION_COUNT, new GetActiveSessionsCount(ACTIVE_SESSION_COUNT), Storage.RUNTIME); 
 		
-		op = new GetActiveSessions(ACTIVE_SESSIONS);
-		engineSubsystem.registerOperationHandler(ACTIVE_SESSIONS, op, op); 
+		// teiid level admin api operation handlers
+		new GetTranslator().register(teiidSubsystem);
+		new GetTranslators().register(teiidSubsystem);
+		new MergeVDBs().register(teiidSubsystem);
+		new ListVDBs().register(teiidSubsystem);
+		new GetVDB().register(teiidSubsystem);
 		
-		op = new GetRequestsPerSession(REQUESTS_PER_SESSION);
-		engineSubsystem.registerOperationHandler(REQUESTS_PER_SESSION, op, op);
-
-		op = new GetRequestsPerVDB(REQUESTS_PER_VDB);
-		engineSubsystem.registerOperationHandler(REQUESTS_PER_VDB, op, op);
-		
-		op = new GetLongRunningQueries(LONG_RUNNING_QUERIES);
-		engineSubsystem.registerOperationHandler(LONG_RUNNING_QUERIES, op, op);		
-		
-		op = new TerminateSession(TERMINATE_SESSION);
-		engineSubsystem.registerOperationHandler(TERMINATE_SESSION, op, op);	
-		
-		op = new CancelQuery(CANCEL_QUERY);
-		engineSubsystem.registerOperationHandler(CANCEL_QUERY, op, op);		
-		
-		op = new CacheTypes(CACHE_TYPES);
-		engineSubsystem.registerOperationHandler(CACHE_TYPES, op, op);	
-		
-		op = new ClearCache(CLEAR_CACHE);
-		engineSubsystem.registerOperationHandler(CLEAR_CACHE, op, op);	
-		
-		op = new CacheStatistics(CACHE_STATISTICS);
-		engineSubsystem.registerOperationHandler(CACHE_STATISTICS, op, op);		
-		
-		op = new WorkerPoolStatistics(WORKERPOOL_STATISTICS);
-		engineSubsystem.registerOperationHandler(WORKERPOOL_STATISTICS, op, op);		
-		
-		op = new ActiveTransactions(ACTIVE_TRANSACTIONS);
-		engineSubsystem.registerOperationHandler(ACTIVE_TRANSACTIONS, op, op);	
-		
-		op = new TerminateTransaction(TERMINATE_TRANSACTION);
-		engineSubsystem.registerOperationHandler(TERMINATE_TRANSACTION, op, op);		
-		
-		op = new MergeVDBs(MERGE_VDBS);
-		engineSubsystem.registerOperationHandler(MERGE_VDBS, op, op);	
-		
-		op = new ExecuteQuery(EXECUTE_QUERY);
-		engineSubsystem.registerOperationHandler(EXECUTE_QUERY, op, op);	
-		
-		op = new GetVDBs(GETVDBS);
-		engineSubsystem.registerOperationHandler(GETVDBS, op, op);
-		
-		op = new GetVDB(GETVDB);
-		engineSubsystem.registerOperationHandler(GETVDB, op, op);		
+		// engine level admin api handlers
+		new GetActiveSessions().register(engineSubsystem);
+		new GetRequestsPerSession().register(engineSubsystem);
+		new GetRequestsPerVDB().register(engineSubsystem);
+		new GetLongRunningQueries().register(engineSubsystem);
+		new TerminateSession().register(engineSubsystem);
+		new CancelQuery().register(engineSubsystem);
+		new CacheTypes().register(engineSubsystem);
+		new ClearCache().register(engineSubsystem);
+		new CacheStatistics().register(engineSubsystem);
+		new WorkerPoolStatistics().register(engineSubsystem);
+		new ActiveTransactions().register(engineSubsystem);
+		new TerminateTransaction().register(engineSubsystem);
+		new ExecuteQuery().register(engineSubsystem);
 	}
 
 	@Override

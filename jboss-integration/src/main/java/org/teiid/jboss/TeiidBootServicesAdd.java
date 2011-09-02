@@ -117,6 +117,10 @@ public class TeiidBootServicesAdd extends AbstractAddStepHandler implements Desc
 		}
 		populateBufferManager(operation, model);
 		//TODO: add cache model descriptions
+		
+		// these are just place holders
+//		model.get(Configuration.QUERY_ENGINE);
+//		model.get(Configuration.TRANSLATOR);
 	}
 	
 	@Override

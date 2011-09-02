@@ -55,7 +55,6 @@ public class TranslatorAdd extends AbstractAddStepHandler implements Description
         operation.get(OPERATION_NAME).set(ADD);
         operation.get(DESCRIPTION).set(bundle.getString("translator.add")); //$NON-NLS-1$
         
-        addAttribute(operation, Configuration.TRANSLATOR_NAME, ATTRIBUTES, bundle.getString(Configuration.TRANSLATOR_NAME+Configuration.DESC), ModelType.STRING, true, null);
         addAttribute(operation, Configuration.TRANSLATOR_MODULE, ATTRIBUTES, bundle.getString(Configuration.TRANSLATOR_MODULE+Configuration.DESC), ModelType.STRING, true, null);
         return operation;
     }
@@ -75,7 +74,11 @@ public class TranslatorAdd extends AbstractAddStepHandler implements Description
     protected void performRuntime(final OperationContext context, final ModelNode operation, final ModelNode model,
             final ServiceVerificationHandler verificationHandler, final List<ServiceController<?>> newControllers) throws OperationFailedException {
 
-		final String name = operation.require(Configuration.TRANSLATOR_NAME).asString();
+        final ModelNode address = operation.require(OP_ADDR);
+        final PathAddress pathAddress = PathAddress.pathAddress(address);
+
+    	final String translatorName = pathAddress.getLastElement().getValue();
+		
         final String moduleName = operation.require(Configuration.TRANSLATOR_MODULE).asString();
 		
         final ServiceTarget target = context.getServiceTarget();
@@ -86,25 +89,32 @@ public class TranslatorAdd extends AbstractAddStepHandler implements Description
             moduleId = ModuleIdentifier.create(moduleName);
             module = Module.getCallerModuleLoader().loadModule(moduleId);
         } catch (ModuleLoadException e) {
-            throw new OperationFailedException(e, new ModelNode().set(IntegrationPlugin.Util.getString("failed_load_module", moduleName, name))); //$NON-NLS-1$
+            throw new OperationFailedException(e, new ModelNode().set(IntegrationPlugin.Util.getString("failed_load_module", moduleName, translatorName))); //$NON-NLS-1$
         }
+        
+        boolean added = false;
         final ServiceLoader<ExecutionFactory> serviceLoader = module.loadService(ExecutionFactory.class);
         if (serviceLoader != null) {
         	for (ExecutionFactory ef:serviceLoader) {
         		VDBTranslatorMetaData metadata = TranslatorUtil.buildTranslatorMetadata(ef, moduleName);
         		if (metadata == null) {
-        			throw new OperationFailedException( new ModelNode().set(IntegrationPlugin.Util.getString("error_adding_translator", name))); //$NON-NLS-1$ 
+        			throw new OperationFailedException( new ModelNode().set(IntegrationPlugin.Util.getString("error_adding_translator", translatorName))); //$NON-NLS-1$ 
         		}
         		
-        		if (name.equalsIgnoreCase(metadata.getName())) {
+        		if (translatorName.equalsIgnoreCase(metadata.getName())) {
 	        		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("translator.added", metadata.getName())); //$NON-NLS-1$
 	        		
 	        		TranslatorService translatorService = new TranslatorService(metadata);
 	        		ServiceBuilder<VDBTranslatorMetaData> builder = target.addService(TeiidServiceNames.translatorServiceName(metadata.getName()), translatorService);
 	        		builder.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class, translatorService.repositoryInjector);
 	                builder.setInitialMode(ServiceController.Mode.ACTIVE).install();
+	                added = true;
         		}
         	}
+        }
+        
+        if (!added) {
+        	throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("translator.failed-to-load", translatorName, moduleName))); //$NON-NLS-1$
         }
     }    
 }

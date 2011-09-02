@@ -466,12 +466,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	}
 
 	@Override
-	public void mergeVDBs(String sourceVDBName, int sourceVDBVersion,
-			String targetVDBName, int targetVDBVersion) throws AdminException {
-		this.vdbRepository.mergeVDBs(sourceVDBName, sourceVDBVersion, targetVDBName, targetVDBVersion);
-	}	
-	
-	@Override
 	public List<List> executeQuery(final String vdbName, final int version, final String command, final long timoutInMilli) throws AdminException {
 		
 		String user = "JOPR ADMIN"; //$NON-NLS-1$
@@ -771,22 +765,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	
 	public void addSecurityDomain(String domain) {
 		this.securityDomainNames.add(domain);
-	}
-	
-	public List<VDBMetaData> getVDBs(){
-		return this.vdbRepository.getVDBs();
-	}
-	
-	public VDBMetaData getVDB(String vdbName, int version){
-		return this.vdbRepository.getVDB(vdbName, version);
-	}	
-	
-	public List<VDBTranslatorMetaData> getTranslators(){
-		return getTranslatorRepositoryInjector().getValue().getTranslators();
-	}
-
-	public VDBTranslatorMetaData getTranslator(String translatorName) {
-		return getTranslatorRepositoryInjector().getValue().getTranslatorMetaData(translatorName);
 	}
 	
 	private DQPCore.ContextProvider getContextProvider() {

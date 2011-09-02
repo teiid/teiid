@@ -273,6 +273,11 @@
 				<artifactId>teiid-client</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+            <dependency>
+                <groupId>org.jboss.teiid</groupId>
+                <artifactId>teiid-admin</artifactId>
+                <version>${project.version}</version>
+            </dependency>            
 			<dependency>
 				<groupId>org.jboss.teiid</groupId>
 				<artifactId>teiid-client</artifactId>
@@ -532,6 +537,7 @@
         <module>jboss-integration</module>
 		<module>test-integration</module>
         <module>client-jdk15</module>
+		<module>admin</module>
   </modules>
     <distributionManagement>
         <repository>

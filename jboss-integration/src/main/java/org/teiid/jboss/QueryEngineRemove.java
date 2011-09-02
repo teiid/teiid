@@ -21,53 +21,59 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OPERATION_NAME;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REMOVE;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
-import static org.teiid.jboss.Configuration.addAttribute;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import org.jboss.as.controller.AbstractAddStepHandler;
+import org.jboss.as.controller.AbstractRemoveStepHandler;
 import org.jboss.as.controller.OperationContext;
-import org.jboss.as.controller.OperationFailedException;
-import org.jboss.as.controller.ServiceVerificationHandler;
+import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
+import org.jboss.as.naming.deployment.ContextNames;
 import org.jboss.dmr.ModelNode;
-import org.jboss.dmr.ModelType;
 import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
+import org.teiid.transport.LocalServerConnection;
 
-public class QueryEngineRemove extends AbstractAddStepHandler implements DescriptionProvider {
+public class QueryEngineRemove extends AbstractRemoveStepHandler implements DescriptionProvider {
+
+	@Override
+    protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) {
+
+        final ModelNode address = operation.require(OP_ADDR);
+        final PathAddress pathAddress = PathAddress.pathAddress(address);
+
+    	String engineName = pathAddress.getLastElement().getValue();
+
+    	final ServiceRegistry serviceRegistry = context.getServiceRegistry(true);
+    	ServiceName serviceName = TeiidServiceNames.engineServiceName(engineName);
+		final ServiceController<?> controller = serviceRegistry.getService(serviceName);
+		if (controller != null) {			 
+			 context.removeService(serviceName);
+		}
+
+		final ServiceName referenceFactoryServiceName = TeiidServiceNames.engineServiceName(engineName).append("reference-factory"); //$NON-NLS-1$
+		final ServiceController<?> referceFactoryController = serviceRegistry.getService(referenceFactoryServiceName);
+		if (referceFactoryController != null) {			 
+			 context.removeService(referenceFactoryServiceName);
+		}
+		
+        final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(LocalServerConnection.TEIID_RUNTIME_CONTEXT+engineName);
+        final ServiceController<?> binderController = serviceRegistry.getService(bindInfo.getBinderServiceName());
+        if (binderController != null) {
+        	context.removeService(bindInfo.getBinderServiceName());
+        }
+    }
 
 	@Override
 	public ModelNode getModelDescription(Locale locale) {
         final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
         final ModelNode operation = new ModelNode();
         operation.get(OPERATION_NAME).set(REMOVE);
-        operation.get(DESCRIPTION).set(bundle.getString("engine.remove")); //$NON-NLS-1$    
-        addAttribute(operation, Configuration.ENGINE_NAME, REQUEST_PROPERTIES, bundle.getString(Configuration.ENGINE_NAME+Configuration.DESC), ModelType.STRING, true, null);
+        operation.get(DESCRIPTION).set(bundle.getString(REMOVE+DESCRIBE));
         return operation;
 	}
-	
-	@Override
-	protected void populateModel(final ModelNode operation, final ModelNode model) throws OperationFailedException {
-		final String name = model.require(Configuration.ENGINE_NAME).asString();
-		model.get(Configuration.ENGINE_NAME).set(name);
-	}
-	
-	@Override
-    protected void performRuntime(final OperationContext context, final ModelNode operation, final ModelNode model,
-            final ServiceVerificationHandler verificationHandler, final List<ServiceController<?>> newControllers) throws OperationFailedException {
-		
-		final String engineName = model.require(Configuration.ENGINE_NAME).asString();
-        final ServiceRegistry registry = context.getServiceRegistry(true);
-        final ServiceController<?> controller = registry.getService(TeiidServiceNames.translatorServiceName(engineName));
-        if (controller != null) {
-            controller.setMode(ServiceController.Mode.REMOVE);
-        }
-	}
+    
 }

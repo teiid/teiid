@@ -23,25 +23,24 @@ package org.teiid.jboss;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OPERATION_NAME;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REMOVE;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
-import static org.teiid.jboss.Configuration.addAttribute;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import org.jboss.as.controller.AbstractAddStepHandler;
+import org.jboss.as.controller.AbstractRemoveStepHandler;
 import org.jboss.as.controller.OperationContext;
-import org.jboss.as.controller.OperationFailedException;
-import org.jboss.as.controller.ServiceVerificationHandler;
+import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
 import org.jboss.dmr.ModelNode;
-import org.jboss.dmr.ModelType;
 import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 
-public class TranslatorRemove extends AbstractAddStepHandler implements DescriptionProvider {
+public class TranslatorRemove extends AbstractRemoveStepHandler implements DescriptionProvider {
 
 	@Override
 	public ModelNode getModelDescription(Locale locale) {
@@ -49,25 +48,23 @@ public class TranslatorRemove extends AbstractAddStepHandler implements Descript
         final ModelNode operation = new ModelNode();
         operation.get(OPERATION_NAME).set(REMOVE);
         operation.get(DESCRIPTION).set(bundle.getString("translator.remove")); //$NON-NLS-1$  
-        addAttribute(operation, Configuration.TRANSLATOR_NAME, REQUEST_PROPERTIES, bundle.getString(Configuration.TRANSLATOR_NAME+Configuration.DESC), ModelType.STRING, true, null);
         return operation;
 	}
 	
 	@Override
-	protected void populateModel(final ModelNode operation, final ModelNode model) throws OperationFailedException {
-		final String translatorName = model.require(Configuration.TRANSLATOR_NAME).asString();
-		model.get(Configuration.TRANSLATOR_NAME).set(translatorName);
-	}
-	
-	@Override
-    protected void performRuntime(final OperationContext context, final ModelNode operation, final ModelNode model,
-            final ServiceVerificationHandler verificationHandler, final List<ServiceController<?>> newControllers) throws OperationFailedException {
-		
-		final String translatorName = model.require(Configuration.TRANSLATOR_NAME).asString();
-        final ServiceRegistry registry = context.getServiceRegistry(true);
-        final ServiceController<?> controller = registry.getService(TeiidServiceNames.translatorServiceName(translatorName));
+    protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) {
+				
+        final ModelNode address = operation.require(OP_ADDR);
+        final PathAddress pathAddress = PathAddress.pathAddress(address);
+
+    	String translatorName = pathAddress.getLastElement().getValue();
+
+    	final ServiceRegistry registry = context.getServiceRegistry(true);
+        final ServiceName serviceName = TeiidServiceNames.translatorServiceName(translatorName);
+        final ServiceController<?> controller = registry.getService(serviceName);
         if (controller != null) {
-            controller.setMode(ServiceController.Mode.REMOVE);
+            LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("translator.removed", translatorName)); //$NON-NLS-1$
+        	context.removeService(serviceName);
         }
 	}
 }
