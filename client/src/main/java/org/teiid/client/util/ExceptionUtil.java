@@ -24,12 +24,8 @@ package org.teiid.client.util;
 
 import java.lang.reflect.Method;
 
-import org.teiid.adminapi.AdminComponentException;
-import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 
 
@@ -59,18 +55,11 @@ public class ExceptionUtil {
 				return exception;
 			}
 			canThrowComponentException |= TeiidComponentException.class.isAssignableFrom(exceptionClasses[i]);
-			canThrowAdminException |= AdminException.class.isAssignableFrom(exceptionClasses[i]);
 			canThrowXATransactionException |= XATransactionException.class.isAssignableFrom(exceptionClasses[i]);
         }
         if (canThrowComponentException) {
         	return new TeiidComponentException(exception);
         }
-        if (canThrowAdminException) {
-			if (exception instanceof TeiidProcessingException) {
-				return new AdminProcessingException(exception);
-			}
-        	return new AdminComponentException(exception);
-		}
         if (canThrowXATransactionException) {
         	return new XATransactionException(exception);
         }
