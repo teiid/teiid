@@ -30,6 +30,7 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.tempdata.GlobalTableStoreImpl.MatTableInfo;
@@ -52,7 +53,7 @@ public interface GlobalTableStore {
 	List<?> updateMatViewRow(String matTableName, List<?> tuple, boolean delete) throws TeiidComponentException;
 
 	TempTable createMatTable(String tableName, GroupSymbol group)
-	throws TeiidComponentException, QueryMetadataException, QueryResolverException, QueryValidatorException;
+	throws TeiidComponentException, QueryMetadataException, TeiidProcessingException;
 	
 	@Replicated
 	void failedLoad(String matTableName);

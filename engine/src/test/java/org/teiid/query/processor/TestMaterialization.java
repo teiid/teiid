@@ -48,6 +48,7 @@ import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.tempdata.GlobalTableStoreImpl.MatTableInfo;
+import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
@@ -62,7 +63,7 @@ public class TestMaterialization {
 	private HardcodedDataManager hdm;
 	
 	@Before public void setUp() {
-		tempStore = new TempTableStore("1"); //$NON-NLS-1$
+		tempStore = new TempTableStore("1", TransactionMode.ISOLATE_WRITES); //$NON-NLS-1$
 	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
 	    QueryMetadataInterface actualMetadata = RealMetadataFactory.exampleMaterializedView();
 	    globalStore = new GlobalTableStoreImpl(bm, actualMetadata);

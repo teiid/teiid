@@ -29,13 +29,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.teiid.client.BatchSerializer;
 import org.teiid.common.buffer.SPage.SearchResult;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.query.processor.relational.ListNestedSortComparator;
 
 /**
@@ -44,7 +47,7 @@ import org.teiid.query.processor.relational.ListNestedSortComparator;
  * but with fewer updates. 
  */
 @SuppressWarnings("unchecked")
-public class STree {
+public class STree implements Cloneable {
 	
 	public enum InsertMode {ORDERED, NEW, UPDATE}
 
@@ -53,7 +56,9 @@ public class STree {
 	protected int randomSeed;
 	private int mask = 1;
 	private int shift = 1;
-	
+
+	protected AtomicInteger counter = new AtomicInteger();
+    protected ConcurrentHashMap<Integer, SPage> pages = new ConcurrentHashMap<Integer, SPage>();
 	protected volatile SPage[] header = new SPage[] {new SPage(this, true)};
     protected BatchManager keyManager;
     protected BatchManager leafManager;
@@ -89,6 +94,47 @@ public class STree {
 		this.keyLength = keyLength;
 		this.types = types;
 		this.keytypes = Arrays.copyOf(types, keyLength);
+	}
+	
+	public STree clone() {
+		updateLock.lock();
+		try {
+			STree clone = (STree) super.clone();
+			clone.updateLock = new ReentrantLock();
+			clone.rowCount = new AtomicInteger(rowCount.get());
+			//clone the pages
+			clone.pages = new ConcurrentHashMap<Integer, SPage>(pages);
+			for (Map.Entry<Integer, SPage> entry : clone.pages.entrySet()) {
+				entry.setValue(entry.getValue().clone(clone));
+			}
+			//reset the pointers
+			for (Map.Entry<Integer, SPage> entry : clone.pages.entrySet()) {
+				SPage clonePage = entry.getValue();
+				clonePage.next = clone.getPage(clonePage.next);
+				clonePage.prev = clone.getPage(clonePage.prev);
+				if (clonePage.children != null) {
+					for (int i = 0; i < clonePage.children.size(); i++) {
+						clonePage.children.set(i, clone.getPage(clonePage.children.get(i)));
+					}
+				}
+			}
+			clone.header = Arrays.copyOf(header, header.length);
+			for (int i = 0; i < header.length; i++) {
+				clone.header[i] = clone.pages.get(header[i].getId());
+			}
+			return clone;
+		} catch (CloneNotSupportedException e) {
+			throw new TeiidRuntimeException(e);
+		} finally {
+			updateLock.unlock();
+		}
+	}
+	
+	private SPage getPage(SPage page) {
+		if (page == null) {
+			return page;
+		}
+		return pages.get(page.getId());
 	}
 	
 	public void writeValuesTo(ObjectOutputStream oos) throws TeiidComponentException, IOException {
@@ -357,7 +403,7 @@ public class STree {
 			int size = searchResult.values.getTuples().size();
 			if (size == 0) {
 				if (header[i] != searchResult.page) {
-					searchResult.page.remove();
+					searchResult.page.remove(false);
 					if (searchResult.page.next != null) {
 						searchResult.page.next.prev = searchResult.page.prev;
 					}
@@ -366,7 +412,7 @@ public class STree {
 					searchResult.page.prev = null;
 					continue;
 				}
-				header[i].remove();
+				header[i].remove(false);
 				if (header[i].next != null) {
 					header[i] = header[i].next;
 					header[i].prev = null;
@@ -401,7 +447,7 @@ public class STree {
 	}
 	
 	public void remove() {
-		truncate();
+		truncate(false);
 		this.keyManager.remove();
 		this.leafManager.remove();
 	}
@@ -410,12 +456,12 @@ public class STree {
 		return this.rowCount.get();
 	}
 	
-	public int truncate() {
+	public int truncate(boolean force) {
 		int oldSize = rowCount.getAndSet(0);
 		for (int i = 0; i < header.length; i++) {
 			SPage page = header[i];
 			while (page != null) {
-				page.remove();
+				page.remove(force);
 				page = page.next;
 			}
 		}

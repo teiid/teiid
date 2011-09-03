@@ -40,6 +40,7 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SQLConstants;
@@ -60,6 +61,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Create;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 
 public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject {
 	
@@ -154,7 +156,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject 
 	}
 	
 	private ConcurrentHashMap<String, MatTableInfo> matTables = new ConcurrentHashMap<String, MatTableInfo>();
-	private TempTableStore tableStore = new TempTableStore("SYSTEM"); //$NON-NLS-1$
+	private TempTableStore tableStore = new TempTableStore("SYSTEM", TransactionMode.ISOLATE_READS); //$NON-NLS-1$
 	private BufferManager bufferManager;
 	private QueryMetadataInterface metadata;
 	private Serializable localAddress;
@@ -196,13 +198,13 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject 
 		String matTableName = RelationalPlanner.MAT_PREFIX+matViewName.toUpperCase();
 		GroupSymbol group = new GroupSymbol(matViewName);
 		group.setMetadataID(viewId);
-		TempMetadataID id = tableStore.tempMetadataStore.getTempGroupID(matTableName);
+		TempMetadataID id = tableStore.getMetadataStore().getTempGroupID(matTableName);
 		//define the table preserving the key/index information and ensure that only a single instance exists
 		if (id == null) {
 			synchronized (viewId) {
-				id = tableStore.tempMetadataStore.getTempGroupID(matTableName);
+				id = tableStore.getMetadataStore().getTempGroupID(matTableName);
 				if (id == null) {
-					id = tableStore.tempMetadataStore.addTempGroup(matTableName, ResolverUtil.resolveElementsInGroup(group, metadata), false, true);
+					id = tableStore.getMetadataStore().addTempGroup(matTableName, ResolverUtil.resolveElementsInGroup(group, metadata), false, true);
 					id.setQueryNode(metadata.getVirtualPlan(viewId));
 					id.setCardinality(metadata.getCardinality(viewId));
 					id.setOriginalMetadataID(viewId);
@@ -273,16 +275,31 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject 
 
 	@Override
 	public void loaded(String matTableName, TempTable table) {
-		this.tableStore.swapTempTable(matTableName, table);
+		swapTempTable(matTableName, table);
 		this.getMatTableInfo(matTableName).setState(MatState.LOADED, true);
 	}
+	
+	private void swapTempTable(String tempTableName, TempTable tempTable) {
+    	this.tableStore.getTempTables().put(tempTableName, tempTable);
+    }
 
 	@Override
 	public List<?> updateMatViewRow(String matTableName, List<?> tuple,
 			boolean delete) throws TeiidComponentException {
 		TempTable tempTable = tableStore.getTempTable(matTableName);
 		if (tempTable != null) {
-			return tempTable.updateTuple(tuple, delete);
+			TempMetadataID id = tableStore.getMetadataStore().getTempGroupID(matTableName);
+			synchronized (id) {
+				boolean clone = tempTable.getActiveReaders().get() != 0;
+				if (clone) {
+					tempTable = tempTable.clone();
+				}
+				List<?> result = tempTable.updateTuple(tuple, delete);
+				if (clone) {
+					swapTempTable(matTableName, tempTable);
+				}
+				return result;
+			}
 		}
 		return null;
 	}
@@ -294,7 +311,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject 
 	
 	@Override
 	public TempTable createMatTable(final String tableName, GroupSymbol group) throws TeiidComponentException,
-	QueryMetadataException, QueryResolverException, QueryValidatorException {
+	QueryMetadataException, TeiidProcessingException {
 		Create create = new Create();
 		create.setTable(group);
 		List<ElementSymbol> allColumns = ResolverUtil.resolveElementsInGroup(group, metadata);
@@ -304,7 +321,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject 
 			List<ElementSymbol> pkColumns = resolveIndex(metadata, allColumns, pk);
 			create.getPrimaryKey().addAll(pkColumns);
 		}
-		TempTable table = getTempTableStore().addTempTable(tableName, create, bufferManager, false);
+		TempTable table = getTempTableStore().addTempTable(tableName, create, bufferManager, false, null);
 		table.setUpdatable(false);
 		CacheHint hint = table.getCacheHint();
 		if (hint != null) {
@@ -424,8 +441,8 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject 
 
 	private void loadTable(String stateId, ObjectInputStream ois)
 			throws TeiidComponentException, QueryMetadataException,
-			QueryResolverException, QueryValidatorException, IOException,
-			ClassNotFoundException {
+			IOException,
+			ClassNotFoundException, TeiidProcessingException {
 		LogManager.logDetail(LogConstants.CTX_DQP, "loading table from remote stream", stateId); //$NON-NLS-1$
 		long updateTime = ois.readLong();
 		Serializable loadingAddress = (Serializable) ois.readObject();
@@ -449,7 +466,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject 
 		tempTable.readFrom(ois);
 		MatTableInfo info = this.getMatTableInfo(stateId);
 		synchronized (info) {
-			this.tableStore.swapTempTable(stateId, tempTable);
+			swapTempTable(stateId, tempTable);
 			info.setState(state, true);
 			info.updateTime = updateTime;
 			info.loadingAddress = loadingAddress;

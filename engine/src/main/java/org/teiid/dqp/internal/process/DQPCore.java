@@ -76,6 +76,7 @@ import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
+import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 
 
 /**
@@ -235,7 +236,7 @@ public class DQPCore implements DQP {
     	}
 		ClientState state = clientState.get(key);
 		if (state == null && create) {
-			state = new ClientState(new TempTableStore(key));
+			state = new ClientState(new TempTableStore(key, TransactionMode.ISOLATE_WRITES));
     		clientState.put(key, state);
 		}
 		return state;

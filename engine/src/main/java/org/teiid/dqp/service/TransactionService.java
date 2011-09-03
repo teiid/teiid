@@ -39,11 +39,11 @@ import org.teiid.client.xa.XidImpl;
 public interface TransactionService {
     
     // processor level methods
-    TransactionContext begin(TransactionContext context) throws XATransactionException;
+    void begin(TransactionContext context) throws XATransactionException;
 
-    TransactionContext commit(TransactionContext context) throws XATransactionException;
+    void commit(TransactionContext context) throws XATransactionException;
 
-    TransactionContext rollback(TransactionContext context) throws XATransactionException;
+    void rollback(TransactionContext context) throws XATransactionException;
 
     TransactionContext getOrCreateTransactionContext(String threadId);
     

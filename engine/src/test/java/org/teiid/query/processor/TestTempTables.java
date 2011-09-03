@@ -24,24 +24,38 @@ package org.teiid.query.processor;
 
 import static org.junit.Assert.*;
 
+import java.sql.Connection;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Executor;
 
+import javax.transaction.RollbackException;
+import javax.transaction.Status;
+import javax.transaction.Synchronization;
+import javax.transaction.SystemException;
+import javax.transaction.Transaction;
+
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.SessionAwareCache;
+import org.teiid.dqp.service.TransactionContext;
+import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
+import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
+import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
@@ -52,6 +66,10 @@ public class TestTempTables {
 	private TempTableDataManager dataManager;
 	private TempTableStore tempStore;
 	
+	private TransactionContext tc;
+	private Transaction txn;
+	private Synchronization synch;
+	
 	private ProcessorPlan execute(String sql, List[] expectedResults) throws Exception {
 		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata);
 		execute(plan, expectedResults);
@@ -60,6 +78,7 @@ public class TestTempTables {
 	
 	private void execute(ProcessorPlan processorPlan, List[] expectedResults) throws Exception {
 		CommandContext cc = TestProcessor.createCommandContext();
+		cc.setTransactionContext(tc);
 		cc.setMetadata(metadata);
 		cc.setTempTableStore(tempStore);
 		TestProcessor.doProcess(processorPlan, dataManager, expectedResults, cc);
@@ -67,7 +86,7 @@ public class TestTempTables {
 	}
 
 	@Before public void setUp() {
-		tempStore = new TempTableStore("1"); //$NON-NLS-1$
+		tempStore = new TempTableStore("1", TransactionMode.ISOLATE_WRITES); //$NON-NLS-1$
 		metadata = new TempMetadataAdapter(RealMetadataFactory.example1Cached(), tempStore.getMetadataStore());
 		metadata.setSession(true);
 		FakeDataManager fdm = new FakeDataManager();
@@ -82,6 +101,96 @@ public class TestTempTables {
 			}
 	    };
 		dataManager = new TempTableDataManager(fdm, bm, executor, cache);
+	}
+	
+	@Test public void testRollbackNoExisting() throws Exception {
+		setupTransaction(Connection.TRANSACTION_SERIALIZABLE);
+		execute("create local temporary table x (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		execute("insert into x (e2, e1) select e2, e1 from pm1.g1", new List[] {Arrays.asList(6)}); //$NON-NLS-1$
+		execute("update x set e1 = e2 where e2 > 1", new List[] {Arrays.asList(2)}); //$NON-NLS-1$
+		
+		Mockito.verify(txn).registerSynchronization((Synchronization) Mockito.anyObject());
+		synch.afterCompletion(Status.STATUS_ROLLEDBACK);
+		
+		try {
+			execute("select * from x", new List[] {});
+			fail();
+		} catch (Exception e) {
+			
+		}
+		execute("create local temporary table x (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+	}
+	
+	@Test public void testRollbackExisting() throws Exception {
+		execute("create local temporary table x (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		setupTransaction(Connection.TRANSACTION_SERIALIZABLE);
+		//execute("create local temporary table x (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		for (int i = 0; i < 86; i++) {
+			execute("insert into x (e2, e1) select e2, e1 from pm1.g1", new List[] {Arrays.asList(6)}); //$NON-NLS-1$
+		}
+		execute("update x set e1 = e2 where e2 > 1", new List[] {Arrays.asList(172)}); //$NON-NLS-1$
+		
+		synch.afterCompletion(Status.STATUS_ROLLEDBACK);
+
+		execute("select * from x", new List[] {});
+	}
+	
+	@Test public void testRollbackExisting1() throws Exception {
+		execute("create local temporary table x (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		for (int i = 0; i < 86; i++) {
+			execute("insert into x (e2, e1) select e2, e1 from pm1.g1", new List[] {Arrays.asList(6)}); //$NON-NLS-1$
+		}
+		setupTransaction(Connection.TRANSACTION_SERIALIZABLE);
+		//execute("create local temporary table x (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		for (int i = 0; i < 86; i++) {
+			execute("insert into x (e2, e1) select e2, e1 from pm1.g1", new List[] {Arrays.asList(6)}); //$NON-NLS-1$
+		}
+		execute("update x set e1 = e2 where e2 > 1", new List[] {Arrays.asList(344)}); //$NON-NLS-1$
+		
+		synch.afterCompletion(Status.STATUS_ROLLEDBACK);
+		this.tc = null;
+		
+		execute("select count(*) from x", new List[] {Arrays.asList(516)});
+		
+		execute("delete from x", new List[] {Arrays.asList(516)});
+	}
+	
+	@Test public void testIsolateReads() throws Exception {
+		GlobalTableStoreImpl gtsi = new GlobalTableStoreImpl(BufferManagerFactory.getStandaloneBufferManager(), RealMetadataFactory.example1Cached());
+		tempStore = gtsi.getTempTableStore();
+		metadata = new TempMetadataAdapter(RealMetadataFactory.example1Cached(), tempStore.getMetadataStore());
+		execute("create local temporary table x (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		for (int i = 0; i < 86; i++) {
+			execute("insert into x (e2, e1) select e2, e1 from pm1.g1", new List[] {Arrays.asList(6)}); //$NON-NLS-1$
+		}
+		setupTransaction(Connection.TRANSACTION_SERIALIZABLE);
+		execute("select count(*) from x", new List[] {Arrays.asList(516)});
+		gtsi.updateMatViewRow("X", Arrays.asList(1), true);
+		tc=null;
+		//outside of the transaction we can see the row removed
+		execute("select count(*) from x", new List[] {Arrays.asList(515)});
+		
+		//back in the transaction we see the original state
+		setupTransaction(Connection.TRANSACTION_SERIALIZABLE);
+		execute("select count(*) from x", new List[] {Arrays.asList(516)});
+		
+		synch.afterCompletion(Status.STATUS_COMMITTED);
+	}
+
+	private void setupTransaction(int isolation) throws RollbackException, SystemException {
+		txn = Mockito.mock(Transaction.class);
+		Mockito.doAnswer(new Answer<Void>() {
+			@Override
+			public Void answer(InvocationOnMock invocation) throws Throwable {
+				synch = (Synchronization)invocation.getArguments()[0];
+				return null;
+			}
+		}).when(txn).registerSynchronization((Synchronization)Mockito.anyObject());
+		Mockito.stub(txn.toString()).toReturn("txn");
+		tc = new TransactionContext();
+		tc.setTransaction(txn);
+		tc.setIsolationLevel(isolation);
+		tc.setTransactionType(Scope.REQUEST);
 	}
 	
 	@Test public void testInsertWithQueryExpression() throws Exception {

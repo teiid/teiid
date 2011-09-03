@@ -92,6 +92,28 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	private static final int IO_BUFFER_SIZE = 1 << 14;
 	private static final int COMPACTION_THRESHOLD = 1 << 25; //start checking at 32 megs
 	
+	private final class CleanupHook implements org.teiid.common.buffer.BatchManager.CleanupHook {
+		
+		private long id;
+		private int beginRow;
+		private WeakReference<BatchManagerImpl> ref;
+		
+		CleanupHook(long id, int beginRow, BatchManagerImpl batchManager) {
+			this.id = id;
+			this.beginRow = beginRow;
+			this.ref = new WeakReference<BatchManagerImpl>(batchManager);
+		}
+		
+		public void cleanup() {
+			BatchManagerImpl batchManager = ref.get();
+			if (batchManager == null) {
+				return;
+			}
+			cleanupManagedBatch(batchManager, beginRow, id);
+		}
+		
+	}
+	
 	private final class BatchManagerImpl implements BatchManager {
 		private final String id;
 		private volatile FileStore store;
@@ -163,7 +185,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				store = newStore;
 				long oldOffset = offset;
 				offset = store.getLength();
-				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Compacted store", id, "pre-size", oldOffset, "post-size", offset); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+					LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Compacted store", id, "pre-size", oldOffset, "post-size", offset); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				}
 				return offset;
 			} finally {
 				this.compactionLock.writeLock().unlock();
@@ -213,7 +237,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				this.lobManager = new LobManager();
 			}
 			sizeEstimate = (int) Math.max(1, manager.sizeUtility.getBatchSize(batch) / 1024);
-            LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Add batch to BufferManager", id, "with size estimate", sizeEstimate); //$NON-NLS-1$ //$NON-NLS-2$
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Add batch to BufferManager", id, "with size estimate", sizeEstimate); //$NON-NLS-1$ //$NON-NLS-2$
+			}
 		}
 		
 		@Override
@@ -249,7 +275,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		@Override
 		public TupleBatch getBatch(boolean cache, String[] types) throws TeiidComponentException {
 			long reads = readAttempts.incrementAndGet();
-			LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, batchManager.id, "getting batch", reads, "reference hits", referenceHit.get()); //$NON-NLS-1$ //$NON-NLS-2$
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, batchManager.id, "getting batch", reads, "reference hits", referenceHit.get()); //$NON-NLS-1$ //$NON-NLS-2$
+			}
 			synchronized (activeBatches) {
 				TupleBufferInfo tbi = activeBatches.remove(batchManager.id);
 				if (tbi != null) { 
@@ -286,7 +314,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 					}
 				}
 				long count = readCount.incrementAndGet();
-				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "reading batch from disk, total reads:", count); //$NON-NLS-1$
+				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+					LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "reading batch from disk, total reads:", count); //$NON-NLS-1$
+				}
 				try {
 					this.batchManager.compactionLock.readLock().lock();
 					long[] info = batchManager.physicalMapping.get(this.id);
@@ -324,7 +354,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				if (batch != null) {
 					if (!persistent) {
 						long count = writeCount.incrementAndGet();
-						LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "writing batch to disk, total writes: ", count); //$NON-NLS-1$
+						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+							LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "writing batch to disk, total writes: ", count); //$NON-NLS-1$
+						}
 						long offset = 0;
 						if (lobManager != null) {
 							for (List<?> tuple : batch.getTuples()) {
@@ -341,7 +373,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				            long[] info = new long[] {offset, size};
 				            batchManager.physicalMapping.put(this.id, info);
 						}
-						LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "batch written starting at:", offset); //$NON-NLS-1$
+						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+							LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "batch written starting at:", offset); //$NON-NLS-1$
+						}
 					}
 					if (softCache) {
 						this.batchReference = new SoftReference<TupleBatch>(batch);
@@ -363,25 +397,17 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		}
 
 		public void remove() {
-			synchronized (activeBatches) {
-				TupleBufferInfo tbi = activeBatches.get(batchManager.id);
-				if (tbi != null && tbi.removeBatch(this.beginRow) != null) {
-					if (tbi.batches.isEmpty()) {
-						activeBatches.remove(batchManager.id);
-					}
-				}
-			}
-			long[] info = batchManager.physicalMapping.remove(id);
-			if (info != null) {
-				batchManager.unusedSpace.addAndGet(info[1]); 
-			}
-			activeBatch = null;
-			batchReference = null;
+			cleanupManagedBatch(batchManager, beginRow, id);
+		}
+				
+		@Override
+		public CleanupHook getCleanupHook() {
+			return new CleanupHook(id, beginRow, batchManager);
 		}
 		
 		@Override
 		public String toString() {
-			return "ManagedBatch " + batchManager.id + " " + activeBatch; //$NON-NLS-1$ //$NON-NLS-2$
+			return "ManagedBatch " + batchManager.id + " " + this.beginRow + " " + activeBatch; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 	}
 	
@@ -487,6 +513,21 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
         return tupleBuffer;
     }
     
+    private void cleanupManagedBatch(BatchManagerImpl batchManager, int beginRow, long id) {
+		synchronized (activeBatches) {
+			TupleBufferInfo tbi = activeBatches.get(batchManager.id);
+			if (tbi != null && tbi.removeBatch(beginRow) != null) {
+				if (tbi.batches.isEmpty()) {
+					activeBatches.remove(batchManager.id);
+				}
+			}
+		}
+		long[] info = batchManager.physicalMapping.remove(id);
+		if (info != null) {
+			batchManager.unusedSpace.addAndGet(info[1]); 
+		}
+    }
+    
     public STree createSTree(final List elements, String groupName, int keyLength) {
     	String newID = String.valueOf(this.tsId.getAndIncrement());
     	int[] lobIndexes = LobManager.getLobIndexes(elements);
@@ -496,13 +537,17 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     	for (int i = 1; i < compareIndexes.length; i++) {
 			compareIndexes[i] = i;
 		}
-        LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating STree:", newID); //$NON-NLS-1$ 
+    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+    		LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating STree:", newID); //$NON-NLS-1$
+    	}
     	return new STree(keyManager, bm, new ListNestedSortComparator(compareIndexes), getProcessorBatchSize(), keyLength, TupleBuffer.getTypeNames(elements));
     }
 
     @Override
     public FileStore createFileStore(String name) {
-        LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating FileStore:", name); //$NON-NLS-1$ 
+    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+    		LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating FileStore:", name); //$NON-NLS-1$
+    	}
     	return this.diskMgr.createFileStore(name);
     }
         

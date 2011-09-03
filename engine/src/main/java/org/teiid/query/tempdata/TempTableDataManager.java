@@ -43,6 +43,7 @@ import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.SessionAwareCache;
@@ -164,7 +165,7 @@ public class TempTableDataManager implements ProcessorDataManager {
         		return null;
         	}
         	final String groupKey = group.getNonCorrelationName().toUpperCase();
-            final TempTable table = contextStore.getOrCreateTempTable(groupKey, command, bufferManager, true);
+            final TempTable table = contextStore.getOrCreateTempTable(groupKey, command, bufferManager, true, true, context);
         	if (command instanceof Insert) {
         		Insert insert = (Insert)command;
         		TupleSource ts = insert.getTupleSource();
@@ -186,8 +187,8 @@ public class TempTableDataManager implements ProcessorDataManager {
         		final Delete delete = (Delete)command;
         		final Criteria crit = delete.getCriteria();
         		if (crit == null) {
-        			//because we are non-transactional, just use a truncate
-        			int rows = table.truncate();
+        			//TODO: we'll add a real truncate later
+        			int rows = table.truncate(false);
                     return CollectionTupleSource.createUpdateCountTupleSource(rows);
         		}
         		return table.delete(crit);
@@ -199,17 +200,18 @@ public class TempTableDataManager implements ProcessorDataManager {
     		if (contextStore.hasTempTable(tempTableName)) {
                 throw new QueryProcessingException(QueryPlugin.Util.getString("TempTableStore.table_exist_error", tempTableName));//$NON-NLS-1$
             }
-    		contextStore.addTempTable(tempTableName, create, bufferManager, true);
+    		contextStore.addTempTable(tempTableName, create, bufferManager, true, context);
             return CollectionTupleSource.createUpdateCountTupleSource(0);	
     	}
     	if (command instanceof Drop) {
     		String tempTableName = ((Drop)command).getTable().getCanonicalName();
-    		contextStore.removeTempTableByName(tempTableName);
+    		contextStore.removeTempTableByName(tempTableName, context);
             return CollectionTupleSource.createUpdateCountTupleSource(0);
     	}
     	if (command instanceof AlterTempTable) {
     		AlterTempTable att = (AlterTempTable)command;
-    		TempTable tt = contextStore.getOrCreateTempTable(att.getTempTable().toUpperCase(), command, bufferManager, true);
+    		TempTable tt = contextStore.getTempTable(att.getTempTable().toUpperCase());
+    		Assertion.isNotNull(tt, "Table doesn't exist"); //$NON-NLS-1$
     		tt.setUpdatable(false);
     		if (att.getIndexColumns() != null) {
     			tt.addIndex(att.getIndexColumns(), false);
@@ -388,10 +390,10 @@ public class TempTableDataManager implements ProcessorDataManager {
 					loadAsynch(context, group, tableName, globalStore);
 				}
 			} 
-			table = globalStore.getTempTableStore().getOrCreateTempTable(tableName, query, bufferManager, false);
+			table = globalStore.getTempTableStore().getOrCreateTempTable(tableName, query, bufferManager, false, false, context);
 			context.accessedDataObject(group.getMetadataID());
 		} else {
-			table = contextStore.getOrCreateTempTable(tableName, query, bufferManager, true);
+			table = contextStore.getOrCreateTempTable(tableName, query, bufferManager, true, false, context);
 			if (context.getDataObjects() != null) {
 				Object id = RelationalPlanner.getTrackableGroup(group, context.getMetadata());
 				if (id != null) {

@@ -341,11 +341,6 @@
 					connector, however this isolation level is fixed and cannot be
 					changed at runtime for specific connections/commands.</para>
 			</listitem>
-			<listitem>
-				<para>Temporary tables are not transactional. For example,
-					a global temporary table will retain all inserts performed during a
-					local transaction that was rolled back.</para>
-			</listitem>
 			<!-- <listitem>
 				<para>Connectors may be set to immutable to prevent their
 					participation in transactions. This is useful in situations where

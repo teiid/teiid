@@ -65,6 +65,11 @@ public class TestTupleBuffer {
 				public void setPrefersMemory(boolean prefers) {
 					
 				}
+				
+				@Override
+				public CleanupHook getCleanupHook() {
+					return null;
+				}
 			};
 		}
 

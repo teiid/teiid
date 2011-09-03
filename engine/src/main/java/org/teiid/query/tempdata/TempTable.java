@@ -51,6 +51,7 @@ import org.teiid.common.buffer.STree.InsertMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -75,7 +76,7 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
  * TODO: in this implementation blocked exceptions will not happen
  *       allowing for subquery evaluation though would cause pauses
  */
-public class TempTable {
+public class TempTable implements Cloneable {
 	
 	private final class InsertUpdateProcessor extends UpdateProcessor {
 		
@@ -274,7 +275,9 @@ public class TempTable {
 		}
 		
 	}
+	private static AtomicInteger ID_GENERATOR = new AtomicInteger();
 	
+	private int id = ID_GENERATOR.getAndIncrement();
 	private STree tree;
 	private AtomicInteger rowId;
 	private List<ElementSymbol> columns;
@@ -292,6 +295,8 @@ public class TempTable {
 	private List<Integer> notNull = new LinkedList<Integer>();
 	private Map<Integer, AtomicInteger> sequences;
 	private int uniqueColIndex;
+	
+	private AtomicInteger activeReaders = new AtomicInteger();
 
 	TempTable(TempMetadataID tid, BufferManager bm, List<ElementSymbol> columns, int primaryKeyLength, String sessionID) {
 		this.tid = tid;
@@ -331,6 +336,33 @@ public class TempTable {
 		this.sessionID = sessionID;
 		this.keyBatchSize = bm.getSchemaSize(columns);
 		this.leafBatchSize = bm.getSchemaSize(columns.subList(0, primaryKeyLength));
+	}
+	
+	public TempTable clone() {
+		lock.readLock().lock();
+		try {
+			TempTable clone = (TempTable) super.clone();
+			clone.lock = new ReentrantReadWriteLock();
+			if (clone.indexTables != null) {
+				clone.indexTables = new LinkedHashMap<List<ElementSymbol>, TempTable>(clone.indexTables);
+				for (Map.Entry<List<ElementSymbol>, TempTable> entry : clone.indexTables.entrySet()) {
+					TempTable indexClone = entry.getValue().clone();
+					indexClone.lock = clone.lock;
+					entry.setValue(indexClone);
+				}
+			}
+			clone.tree = tree.clone();
+			clone.activeReaders = new AtomicInteger();
+			return clone;
+		} catch (CloneNotSupportedException e) {
+			throw new TeiidRuntimeException();
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
+	
+	public AtomicInteger getActiveReaders() {
+		return activeReaders;
 	}
 	
 	void addIndex(List<ElementSymbol> indexColumns, boolean unique) throws TeiidComponentException, TeiidProcessingException {
@@ -500,9 +532,9 @@ public class TempTable {
 		return tree.getRowCount();
 	}
 	
-	public int truncate() {
+	public int truncate(boolean force) {
 		this.tid.getTableData().dataModified(tree.getRowCount());
-		return tree.truncate();
+		return tree.truncate(force);
 	}
 	
 	public void remove() {
@@ -769,6 +801,27 @@ public class TempTable {
 	
 	public TempMetadataID getMetadataId() {
 		return tid;
+	}
+	
+	public int getId() {
+		return id;
+	}
+	
+	@Override
+	public int hashCode() {
+		return id;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == this) {
+			return true;
+		}
+		if (!(obj instanceof TempTable)) {
+			return false;
+		}
+		TempTable other = (TempTable)obj;
+		return id == other.id;
 	}
 
 }

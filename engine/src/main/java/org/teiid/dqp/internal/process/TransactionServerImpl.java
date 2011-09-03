@@ -462,31 +462,28 @@ public class TransactionServerImpl implements TransactionService {
     /**
      * Request level transaction
      */
-    public TransactionContext begin(TransactionContext context) throws XATransactionException{
+    public void begin(TransactionContext context) throws XATransactionException{
         if (context.getTransactionType() != TransactionContext.Scope.NONE) {
             throw new XATransactionException(QueryPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
         }
         beginDirect(context);
         context.setTransactionType(TransactionContext.Scope.REQUEST);
-        return context;
     }
 
     /**
      * Request level transaction
      */    
-    public TransactionContext commit(TransactionContext context) throws XATransactionException {
+    public void commit(TransactionContext context) throws XATransactionException {
         Assertion.assertTrue(context.getTransactionType() == TransactionContext.Scope.REQUEST);
         commitDirect(context);
-        return context;
     }
 
     /**
      * Request level transaction
      */    
-    public TransactionContext rollback(TransactionContext context) throws XATransactionException {
+    public void rollback(TransactionContext context) throws XATransactionException {
         Assertion.assertTrue(context.getTransactionType() == TransactionContext.Scope.REQUEST);
         rollbackDirect(context);
-        return context;      
     }
 
     public void cancelTransactions(String threadId, boolean requestOnly) throws XATransactionException {

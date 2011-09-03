@@ -356,13 +356,14 @@ public class Request implements SecurityFunctionEvaluator {
             
             if (startAutoWrapTxn) {
                 try {
-                    tc = transactionService.begin(tc);
+                    transactionService.begin(tc);
                 } catch (XATransactionException err) {
                     throw new TeiidComponentException(err);
                 }
             }
         } 
         
+        tc.setIsolationLevel(requestMsg.getTransactionIsolation());
         this.transactionContext = tc;
         this.processor = new QueryProcessor(processPlan, context, bufferManager, processorDataManager);
     }

@@ -60,6 +60,7 @@ import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.tempdata.TempTableStore;
+import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 import org.teiid.query.util.CommandContext;
 import org.xml.sax.Attributes;
 import org.xml.sax.EntityResolver;
@@ -110,7 +111,7 @@ public class XMLPlan extends ProcessorPlan {
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
     	context = context.clone();
     	setContext(context);
-        TempTableStore tempTableStore = new TempTableStore(context.getConnectionID());
+        TempTableStore tempTableStore = new TempTableStore(context.getConnectionID(), TransactionMode.NONE);
         tempTableStore.setParentTempTableStore(context.getTempTableStore());
         context.setTempTableStore(tempTableStore);
         this.dataMgr = dataMgr;
