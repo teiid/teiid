@@ -24,6 +24,7 @@ package org.teiid.events;
 
 import java.util.List;
 
+import org.teiid.Replicated;
 import org.teiid.metadata.ColumnStats;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.TableStats;
@@ -45,6 +46,7 @@ public interface EventDistributor {
 	 * @param tuple
 	 * @param delete
 	 */
+	@Replicated(remoteOnly=true)
 	void updateMatViewRow(String vdbName, int vdbVersion, String schema, String viewName, List<?> tuple, boolean delete);
 	
 	/**
@@ -54,6 +56,7 @@ public interface EventDistributor {
  	 * @param schema
 	 * @param tableNames
 	 */
+	@Replicated(remoteOnly=true)
 	void dataModification(String vdbName, int vdbVersion, String schema, String... tableNames);
 
 	/**
@@ -65,6 +68,7 @@ public interface EventDistributor {
 	 * @param columnName
 	 * @param stats
 	 */
+	@Replicated(remoteOnly=true)
 	void setColumnStats(String vdbName, int vdbVersion, String schemaName,
 			String tableName, String columnName, ColumnStats stats);
 
@@ -76,6 +80,7 @@ public interface EventDistributor {
 	 * @param tableName
 	 * @param stats
 	 */
+	@Replicated(remoteOnly=true)
 	void setTableStats(String vdbName, int vdbVersion, String schemaName,
 			String tableName, TableStats stats);
 	
@@ -87,6 +92,7 @@ public interface EventDistributor {
 	 * @param name
 	 * @param value
 	 */
+	@Replicated(remoteOnly=true)
 	void setProperty(String vdbName, int vdbVersion, String uuid, String name, String value);
 	
 	/**
@@ -99,6 +105,7 @@ public interface EventDistributor {
 	 * @param triggerDefinition
 	 * @param enabled
 	 */
+	@Replicated(remoteOnly=true)
 	void setInsteadOfTriggerDefinition(String vdbName, int vdbVersion, String schema, String viewName, Table.TriggerEvent triggerEvent, String triggerDefinition, Boolean enabled);
 
 	/**
@@ -109,6 +116,7 @@ public interface EventDistributor {
 	 * @param procName
 	 * @param definition
 	 */
+	@Replicated(remoteOnly=true)
 	void setProcedureDefinition(String vdbName, int vdbVersion, String schema, String procName, String definition);
 
 	/**
@@ -119,13 +127,7 @@ public interface EventDistributor {
 	 * @param viewName
 	 * @param definition
 	 */
+	@Replicated(remoteOnly=true)
 	void setViewDefinition(String vdbName, int vdbVersion, String schema, String viewName, String definition);
 	
-	/**
-	 * 
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param viewName
-	 */
-	void refreshMatView(String vdbName, int vdbVersion, String tableName);
 }

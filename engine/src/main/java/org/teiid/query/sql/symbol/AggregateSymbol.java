@@ -156,6 +156,10 @@ public class AggregateSymbol extends ExpressionSymbol {
 	public boolean isDistinct() {
 		return this.distinct;
 	}
+	
+	public void setDistinct(boolean distinct) {
+		this.distinct = distinct;
+	}
 
 	/**
 	 * Get the type of the symbol, which depends on the aggregate function and the

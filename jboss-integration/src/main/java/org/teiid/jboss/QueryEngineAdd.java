@@ -99,7 +99,6 @@ class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvid
     	// now build the engine
     	final RuntimeEngineDeployer engine = buildQueryEngine(engineName, operation);
     	engine.setSecurityHelper(new JBossSecurityHelper());
-    	engine.setContainerLifeCycleListener(shutdownListener);
     	// TODO: none of the caching is configured..
     	
     	SocketConfiguration jdbc = null;
@@ -200,8 +199,8 @@ class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvid
     	if (node.hasDefined(Configuration.MAX_ODBC_LOB_SIZE_ALLOWED)) {
     		engine.setMaxODBCLobSizeAllowed(node.get(Configuration.MAX_ODBC_LOB_SIZE_ALLOWED).asInt());
     	}
-    	if (node.hasDefined(Configuration.EVENT_DISTRIBUTOR_NAME)) {
-    		engine.setEventDistributorName(node.get(Configuration.EVENT_DISTRIBUTOR_NAME).asString());
+    	if (node.hasDefined(Configuration.OBJECT_REPLICATOR_NAME)) {
+    		engine.setObjectReplicatorName(node.get(Configuration.OBJECT_REPLICATOR_NAME).asString());
     	}
     	if (node.hasDefined(Configuration.DETECTING_CHANGE_EVENTS)) {
     		engine.setDetectingChangeEvents(node.get(Configuration.DETECTING_CHANGE_EVENTS).asBoolean());
@@ -296,7 +295,7 @@ class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvid
 		addAttribute(node, Configuration.MAX_SOURCE_ROWS, type, bundle.getString(Configuration.MAX_SOURCE_ROWS+DESC), ModelType.INT, false, "-1"); //$NON-NLS-1$
 		addAttribute(node, Configuration.EXCEPTION_ON_MAX_SOURCE_ROWS, type, bundle.getString(Configuration.EXCEPTION_ON_MAX_SOURCE_ROWS+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_ODBC_LOB_SIZE_ALLOWED, type, bundle.getString(Configuration.MAX_ODBC_LOB_SIZE_ALLOWED+DESC), ModelType.INT, false, "5242880"); //$NON-NLS-1$
-		addAttribute(node, Configuration.EVENT_DISTRIBUTOR_NAME, type, bundle.getString(Configuration.EVENT_DISTRIBUTOR_NAME+DESC), ModelType.STRING, false, "teiid/event-distributor"); //$NON-NLS-1$
+		addAttribute(node, Configuration.OBJECT_REPLICATOR_NAME, type, bundle.getString(Configuration.OBJECT_REPLICATOR_NAME+DESC), ModelType.STRING, false, "teiid/event-distributor"); //$NON-NLS-1$
 		addAttribute(node, Configuration.DETECTING_CHANGE_EVENTS, type, bundle.getString(Configuration.DETECTING_CHANGE_EVENTS+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
 		
 		//session stuff
@@ -381,8 +380,8 @@ class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvid
     	if (operation.hasDefined(Configuration.MAX_ODBC_LOB_SIZE_ALLOWED)) {
     		model.get(Configuration.MAX_ODBC_LOB_SIZE_ALLOWED).set(operation.get(Configuration.MAX_ODBC_LOB_SIZE_ALLOWED).asInt());
     	}
-    	if (operation.hasDefined(Configuration.EVENT_DISTRIBUTOR_NAME)) {
-    		model.get(Configuration.EVENT_DISTRIBUTOR_NAME).set(operation.get(Configuration.EVENT_DISTRIBUTOR_NAME).asString());
+    	if (operation.hasDefined(Configuration.OBJECT_REPLICATOR_NAME)) {
+    		model.get(Configuration.OBJECT_REPLICATOR_NAME).set(operation.get(Configuration.OBJECT_REPLICATOR_NAME).asString());
     	}
     	if (operation.hasDefined(Configuration.SECURITY_DOMAIN)) {
     		List<ModelNode> domains = operation.get(Configuration.SECURITY_DOMAIN).asList();

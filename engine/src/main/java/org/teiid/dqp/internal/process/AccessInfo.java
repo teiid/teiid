@@ -41,7 +41,7 @@ import org.teiid.metadata.AbstractMetadataRecord.Modifiable;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
-import org.teiid.query.tempdata.TempTableStore;
+import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.util.CommandContext;
 
 /**
@@ -117,17 +117,17 @@ public class AccessInfo implements Serializable {
 		}
 		VDBMetaData vdb = DQPWorkContext.getWorkContext().getVDB();
 		TransformationMetadata tm = vdb.getAttachment(TransformationMetadata.class);
-		TempTableStore globalStore = vdb.getAttachment(TempTableStore.class);
+		GlobalTableStore globalStore = vdb.getAttachment(GlobalTableStore.class);
 		if (!externalNames.isEmpty()) {
 			this.objectsAccessed = new HashSet<Object>(externalNames.size());
 			for (List<String> key : this.externalNames) {
 				if (key.size() == 1) {
 					String matTableName = key.get(0);
-					TempMetadataID id = globalStore.getMetadataStore().getTempGroupID(matTableName);
+					TempMetadataID id = globalStore.getTempTableStore().getMetadataStore().getTempGroupID(matTableName);
 					if (id == null) {
 						//if the id is null, then create a local instance
 						String viewFullName = matTableName.substring(RelationalPlanner.MAT_PREFIX.length());
-						id = globalStore.getGlobalTempTableMetadataId(tm.getGroupID(viewFullName), tm);
+						id = globalStore.getGlobalTempTableMetadataId(tm.getGroupID(viewFullName));
 					}
 					this.objectsAccessed.add(id);
 				} else {

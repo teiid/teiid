@@ -26,6 +26,12 @@ import org.teiid.core.TeiidComponentException;
 
 public interface BatchManager {
 	
+	public interface CleanupHook {
+		
+		void cleanup();
+		
+	}
+	
 	public interface ManagedBatch {
 		
 		TupleBatch getBatch(boolean cache, String[] types) throws TeiidComponentException;
@@ -33,6 +39,13 @@ public interface BatchManager {
 		void remove();
 		
 		void setPrefersMemory(boolean prefers);
+		
+		/**
+		 * Get an object that can cleaup the {@link ManagedBatch}, but does not hold a hard reference to
+		 * the {@link ManagedBatch} or the {@link BatchManager}
+		 * @return
+		 */
+		CleanupHook getCleanupHook();
 		
 	}
 	

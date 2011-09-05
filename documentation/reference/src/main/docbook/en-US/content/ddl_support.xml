@@ -77,7 +77,7 @@
         </para>
       </listitem>
       <listitem> 
-        <para>Only local temporary tables are supported. This implies that the scope of temp table will be either to the sesssion or the block of a virtual procedure that creates it.
+        <para>Only local temporary tables are supported. This implies that the scope of temp table will be either to the session or the block of a virtual procedure that creates it.
         </para>
       </listitem>
       <listitem>
@@ -85,7 +85,9 @@
         </para>    
       </listitem>    
       <listitem>
-        <para>Temp tables are non-transactional.
+        <para>Temp tables support a READ_UNCOMMITED transaction isolation level.  There are no locking mechanisms available to support higher isolation levels and the result of a rollback may be inconsistent across multiple transactions.
+        If concurrent transactions are not associated with the same local temporary table or session, then the transaction isolation level is effectively SERIALIZABLE.
+        If you want full constency with local temporary tables, then only use a connection with 1 transaction at a time.  This mode of operation is ensured by connection pooling that tracking connections by transaction.
         </para>    
       </listitem>  
       <listitem>

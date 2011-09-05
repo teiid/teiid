@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<connector xmlns="http://java.sun.com/xml/ns/j2ee"
-           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
-           http://java.sun.com/xml/ns/j2ee/connector_1_5.xsd"
-           version="1.5">
+<connector version="1.5">
 
    <vendor-name>Red Hat Middleware LLC</vendor-name>
    <eis-type>Teiid Text Connector</eis-type>
@@ -55,7 +51,7 @@
              <config-property>
                <description>{$display:"Allow Parent Paths"}</description>
                <config-property-name>AllowParentPaths</config-property-name>
-               <config-property-type>java.lang.Boolean</config-property-type>
+               <config-property-type>boolean</config-property-type>
                <config-property-value>true</config-property-value>
             </config-property>
             

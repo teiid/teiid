@@ -1,3 +1,18 @@
+   
+   <!-- un-comment to enable Teiid COMMAND log, 
+        NOTE:  if there are categories above this appender, this will need to be moved above the categories
+				in order for this appender to work.
+   <appender name="COMMAND" class="org.jboss.logging.appender.RollingFileAppender">
+     <param name="File" value="${jboss.server.log.dir}/teiid-command.log"/>
+     <param name="MaxFileSize" value="1000KB"/>
+     <param name="MaxBackupIndex" value="25"/>
+      <layout class="org.apache.log4j.PatternLayout">
+         <param name="ConversionPattern" value="%d %-5p [%c] (%t:%x) %m%n"/>
+      </layout>
+   </appender>   
+   -->
+   
+
 <!--
 	This file contains log4j.xml snippets that can be used in your main jboss-log4j.xml to control
 	Teiid logging in more depth.  By default all messages will go to the org.teiid category and 
@@ -5,14 +20,14 @@
 -->
 
    <!-- Teiid root category snippet.  Use this to control all of Teiid logging from a single category -->
-   <logger name="org.teiid">
-     <level value="INFO" />
-   </logger>
+   <category name="org.teiid">
+     <priority value="INFO" />
+   </category>
    
    <!--  this is to avoid the "Unable to remove nodes to reduce region size below 1024.  Set expiration for nodes in this region" error -->
-   <logger name="org.jboss.cache">
-     <level value="ERROR" />
-   </logger>  
+   <category name="org.jboss.cache">
+     <priority value="ERROR" />
+   </category>  
    
  <!-- Other categories:
 	org.teiid.PROCESSOR - Query processing logs. See also org.teiid.PLANNER for query planning logs.
@@ -49,27 +64,17 @@
  -->
    
    <!-- un-comment to enable COMMAND log - also needs the COMMAND appender to be uncommented
-   <logger name="org.teiid.COMMAND_LOG" additivity="false">
-      <level value="DEBUG"/>
+   <category name="org.teiid.COMMAND_LOG" additivity="false">
+      <priority value="DEBUG"/>
       <appender-ref ref="COMMAND"/>
-   </logger>
+   </category>
    -->
    
    <!-- Un-comment to enable AUDIT log - also needs the AUDIT appender to be uncommented.
    		JBoss already has an AUDIT appender, or you may create your own - see the COMMAND appender below
-   <logger name="org.teiid.AUDIT_LOG" additivity="false">
-      <level value="DEBUG"/>      
+   <category name="org.teiid.AUDIT_LOG" additivity="false">
+      <priority value="DEBUG"/>      
       <appender-ref ref="AUDIT"/>      
-   </logger>
+   </category>
    -->
-   
-   <!-- un-comment to enable Teiid COMMAND log
-   <appender name="COMMAND" class="org.jboss.logging.appender.RollingFileAppender">
-     <param name="File" value="${jboss.server.log.dir}/teiid-command.log"/>
-     <param name="MaxFileSize" value="1000KB"/>
-     <param name="MaxBackupIndex" value="25"/>
-      <layout class="org.apache.log4j.PatternLayout">
-         <param name="ConversionPattern" value="%d %-5p [%c] (%t:%x) %m%n"/>
-      </layout>
-   </appender>   
-   -->
+

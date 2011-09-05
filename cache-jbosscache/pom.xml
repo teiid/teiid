@@ -25,17 +25,15 @@
 			<artifactId>teiid-engine</artifactId>
             <scope>provided</scope>
 		</dependency>
-        <!-- 
 		<dependency>
 			<groupId>org.jboss.cache</groupId>
 			<artifactId>jbosscache-core</artifactId>
             <scope>provided</scope>
 		</dependency>
-        <dependency>
-            <groupId>org.jboss.man</groupId>
-            <artifactId>jboss-managed</artifactId>
-            <scope>provided</scope>
-        </dependency>   
-         -->     
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 </project>

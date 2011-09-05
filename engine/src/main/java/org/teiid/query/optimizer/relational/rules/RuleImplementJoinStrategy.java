@@ -223,7 +223,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         PlanNode sortNode = createSortNode(new ArrayList<SingleElementSymbol>(orderSymbols), outputSymbols);
         
         boolean distinct = false;
-        if (sourceNode.getType() == NodeConstants.Types.SOURCE && outputSymbols.size() == expressions.size() && outputSymbols.containsAll(expressions)) {
+        if (sourceNode.getFirstChild() != null && sourceNode.getType() == NodeConstants.Types.SOURCE && outputSymbols.size() == expressions.size() && outputSymbols.containsAll(expressions)) {
         	PlanNode setOp = NodeEditor.findNodePreOrder(sourceNode.getFirstChild(), NodeConstants.Types.SET_OP, NodeConstants.Types.SOURCE);
         	if (setOp != null) {
         		if (setOp.hasBooleanProperty(NodeConstants.Info.USE_ALL)) {

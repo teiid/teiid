@@ -46,7 +46,7 @@ import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.util.CommandContext;
 
-
+@SuppressWarnings("unchecked")
 public class TestSortNode {
     
     public static final int BATCH_SIZE = 100;
@@ -321,4 +321,37 @@ public class TestSortNode {
     	assertEquals(Arrays.asList(2), ts.nextTuple());
     }
     
+    @Test public void testDupRemoveLowMemory() throws Exception {
+    	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
+        es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        BufferManager bm = BufferManagerFactory.getTestBufferManager(0, 2);
+        TupleBuffer tsid = bm.createTupleBuffer(Arrays.asList(es1), "test", TupleSourceType.PROCESSOR); //$NON-NLS-1$
+        tsid.addTuple(Arrays.asList(1));
+        tsid.addTuple(Arrays.asList(2));
+    	SortUtility su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.DUP_REMOVE, bm, "test", tsid.getSchema()); //$NON-NLS-1$
+    	TupleBuffer out = su.sort();
+    	TupleSource ts = out.createIndexedTupleSource();
+    	assertEquals(Arrays.asList(1), ts.nextTuple());
+    	assertEquals(Arrays.asList(2), ts.nextTuple());
+    	try {
+    		ts.nextTuple();
+    		fail();
+    	} catch (BlockedException e) {
+    		
+    	}
+    	tsid.addTuple(Arrays.asList(3));
+    	tsid.addTuple(Arrays.asList(4));
+    	tsid.addTuple(Arrays.asList(5));
+    	tsid.addTuple(Arrays.asList(6));
+    	tsid.addTuple(Arrays.asList(6));
+    	tsid.addTuple(Arrays.asList(6));
+    	tsid.close();
+    	su.sort();
+		ts.nextTuple();
+		ts.nextTuple();
+		assertNotNull(ts.nextTuple());
+		assertNotNull(ts.nextTuple());
+		assertNull(ts.nextTuple());
+    }
+
 }

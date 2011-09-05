@@ -26,6 +26,7 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.OptionalDataException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
@@ -116,7 +117,11 @@ public class LogonResult implements Externalizable {
 		timeZone = (TimeZone)in.readObject();
 		clusterName = (String)in.readObject();
 		vdbVersion = in.readInt();
-		addtionalProperties = ExternalizeUtil.readMap(in);
+		try {
+			addtionalProperties = ExternalizeUtil.readMap(in);
+		} catch (OptionalDataException e) {
+			
+		}
 	}
 	
 	@Override

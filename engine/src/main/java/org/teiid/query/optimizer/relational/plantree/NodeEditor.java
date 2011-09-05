@@ -54,6 +54,9 @@ public final class NodeEditor {
     }
 
 	public static final PlanNode findNodePreOrder(PlanNode root, int types, int stopTypes) {
+		if (root == null) {
+			return null;
+		}
 		if((types & root.getType()) == root.getType()) {
 			return root;
 		} else if((stopTypes & root.getType()) == root.getType()) {

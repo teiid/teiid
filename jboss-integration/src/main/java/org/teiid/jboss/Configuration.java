@@ -48,7 +48,7 @@ class Configuration {
 	public static final String MAX_SOURCE_ROWS = "max-source-rows-allowed";//$NON-NLS-1$
 	public static final String EXCEPTION_ON_MAX_SOURCE_ROWS = "exception-on-max-source-rows";//$NON-NLS-1$
 	public static final String MAX_ODBC_LOB_SIZE_ALLOWED = "max-odbc-lob-size-allowed";//$NON-NLS-1$
-	public static final String EVENT_DISTRIBUTOR_NAME = "event-distributor-name";//$NON-NLS-1$
+	public static final String OBJECT_REPLICATOR_NAME = "object-replicator-name";//$NON-NLS-1$
 	public static final String DETECTING_CHANGE_EVENTS = "detect-change-events";//$NON-NLS-1$
 	public static final String SECURITY_DOMAIN = "security-domain";//$NON-NLS-1$
 	public static final String MAX_SESSIONS_ALLOWED = "max-sessions-allowed";//$NON-NLS-1$

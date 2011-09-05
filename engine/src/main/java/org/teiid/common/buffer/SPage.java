@@ -22,24 +22,34 @@
 
 package org.teiid.common.buffer;
 
+import java.lang.ref.PhantomReference;
+import java.lang.ref.ReferenceQueue;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Set;
 
+import org.teiid.common.buffer.BatchManager.CleanupHook;
 import org.teiid.common.buffer.BatchManager.ManagedBatch;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidRuntimeException;
 
 /**
  * A linked list Page entry in the tree
  * 
  * TODO: return the tuplebatch from getvalues, since that is what we're tracking
  * 
+ * State cloning allows a single storage reference to be shared in many trees.
+ * A phantom reference is used for proper cleanup once cloned.
+ * 
+ * TODO: a better purging strategy for managedbatchs.
+ * 
  */
 @SuppressWarnings("unchecked")
-class SPage {
+class SPage implements Cloneable {
 	
 	static final int MIN_PERSISTENT_SIZE = 16;
 
@@ -54,22 +64,73 @@ class SPage {
 		}
 	}
 	
-	private static AtomicInteger counter = new AtomicInteger();
-
+	private static final Set<PhantomReference<Object>> REFERENCES = Collections.newSetFromMap(new IdentityHashMap<PhantomReference<Object>, Boolean>());
+	private static ReferenceQueue<Object> QUEUE = new ReferenceQueue<Object>();
+	static class CleanupReference extends PhantomReference<Object> {
+		
+		private CleanupHook batch;
+		
+		public CleanupReference(Object referent, CleanupHook batch) {
+			super(referent, QUEUE);
+			this.batch = batch;
+		}
+		
+		public void cleanup() {
+			try {
+				this.batch.cleanup();
+			} finally {
+				this.clear();
+			}
+		}
+	}
+	
 	STree stree;
 	
+	private int id;
 	protected SPage next;
 	protected SPage prev;
 	protected ManagedBatch managedBatch;
+	private Object trackingObject;
 	protected TupleBatch values;
 	protected ArrayList<SPage> children;
+	//TODO: could track cloning more completely, which would allow for earlier batch removal
+	private boolean cloned; 
 	
 	SPage(STree stree, boolean leaf) {
 		this.stree = stree;
-		this.values = new TupleBatch(counter.getAndIncrement(), new ArrayList(stree.pageSize/4));
+		this.id = stree.counter.getAndIncrement();
+		stree.pages.put(this.id, this);
+		//TODO: this counter is a hack.  need a better idea of a storage id
+		this.values = new TupleBatch(id, new ArrayList(stree.pageSize/4));
 		if (!leaf) {
 			children = new ArrayList<SPage>(stree.pageSize/4);
 		}
+	}
+	
+	public SPage clone(STree tree) {
+		try {
+			if (this.managedBatch != null && trackingObject == null) {
+				cloned = true;
+				this.trackingObject = new Object();
+				CleanupReference managedBatchReference  = new CleanupReference(trackingObject, managedBatch.getCleanupHook());
+				REFERENCES.add(managedBatchReference);
+			}
+			SPage clone = (SPage) super.clone();
+			clone.stree = tree;
+			if (children != null) {
+				clone.children = new ArrayList<SPage>(children);
+			}
+			if (values != null) {
+				clone.values = new TupleBatch(stree.counter.getAndIncrement(), new ArrayList<List<?>>(values.getTuples()));
+			}
+			return clone;
+		} catch (CloneNotSupportedException e) {
+			throw new TeiidRuntimeException(e);
+		}
+	}
+	
+	public int getId() {
+		return id;
 	}
 	
 	static SearchResult search(SPage page, List k, LinkedList<SearchResult> parent) throws TeiidComponentException {
@@ -121,7 +182,7 @@ class SPage {
 	}
 	
 	protected void setValues(TupleBatch values) throws TeiidComponentException {
-		if (managedBatch != null) {
+		if (managedBatch != null && !cloned) {
 			managedBatch.remove();
 		}
 		if (values.getTuples().size() < MIN_PERSISTENT_SIZE) {
@@ -134,17 +195,25 @@ class SPage {
 		} else {
 			values.setDataTypes(stree.types);
 		}
+		if (cloned) {
+			values.setRowOffset(stree.counter.getAndIncrement());
+			cloned = false;
+			trackingObject = null;
+		}
 		if (children != null) {
 			managedBatch = stree.keyManager.createManagedBatch(values, true);
 		} else {
 			managedBatch = stree.leafManager.createManagedBatch(values, stree.preferMemory);
 		}
 	}
-	
-	protected void remove() {
+
+	protected void remove(boolean force) {
 		if (managedBatch != null) {
-			managedBatch.remove();
+			if (force || !cloned) {
+				managedBatch.remove();
+			}
 			managedBatch = null;
+			trackingObject = null;
 		}
 		values = null;
 		children = null;
@@ -156,6 +225,14 @@ class SPage {
 		}
 		if (managedBatch == null) {
 			throw new AssertionError("Batch removed"); //$NON-NLS-1$
+		}
+		for (int i = 0; i < 10; i++) {
+			CleanupReference ref = (CleanupReference)QUEUE.poll();
+			if (ref == null) {
+				break;
+			}
+			REFERENCES.remove(ref);
+			ref.cleanup();
 		}
 		if (children != null) {
 			return managedBatch.getBatch(true, stree.keytypes);
@@ -173,7 +250,7 @@ class SPage {
 		if (current.children != null) {
 			current.children.addAll(current.next.children);
 		}
-		current.next.remove();
+		current.next.remove(false);
 		current.next = current.next.next;
 		if (current.next != null) {
 			current.next.prev = current;

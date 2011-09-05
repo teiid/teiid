@@ -131,7 +131,7 @@
         <!-- Maximum size of lob allowed through ODBC connection in bytes (default 5MB) -->
         <property name="maxODBCLobSizeAllowed">5242880</property>
         <!-- The JNDI name of the Teiid Event Distributor -->
-        <property name="eventDistributorName">teiid/event-distributor</property>
+        <property name="objectReplicatorName">teiid/replicator</property>
         <!-- Set to true for the engine to detect local change events. Should be disabled if using external change data capture tools. (default true) -->
         <property name="detectingChangeEvents">true</property>
     </bean>

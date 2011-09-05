@@ -1234,7 +1234,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     		break;
     	}
     	validateNoSubqueriesOrOuterReferences(windowFunction);
-        if (windowFunction.getFunction().getOrderBy() != null || windowFunction.getFunction().isDistinct()) {
+        if (windowFunction.getFunction().getOrderBy() != null || (windowFunction.getFunction().isDistinct() && windowFunction.getWindowSpecification().getOrderBy() != null)) {
         	handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0042", new Object[] {windowFunction.getFunction(), windowFunction}), windowFunction); //$NON-NLS-1$
         }
         if (windowFunction.getWindowSpecification().getPartition() != null) {
@@ -1437,6 +1437,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 			if (item.getPrefix() != null) {
 				if (item.getPrefix().equals("xml") || item.getPrefix().equals("xmlns")) { //$NON-NLS-1$ //$NON-NLS-2$
 					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_namespaces_reserved"), obj); //$NON-NLS-1$
+				} else if (!Name11Checker.getInstance().isValidNCName(item.getPrefix())) {
+					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_namespaces_invalid", item.getPrefix()), obj); //$NON-NLS-1$
 				}
 				if (item.getUri().length() == 0) {
 					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_namespaces_null_uri"), obj); //$NON-NLS-1$

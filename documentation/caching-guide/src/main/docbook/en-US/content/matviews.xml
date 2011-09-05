@@ -104,6 +104,7 @@
 		Internal materialization also provides more built-in facilities for refreshing and monitoring.</para>
 		<para>The cache hint, when used in the context of an internal materialized view transformation query, provides the ability to fine tune the materialized table.  
 		The pref_mem option also applies to internal materialized views.  Internal table index pages already have a memory preference, so the perf_mem option indicates that the data pages should prefer memory as well.</para>
+		<para>All internal materialized view refresh and updates happen atomically.  Internal materialized views support READ_COMMITTED (used also for READ_UNCOMMITED) and SERIALIZABLE (used also for REPEATABLE_READ) transaction isolation levels.</para>
 		<section>
 			<title>Loading And Refreshing</title>
 			<para>An internal materialized view table is initially in an invalid state (there is no data).  The first user query will trigger an implicit loading of the data.  
@@ -120,22 +121,6 @@
 			subsequent refreshes performed with <code>refreshMatView</code> will use dependent materialized view tables if they exist.  Only one load may occur at a time.  If a load is already in progress when
 			the <code>SYSADMIN.refreshMatView</code> procedure is called, it will return -1 immediately rather than preempting the current load.
 			</para>
-            <para>
-            When Teiid is running clustered mode, after of loading of internal materialized view contents, an event will be sent to all
-            the other participating nodes in the cluster to refresh the contents from the original node in asynchronus fashion.
-            During this remote node loading process, if the node that is reading the contents gets a request from user to serve the
-            results of that view, then the current results in cache will be served. If no results were available at that node, then 
-            request will be blocked until load process is finished.
-            </para>
-            <para>
-            When a Teiid node joins the cluster, at the end of start-up cycle, an asynchronus job
-            will be started to fetch all the previously cached internal materialized views at other nodes
-            for the deployed VDBs. The query request behaviour during this load process is same as above. 
-            </para>  
-            <note><para>In the clustered mode, the "invalidate=true" flag in the "SYSADMIN.refreshMatView" procedure
-            will only apply to the node that is refreshing the contents from source. All other nodes, will still serve the 
-            old contents during the refresh process.</para>
-            </note>          
 			<section>
 		   		<title>TTL Snapshot Refresh</title>
 		   		<para>The <link linkend="cache-hint">cache hint</link> may be used to automatically trigger a full snapshot refresh after a specified time to live (ttl).  
@@ -198,12 +183,9 @@
 		<section>
 			<title>Clustering Considerations</title>
 			<para>Each member in a cluster maintains its own copy of each materialized table and associated indexes.  
-			With cache clustering enabled, an additional snapshot copy of the table is maintained for loading by other members.  
 			An attempt is made to ensure each member receives the same full refresh events as the others.  
 			Full consistency for updatable materialized views however is not guaranteed.  
 			Periodic full refreshes of updatable materialized view tables helps ensure consistency among members.
-			<note><para>Loads of materialized tables are not coordinated across the cluster.  It is possible for the same ttl expiration to trigger a load at each member.</para></note> 
-		    In many clustered scenarios using external materialization is advantageous to fully control the loading of the tables and to have materialized data that is durable.
 		    </para>
 		</section>
 	</section>

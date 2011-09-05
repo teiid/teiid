@@ -118,6 +118,7 @@ public class ObjectConverterUtil {
 	        while ((l_nbytes = is.read(l_buffer, 0, readLength)) != -1) {
 	        	if (length != -1 && writen > length - l_nbytes) {
 		        	out.write(l_buffer, 0, writen + l_nbytes - length); 
+		        	writen = length;
 		        	break;
 	        	}
 	        	out.write(l_buffer,0,l_nbytes); 
@@ -143,7 +144,7 @@ public class ObjectConverterUtil {
     	return write(out, is, new byte[DEFAULT_READING_SIZE], length, close); // buffer holding bytes to be transferred
     }
     
-    public static void write(final Writer out, final Reader is, int length) throws IOException {
+    public static int write(final Writer out, final Reader is, int length, boolean close) throws IOException {
     	int writen = 0;
         try {
 	        char[] l_buffer = new char[DEFAULT_READING_SIZE]; // buffer holding bytes to be transferred
@@ -151,16 +152,20 @@ public class ObjectConverterUtil {
 	        while ((l_nbytes = is.read(l_buffer)) != -1) {
 	        	if (length != -1 && writen > length - l_nbytes) {
 		        	out.write(l_buffer, 0, writen + l_nbytes - length); 
+		        	writen = length;
 		        	break;
 	        	}
 	        	out.write(l_buffer,0,l_nbytes); 
 	        	writen += l_nbytes;
 	        }
+	        return writen;
         } finally {
-        	try {
-        		is.close();
-        	} finally {
-        		out.close();
+        	if (close) {
+	        	try {
+	        		is.close();
+	        	} finally {
+	        		out.close();
+	        	}
         	}
         }
     }
@@ -192,7 +197,7 @@ public class ObjectConverterUtil {
     public static void write(final Reader reader, final File f) throws IOException {
     	f.getParentFile().mkdirs();
     	FileWriter fw = new FileWriter(f);        
-        write(fw, reader, -1);   
+        write(fw, reader, -1, true);   
     }
 
     public static void write(final InputStream is, final File f) throws IOException {
@@ -290,7 +295,7 @@ public class ObjectConverterUtil {
 
     public static char[] convertToCharArray(Reader reader, int length) throws IOException {
         StringWriter sb = new StringWriter();     
-        write(sb, reader, length);
+        write(sb, reader, length, true);
         return sb.toString().toCharArray();
     }
 

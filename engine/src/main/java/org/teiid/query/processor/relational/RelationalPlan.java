@@ -46,6 +46,7 @@ import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.tempdata.TempTableStore;
+import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 import org.teiid.query.util.CommandContext;
 
 /**
@@ -87,7 +88,7 @@ public class RelationalPlan extends ProcessorPlan {
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
     	if (this.with != null) {
     		context = context.clone();
-    		tempTableStore = new TempTableStore(context.getConnectionID());
+    		tempTableStore = new TempTableStore(context.getConnectionID(), TransactionMode.NONE);
             tempTableStore.setParentTempTableStore(context.getTempTableStore());
             context.setTempTableStore(tempTableStore);
     		for (WithQueryCommand withCommand : this.with) {

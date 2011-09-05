@@ -22,15 +22,14 @@
 
 package org.teiid.cdk.api;
 
+import static org.junit.Assert.assertEquals;
 import junit.framework.TestCase;
 
-import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Command;
 import org.teiid.language.NamedTable;
 import org.teiid.language.Select;
 import org.teiid.metadata.AbstractMetadataRecord;
-
 
 public class TestTranslationUtility extends TestCase {
 

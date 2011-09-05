@@ -47,7 +47,6 @@ import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
-import org.jboss.netty.util.internal.ConcurrentHashMap;
 import org.teiid.adminapi.Admin.Cache;
 import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
@@ -66,6 +65,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.LRUCache;
+import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.ContainerLifeCycleListener;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
@@ -84,8 +84,12 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.net.TeiidURL;
+import org.teiid.query.ObjectReplicator;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.processor.DdlPlan;
+import org.teiid.query.tempdata.GlobalTableStore;
+import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.security.SecurityHelper;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.services.SessionServiceImpl;
@@ -111,10 +115,10 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     private long sessionMaxLimit = SessionService.DEFAULT_MAX_SESSIONS;
 	private long sessionExpirationTimeLimit = SessionService.DEFAULT_SESSION_EXPIRATION;
 
-	private String eventDistributorName;
+	private transient ObjectReplicator objectReplicator;
+	private String objectReplicatorName;
 	private transient EventDistributor eventDistributor;	
 	private transient EventDistributor eventDistributorProxy;
-	private transient ContainerLifeCycleListener lifecycleListener;
 
 	private final InjectedValue<WorkManager> workManagerInjector = new InjectedValue<WorkManager>();
 	private final InjectedValue<XATerminator> xaTerminatorInjector = new InjectedValue<XATerminator>();
@@ -184,13 +188,18 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		
 		dqpCore.setTransactionService((TransactionService)LogManager.createLoggingProxy(LogConstants.CTX_TXN_LOG, transactionServerImpl, new Class[] {TransactionService.class}, MessageLevel.DETAIL, Module.getCallerModule().getClassLoader()));
 
-		if (this.eventDistributorName != null) {
+		if (this.objectReplicatorName != null) {
 			try {
 				InitialContext ic = new InitialContext();
-				this.eventDistributor = (EventDistributor) ic.lookup(this.eventDistributorName);
+				this.objectReplicator = (ObjectReplicator) ic.lookup(this.objectReplicatorName);
+				try {
+					this.eventDistributor = this.objectReplicator.replicate(LocalServerConnection.TEIID_RUNTIME_CONTEXT+getName(), EventDistributor.class, this, 0);
+				} catch (Exception e) {
+					LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("replication_failed", this)); //$NON-NLS-1$
+				}
 			} catch (NamingException ne) {
 				//log at a detail level since we may not be in the all profile
-				LogManager.logDetail(LogConstants.CTX_RUNTIME, ne, IntegrationPlugin.Util.getString("jndi_failed", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
+				LogManager.logDetail(LogConstants.CTX_RUNTIME, ne, IntegrationPlugin.Util.getString("jndi_failed", this.objectReplicatorName)); //$NON-NLS-1$
 			}
 		}
 		this.dqpCore.setMetadataRepository(this.vdbRepository.getMetadataRepository());
@@ -253,19 +262,31 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	}    	
     	
     	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("engine_started", getRuntimeVersion(), new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
-
     	// add vdb life cycle listeners
 		this.vdbRepository.addListener(new VDBLifeCycleListener() {
 			
 			private Set<VDBKey> recentlyRemoved = Collections.newSetFromMap(new LRUCache<VDBKey, Boolean>(10000));
 			
 			@Override
-			public void removed(String name, int version) {
+			public void removed(String name, int version, CompositeVDB vdb) {
 				recentlyRemoved.add(new VDBKey(name, version));
+				if (objectReplicator != null) {
+					GlobalTableStore gts = vdb.getVDB().getAttachment(GlobalTableStore.class);
+					objectReplicator.stop(gts);
+				}
 			}
 			
 			@Override
-			public void added(String name, int version) {
+			public void added(String name, int version, CompositeVDB vdb) {
+				GlobalTableStore gts = new GlobalTableStoreImpl(dqpCore.getBufferManager(), vdb.getVDB().getAttachment(TransformationMetadata.class));
+				if (objectReplicator != null) {
+					try {
+						gts = objectReplicator.replicate(name + version, GlobalTableStore.class, gts, 300000);
+					} catch (Exception e) {
+						LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("replication_failed", gts)); //$NON-NLS-1$
+					}
+				}
+				vdb.getVDB().addAttchment(GlobalTableStore.class, gts);
 				if (!recentlyRemoved.remove(new VDBKey(name, version))) {
 					return;
 				}
@@ -286,8 +307,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 				dqpCore.clearCache(Cache.QUERY_SERVICE_RESULT_SET_CACHE.toString(), name, version);
 			}			
 		});
-		
-		synchronizeMaterializeViews();
 	}	
 	
 	@Override
@@ -317,6 +336,10 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	this.sessionService.stop();
     	
     	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("engine_stopped", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
+    	
+    	if (this.objectReplicator != null && this.eventDistributor != null) {
+    		this.objectReplicator.stop(this.eventDistributor);
+    	}
     }
     
 	private void createClientServices() {
@@ -588,23 +611,28 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		return newResults;
 	}
 	
-	public String getEventDistributorName() {
-		return eventDistributorName;
+	public String getObjectReplicatorName() {
+		return objectReplicatorName;
 	}
 	
-	public void setEventDistributorName(String eventDistributorName) {
-		this.eventDistributorName = eventDistributorName;
+	public void setObjectReplicatorName(String eventDistributorName) {
+		this.objectReplicatorName = eventDistributorName;
 	}
 	
 	@Override
 	public void updateMatViewRow(String vdbName, int vdbVersion, String schema,
 			String viewName, List<?> tuple, boolean delete) {
-		this.dqpCore.updateMatViewRow(getContextProvider(), vdbName, vdbVersion, schema, viewName, tuple, delete);
-	}
-	
-	@Override
-	public void refreshMatView(final String vdbName, final int vdbVersion, final String viewName) {
-		this.dqpCore.refreshMatView(getContextProvider(), vdbName, vdbVersion, viewName);
+		VDBMetaData metadata = this.vdbRepository.getVDB(vdbName, vdbVersion);
+		if (metadata != null) {
+			GlobalTableStore gts = metadata.getAttachment(GlobalTableStore.class);
+			if (gts != null) {
+				try {
+					gts.updateMatViewRow((RelationalPlanner.MAT_PREFIX + schema + '.' + viewName).toUpperCase(), tuple, delete);
+				} catch (TeiidComponentException e) {
+					LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("replication_failed", "updateMatViewRow")); //$NON-NLS-1$ //$NON-NLS-2$
+				}
+			}
+		}
 	}
 	
 	@Override
@@ -739,18 +767,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		return this.eventDistributorProxy;
 	}
 	
-	private void synchronizeMaterializeViews() {
-		this.lifecycleListener.addListener(new ContainerLifeCycleListener.LifeCycleEventListener() {
-			@Override
-			public void onStartupFinish() {
-				dqpCore.synchronizeInternalMaterializedViews(getContextProvider());
-			}
-			@Override
-			public void onShutdownStart() {
-			}
-		});
-	}
-	
 	public String getRuntimeVersion() {
 		return ApplicationInfo.getInstance().getBuildNumber();
 	}
@@ -766,29 +782,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	public void addSecurityDomain(String domain) {
 		this.securityDomainNames.add(domain);
 	}
-	
-	private DQPCore.ContextProvider getContextProvider() {
-		return new DQPCore.ContextProvider() {
-			@Override
-			public DQPWorkContext getContext(final String vdbName, final int vdbVersion) {
-				return new DQPWorkContext() {
-					public VDBMetaData getVDB() {
-						return vdbRepository.getVDB(vdbName, vdbVersion);
-					}
-				    public String getVdbName() {
-				        return vdbName;
-				    }
-				    public int getVdbVersion() {
-				        return vdbVersion;
-				    }					
-				};
-			}
-		};
-	}
-	
-	public void setContainerLifeCycleListener(ContainerLifeCycleListener listener) {
-		this.lifecycleListener = listener;
-	}	
 	
 	public InjectedValue<CacheFactory> getCachefactoryInjector() {
 		return cachefactoryInjector;

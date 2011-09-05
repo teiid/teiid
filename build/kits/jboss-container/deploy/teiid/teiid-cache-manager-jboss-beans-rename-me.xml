@@ -138,14 +138,13 @@
         </property>
     </bean>
     
-    <bean name="EventDistributorFactory" class="org.teiid.events.jboss.JGroupsEventDistributor">
-    	<property name="jndiName">teiid/event-distributor</property>
+    <bean name="ObjectReplicator" class="org.teiid.replication.jboss.JGroupsObjectReplicator">
+    	<property name="jndiName">teiid/replicator</property>
         <property name="channelFactory">
             <inject bean="JChannelFactory" />
         </property>
-        <property name="clusterName">${jboss.partition.name:DefaultPartition}-teiid-events</property>
+        <property name="clusterName">${jboss.partition.name:DefaultPartition}-teiid-rep</property>
         <property name="multiplexerStack">${jboss.default.jgroups.stack:udp}</property>        
-        <property name="localEventDistributorName">teiid/engine-deployer</property>
     </bean>
 
 </deployment>

@@ -23,7 +23,6 @@
 package org.teiid.dqp.service;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Properties;
 
 import javax.security.auth.Subject;
@@ -149,5 +148,5 @@ public interface SessionService {
 	
 	String getKrb5SecurityDomain();
 	
-	void assosiateSubjectInContext(String securityDomain, Subject subject); 
+	void associateSubjectInContext(String securityDomain, Subject subject); 
 }

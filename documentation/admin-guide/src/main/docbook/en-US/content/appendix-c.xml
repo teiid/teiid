@@ -30,5 +30,10 @@
 			If a traditional join is not possible (such as with NOT IN) a merge join version of the semijoin or antijoin will be considered by upon the costing information available. 
 			</para>
 		</listitem>
+		<listitem>
+			<para><emphasis>org.teiid.ODBCPacketSize</emphasis> - defaults to 307200.  
+			Target size in bytes of the ODBC results buffer.  This is not a hard maximum, lobs and wide rows may use larger buffers.
+			</para>
+		</listitem>
 	</itemizedlist>
 </appendix>

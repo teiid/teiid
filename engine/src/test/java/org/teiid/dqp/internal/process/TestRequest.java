@@ -42,6 +42,7 @@ import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.tempdata.TempTableStore;
+import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.ContextProperties;
 
@@ -52,7 +53,7 @@ import org.teiid.query.util.ContextProperties;
  */
 public class TestRequest extends TestCase {
 
-    private static final TempTableStore TEMP_TABLE_STORE = new TempTableStore("1"); //$NON-NLS-1$
+    private static final TempTableStore TEMP_TABLE_STORE = new TempTableStore("1", TransactionMode.ISOLATE_WRITES); //$NON-NLS-1$
 	private final static String QUERY = "SELECT * FROM pm1.g1";  //$NON-NLS-1$
     
     /**

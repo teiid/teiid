@@ -29,6 +29,7 @@ import org.jboss.cache.Fqn;
 import org.jboss.cache.Node;
 import org.jboss.cache.Region;
 import org.jboss.cache.config.EvictionAlgorithmConfig;
+import org.jboss.cache.config.EvictionConfig;
 import org.jboss.cache.config.EvictionRegionConfig;
 import org.jboss.cache.eviction.ExpirationAlgorithmConfig;
 import org.jboss.cache.eviction.LRUAlgorithmConfig;
@@ -71,6 +72,8 @@ public class JBossCacheFactory implements CacheFactory, Serializable{
 			Region cacheRegion = this.cacheStore.getRegion(node.getFqn(), true);
 			cacheRegion.setEvictionRegionConfig(buildEvictionConfig(node.getFqn(), config));
 			cacheRegion.activate();
+			cacheRegion = this.cacheStore.getRegion(node.getFqn(), true);
+			cacheRegion.setEvictionRegionConfig(buildEvictionConfig(node.getFqn(), config));
 						
 			JBossCache jc = null;
 			if (config != null && config.getPolicy().equals(Policy.EXPIRATION)) {

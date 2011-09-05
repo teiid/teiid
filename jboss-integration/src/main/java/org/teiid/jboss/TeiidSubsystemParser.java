@@ -121,7 +121,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	writeElement(writer, Element.MAX_SOURCE_ROWS_ELEMENT, node);
     	writeElement(writer, Element.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT, node);
     	writeElement(writer, Element.MAX_ODBC_LOB_SIZE_ALLOWED_ELEMENT, node);
-    	writeElement(writer, Element.EVENT_DISTRIBUTOR_NAME_ELEMENT, node);
+    	writeElement(writer, Element.OBJECT_REPLICATOR_NAME_ELEMENT, node);
     	writeElement(writer, Element.DETECTING_CHANGE_EVENTS_ELEMENT, node);
     	
     	if (node.hasDefined(Element.SECURITY_DOMAIN_ELEMENT.getLocalName())) {
@@ -340,7 +340,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 					break;
 
 				//Strings
-				case EVENT_DISTRIBUTOR_NAME_ELEMENT:
+				case OBJECT_REPLICATOR_NAME_ELEMENT:
 					node.get(reader.getLocalName()).set(reader.getElementText());
 					break;
 				

@@ -29,6 +29,7 @@ import org.teiid.client.plan.PlanNode;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.proc.Statement.Labeled;
 import org.teiid.query.tempdata.TempTableStore;
+import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 
 
 /**
@@ -113,7 +114,7 @@ public class Program implements Cloneable, Labeled {
      */
     public void reset(String sessionId){
         counter = 0;
-        this.tempTables = new TempTableStore(sessionId);
+        this.tempTables = new TempTableStore(sessionId, TransactionMode.ISOLATE_WRITES);
         this.startedTxn = false;
     }
 

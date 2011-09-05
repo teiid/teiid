@@ -58,6 +58,7 @@ import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.VariableContext;
+import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.TempTableStore;
 
 /** 
@@ -116,7 +117,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    
 	    private BufferManager bufferManager;
 	    
-	    private TempTableStore globalTables;
+	    private GlobalTableStore globalTables;
 	    
 	    private SessionAwareCache<PreparedPlan> planCache;
 	    
@@ -484,11 +485,11 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     	globalState.bufferManager = bm;
     }
     
-    public TempTableStore getGlobalTableStore() {
+    public GlobalTableStore getGlobalTableStore() {
     	return globalState.globalTables;
     }
     
-    public void setGlobalTableStore(TempTableStore tempTableStore) {
+    public void setGlobalTableStore(GlobalTableStore tempTableStore) {
     	globalState.globalTables = tempTableStore;
     }
     

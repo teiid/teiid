@@ -51,6 +51,7 @@ import org.teiid.query.sql.lang.ExistsCriteria;
 import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.MatchCriteria;
 import org.teiid.query.sql.lang.NotCriteria;
+import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SetCriteria;
@@ -176,6 +177,34 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     		markInvalid(windowFunction, "Window function order by with aggregate not supported by source"); //$NON-NLS-1$
             return;
     	}
+    	if (!this.caps.supportsCapability(Capability.WINDOW_FUNCTION_DISTINCT_AGGREGATES) 
+    			&& windowFunction.getFunction().isDistinct()) {
+    		markInvalid(windowFunction, "Window function distinct aggregate not supported by source"); //$NON-NLS-1$
+            return;
+    	}
+    	try {
+	    	if (!CapabilitiesUtil.checkElementsAreSearchable(windowFunction.getWindowSpecification().getPartition(), metadata, SupportConstants.Element.SEARCHABLE_COMPARE)) {
+	    		markInvalid(windowFunction, "not all source columns support search type"); //$NON-NLS-1$
+	    	}
+    	} catch(QueryMetadataException e) {
+            handleException(new TeiidComponentException(e));
+        } catch(TeiidComponentException e) {
+            handleException(e);            
+        }
+    }
+    
+    @Override
+    public void visit(OrderByItem obj) {
+    	try {
+			checkElementsAreSearchable(obj.getSymbol(), SupportConstants.Element.SEARCHABLE_COMPARE);
+			if (!CapabilitiesUtil.supportsNullOrdering(this.metadata, this.capFinder, this.modelID, obj)) {
+				markInvalid(obj, "Desired null ordering is not supported by source"); //$NON-NLS-1$
+			}
+    	} catch(QueryMetadataException e) {
+            handleException(new TeiidComponentException(e));
+        } catch(TeiidComponentException e) {
+            handleException(e);            
+        }
     }
     
     public void visit(CaseExpression obj) {

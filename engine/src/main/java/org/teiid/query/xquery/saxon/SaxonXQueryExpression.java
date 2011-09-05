@@ -90,6 +90,9 @@ import org.teiid.translator.WSConnection.Util;
 @SuppressWarnings("serial")
 public class SaxonXQueryExpression {
 	
+	private static final String EMPTY_STRING = ""; //$NON-NLS-1$
+	static final String DEFAULT_PREFIX = "-"; //$NON-NLS-1$
+
 	public static final Properties DEFAULT_OUTPUT_PROPERTIES = new Properties();
 	{
 		DEFAULT_OUTPUT_PROPERTIES.setProperty(OutputKeys.METHOD, "xml"); //$NON-NLS-1$
@@ -168,19 +171,19 @@ public class SaxonXQueryExpression {
     throws QueryResolverException {
         config.setErrorListener(ERROR_LISTENER);
         this.xQueryString = xQueryString;
-        StaticQueryContext context = new StaticQueryContext(config);
+        StaticQueryContext context = config.newStaticQueryContext();
         IndependentContext ic = new IndependentContext(config);
-        namespaceMap.put("", ""); //$NON-NLS-1$ //$NON-NLS-2$
+        namespaceMap.put(EMPTY_STRING, EMPTY_STRING);
         if (namespaces != null) {
         	for (NamespaceItem item : namespaces.getNamespaceItems()) {
         		if (item.getPrefix() == null) {
         			if (item.getUri() == null) {
-        				context.setDefaultElementNamespace(""); //$NON-NLS-1$
-        				ic.setDefaultElementNamespace(""); //$NON-NLS-1$
+        				context.setDefaultElementNamespace(EMPTY_STRING); 
+        				ic.setDefaultElementNamespace(EMPTY_STRING);
         			} else {
         				context.setDefaultElementNamespace(item.getUri());
         				ic.setDefaultElementNamespace(item.getUri());
-        				namespaceMap.put("", item.getUri()); //$NON-NLS-1$
+        				namespaceMap.put(EMPTY_STRING, item.getUri());
         			}
         		} else {
     				context.declareNamespace(item.getPrefix(), item.getUri());
@@ -189,6 +192,7 @@ public class SaxonXQueryExpression {
         		}
 			}
         }
+        namespaceMap.put(DEFAULT_PREFIX, namespaceMap.get(EMPTY_STRING));
         for (DerivedColumn derivedColumn : passing) {
         	if (derivedColumn.getAlias() == null) {
         		continue;
@@ -238,7 +242,13 @@ public class SaxonXQueryExpression {
 			}
 		}
 		this.contextRoot = null;
-		PathMap map = this.xQuery.getPathMap();
+		//we'll use a new pathmap, since we don't want to modify the one associated with the xquery.
+		PathMap map = null;
+		if (columns == null) {
+			map = this.xQuery.getPathMap();
+		} else {
+			map = new PathMap(this.xQuery.getExpression());
+		}
 		PathMapRoot parentRoot;
 		try {
 			parentRoot = map.getContextRoot();

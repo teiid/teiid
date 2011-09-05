@@ -1,12 +1,3 @@
-package org.teiid.query.tempdata;
-
-import java.util.List;
-
-import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
-
 /*
  * JBoss, Home of Professional Open Source.
  * See the COPYRIGHT.txt file distributed with this work for information
@@ -28,6 +19,15 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+
+package org.teiid.query.tempdata;
+
+import java.util.List;
+
+import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 
 public class AlterTempTable extends Command {
 	

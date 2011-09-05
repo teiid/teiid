@@ -181,13 +181,15 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 					index = nameIndexes.get(col.getName());
 				}
 				if (index >= vals.size()) {
-					throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.no_value", col.getName(), textLine, systemId)); //$NON-NLS-1$
-				}
-				val = vals.get(index);
-				try {
-					tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
-				} catch (TransformationException e) {
-					throw new TeiidProcessingException(e, QueryPlugin.Util.getString("TextTableNode.conversion_error", col.getName(), textLine, systemId)); //$NON-NLS-1$
+					//throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.no_value", col.getName(), textLine, systemId)); //$NON-NLS-1$
+					tuple.add(null);
+				} else {
+					val = vals.get(index);
+					try {
+						tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
+					} catch (TransformationException e) {
+						throw new TeiidProcessingException(e, QueryPlugin.Util.getString("TextTableNode.conversion_error", col.getName(), textLine, systemId)); //$NON-NLS-1$
+					}
 				}
 			}
 			addBatchRow(tuple);

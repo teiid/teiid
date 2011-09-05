@@ -333,6 +333,37 @@ public class TestDQPCore {
         assertEquals(100, item.resultsBuffer.getRowCount());
     }
     
+    @Test public void testBufferReuse1() throws Exception {
+    	//the sql should return 100 rows
+        String sql = "SELECT IntKey FROM texttable('1112131415' columns intkey integer width 2 no row delimiter) t " +
+        		"union " +
+        		"SELECT IntKey FROM bqt1.smalla"; //$NON-NLS-1$
+        String userName = "1"; //$NON-NLS-1$
+        String sessionid = "1"; //$NON-NLS-1$
+        agds.sleep = 500;
+        agds.setUseIntCounter(true);
+        RequestMessage reqMsg = exampleRequestMessage(sql);
+        reqMsg.setCursorType(ResultSet.TYPE_FORWARD_ONLY);
+        DQPWorkContext.getWorkContext().getSession().setSessionId(sessionid);
+        DQPWorkContext.getWorkContext().getSession().setUserName(userName);
+        BufferManagerImpl bufferManager = (BufferManagerImpl)core.getBufferManager();
+		bufferManager.setProcessorBatchSize(20);
+        Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
+        ResultsMessage rm = message.get(500000, TimeUnit.MILLISECONDS);
+        assertNull(rm.getException());
+        assertEquals(5, rm.getResults().length);
+        
+        message = core.processCursorRequest(reqMsg.getExecutionId(), 6, 5);
+        rm = message.get(500000, TimeUnit.MILLISECONDS);
+        assertNull(rm.getException());
+        assertEquals(5, rm.getResults().length);
+        
+        message = core.processCursorRequest(reqMsg.getExecutionId(), 11, 5);
+        rm = message.get(500000, TimeUnit.MILLISECONDS);
+        assertNull(rm.getException());
+        assertEquals(5, rm.getResults().length);
+    }
+    
     @Test public void testSourceConcurrency() throws Exception {
     	//setup default of 2
     	agds.setSleep(100);

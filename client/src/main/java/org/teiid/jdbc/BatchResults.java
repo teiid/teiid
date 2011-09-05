@@ -187,11 +187,11 @@ public class BatchResults {
         }
         
         if (row > 0) {
-        	//row is greater than highest, but the last row is not known
-        	while (row + offset > highestRowNumber && lastRowNumber == -1) {
-        		requestNextBatch();
+        	
+        	if (row + offset > highestRowNumber && lastRowNumber == -1) {
+        		requestBatchAndWait(row + offset);
         	}
-
+        	
         	if (row + offset <= highestRowNumber) {
         		setCurrentRowNumber(row);
         		return true;
@@ -203,9 +203,9 @@ public class BatchResults {
         
         row -= offset;
         
-        while (lastRowNumber == -1) {
-        	requestNextBatch();
-        }
+        if (lastRowNumber == -1) {
+    		requestBatchAndWait(Integer.MAX_VALUE);
+    	}
         
         int positiveRow = lastRowNumber + row + 1;
         

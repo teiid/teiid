@@ -22,152 +22,166 @@
 
 package org.teiid.query.tempdata;
 
+import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.teiid.api.exception.query.QueryMetadataException;
+import javax.transaction.RollbackException;
+import javax.transaction.Status;
+import javax.transaction.Synchronization;
+import javax.transaction.SystemException;
+
 import org.teiid.api.exception.query.QueryProcessingException;
-import org.teiid.api.exception.query.QueryResolverException;
-import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.language.SQLConstants;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.dqp.service.TransactionContext;
+import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
-import org.teiid.query.optimizer.relational.RelationalPlanner;
-import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.command.TempTableResolver;
-import org.teiid.query.resolver.util.ResolverUtil;
-import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Create;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.util.CommandContext;
 
+/**
+ * TempTableStores are transactional, but do not act as full resource manager.
+ * This means we are effectively 1PC and don't allow any heuristic exceptions
+ * on commit.
+ *  
+ * Table state snapshoting and a {@link Synchronization} are used to
+ * perform the appropriate commit/rollback actions.
+ * 
+ * Full row level MVCC would be a good next step as it would remove the
+ * cost of state cloning and would allow for concurrent read/write transactions. 
+ */
 public class TempTableStore {
 	
-	public enum MatState {
-		NEEDS_LOADING,
-		LOADING,
-		FAILED_LOAD,
-		LOADED
-	}
-	
-	public static class MatTableInfo {
-		private long updateTime = -1;
-		private MatState state = MatState.NEEDS_LOADING;
-		private long ttl = -1;
-		private boolean valid;
-		
-		synchronized boolean shouldLoad() throws TeiidComponentException {
-    		for (;;) {
-			switch (state) {
-			case NEEDS_LOADING:
-			case FAILED_LOAD:
-				setState(MatState.LOADING);
-				return true;
-			case LOADING:
-				if (valid) {
-					return false;
-				}
-				try {
-					wait();
-				} catch (InterruptedException e) {
-					throw new TeiidComponentException(e);
-				}
-				continue;
-			case LOADED:
-				if (ttl >= 0 && System.currentTimeMillis() - updateTime - ttl > 0) {
-					setState(MatState.LOADING);
-					return true;
-				}
-				return false;
+    public interface TransactionCallback {
+    	void commit();
+    	void rollback();
+    }
+    
+    public enum TransactionMode {
+    	ISOLATE_READS, //for matviews that have atomic updates
+    	ISOLATE_WRITES, //for session/procedure stores that need rollback support - this is effectively READ_UNCOMMITTED
+    	NONE
+    }
+    
+    public class TempTableSynchronization implements Synchronization {
+    	
+    	private String id;
+    	Set<Integer> existingTables = new HashSet<Integer>();
+    	ConcurrentHashMap<String, TempTable> tables = new ConcurrentHashMap<String, TempTable>();
+        private List<TransactionCallback> callbacks = new LinkedList<TransactionCallback>();
+    	        
+        private boolean completed;
+        
+        public TempTableSynchronization(final String id) {
+        	this.id = id;
+        	for (TempTable tempTable : tempTables.values()) {
+        		existingTables.add(tempTable.getId());
+        	}
+        	if (transactionMode == TransactionMode.ISOLATE_WRITES) {
+        		addCallback(new TransactionCallback() {
+        	        private Map<String, TempMetadataID> clonedMetadata = new ConcurrentHashMap<String, TempMetadataID>(tempMetadataStore.getData());
+        	        private Map<String, TempTable> clonedTables = new ConcurrentHashMap<String, TempTable>(tempTables);
+					
+					@Override
+					public void rollback() {
+						LogManager.logDetail(LogConstants.CTX_DQP, "Rolling back txn", id, "restoring", clonedTables.keySet(), "using rollback tables", tables); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						//remove any tables created in the scope of this txn
+						tempTables.values().removeAll(clonedTables.values());
+						for (TempTable table : tempTables.values()) {
+							table.remove();
+						}
+						
+						//restore the state
+						tempMetadataStore.getData().clear();
+						tempMetadataStore.getData().putAll(clonedMetadata);
+						tempTables.clear();
+						tempTables.putAll(clonedTables);
+						
+						//overlay the rollback tables
+						tempTables.putAll(tables);
+					}
+					
+					@Override
+					public void commit() {
+						//remove any original tables that were removed in this txn
+						clonedTables.values().removeAll(tempTables.values());
+						for (TempTable table : clonedTables.values()) {
+							table.remove();
+						}
+					}
+				});
+        	}
+		}
+    	
+    	@Override
+    	public synchronized void afterCompletion(int status) {
+    		//TODO: cleanup tables
+    		completed = true;
+    		synchronizations.remove(id);
+    		for (TransactionCallback callback : callbacks) {
+        		if (status == Status.STATUS_COMMITTED) {
+        			callback.commit();
+        		} else {
+        			callback.rollback();
+        		}
 			}
+    		callbacks.clear();
+    	}
+    	
+    	@Override
+    	public void beforeCompletion() {
+    		
+    	}
+    	
+    	public synchronized boolean addCallback(TransactionCallback callback) {
+    		if (!completed) {
+    			callbacks.add(0, callback);
     		}
-		}
-		
-		public synchronized MatState setState(MatState state, Boolean valid, Long timestamp) {
-			MatState oldState = this.state;
-			LogManager.logDetail(LogConstants.CTX_MATVIEWS, this, "setting matState to", state, valid, timestamp, "old values", oldState, this.valid); //$NON-NLS-1$ //$NON-NLS-2$
-			if (valid != null) {
-				this.valid = valid;
-			}
-			setState(state);
-			if (timestamp != null) {
-				this.updateTime = timestamp;
-			}
-			notifyAll();
-			return oldState;
-		}
-		
-		private void setState(MatState state) {
-			this.state = state;
-			this.updateTime = System.currentTimeMillis();
-		}
-		
-		public synchronized void setTtl(long ttl) {
-			this.ttl = ttl;
-		}
-		
-		public synchronized long getUpdateTime() {
-			return updateTime;
-		}
-		
-		public synchronized MatState getState() {
-			return state;
-		}
-		
-		public synchronized boolean isValid() {
-			return valid;
-		}
-		
-		public synchronized long getTtl() {
-			return ttl;
-		}
-		
-	}
-	
-	private ConcurrentHashMap<String, MatTableInfo> matTables = new ConcurrentHashMap<String, MatTableInfo>();
+    		return !completed;
+    	}
+    }
+    
+    private Map<String, TempTableSynchronization> synchronizations = new ConcurrentHashMap<String, TempTableSynchronization>();
+    private TransactionMode transactionMode = TransactionMode.NONE;
 	
     private TempMetadataStore tempMetadataStore = new TempMetadataStore(new ConcurrentHashMap<String, TempMetadataID>());
-    private Map<String, TempTable> groupToTupleSourceID = new ConcurrentHashMap<String, TempTable>();
+    private Map<String, TempTable> tempTables = new ConcurrentHashMap<String, TempTable>();
     private String sessionID;
     private TempTableStore parentTempTableStore;
     
-    public TempTableStore(String sessionID) {
+    public TempTableStore(String sessionID, TransactionMode transactionMode) {
         this.sessionID = sessionID;
+        this.transactionMode = transactionMode;
     }
-    
-	public MatTableInfo getMatTableInfo(final String tableName) {
-		MatTableInfo newInfo = new MatTableInfo();
-		MatTableInfo info = matTables.putIfAbsent(tableName, newInfo);
-		if (info == null) {
-			info = newInfo;
-		}
-		return info;
-	}
     
     public void setParentTempTableStore(TempTableStore parentTempTableStore) {
 		this.parentTempTableStore = parentTempTableStore;
 	}
     
     public boolean hasTempTable(String tempTableName) {
-    	return groupToTupleSourceID.containsKey(tempTableName);
+    	return tempTables.containsKey(tempTableName);
     }
 
-    TempTable addTempTable(String tempTableName, Create create, BufferManager buffer, boolean add) {
+    TempTable addTempTable(final String tempTableName, Create create, BufferManager buffer, boolean add, CommandContext context) throws TeiidProcessingException {
     	List<ElementSymbol> columns = create.getColumnSymbols();
     	TempMetadataID id = tempMetadataStore.getTempGroupID(tempTableName);
+    	getSynchronization(context);
     	if (id == null) {
 	        //add metadata
 	    	id = tempMetadataStore.addTempGroup(tempTableName, columns, false, true);
@@ -180,44 +194,83 @@ public class TempTableStore {
     		columns.removeAll(primaryKey);
     		columns.addAll(0, primaryKey);
     	}
-        TempTable tempTable = new TempTable(id, buffer, columns, create.getPrimaryKey().size(), sessionID);
+        final TempTable tempTable = new TempTable(id, buffer, columns, create.getPrimaryKey().size(), sessionID);
         if (add) {
-        	groupToTupleSourceID.put(tempTableName, tempTable);
+        	tempTables.put(tempTableName, tempTable);
         }
         return tempTable;
     }
     
-    void swapTempTable(String tempTableName, TempTable tempTable) {
-    	groupToTupleSourceID.put(tempTableName, tempTable);
+    public void removeTempTableByName(final String tempTableName, CommandContext context) throws TeiidProcessingException {
+    	TempTableSynchronization synch = getSynchronization(context);
+    	tempMetadataStore.removeTempGroup(tempTableName);
+        final TempTable table = this.tempTables.remove(tempTableName);
+        if (table == null) {
+        	return;
+        }
+		if (transactionMode != TransactionMode.ISOLATE_WRITES || synch == null || !synch.existingTables.contains(table.getId())) {
+			table.remove();
+    	}
     }
 
-    public void removeTempTableByName(String tempTableName) {
-        tempMetadataStore.removeTempGroup(tempTableName);
-        TempTable table = this.groupToTupleSourceID.remove(tempTableName);
-        if(table != null) {
-            table.remove();
-        }      
-    }
-    
+	private TempTableSynchronization getSynchronization(CommandContext context) throws TeiidProcessingException {
+		TempTableSynchronization synch = null;
+		if (context == null || transactionMode == TransactionMode.NONE) {
+			return null;
+		}
+		TransactionContext tc = context.getTransactionContext();
+		if (tc == null || tc.getTransactionType() == Scope.NONE) {
+			return null;
+		}
+		String transactionId = tc.getTransactionId();
+		synch = synchronizations.get(transactionId);
+		if (synch == null) {
+			boolean success = false;
+			try {
+				synch = new TempTableSynchronization(transactionId);
+				synchronizations.put(transactionId, synch);
+				tc.getTransaction().registerSynchronization(synch);
+				success = true;
+			} catch (RollbackException e) {
+				throw new TeiidProcessingException(e);
+			} catch (SystemException e) {
+				throw new TeiidProcessingException(e);
+			} finally {
+				if (!success) {
+					synchronizations.remove(transactionId);
+				}
+			}
+		}
+		return synch;
+	}
+
     public TempMetadataStore getMetadataStore() {
         return tempMetadataStore;
     }
             
-    public void removeTempTables() {
-        for (String name : groupToTupleSourceID.keySet()) {
-            removeTempTableByName(name);
+    public void removeTempTables() throws TeiidComponentException {
+        for (String name : tempTables.keySet()) {
+            try {
+				removeTempTableByName(name, null);
+			} catch (TeiidProcessingException e) {
+				throw new TeiidComponentException(e);
+			}
         }
     }
     
     public void setUpdatable(String name, boolean updatable) {
-    	TempTable table = groupToTupleSourceID.get(name);
+    	TempTable table = tempTables.get(name);
     	if (table != null) {
     		table.setUpdatable(updatable);
     	}
     }
     
-    TempTable getOrCreateTempTable(String tempTableID, Command command, BufferManager buffer, boolean delegate) throws QueryProcessingException{
-    	TempTable tempTable = getTempTable(tempTableID, command, buffer, delegate);
+    TempTable getTempTable(String tempTableID) {
+        return this.tempTables.get(tempTableID);
+    }
+    
+    TempTable getOrCreateTempTable(String tempTableID, Command command, BufferManager buffer, boolean delegate, boolean forUpdate, CommandContext context) throws TeiidProcessingException{
+    	TempTable tempTable = getTempTable(tempTableID, command, buffer, delegate, forUpdate, context);
     	if (tempTable != null) {
     		return tempTable;
     	}
@@ -237,83 +290,73 @@ public class TempTableStore {
         Create create = new Create();
         create.setTable(new GroupSymbol(tempTableID));
         create.setElementSymbolsAsColumns(columns);
-        return addTempTable(tempTableID, create, buffer, true);       
+        return addTempTable(tempTableID, create, buffer, true, context);       
     }
 
 	private TempTable getTempTable(String tempTableID, Command command,
-			BufferManager buffer, boolean delegate)
-			throws QueryProcessingException {
-		TempTable tsID = groupToTupleSourceID.get(tempTableID);
-        if(tsID != null) {
-            return tsID;
+			BufferManager buffer, boolean delegate, boolean forUpdate, CommandContext context)
+			throws TeiidProcessingException {
+		final TempTable tempTable = tempTables.get(tempTableID);
+        if(tempTable != null) {
+        	//isolate if needed
+    		if (forUpdate) {
+    			if (transactionMode == TransactionMode.ISOLATE_WRITES) {
+    				TransactionContext tc = context.getTransactionContext();
+        			if (tc != null) {
+        				TempTableSynchronization synch = getSynchronization(context);
+        				if (synch != null && synch.existingTables.contains(tempTable.getId())) {
+        					TempTable result = synch.tables.get(tempTableID);
+        					if (result == null) {
+        						synch.tables.put(tempTableID, tempTable.clone());
+        					}
+        					return tempTable;
+        				}
+        			}	
+    			}
+    		} else if (transactionMode == TransactionMode.ISOLATE_READS) {
+    			TransactionContext tc = context.getTransactionContext();
+    			if (tc != null && tc.getIsolationLevel() > Connection.TRANSACTION_READ_COMMITTED) {
+    				TempTableSynchronization synch = getSynchronization(context);
+    				if (synch != null) {
+    					TempTable result = synch.tables.get(tempTableID);
+    					if (result == null) {
+    						synch.tables.put(tempTableID, tempTable);
+    						result = tempTable;
+    						result.getActiveReaders().getAndIncrement();
+        					TransactionCallback callback = new TransactionCallback() {
+    							
+    							@Override
+    							public void rollback() {
+    								tempTable.getActiveReaders().getAndDecrement();
+    							}
+    							
+    							@Override
+    							public void commit() {
+    								tempTable.getActiveReaders().getAndDecrement();
+    							}
+    						};
+    						if (!synch.addCallback(callback)) {
+        						callback.rollback();
+        					}
+    					}
+    					return result;
+    				}
+    			}
+    		}
+            return tempTable;
         }
         if(delegate && this.parentTempTableStore != null){
-    		return this.parentTempTableStore.getTempTable(tempTableID, command, buffer, delegate);
+    		return this.parentTempTableStore.getTempTable(tempTableID, command, buffer, delegate, forUpdate, context);
         }
         return null;
 	}
     
     public Set<String> getAllTempTables() {
-        return new HashSet<String>(this.groupToTupleSourceID.keySet());
+        return new HashSet<String>(this.tempTables.keySet());
     }
-
-	public TempMetadataID getGlobalTempTableMetadataId(Object viewId, QueryMetadataInterface metadata)
-			throws QueryMetadataException, TeiidComponentException, QueryResolverException, QueryValidatorException {
-		String matViewName = metadata.getFullName(viewId);
-		String matTableName = RelationalPlanner.MAT_PREFIX+matViewName.toUpperCase();
-		GroupSymbol group = new GroupSymbol(matViewName);
-		group.setMetadataID(viewId);
-		TempMetadataID id = tempMetadataStore.getTempGroupID(matTableName);
-		//define the table preserving the key/index information and ensure that only a single instance exists
-		if (id == null) {
-			synchronized (viewId) {
-				id = tempMetadataStore.getTempGroupID(matTableName);
-				if (id == null) {
-					id = tempMetadataStore.addTempGroup(matTableName, ResolverUtil.resolveElementsInGroup(group, metadata), false, true);
-					id.setQueryNode(metadata.getVirtualPlan(viewId));
-					id.setCardinality(metadata.getCardinality(viewId));
-					id.setOriginalMetadataID(viewId);
-					
-					Object pk = metadata.getPrimaryKey(viewId);
-					if (pk != null) {
-						ArrayList<TempMetadataID> primaryKey = resolveIndex(metadata, id, pk);
-						id.setPrimaryKey(primaryKey);
-					}
-					Collection keys = metadata.getUniqueKeysInGroup(viewId);
-					for (Object key : keys) {
-						id.addUniqueKey(resolveIndex(metadata, id, key));
-					}
-					Collection indexes = metadata.getIndexesInGroup(viewId);
-					for (Object index : indexes) {
-						id.addIndex(resolveIndex(metadata, id, index));
-					}
-				}
-			}
-		}
-		updateCacheHint(viewId, metadata, group, id);
-		return id;
-	}
-
-	private void updateCacheHint(Object viewId,
-			QueryMetadataInterface metadata, GroupSymbol group,
-			TempMetadataID id) throws TeiidComponentException,
-			QueryMetadataException, QueryResolverException,
-			QueryValidatorException {
-		Command c = QueryResolver.resolveView(group, metadata.getVirtualPlan(viewId), SQLConstants.Reserved.SELECT, metadata).getCommand();
-		CacheHint hint = c.getCacheHint();
-		id.setCacheHint(hint);
-	}
-	
-	static ArrayList<TempMetadataID> resolveIndex(
-			QueryMetadataInterface metadata, TempMetadataID id, Object pk)
-			throws TeiidComponentException, QueryMetadataException {
-		List cols = metadata.getElementIDsInKey(pk);
-		ArrayList<TempMetadataID> primaryKey = new ArrayList<TempMetadataID>(cols.size());
-		for (Object coldId : cols) {
-			int pos = metadata.getPosition(coldId) - 1;
-			primaryKey.add(id.getElements().get(pos));
-		}
-		return primaryKey;
+    
+    Map<String, TempTable> getTempTables() {
+		return tempTables;
 	}
     
 }

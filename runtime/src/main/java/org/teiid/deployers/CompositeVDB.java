@@ -44,7 +44,6 @@ import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
-import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.vdb.runtime.VDBKey;
 
 
@@ -95,8 +94,6 @@ public class CompositeVDB {
 		TransformationMetadata metadata = buildTransformationMetaData(mergedVDB, getVisibilityMap(), getMetadataStores(), getUDF(), systemFunctions, this.additionalStores);
 		mergedVDB.addAttchment(QueryMetadataInterface.class, metadata);
 		mergedVDB.addAttchment(TransformationMetadata.class, metadata);	
-		TempTableStore globalTables = new TempTableStore("SYSTEM"); //$NON-NLS-1$
-		mergedVDB.addAttchment(TempTableStore.class, globalTables); 
 	}
 	
 	private static TransformationMetadata buildTransformationMetaData(VDBMetaData vdb, LinkedHashMap<String, Resource> visibilityMap, MetadataStoreGroup stores, UDFMetaData udf, FunctionTree systemFunctions, MetadataStore[] additionalStores) {
@@ -132,6 +129,13 @@ public class CompositeVDB {
 			update();
 		}
 		return this.mergedVDB;
+	}
+	
+	public boolean hasChildVdb(VDBKey child) {
+		if (this.children != null) {
+			return this.children.containsKey(child);
+		}
+		return false;
 	}
 	
 	private VDBMetaData buildVDB() {

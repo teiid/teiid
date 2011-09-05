@@ -423,7 +423,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         			JDBCURL.addNormalizedProperty(key, value, this.driverConnection.getExecutionProperties());
         		}
         		this.updateCounts = new int[] {0};
-        		return booleanFuture(true);
+        		return booleanFuture(false);
         	}
         	match = TRANSACTION_STATEMENT.matcher(commands[0]);
         	if (match.matches()) {

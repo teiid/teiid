@@ -46,6 +46,15 @@ public class TransactionContext extends ExecutionContext implements Serializable
     private long creationTime;
     private Transaction transaction;
     private Set<String> suspendedBy = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+    private int isolationLevel;
+
+    public int getIsolationLevel() {
+		return isolationLevel;
+	}
+    
+    public void setIsolationLevel(int isolationLevel) {
+		this.isolationLevel = isolationLevel;
+	}
     
     public long getCreationTime() {
 		return creationTime;

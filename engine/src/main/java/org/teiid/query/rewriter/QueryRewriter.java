@@ -2256,9 +2256,13 @@ public class QueryRewriter {
     			expression.setAggregateFunction(Type.MAX);
     		}
     	}
-    	if ((expression.getAggregateFunction() == Type.MAX || expression.getAggregateFunction() == Type.MIN) 
-    			&& rewriteAggs && expression.getExpression() != null && EvaluatableVisitor.willBecomeConstant(expression.getExpression())) {
-    		return expression.getExpression();
+    	if ((expression.getAggregateFunction() == Type.MAX || expression.getAggregateFunction() == Type.MIN)) {
+    		if (expression.isDistinct()) {
+    			expression.setDistinct(false);
+    		}
+    		if (rewriteAggs && expression.getExpression() != null && EvaluatableVisitor.willBecomeConstant(expression.getExpression())) {
+        		return expression.getExpression();
+        	}
     	}
     	if (expression.getExpression() != null && expression.getCondition() != null && !expression.respectsNulls()) {
     		Expression cond = expression.getCondition();

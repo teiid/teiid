@@ -93,8 +93,10 @@ import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
+import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
+import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.CommandContext;
@@ -243,10 +245,11 @@ public class TestProcessor {
     	}
     	context.getNextRand(0);
         if (context.getTempTableStore() == null) {
-        	context.setTempTableStore(new TempTableStore(context.getConnectionID()));
+        	context.setTempTableStore(new TempTableStore(context.getConnectionID(), TransactionMode.ISOLATE_WRITES));
         }
         if (context.getGlobalTableStore() == null) {
-        	context.setGlobalTableStore(new TempTableStore("SYSTEM"));
+        	GlobalTableStoreImpl gts = new GlobalTableStoreImpl(bufferMgr, context.getMetadata());
+        	context.setGlobalTableStore(gts);
         }
         if (!(dataManager instanceof TempTableDataManager)) {
     	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
@@ -257,7 +260,7 @@ public class TestProcessor {
     				command.run();
     			}
     	    };        	
-        	dataManager = new TempTableDataManager(dataManager, bufferMgr, executor, cache, null, null);
+        	dataManager = new TempTableDataManager(dataManager, bufferMgr, executor, cache);
         }        
         if (context.getQueryProcessorFactory() == null) {
         	context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(bufferMgr, dataManager, new DefaultCapabilitiesFinder(), null, context.getMetadata()));

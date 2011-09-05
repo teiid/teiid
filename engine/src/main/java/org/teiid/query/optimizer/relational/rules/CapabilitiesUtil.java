@@ -30,6 +30,7 @@ import java.util.List;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.metadata.Schema;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -38,6 +39,7 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
@@ -461,5 +463,36 @@ public class CapabilitiesUtil {
 	        }                
 	    }
 	    return true;
+	}
+	
+	static boolean supportsNullOrdering(QueryMetadataInterface metadata,
+			CapabilitiesFinder capFinder, Object modelID, OrderByItem symbol)
+			throws QueryMetadataException, TeiidComponentException {
+		boolean supportsNullOrdering = CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_NULL_ORDERING, modelID, metadata, capFinder);
+		NullOrder defaultNullOrder = CapabilitiesUtil.getDefaultNullOrder(modelID, metadata, capFinder);
+		if (symbol.getNullOrdering() != null) {
+			if (!supportsNullOrdering) {
+				if (symbol.getNullOrdering() == NullOrdering.FIRST) {
+					if (defaultNullOrder != NullOrder.FIRST && !(symbol.isAscending() && defaultNullOrder == NullOrder.LOW) 
+							&& !(!symbol.isAscending() && defaultNullOrder == NullOrder.HIGH)) {
+						return false;
+					}
+				} else if (defaultNullOrder != NullOrder.LAST && !(symbol.isAscending() && defaultNullOrder == NullOrder.HIGH) 
+						&& !(!symbol.isAscending() && defaultNullOrder == NullOrder.LOW)) {
+					return false;
+				} 
+				symbol.setNullOrdering(null);
+			} 
+		} else if (supportsNullOrdering && defaultNullOrder != NullOrder.LOW) {
+			//try to match the expected default of low
+			if (symbol.isAscending()) {
+				if (defaultNullOrder != NullOrder.FIRST) {
+					symbol.setNullOrdering(NullOrdering.FIRST);
+				}
+			} else if (defaultNullOrder != NullOrder.LAST) {
+				symbol.setNullOrdering(NullOrdering.LAST);
+			}
+		}
+		return true;
 	}
 }

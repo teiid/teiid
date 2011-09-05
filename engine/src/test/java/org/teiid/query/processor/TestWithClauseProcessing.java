@@ -64,10 +64,16 @@ public class TestWithClauseProcessing {
         
 	    String sql = "with a (x, y, z) as (select e1, e2, e3 from pm1.g1) SELECT a.x from a, a z"; //$NON-NLS-1$
 	    
-	    FakeDataManager dataManager = new FakeDataManager();
-	    sampleData1(dataManager);
+	    HardcodedDataManager dataManager = new HardcodedDataManager();
+	    List[] expected = new List[] { 
+		        Arrays.asList("a", 1, Boolean.FALSE),
+		    };    
+
+	    dataManager.addData("WITH a (x, y, z) AS (SELECT g_0.e1, g_0.e2, g_0.e3 FROM pm1.g1 AS g_0) SELECT g_0.x FROM a AS g_0, a AS g_1", expected);
 	    
-	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, y, z) AS (SELECT g_0.e1, g_0.e2, g_0.e3 FROM pm1.g1 AS g_0) SELECT g_0.x FROM a AS g_0, a AS g_1"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, y, z) AS (SELECT g_0.e1, g_0.e2, g_0.e3 FROM pm1.g1 AS g_0) SELECT g_0.x FROM a AS g_0, a AS g_1"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    
+	    helpProcess(plan, dataManager, expected);
 	}
 	
 	@Test public void testWithPushdownWithConstants() throws TeiidException {

@@ -326,7 +326,7 @@
 	      </para>
         </listitem>
         <listitem>
-	      <para>Windowed aggregates may not use DISTINCT.
+	      <para>Windowed aggregates may not use DISTINCT if the window specification is ordered.
 	      </para>
         </listitem>
 	  </itemizedlist>

@@ -1331,7 +1331,7 @@ int count = visitor.getCount();]]></programlisting>
                   <para>WindowOrderByWithAggregates</para>
                 </entry>
                 <entry>
-                  <para/>
+                  <para>ElementaryOlapOperations</para>
                 </entry>
                 <entry>
                   <para>Translator supports windowed aggregates with a window order by clause.</para>
@@ -1339,10 +1339,21 @@ int count = visitor.getCount();]]></programlisting>
               </row>
               <row>
                 <entry>
+                  <para>WindowDistinctAggregates</para>
+                </entry>
+                <entry>
+                  <para>ElementaryOlapOperations, AggregatesDistinct</para>
+                </entry>
+                <entry>
+                  <para>Translator supports windowed distinct aggregates.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
                   <para>AdvancedOlapOperations</para>
                 </entry>
                 <entry>
-                  <para/>
+                  <para>ElementaryOlapOperations</para>
                 </entry>
                 <entry>
                   <para>Translator supports aggregate conditions.</para>
