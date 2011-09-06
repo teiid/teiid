@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.common.buffer.BatchManager.ManagedBatch;
 import org.teiid.core.TeiidComponentException;
@@ -54,8 +53,6 @@ class SPage {
 		}
 	}
 	
-	private static AtomicInteger counter = new AtomicInteger();
-
 	STree stree;
 	
 	protected SPage next;
@@ -66,7 +63,7 @@ class SPage {
 	
 	SPage(STree stree, boolean leaf) {
 		this.stree = stree;
-		this.values = new TupleBatch(counter.getAndIncrement(), new ArrayList(stree.pageSize/4));
+		this.values = new TupleBatch(0, new ArrayList(stree.pageSize/4));
 		if (!leaf) {
 			children = new ArrayList<SPage>(stree.pageSize/4);
 		}

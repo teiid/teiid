@@ -163,7 +163,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				store = newStore;
 				long oldOffset = offset;
 				offset = store.getLength();
-				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Compacted store", id, "pre-size", oldOffset, "post-size", offset); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+					LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Compacted store", id, "pre-size", oldOffset, "post-size", offset); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				}
 				return offset;
 			} finally {
 				this.compactionLock.writeLock().unlock();
@@ -180,10 +182,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	 * Holder for active batches
 	 */
 	private class TupleBufferInfo {
-		TreeMap<Integer, ManagedBatchImpl> batches = new TreeMap<Integer, ManagedBatchImpl>();
-		Integer lastUsed = null;
+		TreeMap<Long, ManagedBatchImpl> batches = new TreeMap<Long, ManagedBatchImpl>();
+		Long lastUsed = null;
 		
-		ManagedBatchImpl removeBatch(int row) {
+		ManagedBatchImpl removeBatch(long row) {
 			ManagedBatchImpl result = batches.remove(row);
 			if (result != null) {
 				activeBatchKB -= result.sizeEstimate;
@@ -213,7 +215,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				this.lobManager = new LobManager();
 			}
 			sizeEstimate = (int) Math.max(1, manager.sizeUtility.getBatchSize(batch) / 1024);
-            LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Add batch to BufferManager", id, "with size estimate", sizeEstimate); //$NON-NLS-1$ //$NON-NLS-2$
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Add batch to BufferManager", id, "with size estimate", sizeEstimate); //$NON-NLS-1$ //$NON-NLS-2$
+			}
 		}
 		
 		@Override
@@ -242,26 +246,28 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				if (update) {
 					activeBatches.put(batchManager.id, tbi);
 				}
-				Assertion.isNull(tbi.batches.put(this.beginRow, this));
+				tbi.batches.put(this.id, this);
 			}
 		}
 
 		@Override
 		public TupleBatch getBatch(boolean cache, String[] types) throws TeiidComponentException {
 			long reads = readAttempts.incrementAndGet();
-			LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, batchManager.id, "getting batch", reads, "reference hits", referenceHit.get()); //$NON-NLS-1$ //$NON-NLS-2$
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, batchManager.id, "getting batch", reads, "reference hits", referenceHit.get()); //$NON-NLS-1$ //$NON-NLS-2$
+			}
 			synchronized (activeBatches) {
 				TupleBufferInfo tbi = activeBatches.remove(batchManager.id);
 				if (tbi != null) { 
 					boolean put = true;
 					if (!cache) {
-						tbi.removeBatch(this.beginRow);
+						tbi.removeBatch(this.id);
 						if (tbi.batches.isEmpty()) {
 							put = false;
 						}
 					}
 					if (put) {
-						tbi.lastUsed = this.beginRow;
+						tbi.lastUsed = this.id;
 						activeBatches.put(batchManager.id, tbi);
 					}
 				}
@@ -286,7 +292,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 					}
 				}
 				long count = readCount.incrementAndGet();
-				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "reading batch from disk, total reads:", count); //$NON-NLS-1$
+				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+					LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "reading batch from disk, total reads:", count); //$NON-NLS-1$
+				}
 				try {
 					this.batchManager.compactionLock.readLock().lock();
 					long[] info = batchManager.physicalMapping.get(this.id);
@@ -324,7 +332,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				if (batch != null) {
 					if (!persistent) {
 						long count = writeCount.incrementAndGet();
-						LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "writing batch to disk, total writes: ", count); //$NON-NLS-1$
+						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+							LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "writing batch to disk, total writes: ", count); //$NON-NLS-1$
+						}
 						long offset = 0;
 						if (lobManager != null) {
 							for (List<?> tuple : batch.getTuples()) {
@@ -341,7 +351,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				            long[] info = new long[] {offset, size};
 				            batchManager.physicalMapping.put(this.id, info);
 						}
-						LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "batch written starting at:", offset); //$NON-NLS-1$
+						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+							LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "batch written starting at:", offset); //$NON-NLS-1$
+						}
 					}
 					if (softCache) {
 						this.batchReference = new SoftReference<TupleBatch>(batch);
@@ -365,7 +377,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		public void remove() {
 			synchronized (activeBatches) {
 				TupleBufferInfo tbi = activeBatches.get(batchManager.id);
-				if (tbi != null && tbi.removeBatch(this.beginRow) != null) {
+				if (tbi != null && tbi.removeBatch(this.id) != null) {
 					if (tbi.batches.isEmpty()) {
 						activeBatches.remove(batchManager.id);
 					}
@@ -381,7 +393,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		
 		@Override
 		public String toString() {
-			return "ManagedBatch " + batchManager.id + " " + activeBatch; //$NON-NLS-1$ //$NON-NLS-2$
+			return "ManagedBatch " + batchManager.id + " " + this.id + " " + activeBatch; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 	}
 	
@@ -496,13 +508,17 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     	for (int i = 1; i < compareIndexes.length; i++) {
 			compareIndexes[i] = i;
 		}
-        LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating STree:", newID); //$NON-NLS-1$ 
+    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+    		LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating STree:", newID); //$NON-NLS-1$
+    	}
     	return new STree(keyManager, bm, new ListNestedSortComparator(compareIndexes), getProcessorBatchSize(), keyLength, TupleBuffer.getTypeNames(elements));
     }
 
     @Override
     public FileStore createFileStore(String name) {
-        LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating FileStore:", name); //$NON-NLS-1$ 
+    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+    		LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating FileStore:", name); //$NON-NLS-1$
+    	}
     	return this.diskMgr.createFileStore(name);
     }
         
@@ -610,7 +626,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				}
 				Iterator<TupleBufferInfo> iter = activeBatches.values().iterator();
 				TupleBufferInfo tbi = iter.next();
-				Map.Entry<Integer, ManagedBatchImpl> entry = null;
+				Map.Entry<Long, ManagedBatchImpl> entry = null;
 				if (tbi.lastUsed != null) {
 					entry = tbi.batches.floorEntry(tbi.lastUsed - 1);
 				}
