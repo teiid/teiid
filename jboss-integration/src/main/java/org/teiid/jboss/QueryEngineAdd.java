@@ -46,11 +46,11 @@ import org.jboss.dmr.ModelType;
 import org.jboss.msc.inject.ConcurrentMapInjector;
 import org.jboss.msc.service.*;
 import org.jboss.msc.value.InjectedValue;
-import org.teiid.cache.CacheFactory;
 import org.teiid.deployers.SystemVDBDeployer;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.process.AuthorizationValidator;
+import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.jboss.deployers.RuntimeEngineDeployer;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -122,7 +122,8 @@ class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvid
         engineBuilder.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class, engine.getTranslatorRepositoryInjector());
         engineBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, engine.getVdbRepositoryInjector());
         engineBuilder.addDependency(TeiidServiceNames.AUTHORIZATION_VALIDATOR, AuthorizationValidator.class, engine.getAuthorizationValidatorInjector());
-        engineBuilder.addDependency(TeiidServiceNames.CACHE_FACTORY, CacheFactory.class, engine.getCachefactoryInjector());
+        engineBuilder.addDependency(TeiidServiceNames.CACHE_RESULTSET, SessionAwareCache.class, engine.getResultSetCacheInjector());
+        engineBuilder.addDependency(TeiidServiceNames.CACHE_PREPAREDPLAN, SessionAwareCache.class, engine.getPreparedPlanCacheInjector());
         
         if (jdbc != null) {
         	engineBuilder.addDependency(ServiceName.JBOSS.append("binding", jdbc.getSocketBinding()), SocketBinding.class, engine.getJdbcSocketBindingInjector()); //$NON-NLS-1$

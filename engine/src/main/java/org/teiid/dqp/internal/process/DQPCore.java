@@ -22,12 +22,7 @@
 
 package org.teiid.dqp.internal.process;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.FutureTask;
@@ -44,8 +39,6 @@ import org.teiid.adminapi.impl.CacheStatisticsMetadata;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.TransactionMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
-import org.teiid.cache.CacheConfiguration;
-import org.teiid.cache.CacheFactory;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
@@ -65,13 +58,10 @@ import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.TransactionContext;
-import org.teiid.dqp.service.TransactionService;
 import org.teiid.dqp.service.TransactionContext.Scope;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.events.EventDistributor;
-import org.teiid.logging.CommandLogMessage;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
-import org.teiid.logging.MessageLevel;
+import org.teiid.logging.*;
 import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.QueryPlugin;
@@ -202,7 +192,6 @@ public class DQPCore implements DQP {
     private int currentlyActivePlans;
     private int userRequestSourceConcurrency;
     private LinkedList<RequestWorkItem> waitingPlans = new LinkedList<RequestWorkItem>();
-    private CacheFactory cacheFactory;
 
 	private AuthorizationValidator authorizationValidator;
     
@@ -685,18 +674,6 @@ public class DQPCore implements DQP {
         //get buffer manager
         this.bufferManager = bufferService.getBufferManager();
         
-        //result set cache
-        CacheConfiguration rsCacheConfig = config.getResultsetCacheConfig();
-        if (rsCacheConfig != null) {
-			this.rsCache = new SessionAwareCache<CachedResults>(this.cacheFactory, SessionAwareCache.Type.RESULTSET, rsCacheConfig);
-			this.rsCache.setBufferManager(this.bufferManager);
-        }
-
-        //prepared plan cache
-        CacheConfiguration ppCacheConfig = config.getPreparedPlanCacheConfig();
-        prepPlanCache = new SessionAwareCache<PreparedPlan>(this.cacheFactory, SessionAwareCache.Type.PREPAREDPLAN,  ppCacheConfig); 
-        prepPlanCache.setBufferManager(this.bufferManager);
-		
         this.processWorkerPool = new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads());
         this.maxActivePlans = config.getMaxActivePlans();
         
@@ -899,9 +876,13 @@ public class DQPCore implements DQP {
 		return this.config.getMaxSourceRows();
 	}
 	
-	public void setCacheFactory(CacheFactory factory) {
-		this.cacheFactory = factory;
+	public void setResultsetCache(SessionAwareCache<CachedResults> cache) {
+		this.rsCache = cache;
 	}
+	
+	public void setPreparedPlanCache(SessionAwareCache<PreparedPlan> cache) {
+		this.prepPlanCache = cache;
+	}	
 	
 	public int getUserRequestSourceConcurrency() {
 		return userRequestSourceConcurrency;

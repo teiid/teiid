@@ -45,17 +45,20 @@ import org.jboss.dmr.ModelType;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
-import org.jboss.msc.service.*;
+import org.jboss.msc.service.ServiceBuilder;
+import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceTarget;
+import org.jboss.msc.service.ValueService;
 import org.teiid.PolicyDecider;
 import org.teiid.cache.CacheConfiguration;
+import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.cache.CacheFactory;
-import org.teiid.cache.DefaultCacheFactory;
+import org.teiid.cache.jboss.ClusterableCacheFactory;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.deployers.SystemVDBDeployer;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
-import org.teiid.dqp.internal.process.AuthorizationValidator;
-import org.teiid.dqp.internal.process.DataRolePolicyDecider;
-import org.teiid.dqp.internal.process.DefaultAuthorizationValidator;
+import org.teiid.dqp.internal.process.*;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.services.BufferServiceImpl;
 
@@ -104,7 +107,7 @@ public class TeiidBootServicesAdd extends AbstractAddStepHandler implements Desc
 		distributedCacheNode.get(TYPE).set(ModelType.OBJECT);
 		distributedCacheNode.get(DESCRIPTION).set(bundle.getString(Configuration.CACHE_FACORY+DESC));
 		distributedCacheNode.get(REQUIRED).set(false);
-		describeDistributedCache(preparedPlanCacheNode, ATTRIBUTES, bundle);
+		describeCacheFactory(preparedPlanCacheNode, ATTRIBUTES, bundle);
 	}
 
 	@Override
@@ -115,12 +118,18 @@ public class TeiidBootServicesAdd extends AbstractAddStepHandler implements Desc
 		if (operation.hasDefined(Configuration.ASYNC_THREAD_GROUP)) {
 			model.get(Configuration.ASYNC_THREAD_GROUP).set(operation.get(Configuration.ASYNC_THREAD_GROUP).asString());
 		}
-		populateBufferManager(operation, model);
-		//TODO: add cache model descriptions
 		
-		// these are just place holders
-//		model.get(Configuration.QUERY_ENGINE);
-//		model.get(Configuration.TRANSLATOR);
+		populateBufferManager(operation, model);
+		
+		if (operation.hasDefined(Configuration.POLICY_DECIDER_MODULE)) {
+			model.get(Configuration.POLICY_DECIDER_MODULE).set(operation.get(Configuration.POLICY_DECIDER_MODULE).asString());
+		}
+		
+		if (operation.hasDefined(Configuration.AUTHORIZATION_VALIDATOR_MODULE)) {
+			model.get(Configuration.AUTHORIZATION_VALIDATOR_MODULE).set(operation.get(Configuration.AUTHORIZATION_VALIDATOR_MODULE).asString());
+		}		
+		
+		populateCache(operation, model);
 	}
 	
 	@Override
@@ -214,7 +223,7 @@ public class TeiidBootServicesAdd extends AbstractAddStepHandler implements Desc
     	newControllers.add(target.addService(TeiidServiceNames.AUTHORIZATION_VALIDATOR, authValidatorService).install());
     	
     	//cache factory
-    	final CacheFactory cacheFactory = getCacheFactory(operation.get(Configuration.CACHE_FACORY));
+    	final CacheFactory cacheFactory = buildCacheFactory(operation.get(Configuration.CACHE_FACORY));
     	ValueService<CacheFactory> cacheFactoryService = new ValueService<CacheFactory>(new org.jboss.msc.value.Value<CacheFactory>() {
 			@Override
 			public CacheFactory getValue() throws IllegalStateException, IllegalArgumentException {
@@ -223,11 +232,25 @@ public class TeiidBootServicesAdd extends AbstractAddStepHandler implements Desc
     	});
     	newControllers.add(target.addService(TeiidServiceNames.CACHE_FACTORY, cacheFactoryService).install());
     	
-    	CacheConfiguration resultsetCache = buildCacheConfig(operation.get(Configuration.RESULTSET_CACHE));
-    	CacheConfiguration preparePlanCache = buildCacheConfig(operation.get(Configuration.PREPAREDPLAN_CACHE));
+    	// resultset cache
+    	final SessionAwareCache<CachedResults> resultsetCache = buildResultsetCache(operation.get(Configuration.RESULTSET_CACHE), cacheFactory, bufferManager.getBufferManager());
+    	ValueService<SessionAwareCache<CachedResults>> resultSetService = new ValueService<SessionAwareCache<CachedResults>>(new org.jboss.msc.value.Value<SessionAwareCache<CachedResults>>() {
+			@Override
+			public SessionAwareCache<CachedResults> getValue() throws IllegalStateException, IllegalArgumentException {
+				return resultsetCache;
+			}
+    	});
+    	newControllers.add(target.addService(TeiidServiceNames.CACHE_RESULTSET, resultSetService).install());
     	
-    	
-    	// add translators
+    	// prepared-plan cache
+    	final SessionAwareCache<PreparedPlan> preparedPlanCache = buildPreparedPlanCache(operation.get(Configuration.PREPAREDPLAN_CACHE), cacheFactory, bufferManager.getBufferManager());
+    	ValueService<SessionAwareCache<PreparedPlan>> preparedPlanService = new ValueService<SessionAwareCache<PreparedPlan>>(new org.jboss.msc.value.Value<SessionAwareCache<PreparedPlan>>() {
+			@Override
+			public SessionAwareCache<PreparedPlan> getValue() throws IllegalStateException, IllegalArgumentException {
+				return preparedPlanCache;
+			}
+    	});
+    	newControllers.add(target.addService(TeiidServiceNames.CACHE_PREPAREDPLAN, preparedPlanService).install());
     	
     	
     	// Register VDB deployer
@@ -338,7 +361,47 @@ public class TeiidBootServicesAdd extends AbstractAddStepHandler implements Desc
 		}
     }
     
-	private static void describeDistributedCache(ModelNode node, String type, ResourceBundle bundle) {
+	private void populateCache(ModelNode operation, ModelNode model) {
+		if (operation.hasDefined(Configuration.CACHE_FACORY)) {
+			ModelNode cacheFactory = operation.get(Configuration.CACHE_FACORY);
+			if (cacheFactory.hasDefined(Configuration.CACHE_SERVICE_JNDI_NAME)) {
+				model.get(Configuration.CACHE_FACORY, Configuration.CACHE_SERVICE_JNDI_NAME).set(cacheFactory.get(Configuration.CACHE_SERVICE_JNDI_NAME).asString());
+			}
+			if (cacheFactory.hasDefined(Configuration.RESULTSET_CACHE_NAME)) {
+				model.get(Configuration.CACHE_FACORY, Configuration.RESULTSET_CACHE_NAME).set(cacheFactory.get(Configuration.RESULTSET_CACHE_NAME).asString());
+			}			
+		}
+		
+		if (operation.hasDefined(Configuration.RESULTSET_CACHE)) {
+			ModelNode cache = operation.get(Configuration.RESULTSET_CACHE);
+			populateCacheConfig(cache, model.get(Configuration.RESULTSET_CACHE));
+		}
+		
+		if (operation.hasDefined(Configuration.PREPAREDPLAN_CACHE)) {
+			ModelNode cache = operation.get(Configuration.PREPAREDPLAN_CACHE);
+			populateCacheConfig(cache, model.get(Configuration.PREPAREDPLAN_CACHE));
+		}
+	}    
+    
+	private void populateCacheConfig(ModelNode operation, ModelNode model) {
+    	if (operation.hasDefined(Configuration.ENABLE)) {
+    		model.get(Configuration.ENABLE).set(operation.get(Configuration.ENABLE).asBoolean());
+    	}
+    	if (operation.hasDefined(Configuration.MAX_ENTRIES)) {
+    		model.get(Configuration.MAX_ENTRIES).set(operation.get(Configuration.MAX_ENTRIES).asInt());
+    	}
+    	if (operation.hasDefined(Configuration.MAX_AGE_IN_SECS)) {
+    		model.get(Configuration.MAX_AGE_IN_SECS).set(operation.get(Configuration.MAX_AGE_IN_SECS).asInt());
+    	}
+    	if (operation.hasDefined(Configuration.MAX_STALENESS)) {
+    		model.get(Configuration.MAX_STALENESS).set(operation.get(Configuration.MAX_STALENESS).asInt());
+    	}
+    	if (operation.hasDefined(Configuration.CACHE_TYPE)) {
+    		model.get(Configuration.CACHE_TYPE).set(operation.get(Configuration.CACHE_TYPE).asString());
+    	}
+	}
+
+	private static void describeCacheFactory(ModelNode node, String type, ResourceBundle bundle) {
 		addAttribute(node, Configuration.CACHE_SERVICE_JNDI_NAME, type, bundle.getString(Configuration.CACHE_SERVICE_JNDI_NAME+DESC), ModelType.STRING, false, "java:TeiidCacheManager"); //$NON-NLS-1$
 		addAttribute(node, Configuration.RESULTSET_CACHE_NAME, type, bundle.getString(Configuration.RESULTSET_CACHE_NAME+DESC), ModelType.STRING, false, "teiid-resultset-cache"); //$NON-NLS-1$
 	}
@@ -348,7 +411,6 @@ public class TeiidBootServicesAdd extends AbstractAddStepHandler implements Desc
 		addAttribute(node, Configuration.MAX_AGE_IN_SECS, type, bundle.getString(Configuration.MAX_AGE_IN_SECS+DESC), ModelType.INT, false, "7200");//$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_STALENESS, type, bundle.getString(Configuration.MAX_STALENESS+DESC), ModelType.INT, false, "60");//$NON-NLS-1$
 		addAttribute(node, Configuration.CACHE_TYPE, type, bundle.getString(Configuration.CACHE_TYPE+DESC), ModelType.STRING, false, "EXPIRATION"); //$NON-NLS-1$
-		addAttribute(node, Configuration.CACHE_LOCATION, type, bundle.getString(Configuration.CACHE_LOCATION+DESC), ModelType.STRING, false, "resultset");	//$NON-NLS-1$	
 	}
 	
 	private static void describePreparedPlanCache(ModelNode node, String type, ResourceBundle bundle) {
@@ -356,51 +418,97 @@ public class TeiidBootServicesAdd extends AbstractAddStepHandler implements Desc
 		addAttribute(node, Configuration.MAX_AGE_IN_SECS, type, bundle.getString(Configuration.MAX_AGE_IN_SECS+DESC), ModelType.INT, false, "28800");//$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_STALENESS, type, bundle.getString(Configuration.MAX_STALENESS+DESC), ModelType.INT, false, "0");//$NON-NLS-1$
 		addAttribute(node, Configuration.CACHE_TYPE, type, bundle.getString(Configuration.CACHE_TYPE+DESC), ModelType.STRING, false, "LRU"); //$NON-NLS-1$
-		addAttribute(node, Configuration.CACHE_LOCATION, type, bundle.getString(Configuration.CACHE_LOCATION+DESC), ModelType.STRING, false, "preparedplan");	//$NON-NLS-1$	
 	}
 	
-    private CacheFactory getCacheFactory(ModelNode node) {
-    	CacheFactory cacheFactory = new DefaultCacheFactory();	
-    	/*
-    	if (node.hasDefined(Configuration.CLASS)) {
-    		String className = node.get(Configuration.CLASS).asString();
-    	}
-    	
-    	if (node.hasDefined(Configuration.ENABLED)) {
-    		cacheFactory.setEnabled(node.get(Configuration.ENABLED).asBoolean());
-    	}
-    	else {
-    		cacheFactory.setEnabled(true);
-    	}
+    private CacheFactory buildCacheFactory(ModelNode node) {
+    	ClusterableCacheFactory cacheFactory = new ClusterableCacheFactory();	
     	if (node.hasDefined(Configuration.CACHE_SERVICE_JNDI_NAME)) {
     		cacheFactory.setCacheManager(node.get(Configuration.CACHE_SERVICE_JNDI_NAME).asString());
     	}	                	
     	if (node.hasDefined(Configuration.RESULTSET_CACHE_NAME)) {
     		cacheFactory.setResultsetCacheName(node.get(Configuration.RESULTSET_CACHE_NAME).asString());
     	}
-    	*/		                	
     	return cacheFactory;
     }
     
-    private CacheConfiguration buildCacheConfig(ModelNode node) {
-    	CacheConfiguration cacheConfig = new CacheConfiguration();
+    private SessionAwareCache<CachedResults> buildResultsetCache(ModelNode node, CacheFactory cacheFactory, BufferManager bufferManager) {
+    	if (node.hasDefined(Configuration.ENABLE)) {
+    		if (!node.get(Configuration.ENABLE).asBoolean()) {
+    			return null;
+    		}
+    	}
     	
+    	CacheConfiguration cacheConfig = new CacheConfiguration();
     	if (node.hasDefined(Configuration.MAX_ENTRIES)) {
     		cacheConfig.setMaxEntries(node.get(Configuration.MAX_ENTRIES).asInt());
     	}
+    	else {
+    		cacheConfig.setMaxEntries(1024);
+    	}
+    	
     	if (node.hasDefined(Configuration.MAX_AGE_IN_SECS)) {
     		cacheConfig.setMaxAgeInSeconds(node.get(Configuration.MAX_AGE_IN_SECS).asInt());
     	}
+    	else {
+    		cacheConfig.setMaxAgeInSeconds(7200);
+    	}
+    	
     	if (node.hasDefined(Configuration.MAX_STALENESS)) {
     		cacheConfig.setMaxStaleness(node.get(Configuration.MAX_STALENESS).asInt());
+    	}
+    	else {
+    		cacheConfig.setMaxStaleness(60);
     	}
     	if (node.hasDefined(Configuration.CACHE_TYPE)) {
     		cacheConfig.setType(node.get(Configuration.CACHE_TYPE).asString());
     	}
-    	if (node.hasDefined(Configuration.CACHE_LOCATION)) {
-    		cacheConfig.setLocation(node.get(Configuration.CACHE_LOCATION).asString());
-    	}	   	                	
-    	return cacheConfig;
-	}	                
+    	else {
+    		cacheConfig.setType(Policy.EXPIRATION.name());
+    	}
+    	
+    	cacheConfig.setLocation("resultset"); //$NON-NLS-1$
+    	SessionAwareCache<CachedResults> resultsetCache = new SessionAwareCache<CachedResults>(cacheFactory, SessionAwareCache.Type.RESULTSET, cacheConfig);
+    	resultsetCache.setBufferManager(bufferManager);
+    	
+    	return resultsetCache;
+	}	      
+    
+    
+    private SessionAwareCache<PreparedPlan> buildPreparedPlanCache(ModelNode node, CacheFactory cacheFactory, BufferManager bufferManager) {
+    	
+    	CacheConfiguration cacheConfig = new CacheConfiguration();
+    	if (node.hasDefined(Configuration.MAX_ENTRIES)) {
+    		cacheConfig.setMaxEntries(node.get(Configuration.MAX_ENTRIES).asInt());
+    	}
+    	else {
+    		cacheConfig.setMaxEntries(512);
+    	}
+    	
+    	if (node.hasDefined(Configuration.MAX_AGE_IN_SECS)) {
+    		cacheConfig.setMaxAgeInSeconds(node.get(Configuration.MAX_AGE_IN_SECS).asInt());
+    	}
+    	else {
+    		cacheConfig.setMaxAgeInSeconds(28800);
+    	}
+    	
+    	if (node.hasDefined(Configuration.MAX_STALENESS)) {
+    		cacheConfig.setMaxStaleness(node.get(Configuration.MAX_STALENESS).asInt());
+    	}
+    	else {
+    		cacheConfig.setMaxStaleness(0);
+    	}
+    	if (node.hasDefined(Configuration.CACHE_TYPE)) {
+    		cacheConfig.setType(node.get(Configuration.CACHE_TYPE).asString());
+    	}
+    	else {
+    		cacheConfig.setType(Policy.LRU.name());
+    	}
+    	
+    	cacheConfig.setLocation("prepared"); //$NON-NLS-1$
+    	SessionAwareCache<PreparedPlan> cache = new SessionAwareCache<PreparedPlan>(cacheFactory, SessionAwareCache.Type.PREPAREDPLAN, cacheConfig);
+    	cache.setBufferManager(bufferManager);
+    	
+    	return cache;
+	}	    
     
 }

@@ -69,16 +69,15 @@ class Configuration {
 	public static final String MAX_OPEN_FILES = "max-open-files";//$NON-NLS-1$
 	
 	//cache-config
-	public static final String MAX_ENTRIES = "maxEntries";//$NON-NLS-1$
-	public static final String MAX_AGE_IN_SECS = "maxAgeInSeconds";//$NON-NLS-1$
-	public static final String MAX_STALENESS = "maxStaleness";//$NON-NLS-1$
+	public static final String MAX_ENTRIES = "max-entries";//$NON-NLS-1$
+	public static final String MAX_AGE_IN_SECS = "max-age-in-seconds";//$NON-NLS-1$
+	public static final String MAX_STALENESS = "max-staleness";//$NON-NLS-1$
 	public static final String CACHE_TYPE = "type";//$NON-NLS-1$
-	public static final String CACHE_LOCATION= "location";//$NON-NLS-1$
+	public static final String ENABLE = "enable";//$NON-NLS-1$
 	
 	// cache-factory
-	public static final String  CACHE_SERVICE_JNDI_NAME = "cache-service-jndi-name";//$NON-NLS-1$
+	public static final String  CACHE_SERVICE_JNDI_NAME = "cache-manager-jndi-name";//$NON-NLS-1$
 	public static final String  RESULTSET_CACHE_NAME = "resultsetCacheName";//$NON-NLS-1$
-	public static final String  CLASS = "class";//$NON-NLS-1$
 	
 	//socket config
 	public static final String MAX_SOCKET_THREAD_SIZE = "maxSocketThreads";//$NON-NLS-1$

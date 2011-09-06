@@ -43,8 +43,7 @@ import org.teiid.deployers.*;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
-import org.teiid.dqp.internal.process.DQPConfiguration;
-import org.teiid.dqp.internal.process.DQPCore;
+import org.teiid.dqp.internal.process.*;
 import org.teiid.dqp.service.FakeBufferService;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataRepository;
@@ -151,7 +150,16 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 		
         this.sessionService.setVDBRepository(repo);
         this.dqp.setBufferService(new FakeBufferService());
-        this.dqp.setCacheFactory(new DefaultCacheFactory());
+        DefaultCacheFactory dcf = new DefaultCacheFactory() {
+        	@Override
+        	public boolean isReplicated() {
+        		return true; //pretend to be replicated for matview tests
+        	}
+        };
+        
+        this.dqp.setResultsetCache(new SessionAwareCache<CachedResults>(dcf, SessionAwareCache.Type.RESULTSET, new CacheConfiguration(Policy.LRU, 60, 250, "resultsetcache")));
+        this.dqp.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>(dcf, SessionAwareCache.Type.PREPAREDPLAN, new CacheConfiguration()));
+        
         this.dqp.setTransactionService(new FakeTransactionService());
         
         cmr = Mockito.mock(ConnectorManagerRepository.class);
@@ -162,13 +170,6 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         	}
         });
         
-        config.setResultsetCacheConfig(new CacheConfiguration(Policy.LRU, 60, 250, "resultsetcache")); //$NON-NLS-1$
-        this.dqp.setCacheFactory(new DefaultCacheFactory() {
-        	@Override
-        	public boolean isReplicated() {
-        		return true; //pretend to be replicated for matview tests
-        	}
-        });
         this.dqp.start(config);
         this.sessionService.setDqp(this.dqp);
         

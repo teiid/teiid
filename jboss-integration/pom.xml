@@ -17,6 +17,11 @@
       <artifactId>teiid-runtime</artifactId>
     </dependency>
  
+     <dependency>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-cache-jbosscache</artifactId>
+    </dependency>
+    
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-api</artifactId>

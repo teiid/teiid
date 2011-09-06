@@ -79,7 +79,7 @@ public class SessionAwareCache<T> {
 		this(new DefaultCacheFactory(), Type.RESULTSET, new CacheConfiguration(Policy.LRU, 60, maxSize, "default")); //$NON-NLS-1$
 	}
 	
-	SessionAwareCache (final CacheFactory cacheFactory, final Type type, final CacheConfiguration config){
+	public SessionAwareCache (final CacheFactory cacheFactory, final Type type, final CacheConfiguration config){
 		this.maxSize = config.getMaxEntries();
 		if(this.maxSize < 0){
 			this.maxSize = Integer.MAX_VALUE;

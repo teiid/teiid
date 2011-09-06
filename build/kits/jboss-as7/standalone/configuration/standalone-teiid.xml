@@ -276,15 +276,11 @@
             <async-thread-group>teiid-async</async-thread-group>
             
             <query-engine name = "default">
-                <object-replicator-name>teiid/replicator</object-replicator-name>
                 <security-domain>teiid-security</security-domain>
-                <jdbc>
-                    <socket-binding>teiid-jdbc</socket-binding>
-                </jdbc>
-                <odbc>
-                    <socket-binding>teiid-odbc</socket-binding>
-                </odbc>
+                <jdbc socket-binding="teiid-jdbc"/>
+                <odbc socket-binding="teiid-odbc"/>
             </query-engine>
+            
             <translator name="jdbc-simple" module="org.jboss.teiid.translator.jdbc"/>
             <translator name="jdbc-ansi" module="org.jboss.teiid.translator.jdbc"/>
             <translator name="access" module="org.jboss.teiid.translator.jdbc"/>

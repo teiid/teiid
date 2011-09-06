@@ -29,15 +29,14 @@ import org.jboss.cache.Fqn;
 import org.jboss.cache.Node;
 import org.jboss.cache.Region;
 import org.jboss.cache.config.EvictionAlgorithmConfig;
-import org.jboss.cache.config.EvictionConfig;
 import org.jboss.cache.config.EvictionRegionConfig;
 import org.jboss.cache.eviction.ExpirationAlgorithmConfig;
 import org.jboss.cache.eviction.LRUAlgorithmConfig;
 import org.jboss.cache.eviction.RemoveOnEvictActionPolicy;
 import org.teiid.cache.Cache;
 import org.teiid.cache.CacheConfiguration;
-import org.teiid.cache.CacheFactory;
 import org.teiid.cache.CacheConfiguration.Policy;
+import org.teiid.cache.CacheFactory;
 import org.teiid.core.TeiidRuntimeException;
 
 

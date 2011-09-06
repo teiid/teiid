@@ -117,13 +117,13 @@ public class TestDQPCore {
 				return BufferManagerFactory.createBufferManager();
 			}
 		});
-        core.setCacheFactory(new DefaultCacheFactory());
+        core.setResultsetCache(new SessionAwareCache<CachedResults>(new DefaultCacheFactory(), SessionAwareCache.Type.RESULTSET, new CacheConfiguration()));
+        core.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>(new DefaultCacheFactory(), SessionAwareCache.Type.PREPAREDPLAN, new CacheConfiguration()));
         core.setTransactionService(new FakeTransactionService());
         
         config = new DQPConfiguration();
         config.setMaxActivePlans(1);
         config.setUserRequestSourceConcurrency(2);
-        config.setResultsetCacheConfig(new CacheConfiguration());
         core.start(config);
         core.getPrepPlanCache().setModTime(1);
         core.getRsCache().setModTime(1);

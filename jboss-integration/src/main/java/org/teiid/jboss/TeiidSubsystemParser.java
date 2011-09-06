@@ -149,10 +149,10 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     }
     
     private void writeSocketConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+    	writeAttribute(writer, Element.SOCKET_BINDING_ELEMENT, node);
     	writeElement(writer, Element.MAX_SOCKET_SIZE_ELEMENT, node);
     	writeElement(writer, Element.IN_BUFFER_SIZE_ELEMENT, node);
     	writeElement(writer, Element.OUT_BUFFER_SIZE_ELEMENT, node);
-    	writeElement(writer, Element.SOCKET_BINDING_ELEMENT, node);
     	
     	if (has(node, Element.SSL_ELEMENT.getLocalName())) {
     		writer.writeStartElement(Element.SSL_ELEMENT.getLocalName());
@@ -190,11 +190,11 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 	}
 
 	private void writeCacheConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+		writeAttribute(writer, Element.ENABLE_ATTRIBUTE, node);
 		writeElement(writer, Element.MAX_ENTRIES_ELEMENT, node);
 		writeElement(writer, Element.MAX_AGE_IN_SECS_ELEMENT, node);
 		writeElement(writer, Element.MAX_STALENESS_ELEMENT, node);
 		writeElement(writer, Element.CACHE_TYPE_ELEMENT, node);
-		writeElement(writer, Element.CACHE_LOCATION_ELEMENT, node);
 	}
 
 	private boolean has(ModelNode node, String name) {
@@ -410,7 +410,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
             	node.get(reader.getLocalName()).set(Integer.parseInt(reader.getElementText()));
             	break;
             case CACHE_TYPE_ELEMENT:
-            case CACHE_LOCATION_ELEMENT:
             	node.get(reader.getLocalName()).set(reader.getElementText());    
             	break;
             default: 

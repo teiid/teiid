@@ -52,7 +52,6 @@ import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.impl.*;
-import org.teiid.cache.CacheFactory;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
@@ -66,7 +65,6 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.LRUCache;
 import org.teiid.deployers.CompositeVDB;
-import org.teiid.deployers.ContainerLifeCycleListener;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
@@ -129,7 +127,8 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	private final InjectedValue<TranslatorRepository> translatorRepositoryInjector = new InjectedValue<TranslatorRepository>();
 	private final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
 	private final InjectedValue<AuthorizationValidator> authorizationValidatorInjector = new InjectedValue<AuthorizationValidator>();
-	private final InjectedValue<CacheFactory> cachefactoryInjector = new InjectedValue<CacheFactory>();
+	private final InjectedValue<SessionAwareCache> preparedPlanCacheInjector = new InjectedValue<SessionAwareCache>();
+	private final InjectedValue<SessionAwareCache> resultSetCacheInjector = new InjectedValue<SessionAwareCache>();
 	
 	public final ConcurrentMap<String, SecurityDomainContext> securityDomains = new ConcurrentHashMap<String, SecurityDomainContext>();
 	private LinkedList<String> securityDomainNames = new LinkedList<String>();
@@ -204,7 +203,8 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		}
 		this.dqpCore.setMetadataRepository(this.vdbRepository.getMetadataRepository());
 		this.dqpCore.setEventDistributor(this.eventDistributor);
-		this.dqpCore.setCacheFactory(getCachefactoryInjector().getValue());
+		this.dqpCore.setResultsetCache(getResultSetCacheInjector().getValue());
+		this.dqpCore.setPreparedPlanCache(getPreparedPlanCacheInjector().getValue());
 		this.dqpCore.start(this);
 		this.eventDistributorProxy = (EventDistributor)Proxy.newProxyInstance(Module.getCallerModule().getClassLoader(), new Class[] {EventDistributor.class}, new InvocationHandler() {
 			
@@ -783,9 +783,13 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		this.securityDomainNames.add(domain);
 	}
 	
-	public InjectedValue<CacheFactory> getCachefactoryInjector() {
-		return cachefactoryInjector;
+	public InjectedValue<SessionAwareCache> getResultSetCacheInjector() {
+		return resultSetCacheInjector;
 	}
+	
+	public InjectedValue<SessionAwareCache> getPreparedPlanCacheInjector() {
+		return preparedPlanCacheInjector;
+	}	
 
 	public InjectedValue<TranslatorRepository> getTranslatorRepositoryInjector() {
 		return translatorRepositoryInjector;

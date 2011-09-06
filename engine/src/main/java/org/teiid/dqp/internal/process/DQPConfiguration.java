@@ -21,7 +21,6 @@
  */
 package org.teiid.dqp.internal.process;
 
-import org.teiid.cache.CacheConfiguration;
 import org.teiid.client.RequestMessage;
 
 
@@ -46,8 +45,6 @@ public class DQPConfiguration{
 	private boolean exceptionOnMaxSourceRows = true;
 	private int maxSourceRows = -1;
 	private int maxActivePlans = DEFAULT_MAX_ACTIVE_PLANS;
-	private CacheConfiguration resultsetCacheConfig;
-	private CacheConfiguration preparedPlanCacheConfig = new CacheConfiguration();
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
     private int userRequestSourceConcurrency = DEFAULT_USER_REQUEST_SOURCE_CONCURRENCY;
     private boolean detectingChangeEvents = true;
@@ -100,18 +97,6 @@ public class DQPConfiguration{
 
 	public void setLobChunkSizeInKB(int lobChunkSizeInKB) {
 		this.lobChunkSizeInKB = lobChunkSizeInKB;
-	}
-
-	public CacheConfiguration getResultsetCacheConfig() {
-		return this.resultsetCacheConfig;
-	}	
-	
-	public void setResultsetCacheConfig(CacheConfiguration config) {
-		this.resultsetCacheConfig = config;
-	}
-	
-	public boolean isResultSetCacheEnabled() {
-		return this.resultsetCacheConfig != null;
 	}
 	
     /**
@@ -177,15 +162,6 @@ public class DQPConfiguration{
 		this.authorizationValidator = authorizationValidator;
 	}
 	
-	public CacheConfiguration getPreparedPlanCacheConfig() {
-		return preparedPlanCacheConfig;
-	}
-	
-	public void setPreparedPlanCacheConfig(
-			CacheConfiguration preparedPlanCacheConfig) {
-		this.preparedPlanCacheConfig = preparedPlanCacheConfig;
-	}
-
 	public boolean isDetectingChangeEvents() {
 		return detectingChangeEvents;
 	}
