@@ -135,6 +135,34 @@ public class TestTempTables {
 		execute("select * from x", new List[] {});
 	}
 	
+	@Test public void testCommitExistingRemoved() throws Exception {
+		execute("create local temporary table x (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		setupTransaction(Connection.TRANSACTION_SERIALIZABLE);
+		execute("drop table x", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		synch.afterCompletion(Status.STATUS_COMMITTED);
+		try {
+			execute("select * from x", new List[] {});
+			fail();
+		} catch (Exception e) {
+			
+		}
+	}
+	
+	@Test public void testUpdateLock() throws Exception {
+		execute("create local temporary table x (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		setupTransaction(Connection.TRANSACTION_SERIALIZABLE);
+		execute("insert into x (e2, e1) select e2, e1 from pm1.g1", new List[] {Arrays.asList(6)}); //$NON-NLS-1$
+		tc = null;
+		try {
+			execute("insert into x (e2, e1) select e2, e1 from pm1.g1", new List[] {Arrays.asList(6)}); //$NON-NLS-1$
+			fail();
+		} catch (Exception e) {
+			
+		}
+		synch.afterCompletion(Status.STATUS_COMMITTED);
+		execute("insert into x (e2, e1) select e2, e1 from pm1.g1", new List[] {Arrays.asList(6)}); //$NON-NLS-1$
+	}
+	
 	@Test public void testRollbackExisting1() throws Exception {
 		execute("create local temporary table x (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
 		for (int i = 0; i < 86; i++) {

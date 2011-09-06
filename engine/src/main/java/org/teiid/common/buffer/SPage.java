@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.common.buffer.BatchManager.CleanupHook;
 import org.teiid.common.buffer.BatchManager.ManagedBatch;
@@ -83,25 +84,25 @@ class SPage implements Cloneable {
 			}
 		}
 	}
-	
+
+	private static AtomicLong counter = new AtomicLong();
+
 	STree stree;
 	
-	private int id;
+	private long id;
 	protected SPage next;
 	protected SPage prev;
 	protected ManagedBatch managedBatch;
 	private Object trackingObject;
 	protected TupleBatch values;
 	protected ArrayList<SPage> children;
-	//TODO: could track cloning more completely, which would allow for earlier batch removal
-	private boolean cloned; 
+	protected boolean cloned; 
 	
 	SPage(STree stree, boolean leaf) {
 		this.stree = stree;
-		this.id = stree.counter.getAndIncrement();
+		this.id = counter.getAndIncrement();
 		stree.pages.put(this.id, this);
-		//TODO: this counter is a hack.  need a better idea of a storage id
-		this.values = new TupleBatch(id, new ArrayList(stree.pageSize/4));
+		this.values = new TupleBatch(0, new ArrayList(stree.pageSize/4));
 		if (!leaf) {
 			children = new ArrayList<SPage>(stree.pageSize/4);
 		}
@@ -121,7 +122,7 @@ class SPage implements Cloneable {
 				clone.children = new ArrayList<SPage>(children);
 			}
 			if (values != null) {
-				clone.values = new TupleBatch(stree.counter.getAndIncrement(), new ArrayList<List<?>>(values.getTuples()));
+				clone.values = new TupleBatch(0, new ArrayList<List<?>>(values.getTuples()));
 			}
 			return clone;
 		} catch (CloneNotSupportedException e) {
@@ -129,7 +130,7 @@ class SPage implements Cloneable {
 		}
 	}
 	
-	public int getId() {
+	public long getId() {
 		return id;
 	}
 	
@@ -196,7 +197,6 @@ class SPage implements Cloneable {
 			values.setDataTypes(stree.types);
 		}
 		if (cloned) {
-			values.setRowOffset(stree.counter.getAndIncrement());
 			cloned = false;
 			trackingObject = null;
 		}

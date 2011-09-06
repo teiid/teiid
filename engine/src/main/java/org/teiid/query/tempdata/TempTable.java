@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
@@ -275,9 +276,9 @@ public class TempTable implements Cloneable {
 		}
 		
 	}
-	private static AtomicInteger ID_GENERATOR = new AtomicInteger();
+	private static AtomicLong ID_GENERATOR = new AtomicLong();
 	
-	private int id = ID_GENERATOR.getAndIncrement();
+	private Long id = ID_GENERATOR.getAndIncrement();
 	private STree tree;
 	private AtomicInteger rowId;
 	private List<ElementSymbol> columns;
@@ -361,7 +362,7 @@ public class TempTable implements Cloneable {
 		}
 	}
 	
-	public AtomicInteger getActiveReaders() {
+	public AtomicInteger getActive() {
 		return activeReaders;
 	}
 	
@@ -803,13 +804,13 @@ public class TempTable implements Cloneable {
 		return tid;
 	}
 	
-	public int getId() {
+	public Long getId() {
 		return id;
 	}
 	
 	@Override
 	public int hashCode() {
-		return id;
+		return id.hashCode();
 	}
 	
 	@Override
@@ -821,7 +822,7 @@ public class TempTable implements Cloneable {
 			return false;
 		}
 		TempTable other = (TempTable)obj;
-		return id == other.id;
+		return id.equals(other.id);
 	}
 
 }

@@ -95,12 +95,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	private final class CleanupHook implements org.teiid.common.buffer.BatchManager.CleanupHook {
 		
 		private long id;
-		private int beginRow;
 		private WeakReference<BatchManagerImpl> ref;
 		
-		CleanupHook(long id, int beginRow, BatchManagerImpl batchManager) {
+		CleanupHook(long id, BatchManagerImpl batchManager) {
 			this.id = id;
-			this.beginRow = beginRow;
 			this.ref = new WeakReference<BatchManagerImpl>(batchManager);
 		}
 		
@@ -109,7 +107,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			if (batchManager == null) {
 				return;
 			}
-			cleanupManagedBatch(batchManager, beginRow, id);
+			cleanupManagedBatch(batchManager, id);
 		}
 		
 	}
@@ -204,10 +202,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	 * Holder for active batches
 	 */
 	private class TupleBufferInfo {
-		TreeMap<Integer, ManagedBatchImpl> batches = new TreeMap<Integer, ManagedBatchImpl>();
-		Integer lastUsed = null;
+		TreeMap<Long, ManagedBatchImpl> batches = new TreeMap<Long, ManagedBatchImpl>();
+		Long lastUsed = null;
 		
-		ManagedBatchImpl removeBatch(int row) {
+		ManagedBatchImpl removeBatch(long row) {
 			ManagedBatchImpl result = batches.remove(row);
 			if (result != null) {
 				activeBatchKB -= result.sizeEstimate;
@@ -268,7 +266,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				if (update) {
 					activeBatches.put(batchManager.id, tbi);
 				}
-				Assertion.isNull(tbi.batches.put(this.beginRow, this));
+				tbi.batches.put(this.id, this);
 			}
 		}
 
@@ -283,13 +281,13 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				if (tbi != null) { 
 					boolean put = true;
 					if (!cache) {
-						tbi.removeBatch(this.beginRow);
+						tbi.removeBatch(this.id);
 						if (tbi.batches.isEmpty()) {
 							put = false;
 						}
 					}
 					if (put) {
-						tbi.lastUsed = this.beginRow;
+						tbi.lastUsed = this.id;
 						activeBatches.put(batchManager.id, tbi);
 					}
 				}
@@ -397,17 +395,17 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		}
 
 		public void remove() {
-			cleanupManagedBatch(batchManager, beginRow, id);
+			cleanupManagedBatch(batchManager, id);
 		}
 				
 		@Override
 		public CleanupHook getCleanupHook() {
-			return new CleanupHook(id, beginRow, batchManager);
+			return new CleanupHook(id, batchManager);
 		}
 		
 		@Override
 		public String toString() {
-			return "ManagedBatch " + batchManager.id + " " + this.beginRow + " " + activeBatch; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			return "ManagedBatch " + batchManager.id + " " + this.id + " " + activeBatch; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 	}
 	
@@ -513,10 +511,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
         return tupleBuffer;
     }
     
-    private void cleanupManagedBatch(BatchManagerImpl batchManager, int beginRow, long id) {
+    private void cleanupManagedBatch(BatchManagerImpl batchManager, long id) {
 		synchronized (activeBatches) {
 			TupleBufferInfo tbi = activeBatches.get(batchManager.id);
-			if (tbi != null && tbi.removeBatch(beginRow) != null) {
+			if (tbi != null && tbi.removeBatch(id) != null) {
 				if (tbi.batches.isEmpty()) {
 					activeBatches.remove(batchManager.id);
 				}
@@ -655,7 +653,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				}
 				Iterator<TupleBufferInfo> iter = activeBatches.values().iterator();
 				TupleBufferInfo tbi = iter.next();
-				Map.Entry<Integer, ManagedBatchImpl> entry = null;
+				Map.Entry<Long, ManagedBatchImpl> entry = null;
 				if (tbi.lastUsed != null) {
 					entry = tbi.batches.floorEntry(tbi.lastUsed - 1);
 				}

@@ -57,8 +57,7 @@ public class STree implements Cloneable {
 	private int mask = 1;
 	private int shift = 1;
 
-	protected AtomicInteger counter = new AtomicInteger();
-    protected ConcurrentHashMap<Integer, SPage> pages = new ConcurrentHashMap<Integer, SPage>();
+    protected ConcurrentHashMap<Long, SPage> pages = new ConcurrentHashMap<Long, SPage>();
 	protected volatile SPage[] header = new SPage[] {new SPage(this, true)};
     protected BatchManager keyManager;
     protected BatchManager leafManager;
@@ -103,12 +102,12 @@ public class STree implements Cloneable {
 			clone.updateLock = new ReentrantLock();
 			clone.rowCount = new AtomicInteger(rowCount.get());
 			//clone the pages
-			clone.pages = new ConcurrentHashMap<Integer, SPage>(pages);
-			for (Map.Entry<Integer, SPage> entry : clone.pages.entrySet()) {
+			clone.pages = new ConcurrentHashMap<Long, SPage>(pages);
+			for (Map.Entry<Long, SPage> entry : clone.pages.entrySet()) {
 				entry.setValue(entry.getValue().clone(clone));
 			}
 			//reset the pointers
-			for (Map.Entry<Integer, SPage> entry : clone.pages.entrySet()) {
+			for (Map.Entry<Long, SPage> entry : clone.pages.entrySet()) {
 				SPage clonePage = entry.getValue();
 				clonePage.next = clone.getPage(clonePage.next);
 				clonePage.prev = clone.getPage(clonePage.prev);
@@ -447,7 +446,7 @@ public class STree implements Cloneable {
 	}
 	
 	public void remove() {
-		truncate(false);
+		truncate(true);
 		this.keyManager.remove();
 		this.leafManager.remove();
 	}
@@ -528,6 +527,14 @@ public class STree implements Cloneable {
 		int[] sortParameters = this.comparator.getSortParameters();
 		sortParameters = Arrays.copyOf(sortParameters, sortParameters.length - 1);
 		this.comparator.setSortParameters(sortParameters);
+	}
+	
+	public void clearClonedFlags() {
+		for (SPage page : pages.values()) {
+			page.cloned = false;
+			//we don't really care about using synchronization or a volatile here
+			//since the worst case is that we'll just use gc cleanup
+		}
 	}
 	
 }
