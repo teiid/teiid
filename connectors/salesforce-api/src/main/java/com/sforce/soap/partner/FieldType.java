@@ -34,6 +34,7 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;enumeration value="url"/>
  *     &lt;enumeration value="email"/>
  *     &lt;enumeration value="encryptedstring"/>
+ *     &lt;enumeration value="datacategorygroupreference"/>
  *     &lt;enumeration value="anyType"/>
  *   &lt;/restriction>
  * &lt;/simpleType>
@@ -84,6 +85,8 @@ public enum FieldType {
     EMAIL("email"),
     @XmlEnumValue("encryptedstring")
     ENCRYPTEDSTRING("encryptedstring"),
+    @XmlEnumValue("datacategorygroupreference")
+    DATACATEGORYGROUPREFERENCE("datacategorygroupreference"),
     @XmlEnumValue("anyType")
     ANY_TYPE("anyType");
     private final String value;

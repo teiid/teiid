@@ -43,19 +43,11 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link ApiFault }
+     * Create an instance of {@link InvalidFieldFault }
      * 
      */
-    public ApiFault createApiFault() {
-        return new ApiFault();
-    }
-
-    /**
-     * Create an instance of {@link MalformedSearchFault }
-     * 
-     */
-    public MalformedSearchFault createMalformedSearchFault() {
-        return new MalformedSearchFault();
+    public InvalidFieldFault createInvalidFieldFault() {
+        return new InvalidFieldFault();
     }
 
     /**
@@ -67,14 +59,6 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link MalformedQueryFault }
-     * 
-     */
-    public MalformedQueryFault createMalformedQueryFault() {
-        return new MalformedQueryFault();
-    }
-
-    /**
      * Create an instance of {@link InvalidSObjectFault }
      * 
      */
@@ -83,35 +67,19 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link InvalidFieldFault }
+     * Create an instance of {@link MalformedQueryFault }
      * 
      */
-    public InvalidFieldFault createInvalidFieldFault() {
-        return new InvalidFieldFault();
+    public MalformedQueryFault createMalformedQueryFault() {
+        return new MalformedQueryFault();
     }
 
     /**
-     * Create an instance of {@link UnexpectedErrorFault }
+     * Create an instance of {@link InvalidNewPasswordFault }
      * 
      */
-    public UnexpectedErrorFault createUnexpectedErrorFault() {
-        return new UnexpectedErrorFault();
-    }
-
-    /**
-     * Create an instance of {@link InvalidQueryLocatorFault }
-     * 
-     */
-    public InvalidQueryLocatorFault createInvalidQueryLocatorFault() {
-        return new InvalidQueryLocatorFault();
-    }
-
-    /**
-     * Create an instance of {@link ApiQueryFault }
-     * 
-     */
-    public ApiQueryFault createApiQueryFault() {
-        return new ApiQueryFault();
+    public InvalidNewPasswordFault createInvalidNewPasswordFault() {
+        return new InvalidNewPasswordFault();
     }
 
     /**
@@ -123,11 +91,43 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link InvalidNewPasswordFault }
+     * Create an instance of {@link MalformedSearchFault }
      * 
      */
-    public InvalidNewPasswordFault createInvalidNewPasswordFault() {
-        return new InvalidNewPasswordFault();
+    public MalformedSearchFault createMalformedSearchFault() {
+        return new MalformedSearchFault();
+    }
+
+    /**
+     * Create an instance of {@link ApiFault }
+     * 
+     */
+    public ApiFault createApiFault() {
+        return new ApiFault();
+    }
+
+    /**
+     * Create an instance of {@link InvalidQueryLocatorFault }
+     * 
+     */
+    public InvalidQueryLocatorFault createInvalidQueryLocatorFault() {
+        return new InvalidQueryLocatorFault();
+    }
+
+    /**
+     * Create an instance of {@link UnexpectedErrorFault }
+     * 
+     */
+    public UnexpectedErrorFault createUnexpectedErrorFault() {
+        return new UnexpectedErrorFault();
+    }
+
+    /**
+     * Create an instance of {@link ApiQueryFault }
+     * 
+     */
+    public ApiQueryFault createApiQueryFault() {
+        return new ApiQueryFault();
     }
 
     /**

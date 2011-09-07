@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="customSetting" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *         &lt;element name="deletable" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *         &lt;element name="deprecatedAndHidden" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="feedEnabled" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *         &lt;element name="fields" type="{urn:partner.soap.sforce.com}Field" maxOccurs="unbounded" minOccurs="0"/>
  *         &lt;element name="keyPrefix" type="{http://www.w3.org/2001/XMLSchema}string"/>
  *         &lt;element name="label" type="{http://www.w3.org/2001/XMLSchema}string"/>
@@ -61,6 +62,7 @@ import javax.xml.bind.annotation.XmlType;
     "customSetting",
     "deletable",
     "deprecatedAndHidden",
+    "feedEnabled",
     "fields",
     "keyPrefix",
     "label",
@@ -89,6 +91,7 @@ public class DescribeSObjectResult {
     protected boolean customSetting;
     protected boolean deletable;
     protected boolean deprecatedAndHidden;
+    protected boolean feedEnabled;
     @XmlElement(nillable = true)
     protected List<Field> fields;
     @XmlElement(required = true, nillable = true)
@@ -239,6 +242,22 @@ public class DescribeSObjectResult {
      */
     public void setDeprecatedAndHidden(boolean value) {
         this.deprecatedAndHidden = value;
+    }
+
+    /**
+     * Gets the value of the feedEnabled property.
+     * 
+     */
+    public boolean isFeedEnabled() {
+        return feedEnabled;
+    }
+
+    /**
+     * Sets the value of the feedEnabled property.
+     * 
+     */
+    public void setFeedEnabled(boolean value) {
+        this.feedEnabled = value;
     }
 
     /**

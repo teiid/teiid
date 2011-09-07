@@ -19,6 +19,7 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;sequence>
  *         &lt;element name="accessibilityMode" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *         &lt;element name="currencySymbol" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="orgAttachmentFileSizeLimit" type="{http://www.w3.org/2001/XMLSchema}int"/>
  *         &lt;element name="orgDefaultCurrencyIsoCode" type="{http://www.w3.org/2001/XMLSchema}string"/>
  *         &lt;element name="orgDisallowHtmlAttachments" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *         &lt;element name="orgHasPersonAccounts" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
@@ -27,6 +28,7 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="organizationName" type="{http://www.w3.org/2001/XMLSchema}string"/>
  *         &lt;element name="profileId" type="{urn:partner.soap.sforce.com}ID"/>
  *         &lt;element name="roleId" type="{urn:partner.soap.sforce.com}ID"/>
+ *         &lt;element name="sessionSecondsValid" type="{http://www.w3.org/2001/XMLSchema}int"/>
  *         &lt;element name="userDefaultCurrencyIsoCode" type="{http://www.w3.org/2001/XMLSchema}string"/>
  *         &lt;element name="userEmail" type="{http://www.w3.org/2001/XMLSchema}string"/>
  *         &lt;element name="userFullName" type="{http://www.w3.org/2001/XMLSchema}string"/>
@@ -49,6 +51,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "GetUserInfoResult", propOrder = {
     "accessibilityMode",
     "currencySymbol",
+    "orgAttachmentFileSizeLimit",
     "orgDefaultCurrencyIsoCode",
     "orgDisallowHtmlAttachments",
     "orgHasPersonAccounts",
@@ -57,6 +60,7 @@ import javax.xml.bind.annotation.XmlType;
     "organizationName",
     "profileId",
     "roleId",
+    "sessionSecondsValid",
     "userDefaultCurrencyIsoCode",
     "userEmail",
     "userFullName",
@@ -73,6 +77,7 @@ public class GetUserInfoResult {
     protected boolean accessibilityMode;
     @XmlElement(required = true, nillable = true)
     protected String currencySymbol;
+    protected int orgAttachmentFileSizeLimit;
     @XmlElement(required = true, nillable = true)
     protected String orgDefaultCurrencyIsoCode;
     protected boolean orgDisallowHtmlAttachments;
@@ -86,6 +91,7 @@ public class GetUserInfoResult {
     protected String profileId;
     @XmlElement(required = true, nillable = true)
     protected String roleId;
+    protected int sessionSecondsValid;
     @XmlElement(required = true, nillable = true)
     protected String userDefaultCurrencyIsoCode;
     @XmlElement(required = true)
@@ -145,6 +151,22 @@ public class GetUserInfoResult {
      */
     public void setCurrencySymbol(String value) {
         this.currencySymbol = value;
+    }
+
+    /**
+     * Gets the value of the orgAttachmentFileSizeLimit property.
+     * 
+     */
+    public int getOrgAttachmentFileSizeLimit() {
+        return orgAttachmentFileSizeLimit;
+    }
+
+    /**
+     * Sets the value of the orgAttachmentFileSizeLimit property.
+     * 
+     */
+    public void setOrgAttachmentFileSizeLimit(int value) {
+        this.orgAttachmentFileSizeLimit = value;
     }
 
     /**
@@ -313,6 +335,22 @@ public class GetUserInfoResult {
      */
     public void setRoleId(String value) {
         this.roleId = value;
+    }
+
+    /**
+     * Gets the value of the sessionSecondsValid property.
+     * 
+     */
+    public int getSessionSecondsValid() {
+        return sessionSecondsValid;
+    }
+
+    /**
+     * Sets the value of the sessionSecondsValid property.
+     * 
+     */
+    public void setSessionSecondsValid(int value) {
+        this.sessionSecondsValid = value;
     }
 
     /**
