@@ -60,9 +60,12 @@ public class BlocksIndexInput extends IndexInput {
             //System.out.println(" Closing Index File: " + this.indexFile.getName());
 			summary= null;
 			setOpen(false);
-			if (raf != null)
+			if (raf != null) {
 				raf.close();
-			vraf.close();
+			}
+			if (vraf != null) {
+				vraf.close();
+			}
 		}
 	}
     
