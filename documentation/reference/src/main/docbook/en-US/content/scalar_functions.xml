@@ -1854,7 +1854,7 @@
             <entry>
               <para>Retrieve the string form of the command payload
                 or null if no command payload was specified. The command
-                payload is set by a method on the Teiid JDBC API
+                payload is set by <code>TeiidStatement.setPayload</code> method on the Teiid JDBC API
                 extensions on a per-query basis.</para>
             </entry>
             <entry>
@@ -1868,7 +1868,10 @@
             <entry>
               <para>Cast the command payload object to a
                 java.util.Properties object and look up the specified key in
-                the object</para>
+                the object.  Returns null if the command payload is not a Properties object of the key does not exist.
+                The command payload is set by <code>TeiidStatement.setPayload</code> method on the Teiid JDBC API
+                extensions on a per-query basis.
+                </para>
             </entry>
             <entry>
               <para>key in {string}, return is string</para>
@@ -1880,8 +1883,8 @@
             </entry>
             <entry>
               <para>Retrieve a system environment property. The only key specific to the current session is ‘sessionid’.  
-                However the preferred mechanism for getting the session id is with the session_id() function.  
-                To prevent untrusted access to system properties, the use of this function must be specifically enabled in the &jboss-beans; file.
+                <note><para>The preferred mechanism for getting the session id is with the session_id() function.</para></note>  
+                To prevent untrusted access to system properties, this function is not enabled by default.  The ENV function may be enabled via the allowEnvFunction property in the &teiid-deployer-beans; file.
                 </para>
             </entry>
             <entry>
