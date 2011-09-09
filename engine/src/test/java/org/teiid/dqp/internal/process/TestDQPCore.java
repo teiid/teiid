@@ -120,7 +120,9 @@ public class TestDQPCore {
 			
 			@Override
 			public BufferManager getBufferManager() {
-				return BufferManagerFactory.createBufferManager();
+				BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
+				bm.setInlineLobs(false);
+				return bm;
 			}
 		});
         core.setCacheFactory(new DefaultCacheFactory());

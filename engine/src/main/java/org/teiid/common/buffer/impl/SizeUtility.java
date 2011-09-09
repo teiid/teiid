@@ -112,9 +112,8 @@ public final class SizeUtility {
 		} else if (type == DataTypeManager.DefaultDataClasses.BIG_DECIMAL) {
 		 	return isValueCacheEnabled?150:200;
 		}
-		return 512; //assumes buffer overhead in the case of lobs
-		//however the account for lobs is misleading as the lob
-		//references are not actually removed from memory
+		return 512; //this is is misleading for lobs
+		//most references are not actually removed from memory
 	}
     
     /**

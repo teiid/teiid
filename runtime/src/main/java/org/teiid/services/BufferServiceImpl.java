@@ -65,6 +65,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
     private int maxProcessingKb = BufferManager.DEFAULT_MAX_PROCESSING_KB;
     private int maxReserveKb = BufferManager.DEFAULT_RESERVE_BUFFER_KB;
     private long maxBufferSpace = FileStorageManager.DEFAULT_MAX_BUFFERSPACE;
+    private boolean inlineLobs = true;
 	private FileStorageManager fsm;
 	
     /**
@@ -144,6 +145,10 @@ public class BufferServiceImpl implements BufferService, Serializable {
 	public void setConnectorBatchSize(int size) {
 		this.connectorBatchSize = size;
 	}
+	
+	public void setInlineLobs(boolean inlineLobs) {
+		this.inlineLobs = inlineLobs;
+	}
 
 	public File getBufferDirectory() {
 		return bufferDir;
@@ -151,6 +156,10 @@ public class BufferServiceImpl implements BufferService, Serializable {
 
 	public boolean isUseDisk() {
 		return this.useDisk;
+	}
+	
+	public boolean isInlineLobs() {
+		return inlineLobs;
 	}
 
 	@ManagementProperty(description="The max row count of a batch sent internally within the query processor. Should be <= the connectorBatchSize. (default 256)")

@@ -22,7 +22,6 @@
 
 package org.teiid.core.types;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -106,32 +105,6 @@ public class BlobImpl extends BaseLob implements Blob, StreamProvider {
 			} catch (IOException e) {
 			}
         }
-    }
-
-    /**
-     * Returns the number of bytes in the <code>BLOB</code> value
-     * designated by this <code>Blob</code> object.
-     * @return length of the <code>BLOB</code> in bytes
-     */
-    public long length() throws SQLException{
-    	if (getStreamFactory().getLength() == -1) {
-    		InputStream is = new BufferedInputStream(getBinaryStream());
-			try {
-	    		long length = 0;
-	    		while (is.read() != -1) {
-	    			length++;
-	    		}
-				getStreamFactory().setLength(length);
-			} catch (IOException e) {
-				throw new SQLException(e);
-			} finally {
-				try {
-					is.close();
-				} catch (IOException e) {
-				}
-			}
-    	}
-        return getStreamFactory().getLength();
     }
 
     /**

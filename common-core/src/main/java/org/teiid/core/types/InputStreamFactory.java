@@ -36,11 +36,20 @@ import java.sql.SQLException;
 import java.sql.SQLXML;
 
 import javax.activation.DataSource;
+import javax.sql.rowset.serial.SerialBlob;
+import javax.sql.rowset.serial.SerialClob;
 import javax.xml.transform.Source;
 
 import org.teiid.core.util.ReaderInputStream;
 
 public abstract class InputStreamFactory implements Source {
+	
+	public enum StorageMode {
+		MEMORY, //TODO: sources may return Serial values that are much too large and we should convert them to persistent.
+		PERSISTENT,
+		FREE,
+		OTHER
+	}
 	
 	public interface StreamFactoryReference {
 		
@@ -49,7 +58,7 @@ public abstract class InputStreamFactory implements Source {
 	}
 	
 	private String systemId;
-	private long length = -1;
+	protected long length = -1;
 	
     /**
      * Get a new InputStream
@@ -67,10 +76,17 @@ public abstract class InputStreamFactory implements Source {
     	this.systemId = systemId;
     }
     
+    /**
+	 * @throws IOException  
+	 */
     public void free() throws IOException {
     	
     }
     
+    /**
+     * Length in bytes of the {@link InputStream}
+     * @return the length or -1 if the length is not known
+     */
     public long getLength() {
 		return length;
 	}
@@ -79,12 +95,15 @@ public abstract class InputStreamFactory implements Source {
 		this.length = length;
 	}
     
+    /**
+	 * @throws IOException  
+	 */
     public Reader getCharacterStream() throws IOException {
     	return null;
     }
     
-    public boolean isPersistent() {
-    	return false;
+    public StorageMode getStorageMode() {
+    	return StorageMode.OTHER;
     }
     
     public static class FileInputStreamFactory extends InputStreamFactory {
@@ -107,8 +126,8 @@ public abstract class InputStreamFactory implements Source {
     	}
     	
     	@Override
-    	public boolean isPersistent() {
-    		return true;
+    	public StorageMode getStorageMode() {
+    		return StorageMode.PERSISTENT;
     	}
     	
     }
@@ -162,6 +181,11 @@ public abstract class InputStreamFactory implements Source {
 		public OutputStream getOutputStream() throws IOException {
 			throw new UnsupportedOperationException();
 		}
+		
+		@Override
+		public StorageMode getStorageMode() {
+			return getStorageMode(clob);
+		}
     	
     }
     
@@ -184,11 +208,13 @@ public abstract class InputStreamFactory implements Source {
     	
     	@Override
     	public long getLength() {
-    		try {
-				return blob.length();
-			} catch (SQLException e) {
-				return -1;
-			}
+    		if (length == -1) {
+	    		try {
+					length = blob.length();
+				} catch (SQLException e) {
+				}
+    		}
+    		return length;
     	}
     	
     	@Override
@@ -205,7 +231,33 @@ public abstract class InputStreamFactory implements Source {
 		public OutputStream getOutputStream() throws IOException {
 			throw new UnsupportedOperationException();
 		}
+		
+		@Override
+		public StorageMode getStorageMode() {
+			return getStorageMode(blob);
+		}
     	
+    }
+    
+    public static StorageMode getStorageMode(Object lob) {
+    	if (lob instanceof Streamable<?>) {
+    		return getStorageMode(((Streamable<?>)lob).getReference());
+    	}
+    	if (lob instanceof SerialClob) {
+    		return StorageMode.MEMORY;
+    	}
+    	if (lob instanceof SerialBlob) {
+    		return StorageMode.MEMORY;
+    	}
+		if (lob instanceof BaseLob) {
+			BaseLob baseLob = (BaseLob)lob;
+			try {
+				return baseLob.getStreamFactory().getStorageMode();
+			} catch (SQLException e) {
+				return StorageMode.FREE;
+			}
+		}
+		return StorageMode.OTHER;
     }
     
     public static class SQLXMLInputStreamFactory extends InputStreamFactory implements DataSource {
@@ -247,6 +299,11 @@ public abstract class InputStreamFactory implements Source {
 		@Override
 		public OutputStream getOutputStream() throws IOException {
 			throw new UnsupportedOperationException();
+		}
+		
+		@Override
+		public StorageMode getStorageMode() {
+			return getStorageMode(sqlxml);
 		}
     	
     }

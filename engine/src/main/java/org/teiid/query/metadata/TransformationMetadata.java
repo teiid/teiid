@@ -125,8 +125,8 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		}
 		
 		@Override
-		public void free() throws IOException {
-			f.close();
+		public StorageMode getStorageMode() {
+			return StorageMode.PERSISTENT;
 		}
 	}
 

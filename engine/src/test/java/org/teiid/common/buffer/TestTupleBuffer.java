@@ -107,6 +107,7 @@ public class TestTupleBuffer {
 		x.setType(DataTypeManager.DefaultDataClasses.CLOB);
 		List<ElementSymbol> schema = Arrays.asList(x);
 		TupleBuffer tb = new TupleBuffer(new FakeBatchManager(), "x", schema, LobManager.getLobIndexes(schema), 32); //$NON-NLS-1$
+		tb.setInlineLobs(false);
 		ClobType c = new ClobType(new SerialClob(new char[0]));
 		TupleBatch batch = new TupleBatch(1, new List[] {Arrays.asList(c)});
 		tb.addTupleBatch(batch, false);

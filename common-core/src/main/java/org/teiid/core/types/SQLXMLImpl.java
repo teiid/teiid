@@ -71,6 +71,16 @@ public class SQLXMLImpl extends BaseLob implements SQLXML {
 			public InputStream getInputStream() throws IOException {
 				return new ByteArrayInputStream(bytes);
 			}
+			
+			@Override
+			public StorageMode getStorageMode() {
+				return StorageMode.MEMORY;
+			}
+			
+			@Override
+			public long getLength() {
+				return bytes.length;
+			}
 		});
     	setEncoding(Streamable.ENCODING);
 	}

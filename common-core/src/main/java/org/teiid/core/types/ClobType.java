@@ -24,6 +24,7 @@ package org.teiid.core.types;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.io.Reader;
@@ -35,6 +36,7 @@ import java.sql.SQLException;
 import javax.sql.rowset.serial.SerialClob;
 
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.ObjectConverterUtil;
 
 
 /**
@@ -72,17 +74,10 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
     public String getSubString(long pos, int length) throws SQLException {
         return this.reference.getSubString(pos, length);
     }
-
-    /** 
-     * @see java.sql.Clob#length()
-     */
-    public long length() throws SQLException {
-        if (this.length != -1) {
-            return this.length;
-        }
-        
-        this.length = this.reference.length();
-        return length;
+    
+    @Override
+    long computeLength() throws SQLException {
+        return this.reference.length();
     }
 
     /** 
@@ -218,12 +213,52 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
 	}
 	
 	@Override
-	public void writeExternal(ObjectOutput out) throws IOException {
-		try {
-			length();
-		} catch (SQLException e) {
+	protected void readReference(ObjectInput in) throws IOException {
+		char[] chars = new char[(int)length];
+		for (int i = 0; i < chars.length; i++) {
+			chars[i] = in.readChar();
 		}
-		super.writeExternal(out);
+		try {
+			this.reference = new SerialClob(chars);
+		} catch (SQLException e) {
+			throw new IOException(e);
+		}
+	}
+	
+	/**
+	 * Since we have the length in chars we'll just write out in double byte format.
+	 * These clobs should be small, so the wasted space should be minimal.
+	 */
+	@Override
+	protected void writeReference(final ObjectOutput out) throws IOException {
+		Writer w = new Writer() {
+			
+			@Override
+			public void write(char[] cbuf, int off, int len) throws IOException {
+				for (int i = off; i < len; i++) {
+					out.writeShort(cbuf[i]);
+				}
+			}
+			
+			@Override
+			public void flush() throws IOException {
+			}
+			
+			@Override
+			public void close() throws IOException {
+			}
+		};
+		Reader r;
+		try {
+			r = getCharacterStream();
+		} catch (SQLException e) {
+			throw new IOException(e);
+		}
+		try {
+			ObjectConverterUtil.write(w, r, (int)length, false);
+		} finally {
+			r.close();
+		}
 	}
 
 }

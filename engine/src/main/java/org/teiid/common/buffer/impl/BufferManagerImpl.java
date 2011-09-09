@@ -94,12 +94,12 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	
 	private final class CleanupHook implements org.teiid.common.buffer.BatchManager.CleanupHook {
 		
-		private long id;
+		private Long id;
 		private WeakReference<BatchManagerImpl> ref;
 		
-		CleanupHook(long id, BatchManagerImpl batchManager) {
+		CleanupHook(Long id, WeakReference<BatchManagerImpl> batchManager) {
 			this.id = id;
-			this.ref = new WeakReference<BatchManagerImpl>(batchManager);
+			this.ref = batchManager;
 		}
 		
 		public void cleanup() {
@@ -120,6 +120,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		private AtomicLong unusedSpace = new AtomicLong();
 		private int[] lobIndexes;
 		private SizeUtility sizeUtility;
+		private WeakReference<BatchManagerImpl> ref = new WeakReference<BatchManagerImpl>(this);
 
 		private BatchManagerImpl(String newID, int[] lobIndexes) {
 			this.id = newID;
@@ -136,7 +137,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		@Override
 		public ManagedBatch createManagedBatch(TupleBatch batch, boolean softCache)
 				throws TeiidComponentException {
-			ManagedBatchImpl mbi = new ManagedBatchImpl(batch, this, softCache);
+			ManagedBatchImpl mbi = new ManagedBatchImpl(batch, ref, softCache);
 			mbi.addToCache(false);
 			persistBatchReferences();
 			return mbi;
@@ -196,6 +197,11 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		public void remove() {
 			this.store.remove();
 		}
+		
+		@Override
+		public String toString() {
+			return id;
+		}
 	}
 
 	/**
@@ -205,10 +211,18 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		TreeMap<Long, ManagedBatchImpl> batches = new TreeMap<Long, ManagedBatchImpl>();
 		Long lastUsed = null;
 		
-		ManagedBatchImpl removeBatch(long row) {
+		ManagedBatchImpl removeBatch(Long row) {
 			ManagedBatchImpl result = batches.remove(row);
 			if (result != null) {
 				activeBatchKB -= result.sizeEstimate;
+				if (result.softCache) {
+					BatchSoftReference ref = (BatchSoftReference)result.batchReference;
+					if (ref != null) {
+						maxReserveKB += ref.sizeEstimate;
+						ref.sizeEstimate = 0;
+						ref.clear();
+					}
+				}
 			}
 			return result;
 		}
@@ -220,21 +234,22 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		private volatile TupleBatch activeBatch;
 		private volatile Reference<TupleBatch> batchReference;
 		private int beginRow;
-		private BatchManagerImpl batchManager;
-		private long id;
+		private WeakReference<BatchManagerImpl> managerRef;
+		private Long id;
 		private LobManager lobManager;
 		private int sizeEstimate;
 		
-		public ManagedBatchImpl(TupleBatch batch, BatchManagerImpl manager, boolean softCache) {
+		public ManagedBatchImpl(TupleBatch batch, WeakReference<BatchManagerImpl> ref, boolean softCache) {
 			this.softCache = softCache;
 			id = batchAdded.incrementAndGet();
 			this.activeBatch = batch;
 			this.beginRow = batch.getBeginRow();
-			this.batchManager = manager;
-			if (this.batchManager.lobIndexes != null) {
+			this.managerRef = ref;
+			BatchManagerImpl batchManager = ref.get();
+			if (batchManager.lobIndexes != null) {
 				this.lobManager = new LobManager();
 			}
-			sizeEstimate = (int) Math.max(1, manager.sizeUtility.getBatchSize(batch) / 1024);
+			sizeEstimate = (int) Math.max(1, batchManager.sizeUtility.getBatchSize(batch) / 1024);
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
 				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Add batch to BufferManager", id, "with size estimate", sizeEstimate); //$NON-NLS-1$ //$NON-NLS-2$
 			}
@@ -247,6 +262,11 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		}
 
 		private void addToCache(boolean update) {
+			BatchManagerImpl batchManager = managerRef.get();
+			if (batchManager == null) {
+				remove();
+				return;
+			}
 			synchronized (activeBatches) {
 				TupleBatch batch = this.activeBatch;
 				if (batch == null) {
@@ -272,11 +292,25 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 
 		@Override
 		public TupleBatch getBatch(boolean cache, String[] types) throws TeiidComponentException {
+			BatchManagerImpl batchManager = managerRef.get();
+			if (batchManager == null) {
+				remove();
+				throw new AssertionError("Already removed"); //$NON-NLS-1$
+			}
 			long reads = readAttempts.incrementAndGet();
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
 				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, batchManager.id, "getting batch", reads, "reference hits", referenceHit.get()); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			synchronized (activeBatches) {
+				for (int i = 0; i < 10; i++) {
+					BatchSoftReference ref = (BatchSoftReference)SOFT_QUEUE.poll();
+					if (ref == null) {
+						break;
+					}
+					maxReserveKB += ref.sizeEstimate;
+					ref.sizeEstimate = 0;
+					ref.clear();
+				}
 				TupleBufferInfo tbi = activeBatches.remove(batchManager.id);
 				if (tbi != null) { 
 					boolean put = true;
@@ -316,7 +350,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 					LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "reading batch from disk, total reads:", count); //$NON-NLS-1$
 				}
 				try {
-					this.batchManager.compactionLock.readLock().lock();
+					batchManager.compactionLock.readLock().lock();
 					long[] info = batchManager.physicalMapping.get(this.id);
 					Assertion.isNotNull(info, "Invalid batch " + id); //$NON-NLS-1$
 					ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(batchManager.store.createInputStream(info[0]), IO_BUFFER_SIZE));
@@ -340,12 +374,17 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		        } catch (ClassNotFoundException e) {
 		        	throw new TeiidComponentException(e, QueryPlugin.Util.getString("FileStoreageManager.error_reading", batchManager.id)); //$NON-NLS-1$
 		        } finally {
-		        	this.batchManager.compactionLock.readLock().unlock();
+		        	batchManager.compactionLock.readLock().unlock();
 		        }
 			}
 		}
 
 		public synchronized void persist() throws TeiidComponentException {
+			BatchManagerImpl batchManager = managerRef.get();
+			if (batchManager == null) {
+				remove();
+				return;
+			}
 			boolean lockheld = false;
             try {
 				TupleBatch batch = activeBatch;
@@ -376,7 +415,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 						}
 					}
 					if (softCache) {
-						this.batchReference = new SoftReference<TupleBatch>(batch);
+						this.batchReference = new BatchSoftReference(batch, SOFT_QUEUE, sizeEstimate);
+						synchronized (activeBatches) {
+							maxReserveKB -= sizeEstimate;
+						}
 					} else if (useWeakReferences) {
 						this.batchReference = new WeakReference<TupleBatch>(batch);
 					}
@@ -389,25 +431,38 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				persistent = true;
 				activeBatch = null;
 				if (lockheld) {
-					this.batchManager.compactionLock.writeLock().unlock();
+					batchManager.compactionLock.writeLock().unlock();
 				}
 			}
 		}
 
 		public void remove() {
-			cleanupManagedBatch(batchManager, id);
+			cleanupManagedBatch(managerRef.get(), id);
 		}
 				
 		@Override
 		public CleanupHook getCleanupHook() {
-			return new CleanupHook(id, batchManager);
+			return new CleanupHook(id, managerRef);
 		}
 		
 		@Override
 		public String toString() {
-			return "ManagedBatch " + batchManager.id + " " + this.id + " " + activeBatch; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			return "ManagedBatch " + managerRef.get() + " " + this.id + " " + activeBatch; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 	}
+	
+	private static class BatchSoftReference extends SoftReference<TupleBatch> {
+
+		private int sizeEstimate;
+		
+		public BatchSoftReference(TupleBatch referent,
+				ReferenceQueue<? super TupleBatch> q, int sizeEstimate) {
+			super(referent, q);
+			this.sizeEstimate = sizeEstimate;
+		}
+	}
+	
+	private static ReferenceQueue<? super TupleBatch> SOFT_QUEUE = new ReferenceQueue<TupleBatch>();
 	
 	// Configuration 
     private int connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
@@ -419,6 +474,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     private volatile int reserveBatchKB;
     private int maxActivePlans = DQPConfiguration.DEFAULT_MAX_ACTIVE_PLANS; //used as a hint to set the reserveBatchKB
     private boolean useWeakReferences = true;
+    private boolean inlineLobs = true;
 
     private ReentrantLock lock = new ReentrantLock(true);
     private Condition batchesFreed = lock.newCondition();
@@ -508,10 +564,11 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
         	LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating TupleBuffer:", newID, elements, Arrays.toString(tupleBuffer.getTypes()), "of type", tupleSourceType); //$NON-NLS-1$ //$NON-NLS-2$
         }
+    	tupleBuffer.setInlineLobs(inlineLobs);
         return tupleBuffer;
     }
     
-    private void cleanupManagedBatch(BatchManagerImpl batchManager, long id) {
+    private void cleanupManagedBatch(BatchManagerImpl batchManager, Long id) {
 		synchronized (activeBatches) {
 			TupleBufferInfo tbi = activeBatches.get(batchManager.id);
 			if (tbi != null && tbi.removeBatch(id) != null) {
@@ -728,6 +785,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	
 	public void setUseWeakReferences(boolean useWeakReferences) {
 		this.useWeakReferences = useWeakReferences;
+	}
+	
+	public void setInlineLobs(boolean inlineLobs) {
+		this.inlineLobs = inlineLobs;
 	}
 	
 }

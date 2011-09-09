@@ -30,6 +30,7 @@
   <LI><B>File Enhancements</B> - the file translator can now optionally (via the ExceptionIfFileNotFound property) throw an exception if the path refers to a file that doesn't exist.  The file resource adapter can be configured to map file names and can prevent parent path .. references.  See the Admin Guide or the file-ds.xml template for more.
   <LI><B>TEXTTABLE Enhancements</B> - TEXTTABLE can now parse fixed width files that do not use a row delimiter and can optionally produce fixed values that haven't been trimmed.
   <LI><B>Temp table transactions</B> - Internal materialized views and temp table usage from a session and within procedures can take advantage of greater transaction support.
+  <LI><B>Buffering Improvements</B> - Added the ability to inline memory based or small lobs and added tracking of the memory held by soft references.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -39,9 +40,10 @@
   <li>Support for using the FROM clause post item hints MAKEDEP/MAKENOTDEP has been deprecated.  Use the pre item comment hint syntax instead, e.g. /*+ MAKEDEP */ tbl
 </ul>
 
-<h4>from 7.4</h4>
+<h4>from 7.5</h4>
 <ul>
-  <li>Leave was added as a reserved word. 
+  <li>Leave was added as a reserved word.
+  <li>Lob inlining is incompatible with clients older than 7.6.  If a 7.6 server will have older clients that use lobs connect to it, then the BufferService property inlineLobs should be set to false in the teiid-jboss-beans.xml file.
 </ul>
 
 <h4>from 7.4</h4>

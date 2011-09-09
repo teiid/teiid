@@ -27,7 +27,8 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.nio.charset.Charset;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.sql.SQLException;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.core.CorePlugin;
 
@@ -44,7 +45,7 @@ public abstract class Streamable<T> implements Externalizable {
 
 	private static final long serialVersionUID = -8252488562134729374L;
 	
-	private static AtomicInteger counter = new AtomicInteger();
+	private static AtomicLong counter = new AtomicLong();
 	
 	public static final String ENCODING = "UTF-8"; //$NON-NLS-1$
 	public static final Charset CHARSET = Charset.forName(ENCODING);
@@ -66,9 +67,22 @@ public abstract class Streamable<T> implements Externalizable {
     	this.reference = reference;
     }
     
+    /**
+     * Returns the cached length.  May be binary or character based.
+     * @return
+     */
     public long getLength() {
 		return length;
 	}
+    
+    abstract long computeLength() throws SQLException;
+    
+    public long length() throws SQLException {
+    	if (length == -1) {
+    		length = computeLength();
+    	}
+    	return length;
+    }
     
     public T getReference() {
 		return reference;
@@ -82,9 +96,9 @@ public abstract class Streamable<T> implements Externalizable {
         return this.referenceStreamId;
     }
     
-    /*public void setReferenceStreamId(String id) {
+    public void setReferenceStreamId(String id) {
         this.referenceStreamId = id;
-    }*/
+    }
     
     @Override
     public String toString() {
@@ -99,12 +113,27 @@ public abstract class Streamable<T> implements Externalizable {
     		ClassNotFoundException {
     	length = in.readLong();
     	referenceStreamId = (String)in.readObject();
+    	if (referenceStreamId == null) {
+    		//we expect the data inline
+    		readReference(in);
+    	}
     }
+    
+    protected abstract void readReference(ObjectInput in) throws IOException;
     
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
+		try {
+			length();
+		} catch (SQLException e) {
+		}
     	out.writeLong(length);
     	out.writeObject(referenceStreamId);
+    	if (referenceStreamId == null) {
+    		writeReference(out);
+    	}
     }
-
+    
+    protected abstract void writeReference(ObjectOutput out) throws IOException;
+    
 }

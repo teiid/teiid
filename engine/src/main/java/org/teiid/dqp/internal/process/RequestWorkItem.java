@@ -872,6 +872,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 
 	private void doneProducingBatches() {
 		this.doneProducingBatches = true;
+		//TODO: we could perform more tracking to know what source lobs are in use
+		if (this.resultsBuffer.getLobCount() == 0) {
+			for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {
+				connectorRequest.fullyCloseSource();
+		    }
+		}
 		dqpCore.finishProcessing(this);
 	}
 	

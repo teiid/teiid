@@ -56,6 +56,9 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 
 	@Override
 	public long getLength() {
+		if (fsos != null && !fsos.bytesWritten()) {
+			return fsos.getCount();
+		}
 		return lobBuffer.getLength();
 	}
 
@@ -86,7 +89,10 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 	}
 	
 	@Override
-	public boolean isPersistent() {
-		return fsos == null || fsos.bytesWritten();
+	public StorageMode getStorageMode() {
+		if (fsos == null) {
+			return StorageMode.PERSISTENT;
+		}
+		return StorageMode.MEMORY;
 	}
 }

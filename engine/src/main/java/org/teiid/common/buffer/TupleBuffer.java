@@ -94,6 +94,12 @@ public class TupleBuffer {
 		this.batchSize = batchSize;		
 	}
 	
+	public void setInlineLobs(boolean inline) {
+		if (this.lobManager != null) {
+			this.lobManager.setInlineLobs(inline);
+		}
+	}
+	
 	public String getId() {
 		if (this.uuid == null) {
 			this.uuid = java.util.UUID.randomUUID().toString();
@@ -371,6 +377,13 @@ public class TupleBuffer {
 	
 	public String[] getTypes() {
 		return types;
+	}
+	
+	public int getLobCount() {
+		if (this.lobManager == null) {
+			return 0;
+		}
+		return this.lobManager.getLobCount();
 	}
 	
 }

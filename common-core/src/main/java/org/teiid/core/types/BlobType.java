@@ -24,6 +24,7 @@ package org.teiid.core.types;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.sql.Blob;
@@ -32,6 +33,7 @@ import java.sql.SQLException;
 import javax.sql.rowset.serial.SerialBlob;
 
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.ObjectConverterUtil;
 
 
 /**
@@ -61,18 +63,10 @@ public final class BlobType extends Streamable<Blob> implements Blob {
     public byte[] getBytes(long pos, int length) throws SQLException {
         return this.reference.getBytes(pos, length);
     }
-
-    /** 
-     * @see java.sql.Blob#length()
-     */
-    public long length() throws SQLException {
-        //caching the length
-        if (this.length != -1) {
-            return this.length;
-        }
-        // if did not find before then do it again.
-        this.length = this.reference.length();
-        return length;
+    
+    @Override
+    long computeLength() throws SQLException {
+        return this.reference.length();
     }
     
     /** 
@@ -142,12 +136,38 @@ public final class BlobType extends Streamable<Blob> implements Blob {
 	}
 	
 	@Override
-	public void writeExternal(ObjectOutput out) throws IOException {
+	protected void readReference(ObjectInput in) throws IOException {
+		byte[] bytes = new byte[(int)getLength()];
+		in.readFully(bytes);
 		try {
-			length();
+			this.reference = new SerialBlob(bytes);
 		} catch (SQLException e) {
+			throw new IOException(e);
 		}
-		super.writeExternal(out);
+	}
+	
+	@Override
+	protected void writeReference(final ObjectOutput out) throws IOException {
+		try {
+			writeBinary(out, getBinaryStream(), (int)length);
+		} catch (SQLException e) {
+			throw new IOException();
+		}
+	}
+
+	static void writeBinary(final ObjectOutput out, InputStream is, int length) throws IOException {
+		OutputStream os = new OutputStream() {
+			
+			@Override
+			public void write(int b) throws IOException {
+				out.write(b);
+			}
+		};
+		try {
+			ObjectConverterUtil.write(os, is, length, false);
+		} finally {
+			is.close();
+		}
 	}
 	
 }

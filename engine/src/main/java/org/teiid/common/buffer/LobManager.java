@@ -45,6 +45,10 @@ import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.types.XMLType;
+import org.teiid.core.types.InputStreamFactory.BlobInputStreamFactory;
+import org.teiid.core.types.InputStreamFactory.ClobInputStreamFactory;
+import org.teiid.core.types.InputStreamFactory.SQLXMLInputStreamFactory;
+import org.teiid.core.types.InputStreamFactory.StorageMode;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.symbol.Expression;
@@ -55,6 +59,16 @@ import org.teiid.query.sql.symbol.Expression;
  */
 public class LobManager {
 	private Map<String, Streamable<?>> lobReferences = new ConcurrentHashMap<String, Streamable<?>>();
+	private boolean inlineLobs = true;
+	private int maxMemoryBytes = DataTypeManager.MAX_LOB_MEMORY_BYTES;
+	
+	public void setInlineLobs(boolean trackMemoryLobs) {
+		this.inlineLobs = trackMemoryLobs;
+	}
+	
+	public void setMaxMemoryBytes(int maxMemoryBytes) {
+		this.maxMemoryBytes = maxMemoryBytes;
+	}
 
 	public void updateReferences(int[] lobIndexes, List<?> tuple)
 			throws TeiidComponentException {
@@ -64,6 +78,16 @@ public class LobManager {
 				continue;
 			}
 			Streamable lob = (Streamable) anObj;
+			try {
+				if (inlineLobs 
+						&& (InputStreamFactory.getStorageMode(lob) == StorageMode.MEMORY
+						|| lob.length()*(lob instanceof ClobType?2:1) <= maxMemoryBytes)) {
+					lob.setReferenceStreamId(null);
+					continue;
+				}
+			} catch (SQLException e) {
+				//presumably the lob is bad, but let it slide for now
+			}
 			if (lob.getReference() == null) {
 				lob.setReference(getLobReference(lob.getReferenceStreamId()).getReference());
 			} else {
@@ -81,14 +105,14 @@ public class LobManager {
     	return lob;
     }
         
-    public static int[] getLobIndexes(List expressions) {
+    public static int[] getLobIndexes(List<? extends Expression> expressions) {
     	if (expressions == null) {
     		return null;
     	}
 		int[] result = new int[expressions.size()];
 		int resultIndex = 0;
 	    for (int i = 0; i < expressions.size(); i++) {
-	    	Expression expr = (Expression) expressions.get(i);
+	    	Expression expr = expressions.get(i);
 	        if (DataTypeManager.isLOB(expr.getType()) || expr.getType() == DataTypeManager.DefaultDataClasses.OBJECT) {
 	        	result[resultIndex++] = i;
 	        }
@@ -115,7 +139,7 @@ public class LobManager {
 			try {
 				BaseLob baseLob = (BaseLob)lob.getReference();
 				InputStreamFactory isf = baseLob.getStreamFactory();
-				if (isf.isPersistent()) {
+				if (isf.getStorageMode() == StorageMode.PERSISTENT) {
 					return lob;
 				}
 			} catch (SQLException e) {
@@ -127,19 +151,15 @@ public class LobManager {
 		Streamable<?> persistedLob;
 					
 		try {
-			InputStreamFactory isf = new InputStreamFactory() {
-				@Override
-				public InputStream getInputStream() throws IOException {
-			    	if (lob instanceof BlobType) {
-			    		return new BlobInputStreamFactory((Blob)lob).getInputStream();
-			    	}
-			    	else if (lob instanceof ClobType) {
-			    		return new ClobInputStreamFactory((Clob)lob).getInputStream();
-			    	}
-			    	return new SQLXMLInputStreamFactory((SQLXML)lob).getInputStream();
-				}					
-			};
-			InputStream is = isf.getInputStream();
+			InputStream is = null;
+	    	if (lob instanceof BlobType) {
+	    		is = new BlobInputStreamFactory((Blob)lob).getInputStream();
+	    	}
+	    	else if (lob instanceof ClobType) {
+	    		is = new ClobInputStreamFactory((Clob)lob).getInputStream();
+	    	} else {
+	    		is = new SQLXMLInputStreamFactory((SQLXML)lob).getInputStream();
+	    	}
 			OutputStream fsos = store.createOutputStream();
 			length = ObjectConverterUtil.write(fsos, is, bytes, -1);
 		} catch (IOException e) {
@@ -156,8 +176,8 @@ public class LobManager {
 			}
 			
 			@Override
-			public boolean isPersistent() {
-				return true;
+			public StorageMode getStorageMode() {
+				return StorageMode.PERSISTENT;
 			}
 		};			
 		
@@ -177,5 +197,9 @@ public class LobManager {
 			throw new TeiidComponentException(e);
 		}		
 		return persistedLob;		
+	}
+	
+	public int getLobCount() {
+		return this.lobReferences.size();
 	}
 }

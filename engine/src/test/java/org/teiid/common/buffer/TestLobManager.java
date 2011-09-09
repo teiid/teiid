@@ -66,6 +66,7 @@ public class TestLobManager {
 		}));		
 		
 		LobManager lobManager = new LobManager();
+		lobManager.setMaxMemoryBytes(4);
 		lobManager.updateReferences(new int[] {0,1}, Arrays.asList(clob, blob));
 		lobManager.persist(fs);
 		
