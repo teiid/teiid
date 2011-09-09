@@ -25,6 +25,7 @@ package org.teiid.dqp.internal.process;
 import static org.junit.Assert.*;
 
 import java.sql.ResultSet;
+import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -35,6 +36,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.adminapi.DataPolicy;
+import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.DefaultCacheFactory;
@@ -104,6 +107,9 @@ public class TestDQPCore {
         DQPWorkContext context = RealMetadataFactory.buildWorkContext(RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.exampleBQTCached().getMetadataStore(), "bqt"));
         context.getVDB().getModel("BQT3").setVisible(false); //$NON-NLS-1$
         context.getVDB().getModel("VQT").setVisible(false); //$NON-NLS-1$
+        HashMap<String, DataPolicy> policies = new HashMap<String, DataPolicy>();
+        policies.put("foo", new DataPolicyMetadata());
+        context.setPolicies(policies);
 
         ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
         context.getVDB().addAttchment(ConnectorManagerRepository.class, repo);
@@ -124,6 +130,9 @@ public class TestDQPCore {
         config.setMaxActivePlans(1);
         config.setUserRequestSourceConcurrency(2);
         config.setResultsetCacheConfig(new CacheConfiguration());
+        DefaultAuthorizationValidator daa = new DefaultAuthorizationValidator();
+        daa.setPolicyDecider(new DataRolePolicyDecider());
+        config.setAuthorizationValidator(daa);
         core.start(config);
         core.getPrepPlanCache().setModTime(1);
         core.getRsCache().setModTime(1);
@@ -150,6 +159,20 @@ public class TestDQPCore {
 
     @Test public void testRequest1() throws Exception {
     	helpExecute("SELECT IntKey FROM BQT1.SmallA", "a"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testHasRole() throws Exception {
+        String sql = "SELECT hasRole('foo')"; //$NON-NLS-1$
+        String userName = "logon"; //$NON-NLS-1$
+        ResultsMessage rm = helpExecute(sql, userName);
+        assertTrue((Boolean)rm.getResults()[0].get(0));
+    }
+    
+    @Test public void testNotHasRole() throws Exception {
+        String sql = "SELECT hasRole('bar')"; //$NON-NLS-1$
+        String userName = "logon"; //$NON-NLS-1$
+        ResultsMessage rm = helpExecute(sql, userName);
+        assertFalse((Boolean)rm.getResults()[0].get(0));
     }
 
     @Test public void testUser1() throws Exception {
