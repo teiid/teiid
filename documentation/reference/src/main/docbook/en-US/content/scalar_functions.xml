@@ -2083,10 +2083,12 @@
     with the security system.</para>
     <section>
     	<title>HASROLE</title>
-    	<para>Whether the current caller has the role roleName.</para>
+    	<para>Whether the current caller has the Teiid data role roleName.</para>
     	<para><synopsis>hasRole([roleType,] roleName)</synopsis></para>
         <para>roleName must be a string, the return type is boolean.</para>
-        <para>The two argument form is provided for backwards compatibility. roleType is a string and must be 'data'</para>
+        <para>The two argument form is provided for backwards compatibility. roleType is a string and must be 'data'.</para>
+        <para>Role names are case-sensitive and only match Teiid <xref linkend="dataroles"/>. 
+        JAAS roles/groups names are not valid for this function - unless there is corresponding data role with the same name.</para>
     </section>
   </section>
   <section>
