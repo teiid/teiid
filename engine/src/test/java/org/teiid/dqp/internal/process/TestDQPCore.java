@@ -302,8 +302,8 @@ public class TestDQPCore {
 	}
 	
     @Test public void testBufferLimit() throws Exception {
-    	//the sql should return 100 rows
-        String sql = "SELECT A.IntKey FROM BQT1.SmallA as A, BQT1.SmallA as B"; //$NON-NLS-1$
+    	//the sql should return 400 rows
+        String sql = "SELECT A.IntKey FROM BQT1.SmallA as A, BQT1.SmallA as B, (select intkey from BQT1.SmallA limit 4) as C"; //$NON-NLS-1$
         String userName = "1"; //$NON-NLS-1$
         String sessionid = "1"; //$NON-NLS-1$
         
@@ -315,27 +315,29 @@ public class TestDQPCore {
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
         ResultsMessage rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
-        assertEquals(2, rm.getResults().length);
+
+        int rowsPerBatch = 8;
+		assertEquals(rowsPerBatch, rm.getResults().length);
         RequestWorkItem item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
 
-        message = core.processCursorRequest(reqMsg.getExecutionId(), 3, 2);
+        message = core.processCursorRequest(reqMsg.getExecutionId(), 9, rowsPerBatch);
         rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
-        assertEquals(2, rm.getResults().length);
+        assertEquals(rowsPerBatch, rm.getResults().length);
         //ensure that we are idle
         for (int i = 0; i < 10 && item.getThreadState() != ThreadState.IDLE; i++) {
         	Thread.sleep(100);
         }
         assertEquals(ThreadState.IDLE, item.getThreadState());
-        assertTrue(item.resultsBuffer.getManagedRowCount() <= 46);
+        assertTrue(item.resultsBuffer.getManagedRowCount() <= rowsPerBatch*23);
         //pull the rest of the results
         for (int j = 0; j < 48; j++) {
             item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
 
-	        message = core.processCursorRequest(reqMsg.getExecutionId(), j * 2 + 5, 2);
+	        message = core.processCursorRequest(reqMsg.getExecutionId(), (j + 2) * rowsPerBatch + 1, rowsPerBatch);
 	        rm = message.get(5000, TimeUnit.MILLISECONDS);
 	        assertNull(rm.getException());
-	        assertEquals(2, rm.getResults().length);
+	        assertEquals(rowsPerBatch, rm.getResults().length);
         }
     }
     
@@ -353,7 +355,7 @@ public class TestDQPCore {
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
         ResultsMessage rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
-        assertEquals(2, rm.getResults().length);
+        assertEquals(8, rm.getResults().length);
         RequestWorkItem item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
         assertEquals(100, item.resultsBuffer.getRowCount());
     }

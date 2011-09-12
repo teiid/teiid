@@ -163,7 +163,7 @@ public class ProcedurePlan extends ProcessorPlan {
      */
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {       
         this.bufferMgr = bufferMgr;
-        this.batchSize = bufferMgr.getProcessorBatchSize();
+        this.batchSize = bufferMgr.getProcessorBatchSize(getOutputElements());
         setContext(context.clone());
         this.dataMgr = new ProcessorDataManager() {
 			

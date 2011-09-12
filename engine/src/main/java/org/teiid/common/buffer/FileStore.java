@@ -215,7 +215,7 @@ public abstract class FileStore {
 
 	protected abstract void writeDirect(byte[] bytes, int offset, int length) throws TeiidComponentException;
 
-	public void remove() {
+	public synchronized void remove() {
 		if (!this.removed) {
 			this.removed = true;
 			this.removeDirect();

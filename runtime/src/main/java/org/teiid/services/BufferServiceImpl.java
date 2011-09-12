@@ -34,6 +34,7 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.common.buffer.impl.FileStorageManager;
 import org.teiid.common.buffer.impl.MemoryStorageManager;
+import org.teiid.common.buffer.impl.SplittableStorageManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.FileUtils;
@@ -61,7 +62,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
 	private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
 	private int connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
     private int maxOpenFiles = FileStorageManager.DEFAULT_MAX_OPEN_FILES;
-    private long maxFileSize = FileStorageManager.DEFAULT_MAX_FILESIZE; // 2GB
+    private long maxFileSize = SplittableStorageManager.DEFAULT_MAX_FILESIZE; // 2GB
     private int maxProcessingKb = BufferManager.DEFAULT_MAX_PROCESSING_KB;
     private int maxReserveKb = BufferManager.DEFAULT_RESERVE_BUFFER_KB;
     private long maxBufferSpace = FileStorageManager.DEFAULT_MAX_BUFFERSPACE;
@@ -100,11 +101,12 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 // Get the properties for FileStorageManager and create.
                 fsm = new FileStorageManager();
                 fsm.setStorageDirectory(bufferDir.getCanonicalPath());
-                fsm.setMaxFileSize(maxFileSize);
                 fsm.setMaxOpenFiles(maxOpenFiles);
                 fsm.setMaxBufferSpace(maxBufferSpace*MB);
-                fsm.initialize();        
-                this.bufferMgr.setStorageManager(fsm);
+                SplittableStorageManager ssm = new SplittableStorageManager(fsm);
+                ssm.setMaxFileSize(maxFileSize);
+                ssm.initialize();        
+                this.bufferMgr.setStorageManager(ssm);
             } else {
             	this.bufferMgr.setStorageManager(new MemoryStorageManager());
             }

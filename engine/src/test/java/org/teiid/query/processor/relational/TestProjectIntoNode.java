@@ -72,10 +72,9 @@ public class TestProjectIntoNode {
         ElementSymbol elementSymbol_2 = new ElementSymbol("myGroup.myElement2"); //$NON-NLS-1$
         elementSymbol_1.setType(Integer.class);
         elementSymbol_2.setType(String.class);
-        ArrayList elements = new ArrayList();
-        elements.add(elementSymbol_1);
-        elements.add(elementSymbol_2);
+        List<ElementSymbol> elements = Arrays.asList(elementSymbol_1, elementSymbol_2);
         node.setIntoElements(elements); 
+        child.setElements(elements);
         node.setMode(mode);
         node.setModelName("myModel"); //$NON-NLS-1$
         

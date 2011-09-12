@@ -26,6 +26,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
@@ -78,8 +79,6 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 
 	    private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
 	    
-	    private int connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
-
 	    private String userName;
 	    
 	    private Serializable commandPayload;
@@ -312,19 +311,14 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
         return this.globalState.collectNodeStatistics;
     }
     
-    public int getConnectorBatchSize() {
-        return this.globalState.connectorBatchSize;
-    }
-    
-    public void setConnectorBatchSize(int connectorBatchSize) {
-        this.globalState.connectorBatchSize = connectorBatchSize;
-    }
-
-    
+    @Override
     public int getProcessorBatchSize() {
         return this.globalState.processorBatchSize;
     }
-
+    
+    public int getProcessorBatchSize(List<Expression> schema) {
+    	return this.globalState.bufferManager.getProcessorBatchSize(schema);
+    }
     
     public void setProcessorBatchSize(int processorBatchSize) {
         this.globalState.processorBatchSize = processorBatchSize;

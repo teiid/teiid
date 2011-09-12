@@ -62,7 +62,8 @@ public class STree implements Cloneable {
     protected BatchManager keyManager;
     protected BatchManager leafManager;
     protected ListNestedSortComparator comparator;
-    protected int pageSize;
+    private int pageSize;
+    protected int leafSize;
     protected int keyLength;
     protected String[] types;
     protected String[] keytypes;
@@ -76,6 +77,7 @@ public class STree implements Cloneable {
 			BatchManager leafManager,
             final ListNestedSortComparator comparator,
             int pageSize,
+            int leafSize,
             int keyLength,
             String[] types) {
 		randomSeed = seedGenerator.nextInt() | 0x00000100; // ensure nonzero
@@ -90,6 +92,7 @@ public class STree implements Cloneable {
 			mask <<= 1;
 			mask++;
 		}
+		this.leafSize = leafSize;
 		this.keyLength = keyLength;
 		this.types = types;
 		this.keytypes = Arrays.copyOf(types, keyLength);
@@ -276,10 +279,10 @@ public class STree implements Cloneable {
 			} else {
 				level = randomLevel();
 			}
-		} else if (!places.isEmpty() && places.getLast().values.getTuples().size() == pageSize) {
+		} else if (!places.isEmpty() && places.getLast().values.getTuples().size() == getPageSize(true)) {
 			int row = rowCount.get();
-			while (row != 0 && row%pageSize == 0) {
-				row = (row - pageSize + 1)/pageSize;
+			while (row != 0 && row%getPageSize(true) == 0) {
+				row = (row - getPageSize(true) + 1)/getPageSize(true);
 				level++;
 			}
 		}
@@ -312,9 +315,9 @@ public class STree implements Cloneable {
 			return 0;
 		}
 		int logSize = 1;
-		while (sizeHint > this.pageSize) {
+		while (sizeHint > this.getPageSize(logSize==0)) {
 			logSize++;
-			sizeHint/=this.pageSize;
+			sizeHint/=this.getPageSize(logSize==0);
 		}
 		return logSize;
 	}
@@ -329,8 +332,8 @@ public class STree implements Cloneable {
 	SPage insert(List k, SearchResult result, SearchResult parent, Object value, boolean ordered) throws TeiidComponentException {
 		SPage page = result.page;
 		int index = -result.index - 1;
-		if (result.values.getTuples().size() == pageSize) {
-			boolean leaf = !(value instanceof SPage);
+		boolean leaf = !(value instanceof SPage);
+		if (result.values.getTuples().size() == getPageSize(leaf)) {
 			SPage nextPage = new SPage(this, leaf);
 			TupleBatch nextValues = nextPage.getValues();
 			nextPage.next = page.next;
@@ -342,17 +345,17 @@ public class STree implements Cloneable {
 			boolean inNext = false;
 			if (!ordered) {
 				//split the values
-				nextValues.getTuples().addAll(result.values.getTuples().subList(pageSize/2, pageSize));
-				result.values.getTuples().subList(pageSize/2, pageSize).clear();
+				nextValues.getTuples().addAll(result.values.getTuples().subList(getPageSize(leaf)/2, getPageSize(leaf)));
+				result.values.getTuples().subList(getPageSize(leaf)/2, getPageSize(leaf)).clear();
 				if (!leaf) {
-					nextPage.children.addAll(page.children.subList(pageSize/2, pageSize));
-					page.children.subList(pageSize/2, pageSize).clear();
+					nextPage.children.addAll(page.children.subList(getPageSize(leaf)/2, getPageSize(false)));
+					page.children.subList(getPageSize(false)/2, getPageSize(false)).clear();
 				}
-				if (index <= pageSize/2) {
+				if (index <= getPageSize(leaf)/2) {
 					setValue(index, k, value, result.values, page);
 				} else {
 					inNext = true;
-					setValue(index - pageSize/2, k, value, nextValues, nextPage);
+					setValue(index - getPageSize(leaf)/2, k, value, nextValues, nextPage);
 				}
 				page.setValues(result.values);
 				if (parent != null) {
@@ -396,7 +399,9 @@ public class STree implements Cloneable {
 				continue;
 			}
 			searchResult.values.getTuples().remove(searchResult.index);
+			boolean leaf = true;
 			if (searchResult.page.children != null) {
+				leaf = false;
 				searchResult.page.children.remove(searchResult.index);
 			}
 			int size = searchResult.values.getTuples().size();
@@ -423,18 +428,18 @@ public class STree implements Cloneable {
 					header[0] = new SPage(this, true);
 				}
 				continue;
-			} else if (size < pageSize/2) {
+			} else if (size < getPageSize(leaf)/2) {
 				//check for merge
 				if (searchResult.page.next != null) {
 					TupleBatch nextValues = searchResult.page.next.getValues();
-					if (nextValues.getTuples().size() < pageSize/4) {
+					if (nextValues.getTuples().size() < getPageSize(leaf)/4) {
 						SPage.merge(places, nextValues, searchResult.page, searchResult.values);
 						continue;
 					}
 				}
 				if (searchResult.page.prev != null) {
 					TupleBatch prevValues = searchResult.page.prev.getValues();
-					if (prevValues.getTuples().size() < pageSize/4) {
+					if (prevValues.getTuples().size() < getPageSize(leaf)/4) {
 						SPage.merge(places, searchResult.values, searchResult.page.prev, prevValues);
 						continue;
 					}
@@ -537,4 +542,11 @@ public class STree implements Cloneable {
 		}
 	}
 	
+	public int getPageSize(boolean leaf) {
+		if (leaf) {
+			return leafSize;
+		}
+		return pageSize;
+	}
+
 }

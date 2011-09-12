@@ -31,6 +31,7 @@ import org.junit.Test;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.common.buffer.impl.FileStorageManager;
+import org.teiid.common.buffer.impl.SplittableStorageManager;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.sql.symbol.Constant;
@@ -53,7 +54,8 @@ public class TestLocalBufferService {
         assertTrue(svc.isUseDisk());
         
         BufferManagerImpl mgr = (BufferManagerImpl) svc.getBufferManager();
-        assertTrue(((FileStorageManager)mgr.getStorageManager()).getDirectory().endsWith(svc.getBufferDirectory().getName()));
+        SplittableStorageManager ssm = (SplittableStorageManager)mgr.getStorageManager();
+        assertTrue(((FileStorageManager)ssm.getStorageManager()).getDirectory().endsWith(svc.getBufferDirectory().getName()));
     }
 
     @Test public void testCheckMemPropertyGotSet2() throws Exception {
@@ -91,7 +93,8 @@ public class TestLocalBufferService {
         svc.start();
         
         BufferManager mgr = svc.getBufferManager();
-        assertEquals(13141, mgr.getSchemaSize(schema));
+        assertEquals(6570, mgr.getSchemaSize(schema));
+        assertEquals(256, mgr.getProcessorBatchSize(schema));
     }
     
 }

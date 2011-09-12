@@ -25,6 +25,8 @@ package org.teiid.common.buffer.impl;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.types.DataTypeManager;
@@ -39,6 +41,27 @@ import org.teiid.core.types.DataTypeManager;
  */
 public final class SizeUtility {
 	public static final int REFERENCE_SIZE = 8;
+	
+	private static Map<Class<?>, int[]> SIZE_ESTIMATES = new HashMap<Class<?>, int[]>(128);
+	
+	static {
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.STRING, new int[] {100, 256});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.DATE, new int[] {20, 28});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.TIME, new int[] {20, 28});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.TIMESTAMP, new int[] {20, 28});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.LONG, new int[] {12, 16});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.DOUBLE, new int[] {12, 16});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.INTEGER, new int[] {6, 12});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.FLOAT, new int[] {6, 12});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.CHAR, new int[] {4, 10});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.SHORT, new int[] {4, 10});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.OBJECT, new int[] {1024, 1024});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.NULL, new int[] {0, 0});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.BYTE, new int[] {1, 1});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.BOOLEAN, new int[] {1, 1});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.BIG_INTEGER, new int[] {75, 100});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.BIG_DECIMAL, new int[] {150, 200});
+	}
 	
 	private long bigIntegerEstimate;
 	private long bigDecimalEstimate;
@@ -85,35 +108,12 @@ public final class SizeUtility {
     
     static int getSize(boolean isValueCacheEnabled,
 			Class<?> type) {
-		if (type == DataTypeManager.DefaultDataClasses.STRING) {
-			return isValueCacheEnabled?100:256; //assumes an "average" string length of approximately 100 chars
-		} else if (type == DataTypeManager.DefaultDataClasses.DATE 
-				|| type == DataTypeManager.DefaultDataClasses.TIME 
-				|| type == DataTypeManager.DefaultDataClasses.TIMESTAMP) {
-			return isValueCacheEnabled?20:28;
-		} else if (type == DataTypeManager.DefaultDataClasses.LONG 
-				|| type	 == DataTypeManager.DefaultDataClasses.DOUBLE) {
-			return isValueCacheEnabled?12:16;
-		} else if (type == DataTypeManager.DefaultDataClasses.INTEGER 
-				|| type == DataTypeManager.DefaultDataClasses.FLOAT) {
-			return isValueCacheEnabled?6:12;
-		} else if (type == DataTypeManager.DefaultDataClasses.CHAR 
-				|| type == DataTypeManager.DefaultDataClasses.SHORT) {
-			return isValueCacheEnabled?4:10;
-		} else if (type == DataTypeManager.DefaultDataClasses.OBJECT) {
-			return 1024;
-		} else if (type == DataTypeManager.DefaultDataClasses.NULL) {
-			return 0; //it's free
-		} else if (type == DataTypeManager.DefaultDataClasses.BYTE
-				|| type == DataTypeManager.DefaultDataClasses.BOOLEAN) {
-			return 1; //should always be value cached, but there's a small chance it's not
-		} else if (type == DataTypeManager.DefaultDataClasses.BIG_INTEGER){
-			return isValueCacheEnabled?75:100;
-		} else if (type == DataTypeManager.DefaultDataClasses.BIG_DECIMAL) {
-		 	return isValueCacheEnabled?150:200;
-		}
-		return 512; //this is is misleading for lobs
-		//most references are not actually removed from memory
+    	int[] vals = SIZE_ESTIMATES.get(type);
+    	if (vals == null) {
+			return 512; //this is is misleading for lobs
+			//most references are not actually removed from memory
+    	}
+    	return vals[isValueCacheEnabled?0:1];
 	}
     
     /**

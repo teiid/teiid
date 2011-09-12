@@ -29,13 +29,11 @@ import java.io.RandomAccessFile;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.StorageManager;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.QueryPlugin;
@@ -47,7 +45,6 @@ import org.teiid.query.QueryPlugin;
 public class FileStorageManager implements StorageManager {
 	
 	public static final int DEFAULT_MAX_OPEN_FILES = 64;
-	public static final long DEFAULT_MAX_FILESIZE = 2L * 1024L;
 	public static final long DEFAULT_MAX_BUFFERSPACE = 50L * 1024L * 1024L * 1024L;
 	private static final String FILE_PREFIX = "b_"; //$NON-NLS-1$
 	
@@ -97,7 +94,7 @@ public class FileStorageManager implements StorageManager {
 	
 	public class DiskStore extends FileStore {
 	    private String name;
-		private TreeMap<Long, FileInfo> storageFiles = new TreeMap<Long, FileInfo>(); 
+		private FileInfo fileInfo; 
 	    
 	    public DiskStore(String name) {
 			this.name = name;
@@ -106,20 +103,15 @@ public class FileStorageManager implements StorageManager {
 	    /**
 	     * Concurrent reads are possible, but only after writing is complete.
 	     */
-	    public int readDirect(long fileOffset, byte[] b, int offSet, int length) throws TeiidComponentException {
-	    	Map.Entry<Long, FileInfo> entry = storageFiles.floorEntry(fileOffset);
-	    	Assertion.isNotNull(entry);
-			FileInfo fileInfo = entry.getValue();
-			synchronized (fileInfo) {
-				try {
-					RandomAccessFile fileAccess = fileInfo.open();
-			        fileAccess.seek(fileOffset - entry.getKey());
-			        return fileAccess.read(b, offSet, length);
-				} catch (IOException e) {
-					throw new TeiidComponentException(e, QueryPlugin.Util.getString("FileStoreageManager.error_reading", fileInfo.file.getAbsoluteFile())); //$NON-NLS-1$
-				} finally {
-					fileInfo.close();
-				}
+	    public synchronized int readDirect(long fileOffset, byte[] b, int offSet, int length) throws TeiidComponentException {
+			try {
+				RandomAccessFile fileAccess = fileInfo.open();
+		        fileAccess.seek(fileOffset);
+		        return fileAccess.read(b, offSet, length);
+			} catch (IOException e) {
+				throw new TeiidComponentException(e, QueryPlugin.Util.getString("FileStoreageManager.error_reading", fileInfo.file.getAbsoluteFile())); //$NON-NLS-1$
+			} finally {
+				fileInfo.close();
 			}
 	    }
 
@@ -132,26 +124,14 @@ public class FileStorageManager implements StorageManager {
 				usedBufferSpace.addAndGet(-length);
 				throw new TeiidComponentException(QueryPlugin.Util.getString("FileStoreageManager.space_exhausted", maxBufferSpace)); //$NON-NLS-1$
 			}
-			Map.Entry<Long, FileInfo> entry = this.storageFiles.lastEntry();
-			boolean createNew = false;
-			FileInfo fileInfo = null;
 			long fileOffset = 0;
-			if (entry == null) {
-				createNew = true;
-			} else {
-				fileInfo = entry.getValue();
-				fileOffset = entry.getKey();
-				createNew = entry.getValue().file.length() + length > getMaxFileSize();
-			}
-			if (createNew) {
-				FileInfo newFileInfo = new FileInfo(createFile(name, storageFiles.size()));
+			if (fileInfo == null) {
+				fileInfo = new FileInfo(createFile(name));
 	            if (fileInfo != null) {
 	            	fileOffset += fileInfo.file.length();
 	            }
-	            storageFiles.put(fileOffset, newFileInfo);
-	            fileInfo = newFileInfo;
 	        }
-			synchronized (fileInfo) {
+			synchronized (this) {
 		        try {
 		        	RandomAccessFile fileAccess = fileInfo.open();
 		            long pointer = fileAccess.length();
@@ -168,16 +148,13 @@ public class FileStorageManager implements StorageManager {
 		
 		public synchronized void removeDirect() {
 			usedBufferSpace.addAndGet(-len);
-			for (FileInfo info : storageFiles.values()) {
-				info.delete();
-			}
+			fileInfo.delete();
 		}
 		
 	}
 
     // Initialization
     private int maxOpenFiles = DEFAULT_MAX_OPEN_FILES;
-    private long maxFileSize = DEFAULT_MAX_FILESIZE * 1024L * 1024L; // 2GB
     private String directory;
     private File dirFile;
 
@@ -216,14 +193,6 @@ public class FileStorageManager implements StorageManager {
         }
     }
     
-    public void setMaxFileSize(long maxFileSize) {
-    	this.maxFileSize = maxFileSize * 1024L * 1024L;
-	}
-    
-    void setMaxFileSizeDirect(long maxFileSize) {
-    	this.maxFileSize = maxFileSize;
-    }
-    
     public void setMaxOpenFiles(int maxOpenFiles) {
 		this.maxOpenFiles = maxOpenFiles;
 	}
@@ -232,25 +201,21 @@ public class FileStorageManager implements StorageManager {
 		this.directory = directory;
 	}
     
-    File createFile(String name, int fileNumber) throws TeiidComponentException {
+    File createFile(String name) throws TeiidComponentException {
         try {
-        	File storageFile = File.createTempFile(FILE_PREFIX + name + "_" + String.valueOf(fileNumber) + "_", null, this.dirFile); //$NON-NLS-1$ //$NON-NLS-2$
+        	File storageFile = File.createTempFile(FILE_PREFIX + name + "_", null, this.dirFile); //$NON-NLS-1$
             if (LogManager.isMessageToBeRecorded(org.teiid.logging.LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
                 LogManager.logDetail(org.teiid.logging.LogConstants.CTX_BUFFER_MGR, "Created temporary storage area file " + storageFile.getAbsoluteFile()); //$NON-NLS-1$
             }
             return storageFile;
         } catch(IOException e) {
-        	throw new TeiidComponentException(e, QueryPlugin.Util.getString("FileStoreageManager.error_creating", name + "_" + fileNumber)); //$NON-NLS-1$ //$NON-NLS-2$
+        	throw new TeiidComponentException(e, QueryPlugin.Util.getString("FileStoreageManager.error_creating", name)); //$NON-NLS-1$
         }
     }
     
     public FileStore createFileStore(String name) {
     	return new DiskStore(name);
     }
-    
-    public long getMaxFileSize() {
-		return maxFileSize;
-	}
     
     public String getDirectory() {
 		return directory;

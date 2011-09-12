@@ -102,9 +102,9 @@ class SPage implements Cloneable {
 		this.stree = stree;
 		this.id = counter.getAndIncrement();
 		stree.pages.put(this.id, this);
-		this.values = new TupleBatch(0, new ArrayList(stree.pageSize/4));
+		this.values = new TupleBatch(0, new ArrayList(stree.getPageSize(leaf)/4));
 		if (!leaf) {
-			children = new ArrayList<SPage>(stree.pageSize/4);
+			children = new ArrayList<SPage>(stree.getPageSize(false)/4);
 		}
 	}
 	

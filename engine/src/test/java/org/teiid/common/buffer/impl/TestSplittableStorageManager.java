@@ -20,37 +20,33 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.query.processor.relational;
+package org.teiid.common.buffer.impl;
 
-import java.util.Collections;
-import java.util.List;
+import static org.junit.Assert.*;
 
-import org.teiid.common.buffer.TupleBatch;
-import org.teiid.core.TeiidComponentException;
+import org.junit.Test;
+import org.teiid.common.buffer.FileStore;
 
-
-public class NullNode extends RelationalNode {
-
-    public NullNode(int nodeID) {
-        super(nodeID);
-    }
-
-    public TupleBatch nextBatchDirect()
-        throws TeiidComponentException {
-
-        this.terminateBatches();
-        return pullBatch();
-    }
-    
-    @Override
-    public List getOutputElements() {
-    	return Collections.emptyList();
-    }
+public class TestSplittableStorageManager {
+	
+    @Test public void testCreatesSpillFiles() throws Exception {
+    	MemoryStorageManager msm = new MemoryStorageManager();
+        SplittableStorageManager ssm = new SplittableStorageManager(msm);
+        ssm.setMaxFileSizeDirect(2048);
+        String tsID = "0";     //$NON-NLS-1$
+        // Add one batch
+        FileStore store = ssm.createFileStore(tsID);
+        TestFileStorageManager.writeBytes(store);
         
-	public Object clone(){
-		NullNode clonedNode = new NullNode(super.getID());
-		super.copy(this, clonedNode);
-		return clonedNode;
-	}
-    
+        assertEquals(1, msm.getCreated());
+
+        TestFileStorageManager.writeBytes(store);
+        
+        assertEquals(2, msm.getCreated());
+        
+        store.remove();
+        
+        assertEquals(2, msm.getRemoved());
+    }
+
 }

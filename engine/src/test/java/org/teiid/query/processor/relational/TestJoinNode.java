@@ -33,9 +33,9 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.common.buffer.BlockedException;
-import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
@@ -232,7 +232,8 @@ public class TestJoinNode {
     }
     
     public void helpTestJoinDirect(List[] expectedResults, int batchSize, int processingBytes) throws TeiidComponentException, TeiidProcessingException {
-        BufferManager mgr = BufferManagerFactory.getTestBufferManager(processingBytes, batchSize);
+        BufferManagerImpl mgr = BufferManagerFactory.getTestBufferManager(processingBytes, batchSize);
+        mgr.setTargetBytesPerRow(100);
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         join.addChild(leftNode);

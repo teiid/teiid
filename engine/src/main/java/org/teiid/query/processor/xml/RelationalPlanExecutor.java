@@ -144,11 +144,8 @@ class RelationalPlanExecutor implements PlanExecutor {
         	
 			if (this.resultInfo.isAutoStaged() && tempTable != null) {
 				AlterTempTable att = new AlterTempTable(tempTable);
-				int size = (Integer)this.currentRow.get(0);
-				if (size > this.bufferMgr.getProcessorBatchSize() * 2) {
-					//TODO: if the parent is small, then this is not necessary
-					att.setIndexColumns(this.resultInfo.getFkColumns());
-				}
+				//TODO: if the parent is small, then this is not necessary
+				att.setIndexColumns(this.resultInfo.getFkColumns());
 				this.dataManager.registerRequest(this.internalProcessor.getContext(), att, TempMetadataAdapter.TEMP_MODEL.getName(), null, 0, -1);
 			}
 

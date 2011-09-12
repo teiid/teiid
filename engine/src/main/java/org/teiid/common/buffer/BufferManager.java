@@ -74,6 +74,12 @@ public interface BufferManager extends StorageManager {
      * Get the batch size to use during query processing.  
      * @return Batch size (# of rows)
      */
+    int getProcessorBatchSize(List<? extends Expression> schema);
+    
+    /**
+     * Get the nominal batch size target
+     * @return
+     */
     int getProcessorBatchSize();
 
     /**

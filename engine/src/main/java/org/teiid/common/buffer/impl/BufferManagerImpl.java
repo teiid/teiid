@@ -83,12 +83,12 @@ import org.teiid.query.sql.symbol.Expression;
  * 
  * TODO: allow for cached stores to use lru - (result set/mat view)
  * TODO: account for row/content based sizing (difficult given value sharing)
- * TODO: account for memory based lobs (it would be nice if the approximate buffer size matched at 100kB)
  * TODO: add detection of pinned batches to prevent unnecessary purging of non-persistent batches
  *       - this is not necessary for already persistent batches, since we hold a weak reference
  */
 public class BufferManagerImpl implements BufferManager, StorageManager {
 	
+	private static final int TARGET_BYTES_PER_ROW = 1 << 11; //2k bytes per row
 	private static final int IO_BUFFER_SIZE = 1 << 14;
 	private static final int COMPACTION_THRESHOLD = 1 << 25; //start checking at 32 megs
 	
@@ -233,7 +233,6 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		private boolean softCache;
 		private volatile TupleBatch activeBatch;
 		private volatile Reference<TupleBatch> batchReference;
-		private int beginRow;
 		private WeakReference<BatchManagerImpl> managerRef;
 		private Long id;
 		private LobManager lobManager;
@@ -243,7 +242,6 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			this.softCache = softCache;
 			id = batchAdded.incrementAndGet();
 			this.activeBatch = batch;
-			this.beginRow = batch.getBeginRow();
 			this.managerRef = ref;
 			BatchManagerImpl batchManager = ref.get();
 			if (batchManager.lobIndexes != null) {
@@ -355,9 +353,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 					Assertion.isNotNull(info, "Invalid batch " + id); //$NON-NLS-1$
 					ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(batchManager.store.createInputStream(info[0]), IO_BUFFER_SIZE));
 		            batch = new TupleBatch();
+		            batch.setRowOffset(ois.readInt());
 		            batch.setDataTypes(types);
 		            batch.readExternal(ois);
-		            batch.setRowOffset(this.beginRow);
 			        batch.setDataTypes(null);
 					if (lobManager != null) {
 						for (List<?> tuple : batch.getTuples()) {
@@ -404,6 +402,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 							offset = batchManager.getOffset();
 							OutputStream fsos = new BufferedOutputStream(batchManager.store.createOutputStream(), IO_BUFFER_SIZE);
 				            ObjectOutputStream oos = new ObjectOutputStream(fsos);
+				            oos.writeInt(batch.getBeginRow());
 				            batch.writeExternal(oos);
 				            oos.close();
 				            long size = batchManager.store.getLength() - offset;
@@ -475,6 +474,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     private int maxActivePlans = DQPConfiguration.DEFAULT_MAX_ACTIVE_PLANS; //used as a hint to set the reserveBatchKB
     private boolean useWeakReferences = true;
     private boolean inlineLobs = true;
+    private int targetBytesPerRow = TARGET_BYTES_PER_ROW;
 
     private ReentrantLock lock = new ReentrantLock(true);
     private Condition batchesFreed = lock.newCondition();
@@ -535,6 +535,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     public void setConnectorBatchSize(int connectorBatchSize) {
         this.connectorBatchSize = connectorBatchSize;
     } 
+    
+    public void setTargetBytesPerRow(int targetBytesPerRow) {
+		this.targetBytesPerRow = targetBytesPerRow;
+	}
 
     public void setProcessorBatchSize(int processorBatchSize) {
         this.processorBatchSize = processorBatchSize;
@@ -560,7 +564,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     	final String newID = String.valueOf(this.tsId.getAndIncrement());
     	int[] lobIndexes = LobManager.getLobIndexes(elements);
     	BatchManager batchManager = new BatchManagerImpl(newID, lobIndexes);
-        TupleBuffer tupleBuffer = new TupleBuffer(batchManager, newID, elements, lobIndexes, getProcessorBatchSize());
+        TupleBuffer tupleBuffer = new TupleBuffer(batchManager, newID, elements, lobIndexes, getProcessorBatchSize(elements));
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
         	LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating TupleBuffer:", newID, elements, Arrays.toString(tupleBuffer.getTypes()), "of type", tupleSourceType); //$NON-NLS-1$ //$NON-NLS-2$
         }
@@ -595,7 +599,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
     		LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating STree:", newID); //$NON-NLS-1$
     	}
-    	return new STree(keyManager, bm, new ListNestedSortComparator(compareIndexes), getProcessorBatchSize(), keyLength, TupleBuffer.getTypeNames(elements));
+    	return new STree(keyManager, bm, new ListNestedSortComparator(compareIndexes), getProcessorBatchSize(elements), getProcessorBatchSize(elements.subList(0, keyLength)), keyLength, TupleBuffer.getTypeNames(elements));
     }
 
     @Override
@@ -732,7 +736,11 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	}
 	
 	@Override
-	public int getSchemaSize(List<? extends Expression> elements) {
+	public int getProcessorBatchSize(List<? extends Expression> schema) {
+		return getSizeEstimates(schema)[0];
+	}
+	
+	private int[] getSizeEstimates(List<? extends Expression> elements) {
 		int total = 0;
 		boolean isValueCacheEnabled = DataTypeManager.isValueCacheEnabled();
 		//we make a assumption that the average column size under 64bits is approximately 128bytes
@@ -741,9 +749,39 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			Class<?> type = element.getType();
 			total += SizeUtility.getSize(isValueCacheEnabled, type);
 		}
+		//assume 64-bit
 		total += 8*elements.size() + 36;  // column list / row overhead
-		total *= processorBatchSize; 
-		return Math.max(1, total / 1024);
+		
+		//nominal targetBytesPerRow but can scale up or down
+		
+		int totalCopy = total;
+		boolean less = totalCopy < targetBytesPerRow;
+		int rowCount = processorBatchSize;
+		
+		for (int i = 0; i < 2; i++) {
+			if (less) {
+				totalCopy <<= 2;
+			} else {
+				totalCopy >>= 2;
+			}
+			if (less && totalCopy > targetBytesPerRow
+					|| !less && totalCopy < targetBytesPerRow) {
+				break;
+			}
+			if (less) {
+				rowCount <<= 1;
+			} else {
+				rowCount >>= 1;
+			}
+		}
+		rowCount = Math.max(1, rowCount);
+		total *= rowCount; 
+		return new int[]{rowCount, Math.max(1, total / 1024)};
+	}
+	
+	@Override
+	public int getSchemaSize(List<? extends Expression> elements) {
+		return getSizeEstimates(elements)[1];
 	}
 
 	public void shutdown() {

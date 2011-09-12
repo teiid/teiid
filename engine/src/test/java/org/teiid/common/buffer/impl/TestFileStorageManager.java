@@ -27,9 +27,7 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Random;
 
 import org.junit.Test;
@@ -41,12 +39,9 @@ import org.teiid.core.util.UnitTestUtil;
 @SuppressWarnings("nls")
 public class TestFileStorageManager {
 		
-	public FileStorageManager getStorageManager(Integer maxFileSize, Integer openFiles, String dir) throws TeiidComponentException {
+	public FileStorageManager getStorageManager(Integer openFiles, String dir) throws TeiidComponentException {
         FileStorageManager sm = new FileStorageManager();
         sm.setStorageDirectory(UnitTestUtil.getTestScratchPath() + (dir != null ? File.separator + dir : "")); //$NON-NLS-1$
-        if (maxFileSize != null) {
-        	sm.setMaxFileSizeDirect(maxFileSize);
-        }
         if (openFiles != null) {
         	sm.setMaxOpenFiles(openFiles);
         }
@@ -55,7 +50,7 @@ public class TestFileStorageManager {
 	}
     
     @Test public void testWrite() throws Exception {
-        FileStorageManager sm = getStorageManager(null, null, null);        
+        FileStorageManager sm = getStorageManager(null, null);        
         String tsID = "0";     //$NON-NLS-1$
         FileStore store = sm.createFileStore(tsID);
         writeBytes(store);
@@ -64,27 +59,8 @@ public class TestFileStorageManager {
         assertEquals(0, sm.getUsedBufferSpace());
     }
             
-    @Test public void testCreatesSpillFiles() throws Exception {
-        FileStorageManager sm = getStorageManager(1024, null, null); // 1KB
-        String tsID = "0";     //$NON-NLS-1$
-        // Add one batch
-        FileStore store = sm.createFileStore(tsID);
-        writeBytes(store);
-        
-        Map<File, RandomAccessFile> cache = sm.getFileCache();
-        assertEquals(1, cache.size());
-
-        writeBytes(store);
-        
-        assertEquals(2, cache.size());
-        
-        store.remove();
-        
-        assertEquals(0, cache.size());
-    }
-    
     @Test(expected=TeiidComponentException.class) public void testMaxSpace() throws Exception {
-    	FileStorageManager sm = getStorageManager(null, null, null); 
+    	FileStorageManager sm = getStorageManager(null, null); 
     	sm.setMaxBufferSpace(1);
         String tsID = "0";     //$NON-NLS-1$
         // Add one batch
@@ -93,7 +69,7 @@ public class TestFileStorageManager {
     }
     
     @Test public void testFlush() throws Exception {
-    	FileStorageManager sm = getStorageManager(null, null, null);
+    	FileStorageManager sm = getStorageManager(null, null);
     	FileStore store = sm.createFileStore("0");
     	FileStoreOutputStream fsos = store.createOutputStream(2);
     	fsos.write(new byte[3]);
@@ -104,7 +80,7 @@ public class TestFileStorageManager {
 
     static Random r = new Random();
     
-	private void writeBytes(FileStore store)
+	static void writeBytes(FileStore store)
 			throws TeiidComponentException {
 		byte[] bytes = new byte[2048];
         r.nextBytes(bytes);
@@ -114,9 +90,8 @@ public class TestFileStorageManager {
         assertTrue(Arrays.equals(bytes, bytesRead));
 	}
     
-	
     @Test public void testWritingMultipleFiles() throws Exception {
-    	FileStorageManager sm = getStorageManager(1024, null, null); 
+    	FileStorageManager sm = getStorageManager(null, null); 
         String tsID = "0";     //$NON-NLS-1$
         // Add one batch
         FileStore store = sm.createFileStore(tsID);

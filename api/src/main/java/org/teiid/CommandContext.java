@@ -87,7 +87,8 @@ public interface CommandContext {
 	
 	/**
 	 * Get the processor batch size set on the BufferManager
-	 * @return
+	 * @return - the nominal batch size target.  actual batch sizes will vary based 
+	 * upon the column types
 	 */
 	int getProcessorBatchSize();
 	

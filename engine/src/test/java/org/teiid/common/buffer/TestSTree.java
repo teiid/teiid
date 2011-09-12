@@ -79,7 +79,7 @@ public class TestSTree {
 
 	@Test public void testOrderedInsert() throws TeiidComponentException {
 		BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
-		bm.setProcessorBatchSize(16);
+		bm.setProcessorBatchSize(4);
 		
 		ElementSymbol e1 = new ElementSymbol("x");
 		e1.setType(Integer.class);
