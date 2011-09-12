@@ -62,21 +62,21 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     		writer.writeEndElement();
     	}
     	
-    	if (has(node, Element.CACHE_FACORY_ELEMENT.getLocalName())){
-    		writer.writeStartElement(Element.CACHE_FACORY_ELEMENT.getLocalName());
-    		writeCacheFactoryConfiguration(writer, node.get(Element.CACHE_FACORY_ELEMENT.getLocalName()));
+    	if (has(node, Element.RESULTSET_CACHE_ELEMENT.getLocalName())){
+    		writer.writeStartElement(Element.RESULTSET_CACHE_ELEMENT.getLocalName());
+    		writeResultsetCacheConfiguration(writer, node.get(Element.RESULTSET_CACHE_ELEMENT.getLocalName()));
     		writer.writeEndElement();
     	}    	
     	
-    	if (has(node, Element.RESULTSET_CACHE_ELEMENT.getLocalName())){
-    		writer.writeStartElement(Element.RESULTSET_CACHE_ELEMENT.getLocalName());
-    		writeCacheConfiguration(writer, node.get(Element.RESULTSET_CACHE_ELEMENT.getLocalName()));
+    	if (has(node, Element.PREPAREDPLAN_CACHE_ELEMENT.getLocalName())){
+    		writer.writeStartElement(Element.PREPAREDPLAN_CACHE_ELEMENT.getLocalName());
+    		writePreparedPlanCacheConfiguration(writer, node.get(Element.PREPAREDPLAN_CACHE_ELEMENT.getLocalName()));
     		writer.writeEndElement();
     	}
     	
-    	if (has(node, Element.PREPAREDPLAN_CACHE_ELEMENT.getLocalName())){
-    		writer.writeStartElement(Element.RESULTSET_CACHE_ELEMENT.getLocalName());
-    		writeCacheConfiguration(writer, node.get(Element.PREPAREDPLAN_CACHE_ELEMENT.getLocalName()));
+    	if (has(node, Element.OBJECT_REPLICATOR_ELEMENT.getLocalName())){
+    		writer.writeStartElement(Element.OBJECT_REPLICATOR_ELEMENT.getLocalName());
+    		writeObjectReplicatorConfiguration(writer, node.get(Element.OBJECT_REPLICATOR_ELEMENT.getLocalName()));
     		writer.writeEndElement();
     	}
     	
@@ -100,7 +100,12 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         writer.writeEndElement(); // End of subsystem element
     }
     
-    private void writeTranslator(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+    private void writeObjectReplicatorConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+    	writeAttribute(writer, Element.STACK_ATTRIBUTE, node);
+    	writeAttribute(writer, Element.CLUSTER_NAME_ATTRIBUTE, node);
+	}
+
+	private void writeTranslator(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
     	writeAttribute(writer, Element.TRANSLATOR_NAME_ATTRIBUTE, node);
     	writeAttribute(writer, Element.TRANSLATOR_MODULE_ATTRIBUTE, node);
     }
@@ -121,7 +126,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	writeElement(writer, Element.MAX_SOURCE_ROWS_ELEMENT, node);
     	writeElement(writer, Element.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT, node);
     	writeElement(writer, Element.MAX_ODBC_LOB_SIZE_ALLOWED_ELEMENT, node);
-    	writeElement(writer, Element.OBJECT_REPLICATOR_NAME_ELEMENT, node);
+    	writeElement(writer, Element.OBJECT_REPLICATOR_ELEMENT, node);
     	writeElement(writer, Element.DETECTING_CHANGE_EVENTS_ELEMENT, node);
     	
     	if (node.hasDefined(Element.SECURITY_DOMAIN_ELEMENT.getLocalName())) {
@@ -184,17 +189,17 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 		writeElement(writer, Element.MAX_OPEN_FILES_ELEMENT, node);
 	}
 
-	private void writeCacheFactoryConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
-		writeElement(writer, Element.CACHE_SERVICE_JNDI_NAME_ELEMENT, node);
-		writeElement(writer, Element.RESULTSET_CACHE_NAME_ELEMENT, node);
+	private void writeResultsetCacheConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+		writeAttribute(writer, Element.NAME_ELEMENT, node);
+		writeAttribute(writer, Element.CONTAINER_NAME_ELEMENT, node);
+		writeAttribute(writer, Element.ENABLE_ATTRIBUTE, node);
+		writeAttribute(writer, Element.MAX_STALENESS_ELEMENT, node);
 	}
 
-	private void writeCacheConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
-		writeAttribute(writer, Element.ENABLE_ATTRIBUTE, node);
-		writeElement(writer, Element.MAX_ENTRIES_ELEMENT, node);
-		writeElement(writer, Element.MAX_AGE_IN_SECS_ELEMENT, node);
-		writeElement(writer, Element.MAX_STALENESS_ELEMENT, node);
-		writeElement(writer, Element.CACHE_TYPE_ELEMENT, node);
+	private void writePreparedPlanCacheConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+		writeAttribute(writer, Element.MAX_ENTRIES_ELEMENT, node);
+		writeAttribute(writer, Element.MAX_AGE_IN_SECS_ELEMENT, node);
+		writeAttribute(writer, Element.MAX_STALENESS_ELEMENT, node);
 	}
 
 	private boolean has(ModelNode node, String name) {
@@ -252,19 +257,20 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				case ASYNC_THREAD_GROUP_ELEMENT:
     					bootServices.get(reader.getLocalName()).set(reader.getElementText());
     					break;
+
+    				case OBJECT_REPLICATOR_ELEMENT:
+    					bootServices.get(reader.getLocalName()).set(parseObjectReplicator(reader));
+    					break;
     					
     					// complex types
     				case BUFFER_SERVICE_ELEMENT:
     					bootServices.get(reader.getLocalName()).set(parseBufferConfiguration(reader));
     					break;
-    				case RESULTSET_CACHE_ELEMENT:
-    					bootServices.get(reader.getLocalName()).set(parseCacheConfiguration(reader));
-    					break;
     				case PREPAREDPLAN_CACHE_ELEMENT:
-    					bootServices.get(reader.getLocalName()).set(parseCacheConfiguration(reader));
+    					bootServices.get(reader.getLocalName()).set(parsePreparedPlanCacheConfiguration(reader));
     					break;
-    				case CACHE_FACORY_ELEMENT:
-    					bootServices.get(reader.getLocalName()).set(parseCacheFacoryConfiguration(reader));
+    				case RESULTSET_CACHE_ELEMENT:
+    					bootServices.get(reader.getLocalName()).set(parseResultsetCacheConfiguration(reader));
     					break;
 
                     case QUERY_ENGINE_ELEMENT:
@@ -304,7 +310,20 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         }  
     }
     
-    private ModelNode parseQueryEngine(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
+    private ModelNode parseObjectReplicator(XMLExtendedStreamReader reader) throws XMLStreamException {
+    	ModelNode node = new ModelNode();
+    	if (reader.getAttributeCount() > 0) {
+    		for(int i=0; i<reader.getAttributeCount(); i++) {
+    			String attrName = reader.getAttributeLocalName(i);
+    			String attrValue = reader.getAttributeValue(i);
+   				node.get(attrName).set(attrValue);	
+    		}
+    	}
+        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT));
+    	return node;
+	}
+
+	private ModelNode parseQueryEngine(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
     	
     	if (reader.getAttributeCount() > 0) {
     		for(int i=0; i<reader.getAttributeCount(); i++) {
@@ -335,15 +354,9 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 				// booleans
 				case EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT:
 				case DETECTING_CHANGE_EVENTS_ELEMENT:
-				case ALLOW_ENV_FUNCTION_ELEMENT:
 					node.get(reader.getLocalName()).set(Boolean.parseBoolean(reader.getElementText()));
 					break;
 
-				//Strings
-				case OBJECT_REPLICATOR_NAME_ELEMENT:
-					node.get(reader.getLocalName()).set(reader.getElementText());
-					break;
-				
 					//List
 				case SECURITY_DOMAIN_ELEMENT:
 					node.get(reader.getLocalName()).add(reader.getElementText());
@@ -390,14 +403,14 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	return node;
     }
     
-    private ModelNode parseCacheConfiguration(XMLExtendedStreamReader reader) throws XMLStreamException {
+    private ModelNode parsePreparedPlanCacheConfiguration(XMLExtendedStreamReader reader) throws XMLStreamException {
     	ModelNode node = new ModelNode();
 
     	if (reader.getAttributeCount() > 0) {
     		for(int i=0; i<reader.getAttributeCount(); i++) {
     			String attrName = reader.getAttributeLocalName(i);
     			String attrValue = reader.getAttributeValue(i);
-    			node.get(attrName).set(Boolean.parseBoolean(attrValue));
+    			node.get(attrName).set(attrValue);
     		}
     	}    	
  
@@ -409,9 +422,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
             case MAX_STALENESS_ELEMENT:
             	node.get(reader.getLocalName()).set(Integer.parseInt(reader.getElementText()));
             	break;
-            case CACHE_TYPE_ELEMENT:
-            	node.get(reader.getLocalName()).set(reader.getElementText());    
-            	break;
             default: 
                 throw ParseUtils.unexpectedElement(reader);
             }
@@ -419,20 +429,22 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	return node;
     }    
     
-    private ModelNode parseCacheFacoryConfiguration(XMLExtendedStreamReader reader) throws XMLStreamException {
+    private ModelNode parseResultsetCacheConfiguration(XMLExtendedStreamReader reader) throws XMLStreamException {
     	ModelNode node = new ModelNode();
- 
-        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
-            Element element = Element.forName(reader.getLocalName());
-            switch (element) {
-            case CACHE_SERVICE_JNDI_NAME_ELEMENT:
-            case RESULTSET_CACHE_NAME_ELEMENT:
-            	node.get(reader.getLocalName()).set(reader.getElementText());
-            	break;
-            default: 
-                throw ParseUtils.unexpectedElement(reader);
-            }
-        }
+    	
+    	if (reader.getAttributeCount() > 0) {
+    		for(int i=0; i<reader.getAttributeCount(); i++) {
+    			String attrName = reader.getAttributeLocalName(i);
+    			String attrValue = reader.getAttributeValue(i);
+    			if (attrName.equals(Element.ENABLE_ATTRIBUTE.getLocalName())) {
+    				node.get(attrName).set(Boolean.parseBoolean(attrValue));
+    			}
+    			else {
+    				node.get(attrName).set(attrValue);	
+    			}
+    		}
+    	}
+        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT));
     	return node;
     }       
     
@@ -443,7 +455,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     		for(int i=0; i<reader.getAttributeCount(); i++) {
     			String attrName = reader.getAttributeLocalName(i);
     			String attrValue = reader.getAttributeValue(i);
-    			node.get(attrName).set(Boolean.parseBoolean(attrValue));
+   				node.get(attrName).set(attrValue);
     		}
     	}    	
  
@@ -454,9 +466,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
             case IN_BUFFER_SIZE_ELEMENT:
             case OUT_BUFFER_SIZE_ELEMENT:
             	node.get(reader.getLocalName()).set(Integer.parseInt(reader.getElementText()));
-            	break;
-            case SOCKET_BINDING_ELEMENT:
-            	node.get(reader.getLocalName()).set(reader.getElementText());
             	break;
             case SSL_ELEMENT:            	
             	node.get(reader.getLocalName()).set(parseSSLConfiguration(reader));

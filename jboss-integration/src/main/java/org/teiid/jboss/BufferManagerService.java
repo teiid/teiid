@@ -28,7 +28,7 @@ import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.services.BufferServiceImpl;
 
-public class BufferManagerService implements Service<BufferServiceImpl> {
+class BufferManagerService implements Service<BufferServiceImpl> {
 
 	private BufferServiceImpl bufferMgr;
 	public final InjectedValue<String> pathInjector = new InjectedValue<String>();

@@ -27,7 +27,7 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 
-public class ObjectsSerializerService implements Service<ObjectSerializer> {
+class ObjectsSerializerService implements Service<ObjectSerializer> {
 	private InjectedValue<String> pathInjector = new InjectedValue<String>();
 	private ObjectSerializer serializer;
 	

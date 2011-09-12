@@ -36,11 +36,9 @@ import org.jboss.vfs.VirtualFile;
 import org.jboss.vfs.VirtualFileFilter;
 import org.jboss.vfs.VisitorAttributes;
 import org.jboss.vfs.util.SuffixMatchFilter;
-import org.teiid.adminapi.impl.ModelMetaData;
-import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.deployers.TeiidAttachments;
 
-public class VDBDependencyProcessor implements DeploymentUnitProcessor {
+class VDBDependencyProcessor implements DeploymentUnitProcessor {
 	public static final String LIB = "/lib"; //$NON-NLS-1$
 	private static final VirtualFileFilter DEFAULT_JAR_LIB_FILTER = new SuffixMatchFilter(".jar", VisitorAttributes.DEFAULT); //$NON-NLS-1$
 	

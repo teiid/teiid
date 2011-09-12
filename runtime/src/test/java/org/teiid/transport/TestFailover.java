@@ -112,7 +112,7 @@ public class TestFailover {
 
 		}, null); 
 		server.registerClientService(FakeService.class, new TestSocketRemoting.FakeServiceImpl(), null);
-		return new SocketListener(address.getPort(), address.getAddress().getHostAddress(), 1024, 1024, 1, config, server, BufferManagerFactory.getStandaloneBufferManager());
+		return new SocketListener(new InetSocketAddress(address.getAddress().getHostAddress(),address.getPort()), 1024, 1024, 1, config, server, BufferManagerFactory.getStandaloneBufferManager());
 	}
 	
 	@Test public void testFailover() throws Exception {

@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import org.jboss.as.clustering.jgroups.ChannelFactory;
 import org.jgroups.*;
 import org.jgroups.blocks.GroupRequest;
 import org.jgroups.blocks.MethodCall;
@@ -48,7 +49,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.ReplicatedObject;
 
-public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
+public abstract class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 	
 	private static final long serialVersionUID = -6851804958313095166L;
 	private static final String CREATE_STATE = "createState"; //$NON-NLS-1$
@@ -221,53 +222,17 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		void finishState(String id);
 	}
 
-	private transient ChannelFactory channelFactory;
-	private String multiplexerStack;
+	
 	private String clusterName;
-	private String jndiName;
 	//TODO: this should be configurable, or use a common executor
 	private transient Executor executor = Executors.newCachedThreadPool();
 
-	public ChannelFactory getChannelFactory() {
-		return channelFactory;
-	}
-	
-	public void setJndiName(String jndiName) {
-		this.jndiName = jndiName;
-	}
-	
-	public String getJndiName() {
-		return jndiName;
-	}
-	
-	public String getMultiplexerStack() {
-		return multiplexerStack;
-	}
-	
-	public String getClusterName() {
-		return clusterName;
-	}
-	
-	public void setChannelFactory(ChannelFactory channelFactory) {
-		this.channelFactory = channelFactory;
-	}
-	
-	public void setClusterName(String clusterName) {
+	public JGroupsObjectReplicator(String clusterName) {
 		this.clusterName = clusterName;
 	}
 	
-	public void setMultiplexerStack(String multiplexerStack) {
-		this.multiplexerStack = multiplexerStack;
-	}
+	public abstract ChannelFactory getChannelFactory();
 	
-	public void start() throws Exception {
-		if (this.channelFactory == null) {
-			return; //no need to distribute events
-		}
-	}
-
-	public void stop() {
-	}
 	
 	public void stop(Object object) {
 		ReplicatedInvocationHandler<?> handler = (ReplicatedInvocationHandler<?>) Proxy.getInvocationHandler(object);
@@ -280,7 +245,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 	@Override
 	public <T, S> T replicate(String mux_id,
 			Class<T> iface, final S object, long startTimeout) throws Exception {
-		Channel channel = this.channelFactory.createMultiplexerChannel(this.multiplexerStack, mux_id);
+		Channel channel = getChannelFactory().createChannel(mux_id);
 		Method[] methods = iface.getMethods();
 		
 		final HashMap<Method, Short> methodMap = new HashMap<Method, Short>();

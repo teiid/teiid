@@ -21,22 +21,32 @@
  */
 package org.teiid.jboss;
 
+import org.jboss.as.clustering.jgroups.ChannelFactory;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
-import org.teiid.deployers.VDBRepository;
+import org.jboss.msc.value.InjectedValue;
+import org.teiid.replication.jboss.JGroupsObjectReplicator;
 
-class VDBRepositoryService implements Service<VDBRepository> {
-	private VDBRepository repo;
+class JGroupsObjectReplicatorService implements Service<JGroupsObjectReplicator> {
+
+	public final InjectedValue<ChannelFactory> channelFactoryInjector = new InjectedValue<ChannelFactory>();
+	private JGroupsObjectReplicator replicator; 
+	private String clusterName;
 	
-	public VDBRepositoryService(VDBRepository repo) {
-		this.repo = repo;
+	public JGroupsObjectReplicatorService(String clusterName){
+		this.clusterName = clusterName;
 	}
 	
 	@Override
 	public void start(StartContext context) throws StartException {
-		repo.start();
+		replicator = new JGroupsObjectReplicator(this.clusterName) {
+			@Override
+			public ChannelFactory getChannelFactory() {
+				return channelFactoryInjector.getValue();
+			}
+		};
 	}
 
 	@Override
@@ -44,7 +54,8 @@ class VDBRepositoryService implements Service<VDBRepository> {
 	}
 
 	@Override
-	public VDBRepository getValue() throws IllegalStateException, IllegalArgumentException {
-		return repo;
+	public JGroupsObjectReplicator getValue() throws IllegalStateException,IllegalArgumentException {
+		return replicator;
 	}
+
 }

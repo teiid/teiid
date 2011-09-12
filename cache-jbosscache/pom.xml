@@ -8,7 +8,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>teiid-cache-jbosscache</artifactId>
 	<name>JBoss Cache</name>
-	<description>JBossCache provider.</description>
+	<description>Infinispan Provider</description>
 	<dependencies>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
@@ -25,15 +25,15 @@
 			<artifactId>teiid-engine</artifactId>
             <scope>provided</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.jboss.cache</groupId>
-			<artifactId>jbosscache-core</artifactId>
-            <scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>commons-logging</groupId>
-			<artifactId>commons-logging</artifactId>
-			<scope>provided</scope>
-		</dependency>
+        <dependency>
+          <groupId>org.infinispan</groupId>
+          <artifactId>infinispan-core</artifactId>
+          <scope>provided</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.jboss.as</groupId>
+          <artifactId>jboss-as-clustering-jgroups</artifactId>
+          <scope>provided</scope>
+        </dependency>        
 	</dependencies>
 </project>

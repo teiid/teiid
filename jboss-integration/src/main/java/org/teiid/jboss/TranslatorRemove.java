@@ -40,7 +40,7 @@ import org.jboss.msc.service.ServiceRegistry;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 
-public class TranslatorRemove extends AbstractRemoveStepHandler implements DescriptionProvider {
+class TranslatorRemove extends AbstractRemoveStepHandler implements DescriptionProvider {
 
 	@Override
 	public ModelNode getModelDescription(Locale locale) {

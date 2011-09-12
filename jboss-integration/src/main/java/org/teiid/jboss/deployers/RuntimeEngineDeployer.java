@@ -26,6 +26,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.InetSocketAddress;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
@@ -33,8 +34,6 @@ import java.sql.SQLXML;
 import java.util.*;
 import java.util.concurrent.*;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
 import javax.security.auth.login.LoginException;
@@ -113,8 +112,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     private long sessionMaxLimit = SessionService.DEFAULT_MAX_SESSIONS;
 	private long sessionExpirationTimeLimit = SessionService.DEFAULT_SESSION_EXPIRATION;
 
-	private transient ObjectReplicator objectReplicator;
-	private String objectReplicatorName;
 	private transient EventDistributor eventDistributor;	
 	private transient EventDistributor eventDistributorProxy;
 
@@ -129,6 +126,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	private final InjectedValue<AuthorizationValidator> authorizationValidatorInjector = new InjectedValue<AuthorizationValidator>();
 	private final InjectedValue<SessionAwareCache> preparedPlanCacheInjector = new InjectedValue<SessionAwareCache>();
 	private final InjectedValue<SessionAwareCache> resultSetCacheInjector = new InjectedValue<SessionAwareCache>();
+	private final InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
 	
 	public final ConcurrentMap<String, SecurityDomainContext> securityDomains = new ConcurrentHashMap<String, SecurityDomainContext>();
 	private LinkedList<String> securityDomainNames = new LinkedList<String>();
@@ -175,32 +173,19 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		
 		this.setBufferService(bufferServiceInjector.getValue());
 		
-		if (this.jdbcSocketConfiguration != null) {
-			this.jdbcSocketConfiguration.setHostAddress(this.jdbcSocketBindingInjector.getValue().getAddress());
-			this.jdbcSocketConfiguration.setPortNumber(this.jdbcSocketBindingInjector.getValue().getPort());
-		}
-		
-		if (this.odbcSocketConfiguration != null) {
-			this.odbcSocketConfiguration.setHostAddress(this.odbcSocketBindingInjector.getValue().getAddress());
-			this.odbcSocketConfiguration.setPortNumber(this.odbcSocketBindingInjector.getValue().getPort());
-		}
-		
 		dqpCore.setTransactionService((TransactionService)LogManager.createLoggingProxy(LogConstants.CTX_TXN_LOG, transactionServerImpl, new Class[] {TransactionService.class}, MessageLevel.DETAIL, Module.getCallerModule().getClassLoader()));
 
-		if (this.objectReplicatorName != null) {
+		if (getObjectReplicatorInjector().getValue() != null) {
 			try {
-				InitialContext ic = new InitialContext();
-				this.objectReplicator = (ObjectReplicator) ic.lookup(this.objectReplicatorName);
-				try {
-					this.eventDistributor = this.objectReplicator.replicate(LocalServerConnection.TEIID_RUNTIME_CONTEXT+getName(), EventDistributor.class, this, 0);
-				} catch (Exception e) {
-					LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("replication_failed", this)); //$NON-NLS-1$
-				}
-			} catch (NamingException ne) {
-				//log at a detail level since we may not be in the all profile
-				LogManager.logDetail(LogConstants.CTX_RUNTIME, ne, IntegrationPlugin.Util.getString("jndi_failed", this.objectReplicatorName)); //$NON-NLS-1$
+				this.eventDistributor = getObjectReplicatorInjector().getValue().replicate(LocalServerConnection.TEIID_RUNTIME_CONTEXT+getName(), EventDistributor.class, this, 0);
+			} catch (Exception e) {
+				LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("replication_failed", this)); //$NON-NLS-1$
 			}
 		}
+		else {
+			LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("distributed_cache_not_enabled")); //$NON-NLS-1$
+		}
+		
 		this.dqpCore.setMetadataRepository(this.vdbRepository.getMetadataRepository());
 		this.dqpCore.setEventDistributor(this.eventDistributor);
 		this.dqpCore.setResultsetCache(getResultSetCacheInjector().getValue());
@@ -221,21 +206,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	// create the necessary services
     	createClientServices();
     	
-    	int offset = 0;
-    	String portBinding = System.getProperty("jboss.service.binding.set"); //$NON-NLS-1$
-    	if (portBinding != null && portBinding.startsWith("ports-")) { //$NON-NLS-1$
-    		if (portBinding.equals("ports-default")) { //$NON-NLS-1$
-    			offset = 0;
-    		}
-    		else {
-    			try {
-					offset = Integer.parseInt(portBinding.substring(portBinding.length()-2))*100;
-				} catch (NumberFormatException e) {
-					offset = 0;
-				}
-    		}
-    	}
-    	
     	this.csr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
     	DQP dqpProxy = proxyService(DQP.class, this.dqpCore, LogConstants.CTX_DQP);
     	this.csr.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);
@@ -245,18 +215,20 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	jdbcCsr.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);
     	
     	if (this.jdbcSocketConfiguration != null) {
-	    	this.jdbcSocket = new SocketListener(this.jdbcSocketConfiguration, jdbcCsr, this.dqpCore.getBufferManager(), offset);
-	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled","Teiid JDBC = ",(this.jdbcSocketConfiguration.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+this.jdbcSocketConfiguration.getHostAddress().getHostName()+":"+(this.jdbcSocketConfiguration.getPortNumber()+offset))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+    		InetSocketAddress address = getJdbcSocketBindingInjector().getValue().getSocketAddress();
+	    	this.jdbcSocket = new SocketListener(address, this.jdbcSocketConfiguration, jdbcCsr, this.dqpCore.getBufferManager());
+	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled","Teiid JDBC = ",(this.jdbcSocketConfiguration.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+address.getHostName()+":"+address.getPort())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     	} else {
     		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_not_enabled", "jdbc connections")); //$NON-NLS-1$ //$NON-NLS-2$
     	}
     	
     	if (this.odbcSocketConfiguration != null) {
     		this.vdbRepository.odbcEnabled();
-    		ODBCSocketListener odbc = new ODBCSocketListener(this.odbcSocketConfiguration, this.dqpCore.getBufferManager(), offset, getMaxODBCLobSizeAllowed(), this.logon);
+    		InetSocketAddress address = getOdbcSocketBindingInjector().getValue().getSocketAddress();
+    		ODBCSocketListener odbc = new ODBCSocketListener(address, this.odbcSocketConfiguration, this.dqpCore.getBufferManager(), getMaxODBCLobSizeAllowed(), this.logon);
     		odbc.setAuthenticationType(sessionService.getAuthType());
 	    	this.odbcSocket = odbc;
-	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("odbc_enabled","Teiid ODBC - SSL=", (this.odbcSocketConfiguration.getSSLConfiguration().isSslEnabled()?"ON":"OFF")+" Host = "+this.odbcSocketConfiguration.getHostAddress().getHostName()+" Port = "+(this.odbcSocketConfiguration.getPortNumber()+offset))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("odbc_enabled","Teiid ODBC - SSL=", (this.odbcSocketConfiguration.getSSLConfiguration().isSslEnabled()?"ON":"OFF")+" Host = "+address.getHostName()+" Port = "+address.getPort())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
     	} else {
     		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("odbc_not_enabled")); //$NON-NLS-1$
     	}    	
@@ -270,18 +242,18 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 			@Override
 			public void removed(String name, int version, CompositeVDB vdb) {
 				recentlyRemoved.add(new VDBKey(name, version));
-				if (objectReplicator != null) {
+				if (getObjectReplicatorInjector().getValue() != null) {
 					GlobalTableStore gts = vdb.getVDB().getAttachment(GlobalTableStore.class);
-					objectReplicator.stop(gts);
+					getObjectReplicatorInjector().getValue().stop(gts);
 				}
 			}
 			
 			@Override
 			public void added(String name, int version, CompositeVDB vdb) {
 				GlobalTableStore gts = new GlobalTableStoreImpl(dqpCore.getBufferManager(), vdb.getVDB().getAttachment(TransformationMetadata.class));
-				if (objectReplicator != null) {
+				if (getObjectReplicatorInjector().getValue() != null) {
 					try {
-						gts = objectReplicator.replicate(name + version, GlobalTableStore.class, gts, 300000);
+						gts = getObjectReplicatorInjector().getValue().replicate(name + version, GlobalTableStore.class, gts, 300000);
 					} catch (Exception e) {
 						LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("replication_failed", gts)); //$NON-NLS-1$
 					}
@@ -337,8 +309,8 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	
     	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("engine_stopped", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
     	
-    	if (this.objectReplicator != null && this.eventDistributor != null) {
-    		this.objectReplicator.stop(this.eventDistributor);
+    	if (getObjectReplicatorInjector().getValue() != null && this.eventDistributor != null) {
+    		getObjectReplicatorInjector().getValue().stop(this.eventDistributor);
     	}
     }
     
@@ -611,14 +583,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		return newResults;
 	}
 	
-	public String getObjectReplicatorName() {
-		return objectReplicatorName;
-	}
-	
-	public void setObjectReplicatorName(String eventDistributorName) {
-		this.objectReplicatorName = eventDistributorName;
-	}
-	
 	@Override
 	public void updateMatViewRow(String vdbName, int vdbVersion, String schema,
 			String viewName, List<?> tuple, boolean delete) {
@@ -825,5 +789,9 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 
 	public InjectedValue<SocketBinding> getOdbcSocketBindingInjector() {
 		return odbcSocketBindingInjector;
+	}
+
+	public InjectedValue<ObjectReplicator> getObjectReplicatorInjector() {
+		return objectReplicatorInjector;
 	}	
 }

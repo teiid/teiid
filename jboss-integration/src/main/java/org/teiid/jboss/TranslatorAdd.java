@@ -46,7 +46,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.translator.ExecutionFactory;
 
-public class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvider {
+class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvider {
 
     @Override
     public ModelNode getModelDescription(final Locale locale) {
@@ -64,10 +64,13 @@ public class TranslatorAdd extends AbstractAddStepHandler implements Description
         final ModelNode address = operation.require(OP_ADDR);
         final PathAddress pathAddress = PathAddress.pathAddress(address);
 
-        final String moduleName = operation.require(Configuration.TRANSLATOR_MODULE).asString();
-
-        model.get(NAME).set(pathAddress.getLastElement().getValue());
-        model.get(Configuration.TRANSLATOR_MODULE).set(moduleName);
+        populate(pathAddress.getLastElement().getValue(), operation, model);
+	}
+	
+	static void populate(String name, ModelNode operation, ModelNode model) {
+		final String moduleName = operation.require(Configuration.TRANSLATOR_MODULE).asString();
+        model.get(NAME).set(name);
+        model.get(Configuration.TRANSLATOR_MODULE).set(moduleName);		
 	}
 	
 	@Override
@@ -83,11 +86,9 @@ public class TranslatorAdd extends AbstractAddStepHandler implements Description
 		
         final ServiceTarget target = context.getServiceTarget();
 
-        final ModuleIdentifier moduleId;
         final Module module;
         try {
-            moduleId = ModuleIdentifier.create(moduleName);
-            module = Module.getCallerModuleLoader().loadModule(moduleId);
+            module = Module.getCallerModuleLoader().loadModule(ModuleIdentifier.create(moduleName));
         } catch (ModuleLoadException e) {
             throw new OperationFailedException(e, new ModelNode().set(IntegrationPlugin.Util.getString("failed_load_module", moduleName, translatorName))); //$NON-NLS-1$
         }

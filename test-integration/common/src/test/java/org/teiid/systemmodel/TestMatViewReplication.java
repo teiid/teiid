@@ -34,6 +34,8 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.jboss.as.clustering.jgroups.ChannelFactory;
+import org.jgroups.Channel;
 import org.jgroups.JChannelFactory;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -124,12 +126,20 @@ public class TestMatViewReplication {
 	private FakeServer createServer() throws Exception {
 		FakeServer server = new FakeServer();
 		
-		JGroupsObjectReplicator jor = new JGroupsObjectReplicator();
-        jor.setClusterName("demo");
-        jor.setMultiplexerStack("tcp");
-        JChannelFactory jcf = new JChannelFactory();
-        jcf.setMultiplexerConfig(this.getClass().getClassLoader().getResource("stacks.xml")); //$NON-NLS-1$
-        jor.setChannelFactory(jcf);
+		JGroupsObjectReplicator jor = new JGroupsObjectReplicator("demo") {
+			@Override
+			public ChannelFactory getChannelFactory() {
+				return new ChannelFactory() {
+					@Override
+					public Channel createChannel(String id) throws Exception {
+				        JChannelFactory jcf = new JChannelFactory();
+				        jcf.setMultiplexerConfig(this.getClass().getClassLoader().getResource("stacks.xml")); //$NON-NLS-1$
+				        return jcf.createMultiplexerChannel("tcp", id);
+					}
+				};
+			}
+			
+		};
 
 		server.setReplicator(jor);
     	HashMap<String, Collection<FunctionMethod>> udfs = new HashMap<String, Collection<FunctionMethod>>();

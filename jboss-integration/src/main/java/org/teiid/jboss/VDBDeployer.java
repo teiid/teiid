@@ -44,7 +44,7 @@ import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.runtime.RuntimePlugin;
 
 
-public class VDBDeployer implements DeploymentUnitProcessor {
+class VDBDeployer implements DeploymentUnitProcessor {
 			
 	private TranslatorRepository translatorRepository;
 	private String asyncThreadPoolName;

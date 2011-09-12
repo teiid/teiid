@@ -577,7 +577,7 @@ class ListVDBs extends BaseOperationHandler<VDBRepository>{
 	protected void executeOperation(VDBRepository repo, ModelNode operation, ModelNode node) throws OperationFailedException {
 		List<VDBMetaData> vdbs = repo.getVDBs();
 		for (VDBMetaData vdb:vdbs) {
-			node.add(MetadataMapper.wrap(vdb, node.add()));
+			MetadataMapper.wrap(vdb, node.add());
 		}
 	}
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
@@ -595,7 +595,7 @@ class GetTranslators extends TranslatorOperationHandler{
 	protected void executeOperation(TranslatorRepository repo, ModelNode operation, ModelNode node) throws OperationFailedException {
 		List<VDBTranslatorMetaData> translators = repo.getTranslators();
 		for (VDBTranslatorMetaData t:translators) {
-			node.add(MetadataMapper.VDBTranslatorMetaDataMapper.wrap(t, node.add()));
+			MetadataMapper.VDBTranslatorMetaDataMapper.wrap(t, node.add());
 		}
 	}
 	

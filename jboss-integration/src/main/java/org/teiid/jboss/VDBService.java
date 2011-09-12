@@ -52,7 +52,7 @@ import org.teiid.translator.DelegatingExecutionFactory;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
-public class VDBService implements Service<VDBMetaData> {
+class VDBService implements Service<VDBMetaData> {
 	public static final String VDB_LASTMODIFIED_TIME = "VDB_LASTMODIFIED_TIME"; //$NON-NLS-1$
 	private VDBMetaData vdb;
 	private final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();

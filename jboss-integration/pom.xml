@@ -51,6 +51,11 @@
         <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>org.jboss.as</groupId>
+      <artifactId>jboss-as-clustering-jgroups</artifactId>
+      <scope>provided</scope>
+    </dependency>      
+    <dependency>
         <groupId>org.jboss</groupId>
         <artifactId>staxmapper</artifactId>
         <scope>provided</scope>

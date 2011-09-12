@@ -32,10 +32,9 @@ import org.jboss.as.controller.ExtensionContext;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.SubsystemRegistration;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
-import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
 import org.jboss.as.controller.parsing.ExtensionParsingContext;
-import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.AttributeAccess.Storage;
+import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.teiid.logging.Log4jListener;
@@ -53,6 +52,7 @@ public class TeiidExtension implements Extension {
 	private static TranslatorAdd TRANSLATOR_ADD = new TranslatorAdd();
 	private static TranslatorRemove TRANSLATOR_REMOVE = new TranslatorRemove();
 	private static TeiidBootServicesAdd TEIID_BOOT_ADD = new TeiidBootServicesAdd();
+	private static TeiidSubsystemDescribe TEIID_DESCRIBE = new TeiidSubsystemDescribe();
 	
 	@Override
 	public void initialize(ExtensionContext context) {
@@ -63,29 +63,10 @@ public class TeiidExtension implements Extension {
 		registration.registerXMLElementWriter(parser);
 
 		// Main Teiid system, with children query engine and translators.
-		final ManagementResourceRegistration teiidSubsystem = registration.registerSubsystemModel(new DescriptionProvider() {
-			@Override
-			public ModelNode getModelDescription(Locale locale) {
-				final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
-				
-		        ModelNode node = new ModelNode();
-		        node.get(ModelDescriptionConstants.DESCRIPTION).set("teiid subsystem"); //$NON-NLS-1$
-		        node.get(ModelDescriptionConstants.HEAD_COMMENT_ALLOWED).set(true);
-		        node.get(ModelDescriptionConstants.TAIL_COMMENT_ALLOWED).set(true);
-		        node.get(ModelDescriptionConstants.NAMESPACE).set(Namespace.CURRENT.getUri());
-		        
-		        TeiidBootServicesAdd.describeTeiidRoot(bundle, ATTRIBUTES, node);
-		        node.get(CHILDREN, Configuration.QUERY_ENGINE, DESCRIPTION).set(bundle.getString(Configuration.QUERY_ENGINE+Configuration.DESC)); 
-		        node.get(CHILDREN, Configuration.QUERY_ENGINE, REQUIRED).set(true);
-		        
-		        node.get(CHILDREN, Configuration.TRANSLATOR, DESCRIPTION).set(bundle.getString(Configuration.TRANSLATOR+Configuration.DESC));
-		        node.get(CHILDREN, Configuration.TRANSLATOR, REQUIRED).set(true);
-
-		        return node;
-		    }
-		});
+		
+		final ManagementResourceRegistration teiidSubsystem = registration.registerSubsystemModel(TEIID_DESCRIBE);
 		teiidSubsystem.registerOperationHandler(ADD, TEIID_BOOT_ADD, TEIID_BOOT_ADD, false);
-		//teiidSubsystem.registerOperationHandler(REMOVE, ENGINE_REMOVE, ENGINE_REMOVE, false);     
+		teiidSubsystem.registerOperationHandler(DESCRIBE, TEIID_DESCRIBE, TEIID_DESCRIBE, false);     
 				
 		// Translator Subsystem
         final ManagementResourceRegistration translatorSubsystem = teiidSubsystem.registerSubModel(PathElement.pathElement(Configuration.TRANSLATOR), new DescriptionProvider() {

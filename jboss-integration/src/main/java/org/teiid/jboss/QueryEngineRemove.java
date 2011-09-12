@@ -37,7 +37,7 @@ import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
 import org.teiid.transport.LocalServerConnection;
 
-public class QueryEngineRemove extends AbstractRemoveStepHandler implements DescriptionProvider {
+class QueryEngineRemove extends AbstractRemoveStepHandler implements DescriptionProvider {
 
 	@Override
     protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) {

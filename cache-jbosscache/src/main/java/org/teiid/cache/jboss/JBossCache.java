@@ -22,138 +22,65 @@
 
 package org.teiid.cache.jboss;
 
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
-import org.jboss.cache.Fqn;
-import org.jboss.cache.Node;
 import org.teiid.cache.Cache;
-import org.teiid.cache.CacheConfiguration;
-import org.teiid.cache.CacheListener;
 
 
 /**
- * Implementation of Cache using JBoss Cache
+ * Implementation of Cache using Infinispan
  */
-public class JBossCache<K, V> implements Cache<K, V> {
+public class JBossCache<K, V> implements Cache<String, V> {
 
-	protected org.jboss.cache.Cache<K, V> cacheStore;
-	protected Fqn rootFqn;
-	protected JBossCacheListener cacheListener;
-	protected CacheConfiguration config;
+	protected org.infinispan.Cache<String, V> cacheStore;
+	private final String name; 
 	
-	public JBossCache(org.jboss.cache.Cache<K, V> cacheStore, Fqn fqn) {
+	public JBossCache(org.infinispan.Cache<String, V> cacheStore, String cacheName) {
 		this.cacheStore = cacheStore;
-		this.rootFqn = fqn;
+		this.name = cacheName;
+	}
+	
+	private String fqn(String key) {
+		return this.name+"."+key; //$NON-NLS-1$
 	}
 	
 	@Override
-	public V get(K key) {
-		Node<K, V> node = getRootNode();
-		Node child = node.getChild(getFqn(key));
-		if (child != null) {
-			if (validateNode(child)) {
-				return (V)child.get(key);
-			}
-			remove(key);
-		}
-		return null;
+	public V get(String key) {
+		return this.cacheStore.get(fqn(key));
 	}
 	
-	protected boolean validateNode(Node node) {
-		return true;
-	}
-
-	protected Fqn<String> getFqn(K key) {
-		if (key.getClass().isPrimitive() || key instanceof String) {
-			return Fqn.fromString(String.valueOf(key));
-		}
-		return Fqn.fromString(String.valueOf(key.getClass().getSimpleName()+key.hashCode()));
-	}
-
-	public V put(K key, V value) {
-		Node<K, V> node = getRootNode();
-		Node<K, V> child = node.addChild(getFqn(key));
-		return child.put(key, value);
+	public V put(String key, V value) {
+		return this.cacheStore.put(fqn(key), value);
 	}
 	
 	@Override
-	public V put(K key, V value, Long ttl) {
-		return this.put(key, value);
+	public V put(String key, V value, Long ttl) {
+		return this.cacheStore.put(fqn(key), value, ttl, TimeUnit.SECONDS);
 	}
 
 	@Override
-	public V remove(K key) {
-		Node<K, V> node = getRootNode();
-		Fqn<String> fqn = getFqn(key);
-		Node child = node.getChild(fqn);
-		if (child != null) {
-			V value = (V)child.remove(key);
-			node.removeChild(fqn);
-			return value;
-		}
-		return null;
+	public V remove(String key) {
+		return this.cacheStore.remove(fqn(key));
 	}
 	
 	@Override
 	public int size() {
-		Node<K, V> node = getRootNode();
-		int size = 0;
-		Set<Node<K,V>> nodes = new HashSet<Node<K, V>>(node.getChildren());
-		for (Node<K, V> child : nodes) {
-			if (!child.getData().isEmpty()) {
-				size++;
-			}
-		}
-		return size;
+		return this.cacheStore.size();
 	}
 	
 	@Override
 	public void clear() {
-		Node<K, V> node = getRootNode();
-		node.clearData();
-		Set<Node<K,V>> nodes = new HashSet<Node<K, V>>(node.getChildren());
-		for (Node<K, V> child : nodes) {
-			child.clearData();
-			node.removeChild(child.getFqn());
-		}
+		this.cacheStore.clear();
 	}
 	
-	public synchronized void addListener(CacheListener listener) {
-		this.cacheListener = new JBossCacheListener(this.rootFqn, listener);
-		this.cacheStore.addCacheListener(this.cacheListener);
-	}
-
-	public synchronized void removeListener() {
-		this.cacheStore.removeCacheListener(this.cacheListener);
-		this.cacheListener = null;	
-	}
-
-	protected Node<K, V> getRootNode() {
-		Node<K, V> node = this.cacheStore.getNode(this.rootFqn);
-		if (node == null) {
-			throw new IllegalStateException("Cache Node "+ this.rootFqn +" not found."); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-		return node;
-	}
-
 	@Override
 	public String getName() {
-		return this.rootFqn.toString();
-	}
-
-	void setCacheConfiguration(CacheConfiguration config) {
-		this.config = config;
+		return this.name;
 	}
 
 	@Override
-	public Set<K> keys() {
-		HashSet keys = new HashSet();
-		Node<K, V> node = getRootNode();
-		Set<Node<K, V>> children = node.getChildren();
-		for (Node<K, V> child:children) {
-			keys.addAll(child.getData().keySet());
-		}
-		return keys;
+	public Set<String> keys() {
+		return this.cacheStore.keySet();
 	}
 }

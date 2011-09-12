@@ -44,7 +44,7 @@ import org.teiid.runtime.RuntimePlugin;
 /**
  * This file loads the "vdb.xml" file inside a ".vdb" file, along with all the metadata in the .INDEX files
  */
-public class VDBParserDeployer implements DeploymentUnitProcessor {
+class VDBParserDeployer implements DeploymentUnitProcessor {
 	
 	public VDBParserDeployer() {
 	}

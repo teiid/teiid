@@ -28,9 +28,8 @@ import org.jboss.dmr.ModelType;
 
 class Configuration {
 	public static final String BUFFER_SERVICE = "buffer-service";//$NON-NLS-1$
-	public static final String RESULTSET_CACHE = "resultset-cache";//$NON-NLS-1$
 	public static final String PREPAREDPLAN_CACHE = "preparedplan-cache";//$NON-NLS-1$	
-	public static final String CACHE_FACORY = "distributed-cache-factory";//$NON-NLS-1$
+	public static final String RESULTSET_CACHE = "resultset-cache";//$NON-NLS-1$
 	public static final String QUERY_ENGINE = "query-engine";//$NON-NLS-1$
 	public static final String JDBC = "jdbc";//$NON-NLS-1$
 	public static final String ODBC = "odbc"; //$NON-NLS-1$
@@ -48,7 +47,7 @@ class Configuration {
 	public static final String MAX_SOURCE_ROWS = "max-source-rows-allowed";//$NON-NLS-1$
 	public static final String EXCEPTION_ON_MAX_SOURCE_ROWS = "exception-on-max-source-rows";//$NON-NLS-1$
 	public static final String MAX_ODBC_LOB_SIZE_ALLOWED = "max-odbc-lob-size-allowed";//$NON-NLS-1$
-	public static final String OBJECT_REPLICATOR_NAME = "object-replicator-name";//$NON-NLS-1$
+	public static final String OBJECT_REPLICATOR = "object-replicator";//$NON-NLS-1$
 	public static final String DETECTING_CHANGE_EVENTS = "detect-change-events";//$NON-NLS-1$
 	public static final String SECURITY_DOMAIN = "security-domain";//$NON-NLS-1$
 	public static final String MAX_SESSIONS_ALLOWED = "max-sessions-allowed";//$NON-NLS-1$
@@ -72,32 +71,34 @@ class Configuration {
 	public static final String MAX_ENTRIES = "max-entries";//$NON-NLS-1$
 	public static final String MAX_AGE_IN_SECS = "max-age-in-seconds";//$NON-NLS-1$
 	public static final String MAX_STALENESS = "max-staleness";//$NON-NLS-1$
-	public static final String CACHE_TYPE = "type";//$NON-NLS-1$
 	public static final String ENABLE = "enable";//$NON-NLS-1$
 	
-	// cache-factory
-	public static final String  CACHE_SERVICE_JNDI_NAME = "cache-manager-jndi-name";//$NON-NLS-1$
-	public static final String  RESULTSET_CACHE_NAME = "resultsetCacheName";//$NON-NLS-1$
+	// cache-container
+	public static final String  NAME = "name";//$NON-NLS-1$
+	public static final String  CONTAINER_NAME = "container-name";//$NON-NLS-1$
 	
 	//socket config
-	public static final String MAX_SOCKET_THREAD_SIZE = "maxSocketThreads";//$NON-NLS-1$
-	public static final String IN_BUFFER_SIZE = "inputBufferSize";//$NON-NLS-1$
-	public static final String OUT_BUFFER_SIZE = "outputBufferSize";//$NON-NLS-1$
+	public static final String MAX_SOCKET_THREAD_SIZE = "max-socket-threads";//$NON-NLS-1$
+	public static final String IN_BUFFER_SIZE = "input-buffer-size";//$NON-NLS-1$
+	public static final String OUT_BUFFER_SIZE = "output-buffer-size";//$NON-NLS-1$
 	public static final String SOCKET_BINDING = "socket-binding";//$NON-NLS-1$
 	public static final String SOCKET_ENABLED = "enabled";//$NON-NLS-1$
 	public static final String SSL_MODE = "mode";//$NON-NLS-1$
-	public static final String KEY_STORE_FILE = "keystoreFilename";//$NON-NLS-1$
-	public static final String KEY_STORE_PASSWD = "keystorePassword";//$NON-NLS-1$
-	public static final String KEY_STORE_TYPE = "keystoreType";//$NON-NLS-1$
-	public static final String SSL_PROTOCOL = "sslProtocol";//$NON-NLS-1$
-	public static final String KEY_MANAGEMENT_ALG = "keymanagementAlgorithm";//$NON-NLS-1$
-	public static final String TRUST_FILE = "truststoreFilename";//$NON-NLS-1$
-	public static final String TRUST_PASSWD = "truststorePassword";//$NON-NLS-1$
-	public static final String AUTH_MODE = "authenticationMode";//$NON-NLS-1$
+	public static final String KEY_STORE_FILE = "keystore-name";//$NON-NLS-1$
+	public static final String KEY_STORE_PASSWD = "keystore-password";//$NON-NLS-1$
+	public static final String KEY_STORE_TYPE = "keystore-type";//$NON-NLS-1$
+	public static final String SSL_PROTOCOL = "ssl-protocol";//$NON-NLS-1$
+	public static final String KEY_MANAGEMENT_ALG = "keymanagement-algorithm";//$NON-NLS-1$
+	public static final String TRUST_FILE = "truststore-name";//$NON-NLS-1$
+	public static final String TRUST_PASSWD = "truststore-password";//$NON-NLS-1$
+	public static final String AUTH_MODE = "authentication-mode";//$NON-NLS-1$
 	public static final String SSL = "ssl";//$NON-NLS-1$
 	
 	public static final String TRANSLATOR_NAME = "name";//$NON-NLS-1$
 	public static final String TRANSLATOR_MODULE = "module";//$NON-NLS-1$
+	
+	public static final String STACK = "stack";//$NON-NLS-1$
+	public static final String CLUSTER_NAME = "cluster-name";//$NON-NLS-1$
 	
 	public static final String ENGINE_NAME = "name";//$NON-NLS-1$
 	

@@ -45,6 +45,7 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.jboss.msc.inject.ConcurrentMapInjector;
 import org.jboss.msc.service.*;
+import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.deployers.SystemVDBDeployer;
 import org.teiid.deployers.VDBRepository;
@@ -54,6 +55,7 @@ import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.jboss.deployers.RuntimeEngineDeployer;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.query.ObjectReplicator;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.LocalServerConnection;
@@ -68,7 +70,7 @@ class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvid
 		
         final ModelNode node = new ModelNode();
         node.get(OPERATION_NAME).set(ADD);
-        node.get(DESCRIPTION).set("engine.add"); //$NON-NLS-1$
+        node.get(DESCRIPTION).set("engine.add");  //$NON-NLS-1$
         
         ModelNode engine = node.get(REQUEST_PROPERTIES, Configuration.QUERY_ENGINE);
         describeQueryEngine(engine, ATTRIBUTES, bundle);
@@ -81,7 +83,7 @@ class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvid
         final PathAddress pathAddress = PathAddress.pathAddress(address);
     	final String engineName = pathAddress.getLastElement().getValue();
 
-		populateQueryEngine(engineName, operation, model);
+		populate(engineName, operation, model);
 	}
 	
 	@Override
@@ -124,6 +126,7 @@ class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvid
         engineBuilder.addDependency(TeiidServiceNames.AUTHORIZATION_VALIDATOR, AuthorizationValidator.class, engine.getAuthorizationValidatorInjector());
         engineBuilder.addDependency(TeiidServiceNames.CACHE_RESULTSET, SessionAwareCache.class, engine.getResultSetCacheInjector());
         engineBuilder.addDependency(TeiidServiceNames.CACHE_PREPAREDPLAN, SessionAwareCache.class, engine.getPreparedPlanCacheInjector());
+        engineBuilder.addDependency(DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, engine.getObjectReplicatorInjector());
         
         if (jdbc != null) {
         	engineBuilder.addDependency(ServiceName.JBOSS.append("binding", jdbc.getSocketBinding()), SocketBinding.class, engine.getJdbcSocketBindingInjector()); //$NON-NLS-1$
@@ -199,9 +202,6 @@ class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvid
     	}
     	if (node.hasDefined(Configuration.MAX_ODBC_LOB_SIZE_ALLOWED)) {
     		engine.setMaxODBCLobSizeAllowed(node.get(Configuration.MAX_ODBC_LOB_SIZE_ALLOWED).asInt());
-    	}
-    	if (node.hasDefined(Configuration.OBJECT_REPLICATOR_NAME)) {
-    		engine.setObjectReplicatorName(node.get(Configuration.OBJECT_REPLICATOR_NAME).asString());
     	}
     	if (node.hasDefined(Configuration.DETECTING_CHANGE_EVENTS)) {
     		engine.setDetectingChangeEvents(node.get(Configuration.DETECTING_CHANGE_EVENTS).asBoolean());
@@ -295,8 +295,7 @@ class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvid
 		addAttribute(node, Configuration.QUERY_THRESHOLD_IN_SECS, type, bundle.getString(Configuration.QUERY_THRESHOLD_IN_SECS+DESC), ModelType.INT, false, "600"); //$NON-NLS-1$		
 		addAttribute(node, Configuration.MAX_SOURCE_ROWS, type, bundle.getString(Configuration.MAX_SOURCE_ROWS+DESC), ModelType.INT, false, "-1"); //$NON-NLS-1$
 		addAttribute(node, Configuration.EXCEPTION_ON_MAX_SOURCE_ROWS, type, bundle.getString(Configuration.EXCEPTION_ON_MAX_SOURCE_ROWS+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_ODBC_LOB_SIZE_ALLOWED, type, bundle.getString(Configuration.MAX_ODBC_LOB_SIZE_ALLOWED+DESC), ModelType.INT, false, "5242880"); //$NON-NLS-1$
-		addAttribute(node, Configuration.OBJECT_REPLICATOR_NAME, type, bundle.getString(Configuration.OBJECT_REPLICATOR_NAME+DESC), ModelType.STRING, false, "teiid/event-distributor"); //$NON-NLS-1$
+		addAttribute(node, Configuration.MAX_ODBC_LOB_SIZE_ALLOWED, type, bundle.getString(Configuration.MAX_ODBC_LOB_SIZE_ALLOWED+DESC), ModelType.INT, false, "5242880"); //$NON-NLS-1$		
 		addAttribute(node, Configuration.DETECTING_CHANGE_EVENTS, type, bundle.getString(Configuration.DETECTING_CHANGE_EVENTS+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
 		
 		//session stuff
@@ -325,11 +324,10 @@ class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvid
 	
 	
 	private static void describeSocketConfig(ModelNode node, String type, ResourceBundle bundle) {
-		addAttribute(node, Configuration.SOCKET_ENABLED, type, bundle.getString(Configuration.SOCKET_ENABLED+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
 		addAttribute(node, Configuration.MAX_SOCKET_THREAD_SIZE, type, bundle.getString(Configuration.MAX_SOCKET_THREAD_SIZE+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
 		addAttribute(node, Configuration.IN_BUFFER_SIZE, type, bundle.getString(Configuration.IN_BUFFER_SIZE+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
 		addAttribute(node, Configuration.OUT_BUFFER_SIZE, type, bundle.getString(Configuration.OUT_BUFFER_SIZE+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
-		addAttribute(node, Configuration.SOCKET_BINDING, type, bundle.getString(Configuration.SOCKET_BINDING+DESC), ModelType.INT, true, null);
+		addAttribute(node, Configuration.SOCKET_BINDING, type, bundle.getString(Configuration.SOCKET_BINDING+DESC), ModelType.STRING, true, null);
 		
 		ModelNode sslNode = node.get(CHILDREN, Configuration.SSL);
 		sslNode.get(TYPE).set(ModelType.OBJECT);
@@ -348,7 +346,7 @@ class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvid
 		addAttribute(node, Configuration.AUTH_MODE, type, bundle.getString(Configuration.AUTH_MODE+DESC), ModelType.STRING, false, "anonymous");	//$NON-NLS-1$
 	}	
 	
-	private void populateQueryEngine(String engineName, ModelNode operation, ModelNode model) {
+	static void populate(String engineName, ModelNode operation, ModelNode model) {
 		model.get(Configuration.ENGINE_NAME).set(engineName);
 		
 		if (operation.hasDefined(Configuration.MAX_THREADS)) {
@@ -381,9 +379,6 @@ class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvid
     	if (operation.hasDefined(Configuration.MAX_ODBC_LOB_SIZE_ALLOWED)) {
     		model.get(Configuration.MAX_ODBC_LOB_SIZE_ALLOWED).set(operation.get(Configuration.MAX_ODBC_LOB_SIZE_ALLOWED).asInt());
     	}
-    	if (operation.hasDefined(Configuration.OBJECT_REPLICATOR_NAME)) {
-    		model.get(Configuration.OBJECT_REPLICATOR_NAME).set(operation.get(Configuration.OBJECT_REPLICATOR_NAME).asString());
-    	}
     	if (operation.hasDefined(Configuration.SECURITY_DOMAIN)) {
     		List<ModelNode> domains = operation.get(Configuration.SECURITY_DOMAIN).asList();
     		for (ModelNode domain: domains) {
@@ -409,7 +404,7 @@ class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvid
     	}     	
 	}
 
-	private void populateSocketConfiguration(ModelNode operation, ModelNode model) {
+	private static void populateSocketConfiguration(ModelNode operation, ModelNode model) {
 		if (operation.hasDefined(Configuration.SOCKET_BINDING)) {
 			model.get(Configuration.SOCKET_BINDING).set(operation.get(Configuration.SOCKET_BINDING).asString());
 		}

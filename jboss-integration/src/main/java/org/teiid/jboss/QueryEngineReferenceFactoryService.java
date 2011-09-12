@@ -35,7 +35,7 @@ import org.jboss.msc.value.InjectedValue;
 import org.teiid.jboss.deployers.RuntimeEngineDeployer;
 
 
-public class QueryEngineReferenceFactoryService implements Service<ManagedReferenceFactory>, ManagedReferenceFactory {
+class QueryEngineReferenceFactoryService implements Service<ManagedReferenceFactory>, ManagedReferenceFactory {
     private final InjectedValue<RuntimeEngineDeployer> engineInjector = new InjectedValue<RuntimeEngineDeployer>();
 
     private ManagedReference reference;

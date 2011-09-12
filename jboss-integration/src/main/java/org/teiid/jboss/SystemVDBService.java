@@ -27,7 +27,7 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.teiid.deployers.SystemVDBDeployer;
 
-public class SystemVDBService implements Service<SystemVDBDeployer> {
+class SystemVDBService implements Service<SystemVDBDeployer> {
 	private SystemVDBDeployer deployer;
 	
 	public SystemVDBService(SystemVDBDeployer deployer){

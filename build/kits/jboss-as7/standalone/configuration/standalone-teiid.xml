@@ -161,8 +161,14 @@
                 </local-cache>
                 <local-cache name="timestamps">
                     <eviction strategy="NONE"/>
-                </local-cache>
+                </local-cache>                 
             </cache-container>
+            <cache-container name="teiid" default-cache="resultset">
+                <local-cache name="resultset">
+                    <expiration lifespan="7200" />
+                    <eviction max-entries="1024" strategy="LRU"/>
+                </local-cache>
+            </cache-container>            
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:jaxrs:1.0"/>
         <subsystem xmlns="urn:jboss:domain:jca:1.0">
@@ -274,6 +280,7 @@
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:teiid:1.0">
             <async-thread-group>teiid-async</async-thread-group>
+            <resultset-cache container-name="teiid" name="resultset"/>
             
             <query-engine name = "default">
                 <security-domain>teiid-security</security-domain>

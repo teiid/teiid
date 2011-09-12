@@ -61,14 +61,7 @@
                 </xs:annotation>
             </xs:element>
 
-
-            <xs:element name="distributed-cache-factory" type="cache-factory-type" maxOccurs="1" minOccurs="1">
-                <xs:annotation>
-                    <xs:documentation>Cache Factory</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-
-            <xs:element name="resultset-cache" type="cache-config" maxOccurs="1" minOccurs="0">
+            <xs:element name="resultset-cache" type="xs:string" maxOccurs="1" minOccurs="0">
                 <xs:annotation>
                     <xs:documentation>Configuration for result set caching.
                         There will be 2 caches with these settings.
@@ -76,12 +69,28 @@
                         The other cache holds vdb scoped results and can
                         be replicated.</xs:documentation>
                 </xs:annotation>
+                <xs:attribute name="container-name" type="xs:string" use="required"/>
+                <xs:attribute name="name" type="xs:string" use="required"/>
+                <xs:attribute name="enable" type="xs:boolean" default="true"/>
+                <xs:attribute name="max-staleness" type="xs:int" default="60"/>
             </xs:element>
-            <xs:element name="preparedplan-cache" type="cache-config" maxOccurs="1" minOccurs="0">
+            
+            <xs:element name="preparedplan-cache" type="xs:string" maxOccurs="1" minOccurs="0">
                 <xs:annotation>
                     <xs:documentation>Configuration for prepared plan caching. (local memory only)</xs:documentation>
                 </xs:annotation>
+                <xs:attribute name="max-entries" type="xs:string"/>
+                <xs:attribute name="max-age-in-seconds" type="xs:boolean" default="true"/>
+                <xs:attribute name="max-staleness" type="xs:int" default="0"/>                
             </xs:element>
+            
+            <xs:element name="object-replicator" type="xs:string" maxOccurs="1" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Cluster wide results distributor </xs:documentation>
+                </xs:annotation>
+                <xs:attribute name="stack" type="xs:string" use="required"/>
+                <xs:attribute name="cluster-name" type="xs:string" use="required"/>
+            </xs:element>            
         
             <xs:element name="query-engine" type="runtime-engine-type" maxOccurs="2" minOccurs="1">
                 <xs:annotation>
@@ -136,50 +145,6 @@
         </xs:sequence>
     </xs:complexType>
 
-    <xs:complexType name="cache-factory-type">
-        <xs:sequence>
-            <xs:element name="cache-service-jndi-name" type="xs:string" minOccurs="1" maxOccurs="1">
-                <xs:annotation>
-                    <xs:documentation>JNDI Name of the Cache manager</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="resultsetCacheName" type="xs:string" minOccurs="1" maxOccurs="1">
-                <xs:annotation>
-                    <xs:documentation>Name of the resultset cache name</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-        </xs:sequence>
-    </xs:complexType>
-    <xs:complexType name="cache-config">
-        <xs:sequence>
-            <xs:element name="max-entries" type="xs:string" minOccurs="0" maxOccurs="1" default="1024">
-                <xs:annotation>
-                    <xs:documentation>Max Entries allowed (default 1024)</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="max-age-in-seconds" type="xs:int" minOccurs="0" maxOccurs="1" default="7200">
-                <xs:annotation>
-                    <xs:documentation>Max age in seconds (default 7200 - 2 hours)</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="max-staleness" type="xs:int" minOccurs="0" maxOccurs="1" default="-1">
-                <xs:annotation>
-                    <xs:documentation>Max staleness in seconds. Modifications are based upon data updates -1 indicates no max. (default 60 - 1 minute)</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="type" minOccurs="0" maxOccurs="1" default="LRU">
-                <xs:annotation>
-                    <xs:documentation>Allowed values are LRU, EXPIRATION. Setting this value to LRU will cause cache hint TTL values to be ignored. (default EXPIRATION)</xs:documentation>
-                </xs:annotation>
-                <xs:simpleType>
-                    <xs:restriction base="xs:string">
-                        <xs:enumeration value="LRU" />
-                        <xs:enumeration value="EXPIRATION" />
-                    </xs:restriction>
-                </xs:simpleType>
-            </xs:element>
-        </xs:sequence>
-    </xs:complexType>
     <xs:complexType name="runtime-engine-type">
         <xs:sequence>
             <xs:element name="max-threads" type="xs:int" minOccurs="0" maxOccurs="1" default="64">
@@ -274,34 +239,21 @@
         <xs:attribute name="name" type="xs:string" use="required"/>
     </xs:complexType>
 
-    <xs:complexType name="authorization-validator-type">
-        <xs:sequence>
-            <xs:element name="maxSocketThreads" type="xs:int" minOccurs="0" maxOccurs="1">
-                <xs:annotation>
-                    <xs:documentation>Max number of threads dedicated to initial request processing.
-                        Zero indicates the system default of max available processors. (default 0)
-                        Setting this value above the max available processors is not recommended.</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-        </xs:sequence>
-    </xs:complexType>
-
-
     <xs:complexType name="socket-config">
         <xs:sequence>
-            <xs:element name="maxSocketThreads" type="xs:int" minOccurs="0" maxOccurs="1" default="0">
+            <xs:element name="max-socket-threads" type="xs:int" minOccurs="0" maxOccurs="1" default="0">
                 <xs:annotation>
                     <xs:documentation>Max number of threads dedicated to initial request processing.
                         Zero indicates the system default of max available processors. (default 0)
                         Setting this value above the max available processors is not recommended.</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="inputBufferSize" type="xs:int" minOccurs="0" maxOccurs="1" default="0">
+            <xs:element name="input-buffer-size" type="xs:int" minOccurs="0" maxOccurs="1" default="0">
                 <xs:annotation>
                     <xs:documentation>SO_RCVBUF size, 0 indicates that system default should be used (default 0) </xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="outputBufferSize" type="xs:int" minOccurs="0" maxOccurs="1" default="0">
+            <xs:element name="output-buffer-size" type="xs:int" minOccurs="0" maxOccurs="1" default="0">
                 <xs:annotation>
                     <xs:documentation>SO_SNDBUF size, 0 indicates that system default should be used (default 0)</xs:documentation>
                 </xs:annotation>
@@ -334,14 +286,14 @@
                     </xs:restriction>
                 </xs:simpleType>                
             </xs:element>
-            <xs:element name="keystoreFilename" type="xs:string" minOccurs="0" maxOccurs="1" />
-            <xs:element name="keystorePassword" type="xs:string" minOccurs="0" maxOccurs="1" />
-            <xs:element name="keystoreType" type="xs:string" minOccurs="0" maxOccurs="1" />
-            <xs:element name="sslProtocol" type="xs:string" minOccurs="0" maxOccurs="1" />
-            <xs:element name="keymanagementAlgorithm" type="xs:boolean" minOccurs="0" maxOccurs="1" />
-            <xs:element name="truststoreFilename" type="xs:string" minOccurs="0" maxOccurs="1" />
-            <xs:element name="truststorePassword" type="xs:string" minOccurs="0" maxOccurs="1" />
-            <xs:element name="authenticationMode" minOccurs="0" maxOccurs="1" default="anonymous">
+            <xs:element name="keystore-name" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="keystore-password" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="keystore-type" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="ssl-protocol" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="keymanagement-algorithm" type="xs:boolean" minOccurs="0" maxOccurs="1" />
+            <xs:element name="truststore-name" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="truststore-password" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="authentication-mode" minOccurs="0" maxOccurs="1" default="anonymous">
                 <xs:annotation>
                     <xs:documentation>1-way, 2-way, anonymous</xs:documentation>
                 </xs:annotation>

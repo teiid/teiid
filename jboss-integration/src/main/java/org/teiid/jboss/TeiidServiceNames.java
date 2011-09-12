@@ -35,9 +35,9 @@ public class TeiidServiceNames {
 	public static ServiceName AUTHORIZATION_VALIDATOR = ServiceName.JBOSS.append("teiid", "authorization-validator");//$NON-NLS-1$ //$NON-NLS-2$
 	private static ServiceName VDB_SVC_BASE = ServiceName.JBOSS.append("teiid", "vdb"); //$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName OBJECT_SERIALIZER = ServiceName.JBOSS.append("teiid", "object-serializer"); //$NON-NLS-1$ //$NON-NLS-2$
-	public static ServiceName CACHE_FACTORY = ServiceName.JBOSS.append("teiid", "cache-factory"); //$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName CACHE_RESULTSET = ServiceName.JBOSS.append("teiid", "cache", "resultset"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	public static ServiceName CACHE_PREPAREDPLAN = ServiceName.JBOSS.append("teiid", "cache", "prepared-plan"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	public static ServiceName OBJECT_REPLICATOR = ServiceName.JBOSS.append("teiid", "object-replicator"); //$NON-NLS-1$ //$NON-NLS-2$
 	
 	
 	public static ServiceName translatorServiceName(String name) {

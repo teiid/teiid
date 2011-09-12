@@ -28,7 +28,7 @@ import org.teiid.metadata.VdbConstants;
 
 
 
-public class VDBStructure  implements DeploymentUnitProcessor {
+class VDBStructure  implements DeploymentUnitProcessor {
 	private static final String VDB_EXTENSION = ".vdb"; //$NON-NLS-1$
 	private static final String DYNAMIC_VDB_STRUCTURE = "-vdb.xml"; //$NON-NLS-1$
 	
