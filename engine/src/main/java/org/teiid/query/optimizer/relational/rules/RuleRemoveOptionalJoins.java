@@ -25,6 +25,7 @@ package org.teiid.query.optimizer.relational.rules;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -50,6 +51,7 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.util.CommandContext;
@@ -72,7 +74,7 @@ public class RuleRemoveOptionalJoins implements
                                                    TeiidComponentException {
 
         try {
-            removeOptionalJoinNodes(plan, metadata, capFinder, null);
+            removeOptionalJoinNodes(plan, metadata, capFinder, null, null);
         } catch (QueryResolverException e) {
             throw new TeiidComponentException(e);
         }
@@ -85,12 +87,21 @@ public class RuleRemoveOptionalJoins implements
      */ 
     private boolean removeOptionalJoinNodes(PlanNode node,
                                             QueryMetadataInterface metadata,
-                                            CapabilitiesFinder capFinder, Set<ElementSymbol> elements) throws QueryPlannerException,
+                                            CapabilitiesFinder capFinder, Set<ElementSymbol> elements, List<Integer> indexes) throws QueryPlannerException,
                                                                          QueryMetadataException,
                                                                          TeiidComponentException, QueryResolverException {
         if (node.getChildCount() == 0) {
             return false;
         }
+        
+        if (indexes != null && node.getParent() != null && node.getParent().getType() == NodeConstants.Types.SET_OP && node.getParent().getFirstChild() != node) {
+        	elements = new HashSet<ElementSymbol>();
+        	List columns = (List)node.getProperty(NodeConstants.Info.PROJECT_COLS);
+            for (int i : indexes) {
+        		SingleElementSymbol column = (SingleElementSymbol) columns.get(i);
+        		ElementCollectorVisitor.getElements(column, elements);
+			}
+        } 
         
         boolean isRoot = false;
         
@@ -138,15 +149,21 @@ public class RuleRemoveOptionalJoins implements
             case NodeConstants.Types.SOURCE:
             {
                 if (elements == null) {
+                    indexes = null;
                     break;
                 }
                 SymbolMap symbolMap = (SymbolMap)node.getProperty(NodeConstants.Info.SYMBOL_MAP);
                 Set convertedElements = new HashSet();
+                indexes = new LinkedList<Integer>();
+                List<ElementSymbol> keys = symbolMap.getKeys();
+                List<Expression> values = symbolMap.getValues();
                 for (ElementSymbol element : elements) {
-                    Expression convertedExpression = symbolMap.getMappedExpression(element);
-                    if (convertedExpression != null) {
+                	int index = keys.indexOf(element);
+                	if (index >= 0) {
+                		Expression convertedExpression = values.get(index);
+                		indexes.add(index);
                         ElementCollectorVisitor.getElements(convertedExpression, convertedElements);
-                    }
+                	}
                 }
                 elements = convertedElements;
                 isRoot = true;
@@ -170,6 +187,14 @@ public class RuleRemoveOptionalJoins implements
                 break;
             }
             case NodeConstants.Types.SET_OP:
+            {
+            	if (!node.hasBooleanProperty(NodeConstants.Info.USE_ALL)) {
+	            	//allow project nodes to be seen as roots
+	                elements = null;
+	                indexes = null;
+            	} 
+                break;
+            }
             case NodeConstants.Types.DUP_REMOVE:
             {
                 //allow project nodes to be seen as roots
@@ -182,7 +207,7 @@ public class RuleRemoveOptionalJoins implements
         if (isRoot) {
             boolean optionalRemoved = false;
             do {
-                optionalRemoved = removeOptionalJoinNodes(node.getFirstChild(), metadata, capFinder, elements);
+                optionalRemoved = removeOptionalJoinNodes(node.getFirstChild(), metadata, capFinder, elements, indexes);
             } while (optionalRemoved);
             return false;
         }
@@ -191,7 +216,7 @@ public class RuleRemoveOptionalJoins implements
         Iterator iter = node.getChildren().iterator();
 
         while (node.getChildCount() >= 1 && iter.hasNext()) {
-            if (removeOptionalJoinNodes((PlanNode)iter.next(), metadata, capFinder, elements)) {
+            if (removeOptionalJoinNodes((PlanNode)iter.next(), metadata, capFinder, elements, indexes)) {
                 return true;
             }
         }
