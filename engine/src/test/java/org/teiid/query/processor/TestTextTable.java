@@ -22,6 +22,8 @@
 
 package org.teiid.query.processor;
 
+import static org.junit.Assert.*;
+import static org.teiid.query.optimizer.TestOptimizer.*;
 import static org.teiid.query.processor.TestProcessor.*;
 
 import java.util.Arrays;
@@ -34,7 +36,13 @@ import org.teiid.core.types.ClobType;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.query.processor.relational.JoinNode;
+import org.teiid.query.processor.relational.NestedTableJoinStrategy;
+import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings({"unchecked", "nls"})
 public class TestTextTable {
@@ -208,7 +216,26 @@ public class TestTextTable {
         };    
 
         process(sql, expected);
-    }   
+    }
+	
+	@Test public void testTextTableJoin() throws Exception {
+		String sql = "select z.* from (select x.* from (select * from pm1.g1 where e1 = 'c') y, texttable(e1 || '\n' || e2 || '\n' || e3 COLUMNS x string) x) as z, " +
+				"(select x.* from (select * from pm1.g1 where e1 = 'c') y, texttable(e1 || '\n' || e2 || '\n' || e3 COLUMNS x string) x) as z1 where z.x = z1.x order by z.x";
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("1"),
+        		Arrays.asList("c"),
+        		Arrays.asList("true"),
+        };    
+
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        RelationalPlan plan = (RelationalPlan)helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        // The root node's child is a sortNode so we want the sortNode's first child
+        JoinNode join = (JoinNode) plan.getRootNode().getChildren()[0].getChildren()[0];
+        assertTrue(!(join.getJoinStrategy() instanceof NestedTableJoinStrategy));
+        helpProcess(plan, createCommandContext(), dataManager, expected);
+    } 
 	
 	public static void process(String sql, List[] expectedResults) throws Exception {    
     	FakeDataManager dataManager = new FakeDataManager();
