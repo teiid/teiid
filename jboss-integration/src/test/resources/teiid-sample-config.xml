@@ -16,25 +16,13 @@
         <authorization-validator-module>javax.api</authorization-validator-module>
         <policy-decider-module>javax.api</policy-decider-module>
          -->
-        <distributed-cache-factory>
-            <cache-service-jndi-name>java:TeiidCacheManager</cache-service-jndi-name>
-            <resultsetCacheName>teiid-resultset-cache</resultsetCacheName>
-        </distributed-cache-factory>
         
-        <resultset-cache>
-            <maxEntries>1024</maxEntries>
-            <maxAgeInSeconds>7200</maxAgeInSeconds>
-            <maxStaleness>60</maxStaleness>
-            <type>EXPIRATION</type>
-            <location>resultset</location>
-        </resultset-cache>
+        <resultset-cache name="cache" container-name="container" enable="false" max-staleness="90"/>
         
-        <preparedplan-cache>
-            <maxEntries>512</maxEntries>
-            <maxAgeInSeconds>28800</maxAgeInSeconds>
-            <maxStaleness>0</maxStaleness>
-        </preparedplan-cache>    
-    
+        <preparedplan-cache max-entries="512" max-age-in-seconds="28800" max-staleness="90"/>
+        
+        <object-replicator stack="stack" cluster-name="cluster"/>
+        
     <query-engine name="default">
         <max-threads>64</max-threads>
         <max-active-plans>20</max-active-plans>
@@ -46,25 +34,22 @@
         <max-source-rows-allowed>-1</max-source-rows-allowed>
         <exception-on-max-source-rows>true</exception-on-max-source-rows>
         <max-odbc-lob-size-allowed>5242880</max-odbc-lob-size-allowed>
-        <event-distributor-name>teiid/event-distributor</event-distributor-name>
         <detect-change-events>true</detect-change-events>
         <security-domain>teiid-security</security-domain>
         <security-domain>teiid-security2</security-domain>
         <max-sessions-allowed>5000</max-sessions-allowed>
         <sessions-expiration-timelimit>0</sessions-expiration-timelimit>
                 
-        <jdbc>
-            <maxSocketThreads>0</maxSocketThreads>
-            <inputBufferSize>0</inputBufferSize>
-            <outputBufferSize>0</outputBufferSize>
-            <socket-binding>teiid-jdbc</socket-binding>
+        <jdbc socket-binding="teiid-jdbc">
+            <max-socket-threads>0</max-socket-threads>
+            <input-buffer-size>0</input-buffer-size>
+            <output-buffer-size>0</output-buffer-size>
         </jdbc>
 
-        <odbc>
-            <maxSocketThreads>0</maxSocketThreads>
-            <inputBufferSize>0</inputBufferSize>
-            <outputBufferSize>0</outputBufferSize>
-            <socket-binding>teiid-odbc</socket-binding>
+        <odbc socket-binding="teiid-odbc">
+            <max-socket-threads>0</max-socket-threads>
+            <input-buffer-size>0</input-buffer-size>
+            <output-buffer-size>0</output-buffer-size>
         </odbc>
     </query-engine>
     

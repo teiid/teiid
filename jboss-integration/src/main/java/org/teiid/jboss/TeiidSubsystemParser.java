@@ -155,7 +155,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     
     private void writeSocketConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
     	writeAttribute(writer, Element.SOCKET_BINDING_ELEMENT, node);
-    	writeElement(writer, Element.MAX_SOCKET_SIZE_ELEMENT, node);
+    	writeElement(writer, Element.MAX_SOCKET_THREAD_SIZE_ELEMENT, node);
     	writeElement(writer, Element.IN_BUFFER_SIZE_ELEMENT, node);
     	writeElement(writer, Element.OUT_BUFFER_SIZE_ELEMENT, node);
     	
@@ -462,7 +462,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
             Element element = Element.forName(reader.getLocalName());
             switch (element) {
-            case MAX_SOCKET_SIZE_ELEMENT:
+            case MAX_SOCKET_THREAD_SIZE_ELEMENT:
             case IN_BUFFER_SIZE_ELEMENT:
             case OUT_BUFFER_SIZE_ELEMENT:
             	node.get(reader.getLocalName()).set(Integer.parseInt(reader.getElementText()));

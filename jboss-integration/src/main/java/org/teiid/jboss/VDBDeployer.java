@@ -25,10 +25,9 @@ import java.util.List;
 import java.util.concurrent.Executor;
 
 import org.jboss.as.server.deployment.*;
-import org.jboss.msc.service.ServiceBuilder;
-import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.*;
+import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceController.Mode;
-import org.jboss.msc.service.ServiceName;
 import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -41,7 +40,9 @@ import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.index.IndexMetadataFactory;
+import org.teiid.query.ObjectReplicator;
 import org.teiid.runtime.RuntimePlugin;
+import org.teiid.services.BufferServiceImpl;
 
 
 class VDBDeployer implements DeploymentUnitProcessor {
@@ -108,7 +109,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		ServiceBuilder<VDBMetaData> vdbService = context.getServiceTarget().addService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()), vdb);
 		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
 			for (String sourceName:model.getSourceNames()) {
-				vdbService.addDependency(ServiceName.JBOSS.append("data-source", model.getSourceConnectionJndiName(sourceName)));	//$NON-NLS-1$
+				vdbService.addDependency(DependencyType.OPTIONAL, ServiceName.JBOSS.append("data-source", model.getSourceConnectionJndiName(sourceName)));	//$NON-NLS-1$
 			}
 		}
 		
@@ -123,6 +124,8 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		vdbService.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class,  vdb.getTranslatorRepositoryInjector());
 		vdbService.addDependency(TeiidServiceNames.executorServiceName(this.asyncThreadPoolName), Executor.class,  vdb.getExecutorInjector());
 		vdbService.addDependency(TeiidServiceNames.OBJECT_SERIALIZER, ObjectSerializer.class, vdb.getSerializerInjector());
+		vdbService.addDependency(TeiidServiceNames.BUFFER_MGR, BufferServiceImpl.class, vdb.getBufferServiceInjector());
+		vdbService.addDependency(DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, vdb.getObjectReplicatorInjector());
 		vdbService.setInitialMode(Mode.PASSIVE).install();
 	}
 
@@ -136,6 +139,9 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
         final ServiceController<?> controller = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()));
         if (controller != null) {
+        	VDBService vdbService = (VDBService)controller.getService();
+        	vdbService.undeployinProgress();
+        	
             controller.setMode(ServiceController.Mode.REMOVE);
         }
 	}

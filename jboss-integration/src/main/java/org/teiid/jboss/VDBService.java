@@ -27,8 +27,10 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executor;
 
-import org.jboss.msc.service.*;
-import org.jboss.msc.service.ServiceContainer.TerminateListener;
+import org.jboss.msc.service.Service;
+import org.jboss.msc.service.StartContext;
+import org.jboss.msc.service.StartException;
+import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
@@ -37,6 +39,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidException;
 import org.teiid.deployers.*;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
@@ -46,8 +49,13 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.index.IndexMetadataFactory;
+import org.teiid.query.ObjectReplicator;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
+import org.teiid.query.tempdata.GlobalTableStore;
+import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.runtime.RuntimePlugin;
+import org.teiid.services.BufferServiceImpl;
 import org.teiid.translator.DelegatingExecutionFactory;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
@@ -59,6 +67,9 @@ class VDBService implements Service<VDBMetaData> {
 	private final InjectedValue<TranslatorRepository> translatorRepositoryInjector = new InjectedValue<TranslatorRepository>();
 	private final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
 	private final InjectedValue<ObjectSerializer> serializerInjector = new InjectedValue<ObjectSerializer>();
+	private final InjectedValue<BufferServiceImpl> bufferServiceInjector = new InjectedValue<BufferServiceImpl>();
+	private final InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
+	private boolean undeployInProgress = false;
 	
 	public VDBService(VDBMetaData metadata) {
 		this.vdb = metadata;
@@ -178,24 +189,38 @@ class VDBService implements Service<VDBMetaData> {
 		this.vdb.removeAttachment(MetadataStoreGroup.class);
 		this.vdb.removeAttachment(IndexMetadataFactory.class);	
 		
+		// add object replication to temp/matview tables
+		GlobalTableStore gts = new GlobalTableStoreImpl(getBuffermanager(), vdb.getAttachment(TransformationMetadata.class));
+		if (getObjectReplicatorInjector().getValue() != null) {
+			try {
+				gts = getObjectReplicatorInjector().getValue().replicate(vdb.getName() + vdb.getVersion(), GlobalTableStore.class, gts, 300000);
+			} catch (Exception e) {
+				LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("replication_failed", gts)); //$NON-NLS-1$
+			}
+		}
+		vdb.addAttchment(GlobalTableStore.class, gts);		
+		
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_deployed",vdb, valid?"active":"inactive")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$		
 	}
 
 	@Override
 	public void stop(StopContext context) {
 		
+		// stop object replication
+		if (getObjectReplicatorInjector().getValue() != null) {
+			GlobalTableStore gts = vdb.getAttachment(GlobalTableStore.class);
+			getObjectReplicatorInjector().getValue().stop(gts);
+		}		
+		
 		getVDBRepository().removeVDB(this.vdb.getName(), this.vdb.getVersion());
 		this.vdb.setRemoved(true);
 
-		context.getController().getServiceContainer().addTerminateListener(new TerminateListener() {
-			@Override
-			public void handleTermination(Info info) {
-				if (info.getShutdownInitiated() < 0) {
-					getSerializer().removeAttachments(vdb); 
-					LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+vdb.getName()+" metadata removed"); //$NON-NLS-1$ //$NON-NLS-2$
-				}
-			}			
-		});
+		// service stopped not due to shutdown then clean-up the data files
+		if (undeployInProgress) {
+			getSerializer().removeAttachments(vdb); 
+			LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+vdb.getName()+" metadata removed"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_undeployed", this.vdb)); //$NON-NLS-1$
 	}
 
@@ -415,5 +440,21 @@ class VDBService implements Service<VDBMetaData> {
 	
 	private ObjectSerializer getSerializer() {
 		return serializerInjector.getValue();
+	}
+	
+	public InjectedValue<BufferServiceImpl> getBufferServiceInjector() {
+		return bufferServiceInjector;
+	}
+	
+	private BufferManager getBuffermanager() {
+		return getBufferServiceInjector().getValue().getBufferManager();
+	}
+	
+	public InjectedValue<ObjectReplicator> getObjectReplicatorInjector() {
+		return objectReplicatorInjector;
+	}	
+	
+	public void undeployinProgress() {
+		this.undeployInProgress = true;
 	}
 }

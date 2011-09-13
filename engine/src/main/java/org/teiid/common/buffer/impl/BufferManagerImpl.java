@@ -22,25 +22,12 @@
 
 package org.teiid.common.buffer.impl;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -49,14 +36,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.teiid.common.buffer.BatchManager;
-import org.teiid.common.buffer.BufferManager;
-import org.teiid.common.buffer.FileStore;
-import org.teiid.common.buffer.LobManager;
-import org.teiid.common.buffer.STree;
-import org.teiid.common.buffer.StorageManager;
-import org.teiid.common.buffer.TupleBatch;
-import org.teiid.common.buffer.TupleBuffer;
+import org.teiid.common.buffer.*;
 import org.teiid.common.buffer.BatchManager.ManagedBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
@@ -67,7 +47,9 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.ReplicatedObject;
 import org.teiid.query.processor.relational.ListNestedSortComparator;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 
 
@@ -87,7 +69,7 @@ import org.teiid.query.sql.symbol.Expression;
  * TODO: add detection of pinned batches to prevent unnecessary purging of non-persistent batches
  *       - this is not necessary for already persistent batches, since we hold a weak reference
  */
-public class BufferManagerImpl implements BufferManager, StorageManager {
+public class BufferManagerImpl implements BufferManager, StorageManager, ReplicatedObject {
 	
 	private static final int IO_BUFFER_SIZE = 1 << 14;
 	private static final int COMPACTION_THRESHOLD = 1 << 25; //start checking at 32 megs
@@ -122,7 +104,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		private AtomicLong unusedSpace = new AtomicLong();
 		private int[] lobIndexes;
 		private SizeUtility sizeUtility;
-
+		
 		private BatchManagerImpl(String newID, int[] lobIndexes) {
 			this.id = newID;
 			this.store = createFileStore(id);
@@ -701,6 +683,12 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	}
 	
 	@Override
+	public void distributeTupleBuffer(String uuid, TupleBuffer tb) {
+		tb.setId(uuid);
+		addTupleBuffer(tb);
+	}
+	
+	@Override
 	public TupleBuffer getTupleBuffer(String id) {		
 		cleanDefunctTupleBuffers();
 		Reference<TupleBuffer> r = this.tupleBufferMap.get(id);
@@ -730,6 +718,130 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	
 	public void setUseWeakReferences(boolean useWeakReferences) {
 		this.useWeakReferences = useWeakReferences;
+	}	
+	
+	@Override
+	public void getState(OutputStream ostream) {
+		try {
+			ObjectOutputStream out = new ObjectOutputStream(ostream);
+			for(String id:this.tupleBufferMap.keySet()) {
+				TupleReference tr = this.tupleBufferMap.get(id);
+				TupleBuffer tb = tr.get();
+				if (tb != null) {
+					out.writeObject(tb.getId());
+					getTupleBufferState(out, tb);
+				}
+			}
+		} catch (TeiidComponentException e) {
+			throw new TeiidRuntimeException(e);
+		} catch (IOException e) {
+			throw new TeiidRuntimeException(e);
+		}				
 	}
 	
+	@Override
+	public void getState(String state_id, OutputStream ostream) {
+		TupleBuffer buffer = this.getTupleBuffer(state_id);
+		if (buffer != null) {
+			try {
+				ObjectOutputStream out = new ObjectOutputStream(ostream);
+				getTupleBufferState(out, buffer);
+			} catch (TeiidComponentException e) {
+				throw new TeiidRuntimeException(e);
+			} catch (IOException e) {
+				throw new TeiidRuntimeException(e);
+			}
+		}
+	}
+
+	private void getTupleBufferState(ObjectOutputStream out, TupleBuffer buffer) throws TeiidComponentException, IOException {
+		out.writeInt(buffer.getRowCount());
+		out.writeInt(buffer.getBatchSize());
+		out.writeObject(buffer.getTypes());
+		out.writeBoolean(buffer.isPrefersMemory());
+		for (int row = 1; row <= buffer.getRowCount(); row+=buffer.getBatchSize()) {
+			TupleBatch b = buffer.getBatch(row);
+			b.preserveTypes();
+			out.writeObject(b);
+		}
+	}
+
+	@Override
+	public void setState(InputStream istream) {
+		try {
+			ObjectInputStream in = new ObjectInputStream(istream);
+			while (true) {
+				String state_id = null;
+				try {
+					state_id = (String)in.readObject();
+				} catch (IOException e) {
+					break;
+				}
+				if (state_id != null) {
+					setTupleBufferState(state_id, in);
+				}
+			}
+		} catch (IOException e) {
+			throw new TeiidRuntimeException(e);
+		} catch(ClassNotFoundException e) {
+			throw new TeiidRuntimeException(e);
+		} catch(TeiidComponentException e) {
+			throw new TeiidRuntimeException(e);
+		}
+		
+	}	
+	
+	@Override
+	public void setState(String state_id, InputStream istream) {
+		TupleBuffer buffer = this.getTupleBuffer(state_id);
+		if (buffer == null) {
+			try {
+				ObjectInputStream in = new ObjectInputStream(istream);
+				setTupleBufferState(state_id, in);
+			} catch (IOException e) {
+				throw new TeiidRuntimeException(e);
+			} catch(ClassNotFoundException e) {
+				throw new TeiidRuntimeException(e);
+			} catch(TeiidComponentException e) {
+				throw new TeiidRuntimeException(e);
+			}
+		}
+	}
+
+	private void setTupleBufferState(String state_id, ObjectInputStream in) throws IOException, ClassNotFoundException, TeiidComponentException {
+		int rowCount = in.readInt();
+		int batchSize = in.readInt();
+		String[] types = (String[])in.readObject();
+		boolean prefersMemory = in.readBoolean();
+		
+		List<ElementSymbol> schema = new ArrayList<ElementSymbol>(types.length);
+		for (String type : types) {
+			ElementSymbol es = new ElementSymbol("x"); //$NON-NLS-1$
+			es.setType(DataTypeManager.getDataTypeClass(type));
+			schema.add(es);
+		}
+		TupleBuffer buffer = createTupleBuffer(schema, "cached", TupleSourceType.FINAL); //$NON-NLS-1$
+		buffer.setBatchSize(batchSize);
+		buffer.setId(state_id);
+		buffer.setPrefersMemory(prefersMemory);
+		
+		for (int row = 1; row <= rowCount; row+=batchSize) {
+			TupleBatch batch = (TupleBatch)in.readObject();
+			if (batch == null) {					
+				buffer.remove();
+				throw new IOException(QueryPlugin.Util.getString("not_found_cache")); //$NON-NLS-1$
+			}		
+			buffer.addTupleBatch(batch, true);
+		}
+		buffer.close();
+		addTupleBuffer(buffer);
+	}
+
+	@Override
+	public void setLocalAddress(Serializable address) {
+	}
+
+	@Override
+	public void droppedMembers(Collection<Serializable> addresses) {
+	}	
 }

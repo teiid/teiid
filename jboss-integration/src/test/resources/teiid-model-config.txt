@@ -1,11 +1,5 @@
 {
     "attributes" => {
-        "name" => {
-            "type" => STRING,
-            "description" => "Name of the subsystem",
-            "required" => true,
-            "max-occurs" => 1
-        },
         "max-threads" => {
             "type" => INT,
             "description" => "Process pool maximum thread count. (default 64)",
@@ -76,13 +70,6 @@
             "max-occurs" => 1,
             "default" => 5242880
         },
-        "event-distributor-name" => {
-            "type" => STRING,
-            "description" => "The JNDI name of the Teiid Event Distributor",
-            "required" => false,
-            "max-occurs" => 1,
-            "default" => "teiid/event-distributor"
-        },
         "detect-change-events" => {
             "type" => BOOLEAN,
             "description" => "Set to true for the engine to detect local change events. Should be disabled if using external change data capture tools. (default true)",
@@ -92,7 +79,7 @@
         },
         "security-domain" => {
             "type" => LIST,
-            "description" => "Comma separated list of domains to be used to login into Teiid",
+            "description" => "List of domains to be used to login into Teiid",
             "required" => false,
             "max-occurs" => 1
         },
@@ -119,28 +106,21 @@
             "max-occurs" => 1,
             "min-occurs" => 1,
             "attributes" => {
-                "enabled" => {
-                    "type" => BOOLEAN,
-                    "description" => "enabled",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => true
-                },
-                "maxSocketThreads" => {
+                "max-socket-threads" => {
                     "type" => INT,
                     "description" => "Max number of threads dedicated to initial request processing. Zero indicates the system default of max available processors. (default 0)  Setting this value above the max available processors is not recommended.",
                     "required" => false,
                     "max-occurs" => 1,
                     "default" => 0
                 },
-                "inputBufferSize" => {
+                "input-buffer-size" => {
                     "type" => INT,
                     "description" => "SO_RCVBUF size, 0 indicates that system default should be used (default 0)",
                     "required" => false,
                     "max-occurs" => 1,
                     "default" => 0
                 },
-                "outputBufferSize" => {
+                "output-buffer-size" => {
                     "type" => INT,
                     "description" => "SO_SNDBUF size, 0 indicates that system default should be used (default 0)",
                     "required" => false,
@@ -148,7 +128,7 @@
                     "default" => 0
                 },
                 "socket-binding" => {
-                    "type" => INT,
+                    "type" => STRING,
                     "description" => "Socket binding for the profile",
                     "required" => true,
                     "max-occurs" => 1
@@ -160,52 +140,52 @@
                     "max-occurs" => 1,
                     "default" => "login"
                 },
-                "keystoreFilename" => {
+                "keystore-name" => {
                     "type" => STRING,
                     "description" => "Keystore File Name",
                     "required" => false,
                     "max-occurs" => 1
                 },
-                "keystorePassword" => {
+                "keystore-password" => {
                     "type" => STRING,
                     "description" => "Keystore password",
                     "required" => false,
                     "max-occurs" => 1
                 },
-                "keystoreType" => {
+                "keystore-type" => {
                     "type" => STRING,
                     "description" => "Keystore type",
                     "required" => false,
                     "max-occurs" => 1,
                     "default" => "JKS"
                 },
-                "sslProtocol" => {
+                "ssl-protocol" => {
                     "type" => BOOLEAN,
                     "description" => "SSL protocol used",
                     "required" => false,
                     "max-occurs" => 1,
                     "default" => false
                 },
-                "keymanagementAlgorithm" => {
+                "keymanagement-algorithm" => {
                     "type" => STRING,
                     "description" => "Use key management algorithm",
                     "required" => false,
                     "max-occurs" => 1,
                     "default" => "false"
                 },
-                "truststoreFilename" => {
+                "truststore-name" => {
                     "type" => STRING,
                     "description" => "Truststore Name",
                     "required" => false,
                     "max-occurs" => 1
                 },
-                "truststorePassword" => {
+                "truststore-password" => {
                     "type" => STRING,
                     "description" => "Truststore Password",
                     "required" => false,
                     "max-occurs" => 1
                 },
-                "authenticationMode" => {
+                "authentication-mode" => {
                     "type" => STRING,
                     "description" => "Authentication Mode (1-way, 2-way, anonymous)",
                     "required" => false,
@@ -228,28 +208,21 @@
             "max-occurs" => 1,
             "min-occurs" => 1,
             "attributes" => {
-                "enabled" => {
-                    "type" => BOOLEAN,
-                    "description" => "enabled",
-                    "required" => false,
-                    "max-occurs" => 1,
-                    "default" => true
-                },
-                "maxSocketThreads" => {
+                "max-socket-threads" => {
                     "type" => INT,
                     "description" => "Max number of threads dedicated to initial request processing. Zero indicates the system default of max available processors. (default 0)  Setting this value above the max available processors is not recommended.",
                     "required" => false,
                     "max-occurs" => 1,
                     "default" => 0
                 },
-                "inputBufferSize" => {
+                "input-buffer-size" => {
                     "type" => INT,
                     "description" => "SO_RCVBUF size, 0 indicates that system default should be used (default 0)",
                     "required" => false,
                     "max-occurs" => 1,
                     "default" => 0
                 },
-                "outputBufferSize" => {
+                "output-buffer-size" => {
                     "type" => INT,
                     "description" => "SO_SNDBUF size, 0 indicates that system default should be used (default 0)",
                     "required" => false,
@@ -257,7 +230,7 @@
                     "default" => 0
                 },
                 "socket-binding" => {
-                    "type" => INT,
+                    "type" => STRING,
                     "description" => "Socket binding for the profile",
                     "required" => true,
                     "max-occurs" => 1
@@ -269,52 +242,52 @@
                     "max-occurs" => 1,
                     "default" => "login"
                 },
-                "keystoreFilename" => {
+                "keystore-name" => {
                     "type" => STRING,
                     "description" => "Keystore File Name",
                     "required" => false,
                     "max-occurs" => 1
                 },
-                "keystorePassword" => {
+                "keystore-password" => {
                     "type" => STRING,
                     "description" => "Keystore password",
                     "required" => false,
                     "max-occurs" => 1
                 },
-                "keystoreType" => {
+                "keystore-type" => {
                     "type" => STRING,
                     "description" => "Keystore type",
                     "required" => false,
                     "max-occurs" => 1,
                     "default" => "JKS"
                 },
-                "sslProtocol" => {
+                "ssl-protocol" => {
                     "type" => BOOLEAN,
                     "description" => "SSL protocol used",
                     "required" => false,
                     "max-occurs" => 1,
                     "default" => false
                 },
-                "keymanagementAlgorithm" => {
+                "keymanagement-algorithm" => {
                     "type" => STRING,
                     "description" => "Use key management algorithm",
                     "required" => false,
                     "max-occurs" => 1,
                     "default" => "false"
                 },
-                "truststoreFilename" => {
+                "truststore-name" => {
                     "type" => STRING,
                     "description" => "Truststore Name",
                     "required" => false,
                     "max-occurs" => 1
                 },
-                "truststorePassword" => {
+                "truststore-password" => {
                     "type" => STRING,
                     "description" => "Truststore Password",
                     "required" => false,
                     "max-occurs" => 1
                 },
-                "authenticationMode" => {
+                "authentication-mode" => {
                     "type" => STRING,
                     "description" => "Authentication Mode (1-way, 2-way, anonymous)",
                     "required" => false,

@@ -31,7 +31,6 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import javax.xml.stream.*;
 import javax.xml.transform.Source;
@@ -49,21 +48,25 @@ import org.jboss.as.controller.operations.common.Util;
 import org.jboss.as.controller.operations.global.GlobalOperationHandlers;
 import org.jboss.as.controller.persistence.ConfigurationPersistenceException;
 import org.jboss.as.controller.persistence.ConfigurationPersister;
-import org.jboss.as.controller.persistence.ModelMarshallingContext;
 import org.jboss.as.controller.persistence.SubsystemMarshallingContext;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.jboss.dmr.Property;
+import org.jboss.modules.Module;
+import org.jboss.modules.ModuleClassLoader;
+import org.jboss.modules.ModuleIdentifier;
+import org.jboss.modules.ModuleLoader;
 import org.jboss.msc.service.*;
 import org.jboss.staxmapper.XMLElementWriter;
-import org.jboss.staxmapper.XMLExtendedStreamWriter;
 import org.jboss.staxmapper.XMLMapper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations.Mock;
+import org.mockito.internal.stubbing.Stubber;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
@@ -191,7 +194,7 @@ public class TestTeiidConfiguration {
         }
     }     
 	
-    static List<ModelNode> createSubSystem(String xmlContent) throws XMLStreamException {
+    static List<ModelNode> createSubSystem(String xmlContent) throws Exception {
 
         final Reader reader = new StringReader(xmlContent);
         XMLStreamReader xmlReader = XMLInputFactory.newInstance().createXMLStreamReader(reader);
@@ -211,7 +214,6 @@ public class TestTeiidConfiguration {
             }
             update.get(OP_ADDR).set(subsystemAddress);
         }
-
         return updates;
     }	
     

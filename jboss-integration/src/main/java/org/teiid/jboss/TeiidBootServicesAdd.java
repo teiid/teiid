@@ -153,19 +153,14 @@ class TeiidBootServicesAdd extends AbstractAddStepHandler implements Description
     	newControllers.add(service);
     	
     	// system function tree
-		SystemFunctionManager systemFunctionManager = null;
-		try {
-			systemFunctionManager = new SystemFunctionManager();
-			if (operation.hasDefined(Configuration.ALLOW_ENV_FUNCTION)) {
-				systemFunctionManager.setAllowEnvFunction(operation.get(Configuration.ALLOW_ENV_FUNCTION).asBoolean());
-			}
-			else {
-				systemFunctionManager.setAllowEnvFunction(false);
-			}
-			systemFunctionManager.setClassloader(Module.getCallerModule().getModule(ModuleIdentifier.create("org.jboss.teiid")).getClassLoader()); //$NON-NLS-1$
-		} catch (ModuleLoadException e) {
-			throw new OperationFailedException(e, operation);
+		SystemFunctionManager systemFunctionManager = new SystemFunctionManager();
+		if (operation.hasDefined(Configuration.ALLOW_ENV_FUNCTION)) {
+			systemFunctionManager.setAllowEnvFunction(operation.get(Configuration.ALLOW_ENV_FUNCTION).asBoolean());
 		}
+		else {
+			systemFunctionManager.setAllowEnvFunction(false);
+		}
+		systemFunctionManager.setClassloader(Module.getCallerModule().getClassLoader()); 
     	
     	// VDB repository
     	final VDBRepository vdbRepository = new VDBRepository();
@@ -253,6 +248,7 @@ class TeiidBootServicesAdd extends AbstractAddStepHandler implements Description
     			clusterName = node.get(Configuration.CLUSTER_NAME).asString();
     		}
     		JGroupsObjectReplicatorService replicatorService = new JGroupsObjectReplicatorService(clusterName);
+    		replicatorService.setBufferManager(bufferManager.getBufferManager());
 			ServiceBuilder<JGroupsObjectReplicator> serviceBuilder = target.addService(TeiidServiceNames.OBJECT_REPLICATOR, replicatorService);
 			serviceBuilder.addDependency(ServiceName.JBOSS.append("jgroups", stack), ChannelFactory.class, replicatorService.channelFactoryInjector); //$NON-NLS-1$
 			newControllers.add(serviceBuilder.install());
@@ -263,9 +259,9 @@ class TeiidBootServicesAdd extends AbstractAddStepHandler implements Description
         context.addStep(new AbstractDeploymentChainStep() {
 			@Override
 			public void execute(DeploymentProcessorTarget processorTarget) {
-				processorTarget.addDeploymentProcessor(Phase.STRUCTURE, Phase.STRUCTURE_WAR_DEPLOYMENT_INIT|0x0001,new VDBStructure());
+				processorTarget.addDeploymentProcessor(Phase.STRUCTURE, Phase.STRUCTURE_WAR_DEPLOYMENT_INIT|0x0001,new VDBStructureDeployer());
 				processorTarget.addDeploymentProcessor(Phase.PARSE, Phase.PARSE_WEB_DEPLOYMENT|0x0001, new VDBParserDeployer());
-				processorTarget.addDeploymentProcessor(Phase.DEPENDENCIES, Phase.DEPENDENCIES_WAR_MODULE|0x0001, new VDBDependencyProcessor());
+				processorTarget.addDeploymentProcessor(Phase.DEPENDENCIES, Phase.DEPENDENCIES_WAR_MODULE|0x0001, new VDBDependencyDeployer());
 				processorTarget.addDeploymentProcessor(Phase.INSTALL, Phase.INSTALL_WAR_DEPLOYMENT|0x0001, new VDBDeployer(translatorRepo, asyncThreadPoolName));            			
 			}
         	

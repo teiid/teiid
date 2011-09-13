@@ -24,6 +24,7 @@ package org.teiid.common.buffer;
 
 import java.util.List;
 
+import org.teiid.Replicated;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.sql.symbol.Expression;
 
@@ -130,4 +131,7 @@ public interface BufferManager extends StorageManager {
 	 * @param maxActivePlans
 	 */
 	void setMaxActivePlans(int maxActivePlans);		
+	
+	@Replicated(replicateState=true)
+	void distributeTupleBuffer(String uuid, TupleBuffer tb);
 }

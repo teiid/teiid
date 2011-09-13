@@ -86,7 +86,6 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.processor.DdlPlan;
 import org.teiid.query.tempdata.GlobalTableStore;
-import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.security.SecurityHelper;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.services.SessionServiceImpl;
@@ -242,23 +241,10 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 			@Override
 			public void removed(String name, int version, CompositeVDB vdb) {
 				recentlyRemoved.add(new VDBKey(name, version));
-				if (getObjectReplicatorInjector().getValue() != null) {
-					GlobalTableStore gts = vdb.getVDB().getAttachment(GlobalTableStore.class);
-					getObjectReplicatorInjector().getValue().stop(gts);
-				}
 			}
 			
 			@Override
 			public void added(String name, int version, CompositeVDB vdb) {
-				GlobalTableStore gts = new GlobalTableStoreImpl(dqpCore.getBufferManager(), vdb.getVDB().getAttachment(TransformationMetadata.class));
-				if (getObjectReplicatorInjector().getValue() != null) {
-					try {
-						gts = getObjectReplicatorInjector().getValue().replicate(name + version, GlobalTableStore.class, gts, 300000);
-					} catch (Exception e) {
-						LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("replication_failed", gts)); //$NON-NLS-1$
-					}
-				}
-				vdb.getVDB().addAttchment(GlobalTableStore.class, gts);
 				if (!recentlyRemoved.remove(new VDBKey(name, version))) {
 					return;
 				}

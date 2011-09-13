@@ -61,35 +61,37 @@
                 </xs:annotation>
             </xs:element>
 
-            <xs:element name="resultset-cache" type="xs:string" maxOccurs="1" minOccurs="0">
+            <xs:element name="resultset-cache" maxOccurs="1" minOccurs="0">
                 <xs:annotation>
-                    <xs:documentation>Configuration for result set caching.
-                        There will be 2 caches with these settings.
-                        One cache holds results that are specific to sessions.
-                        The other cache holds vdb scoped results and can
-                        be replicated.</xs:documentation>
+                    <xs:documentation>Configuration for result set caching.</xs:documentation>
                 </xs:annotation>
-                <xs:attribute name="container-name" type="xs:string" use="required"/>
-                <xs:attribute name="name" type="xs:string" use="required"/>
-                <xs:attribute name="enable" type="xs:boolean" default="true"/>
-                <xs:attribute name="max-staleness" type="xs:int" default="60"/>
+                <xs:complexType>
+                    <xs:attribute name="name" type="xs:string" use="required"/>
+                    <xs:attribute name="container-name" type="xs:string" use="required"/>
+                    <xs:attribute name="enable" type="xs:boolean" default="true"/>
+                    <xs:attribute name="max-staleness" type="xs:int" default="60"/>
+                </xs:complexType>
             </xs:element>
             
-            <xs:element name="preparedplan-cache" type="xs:string" maxOccurs="1" minOccurs="0">
+            <xs:element name="preparedplan-cache" maxOccurs="1" minOccurs="0">
                 <xs:annotation>
                     <xs:documentation>Configuration for prepared plan caching. (local memory only)</xs:documentation>
                 </xs:annotation>
-                <xs:attribute name="max-entries" type="xs:string"/>
-                <xs:attribute name="max-age-in-seconds" type="xs:boolean" default="true"/>
-                <xs:attribute name="max-staleness" type="xs:int" default="0"/>                
+                <xs:complexType>
+                    <xs:attribute name="max-entries" type="xs:int" default="512"/>
+                    <xs:attribute name="max-age-in-seconds" type="xs:int" default="28800"/>
+                    <xs:attribute name="max-staleness" type="xs:int" default="0"/>    
+                </xs:complexType>            
             </xs:element>
             
-            <xs:element name="object-replicator" type="xs:string" maxOccurs="1" minOccurs="0">
+            <xs:element name="object-replicator" maxOccurs="1" minOccurs="0">
                 <xs:annotation>
                     <xs:documentation>Cluster wide results distributor </xs:documentation>
                 </xs:annotation>
-                <xs:attribute name="stack" type="xs:string" use="required"/>
-                <xs:attribute name="cluster-name" type="xs:string" use="required"/>
+                <xs:complexType>
+                    <xs:attribute name="stack" type="xs:string" use="required"/>
+                    <xs:attribute name="cluster-name" type="xs:string" use="required"/>
+                </xs:complexType>
             </xs:element>            
         
             <xs:element name="query-engine" type="runtime-engine-type" maxOccurs="2" minOccurs="1">
