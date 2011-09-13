@@ -420,8 +420,13 @@ public class TempTableDataManager implements ProcessorDataManager {
 		if (!group.isTempGroupSymbol()) {
 			return null;
 		}
+		String viewName = null;
 		final String tableName = group.getNonCorrelationName().toUpperCase();
 		boolean remapColumns = !tableName.equalsIgnoreCase(group.getName());
+		TempMetadataID groupID = (TempMetadataID)group.getMetadataID();
+		if (groupID.getOriginalMetadataID() != null) {
+			viewName = context.getMetadata().getFullName(groupID.getOriginalMetadataID());
+		}
 		TempTable table = null;
 		if (group.isGlobalTable()) {
 			final TempTableStore globalStore = context.getGlobalTableStore();
@@ -445,9 +450,9 @@ public class TempTableDataManager implements ProcessorDataManager {
 			if (load) {
 				if (!info.isValid()) {
 					//blocking load
-					loadGlobalTable(context, group, tableName, null, globalStore, info, loadTime, true);
+					loadGlobalTable(context, group, tableName, viewName, globalStore, info, loadTime, true);
 				} else {
-					loadAsynch(context, group, tableName, null, globalStore, info, loadTime);
+					loadAsynch(context, group, tableName, viewName, globalStore, info, loadTime);
 				}
 			} 
 			table = globalStore.getOrCreateTempTable(tableName, query, bufferManager, false);
@@ -611,8 +616,8 @@ public class TempTableDataManager implements ProcessorDataManager {
 		matTableEntry.lastUpdate = System.currentTimeMillis();
 		MatTableEntry entry = refreshJob.put(key, matTableEntry, null);
 		if (entry == null) {
-			// in the case of refreshjob, cacheCreate are not being notified correctly due to nature of how Teiid uses the cache
-			// so, in order to get a cacheModified event insert again.
+			// Due to nature how the JBoss Cache being used as flat keys with nodes, node creation event is 
+			// hard to capture, this is way to insert and later do update to capture the node modification.
 			refreshJob.put(key, matTableEntry, null);
 		}
 	}

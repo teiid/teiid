@@ -1004,6 +1004,7 @@ public class RelationalPlanner {
 					id = store.addTempGroup(matTableName, ResolverUtil.resolveElementsInGroup(table, metadata), false, true);
 					id.setQueryNode(metadata.getVirtualPlan(table.getMetadataID()));
 					id.setCardinality(metadata.getCardinality(table.getMetadataID()));
+					id.setOriginalMetadataID(table.getMetadataID());
 					
 					Object pk = metadata.getPrimaryKey(table.getMetadataID());
 					if (pk != null) {
