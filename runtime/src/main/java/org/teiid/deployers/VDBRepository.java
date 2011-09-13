@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jboss.deployers.spi.DeploymentException;
 import org.teiid.adminapi.AdminException;
@@ -60,7 +61,7 @@ public class VDBRepository implements Serializable{
 	private MetadataStore systemStore;
 	private MetadataStore odbcStore;
 	private boolean odbcEnabled = false;
-	private List<VDBLifeCycleListener> listeners = new ArrayList<VDBLifeCycleListener>();
+	private List<VDBLifeCycleListener> listeners = new CopyOnWriteArrayList<VDBLifeCycleListener>();
 	private SystemFunctionManager systemFunctionManager;
 	
 	public void addVDB(VDBMetaData vdb, MetadataStoreGroup stores, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr) throws DeploymentException {
@@ -157,7 +158,7 @@ public class VDBRepository implements Serializable{
 		this.odbcEnabled = true;
 	}
 	
-	public synchronized boolean removeVDB(String vdbName, int vdbVersion) {
+	public boolean removeVDB(String vdbName, int vdbVersion) {
 		VDBKey key = new VDBKey(vdbName, vdbVersion);
 		CompositeVDB removed = this.vdbRepo.remove(key);
 		if (removed != null) {
@@ -214,11 +215,11 @@ public class VDBRepository implements Serializable{
 		}
 	}
 	
-	public synchronized void addListener(VDBLifeCycleListener listener) {
+	public void addListener(VDBLifeCycleListener listener) {
 		this.listeners.add(listener);
 	}
 	
-	public synchronized void removeListener(VDBLifeCycleListener listener) {
+	public void removeListener(VDBLifeCycleListener listener) {
 		this.listeners.remove(listener);
 	}
 	
