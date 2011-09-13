@@ -241,6 +241,61 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	}
 
 	@Override
+	public void sendCursorResults(ResultSet rs, int rowCount) {
+		try {
+			try {
+        		ResultSetMetaData meta = rs.getMetaData();
+        		sendRowDescription(meta, rs.getStatement());
+            	int rowsSent = sendDataRows(rs, rowCount);
+				sendCommandComplete("FETCH", rowsSent);
+			} catch (SQLException e) {
+				sendErrorResponse(e);
+			}
+		} catch (IOException e) {
+			terminate(e);
+		}
+	}
+	
+	@Override
+	public void sendPortalResults(String sql, ResultSet rs, int rowCount, boolean portal) {
+		try {
+			try {
+				int rowsSent = sendDataRows(rs, rowCount);
+				if (rowsSent < rowCount) {
+					sendCommandComplete(sql, 0);
+				}
+				else {
+					sendPortalSuspended();
+				}
+			} catch (SQLException e) {
+				sendErrorResponse(e);
+			}
+		} catch (IOException e) {
+			terminate(e);
+		} 
+	}
+	
+	@Override
+	public void sendMoveCursor(ResultSet rs, int rowCount) {
+		try {
+			try {
+				int rowsMoved = 0;
+				for (int i = 0; i < rowCount; i++) {
+					if (!rs.next()) {
+						break;
+					}
+					rowsMoved++;
+				}
+				sendCommandComplete("MOVE", rowsMoved);
+			} catch (SQLException e) {
+				sendErrorResponse(e);
+			}
+		} catch (IOException e) {
+			terminate(e);
+		}
+	}	
+	
+	@Override
 	public void sendResults(String sql, ResultSet rs, boolean describeRows) {
 		try {
             try {
@@ -248,9 +303,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
             		ResultSetMetaData meta = rs.getMetaData();
             		sendRowDescription(meta, rs.getStatement());
             	}
-                while (rs.next()) {
-                    sendDataRow(rs);
-                }
+                sendDataRows(rs, -1);
                 sendCommandComplete(sql, 0);
 			} catch (SQLException e) {
 				sendErrorResponse(e);
@@ -311,8 +364,9 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		startMessage('I');
 		sendMessage();
 	}
-		
-	private void sendCommandComplete(String sql, int updateCount) throws IOException {
+	
+	@Override
+	public void sendCommandComplete(String sql, int updateCount) throws IOException {
 		startMessage('C');
 		sql = sql.trim().toUpperCase();
 		// TODO remove remarks at the beginning
@@ -331,22 +385,64 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			tag = "COMMIT";
 		} else if (sql.startsWith("ROLLBACK")) {
 			tag = "ROLLBACK";
-		} else {
-			trace("Check command tag: " + sql);
-			tag = "UPDATE " + updateCount;
+		} else if (sql.startsWith("DECLARE CURSOR")) {
+			tag = "DECLARE CURSOR";
+		} else if (sql.startsWith("CLOSE CURSOR")) {
+			tag = "CLOSE CURSOR";
+		} else if (sql.startsWith("FETCH")) {
+			tag = "FETCH "+updateCount;
+		}  else if (sql.startsWith("MOVE")) {
+			tag = "MOVE "+updateCount;
+		}
+		else {
+			tag = sql;
 		}
 		writeString(tag);
 		sendMessage();
 	}
-
-	private void sendDataRow(ResultSet rs) throws SQLException, IOException {
+	
+	// 300k
+	static int ODBC_SOCKET_BUFF_SIZE = Integer.parseInt(System.getProperty("ODBCPacketSize", "307200"));
+	
+	private int sendDataRows(ResultSet rs, int rowsToSend) throws SQLException, IOException {		
+		int avgRowsize = -1;
+		int rowCount = 0;
+		ChannelBuffer buffer = ChannelBuffers.directBuffer(ODBC_SOCKET_BUFF_SIZE);
 		int columns = rs.getMetaData().getColumnCount();
-		String[] values = new String[columns];
-		for (int i = 0; i < columns; i++) {
-			values[i] = rs.getString(i + 1);
+		int rowsSent = 0;
+		
+		while(rs.next()) {
+			String[] values = new String[columns];
+			for (int i = 0; i < columns; i++) {
+				values[i] = rs.getString(i + 1);
+			}
+			
+			rowCount++;
+			
+			buildDataRow(values, buffer);
+			avgRowsize = buffer.readableBytes()/rowCount;
+			
+			if (buffer.writableBytes() < (avgRowsize*2)) {
+				Channels.write(this.ctx, this.message.getFuture(), buffer, this.message.getRemoteAddress());
+				rowCount = 0;
+				buffer= ChannelBuffers.directBuffer(ODBC_SOCKET_BUFF_SIZE);
+			}
+			
+			rowsSent++;
+			if (rowsSent == rowsToSend) {
+				break;
+			}
 		}
+		
+		if (rowCount > 0) {
+			Channels.write(this.ctx, this.message.getFuture(), buffer, this.message.getRemoteAddress());
+		}
+		return rowsSent;
+	}	
+
+	private void buildDataRow(String[] values, ChannelBuffer buffer) throws IOException {
 		startMessage('D');
-		writeShort(columns);
+		writeShort(values.length);
 		for (String s : values) {
 			if (s == null) {
 				writeInt(-1);
@@ -357,7 +453,16 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 				write(d2);
 			}
 		}
-		sendMessage();
+		
+		byte[] buff = outBuffer.toByteArray();
+		int len = buff.length;
+		this.outBuffer = null;
+		this.dataOut = null;
+		
+		// now build the wire contents.
+		buffer.writeByte((byte)this.messageType);
+		buffer.writeInt(len+4);
+		buffer.writeBytes(buff);
 	}
 
 	private void sendErrorResponse(Throwable t) throws IOException {
@@ -472,6 +577,11 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 
 	private void sendBindComplete() {
 		startMessage('2');
+		sendMessage();
+	}
+	
+	private void sendPortalSuspended() {
+		startMessage('s');
 		sendMessage();
 	}
 

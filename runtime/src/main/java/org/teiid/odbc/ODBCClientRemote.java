@@ -21,6 +21,7 @@
  */
 package org.teiid.odbc;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.ParameterMetaData;
 import java.sql.ResultSet;
@@ -65,7 +66,16 @@ public interface ODBCClientRemote {
 	
 	//	DataRow (B)
 	//	CommandComplete (B)
+	// if count = -1 send all
 	void sendResults(String sql, ResultSet rs, boolean describeRows);
+	
+	void sendCursorResults(ResultSet rs, int rowCount);
+	
+	void sendPortalResults(String sql, ResultSet rs, int rowCount, boolean portal);
+	
+	void sendMoveCursor(ResultSet rs, int rowCount);
+	
+	void sendCommandComplete(String sql, int updateCount) throws IOException;
 
 	//	CommandComplete (B)
 	void sendUpdateCount(String sql, int updateCount);
@@ -100,9 +110,4 @@ public interface ODBCClientRemote {
 	
 	//	NoticeResponse (B)
 	//	NotificationResponse (B)
-	
-	//	PortalSuspended (B)
-	
-		
-
 }

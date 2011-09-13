@@ -55,6 +55,11 @@ public interface ODBCServerRemote {
 	void unsupportedOperation(String msg);
 
 	void flush();
+	
+	void cursorExecute(String prepareName, String sql);
+	void cursorFetch(String prepareName, int rows);
+	void cursorMove(String prepareName, int rows);
+	void cursorClose(String prepareName);
 
 	//  unimplemented frontend messages
 	//	CopyData (F & B)
