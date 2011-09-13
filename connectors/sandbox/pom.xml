@@ -13,6 +13,5 @@
   <description>Experimental connectors in progress</description>
   <modules>
     <module>translator-yahoo</module>
-    <module>translator-teradata</module>
   </modules>
 </project>
