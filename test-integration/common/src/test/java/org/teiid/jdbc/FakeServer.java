@@ -22,6 +22,9 @@
 package org.teiid.jdbc;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.jboss.deployers.spi.DeploymentException;
@@ -31,11 +34,12 @@ import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.cache.CacheConfiguration;
-import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.cache.CacheConfiguration.Policy;
+import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.deployers.MetadataStoreGroup;
+import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
@@ -48,6 +52,8 @@ import org.teiid.metadata.Schema;
 import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.metadata.index.VDBMetadataFactory;
 import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.function.metadata.FunctionMethod;
+import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.services.SessionServiceImpl;
@@ -66,6 +72,10 @@ public class FakeServer extends ClientServiceRegistryImpl {
 	private ConnectorManagerRepository cmr;
 	
 	public FakeServer() {
+		this(new DQPConfiguration());
+	}
+	
+	public FakeServer(DQPConfiguration config) {
 		this.logon = new LogonImpl(sessionService, null);
 		
 		this.repo.setSystemStore(VDBMetadataFactory.getSystem());
@@ -86,9 +96,13 @@ public class FakeServer extends ClientServiceRegistryImpl {
         	}
         });
         
-        DQPConfiguration config = new DQPConfiguration();
         config.setResultsetCacheConfig(new CacheConfiguration(Policy.LRU, 60, 250, "resultsetcache")); //$NON-NLS-1$
-        this.dqp.setCacheFactory(new DefaultCacheFactory());
+        this.dqp.setCacheFactory(new DefaultCacheFactory() {
+        	@Override
+        	public boolean isReplicated() {
+        		return true; //pretend to be replicated for matview tests
+        	}
+        });
         this.dqp.start(config);
         this.sessionService.setDqp(this.dqp);
         
@@ -96,12 +110,29 @@ public class FakeServer extends ClientServiceRegistryImpl {
         registerClientService(DQP.class, dqp, null);
 	}
 	
+	public void stop() {
+		this.dqp.stop();
+	}
+	
 	public void deployVDB(String vdbName, String vdbPath) throws Exception {
-		
+		deployVDB(vdbName, vdbPath, null);
+	}
+	
+	public void deployVDB(String vdbName, String vdbPath, Map<String, Collection<FunctionMethod>> udfs) throws Exception {
 		IndexMetadataFactory imf = VDBMetadataFactory.loadMetadata(new File(vdbPath).toURI().toURL());
 		MetadataStore metadata = imf.getMetadataStore(repo.getSystemStore().getDatatypes());
-		
-        VDBMetaData vdbMetaData = new VDBMetaData();
+		LinkedHashMap<String, Resource> entries = imf.getEntriesPlusVisibilities();
+        deployVDB(vdbName, metadata, entries, udfs);		
+	}
+	
+	public void deployVDB(String vdbName, MetadataStore metadata,
+			LinkedHashMap<String, Resource> entries) {
+		deployVDB(vdbName, metadata, entries, null);
+	}
+
+	public void deployVDB(String vdbName, MetadataStore metadata,
+			LinkedHashMap<String, Resource> entries, Map<String, Collection<FunctionMethod>> udfs) {
+		VDBMetaData vdbMetaData = new VDBMetaData();
         vdbMetaData.setName(vdbName);
         vdbMetaData.setStatus(VDB.Status.ACTIVE);
         
@@ -120,10 +151,17 @@ public class FakeServer extends ClientServiceRegistryImpl {
         try {
         	MetadataStoreGroup stores = new MetadataStoreGroup();
         	stores.addStore(metadata);
-			this.repo.addVDB(vdbMetaData, stores, imf.getEntriesPlusVisibilities(), null, cmr);
+        	UDFMetaData udfMetaData = null;
+        	if (udfs != null) {
+        		udfMetaData = new UDFMetaData();
+        		for (Map.Entry<String, Collection<FunctionMethod>> entry : udfs.entrySet()) {
+        			udfMetaData.addFunctions(entry.getValue());
+        		}
+        	}
+			this.repo.addVDB(vdbMetaData, stores, entries, udfMetaData, cmr);
 		} catch (DeploymentException e) {
 			throw new RuntimeException(e);
-		}		
+		}
 	}
 	
 	public void removeVDB(String vdbName) {
