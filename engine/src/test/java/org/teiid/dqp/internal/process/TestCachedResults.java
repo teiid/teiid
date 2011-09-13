@@ -24,6 +24,7 @@ package org.teiid.dqp.internal.process;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -41,6 +42,7 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.service.FakeBufferService;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -101,7 +103,6 @@ public class TestCachedResults {
 		results.setResults(tb);
 		results.setCommand(new Query());
 		Cache cache = new DefaultCache("dummy"); //$NON-NLS-1$
-		
 		// simulate the jboss-cache remote transport, where the batches are remotely looked up
 		// in cache
 		for (int row=1; row<=tb.getRowCount();row+=4) {
@@ -119,7 +120,7 @@ public class TestCachedResults {
 		CachedResults cachedResults = (CachedResults)ois.readObject();
 		ois.close();
 		
-		cachedResults.restore(cache, bm);
+		assertTrue(cachedResults.restore(cache, bm));
 		
 		// since restored, simulate a async cache flush
 		cache.clear();
@@ -132,5 +133,9 @@ public class TestCachedResults {
 		
 		assertArrayEquals(tb.getBatch(1).getAllTuples(), cachedTb.getBatch(1).getAllTuples());
 		assertArrayEquals(tb.getBatch(9).getAllTuples(), cachedTb.getBatch(9).getAllTuples());
+		
+		//ensure that an incomplete load fails
+		cache.remove(results.getId()+","+1); //$NON-NLS-1$
+		cachedResults = UnitTestUtil.helpSerialize(results);
 	}	
 }
