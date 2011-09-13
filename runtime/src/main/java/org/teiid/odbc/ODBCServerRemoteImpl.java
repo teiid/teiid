@@ -194,8 +194,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		} 
 	}	
 	
-	@Override
-	public void cursorExecute(String cursorName, String sql) {
+	private boolean cursorExecute(String cursorName, String sql) {
 		if (this.connection != null) {
 			if (sql != null) {
 				String modfiedSQL = sql.replaceAll("\\$\\d+", "?");//$NON-NLS-1$ //$NON-NLS-2$
@@ -211,6 +210,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 					boolean hasResults = stmt.execute();
 					this.cursorMap.put(cursorName, new Cursor(cursorName, sql, stmt, null, hasResults?stmt.getResultSet():null));
 					this.client.sendCommandComplete("DECLARE CURSOR", 0); //$NON-NLS-1$
+					return true;
 				} catch (SQLException e) {
 					this.client.errorOccurred(e);
 				} catch (IOException e) {
@@ -221,47 +221,55 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		else {
 			this.client.errorOccurred(RuntimePlugin.Util.getString("no_active_connection")); //$NON-NLS-1$
 		}
-		
+		return false;
 	}
-	@Override
-	public void cursorFetch(String cursorName, int rows) {
+	
+	private boolean cursorFetch(String cursorName, int rows) {
 		Cursor cursor = this.cursorMap.get(cursorName);
 		if (cursor != null) {
 			cursor.fetchSize = rows;
 			this.client.sendCursorResults(cursor.rs, rows);
+			return true;
 		}
-		else {
-			this.client.errorOccurred(RuntimePlugin.Util.getString("not_bound", cursorName)); //$NON-NLS-1$
-			return;
-		}
+		this.client.errorOccurred(RuntimePlugin.Util.getString("not_bound", cursorName)); //$NON-NLS-1$
+		return false;
 	}
 	
-	@Override
-	public void cursorMove(String prepareName, int rows) {
+	private boolean cursorMove(String prepareName, int rows) {
+		if (rows == 0) {
+			try {
+				this.client.sendCommandComplete("MOVE", 0); //$NON-NLS-1$
+				return true;
+			} catch (IOException e) {
+				this.client.errorOccurred(e);
+				return false;
+			}
+		}
+		
 		Cursor cursor = this.cursorMap.get(prepareName);
 		if (cursor != null) {
 			this.client.sendMoveCursor(cursor.rs, rows);
+			return true;
 		}
-		else {
-			this.client.errorOccurred(RuntimePlugin.Util.getString("not_bound", prepareName)); //$NON-NLS-1$
-			return;
-		}
+		this.client.errorOccurred(RuntimePlugin.Util.getString("not_bound", prepareName)); //$NON-NLS-1$
+		return false;
 	}	
 	
-	@Override
-	public void cursorClose(String prepareName) {
+	private boolean cursorClose(String prepareName) {
 		Cursor cursor = this.cursorMap.remove(prepareName);
 		if (cursor != null) {
 			try {
 				cursor.rs.close();
 				cursor.stmt.close();
 				this.client.sendCommandComplete("CLOSE CURSOR", 0); //$NON-NLS-1$
+				return true;
 			} catch (SQLException e) {
 				this.client.errorOccurred(e);
 			} catch (IOException e) {
 				this.client.errorOccurred(e);
 			}
 		}
+		return false;
 	}
 	
 	@Override
@@ -490,18 +498,19 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	        ScriptReader reader = new ScriptReader(new StringReader(query));
 	        String sql =  reader.readStatement();
 	        while (sql != null) {
+	        	boolean success = true; 
 		        Matcher m = null;
 		        if ((m = cursorSelectPattern.matcher(sql)).matches()){
-					cursorExecute(m.group(1), fixSQL(m.group(4)));
+					success = cursorExecute(m.group(1), fixSQL(m.group(4)));
 				}
 				else if ((m = fetchPattern.matcher(sql)).matches()){
-					cursorFetch(m.group(2), Integer.parseInt(m.group(1)));
+					success = cursorFetch(m.group(2), Integer.parseInt(m.group(1)));
 				}
 				else if ((m = movePattern.matcher(sql)).matches()){
-					cursorMove(m.group(2), Integer.parseInt(m.group(1)));
+					success = cursorMove(m.group(2), Integer.parseInt(m.group(1)));
 				}
 				else if ((m = closePattern.matcher(sql)).matches()){
-					cursorClose(m.group(1));
+					success = cursorClose(m.group(1));
 				}
 				else if ((m = savepointPattern.matcher(sql)).matches()) {
 					this.client.sendCommandComplete("SAVEPOINT", 0); //$NON-NLS-1$
@@ -513,12 +522,19 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 					closePreparedStatement(m.group(1));
 					this.client.sendCommandComplete("DEALLOCATE", 0); //$NON-NLS-1$
 				}					
-		        
 				else {
-					if (!executeAndSend(fixSQL(sql))) {
-						break;
-					}
+					success = executeAndSend(fixSQL(sql));
 				}
+		        
+		        if (!success) {
+		        	try {
+						if (!this.connection.getAutoCommit()) {
+							this.connection.rollback(false);
+						}
+					} catch (SQLException e) {
+					}
+					break;
+		        }
 	            sql = reader.readStatement();
 	        }
 	        sync();
@@ -647,7 +663,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		}		
 		Prepared query = this.preparedMap.remove(preparedName);
 		if (query == null) {
-			this.client.errorOccurred(RuntimePlugin.Util.getString("no_stmt_found", preparedName)); //$NON-NLS-1$
+			// since we pro actively closing the prepare, if deallocate comes in do not throw an error.
+			this.client.statementClosed();
 		}
 		else {
 			// Close all the bound messages off of this prepared
