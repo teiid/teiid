@@ -95,8 +95,10 @@ public class DefaultCache<K, V> implements Cache<K, V>, Serializable {
 		this.ttl = ttl;
 	}
 	
-	public void addListener(CacheListener listener) {
-		throw new UnsupportedOperationException();
+	public void setListener(CacheListener listener) {
+	}
+	
+	public void removeListener() {
 	}
 
 	public void clear() {

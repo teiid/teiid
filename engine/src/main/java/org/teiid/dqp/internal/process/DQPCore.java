@@ -22,6 +22,10 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -46,6 +50,7 @@ import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
+import org.teiid.cache.CacheListener;
 import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
@@ -212,6 +217,7 @@ public class DQPCore implements DQP {
     private CacheFactory cacheFactory;
 
 	private SessionAwareCache<CachedResults> matTables;
+	private CacheListener<TempTableDataManager.MatTableKey, TempTableDataManager.MatTableEntry> matTableListener;
     
     /**
      * perform a full shutdown and wait for 10 seconds for all threads to finish
@@ -711,11 +717,11 @@ public class DQPCore implements DQP {
         }
         
         if (cacheFactory.isReplicated()) {
-        	matTables = new SessionAwareCache<CachedResults>(this.cacheFactory, SessionAwareCache.Type.RESULTSET, new CacheConfiguration(Policy.EXPIRATION, -1, -1, "MaterilizationTables")); //$NON-NLS-1$
+        	matTables = new SessionAwareCache<CachedResults>(this.cacheFactory, SessionAwareCache.Type.RESULTSET, new CacheConfiguration(Policy.EXPIRATION, -1, -1, "MaterializationTables")); //$NON-NLS-1$
         	matTables.setBufferManager(this.bufferManager);
         }
         
-        dataTierMgr = new TempTableDataManager(new DataTierManagerImpl(this,this.bufferService), this.bufferManager, this.processWorkerPool, this.rsCache, this.matTables, this.cacheFactory); 
+        dataTierMgr = new TempTableDataManager(new DataTierManagerImpl(this,this.bufferService), this.bufferManager, this.processWorkerPool, this.rsCache, this.matTables, this.cacheFactory, this.matTableListener); 
 	}
 	
 	public void setBufferService(BufferService service) {
@@ -724,6 +730,29 @@ public class DQPCore implements DQP {
 	
 	public void setTransactionService(TransactionService service) {
 		this.transactionService = service;
+	}
+	
+	public void setMatTableListener(final CacheListener<TempTableDataManager.MatTableKey, TempTableDataManager.MatTableEntry> listener) {
+		this.matTableListener = (CacheListener<TempTableDataManager.MatTableKey, TempTableDataManager.MatTableEntry>)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {CacheListener.class}, new InvocationHandler() {
+			@Override
+			public Object invoke(Object proxy, final Method method, final Object[] args) throws Throwable {
+				addWork(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							method.invoke(listener, args);
+						} catch (IllegalArgumentException e) {
+							LogManager.logDetail(LogConstants.CTX_DQP, e);
+						} catch (IllegalAccessException e) {
+							LogManager.logDetail(LogConstants.CTX_DQP, e);
+						} catch (InvocationTargetException e) {
+							LogManager.logDetail(LogConstants.CTX_DQP, e);
+						}
+					}
+				});
+				return null;
+			}
+		});
 	}
 	
 	@Override

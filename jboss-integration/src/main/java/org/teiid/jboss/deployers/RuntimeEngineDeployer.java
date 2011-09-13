@@ -70,6 +70,7 @@ import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.adminapi.jboss.AdminProvider;
 import org.teiid.cache.CacheFactory;
+import org.teiid.cache.CacheListener;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
@@ -97,6 +98,9 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.net.TeiidURL;
+import org.teiid.query.tempdata.TempTableDataManager;
+import org.teiid.query.tempdata.TempTableDataManager.MatTableEntry;
+import org.teiid.query.tempdata.TempTableDataManager.MatTableKey;
 import org.teiid.security.SecurityHelper;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
@@ -147,7 +151,8 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	
     public void start() {
 		dqpCore.setTransactionService((TransactionService)LogManager.createLoggingProxy(LogConstants.CTX_TXN_LOG, transactionServerImpl, new Class[] {TransactionService.class}, MessageLevel.DETAIL));
-
+		dqpCore.setMatTableListener(getMatTableListener());
+		
     	// create the necessary services
     	createClientServices();
     	
@@ -497,7 +502,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	
 	@Override
     @ManagementOperation(description="Execute a sql query", params={@ManagementParameter(name="vdbName"),@ManagementParameter(name="vdbVersion"), @ManagementParameter(name="command"), @ManagementParameter(name="timoutInMilli")})	
-	public List<List> executeQuery(final String vdbName, final int version, final String command, final long timoutInMilli) throws AdminException {
+	public List<List> executeQuery(final String vdbName, final int version, final String command, final long timoutInMilli) throws AdminException {	
 		Properties properties = new Properties();
 		properties.setProperty(TeiidURL.JDBC.VDB_NAME, vdbName);
 		properties.setProperty(TeiidURL.JDBC.VDB_VERSION, String.valueOf(version));
@@ -530,7 +535,14 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 					request.setExecutionId(0L);
 					request.setRowLimit(getMaxRowsFetchSize()); // this would limit the number of rows that are returned.
 					Future<ResultsMessage> message = dqpCore.executeRequest(requestID, request);
-					ResultsMessage rm = message.get(timoutInMilli, TimeUnit.MILLISECONDS);
+									
+					ResultsMessage rm = null;
+					if (timoutInMilli < 0) {
+						rm = message.get();
+					}
+					else {
+						rm = message.get(timoutInMilli, TimeUnit.MILLISECONDS);
+					}
 					
 			        if (rm.getException() != null) {
 			            throw new AdminProcessingException(rm.getException());
@@ -606,5 +618,40 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 			newResults[i] = newRow;
 		}		
 		return newResults;
+	}
+	
+    private CacheListener<TempTableDataManager.MatTableKey, TempTableDataManager.MatTableEntry> getMatTableListener() {
+		return new CacheListener<TempTableDataManager.MatTableKey, TempTableDataManager.MatTableEntry>() {
+						
+			@Override
+			public void cacheChanged() {
+			}
+
+			@Override
+			public void cacheCreated(MatTableKey key, MatTableEntry value) {
+				refreshMatView(key, value);
+			}
+
+			@Override
+			public void cacheModified(MatTableKey key, MatTableEntry value) {
+				refreshMatView(key, value);
+			}
+
+			private void refreshMatView(MatTableKey key, MatTableEntry value) {
+				if (value != null) {
+					try {
+						if (value.allowsUpdate()) {
+							executeQuery(key.getVDBName(), key.getVDBVersion(), "execute SYSADMIN.refreshmatview(viewname=>'"+value.getViewName()+"',invalidate=>false)", -1); //$NON-NLS-1$ //$NON-NLS-2$
+						}
+					} catch (AdminException e) {
+						LogManager.logWarning(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("error_refresh", value.getViewName() )); //$NON-NLS-1$
+					}
+				}
+			}
+			@Override
+			public void cacheRemoved(MatTableKey key, MatTableEntry value) {
+				
+			}
+		};
 	}
 }

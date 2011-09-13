@@ -25,6 +25,9 @@ package org.teiid.cache;
 /**
  * Listener for the cache events like add,update delete
  */
-public interface CacheListener {
+public interface CacheListener<K, V> {
 	void cacheChanged();
+	void cacheCreated(K key, V value);
+	void cacheRemoved(K key, V value);
+	void cacheModified(K key, V value);
 }

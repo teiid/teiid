@@ -40,6 +40,7 @@ import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.cache.Cache;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
+import org.teiid.cache.CacheListener;
 import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
@@ -113,7 +114,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 	private SessionAwareCache<CachedResults> cache;
     private Executor executor;
     
-    private static class MatTableKey implements Serializable {
+    public static class MatTableKey implements Serializable {
 		private static final long serialVersionUID = 5481692896572663992L;
 		String name;
     	VDBKey vdb;
@@ -134,19 +135,37 @@ public class TempTableDataManager implements ProcessorDataManager {
     		MatTableKey other = (MatTableKey)obj;
     		return this.name.equals(other.name) && this.vdb.equals(other.vdb);
     	}
+    	
+    	public String getVDBName() {
+    		return vdb.getName();
+    	}
+    	
+    	public int getVDBVersion() {
+    		return vdb.getVersion();
+    	}
     }
     
-    private static class MatTableEntry implements Serializable {
+    public static class MatTableEntry implements Serializable {
 		private static final long serialVersionUID = 8559613701442751579L;
     	long lastUpdate = System.currentTimeMillis();
     	boolean valid;
+    	String viewName;
+    	
+    	public String getViewName() {
+    		return viewName;
+    	}
+    	
+    	public boolean allowsUpdate() {
+    		return valid && viewName != null;
+    	}
     }
     
     private Cache<MatTableKey, MatTableEntry> tables;
+    private Cache<MatTableKey, MatTableEntry> refreshJob;
     private SessionAwareCache<CachedResults> distributedCache;
 
     public TempTableDataManager(ProcessorDataManager processorDataManager, BufferManager bufferManager, 
-    		Executor executor, SessionAwareCache<CachedResults> cache, SessionAwareCache<CachedResults> distibutedCache, CacheFactory cacheFactory){
+    		Executor executor, SessionAwareCache<CachedResults> cache, SessionAwareCache<CachedResults> distibutedCache, CacheFactory cacheFactory, CacheListener<MatTableKey, MatTableEntry> listener){
         this.processorDataManager = processorDataManager;
         this.bufferManager = bufferManager;
         this.executor = executor;
@@ -155,6 +174,10 @@ public class TempTableDataManager implements ProcessorDataManager {
         if (distibutedCache != null) {
 	        CacheConfiguration cc = new CacheConfiguration(Policy.LRU, -1, -1, "MaterializationUpdates"); //$NON-NLS-1$
 	        tables = cacheFactory.get(cc.getLocation(), cc);
+	        
+	        cc = new CacheConfiguration(Policy.LRU, -1, -1, "MaterializationRefresh"); //$NON-NLS-1$
+	        refreshJob = cacheFactory.get(cc.getLocation(), cc);
+	        refreshJob.setListener(listener);
         }
     }
     
@@ -289,7 +312,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 		context.setDeterminismLevel(determinismLevel);
 		return tb.createIndexedTupleSource();
 	}
-
+	
 	private TupleSource handleSystemProcedures(CommandContext context, StoredProcedure proc)
 			throws TeiidComponentException, QueryMetadataException,
 			QueryProcessingException, QueryResolverException,
@@ -303,9 +326,23 @@ public class TempTableDataManager implements ProcessorDataManager {
 			String matTableName = RelationalPlanner.MAT_PREFIX+matViewName.toUpperCase();
 			LogManager.logDetail(LogConstants.CTX_MATVIEWS, "processing refreshmatview for", matViewName); //$NON-NLS-1$
 			MatTableInfo info = globalStore.getMatTableInfo(matTableName);
+			
+			Long loadTime = null;
+			boolean useCache = false;
+			if (this.distributedCache != null) {
+				MatTableKey key = new MatTableKey();
+				key.name = matTableName;
+				key.vdb = new VDBKey(context.getVdbName(), context.getVdbVersion());
+				MatTableEntry entry = this.tables.get(key);
+				useCache = (entry != null && entry.valid && entry.lastUpdate > info.getUpdateTime());
+				if (useCache) {
+					loadTime = entry.lastUpdate;
+				}
+			}			
+			
 			boolean invalidate = Boolean.TRUE.equals(((Constant)proc.getParameter(2).getExpression()).getValue());
 			if (invalidate) {
-				touchTable(context, matTableName, false);
+				touchTable(context, matTableName, matViewName, false, System.currentTimeMillis());
 			}
 			MatState oldState = info.setState(MatState.NEEDS_LOADING, invalidate?Boolean.FALSE:null, null);
 			if (oldState == MatState.LOADING) {
@@ -316,7 +353,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			Object matTableId = RelationalPlanner.getGlobalTempTableMetadataId(group, matTableName, context, metadata, AnalysisRecord.createNonRecordingRecord());
 			GroupSymbol matTable = new GroupSymbol(matTableName);
 			matTable.setMetadataID(matTableId);
-			int rowCount = loadGlobalTable(context, matTable, matTableName, globalStore, info, null, false);
+			int rowCount = loadGlobalTable(context, matTable, matTableName, matViewName, globalStore, info, invalidate?null:loadTime, !invalidate && useCache);			
 			return CollectionTupleSource.createUpdateCountTupleSource(rowCount);
 		} else if (StringUtil.endsWithIgnoreCase(proc.getProcedureCallableName(), REFRESHMATVIEWROW)) {
 			Object groupID = validateMatView(metadata, proc);
@@ -408,9 +445,9 @@ public class TempTableDataManager implements ProcessorDataManager {
 			if (load) {
 				if (!info.isValid()) {
 					//blocking load
-					loadGlobalTable(context, group, tableName, globalStore, info, loadTime, true);
+					loadGlobalTable(context, group, tableName, null, globalStore, info, loadTime, true);
 				} else {
-					loadAsynch(context, group, tableName, globalStore, info, loadTime);
+					loadAsynch(context, group, tableName, null, globalStore, info, loadTime);
 				}
 			} 
 			table = globalStore.getOrCreateTempTable(tableName, query, bufferManager, false);
@@ -435,13 +472,13 @@ public class TempTableDataManager implements ProcessorDataManager {
 	}
 
 	private void loadAsynch(final CommandContext context,
-			final GroupSymbol group, final String tableName,
+			final GroupSymbol group, final String tableName,final String viewName,
 			final TempTableStore globalStore, final MatTableInfo info,
 			final Long loadTime) {
 		Callable<Integer> toCall = new Callable<Integer>() {
 			@Override
 			public Integer call() throws Exception {
-				return loadGlobalTable(context, group, tableName, globalStore, info, loadTime, true);
+				return loadGlobalTable(context, group, tableName, viewName, globalStore, info, loadTime, true);
 			}
 		};
 		FutureTask<Integer> task = new FutureTask<Integer>(toCall);
@@ -449,9 +486,9 @@ public class TempTableDataManager implements ProcessorDataManager {
 	}
 
 	private int loadGlobalTable(CommandContext context,
-			GroupSymbol group, final String tableName,
+			GroupSymbol group, final String tableName, final String viewName,
 			TempTableStore globalStore, MatTableInfo info, Long loadTime, boolean useCache)
-			throws TeiidComponentException, TeiidProcessingException {
+			throws TeiidComponentException, TeiidProcessingException {		
 		LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.getString("TempTableDataManager.loading", tableName)); //$NON-NLS-1$
 		QueryMetadataInterface metadata = context.getMetadata();
 		Create create = new Create();
@@ -477,9 +514,11 @@ public class TempTableDataManager implements ProcessorDataManager {
 			}
 		}
 		int rowCount = -1;
+		boolean tableUpdated = false;
+		String fullName = null;
 		try {
-			String fullName = metadata.getFullName(group.getMetadataID());
-			TupleSource ts = null;
+			fullName = metadata.getFullName(group.getMetadataID());
+			TupleSource ts = null;			
 			CacheID cid = null;
 			if (distributedCache != null) {
 				cid = new CacheID(new ParseInfo(), fullName, context.getVdbName(), 
@@ -487,6 +526,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 				if (useCache) {
 					CachedResults cr = this.distributedCache.get(cid);
 					if (cr != null) {
+						LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.getString("TempTableDataManager.cache_load", tableName)); //$NON-NLS-1$
 						ts = cr.getResults().createIndexedTupleSource();
 					}
 				}
@@ -501,14 +541,15 @@ public class TempTableDataManager implements ProcessorDataManager {
 				String transformation = metadata.getVirtualPlan(group.getMetadataID()).getQuery();
 				QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(transformation, fullName, context);
 				qp.setNonBlocking(true);
-				
+
 				if (distributedCache != null) {
 					CachedResults cr = new CachedResults();
 					BatchCollector bc = qp.createBatchCollector();
 					TupleBuffer tb = bc.collectTuples();
 					cr.setResults(tb);
-					touchTable(context, fullName, true);
-					this.distributedCache.put(cid, FunctionMethod.VDB_DETERMINISTIC, cr, info.getTtl());
+					touchTable(context, fullName, viewName, true, info.getUpdateTime());
+					this.distributedCache.put(cid, FunctionMethod.VDB_DETERMINISTIC, cr, info.getTtl());					
+					tableUpdated = true;
 					ts = tb.createIndexedTupleSource();
 				} else {
 					ts = new BatchCollector.BatchProducerTupleSource(qp);
@@ -541,18 +582,39 @@ public class TempTableDataManager implements ProcessorDataManager {
 				globalStore.swapTempTable(tableName, table);
 				info.setState(MatState.LOADED, true, loadTime);
 				LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.getString("TempTableDataManager.loaded", tableName, rowCount)); //$NON-NLS-1$
+				if (tableUpdated) {
+					initiateRefreshAcrossCluster(context, fullName, viewName);
+				}
 			}
 		}
 		return rowCount;
 	}
 
-	private void touchTable(CommandContext context, String fullName, boolean valid) {
+	private void touchTable(CommandContext context, String fullName, String viewName, boolean valid, long loadtime) {
 		MatTableKey key = new MatTableKey();
 		key.name = fullName;
 		key.vdb = new VDBKey(context.getVdbName(), context.getVdbVersion());
 		MatTableEntry matTableEntry = new MatTableEntry();
 		matTableEntry.valid = valid;
+		matTableEntry.viewName = viewName;
+		matTableEntry.lastUpdate = loadtime;
 		tables.put(key, matTableEntry, null);
+	}
+	
+	private void initiateRefreshAcrossCluster(CommandContext context, String fullName, String viewName) {
+		MatTableKey key = new MatTableKey();
+		key.name = fullName;
+		key.vdb = new VDBKey(context.getVdbName(), context.getVdbVersion());
+		MatTableEntry matTableEntry = new MatTableEntry();
+		matTableEntry.valid = true;
+		matTableEntry.viewName = viewName;
+		matTableEntry.lastUpdate = System.currentTimeMillis();
+		MatTableEntry entry = refreshJob.put(key, matTableEntry, null);
+		if (entry == null) {
+			// in the case of refreshjob, cacheCreate are not being notified correctly due to nature of how Teiid uses the cache
+			// so, in order to get a cacheModified event insert again.
+			refreshJob.put(key, matTableEntry, null);
+		}
 	}
 
 	/**

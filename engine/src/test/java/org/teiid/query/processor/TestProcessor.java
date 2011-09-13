@@ -245,7 +245,7 @@ public class TestProcessor {
     				command.run();
     			}
     	    };        	
-        	dataManager = new TempTableDataManager(dataManager, bufferMgr, executor, cache, null, null);
+        	dataManager = new TempTableDataManager(dataManager, bufferMgr, executor, cache, null, null, null);
         }        
         if (context.getQueryProcessorFactory() == null) {
         	context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(bufferMgr, dataManager, new DefaultCapabilitiesFinder(), null, context.getMetadata()));

@@ -62,9 +62,8 @@ public class TupleBatchCacheLoader extends ClusteredTupleBatchCacheLoader {
 				map.put(id, b);
 				return map;
 			}
-			return super.get(fqn);
 		}
-		return null;
+		return super.get(fqn);
 	}
 
 	@Override

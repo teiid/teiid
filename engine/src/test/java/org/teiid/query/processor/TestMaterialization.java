@@ -74,7 +74,7 @@ public class TestMaterialization {
 				command.run();
 			}
 	    };
-		dataManager = new TempTableDataManager(hdm, bm, executor, cache, cache, new DefaultCacheFactory());
+		dataManager = new TempTableDataManager(hdm, bm, executor, cache, cache, new DefaultCacheFactory(), null);
 	}
 	
 	private void execute(String sql, List<?>... expectedResults) throws Exception {
