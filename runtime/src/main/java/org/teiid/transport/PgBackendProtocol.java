@@ -214,7 +214,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 					if (paramType != null && paramType[i] != 0) {
 						type = paramType[i];
 					} else {
-						type = PG_TYPE_VARCHAR;
+						type = convertType(meta.getParameterType(i+1));
 					}
 					writeInt(type);
 				}
