@@ -100,5 +100,34 @@ public class TestSTree {
 		}
 				
 	}
-
+	
+	/**
+	 * Forces the logic through several compaction cycles by using large strings
+	 * @throws TeiidComponentException
+	 */
+	@Test public void testCompaction() throws TeiidComponentException {
+		BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
+		bm.setProcessorBatchSize(32);
+		bm.setMaxReserveKB(0);//force all to disk
+		bm.setCompactionThreshold(0);
+		bm.initialize();
+		
+		ElementSymbol e1 = new ElementSymbol("x");
+		e1.setType(String.class);
+		List<ElementSymbol> elements = Arrays.asList(e1);
+		STree map = bm.createSTree(elements, "1", 1);
+		
+		int size = 1000;
+		
+		for (int i = 0; i < size; i++) {
+			assertNull(map.insert(Arrays.asList(new String(new byte[1000])), InsertMode.ORDERED, size));
+			assertEquals(i + 1, map.getRowCount());
+		}
+		
+		for (int i = 0; i < size; i++) {
+			assertNotNull(map.remove(Arrays.asList(new String(new byte[1000]))));
+		}
+				
+	}
+	
 }

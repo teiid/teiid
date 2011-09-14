@@ -22,6 +22,7 @@
 
 package org.teiid.common.buffer.impl;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -57,14 +58,16 @@ public class SplittableStorageManager implements StorageManager {
 			this.name = name;
 		}
 	    
+	    @Override
 	    public int readDirect(long fileOffset, byte[] b, int offSet, int length) throws TeiidComponentException {
 	    	Map.Entry<Long, FileStore> entry = storageFiles.floorEntry(fileOffset);
 	    	FileStore fileInfo = entry.getValue();
 	    	return fileInfo.read(fileOffset - entry.getKey(), b, offSet, length);
 	    }
 
-		public void writeDirect(byte[] bytes, int offset, int length) throws TeiidComponentException {
-			Map.Entry<Long, FileStore> entry = this.storageFiles.lastEntry();
+	    @Override
+		public void writeDirect(long start, byte[] bytes, int offset, int length) throws TeiidComponentException {
+			Map.Entry<Long, FileStore> entry = this.storageFiles.floorEntry(start);
 			boolean createNew = false;
 			FileStore fileInfo = null;
 			long fileOffset = 0;
@@ -73,7 +76,10 @@ public class SplittableStorageManager implements StorageManager {
 			} else {
 				fileInfo = entry.getValue();
 				fileOffset = entry.getKey();
-				createNew = entry.getValue().getLength() + length > getMaxFileSize();
+				if (start > entry.getValue().getLength() + fileOffset) {
+					throw new AssertionError("invalid write start location"); //$NON-NLS-1$
+				}
+				createNew = start + length > getMaxFileSize();
 			}
 			if (createNew) {
 				FileStore newFileInfo = storageManager.createFileStore(name + "_" + storageFiles.size()); //$NON-NLS-1$
@@ -83,13 +89,34 @@ public class SplittableStorageManager implements StorageManager {
 	            storageFiles.put(fileOffset, newFileInfo);
 	            fileInfo = newFileInfo;
 	        }
-			fileInfo.write(bytes, offset, length);
+			fileInfo.write(start - fileOffset, bytes, offset, length);
 		}
 		
 		public void removeDirect() {
 			for (FileStore info : storageFiles.values()) {
 				info.remove();
 			}
+			storageFiles.clear();
+		}
+		
+		@Override
+		protected void truncateDirect(long length)
+				throws TeiidComponentException {
+			Map.Entry<Long, FileStore> start = storageFiles.floorEntry(length);
+			if (start == null) {
+				return;
+			}
+			if (start.getKey().longValue() == length) {
+				start.getValue().remove();
+				storageFiles.remove(start.getKey());
+			} else {
+				start.getValue().truncate(length - start.getKey());
+			}
+			for (Iterator<FileStore> iter = storageFiles.tailMap(length, false).values().iterator(); iter.hasNext();) {
+				iter.next().remove();
+				iter.remove();
+			}
+			
 		}
 		
 	}

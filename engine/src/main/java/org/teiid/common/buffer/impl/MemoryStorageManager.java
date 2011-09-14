@@ -45,19 +45,20 @@ public class MemoryStorageManager implements StorageManager {
 			private ByteBuffer buffer = ByteBuffer.allocate(1 << 16);
 			
 			@Override
-			public void writeDirect(byte[] bytes, int offset, int length) throws TeiidComponentException {
-				if (getLength() + length > buffer.capacity()) {
+			public void writeDirect(long start, byte[] bytes, int offset, int length) throws TeiidComponentException {
+				buffer.position((int)start);
+				if (buffer.position() + length > buffer.capacity()) {
 					ByteBuffer newBuffer = ByteBuffer.allocate(buffer.capacity() * 2 + length);
 					buffer.position(0);
 					newBuffer.put(buffer);
 					buffer = newBuffer;
+					buffer.position((int)start);
 				}
-				buffer.position((int)getLength());
 				buffer.put(bytes, offset, length);
 			}
 			
 			@Override
-			public synchronized void removeDirect() {
+			public void removeDirect() {
 				removed.incrementAndGet();
 				buffer = ByteBuffer.allocate(0);
 			}
@@ -73,6 +74,15 @@ public class MemoryStorageManager implements StorageManager {
 				length = Math.min(length, (int)getLength() - position);
 				buffer.get(b, offset, length);
 				return length;
+			}
+			
+			@Override
+			protected void truncateDirect(long length) {
+				ByteBuffer newBuffer = ByteBuffer.allocate((int)length);
+				buffer.position(0);
+				buffer.limit(newBuffer.capacity());
+				newBuffer.put(buffer);
+				buffer = newBuffer;
 			}
 		};
 	}

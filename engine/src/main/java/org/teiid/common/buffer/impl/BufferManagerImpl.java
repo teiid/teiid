@@ -23,25 +23,24 @@
 package org.teiid.common.buffer.impl;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
@@ -113,13 +112,15 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	}
 	
 	private final class BatchManagerImpl implements BatchManager {
-		private final String id;
-		private volatile FileStore store;
-		private Map<Long, long[]> physicalMapping = new ConcurrentHashMap<Long, long[]>();
-		private ReadWriteLock compactionLock = new ReentrantReadWriteLock();
-		private AtomicLong unusedSpace = new AtomicLong();
+		final String id;
+		volatile FileStore store;
+		Map<Long, long[]> physicalMapping = new HashMap<Long, long[]>();
+		long tail;
+		ConcurrentSkipListSet<Long> freed = new ConcurrentSkipListSet<Long>(); 
+		ReadWriteLock compactionLock = new ReentrantReadWriteLock();
+		AtomicLong unusedSpace = new AtomicLong();
 		private int[] lobIndexes;
-		private SizeUtility sizeUtility;
+		SizeUtility sizeUtility;
 		private WeakReference<BatchManagerImpl> ref = new WeakReference<BatchManagerImpl>(this);
 
 		private BatchManagerImpl(String newID, int[] lobIndexes) {
@@ -128,6 +129,16 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			this.store.setCleanupReference(this);
 			this.lobIndexes = lobIndexes;
 			this.sizeUtility = new SizeUtility();
+		}
+		
+		private void freeBatch(Long batch) {
+			long[] info = physicalMapping.remove(batch);
+			if (info != null) { 
+				unusedSpace.addAndGet(info[1]); 
+				if (info[0] + info[1] == tail) {
+					tail -= info[1];
+				}
+			}
 		}
 		
 		public FileStore createStorage(String prefix) {
@@ -143,53 +154,82 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			return mbi;
 		}
 		
-		private boolean shouldCompact(long offset) {
-			return offset > COMPACTION_THRESHOLD && unusedSpace.get() * 4 > offset * 3;
+		private long getOffset() throws TeiidComponentException {
+			if (store.getLength() <= compactionThreshold || unusedSpace.get() * 4 <= store.getLength() * 3) {
+				return tail;
+			}
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+				LogManager.logDetail(LogConstants.CTX_DQP, "Running full compaction on", id); //$NON-NLS-1$
+			}
+			byte[] buffer = new byte[IO_BUFFER_SIZE];
+			TreeSet<long[]> bySize = new TreeSet<long[]>(new Comparator<long[]>() {
+				@Override
+				public int compare(long[] o1, long[] o2) {
+					int signum = Long.signum(o1[1] - o2[1]);
+					if (signum == 0) {
+						//take the upper address first
+						return Long.signum(o2[0] - o1[0]);
+					}
+					return signum;
+				}
+			});
+			TreeSet<long[]> byAddress = new TreeSet<long[]>(new Comparator<long[]>() {
+				
+				@Override
+				public int compare(long[] o1, long[] o2) {
+					return Long.signum(o1[0] - o2[0]);
+				}
+			});
+			bySize.addAll(physicalMapping.values());
+			byAddress.addAll(physicalMapping.values());
+			long lastEndAddress = 0;
+			unusedSpace.set(0);
+			long minFreeSpace = 1 << 11;
+			while (!byAddress.isEmpty()) {
+				long[] info = byAddress.pollFirst();
+				bySize.remove(info);
+
+				long currentOffset = info[0];
+				long space = currentOffset - lastEndAddress;
+				while (space > 0 && !bySize.isEmpty()) {
+					long[] smallest = bySize.first();
+					if (smallest[1] > space) {
+						break;
+					}
+					bySize.pollFirst();
+					byAddress.remove(smallest);
+					move(smallest, lastEndAddress, buffer);
+					space -= smallest[1];
+					lastEndAddress += smallest[1];
+				}
+				
+				if (space <= minFreeSpace) {
+					unusedSpace.addAndGet(space);
+				} else {
+					move(info, lastEndAddress, buffer);
+				}
+				lastEndAddress = info[0] + info[1];
+			}
+			long oldLength = store.getLength();
+			store.truncate(lastEndAddress);
+			tail = lastEndAddress;
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Compacted store", id, "pre-size", oldLength, "post-size", store.getLength()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			}
+			return tail;
 		}
 		
-		private long getOffset() throws TeiidComponentException {
-			long offset = store.getLength();
-			if (!shouldCompact(offset)) {
-				return offset;
-			}
-			try {
-				this.compactionLock.writeLock().lock();
-				offset = store.getLength();
-				//retest the condition to ensure that compaction is still needed
-				if (!shouldCompact(offset)) {
-					return offset;
-				}
-				FileStore newStore = createFileStore(id);
-				newStore.setCleanupReference(this);
-				byte[] buffer = new byte[IO_BUFFER_SIZE];
-				List<long[]> values = new ArrayList<long[]>(physicalMapping.values());
-				Collections.sort(values, new Comparator<long[]>() {
-					@Override
-					public int compare(long[] o1, long[] o2) {
-						return Long.signum(o1[0] - o2[0]);
-					}
-				});
-				for (long[] info : values) {
-					long oldOffset = info[0];
-					info[0] = newStore.getLength();
-					int size = (int)info[1];
-					while (size > 0) {
-						int toWrite = Math.min(IO_BUFFER_SIZE, size);
-						store.readFully(oldOffset, buffer, 0, toWrite);
-						newStore.write(buffer, 0, toWrite);
-						size -= toWrite;
-					}
-				}
-				store.remove();
-				store = newStore;
-				long oldOffset = offset;
-				offset = store.getLength();
-				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
-					LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Compacted store", id, "pre-size", oldOffset, "post-size", offset); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				}
-				return offset;
-			} finally {
-				this.compactionLock.writeLock().unlock();
+		private void move(long[] toMove, long newOffset, byte[] buffer) throws TeiidComponentException {
+			long oldOffset = toMove[0];
+			toMove[0] = newOffset;
+			int size = (int)toMove[1];
+			while (size > 0) {
+				int toWrite = Math.min(IO_BUFFER_SIZE, size);
+				store.readFully(oldOffset, buffer, 0, toWrite);
+				store.write(newOffset, buffer, 0, toWrite);
+				size -= toWrite;
+				oldOffset += toWrite;
+				newOffset += toWrite;
 			}
 		}
 
@@ -350,7 +390,6 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				try {
 					batchManager.compactionLock.readLock().lock();
 					long[] info = batchManager.physicalMapping.get(this.id);
-					Assertion.isNotNull(info, "Invalid batch " + id); //$NON-NLS-1$
 					ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(batchManager.store.createInputStream(info[0]), IO_BUFFER_SIZE));
 		            batch = new TupleBatch();
 		            batch.setRowOffset(ois.readInt());
@@ -378,7 +417,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		}
 
 		public synchronized void persist() throws TeiidComponentException {
-			BatchManagerImpl batchManager = managerRef.get();
+			final BatchManagerImpl batchManager = managerRef.get();
 			if (batchManager == null) {
 				remove();
 				return;
@@ -392,23 +431,37 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
 							LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "writing batch to disk, total writes: ", count); //$NON-NLS-1$
 						}
-						long offset = 0;
 						if (lobManager != null) {
 							for (List<?> tuple : batch.getTuples()) {
 								lobManager.updateReferences(batchManager.lobIndexes, tuple);
 							}
 						}
-						synchronized (batchManager.store) {
-							offset = batchManager.getOffset();
-							OutputStream fsos = new BufferedOutputStream(batchManager.store.createOutputStream(), IO_BUFFER_SIZE);
-				            ObjectOutputStream oos = new ObjectOutputStream(fsos);
-				            oos.writeInt(batch.getBeginRow());
-				            batch.writeExternal(oos);
-				            oos.close();
-				            long size = batchManager.store.getLength() - offset;
-				            long[] info = new long[] {offset, size};
-				            batchManager.physicalMapping.put(this.id, info);
+						batchManager.compactionLock.writeLock().lock();
+						Long free = null;
+						while ((free = batchManager.freed.pollFirst()) != null) {
+							batchManager.freeBatch(free);
 						}
+						lockheld = true;
+						final long offset = batchManager.getOffset();
+						ExtensibleBufferedOutputStream fsos = new ExtensibleBufferedOutputStream(new byte[IO_BUFFER_SIZE]) {
+							
+							@Override
+							protected void flushDirect() throws IOException {
+								try {
+									batchManager.store.write(offset + bytesWritten, buf, 0, count);
+								} catch (TeiidComponentException e) {
+									throw new IOException(e);
+								}
+							}
+						};
+			            ObjectOutputStream oos = new ObjectOutputStream(fsos);
+			            oos.writeInt(batch.getBeginRow());
+			            batch.writeExternal(oos);
+			            oos.close();
+			            long size = fsos.getBytesWritten();
+			            long[] info = new long[] {offset, size};
+			            batchManager.physicalMapping.put(this.id, info);
+			            batchManager.tail = Math.max(batchManager.tail, offset + size);
 						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
 							LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "batch written starting at:", offset); //$NON-NLS-1$
 						}
@@ -436,7 +489,12 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		}
 
 		public void remove() {
-			cleanupManagedBatch(managerRef.get(), id);
+			activeBatch = null;
+			batchReference = null;
+			BatchManagerImpl batchManager = managerRef.get();
+			if (batchManager != null) {
+				cleanupManagedBatch(batchManager, id);
+			}
 		}
 				
 		@Override
@@ -475,6 +533,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     private boolean useWeakReferences = true;
     private boolean inlineLobs = true;
     private int targetBytesPerRow = TARGET_BYTES_PER_ROW;
+	private int compactionThreshold = COMPACTION_THRESHOLD;
 
     private ReentrantLock lock = new ReentrantLock(true);
     private Condition batchesFreed = lock.newCondition();
@@ -581,9 +640,15 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				}
 			}
 		}
-		long[] info = batchManager.physicalMapping.remove(id);
-		if (info != null) {
-			batchManager.unusedSpace.addAndGet(info[1]); 
+		
+		if (batchManager.compactionLock.writeLock().tryLock()) {
+			try {
+				batchManager.freeBatch(id);
+			} finally {
+				batchManager.compactionLock.writeLock().unlock();
+			}
+		} else {
+			batchManager.freed.add(id);
 		}
     }
     
@@ -730,7 +795,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			try {
 				mb.persist();
 			} catch (TeiidComponentException e) {
-				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, e, "Error persisting batch, attempts to read that batch later will result in an exception"); //$NON-NLS-1$
+				LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, "Error persisting batch, attempts to read that batch later will result in an exception"); //$NON-NLS-1$
 			}
 		}
 	}
@@ -743,8 +808,6 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	private int[] getSizeEstimates(List<? extends Expression> elements) {
 		int total = 0;
 		boolean isValueCacheEnabled = DataTypeManager.isValueCacheEnabled();
-		//we make a assumption that the average column size under 64bits is approximately 128bytes
-		//this includes alignment, row/array, and reference overhead
 		for (Expression element : elements) {
 			Class<?> type = element.getType();
 			total += SizeUtility.getSize(isValueCacheEnabled, type);
@@ -827,6 +890,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	
 	public void setInlineLobs(boolean inlineLobs) {
 		this.inlineLobs = inlineLobs;
+	}
+	
+	public void setCompactionThreshold(int compactionThreshold) {
+		this.compactionThreshold = compactionThreshold;
 	}
 	
 }

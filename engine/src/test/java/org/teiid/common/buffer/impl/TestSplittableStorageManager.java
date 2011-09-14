@@ -48,5 +48,26 @@ public class TestSplittableStorageManager {
         
         assertEquals(2, msm.getRemoved());
     }
+    
+    @Test public void testTruncate() throws Exception {
+    	MemoryStorageManager msm = new MemoryStorageManager();
+        SplittableStorageManager ssm = new SplittableStorageManager(msm);
+        ssm.setMaxFileSizeDirect(2048);
+        String tsID = "0";     //$NON-NLS-1$
+        // Add one batch
+        FileStore store = ssm.createFileStore(tsID);
+        TestFileStorageManager.writeBytes(store);
+        
+        assertEquals(1, msm.getCreated());
+
+        TestFileStorageManager.writeBytes(store);
+        
+        assertEquals(2, msm.getCreated());
+        
+        store.truncate(100);
+        
+        assertEquals(1, msm.getRemoved());
+        
+    }
 
 }

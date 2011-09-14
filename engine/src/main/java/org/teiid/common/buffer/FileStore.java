@@ -176,6 +176,13 @@ public abstract class FileStore {
 	public synchronized long getLength() {
 		return len;
 	}
+	
+	public synchronized void truncate(long length) throws TeiidComponentException {
+		truncateDirect(length);
+		len = length;
+	}
+	
+	protected abstract void truncateDirect(long length) throws TeiidComponentException;
 		
 	public int read(long fileOffset, byte[] b, int offSet, int length)
 			throws TeiidComponentException {
@@ -199,21 +206,21 @@ public abstract class FileStore {
     	} while (n < length);
 	}
 	
-	public void write(byte[] bytes) throws TeiidComponentException {
-		write(bytes, 0, bytes.length);
-	}
-
 	public synchronized long write(byte[] bytes, int offset, int length) throws TeiidComponentException {
+		return write(len, bytes, offset, length);
+	}
+	
+	public synchronized long write(long start, byte[] bytes, int offset, int length) throws TeiidComponentException {
 		if (removed) {
 			throw new TeiidComponentException("already removed"); //$NON-NLS-1$
 		}
-		writeDirect(bytes, offset, length);
+		writeDirect(start, bytes, offset, length);
 		long result = len;
-		len += length;		
+		len = Math.max(len, start + length);
 		return result;
 	}
 
-	protected abstract void writeDirect(byte[] bytes, int offset, int length) throws TeiidComponentException;
+	protected abstract void writeDirect(long start, byte[] bytes, int offset, int length) throws TeiidComponentException;
 
 	public synchronized void remove() {
 		if (!this.removed) {
