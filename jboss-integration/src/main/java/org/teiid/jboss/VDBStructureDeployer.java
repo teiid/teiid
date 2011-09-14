@@ -37,12 +37,13 @@ class VDBStructureDeployer  implements DeploymentUnitProcessor {
 		
         DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
         
+        String deploymentName = deploymentUnit.getName();
         VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
         if (file == null) {
         	return;
         }
         
-        if(file.getName().toLowerCase().endsWith(VDB_EXTENSION)) {
+        if(deploymentName.endsWith(VDB_EXTENSION)) {
 			VirtualFile metainf = file.getChild("META-INF"); //$NON-NLS-1$
 			if (metainf == null) {
 				return;
@@ -54,7 +55,7 @@ class VDBStructureDeployer  implements DeploymentUnitProcessor {
 			// adds a TYPE attachment.
 			TeiidAttachments.setAsVDBDeployment(deploymentUnit);
         }
-        else if (file.getName().toLowerCase().endsWith(DYNAMIC_VDB_STRUCTURE)) {
+        else if (deploymentName.endsWith(DYNAMIC_VDB_STRUCTURE)) {
 	        TeiidAttachments.setAsDynamicVDBDeployment(deploymentUnit);			        	
         }
 	}

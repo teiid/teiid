@@ -454,7 +454,7 @@ class VDBService implements Service<VDBMetaData> {
 		return objectReplicatorInjector;
 	}	
 	
-	public void undeployinProgress() {
+	public void undeployInProgress() {
 		this.undeployInProgress = true;
 	}
 }

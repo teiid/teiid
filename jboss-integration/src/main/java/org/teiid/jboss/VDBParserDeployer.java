@@ -58,7 +58,7 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
 
 		if (TeiidAttachments.isDynamicVDB(deploymentUnit)) {
-			parseVDBXML(file, deploymentUnit);			
+			parseVDBXML(file, deploymentUnit).setDynamic(true);			
 		}
 		else {
 			// scan for different files 
@@ -101,11 +101,12 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 		}
 	}
 
-	private void parseVDBXML(VirtualFile file, DeploymentUnit deploymentUnit) throws DeploymentUnitProcessingException {
+	private VDBMetaData parseVDBXML(VirtualFile file, DeploymentUnit deploymentUnit) throws DeploymentUnitProcessingException {
 		try {
 			VDBMetaData vdb = VDBMetadataParser.unmarshell(file.openStream());
 			deploymentUnit.putAttachment(TeiidAttachments.VDB_METADATA, vdb);
 			LogManager.logDetail(LogConstants.CTX_RUNTIME,"VDB "+file.getName()+" has been parsed.");  //$NON-NLS-1$ //$NON-NLS-2$
+			return vdb;
 		} catch (XMLStreamException e) {
 			throw new DeploymentUnitProcessingException(e);
 		} catch (IOException e) {

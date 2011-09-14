@@ -21,14 +21,17 @@
  */
 package org.teiid.jboss;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 
-import org.jboss.as.server.deployment.*;
+import org.jboss.as.server.deployment.DeploymentPhaseContext;
+import org.jboss.as.server.deployment.DeploymentUnit;
+import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
+import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.msc.service.*;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceController.Mode;
-import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -60,7 +63,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		if (!TeiidAttachments.isVDBDeployment(deploymentUnit)) {
 			return;
 		}
-		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
+		final String deploymentName = deploymentUnit.getName();
 		VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
 		
 		// check to see if there is old vdb already deployed.
@@ -85,7 +88,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			String type = data.getType();
 			Translator parent = this.translatorRepository.getTranslatorMetaData(type);
 			if ( parent == null) {
-				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("translator_type_not_found", file.getName())); //$NON-NLS-1$
+				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("translator_type_not_found", deploymentName)); //$NON-NLS-1$
 			}
 		}
 				
@@ -105,13 +108,17 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		deploymentUnit.removeAttachment(TeiidAttachments.UDF_METADATA);
 		
 		// build a VDB service
+		ArrayList<String> unAvailableDS = new ArrayList<String>();
 		VDBService vdb = new VDBService(deployment);
 		ServiceBuilder<VDBMetaData> vdbService = context.getServiceTarget().addService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()), vdb);
-		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
-			for (String sourceName:model.getSourceNames()) {
-				vdbService.addDependency(DependencyType.OPTIONAL, ServiceName.JBOSS.append("data-source", model.getSourceConnectionJndiName(sourceName)));	//$NON-NLS-1$
-			}
-		}
+//		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
+//			for (String sourceName:model.getSourceNames()) {
+//				vdbService.addDependency(ServiceName.JBOSS.append("data-source", model.getSourceConnectionJndiName(sourceName)));	//$NON-NLS-1$
+//				if (context.getServiceRegistry().getService(ServiceName.JBOSS.append("data-source", model.getSourceConnectionJndiName(sourceName))) == null) { //$NON-NLS-1$
+//					unAvailableDS.add(model.getSourceConnectionJndiName(sourceName));
+//				}
+//			}
+//		}
 		
 		// adding the translator services is redundant, however if one is removed then it is an issue.
 		for (Translator t: deployment.getOverrideTranslators()) {
@@ -127,6 +134,10 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		vdbService.addDependency(TeiidServiceNames.BUFFER_MGR, BufferServiceImpl.class, vdb.getBufferServiceInjector());
 		vdbService.addDependency(DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, vdb.getObjectReplicatorInjector());
 		vdbService.setInitialMode(Mode.PASSIVE).install();
+		
+		if (!unAvailableDS.isEmpty()) {
+			LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("vdb-inactive", deployment.getName(), deployment.getVersion(), unAvailableDS)); //$NON-NLS-1$
+		}
 	}
 
 
@@ -140,7 +151,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
         final ServiceController<?> controller = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()));
         if (controller != null) {
         	VDBService vdbService = (VDBService)controller.getService();
-        	vdbService.undeployinProgress();
+        	vdbService.undeployInProgress();
         	
             controller.setMode(ServiceController.Mode.REMOVE);
         }

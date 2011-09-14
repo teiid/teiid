@@ -34,6 +34,7 @@
         <extension module="org.jboss.as.logging"/>
         <extension module="org.jboss.as.naming"/>
         <extension module="org.jboss.as.osgi"/>
+        <extension module="org.jboss.as.pojo"/>
         <extension module="org.jboss.as.remoting"/>
         <extension module="org.jboss.as.sar"/>
         <extension module="org.jboss.as.security"/>
@@ -196,6 +197,7 @@
             <jpa default-datasource=""/>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:naming:1.0" />
+        <subsystem xmlns="urn:jboss:domain:pojo:1.0" />
         <subsystem xmlns="urn:jboss:domain:osgi:1.0" activation="lazy">
             <configuration pid="org.apache.felix.webconsole.internal.servlet.OsgiManager">
                 <property name="manager.root">jboss-osgi</property>
@@ -360,20 +362,20 @@
 
     <interfaces>
         <interface name="management">
-            <inet-address value="127.0.0.1"/>
+            <inet-address value="${jboss.bind.address.management:127.0.0.1}"/>
         </interface>
         <interface name="public">
-           <inet-address value="127.0.0.1"/>
+           <inet-address value="${jboss.bind.address.public:127.0.0.1}"/>
         </interface>
     </interfaces>
 
     <socket-binding-group name="standard-sockets" default-interface="public">
         <socket-binding name="http" port="8080"/>
         <socket-binding name="https" port="8443"/>
-        <socket-binding name="jmx-connector-registry" port="1090"/>
-        <socket-binding name="jmx-connector-server" port="1091"/>
+        <socket-binding name="jmx-connector-registry" interface="management" port="1090"/>
+        <socket-binding name="jmx-connector-server" interface="management" port="1091"/>
         <socket-binding name="jndi" port="1099"/>
-        <socket-binding name="osgi-http" port="8090"/>
+        <socket-binding name="osgi-http" interface="management" port="8090"/>
         <socket-binding name="remoting" port="4447"/>
         <socket-binding name="txn-recovery-environment" port="4712"/>
         <socket-binding name="txn-status-manager" port="4713"/>
