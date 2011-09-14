@@ -341,7 +341,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 				}
 			}			
 			boolean invalidate = Boolean.TRUE.equals(((Constant)proc.getParameter(2).getExpression()).getValue());
-			if (invalidate) {
+			if (invalidate && distributedCache != null) {
 				touchTable(context, matTableName, false, System.currentTimeMillis());
 			}
 			MatState oldState = info.setState(MatState.NEEDS_LOADING, invalidate?Boolean.FALSE:null, null);
