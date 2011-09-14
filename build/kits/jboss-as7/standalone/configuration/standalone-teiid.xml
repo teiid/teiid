@@ -259,7 +259,24 @@
             </modules>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:remoting:1.0"/>
-        <subsystem xmlns="urn:jboss:domain:resource-adapters:1.0" />
+        <subsystem xmlns="urn:jboss:domain:resource-adapters:1.0">
+            <resource-adapters>
+                <resource-adapter>
+                    <archive>teiid-connector-file.rar</archive>
+                    <transaction-support>NoTransaction</transaction-support>
+                    <connection-definitions>
+                        <connection-definition class-name="org.teiid.resource.adapter.file.FileManagedConnectionFactory" 
+                                jndi-name="java:/fileDS" 
+                                enabled="true" 
+                                use-java-context="true" 
+                                pool-name="teiid-file-ds">
+                              <config-property name="ParentDirectory">/home/rareddy/testing/</config-property>
+                              <config-property name="AllowParentPaths">true</config-property>
+                        </connection-definition>
+                    </connection-definitions>
+                </resource-adapter>
+            </resource-adapters>
+        </subsystem>
         <subsystem xmlns="urn:jboss:domain:sar:1.0"/>
         <subsystem xmlns="urn:jboss:domain:security:1.0">
             <security-domains>
