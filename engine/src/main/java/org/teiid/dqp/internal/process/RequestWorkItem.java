@@ -25,12 +25,13 @@ package org.teiid.dqp.internal.process;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
@@ -144,7 +145,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
      * maintained during processing
      */
     private Throwable processingException;
-    private Map<AtomicRequestID, DataTierTupleSource> connectorInfo = new ConcurrentHashMap<AtomicRequestID, DataTierTupleSource>(4);
+    private Map<AtomicRequestID, DataTierTupleSource> connectorInfo = Collections.synchronizedMap(new HashMap<AtomicRequestID, DataTierTupleSource>(4));
     // This exception contains details of all the atomic requests that failed when query is run in partial results mode.
     private List<TeiidException> warnings = new LinkedList<TeiidException>();
     private volatile boolean doneProducingBatches;
@@ -157,7 +158,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	private int begin;
 	private int end;
     private TupleBatch savedBatch;
-    private Map<Integer, LobWorkItem> lobStreams = new ConcurrentHashMap<Integer, LobWorkItem>(4);    
+    private Map<Integer, LobWorkItem> lobStreams = Collections.synchronizedMap(new HashMap<Integer, LobWorkItem>(4));    
     
     /**The time when command begins processing on the server.*/
     private long processingTimestamp = System.currentTimeMillis();
@@ -362,7 +363,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			 * break the read of a lob from a transactional source under a transaction 
 			 * if the source does not support holding the clob open after commit
 			 */
-        	for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {
+        	for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
         		if (connectorRequest.isTransactional()) {
         			connectorRequest.fullyCloseSource();
         		}
@@ -401,15 +402,21 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					}
 				}
 				
-				for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {
+				for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
 					connectorRequest.fullyCloseSource();
 			    }
 			}
 
 			this.resultsBuffer = null;
 			
-			for (LobWorkItem lobWorkItem : this.lobStreams.values()) {
-				lobWorkItem.close();
+			if (!this.lobStreams.isEmpty()) {
+				List<LobWorkItem> lobs = null;
+				synchronized (lobStreams) {
+					lobs = new ArrayList<LobWorkItem>(this.lobStreams.values());
+				}
+				for (LobWorkItem lobWorkItem : lobs) {
+					lobWorkItem.close();
+				}
 			}
 		}
 
@@ -592,7 +599,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     		}
 	        int finalRowCount = this.resultsBuffer.isFinal()?this.resultsBuffer.getRowCount():(batch.getTerminationFlag()?batch.getEndRow():-1);
 	        
-	        response = createResultsMessage(batch.getAllTuples(), this.originalCommand.getProjectedSymbols());
+	        response = createResultsMessage(batch.getTuples(), this.originalCommand.getProjectedSymbols());
 	        response.setFirstRow(batch.getBeginRow());
 	        response.setLastRow(batch.getEndRow());
 	        response.setUpdateResult(this.returnsUpdateCount);
@@ -631,7 +638,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         return result;
 	}
     
-    public ResultsMessage createResultsMessage(List[] batch, List columnSymbols) {
+    public ResultsMessage createResultsMessage(List<? extends List<?>> batch, List columnSymbols) {
         String[] columnNames = new String[columnSymbols.size()];
         String[] dataTypes = new String[columnSymbols.size()];
 
@@ -640,7 +647,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
             columnNames[i] = SingleElementSymbol.getShortName(symbol.getOutputName());
             dataTypes[i] = DataTypeManager.getDataTypeName(symbol.getType());
         }
-        ResultsMessage result = new ResultsMessage(requestMsg, batch, columnNames, dataTypes);
+        ResultsMessage result = new ResultsMessage(batch, columnNames, dataTypes);
         setAnalysisRecords(result);
         return result;
     }
@@ -672,7 +679,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     		}
     	}
 		LogManager.logDetail(LogConstants.CTX_DQP, processingException, "Sending error to client", requestID); //$NON-NLS-1$
-        ResultsMessage response = new ResultsMessage(requestMsg);
+        ResultsMessage response = new ResultsMessage();
         Throwable exception = this.processingException;
         if (isCanceled) {
         	exception = addCancelCode(exception); 
@@ -737,7 +744,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     	
         // Cancel Connector atomic requests 
         try {
-        	for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {
+        	for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
                 connectorRequest.cancelRequest();
             }
         } finally {
@@ -837,7 +844,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	
 	
 	Collection<DataTierTupleSource> getConnectorRequests() {
-		return new LinkedList<DataTierTupleSource>(this.connectorInfo.values());
+		synchronized (this.connectorInfo) {
+			return new ArrayList<DataTierTupleSource>(this.connectorInfo.values());
+		}
 	}
 	
 	DataTierTupleSource getConnectorRequest(AtomicRequestID id) {
@@ -874,7 +883,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		this.doneProducingBatches = true;
 		//TODO: we could perform more tracking to know what source lobs are in use
 		if (this.resultsBuffer.getLobCount() == 0) {
-			for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {
+			for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
 				connectorRequest.fullyCloseSource();
 		    }
 		}

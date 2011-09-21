@@ -42,7 +42,7 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 	public FileStoreInputStreamFactory(FileStore lobBuffer, String encoding) {
 		this.encoding = encoding;
 		this.lobBuffer = lobBuffer;
-		this.lobBuffer.setCleanupReference(this);
+		AutoCleanupUtil.setCleanupReference(this, lobBuffer);
 	}
 
 	@Override

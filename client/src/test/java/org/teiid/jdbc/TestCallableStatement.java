@@ -38,9 +38,6 @@ import org.teiid.client.ResultsMessage;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.client.security.LogonResult;
 import org.teiid.core.types.JDBCSQLTypeInfo;
-import org.teiid.jdbc.CallableStatementImpl;
-import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.ResultSetImpl;
 import org.teiid.net.ServerConnection;
 
 
@@ -68,7 +65,7 @@ public class TestCallableStatement extends TestCase {
 		
 		RequestMessage request = new RequestMessage();
 		request.setExecutionId(1);
-		ResultsMessage resultsMsg = new ResultsMessage(request);
+		ResultsMessage resultsMsg = new ResultsMessage();
 		List[] results = new List[] {Arrays.asList(null, null, null), Arrays.asList(null, 1, 2)};
 		resultsMsg.setResults(results);
 		resultsMsg.setColumnNames(new String[] { "IntNum", "Out1", "Out2" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

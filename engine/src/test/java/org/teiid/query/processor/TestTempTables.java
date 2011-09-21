@@ -188,19 +188,19 @@ public class TestTempTables {
 		tempStore = gtsi.getTempTableStore();
 		metadata = new TempMetadataAdapter(RealMetadataFactory.example1Cached(), tempStore.getMetadataStore());
 		execute("create local temporary table x (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
-		for (int i = 0; i < 86; i++) {
+		for (int i = 0; i < 300; i++) {
 			execute("insert into x (e2, e1) select e2, e1 from pm1.g1", new List[] {Arrays.asList(6)}); //$NON-NLS-1$
 		}
 		setupTransaction(Connection.TRANSACTION_SERIALIZABLE);
-		execute("select count(*) from x", new List[] {Arrays.asList(516)});
-		gtsi.updateMatViewRow("X", Arrays.asList(1), true);
+		execute("select count(e1) from x", new List[] {Arrays.asList(1500)});
+		gtsi.updateMatViewRow("X", Arrays.asList(2), true);
 		tc=null;
 		//outside of the transaction we can see the row removed
-		execute("select count(*) from x", new List[] {Arrays.asList(515)});
+		execute("select count(e1) from x", new List[] {Arrays.asList(1499)});
 		
 		//back in the transaction we see the original state
 		setupTransaction(Connection.TRANSACTION_SERIALIZABLE);
-		execute("select count(*) from x", new List[] {Arrays.asList(516)});
+		execute("select count(e1) from x", new List[] {Arrays.asList(1500)});
 		
 		synch.afterCompletion(Status.STATUS_COMMITTED);
 	}

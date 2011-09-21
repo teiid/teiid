@@ -19,32 +19,42 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+ 
+ package org.teiid.common.buffer.impl;
 
-package org.teiid.common.buffer;
+import static org.junit.Assert.*;
 
-import java.lang.ref.Reference;
-import java.util.List;
+import java.util.BitSet;
+import java.util.Random;
 
-import org.teiid.core.TeiidComponentException;
+import org.junit.Test;
 
-/**
- * Acts as a combination serializer/cachemanager
- */
-public interface BatchManager {
+public class TestBitSetTree {
 	
-	List<List<?>> getBatch(Long batch, boolean retain) throws TeiidComponentException;
+	@Test public void testBitsSet() {
+		BitSetTree bst = new BitSetTree();
+		bst.set(1, true);
+		bst.set(100, true);
+		bst.set(10000, true);
+		bst.set(1000000, true);
+		assertEquals(4, bst.getBitsSet());
+	}
 	
-	void remove(Long batch);
-	
-	void setPrefersMemory(boolean prefers);
-	
-	boolean prefersMemory();
-	
-	Long createManagedBatch(List<? extends List<?>> batch) throws TeiidComponentException;
-	
-	void remove();
-	
-	Reference<? extends BatchManager> getBatchManagerReference();
-	
-	String[] getTypes();
+	@Test public void testNextClearSet() {
+		BitSetTree bst = new BitSetTree();
+		BitSet bst1 = new BitSet();
+		Random r = new Random(1);
+		for (int i = 0; i < 1000; i++) {
+			int rand = r.nextInt() & BitSetTree.MAX_INDEX;
+			bst.set(rand, true);
+			bst1.set(rand, true);
+		}
+		
+		for (int i = 0; i < 10000; i++) {
+			int rand = r.nextInt() & BitSetTree.MAX_INDEX;
+			assertEquals(bst1.nextClearBit(rand), bst.nextClearBit(rand));
+			assertEquals(bst1.nextSetBit(rand), bst.nextSetBit(rand));
+		}
+	}
+
 }

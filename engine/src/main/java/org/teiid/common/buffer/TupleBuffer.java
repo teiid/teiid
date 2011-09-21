@@ -28,7 +28,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.teiid.common.buffer.BatchManager.ManagedBatch;
+import org.teiid.common.buffer.LobManager.ReferenceMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Streamable;
@@ -64,33 +64,23 @@ public class TupleBuffer {
 	private BatchManager manager;
 	private String tupleSourceID;
 	private List<? extends Expression> schema;
-	private String[] types;
 	private int batchSize;
 	
 	private int rowCount;
 	private boolean isFinal;
-    private TreeMap<Integer, BatchManager.ManagedBatch> batches = new TreeMap<Integer, BatchManager.ManagedBatch>();
+    private TreeMap<Integer, Long> batches = new TreeMap<Integer, Long>();
 	private ArrayList<List<?>> batchBuffer;
 	private boolean removed;
 	private boolean forwardOnly;
-	private boolean prefersMemory;
 
 	private LobManager lobManager;
-	private int[] lobIndexes;
 	private String uuid;
-	private FileStore lobStore;
 	
-	public TupleBuffer(BatchManager manager, String id, List<? extends Expression> schema, int[] lobIndexes, int batchSize) {
+	public TupleBuffer(BatchManager manager, String id, List<? extends Expression> schema, LobManager lobManager, int batchSize) {
 		this.manager = manager;
 		this.tupleSourceID = id;
 		this.schema = schema;
-		this.types = getTypeNames(schema);
-		this.lobIndexes = lobIndexes;
-		if (this.lobIndexes != null) {
-			this.lobManager = new LobManager();
-			this.lobStore = this.manager.createStorage("_lobs"); //$NON-NLS-1$
-			this.lobStore.setCleanupReference(this);
-		}
+		this.lobManager = lobManager;
 		this.batchSize = batchSize;		
 	}
 	
@@ -112,12 +102,12 @@ public class TupleBuffer {
 	}
 	
 	public boolean isLobs() {
-		return lobIndexes != null;
+		return lobManager != null;
 	}
 	
 	public void addTuple(List<?> tuple) throws TeiidComponentException {
 		if (isLobs()) {
-			lobManager.updateReferences(lobIndexes, tuple);
+			lobManager.updateReferences(tuple, ReferenceMode.CREATE);
 		}
 		this.rowCount++;
 		if (batchBuffer == null) {
@@ -125,7 +115,7 @@ public class TupleBuffer {
 		}
 		batchBuffer.add(tuple);
 		if (batchBuffer.size() == batchSize) {
-			saveBatch(false, false);
+			saveBatch(false);
 		}
 	}
 	
@@ -144,7 +134,7 @@ public class TupleBuffer {
 			//add the lob references only, since they may still be referenced later
 			if (isLobs()) {
 				for (List<?> tuple : batch.getTuples()) {
-					lobManager.updateReferences(lobIndexes, tuple);
+					lobManager.updateReferences(tuple, ReferenceMode.CREATE);
 				}
 			}
 		}
@@ -154,7 +144,7 @@ public class TupleBuffer {
 			throws TeiidComponentException {
 		assert this.rowCount <= rowCount;
 		if (this.rowCount != rowCount) {
-			saveBatch(false, true);
+			saveBatch(true);
 			this.rowCount = rowCount;
 		}
 	}
@@ -163,15 +153,15 @@ public class TupleBuffer {
 		if (this.batchBuffer != null) {
 			this.batchBuffer.clear();
 		}
-		for (BatchManager.ManagedBatch batch : this.batches.values()) {
-			batch.remove();
+		for (Long batch : this.batches.values()) {
+			this.manager.remove(batch);
 		}
 		this.batches.clear();
 	}
 	
 	public void persistLobs() throws TeiidComponentException {
 		if (this.lobManager != null) {
-			this.lobManager.persist(this.lobStore);
+			this.lobManager.persist();
 		}
 	}
 	
@@ -180,26 +170,21 @@ public class TupleBuffer {
 	 * @throws TeiidComponentException
 	 */
 	public void saveBatch() throws TeiidComponentException {
-		this.saveBatch(false, false);
+		this.saveBatch(false);
 	}
 
-	void saveBatch(boolean finalBatch, boolean force) throws TeiidComponentException {
+	void saveBatch(boolean force) throws TeiidComponentException {
 		Assertion.assertTrue(!this.isRemoved());
 		if (batchBuffer == null || batchBuffer.isEmpty() || (!force && batchBuffer.size() < Math.max(1, batchSize / 32))) {
 			return;
 		}
-        TupleBatch writeBatch = new TupleBatch(rowCount - batchBuffer.size() + 1, batchBuffer);
-        if (finalBatch) {
-        	writeBatch.setTerminationFlag(true);
-        }
-        writeBatch.setDataTypes(types);
-		BatchManager.ManagedBatch mbatch = manager.createManagedBatch(writeBatch, prefersMemory);
-		this.batches.put(writeBatch.getBeginRow(), mbatch);
+		Long mbatch = manager.createManagedBatch(batchBuffer);
+		this.batches.put(rowCount - batchBuffer.size() + 1, mbatch);
         batchBuffer = null;
 	}
 	
 	public void close() throws TeiidComponentException {
-		saveBatch(true, false);
+		saveBatch(false);
 		this.isFinal = true;
 	}
 	
@@ -210,6 +195,8 @@ public class TupleBuffer {
 	 * @param row
 	 * @return
 	 * @throws TeiidComponentException
+	 * 
+	 * TODO: a method to get the raw batch
 	 */
 	public TupleBatch getBatch(int row) throws TeiidComponentException {
 		TupleBatch result = null;
@@ -224,17 +211,20 @@ public class TupleBuffer {
 			if (this.batchBuffer != null && !this.batchBuffer.isEmpty()) {
 				//this is just a sanity check to ensure we're not holding too many
 				//hard references to batches.
-				saveBatch(isFinal, false);
+				saveBatch(false);
 			}
-			Map.Entry<Integer, BatchManager.ManagedBatch> entry = batches.floorEntry(row);
+			Map.Entry<Integer, Long> entry = batches.floorEntry(row);
 			Assertion.isNotNull(entry);
-			BatchManager.ManagedBatch batch = entry.getValue();
-	    	result = batch.getBatch(!forwardOnly, types);
+			Long batch = entry.getValue();
+	    	List<List<?>> rows = manager.getBatch(batch, !forwardOnly);
+	    	result = new TupleBatch(entry.getKey(), rows);
+	    	if (isFinal && result.getEndRow() == rowCount) {
+	    		result.setTerminationFlag(true);
+	    	}
 	    	if (forwardOnly) {
 				batches.remove(entry.getKey());
 			}
 		}
-		result.setDataTypes(types);
 		if (isFinal && result.getEndRow() == rowCount) {
 			result.setTerminationFlag(true);
 		}
@@ -246,8 +236,8 @@ public class TupleBuffer {
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
 	            LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Removing TupleBuffer:", this.tupleSourceID); //$NON-NLS-1$
 	        }
-			if (this.lobStore != null) {
-				this.lobStore.remove();
+			if (this.lobManager != null) {
+				this.lobManager.remove();
 			}
 			this.batchBuffer = null;
 			purge();
@@ -365,18 +355,11 @@ public class TupleBuffer {
 	}
 	
 	public void setPrefersMemory(boolean prefersMemory) {
-		this.prefersMemory = prefersMemory;
-		for (ManagedBatch batch : this.batches.values()) {
-			batch.setPrefersMemory(prefersMemory);
-		}
-	}
-	
-	public boolean isPrefersMemory() {
-		return prefersMemory;
+		this.manager.setPrefersMemory(prefersMemory);
 	}
 	
 	public String[] getTypes() {
-		return types;
+		return manager.getTypes();
 	}
 	
 	public int getLobCount() {

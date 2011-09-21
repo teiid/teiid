@@ -23,6 +23,7 @@
 package org.teiid.common.buffer;
 
 import java.lang.ref.PhantomReference;
+import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,15 +34,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.teiid.common.buffer.BatchManager.CleanupHook;
-import org.teiid.common.buffer.BatchManager.ManagedBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 
 /**
  * A linked list Page entry in the tree
- * 
- * TODO: return the tuplebatch from getvalues, since that is what we're tracking
  * 
  * State cloning allows a single storage reference to be shared in many trees.
  * A phantom reference is used for proper cleanup once cloned.
@@ -57,8 +54,8 @@ class SPage implements Cloneable {
 	static class SearchResult {
 		int index;
 		SPage page;
-		TupleBatch values;
-		public SearchResult(int index, SPage page, TupleBatch values) {
+		List<List<?>> values;
+		public SearchResult(int index, SPage page, List<List<?>> values) {
 			this.index = index;
 			this.page = page;
 			this.values = values;
@@ -69,16 +66,21 @@ class SPage implements Cloneable {
 	private static ReferenceQueue<Object> QUEUE = new ReferenceQueue<Object>();
 	static class CleanupReference extends PhantomReference<Object> {
 		
-		private CleanupHook batch;
+		private Long batch;
+		private Reference<? extends BatchManager> ref;
 		
-		public CleanupReference(Object referent, CleanupHook batch) {
+		public CleanupReference(Object referent, Long batch, Reference<? extends BatchManager> ref) {
 			super(referent, QUEUE);
 			this.batch = batch;
+			this.ref = ref;
 		}
 		
 		public void cleanup() {
 			try {
-				this.batch.cleanup();
+				BatchManager batchManager = ref.get();
+				if (batchManager != null) {
+					batchManager.remove(batch);
+				}
 			} finally {
 				this.clear();
 			}
@@ -92,28 +94,26 @@ class SPage implements Cloneable {
 	private long id;
 	protected SPage next;
 	protected SPage prev;
-	protected ManagedBatch managedBatch;
-	private Object trackingObject;
-	protected TupleBatch values;
-	protected ArrayList<SPage> children;
-	protected boolean cloned; 
+	protected Long managedBatch;
+	protected Object trackingObject;
+	protected List<List<?>> values;
+	protected List<SPage> children;
 	
 	SPage(STree stree, boolean leaf) {
 		this.stree = stree;
 		this.id = counter.getAndIncrement();
 		stree.pages.put(this.id, this);
-		this.values = new TupleBatch(0, new ArrayList(stree.getPageSize(leaf)/4));
+		this.values = new ArrayList<List<?>>();
 		if (!leaf) {
-			children = new ArrayList<SPage>(stree.getPageSize(false)/4);
+			children = new ArrayList<SPage>();
 		}
 	}
 	
 	public SPage clone(STree tree) {
 		try {
 			if (this.managedBatch != null && trackingObject == null) {
-				cloned = true;
 				this.trackingObject = new Object();
-				CleanupReference managedBatchReference  = new CleanupReference(trackingObject, managedBatch.getCleanupHook());
+				CleanupReference managedBatchReference  = new CleanupReference(trackingObject, managedBatch, stree.getBatchManager(children == null).getBatchManagerReference());
 				REFERENCES.add(managedBatchReference);
 			}
 			SPage clone = (SPage) super.clone();
@@ -122,7 +122,7 @@ class SPage implements Cloneable {
 				clone.children = new ArrayList<SPage>(children);
 			}
 			if (values != null) {
-				clone.values = new TupleBatch(0, new ArrayList<List<?>>(values.getTuples()));
+				clone.values = new ArrayList<List<?>>(values);
 			}
 			return clone;
 		} catch (CloneNotSupportedException e) {
@@ -135,32 +135,32 @@ class SPage implements Cloneable {
 	}
 	
 	static SearchResult search(SPage page, List k, LinkedList<SearchResult> parent) throws TeiidComponentException {
-		TupleBatch previousValues = null;
+		List<List<?>> previousValues = null;
 		for (;;) {
-			TupleBatch values = page.getValues();
-			int index = Collections.binarySearch(values.getTuples(), k, page.stree.comparator);
+			List<List<?>> values = page.getValues();
+			int index = Collections.binarySearch(values, k, page.stree.comparator);
 			int flippedIndex = - index - 1;
 			if (previousValues != null) {
 				if (flippedIndex == 0) {
 					//systemic weakness of the algorithm
-					return new SearchResult(-previousValues.getTuples().size() - 1, page.prev, previousValues);
+					return new SearchResult(-previousValues.size() - 1, page.prev, previousValues);
 				}
 				if (parent != null && index != 0) {
 					page.stree.updateLock.lock();
 					try {
-						index = Collections.binarySearch(values.getTuples(), k, page.stree.comparator);
+						index = Collections.binarySearch(values, k, page.stree.comparator);
 						if (index != 0) {
 							//for non-matches move the previous pointer over to this page
 							SPage childPage = page;
 							List oldKey = null;
-							List newKey = page.stree.extractKey(values.getTuples().get(0));
+							List newKey = page.stree.extractKey(values.get(0));
 							for (Iterator<SearchResult> desc = parent.descendingIterator(); desc.hasNext();) {
 								SearchResult sr = desc.next();
 								int parentIndex = Math.max(0, -sr.index - 2);
 								if (oldKey == null) {
-									oldKey = sr.values.getTuples().set(parentIndex, newKey); 
-								} else if (page.stree.comparator.compare(oldKey, sr.values.getTuples().get(parentIndex)) == 0 ) {
-									sr.values.getTuples().set(parentIndex, newKey);
+									oldKey = sr.values.set(parentIndex, newKey); 
+								} else if (page.stree.comparator.compare(oldKey, sr.values.get(parentIndex)) == 0 ) {
+									sr.values.set(parentIndex, newKey);
 								} else {
 									break;
 								}
@@ -174,7 +174,7 @@ class SPage implements Cloneable {
 					}
 				}
 			}
-			if (flippedIndex != values.getTuples().size() || page.next == null) {
+			if (flippedIndex != values.size() || page.next == null) {
 				return new SearchResult(index, page, values);
 			}
 			previousValues = values; 
@@ -182,35 +182,32 @@ class SPage implements Cloneable {
 		}
 	}
 	
-	protected void setValues(TupleBatch values) throws TeiidComponentException {
-		if (managedBatch != null && !cloned) {
-			managedBatch.remove();
+	protected void setValues(List<List<?>> values) throws TeiidComponentException {
+		if (values instanceof LightWeightCopyOnWriteList<?>) {
+			values = ((LightWeightCopyOnWriteList<List<?>>)values).getList();
 		}
-		if (values.getTuples().size() < MIN_PERSISTENT_SIZE) {
-			this.values = values;
-			return;
-		} 
-		this.values = null;
-		if (children != null) {
-			values.setDataTypes(stree.keytypes);
-		} else {
-			values.setDataTypes(stree.types);
-		}
-		if (cloned) {
-			cloned = false;
+		if (managedBatch != null && trackingObject == null) {
+			stree.getBatchManager(children == null).remove(managedBatch);
+			managedBatch = null;
 			trackingObject = null;
 		}
-		if (children != null) {
-			managedBatch = stree.keyManager.createManagedBatch(values, true);
-		} else {
-			managedBatch = stree.leafManager.createManagedBatch(values, stree.preferMemory);
+		if (values.size() < MIN_PERSISTENT_SIZE) {
+			this.values = values;
+			return;
+		} else if (stree.batchInsert && children == null && values.size() < stree.leafSize) {
+			this.values = values;
+			stree.incompleteInsert = this;
+			return;
 		}
+		this.values = null;
+		this.trackingObject = null;
+		managedBatch = stree.getBatchManager(children == null).createManagedBatch(values);
 	}
-
+	
 	protected void remove(boolean force) {
 		if (managedBatch != null) {
-			if (force || !cloned) {
-				managedBatch.remove();
+			if (force || trackingObject == null) {
+				stree.getBatchManager(children == null).remove(managedBatch);
 			}
 			managedBatch = null;
 			trackingObject = null;
@@ -219,7 +216,7 @@ class SPage implements Cloneable {
 		children = null;
 	}
 
-	protected TupleBatch getValues() throws TeiidComponentException {
+	protected List<List<?>> getValues() throws TeiidComponentException {
 		if (values != null) {
 			return values;
 		}
@@ -234,19 +231,20 @@ class SPage implements Cloneable {
 			REFERENCES.remove(ref);
 			ref.cleanup();
 		}
-		if (children != null) {
-			return managedBatch.getBatch(true, stree.keytypes);
+		List<List<?>> result = stree.getBatchManager(children == null).getBatch(managedBatch, true);
+		if (trackingObject != null) {
+			return new LightWeightCopyOnWriteList<List<?>>(result);
 		}
-		return managedBatch.getBatch(true, stree.types);
+		return result;
 	}
 	
-	static void merge(LinkedList<SearchResult> places, TupleBatch nextValues, SPage current, TupleBatch currentValues)
+	static void merge(LinkedList<SearchResult> places, List<List<?>> nextValues, SPage current, List<List<?>> currentValues)
 	throws TeiidComponentException {
 		SearchResult parent = places.peekLast();
 		if (parent != null) {
-			correctParents(parent.page, nextValues.getTuples().get(0), current.next, current);
+			correctParents(parent.page, nextValues.get(0), current.next, current);
 		}
-		currentValues.getTuples().addAll(nextValues.getTuples());
+		currentValues.addAll(nextValues);
 		if (current.children != null) {
 			current.children.addAll(current.next.children);
 		}
@@ -292,19 +290,19 @@ class SPage implements Cloneable {
 	public String toString() {
 		StringBuilder result = new StringBuilder();
 		try {
-			TupleBatch tb = getValues();
-			result.append(tb.getBeginRow());
+			List<List<?>> tb = getValues();
+			result.append(id);
 			if (children == null) {
-				if (tb.getTuples().size() <= 1) {
-					result.append(tb.getTuples());
+				if (tb.size() <= 1) {
+					result.append(tb);
 				} else {
-					result.append("[").append(tb.getTuples().get(0)).append(" . ").append(tb.getTuples().size()). //$NON-NLS-1$ //$NON-NLS-2$
-					append(" . ").append(tb.getTuples().get(tb.getTuples().size() - 1)).append("]"); //$NON-NLS-1$ //$NON-NLS-2$ 
+					result.append("[").append(tb.get(0)).append(" . ").append(tb.size()). //$NON-NLS-1$ //$NON-NLS-2$
+					append(" . ").append(tb.get(tb.size() - 1)).append("]"); //$NON-NLS-1$ //$NON-NLS-2$ 
 				}
 			} else {
 				result.append("["); //$NON-NLS-1$
 				for (int i = 0; i < children.size(); i++) {
-					result.append(tb.getTuples().get(i)).append("->").append(children.get(i).getValues().getBeginRow()); //$NON-NLS-1$
+					result.append(tb.get(i)).append("->").append(children.get(i).getId()); //$NON-NLS-1$
 					if (i < children.size() - 1) {
 						result.append(", "); //$NON-NLS-1$
 					}

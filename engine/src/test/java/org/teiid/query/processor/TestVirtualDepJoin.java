@@ -33,9 +33,8 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleBuffer;
-import org.teiid.common.buffer.impl.BufferManagerImpl;
-import org.teiid.common.buffer.impl.MemoryStorageManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
@@ -461,16 +460,8 @@ public class TestVirtualDepJoin {
         TestProcessor.examineResults((List[])expected.toArray(new List[expected.size()]), bufferMgr, id);
     }
 
-    private BufferManager createCustomBufferMgr(int batchSize) throws TeiidComponentException {
-        BufferManagerImpl bufferMgr = new BufferManagerImpl();
-        bufferMgr.setConnectorBatchSize(batchSize);
-        bufferMgr.setProcessorBatchSize(batchSize);
-        bufferMgr.initialize();
-
-        // Add unmanaged memory storage manager
-        bufferMgr.setStorageManager(new MemoryStorageManager());
-
-        return bufferMgr;
+    private BufferManager createCustomBufferMgr(int batchSize) {
+        return BufferManagerFactory.getTestBufferManager(200000, batchSize);
     }
 
     public void helpTestVirtualDepJoin(boolean pushCriteria) throws Exception {  

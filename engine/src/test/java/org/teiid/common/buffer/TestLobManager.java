@@ -28,8 +28,10 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Test;
+import org.teiid.common.buffer.LobManager.ReferenceMode;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
@@ -65,10 +67,11 @@ public class TestLobManager {
 			
 		}));		
 		
-		LobManager lobManager = new LobManager();
+		LobManager lobManager = new LobManager(new int[] {0, 1}, fs);
 		lobManager.setMaxMemoryBytes(4);
-		lobManager.updateReferences(new int[] {0,1}, Arrays.asList(clob, blob));
-		lobManager.persist(fs);
+		List<Streamable<? extends Object>> tuple = Arrays.asList(clob, blob);
+		lobManager.updateReferences(tuple, ReferenceMode.CREATE);
+		lobManager.persist();
 		
 		Streamable<?>lob = lobManager.getLobReference(clob.getReferenceStreamId());
 		assertTrue(lob.getClass().isAssignableFrom(ClobType.class));
@@ -80,6 +83,10 @@ public class TestLobManager {
 		assertTrue(lob.getClass().isAssignableFrom(BlobType.class));
 		BlobType blobRead = (BlobType)lob;
 		assertTrue(Arrays.equals(ObjectConverterUtil.convertToByteArray(blob.getBinaryStream()), ObjectConverterUtil.convertToByteArray(blobRead.getBinaryStream())));
+		
+		lobManager.updateReferences(tuple, ReferenceMode.REMOVE);
+		
+		assertEquals(0, lobManager.getLobCount());
 		
 	}
 	

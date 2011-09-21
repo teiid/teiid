@@ -22,15 +22,9 @@
 
 package org.teiid.common.buffer;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import org.teiid.client.BatchSerializer;
 
 
 /**
@@ -40,27 +34,16 @@ import org.teiid.client.BatchSerializer;
  * tuples.  The {@link #getEndRow ending row} is the last row contained in 
  * this tuple batch; it is equal to the beginning row plus the 
  * {@link #getRowCount number of rows} contained in this batch, minus one.
- * This object is immutable and Serializable;
  */
-public class TupleBatch implements Externalizable {
+public class TupleBatch {
 	
 	private static final long serialVersionUID = 6304443387337336957L;
 	
 	private int rowOffset;    
-    private List<List<?>> tuples;
+    protected List<List<?>> tuples;
     
     // Optional state
     private boolean terminationFlag = false;
-    
-    // for distributed cache purposes
-    private String[] preservedTypes;
-    
-    /**
-     * Contains ordered data types of each of the columns in the batch. Although it is not serialized,
-     * this array is a serialization aid and must be set before serialization and deserialization using
-     * the setDataTypes method. 
-     */
-    private transient String[] types;
     
     /** Required to honor Externalizable contract */
     public TupleBatch() {
@@ -152,14 +135,6 @@ public class TupleBatch implements Externalizable {
         this.terminationFlag = terminationFlag;    
     }
     
-    public void setDataTypes(String[] types) {
-        this.types = types;
-    }
-    
-    public String[] getDataTypes() {
-		return types;
-	}
-    
     public boolean containsRow(int row) {
     	return rowOffset <= row && getEndRow() >= row;
     }
@@ -179,31 +154,8 @@ public class TupleBatch implements Externalizable {
         return s.toString();
     }
 
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-    	rowOffset = in.readInt();
-        terminationFlag = in.readBoolean();
-        preservedTypes = (String[])in.readObject();
-        if (types == null) {
-        	types = preservedTypes;
-        }
-        tuples = new ArrayList<List<?>>();
-        for (List tuple : BatchSerializer.readBatch(in, types)) {
-        	tuples.add(tuple);
-        }
-    }
-    public void writeExternal(ObjectOutput out) throws IOException {
-    	out.writeInt(this.rowOffset);
-        out.writeBoolean(terminationFlag);
-        out.writeObject(this.preservedTypes);
-        BatchSerializer.writeBatch(out, types, getAllTuples());
-    }
-    
     public void setRowOffset(int rowOffset) {
 		this.rowOffset = rowOffset;
 	}
-    
-    public void preserveTypes() {
-    	this.preservedTypes = types;
-    }
 }
 

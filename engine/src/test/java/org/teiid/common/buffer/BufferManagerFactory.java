@@ -22,9 +22,10 @@
 
 package org.teiid.common.buffer;
 
-import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
+import org.teiid.common.buffer.impl.FileStoreCache;
 import org.teiid.common.buffer.impl.MemoryStorageManager;
+import org.teiid.common.buffer.impl.SplittableStorageManager;
 import org.teiid.core.TeiidComponentException;
 
 
@@ -81,12 +82,18 @@ public class BufferManagerFactory {
 	public static BufferManagerImpl initBufferManager(BufferManagerImpl bufferManager) {
 	    try {
 			bufferManager.initialize();
-		} catch (TeiidComponentException e) {
+			MemoryStorageManager storageManager = new MemoryStorageManager();
+			SplittableStorageManager ssm = new SplittableStorageManager(storageManager);
+			ssm.setMaxFileSizeDirect(MemoryStorageManager.MAX_FILE_SIZE);
+			FileStoreCache fsc = new FileStoreCache();
+			fsc.setSegmentCount(1);
+			fsc.setStorageManager(ssm);
+			fsc.initialize();
+		    bufferManager.setCache(fsc);
+		    return bufferManager;
+	    } catch (TeiidComponentException e) {
 			throw new RuntimeException(e);
 		}
-	
-	    bufferManager.setStorageManager(new MemoryStorageManager());
-	    return bufferManager;
 	}
 
 }

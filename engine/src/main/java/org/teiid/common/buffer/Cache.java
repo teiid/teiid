@@ -22,29 +22,18 @@
 
 package org.teiid.common.buffer;
 
-import java.lang.ref.Reference;
-import java.util.List;
+import java.util.Collection;
 
 import org.teiid.core.TeiidComponentException;
 
 /**
- * Acts as a combination serializer/cachemanager
+ * Represents the storage strategy for the {@link BufferManager}
  */
-public interface BatchManager {
-	
-	List<List<?>> getBatch(Long batch, boolean retain) throws TeiidComponentException;
-	
-	void remove(Long batch);
-	
-	void setPrefersMemory(boolean prefers);
-	
-	boolean prefersMemory();
-	
-	Long createManagedBatch(List<? extends List<?>> batch) throws TeiidComponentException;
-	
-	void remove();
-	
-	Reference<? extends BatchManager> getBatchManagerReference();
-	
-	String[] getTypes();
+public interface Cache extends StorageManager {
+	void createCacheGroup(Long gid);
+	Collection<Long> removeCacheGroup(Long gid);
+	void addToCacheGroup(Long gid, Long oid); //called prior to adding an entry
+	CacheEntry get(Long id, Serializer<?> serializer) throws TeiidComponentException;
+	void add(CacheEntry entry, Serializer<?> s);
+	void remove(Long gid, Long id);
 }

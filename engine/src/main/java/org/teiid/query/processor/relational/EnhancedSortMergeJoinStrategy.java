@@ -141,6 +141,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	List<?> lastTuple = null;
     	boolean sortedDistinct = sorted && !state.isDistinct();
     	int sizeHint = index.getExpectedHeight(state.getTupleBuffer().getRowCount());
+    	index.setBatchInsert(sorted);
     	outer: while (its.hasNext()) {
     		//detect if sorted and distinct
     		List<?> originalTuple = its.nextTuple();
@@ -162,6 +163,8 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	}
     	if (!sorted) {
     		index.compact();
+    	} else {
+    		index.setBatchInsert(false);
     	}
     	its.closeSource();
     	this.reverseIndexes = new int[elements.size()];

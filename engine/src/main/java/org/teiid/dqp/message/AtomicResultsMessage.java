@@ -22,20 +22,12 @@
 
 package org.teiid.dqp.message;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.List;
 
-import org.teiid.client.BatchSerializer;
-import org.teiid.core.util.ExternalizeUtil;
 
-
-public class AtomicResultsMessage implements Externalizable {
+public class AtomicResultsMessage {
 
 	private List[] results;
-	private String[] dataTypes;
 
     // Final row index in complete result set, if known
     private int finalRow = -1;
@@ -53,8 +45,7 @@ public class AtomicResultsMessage implements Externalizable {
 	public AtomicResultsMessage() {
 	}
 	
-	public AtomicResultsMessage(List[] results, String[] dataTypes) {
-		this.dataTypes = dataTypes;
+	public AtomicResultsMessage(List[] results) {
         this.results = results;
 	}
 	
@@ -84,26 +75,6 @@ public class AtomicResultsMessage implements Externalizable {
 
 	public List[] getResults() {
 		return results;
-	}
-
-	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        dataTypes = ExternalizeUtil.readStringArray(in);
-        results = BatchSerializer.readBatch(in, dataTypes);
-        finalRow = in.readInt();
-        supportsImplicitClose = in.readBoolean();
-        warnings = (List<Exception>)in.readObject();
-        isTransactional = in.readBoolean();
-        supportsCloseWithLobs = in.readBoolean();
-	}
-
-	public void writeExternal(ObjectOutput out) throws IOException {
-        ExternalizeUtil.writeArray(out, dataTypes);
-        BatchSerializer.writeBatch(out, dataTypes, results);
-        out.writeInt(finalRow);
-        out.writeBoolean(supportsImplicitClose);
-        out.writeObject(warnings);
-        out.writeBoolean(isTransactional);
-        out.writeBoolean(supportsCloseWithLobs);
 	}
 
 	public boolean isTransactional() {

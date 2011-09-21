@@ -31,6 +31,7 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.dqp.internal.process.SerializableTupleBatch;
 
 public class TupleBatchCacheLoader extends ClusteredTupleBatchCacheLoader {
 
@@ -58,8 +59,7 @@ public class TupleBatchCacheLoader extends ClusteredTupleBatchCacheLoader {
 			if (tb != null) {
 				Map map = new HashMap();
 				TupleBatch b = tb.getBatch(row);
-				b.preserveTypes();
-				map.put(id, b);
+				map.put(id, new SerializableTupleBatch(b, tb.getTypes()));
 				return map;
 			}
 		}

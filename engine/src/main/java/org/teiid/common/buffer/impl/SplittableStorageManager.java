@@ -22,9 +22,9 @@
 
 package org.teiid.common.buffer.impl;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.ConcurrentSkipListMap;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.StorageManager;
@@ -32,8 +32,8 @@ import org.teiid.core.TeiidComponentException;
 
 public class SplittableStorageManager implements StorageManager {
 	
-	public static final long DEFAULT_MAX_FILESIZE = 2L * 1024L;
-    private long maxFileSize = DEFAULT_MAX_FILESIZE * 1024L * 1024L; // 2GB
+	public static final long DEFAULT_MAX_FILESIZE = 2 * 1024l;
+    private long maxFileSize = DEFAULT_MAX_FILESIZE * 1024l * 1024l; // 2GB
 	private StorageManager storageManager;
 	
 	public SplittableStorageManager(StorageManager storageManager) {
@@ -52,71 +52,91 @@ public class SplittableStorageManager implements StorageManager {
 	
 	public class SplittableFileStore extends FileStore {
 	    private String name;
-		private ConcurrentSkipListMap<Long, FileStore> storageFiles = new ConcurrentSkipListMap<Long, FileStore>(); 
+		private List<FileStore> storageFiles = new ArrayList<FileStore>();
+		
+		private volatile long len;
 	    
 	    public SplittableFileStore(String name) {
 			this.name = name;
 		}
 	    
 	    @Override
-	    public int readDirect(long fileOffset, byte[] b, int offSet, int length) throws TeiidComponentException {
-	    	Map.Entry<Long, FileStore> entry = storageFiles.floorEntry(fileOffset);
-	    	FileStore fileInfo = entry.getValue();
-	    	return fileInfo.read(fileOffset - entry.getKey(), b, offSet, length);
+	    public long getLength() {
+	    	return len;
+	    }
+	    
+	    @Override
+	    protected int readWrite(long fileOffset, byte[] b, int offSet,
+	    		int length, boolean write) throws IOException {
+	    	FileStore store = null;
+	    	if (!write) {
+	    		synchronized (this) {
+		    		if (fileOffset + length > len) {
+		    			throw new IOException("Invalid file position " + fileOffset + " length " + length); //$NON-NLS-1$ //$NON-NLS-2$
+		    		}
+		    		store = storageFiles.get((int)(fileOffset/maxFileSize));
+	    		}
+		    	return store.read(fileOffset%maxFileSize, b, offSet, length);
+			}
+	    	synchronized (this) {
+		    	ensureLength(fileOffset + length);
+	    		store = storageFiles.get((int)(fileOffset/maxFileSize));
+			}
+	    	long fileBegin = (int)(fileOffset%maxFileSize);
+	    	length = Math.min(length, (int)Math.min(Integer.MAX_VALUE, maxFileSize - fileBegin));
+			store.write(fileBegin, b, offSet, length);
+			return length;
 	    }
 
-	    @Override
-		public void writeDirect(long start, byte[] bytes, int offset, int length) throws TeiidComponentException {
-			Map.Entry<Long, FileStore> entry = this.storageFiles.floorEntry(start);
-			boolean createNew = false;
-			FileStore fileInfo = null;
-			long fileOffset = 0;
-			if (entry == null) {
-				createNew = true;
-			} else {
-				fileInfo = entry.getValue();
-				fileOffset = entry.getKey();
-				if (start > entry.getValue().getLength() + fileOffset) {
-					throw new AssertionError("invalid write start location"); //$NON-NLS-1$
-				}
-				createNew = start + length > getMaxFileSize();
+		private void ensureLength(long length) throws IOException {
+			if (length <= len) {
+				return;
 			}
-			if (createNew) {
+			int numFiles = (int)(length/maxFileSize);
+			long lastFileSize = length%maxFileSize;
+			if (lastFileSize > 0) {
+				numFiles++;
+			}
+			for (int i = storageFiles.size(); i < numFiles; i++) {
 				FileStore newFileInfo = storageManager.createFileStore(name + "_" + storageFiles.size()); //$NON-NLS-1$
-	            if (fileInfo != null) {
-	            	fileOffset += fileInfo.getLength();
-	            }
-	            storageFiles.put(fileOffset, newFileInfo);
-	            fileInfo = newFileInfo;
-	        }
-			fileInfo.write(start - fileOffset, bytes, offset, length);
+				storageFiles.add(newFileInfo);
+				if (lastFileSize == 0 || i != numFiles - 1) {
+					newFileInfo.setLength(maxFileSize);
+				}
+			}
+			if (lastFileSize > 0) {
+				storageFiles.get(storageFiles.size() - 1).setLength(lastFileSize);
+			}
+			len = length;
 		}
-		
-		public void removeDirect() {
-			for (FileStore info : storageFiles.values()) {
+
+	    @Override
+	    public synchronized void setLength(long length) throws IOException {
+			if (length > len) {
+				ensureLength(length);
+			} else {
+				int numFiles = (int)(length/maxFileSize);
+				long lastFileSize = length%maxFileSize;
+				if (lastFileSize > 0) {
+					numFiles++;
+				}
+				int toRemove = storageFiles.size() - numFiles;
+				for (int i = 0; i < toRemove; i++) {
+					FileStore store = storageFiles.remove(storageFiles.size() -1);
+					store.remove();
+				}
+				if (lastFileSize > 0) {
+					storageFiles.get(storageFiles.size() - 1).setLength(lastFileSize);
+				}
+			}
+			len = length;
+	    }
+	    
+		public synchronized void removeDirect() {
+			for (FileStore info : storageFiles) {
 				info.remove();
 			}
 			storageFiles.clear();
-		}
-		
-		@Override
-		protected void truncateDirect(long length)
-				throws TeiidComponentException {
-			Map.Entry<Long, FileStore> start = storageFiles.floorEntry(length);
-			if (start == null) {
-				return;
-			}
-			if (start.getKey().longValue() == length) {
-				start.getValue().remove();
-				storageFiles.remove(start.getKey());
-			} else {
-				start.getValue().truncate(length - start.getKey());
-			}
-			for (Iterator<FileStore> iter = storageFiles.tailMap(length, false).values().iterator(); iter.hasNext();) {
-				iter.next().remove();
-				iter.remove();
-			}
-			
 		}
 		
 	}
@@ -126,10 +146,10 @@ public class SplittableStorageManager implements StorageManager {
 	}
 	
     public void setMaxFileSize(long maxFileSize) {
-    	this.maxFileSize = maxFileSize * 1024L * 1024L;
+    	this.maxFileSize = maxFileSize * 1024l * 1024l;
 	}
     
-    void setMaxFileSizeDirect(long maxFileSize) {
+    public void setMaxFileSizeDirect(long maxFileSize) {
     	this.maxFileSize = maxFileSize;
     }
     

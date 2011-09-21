@@ -33,6 +33,7 @@ import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.common.buffer.impl.FileStorageManager;
+import org.teiid.common.buffer.impl.FileStoreCache;
 import org.teiid.common.buffer.impl.MemoryStorageManager;
 import org.teiid.common.buffer.impl.SplittableStorageManager;
 import org.teiid.core.TeiidComponentException;
@@ -105,10 +106,11 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 fsm.setMaxBufferSpace(maxBufferSpace*MB);
                 SplittableStorageManager ssm = new SplittableStorageManager(fsm);
                 ssm.setMaxFileSize(maxFileSize);
-                ssm.initialize();        
-                this.bufferMgr.setStorageManager(ssm);
+                FileStoreCache fsc = new FileStoreCache();
+                fsc.setStorageManager(ssm);
+                this.bufferMgr.setCache(fsc);
             } else {
-            	this.bufferMgr.setStorageManager(new MemoryStorageManager());
+            	this.bufferMgr.setCache(new MemoryStorageManager());
             }
             
         } catch(TeiidComponentException e) { 
@@ -129,7 +131,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
         }
     }
 
-    public BufferManager getBufferManager() {
+    public BufferManagerImpl getBufferManager() {
         return this.bufferMgr;
     }
 	

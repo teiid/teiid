@@ -311,7 +311,7 @@ public class TestDQPCore {
         reqMsg.setCursorType(ResultSet.TYPE_FORWARD_ONLY);
         DQPWorkContext.getWorkContext().getSession().setSessionId(sessionid);
         DQPWorkContext.getWorkContext().getSession().setUserName(userName);
-        ((BufferManagerImpl)core.getBufferManager()).setProcessorBatchSize(2);
+        ((BufferManagerImpl)core.getBufferManager()).setProcessorBatchSize(1);
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
         ResultsMessage rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
@@ -337,7 +337,7 @@ public class TestDQPCore {
 	        message = core.processCursorRequest(reqMsg.getExecutionId(), (j + 2) * rowsPerBatch + 1, rowsPerBatch);
 	        rm = message.get(5000, TimeUnit.MILLISECONDS);
 	        assertNull(rm.getException());
-	        assertEquals(rowsPerBatch, rm.getResults().length);
+	        assertEquals(rowsPerBatch, rm.getResultsList().size());
         }
     }
     
@@ -351,11 +351,11 @@ public class TestDQPCore {
         reqMsg.setCursorType(ResultSet.TYPE_FORWARD_ONLY);
         DQPWorkContext.getWorkContext().getSession().setSessionId(sessionid);
         DQPWorkContext.getWorkContext().getSession().setUserName(userName);
-        ((BufferManagerImpl)core.getBufferManager()).setProcessorBatchSize(2);
+        ((BufferManagerImpl)core.getBufferManager()).setProcessorBatchSize(1);
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
         ResultsMessage rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
-        assertEquals(8, rm.getResults().length);
+        assertEquals(8, rm.getResultsList().size());
         RequestWorkItem item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
         assertEquals(100, item.resultsBuffer.getRowCount());
     }

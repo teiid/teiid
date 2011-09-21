@@ -23,15 +23,73 @@
 package org.teiid.common.buffer.impl;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.teiid.common.buffer.Cache;
+import org.teiid.common.buffer.CacheEntry;
 import org.teiid.common.buffer.FileStore;
-import org.teiid.common.buffer.StorageManager;
+import org.teiid.common.buffer.Serializer;
 import org.teiid.core.TeiidComponentException;
 
 
-public class MemoryStorageManager implements StorageManager {
+public class MemoryStorageManager implements Cache {
+	
+	public static final int MAX_FILE_SIZE = 1 << 17;
     
+	private final class MemoryFileStore extends FileStore {
+		private ByteBuffer buffer = ByteBuffer.allocate(MAX_FILE_SIZE);
+		
+		public MemoryFileStore() {
+			buffer.limit(0);
+		}
+
+		@Override
+		public synchronized void removeDirect() {
+			removed.incrementAndGet();
+			buffer = ByteBuffer.allocate(0);
+		}
+		
+		@Override
+		protected synchronized int readWrite(long fileOffset, byte[] b, int offSet,
+				int length, boolean write) {
+			if (!write) {
+				if (fileOffset >= getLength()) {
+					return -1;
+				}
+				int position = (int)fileOffset;
+				buffer.position(position);
+				length = Math.min(length, (int)getLength() - position);
+				buffer.get(b, offSet, length);
+				return length;	
+			}
+			int requiredLength = (int)(fileOffset + length);
+			if (requiredLength > buffer.limit()) {
+				buffer.limit(requiredLength);
+			}
+			buffer.position((int)fileOffset);
+			buffer.put(b, offSet, length);
+			return length;
+		}
+
+		@Override
+		public synchronized void setLength(long length) {
+			buffer.limit((int)length);
+		}
+		
+		@Override
+		public synchronized long getLength() {
+			return buffer.limit();
+		}
+
+	}
+
+	private Map<Long, Map<Long, CacheEntry>> groups = new ConcurrentHashMap<Long, Map<Long, CacheEntry>>();
 	private AtomicInteger created = new AtomicInteger();
 	private AtomicInteger removed = new AtomicInteger();
 	
@@ -41,50 +99,7 @@ public class MemoryStorageManager implements StorageManager {
 	@Override
 	public FileStore createFileStore(String name) {
 		created.incrementAndGet();
-		return new FileStore() {
-			private ByteBuffer buffer = ByteBuffer.allocate(1 << 16);
-			
-			@Override
-			public void writeDirect(long start, byte[] bytes, int offset, int length) throws TeiidComponentException {
-				buffer.position((int)start);
-				if (buffer.position() + length > buffer.capacity()) {
-					ByteBuffer newBuffer = ByteBuffer.allocate(buffer.capacity() * 2 + length);
-					buffer.position(0);
-					newBuffer.put(buffer);
-					buffer = newBuffer;
-					buffer.position((int)start);
-				}
-				buffer.put(bytes, offset, length);
-			}
-			
-			@Override
-			public void removeDirect() {
-				removed.incrementAndGet();
-				buffer = ByteBuffer.allocate(0);
-			}
-			
-			@Override
-			public synchronized int readDirect(long fileOffset, byte[] b, int offset, int length)
-					throws TeiidComponentException {
-				if (fileOffset >= getLength()) {
-					return -1;
-				}
-				int position = (int)fileOffset;
-				buffer.position(position);
-				length = Math.min(length, (int)getLength() - position);
-				buffer.get(b, offset, length);
-				return length;
-			}
-			
-			@Override
-			protected void truncateDirect(long length) {
-				ByteBuffer newBuffer = ByteBuffer.allocate((int)length);
-				buffer.position(0);
-				buffer.limit(newBuffer.capacity());
-				newBuffer.put(buffer);
-				buffer = newBuffer;
-			}
-		};
+		return new MemoryFileStore();
 	}
 	
 	public int getCreated() {
@@ -94,4 +109,55 @@ public class MemoryStorageManager implements StorageManager {
 	public int getRemoved() {
 		return removed.get();
 	}
+	
+	@Override
+	public void add(CacheEntry entry, Serializer<?> s) {
+		Map<Long, CacheEntry> group = groups.get(s.getId());
+		if (group != null) {
+			group.put(entry.getId(), entry);
+		}
+	}
+	
+	@Override
+	public void addToCacheGroup(Long gid, Long oid) {
+		Map<Long, CacheEntry> group = groups.get(gid);
+		if (group != null) {
+			group.put(oid, null);
+		}
+	}
+	
+	@Override
+	public void createCacheGroup(Long gid) {
+		groups.put(gid, Collections.synchronizedMap(new HashMap<Long, CacheEntry>()));
+	}
+	
+	@Override
+	public CacheEntry get(Long id, Serializer<?> serializer)
+			throws TeiidComponentException {
+		Map<Long, CacheEntry> group = groups.get(id);
+		if (group != null) {
+			return group.get(id);
+		}
+		return null;
+	}
+		
+	@Override
+	public void remove(Long gid, Long id) {
+		Map<Long, CacheEntry> group = groups.get(gid);
+		if (group != null) {
+			group.remove(id);
+		}
+	}
+	
+	@Override
+	public Collection<Long> removeCacheGroup(Long gid) {
+		Map<Long, CacheEntry> group = groups.remove(gid);
+		if (group == null) {
+			return Collections.emptySet();
+		}
+		synchronized (group) {
+			return new ArrayList<Long>(group.keySet());
+		}
+	}
+	
 }

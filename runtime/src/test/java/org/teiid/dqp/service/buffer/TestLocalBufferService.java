@@ -31,6 +31,7 @@ import org.junit.Test;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.common.buffer.impl.FileStorageManager;
+import org.teiid.common.buffer.impl.FileStoreCache;
 import org.teiid.common.buffer.impl.SplittableStorageManager;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
@@ -53,8 +54,8 @@ public class TestLocalBufferService {
         assertTrue("does not end with one", svc.getBufferDirectory().getParent().endsWith("1")); //$NON-NLS-1$ //$NON-NLS-2$
         assertTrue(svc.isUseDisk());
         
-        BufferManagerImpl mgr = (BufferManagerImpl) svc.getBufferManager();
-        SplittableStorageManager ssm = (SplittableStorageManager)mgr.getStorageManager();
+        BufferManagerImpl mgr = svc.getBufferManager();
+        SplittableStorageManager ssm = (SplittableStorageManager)((FileStoreCache)mgr.getCache()).getStorageManager();
         assertTrue(((FileStorageManager)ssm.getStorageManager()).getDirectory().endsWith(svc.getBufferDirectory().getName()));
     }
 

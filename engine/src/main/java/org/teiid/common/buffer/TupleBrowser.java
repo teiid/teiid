@@ -48,7 +48,7 @@ public class TupleBrowser implements TupleSource {
 	private SPage bound;
 	private int boundIndex = -1;
 	
-	private TupleBatch values;
+	private List<List<?>> values;
 	private boolean updated;
 	private boolean direction;
 	
@@ -106,7 +106,7 @@ public class TupleBrowser implements TupleSource {
 			if (boundIndex < 0) {
 				//we are guaranteed by find to not get back the -1 index, unless
 				//there are no tuples, in which case a bound of -1 is fine
-				boundIndex = Math.min(upper.values.getTuples().size(), -boundIndex -1) - 1;
+				boundIndex = Math.min(upper.values.size(), -boundIndex -1) - 1;
 			}
 			if (!direction) {
 				values = upper.values;
@@ -122,7 +122,7 @@ public class TupleBrowser implements TupleSource {
 				if (page != bound || values == null) {
 					values = bound.getValues();
 				}
-				boundIndex = values.getTuples().size() - 1;
+				boundIndex = values.size() - 1;
 			}
 		}
 				
@@ -173,14 +173,14 @@ public class TupleBrowser implements TupleSource {
 					continue;
 				}
 				if (values != null) {
-					int possibleIndex = Collections.binarySearch(values.getTuples(), newValue, tree.comparator);
+					int possibleIndex = Collections.binarySearch(values, newValue, tree.comparator);
 					if (possibleIndex >= 0) {
 						//value exists in the current page
 						index = possibleIndex;
-						return values.getTuples().get(possibleIndex);
+						return values.get(possibleIndex);
 					}
 					//check for end/terminal conditions
-					if (direction && possibleIndex == -values.getTuples().size() -1) {
+					if (direction && possibleIndex == -values.size() -1) {
 						if (page.next == null) {
 							resetState();
 							return null;
@@ -199,7 +199,7 @@ public class TupleBrowser implements TupleSource {
 				if (!setPage(newValue)) {
 					continue;
 				}
-				return values.getTuples().get(index);
+				return values.get(index);
 			}
 			if (page == null) {
 				if (inPartial) {
@@ -213,11 +213,11 @@ public class TupleBrowser implements TupleSource {
 				if (direction) {
 					index = 0;
 				} else {
-					index = values.getTuples().size() - 1;
+					index = values.size() - 1;
 				}
 			}
-			if (index >= 0 && index < values.getTuples().size()) {
-				List<?> result = values.getTuples().get(index);
+			if (index >= 0 && index < values.size()) {
+				List<?> result = values.get(index);
 				if (page == bound && index == boundIndex) {
 					resetState();
 					page = null; //terminate
@@ -257,7 +257,7 @@ public class TupleBrowser implements TupleSource {
 	 * @throws TeiidComponentException
 	 */
 	public void update(List<?> tuple) throws TeiidComponentException {
-		values.getTuples().set(index - getOffset(), tuple);
+		values.set(index - getOffset(), tuple);
 		updated = true;
 	}
 	

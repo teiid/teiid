@@ -109,7 +109,6 @@ public class TestSTree {
 		BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
 		bm.setProcessorBatchSize(32);
 		bm.setMaxReserveKB(0);//force all to disk
-		bm.setCompactionThreshold(0);
 		bm.initialize();
 		
 		ElementSymbol e1 = new ElementSymbol("x");

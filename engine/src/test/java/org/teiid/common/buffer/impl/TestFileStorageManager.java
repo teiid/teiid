@@ -25,6 +25,7 @@ package org.teiid.common.buffer.impl;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
@@ -59,7 +60,7 @@ public class TestFileStorageManager {
         assertEquals(0, sm.getUsedBufferSpace());
     }
             
-    @Test(expected=TeiidComponentException.class) public void testMaxSpace() throws Exception {
+    @Test(expected=IOException.class) public void testMaxSpace() throws Exception {
     	FileStorageManager sm = getStorageManager(null, null); 
     	sm.setMaxBufferSpace(1);
         String tsID = "0";     //$NON-NLS-1$
@@ -81,10 +82,11 @@ public class TestFileStorageManager {
     static Random r = new Random();
     
 	static void writeBytes(FileStore store)
-			throws TeiidComponentException {
+			throws IOException {
 		byte[] bytes = new byte[2048];
         r.nextBytes(bytes);
-        long start = store.write(bytes, 0, bytes.length);
+        long start = store.getLength(); 
+        store.write(bytes, 0, bytes.length);
         byte[] bytesRead = new byte[2048];        
         store.readFully(start, bytesRead, 0, bytesRead.length);
         assertTrue(Arrays.equals(bytes, bytesRead));

@@ -30,60 +30,18 @@ import java.util.List;
 import javax.sql.rowset.serial.SerialClob;
 
 import org.junit.Test;
-import org.mockito.Mockito;
-import org.teiid.core.TeiidComponentException;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
-
 public class TestTupleBuffer {
-
-	public static final class FakeBatchManager implements BatchManager {
-		@Override
-		public void remove() {
-			
-		}
-
-		@Override
-		public ManagedBatch createManagedBatch(final TupleBatch batch, boolean softCache)
-				throws TeiidComponentException {
-			return new ManagedBatch() {
-				
-				@Override
-				public void remove() {
-					
-				}
-				
-				@Override
-				public TupleBatch getBatch(boolean cache, String[] types)
-						throws TeiidComponentException {
-					return batch;
-				}
-
-				@Override
-				public void setPrefersMemory(boolean prefers) {
-					
-				}
-				
-				@Override
-				public CleanupHook getCleanupHook() {
-					return null;
-				}
-			};
-		}
-
-		@Override
-		public FileStore createStorage(String prefix) {
-			return Mockito.mock(FileStore.class);
-		}
-	}
 
 	@Test public void testForwardOnly() throws Exception {
 		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
 		x.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 		List<ElementSymbol> schema = Arrays.asList(x);
-		TupleBuffer tb = new TupleBuffer(new FakeBatchManager(), "x", schema, null, 32); //$NON-NLS-1$ 
+		TupleBuffer tb = BufferManagerFactory.getStandaloneBufferManager().createTupleBuffer(schema, "x", TupleSourceType.PROCESSOR); //$NON-NLS-1$ 
 		tb.setForwardOnly(true);
 		tb.addTuple(Arrays.asList(1));
 		TupleBatch batch = tb.getBatch(1);
@@ -106,7 +64,7 @@ public class TestTupleBuffer {
 		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
 		x.setType(DataTypeManager.DefaultDataClasses.CLOB);
 		List<ElementSymbol> schema = Arrays.asList(x);
-		TupleBuffer tb = new TupleBuffer(new FakeBatchManager(), "x", schema, LobManager.getLobIndexes(schema), 32); //$NON-NLS-1$
+		TupleBuffer tb = BufferManagerFactory.getStandaloneBufferManager().createTupleBuffer(schema, "x", TupleSourceType.PROCESSOR); //$NON-NLS-1$
 		tb.setInlineLobs(false);
 		ClobType c = new ClobType(new SerialClob(new char[0]));
 		TupleBatch batch = new TupleBatch(1, new List[] {Arrays.asList(c)});

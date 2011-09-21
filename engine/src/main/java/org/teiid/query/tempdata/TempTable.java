@@ -90,6 +90,19 @@ public class TempTable implements Cloneable {
 			this.addRowId = addRowId;
 			this.indexes = indexes;
 		}
+		
+		@Override
+		int process() throws ExpressionEvaluationException,
+				TeiidComponentException, TeiidProcessingException {
+			tree.setBatchInsert(addRowId);
+			return super.process();
+		}
+		
+		@Override
+		protected void afterCompletion() throws TeiidComponentException {
+			tree.setBatchInsert(false);
+		}
+		
 
 		@Override
 		protected void tuplePassed(List tuple) throws BlockedException,
@@ -237,6 +250,7 @@ public class TempTable implements Cloneable {
 				success = true;
 			} finally {
 				try {
+					afterCompletion();
 					if (!success && undoLog != null) {
 						undoLog.setFinal(true);
 						TupleSource undoTs = undoLog.createIndexedTupleSource();
@@ -258,6 +272,14 @@ public class TempTable implements Cloneable {
 				}
 			}
 			return updateCount;
+		}
+
+		/**
+		 * 
+		 * @throws TeiidComponentException
+		 */
+		protected void afterCompletion() throws TeiidComponentException {
+			
 		}
 
 		@SuppressWarnings("unused")

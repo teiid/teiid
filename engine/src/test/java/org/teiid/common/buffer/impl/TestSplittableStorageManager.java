@@ -43,10 +43,18 @@ public class TestSplittableStorageManager {
         TestFileStorageManager.writeBytes(store);
         
         assertEquals(2, msm.getCreated());
+
+        store.setLength(10000);
         
+        assertEquals(5, msm.getCreated());
+        
+        store.setLength(100);
+
+        assertEquals(4, msm.getRemoved());
+
         store.remove();
         
-        assertEquals(2, msm.getRemoved());
+        assertEquals(5, msm.getRemoved());
     }
     
     @Test public void testTruncate() throws Exception {
@@ -64,7 +72,7 @@ public class TestSplittableStorageManager {
         
         assertEquals(2, msm.getCreated());
         
-        store.truncate(100);
+        store.setLength(100);
         
         assertEquals(1, msm.getRemoved());
         

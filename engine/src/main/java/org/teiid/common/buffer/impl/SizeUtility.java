@@ -26,9 +26,9 @@ import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.types.DataTypeManager;
 
 
@@ -65,27 +65,29 @@ public final class SizeUtility {
 	
 	private long bigIntegerEstimate;
 	private long bigDecimalEstimate;
+	private String[] types;
 	
-	public SizeUtility() {
+	public SizeUtility(String[] types) {
 		boolean isValueCacheEnabled = DataTypeManager.isValueCacheEnabled();
 		bigIntegerEstimate = getSize(isValueCacheEnabled, DataTypeManager.DefaultDataClasses.BIG_INTEGER);
 		bigDecimalEstimate = getSize(isValueCacheEnabled, DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
+		this.types = types;
 	}
 	
-    public long getBatchSize(TupleBatch data) {
+    public long getBatchSize(List<? extends List<?>> data) {
     	return getBatchSize(DataTypeManager.isValueCacheEnabled(), data);
     }
 	
-    private long getBatchSize(boolean accountForValueCache, TupleBatch data) {
-        int colLength = data.getDataTypes().length;
-        int rowLength = data.getRowCount();
+    private long getBatchSize(boolean accountForValueCache, List<? extends List<?>> data) {
+        int colLength = types.length;
+        int rowLength = data.size();
     
         // Array overhead for row array
         long size = 16 + alignMemory(rowLength * REFERENCE_SIZE); 
         // array overhead for all the columns ( 8 object overhead + 4 ref + 4 int)
         size += (rowLength * (48 + alignMemory(colLength * REFERENCE_SIZE))); 
         for (int col = 0; col < colLength; col++) {
-            Class<?> type = DataTypeManager.getDataTypeClass(data.getDataTypes()[col]);
+            Class<?> type = DataTypeManager.getDataTypeClass(types[col]);
                         
             if (type == DataTypeManager.DefaultDataClasses.STRING 
             		|| type == DataTypeManager.DefaultDataClasses.OBJECT
@@ -94,7 +96,7 @@ public final class SizeUtility {
             	int estRow = 0;
                 for (int row = 0; row < rowLength; row++) {
                 	boolean updateEst = row == estRow;
-                    size += getSize(data.getTuples().get(row).get(col), updateEst, accountForValueCache);
+                    size += getSize(data.get(row).get(col), updateEst, accountForValueCache);
                     if (updateEst) {
                     	estRow = estRow * 2 + 1;
                     }
