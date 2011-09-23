@@ -59,12 +59,10 @@ public abstract class BaseOperationHandler<T> implements DescriptionProvider, Op
             context.addStep(new OperationStepHandler() {
                 public void execute(OperationContext context, ModelNode operation) throws OperationFailedException {
 
-                    ModelNode model = context.getResult();
-                    
                     final ModelNode address = operation.require(OP_ADDR);
                     final PathAddress pathAddress = PathAddress.pathAddress(address);
                     
-                    executeOperation(getService(context, pathAddress), operation, model);
+                    executeOperation(context, getService(context, pathAddress, operation), operation);
                 	
                 	context.completeStep();
                 }
@@ -78,7 +76,7 @@ public abstract class BaseOperationHandler<T> implements DescriptionProvider, Op
     }
 	
     @SuppressWarnings("unused")
-	protected T getService(OperationContext context, PathAddress pathAddress) throws OperationFailedException{
+	protected T getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException{
     	return null;
     }
 	
@@ -92,15 +90,15 @@ public abstract class BaseOperationHandler<T> implements DescriptionProvider, Op
         return operation;
     }	
     
-    protected String getReplyName() {
-    	return name()+".reply"+DESCRIBE; //$NON-NLS-1$
-    }
+//    protected String getReplyName() {
+//    	return name()+".reply"+DESCRIBE; //$NON-NLS-1$
+//    }
     
     protected String getParameterDescription(ResourceBundle bundle, String paramName) {
     	return bundle.getString(name()+"."+paramName+DESCRIBE); //$NON-NLS-1$ 
     }    
     
-	abstract protected void executeOperation(T service, ModelNode operation, ModelNode node) throws OperationFailedException;
+	abstract protected void executeOperation(OperationContext context, T service, ModelNode operation) throws OperationFailedException;
 	
 	protected void describeParameters(@SuppressWarnings("unused") ModelNode operationNode, @SuppressWarnings("unused")ResourceBundle bundle) {
 	}

@@ -109,23 +109,26 @@ public class TeiidExtension implements Extension {
 		
 		// teiid level admin api operation handlers
 		new GetTranslator().register(teiidSubsystem);
-		new GetTranslators().register(teiidSubsystem);
+		new ListTranslators().register(teiidSubsystem);
 		new MergeVDBs().register(teiidSubsystem);
 		new ListVDBs().register(teiidSubsystem);
 		new GetVDB().register(teiidSubsystem);
+		new CacheTypes().register(teiidSubsystem);
+		new ClearCache().register(teiidSubsystem);
+		new CacheStatistics().register(teiidSubsystem);
+		new AddDataRole().register(teiidSubsystem);
+		new RemoveDataRole().register(teiidSubsystem);
+		new AddAnyAuthenticatedDataRole().register(teiidSubsystem);
 		
 		// engine level admin api handlers
-		new GetActiveSessions().register(engineSubsystem);
-		new GetRequestsPerSession().register(engineSubsystem);
-		new GetRequestsPerVDB().register(engineSubsystem);
+		new ListSessions().register(engineSubsystem);
+		new RequestsPerSession().register(engineSubsystem);
+		new RequestsPerVDB().register(engineSubsystem);
 		new GetLongRunningQueries().register(engineSubsystem);
 		new TerminateSession().register(engineSubsystem);
-		new CancelQuery().register(engineSubsystem);
-		new CacheTypes().register(engineSubsystem);
-		new ClearCache().register(engineSubsystem);
-		new CacheStatistics().register(engineSubsystem);
+		new CancelRequest().register(engineSubsystem);
 		new WorkerPoolStatistics().register(engineSubsystem);
-		new ActiveTransactions().register(engineSubsystem);
+		new ListTransactions().register(engineSubsystem);
 		new TerminateTransaction().register(engineSubsystem);
 		new ExecuteQuery().register(engineSubsystem);
 	}

@@ -97,8 +97,8 @@ public class TestAdminObjectBuilder {
 		vdb.addDataPolicy(roleOne);
 		
 		// convert to managed object and build the VDB out of MO
-		ModelNode node = MetadataMapper.wrap(vdb, new ModelNode());
-		vdb = MetadataMapper.unwrap(node);
+		ModelNode node = VDBMetadataMapper.INSTANCE.wrap(vdb, new ModelNode());
+		vdb = VDBMetadataMapper.INSTANCE.unwrap(node);
 		
 		assertEquals("myVDB", vdb.getName()); 
 		assertEquals("vdb description", vdb.getDescription()); 
@@ -169,8 +169,8 @@ public class TestAdminObjectBuilder {
 		tm.addProperty("ExtensionTranslationClassName", "org.teiid.translator.jdbc.oracle.OracleSQLTranslator");
 		
 		// convert to managed object and build the VDB out of MO
-		ModelNode node = MetadataMapper.VDBTranslatorMetaDataMapper.wrap(tm, new ModelNode());
-		VDBTranslatorMetaData tm1 = MetadataMapper.VDBTranslatorMetaDataMapper.unwrap(node);
+		ModelNode node = VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE.wrap(tm, new ModelNode());
+		VDBTranslatorMetaData tm1 = VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE.unwrap(node);
 		
 		assertEquals("Oracle", tm1.getName());
 		assertEquals(ExecutionFactory.class.getName(), tm1.getPropertyValue(Translator.EXECUTION_FACTORY_CLASS));

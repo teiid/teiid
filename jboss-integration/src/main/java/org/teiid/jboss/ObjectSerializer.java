@@ -83,6 +83,10 @@ public class ObjectSerializer {
 	public File buildVDBFile(VDBMetaData vdb) {
 		return new File(baseDirectory(vdb.getName()+"_"+vdb.getVersion()), vdb.getName()+"_"+vdb.getVersion()+ATTACHMENT_SUFFIX); //$NON-NLS-1$ //$NON-NLS-2$
 	}
+	
+	public File buildVdbXml(VDBMetaData vdb) {
+		return new File(baseDirectory(vdb.getName()+"_"+vdb.getVersion()), "vdb.xml"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
 
 	public File buildModelFile(VDBMetaData vdb, String modelName) {
 		return new File(baseDirectory(vdb.getName()+"_"+vdb.getVersion()), vdb.getName()+"_"+vdb.getVersion()+"_"+modelName+ATTACHMENT_SUFFIX); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -114,5 +118,11 @@ public class ObjectSerializer {
 		}
 		cacheFile.delete();
 		return null;
+	}
+
+	public OutputStream getVdbXmlOutputStream(VDBMetaData vdb) throws IOException {
+		File f = buildVdbXml(vdb);
+		f.mkdirs();
+		return new FileOutputStream(f);
 	}	
 }

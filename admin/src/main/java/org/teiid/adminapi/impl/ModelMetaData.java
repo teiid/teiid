@@ -153,6 +153,10 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	public List<SourceMappingMetadata> getSourceMappings(){
 		return new ArrayList<SourceMappingMetadata>(this.sources.getMap().values());
 	}
+	
+	public SourceMappingMetadata getSourceMapping(String sourceName){
+		return this.sources.getMap().get(sourceName);
+	}	
     
 	public void setSourceMappings(List<SourceMappingMetadata> sources){
 		for (SourceMappingMetadata source: sources) {

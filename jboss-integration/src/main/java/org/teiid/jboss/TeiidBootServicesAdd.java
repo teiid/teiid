@@ -77,11 +77,11 @@ class TeiidBootServicesAdd extends AbstractAddStepHandler implements Description
 
 	static void describeTeiidRoot(final ResourceBundle bundle, String type, final ModelNode node) {
 		addAttribute(node, Configuration.ALLOW_ENV_FUNCTION, type, bundle.getString(Configuration.ALLOW_ENV_FUNCTION+DESC), ModelType.BOOLEAN, false, "false"); //$NON-NLS-1$
-        addAttribute(node, Configuration.ASYNC_THREAD_GROUP, type, bundle.getString(Configuration.ASYNC_THREAD_GROUP+DESC), ModelType.STRING, true, "teiid-async-threads"); //$NON-NLS-1$
+        addAttribute(node, Configuration.ASYNC_THREAD_GROUP, type, bundle.getString(Configuration.ASYNC_THREAD_GROUP+DESC), ModelType.STRING, true, null); 
 
-        addAttribute(node, Configuration.AUTHORIZATION_VALIDATOR_MODULE, type, bundle.getString(Configuration.AUTHORIZATION_VALIDATOR_MODULE+DESC), ModelType.BOOLEAN, false, "false"); //$NON-NLS-1$
-        addAttribute(node, Configuration.POLICY_DECIDER_MODULE, type, bundle.getString(Configuration.POLICY_DECIDER_MODULE+DESC), ModelType.STRING, false, "teiid-async-threads"); //$NON-NLS-1$
-        addAttribute(node, Configuration.OBJECT_REPLICATOR, type, bundle.getString(Configuration.OBJECT_REPLICATOR+DESC), ModelType.STRING, false, "teiid/event-distributor"); //$NON-NLS-1$
+        addAttribute(node, Configuration.AUTHORIZATION_VALIDATOR_MODULE, type, bundle.getString(Configuration.AUTHORIZATION_VALIDATOR_MODULE+DESC), ModelType.BOOLEAN, false, null);
+        addAttribute(node, Configuration.POLICY_DECIDER_MODULE, type, bundle.getString(Configuration.POLICY_DECIDER_MODULE+DESC), ModelType.STRING, false, null);
+        addAttribute(node, Configuration.OBJECT_REPLICATOR, type, bundle.getString(Configuration.OBJECT_REPLICATOR+DESC), ModelType.STRING, false, null);
         
 		ModelNode bufferNode = node.get(CHILDREN, Configuration.BUFFER_SERVICE);
 		bufferNode.get(TYPE).set(ModelType.OBJECT);

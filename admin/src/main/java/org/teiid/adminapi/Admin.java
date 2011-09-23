@@ -56,23 +56,22 @@ public interface Admin {
     void changeVDBConnectionType(String vdbName, int vdbVersion, ConnectionType type) throws AdminException;
     
     /**
-     * Deploy a {@link VDB} file.
-     * @param name  Name of the VDB file to save under
-     * @param VDB 	VDB.
+     * Deploy a artifact (VDB, JAR, RAR files)
+     * @param deployName  Name of the VDB file to save under
+     * @param content
      * @throws AdminException
      *             
      * @return the {@link VDB} representing the current property values and runtime state.
      */
-    public void deployVDB(String fileName, InputStream vdb) throws AdminException;
+    public void deploy(String deployName, InputStream content) throws AdminException;
     
     
     /**
-     * Delete the VDB with the given name and version
-     * @param vdbName
-     * @param version
+     * Undeploy artifact (VDB, JAR, RAR files)
+     * @param deployedName
      * @throws AdminException
      */
-    void deleteVDB(String vdbName, int vdbVersion) throws AdminException;
+    void undeploy(String deployedName) throws AdminException;
     
     /**
      * Get the VDBs that currently deployed in the system
@@ -81,7 +80,7 @@ public interface Admin {
      * same name in the Collection but they will differ by VDB version.
      * @throws AdminException 
      */
-    Set<VDB> getVDBs() throws AdminException;
+    Set<? extends VDB> getVDBs() throws AdminException;
     
     /**
      * Get the VDB
@@ -90,7 +89,7 @@ public interface Admin {
      * @throws AdminException 
      * @return
      */
-    VDB getVDB(String vdbName, int vbdVersion) throws AdminException;
+    VDB getVDB(String vdbName, int vdbVersion) throws AdminException;
 
     /**
      * Get the translators that are available in the configuration
@@ -98,7 +97,7 @@ public interface Admin {
      * @return Collection of {@link Translator}
      * @throws AdminException 
      */
-    Collection<Translator> getTranslators() throws AdminException;
+    Collection<? extends Translator> getTranslators() throws AdminException;
     
     /**
      * Get the translator by the given the deployed name.
@@ -128,21 +127,21 @@ public interface Admin {
      * @return Collection of {@link Session}
      * @throws AdminException 
      */
-    Collection<Session> getSessions() throws AdminException;
+    Collection<? extends Session> getSessions() throws AdminException;
 
     /**
      * Get the all Requests that are currently in process
      * @return Collection of {@link Request}
      * @throws AdminException 
      */
-    Collection<Request> getRequests() throws AdminException;
+    Collection<? extends Request> getRequests() throws AdminException;
     
     /**
      * Get the Requests for the given session
      * @return Collection of {@link Request}
      * @throws AdminException 
      */
-    Collection<Request> getRequestsForSession(String sessionId) throws AdminException;
+    Collection<? extends Request> getRequestsForSession(String sessionId) throws AdminException;
     
 
     /**
@@ -151,7 +150,7 @@ public interface Admin {
      * @return
      * @throws AdminException
      */
-    Collection<PropertyDefinition> getTemplatePropertyDefinitions(String templateName) throws AdminException;
+    Collection<? extends PropertyDefinition> getTemplatePropertyDefinitions(String templateName) throws AdminException;
     
     
     /**
@@ -159,7 +158,7 @@ public interface Admin {
      * @return
      * @throws AdminException
      */
-    Collection<Transaction> getTransactions() throws AdminException;
+    Collection<? extends Transaction> getTransactions() throws AdminException;
     
     /**
      * Clear the cache or caches specified by the cacheIdentifier.

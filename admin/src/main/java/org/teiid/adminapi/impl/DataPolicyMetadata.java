@@ -110,6 +110,10 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		this.mappedRoleNames.add(name);
 	}  	
 	
+	public void removeMappedRoleName(String name) {
+		this.mappedRoleNames.remove(name);
+	}  		
+	
 	public boolean allows(String resourceName, DataPolicy.PermissionType type) {
 		resourceName = resourceName.toLowerCase();
 		while (resourceName.length() > 0) {

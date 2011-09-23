@@ -72,7 +72,7 @@ class QueryEngineRemove extends AbstractRemoveStepHandler implements Description
         final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
         final ModelNode operation = new ModelNode();
         operation.get(OPERATION_NAME).set(REMOVE);
-        operation.get(DESCRIPTION).set(bundle.getString(REMOVE+DESCRIBE));
+        operation.get(DESCRIPTION).set(bundle.getString(REMOVE+"."+DESCRIBE)); //$NON-NLS-1$
         return operation;
 	}
     

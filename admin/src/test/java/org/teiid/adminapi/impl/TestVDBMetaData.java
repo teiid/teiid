@@ -51,7 +51,7 @@ import org.teiid.core.util.UnitTestUtil;
 public class TestVDBMetaData {
 
 	@Test
-	public void testMarshellUnmarshell() throws Exception {
+	public void testMarshellUnmarshellUsingJaxb() throws Exception {
 		
 		VDBMetaData vdb = buildVDB();
 		
@@ -65,7 +65,7 @@ public class TestVDBMetaData {
 		StringWriter sw = new StringWriter();
 		marshell.marshal(vdb, sw);
 				
-		System.out.println(sw.toString());
+		//System.out.println(sw.toString());
 
 		// UnMarshell
 		Unmarshaller un = jc.createUnmarshaller();
@@ -74,6 +74,23 @@ public class TestVDBMetaData {
 		
 		validateVDB(vdb);
 	}
+	
+	
+	@Test
+	public void testMarshellUnmarshellDirectParsing() throws Exception {
+		
+		VDBMetaData vdb = buildVDB();
+		
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		VDBMetadataParser.marshell(vdb, out);
+		
+		//System.out.println(new String(out.toByteArray()));
+
+		// UnMarshell
+		vdb = VDBMetadataParser.unmarshell(new ByteArrayInputStream(out.toByteArray()));
+		
+		validateVDB(vdb);
+	}	
 
 	static void validateVDB(VDBMetaData vdb) {
 		ModelMetaData modelOne;
@@ -217,16 +234,17 @@ public class TestVDBMetaData {
 	@Test public void testVDBMetaDataMapper() {
 		VDBMetaData vdb = buildVDB();
 		
-		ModelNode node = MetadataMapper.wrap(vdb, new ModelNode());
+		ModelNode node = VDBMetadataMapper.INSTANCE.wrap(vdb, new ModelNode());
 		
-		vdb = MetadataMapper.unwrap(node);
+		vdb = VDBMetadataMapper.INSTANCE.unwrap(node);
 		validateVDB(vdb);
 	}
 	
 	@Test
 	public void testVDBMetaDataDescribe() throws Exception {
-		ModelNode node = MetadataMapper.describe(new ModelNode());
+		ModelNode node = VDBMetadataMapper.INSTANCE.describe(new ModelNode());
 		String actual = node.toJSONString(false);
+		
 		assertEquals(ObjectConverterUtil.convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/vdb-describe.txt")), actual);
 	}
 }

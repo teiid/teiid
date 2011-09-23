@@ -1,4 +1,4 @@
-<!--This script builds a JAR for the Embedded Server Installation -->
+<!--This script builds a zip for Teiid Server Installation -->
 <assembly>
   
   <id>jboss-dist</id>

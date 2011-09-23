@@ -37,9 +37,9 @@ public class TestTransactionMetadata {
 		tm.setId("tnx-id");
 		tm.setScope("scope");
 		
-		ModelNode node = MetadataMapper.TransactionMetadataMapper.wrap(tm, new ModelNode());
+		ModelNode node = VDBMetadataMapper.TransactionMetadataMapper.INSTANCE.wrap(tm, new ModelNode());
 		
-		TransactionMetadata tm1 = MetadataMapper.TransactionMetadataMapper.unwrap(node);
+		TransactionMetadata tm1 = VDBMetadataMapper.TransactionMetadataMapper.INSTANCE.unwrap(node);
 		
 		assertEquals(tm.getAssociatedSession(), tm1.getAssociatedSession());
 		
@@ -85,7 +85,7 @@ public class TestTransactionMetadata {
 			"}";
 	@Test
 	public void testDescribe() {
-		ModelNode n = MetadataMapper.TransactionMetadataMapper.describe(new ModelNode());
+		ModelNode n = VDBMetadataMapper.TransactionMetadataMapper.INSTANCE.describe(new ModelNode());
 		//System.out.println(n.toJSONString(false));
 		assertEquals(describe, n.toJSONString(false));
 	}

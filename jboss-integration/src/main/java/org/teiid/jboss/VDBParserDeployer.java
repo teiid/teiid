@@ -21,12 +21,14 @@
  */
 package org.teiid.jboss;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.as.server.deployment.*;
+import org.jboss.msc.service.ServiceController;
 import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -56,31 +58,31 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 		}
 
 		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
-
+		
 		if (TeiidAttachments.isDynamicVDB(deploymentUnit)) {
-			parseVDBXML(file, deploymentUnit).setDynamic(true);			
+			parseVDBXML(file, deploymentUnit, phaseContext).setDynamic(true);			
 		}
 		else {
 			// scan for different files 
 			List<VirtualFile> childFiles = file.getChildren();
 			for (VirtualFile childFile:childFiles) {
-				scanVDB(childFile, deploymentUnit);
+				scanVDB(childFile, deploymentUnit, phaseContext);
 			}
 			
 			mergeMetaData(deploymentUnit);
 		}
 	}
 	
-	private void scanVDB(VirtualFile file, DeploymentUnit deploymentUnit) throws DeploymentUnitProcessingException {
+	private void scanVDB(VirtualFile file, DeploymentUnit deploymentUnit, DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
 		if (file.isDirectory()) {
 			List<VirtualFile> childFiles = file.getChildren();
 			for (VirtualFile childFile:childFiles) {
-				scanVDB(childFile, deploymentUnit);
+				scanVDB(childFile, deploymentUnit, phaseContext);
 			}
 		}
 		else {
 			if (file.getName().toLowerCase().equals(VdbConstants.DEPLOYMENT_FILE)) {
-				parseVDBXML(file, deploymentUnit);
+				parseVDBXML(file, deploymentUnit, phaseContext);
 			}
 			else if (file.getName().endsWith(VdbConstants.INDEX_EXT)) {
 				IndexMetadataFactory imf = deploymentUnit.getAttachment(TeiidAttachments.INDEX_METADATA);
@@ -101,9 +103,14 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 		}
 	}
 
-	private VDBMetaData parseVDBXML(VirtualFile file, DeploymentUnit deploymentUnit) throws DeploymentUnitProcessingException {
+	private VDBMetaData parseVDBXML(VirtualFile file, DeploymentUnit deploymentUnit, DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
 		try {
 			VDBMetaData vdb = VDBMetadataParser.unmarshell(file.openStream());
+			ServiceController<?> sc = phaseContext.getServiceRegistry().getService(TeiidServiceNames.OBJECT_SERIALIZER);
+			ObjectSerializer serializer = ObjectSerializer.class.cast(sc.getValue());
+			if (serializer.buildVdbXml(vdb).exists()) {
+				vdb = VDBMetadataParser.unmarshell(new FileInputStream(serializer.buildVdbXml(vdb)));
+			}
 			deploymentUnit.putAttachment(TeiidAttachments.VDB_METADATA, vdb);
 			LogManager.logDetail(LogConstants.CTX_RUNTIME,"VDB "+file.getName()+" has been parsed.");  //$NON-NLS-1$ //$NON-NLS-2$
 			return vdb;

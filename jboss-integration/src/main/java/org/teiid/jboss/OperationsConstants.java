@@ -28,6 +28,12 @@ class OperationsConstants {
 	public static final String EXECUTION_ID = "execution-id";//$NON-NLS-1$
 	public static final String CACHE_TYPE = "cache-type";//$NON-NLS-1$
 	public static final String XID = "xid";//$NON-NLS-1$
+	public static final String DATA_ROLE = "data-role"; //$NON-NLS-1$
+	public static final String MAPPED_ROLE = "mapped-role"; //$NON-NLS-1$
+	public static final String CONNECTION_TYPE = "connection-type"; //$NON-NLS-1$
+	public static final String MODEL_NAME = "model-name"; //$NON-NLS-1$
+	public static final String SOURCE_NAME = "source-name"; //$NON-NLS-1$
+	public static final String DS_NAME = "ds-name"; //$NON-NLS-1$
 	
 	public static final String SOURCE_VDBNAME = "source-vdb-name";//$NON-NLS-1$
 	public static final String SOURCE_VDBVERSION = "source-vdb-version";//$NON-NLS-1$

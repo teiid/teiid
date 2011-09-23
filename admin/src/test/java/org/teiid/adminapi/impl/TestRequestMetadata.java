@@ -34,9 +34,9 @@ public class TestRequestMetadata {
 	@Test public void testMapping() {
 		RequestMetadata request = buildRequest();
 		
-		ModelNode node = MetadataMapper.RequestMetadataMapper.wrap(request, new ModelNode());
+		ModelNode node = VDBMetadataMapper.RequestMetadataMapper.INSTANCE.wrap(request, new ModelNode());
 		
-		RequestMetadata actual = MetadataMapper.RequestMetadataMapper.unwrap(node);
+		RequestMetadata actual = VDBMetadataMapper.RequestMetadataMapper.INSTANCE.unwrap(node);
 		
 		assertEquals(request, actual);
 		assertEquals(request.getState(), actual.getState());
@@ -128,7 +128,7 @@ public class TestRequestMetadata {
 			"    }\n" + 
 			"}";
 	@Test public void testDescribe() {
-		assertEquals(desc, MetadataMapper.RequestMetadataMapper.describe(new ModelNode()).toJSONString(false));
+		assertEquals(desc, VDBMetadataMapper.RequestMetadataMapper.INSTANCE.describe(new ModelNode()).toJSONString(false));
 	}
 
 }

@@ -33,15 +33,11 @@ public interface DQPManagement {
     WorkerPoolStatisticsMetadata getWorkerPoolStatistics();
     void terminateSession(String terminateeId);
     boolean cancelRequest(String sessionId, long requestId) throws AdminException;
-    Collection<String> getCacheTypes();
-    void clearCache(String cacheType);
-    void clearCache(String cacheType, String vdbName, int version);
     Collection<SessionMetadata> getActiveSessions() throws AdminException;
     int getActiveSessionsCount() throws AdminException;
     Collection<TransactionMetadata> getTransactions();
     void terminateTransaction(String xid) throws AdminException ;
     List<RequestMetadata> getLongRunningRequests();
     List<RequestMetadata> getRequestsUsingVDB(String vdbName, int vdbVersion) throws AdminException;
-    CacheStatisticsMetadata getCacheStatistics(String cacheType);
     List<List> executeQuery(String vdbName, int version, String command, long timoutInMilli) throws AdminException;
 }

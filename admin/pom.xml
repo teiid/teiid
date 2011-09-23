@@ -32,12 +32,10 @@
         <dependency>
             <groupId>org.jboss.as</groupId>
             <artifactId>jboss-as-controller-client</artifactId>   
-            <scope>provided</scope>
         </dependency> 
         <dependency>
             <groupId>org.jboss.as</groupId>
             <artifactId>jboss-as-cli</artifactId>
-            <scope>provided</scope>  
         </dependency>  
 	</dependencies>
 </project>

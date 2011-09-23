@@ -46,7 +46,6 @@ import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
-import org.teiid.adminapi.Admin.Cache;
 import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
@@ -261,8 +260,8 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 				}
 
 				// dump the caches. 
-				dqpCore.clearCache(Cache.PREPARED_PLAN_CACHE.toString(), name, version);
-				dqpCore.clearCache(Cache.QUERY_SERVICE_RESULT_SET_CACHE.toString(), name, version);
+				getResultSetCacheInjector().getValue().clearForVDB(name, version);
+				getPreparedPlanCacheInjector().getValue().clearForVDB(name, version);
 			}			
 		});
 	}	
@@ -398,26 +397,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		}
     }
     
-	@Override
-    public Collection<String> getCacheTypes(){
-		return this.dqpCore.getCacheTypes();
-	}
-	
-	@Override
-	public void clearCache(String cacheType) {
-		this.dqpCore.clearCache(cacheType);
-	}
-	
-	@Override
-	public void clearCache(String cacheType, String vdbName, int version) {
-		this.dqpCore.clearCache(cacheType, vdbName, version);
-	}	
-	
-	@Override
-	public CacheStatisticsMetadata getCacheStatistics(String cacheType) {
-		return this.dqpCore.getCacheStatistics(cacheType);
-	}
-	
 	@Override
 	public Collection<SessionMetadata> getActiveSessions() throws AdminException {
 		try {
@@ -779,5 +758,5 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 
 	public InjectedValue<ObjectReplicator> getObjectReplicatorInjector() {
 		return objectReplicatorInjector;
-	}	
+	}
 }

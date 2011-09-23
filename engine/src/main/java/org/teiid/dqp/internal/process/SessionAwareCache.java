@@ -23,12 +23,10 @@
 package org.teiid.dqp.internal.process;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.teiid.adminapi.Admin;
 import org.teiid.cache.Cachable;
 import org.teiid.cache.Cache;
 import org.teiid.cache.CacheConfiguration;
@@ -337,5 +335,16 @@ public class SessionAwareCache<T> {
     		return Collections.EMPTY_SET;
     	}
     	return this.distributedCache.keys();
+    }
+    
+    public static Collection<String> getCacheTypes(){
+    	ArrayList<String> caches = new ArrayList<String>();
+    	caches.add(Admin.Cache.PREPARED_PLAN_CACHE.toString());
+    	caches.add(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.toString());
+    	return caches;
+    }    
+    
+    public static boolean isResultsetCache(String cacheType) {
+    	return (Admin.Cache.valueOf(cacheType) == Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE);
     }
 }

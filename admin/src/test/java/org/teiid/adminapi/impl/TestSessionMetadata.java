@@ -42,9 +42,9 @@ public class TestSessionMetadata {
 		session.setSecurityContext("auth-domain");
 		session.setUserName("user");
 
-		ModelNode node = MetadataMapper.SessionMetadataMapper.wrap(session, new ModelNode());
+		ModelNode node = VDBMetadataMapper.SessionMetadataMapper.INSTANCE.wrap(session, new ModelNode());
 		
-		SessionMetadata session1 = MetadataMapper.SessionMetadataMapper.unwrap(node);
+		SessionMetadata session1 = VDBMetadataMapper.SessionMetadataMapper.INSTANCE.unwrap(node);
 		
 		assertEquals(session.getSessionId(), session1.getSessionId());
 		assertEquals(session.getApplicationName(), session1.getApplicationName());
@@ -130,7 +130,7 @@ public class TestSessionMetadata {
 			"}"; 
 	
 	@Test public void testDescribe() {
-		ModelNode n = MetadataMapper.SessionMetadataMapper.describe(new ModelNode());
+		ModelNode n = VDBMetadataMapper.SessionMetadataMapper.INSTANCE.describe(new ModelNode());
 		//System.out.println(n.toJSONString(false));
 		assertEquals(describe, n.toJSONString(false));
 	}

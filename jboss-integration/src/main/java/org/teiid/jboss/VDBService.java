@@ -27,18 +27,16 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executor;
 
+import javax.xml.stream.XMLStreamException;
+
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
-import org.teiid.adminapi.Model;
-import org.teiid.adminapi.Translator;
-import org.teiid.adminapi.VDB;
-import org.teiid.adminapi.impl.ModelMetaData;
-import org.teiid.adminapi.impl.SourceMappingMetadata;
-import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.adminapi.*;
+import org.teiid.adminapi.VDB.ConnectionType;
+import org.teiid.adminapi.impl.*;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidException;
 import org.teiid.deployers.*;
@@ -456,5 +454,81 @@ class VDBService implements Service<VDBMetaData> {
 	
 	public void undeployInProgress() {
 		this.undeployInProgress = true;
+	}
+	
+	public void addDataRole(String policyName, String mappedRole) throws AdminProcessingException{
+		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
+		
+		if (policy == null) {
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("policy_not_found", policyName, this.vdb.getName(), this.vdb.getVersion())); //$NON-NLS-1$
+		}		
+		
+		policy.addMappedRoleName(mappedRole);
+		save();
+	}
+	
+	public void remoteDataRole(String policyName, String mappedRole) throws AdminProcessingException{
+		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
+		
+		if (policy == null) {
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("policy_not_found", policyName, this.vdb.getName(), this.vdb.getVersion())); //$NON-NLS-1$
+		}		
+		
+		policy.removeMappedRoleName(mappedRole);
+		save();
+	}	
+	
+	public void addAnyAuthenticated(String policyName) throws AdminProcessingException{
+		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
+		
+		if (policy == null) {
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("policy_not_found", policyName, this.vdb.getName(), this.vdb.getVersion())); //$NON-NLS-1$
+		}		
+		
+		policy.setAnyAuthenticated(true);
+		save();
+	}	
+	
+	public void removeAnyAuthenticated(String policyName) throws AdminProcessingException{
+		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
+		
+		if (policy == null) {
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("policy_not_found", policyName, this.vdb.getName(), this.vdb.getVersion())); //$NON-NLS-1$
+		}		
+		
+		policy.setAnyAuthenticated(false);
+		save();
+	}		
+	
+	public void changeConnectionType(ConnectionType type) throws AdminProcessingException {
+		this.vdb.setConnectionType(type);
+		save();
+	}
+	
+	public void assignDatasource(String modelName, String sourceName, String translatorName, String dsName) throws AdminProcessingException{
+		ModelMetaData model = this.vdb.getModel(modelName);
+		
+		if (model == null) {
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("model_not_found", modelName, this.vdb.getName(), this.vdb.getVersion())); //$NON-NLS-1$
+		}
+		
+		SourceMappingMetadata source = model.getSourceMapping(sourceName);
+		if(source == null) {
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("source_not_found", sourceName, modelName, this.vdb.getName(), this.vdb.getVersion())); //$NON-NLS-1$
+		}
+		source.setTranslatorName(translatorName);
+		source.setConnectionJndiName(dsName);
+		save();
+	}
+	
+	private void save() throws AdminProcessingException{
+		try {
+			ObjectSerializer os = getSerializer();
+			VDBMetadataParser.marshell(this.vdb, os.getVdbXmlOutputStream(this.vdb));
+		} catch (IOException e) {
+			throw new AdminProcessingException(e);
+		} catch (XMLStreamException e) {
+			throw new AdminProcessingException(e);
+		}
 	}
 }
