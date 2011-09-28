@@ -63,6 +63,8 @@ import org.teiid.services.BufferServiceImpl;
 
 class TeiidBootServicesAdd extends AbstractAddStepHandler implements DescriptionProvider {
 
+	static final String DASH = "-"; //$NON-NLS-1$
+
 	@Override
 	public ModelNode getModelDescription(Locale locale) {
         final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
@@ -81,27 +83,11 @@ class TeiidBootServicesAdd extends AbstractAddStepHandler implements Description
 
         addAttribute(node, Configuration.AUTHORIZATION_VALIDATOR_MODULE, type, bundle.getString(Configuration.AUTHORIZATION_VALIDATOR_MODULE+DESC), ModelType.BOOLEAN, false, null);
         addAttribute(node, Configuration.POLICY_DECIDER_MODULE, type, bundle.getString(Configuration.POLICY_DECIDER_MODULE+DESC), ModelType.STRING, false, null);
-        addAttribute(node, Configuration.OBJECT_REPLICATOR, type, bundle.getString(Configuration.OBJECT_REPLICATOR+DESC), ModelType.STRING, false, null);
         
-		ModelNode bufferNode = node.get(CHILDREN, Configuration.BUFFER_SERVICE);
-		bufferNode.get(TYPE).set(ModelType.OBJECT);
-		bufferNode.get(DESCRIPTION).set(bundle.getString(Configuration.BUFFER_SERVICE+DESC));
-		bufferNode.get(REQUIRED).set(false);
-		describeBufferManager(bufferNode, ATTRIBUTES, bundle);		
-        
-		// preparedplan-set-cache
-		ModelNode preparedPlanCacheNode = node.get(CHILDREN, Configuration.PREPAREDPLAN_CACHE);
-		preparedPlanCacheNode.get(TYPE).set(ModelType.OBJECT);
-		preparedPlanCacheNode.get(DESCRIPTION).set(bundle.getString(Configuration.PREPAREDPLAN_CACHE+DESC));
-		preparedPlanCacheNode.get(REQUIRED).set(false);
-		describePreparedPlanCache(preparedPlanCacheNode, ATTRIBUTES, bundle);
-		
-		// result-set-cache
-		ModelNode distributedCacheNode = node.get(CHILDREN, Configuration.RESULTSET_CACHE);
-		distributedCacheNode.get(TYPE).set(ModelType.OBJECT);
-		distributedCacheNode.get(DESCRIPTION).set(bundle.getString(Configuration.RESULTSET_CACHE+DESC));
-		distributedCacheNode.get(REQUIRED).set(false);
-		describeResultsetCache(preparedPlanCacheNode, ATTRIBUTES, bundle);
+        describeObjectReplicator(node, type, bundle);
+		describeBufferManager(node, type, bundle);		
+		describePreparedPlanCache(node, type, bundle);
+		describeResultsetCache(node, type, bundle);
 	}
 
 	@Override
@@ -182,7 +168,7 @@ class TeiidBootServicesAdd extends AbstractAddStepHandler implements Description
 
     	// TODO: remove verbose service by moving the buffer service from runtime project
     	newControllers.add(RelativePathService.addService(TeiidServiceNames.BUFFER_DIR, "teiid-buffer", "jboss.server.temp.dir", target)); //$NON-NLS-1$ //$NON-NLS-2$
-    	final BufferServiceImpl bufferManager = buildBufferManager(operation.get(Configuration.BUFFER_SERVICE));
+    	final BufferServiceImpl bufferManager = buildBufferManager(operation);
     	BufferManagerService bufferService = new BufferManagerService(bufferManager);
     	ServiceBuilder<BufferServiceImpl> bufferServiceBuilder = target.addService(TeiidServiceNames.BUFFER_MGR, bufferService);
     	bufferServiceBuilder.addDependency(TeiidServiceNames.BUFFER_DIR, String.class, bufferService.pathInjector);
@@ -230,7 +216,7 @@ class TeiidBootServicesAdd extends AbstractAddStepHandler implements Description
     	newControllers.add(target.addService(TeiidServiceNames.CACHE_RESULTSET, resultSetService).install());
     	
     	// prepared-plan cache
-    	final SessionAwareCache<PreparedPlan> preparedPlanCache = buildPreparedPlanCache(operation.get(Configuration.PREPAREDPLAN_CACHE), bufferManager.getBufferManager());
+    	final SessionAwareCache<PreparedPlan> preparedPlanCache = buildPreparedPlanCache(operation, bufferManager.getBufferManager());
     	ValueService<SessionAwareCache<PreparedPlan>> preparedPlanService = new ValueService<SessionAwareCache<PreparedPlan>>(new org.jboss.msc.value.Value<SessionAwareCache<PreparedPlan>>() {
 			@Override
 			public SessionAwareCache<PreparedPlan> getValue() throws IllegalStateException, IllegalArgumentException {
@@ -240,12 +226,11 @@ class TeiidBootServicesAdd extends AbstractAddStepHandler implements Description
     	newControllers.add(target.addService(TeiidServiceNames.CACHE_PREPAREDPLAN, preparedPlanService).install());
     	
     	// Object Replicator
-    	if (operation.hasDefined(Configuration.OBJECT_REPLICATOR)) {
-    		ModelNode node = operation.get(Configuration.OBJECT_REPLICATOR);
-    		String stack = node.get(Configuration.STACK).asString();
+    	if (operation.hasDefined(ORC(Configuration.STACK))) {
+    		String stack = operation.get(ORC(Configuration.STACK)).asString();
     		String clusterName = "teiid-rep"; //$NON-NLS-1$ 
-    		if (node.hasDefined(Configuration.CLUSTER_NAME)) {
-    			clusterName = node.get(Configuration.CLUSTER_NAME).asString();
+    		if (operation.hasDefined(ORC(Configuration.CLUSTER_NAME))) {
+    			clusterName = operation.get(ORC(Configuration.CLUSTER_NAME)).asString();
     		}
     		JGroupsObjectReplicatorService replicatorService = new JGroupsObjectReplicatorService(clusterName);
     		replicatorService.setBufferManager(bufferManager.getBufferManager());
@@ -282,16 +267,26 @@ class TeiidBootServicesAdd extends AbstractAddStepHandler implements Description
         return services.iterator().next();
     }
 	
-	
+    private static String BS(String name) {
+    	return Configuration.BUFFER_SERVICE+DASH+name;
+    }
 	static void describeBufferManager(ModelNode node, String type, ResourceBundle bundle) {
-		addAttribute(node, Configuration.USE_DISK, type, bundle.getString(Configuration.USE_DISK+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
-		addAttribute(node, Configuration.PROCESSOR_BATCH_SIZE, type, bundle.getString(Configuration.PROCESSOR_BATCH_SIZE+DESC), ModelType.INT, false, "512"); //$NON-NLS-1$
-		addAttribute(node, Configuration.CONNECTOR_BATCH_SIZE, type, bundle.getString(Configuration.CONNECTOR_BATCH_SIZE+DESC), ModelType.INT, false, "1024"); //$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_PROCESSING_KB, type, bundle.getString(Configuration.MAX_PROCESSING_KB+DESC), ModelType.INT, false, "-1"); //$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_RESERVED_KB, type, bundle.getString(Configuration.MAX_RESERVED_KB+DESC), ModelType.INT, false, "-1"); //$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_FILE_SIZE, type, bundle.getString(Configuration.MAX_FILE_SIZE+DESC), ModelType.LONG, false, "2048"); //$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_BUFFER_SPACE, type, bundle.getString(Configuration.MAX_BUFFER_SPACE+DESC), ModelType.LONG, false, "51200"); //$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_OPEN_FILES, type, bundle.getString(Configuration.MAX_OPEN_FILES+DESC), ModelType.INT, false, "64"); //$NON-NLS-1$
+		addAttribute(node, BS(Configuration.USE_DISK), type, bundle.getString(Configuration.USE_DISK+DESC), ModelType.BOOLEAN, false, "true"); //$NON-NLS-1$
+		addAttribute(node, BS(Configuration.PROCESSOR_BATCH_SIZE), type, bundle.getString(Configuration.PROCESSOR_BATCH_SIZE+DESC), ModelType.INT, false, "512"); //$NON-NLS-1$
+		addAttribute(node, BS(Configuration.CONNECTOR_BATCH_SIZE), type, bundle.getString(Configuration.CONNECTOR_BATCH_SIZE+DESC), ModelType.INT, false, "1024"); //$NON-NLS-1$
+		addAttribute(node, BS(Configuration.MAX_PROCESSING_KB), type, bundle.getString(Configuration.MAX_PROCESSING_KB+DESC), ModelType.INT, false, "-1"); //$NON-NLS-1$
+		addAttribute(node, BS(Configuration.MAX_RESERVED_KB), type, bundle.getString(Configuration.MAX_RESERVED_KB+DESC), ModelType.INT, false, "-1"); //$NON-NLS-1$
+		addAttribute(node, BS(Configuration.MAX_FILE_SIZE), type, bundle.getString(Configuration.MAX_FILE_SIZE+DESC), ModelType.LONG, false, "2048"); //$NON-NLS-1$
+		addAttribute(node, BS(Configuration.MAX_BUFFER_SPACE), type, bundle.getString(Configuration.MAX_BUFFER_SPACE+DESC), ModelType.LONG, false, "51200"); //$NON-NLS-1$
+		addAttribute(node, BS(Configuration.MAX_OPEN_FILES), type, bundle.getString(Configuration.MAX_OPEN_FILES+DESC), ModelType.INT, false, "64"); //$NON-NLS-1$
+	}	
+		
+    private static String ORC(String name) {
+    	return Configuration.OBJECT_REPLICATOR+DASH+name;
+    }	
+	static void describeObjectReplicator(ModelNode node, String type, ResourceBundle bundle) {
+		addAttribute(node, ORC(Configuration.STACK), type, bundle.getString(Configuration.STACK+DESC), ModelType.STRING, false, null); 
+		addAttribute(node, ORC(Configuration.CLUSTER_NAME), type, bundle.getString(Configuration.CLUSTER_NAME+DESC), ModelType.STRING, false, null);
 	}	
 	
     private BufferServiceImpl  buildBufferManager(ModelNode node) {
@@ -301,132 +296,125 @@ class TeiidBootServicesAdd extends AbstractAddStepHandler implements Description
     		return bufferManger;
     	}
     	
-    	if (node.hasDefined(Configuration.USE_DISK)) {
-    		bufferManger.setUseDisk(node.get(Configuration.USE_DISK).asBoolean());
+    	if (node.hasDefined(BS(Configuration.USE_DISK))) {
+    		bufferManger.setUseDisk(node.get(BS(Configuration.USE_DISK)).asBoolean());
     	}	                	
-    	if (node.hasDefined(Configuration.PROCESSOR_BATCH_SIZE)) {
-    		bufferManger.setProcessorBatchSize(node.get(Configuration.PROCESSOR_BATCH_SIZE).asInt());
+    	if (node.hasDefined(BS(Configuration.PROCESSOR_BATCH_SIZE))) {
+    		bufferManger.setProcessorBatchSize(node.get(BS(Configuration.PROCESSOR_BATCH_SIZE)).asInt());
     	}	
-    	if (node.hasDefined(Configuration.CONNECTOR_BATCH_SIZE)) {
-    		bufferManger.setConnectorBatchSize(node.get(Configuration.CONNECTOR_BATCH_SIZE).asInt());
+    	if (node.hasDefined(BS(Configuration.CONNECTOR_BATCH_SIZE))) {
+    		bufferManger.setConnectorBatchSize(node.get(BS(Configuration.CONNECTOR_BATCH_SIZE)).asInt());
     	}	
-    	if (node.hasDefined(Configuration.MAX_PROCESSING_KB)) {
-    		bufferManger.setMaxProcessingKb(node.get(Configuration.MAX_PROCESSING_KB).asInt());
+    	if (node.hasDefined(BS(Configuration.MAX_PROCESSING_KB))) {
+    		bufferManger.setMaxProcessingKb(node.get(BS(Configuration.MAX_PROCESSING_KB)).asInt());
     	}
-    	if (node.hasDefined(Configuration.MAX_RESERVED_KB)) {
-    		bufferManger.setMaxReserveKb(node.get(Configuration.MAX_RESERVED_KB).asInt());
+    	if (node.hasDefined(BS(Configuration.MAX_RESERVED_KB))) {
+    		bufferManger.setMaxReserveKb(node.get(BS(Configuration.MAX_RESERVED_KB)).asInt());
     	}
-    	if (node.hasDefined(Configuration.MAX_FILE_SIZE)) {
-    		bufferManger.setMaxFileSize(node.get(Configuration.MAX_FILE_SIZE).asLong());
+    	if (node.hasDefined(BS(Configuration.MAX_FILE_SIZE))) {
+    		bufferManger.setMaxFileSize(node.get(BS(Configuration.MAX_FILE_SIZE)).asLong());
     	}
-    	if (node.hasDefined(Configuration.MAX_BUFFER_SPACE)) {
-    		bufferManger.setMaxBufferSpace(node.get(Configuration.MAX_BUFFER_SPACE).asLong());
+    	if (node.hasDefined(BS(Configuration.MAX_BUFFER_SPACE))) {
+    		bufferManger.setMaxBufferSpace(node.get(BS(Configuration.MAX_BUFFER_SPACE)).asLong());
     	}
-    	if (node.hasDefined(Configuration.MAX_OPEN_FILES)) {
-    		bufferManger.setMaxOpenFiles(node.get(Configuration.MAX_OPEN_FILES).asInt());
+    	if (node.hasDefined(BS(Configuration.MAX_OPEN_FILES))) {
+    		bufferManger.setMaxOpenFiles(node.get(BS(Configuration.MAX_OPEN_FILES)).asInt());
     	}	                	
     	return bufferManger;
     }	
     
     private static void populateBufferManager(ModelNode operation, ModelNode model) {
     	
-    	ModelNode childNode = operation.get(CHILDREN, Configuration.BUFFER_SERVICE);
-    	if (!childNode.isDefined()) {
-    		return;
-    	}
-		if (operation.hasDefined(Configuration.USE_DISK)) {
-			model.get(Configuration.USE_DISK).set(operation.get(Configuration.USE_DISK).asString());
+		if (operation.hasDefined(BS(Configuration.USE_DISK))) {
+			model.get(BS(Configuration.USE_DISK)).set(operation.get(BS(Configuration.USE_DISK)).asString());
 		}
 
-		if (operation.hasDefined(Configuration.PROCESSOR_BATCH_SIZE)) {
-			model.get(Configuration.PROCESSOR_BATCH_SIZE).set(operation.get(Configuration.PROCESSOR_BATCH_SIZE).asString());
+		if (operation.hasDefined(BS(Configuration.PROCESSOR_BATCH_SIZE))) {
+			model.get(BS(Configuration.PROCESSOR_BATCH_SIZE)).set(operation.get(BS(Configuration.PROCESSOR_BATCH_SIZE)).asString());
 		}
-		if (operation.hasDefined(Configuration.CONNECTOR_BATCH_SIZE)) {
-			model.get(Configuration.CONNECTOR_BATCH_SIZE).set(operation.get(Configuration.CONNECTOR_BATCH_SIZE).asString());
+		if (operation.hasDefined(BS(Configuration.CONNECTOR_BATCH_SIZE))) {
+			model.get(BS(Configuration.CONNECTOR_BATCH_SIZE)).set(operation.get(BS(Configuration.CONNECTOR_BATCH_SIZE)).asString());
 		}
-		if (operation.hasDefined(Configuration.MAX_PROCESSING_KB)) {
-			model.get(Configuration.MAX_PROCESSING_KB).set(operation.get(Configuration.MAX_PROCESSING_KB).asString());
+		if (operation.hasDefined(BS(Configuration.MAX_PROCESSING_KB))) {
+			model.get(BS(Configuration.MAX_PROCESSING_KB)).set(operation.get(BS(Configuration.MAX_PROCESSING_KB)).asString());
 		}
-		if (operation.hasDefined(Configuration.MAX_RESERVED_KB)) {
-			model.get(Configuration.MAX_RESERVED_KB).set(operation.get(Configuration.MAX_RESERVED_KB).asString());
+		if (operation.hasDefined(BS(Configuration.MAX_RESERVED_KB))) {
+			model.get(BS(Configuration.MAX_RESERVED_KB)).set(operation.get(BS(Configuration.MAX_RESERVED_KB)).asString());
 		}
-		if (operation.hasDefined(Configuration.MAX_FILE_SIZE)) {
-			model.get(Configuration.MAX_FILE_SIZE).set(operation.get(Configuration.MAX_FILE_SIZE).asString());
+		if (operation.hasDefined(BS(Configuration.MAX_FILE_SIZE))) {
+			model.get(BS(Configuration.MAX_FILE_SIZE)).set(operation.get(BS(Configuration.MAX_FILE_SIZE)).asString());
 		}
-		if (operation.hasDefined(Configuration.MAX_BUFFER_SPACE)) {
-			model.get(Configuration.MAX_BUFFER_SPACE).set(operation.get(Configuration.MAX_BUFFER_SPACE).asString());
+		if (operation.hasDefined(BS(Configuration.MAX_BUFFER_SPACE))) {
+			model.get(BS(Configuration.MAX_BUFFER_SPACE)).set(operation.get(BS(Configuration.MAX_BUFFER_SPACE)).asString());
 		}
-		if (operation.hasDefined(Configuration.MAX_BUFFER_SPACE)) {
-			model.get(Configuration.MAX_BUFFER_SPACE).set(operation.get(Configuration.MAX_BUFFER_SPACE).asString());
+		if (operation.hasDefined(BS(Configuration.MAX_BUFFER_SPACE))) {
+			model.get(BS(Configuration.MAX_BUFFER_SPACE)).set(operation.get(BS(Configuration.MAX_BUFFER_SPACE)).asString());
 		}
-		if (operation.hasDefined(Configuration.MAX_OPEN_FILES)) {
-			model.get(Configuration.MAX_OPEN_FILES).set(operation.get(Configuration.MAX_OPEN_FILES).asString());
+		if (operation.hasDefined(BS(Configuration.MAX_OPEN_FILES))) {
+			model.get(BS(Configuration.MAX_OPEN_FILES)).set(operation.get(BS(Configuration.MAX_OPEN_FILES)).asString());
 		}
     }
     
 	private static void populateResultsetCache(ModelNode operation, ModelNode model) {
-		if (operation.hasDefined(Configuration.RESULTSET_CACHE)) {
-			ModelNode cache = operation.get(Configuration.RESULTSET_CACHE);
-			if (cache.hasDefined(Configuration.NAME)) {
-				model.get(Configuration.RESULTSET_CACHE, Configuration.NAME).set(cache.get(Configuration.NAME).asString());
-			}
-			
-			if (cache.hasDefined(Configuration.CONTAINER_NAME)) {
-				model.get(Configuration.RESULTSET_CACHE, Configuration.CONTAINER_NAME).set(cache.get(Configuration.CONTAINER_NAME).asString());
-			}
+		if (operation.hasDefined(RSC(Configuration.NAME))) {
+			model.get(RSC(Configuration.NAME)).set(operation.get(RSC(Configuration.NAME)).asString());
+		}
+		
+		if (operation.hasDefined(RSC(Configuration.CONTAINER_NAME))) {
+			model.get(RSC(Configuration.CONTAINER_NAME)).set(operation.get(RSC(Configuration.CONTAINER_NAME)).asString());
+		}
 
-			if (cache.hasDefined(Configuration.ENABLE)) {
-				model.get(Configuration.RESULTSET_CACHE, Configuration.ENABLE).set(cache.get(Configuration.ENABLE).asBoolean());
-			}
+		if (operation.hasDefined(RSC(Configuration.ENABLE))) {
+			model.get(RSC(Configuration.ENABLE)).set(operation.get(RSC(Configuration.ENABLE)).asBoolean());
+		}
 
-			if (cache.hasDefined(Configuration.MAX_STALENESS)) {
-				model.get(Configuration.RESULTSET_CACHE, Configuration.MAX_STALENESS).set(cache.get(Configuration.MAX_STALENESS).asInt());
-			}
+		if (operation.hasDefined(RSC(Configuration.MAX_STALENESS))) {
+			model.get(RSC(Configuration.MAX_STALENESS)).set(operation.get(RSC(Configuration.MAX_STALENESS)).asInt());
 		}
 	}    
 	
 	private static void populateObjectReplicator(ModelNode operation, ModelNode model) {
-		if (operation.hasDefined(Configuration.OBJECT_REPLICATOR)) {
-			ModelNode replicator = operation.get(Configuration.OBJECT_REPLICATOR);
-			if (replicator.hasDefined(Configuration.STACK)) {
-				model.get(Configuration.OBJECT_REPLICATOR, Configuration.STACK).set(replicator.get(Configuration.STACK).asString());
-			}
-			
-			if (replicator.hasDefined(Configuration.CLUSTER_NAME)) {
-				model.get(Configuration.OBJECT_REPLICATOR, Configuration.CLUSTER_NAME).set(replicator.get(Configuration.CLUSTER_NAME).asString());
-			}
+		if (operation.hasDefined(ORC(Configuration.STACK))) {
+			model.get(ORC(Configuration.STACK)).set(operation.get(ORC(Configuration.STACK)).asString());
+		}
+		
+		if (operation.hasDefined(ORC(Configuration.CLUSTER_NAME))) {
+			model.get(ORC(Configuration.CLUSTER_NAME)).set(operation.get(ORC(Configuration.CLUSTER_NAME)).asString());
 		}
 	}	
     
 	private static void populatePreparedPlanCache(ModelNode operation, ModelNode model) {
-		if (operation.hasDefined(Configuration.PREPAREDPLAN_CACHE)) {
-			ModelNode cache = operation.get(Configuration.PREPAREDPLAN_CACHE);
-			if (cache.hasDefined(Configuration.MAX_ENTRIES)) {
-	    		model.get(Configuration.MAX_ENTRIES).set(cache.get(Configuration.MAX_ENTRIES).asInt());
-	    	}
-	    	if (cache.hasDefined(Configuration.MAX_AGE_IN_SECS)) {
-	    		model.get(Configuration.MAX_AGE_IN_SECS).set(cache.get(Configuration.MAX_AGE_IN_SECS).asInt());
-	    	}
-	    	if (cache.hasDefined(Configuration.MAX_STALENESS)) {
-	    		model.get(Configuration.MAX_STALENESS).set(cache.get(Configuration.MAX_STALENESS).asInt());
-	    	}
-		}
+		if (operation.hasDefined(PPC(Configuration.MAX_ENTRIES))) {
+    		model.get(PPC(Configuration.MAX_ENTRIES)).set(operation.get(PPC(Configuration.MAX_ENTRIES)).asInt());
+    	}
+    	if (operation.hasDefined(PPC(Configuration.MAX_AGE_IN_SECS))) {
+    		model.get(PPC(Configuration.MAX_AGE_IN_SECS)).set(operation.get(PPC(Configuration.MAX_AGE_IN_SECS)).asInt());
+    	}
+    	if (operation.hasDefined(PPC(Configuration.MAX_STALENESS))) {
+    		model.get(PPC(Configuration.MAX_STALENESS)).set(operation.get(PPC(Configuration.MAX_STALENESS)).asInt());
+    	}
 	}
 
+    private static String RSC(String name) {
+    	return Configuration.RESULTSET_CACHE+DASH+name;
+    }	
 	private static void describeResultsetCache(ModelNode node, String type, ResourceBundle bundle) {
-		addAttribute(node, Configuration.NAME, type, bundle.getString(Configuration.NAME+DESC), ModelType.STRING, false, "resultset"); //$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_STALENESS, type, bundle.getString(Configuration.MAX_STALENESS+DESC), ModelType.INT, false, "60");//$NON-NLS-1$
-		addAttribute(node, Configuration.ENABLE, type, bundle.getString(Configuration.ENABLE+DESC), ModelType.BOOLEAN, false, null);
-		addAttribute(node, Configuration.CONTAINER_NAME, type, bundle.getString(Configuration.CONTAINER_NAME+DESC), ModelType.STRING, false, null);		
+		addAttribute(node, RSC(Configuration.NAME), type, bundle.getString(RSC(Configuration.NAME)+DESC), ModelType.STRING, false, "resultset"); //$NON-NLS-1$
+		addAttribute(node, RSC(Configuration.MAX_STALENESS), type, bundle.getString(Configuration.MAX_STALENESS+DESC), ModelType.INT, false, "60");//$NON-NLS-1$
+		addAttribute(node, RSC(Configuration.ENABLE), type, bundle.getString(Configuration.ENABLE+DESC), ModelType.BOOLEAN, false, null);
+		addAttribute(node, RSC(Configuration.CONTAINER_NAME), type, bundle.getString(Configuration.CONTAINER_NAME+DESC), ModelType.STRING, false, null);		
 	}
 	
+    private static String PPC(String name) {
+    	return Configuration.PREPAREDPLAN_CACHE+DASH+name;
+    }		
 	private static void describePreparedPlanCache(ModelNode node, String type, ResourceBundle bundle) {
-		addAttribute(node, Configuration.MAX_ENTRIES, type, bundle.getString(Configuration.MAX_ENTRIES+DESC), ModelType.INT, false, "512"); //$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_AGE_IN_SECS, type, bundle.getString(Configuration.MAX_AGE_IN_SECS+DESC), ModelType.INT, false, "28800");//$NON-NLS-1$
-		addAttribute(node, Configuration.MAX_STALENESS, type, bundle.getString(Configuration.MAX_STALENESS+DESC), ModelType.INT, false, "0");//$NON-NLS-1$
+		addAttribute(node, PPC(Configuration.MAX_ENTRIES), type, bundle.getString(Configuration.MAX_ENTRIES+DESC), ModelType.INT, false, "512"); //$NON-NLS-1$
+		addAttribute(node, PPC(Configuration.MAX_AGE_IN_SECS), type, bundle.getString(Configuration.MAX_AGE_IN_SECS+DESC), ModelType.INT, false, "28800");//$NON-NLS-1$
+		addAttribute(node, PPC(Configuration.MAX_STALENESS), type, bundle.getString(Configuration.MAX_STALENESS+DESC), ModelType.INT, false, "0");//$NON-NLS-1$
 	}
     
-    private SessionAwareCache<CachedResults> buildResultsetCache(ModelNode operation, BufferManager bufferManager) throws OperationFailedException {
+    private SessionAwareCache<CachedResults> buildResultsetCache(ModelNode operation, BufferManager bufferManager) {
 
     	CacheConfiguration cacheConfig = new CacheConfiguration();
     	// these settings are not really used; they are defined by infinispan
@@ -436,37 +424,33 @@ class TeiidBootServicesAdd extends AbstractAddStepHandler implements Description
     	cacheConfig.setLocation("resultset"); //$NON-NLS-1$
     	cacheConfig.setMaxStaleness(60);
     	
-    	if (!operation.hasDefined(Configuration.RESULTSET_CACHE)) {
-       		SessionAwareCache<CachedResults> resultsetCache = new SessionAwareCache<CachedResults>(new DefaultCacheFactory(), SessionAwareCache.Type.RESULTSET, cacheConfig);
-        	resultsetCache.setBufferManager(bufferManager);
-        	return resultsetCache;
-    	}
+    	if (operation.hasDefined(RSC(Configuration.ENABLE))) {
+    		if (!operation.get(RSC(Configuration.ENABLE)).asBoolean()) {
+    			return null;
+    		}
+    	}    	
     	
-    	ModelNode node = operation.get(Configuration.RESULTSET_CACHE);
-    	ClusterableCacheFactory cacheFactory = new ClusterableCacheFactory();
+    	ClusterableCacheFactory cacheFactory = null;
 
-    	if (node.hasDefined(Configuration.CONTAINER_NAME)) {
-    		cacheFactory.setCacheManager(node.get(Configuration.CONTAINER_NAME).asString());
+    	if (operation.hasDefined(RSC(Configuration.CONTAINER_NAME))) {
+    		cacheFactory = new ClusterableCacheFactory();
+    		cacheFactory.setCacheManager(operation.get(RSC(Configuration.CONTAINER_NAME)).asString());
     	}
     	else {
-    		throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("cache-container-name-required"))); //$NON-NLS-1$
+    		SessionAwareCache<CachedResults> resultsetCache = new SessionAwareCache<CachedResults>(new DefaultCacheFactory(), SessionAwareCache.Type.RESULTSET, cacheConfig);
+        	resultsetCache.setBufferManager(bufferManager);
+        	return resultsetCache;    		
     	}
     	
-    	if (node.hasDefined(Configuration.NAME)) {
-    		cacheFactory.setResultsetCacheName(node.get(Configuration.NAME).asString());
+    	if (operation.hasDefined(RSC(Configuration.NAME))) {
+    		cacheFactory.setResultsetCacheName(operation.get(RSC(Configuration.NAME)).asString());
     	}	 
     	else {
     		cacheFactory.setResultsetCacheName("resultset"); //$NON-NLS-1$
     	}
-    	
-    	if (node.hasDefined(Configuration.ENABLE)) {
-    		if (!node.get(Configuration.ENABLE).asBoolean()) {
-    			return null;
-    		}
-    	}
 
-   		if (node.hasDefined(Configuration.MAX_STALENESS)) {
-    		cacheConfig.setMaxStaleness(node.get(Configuration.MAX_STALENESS).asInt());
+   		if (operation.hasDefined(RSC(Configuration.MAX_STALENESS))) {
+    		cacheConfig.setMaxStaleness(operation.get(RSC(Configuration.MAX_STALENESS)).asInt());
     	}
 
    		SessionAwareCache<CachedResults> resultsetCache = new SessionAwareCache<CachedResults>(cacheFactory, SessionAwareCache.Type.RESULTSET, cacheConfig);
@@ -477,22 +461,22 @@ class TeiidBootServicesAdd extends AbstractAddStepHandler implements Description
     
     private SessionAwareCache<PreparedPlan> buildPreparedPlanCache(ModelNode node, BufferManager bufferManager) {
     	CacheConfiguration cacheConfig = new CacheConfiguration();
-    	if (node.hasDefined(Configuration.MAX_ENTRIES)) {
-    		cacheConfig.setMaxEntries(node.get(Configuration.MAX_ENTRIES).asInt());
+    	if (node.hasDefined(PPC(Configuration.MAX_ENTRIES))) {
+    		cacheConfig.setMaxEntries(node.get(PPC(Configuration.MAX_ENTRIES)).asInt());
     	}
     	else {
     		cacheConfig.setMaxEntries(512);
     	}
     	
-    	if (node.hasDefined(Configuration.MAX_AGE_IN_SECS)) {
-    		cacheConfig.setMaxAgeInSeconds(node.get(Configuration.MAX_AGE_IN_SECS).asInt());
+    	if (node.hasDefined(PPC(Configuration.MAX_AGE_IN_SECS))) {
+    		cacheConfig.setMaxAgeInSeconds(node.get(PPC(Configuration.MAX_AGE_IN_SECS)).asInt());
     	}
     	else {
     		cacheConfig.setMaxAgeInSeconds(28800);
     	}
     	
-    	if (node.hasDefined(Configuration.MAX_STALENESS)) {
-    		cacheConfig.setMaxStaleness(node.get(Configuration.MAX_STALENESS).asInt());
+    	if (node.hasDefined(PPC(Configuration.MAX_STALENESS))) {
+    		cacheConfig.setMaxStaleness(node.get(PPC(Configuration.MAX_STALENESS)).asInt());
     	}
     	else {
     		cacheConfig.setMaxStaleness(0);

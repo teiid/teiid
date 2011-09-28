@@ -81,7 +81,6 @@ public class TestTeiidConfiguration {
         profileAddress.add("profile", "test");
     }
     
-	@Test
 	public void testValidateSchema() throws Exception {
 		InputStream content = Thread.currentThread().getContextClassLoader().getResourceAsStream("teiid-sample-config.xml");
 		URL xsdURL = Thread.currentThread().getContextClassLoader().getResource("schema/jboss-teiid.xsd");
@@ -113,7 +112,6 @@ public class TestTeiidConfiguration {
 
 	}
 	
-    @Test
     public void testTeiidConfiguration() throws Exception {
         List<ModelNode> updates = createSubSystem(ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config.xml")));
         assertEquals(3, updates.size());
@@ -371,21 +369,6 @@ public class TestTeiidConfiguration {
         return rsp.get(RESULT);
     }
     
-    public void susbsytemParserDeparser(String xmlContent) throws Exception {
-        XMLMapper xmlMapper = XMLMapper.Factory.create();
-        List<ModelNode> updates = createSubSystem(xmlContent);
-        
-        StringWriter sw = new StringWriter();
-        XMLStreamWriter streamWriter = XMLOutputFactory.newInstance().createXMLStreamWriter(sw);        
-        xmlMapper.deparseDocument(new TeiidSubsystemParser(), new SubsystemMarshallingContext(updates.get(1), new MockXMLExtendedWriter(streamWriter)), streamWriter);
-        
-        System.out.println(sw.toString());
-    }
-    
-    //@Test
-    public void testXMLPersistence() throws Exception {
-    	susbsytemParserDeparser(ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config.xml")));
-    }
     
     @Test
     public void testSubSystemDescription() throws IOException {

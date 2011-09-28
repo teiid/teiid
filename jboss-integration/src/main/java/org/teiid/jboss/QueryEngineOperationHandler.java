@@ -23,9 +23,12 @@ package org.teiid.jboss;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.ResourceBundle;
+
+import javax.xml.stream.XMLStreamException;
 
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
@@ -36,7 +39,6 @@ import org.jboss.msc.service.ServiceController;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.*;
 import org.teiid.adminapi.impl.VDBMetadataMapper.TransactionMetadataMapper;
 import org.teiid.adminapi.impl.VDBMetadataMapper.VDBTranslatorMetaDataMapper;
@@ -707,12 +709,15 @@ class GetTranslator extends TranslatorOperationHandler{
 	}	
 }
 
-abstract class VDBOperations extends BaseOperationHandler<VDBService>{
+abstract class VDBOperations extends BaseOperationHandler<VDBMetaData>{
+	private ObjectSerializer serializer;
+	
 	public VDBOperations(String operationName) {
 		super(operationName);
 	}
+	
 	@Override
-	public VDBService getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException {
+	public VDBMetaData getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException {
 		if (!operation.hasDefined(OperationsConstants.VDB_NAME)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.VDB_NAME+MISSING)));
 		}
@@ -723,8 +728,12 @@ abstract class VDBOperations extends BaseOperationHandler<VDBService>{
 
 		String vdbName = operation.get(OperationsConstants.VDB_NAME).asString();
 		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION).asInt();
+
+		ServiceController<?> osSvc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.OBJECT_SERIALIZER);
+		this.serializer = ObjectSerializer.class.cast(osSvc.getValue());
+		
 		ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.vdbServiceName(vdbName, vdbVersion));
-        return VDBService.class.cast(sc.getValue());	
+        return VDBMetaData.class.cast(sc.getValue());	
 	}
 	
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
@@ -736,6 +745,16 @@ abstract class VDBOperations extends BaseOperationHandler<VDBService>{
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.VDB_VERSION));
 	}	
+	
+	protected void save(VDBMetaData vdb) throws AdminProcessingException{
+		try {
+			VDBMetadataParser.marshell(vdb, this.serializer.getVdbXmlOutputStream(vdb));
+		} catch (IOException e) {
+			throw new AdminProcessingException(e);
+		} catch (XMLStreamException e) {
+			throw new AdminProcessingException(e);
+		}
+	}	
 }
 
 class AddDataRole extends VDBOperations {
@@ -745,7 +764,7 @@ class AddDataRole extends VDBOperations {
 	}
 	
 	@Override
-	protected void executeOperation(OperationContext context, VDBService service, ModelNode operation) throws OperationFailedException {
+	protected void executeOperation(OperationContext context, VDBMetaData vdb, ModelNode operation) throws OperationFailedException {
 		if (!operation.hasDefined(OperationsConstants.DATA_ROLE)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.DATA_ROLE+MISSING)));
 		}
@@ -754,11 +773,18 @@ class AddDataRole extends VDBOperations {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.MAPPED_ROLE+MISSING)));
 		}
 
-		String dataRole = operation.get(OperationsConstants.DATA_ROLE).asString();
+		String policyName = operation.get(OperationsConstants.DATA_ROLE).asString();
 		String mappedRole = operation.get(OperationsConstants.MAPPED_ROLE).asString();
 		
 		try {
-			service.addDataRole(dataRole, mappedRole);
+			DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
+			
+			if (policy == null) {
+				throw new AdminProcessingException(IntegrationPlugin.Util.getString("policy_not_found", policyName, vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
+			}		
+			
+			policy.addMappedRoleName(mappedRole);
+			save(vdb);
 		} catch (AdminProcessingException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
 		}
@@ -785,7 +811,7 @@ class RemoveDataRole extends VDBOperations {
 	}
 	
 	@Override
-	protected void executeOperation(OperationContext context, VDBService service, ModelNode operation) throws OperationFailedException {
+	protected void executeOperation(OperationContext context, VDBMetaData vdb, ModelNode operation) throws OperationFailedException {
 		if (!operation.hasDefined(OperationsConstants.DATA_ROLE)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.DATA_ROLE+MISSING)));
 		}
@@ -794,11 +820,18 @@ class RemoveDataRole extends VDBOperations {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.MAPPED_ROLE+MISSING)));
 		}
 
-		String dataRole = operation.get(OperationsConstants.DATA_ROLE).asString();
+		String policyName = operation.get(OperationsConstants.DATA_ROLE).asString();
 		String mappedRole = operation.get(OperationsConstants.MAPPED_ROLE).asString();
 		
 		try {
-			service.addDataRole(dataRole, mappedRole);
+			DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
+			
+			if (policy == null) {
+				throw new AdminProcessingException(IntegrationPlugin.Util.getString("policy_not_found", policyName, vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
+			}		
+			
+			policy.removeMappedRoleName(mappedRole);
+			save(vdb);
 		} catch (AdminProcessingException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
 		}
@@ -825,15 +858,22 @@ class AddAnyAuthenticatedDataRole extends VDBOperations {
 	}
 	
 	@Override
-	protected void executeOperation(OperationContext context, VDBService service, ModelNode operation) throws OperationFailedException {
+	protected void executeOperation(OperationContext context, VDBMetaData vdb, ModelNode operation) throws OperationFailedException {
 		if (!operation.hasDefined(OperationsConstants.DATA_ROLE)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.DATA_ROLE+MISSING)));
 		}
 
-		String dataRole = operation.get(OperationsConstants.DATA_ROLE).asString();
+		String policyName = operation.get(OperationsConstants.DATA_ROLE).asString();
 		
 		try {
-			service.addAnyAuthenticated(dataRole);
+			DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
+			
+			if (policy == null) {
+				throw new AdminProcessingException(IntegrationPlugin.Util.getString("policy_not_found", policyName, vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
+			}		
+			
+			policy.setAnyAuthenticated(true);
+			save(vdb);
 		} catch (AdminProcessingException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
 		}
@@ -857,15 +897,22 @@ class RemoveAnyAuthenticatedDataRole extends VDBOperations {
 	}
 	
 	@Override
-	protected void executeOperation(OperationContext context, VDBService service, ModelNode operation) throws OperationFailedException {
+	protected void executeOperation(OperationContext context, VDBMetaData vdb, ModelNode operation) throws OperationFailedException {
 		if (!operation.hasDefined(OperationsConstants.DATA_ROLE)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.DATA_ROLE+MISSING)));
 		}
 
-		String dataRole = operation.get(OperationsConstants.DATA_ROLE).asString();
+		String policyName = operation.get(OperationsConstants.DATA_ROLE).asString();
 		
 		try {
-			service.removeAnyAuthenticated(dataRole);
+			DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
+			
+			if (policy == null) {
+				throw new AdminProcessingException(IntegrationPlugin.Util.getString("policy_not_found", policyName, vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
+			}		
+			
+			policy.setAnyAuthenticated(false);
+			save(vdb);
 		} catch (AdminProcessingException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
 		}
@@ -888,14 +935,15 @@ class ChangeVDBConnectionType extends VDBOperations {
 	}
 	
 	@Override
-	protected void executeOperation(OperationContext context, VDBService service, ModelNode operation) throws OperationFailedException {
+	protected void executeOperation(OperationContext context, VDBMetaData vdb, ModelNode operation) throws OperationFailedException {
 		if (!operation.hasDefined(OperationsConstants.CONNECTION_TYPE)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.CONNECTION_TYPE+MISSING)));
 		}
 
 		String connectionType = operation.get(OperationsConstants.CONNECTION_TYPE).asString();
 		try {
-			service.changeConnectionType(VDB.ConnectionType.valueOf(connectionType));
+			vdb.setConnectionType(connectionType);
+			save(vdb);
 		} catch (AdminProcessingException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
 		}
@@ -918,7 +966,7 @@ class AssignDataSource extends VDBOperations {
 	}
 	
 	@Override
-	protected void executeOperation(OperationContext context, VDBService service, ModelNode operation) throws OperationFailedException {
+	protected void executeOperation(OperationContext context, VDBMetaData vdb, ModelNode operation) throws OperationFailedException {
 		if (!operation.hasDefined(OperationsConstants.MODEL_NAME)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.MODEL_NAME+MISSING)));
 		}
@@ -942,7 +990,19 @@ class AssignDataSource extends VDBOperations {
 		String dsName = operation.get(OperationsConstants.DS_NAME).asString();
 		
 		try {
-			service.assignDatasource(modelName, sourceName, translatorName, dsName);
+			ModelMetaData model = vdb.getModel(modelName);
+			
+			if (model == null) {
+				throw new AdminProcessingException(IntegrationPlugin.Util.getString("model_not_found", modelName, vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
+			}
+			
+			SourceMappingMetadata source = model.getSourceMapping(sourceName);
+			if(source == null) {
+				throw new AdminProcessingException(IntegrationPlugin.Util.getString("source_not_found", sourceName, modelName, vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
+			}
+			source.setTranslatorName(translatorName);
+			source.setConnectionJndiName(dsName);
+			save(vdb);
 		} catch (AdminProcessingException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
 		}

@@ -119,8 +119,12 @@ public class TeiidExtension implements Extension {
 		new AddDataRole().register(teiidSubsystem);
 		new RemoveDataRole().register(teiidSubsystem);
 		new AddAnyAuthenticatedDataRole().register(teiidSubsystem);
+		new AssignDataSource().register(teiidSubsystem);
+		new ChangeVDBConnectionType().register(teiidSubsystem);
+		new RemoveAnyAuthenticatedDataRole().register(teiidSubsystem);
 		
 		// engine level admin api handlers
+		new ListRequests().register(engineSubsystem);
 		new ListSessions().register(engineSubsystem);
 		new RequestsPerSession().register(engineSubsystem);
 		new RequestsPerVDB().register(engineSubsystem);

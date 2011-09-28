@@ -55,22 +55,18 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
         operation.get(OPERATION_NAME).set(ADD);
         operation.get(DESCRIPTION).set(bundle.getString("translator.add")); //$NON-NLS-1$
         
-        addAttribute(operation, Configuration.TRANSLATOR_MODULE, ATTRIBUTES, bundle.getString(Configuration.TRANSLATOR_MODULE+Configuration.DESC), ModelType.STRING, true, null);
+        addAttribute(operation, Configuration.TRANSLATOR_MODULE, REQUEST_PROPERTIES, bundle.getString(Configuration.TRANSLATOR_MODULE+Configuration.DESC), ModelType.STRING, true, null);
         return operation;
     }
     
 	@Override
 	protected void populateModel(final ModelNode operation, final ModelNode model) throws OperationFailedException{
-        final ModelNode address = operation.require(OP_ADDR);
-        final PathAddress pathAddress = PathAddress.pathAddress(address);
-
-        populate(pathAddress.getLastElement().getValue(), operation, model);
+        populate(operation, model);
 	}
 	
-	static void populate(String name, ModelNode operation, ModelNode model) {
+	static void populate(ModelNode operation, ModelNode model) {
 		final String moduleName = operation.require(Configuration.TRANSLATOR_MODULE).asString();
-        model.get(NAME).set(name);
-        model.get(Configuration.TRANSLATOR_MODULE).set(moduleName);		
+		model.get(Configuration.TRANSLATOR_MODULE).set(moduleName);		
 	}
 	
 	@Override

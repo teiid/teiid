@@ -94,11 +94,20 @@
                 </xs:complexType>
             </xs:element>            
         
-            <xs:element name="query-engine" type="runtime-engine-type" maxOccurs="2" minOccurs="1">
+            <xs:element name="query-engine" type="runtime-engine-type" maxOccurs="unbounded" minOccurs="0">
                 <xs:annotation>
                     <xs:documentation>Main Teiid runtime engine configuration</xs:documentation>
                 </xs:annotation>
             </xs:element>
+            <xs:element name="translator" maxOccurs="unbounded" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Translators defined in the system</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:attribute name="name" type="xs:string" use="required"/>
+                    <xs:attribute name="module" type="xs:string" use="required"/>
+                </xs:complexType>
+            </xs:element>            
         </xs:sequence>
     </xs:complexType>
 
@@ -243,23 +252,6 @@
 
     <xs:complexType name="socket-config">
         <xs:sequence>
-            <xs:element name="max-socket-threads" type="xs:int" minOccurs="0" maxOccurs="1" default="0">
-                <xs:annotation>
-                    <xs:documentation>Max number of threads dedicated to initial request processing.
-                        Zero indicates the system default of max available processors. (default 0)
-                        Setting this value above the max available processors is not recommended.</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="input-buffer-size" type="xs:int" minOccurs="0" maxOccurs="1" default="0">
-                <xs:annotation>
-                    <xs:documentation>SO_RCVBUF size, 0 indicates that system default should be used (default 0) </xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="output-buffer-size" type="xs:int" minOccurs="0" maxOccurs="1" default="0">
-                <xs:annotation>
-                    <xs:documentation>SO_SNDBUF size, 0 indicates that system default should be used (default 0)</xs:documentation>
-                </xs:annotation>
-            </xs:element>
             <xs:element name="ssl" type="ssl-config" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>SSL Configuration</xs:documentation>
@@ -267,6 +259,23 @@
             </xs:element>
         </xs:sequence>
         <xs:attribute name="socket-binding" type="xs:string" use="required"/>
+        <xs:attribute name="input-buffer-size" type="xs:int">
+                <xs:annotation>
+                    <xs:documentation>SO_RCVBUF size, 0 indicates that system default should be used (default 0) </xs:documentation>
+                </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="output-buffer-size" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>SO_SNDBUF size, 0 indicates that system default should be used (default 0)</xs:documentation>
+                </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="max-socket-threads" type="xs:int">
+                <xs:annotation>
+                    <xs:documentation>Max number of threads dedicated to initial request processing.
+                        Zero indicates the system default of max available processors. (default 0)
+                        Setting this value above the max available processors is not recommended.</xs:documentation>
+                </xs:annotation>        
+        </xs:attribute>
     </xs:complexType>
 
     <xs:complexType name="ssl-config">
@@ -288,13 +297,6 @@
                     </xs:restriction>
                 </xs:simpleType>                
             </xs:element>
-            <xs:element name="keystore-name" type="xs:string" minOccurs="0" maxOccurs="1" />
-            <xs:element name="keystore-password" type="xs:string" minOccurs="0" maxOccurs="1" />
-            <xs:element name="keystore-type" type="xs:string" minOccurs="0" maxOccurs="1" />
-            <xs:element name="ssl-protocol" type="xs:string" minOccurs="0" maxOccurs="1" />
-            <xs:element name="keymanagement-algorithm" type="xs:boolean" minOccurs="0" maxOccurs="1" />
-            <xs:element name="truststore-name" type="xs:string" minOccurs="0" maxOccurs="1" />
-            <xs:element name="truststore-password" type="xs:string" minOccurs="0" maxOccurs="1" />
             <xs:element name="authentication-mode" minOccurs="0" maxOccurs="1" default="anonymous">
                 <xs:annotation>
                     <xs:documentation>1-way, 2-way, anonymous</xs:documentation>
@@ -307,6 +309,13 @@
                     </xs:restriction>
                 </xs:simpleType>                                
             </xs:element>
+            <xs:element name="ssl-protocol" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="keymanagement-algorithm" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="keystore-name" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="keystore-password" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="keystore-type" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="truststore-name" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="truststore-password" type="xs:string" minOccurs="0" maxOccurs="1" />
         </xs:sequence>
     </xs:complexType>
 

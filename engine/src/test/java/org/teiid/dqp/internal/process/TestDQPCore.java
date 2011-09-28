@@ -108,15 +108,15 @@ public class TestDQPCore {
         ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
         context.getVDB().addAttchment(ConnectorManagerRepository.class, repo);
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(agds);
-        
-        core = new DQPCore();
-        core.setBufferService(new BufferService() {
+        BufferService bs = new BufferService() {
 			
 			@Override
 			public BufferManager getBufferManager() {
 				return BufferManagerFactory.createBufferManager();
 			}
-		});
+		};
+        core = new DQPCore();
+        core.setBufferService(bs);
         core.setResultsetCache(new SessionAwareCache<CachedResults>(new DefaultCacheFactory(), SessionAwareCache.Type.RESULTSET, new CacheConfiguration()));
         core.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>(new DefaultCacheFactory(), SessionAwareCache.Type.PREPAREDPLAN, new CacheConfiguration()));
         core.setTransactionService(new FakeTransactionService());
@@ -126,7 +126,7 @@ public class TestDQPCore {
         config.setUserRequestSourceConcurrency(2);
         core.start(config);
         core.getPrepPlanCache().setModTime(1);
-        core.getRsCache().setModTime(1);
+        core.getRsCache().setBufferManager(bs.getBufferManager());
     }
     
     @After public void tearDown() throws Exception {

@@ -21,6 +21,7 @@
  */
 package org.teiid.adminapi.impl;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
@@ -305,9 +306,10 @@ public class VDBMetadataParser {
 	    }	    
 	}
 
-	public static void marshell(VDBMetaData vdb, OutputStream out) throws XMLStreamException {
+	public static void marshell(VDBMetaData vdb, OutputStream out) throws XMLStreamException, IOException {
 		XMLStreamWriter writer = XMLOutputFactory.newFactory().createXMLStreamWriter(out);
         
+		writer.writeStartDocument();
 		writer.writeStartElement(Element.VDB.getLocalName());
 		writer.writeAttribute(Element.NAME.getLocalName(), vdb.getName());
 		writer.writeAttribute(Element.VERSION.getLocalName(), String.valueOf(vdb.getVersion()));
@@ -337,6 +339,9 @@ public class VDBMetadataParser {
 		// designer only 
 		
 		writer.writeEndElement();
+		writer.writeEndDocument();
+		writer.close();
+		out.close();
 	}
 	
 	private static void writeDataPolicy(XMLStreamWriter writer, DataPolicy dp)  throws XMLStreamException {

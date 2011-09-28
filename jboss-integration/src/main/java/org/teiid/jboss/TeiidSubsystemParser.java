@@ -27,6 +27,8 @@ import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
 import static org.jboss.as.controller.parsing.ParseUtils.requireNoAttributes;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -51,68 +53,76 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         	return;
         }
         
-        writeElement(writer, Element.ASYNC_THREAD_GROUP_ELEMENT, node);
         writeElement(writer, Element.ALLOW_ENV_FUNCTION_ELEMENT, node);
-        writeElement(writer, Element.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT, node);
-        writeElement(writer, Element.POLICY_DECIDER_MODULE_ELEMENT, node);
+        writeElement(writer, Element.ASYNC_THREAD_GROUP_ELEMENT, node);
         
-    	if (has(node, Element.BUFFER_SERVICE_ELEMENT.getLocalName())){
+    	if (like(node, Element.BUFFER_SERVICE_ELEMENT)){
     		writer.writeStartElement(Element.BUFFER_SERVICE_ELEMENT.getLocalName());
-    		writeBufferService(writer, node.get(Element.BUFFER_SERVICE_ELEMENT.getLocalName()));
+    		writeBufferService(writer, node);
     		writer.writeEndElement();
     	}
+
+    	writeElement(writer, Element.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT, node);
+        writeElement(writer, Element.POLICY_DECIDER_MODULE_ELEMENT, node);
+
     	
-    	if (has(node, Element.RESULTSET_CACHE_ELEMENT.getLocalName())){
+    	if (like(node, Element.RESULTSET_CACHE_ELEMENT)){
     		writer.writeStartElement(Element.RESULTSET_CACHE_ELEMENT.getLocalName());
-    		writeResultsetCacheConfiguration(writer, node.get(Element.RESULTSET_CACHE_ELEMENT.getLocalName()));
+    		writeResultsetCacheConfiguration(writer, node);
     		writer.writeEndElement();
     	}    	
     	
-    	if (has(node, Element.PREPAREDPLAN_CACHE_ELEMENT.getLocalName())){
+    	if (like(node, Element.PREPAREDPLAN_CACHE_ELEMENT)){
     		writer.writeStartElement(Element.PREPAREDPLAN_CACHE_ELEMENT.getLocalName());
-    		writePreparedPlanCacheConfiguration(writer, node.get(Element.PREPAREDPLAN_CACHE_ELEMENT.getLocalName()));
+    		writePreparedPlanCacheConfiguration(writer, node);
     		writer.writeEndElement();
     	}
     	
-    	if (has(node, Element.OBJECT_REPLICATOR_ELEMENT.getLocalName())){
+    	if (like(node, Element.OBJECT_REPLICATOR_ELEMENT)){
     		writer.writeStartElement(Element.OBJECT_REPLICATOR_ELEMENT.getLocalName());
-    		writeObjectReplicatorConfiguration(writer, node.get(Element.OBJECT_REPLICATOR_ELEMENT.getLocalName()));
+    		writeObjectReplicatorConfiguration(writer, node);
     		writer.writeEndElement();
     	}
     	
-    	Set<String> engines = node.get(Element.QUERY_ENGINE_ELEMENT.getLocalName()).keys();
-    	if (engines != null && !engines.isEmpty()) {
-    		for (String engine:engines) {
-    	        writer.writeStartElement(Element.QUERY_ENGINE_ELEMENT.getLocalName());
-    	        writeQueryEngine(writer, node.get(Element.QUERY_ENGINE_ELEMENT.getLocalName(), engine));
-    	        writer.writeEndElement();    			
-    		}
+    	if (has(node, Element.QUERY_ENGINE_ELEMENT.getLocalName())) {
+	    	ArrayList<String> engines = new ArrayList<String>(node.get(Element.QUERY_ENGINE_ELEMENT.getLocalName()).keys());
+	    	Collections.sort(engines);
+	    	if (!engines.isEmpty()) {
+	    		for (String engine:engines) {
+	    	        writer.writeStartElement(Element.QUERY_ENGINE_ELEMENT.getLocalName());
+	    	        writeQueryEngine(writer, node.get(Element.QUERY_ENGINE_ELEMENT.getLocalName(), engine), engine);
+	    	        writer.writeEndElement();    			
+	    		}
+	    	}
     	}
     	
-    	Set<String> translators = node.get(Element.TRANSLATOR_ELEMENT.getLocalName()).keys();
-    	if (translators != null && !translators.isEmpty()) {
-    		for (String translator:translators) {
-    	        writer.writeStartElement(Element.TRANSLATOR_ELEMENT.getLocalName());
-    	        writeTranslator(writer, node.get(Element.TRANSLATOR_ELEMENT.getLocalName(), translator));
-    	        writer.writeEndElement();    			
-    		}
-    	}        
+    	if (has(node, Element.TRANSLATOR_ELEMENT.getLocalName())) {
+	    	ArrayList<String> translators = new ArrayList<String>(node.get(Element.TRANSLATOR_ELEMENT.getLocalName()).keys());
+	    	Collections.sort(translators);
+	    	if (!translators.isEmpty()) {
+	    		for (String translator:translators) {
+	    	        writer.writeStartElement(Element.TRANSLATOR_ELEMENT.getLocalName());
+	    	        writeTranslator(writer, node.get(Element.TRANSLATOR_ELEMENT.getLocalName(), translator), translator);
+	    	        writer.writeEndElement();    			
+	    		}
+	    	}        
+    	}
         writer.writeEndElement(); // End of subsystem element
     }
     
     private void writeObjectReplicatorConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
-    	writeAttribute(writer, Element.STACK_ATTRIBUTE, node);
-    	writeAttribute(writer, Element.CLUSTER_NAME_ATTRIBUTE, node);
+    	writeAttribute(writer, Element.OR_STACK_ATTRIBUTE, node);
+    	writeAttribute(writer, Element.OR_CLUSTER_NAME_ATTRIBUTE, node);
 	}
 
-	private void writeTranslator(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
-    	writeAttribute(writer, Element.TRANSLATOR_NAME_ATTRIBUTE, node);
+	private void writeTranslator(XMLExtendedStreamWriter writer, ModelNode node, String translatorName) throws XMLStreamException {
+    	writer.writeAttribute(Element.TRANSLATOR_NAME_ATTRIBUTE.getLocalName(), translatorName);
     	writeAttribute(writer, Element.TRANSLATOR_MODULE_ATTRIBUTE, node);
     }
     
     // write the elements according to the schema defined.
-    private void writeQueryEngine( XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
-    	writeAttribute(writer, Element.ENGINE_NAME_ATTRIBUTE, node);
+    private void writeQueryEngine( XMLExtendedStreamWriter writer, ModelNode node, String engineName) throws XMLStreamException {
+    	writer.writeAttribute(Element.ENGINE_NAME_ATTRIBUTE.getLocalName(), engineName);
     	
     	writeElement(writer, Element.MAX_THREADS_ELEMENT, node);
     	writeElement(writer, Element.MAX_ACTIVE_PLANS_ELEMENT, node);
@@ -139,44 +149,71 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	
     	    	
     	//jdbc
-    	if (has(node, Element.JDBC_ELEMENT.getLocalName())){
-    		writer.writeStartElement(Element.JDBC_ELEMENT.getLocalName());
-    		writeSocketConfiguration(writer, node.get(Element.JDBC_ELEMENT.getLocalName()));
-    		writer.writeEndElement();
+    	if (like(node, Element.JDBC_ELEMENT)) {
+			writer.writeStartElement(Element.JDBC_ELEMENT.getLocalName());
+			writeJDBCSocketConfiguration(writer, node);
+			writer.writeEndElement();
     	}
     	
     	//odbc
-    	if (has(node, Element.ODBC_ELEMENT.getLocalName())) {
-    		writer.writeStartElement(Element.ODBC_ELEMENT.getLocalName());
-    		writeSocketConfiguration(writer, node.get(Element.ODBC_ELEMENT.getLocalName()));
-    		writer.writeEndElement();
+    	if (like(node, Element.ODBC_ELEMENT)) {
+			writer.writeStartElement(Element.ODBC_ELEMENT.getLocalName());
+			writeODBCSocketConfiguration(writer, node);
+			writer.writeEndElement();
     	}
     }
     
-    private void writeSocketConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
-    	writeAttribute(writer, Element.SOCKET_BINDING_ELEMENT, node);
-    	writeElement(writer, Element.MAX_SOCKET_THREAD_SIZE_ELEMENT, node);
-    	writeElement(writer, Element.IN_BUFFER_SIZE_ELEMENT, node);
-    	writeElement(writer, Element.OUT_BUFFER_SIZE_ELEMENT, node);
-    	
-    	if (has(node, Element.SSL_ELEMENT.getLocalName())) {
-    		writer.writeStartElement(Element.SSL_ELEMENT.getLocalName());
-    		writeSSLConfiguration(writer, node.get(Element.SSL_ELEMENT.getLocalName()));
-    		writer.writeEndElement();
+    private void writeJDBCSocketConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+    	writeAttribute(writer, Element.JDBC_SOCKET_BINDING_ATTRIBUTE, node);
+    	writeAttribute(writer, Element.JDBC_MAX_SOCKET_THREAD_SIZE_ATTRIBUTE, node);
+    	writeAttribute(writer, Element.JDBC_IN_BUFFER_SIZE_ATTRIBUTE, node);
+    	writeAttribute(writer, Element.JDBC_OUT_BUFFER_SIZE_ATTRIBUTE, node);
+
+    	// SSL
+    	if (like(node, Element.JDBC_SSL_ELEMENT)) {
+			writer.writeStartElement(Element.JDBC_SSL_ELEMENT.getLocalName());
+			writeJDBCSSLConfiguration(writer, node);
+			writer.writeEndElement();
     	}
 	}
 
-	private void writeSSLConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
-		writeElement(writer, Element.SSL_MODE_ELEMENT, node);
-		writeElement(writer, Element.KEY_STORE_FILE_ELEMENT, node);
-		writeElement(writer, Element.KEY_STORE_PASSWD_ELEMENT, node);
-		writeElement(writer, Element.KEY_STORE_TYPE_ELEMENT, node);
-		writeElement(writer, Element.SSL_PROTOCOL_ELEMENT, node);
-		writeElement(writer, Element.TRUST_FILE_ELEMENT, node);
-		writeElement(writer, Element.TRUST_PASSWD_ELEMENT, node);
-		writeElement(writer, Element.AUTH_MODE_ELEMENT, node);    
-		writeElement(writer, Element.KEY_MANAGEMENT_ALG_ELEMENT, node);  
+	private void writeJDBCSSLConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+		writeElement(writer, Element.JDBC_SSL_MODE_ELEMENT, node);
+		writeElement(writer, Element.JDBC_AUTH_MODE_ELEMENT, node);
+		writeElement(writer, Element.JDBC_SSL_PROTOCOL_ELEMENT, node);
+		writeElement(writer, Element.JDBC_KEY_MANAGEMENT_ALG_ELEMENT, node);
+		writeElement(writer, Element.JDBC_KEY_STORE_FILE_ELEMENT, node);
+		writeElement(writer, Element.JDBC_KEY_STORE_PASSWD_ELEMENT, node);
+		writeElement(writer, Element.JDBC_KEY_STORE_TYPE_ELEMENT, node);
+		writeElement(writer, Element.JDBC_TRUST_FILE_ELEMENT, node);
+		writeElement(writer, Element.JDBC_TRUST_PASSWD_ELEMENT, node);
 	}
+	
+    private void writeODBCSocketConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+    	writeAttribute(writer, Element.ODBC_SOCKET_BINDING_ATTRIBUTE, node);
+    	writeAttribute(writer, Element.ODBC_MAX_SOCKET_THREAD_SIZE_ATTRIBUTE, node);
+    	writeAttribute(writer, Element.ODBC_IN_BUFFER_SIZE_ATTRIBUTE, node);
+    	writeAttribute(writer, Element.ODBC_OUT_BUFFER_SIZE_ATTRIBUTE, node);
+
+    	// SSL
+    	if (like(node, Element.ODBC_SSL_ELEMENT)) {
+			writer.writeStartElement(Element.ODBC_SSL_ELEMENT.getLocalName());
+			writeODBCSSLConfiguration(writer, node);
+			writer.writeEndElement();
+    	}
+	}
+
+	private void writeODBCSSLConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+		writeElement(writer, Element.ODBC_SSL_MODE_ELEMENT, node);
+		writeElement(writer, Element.ODBC_AUTH_MODE_ELEMENT, node);
+		writeElement(writer, Element.ODBC_SSL_PROTOCOL_ELEMENT, node);
+		writeElement(writer, Element.ODBC_KEY_MANAGEMENT_ALG_ELEMENT, node);
+		writeElement(writer, Element.ODBC_KEY_STORE_FILE_ELEMENT, node);
+		writeElement(writer, Element.ODBC_KEY_STORE_PASSWD_ELEMENT, node);
+		writeElement(writer, Element.ODBC_KEY_STORE_TYPE_ELEMENT, node);
+		writeElement(writer, Element.ODBC_TRUST_FILE_ELEMENT, node);
+		writeElement(writer, Element.ODBC_TRUST_PASSWD_ELEMENT, node);
+	}	
 
 	private void writeBufferService(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
 		writeElement(writer, Element.USE_DISK_ELEMENT, node);
@@ -190,26 +227,38 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 	}
 
 	private void writeResultsetCacheConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
-		writeAttribute(writer, Element.NAME_ELEMENT, node);
-		writeAttribute(writer, Element.CONTAINER_NAME_ELEMENT, node);
-		writeAttribute(writer, Element.ENABLE_ATTRIBUTE, node);
-		writeAttribute(writer, Element.MAX_STALENESS_ELEMENT, node);
+		writeAttribute(writer, Element.RSC_NAME_ELEMENT, node);
+		writeAttribute(writer, Element.RSC_CONTAINER_NAME_ELEMENT, node);
+		writeAttribute(writer, Element.RSC_ENABLE_ATTRIBUTE, node);
+		writeAttribute(writer, Element.RSC_MAX_STALENESS_ELEMENT, node);
 	}
 
 	private void writePreparedPlanCacheConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
-		writeAttribute(writer, Element.MAX_ENTRIES_ELEMENT, node);
-		writeAttribute(writer, Element.MAX_AGE_IN_SECS_ELEMENT, node);
-		writeAttribute(writer, Element.MAX_STALENESS_ELEMENT, node);
+		writeAttribute(writer, Element.PPC_MAX_ENTRIES_ATTRIBUTE, node);
+		writeAttribute(writer, Element.PPC_MAX_AGE_IN_SECS_ATTRIBUTE, node);
+		writeAttribute(writer, Element.PPC_MAX_STALENESS_ATTRIBUTE, node);
 	}
 
 	private boolean has(ModelNode node, String name) {
         return node.has(name) && node.get(name).isDefined();
     }
+	
+	private boolean like(ModelNode node, Element element) {
+		if (node.isDefined()) {			
+			Set<String> keys = node.keys();
+			for (String key:keys) {
+				if (key.startsWith(element.getModelName())) {
+					return true;
+				}
+			}
+		}
+        return false;
+    }
 
     private void writeElement(final XMLExtendedStreamWriter writer, final Element element, final ModelNode node) throws XMLStreamException {
-    	if (has(node, element.getLocalName())) {
+    	if (has(node, element.getModelName())) {
 	        writer.writeStartElement(element.getLocalName());
-	        writer.writeCharacters(node.get(element.getLocalName()).asString());
+	        writer.writeCharacters(node.get(element.getModelName()).asString());
 	        writer.writeEndElement();
     	}
     }     
@@ -223,8 +272,8 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     }      
     
     private void writeAttribute(final XMLExtendedStreamWriter writer, final Element element, final ModelNode node) throws XMLStreamException {
-    	if (has(node, element.getLocalName())) {
-	        writer.writeAttribute(element.getLocalName(), node.get(element.getLocalName()).asString());
+    	if (has(node, element.getModelName())) {
+	        writer.writeAttribute(element.getLocalName(), node.get(element.getModelName()).asString());
     	}
     }     
 
@@ -257,27 +306,29 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				case ASYNC_THREAD_GROUP_ELEMENT:
     					bootServices.get(reader.getLocalName()).set(reader.getElementText());
     					break;
-
+    					
+  					// complex types
     				case OBJECT_REPLICATOR_ELEMENT:
-    					bootServices.get(reader.getLocalName()).set(parseObjectReplicator(reader));
+    					parseObjectReplicator(reader, bootServices);
     					break;
     					
-    					// complex types
     				case BUFFER_SERVICE_ELEMENT:
-    					bootServices.get(reader.getLocalName()).set(parseBufferConfiguration(reader));
+    					parseBufferConfiguration(reader, bootServices);
     					break;
     				case PREPAREDPLAN_CACHE_ELEMENT:
-    					bootServices.get(reader.getLocalName()).set(parsePreparedPlanCacheConfiguration(reader));
+    					parsePreparedPlanCacheConfiguration(reader, bootServices);
     					break;
     				case RESULTSET_CACHE_ELEMENT:
-    					bootServices.get(reader.getLocalName()).set(parseResultsetCacheConfiguration(reader));
+    					parseResultsetCacheConfiguration(reader, bootServices);
     					break;
 
                     case QUERY_ENGINE_ELEMENT:
-                        ModelNode engineNode = parseQueryEngine(reader, new ModelNode());
+                        ModelNode engineNode = new ModelNode();
+                        
+                        String name = parseQueryEngine(reader, engineNode);
                         
                         final ModelNode engineAddress = address.clone();
-                        engineAddress.add(Configuration.QUERY_ENGINE, engineNode.require(Configuration.ENGINE_NAME).asString());
+                        engineAddress.add(Configuration.QUERY_ENGINE, name);
                         engineAddress.protect();
                         engineNode.get(OP).set(ADD);
                         engineNode.get(OP_ADDR).set(engineAddress);
@@ -286,10 +337,12 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
                         break;
                         
                     case TRANSLATOR_ELEMENT:
-                    	ModelNode translatorNode = parseTranslator(reader, new ModelNode());
+                    	ModelNode translatorNode = new ModelNode();
+                    	
+                    	String translatorName = parseTranslator(reader, translatorNode);
 
                         final ModelNode translatorAddress = address.clone();
-                        translatorAddress.add(Configuration.TRANSLATOR, translatorNode.require(Configuration.TRANSLATOR_NAME).asString());
+                        translatorAddress.add(Configuration.TRANSLATOR, translatorName);
                         translatorAddress.protect();
                         
                         translatorNode.get(OP).set(ADD);
@@ -310,26 +363,42 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         }  
     }
     
-    private ModelNode parseObjectReplicator(XMLExtendedStreamReader reader) throws XMLStreamException {
-    	ModelNode node = new ModelNode();
+    private ModelNode parseObjectReplicator(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
     	if (reader.getAttributeCount() > 0) {
     		for(int i=0; i<reader.getAttributeCount(); i++) {
     			String attrName = reader.getAttributeLocalName(i);
     			String attrValue = reader.getAttributeValue(i);
-   				node.get(attrName).set(attrValue);	
+    			
+    			Element element = Element.forName(attrName, Configuration.OBJECT_REPLICATOR);
+    			switch(element) {
+    			case OR_STACK_ATTRIBUTE:
+    				node.get(Element.OR_STACK_ATTRIBUTE.getModelName()).set(attrValue);
+    				break;
+    			case OR_CLUSTER_NAME_ATTRIBUTE:
+    				node.get(Element.OR_CLUSTER_NAME_ATTRIBUTE.getModelName()).set(attrValue);
+    				break;
+                default: 
+                    throw ParseUtils.unexpectedElement(reader);
+    			}    			
     		}
     	}
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT));
     	return node;
 	}
 
-	private ModelNode parseQueryEngine(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
+	private String parseQueryEngine(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
+    	String engineName = "default"; //$NON-NLS-1$
     	
     	if (reader.getAttributeCount() > 0) {
     		for(int i=0; i<reader.getAttributeCount(); i++) {
     			String attrName = reader.getAttributeLocalName(i);
     			String attrValue = reader.getAttributeValue(i);
-    			node.get(attrName).set(attrValue);
+    			if (attrName.equals(Element.ENGINE_NAME_ATTRIBUTE.getLocalName())) {
+    				engineName = attrValue;
+    			}
+    			else {
+        			node.get(attrName).set(attrValue);
+    			}
     		}
     	}    	
     	
@@ -363,38 +432,47 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 					break;
 	
 				case JDBC_ELEMENT:
-					node.get(reader.getLocalName()).set(parseSocketConfiguration(reader));
+					parseJDBCSocketConfiguration(reader, node);
 					break;
 					
 				case ODBC_ELEMENT:
-					node.get(reader.getLocalName()).set(parseSocketConfiguration(reader));
+					parseODBCSocketConfiguration(reader, node);
 					break;                   
                     
                 default: 
                     throw ParseUtils.unexpectedElement(reader);
             }
         }
-    	return node;
+    	return engineName;
     }
     
-    private ModelNode parseBufferConfiguration(XMLExtendedStreamReader reader) throws XMLStreamException {
-    	ModelNode node = new ModelNode();
+    private ModelNode parseBufferConfiguration(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
-            Element element = Element.forName(reader.getLocalName());
+            Element element = Element.forName(reader.getLocalName(), Configuration.BUFFER_SERVICE);
 			switch (element) {
 			case USE_DISK_ELEMENT:
-				node.get(reader.getLocalName()).set(Boolean.parseBoolean(reader.getElementText()));
+				node.get(Element.USE_DISK_ELEMENT.getModelName()).set(Boolean.parseBoolean(reader.getElementText()));
 				break;
 			case PROCESSOR_BATCH_SIZE_ELEMENT:
-			case CONNECTOR_BATCH_SIZE_ELEMENT:
-			case MAX_PROCESSING_KB_ELEMENT:
-			case MAX_RESERVED_KB_ELEMENT:
-			case MAX_OPEN_FILES_ELEMENT:
-				node.get(reader.getLocalName()).set(Integer.parseInt(reader.getElementText()));
+				node.get(Element.PROCESSOR_BATCH_SIZE_ELEMENT.getModelName()).set(Integer.parseInt(reader.getElementText()));
 				break;
-			case MAX_FILE_SIZE_ELEMENT:				
+			case CONNECTOR_BATCH_SIZE_ELEMENT:
+				node.get(Element.CONNECTOR_BATCH_SIZE_ELEMENT.getModelName()).set(Integer.parseInt(reader.getElementText()));
+				break;
+			case MAX_PROCESSING_KB_ELEMENT:
+				node.get(Element.MAX_PROCESSING_KB_ELEMENT.getModelName()).set(Integer.parseInt(reader.getElementText()));
+				break;
+			case MAX_RESERVED_KB_ELEMENT:
+				node.get(Element.MAX_RESERVED_KB_ELEMENT.getModelName()).set(Integer.parseInt(reader.getElementText()));
+				break;
+			case MAX_OPEN_FILES_ELEMENT:
+				node.get(Element.MAX_OPEN_FILES_ELEMENT.getModelName()).set(Integer.parseInt(reader.getElementText()));
+				break;
+			case MAX_FILE_SIZE_ELEMENT:
+				node.get(Element.MAX_FILE_SIZE_ELEMENT.getModelName()).set(Long.parseLong(reader.getElementText()));
+				break;
 			case MAX_BUFFER_SPACE_ELEMENT:
-				node.get(reader.getLocalName()).set(Long.parseLong(reader.getElementText()));
+				node.get(Element.MAX_BUFFER_SPACE_ELEMENT.getModelName()).set(Long.parseLong(reader.getElementText()));
 				break;
 			default:
 				throw ParseUtils.unexpectedElement(reader);
@@ -403,24 +481,133 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	return node;
     }
     
-    private ModelNode parsePreparedPlanCacheConfiguration(XMLExtendedStreamReader reader) throws XMLStreamException {
-    	ModelNode node = new ModelNode();
+    private ModelNode parsePreparedPlanCacheConfiguration(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
+    	if (reader.getAttributeCount() > 0) {
+    		for(int i=0; i<reader.getAttributeCount(); i++) {
+    			String attrName = reader.getAttributeLocalName(i);
+    			String attrValue = reader.getAttributeValue(i);
+    			Element element = Element.forName(attrName, Configuration.PREPAREDPLAN_CACHE);
+    			switch(element) {
+                case PPC_MAX_ENTRIES_ATTRIBUTE:
+                	node.get(Element.PPC_MAX_ENTRIES_ATTRIBUTE.getModelName()).set(Integer.parseInt(attrValue));
+                	break;
+                	
+                case PPC_MAX_AGE_IN_SECS_ATTRIBUTE:
+                	node.get(Element.PPC_MAX_AGE_IN_SECS_ATTRIBUTE.getModelName()).set(Integer.parseInt(attrValue));
+                	break;
+                	
+                case PPC_MAX_STALENESS_ATTRIBUTE:
+                	node.get(Element.PPC_MAX_STALENESS_ATTRIBUTE.getModelName()).set(Integer.parseInt(attrValue));
+                	break;
+                default: 
+                    throw ParseUtils.unexpectedElement(reader);
+    			}
+    		}
+    	}    	
+        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT));
+    	return node;
+    }    
+    
+    private ModelNode parseResultsetCacheConfiguration(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
+    	if (reader.getAttributeCount() > 0) {
+    		for(int i=0; i<reader.getAttributeCount(); i++) {
+    			String attrName = reader.getAttributeLocalName(i);
+    			String attrValue = reader.getAttributeValue(i);
+    			Element element = Element.forName(attrName, Configuration.RESULTSET_CACHE);
+    			switch(element) {
+    			case RSC_CONTAINER_NAME_ELEMENT:
+    				node.get(Element.RSC_CONTAINER_NAME_ELEMENT.getModelName()).set(attrValue);
+    				break;
+    			case RSC_ENABLE_ATTRIBUTE:
+    				node.get(Element.RSC_ENABLE_ATTRIBUTE.getModelName()).set(Boolean.parseBoolean(attrValue));
+    				break;
+    			case RSC_MAX_STALENESS_ELEMENT:
+    				node.get(Element.RSC_MAX_STALENESS_ELEMENT.getModelName()).set(Integer.parseInt(attrValue));
+    				break;
+    			case RSC_NAME_ELEMENT:
+    				node.get(Element.RSC_NAME_ELEMENT.getModelName()).set(attrValue);
+    				break;
+    			default: 
+                	throw ParseUtils.unexpectedElement(reader);
+    			}    			
+    		}
+    	}
+        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT));
+    	return node;
+    }       
+    
+    private ModelNode parseJDBCSocketConfiguration(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
 
     	if (reader.getAttributeCount() > 0) {
     		for(int i=0; i<reader.getAttributeCount(); i++) {
     			String attrName = reader.getAttributeLocalName(i);
     			String attrValue = reader.getAttributeValue(i);
-    			node.get(attrName).set(attrValue);
+
+    			Element element = Element.forName(attrName, Configuration.JDBC);
+                switch (element) {
+    			case JDBC_SOCKET_BINDING_ATTRIBUTE:
+    				node.get(Element.JDBC_SOCKET_BINDING_ATTRIBUTE.getModelName()).set(attrValue);
+    				break;
+                case JDBC_MAX_SOCKET_THREAD_SIZE_ATTRIBUTE:
+    				node.get(Element.JDBC_MAX_SOCKET_THREAD_SIZE_ATTRIBUTE.getModelName()).set(Integer.parseInt(attrValue));
+    				break;
+                case JDBC_IN_BUFFER_SIZE_ATTRIBUTE:
+    				node.get(Element.JDBC_IN_BUFFER_SIZE_ATTRIBUTE.getModelName()).set(Integer.parseInt(attrValue));
+    				break;
+                case JDBC_OUT_BUFFER_SIZE_ATTRIBUTE:
+    				node.get(Element.JDBC_OUT_BUFFER_SIZE_ATTRIBUTE.getModelName()).set(Integer.parseInt(attrValue));
+    				break;
+    			default: 
+                	throw ParseUtils.unexpectedElement(reader);
+                }
     		}
     	}    	
  
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
-            Element element = Element.forName(reader.getLocalName());
+            Element element = Element.forName(reader.getLocalName(), Configuration.JDBC);
             switch (element) {
-            case MAX_ENTRIES_ELEMENT:
-            case MAX_AGE_IN_SECS_ELEMENT:
-            case MAX_STALENESS_ELEMENT:
-            	node.get(reader.getLocalName()).set(Integer.parseInt(reader.getElementText()));
+            case JDBC_SSL_ELEMENT:            	
+            	parseJDBCSSLConfiguration(reader, node);
+            	break;
+            default: 
+                throw ParseUtils.unexpectedElement(reader);
+            }
+        }
+    	return node;
+    }
+    
+    private ModelNode parseODBCSocketConfiguration(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
+
+    	if (reader.getAttributeCount() > 0) {
+    		for(int i=0; i<reader.getAttributeCount(); i++) {
+    			String attrName = reader.getAttributeLocalName(i);
+    			String attrValue = reader.getAttributeValue(i);
+
+    			Element element = Element.forName(attrName, Configuration.ODBC);
+                switch (element) {
+    			case ODBC_SOCKET_BINDING_ATTRIBUTE:
+    				node.get(Element.ODBC_SOCKET_BINDING_ATTRIBUTE.getModelName()).set(attrValue);
+    				break;
+                case ODBC_MAX_SOCKET_THREAD_SIZE_ATTRIBUTE:
+    				node.get(Element.ODBC_MAX_SOCKET_THREAD_SIZE_ATTRIBUTE.getModelName()).set(Integer.parseInt(attrValue));
+    				break;
+                case ODBC_IN_BUFFER_SIZE_ATTRIBUTE:
+    				node.get(Element.ODBC_IN_BUFFER_SIZE_ATTRIBUTE.getModelName()).set(Integer.parseInt(attrValue));
+    				break;
+                case ODBC_OUT_BUFFER_SIZE_ATTRIBUTE:
+    				node.get(Element.ODBC_OUT_BUFFER_SIZE_ATTRIBUTE.getModelName()).set(Integer.parseInt(attrValue));
+    				break;
+    			default: 
+                	throw ParseUtils.unexpectedElement(reader);
+                }
+    		}
+    	}    	
+ 
+        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
+            Element element = Element.forName(reader.getLocalName(), Configuration.ODBC);
+            switch (element) {
+            case ODBC_SSL_ELEMENT:            	
+            	parseODBCSSLConfiguration(reader, node);
             	break;
             default: 
                 throw ParseUtils.unexpectedElement(reader);
@@ -429,46 +616,36 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	return node;
     }    
     
-    private ModelNode parseResultsetCacheConfiguration(XMLExtendedStreamReader reader) throws XMLStreamException {
-    	ModelNode node = new ModelNode();
-    	
-    	if (reader.getAttributeCount() > 0) {
-    		for(int i=0; i<reader.getAttributeCount(); i++) {
-    			String attrName = reader.getAttributeLocalName(i);
-    			String attrValue = reader.getAttributeValue(i);
-    			if (attrName.equals(Element.ENABLE_ATTRIBUTE.getLocalName())) {
-    				node.get(attrName).set(Boolean.parseBoolean(attrValue));
-    			}
-    			else {
-    				node.get(attrName).set(attrValue);	
-    			}
-    		}
-    	}
-        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT));
-    	return node;
-    }       
-    
-    private ModelNode parseSocketConfiguration(XMLExtendedStreamReader reader) throws XMLStreamException {
-    	ModelNode node = new ModelNode();
-
-    	if (reader.getAttributeCount() > 0) {
-    		for(int i=0; i<reader.getAttributeCount(); i++) {
-    			String attrName = reader.getAttributeLocalName(i);
-    			String attrValue = reader.getAttributeValue(i);
-   				node.get(attrName).set(attrValue);
-    		}
-    	}    	
- 
+    private ModelNode parseJDBCSSLConfiguration(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
-            Element element = Element.forName(reader.getLocalName());
+            Element element = Element.forName(reader.getLocalName(), Configuration.JDBC, Configuration.SSL);
             switch (element) {
-            case MAX_SOCKET_THREAD_SIZE_ELEMENT:
-            case IN_BUFFER_SIZE_ELEMENT:
-            case OUT_BUFFER_SIZE_ELEMENT:
-            	node.get(reader.getLocalName()).set(Integer.parseInt(reader.getElementText()));
+            case JDBC_SSL_MODE_ELEMENT:
+            	node.get(Element.JDBC_SSL_MODE_ELEMENT.getModelName()).set(reader.getElementText());
             	break;
-            case SSL_ELEMENT:            	
-            	node.get(reader.getLocalName()).set(parseSSLConfiguration(reader));
+            case JDBC_KEY_STORE_FILE_ELEMENT:
+            	node.get(Element.JDBC_KEY_STORE_FILE_ELEMENT.getModelName()).set(reader.getElementText());
+            	break;
+            case JDBC_KEY_STORE_PASSWD_ELEMENT:
+            	node.get(Element.JDBC_KEY_STORE_PASSWD_ELEMENT.getModelName()).set(reader.getElementText());
+            	break;
+            case JDBC_KEY_STORE_TYPE_ELEMENT:
+            	node.get(Element.JDBC_KEY_STORE_TYPE_ELEMENT.getModelName()).set(reader.getElementText());
+            	break;
+            case JDBC_SSL_PROTOCOL_ELEMENT:
+            	node.get(Element.JDBC_SSL_PROTOCOL_ELEMENT.getModelName()).set(reader.getElementText());
+            	break;
+            case JDBC_TRUST_FILE_ELEMENT:
+            	node.get(Element.JDBC_TRUST_FILE_ELEMENT.getModelName()).set(reader.getElementText());
+            	break;
+            case JDBC_TRUST_PASSWD_ELEMENT:
+            	node.get(Element.JDBC_TRUST_PASSWD_ELEMENT.getModelName()).set(reader.getElementText());
+            	break;
+            case JDBC_AUTH_MODE_ELEMENT:
+            	node.get(Element.JDBC_AUTH_MODE_ELEMENT.getModelName()).set(reader.getElementText());
+            	break;
+            case JDBC_KEY_MANAGEMENT_ALG_ELEMENT:
+            	node.get(Element.JDBC_KEY_MANAGEMENT_ALG_ELEMENT.getModelName()).set(reader.getElementText());
             	break;
             default: 
                 throw ParseUtils.unexpectedElement(reader);
@@ -477,31 +654,46 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	return node;
     }
     
-    private ModelNode parseSSLConfiguration(XMLExtendedStreamReader reader) throws XMLStreamException {
-    	ModelNode node = new ModelNode();
-
+    private ModelNode parseODBCSSLConfiguration(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
-            Element element = Element.forName(reader.getLocalName());
+            Element element = Element.forName(reader.getLocalName(), Configuration.ODBC, Configuration.SSL);
             switch (element) {
-            case SSL_MODE_ELEMENT:
-            case KEY_STORE_FILE_ELEMENT:
-            case KEY_STORE_PASSWD_ELEMENT:
-            case KEY_STORE_TYPE_ELEMENT:
-            case SSL_PROTOCOL_ELEMENT:
-            case TRUST_FILE_ELEMENT:
-            case TRUST_PASSWD_ELEMENT:
-            case AUTH_MODE_ELEMENT:
-            case KEY_MANAGEMENT_ALG_ELEMENT:
-            	node.get(reader.getLocalName()).set(reader.getElementText());
+            case ODBC_SSL_MODE_ELEMENT:
+            	node.get(Element.ODBC_SSL_MODE_ELEMENT.getModelName()).set(reader.getElementText());
+            	break;
+            case ODBC_KEY_STORE_FILE_ELEMENT:
+            	node.get(Element.ODBC_KEY_STORE_FILE_ELEMENT.getModelName()).set(reader.getElementText());
+            	break;
+            case ODBC_KEY_STORE_PASSWD_ELEMENT:
+            	node.get(Element.ODBC_KEY_STORE_PASSWD_ELEMENT.getModelName()).set(reader.getElementText());
+            	break;
+            case ODBC_KEY_STORE_TYPE_ELEMENT:
+            	node.get(Element.ODBC_KEY_STORE_TYPE_ELEMENT.getModelName()).set(reader.getElementText());
+            	break;
+            case ODBC_SSL_PROTOCOL_ELEMENT:
+            	node.get(Element.ODBC_SSL_PROTOCOL_ELEMENT.getModelName()).set(reader.getElementText());
+            	break;
+            case ODBC_TRUST_FILE_ELEMENT:
+            	node.get(Element.ODBC_TRUST_FILE_ELEMENT.getModelName()).set(reader.getElementText());
+            	break;
+            case ODBC_TRUST_PASSWD_ELEMENT:
+            	node.get(Element.ODBC_TRUST_PASSWD_ELEMENT.getModelName()).set(reader.getElementText());
+            	break;
+            case ODBC_AUTH_MODE_ELEMENT:
+            	node.get(Element.ODBC_AUTH_MODE_ELEMENT.getModelName()).set(reader.getElementText());
+            	break;
+            case ODBC_KEY_MANAGEMENT_ALG_ELEMENT:
+            	node.get(Element.ODBC_KEY_MANAGEMENT_ALG_ELEMENT.getModelName()).set(reader.getElementText());
             	break;
             default: 
                 throw ParseUtils.unexpectedElement(reader);
             }
         }
     	return node;
-    }
+    }    
     
-    private ModelNode parseTranslator(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
+    private String parseTranslator(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
+    	String translatorName = null;
     	if (reader.getAttributeCount() > 0) {
     		for(int i=0; i<reader.getAttributeCount(); i++) {
     			String attrName = reader.getAttributeLocalName(i);
@@ -510,6 +702,8 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     			Element element = Element.forName(attrName);
     			switch(element) {
     			case TRANSLATOR_NAME_ATTRIBUTE:
+    				translatorName = attrValue;
+    				break;
     			case TRANSLATOR_MODULE_ATTRIBUTE:
     				node.get(attrName).set(attrValue);
     				break;
@@ -521,6 +715,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
     		throw ParseUtils.unexpectedElement(reader);
     	}
-    	return node;
+    	return translatorName;
     }
 }

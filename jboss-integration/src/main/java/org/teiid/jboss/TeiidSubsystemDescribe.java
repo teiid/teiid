@@ -81,7 +81,7 @@ public class TeiidSubsystemDescribe implements OperationStepHandler, Description
                 addOperation.get(OP).set(ADD);
                 addOperation.get(OP_ADDR).set(address);
                 
-                QueryEngineAdd.populate(container.getName(), container.getValue(), addOperation);
+                QueryEngineAdd.populate(container.getValue(), addOperation);
                 
                 result.add(addOperation);
             }
@@ -96,7 +96,7 @@ public class TeiidSubsystemDescribe implements OperationStepHandler, Description
                 addOperation.get(OP).set(ADD);
                 addOperation.get(OP_ADDR).set(address);
                 
-                TranslatorAdd.populate(container.getName(), container.getValue(), addOperation);
+                TranslatorAdd.populate(container.getValue(), addOperation);
                 
                 result.add(addOperation);
             }

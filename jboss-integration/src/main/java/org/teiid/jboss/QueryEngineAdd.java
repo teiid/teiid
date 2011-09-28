@@ -72,18 +72,13 @@ class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvid
         node.get(OPERATION_NAME).set(ADD);
         node.get(DESCRIPTION).set("engine.add");  //$NON-NLS-1$
         
-        ModelNode engine = node.get(REQUEST_PROPERTIES, Configuration.QUERY_ENGINE);
-        describeQueryEngine(engine, ATTRIBUTES, bundle);
+        describeQueryEngine(node, REQUEST_PROPERTIES, bundle);
         return node;
 	}
 	
 	@Override
 	protected void populateModel(ModelNode operation, ModelNode model) {
-        final ModelNode address = operation.require(OP_ADDR);
-        final PathAddress pathAddress = PathAddress.pathAddress(address);
-    	final String engineName = pathAddress.getLastElement().getValue();
-
-		populate(engineName, operation, model);
+		populate(operation, model);
 	}
 	
 	@Override
@@ -101,17 +96,14 @@ class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvid
     	// now build the engine
     	final RuntimeEngineDeployer engine = buildQueryEngine(engineName, operation);
     	engine.setSecurityHelper(new JBossSecurityHelper());
-    	// TODO: none of the caching is configured..
     	
-    	SocketConfiguration jdbc = null;
-    	if (operation.hasDefined(Configuration.JDBC)) {
-    		jdbc = buildSocketConfiguration(operation.get(Configuration.JDBC));
+    	SocketConfiguration jdbc = buildSocketConfiguration(Configuration.JDBC, operation);
+    	if (jdbc != null) {
     		engine.setJdbcSocketConfiguration(jdbc);
     	}
     	
-    	SocketConfiguration odbc = null;
-    	if (operation.hasDefined(Configuration.ODBC)) {
-    		odbc = buildSocketConfiguration(operation.get(Configuration.ODBC));
+    	SocketConfiguration odbc = buildSocketConfiguration(Configuration.ODBC, operation);
+    	if (odbc != null) {
     		engine.setOdbcSocketConfiguration(odbc);
     	}    	
         
@@ -222,63 +214,60 @@ class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvid
 	}
         
     
-	private SocketConfiguration buildSocketConfiguration(ModelNode node) {
-		SocketConfiguration socket = new SocketConfiguration();
+	private SocketConfiguration buildSocketConfiguration(String prefix, ModelNode node) {
 		
-		if (node.hasDefined(Configuration.SOCKET_BINDING)) {
-			socket.setSocketBinding(node.require(Configuration.SOCKET_BINDING).asString());
+		if (!node.hasDefined(prefix+Configuration.SOCKET_BINDING)) {
+			return null;
 		}
-		else {
-			throw new IllegalArgumentException(IntegrationPlugin.Util.getString(Configuration.SOCKET_BINDING+".not_defined")); //$NON-NLS-1$
-		}
+		
+		SocketConfiguration socket = new SocketConfiguration();
+		socket.setSocketBinding(node.require(prefix+Configuration.SOCKET_BINDING).asString());
 
-   		if (node.hasDefined(Configuration.MAX_SOCKET_THREAD_SIZE)) {
-    		socket.setMaxSocketThreads(node.get(Configuration.MAX_SOCKET_THREAD_SIZE).asInt());
+   		if (node.hasDefined(prefix+Configuration.MAX_SOCKET_THREAD_SIZE)) {
+    		socket.setMaxSocketThreads(node.get(prefix+Configuration.MAX_SOCKET_THREAD_SIZE).asInt());
     	}
-    	if (node.hasDefined(Configuration.IN_BUFFER_SIZE)) {
-    		socket.setInputBufferSize(node.get(Configuration.IN_BUFFER_SIZE).asInt());
+    	if (node.hasDefined(prefix+Configuration.IN_BUFFER_SIZE)) {
+    		socket.setInputBufferSize(node.get(prefix+Configuration.IN_BUFFER_SIZE).asInt());
     	}	
-    	if (node.hasDefined(Configuration.OUT_BUFFER_SIZE)) {
-    		socket.setOutputBufferSize(node.get(Configuration.OUT_BUFFER_SIZE).asInt());
+    	if (node.hasDefined(prefix+Configuration.OUT_BUFFER_SIZE)) {
+    		socket.setOutputBufferSize(node.get(prefix+Configuration.OUT_BUFFER_SIZE).asInt());
     	}		   
     	
     	SSLConfiguration ssl = new SSLConfiguration();
     	ssl.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
     	
-    	if (node.hasDefined(Configuration.SSL)) {
-    		ModelNode sslNode = node.get(Configuration.SSL);
+    	String sslPrefix = prefix+ Configuration.SSL +TeiidBootServicesAdd.DASH;
     		
-        	if (sslNode.hasDefined(Configuration.SSL_MODE)) {
-        		ssl.setMode(sslNode.get(Configuration.SSL_MODE).asString());
-        	}
-        	
-        	if (sslNode.hasDefined(Configuration.KEY_STORE_FILE)) {
-        		ssl.setKeystoreFilename(sslNode.get(Configuration.KEY_STORE_FILE).asString());
-        	}	
-        	
-        	if (sslNode.hasDefined(Configuration.KEY_STORE_PASSWD)) {
-        		ssl.setKeystorePassword(sslNode.get(Configuration.KEY_STORE_PASSWD).asString());
-        	}	
-        	
-        	if (sslNode.hasDefined(Configuration.KEY_STORE_TYPE)) {
-        		ssl.setKeystoreType(sslNode.get(Configuration.KEY_STORE_TYPE).asString());
-        	}		
-        	
-        	if (sslNode.hasDefined(Configuration.SSL_PROTOCOL)) {
-        		ssl.setSslProtocol(sslNode.get(Configuration.SSL_PROTOCOL).asString());
-        	}	
-        	if (sslNode.hasDefined(Configuration.KEY_MANAGEMENT_ALG)) {
-        		ssl.setKeymanagementAlgorithm(sslNode.get(Configuration.KEY_MANAGEMENT_ALG).asString());
-        	}
-        	if (sslNode.hasDefined(Configuration.TRUST_FILE)) {
-        		ssl.setTruststoreFilename(sslNode.get(Configuration.TRUST_FILE).asString());
-        	}
-        	if (sslNode.hasDefined(Configuration.TRUST_PASSWD)) {
-        		ssl.setTruststorePassword(sslNode.get(Configuration.TRUST_PASSWD).asString());
-        	}
-        	if (sslNode.hasDefined(Configuration.AUTH_MODE)) {
-        		ssl.setAuthenticationMode(sslNode.get(Configuration.AUTH_MODE).asString());
-        	}
+    	if (node.hasDefined(sslPrefix+Configuration.SSL_MODE)) {
+    		ssl.setMode(node.get(sslPrefix+Configuration.SSL_MODE).asString());
+    	}
+    	
+    	if (node.hasDefined(sslPrefix+Configuration.KEY_STORE_FILE)) {
+    		ssl.setKeystoreFilename(node.get(sslPrefix+Configuration.KEY_STORE_FILE).asString());
+    	}	
+    	
+    	if (node.hasDefined(sslPrefix+Configuration.KEY_STORE_PASSWD)) {
+    		ssl.setKeystorePassword(node.get(sslPrefix+Configuration.KEY_STORE_PASSWD).asString());
+    	}	
+    	
+    	if (node.hasDefined(sslPrefix+Configuration.KEY_STORE_TYPE)) {
+    		ssl.setKeystoreType(node.get(sslPrefix+Configuration.KEY_STORE_TYPE).asString());
+    	}		
+    	
+    	if (node.hasDefined(sslPrefix+Configuration.SSL_PROTOCOL)) {
+    		ssl.setSslProtocol(node.get(sslPrefix+Configuration.SSL_PROTOCOL).asString());
+    	}	
+    	if (node.hasDefined(sslPrefix+Configuration.KEY_MANAGEMENT_ALG)) {
+    		ssl.setKeymanagementAlgorithm(node.get(sslPrefix+Configuration.KEY_MANAGEMENT_ALG).asString());
+    	}
+    	if (node.hasDefined(sslPrefix+Configuration.TRUST_FILE)) {
+    		ssl.setTruststoreFilename(node.get(sslPrefix+Configuration.TRUST_FILE).asString());
+    	}
+    	if (node.hasDefined(sslPrefix+Configuration.TRUST_PASSWD)) {
+    		ssl.setTruststorePassword(node.get(sslPrefix+Configuration.TRUST_PASSWD).asString());
+    	}
+    	if (node.hasDefined(sslPrefix+Configuration.AUTH_MODE)) {
+    		ssl.setAuthenticationMode(node.get(sslPrefix+Configuration.AUTH_MODE).asString());
     	}
     	socket.setSSLConfiguration(ssl);
     	
@@ -304,50 +293,34 @@ class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvid
 		addAttribute(node, Configuration.SESSION_EXPIRATION_TIME_LIMIT, type, bundle.getString(Configuration.SESSION_EXPIRATION_TIME_LIMIT+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
 		
 		//jdbc
-		ModelNode jdbcSocketNode = node.get(CHILDREN, Configuration.JDBC);
-		jdbcSocketNode.get(TYPE).set(ModelType.OBJECT);
-		jdbcSocketNode.get(DESCRIPTION).set(bundle.getString(Configuration.JDBC+DESC));
-		jdbcSocketNode.get(REQUIRED).set(false);
-		jdbcSocketNode.get(MAX_OCCURS).set(1);
-		jdbcSocketNode.get(MIN_OCCURS).set(1);	
-		describeSocketConfig(jdbcSocketNode, type, bundle);
+		describeSocketConfig(Configuration.JDBC+TeiidBootServicesAdd.DASH, node, type, bundle);
 		
 		//odbc
-		ModelNode odbcSocketNode = node.get(CHILDREN, Configuration.ODBC);
-		odbcSocketNode.get(TYPE).set(ModelType.OBJECT);
-		odbcSocketNode.get(DESCRIPTION).set(bundle.getString(Configuration.ODBC+DESC));
-		odbcSocketNode.get(REQUIRED).set(false);
-		odbcSocketNode.get(MAX_OCCURS).set(1);
-		odbcSocketNode.get(MIN_OCCURS).set(1);	
-		describeSocketConfig(odbcSocketNode, type, bundle);			
+		describeSocketConfig(Configuration.ODBC+TeiidBootServicesAdd.DASH, node, type, bundle);			
 	}
 	
 	
-	private static void describeSocketConfig(ModelNode node, String type, ResourceBundle bundle) {
-		addAttribute(node, Configuration.MAX_SOCKET_THREAD_SIZE, type, bundle.getString(Configuration.MAX_SOCKET_THREAD_SIZE+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
-		addAttribute(node, Configuration.IN_BUFFER_SIZE, type, bundle.getString(Configuration.IN_BUFFER_SIZE+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
-		addAttribute(node, Configuration.OUT_BUFFER_SIZE, type, bundle.getString(Configuration.OUT_BUFFER_SIZE+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
-		addAttribute(node, Configuration.SOCKET_BINDING, type, bundle.getString(Configuration.SOCKET_BINDING+DESC), ModelType.STRING, true, null);
+	private static void describeSocketConfig(String prefix, ModelNode node, String type, ResourceBundle bundle) {
+		addAttribute(node, prefix+Configuration.MAX_SOCKET_THREAD_SIZE, type, bundle.getString(Configuration.MAX_SOCKET_THREAD_SIZE+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
+		addAttribute(node, prefix+Configuration.IN_BUFFER_SIZE, type, bundle.getString(Configuration.IN_BUFFER_SIZE+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
+		addAttribute(node, prefix+Configuration.OUT_BUFFER_SIZE, type, bundle.getString(Configuration.OUT_BUFFER_SIZE+DESC), ModelType.INT, false, "0"); //$NON-NLS-1$
+		addAttribute(node, prefix+Configuration.SOCKET_BINDING, type, bundle.getString(Configuration.SOCKET_BINDING+DESC), ModelType.STRING, false, null);
 		
-		ModelNode sslNode = node.get(CHILDREN, Configuration.SSL);
-		sslNode.get(TYPE).set(ModelType.OBJECT);
-		sslNode.get(DESCRIPTION).set(bundle.getString(Configuration.SSL+DESC));
-		sslNode.get(REQUIRED).set(false);
-		sslNode.get(MAX_OCCURS).set(1);
-		sslNode.get(MIN_OCCURS).set(0);
-		addAttribute(node, Configuration.SSL_MODE, type, bundle.getString(Configuration.SSL_MODE+DESC), ModelType.STRING, false, "login");	//$NON-NLS-1$
-		addAttribute(node, Configuration.KEY_STORE_FILE, type, bundle.getString(Configuration.KEY_STORE_FILE+DESC), ModelType.STRING, false, null);	
-		addAttribute(node, Configuration.KEY_STORE_PASSWD, type, bundle.getString(Configuration.KEY_STORE_PASSWD+DESC), ModelType.STRING, false, null);
-		addAttribute(node, Configuration.KEY_STORE_TYPE, type, bundle.getString(Configuration.KEY_STORE_TYPE+DESC), ModelType.STRING, false, "JKS"); //$NON-NLS-1$
-		addAttribute(node, Configuration.SSL_PROTOCOL, type, bundle.getString(Configuration.SSL_PROTOCOL+DESC), ModelType.BOOLEAN, false, "SSLv3");	//$NON-NLS-1$
-		addAttribute(node, Configuration.KEY_MANAGEMENT_ALG, type, bundle.getString(Configuration.KEY_MANAGEMENT_ALG+DESC), ModelType.STRING, false, "false");	//$NON-NLS-1$
-		addAttribute(node, Configuration.TRUST_FILE, type, bundle.getString(Configuration.TRUST_FILE+DESC), ModelType.STRING, false, null);	
-		addAttribute(node, Configuration.TRUST_PASSWD, type, bundle.getString(Configuration.TRUST_PASSWD+DESC), ModelType.STRING, false, null);	
-		addAttribute(node, Configuration.AUTH_MODE, type, bundle.getString(Configuration.AUTH_MODE+DESC), ModelType.STRING, false, "anonymous");	//$NON-NLS-1$
+		String sslPrefix = prefix+Configuration.SSL+TeiidBootServicesAdd.DASH;
+
+		addAttribute(node, sslPrefix+Configuration.SSL_MODE, type, bundle.getString(Configuration.SSL_MODE+DESC), ModelType.STRING, false, "login");	//$NON-NLS-1$
+		addAttribute(node, sslPrefix+Configuration.KEY_STORE_FILE, type, bundle.getString(Configuration.KEY_STORE_FILE+DESC), ModelType.STRING, false, null);	
+		addAttribute(node, sslPrefix+Configuration.KEY_STORE_PASSWD, type, bundle.getString(Configuration.KEY_STORE_PASSWD+DESC), ModelType.STRING, false, null);
+		addAttribute(node, sslPrefix+Configuration.KEY_STORE_TYPE, type, bundle.getString(Configuration.KEY_STORE_TYPE+DESC), ModelType.STRING, false, "JKS"); //$NON-NLS-1$
+		addAttribute(node, sslPrefix+Configuration.SSL_PROTOCOL, type, bundle.getString(Configuration.SSL_PROTOCOL+DESC), ModelType.STRING, false, "SSLv3");	//$NON-NLS-1$
+		addAttribute(node, sslPrefix+Configuration.KEY_MANAGEMENT_ALG, type, bundle.getString(Configuration.KEY_MANAGEMENT_ALG+DESC), ModelType.STRING, false, null);
+		addAttribute(node, sslPrefix+Configuration.TRUST_FILE, type, bundle.getString(Configuration.TRUST_FILE+DESC), ModelType.STRING, false, null);	
+		addAttribute(node, sslPrefix+Configuration.TRUST_PASSWD, type, bundle.getString(Configuration.TRUST_PASSWD+DESC), ModelType.STRING, false, null);	
+		addAttribute(node, sslPrefix+Configuration.AUTH_MODE, type, bundle.getString(Configuration.AUTH_MODE+DESC), ModelType.STRING, false, "anonymous");	//$NON-NLS-1$
 	}	
 	
-	static void populate(String engineName, ModelNode operation, ModelNode model) {
-		model.get(Configuration.ENGINE_NAME).set(engineName);
+	static void populate(ModelNode operation, ModelNode model) {
+		//model.get(Configuration.ENGINE_NAME).set(engineName);
 		
 		if (operation.hasDefined(Configuration.MAX_THREADS)) {
     		model.get(Configuration.MAX_THREADS).set(operation.get(Configuration.MAX_THREADS).asInt());
@@ -395,65 +368,57 @@ class QueryEngineAdd extends AbstractAddStepHandler implements DescriptionProvid
     		model.get(Configuration.MAX_SESSIONS_ALLOWED).set(operation.get(Configuration.MAX_SESSIONS_ALLOWED).asInt());
     	}		 
     	
-    	if (operation.hasDefined(Configuration.JDBC)) {
-    		populateSocketConfiguration(operation.get(Configuration.JDBC), model.get(Configuration.JDBC));
-    	}
-    	
-    	if (operation.hasDefined(Configuration.ODBC)) {
-    		populateSocketConfiguration(operation.get(Configuration.ODBC), model.get(Configuration.ODBC));
-    	}     	
+		populateSocketConfiguration(Configuration.JDBC+TeiidBootServicesAdd.DASH, operation, model);
+	
+		populateSocketConfiguration(Configuration.ODBC+TeiidBootServicesAdd.DASH, operation, model);
 	}
 
-	private static void populateSocketConfiguration(ModelNode operation, ModelNode model) {
-		if (operation.hasDefined(Configuration.SOCKET_BINDING)) {
-			model.get(Configuration.SOCKET_BINDING).set(operation.get(Configuration.SOCKET_BINDING).asString());
+	private static void populateSocketConfiguration(String prefix, ModelNode operation, ModelNode model) {
+		if (operation.hasDefined(prefix+Configuration.SOCKET_BINDING)) {
+			model.get(prefix+Configuration.SOCKET_BINDING).set(operation.get(prefix+Configuration.SOCKET_BINDING).asString());
 		}
-   		if (operation.hasDefined(Configuration.MAX_SOCKET_THREAD_SIZE)) {
-    		model.get(Configuration.MAX_SOCKET_THREAD_SIZE).set(operation.get(Configuration.MAX_SOCKET_THREAD_SIZE).asInt());
+   		if (operation.hasDefined(prefix+Configuration.MAX_SOCKET_THREAD_SIZE)) {
+    		model.get(prefix+Configuration.MAX_SOCKET_THREAD_SIZE).set(operation.get(prefix+Configuration.MAX_SOCKET_THREAD_SIZE).asInt());
     	}
-    	if (operation.hasDefined(Configuration.IN_BUFFER_SIZE)) {
-    		model.get(Configuration.IN_BUFFER_SIZE).set(operation.get(Configuration.IN_BUFFER_SIZE).asInt());
+    	if (operation.hasDefined(prefix+Configuration.IN_BUFFER_SIZE)) {
+    		model.get(prefix+Configuration.IN_BUFFER_SIZE).set(operation.get(prefix+Configuration.IN_BUFFER_SIZE).asInt());
     	}	
-    	if (operation.hasDefined(Configuration.OUT_BUFFER_SIZE)) {
-    		model.get(Configuration.OUT_BUFFER_SIZE).set(operation.get(Configuration.OUT_BUFFER_SIZE).asInt());
+    	if (operation.hasDefined(prefix+Configuration.OUT_BUFFER_SIZE)) {
+    		model.get(prefix+Configuration.OUT_BUFFER_SIZE).set(operation.get(prefix+Configuration.OUT_BUFFER_SIZE).asInt());
     	}		   
     	
+    	String sslPrefix = prefix+Configuration.SSL+TeiidBootServicesAdd.DASH;
     	
-    	if (operation.hasDefined(Configuration.SSL)) {
-    		operation = operation.get(Configuration.SSL);
-    		model = model.get(Configuration.SSL);
-    		
-        	if (operation.hasDefined(Configuration.SSL_MODE)) {
-        		model.get(Configuration.SSL_MODE).set(operation.get(Configuration.SSL_MODE).asString());
-        	}
-        	
-        	if (operation.hasDefined(Configuration.KEY_STORE_FILE)) {
-        		model.get(Configuration.KEY_STORE_FILE).set(operation.get(Configuration.KEY_STORE_FILE).asString());
-        	}	
-        	
-        	if (operation.hasDefined(Configuration.KEY_STORE_PASSWD)) {
-        		model.get(Configuration.KEY_STORE_PASSWD).set(operation.get(Configuration.KEY_STORE_PASSWD).asString());
-        	}	
-        	
-        	if (operation.hasDefined(Configuration.KEY_STORE_TYPE)) {
-        		model.get(Configuration.KEY_STORE_TYPE).set(operation.get(Configuration.KEY_STORE_TYPE).asString());
-        	}		
-        	
-        	if (operation.hasDefined(Configuration.SSL_PROTOCOL)) {
-        		model.get(Configuration.SSL_PROTOCOL).set(operation.get(Configuration.SSL_PROTOCOL).asString());
-        	}	
-        	if (operation.hasDefined(Configuration.KEY_MANAGEMENT_ALG)) {
-        		model.get(Configuration.KEY_MANAGEMENT_ALG).set(operation.get(Configuration.KEY_MANAGEMENT_ALG).asString());
-        	}
-        	if (operation.hasDefined(Configuration.TRUST_FILE)) {
-        		model.get(Configuration.TRUST_FILE).set(operation.get(Configuration.TRUST_FILE).asString());
-        	}
-        	if (operation.hasDefined(Configuration.TRUST_PASSWD)) {
-        		model.get(Configuration.TRUST_PASSWD).set(operation.get(Configuration.TRUST_PASSWD).asString());
-        	}
-        	if (operation.hasDefined(Configuration.AUTH_MODE)) {
-        		model.get(Configuration.AUTH_MODE).set(operation.get(Configuration.AUTH_MODE).asString());
-        	}
+    	if (operation.hasDefined(sslPrefix+Configuration.SSL_MODE)) {
+    		model.get(sslPrefix+Configuration.SSL_MODE).set(operation.get(sslPrefix+Configuration.SSL_MODE).asString());
+    	}
+    	
+    	if (operation.hasDefined(sslPrefix+Configuration.KEY_STORE_FILE)) {
+    		model.get(sslPrefix+Configuration.KEY_STORE_FILE).set(operation.get(sslPrefix+Configuration.KEY_STORE_FILE).asString());
+    	}	
+    	
+    	if (operation.hasDefined(sslPrefix+Configuration.KEY_STORE_PASSWD)) {
+    		model.get(sslPrefix+Configuration.KEY_STORE_PASSWD).set(operation.get(sslPrefix+Configuration.KEY_STORE_PASSWD).asString());
+    	}	
+    	
+    	if (operation.hasDefined(sslPrefix+Configuration.KEY_STORE_TYPE)) {
+    		model.get(sslPrefix+Configuration.KEY_STORE_TYPE).set(operation.get(sslPrefix+Configuration.KEY_STORE_TYPE).asString());
+    	}		
+    	
+    	if (operation.hasDefined(sslPrefix+Configuration.SSL_PROTOCOL)) {
+    		model.get(sslPrefix+Configuration.SSL_PROTOCOL).set(operation.get(sslPrefix+Configuration.SSL_PROTOCOL).asString());
+    	}	
+    	if (operation.hasDefined(sslPrefix+Configuration.KEY_MANAGEMENT_ALG)) {
+    		model.get(sslPrefix+Configuration.KEY_MANAGEMENT_ALG).set(operation.get(sslPrefix+Configuration.KEY_MANAGEMENT_ALG).asString());
+    	}
+    	if (operation.hasDefined(sslPrefix+Configuration.TRUST_FILE)) {
+    		model.get(sslPrefix+Configuration.TRUST_FILE).set(operation.get(sslPrefix+Configuration.TRUST_FILE).asString());
+    	}
+    	if (operation.hasDefined(sslPrefix+Configuration.TRUST_PASSWD)) {
+    		model.get(sslPrefix+Configuration.TRUST_PASSWD).set(operation.get(sslPrefix+Configuration.TRUST_PASSWD).asString());
+    	}
+    	if (operation.hasDefined(sslPrefix+Configuration.AUTH_MODE)) {
+    		model.get(sslPrefix+Configuration.AUTH_MODE).set(operation.get(sslPrefix+Configuration.AUTH_MODE).asString());
     	}
 	}	
 }

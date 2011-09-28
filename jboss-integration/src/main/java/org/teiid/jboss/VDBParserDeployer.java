@@ -143,7 +143,7 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 				imf.addEntriesPlusVisibilities(file, vdb);
 					
 				// This time stamp is used to check if the VDB is modified after the metadata is written to disk
-				vdb.addProperty(VDBService.VDB_LASTMODIFIED_TIME, String.valueOf(file.getLastModified()));
+				//vdb.addProperty(VDBService.VDB_LASTMODIFIED_TIME, String.valueOf(file.getLastModified()));
 			}
 			
 			if (udf != null) {

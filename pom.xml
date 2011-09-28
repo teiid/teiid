@@ -455,7 +455,12 @@
               <groupId>org.jboss.as</groupId>
               <artifactId>jboss-as-clustering-jgroups</artifactId>
               <version>${jbossas-version}</version>
-            </dependency>                      
+            </dependency>    
+            <dependency>
+                <groupId>org.jboss.as</groupId>
+                <artifactId>jboss-as-subsystem-test</artifactId>
+                <version>${jbossas-version}</version>
+            </dependency>                                
             <dependency>
               <groupId>org.infinispan</groupId>
               <artifactId>infinispan-core</artifactId>

@@ -122,7 +122,6 @@ public class ObjectSerializer {
 
 	public OutputStream getVdbXmlOutputStream(VDBMetaData vdb) throws IOException {
 		File f = buildVdbXml(vdb);
-		f.mkdirs();
 		return new FileOutputStream(f);
 	}	
 }

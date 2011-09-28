@@ -295,7 +295,7 @@ public class FunctionTree {
         // Defect 20007 - Ignore the invocation method if pushdown is not required.
         if (validateClass && (method.getPushdown() == PushDown.CAN_PUSHDOWN || method.getPushdown() == PushDown.CANNOT_PUSHDOWN)) {
             try {
-                Class<?> methodClass = source.getInvocationClass(method.getInvocationClass(), method.getClassLoader());
+                Class<?> methodClass = source.getInvocationClass(method.getInvocationClass(), method.getClassLoader()==null?Thread.currentThread().getContextClassLoader():method.getClassLoader());
                 ReflectionHelper helper = new ReflectionHelper(methodClass);
                 try {
                 	invocationMethod = helper.findBestMethodWithSignature(method.getInvocationMethod(), inputTypes);

@@ -59,7 +59,6 @@ import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
 class VDBService implements Service<VDBMetaData> {
-	public static final String VDB_LASTMODIFIED_TIME = "VDB_LASTMODIFIED_TIME"; //$NON-NLS-1$
 	private VDBMetaData vdb;
 	private final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
 	private final InjectedValue<TranslatorRepository> translatorRepositoryInjector = new InjectedValue<TranslatorRepository>();
@@ -81,10 +80,6 @@ class VDBService implements Service<VDBMetaData> {
 		// check if this is a VDB with index files, if there are then build the TransformationMetadata
 		UDFMetaData udf = this.vdb.getAttachment(UDFMetaData.class);
 		IndexMetadataFactory indexFactory = this.vdb.getAttachment(IndexMetadataFactory.class);
-		long vdbModifiedTime = -1L;
-		if (vdb.getPropertyValue(VDBService.VDB_LASTMODIFIED_TIME) != null) {
-			vdbModifiedTime = Long.parseLong(vdb.getPropertyValue(VDBService.VDB_LASTMODIFIED_TIME));
-		}
 		
 		// add required connector managers; if they are not already there
 		for (Translator t: this.vdb.getOverrideTranslators()) {
@@ -105,10 +100,11 @@ class VDBService implements Service<VDBMetaData> {
 		createConnectorManagers(cmr, repo, this.vdb);
 				
 		// check to see if the vdb has been modified when server is down; if it is then clear the old files
-		if (vdbModifiedTime != -1L && getSerializer().isStale(this.vdb, vdbModifiedTime)) {
-			getSerializer().removeAttachments(this.vdb);
-			LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB ", vdb.getName(), " old cached metadata has been removed"); //$NON-NLS-1$ //$NON-NLS-2$				
-		}
+		// This is no longer required as VDB can not modified in place in deployment directory as they held inside the data dir
+		//if (vdbModifiedTime != -1L && getSerializer().isStale(this.vdb, vdbModifiedTime)) {
+		//	getSerializer().removeAttachments(this.vdb);
+		//	LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB ", vdb.getName(), " old cached metadata has been removed"); //$NON-NLS-1$ //$NON-NLS-2$				
+		//}
 				
 		boolean asynchLoad = false;
 		boolean preview = this.vdb.isPreview();

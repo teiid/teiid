@@ -40,19 +40,25 @@
         <max-sessions-allowed>5000</max-sessions-allowed>
         <sessions-expiration-timelimit>0</sessions-expiration-timelimit>
                 
-        <jdbc socket-binding="teiid-jdbc">
-            <max-socket-threads>0</max-socket-threads>
-            <input-buffer-size>0</input-buffer-size>
-            <output-buffer-size>0</output-buffer-size>
-        </jdbc>
+        <jdbc socket-binding="teiid-jdbc" max-socket-threads="1" input-buffer-size="2" output-buffer-size="3"/>
 
-        <odbc socket-binding="teiid-odbc">
-            <max-socket-threads>0</max-socket-threads>
-            <input-buffer-size>0</input-buffer-size>
-            <output-buffer-size>0</output-buffer-size>
+        <odbc socket-binding="teiid-odbc" max-socket-threads="1" input-buffer-size="2" output-buffer-size="3">
+            <ssl>
+                <mode>login</mode>
+                <keystore-name>keystore-name</keystore-name>
+                <keystore-password>keystore passs</keystore-password>
+                <keystore-type>key store type</keystore-type>
+                <ssl-protocol>ssl protocol</ssl-protocol>
+                <keymanagement-algorithm>algo</keymanagement-algorithm>
+                <truststore-name>truststore name</truststore-name>
+                <truststore-password>trust pass</truststore-password>
+                <authentication-mode>1-way</authentication-mode>
+            </ssl>
         </odbc>
     </query-engine>
     
     <query-engine name="alternate"/>
 
+    <translator name="jdbc-simple" module="org.jboss.teiid.translator.jdbc"/>
+    <translator name="jdbc-ansi" module="org.jboss.teiid.translator.jdbc"/>
 </subsystem>

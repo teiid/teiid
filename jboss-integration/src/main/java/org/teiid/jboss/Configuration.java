@@ -82,7 +82,6 @@ class Configuration {
 	public static final String IN_BUFFER_SIZE = "input-buffer-size";//$NON-NLS-1$
 	public static final String OUT_BUFFER_SIZE = "output-buffer-size";//$NON-NLS-1$
 	public static final String SOCKET_BINDING = "socket-binding";//$NON-NLS-1$
-	public static final String SOCKET_ENABLED = "enabled";//$NON-NLS-1$
 	public static final String SSL_MODE = "mode";//$NON-NLS-1$
 	public static final String KEY_STORE_FILE = "keystore-name";//$NON-NLS-1$
 	public static final String KEY_STORE_PASSWD = "keystore-password";//$NON-NLS-1$
