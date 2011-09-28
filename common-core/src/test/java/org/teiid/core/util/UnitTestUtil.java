@@ -28,7 +28,16 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.io.Serializable;
+import java.io.Writer;
+import java.sql.Timestamp;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Formatter;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import junit.framework.Assert;
 import junit.framework.AssertionFailedError;
@@ -388,6 +397,7 @@ public class UnitTestUtil {
 	    return filePath;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static final <T extends Serializable> T helpSerialize(T object) throws IOException, ClassNotFoundException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -397,6 +407,60 @@ public class UnitTestUtil {
         ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
         
         return (T)ois.readObject();
+	}
+	
+	public static void enableTraceLogging(String loggerName) {
+		Logger logger = Logger.getLogger(loggerName);
+    	logger.setLevel(Level.FINEST);
+		if (logger.getHandlers().length > 0) {
+	    	for (Handler h : logger.getHandlers()) {
+				h.setLevel(Level.FINEST);
+			}
+    	} else {
+    		logger.setUseParentHandlers(false);
+    		ConsoleHandler ch = new ConsoleHandler();
+    		ch.setFormatter(new Formatter() {
+				
+				@Override
+				public String format(LogRecord record) {
+					final StringBuilder result = new StringBuilder();
+					result.append(new Timestamp(record.getMillis()));
+					result.append(" "); //$NON-NLS-1$
+					result.append(record.getLoggerName());
+					result.append(" "); //$NON-NLS-1$
+					result.append(record.getLevel());
+					result.append(" "); //$NON-NLS-1$
+					result.append(record.getThreadID());
+					result.append(" "); //$NON-NLS-1$
+					result.append(record.getMessage());
+					result.append('\n');
+					if (record.getThrown() != null) {
+						record.getThrown().printStackTrace(new PrintWriter(new Writer() {
+
+							@Override
+							public void close() throws IOException {
+								
+							}
+
+							@Override
+							public void flush() throws IOException {
+								
+							}
+
+							@Override
+							public void write(char[] cbuf, int off, int len)
+									throws IOException {
+								result.append(new String(cbuf, off, len));
+							}
+						}));
+						result.append('\n');
+					}
+					return result.toString();
+				}
+			});
+    		ch.setLevel(Level.FINEST);
+    		logger.addHandler(ch);
+    	}
 	}
 
 }

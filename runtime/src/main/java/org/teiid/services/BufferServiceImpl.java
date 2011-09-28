@@ -66,7 +66,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
     private long maxFileSize = SplittableStorageManager.DEFAULT_MAX_FILESIZE; // 2GB
     private int maxProcessingKb = BufferManager.DEFAULT_MAX_PROCESSING_KB;
     private int maxReserveKb = BufferManager.DEFAULT_RESERVE_BUFFER_KB;
-    private long maxBufferSpace = FileStorageManager.DEFAULT_MAX_BUFFERSPACE;
+    private long maxBufferSpace = FileStorageManager.DEFAULT_MAX_BUFFERSPACE>>20;
     private boolean inlineLobs = true;
 	private FileStorageManager fsm;
 	
@@ -108,6 +108,8 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 ssm.setMaxFileSize(maxFileSize);
                 FileStoreCache fsc = new FileStoreCache();
                 fsc.setStorageManager(ssm);
+                fsc.setMaxBufferSpace(maxBufferSpace*MB);
+                fsc.initialize();
                 this.bufferMgr.setCache(fsc);
             } else {
             	this.bufferMgr.setCache(new MemoryStorageManager());

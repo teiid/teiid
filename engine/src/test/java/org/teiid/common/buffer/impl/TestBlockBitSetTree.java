@@ -29,29 +29,35 @@ import java.util.Random;
 
 import org.junit.Test;
 
-public class TestBitSetTree {
+public class TestBlockBitSetTree {
 	
 	@Test public void testBitsSet() {
-		BitSetTree bst = new BitSetTree();
+		BlockBitSetTree bst = new BlockBitSetTree((1 << 20) -1, new TestBlockClosedLongIntHashTable.DummyBlockManager());
 		bst.set(1, true);
 		bst.set(100, true);
 		bst.set(10000, true);
 		bst.set(1000000, true);
 		assertEquals(4, bst.getBitsSet());
+		bst.set(1, false);
+		assertEquals(3, bst.getBitsSet());
+		assertFalse(bst.get(1));
 	}
 	
 	@Test public void testNextClearSet() {
-		BitSetTree bst = new BitSetTree();
+		BlockBitSetTree bst = new BlockBitSetTree((1 << 20) -1, new TestBlockClosedLongIntHashTable.DummyBlockManager());
 		BitSet bst1 = new BitSet();
 		Random r = new Random(1);
 		for (int i = 0; i < 1000; i++) {
-			int rand = r.nextInt() & BitSetTree.MAX_INDEX;
+			int rand = r.nextInt() & bst.getMaxIndex();
 			bst.set(rand, true);
 			bst1.set(rand, true);
+			assertTrue(bst.get(rand));
+			assertEquals(bst1.nextSetBit(rand), bst.nextSetBit(rand));
+			assertEquals(String.valueOf(i), bst1.nextSetBit(rand), bst.nextSetBit(rand));
 		}
 		
 		for (int i = 0; i < 10000; i++) {
-			int rand = r.nextInt() & BitSetTree.MAX_INDEX;
+			int rand = r.nextInt() & bst.getMaxIndex();
 			assertEquals(bst1.nextClearBit(rand), bst.nextClearBit(rand));
 			assertEquals(bst1.nextSetBit(rand), bst.nextSetBit(rand));
 		}

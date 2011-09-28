@@ -86,7 +86,7 @@ public class BufferManagerFactory {
 			SplittableStorageManager ssm = new SplittableStorageManager(storageManager);
 			ssm.setMaxFileSizeDirect(MemoryStorageManager.MAX_FILE_SIZE);
 			FileStoreCache fsc = new FileStoreCache();
-			fsc.setSegmentCount(1);
+			fsc.setMaxBufferSpace(Runtime.getRuntime().maxMemory()/4);
 			fsc.setStorageManager(ssm);
 			fsc.initialize();
 		    bufferManager.setCache(fsc);

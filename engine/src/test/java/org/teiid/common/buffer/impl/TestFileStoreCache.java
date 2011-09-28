@@ -27,51 +27,93 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.Arrays;
-import java.util.List;
 
 import org.junit.Test;
 import org.teiid.common.buffer.CacheEntry;
 import org.teiid.common.buffer.Serializer;
+import org.teiid.core.util.UnitTestUtil;
 
 public class TestFileStoreCache {
 	
+	private final class SimpleSerializer implements Serializer<Integer> {
+		@Override
+		public Integer deserialize(ObjectInputStream ois)
+				throws IOException, ClassNotFoundException {
+			Integer result = ois.readInt();
+			for (int i = 0; i < result; i++) {
+				assertEquals(i, ois.readInt());
+			}
+			return result;
+		}
+
+		@Override
+		public Long getId() {
+			return 1l;
+		}
+
+		@Override
+		public void serialize(Integer obj, ObjectOutputStream oos)
+				throws IOException {
+			oos.writeInt(obj);
+			for (int i = 0; i < obj; i++) {
+				oos.writeInt(i);
+			}
+		}
+
+		@Override
+		public boolean useSoftCache() {
+			return false;
+		}
+	}
+
 	@Test public void testAddGetMultiBlock() throws Exception {
 		FileStoreCache fsc = new FileStoreCache();
-		fsc.setStorageManager(new MemoryStorageManager());
+		fsc.setMaxBufferSpace(1 << 28);
+		SplittableStorageManager ssm = new SplittableStorageManager(new MemoryStorageManager());
+		ssm.setMaxFileSizeDirect(MemoryStorageManager.MAX_FILE_SIZE);
+		fsc.setStorageManager(ssm);
 		fsc.initialize();
 		
+		UnitTestUtil.enableTraceLogging("org.teiid");  //$NON-NLS-1$
+		
 		CacheEntry ce = new CacheEntry(2l);
-		Serializer<Object> s = new Serializer<Object>() {
-			@Override
-			public Object deserialize(ObjectInputStream ois)
-					throws IOException, ClassNotFoundException {
-				return ois.readObject();
-			}
-			
-			@Override
-			public Long getId() {
-				return 1l;
-			}
-			
-			@Override
-			public void serialize(Object obj, ObjectOutputStream oos)
-					throws IOException {
-				oos.writeObject(obj);
-			}
-			
-			@Override
-			public boolean useSoftCache() {
-				return false;
-			}
-		};
+		Serializer<Integer> s = new SimpleSerializer();
 		fsc.createCacheGroup(s.getId());
-		List<Object> cacheObject = Arrays.asList(new Object[10000]);
+		Integer cacheObject = Integer.valueOf(2);
 		ce.setObject(cacheObject);
 		fsc.add(ce, s);
 		
 		ce = fsc.get(2l, s);
 		assertEquals(cacheObject, ce.getObject());
+		
+		//test something that exceeds the direct inode data blocks
+		ce = new CacheEntry(3l);
+		cacheObject = Integer.valueOf(80000);
+		ce.setObject(cacheObject);
+		fsc.add(ce, s);
+		
+		ce = fsc.get(3l, s);
+		assertEquals(cacheObject, ce.getObject());
+		
+		fsc.removeCacheGroup(1l);
+		
+		assertEquals(0, fsc.getDataBlocksInUse());
+		assertEquals(0, fsc.getInodesInUse());
+		
+		//test something that exceeds the indirect inode data blocks
+		ce = new CacheEntry(3l);
+		fsc.createCacheGroup(s.getId());
+		cacheObject = Integer.valueOf(5000000);
+		ce.setObject(cacheObject);
+		fsc.add(ce, s);
+		
+		ce = fsc.get(3l, s);
+		assertEquals(cacheObject, ce.getObject());
+		
+		fsc.removeCacheGroup(1l);
+		
+		assertEquals(0, fsc.getDataBlocksInUse());
+		assertEquals(0, fsc.getInodesInUse());
 	}
 	
 }

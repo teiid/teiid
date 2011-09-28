@@ -30,9 +30,6 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.jgroups.JChannelFactory;
 import org.junit.BeforeClass;
@@ -58,16 +55,7 @@ public class TestMatViewReplication {
     
     @Test public void testReplication() throws Exception {
     	if (DEBUG) {
-	    	Logger logger = Logger.getLogger("org.teiid");
-	    	logger.setLevel(Level.FINEST);
-	    	for (Handler h : logger.getHandlers()) {
-				h.setLevel(Level.FINEST);
-			}
-	    	/*org.apache.log4j.Logger l = LogManager.getLogger("org.jgroups");
-	    	l.setLevel(org.apache.log4j.Level.TRACE);
-	    	ConsoleAppender ca = new ConsoleAppender(new PatternLayout());
-	    	ca.setName("x");
-	    	l.addAppender(ca);*/
+	    	UnitTestUtil.enableTraceLogging("org.teiid");
     	}
     	
 		FakeServer server1 = createServer();

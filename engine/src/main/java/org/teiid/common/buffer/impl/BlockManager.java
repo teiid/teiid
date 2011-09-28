@@ -20,20 +20,32 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.common.buffer;
+package org.teiid.common.buffer.impl;
 
-import java.util.Collection;
-
-import org.teiid.core.TeiidComponentException;
+import org.teiid.common.buffer.impl.FileStoreCache.BlockInfo;
 
 /**
- * Represents the storage strategy for the {@link BufferManager}
+ * Represents an INode
+ * 
+ * Returned BlockInfo may be shared.  If shared there and no guarantees about position and mark.
+ * in particular system/index blocks can be used by multiple threads relative methods should be
+ * avoided, but may be used for exclusive write operations.
+ * Otherwise the position will be 0.
+ * 
+ * Due to buffermanager locking, non-index data blocks can be assumed to be thread-safe. 
  */
-public interface Cache extends StorageManager {
-	void createCacheGroup(Long gid); //called prior to adding an entry
-	Collection<Long> removeCacheGroup(Long gid);
-	void addToCacheGroup(Long gid, Long oid); 
-	CacheEntry get(Long id, Serializer<?> serializer) throws TeiidComponentException;
-	void add(CacheEntry entry, Serializer<?> s);
-	void remove(Long gid, Long id);
+public interface BlockManager {
+	
+	int getInode();
+	
+	BlockInfo allocateBlock(int index);
+	
+	BlockInfo getBlock(int index);
+	
+	void updateBlock(BlockInfo block);
+	
+	void freeBlock(int index);
+	
+	void free();
+
 }

@@ -24,32 +24,37 @@ package org.teiid.common.buffer.impl;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 public abstract class ExtensibleBufferedOutputStream extends OutputStream {
 	
-	protected int bytesWritten;
-    protected byte buf[];
-    protected int count;
+    protected ByteBuffer buf;
     
-    public ExtensibleBufferedOutputStream(byte[] buf) {
-    	this.buf = buf;
+    public ExtensibleBufferedOutputStream() {
 	}
     
     public void write(int b) throws IOException {
-		if (count >= buf.length) {
+    	ensureBuffer();
+		if (buf.remaining() == 0) {
 		    flush();
 		}
-		buf[count++] = (byte)b;
+		buf.put((byte)b);
     }
+
+	private void ensureBuffer() {
+		if (buf == null) {
+    		buf = newBuffer();
+    	}
+	}
 
     public void write(byte b[], int off, int len) throws IOException {
     	while (true) {
-    		int toCopy = Math.min(buf.length - count, len);
-			System.arraycopy(b, off, buf, count, toCopy);
-			count += toCopy;
+        	ensureBuffer();
+    		int toCopy = Math.min(buf.remaining(), len);
+    		buf.put(b, off, toCopy);
 			len -= toCopy;
 			off += toCopy;
-			if (count < buf.length) {
+			if (buf.remaining() > 0) {
 				break;
 			}
 			flush();
@@ -57,12 +62,13 @@ public abstract class ExtensibleBufferedOutputStream extends OutputStream {
     }
 
 	public void flush() throws IOException {
-		if (count > 0) {
+		if (buf != null && buf.position() > 0) {
 			flushDirect();
 		}
-		bytesWritten += count;
-		count = 0;
+		buf = null;
 	}
+
+	protected abstract ByteBuffer newBuffer();
 	
 	protected abstract void flushDirect() throws IOException;
     
@@ -71,8 +77,4 @@ public abstract class ExtensibleBufferedOutputStream extends OutputStream {
 		flush();
     }
     
-    public int getBytesWritten() {
-		return bytesWritten;
-	}
-
 }

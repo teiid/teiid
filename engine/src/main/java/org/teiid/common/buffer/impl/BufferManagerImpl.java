@@ -31,6 +31,7 @@ import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -250,6 +251,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     private boolean useWeakReferences = true;
     private boolean inlineLobs = true;
     private int targetBytesPerRow = TARGET_BYTES_PER_ROW;
+    private int maxSoftReferences;
 
     private ReentrantLock lock = new ReentrantLock(true);
     private Condition batchesFreed = lock.newCondition();
@@ -260,10 +262,23 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     private LinkedHashMap<Long, CacheEntry> memoryEntries = new LinkedHashMap<Long, CacheEntry>(16, .75f, false);
     private LinkedHashMap<Long, CacheEntry> tenuredMemoryEntries = new LinkedHashMap<Long, CacheEntry>(16, .75f, true);
     
-    private WeakReferenceHashedValueCache<CacheEntry> weakReferenceCache; //limited size based upon the memory settings
-    private ConcurrentHashMap<Long, BatchSoftReference> softCache = new ConcurrentHashMap<Long, BatchSoftReference>(); //"unlimitted" size maintained by reference queue
+    //limited size reference caches based upon the memory settings
+    private WeakReferenceHashedValueCache<CacheEntry> weakReferenceCache; 
+    private Map<Long, BatchSoftReference> softCache = Collections.synchronizedMap(new LinkedHashMap<Long, BatchSoftReference>(16, .75f, false) {
+		private static final long serialVersionUID = 1L;
+
+		protected boolean removeEldestEntry(Map.Entry<Long,BatchSoftReference> eldest) {
+    		if (size() > maxSoftReferences) {
+    			BatchSoftReference bsr = eldest.getValue();
+    			maxReserveKB.addAndGet(bsr.sizeEstimate);
+    			bsr.clear();
+    			return true;
+    		}
+    		return false;
+    	};
+    });
     
-    private Cache cache;
+    Cache cache;
     
 	private Map<String, TupleReference> tupleBufferMap = new ConcurrentHashMap<String, TupleReference>();
 	private ReferenceQueue<TupleBuffer> tupleBufferQueue = new ReferenceQueue<TupleBuffer>();
@@ -430,11 +445,12 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		if (this.maxProcessingKBOrig < 0) {
 			this.maxProcessingKB = Math.max(Math.min(8 * processorBatchSize, Integer.MAX_VALUE), (int)(.1 * maxMemory)/maxActivePlans);
 		} 
+		int memoryBatches = (this.maxProcessingKB * maxActivePlans + this.getMaxReserveKB()) / (processorBatchSize * targetBytesPerRow / 1024);
+		int logSize = 39 - Integer.numberOfLeadingZeros(memoryBatches);
 		if (useWeakReferences) {
-			int memoryBatches = (this.maxProcessingKB * maxActivePlans + this.getMaxReserveKB()) / (processorBatchSize * targetBytesPerRow / 1024);
-			int logSize = 39 - Integer.numberOfLeadingZeros(memoryBatches);
 			weakReferenceCache = new WeakReferenceHashedValueCache<CacheEntry>(Math.min(20, logSize));
 		}
+		this.maxSoftReferences = 1 << Math.max(28, logSize+2);
 	}
 	
     @Override
@@ -551,7 +567,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	}
 
 	private void createSoftReference(CacheEntry ce) {
-		BatchSoftReference ref = new BatchSoftReference(ce, SOFT_QUEUE, ce.getSizeEstimate());
+		BatchSoftReference ref = new BatchSoftReference(ce, SOFT_QUEUE, ce.getSizeEstimate()/2);
 		softCache.put(ce.getId(), ref);
 		maxReserveKB.addAndGet(- ce.getSizeEstimate()/2);
 	}
@@ -584,12 +600,11 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			return ce;
 		}
 		if (prefersMemory) {
-			BatchSoftReference bsr = softCache.get(batch);
+			BatchSoftReference bsr = softCache.remove(batch);
 			if (bsr != null) {
 				ce = bsr.get();
 				if (ce != null) {
-					softCache.remove(batch);
-					maxReserveKB.addAndGet(bsr.sizeEstimate/2);
+					maxReserveKB.addAndGet(bsr.sizeEstimate);
 				}
 			}
 		} else if (useWeakReferences) {
@@ -611,6 +626,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	}
 	
 	void remove(Long gid, Long batch, boolean prefersMemory) {
+		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+			LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Removing batch from BufferManager", batch); //$NON-NLS-1$
+		}
 		CacheEntry ce = fastGet(batch, prefersMemory, false);
 		if (ce == null) {
 			cache.remove(gid, batch);
@@ -661,8 +679,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				break;
 			}
 			softCache.remove(ref.key);
-			maxReserveKB.addAndGet(ref.sizeEstimate/2);
-			ref.sizeEstimate = 0;
+			maxReserveKB.addAndGet(ref.sizeEstimate);
 			ref.clear();
 		}
 	}

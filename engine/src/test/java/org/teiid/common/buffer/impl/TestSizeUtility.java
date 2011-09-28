@@ -98,18 +98,6 @@ public class TestSizeUtility {
         helpTestGetSize("abcdefghij", 64); //$NON-NLS-1$
     }
 
-    public void XtestGetSizeLongString() {
-        // There is no clear way of figuring out the actual size of a string that is created
-        // from a StringBuffer because the buffer can sometimes be twice as big as the actual length of the string
-        // Since the data comin from the connector is not created this way, this test is an inaccurate setup 
-        int size = 10000;
-        StringBuffer str = new StringBuffer();
-        for(int i=0; i<size; i++) { 
-            str.append("a"); //$NON-NLS-1$
-        }
-        helpTestGetSize(str.toString(), size+3);
-    }
-
     @Test public void testGetSizeRow1() {
         List<Object> row = new ArrayList<Object>(1);
         row.add(new Integer(0));

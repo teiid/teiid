@@ -151,6 +151,9 @@ public class FileStorageManager implements StorageManager {
 	    
 	    @Override
 	    public synchronized void setLength(long length) throws IOException {
+	    	if (fileInfo == null) {
+				fileInfo = new FileInfo(createFile(name));
+	        }
 	    	try {
 	    		fileInfo.open().setLength(length);
 	    	} finally {
@@ -165,7 +168,7 @@ public class FileStorageManager implements StorageManager {
 				fileInfo.delete();
 			}
 		}
-		
+	    
 	}
 
     // Initialization
