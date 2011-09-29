@@ -19,6 +19,9 @@
 	   	<itemizedlist>
 	   		<listitem><para>The cache hint should appear at the beginning of the SQL.  It will not have any affect on INSERT/UPDATE/DELETE statements or virtual update procedure definitions.</para></listitem>
 	   		<listitem><para><emphasis>pref_mem</emphasis> - if present indicates that the cached results should prefer to remain in memory.  They are not however required to be memory only.
+	   		<note><para>Care should be taken to not over use the pref_mem option.  
+	   		The memory preference is implemented with Java soft references.  While soft references are effective at preventing out of memory conditions.  
+	   		Too much memory held by soft references can limit the effective working memory.  Consult your JVM options for clearing soft references if you need to tune their behavior.</para></note>
 	   		</para></listitem>
 	   		<listitem><para><emphasis>ttl:n</emphasis> - if present n indicates the time to live value in milliseconds.
 	   		</para></listitem>

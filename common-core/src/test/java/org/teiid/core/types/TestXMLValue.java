@@ -22,18 +22,9 @@
 
 package org.teiid.core.types;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
-import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.core.types.XMLType;
-import org.teiid.core.util.UnitTestUtil;
-
-
 import junit.framework.TestCase;
+
+import org.teiid.core.util.UnitTestUtil;
 
 
 public class TestXMLValue extends TestCase {
@@ -55,22 +46,26 @@ public class TestXMLValue extends TestCase {
         String key = xv.getReferenceStreamId();
         
         // now force to serialize
-        File saved = new File(UnitTestUtil.getTestScratchPath()+"/xmlsaved.bin"); //$NON-NLS-1$
-        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(saved));
-        out.writeObject(xv);
-        out.close();
-        
-        // now read back the object from serilized state
-        ObjectInputStream in = new ObjectInputStream(new FileInputStream(saved));
-        XMLType read = (XMLType)in.readObject();
+        XMLType read = UnitTestUtil.helpSerialize(xv);
                 
         // make sure we have kept the reference stream id
         assertEquals(key, read.getReferenceStreamId());
         
         // and lost the original object
         assertNull(read.getReference());
+    }
+    
+    public void testReferencePersistence() throws Exception {
+        String testString = "<foo>this is an xml value test</foo>"; //$NON-NLS-1$
+        SQLXMLImpl xml = new SQLXMLImpl(testString); 
         
-        saved.delete();
+        XMLType xv = new XMLType(xml);
+        xv.setReferenceStreamId(null);
+        
+        // now force to serialize
+        XMLType read = UnitTestUtil.helpSerialize(xv);
+                
+        assertEquals(testString, read.getString());
     }
     
 }

@@ -35,10 +35,10 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.client.BatchSerializer;
+import junit.framework.TestCase;
+
 import org.teiid.core.types.DataTypeManager;
 
-import junit.framework.TestCase;
 
 
 
@@ -63,21 +63,22 @@ public class TestBatchSerializer extends TestCase {
         }
     }
     
-    private static void helpTestSerialization(String[] types, List[] batch) throws IOException, ClassNotFoundException {
+    private static void helpTestSerialization(String[] types, List<?>[] batch) throws IOException, ClassNotFoundException {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         ObjectOutputStream out = new ObjectOutputStream(byteStream);
-        BatchSerializer.writeBatch(out, types, batch);
+        List<List<?>> batchList = Arrays.asList(batch);
+        BatchSerializer.writeBatch(out, types, batchList);
         out.flush();
         
         byte[] bytes = byteStream.toByteArray();
         
         ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytes);
         ObjectInputStream in = new ObjectInputStream(bytesIn);
-        List[] newBatch = BatchSerializer.readBatch(in, types);
+        List<List<Object>> newBatch = BatchSerializer.readBatch(in, types);
         out.close();
         in.close();
 
-        assertEqual(batch, newBatch);
+        assertTrue(batchList.equals(newBatch));
     }
     
     private static final String[] sampleBatchTypes = {DataTypeManager.DefaultDataTypes.BIG_DECIMAL,
@@ -164,14 +165,6 @@ public class TestBatchSerializer extends TestCase {
         helpTestSerialization(sampleBatchTypes, sampleBatch(833)); // A bunch of rows. This should also test large strings
     }
     
-    public void testSerializeBasicTypes_NoTypeHints() throws Exception {
-        helpTestSerialization(null, sampleBatch(1));
-        helpTestSerialization(null, sampleBatch(8));
-        helpTestSerialization(null, sampleBatch(17));
-        helpTestSerialization(null, sampleBatch(120));
-        helpTestSerialization(null, sampleBatch(833));
-    }
-    
     public void testSerializeBasicTypesWithNulls() throws Exception {
         helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(1));
         helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(8));
@@ -186,10 +179,7 @@ public class TestBatchSerializer extends TestCase {
     }
     
     public void testSerializeNoData() throws Exception {
-        helpTestSerialization(sampleBatchTypes, null);
-        helpTestSerialization(null, null);
         helpTestSerialization(sampleBatchTypes, new List[0]);
-        helpTestSerialization(null, new List[0]);
     }
     
     public void testSerializeDatatypeMismatch() throws Exception {

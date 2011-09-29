@@ -26,7 +26,7 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -45,9 +45,9 @@ public class ResultsMessage implements Externalizable {
 
     static final long serialVersionUID = 3546924172976187793L;
 
-	private List[] results = null;
-	private String[] columnNames = null;
-	private String[] dataTypes = null;
+	private List<? extends List<?>> results;
+	private String[] columnNames;
+	private String[] dataTypes;
 
     /** A description of planning that occurred as requested in the request. */
     private PlanNode planDescription;
@@ -85,36 +85,29 @@ public class ResultsMessage implements Externalizable {
     public ResultsMessage(){
     }
 
-    /**
-     * Instantiate and copy relevant information from the original request message.
-     * Typically, the transaction context should only be copied if this results
-     * message is being returned from the connector to the query engine. Clients
-     * will be unable to deserialize this object.
-     * @param requestMsg
-     * @param copyTransactionContext true if the transaction context should be copied; false otherwise.
-     * @since 4.2
-     */
-    public ResultsMessage(RequestMessage requestMsg){
-        this.results = new ArrayList[0];
-
-    }
-
-    public ResultsMessage(RequestMessage requestMsg, List[] results, String[] columnNames, String[] dataTypes){
-        this (requestMsg);
-        setResults( results );
+    public ResultsMessage(List<? extends List<?>> results, String[] columnNames, String[] dataTypes){
+        this.results = results;
         setFirstRow( 1 );
-        setLastRow( results.length );
+        setLastRow( results.size() );
 
         this.columnNames = columnNames;
         this.dataTypes = dataTypes;
     }
-
-	public  List[] getResults() {
+    
+	public List<? extends List<?>> getResultsList() {
 		return results;
 	}
+	
+	/**
+	 * @deprecated see {@link #getResultsList()}
+	 * @return
+	 */
+	public List<?>[] getResults() {
+		return results.toArray(new List[results.size()]);
+	}
 
-    public void setResults(List[] results) {
-		this.results = results;
+    public void setResults(List<?>[] results) {
+		this.results = Arrays.asList(results);
 	}
 
 	public  String[] getColumnNames() {
@@ -341,7 +334,7 @@ public class ResultsMessage implements Externalizable {
      */
     public String toString() {
         return new StringBuffer("ResultsMessage rowCount=") //$NON-NLS-1$
-            .append(results == null ? 0 : results.length)
+            .append(results == null ? 0 : results.size())
             .append(" finalRow=") //$NON-NLS-1$
             .append(finalRow)
             .toString();

@@ -34,7 +34,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
-import org.teiid.common.buffer.TupleBatch;
 
 public class TestSizeUtility {
 
@@ -43,7 +42,7 @@ public class TestSizeUtility {
     }
 
     public void helpTestGetSize(Object obj, long expectedSize) {  
-        long actualSize = new SizeUtility().getSize(obj, true, false);
+        long actualSize = new SizeUtility(null).getSize(obj, true, false);
         assertEquals("Got unexpected size: ", expectedSize, actualSize); //$NON-NLS-1$
     }
 
@@ -97,18 +96,6 @@ public class TestSizeUtility {
 
     @Test public void testGetSizeShortString() {
         helpTestGetSize("abcdefghij", 64); //$NON-NLS-1$
-    }
-
-    public void XtestGetSizeLongString() {
-        // There is no clear way of figuring out the actual size of a string that is created
-        // from a StringBuffer because the buffer can sometimes be twice as big as the actual length of the string
-        // Since the data comin from the connector is not created this way, this test is an inaccurate setup 
-        int size = 10000;
-        StringBuffer str = new StringBuffer();
-        for(int i=0; i<size; i++) { 
-            str.append("a"); //$NON-NLS-1$
-        }
-        helpTestGetSize(str.toString(), size+3);
     }
 
     @Test public void testGetSizeRow1() {
@@ -176,9 +163,7 @@ public class TestSizeUtility {
         
         String[] types = {"string", "integer", "boolean", "double", "string", "integer"};     //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$//$NON-NLS-4$ //$NON-NLS-5$//$NON-NLS-6$
 
-        TupleBatch tb = new TupleBatch(1, expected);
-        tb.setDataTypes(types);
-        long actualSize = new SizeUtility().getBatchSize(tb);
+        long actualSize = new SizeUtility(types).getBatchSize(Arrays.asList(expected));
         assertEquals("Got unexpected size: ", 2667, actualSize); //$NON-NLS-1$        
     }
     

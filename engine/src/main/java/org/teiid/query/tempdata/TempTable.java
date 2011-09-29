@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
@@ -89,6 +90,19 @@ public class TempTable implements Cloneable {
 			this.addRowId = addRowId;
 			this.indexes = indexes;
 		}
+		
+		@Override
+		int process() throws ExpressionEvaluationException,
+				TeiidComponentException, TeiidProcessingException {
+			tree.setBatchInsert(addRowId);
+			return super.process();
+		}
+		
+		@Override
+		protected void afterCompletion() throws TeiidComponentException {
+			tree.setBatchInsert(false);
+		}
+		
 
 		@Override
 		protected void tuplePassed(List tuple) throws BlockedException,
@@ -236,6 +250,7 @@ public class TempTable implements Cloneable {
 				success = true;
 			} finally {
 				try {
+					afterCompletion();
 					if (!success && undoLog != null) {
 						undoLog.setFinal(true);
 						TupleSource undoTs = undoLog.createIndexedTupleSource();
@@ -259,6 +274,14 @@ public class TempTable implements Cloneable {
 			return updateCount;
 		}
 
+		/**
+		 * 
+		 * @throws TeiidComponentException
+		 */
+		protected void afterCompletion() throws TeiidComponentException {
+			
+		}
+
 		@SuppressWarnings("unused")
 		void success() throws TeiidComponentException, ExpressionEvaluationException, TeiidProcessingException {}
 
@@ -275,9 +298,9 @@ public class TempTable implements Cloneable {
 		}
 		
 	}
-	private static AtomicInteger ID_GENERATOR = new AtomicInteger();
+	private static AtomicLong ID_GENERATOR = new AtomicLong();
 	
-	private int id = ID_GENERATOR.getAndIncrement();
+	private Long id = ID_GENERATOR.getAndIncrement();
 	private STree tree;
 	private AtomicInteger rowId;
 	private List<ElementSymbol> columns;
@@ -361,7 +384,7 @@ public class TempTable implements Cloneable {
 		}
 	}
 	
-	public AtomicInteger getActiveReaders() {
+	public AtomicInteger getActive() {
 		return activeReaders;
 	}
 	
@@ -803,13 +826,13 @@ public class TempTable implements Cloneable {
 		return tid;
 	}
 	
-	public int getId() {
+	public Long getId() {
 		return id;
 	}
 	
 	@Override
 	public int hashCode() {
-		return id;
+		return id.hashCode();
 	}
 	
 	@Override
@@ -821,7 +844,7 @@ public class TempTable implements Cloneable {
 			return false;
 		}
 		TempTable other = (TempTable)obj;
-		return id == other.id;
+		return id.equals(other.id);
 	}
 
 }

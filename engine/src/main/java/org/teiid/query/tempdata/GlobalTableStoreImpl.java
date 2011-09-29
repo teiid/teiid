@@ -290,7 +290,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject 
 		if (tempTable != null) {
 			TempMetadataID id = tableStore.getMetadataStore().getTempGroupID(matTableName);
 			synchronized (id) {
-				boolean clone = tempTable.getActiveReaders().get() != 0;
+				boolean clone = tempTable.getActive().get() != 0;
 				if (clone) {
 					tempTable = tempTable.clone();
 				}

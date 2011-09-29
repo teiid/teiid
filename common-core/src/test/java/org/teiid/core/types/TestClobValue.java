@@ -24,12 +24,7 @@ package org.teiid.core.types;
 
 import static org.junit.Assert.*;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Reader;
 
 import javax.sql.rowset.serial.SerialClob;
@@ -56,14 +51,7 @@ public class TestClobValue {
         String key = cv.getReferenceStreamId();
         
         // now force to serialize
-        File saved = new File(UnitTestUtil.getTestScratchPath()+"/clobassaved.bin"); //$NON-NLS-1$
-        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(saved));
-        out.writeObject(cv);
-        out.close();
-        
-        // now read back the object from serilized state
-        ObjectInputStream in = new ObjectInputStream(new FileInputStream(saved));
-        ClobType read = (ClobType)in.readObject();
+        ClobType read = UnitTestUtil.helpSerialize(cv);
         
         assertTrue(read.length() > 0);
                 
@@ -72,8 +60,21 @@ public class TestClobValue {
         
         // and lost the original object
         assertNull(read.getReference());
+    }
+    
+    @Test public void testReferencePersistence() throws Exception {
+    	String testString = "this is test clob"; //$NON-NLS-1$
+        SerialClob clob = new SerialClob(testString.toCharArray());
         
-        saved.delete();
+        ClobType cv = new ClobType(clob);
+        cv.setReferenceStreamId(null);
+        
+        // now force to serialize
+        ClobType read = UnitTestUtil.helpSerialize(cv);
+        
+        assertTrue(read.length() > 0);
+                
+        assertEquals(testString, read.getSubString(1, testString.length()));
     }
     
     @Test public void testClobSubstring() throws Exception {

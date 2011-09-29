@@ -797,7 +797,7 @@ public class TestAllResultsImpl {
 	private ResultsMessage exampleMessage(List<Object>[] results, String[] columnNames, String[] datatypes) {
 		RequestMessage request = new RequestMessage();
 		request.setExecutionId(REQUEST_ID);
-		ResultsMessage resultsMsg = new ResultsMessage(request);
+		ResultsMessage resultsMsg = new ResultsMessage();
 		resultsMsg.setResults(results);
 		resultsMsg.setColumnNames(columnNames);
 		resultsMsg.setDataTypes(datatypes); 
@@ -834,7 +834,7 @@ public class TestAllResultsImpl {
 	private static ResultsMessage exampleResultsMsg4(int begin, int length, boolean lastBatch) {
 		RequestMessage request = new RequestMessage();
 		request.setExecutionId(REQUEST_ID);
-		ResultsMessage resultsMsg = new ResultsMessage(request);
+		ResultsMessage resultsMsg = new ResultsMessage();
 		List[] results = exampleResults1(length, begin);
 		resultsMsg.setResults(results);
 		resultsMsg.setColumnNames(new String[] { "IntKey" }); //$NON-NLS-1$
@@ -862,7 +862,7 @@ public class TestAllResultsImpl {
 	@Test public void testDateType() throws SQLException {
 		RequestMessage request = new RequestMessage();
 		request.setExecutionId(REQUEST_ID);
-		ResultsMessage resultsMsg = new ResultsMessage(request);
+		ResultsMessage resultsMsg = new ResultsMessage();
 		resultsMsg.setResults(new List[] {Arrays.asList(new Timestamp(0))});
 		resultsMsg.setColumnNames(new String[] { "TS" }); //$NON-NLS-1$
 		resultsMsg.setDataTypes(new String[] { JDBCSQLTypeInfo.TIMESTAMP }); 

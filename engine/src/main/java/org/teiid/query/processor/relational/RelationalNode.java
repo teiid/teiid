@@ -114,7 +114,11 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
             this.getProcessingState().nodeStatistics = new RelationalNodeStatistics();
         }
 
-        this.getProcessingState().batchSize = bufferManager.getProcessorBatchSize();
+        if (getOutputElements() != null) {
+        	this.getProcessingState().batchSize = bufferManager.getProcessorBatchSize(getOutputElements());
+        } else {
+        	this.getProcessingState().batchSize = bufferManager.getProcessorBatchSize();
+        }
     }
 
     public CommandContext getContext() {

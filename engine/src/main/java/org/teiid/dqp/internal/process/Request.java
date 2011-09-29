@@ -233,7 +233,6 @@ public class Request implements SecurityFunctionEvaluator {
                 props,
                 this.requestMsg.getShowPlan() != ShowPlan.OFF);
         this.context.setProcessorBatchSize(bufferManager.getProcessorBatchSize());
-        this.context.setConnectorBatchSize(bufferManager.getConnectorBatchSize());
         this.context.setGlobalTableStore(this.globalTables);
         if (multiSourceModels != null) {
             MultiSourcePlanToProcessConverter modifier = new MultiSourcePlanToProcessConverter(

@@ -31,7 +31,6 @@ import javax.resource.ResourceException;
 
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.BlockedException;
-import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
 import org.teiid.dqp.message.AtomicRequestID;
@@ -332,7 +331,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 		    LogManager.logWarning(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.getString("ConnectorWorker.zero_size_non_last_batch", requestMsg.getConnectorName())); //$NON-NLS-1$
 		}
 
-		AtomicResultsMessage response = createResultsMessage(rows.toArray(new List[currentRowCount]), requestMsg.getCommand().getProjectedSymbols());
+		AtomicResultsMessage response = createResultsMessage(rows.toArray(new List[currentRowCount]));
 		
 		// if we need to keep the execution alive, then we can not support implicit close.
 		response.setSupportsImplicitClose(!this.securityContext.keepExecutionAlive());
@@ -346,9 +345,8 @@ public class ConnectorWorkItem implements ConnectorWork {
 		return response;
 	}
 
-    public static AtomicResultsMessage createResultsMessage(List[] batch, List columnSymbols) {
-        String[] dataTypes = TupleBuffer.getTypeNames(columnSymbols);        
-        return new AtomicResultsMessage(batch, dataTypes);
+    public static AtomicResultsMessage createResultsMessage(List[] batch) {
+        return new AtomicResultsMessage(batch);
     }    
             
     boolean isCancelled() {

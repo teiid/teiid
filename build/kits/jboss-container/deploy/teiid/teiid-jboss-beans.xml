@@ -43,7 +43,11 @@
         <!-- Max storage space, in MB, to be used for buffer files (default 50G) -->
         <property name="maxBufferSpace">51200</property>
         <!-- Max open buffer files (default 64) -->
-        <property name="maxOpenFiles">64</property> 
+        <property name="maxOpenFiles">64</property>
+        <!-- Set to true to allow inlining of memory based and small lobs into results. 
+             However inline lob values are not supported by pre-7.6 clients, so disable this 
+             property if using older clients utilizing lobs. (default true) -->
+        <property name="inlineLobs">true</property>
     </bean>
     
     <bean name="CacheFactory" class="org.teiid.cache.jboss.ClusterableCacheFactory">

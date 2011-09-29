@@ -365,7 +365,6 @@ public class TestProcessor {
 		props.setProperty("soap_port", "12345"); //$NON-NLS-1$ //$NON-NLS-2$
 		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", 1, props, DEBUG); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         context.setProcessorBatchSize(BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE);
-        context.setConnectorBatchSize(BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE);
         context.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
         context.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>());
 		return context;
@@ -1080,7 +1079,6 @@ public class TestProcessor {
 
         CommandContext context = createCommandContext();
         context.setProcessorBatchSize(2);
-        context.setConnectorBatchSize(2);
         context.setMetadata(RealMetadataFactory.example1Cached());
         
         // Plan query

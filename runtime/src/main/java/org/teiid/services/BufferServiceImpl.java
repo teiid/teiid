@@ -29,7 +29,9 @@ import java.io.Serializable;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.common.buffer.impl.FileStorageManager;
+import org.teiid.common.buffer.impl.FileStoreCache;
 import org.teiid.common.buffer.impl.MemoryStorageManager;
+import org.teiid.common.buffer.impl.SplittableStorageManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.FileUtils;
@@ -56,10 +58,11 @@ public class BufferServiceImpl implements BufferService, Serializable {
 	private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
 	private int connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
     private int maxOpenFiles = FileStorageManager.DEFAULT_MAX_OPEN_FILES;
-    private long maxFileSize = FileStorageManager.DEFAULT_MAX_FILESIZE; // 2GB
+    private long maxFileSize = SplittableStorageManager.DEFAULT_MAX_FILESIZE; // 2GB
     private int maxProcessingKb = BufferManager.DEFAULT_MAX_PROCESSING_KB;
     private int maxReserveKb = BufferManager.DEFAULT_RESERVE_BUFFER_KB;
-    private long maxBufferSpace = FileStorageManager.DEFAULT_MAX_BUFFERSPACE;
+    private long maxBufferSpace = FileStorageManager.DEFAULT_MAX_BUFFERSPACE>>20;
+    private boolean inlineLobs = true;
 	private FileStorageManager fsm;
 	
     /**
@@ -94,13 +97,17 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 // Get the properties for FileStorageManager and create.
                 fsm = new FileStorageManager();
                 fsm.setStorageDirectory(bufferDir.getCanonicalPath());
-                fsm.setMaxFileSize(maxFileSize);
                 fsm.setMaxOpenFiles(maxOpenFiles);
                 fsm.setMaxBufferSpace(maxBufferSpace*MB);
-                fsm.initialize();        
-                this.bufferMgr.setStorageManager(fsm);
+                SplittableStorageManager ssm = new SplittableStorageManager(fsm);
+                ssm.setMaxFileSize(maxFileSize);
+                FileStoreCache fsc = new FileStoreCache();
+                fsc.setStorageManager(ssm);
+                fsc.setMaxBufferSpace(maxBufferSpace*MB);
+                fsc.initialize();
+                this.bufferMgr.setCache(fsc);
             } else {
-            	this.bufferMgr.setStorageManager(new MemoryStorageManager());
+            	this.bufferMgr.setCache(new MemoryStorageManager());
             }
             
         } catch(TeiidComponentException e) { 
@@ -121,7 +128,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
         }
     }
 
-    public BufferManager getBufferManager() {
+    public BufferManagerImpl getBufferManager() {
         return this.bufferMgr;
     }
 	
@@ -139,6 +146,10 @@ public class BufferServiceImpl implements BufferService, Serializable {
 	public void setConnectorBatchSize(int size) {
 		this.connectorBatchSize = size;
 	}
+	
+	public void setInlineLobs(boolean inlineLobs) {
+		this.inlineLobs = inlineLobs;
+	}
 
 	public File getBufferDirectory() {
 		return bufferDir;
@@ -146,6 +157,10 @@ public class BufferServiceImpl implements BufferService, Serializable {
 
 	public boolean isUseDisk() {
 		return this.useDisk;
+	}
+	
+	public boolean isInlineLobs() {
+		return inlineLobs;
 	}
 
 	public int getProcessorBatchSize() {

@@ -22,6 +22,9 @@
 
 package org.teiid.query.processor.relational;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 
@@ -38,11 +41,12 @@ public class NullNode extends RelationalNode {
         this.terminateBatches();
         return pullBatch();
     }
-        
-    protected void getNodeString(StringBuffer str) {
-        super.getNodeString(str);
+    
+    @Override
+    public List getOutputElements() {
+    	return Collections.emptyList();
     }
-
+        
 	public Object clone(){
 		NullNode clonedNode = new NullNode(super.getID());
 		super.copy(this, clonedNode);

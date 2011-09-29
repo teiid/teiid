@@ -213,7 +213,7 @@ public class TempTableDataManager implements ProcessorDataManager {
     		TempTable tt = contextStore.getTempTable(att.getTempTable().toUpperCase());
     		Assertion.isNotNull(tt, "Table doesn't exist"); //$NON-NLS-1$
     		tt.setUpdatable(false);
-    		if (att.getIndexColumns() != null) {
+    		if (att.getIndexColumns() != null && tt.getRowCount() > 2*tt.getTree().getPageSize(true)) {
     			tt.addIndex(att.getIndexColumns(), false);
     		}
     		return CollectionTupleSource.createUpdateCountTupleSource(0);

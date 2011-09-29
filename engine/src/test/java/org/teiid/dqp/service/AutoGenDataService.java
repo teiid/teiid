@@ -95,7 +95,7 @@ public class AutoGenDataService extends ConnectorManager{
         	results = new List[] {Arrays.asList(1)};
         }
                 
-        final AtomicResultsMessage msg = ConnectorWorkItem.createResultsMessage(results, projectedSymbols);
+        final AtomicResultsMessage msg = ConnectorWorkItem.createResultsMessage(results);
         msg.setFinalRow(rows);
         return new ConnectorWork() {
 			

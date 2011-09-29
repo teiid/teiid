@@ -22,19 +22,12 @@
 
 package org.teiid.core.types;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
 import javax.sql.rowset.serial.SerialBlob;
 
-import org.teiid.core.types.BlobType;
-import org.teiid.core.util.UnitTestUtil;
-
-
 import junit.framework.TestCase;
+
+import org.junit.Test;
+import org.teiid.core.util.UnitTestUtil;
 
 
 public class TestBlobValue extends TestCase {
@@ -55,22 +48,27 @@ public class TestBlobValue extends TestCase {
         String key = bv.getReferenceStreamId();
         
         // now force to serialize
-        File saved = new File(UnitTestUtil.getTestScratchPath()+"/blobassaved.bin"); //$NON-NLS-1$
-        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(saved));
-        out.writeObject(bv);
-        out.close();
-        
-        // now read back the object from serilized state
-        ObjectInputStream in = new ObjectInputStream(new FileInputStream(saved));
-        BlobType read = (BlobType)in.readObject();
+        BlobType read = UnitTestUtil.helpSerialize(bv);
                 
         // make sure we have kept the reference stream id
         assertEquals(key, read.getReferenceStreamId());
         
         // and lost the original object
         assertNull(read.getReference());
+    }
+    
+    @Test public void testReferencePersistence() throws Exception {
+    	String testString = "this is test clob"; //$NON-NLS-1$
+        SerialBlob blob = new SerialBlob(testString.getBytes());
         
-        saved.delete();
+        BlobType bv = new BlobType(blob);
+        bv.setReferenceStreamId(null);
+        // now force to serialize
+        BlobType read = UnitTestUtil.helpSerialize(bv);
+                
+        assertNull(read.getReferenceStreamId());
+        
+        assertEquals(testString, new String(read.getBytes(1, (int)blob.length())));
     }
     
 }

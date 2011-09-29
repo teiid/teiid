@@ -30,9 +30,10 @@ import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.BaseLob;
@@ -45,6 +46,10 @@ import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.types.XMLType;
+import org.teiid.core.types.InputStreamFactory.BlobInputStreamFactory;
+import org.teiid.core.types.InputStreamFactory.ClobInputStreamFactory;
+import org.teiid.core.types.InputStreamFactory.SQLXMLInputStreamFactory;
+import org.teiid.core.types.InputStreamFactory.StorageMode;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.symbol.Expression;
@@ -54,9 +59,57 @@ import org.teiid.query.sql.symbol.Expression;
  * TODO: for temp tables we may need to have a copy by value management strategy
  */
 public class LobManager {
-	private Map<String, Streamable<?>> lobReferences = new ConcurrentHashMap<String, Streamable<?>>();
+	
+	public enum ReferenceMode {
+		ATTACH,
+		CREATE,
+		REMOVE
+	}
+	
+	private static class LobHolder {
+		Streamable<?> lob;
+		int referenceCount = 1;
 
-	public void updateReferences(int[] lobIndexes, List<?> tuple)
+		public LobHolder(Streamable<?> lob) {
+			this.lob = lob;
+		}
+	}
+	
+	private Map<String, LobHolder> lobReferences = Collections.synchronizedMap(new HashMap<String, LobHolder>());
+	private boolean inlineLobs = true;
+	private int maxMemoryBytes = DataTypeManager.MAX_LOB_MEMORY_BYTES;
+	private int[] lobIndexes;
+	private FileStore lobStore;
+	
+	public LobManager(int[] lobIndexes, FileStore lobStore) {
+		this.lobIndexes = lobIndexes;
+		this.lobStore = lobStore;
+	}
+	
+	public LobManager clone() {
+		LobManager clone = new LobManager(lobIndexes, null);
+		clone.inlineLobs = inlineLobs;
+		clone.maxMemoryBytes = maxMemoryBytes;
+		synchronized (lobReferences) {
+			for (Map.Entry<String, LobHolder> entry : lobReferences.entrySet()) {
+				LobHolder lobHolder = new LobHolder(entry.getValue().lob);
+				lobHolder.referenceCount = entry.getValue().referenceCount;
+				clone.lobReferences.put(entry.getKey(), lobHolder);
+			}
+		}
+		return clone;
+	}
+	
+	public void setInlineLobs(boolean trackMemoryLobs) {
+		this.inlineLobs = trackMemoryLobs;
+	}
+	
+	public void setMaxMemoryBytes(int maxMemoryBytes) {
+		this.maxMemoryBytes = maxMemoryBytes;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void updateReferences(List<?> tuple, ReferenceMode mode)
 			throws TeiidComponentException {
 		for (int i = 0; i < lobIndexes.length; i++) {
 			Object anObj = tuple.get(lobIndexes[i]);
@@ -64,31 +117,64 @@ public class LobManager {
 				continue;
 			}
 			Streamable lob = (Streamable) anObj;
-			if (lob.getReference() == null) {
-				lob.setReference(getLobReference(lob.getReferenceStreamId()).getReference());
-			} else {
-				String id = lob.getReferenceStreamId();
-				this.lobReferences.put(id, lob);
+			try {
+				if (lob.getReferenceStreamId() == null || (inlineLobs 
+						&& (InputStreamFactory.getStorageMode(lob) == StorageMode.MEMORY
+						|| lob.length()*(lob instanceof ClobType?2:1) <= maxMemoryBytes))) {
+					lob.setReferenceStreamId(null);
+					continue;
+				}
+			} catch (SQLException e) {
+				//presumably the lob is bad, but let it slide for now
+			}
+			String id = lob.getReferenceStreamId();
+			LobHolder lobHolder = this.lobReferences.get(id);
+			switch (mode) {
+			case REMOVE:
+				if (lobHolder != null) {
+					lobHolder.referenceCount--;
+					if (lobHolder.referenceCount < 1) {
+						this.lobReferences.remove(id);
+					}
+				}
+				break;
+			case ATTACH:
+				if (lob.getReference() == null) {
+					if (lobHolder == null) {
+						throw new TeiidComponentException(QueryPlugin.Util.getString("ProcessWorker.wrongdata")); //$NON-NLS-1$
+					}
+					lob.setReference(lobHolder.lob.getReference());
+				}
+				break;
+			case CREATE:
+				if (lob.getReference() == null) {
+					throw new TeiidComponentException(QueryPlugin.Util.getString("ProcessWorker.wrongdata")); //$NON-NLS-1$					
+				}
+				if (lobHolder == null) {
+					this.lobReferences.put(id, new LobHolder(lob));					
+				} else {
+					lobHolder.referenceCount++;
+				}
 			}
 		}
 	}
 	
     public Streamable<?> getLobReference(String id) throws TeiidComponentException {
-    	Streamable<?> lob = this.lobReferences.get(id);
+    	LobHolder lob = this.lobReferences.get(id);
     	if (lob == null) {
     		throw new TeiidComponentException(QueryPlugin.Util.getString("ProcessWorker.wrongdata")); //$NON-NLS-1$
     	}
-    	return lob;
+    	return lob.lob;
     }
         
-    public static int[] getLobIndexes(List expressions) {
+    public static int[] getLobIndexes(List<? extends Expression> expressions) {
     	if (expressions == null) {
     		return null;
     	}
 		int[] result = new int[expressions.size()];
 		int resultIndex = 0;
 	    for (int i = 0; i < expressions.size(); i++) {
-	    	Expression expr = (Expression) expressions.get(i);
+	    	Expression expr = expressions.get(i);
 	        if (DataTypeManager.isLOB(expr.getType()) || expr.getType() == DataTypeManager.DefaultDataClasses.OBJECT) {
 	        	result[resultIndex++] = i;
 	        }
@@ -99,12 +185,12 @@ public class LobManager {
 	    return Arrays.copyOf(result, resultIndex);
     }
 
-	public void persist(FileStore lobStore) throws TeiidComponentException {
+	public void persist() throws TeiidComponentException {
 		// stream the contents of lob into file store.
-		byte[] bytes = new byte[102400]; // 100k
+		byte[] bytes = new byte[1 << 14]; 
 
-		for (Map.Entry<String, Streamable<?>> entry : this.lobReferences.entrySet()) {
-			entry.setValue(persistLob(entry.getValue(), lobStore, bytes));
+		for (Map.Entry<String, LobHolder> entry : this.lobReferences.entrySet()) {
+			entry.getValue().lob = persistLob(entry.getValue().lob, lobStore, bytes);
 		}
 	}    
     
@@ -115,7 +201,7 @@ public class LobManager {
 			try {
 				BaseLob baseLob = (BaseLob)lob.getReference();
 				InputStreamFactory isf = baseLob.getStreamFactory();
-				if (isf.isPersistent()) {
+				if (isf.getStorageMode() == StorageMode.PERSISTENT) {
 					return lob;
 				}
 			} catch (SQLException e) {
@@ -127,19 +213,15 @@ public class LobManager {
 		Streamable<?> persistedLob;
 					
 		try {
-			InputStreamFactory isf = new InputStreamFactory() {
-				@Override
-				public InputStream getInputStream() throws IOException {
-			    	if (lob instanceof BlobType) {
-			    		return new BlobInputStreamFactory((Blob)lob).getInputStream();
-			    	}
-			    	else if (lob instanceof ClobType) {
-			    		return new ClobInputStreamFactory((Clob)lob).getInputStream();
-			    	}
-			    	return new SQLXMLInputStreamFactory((SQLXML)lob).getInputStream();
-				}					
-			};
-			InputStream is = isf.getInputStream();
+			InputStream is = null;
+	    	if (lob instanceof BlobType) {
+	    		is = new BlobInputStreamFactory((Blob)lob).getInputStream();
+	    	}
+	    	else if (lob instanceof ClobType) {
+	    		is = new ClobInputStreamFactory((Clob)lob).getInputStream();
+	    	} else {
+	    		is = new SQLXMLInputStreamFactory((SQLXML)lob).getInputStream();
+	    	}
 			OutputStream fsos = store.createOutputStream();
 			length = ObjectConverterUtil.write(fsos, is, bytes, -1);
 		} catch (IOException e) {
@@ -156,8 +238,8 @@ public class LobManager {
 			}
 			
 			@Override
-			public boolean isPersistent() {
-				return true;
+			public StorageMode getStorageMode() {
+				return StorageMode.PERSISTENT;
 			}
 		};			
 		
@@ -177,5 +259,14 @@ public class LobManager {
 			throw new TeiidComponentException(e);
 		}		
 		return persistedLob;		
+	}
+	
+	public int getLobCount() {
+		return this.lobReferences.size();
+	}
+
+	public void remove() {
+		this.lobReferences.clear();
+		
 	}
 }

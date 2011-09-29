@@ -94,6 +94,7 @@ public class SortUtility {
     private String groupName;
     private List<? extends Expression> schema;
     private int schemaSize;
+    private int batchSize;
 	private ListNestedSortComparator comparator;
 
     private TupleBuffer output;
@@ -164,6 +165,7 @@ public class SortUtility {
         this.groupName = groupName;
         this.schema = schema;
         this.schemaSize = bufferManager.getSchemaSize(this.schema);
+        this.batchSize = bufferManager.getProcessorBatchSize(this.schema);
         this.comparator = new ListNestedSortComparator(cols, sortTypes);
         int distinctIndex = cols.length - 1;
         this.comparator.setDistinctIndex(distinctIndex);
@@ -226,7 +228,7 @@ public class SortUtility {
     		
             int totalReservedBuffers = 0;
             try {
-	            int maxRows = this.bufferManager.getProcessorBatchSize();
+	            int maxRows = this.batchSize;
 		        while(!doneReading) {
 		        	//attempt to reserve more working memory if there are additional rows available before blocking
 		        	if (workingTuples.size() >= maxRows) {
@@ -236,7 +238,7 @@ public class SortUtility {
 		        			break;
 		        		} 
 		        		totalReservedBuffers += reserved;
-		        		maxRows += bufferManager.getProcessorBatchSize();	
+		        		maxRows += this.batchSize;	
 		        	}
 		            try {
 		            	List<?> tuple = source.nextTuple();
@@ -249,7 +251,7 @@ public class SortUtility {
 	                    	this.collected++;
 	                    }
 		            } catch(BlockedException e) {
-		            	if (workingTuples.size() >= bufferManager.getProcessorBatchSize()) {
+		            	if (workingTuples.size() >= this.batchSize) {
 		            		break;
 		            	}
 		            	if (mode != Mode.DUP_REMOVE  

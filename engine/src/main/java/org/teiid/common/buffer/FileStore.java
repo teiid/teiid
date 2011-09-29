@@ -25,20 +25,14 @@ package org.teiid.common.buffer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.ref.PhantomReference;
-import java.lang.ref.ReferenceQueue;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.teiid.core.TeiidComponentException;
+import org.teiid.common.buffer.AutoCleanupUtil.Removable;
 
-public abstract class FileStore {
-	
-	private static ReferenceQueue<Object> QUEUE = new ReferenceQueue<Object>();
-	private static final Set<PhantomReference<Object>> REFERENCES = Collections.newSetFromMap(new IdentityHashMap<PhantomReference<Object>, Boolean>());
-	
+public abstract class FileStore implements Removable {
+		
 	/**
 	 * A customized buffered stream with an exposed buffer
 	 */
@@ -80,12 +74,8 @@ public abstract class FileStore {
 		}
 
 		private void writeDirect(byte[] b, int off, int len) throws IOException {
-			try {
-				FileStore.this.write(b, off, len);
-				bytesWritten = true;
-			} catch (TeiidComponentException e) {
-				throw new IOException(e);
-			}
+			FileStore.this.write(b, off, len);
+			bytesWritten = true;
 		}
 
 		public void flushBuffer() throws IOException {
@@ -140,84 +130,59 @@ public abstract class FileStore {
 		
 	}
 
-	static class CleanupReference extends PhantomReference<Object> {
-		
-		private FileStore store;
-		
-		public CleanupReference(Object referent, FileStore store) {
-			super(referent, QUEUE);
-			this.store = store;
-		}
-		
-		public void cleanup() {
-			try {
-				this.store.remove();
-			} finally {
-				this.clear();
-			}
-		}
-	}
+	private AtomicBoolean removed = new AtomicBoolean();
 	
-	private boolean removed;
-	protected long len;
+	public abstract long getLength();
 	
-	public void setCleanupReference(Object o) {
-		REFERENCES.add(new CleanupReference(o, this));
-		for (int i = 0; i < 10; i++) {
-			CleanupReference ref = (CleanupReference)QUEUE.poll();
-			if (ref == null) {
-				break;
-			}
-			ref.cleanup();
-			REFERENCES.remove(ref);
-		}
-	}
+	public abstract void setLength(long length) throws IOException;
 	
-	public synchronized long getLength() {
-		return len;
-	}
-		
 	public int read(long fileOffset, byte[] b, int offSet, int length)
-			throws TeiidComponentException {
-		if (removed) {
-			throw new TeiidComponentException("already removed"); //$NON-NLS-1$
+			throws IOException {
+		checkRemoved();
+		return readWrite(fileOffset, b, offSet, length, false);
+	}
+
+	private void checkRemoved() throws IOException {
+		if (removed.get()) {
+			throw new IOException("already removed"); //$NON-NLS-1$
 		}
-		return readDirect(fileOffset, b, offSet, length);
 	}
 	
-	protected abstract int readDirect(long fileOffset, byte[] b, int offSet, int length)
-			throws TeiidComponentException;
+	protected abstract int readWrite(long fileOffset, byte[] b, int offSet, int length, boolean write)
+			throws IOException;
 
-	public void readFully(long fileOffset, byte[] b, int offSet, int length) throws TeiidComponentException {
+	public void readFully(long fileOffset, byte[] b, int offSet, int length) throws IOException {
+		if (length == 0) {
+			return;
+		}
         int n = 0;
     	do {
     	    int count = this.read(fileOffset + n, b, offSet + n, length - n);
-    	    if (count < 0) {
-    	    	throw new TeiidComponentException("not enough bytes available"); //$NON-NLS-1$
+    	    if (count <= 0 && length > 0) {
+    	    	throw new IOException("not enough bytes available"); //$NON-NLS-1$
     	    }
     	    n += count;
     	} while (n < length);
 	}
 	
-	public void write(byte[] bytes) throws TeiidComponentException {
-		write(bytes, 0, bytes.length);
+	public synchronized void write(byte[] bytes, int offset, int length) throws IOException {
+		write(getLength(), bytes, offset, length);
 	}
-
-	public synchronized long write(byte[] bytes, int offset, int length) throws TeiidComponentException {
-		if (removed) {
-			throw new TeiidComponentException("already removed"); //$NON-NLS-1$
-		}
-		writeDirect(bytes, offset, length);
-		long result = len;
-		len += length;		
-		return result;
+	
+	public void write(long start, byte[] bytes, int offset, int length) throws IOException {
+        int n = 0;
+    	do {
+    		checkRemoved();
+    	    int count = this.readWrite(start + n, bytes, offset + n, length - n, true);
+    	    if (count <= 0 && length > 0) {
+    	    	throw new IOException("not enough bytes available"); //$NON-NLS-1$
+    	    }
+    	    n += count;
+    	} while (n < length);
 	}
-
-	protected abstract void writeDirect(byte[] bytes, int offset, int length) throws TeiidComponentException;
 
 	public void remove() {
-		if (!this.removed) {
-			this.removed = true;
+		if (removed.compareAndSet(false, true)) {
 			this.removeDirect();
 		}
 	}
@@ -241,27 +206,45 @@ public abstract class FileStore {
 			
 			@Override
 			public int read(byte[] b, int off, int len) throws IOException {
-				try {
-					if (this.streamLength != -1 && len > this.streamLength) {
-						len = (int)this.streamLength;
-					}
-					if (this.streamLength == -1 || this.streamLength > 0) {
-						int bytes = FileStore.this.read(offset, b, off, len);
-						if (bytes != -1) {
-							this.offset += bytes;
-							if (this.streamLength != -1) {
-								this.streamLength -= bytes;
-							}
-						}
-						return bytes;
-					}
-					return -1;
-				} catch (TeiidComponentException e) {
-					throw new IOException(e);
+				if (this.streamLength != -1 && len > this.streamLength) {
+					len = (int)this.streamLength;
 				}
+				if (this.streamLength == -1 || this.streamLength > 0) {
+					int bytes = FileStore.this.read(offset, b, off, len);
+					if (bytes != -1) {
+						this.offset += bytes;
+						if (this.streamLength != -1) {
+							this.streamLength -= bytes;
+						}
+					}
+					return bytes;
+				}
+				return -1;
 			}
 		};
 	}
+	
+    public ByteBuffer getBuffer(long start, int length, boolean allocate) throws IOException {
+    	byte[] b = new byte[length];
+    	if (!allocate) {
+    		readFully(start, b, 0, length);
+    	}
+    	return ByteBuffer.wrap(b);
+    }
+    
+    public void updateFromBuffer(ByteBuffer bb, long start) throws IOException {
+    	byte[] b = null;
+    	int offset = 0;
+    	bb.rewind();
+    	if (bb.hasArray()) {
+    		b = bb.array();
+    		offset = bb.arrayOffset();
+    	} else {
+    		b = new byte[bb.limit()];
+    		bb.get(b);
+    	}
+    	write(start, b, offset, bb.limit());
+    }
 	
 	public InputStream createInputStream(final long start) {
 		return createInputStream(start, -1);
@@ -277,16 +260,12 @@ public abstract class FileStore {
 			
 			@Override
 			public void write(byte[] b, int off, int len) throws IOException {
-				try {
-					FileStore.this.write(b, off, len);
-				} catch (TeiidComponentException e) {
-					throw new IOException(e);
-				}
+				FileStore.this.write(b, off, len);
 			}
 		};
 	}
 	
-	public  FileStoreOutputStream createOutputStream(int maxMemorySize) {
+	public FileStoreOutputStream createOutputStream(int maxMemorySize) {
 		return new FileStoreOutputStream(maxMemorySize);
 	}
 	

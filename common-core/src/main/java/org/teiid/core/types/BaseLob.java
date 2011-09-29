@@ -22,6 +22,7 @@
 
 package org.teiid.core.types;
 
+import java.io.BufferedInputStream;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -75,17 +76,8 @@ public class BaseLob implements Externalizable, StreamFactoryReference {
 		this.charset = charset;
 	}
 	
-	public void free() throws SQLException {
-		if (this.streamFactory != null) {
-			try {
-				this.streamFactory.free();
-				this.streamFactory = null;
-			} catch (IOException e) {
-				SQLException ex = new SQLException(e.getMessage());
-				ex.initCause(e);
-				throw ex;
-			}
-		}
+	public void free() {
+		this.streamFactory = null;
 	}
 	
     public Reader getCharacterStream() throws SQLException {
@@ -126,5 +118,35 @@ public class BaseLob implements Externalizable, StreamFactoryReference {
     public void writeExternal(ObjectOutput out) throws IOException {
     	out.writeObject(streamFactory);
     }
+    
+    /**
+     * Returns the number of bytes.
+     */
+    public long length() throws SQLException{
+    	if (getStreamFactory().getLength() == -1) {
+    		getStreamFactory().setLength(length(getBinaryStream()));
+    	}
+        return getStreamFactory().getLength();
+    }
+
+	static long length(InputStream is) throws SQLException {
+		if (!(is instanceof BufferedInputStream)) {
+			is = new BufferedInputStream(is);
+		}
+		try {
+			long length = 0;
+			while (is.read() != -1) {
+				length++;
+			}
+			return length;
+		} catch (IOException e) {
+			throw new SQLException(e);
+		} finally {
+			try {
+				is.close();
+			} catch (IOException e) {
+			}
+		}
+	}
 
 }

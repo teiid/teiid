@@ -127,22 +127,22 @@ public class TestElementSymbol {
 
 	@Test public void testEquals5() { 
 		ElementSymbol es = sampleElement1();
-		helpEquals(es, (ElementSymbol)es.clone(), true);
+		helpEquals(es, es.clone(), true);
 	} 
 
 	@Test public void testEquals6() { 
 		ElementSymbol es = sampleElement2();
-		helpEquals(es, (ElementSymbol)es.clone(), true);
+		helpEquals(es, es.clone(), true);
 	} 
 
 	@Test public void testEquals7() { 
 		ElementSymbol es = sampleElement3();
-		helpEquals(es, (ElementSymbol)es.clone(), true);
+		helpEquals(es, es.clone(), true);
 	} 
 	
 	@Test public void testEquals8() { 
 		ElementSymbol es = sampleElement4();
-		helpEquals(es, (ElementSymbol)es.clone(), true);
+		helpEquals(es, es.clone(), true);
 	} 
 
 	// Compare fully-qualified to short versions
@@ -190,7 +190,7 @@ public class TestElementSymbol {
 	
 	@Test public void testCloneEquivalence(){
 		ElementSymbol s1 = sampleElement1();
-		ElementSymbol s2 = (ElementSymbol)s1.clone();
+		ElementSymbol s2 = s1.clone();
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, s1, s2);
 	}
@@ -225,31 +225,31 @@ public class TestElementSymbol {
 	
 	@Test public void testClone1() { 
 		ElementSymbol e1 = sampleElement1();
-		ElementSymbol copy = (ElementSymbol) e1.clone();    		
+		ElementSymbol copy = e1.clone();    		
 		helpEquals(e1, copy, true);
 	}
 
 	@Test public void testClone2() { 
 		ElementSymbol e1 = sampleElement2();
-		ElementSymbol copy = (ElementSymbol) e1.clone();    		
+		ElementSymbol copy = e1.clone();    		
 		helpEquals(e1, copy, true);
 	}
 
 	@Test public void testClone3() { 
 		ElementSymbol e1 = sampleElement3();
-		ElementSymbol copy = (ElementSymbol) e1.clone();    		
+		ElementSymbol copy = e1.clone();    		
 		helpEquals(e1, copy, true);
 	}
 
 	@Test public void testClone4() { 
 		ElementSymbol e1 = sampleElement4();
-		ElementSymbol copy = (ElementSymbol) e1.clone();    		
+		ElementSymbol copy = e1.clone();    		
 		helpEquals(e1, copy, true);
 	}
 	
 	@Test public void testClone5() {
 		ElementSymbol e1 = sampleElement1();
-		ElementSymbol copy = (ElementSymbol) e1.clone();    		
+		ElementSymbol copy = e1.clone();    		
 		helpEquals(e1, copy, true);
 		
 		// Change original, clone shouldn't change

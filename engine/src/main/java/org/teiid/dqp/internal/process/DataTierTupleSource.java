@@ -398,7 +398,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 			fullyCloseSource();
 		}
     	if(workItem.requestMsg.supportsPartialResults()) {
-			AtomicResultsMessage emptyResults = new AtomicResultsMessage(new List[0], null);
+			AtomicResultsMessage emptyResults = new AtomicResultsMessage(new List[0]);
 			emptyResults.setWarnings(Arrays.asList((Exception)exception));
 			emptyResults.setFinalRow(this.rowsProcessed);
 			return emptyResults;

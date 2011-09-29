@@ -31,7 +31,7 @@ import org.teiid.query.util.CommandContext;
 
 public class SecuritySystemFunctions {
 
-    public static boolean hasRole(CommandContext context, Object roleName) throws FunctionExecutionException {
+    public static boolean hasRole(CommandContext context, String roleName) throws FunctionExecutionException {
         SecurityFunctionEvaluator eval = context.getSecurityFunctionEvaluator();
         
         if (eval == null) {
@@ -39,13 +39,13 @@ public class SecuritySystemFunctions {
         }
         
         try {
-            return eval.hasRole(SecurityFunctionEvaluator.DATA_ROLE, (String)roleName);
+            return eval.hasRole(SecurityFunctionEvaluator.DATA_ROLE, roleName);
         } catch (TeiidComponentException err) {
             throw new FunctionExecutionException(err, err.getMessage());
         }
     }
 	
-    public static boolean hasRole(CommandContext context, Object roleType, Object roleName) throws FunctionExecutionException {
+    public static boolean hasRole(CommandContext context, String roleType, String roleName) throws FunctionExecutionException {
         
         SecurityFunctionEvaluator eval = context.getSecurityFunctionEvaluator();
         
@@ -54,7 +54,7 @@ public class SecuritySystemFunctions {
         }
         
         try {
-            return eval.hasRole((String)roleType, (String)roleName);
+            return eval.hasRole(roleType, roleName);
         } catch (TeiidComponentException err) {
             throw new FunctionExecutionException(err, err.getMessage());
         }

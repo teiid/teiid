@@ -189,4 +189,29 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 			}
 		}
 	}
+	
+	@Override
+	long computeLength() throws SQLException {
+        if (this.reference instanceof SQLXMLImpl) {
+        	SQLXMLImpl impl = (SQLXMLImpl)this.reference;
+        	return impl.length();
+        }
+        return BaseLob.length(getBinaryStream());
+    }
+	
+	@Override
+	protected void readReference(ObjectInput in) throws IOException {
+		byte[] bytes = new byte[(int)getLength()];
+		in.readFully(bytes);
+		this.reference = new SQLXMLImpl(bytes);
+	}
+	
+	@Override
+	protected void writeReference(final ObjectOutput out) throws IOException {
+		try {
+			BlobType.writeBinary(out, getBinaryStream(), (int)length);
+		} catch (SQLException e) {
+			throw new IOException();
+		}
+	}
 }

@@ -23,7 +23,6 @@ package org.teiid.dqp.internal.process;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
@@ -33,8 +32,8 @@ import org.junit.Test;
 import org.teiid.cache.Cache;
 import org.teiid.cache.DefaultCache;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.BufferManagerFactory;
-import org.teiid.common.buffer.TestTupleBuffer.FakeBatchManager;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
@@ -62,7 +61,7 @@ public class TestCachedResults {
 		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
 		x.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 		List<ElementSymbol> schema = Arrays.asList(x);
-		TupleBuffer tb = new TupleBuffer(new FakeBatchManager(), "x", schema, null, 4); //$NON-NLS-1$ 
+		TupleBuffer tb = BufferManagerFactory.getStandaloneBufferManager().createTupleBuffer(schema, "x", TupleSourceType.PROCESSOR); //$NON-NLS-1$ 
 		tb.setForwardOnly(false);
 		
 		tb.addTuple(Arrays.asList(1));	

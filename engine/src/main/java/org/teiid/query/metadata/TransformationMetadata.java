@@ -105,6 +105,11 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 			} catch (IOException e) {
 			}
 		}
+		
+		@Override
+		public StorageMode getStorageMode() {
+			return StorageMode.PERSISTENT;
+		}
 	}
 
 	public static class Resource {

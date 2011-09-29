@@ -126,22 +126,39 @@ public class DataTypeManager {
 		}
 	}
 	
-	private static Map<Class<?>, ValueCache<?>> valueMaps = new HashMap<Class<?>, ValueCache<?>>(128);
-	private static HashedValueCache<String> stringCache = new HashedValueCache<String>(17) {
+	public static class WeakReferenceHashedValueCache<T> extends HashedValueCache<T> {
+		
+		public WeakReferenceHashedValueCache(int size) {
+			super(size);
+		}
+		
+		public T getByHash(Object obj) {
+			int index = hash(obj.hashCode()) & (cache.length - 1);
+	    	return get(index);
+		}
 		
 		@Override
-		protected Object get(int index) {
-			WeakReference<?> ref = (WeakReference<?>) cache[index];
+		protected T get(int index) {
+			WeakReference<T> ref = (WeakReference<T>) cache[index];
 			if (ref != null) {
-				return ref.get();
+				T result = ref.get();
+				if (result == null) {
+					cache[index] = null;
+				}
+				return result;
 			}
 			return null;
 		}
 		
 		@Override
-		protected void set(int index, String value) {
-			cache[index] = new WeakReference<Object>(value);
-		}
+		protected void set(int index, T value) {
+			cache[index] = new WeakReference<T>(value);
+		}		
+		
+	}
+	
+	private static Map<Class<?>, ValueCache<?>> valueMaps = new HashMap<Class<?>, ValueCache<?>>(128);
+	private static HashedValueCache<String> stringCache = new WeakReferenceHashedValueCache<String>(17) {
 		
 		@Override
 		protected int primaryHash(String value) {
@@ -536,21 +553,7 @@ public class DataTypeManager {
 			valueMaps.put(DefaultDataClasses.DATE, new HashedValueCache<Date>(14));
 			valueMaps.put(DefaultDataClasses.TIME, new HashedValueCache<Time>(14));
 			valueMaps.put(DefaultDataClasses.TIMESTAMP, new HashedValueCache<Timestamp>(14));
-			valueMaps.put(DefaultDataClasses.BIG_DECIMAL, new HashedValueCache<BigDecimal>(16) {
-				@Override
-				protected Object get(int index) {
-					WeakReference<?> ref = (WeakReference<?>) cache[index];
-					if (ref != null) {
-						return ref.get();
-					}
-					return null;
-				}
-				
-				@Override
-				protected void set(int index, BigDecimal value) {
-					cache[index] = new WeakReference<BigDecimal>(value);
-				}
-			});
+			valueMaps.put(DefaultDataClasses.BIG_DECIMAL, new WeakReferenceHashedValueCache<BigDecimal>(16));
 			valueMaps.put(DefaultDataClasses.STRING, stringCache);
 		}
 	}

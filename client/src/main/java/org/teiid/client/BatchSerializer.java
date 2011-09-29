@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -75,23 +76,23 @@ public class BatchSerializer {
      * @throws IOException
      * @since 4.2
      */
-    static void writeIsNullData(ObjectOutput out, int col, List[] batch) throws IOException {
-        int numBytes = batch.length / 8, row = 0, currentByte = 0;
+    static void writeIsNullData(ObjectOutput out, int col, List<? extends List<?>> batch) throws IOException {
+        int numBytes = batch.size() / 8, row = 0, currentByte = 0;
         for (int byteNum = 0; byteNum < numBytes; byteNum++, row+=8) {
-            currentByte  = (batch[row].get(col) == null) ? 0x80 : 0;
-            if (batch[row+1].get(col) == null) currentByte |= 0x40;
-            if (batch[row+2].get(col) == null) currentByte |= 0x20;
-            if (batch[row+3].get(col) == null) currentByte |= 0x10;
-            if (batch[row+4].get(col) == null) currentByte |= 0x08;
-            if (batch[row+5].get(col) == null) currentByte |= 0x04;
-            if (batch[row+6].get(col) == null) currentByte |= 0x02;
-            if (batch[row+7].get(col) == null) currentByte |= 0x01;
+            currentByte  = (batch.get(row).get(col) == null) ? 0x80 : 0;
+            if (batch.get(row+1).get(col) == null) currentByte |= 0x40;
+            if (batch.get(row+2).get(col) == null) currentByte |= 0x20;
+            if (batch.get(row+3).get(col) == null) currentByte |= 0x10;
+            if (batch.get(row+4).get(col) == null) currentByte |= 0x08;
+            if (batch.get(row+5).get(col) == null) currentByte |= 0x04;
+            if (batch.get(row+6).get(col) == null) currentByte |= 0x02;
+            if (batch.get(row+7).get(col) == null) currentByte |= 0x01;
             out.write(currentByte);
         }
-        if (batch.length % 8 > 0) {
+        if (batch.size() % 8 > 0) {
             currentByte = 0;
-            for (int mask = 0x80; row < batch.length; row++, mask >>= 1) {
-                if (batch[row].get(col) == null) currentByte |= mask;
+            for (int mask = 0x80; row < batch.size(); row++, mask >>= 1) {
+                if (batch.get(row).get(col) == null) currentByte |= mask;
             }
             out.write(currentByte);
         }
@@ -126,22 +127,22 @@ public class BatchSerializer {
      * @since 4.2
      */
     private static class ColumnSerializer {
-        public void writeColumn(ObjectOutput out, int col, List[] batch) throws IOException {
+        public void writeColumn(ObjectOutput out, int col, List<? extends List<?>> batch) throws IOException {
             writeIsNullData(out, col, batch);
             Object obj = null;
-            for (int i = 0; i < batch.length; i++) {
-                obj = batch[i].get(col);
+            for (int i = 0; i < batch.size(); i++) {
+                obj = batch.get(i).get(col);
                 if (obj != null) {
                     writeObject(out, obj);
                 }
             }
         }
         
-        public void readColumn(ObjectInput in, int col, List[] batch, byte[] isNull) throws IOException, ClassNotFoundException {
+        public void readColumn(ObjectInput in, int col, List<List<Object>> batch, byte[] isNull) throws IOException, ClassNotFoundException {
             readIsNullData(in, isNull);
-            for (int i = 0; i < batch.length; i++) {
+            for (int i = 0; i < batch.size(); i++) {
                 if (!isNullObject(isNull, i)) {
-                    batch[i].set(col, DataTypeManager.getCanonicalValue(readObject(in)));
+                    batch.get(i).set(col, DataTypeManager.getCanonicalValue(readObject(in)));
                 }
             }
         }
@@ -203,13 +204,14 @@ public class BatchSerializer {
         /* This implementation compacts the isNull and boolean data for non-null values into a byte[]
          * by using a 8 bit mask that is bit-shifted to mask each value.
          */
-        public void writeColumn(ObjectOutput out, int col, List[] batch) throws IOException {
+    	@Override
+        public void writeColumn(ObjectOutput out, int col, List<? extends List<?>> batch) throws IOException {
             int currentByte = 0;
             int mask = 0x80;
             Object obj;
-            for (int row = 0; row < batch.length; row++) {
+            for (int row = 0; row < batch.size(); row++) {
                 // Write the isNull value
-                obj = batch[row].get(col);
+                obj = batch.get(row).get(col);
                 if (obj == null ) {
                     currentByte |= mask;
                 }
@@ -241,10 +243,13 @@ public class BatchSerializer {
             }
         }
         
-        public void readColumn(ObjectInput in, int col, List[] batch, byte[] isNull) throws IOException, ClassNotFoundException {
+        @Override
+        public void readColumn(ObjectInput in, int col,
+        		List<List<Object>> batch, byte[] isNull) throws IOException,
+        		ClassNotFoundException {
             int currentByte = 0, mask = 0; // Initialize the mask so that it is reset in the loop
             boolean isNullVal;
-            for (int row = 0; row < batch.length; row++) {
+            for (int row = 0; row < batch.size(); row++) {
                 if (mask == 0) {
                     // If we used up the byte, read the next one, and reset the mask
                     currentByte = in.read();
@@ -257,7 +262,7 @@ public class BatchSerializer {
                         currentByte = in.read();
                         mask = 0x80;
                     }
-                    batch[row].set(col, ((currentByte & mask) == 0) ? Boolean.FALSE : Boolean.TRUE);
+                    batch.get(row).set(col, ((currentByte & mask) == 0) ? Boolean.FALSE : Boolean.TRUE);
                     mask >>= 1;
                 }
             }
@@ -354,17 +359,12 @@ public class BatchSerializer {
         return cs;
     }
     
-    public static void writeBatch(ObjectOutput out, String[] types, List[] batch) throws IOException {
-        // If there are no type hints, simply use the default mechanism to serialize
-        if (types == null || types.length == 0) {
-            out.writeObject(batch);
-            return;
-        }
+    public static void writeBatch(ObjectOutput out, String[] types, List<? extends List<?>> batch) throws IOException {
         if (batch == null) {
             out.writeInt(-1);
         } else {
-            out.writeInt(batch.length);
-            if (batch.length > 0) {
+            out.writeInt(batch.size());
+            if (batch.size() > 0) {
 	            int columns = types.length;
 	            out.writeInt(columns);
 	            for(int i = 0; i < columns; i++) {
@@ -374,8 +374,8 @@ public class BatchSerializer {
 	                } catch (ClassCastException e) {
 	                    Object obj = null;
 	                    String objectClass = null;
-	                    objectSearch: for (int row = 0; row < batch.length; row++) {
-	                        obj = batch[row].get(i);
+	                    objectSearch: for (int row = 0; row < batch.size(); row++) {
+	                        obj = batch.get(row).get(i);
 	                        if (obj != null) {
 	                            objectClass = obj.getClass().getName();
 	                            break objectSearch;
@@ -388,21 +388,17 @@ public class BatchSerializer {
         }
     }
     
-    public static List[] readBatch(ObjectInput in, String[] types) throws IOException, ClassNotFoundException {
-        // If there are no type hints, use the default mechanism to deserialize
-        if (types == null || types.length == 0) {
-            return (List[])in.readObject();
-        }
+    public static List<List<Object>> readBatch(ObjectInput in, String[] types) throws IOException, ClassNotFoundException {
         int rows = in.readInt();
         if (rows == 0) {
-            return new List[0];
+            return new ArrayList<List<Object>>(0);
         } else if (rows > 0) {
             int columns = in.readInt();
-            List[] batch = new List[rows];
+            List<List<Object>> batch = new ArrayList<List<Object>>(rows);
             int numBytes = rows/8;
             int extraRows = rows % 8;
             for (int currentRow = 0; currentRow < rows; currentRow++) {
-                batch[currentRow] = Arrays.asList(new Object[columns]);
+                batch.add(currentRow, Arrays.asList(new Object[columns]));
             }
             byte[] isNullBuffer = new byte[(extraRows > 0) ? numBytes + 1: numBytes];
             for (int col = 0; col < columns; col++) {

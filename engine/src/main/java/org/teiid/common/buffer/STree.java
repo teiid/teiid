@@ -27,15 +27,16 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.teiid.client.BatchSerializer;
+import org.teiid.common.buffer.LobManager.ReferenceMode;
 import org.teiid.common.buffer.SPage.SearchResult;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
@@ -51,23 +52,23 @@ public class STree implements Cloneable {
 	
 	public enum InsertMode {ORDERED, NEW, UPDATE}
 
-	private static final Random seedGenerator = new Random();
+	private static final Random seedGenerator = new Random(0);
 
 	protected int randomSeed;
 	private int mask = 1;
 	private int shift = 1;
 
-	protected AtomicInteger counter = new AtomicInteger();
-    protected ConcurrentHashMap<Integer, SPage> pages = new ConcurrentHashMap<Integer, SPage>();
+    protected HashMap<Long, SPage> pages = new HashMap<Long, SPage>();
 	protected volatile SPage[] header = new SPage[] {new SPage(this, true)};
     protected BatchManager keyManager;
     protected BatchManager leafManager;
     protected ListNestedSortComparator comparator;
-    protected int pageSize;
+    private int pageSize;
+    protected int leafSize;
     protected int keyLength;
-    protected String[] types;
-    protected String[] keytypes;
-    protected boolean preferMemory;
+	protected boolean batchInsert;
+	protected SPage incompleteInsert;
+	protected LobManager lobManager;
     
     protected ReentrantLock updateLock = new ReentrantLock();
     
@@ -77,10 +78,12 @@ public class STree implements Cloneable {
 			BatchManager leafManager,
             final ListNestedSortComparator comparator,
             int pageSize,
+            int leafSize,
             int keyLength,
-            String[] types) {
+            LobManager lobManager) {
 		randomSeed = seedGenerator.nextInt() | 0x00000100; // ensure nonzero
 		this.keyManager = manager;
+		manager.setPrefersMemory(true);
 		this.leafManager = leafManager;
 		this.comparator = comparator;
 		this.pageSize = Math.max(pageSize, SPage.MIN_PERSISTENT_SIZE);
@@ -91,24 +94,27 @@ public class STree implements Cloneable {
 			mask <<= 1;
 			mask++;
 		}
+		this.leafSize = leafSize;
 		this.keyLength = keyLength;
-		this.types = types;
-		this.keytypes = Arrays.copyOf(types, keyLength);
+		this.lobManager = lobManager;
 	}
 	
 	public STree clone() {
 		updateLock.lock();
 		try {
 			STree clone = (STree) super.clone();
+			if (lobManager != null) {
+				clone.lobManager = lobManager.clone();
+			}
 			clone.updateLock = new ReentrantLock();
 			clone.rowCount = new AtomicInteger(rowCount.get());
 			//clone the pages
-			clone.pages = new ConcurrentHashMap<Integer, SPage>(pages);
-			for (Map.Entry<Integer, SPage> entry : clone.pages.entrySet()) {
+			clone.pages = new HashMap<Long, SPage>(pages);
+			for (Map.Entry<Long, SPage> entry : clone.pages.entrySet()) {
 				entry.setValue(entry.getValue().clone(clone));
 			}
 			//reset the pointers
-			for (Map.Entry<Integer, SPage> entry : clone.pages.entrySet()) {
+			for (Map.Entry<Long, SPage> entry : clone.pages.entrySet()) {
 				SPage clonePage = entry.getValue();
 				clonePage.next = clone.getPage(clonePage.next);
 				clonePage.prev = clone.getPage(clonePage.prev);
@@ -141,23 +147,41 @@ public class STree implements Cloneable {
 		SPage page = header[0];
 		oos.writeInt(this.rowCount.get());
 		while (true) {
-			TupleBatch batch = page.getValues();
-			BatchSerializer.writeBatch(oos, types, batch.getAllTuples());
+			List<List<?>> batch = page.getValues();
+			BatchSerializer.writeBatch(oos, leafManager.getTypes(), batch);
 			if (page.next == null) {
 				break;
 			}
 		}
 	}
 	
+	public void setBatchInsert(boolean batchInsert) throws TeiidComponentException {
+		if (this.batchInsert == batchInsert) {
+			return;
+		}
+		this.batchInsert = batchInsert;
+		if (batchInsert || incompleteInsert == null) {
+			return;
+		}
+		SPage toFlush = incompleteInsert;
+		incompleteInsert = null;
+		if (toFlush.managedBatch != null) {
+			return;
+		}
+		toFlush.setValues(toFlush.getValues());
+	}
+	
 	public void readValuesFrom(ObjectInputStream ois) throws IOException, ClassNotFoundException, TeiidComponentException {
 		int size = ois.readInt();
 		int sizeHint = this.getExpectedHeight(size);
+		batchInsert = true;
 		while (this.getRowCount() < size) {
-			List[] batch = BatchSerializer.readBatch(ois, types);
+			List<List<Object>> batch = BatchSerializer.readBatch(ois, leafManager.getTypes());
 			for (List list : batch) {
 				this.insert(list, InsertMode.ORDERED, sizeHint);
 			}
 		}
+		batchInsert = false;
 	}
 	
 	protected SPage findChildTail(SPage page) {
@@ -219,7 +243,7 @@ public class STree implements Cloneable {
 			if (places != null) {
 				places.add(s);
 			}
-			if ((s.index == -1 && s.page == header[i]) || s.values.getTuples().isEmpty()) {
+			if ((s.index == -1 && s.page == header[i]) || s.values.isEmpty()) {
 				x = null;
 				continue; //start at the beginning of the next level
 			}
@@ -234,7 +258,7 @@ public class STree implements Cloneable {
 				if (!matched) {
 					return null;
 				}
-				return s.values.getTuples().get(index);
+				return s.values.get(index);
 			}
 			x = x.children.get(index);
 		}
@@ -248,13 +272,16 @@ public class STree implements Cloneable {
 	public List insert(List tuple, InsertMode mode, int sizeHint) throws TeiidComponentException {
 		LinkedList<SearchResult> places = new LinkedList<SearchResult>();
 		List match = null;
+		if (this.lobManager != null) {
+			this.lobManager.updateReferences(tuple, ReferenceMode.CREATE);
+		}
 		if (mode == InsertMode.ORDERED) {
 			SPage last = null;
 			while (last == null || last.children != null) {
 				last = findChildTail(last);
 				//TODO: do this lazily
-				TupleBatch batch = last.getValues();
-				places.add(new SearchResult(-batch.getTuples().size() -1, last, batch));
+				List<List<?>> batch = last.getValues();
+				places.add(new SearchResult(-batch.size() -1, last, batch));
 			}
 		} else {
 			match = find(tuple, places);
@@ -264,8 +291,11 @@ public class STree implements Cloneable {
 				}
 				SearchResult last = places.getLast();
 				SPage page = last.page;
-				last.values.getTuples().set(last.index, tuple);
+				last.values.set(last.index, tuple);
 				page.setValues(last.values);
+				if (this.lobManager != null) {
+					this.lobManager.updateReferences(tuple, ReferenceMode.REMOVE);
+				}
 				return match;
 			}
 		}
@@ -277,10 +307,10 @@ public class STree implements Cloneable {
 			} else {
 				level = randomLevel();
 			}
-		} else if (!places.isEmpty() && places.getLast().values.getTuples().size() == pageSize) {
+		} else if (!places.isEmpty() && places.getLast().values.size() == getPageSize(true)) {
 			int row = rowCount.get();
-			while (row != 0 && row%pageSize == 0) {
-				row = (row - pageSize + 1)/pageSize;
+			while (row != 0 && row%getPageSize(true) == 0) {
+				row = (row - getPageSize(true) + 1)/getPageSize(true);
 				level++;
 			}
 		}
@@ -293,8 +323,8 @@ public class STree implements Cloneable {
 		for (int i = 0; i <= level; i++) {
 			if (places.isEmpty()) {
 				SPage newHead = new SPage(this, false);
-				TupleBatch batch = newHead.getValues();
-				batch.getTuples().add(key);
+				List<List<?>> batch = newHead.getValues();
+				batch.add(key);
 				newHead.setValues(batch);
 				newHead.children.add(page);
 				header[i] = newHead;
@@ -313,9 +343,9 @@ public class STree implements Cloneable {
 			return 0;
 		}
 		int logSize = 1;
-		while (sizeHint > this.pageSize) {
+		while (sizeHint > this.getPageSize(logSize==0)) {
 			logSize++;
-			sizeHint/=this.pageSize;
+			sizeHint/=this.getPageSize(logSize==0);
 		}
 		return logSize;
 	}
@@ -330,10 +360,10 @@ public class STree implements Cloneable {
 	SPage insert(List k, SearchResult result, SearchResult parent, Object value, boolean ordered) throws TeiidComponentException {
 		SPage page = result.page;
 		int index = -result.index - 1;
-		if (result.values.getTuples().size() == pageSize) {
-			boolean leaf = !(value instanceof SPage);
+		boolean leaf = !(value instanceof SPage);
+		if (result.values.size() == getPageSize(leaf)) {
 			SPage nextPage = new SPage(this, leaf);
-			TupleBatch nextValues = nextPage.getValues();
+			List<List<?>> nextValues = nextPage.getValues();
 			nextPage.next = page.next;
 			nextPage.prev = page;
 			if (nextPage.next != null) {
@@ -343,21 +373,21 @@ public class STree implements Cloneable {
 			boolean inNext = false;
 			if (!ordered) {
 				//split the values
-				nextValues.getTuples().addAll(result.values.getTuples().subList(pageSize/2, pageSize));
-				result.values.getTuples().subList(pageSize/2, pageSize).clear();
+				nextValues.addAll(result.values.subList(getPageSize(leaf)/2, getPageSize(leaf)));
+				result.values.subList(getPageSize(leaf)/2, getPageSize(leaf)).clear();
 				if (!leaf) {
-					nextPage.children.addAll(page.children.subList(pageSize/2, pageSize));
-					page.children.subList(pageSize/2, pageSize).clear();
+					nextPage.children.addAll(page.children.subList(getPageSize(leaf)/2, getPageSize(false)));
+					page.children.subList(getPageSize(false)/2, getPageSize(false)).clear();
 				}
-				if (index <= pageSize/2) {
+				if (index <= getPageSize(leaf)/2) {
 					setValue(index, k, value, result.values, page);
 				} else {
 					inNext = true;
-					setValue(index - pageSize/2, k, value, nextValues, nextPage);
+					setValue(index - getPageSize(leaf)/2, k, value, nextValues, nextPage);
 				}
 				page.setValues(result.values);
 				if (parent != null) {
-					List min = nextPage.getValues().getTuples().get(0);
+					List min = nextPage.getValues().get(0);
 					SPage.correctParents(parent.page, min, page, nextPage);
 				}
 			} else {
@@ -375,12 +405,12 @@ public class STree implements Cloneable {
 		return page;
 	}
 	
-	static void setValue(int index, List key, Object value, TupleBatch values, SPage page) {
+	static void setValue(int index, List key, Object value, List<List<?>> values, SPage page) {
 		if (value instanceof SPage) {
-			values.getTuples().add(index, key);
+			values.add(index, key);
 			page.children.add(index, (SPage) value);
 		} else {
-			values.getTuples().add(index, (List)value);
+			values.add(index, (List)value);
 		}
 	}
 	
@@ -396,11 +426,13 @@ public class STree implements Cloneable {
 			if (searchResult.index < 0) {
 				continue;
 			}
-			searchResult.values.getTuples().remove(searchResult.index);
+			searchResult.values.remove(searchResult.index);
+			boolean leaf = true;
 			if (searchResult.page.children != null) {
+				leaf = false;
 				searchResult.page.children.remove(searchResult.index);
 			}
-			int size = searchResult.values.getTuples().size();
+			int size = searchResult.values.size();
 			if (size == 0) {
 				if (header[i] != searchResult.page) {
 					searchResult.page.remove(false);
@@ -424,18 +456,18 @@ public class STree implements Cloneable {
 					header[0] = new SPage(this, true);
 				}
 				continue;
-			} else if (size < pageSize/2) {
+			} else if (size < getPageSize(leaf)/2) {
 				//check for merge
 				if (searchResult.page.next != null) {
-					TupleBatch nextValues = searchResult.page.next.getValues();
-					if (nextValues.getTuples().size() < pageSize/4) {
+					List<List<?>> nextValues = searchResult.page.next.getValues();
+					if (nextValues.size() < getPageSize(leaf)/4) {
 						SPage.merge(places, nextValues, searchResult.page, searchResult.values);
 						continue;
 					}
 				}
 				if (searchResult.page.prev != null) {
-					TupleBatch prevValues = searchResult.page.prev.getValues();
-					if (prevValues.getTuples().size() < pageSize/4) {
+					List<List<?>> prevValues = searchResult.page.prev.getValues();
+					if (prevValues.size() < getPageSize(leaf)/4) {
 						SPage.merge(places, searchResult.values, searchResult.page.prev, prevValues);
 						continue;
 					}
@@ -443,11 +475,14 @@ public class STree implements Cloneable {
 			}
 			searchResult.page.setValues(searchResult.values);
 		}
+		if (lobManager != null) {
+			lobManager.updateReferences(tuple, ReferenceMode.REMOVE);
+		}
 		return tuple;
 	}
 	
 	public void remove() {
-		truncate(false);
+		truncate(true);
 		this.keyManager.remove();
 		this.leafManager.remove();
 	}
@@ -494,11 +529,11 @@ public class STree implements Cloneable {
 	}
 	
 	public void setPreferMemory(boolean preferMemory) {
-		this.preferMemory = preferMemory;
+		this.leafManager.setPrefersMemory(preferMemory);
 	}
 	
 	public boolean isPreferMemory() {
-		return preferMemory;
+		return this.leafManager.prefersMemory();
 	}
 	
 	public ListNestedSortComparator getComparator() {
@@ -530,4 +565,26 @@ public class STree implements Cloneable {
 		this.comparator.setSortParameters(sortParameters);
 	}
 	
+	public void clearClonedFlags() {
+		for (SPage page : pages.values()) {
+			page.trackingObject = null;
+			//we don't really care about using synchronization or a volatile here
+			//since the worst case is that we'll just use gc cleanup
+		}
+	}
+	
+	public int getPageSize(boolean leaf) {
+		if (leaf) {
+			return leafSize;
+		}
+		return pageSize;
+	}
+	
+	BatchManager getBatchManager(boolean leaf) {
+		if (leaf) {
+			return leafManager;
+		}
+		return keyManager;
+	}
+
 }

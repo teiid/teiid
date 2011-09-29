@@ -82,7 +82,7 @@ public class TempTableStore {
     public class TempTableSynchronization implements Synchronization {
     	
     	private String id;
-    	Set<Integer> existingTables = new HashSet<Integer>();
+    	Set<Long> existingTables = new HashSet<Long>();
     	ConcurrentHashMap<String, TempTable> tables = new ConcurrentHashMap<String, TempTable>();
         private List<TransactionCallback> callbacks = new LinkedList<TransactionCallback>();
     	        
@@ -131,10 +131,21 @@ public class TempTableStore {
     	
     	@Override
     	public synchronized void afterCompletion(int status) {
-    		//TODO: cleanup tables
     		completed = true;
     		synchronizations.remove(id);
-    		for (TransactionCallback callback : callbacks) {
+    		if (transactionMode == TransactionMode.ISOLATE_READS) {
+				for (TempTable table : tables.values()) {
+					table.getActive().decrementAndGet();
+				}
+    		} else {
+    			HashSet<TempTable> current = new HashSet<TempTable>(tempTables.values());
+    			current.retainAll(tables.values());
+				for (TempTable table : current) {
+					table.getActive().set(0);
+					table.getTree().clearClonedFlags();
+				}
+    		}
+			for (TransactionCallback callback : callbacks) {
         		if (status == Status.STATUS_COMMITTED) {
         			callback.commit();
         		} else {
@@ -143,6 +154,10 @@ public class TempTableStore {
 			}
     		callbacks.clear();
     	}
+    	
+    	public boolean isCompleted() {
+			return completed;
+		}
     	
     	@Override
     	public void beforeCompletion() {
@@ -307,11 +322,21 @@ public class TempTableStore {
         				if (synch != null && synch.existingTables.contains(tempTable.getId())) {
         					TempTable result = synch.tables.get(tempTableID);
         					if (result == null) {
-        						synch.tables.put(tempTableID, tempTable.clone());
+        						synchronized (synch) {
+									if (synch.isCompleted()) {
+										throw new AssertionError("Expected active transaction"); //$NON-NLS-1$
+									}
+	        						if (!tempTable.getActive().compareAndSet(0, 1)) {
+	        	    					throw new TeiidProcessingException(QueryPlugin.Util.getString("TempTableStore.pending_update", tempTableID)); //$NON-NLS-1$ 
+	        	    				}
+	        						synch.tables.put(tempTableID, tempTable.clone());
+								}
         					}
         					return tempTable;
         				}
-        			}	
+        			} else if (tempTable.getActive().get() != 0) {
+        				throw new TeiidProcessingException(QueryPlugin.Util.getString("TempTableStore.pending_update", tempTableID)); //$NON-NLS-1$
+    				}
     			}
     		} else if (transactionMode == TransactionMode.ISOLATE_READS) {
     			TransactionContext tc = context.getTransactionContext();
@@ -320,24 +345,13 @@ public class TempTableStore {
     				if (synch != null) {
     					TempTable result = synch.tables.get(tempTableID);
     					if (result == null) {
-    						synch.tables.put(tempTableID, tempTable);
     						result = tempTable;
-    						result.getActiveReaders().getAndIncrement();
-        					TransactionCallback callback = new TransactionCallback() {
-    							
-    							@Override
-    							public void rollback() {
-    								tempTable.getActiveReaders().getAndDecrement();
-    							}
-    							
-    							@Override
-    							public void commit() {
-    								tempTable.getActiveReaders().getAndDecrement();
-    							}
-    						};
-    						if (!synch.addCallback(callback)) {
-        						callback.rollback();
-        					}
+    						synchronized (synch) {
+								if (!synch.isCompleted()) {
+									synch.tables.put(tempTableID, tempTable);
+									result.getActive().getAndIncrement();
+								}
+							}
     					}
     					return result;
     				}

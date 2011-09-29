@@ -25,6 +25,7 @@ package org.teiid.dqp.internal.process;
 import static org.junit.Assert.*;
 
 import java.sql.ResultSet;
+import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -35,6 +36,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.adminapi.DataPolicy;
+import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.DefaultCacheFactory;
@@ -104,6 +107,9 @@ public class TestDQPCore {
         DQPWorkContext context = RealMetadataFactory.buildWorkContext(RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.exampleBQTCached().getMetadataStore(), "bqt"));
         context.getVDB().getModel("BQT3").setVisible(false); //$NON-NLS-1$
         context.getVDB().getModel("VQT").setVisible(false); //$NON-NLS-1$
+        HashMap<String, DataPolicy> policies = new HashMap<String, DataPolicy>();
+        policies.put("foo", new DataPolicyMetadata());
+        context.setPolicies(policies);
 
         ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
         context.getVDB().addAttchment(ConnectorManagerRepository.class, repo);
@@ -112,7 +118,9 @@ public class TestDQPCore {
 			
 			@Override
 			public BufferManager getBufferManager() {
-				return BufferManagerFactory.createBufferManager();
+				BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
+				bm.setInlineLobs(false);
+				return bm;
 			}
 		};
         core = new DQPCore();
@@ -124,6 +132,9 @@ public class TestDQPCore {
         config = new DQPConfiguration();
         config.setMaxActivePlans(1);
         config.setUserRequestSourceConcurrency(2);
+        DefaultAuthorizationValidator daa = new DefaultAuthorizationValidator();
+        daa.setPolicyDecider(new DataRolePolicyDecider());
+        config.setAuthorizationValidator(daa);
         core.start(config);
         core.getPrepPlanCache().setModTime(1);
         core.getRsCache().setBufferManager(bs.getBufferManager());
@@ -150,6 +161,20 @@ public class TestDQPCore {
 
     @Test public void testRequest1() throws Exception {
     	helpExecute("SELECT IntKey FROM BQT1.SmallA", "a"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testHasRole() throws Exception {
+        String sql = "SELECT hasRole('foo')"; //$NON-NLS-1$
+        String userName = "logon"; //$NON-NLS-1$
+        ResultsMessage rm = helpExecute(sql, userName);
+        assertTrue((Boolean)rm.getResults()[0].get(0));
+    }
+    
+    @Test public void testNotHasRole() throws Exception {
+        String sql = "SELECT hasRole('bar')"; //$NON-NLS-1$
+        String userName = "logon"; //$NON-NLS-1$
+        ResultsMessage rm = helpExecute(sql, userName);
+        assertFalse((Boolean)rm.getResults()[0].get(0));
     }
 
     @Test public void testUser1() throws Exception {
@@ -277,8 +302,8 @@ public class TestDQPCore {
 	}
 	
     @Test public void testBufferLimit() throws Exception {
-    	//the sql should return 100 rows
-        String sql = "SELECT A.IntKey FROM BQT1.SmallA as A, BQT1.SmallA as B"; //$NON-NLS-1$
+    	//the sql should return 400 rows
+        String sql = "SELECT A.IntKey FROM BQT1.SmallA as A, BQT1.SmallA as B, (select intkey from BQT1.SmallA limit 4) as C"; //$NON-NLS-1$
         String userName = "1"; //$NON-NLS-1$
         String sessionid = "1"; //$NON-NLS-1$
         
@@ -286,31 +311,33 @@ public class TestDQPCore {
         reqMsg.setCursorType(ResultSet.TYPE_FORWARD_ONLY);
         DQPWorkContext.getWorkContext().getSession().setSessionId(sessionid);
         DQPWorkContext.getWorkContext().getSession().setUserName(userName);
-        ((BufferManagerImpl)core.getBufferManager()).setProcessorBatchSize(2);
+        ((BufferManagerImpl)core.getBufferManager()).setProcessorBatchSize(1);
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
         ResultsMessage rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
-        assertEquals(2, rm.getResults().length);
+
+        int rowsPerBatch = 8;
+		assertEquals(rowsPerBatch, rm.getResults().length);
         RequestWorkItem item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
 
-        message = core.processCursorRequest(reqMsg.getExecutionId(), 3, 2);
+        message = core.processCursorRequest(reqMsg.getExecutionId(), 9, rowsPerBatch);
         rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
-        assertEquals(2, rm.getResults().length);
+        assertEquals(rowsPerBatch, rm.getResults().length);
         //ensure that we are idle
         for (int i = 0; i < 10 && item.getThreadState() != ThreadState.IDLE; i++) {
         	Thread.sleep(100);
         }
         assertEquals(ThreadState.IDLE, item.getThreadState());
-        assertTrue(item.resultsBuffer.getManagedRowCount() <= 46);
+        assertTrue(item.resultsBuffer.getManagedRowCount() <= rowsPerBatch*23);
         //pull the rest of the results
         for (int j = 0; j < 48; j++) {
             item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
 
-	        message = core.processCursorRequest(reqMsg.getExecutionId(), j * 2 + 5, 2);
+	        message = core.processCursorRequest(reqMsg.getExecutionId(), (j + 2) * rowsPerBatch + 1, rowsPerBatch);
 	        rm = message.get(5000, TimeUnit.MILLISECONDS);
 	        assertNull(rm.getException());
-	        assertEquals(2, rm.getResults().length);
+	        assertEquals(rowsPerBatch, rm.getResultsList().size());
         }
     }
     
@@ -324,11 +351,11 @@ public class TestDQPCore {
         reqMsg.setCursorType(ResultSet.TYPE_FORWARD_ONLY);
         DQPWorkContext.getWorkContext().getSession().setSessionId(sessionid);
         DQPWorkContext.getWorkContext().getSession().setUserName(userName);
-        ((BufferManagerImpl)core.getBufferManager()).setProcessorBatchSize(2);
+        ((BufferManagerImpl)core.getBufferManager()).setProcessorBatchSize(1);
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
         ResultsMessage rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
-        assertEquals(2, rm.getResults().length);
+        assertEquals(8, rm.getResultsList().size());
         RequestWorkItem item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
         assertEquals(100, item.resultsBuffer.getRowCount());
     }

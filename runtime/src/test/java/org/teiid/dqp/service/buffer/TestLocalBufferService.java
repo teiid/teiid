@@ -37,6 +37,8 @@ import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.common.buffer.impl.FileStorageManager;
+import org.teiid.common.buffer.impl.FileStoreCache;
+import org.teiid.common.buffer.impl.SplittableStorageManager;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
 import org.teiid.core.util.UnitTestUtil;
@@ -60,8 +62,9 @@ public class TestLocalBufferService {
         assertTrue("does not end with one", svc.getBufferDirectory().getParent().endsWith("1")); //$NON-NLS-1$ //$NON-NLS-2$
         assertTrue(svc.isUseDisk());
         
-        BufferManagerImpl mgr = (BufferManagerImpl) svc.getBufferManager();
-        assertTrue(((FileStorageManager)mgr.getStorageManager()).getDirectory().endsWith(svc.getBufferDirectory().getName()));
+        BufferManagerImpl mgr = svc.getBufferManager();
+        SplittableStorageManager ssm = (SplittableStorageManager)((FileStoreCache)mgr.getCache()).getStorageManager();
+        assertTrue(((FileStorageManager)ssm.getStorageManager()).getDirectory().endsWith(svc.getBufferDirectory().getName()));
     }
 
     @Test public void testCheckMemPropertyGotSet2() throws Exception {
@@ -99,7 +102,8 @@ public class TestLocalBufferService {
         svc.start();
         
         BufferManager mgr = svc.getBufferManager();
-        assertEquals(13141, mgr.getSchemaSize(schema));
+        assertEquals(6570, mgr.getSchemaSize(schema));
+        assertEquals(256, mgr.getProcessorBatchSize(schema));
     }
     
     @Test
