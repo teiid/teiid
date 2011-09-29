@@ -44,6 +44,7 @@ import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.internal.process.*;
+import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.FakeBufferService;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataRepository;
@@ -149,16 +150,21 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 		this.repo.start();
 		
         this.sessionService.setVDBRepository(repo);
-        this.dqp.setBufferService(new FakeBufferService());
+        BufferService fbs = new FakeBufferService();
+        this.dqp.setBufferService(fbs);
         DefaultCacheFactory dcf = new DefaultCacheFactory() {
         	@Override
         	public boolean isReplicated() {
         		return true; //pretend to be replicated for matview tests
         	}
         };
-        
-        this.dqp.setResultsetCache(new SessionAwareCache<CachedResults>(dcf, SessionAwareCache.Type.RESULTSET, new CacheConfiguration(Policy.LRU, 60, 250, "resultsetcache")));
-        this.dqp.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>(dcf, SessionAwareCache.Type.PREPAREDPLAN, new CacheConfiguration()));
+
+        SessionAwareCache rs = new SessionAwareCache<CachedResults>(dcf, SessionAwareCache.Type.RESULTSET, new CacheConfiguration(Policy.LRU, 60, 250, "resultsetcache"));
+        rs.setBufferManager(fbs.getBufferManager());
+        this.dqp.setResultsetCache(rs);
+        SessionAwareCache ppc = new SessionAwareCache<PreparedPlan>(dcf, SessionAwareCache.Type.PREPAREDPLAN, new CacheConfiguration());
+        ppc.setBufferManager(fbs.getBufferManager());
+        this.dqp.setPreparedPlanCache(ppc);
         
         this.dqp.setTransactionService(new FakeTransactionService());
         

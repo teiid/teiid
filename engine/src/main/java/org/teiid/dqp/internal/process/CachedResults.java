@@ -118,7 +118,7 @@ public class CachedResults implements Serializable, Cachable {
 				return false;
 			}
 		}
-		return true;
+		return (this.results != null);
 	}	
 	
 	@Override

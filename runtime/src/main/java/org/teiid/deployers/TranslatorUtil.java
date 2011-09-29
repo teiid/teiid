@@ -93,18 +93,20 @@ public class TranslatorUtil {
 	public static ExecutionFactory buildExecutionFactory(VDBTranslatorMetaData data) throws TeiidException {
 		ExecutionFactory executionFactory;
 		
-        final ModuleIdentifier moduleId;
-        final Module module;
-        try {
-            moduleId = ModuleIdentifier.create(data.getModuleName());
-            module = Module.getCallerModuleLoader().loadModule(moduleId);
-        } catch (ModuleLoadException e) {
-            throw new TeiidException(e, RuntimePlugin.Util.getString("failed_load_module", data.getModuleName(), data.getName())); //$NON-NLS-1$
-        }		
+        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+        if (data.getModuleName() != null) {
+	        try {
+	        	final ModuleIdentifier moduleId = ModuleIdentifier.create(data.getModuleName());
+	        	final Module module = Module.getCallerModuleLoader().loadModule(moduleId);
+	        	classloader = module.getClassLoader();
+	        } catch (ModuleLoadException e) {
+	            throw new TeiidException(e, RuntimePlugin.Util.getString("failed_load_module", data.getModuleName(), data.getName())); //$NON-NLS-1$
+	        }		
+        }
 		
 		try {
 			String executionClass = data.getPropertyValue(VDBTranslatorMetaData.EXECUTION_FACTORY_CLASS);
-			Object o = ReflectionHelper.create(executionClass, null, module.getClassLoader());
+			Object o = ReflectionHelper.create(executionClass, null, classloader);
 			if(!(o instanceof ExecutionFactory)) {
 				throw new TeiidException(RuntimePlugin.Util.getString("invalid_class", executionClass));//$NON-NLS-1$	
 			}

@@ -73,15 +73,31 @@ public class TestMembershipServiceImpl extends TestCase {
         domains.add("testFile"); //$NON-NLS-1$
         Map<String, SecurityDomainContext> securityDomainMap = new HashMap<String, SecurityDomainContext>();
         SecurityDomainContext securityContext = Mockito.mock(SecurityDomainContext.class);
-        AuthenticationManager authManager = Mockito.mock(AuthenticationManager.class);
-        Mockito.stub(authManager.isValid(new SimplePrincipal("user1"), credentials, new Subject())).toReturn(true);
+        AuthenticationManager authManager = new AuthenticationManager() {
+			public String getSecurityDomain() {
+				return null;
+			}
+			public boolean isValid(Principal principal, Object credential, Subject activeSubject) {
+				return true;
+			}
+			public boolean isValid(Principal principal, Object credential) {
+				return true;
+			}
+			
+			@Override
+			public Principal getTargetPrincipal(Principal anotherDomainPrincipal, Map<String, Object> contextMap) {
+				return null;
+			}
+			@Override
+			public Subject getActiveSubject() {
+				return null;
+			}
+		};
+        
         Mockito.stub(securityContext.getAuthenticationManager()).toReturn(authManager);
         securityDomainMap.put("testFile", securityContext); //$NON-NLS-1$
         
         ms.authenticateUser("user1", credentials, null, domains,securityDomainMap, false); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        Mockito.verify(authManager).isValid(new SimplePrincipal("user1"), credentials, new Subject());
-        
         assertEquals("user1@testFile", ms.getUserName()); //$NON-NLS-1$
     }
     

@@ -96,11 +96,11 @@ public class TeiidLoginContext {
         		if (authManager != null) {
                     Principal userPrincipal = new SimplePrincipal(username);
                     Subject subject = new Subject();
-                    boolean isValid = authManager.isValid(userPrincipal, new String(credential.getCredentialsAsCharArray()), subject);
+                    boolean isValid = authManager.isValid(userPrincipal, credential==null?null:new String(credential.getCredentialsAsCharArray()), subject);
                     if (isValid) {
         				this.userName = baseUsername+AT+domain;
         				this.securitydomain = domain;
-        				this.securityContext = this.securityHelper.createSecurityContext(this.securitydomain, userPrincipal, new String(credential.getCredentialsAsCharArray()), subject);
+        				this.securityContext = this.securityHelper.createSecurityContext(this.securitydomain, userPrincipal, credential==null?null:new String(credential.getCredentialsAsCharArray()), subject);
         				LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", username, "\""}); //$NON-NLS-1$ //$NON-NLS-2$
         				return;
                     }            			

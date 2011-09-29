@@ -520,21 +520,25 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	private FunctionMethod addHasFunctionPrivilage() throws TranslatorException  {
 		FunctionMethod func = addFunction("has_function_privilege"); //$NON-NLS-1$
 		
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		try {
-			ArrayList<FunctionParameter> inParams = new ArrayList<FunctionParameter>();
-			inParams.add(new FunctionParameter("oid", DataTypeManager.DefaultDataTypes.INTEGER, ""));//$NON-NLS-1$ //$NON-NLS-2$
-			inParams.add(new FunctionParameter("permission", DataTypeManager.DefaultDataTypes.STRING, "")); //$NON-NLS-1$ //$NON-NLS-2$
-			
-			func.setInputParameters(inParams);
-			func.setOutputParameter(new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, ""));  //$NON-NLS-1$ //$NON-NLS-2$
-			
-			func.setInvocationClass(ReturnTrue.class.getName());
-			func.setInvocationMethod("result"); //$NON-NLS-1$
-			func.setPushdown(PushDown.CANNOT_PUSHDOWN);
-			func.setClassloader(Module.getModuleFromCallerModuleLoader(ModuleIdentifier.create("org.jboss.teiid")).getClassLoader()); //$NON-NLS-1$
+			classLoader = Module.getModuleFromCallerModuleLoader(ModuleIdentifier.create("org.jboss.teiid")).getClassLoader(); //$NON-NLS-1$
 		} catch (ModuleLoadException e) {
-			throw new TranslatorException(e);
+			// only in test situations
 		}
+		
+		ArrayList<FunctionParameter> inParams = new ArrayList<FunctionParameter>();
+		inParams.add(new FunctionParameter("oid", DataTypeManager.DefaultDataTypes.INTEGER, ""));//$NON-NLS-1$ //$NON-NLS-2$
+		inParams.add(new FunctionParameter("permission", DataTypeManager.DefaultDataTypes.STRING, "")); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		func.setInputParameters(inParams);
+		func.setOutputParameter(new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, ""));  //$NON-NLS-1$ //$NON-NLS-2$
+		
+		func.setInvocationClass(ReturnTrue.class.getName());
+		func.setInvocationMethod("result"); //$NON-NLS-1$
+		func.setPushdown(PushDown.CANNOT_PUSHDOWN);
+		func.setClassloader(classLoader); 
+		
 		return func;
 	}
 	
