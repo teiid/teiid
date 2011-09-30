@@ -199,6 +199,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 					cache.remove(this.id, batch);
 				}
 				ce.setSerializer(this.ref);
+				ce.setPersistent(true);
 				if (retain) {
 					addMemoryEntry(ce);
 				}
@@ -556,7 +557,11 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
 				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, ce.getId(), "writing batch to storage, total writes: ", count); //$NON-NLS-1$
 			}
-			cache.add(ce, s);
+			try {
+				cache.add(ce, s);
+			} catch (Throwable e) {
+				LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, "Error persisting batch, attempts to read batch "+ ce.getId() +" later will result in an exception"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
 			ce.setPersistent(true);
 		}
 		if (s.useSoftCache()) {
@@ -668,6 +673,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		cleanSoftReferences();
 		Collection<Long> vals = cache.removeCacheGroup(id);
 		for (Long val : vals) {
+			//TODO: we will unnecessarily call remove on the cache, but that should be low cost
 			fastGet(val, prefersMemory, false);
 		}
 	}

@@ -98,7 +98,8 @@ jboss.bind.address=&lt;bind address&gt;
 	/deployers
 	   /teiid.deployer
 	/lib
-	/teiid-examples]]></programlisting>     
+	/teiid-examples
+	/tmp/teiid]]></programlisting>     
 	</example>
     <section>
         <title>/deploy/teiid/teiid-jboss-beans.xml</title>
@@ -162,6 +163,14 @@ jboss.bind.address=&lt;bind address&gt;
     <section>
         <title>teiid-docs</title>
         <para>This directory contains the PDF documents related Teiid and Teiid development. </para>
+    </section>
+    
+    <section>
+        <title>tmp/teiid</title>
+        <para>This directory contains temporary files created by Teiid.  These are mostly created by the buffer manager.  
+        These files are not needed across a VM restart.  Heavy usage of large data sets will create lots of temporary files.
+        In heavy usage scenarios, consider pointing the buffer directory at a partition that is routinely defragmented.
+        </para>
     </section>
          
    </section>   

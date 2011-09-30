@@ -31,9 +31,11 @@ import org.teiid.core.TeiidComponentException;
  */
 public interface Cache extends StorageManager {
 	void createCacheGroup(Long gid); //called prior to adding an entry
+	//TODO: this should use a callback on the buffermangaer to remove memory entries
+	//without materializing all group keys
 	Collection<Long> removeCacheGroup(Long gid);
 	void addToCacheGroup(Long gid, Long oid); 
 	CacheEntry get(Long id, Serializer<?> serializer) throws TeiidComponentException;
-	void add(CacheEntry entry, Serializer<?> s);
+	void add(CacheEntry entry, Serializer<?> s) throws Exception;
 	void remove(Long gid, Long id);
 }

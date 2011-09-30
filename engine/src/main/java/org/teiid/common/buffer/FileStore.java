@@ -25,7 +25,6 @@ package org.teiid.common.buffer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -223,28 +222,6 @@ public abstract class FileStore implements Removable {
 			}
 		};
 	}
-	
-    public ByteBuffer getBuffer(long start, int length, boolean allocate) throws IOException {
-    	byte[] b = new byte[length];
-    	if (!allocate) {
-    		readFully(start, b, 0, length);
-    	}
-    	return ByteBuffer.wrap(b);
-    }
-    
-    public void updateFromBuffer(ByteBuffer bb, long start) throws IOException {
-    	byte[] b = null;
-    	int offset = 0;
-    	bb.rewind();
-    	if (bb.hasArray()) {
-    		b = bb.array();
-    		offset = bb.arrayOffset();
-    	} else {
-    		b = new byte[bb.limit()];
-    		bb.get(b);
-    	}
-    	write(start, b, offset, bb.limit());
-    }
 	
 	public InputStream createInputStream(final long start) {
 		return createInputStream(start, -1);

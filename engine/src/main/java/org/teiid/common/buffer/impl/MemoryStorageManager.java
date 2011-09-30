@@ -22,7 +22,6 @@
 
 package org.teiid.common.buffer.impl;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -86,20 +85,6 @@ public class MemoryStorageManager implements Cache {
 		@Override
 		public synchronized long getLength() {
 			return buffer.limit();
-		}
-		
-		@Override
-		public synchronized ByteBuffer getBuffer(long start, int length, boolean allocate) {
-			int position = (int)start;
-			buffer.limit(position + length);
-			buffer.position(position);
-			return buffer.slice();
-		}
-		
-		@Override
-		public void updateFromBuffer(ByteBuffer bb, long start)
-				throws IOException {
-			//do nothing we are sharing the bytes
 		}
 
 	}

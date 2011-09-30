@@ -50,6 +50,45 @@ import junit.framework.AssertionFailedError;
  */
 public class UnitTestUtil {
 	
+	public static final class LogFormatter extends Formatter {
+		@Override
+		public String format(LogRecord record) {
+			final StringBuilder result = new StringBuilder();
+			result.append(new Timestamp(record.getMillis()));
+			result.append(" "); //$NON-NLS-1$
+			result.append(record.getLoggerName());
+			result.append(" "); //$NON-NLS-1$
+			result.append(record.getLevel());
+			result.append(" "); //$NON-NLS-1$
+			result.append(Thread.currentThread().getName());
+			result.append(" "); //$NON-NLS-1$
+			result.append(record.getMessage());
+			result.append('\n');
+			if (record.getThrown() != null) {
+				record.getThrown().printStackTrace(new PrintWriter(new Writer() {
+
+					@Override
+					public void close() throws IOException {
+						
+					}
+
+					@Override
+					public void flush() throws IOException {
+						
+					}
+
+					@Override
+					public void write(char[] cbuf, int off, int len)
+							throws IOException {
+						result.append(new String(cbuf, off, len));
+					}
+				}));
+				result.append('\n');
+			}
+			return result.toString();
+		}
+	}
+
 	public static final String PATH_SEPARATOR = "/"; //$NON-NLS-1$
 
 	private static final String DEFAULT_TESTDATA_PATH = "src/test/resources"; //$NON-NLS-1$
@@ -419,45 +458,7 @@ public class UnitTestUtil {
     	} else {
     		logger.setUseParentHandlers(false);
     		ConsoleHandler ch = new ConsoleHandler();
-    		ch.setFormatter(new Formatter() {
-				
-				@Override
-				public String format(LogRecord record) {
-					final StringBuilder result = new StringBuilder();
-					result.append(new Timestamp(record.getMillis()));
-					result.append(" "); //$NON-NLS-1$
-					result.append(record.getLoggerName());
-					result.append(" "); //$NON-NLS-1$
-					result.append(record.getLevel());
-					result.append(" "); //$NON-NLS-1$
-					result.append(record.getThreadID());
-					result.append(" "); //$NON-NLS-1$
-					result.append(record.getMessage());
-					result.append('\n');
-					if (record.getThrown() != null) {
-						record.getThrown().printStackTrace(new PrintWriter(new Writer() {
-
-							@Override
-							public void close() throws IOException {
-								
-							}
-
-							@Override
-							public void flush() throws IOException {
-								
-							}
-
-							@Override
-							public void write(char[] cbuf, int off, int len)
-									throws IOException {
-								result.append(new String(cbuf, off, len));
-							}
-						}));
-						result.append('\n');
-					}
-					return result.toString();
-				}
-			});
+    		ch.setFormatter(new LogFormatter());
     		ch.setLevel(Level.FINEST);
     		logger.addHandler(ch);
     	}

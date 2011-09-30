@@ -108,7 +108,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 ssm.setMaxFileSize(maxFileSize);
                 FileStoreCache fsc = new FileStoreCache();
                 fsc.setStorageManager(ssm);
-                fsc.setMaxBufferSpace(maxBufferSpace*MB);
                 fsc.initialize();
                 this.bufferMgr.setCache(fsc);
             } else {

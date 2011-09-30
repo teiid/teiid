@@ -378,17 +378,17 @@ public class TestDQPCore {
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
         ResultsMessage rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
-        assertEquals(5, rm.getResults().length);
+        assertEquals(5, rm.getResultsList().size());
         
         message = core.processCursorRequest(reqMsg.getExecutionId(), 6, 5);
         rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
-        assertEquals(5, rm.getResults().length);
+        assertEquals(5, rm.getResultsList().size());
         
         message = core.processCursorRequest(reqMsg.getExecutionId(), 11, 5);
         rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
-        assertEquals(5, rm.getResults().length);
+        assertEquals(5, rm.getResultsList().size());
     }
     
     @Test public void testSourceConcurrency() throws Exception {

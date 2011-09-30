@@ -29,6 +29,7 @@ import java.nio.ByteBuffer;
 public abstract class ExtensibleBufferedOutputStream extends OutputStream {
 	
     protected ByteBuffer buf;
+    protected int bytesWritten;
     
     public ExtensibleBufferedOutputStream() {
 	}
@@ -63,18 +64,22 @@ public abstract class ExtensibleBufferedOutputStream extends OutputStream {
 
 	public void flush() throws IOException {
 		if (buf != null && buf.position() > 0) {
-			flushDirect();
+			bytesWritten += flushDirect();
 		}
 		buf = null;
 	}
 
 	protected abstract ByteBuffer newBuffer();
 	
-	protected abstract void flushDirect() throws IOException;
+	protected abstract int flushDirect() throws IOException;
     
     @Override
     public void close() throws IOException {
 		flush();
     }
+    
+    public int getBytesWritten() {
+		return bytesWritten;
+	}
     
 }
