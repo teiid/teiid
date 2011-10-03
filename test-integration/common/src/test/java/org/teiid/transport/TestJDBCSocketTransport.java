@@ -36,6 +36,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
@@ -53,6 +54,8 @@ public class TestJDBCSocketTransport {
 		config.setBindAddress(addr.getHostName());
 		config.setPortNumber(0);
 		
+		DQPConfiguration dqpConfig = new DQPConfiguration();
+		dqpConfig.setMaxActivePlans(2);
 		FakeServer server = new FakeServer();
 		server.setUseCallingThread(false);
 		server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
@@ -81,13 +84,23 @@ public class TestJDBCSocketTransport {
 		}
 	}
 	
-	/**
-	 * Under the covers this still executes a prepared statement due to the driver handling
-	 */
 	@Test public void testSelect() throws Exception {
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select * from tables order by name"));
 		TestMMDatabaseMetaData.compareResultSet(s.getResultSet());
+	}
+	
+	/**
+	 * Ensures if you start more than the maxActivePlans
+	 * where all the plans take up more than output buffer limit
+	 * that processing still proceeds
+	 * @throws Exception
+	 */
+	@Test public void testSimultaneousLargeSelects() throws Exception {
+		for (int j = 0; j < 3; j++) {
+			Statement s = conn.createStatement();
+			assertTrue(s.execute("select * from columns c1, columns c2"));
+		}
 	}
 	
 }

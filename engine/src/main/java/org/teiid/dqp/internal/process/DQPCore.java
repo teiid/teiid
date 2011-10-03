@@ -25,6 +25,8 @@ package org.teiid.dqp.internal.process;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -202,6 +204,7 @@ public class DQPCore implements DQP {
     private int currentlyActivePlans;
     private int userRequestSourceConcurrency;
     private LinkedList<RequestWorkItem> waitingPlans = new LinkedList<RequestWorkItem>();
+    private LinkedHashSet<RequestWorkItem> bufferFullPlans = new LinkedHashSet<RequestWorkItem>();
     private CacheFactory cacheFactory;
 
 	private AuthorizationValidator authorizationValidator;
@@ -343,12 +346,21 @@ public class DQPCore implements DQP {
         addRequest(requestID, workItem, state);
         boolean runInThread = DQPWorkContext.getWorkContext().useCallingThread() || requestMsg.isSync();
         synchronized (waitingPlans) {
-			if (runInThread || currentlyActivePlans < maxActivePlans) {
+			if (runInThread || currentlyActivePlans <= maxActivePlans) {
 				startActivePlan(workItem, !runInThread);
 			} else {
 				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-		            LogManager.logDetail(LogConstants.CTX_DQP, "Queuing plan, since max plans has been reached.");  //$NON-NLS-1$
+		            LogManager.logDetail(LogConstants.CTX_DQP, workItem.requestID, "Queuing plan, since max plans has been reached.");  //$NON-NLS-1$
 		        }  
+				if (!bufferFullPlans.isEmpty()) {
+	        		Iterator<RequestWorkItem> id = bufferFullPlans.iterator();
+	        		RequestWorkItem bufferFull = id.next();
+	        		id.remove();
+					if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+			            LogManager.logDetail(LogConstants.CTX_DQP, bufferFull.requestID, "Restarting plan with full buffer, since there is a pending active plan.");  //$NON-NLS-1$
+			        }  
+	        		bufferFull.moreWork();
+	        	}
 				waitingPlans.add(workItem);
 			}
 		}
@@ -391,10 +403,21 @@ public class DQPCore implements DQP {
         	}
         	workItem.active = false;
     		currentlyActivePlans--;
+    		bufferFullPlans.remove(workItem.requestID);
 			if (!waitingPlans.isEmpty()) {
 				startActivePlan(waitingPlans.remove(), true);
 			}
 		}
+    }
+    
+    public boolean hasWaitingPlans(RequestWorkItem item) {
+    	synchronized (waitingPlans) {
+    		if (!waitingPlans.isEmpty()) {
+    			return true;
+    		}
+    		this.bufferFullPlans.add(item);
+		}
+    	return false;
     }
     
     void removeRequest(final RequestWorkItem workItem) {

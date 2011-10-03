@@ -97,7 +97,7 @@ public class TestRequestID extends TestCase {
     }
 
     public void testSerialize2() throws Exception {
-        RequestID copy = UnitTestUtil.helpSerialize(new RequestID(100)); //$NON-NLS-1$
+        RequestID copy = UnitTestUtil.helpSerialize(new RequestID(100));
 
         assertEquals(null, copy.getConnectionID());
         assertEquals(100, copy.getExecutionID());

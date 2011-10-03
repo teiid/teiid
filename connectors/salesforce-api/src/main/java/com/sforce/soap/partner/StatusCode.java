@@ -13,6 +13,7 @@ import javax.xml.bind.annotation.XmlType;
  * <pre>
  * &lt;simpleType name="StatusCode">
  *   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+ *     &lt;enumeration value="ALL_OR_NONE_OPERATION_ROLLED_BACK"/>
  *     &lt;enumeration value="ALREADY_IN_PROCESS"/>
  *     &lt;enumeration value="ASSIGNEE_TYPE_REQUIRED"/>
  *     &lt;enumeration value="BAD_CUSTOM_ENTITY_PARENT_DOMAIN"/>
@@ -64,6 +65,7 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;enumeration value="ERROR_IN_MAILER"/>
  *     &lt;enumeration value="FAILED_ACTIVATION"/>
  *     &lt;enumeration value="FIELD_CUSTOM_VALIDATION_EXCEPTION"/>
+ *     &lt;enumeration value="FIELD_FILTER_VALIDATION_EXCEPTION"/>
  *     &lt;enumeration value="FIELD_INTEGRITY_EXCEPTION"/>
  *     &lt;enumeration value="FILTERED_LOOKUP_LIMIT_EXCEEDED"/>
  *     &lt;enumeration value="HTML_FILE_UPLOAD_NOT_ALLOWED"/>
@@ -83,6 +85,8 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;enumeration value="INVALID_CURRENCY_CONV_RATE"/>
  *     &lt;enumeration value="INVALID_CURRENCY_CORP_RATE"/>
  *     &lt;enumeration value="INVALID_CURRENCY_ISO"/>
+ *     &lt;enumeration value="INVALID_DATA_CATEGORY_GROUP_REFERENCE"/>
+ *     &lt;enumeration value="INVALID_DATA_URI"/>
  *     &lt;enumeration value="INVALID_EMAIL_ADDRESS"/>
  *     &lt;enumeration value="INVALID_EMPTY_KEY_OWNER"/>
  *     &lt;enumeration value="INVALID_FIELD"/>
@@ -100,6 +104,7 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;enumeration value="INVALID_OR_NULL_FOR_RESTRICTED_PICKLIST"/>
  *     &lt;enumeration value="INVALID_PARTNER_NETWORK_STATUS"/>
  *     &lt;enumeration value="INVALID_PERSON_ACCOUNT_OPERATION"/>
+ *     &lt;enumeration value="INVALID_READ_ONLY_USER_DML"/>
  *     &lt;enumeration value="INVALID_SAVE_AS_ACTIVITY_FLAG"/>
  *     &lt;enumeration value="INVALID_SESSION_ID"/>
  *     &lt;enumeration value="INVALID_SETUP_OWNER"/>
@@ -140,14 +145,18 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;enumeration value="NUMBER_OUTSIDE_VALID_RANGE"/>
  *     &lt;enumeration value="NUM_HISTORY_FIELDS_BY_SOBJECT_EXCEEDED"/>
  *     &lt;enumeration value="OPTED_OUT_OF_MASS_MAIL"/>
+ *     &lt;enumeration value="OP_WITH_INVALID_USER_TYPE_EXCEPTION"/>
  *     &lt;enumeration value="PACKAGE_LICENSE_REQUIRED"/>
+ *     &lt;enumeration value="PORTAL_NO_ACCESS"/>
  *     &lt;enumeration value="PORTAL_USER_ALREADY_EXISTS_FOR_CONTACT"/>
  *     &lt;enumeration value="PRIVATE_CONTACT_ON_ASSET"/>
  *     &lt;enumeration value="RECORD_IN_USE_BY_WORKFLOW"/>
  *     &lt;enumeration value="REQUEST_RUNNING_TOO_LONG"/>
+ *     &lt;enumeration value="REQUIRED_FEATURE_MISSING"/>
  *     &lt;enumeration value="REQUIRED_FIELD_MISSING"/>
  *     &lt;enumeration value="SELF_REFERENCE_FROM_TRIGGER"/>
  *     &lt;enumeration value="SHARE_NEEDED_FOR_CHILD_OWNER"/>
+ *     &lt;enumeration value="SINGLE_EMAIL_LIMIT_EXCEEDED"/>
  *     &lt;enumeration value="STANDARD_PRICE_NOT_DEFINED"/>
  *     &lt;enumeration value="STORAGE_LIMIT_EXCEEDED"/>
  *     &lt;enumeration value="STRING_TOO_LONG"/>
@@ -165,6 +174,8 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;enumeration value="UNSPECIFIED_EMAIL_ADDRESS"/>
  *     &lt;enumeration value="UNSUPPORTED_APEX_TRIGGER_OPERATON"/>
  *     &lt;enumeration value="UNVERIFIED_SENDER_ADDRESS"/>
+ *     &lt;enumeration value="USER_OWNS_PORTAL_ACCOUNT_EXCEPTION"/>
+ *     &lt;enumeration value="USER_WITH_APEX_SHARES_EXCEPTION"/>
  *     &lt;enumeration value="WEBLINK_SIZE_LIMIT_EXCEEDED"/>
  *     &lt;enumeration value="WRONG_CONTROLLER_TYPE"/>
  *   &lt;/restriction>
@@ -176,6 +187,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlEnum
 public enum StatusCode {
 
+    ALL_OR_NONE_OPERATION_ROLLED_BACK,
     ALREADY_IN_PROCESS,
     ASSIGNEE_TYPE_REQUIRED,
     BAD_CUSTOM_ENTITY_PARENT_DOMAIN,
@@ -227,6 +239,7 @@ public enum StatusCode {
     ERROR_IN_MAILER,
     FAILED_ACTIVATION,
     FIELD_CUSTOM_VALIDATION_EXCEPTION,
+    FIELD_FILTER_VALIDATION_EXCEPTION,
     FIELD_INTEGRITY_EXCEPTION,
     FILTERED_LOOKUP_LIMIT_EXCEEDED,
     HTML_FILE_UPLOAD_NOT_ALLOWED,
@@ -246,6 +259,8 @@ public enum StatusCode {
     INVALID_CURRENCY_CONV_RATE,
     INVALID_CURRENCY_CORP_RATE,
     INVALID_CURRENCY_ISO,
+    INVALID_DATA_CATEGORY_GROUP_REFERENCE,
+    INVALID_DATA_URI,
     INVALID_EMAIL_ADDRESS,
     INVALID_EMPTY_KEY_OWNER,
     INVALID_FIELD,
@@ -263,6 +278,7 @@ public enum StatusCode {
     INVALID_OR_NULL_FOR_RESTRICTED_PICKLIST,
     INVALID_PARTNER_NETWORK_STATUS,
     INVALID_PERSON_ACCOUNT_OPERATION,
+    INVALID_READ_ONLY_USER_DML,
     INVALID_SAVE_AS_ACTIVITY_FLAG,
     INVALID_SESSION_ID,
     INVALID_SETUP_OWNER,
@@ -303,14 +319,18 @@ public enum StatusCode {
     NUMBER_OUTSIDE_VALID_RANGE,
     NUM_HISTORY_FIELDS_BY_SOBJECT_EXCEEDED,
     OPTED_OUT_OF_MASS_MAIL,
+    OP_WITH_INVALID_USER_TYPE_EXCEPTION,
     PACKAGE_LICENSE_REQUIRED,
+    PORTAL_NO_ACCESS,
     PORTAL_USER_ALREADY_EXISTS_FOR_CONTACT,
     PRIVATE_CONTACT_ON_ASSET,
     RECORD_IN_USE_BY_WORKFLOW,
     REQUEST_RUNNING_TOO_LONG,
+    REQUIRED_FEATURE_MISSING,
     REQUIRED_FIELD_MISSING,
     SELF_REFERENCE_FROM_TRIGGER,
     SHARE_NEEDED_FOR_CHILD_OWNER,
+    SINGLE_EMAIL_LIMIT_EXCEEDED,
     STANDARD_PRICE_NOT_DEFINED,
     STORAGE_LIMIT_EXCEEDED,
     STRING_TOO_LONG,
@@ -328,6 +348,8 @@ public enum StatusCode {
     UNSPECIFIED_EMAIL_ADDRESS,
     UNSUPPORTED_APEX_TRIGGER_OPERATON,
     UNVERIFIED_SENDER_ADDRESS,
+    USER_OWNS_PORTAL_ACCOUNT_EXCEPTION,
+    USER_WITH_APEX_SHARES_EXCEPTION,
     WEBLINK_SIZE_LIMIT_EXCEEDED,
     WRONG_CONTROLLER_TYPE;
 

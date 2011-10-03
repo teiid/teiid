@@ -78,6 +78,9 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
 
 public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunnable {
 	
+	//TODO: this could be configurable
+	private static final int OUTPUT_BUFFER_MAX_BATCHES = 20;
+
 	private final class WorkWrapper<T> implements
 			DQPCore.CompletionListener<T> {
 		
@@ -276,7 +279,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
             resume();
         	
             if (this.state == ProcessingState.PROCESSING) {
-            	processMore();
+            	if (!this.closeRequested) {
+            		processMore();
+            	}
             	if (this.closeRequested) {
             		this.state = ProcessingState.CLOSE;
             	}
@@ -485,10 +490,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		collector = new BatchCollector(processor, processor.getBufferManager(), this.request.context, isForwardOnly()) {
 			protected void flushBatchDirect(TupleBatch batch, boolean add) throws TeiidComponentException,TeiidProcessingException {
 				resultsBuffer = getTupleBuffer();
-				boolean added = false;
 				if (cid != null) {
 					super.flushBatchDirect(batch, add);
-					added = true;
 				}
 				if (batch.getTerminationFlag()) {
 					doneProducingBatches();
@@ -496,14 +499,20 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				addToCache();
 				synchronized (lobStreams) {
 					add = sendResultsIfNeeded(batch);
-					if (!added) {
-						super.flushBatchDirect(batch, add);
-						//restrict the buffer size for forward only results
-						if (add && !processor.hasFinalBuffer()
-								&& !batch.getTerminationFlag() 
-								&& this.getTupleBuffer().getManagedRowCount() >= 20 * this.getTupleBuffer().getBatchSize()) {
+					if (cid != null) {
+						return;
+					}
+					super.flushBatchDirect(batch, add);
+					//restrict the buffer size for forward only results
+					if (add && !processor.hasFinalBuffer()
+							&& !batch.getTerminationFlag() 
+							&& this.getTupleBuffer().getManagedRowCount() >= OUTPUT_BUFFER_MAX_BATCHES * this.getTupleBuffer().getBatchSize()) {
+						if (!dqpCore.hasWaitingPlans(RequestWorkItem.this)) {
 							//requestMore will trigger more processing
 							throw BlockedException.block(requestID, "Blocking due to full results buffer."); //$NON-NLS-1$
+						} 
+						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+							LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Exceeding buffer limit since there are pending active plans."); //$NON-NLS-1$
 						}
 					}
 				}
@@ -789,10 +798,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         		return;
         	}
 		}
-    	this.closeRequested = true;
     	if (!this.doneProducingBatches) {
     		this.requestCancel(); //pending work should be canceled for fastest clean up
     	}
+    	this.closeRequested = true;
     	this.doMoreWork();
     }
     

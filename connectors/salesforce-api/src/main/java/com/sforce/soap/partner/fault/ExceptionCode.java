@@ -21,6 +21,9 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;enumeration value="CLIENT_NOT_ACCESSIBLE_FOR_USER"/>
  *     &lt;enumeration value="CLIENT_REQUIRE_UPDATE_FOR_USER"/>
  *     &lt;enumeration value="CUSTOM_METADATA_LIMIT_EXCEEDED"/>
+ *     &lt;enumeration value="DATACLOUD_API_CLIENT_EXCEPTION"/>
+ *     &lt;enumeration value="DATACLOUD_API_SERVER_EXCEPTION"/>
+ *     &lt;enumeration value="DATACLOUD_API_UNAVAILABLE"/>
  *     &lt;enumeration value="DUPLICATE_VALUE"/>
  *     &lt;enumeration value="EMAIL_BATCH_SIZE_LIMIT_EXCEEDED"/>
  *     &lt;enumeration value="EMAIL_TO_CASE_INVALID_ROUTING"/>
@@ -32,6 +35,7 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;enumeration value="EXCEEDED_MAX_TYPES_LIMIT"/>
  *     &lt;enumeration value="EXCEEDED_QUOTA"/>
  *     &lt;enumeration value="FUNCTIONALITY_NOT_ENABLED"/>
+ *     &lt;enumeration value="FUNCTIONALITY_TEMPORARILY_UNAVAILABLE"/>
  *     &lt;enumeration value="INACTIVE_OWNER_OR_USER"/>
  *     &lt;enumeration value="INACTIVE_PORTAL"/>
  *     &lt;enumeration value="INSUFFICIENT_ACCESS"/>
@@ -60,6 +64,9 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;enumeration value="INVALID_SSO_GATEWAY_URL"/>
  *     &lt;enumeration value="INVALID_TYPE"/>
  *     &lt;enumeration value="INVALID_TYPE_FOR_OPERATION"/>
+ *     &lt;enumeration value="JIGSAW_IMPORT_LIMIT_EXCEEDED"/>
+ *     &lt;enumeration value="JIGSAW_REQUEST_NOT_SUPPORTED"/>
+ *     &lt;enumeration value="JSON_PARSER_ERROR"/>
  *     &lt;enumeration value="LIMIT_EXCEEDED"/>
  *     &lt;enumeration value="LOGIN_CHALLENGE_ISSUED"/>
  *     &lt;enumeration value="LOGIN_CHALLENGE_PENDING"/>
@@ -74,6 +81,8 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;enumeration value="NO_SOFTPHONE_LAYOUT"/>
  *     &lt;enumeration value="NUMBER_OUTSIDE_VALID_RANGE"/>
  *     &lt;enumeration value="OPERATION_TOO_LARGE"/>
+ *     &lt;enumeration value="ORG_IN_MAINTENANCE"/>
+ *     &lt;enumeration value="ORG_IS_DOT_ORG"/>
  *     &lt;enumeration value="ORG_LOCKED"/>
  *     &lt;enumeration value="ORG_NOT_OWNED_BY_INSTANCE"/>
  *     &lt;enumeration value="PASSWORD_LOCKOUT"/>
@@ -83,12 +92,17 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;enumeration value="REQUEST_LIMIT_EXCEEDED"/>
  *     &lt;enumeration value="REQUEST_RUNNING_TOO_LONG"/>
  *     &lt;enumeration value="SERVER_UNAVAILABLE"/>
+ *     &lt;enumeration value="SOCIALCRM_FEEDSERVICE_API_CLIENT_EXCEPTION"/>
+ *     &lt;enumeration value="SOCIALCRM_FEEDSERVICE_API_SERVER_EXCEPTION"/>
+ *     &lt;enumeration value="SOCIALCRM_FEEDSERVICE_API_UNAVAILABLE"/>
  *     &lt;enumeration value="SSO_SERVICE_DOWN"/>
  *     &lt;enumeration value="TOO_MANY_APEX_REQUESTS"/>
  *     &lt;enumeration value="TRIAL_EXPIRED"/>
  *     &lt;enumeration value="UNKNOWN_EXCEPTION"/>
  *     &lt;enumeration value="UNSUPPORTED_API_VERSION"/>
  *     &lt;enumeration value="UNSUPPORTED_CLIENT"/>
+ *     &lt;enumeration value="UNSUPPORTED_MEDIA_TYPE"/>
+ *     &lt;enumeration value="XML_PARSER_ERROR"/>
  *   &lt;/restriction>
  * &lt;/simpleType>
  * </pre>
@@ -106,6 +120,9 @@ public enum ExceptionCode {
     CLIENT_NOT_ACCESSIBLE_FOR_USER,
     CLIENT_REQUIRE_UPDATE_FOR_USER,
     CUSTOM_METADATA_LIMIT_EXCEEDED,
+    DATACLOUD_API_CLIENT_EXCEPTION,
+    DATACLOUD_API_SERVER_EXCEPTION,
+    DATACLOUD_API_UNAVAILABLE,
     DUPLICATE_VALUE,
     EMAIL_BATCH_SIZE_LIMIT_EXCEEDED,
     EMAIL_TO_CASE_INVALID_ROUTING,
@@ -117,6 +134,7 @@ public enum ExceptionCode {
     EXCEEDED_MAX_TYPES_LIMIT,
     EXCEEDED_QUOTA,
     FUNCTIONALITY_NOT_ENABLED,
+    FUNCTIONALITY_TEMPORARILY_UNAVAILABLE,
     INACTIVE_OWNER_OR_USER,
     INACTIVE_PORTAL,
     INSUFFICIENT_ACCESS,
@@ -145,6 +163,9 @@ public enum ExceptionCode {
     INVALID_SSO_GATEWAY_URL,
     INVALID_TYPE,
     INVALID_TYPE_FOR_OPERATION,
+    JIGSAW_IMPORT_LIMIT_EXCEEDED,
+    JIGSAW_REQUEST_NOT_SUPPORTED,
+    JSON_PARSER_ERROR,
     LIMIT_EXCEEDED,
     LOGIN_CHALLENGE_ISSUED,
     LOGIN_CHALLENGE_PENDING,
@@ -159,6 +180,8 @@ public enum ExceptionCode {
     NO_SOFTPHONE_LAYOUT,
     NUMBER_OUTSIDE_VALID_RANGE,
     OPERATION_TOO_LARGE,
+    ORG_IN_MAINTENANCE,
+    ORG_IS_DOT_ORG,
     ORG_LOCKED,
     ORG_NOT_OWNED_BY_INSTANCE,
     PASSWORD_LOCKOUT,
@@ -168,12 +191,17 @@ public enum ExceptionCode {
     REQUEST_LIMIT_EXCEEDED,
     REQUEST_RUNNING_TOO_LONG,
     SERVER_UNAVAILABLE,
+    SOCIALCRM_FEEDSERVICE_API_CLIENT_EXCEPTION,
+    SOCIALCRM_FEEDSERVICE_API_SERVER_EXCEPTION,
+    SOCIALCRM_FEEDSERVICE_API_UNAVAILABLE,
     SSO_SERVICE_DOWN,
     TOO_MANY_APEX_REQUESTS,
     TRIAL_EXPIRED,
     UNKNOWN_EXCEPTION,
     UNSUPPORTED_API_VERSION,
-    UNSUPPORTED_CLIENT;
+    UNSUPPORTED_CLIENT,
+    UNSUPPORTED_MEDIA_TYPE,
+    XML_PARSER_ERROR;
 
     public String value() {
         return name();

@@ -27,6 +27,9 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.core.util.HashCodeUtil;
+
 /**
  * <p>This class represents an identifier for a request.  However, there are some
  * differences in what constitutes "uniqueness" for a given RequestID that 
@@ -58,7 +61,6 @@ public class RequestID implements Externalizable {
     
     // Derived state
     private String combinedID;
-    private int hash;
 
     /**
      * Necessary for implementing Externalizable 
@@ -74,17 +76,11 @@ public class RequestID implements Externalizable {
     public RequestID(String connectionID, long executionID) {
         this.connectionID = connectionID;
         this.executionID = executionID;
-        
-        createCombinedID();
-        computeHashCode();
     }
     
     public RequestID(long connectionID, long executionID) {
         this.connectionID = String.valueOf(connectionID);
         this.executionID = executionID;
-        
-        createCombinedID();
-        computeHashCode();
     }    
     
     /**
@@ -129,28 +125,28 @@ public class RequestID implements Externalizable {
         this.combinedID = combinedStr.toString();
     }
     
-    private void computeHashCode() {
-        this.hash = combinedID.hashCode();
-    }
-    
     public int hashCode() {
-        return this.hash;
+        return HashCodeUtil.hashCode(connectionID==null?0:connectionID.hashCode(), executionID);
     }
     
     public boolean equals(Object obj) {
         if(obj == this) {
             return true;
-        } else if(obj == null || !(obj instanceof RequestID) || obj.hashCode() != this.hashCode()) {
+        } else if(obj == null || !(obj instanceof RequestID)) {
             return false;
-        } else {
-            return this.toString().equals(obj.toString());
-        }
+        } 
+        RequestID other = (RequestID)obj;
+        return this.executionID == other.executionID 
+        	&& EquivalenceUtil.areEqual(this.connectionID, other.connectionID);
     }
     
     /**
      * Return a combined string for the ID.
      */
     public String toString() {
+    	if (combinedID == null) {
+    		createCombinedID();
+    	}
         return this.combinedID;
     }
 
@@ -160,9 +156,6 @@ public class RequestID implements Externalizable {
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         connectionID = (String)in.readObject();
         executionID = in.readLong();
-
-        createCombinedID();
-        computeHashCode();
     }
 
     /**

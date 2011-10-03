@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="customSetting" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *         &lt;element name="deletable" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *         &lt;element name="deprecatedAndHidden" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="feedEnabled" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *         &lt;element name="keyPrefix" type="{http://www.w3.org/2001/XMLSchema}string"/>
  *         &lt;element name="label" type="{http://www.w3.org/2001/XMLSchema}string"/>
  *         &lt;element name="labelPlural" type="{http://www.w3.org/2001/XMLSchema}string"/>
@@ -52,6 +53,7 @@ import javax.xml.bind.annotation.XmlType;
     "customSetting",
     "deletable",
     "deprecatedAndHidden",
+    "feedEnabled",
     "keyPrefix",
     "label",
     "labelPlural",
@@ -74,6 +76,7 @@ public class DescribeGlobalSObjectResult {
     protected boolean customSetting;
     protected boolean deletable;
     protected boolean deprecatedAndHidden;
+    protected boolean feedEnabled;
     @XmlElement(required = true, nillable = true)
     protected String keyPrefix;
     @XmlElement(required = true)
@@ -186,6 +189,22 @@ public class DescribeGlobalSObjectResult {
      */
     public void setDeprecatedAndHidden(boolean value) {
         this.deprecatedAndHidden = value;
+    }
+
+    /**
+     * Gets the value of the feedEnabled property.
+     * 
+     */
+    public boolean isFeedEnabled() {
+        return feedEnabled;
+    }
+
+    /**
+     * Sets the value of the feedEnabled property.
+     * 
+     */
+    public void setFeedEnabled(boolean value) {
+        this.feedEnabled = value;
     }
 
     /**

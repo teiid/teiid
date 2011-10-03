@@ -1864,7 +1864,7 @@
     	<title>COMMANDPAYLOAD</title>
     	<para>Retrieve a string from the command payload
                 or null if no command payload was specified. The command
-                payload is set by a method on the Teiid JDBC API
+                payload is set by the <code>TeiidStatement.setPayload</code> method on the Teiid JDBC API
                 extensions on a per-query basis.</para>
     	<para><synopsis>COMMANDPAYLOAD([key])</synopsis></para>
     	<para>If the key parameter is provided, the command payload object is cast to a
@@ -1877,7 +1877,7 @@
     	<para><synopsis>ENV(key)</synopsis></para>
     	<para>The only key specific to the current session is 'sessionid'.  
                 However the preferred mechanism for getting the session id is with the session_id() function.  
-                To prevent untrusted access to system properties, the use of this function must be specifically enabled in the &jboss-beans; file.</para>
+                To prevent untrusted access to system properties, this function is not enabled by default.  The ENV function may be enabled via the allowEnvFunction property in the &teiid-deployer-beans; file.</para>
     	<para>key, return value are strings</para>
      </section>
      <section>
@@ -1967,10 +1967,13 @@
           <para id="xmlnamespaces">XMLNAMESPACES is used provide namespace information.  NO DEFAULT is equivalent to defining the default namespace to the null uri - xmlns="".  
           Only one DEFAULT or NO DEFAULT namespace item may be specified.  The namespace prefixes xmlns and xml are reserved.</para>
           <para>If a attribute name is not supplied, the expression must be a column reference, in which case the attribute name will be the column name. Null attribute values are ignored.</para>
-		<para>Name, prefix are identifiers. uri is a string literal. content can be any type. Return value is xml.  The return value is valid for use in places where a document is expected.</para>            
-           <para><emphasis>Example</emphasis>: with an xml_value of &lt;doc/&gt;, <programlisting>xmlelement('elem', 1, '&lt;2/&gt;', xml_value)</programlisting>
+		<para>Name, prefix are identifiers. uri is a string literal. content can be any type. Return value is xml.  The return value is valid for use in places where a document is expected.</para>         
+		<example>
+		   <title>XMLELEMENT of mixed values</title>
+		   <para>with an xml_value of &lt;doc/&gt;, <programlisting>XMLELEMENT(NAME "elem", 1, '&lt;2/&gt;', xml_value)</programlisting>
            		Returns: <code>&lt;elem&gt;1&amp;lt;2/&amp;gt;&lt;doc/&gt;&lt;elem/&gt;</code>
            </para>
+		</example>   
     </section>
     <section>
     	<title>XMLFOREST</title>
@@ -2053,10 +2056,12 @@
     with the security system.</para>
     <section>
     	<title>HASROLE</title>
-    	<para>Whether the current caller has the role roleName.</para>
+    	<para>Whether the current caller has the Teiid data role roleName.</para>
     	<para><synopsis>hasRole([roleType,] roleName)</synopsis></para>
         <para>roleName must be a string, the return type is boolean.</para>
-        <para>The two argument form is provided for backwards compatibility. roleType is a string and must be 'data'</para>
+        <para>The two argument form is provided for backwards compatibility. roleType is a string and must be 'data'.</para>
+        <para>Role names are case-sensitive and only match Teiid <xref linkend="dataroles"/>. 
+        JAAS roles/groups names are not valid for this function - unless there is corresponding data role with the same name.</para>
     </section>
   </section>
   <section>
