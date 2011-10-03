@@ -22,12 +22,12 @@
 
 package org.teiid.common.buffer;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.teiid.client.ResizingArrayList;
 import org.teiid.common.buffer.LobManager.ReferenceMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
@@ -69,7 +69,7 @@ public class TupleBuffer {
 	private int rowCount;
 	private boolean isFinal;
     private TreeMap<Integer, Long> batches = new TreeMap<Integer, Long>();
-	private ArrayList<List<?>> batchBuffer;
+	private List<List<?>> batchBuffer;
 	private boolean removed;
 	private boolean forwardOnly;
 
@@ -111,7 +111,7 @@ public class TupleBuffer {
 		}
 		this.rowCount++;
 		if (batchBuffer == null) {
-			batchBuffer = new ArrayList<List<?>>(batchSize/4);
+			batchBuffer = new ResizingArrayList<List<?>>(batchSize/4);
 		}
 		batchBuffer.add(tuple);
 		if (batchBuffer.size() == batchSize) {
@@ -178,7 +178,7 @@ public class TupleBuffer {
 		if (batchBuffer == null || batchBuffer.isEmpty() || (!force && batchBuffer.size() < Math.max(1, batchSize / 32))) {
 			return;
 		}
-		Long mbatch = manager.createManagedBatch(batchBuffer);
+		Long mbatch = manager.createManagedBatch(batchBuffer, null, false);
 		this.batches.put(rowCount - batchBuffer.size() + 1, mbatch);
         batchBuffer = null;
 	}

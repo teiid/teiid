@@ -74,11 +74,7 @@ public final class SizeUtility {
 		this.types = types;
 	}
 	
-    public long getBatchSize(List<? extends List<?>> data) {
-    	return getBatchSize(DataTypeManager.isValueCacheEnabled(), data);
-    }
-	
-    private long getBatchSize(boolean accountForValueCache, List<? extends List<?>> data) {
+    public long getBatchSize(boolean accountForValueCache, List<? extends List<?>> data) {
         int colLength = types.length;
         int rowLength = data.size();
     

@@ -24,10 +24,12 @@ package org.teiid.common.buffer;
 
 import java.lang.ref.WeakReference;
 
-public class CacheEntry {
+public class CacheEntry implements Comparable<CacheEntry>{
 	private boolean persistent;
 	private Object object;
 	private int sizeEstimate;
+	private long lastAccess;
+	private double orderingValue;
 	private WeakReference<? extends Serializer<?>> serializer;
 	private Long id;
 	
@@ -50,6 +52,34 @@ public class CacheEntry {
 	
 	public void setSizeEstimate(int sizeEstimate) {
 		this.sizeEstimate = sizeEstimate;
+	}
+	
+	public long getLastAccess() {
+		return lastAccess;
+	}
+	
+	public void setLastAccess(long lastAccess) {
+		this.lastAccess = lastAccess;
+	}
+	
+	public double getOrderingValue() {
+		return orderingValue;
+	}
+	
+	public void setOrderingValue(double orderingValue) {
+		this.orderingValue = orderingValue;
+	}
+	
+	@Override
+	public int compareTo(CacheEntry o) {
+		int result = (int) Math.signum(orderingValue - o.orderingValue);
+		if (result == 0) {
+			result = Long.signum(lastAccess - o.lastAccess);
+			if (result == 0) {
+				return Long.signum(id - o.id);
+			}
+		}
+		return result;
 	}
 	
 	public boolean equals(Object obj) {

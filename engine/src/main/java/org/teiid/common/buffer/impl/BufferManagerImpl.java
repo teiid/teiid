@@ -32,7 +32,6 @@ import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,8 +78,8 @@ import org.teiid.query.sql.symbol.Expression;
  *       - this is not necessary for already persistent batches, since we hold a weak reference
  */
 public class BufferManagerImpl implements BufferManager, StorageManager {
-	
-	private final class BatchManagerImpl implements BatchManager, Serializer<List<? extends List<?>>> {
+
+	final class BatchManagerImpl implements BatchManager, Serializer<List<? extends List<?>>> {
 		final Long id;
 		SizeUtility sizeUtility;
 		private WeakReference<BatchManagerImpl> ref = new WeakReference<BatchManagerImpl>(this);
@@ -131,7 +130,8 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		}
 		
 		@Override
-		public Long createManagedBatch(List<? extends List<?>> batch)
+		public Long createManagedBatch(List<? extends List<?>> batch,
+				Long previous, boolean removeOld)
 				throws TeiidComponentException {
 			int sizeEstimate = getSizeEstimate(batch);
 			Long oid = batchAdded.getAndIncrement();
@@ -139,7 +139,20 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			ce.setObject(batch);
 			ce.setSizeEstimate(sizeEstimate);
 			ce.setSerializer(this.ref);
-			return addCacheEntry(ce, this);
+			CacheEntry old = null;
+			if (previous != null) {
+				if (removeOld) {
+					old = BufferManagerImpl.this.remove(id, previous, prefersMemory.get());
+				} else {
+					old = fastGet(previous, prefersMemory.get(), true);
+				}
+			}
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Add batch to BufferManager", ce.getId(), "with size estimate", ce.getSizeEstimate()); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			cache.addToCacheGroup(id, ce.getId());
+			addMemoryEntry(ce, old);
+			return oid;
 		}
 
 		@Override
@@ -166,7 +179,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		}
 		
 		public int getSizeEstimate(List<? extends List<?>> obj) {
-			return (int) Math.max(1, sizeUtility.getBatchSize(obj) / 1024);
+			return (int) Math.max(1, sizeUtility.getBatchSize(DataTypeManager.isValueCacheEnabled(), obj) / 1024);
 		}
 		
 		@SuppressWarnings("unchecked")
@@ -201,7 +214,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				ce.setSerializer(this.ref);
 				ce.setPersistent(true);
 				if (retain) {
-					addMemoryEntry(ce);
+					addMemoryEntry(ce, null);
 				}
 			}	
 			return (List<List<?>>)ce.getObject();
@@ -259,9 +272,32 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     
     private AtomicInteger activeBatchKB = new AtomicInteger();
     
-    //tiered memory entries.  the first tier is just a queue of adds/gets.  once accessed again, the entry moves to the tenured tier.
-    private LinkedHashMap<Long, CacheEntry> memoryEntries = new LinkedHashMap<Long, CacheEntry>(16, .75f, false);
-    private LinkedHashMap<Long, CacheEntry> tenuredMemoryEntries = new LinkedHashMap<Long, CacheEntry>(16, .75f, true);
+    //combined recency/frequency lamda value between 0 and 1 lower -> LFU, higher -> LRU
+    //TODO: adaptively adjust this value.  more hits should move closer to lru
+    private final double crfLamda = .0002;
+    //implements a LRFU cache using the a customized crf function.  we store the value with
+    //the cache entry to make a better decision about reuse of the batch
+    //TODO: consider the size estimate in the weighting function
+    private OrderedCache<Long, CacheEntry> memoryEntries = new OrderedCache<Long, CacheEntry>() {
+		
+		@Override
+		protected void recordAccess(Long key, CacheEntry value, boolean initial) {
+			long lastAccess = value.getLastAccess();
+			value.setLastAccess(readAttempts.get());
+			if (initial && lastAccess == 0) {
+				return;
+			}
+			double orderingValue = value.getOrderingValue();
+			orderingValue = 
+				//Frequency component
+				orderingValue*Math.pow(1-crfLamda, value.getLastAccess() - lastAccess)
+				//recency component
+				+ Math.pow(value.getLastAccess(), crfLamda);
+			value.setOrderingValue(orderingValue);
+		}
+	};
+	
+	//private LinkedHashMap<Long, CacheEntry> memoryEntries = new LinkedHashMap<Long, CacheEntry>();
     
     //limited size reference caches based upon the memory settings
     private WeakReferenceHashedValueCache<CacheEntry> weakReferenceCache; 
@@ -510,38 +546,26 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     			if (memoryCount < getMaxReserveKB() / 8) {
 					DataTypeManager.setValueCacheEnabled(false);
 				}
-			} else if (memoryCount > getMaxReserveKB() / 4) {
+			} else if (memoryCount > getMaxReserveKB() / 2) {
 				DataTypeManager.setValueCacheEnabled(true);
 			}
 			return;
 		}
-		boolean first = true;
+		int maxToFree = Math.max(maxProcessingKB>>1, reserveBatchKB>>3);
+		int freed = 0;
 		while (true) {
 			CacheEntry ce = null;
 			synchronized (memoryEntries) {
-				if (activeBatchKB.get() == 0 || activeBatchKB.get() < reserveBatchKB * .8) {
+				if (freed > maxToFree || activeBatchKB.get() == 0 || activeBatchKB.get() < reserveBatchKB * .8) {
 					break;
 				}
-				if (first) { //let one entry per persist cycle loose its tenure.  this helps us be more write avoident.
-					first = false;
-					if (!tenuredMemoryEntries.isEmpty()) {
-						Iterator<Map.Entry<Long, CacheEntry>> iter = tenuredMemoryEntries.entrySet().iterator();
-						Map.Entry<Long, CacheEntry> entry = iter.next();
-						iter.remove();
-						memoryEntries.put(entry.getKey(), entry.getValue());
-					}
-				}
-				LinkedHashMap<Long, CacheEntry> toDrain = memoryEntries;
-				if (memoryEntries.isEmpty()) {
-					toDrain = tenuredMemoryEntries;
-					if (tenuredMemoryEntries.isEmpty()) {
-						break;
-					}
-				}
-				Iterator<CacheEntry> iter = toDrain.values().iterator();
-				ce = iter.next();
-				iter.remove();
+				ce = memoryEntries.evict();
+				freed += ce.getSizeEstimate();
 				activeBatchKB.addAndGet(-ce.getSizeEstimate());
+				if (ce.isPersistent()) {
+					continue;
+				}
+				ce.setPersistent(true);
 			}
 			persist(ce);
 		}
@@ -552,17 +576,14 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		if (s == null) {
 			return;
 		}
-		if (!ce.isPersistent()) {
-			long count = writeCount.incrementAndGet();
-			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, ce.getId(), "writing batch to storage, total writes: ", count); //$NON-NLS-1$
-			}
-			try {
-				cache.add(ce, s);
-			} catch (Throwable e) {
-				LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, "Error persisting batch, attempts to read batch "+ ce.getId() +" later will result in an exception"); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-			ce.setPersistent(true);
+		long count = writeCount.incrementAndGet();
+		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+			LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, ce.getId(), "writing batch to storage, total writes: ", count); //$NON-NLS-1$
+		}
+		try {
+			cache.add(ce, s);
+		} catch (Throwable e) {
+			LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, "Error persisting batch, attempts to read batch "+ ce.getId() +" later will result in an exception"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		if (s.useSoftCache()) {
 			createSoftReference(ce);
@@ -584,18 +605,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		CacheEntry ce = null;
 		synchronized (memoryEntries) {
 			if (retain) {
-				ce = tenuredMemoryEntries.get(batch);
-				if (ce == null) {
-					ce = memoryEntries.remove(batch);
-					if (ce != null) {
-						tenuredMemoryEntries.put(batch, ce);
-					}
-				} 
+				ce = memoryEntries.get(batch);
 			} else {
-				ce = tenuredMemoryEntries.remove(batch);
-				if (ce == null) {
-					ce = memoryEntries.remove(batch);
-				}
+				ce = memoryEntries.remove(batch);
 			}
 		}
 		if (ce != null) {
@@ -621,7 +633,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		if (ce != null && ce.getObject() != null) {
 			referenceHit.getAndIncrement();
 			if (retain) {
-				addMemoryEntry(ce);
+				addMemoryEntry(ce, null);
 			} else {
 				BufferManagerImpl.this.remove(ce, false);
 			}
@@ -630,7 +642,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		return null;
 	}
 	
-	void remove(Long gid, Long batch, boolean prefersMemory) {
+	CacheEntry remove(Long gid, Long batch, boolean prefersMemory) {
 		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
 			LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Removing batch from BufferManager", batch); //$NON-NLS-1$
 		}
@@ -640,6 +652,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		} else {
 			ce.nullOut();
 		}
+		return ce;
 	}
 
 	private void remove(CacheEntry ce, boolean inMemory) {
@@ -652,18 +665,12 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		}
 	}
 	
-	Long addCacheEntry(CacheEntry ce, Serializer<?> s) {
-		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
-			LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Add batch to BufferManager", ce.getId(), "with size estimate", ce.getSizeEstimate()); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-		cache.addToCacheGroup(s.getId(), ce.getId());
-		addMemoryEntry(ce);
-		return ce.getId();
-	}
-	
-	void addMemoryEntry(CacheEntry ce) {
+	void addMemoryEntry(CacheEntry ce, CacheEntry previous) {
 		persistBatchReferences();
 		synchronized (memoryEntries) {
+			if (previous != null) {
+				ce.setOrderingValue(previous.getOrderingValue());
+			}
 			memoryEntries.put(ce.getId(), ce);
 		}
 		activeBatchKB.getAndAdd(ce.getSizeEstimate());
@@ -782,12 +789,20 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		this.inlineLobs = inlineLobs;
 	}
 
-	private int getMaxReserveKB() {
+	public int getMaxReserveKB() {
 		return maxReserveKB.get();
 	}
 	
 	public void setCache(Cache cache) {
 		this.cache = cache;
+	}
+	
+	public int getActiveBatchKB() {
+		return activeBatchKB.get();
+	}
+	
+	public int getMemoryCacheEntries() {
+		return memoryEntries.size();
 	}
 	
 }

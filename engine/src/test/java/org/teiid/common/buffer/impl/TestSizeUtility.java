@@ -163,7 +163,7 @@ public class TestSizeUtility {
         
         String[] types = {"string", "integer", "boolean", "double", "string", "integer"};     //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$//$NON-NLS-4$ //$NON-NLS-5$//$NON-NLS-6$
 
-        long actualSize = new SizeUtility(types).getBatchSize(Arrays.asList(expected));
+        long actualSize = new SizeUtility(types).getBatchSize(false, Arrays.asList(expected));
         assertEquals("Got unexpected size: ", 2667, actualSize); //$NON-NLS-1$        
     }
     

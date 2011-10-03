@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.teiid.client.ResizingArrayList;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 
@@ -103,9 +104,9 @@ class SPage implements Cloneable {
 		this.stree = stree;
 		this.id = counter.getAndIncrement();
 		stree.pages.put(this.id, this);
-		this.values = new ArrayList<List<?>>();
+		this.values = new ResizingArrayList<List<?>>();
 		if (!leaf) {
-			children = new ArrayList<SPage>();
+			children = new ResizingArrayList<SPage>();
 		}
 	}
 	
@@ -186,22 +187,26 @@ class SPage implements Cloneable {
 		if (values instanceof LightWeightCopyOnWriteList<?>) {
 			values = ((LightWeightCopyOnWriteList<List<?>>)values).getList();
 		}
+		if (values.size() < MIN_PERSISTENT_SIZE) {
+			setDirectValues(values);
+			return;
+		} else if (stree.batchInsert && children == null && values.size() < stree.leafSize) {
+			setDirectValues(values);
+			stree.incompleteInsert = this;
+			return;
+		}
+		this.values = null;
+		managedBatch = stree.getBatchManager(children == null).createManagedBatch(values, managedBatch, trackingObject == null);
+		this.trackingObject = null;
+	}
+
+	private void setDirectValues(List<List<?>> values) {
 		if (managedBatch != null && trackingObject == null) {
 			stree.getBatchManager(children == null).remove(managedBatch);
 			managedBatch = null;
 			trackingObject = null;
 		}
-		if (values.size() < MIN_PERSISTENT_SIZE) {
-			this.values = values;
-			return;
-		} else if (stree.batchInsert && children == null && values.size() < stree.leafSize) {
-			this.values = values;
-			stree.incompleteInsert = this;
-			return;
-		}
-		this.values = null;
-		this.trackingObject = null;
-		managedBatch = stree.getBatchManager(children == null).createManagedBatch(values);
+		this.values = values;
 	}
 	
 	protected void remove(boolean force) {

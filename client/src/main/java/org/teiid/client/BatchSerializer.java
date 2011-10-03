@@ -50,7 +50,7 @@ public class BatchSerializer {
     
     private static ColumnSerializer defaultSerializer = new ColumnSerializer();
     
-    private static final Map<String, ColumnSerializer> serializers = new HashMap<String, ColumnSerializer>();
+    private static final Map<String, ColumnSerializer> serializers = new HashMap<String, ColumnSerializer>(128);
     static {
         serializers.put(DataTypeManager.DefaultDataTypes.BIG_DECIMAL,   new BigDecimalColumnSerializer());
         serializers.put(DataTypeManager.DefaultDataTypes.BIG_INTEGER,   new BigIntegerColumnSerializer());
@@ -394,7 +394,7 @@ public class BatchSerializer {
             return new ArrayList<List<Object>>(0);
         } else if (rows > 0) {
             int columns = in.readInt();
-            List<List<Object>> batch = new ArrayList<List<Object>>(rows);
+            List<List<Object>> batch = new ResizingArrayList<List<Object>>(rows);
             int numBytes = rows/8;
             int extraRows = rows % 8;
             for (int currentRow = 0; currentRow < rows; currentRow++) {

@@ -235,6 +235,8 @@ public class FileStoreCache implements Cache {
 			};
 	        ObjectOutputStream oos = new ObjectOutputStream(fsos);
 	        oos.writeInt(entry.getSizeEstimate());
+	        oos.writeLong(entry.getLastAccess());
+	        oos.writeDouble(entry.getOrderingValue());
 	        s.serialize(entry.getObject(), oos);
 	        oos.close();
 	        long size = fsos.getBytesWritten();
@@ -270,6 +272,8 @@ public class FileStoreCache implements Cache {
 			ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(group.store.createInputStream(info[0]), IO_BUFFER_SIZE));
 			CacheEntry ce = new CacheEntry(id);
 			ce.setSizeEstimate(ois.readInt());
+			ce.setLastAccess(ois.readLong());
+			ce.setOrderingValue(ois.readDouble());
 			ce.setObject(serializer.deserialize(ois));
 			return ce;
         } catch(IOException e) {
