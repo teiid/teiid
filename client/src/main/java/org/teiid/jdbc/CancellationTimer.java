@@ -23,7 +23,7 @@
 package org.teiid.jdbc;
 
 import java.util.TreeSet;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.jboss.logging.Logger;
 
@@ -32,11 +32,11 @@ import org.jboss.logging.Logger;
  */
 public class CancellationTimer {
 	
-	private static AtomicInteger id = new AtomicInteger();
+	private static AtomicLong id = new AtomicLong();
 	
 	static abstract class CancelTask implements Runnable, Comparable<CancelTask> {
-		long endTime;
-		int seqId = id.get();
+		final long endTime;
+		final long seqId = id.get();
 		
 		public CancelTask(long delay) {
 			this.endTime = System.currentTimeMillis() + delay;
@@ -44,21 +44,14 @@ public class CancellationTimer {
 		
 		@Override
 		public int compareTo(CancelTask o) {
-			int result = Long.signum(this.endTime = o.endTime);
+			int result = Long.signum(this.endTime - o.endTime);
 			if (result == 0) {
-				return seqId = o.seqId;
+				return Long.signum(seqId - o.seqId);
 			}
 			return result;
 		}
-		@Override
 		public boolean equals(Object obj) {
-			if (obj == this) {
-				return true;
-			}
-			if (!(obj instanceof CancelTask)) {
-				return false;
-			}
-			return this.compareTo((CancelTask)obj) == 0;
+			return obj == this;
 		}
 	}
 	
@@ -117,6 +110,10 @@ public class CancellationTimer {
 			this.cancelQueue.remove(task);
 			this.notifyAll();
 		}
+	}
+	
+	synchronized int getQueueSize() {
+		return cancelQueue.size();
 	}
 
 }
