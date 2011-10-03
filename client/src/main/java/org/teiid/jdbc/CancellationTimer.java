@@ -36,7 +36,7 @@ public class CancellationTimer {
 	
 	static abstract class CancelTask implements Runnable, Comparable<CancelTask> {
 		final long endTime;
-		final long seqId = id.get();
+		final long seqId = id.getAndIncrement();
 		
 		public CancelTask(long delay) {
 			this.endTime = System.currentTimeMillis() + delay;
