@@ -125,6 +125,7 @@ public class TeiidDialect extends Dialect {
         registerFunction("formattimestamp", new StandardSQLFunction("formattimestamp", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("hour", new StandardSQLFunction("hour", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("minute", new StandardSQLFunction("minute", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("month", new StandardSQLFunction("month", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("monthname", new StandardSQLFunction("monthname", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("parsedate", new StandardSQLFunction("parsedate", Hibernate.DATE)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("parsetime", new StandardSQLFunction("parsetime", Hibernate.TIME)); //$NON-NLS-1$ //$NON-NLS-2$
@@ -147,8 +148,8 @@ public class TeiidDialect extends Dialect {
         registerFunction("uuid", new StandardSQLFunction("uuid", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("unescape", new StandardSQLFunction("unescape", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
         
-        registerFunction("array_get", new StandardSQLFunction("uuid", Hibernate.OBJECT)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("array_length", new StandardSQLFunction("unescape", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("array_get", new StandardSQLFunction("array_get", Hibernate.OBJECT)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("array_length", new StandardSQLFunction("array_length", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public boolean dropConstraints() {
