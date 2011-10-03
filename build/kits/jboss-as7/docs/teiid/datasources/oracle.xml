@@ -1,7 +1,7 @@
 <!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
 <subsystem xmlns="urn:jboss:domain:datasources:1.0">
     <datasources>
-        <datasource jndi-name="java:/Oracle11_PushDS" pool-name="OracleDS" enabled="true" jta="true" use-java-context="true" use-ccm="true">
+        <datasource jndi-name="java:/OracleDS" pool-name="OracleDS" enabled="true" jta="true" use-java-context="true" use-ccm="true">
             <connection-url>jdbc:oracle:thin:{host}:1521:orcl</connection-url>
             <driver>oracle</driver>
             <pool>

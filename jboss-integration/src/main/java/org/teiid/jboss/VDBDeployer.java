@@ -25,15 +25,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 
+import javax.naming.InitialContext;
+
+import org.jboss.as.server.deployment.Attachments;
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
+import org.jboss.modules.Module;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.teiid.adminapi.Translator;
+import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.deployers.TeiidAttachments;
@@ -49,7 +54,7 @@ import org.teiid.services.BufferServiceImpl;
 
 
 class VDBDeployer implements DeploymentUnitProcessor {
-			
+	private static final String JAVA_CONTEXT = "java:/"; //$NON-NLS-1$			
 	private TranslatorRepository translatorRepository;
 	private String asyncThreadPoolName;
 	
@@ -91,10 +96,14 @@ class VDBDeployer implements DeploymentUnitProcessor {
 				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("translator_type_not_found", deploymentName)); //$NON-NLS-1$
 			}
 		}
-				
+		
 		// check if this is a VDB with index files, if there are then build the TransformationMetadata
 		UDFMetaData udf = deploymentUnit.getAttachment(TeiidAttachments.UDF_METADATA);
 		if (udf != null) {
+			final Module module = deploymentUnit.getAttachment(Attachments.MODULE);
+			if (module != null) {
+				udf.setFunctionClassLoader(module.getClassLoader());
+			}
 			deployment.addAttchment(UDFMetaData.class, udf);
 		}
 
@@ -111,14 +120,15 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		ArrayList<String> unAvailableDS = new ArrayList<String>();
 		VDBService vdb = new VDBService(deployment);
 		ServiceBuilder<VDBMetaData> vdbService = context.getServiceTarget().addService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()), vdb);
-//		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
-//			for (String sourceName:model.getSourceNames()) {
-//				vdbService.addDependency(ServiceName.JBOSS.append("data-source", model.getSourceConnectionJndiName(sourceName)));	//$NON-NLS-1$
-//				if (context.getServiceRegistry().getService(ServiceName.JBOSS.append("data-source", model.getSourceConnectionJndiName(sourceName))) == null) { //$NON-NLS-1$
-//					unAvailableDS.add(model.getSourceConnectionJndiName(sourceName));
-//				}
-//			}
-//		}
+		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
+			for (String sourceName:model.getSourceNames()) {
+				//TODO: need to make the service as dependency; otherwise dynamic vdbs will not work correctly.
+				//vdbService.addDependency(ServiceName.JBOSS.append("data-source", model.getSourceConnectionJndiName(sourceName)));	//$NON-NLS-1$
+				if (!isSourceAvailable(model.getSourceConnectionJndiName(sourceName))) { 
+					unAvailableDS.add(model.getSourceConnectionJndiName(sourceName));
+				}
+			}
+		}
 		
 		// adding the translator services is redundant, however if one is removed then it is an issue.
 		for (Translator t: deployment.getOverrideTranslators()) {
@@ -141,6 +151,26 @@ class VDBDeployer implements DeploymentUnitProcessor {
 	}
 
 
+	private boolean isSourceAvailable(String name) {
+    		String jndiName = name;
+		if (!name.startsWith(JAVA_CONTEXT)) {
+			jndiName = JAVA_CONTEXT + jndiName;
+		}
+		try {
+			InitialContext ic = new InitialContext();    		
+			try {
+				ic.lookup(jndiName);
+			} catch (Exception e) {
+				if (!jndiName.equals(name)) {
+					ic.lookup(name);
+				}
+			}
+		} catch (Exception e) {
+			return false;
+		}   			
+    	return true;
+	}	
+	
 	@Override
 	public void undeploy(final DeploymentUnit deploymentUnit) {
 		if (!TeiidAttachments.isVDBDeployment(deploymentUnit)) {

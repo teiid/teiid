@@ -22,9 +22,12 @@
 package org.teiid.deployers;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import javax.xml.bind.JAXBException;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.vfs.VirtualFile;
@@ -85,6 +88,15 @@ public class UDFMetaData {
 	public void addFunctions(UDFMetaData funcs){
 		for (Map.Entry<String, Collection<FunctionMethod>> entry : funcs.getFunctions().entrySet()) {
 			addFunctions(entry.getKey(), entry.getValue());
+		}
+	}
+
+	public void setFunctionClassLoader(ClassLoader functionClassLoader) {
+		for (String name : this.methods.keySet()) {
+			Collection <FunctionMethod> funcs = this.methods.get(name);
+			for(FunctionMethod fm:funcs) {
+				fm.setClassloader(functionClassLoader);
+			}
 		}
 	}	
 }

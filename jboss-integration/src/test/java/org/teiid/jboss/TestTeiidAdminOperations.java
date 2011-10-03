@@ -8,6 +8,9 @@ import java.io.ByteArrayInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import javax.xml.transform.Source;
@@ -188,12 +191,8 @@ public class TestTeiidAdminOperations extends AbstractSubsystemTest {
     }
     
     @Test
-    public void testOperatrions() throws Exception {
+    public void testQueryOperatrions() throws Exception {
     	String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config.xml"));
-
-    	String json = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-model-json.txt"));
-    	ModelNode testModel = ModelNode.fromJSONString(json);
-        String triggered = outputModel(testModel);
 
         KernelServices services = super.installInController(
                 new AdditionalInitialization() {
@@ -203,5 +202,39 @@ public class TestTeiidAdminOperations extends AbstractSubsystemTest {
                     }
                 },
                 subsystemXml);
-    }     
+        
+        PathAddress addr = PathAddress.pathAddress(
+                PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM),
+                PathElement.pathElement("query-engine", "default"));
+        ModelNode addOp = new ModelNode();
+        addOp.get(OP).set("read-operation-names");
+        addOp.get(OP_ADDR).set(addr.toModelNode());
+        
+        ModelNode result = services.executeOperation(addOp);
+        Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
+        
+        List<String> opNames = getList(result);
+        assertEquals(22, opNames.size());
+        String [] ops = {"add", "cancel-request", "execute-query", "list-requests", "list-sessions", "list-transactions", 
+        		"long-running-queries", "read-attribute", "read-children-names", "read-children-resources", 
+        		"read-children-types", "read-operation-description", "read-operation-names", "read-resource", 
+        		"read-resource-description", "remove", "requests-per-session", "requests-per-vdb", 
+        		"terminate-session", "terminate-transaction", "workerpool-statistics", "write-attribute"};
+        assertEquals(Arrays.asList(ops), opNames);
+    }
+    
+    private static List<String> getList(ModelNode operationResult) {
+        if(!operationResult.hasDefined("result"))
+            return Collections.emptyList();
+
+        List<ModelNode> nodeList = operationResult.get("result").asList();
+        if(nodeList.isEmpty())
+            return Collections.emptyList();
+
+        List<String> list = new ArrayList<String>(nodeList.size());
+        for(ModelNode node : nodeList) {
+            list.add(node.asString());
+        }
+        return list;
+    }    
 }
