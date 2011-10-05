@@ -22,6 +22,7 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
@@ -61,6 +63,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.Streamable;
+import org.teiid.core.util.ExecutorUtils;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
@@ -69,6 +72,7 @@ import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionService;
 import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.events.EventDistributor;
+import org.teiid.jdbc.EnhancedTimer;
 import org.teiid.logging.CommandLogMessage;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -208,6 +212,8 @@ public class DQPCore implements DQP {
     private CacheFactory cacheFactory;
 
 	private AuthorizationValidator authorizationValidator;
+	
+	private EnhancedTimer cancellationTimer;
     
     /**
      * perform a full shutdown and wait for 10 seconds for all threads to finish
@@ -341,9 +347,27 @@ public class DQPCore implements DQP {
 		request.setAuthorizationValidator(this.authorizationValidator);
 		request.setUserRequestConcurrency(this.getUserRequestSourceConcurrency());
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
-        RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
+        final RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
     	logMMCommand(workItem, Event.NEW, null); 
         addRequest(requestID, workItem, state);
+        long timeout = workContext.getVDB().getQueryTimeout();
+        timeout = Math.min(timeout>0?timeout:Long.MAX_VALUE, config.getQueryTimeout()>0?config.getQueryTimeout():Long.MAX_VALUE);
+        if (timeout < Long.MAX_VALUE) {
+        	workItem.setCancelTask(this.cancellationTimer.add(new Runnable() {
+				WeakReference<RequestWorkItem> workItemRef = new WeakReference<RequestWorkItem>(workItem);
+				@Override
+				public void run() {
+					try {
+						RequestWorkItem wi = workItemRef.get();
+						if (wi != null) {
+							wi.requestCancel();
+						}
+					} catch (TeiidComponentException e) {
+						LogManager.logError(LogConstants.CTX_DQP, e, "Error processing cancellation task."); //$NON-NLS-1$
+					}
+				}
+			}, timeout));
+        }
         boolean runInThread = DQPWorkContext.getWorkContext().useCallingThread() || requestMsg.isSync();
         synchronized (waitingPlans) {
 			if (runInThread || currentlyActivePlans <= maxActivePlans) {
@@ -721,6 +745,10 @@ public class DQPCore implements DQP {
         prepPlanCache.setBufferManager(this.bufferManager);
 		
         this.processWorkerPool = new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads());
+        //we don't want cancellations waiting on normal processing, so they get a small dedicated pool
+        //TODO: overflow to the worker pool
+        Executor timeoutExecutor = ExecutorUtils.newFixedThreadPool(3, "Server Side Timeout"); //$NON-NLS-1$
+        this.cancellationTimer = new EnhancedTimer(timeoutExecutor, timeoutExecutor);
         this.maxActivePlans = config.getMaxActivePlans();
         
         if (this.maxActivePlans > config.getMaxThreads()) {

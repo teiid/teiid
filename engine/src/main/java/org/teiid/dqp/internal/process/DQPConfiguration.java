@@ -44,8 +44,6 @@ public class DQPConfiguration{
 	private int timeSliceInMilli = DEFAULT_PROCESSOR_TIMESLICE;
 	private int maxRowsFetchSize = DEFAULT_FETCH_SIZE;
 	private int lobChunkSizeInKB = 100;
-	private boolean useDataRoles = true;
-	private boolean allowCreateTemporaryTablesByDefault = true;
 	private int queryThresholdInSecs = DEFAULT_QUERY_THRESHOLD;
 	private boolean exceptionOnMaxSourceRows = true;
 	private int maxSourceRows = -1;
@@ -55,9 +53,9 @@ public class DQPConfiguration{
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
     private int userRequestSourceConcurrency = DEFAULT_USER_REQUEST_SOURCE_CONCURRENCY;
     private boolean detectingChangeEvents = true;
+    private long queryTimeout;
     
     private transient AuthorizationValidator authorizationValidator;
-	private boolean allowFunctionCallsByDefault;
 
 	@ManagementProperty(description="Max active plans (default 20).  Increase this value, and max threads, on highly concurrent systems - but ensure that the underlying pools can handle the increased load without timeouts.")
 	public int getMaxActivePlans() {
@@ -218,6 +216,15 @@ public class DQPConfiguration{
 	@ManagementProperty(description="Set to true for the engine to detect local change events. Should be disabled if using external change data capture tools. (default true)")
 	public void setDetectingChangeEvents(boolean detectingChangeEvents) {
 		this.detectingChangeEvents = detectingChangeEvents;
+	}
+	
+	@ManagementProperty(description="Set the default query timeout for all queries in milliseconds. 0 indicates no timeout.  Lesser timeout values may be set per VDB or by clients. (default 0)")
+	public void setQueryTimeout(long queryTimeout) {
+		this.queryTimeout = queryTimeout;
+	}
+	
+	public long getQueryTimeout() {
+		return queryTimeout;
 	}
 
 }

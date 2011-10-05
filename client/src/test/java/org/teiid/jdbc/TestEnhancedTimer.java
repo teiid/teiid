@@ -25,33 +25,28 @@ package org.teiid.jdbc;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
-import org.teiid.jdbc.CancellationTimer.CancelTask;
+import org.teiid.jdbc.EnhancedTimer.Task;
 
 @SuppressWarnings("nls")
-public class TestCancellationTimer {
+public class TestEnhancedTimer {
 	
-	private final class SimpleCancelTask extends CancelTask {
-		private SimpleCancelTask(long delay) {
-			super(delay);
-		}
-
+	private final class SimpleCancelTask implements Runnable {
 		@Override
 		public void run() {
 		}
 	}
 
 	@Test public void testRemove() {
-		CancellationTimer ct = new CancellationTimer("foo");
-		SimpleCancelTask sct = new SimpleCancelTask(20000); 
-		ct.add(sct);
-		SimpleCancelTask sct1 = new SimpleCancelTask(30000); 
-		ct.add(sct1);
-		SimpleCancelTask sct2 = new SimpleCancelTask(10000); 
-		ct.add(sct2);
+		EnhancedTimer ct = new EnhancedTimer("foo");
+		SimpleCancelTask sct = new SimpleCancelTask();
+		Task tt = ct.add(sct, 20000);
+		Task tt1 = ct.add(sct, 20000);
+		assertTrue(tt.compareTo(tt1) < 0);
+		Task tt2 = ct.add(sct, 10000);
 		assertEquals(3, ct.getQueueSize());
-		ct.remove(sct2);
-		ct.remove(sct1);
-		ct.remove(sct);
+		tt.cancel();
+		tt1.cancel();
+		tt2.cancel();
 		assertEquals(0, ct.getQueueSize());
 	}
 	

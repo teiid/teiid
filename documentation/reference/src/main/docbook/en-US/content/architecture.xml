@@ -123,17 +123,25 @@
         actually support this method.</para>
     </section>
     <section>
-      <title>Timeouts</title>
-      <para>Timeouts in Teiid are managed on the client-side,
-        in the JDBC API (which underlies both SOAP and ODBC access).
-        Timeouts are only relevant for the first record returned. If the
+      <title>User Query Timeouts</title>
+      <para>User query timeouts in Teiid can be managed on the client-side or the server-side.
+        Timeouts are only relevant for the first record returned.  If the
         first record has not been received by the client within the
-        specified timeout period, a ‘cancel’ command is issued to the
+        specified timeout period, a 'cancel' command is issued to the
         server for the request and no results are returned to the
-        client. The cancel command is issued by the JDBC API without the
-        client’s intervention.  See the Client Developers Guide for more on setting 
-        statement timeouts via the connection property "QUERYTIMEOUT" and see the Java JDBC API for setting 
-        the query timeout via <code>java.sql.Statement.setQueryTimeout</code> method.</para>
+        client.  The cancel command is issued asynchronously without the
+        client’s intervention.
+        </para><para>
+        The JDBC API uses the query timeout set by the <code>java.sql.Statement.setQueryTimeout</code> method.
+        You may also set a default statement timeout via the connection property "QUERYTIMEOUT".  
+        ODBC clients may also utilize QUERYTIMEOUT as an execution property via a set statement to control the default timeout setting.
+        See the Client Developers Guide for more on connection/execution properties and set statements.</para>
+        <para>Server-side timeouts start when the query is received by the engine.  There may be a skew from the when the
+        client issued the query due to network latency or server load that may slow the processing of IO work.
+        The timeout will be cancelled if the first result is sent back before the timeout has ended.  
+        See the <xref linkend="vdbs"/> section for more on setting the query-timeout VDB property.
+        See the Admin Guide for more on modifying the &jboss-beans; file to set default query timeout for all queries.
+        </para>
     </section>
   </section>
   <section>

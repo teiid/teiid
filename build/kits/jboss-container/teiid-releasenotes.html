@@ -30,7 +30,9 @@
   <LI><B>File Enhancements</B> - the file translator can now optionally (via the ExceptionIfFileNotFound property) throw an exception if the path refers to a file that doesn't exist.  The file resource adapter can be configured to map file names and can prevent parent path .. references.  See the Admin Guide or the file-ds.xml template for more.
   <LI><B>TEXTTABLE Enhancements</B> - TEXTTABLE can now parse fixed width files that do not use a row delimiter and can optionally produce fixed values that haven't been trimmed.
   <LI><B>Temp table transactions</B> - Internal materialized views and temp table usage from a session and within procedures can take advantage of greater transaction support.
-  <LI><B>Buffering Improvements</B> - Added the ability to inline memory based or small lobs and added tracking of the memory held by soft references.
+  <LI><B>Buffering Improvements</B> - Added the ability to inline memory based or small lobs and added tracking of the memory held by soft references.  Also switched to a LFRU algorithm that significantly reduces writes and read misses with temporary tables.
+  <LI><B>GSSAPI</B> - both the Teiid JDBC client/server and the ODBC pg backend can now support GSSAPI for single sign-on. 
+  <LI><B>Server-side Query Timeouts</B> - default query timeouts can be configured at both the VDB (via the query-timeout VDB property) and entire server (via the teiid-jboss-beans.xml queryTimeout property).
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

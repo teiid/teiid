@@ -60,6 +60,7 @@ import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionService;
 import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.jdbc.SQLStates;
+import org.teiid.jdbc.EnhancedTimer.Task;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -168,6 +169,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     
     protected boolean useCallingThread;
     private volatile boolean hasThread;
+    
+    private Task cancelTask;
     
     public RequestWorkItem(DQPCore dqpCore, RequestMessage requestMsg, Request request, ResultsReceiver<ResultsMessage> receiver, RequestID requestID, DQPWorkContext workContext) {
         this.requestMsg = requestMsg;
@@ -292,37 +295,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
             LogManager.logDetail(LogConstants.CTX_DQP, "Request Thread", requestID, "- time slice expired"); //$NON-NLS-1$ //$NON-NLS-2$
             this.moreWork();
         } catch (Throwable e) {
-        	LogManager.logDetail(LogConstants.CTX_DQP, e, "Request Thread", requestID, "- error occurred"); //$NON-NLS-1$ //$NON-NLS-2$
-            
-            if (!isCanceled()) {
-            	dqpCore.logMMCommand(this, Event.ERROR, null);
-                //Case 5558: Differentiate between system level errors and
-                //processing errors.  Only log system level errors as errors, 
-                //log the processing errors as warnings only
-                if(e instanceof TeiidProcessingException) {                          
-                	Throwable cause = e;
-                	while (cause.getCause() != null && cause.getCause() != cause) {
-                		cause = cause.getCause();
-                	}
-                	StackTraceElement[] elems = cause.getStackTrace();
-                	Object elem = null;
-                	if (elems.length > 0) {
-                		elem = cause.getStackTrace()[0];
-                	} else {
-                		elem = cause.getMessage();
-                	}
-                    LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.getString("ProcessWorker.processing_error", e.getMessage(), requestID, e.getClass().getName(), elem)); //$NON-NLS-1$
-                }else {
-                    LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("ProcessWorker.error", requestID)); //$NON-NLS-1$
-                }                                
-            }
-            
-            this.processingException = e;
-            this.state = ProcessingState.CLOSE;
+        	handleThrowable(e);
         } finally {
-        	if (this.state == ProcessingState.CLOSE && !isClosed) {
-        		attemptClose();
-        	} else if (isClosed) {
+        	if (isClosed) {
         		/*
         		 * since there may be a client waiting notify them of a problem
         		 */
@@ -330,10 +305,42 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         			this.processingException = new IllegalStateException("Request is already closed"); //$NON-NLS-1$
         		}
         		sendError();
+        	} else if (this.state == ProcessingState.CLOSE) {
+        		close();
         	}
         	suspend();
         }
     }
+
+	private void handleThrowable(Throwable e) {
+		LogManager.logDetail(LogConstants.CTX_DQP, e, "Request Thread", requestID, "- error occurred"); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		if (!isCanceled()) {
+			dqpCore.logMMCommand(this, Event.ERROR, null);
+		    //Case 5558: Differentiate between system level errors and
+		    //processing errors.  Only log system level errors as errors, 
+		    //log the processing errors as warnings only
+		    if(e instanceof TeiidProcessingException) {                          
+		    	Throwable cause = e;
+		    	while (cause.getCause() != null && cause.getCause() != cause) {
+		    		cause = cause.getCause();
+		    	}
+		    	StackTraceElement[] elems = cause.getStackTrace();
+		    	Object elem = null;
+		    	if (elems.length > 0) {
+		    		elem = cause.getStackTrace()[0];
+		    	} else {
+		    		elem = cause.getMessage();
+		    	}
+		        LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.getString("ProcessWorker.processing_error", e.getMessage(), requestID, e.getClass().getName(), elem)); //$NON-NLS-1$
+		    }else {
+		        LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("ProcessWorker.error", requestID)); //$NON-NLS-1$
+		    }                                
+		}
+		
+		this.processingException = e;
+		this.state = ProcessingState.CLOSE;
+	}
 
 	private void resume() throws XATransactionException {
 		if (this.transactionState == TransactionState.ACTIVE && this.transactionContext.getTransaction() != null) {
@@ -387,65 +394,77 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	 * Client close is currently implemented as asynch.
 	 * Any errors that occur will not make it to the client, instead we just log them here.
 	 */
-	protected void attemptClose() {
+	protected void close() {
 		int rowcount = -1;
-		if (this.resultsBuffer != null) {
-			if (this.processor != null) {
-				this.processor.closeProcessing();
-			
-				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-			        LogManager.logDetail(LogConstants.CTX_DQP, "Removing tuplesource for the request " + requestID); //$NON-NLS-1$
-			    }
-				rowcount = resultsBuffer.getRowCount();
-				if (this.cid == null || !this.doneProducingBatches) {
-					resultsBuffer.remove();
-				} else {
-					try {
-						this.resultsBuffer.persistLobs();
-					} catch (TeiidComponentException e) {
-						LogManager.logDetail(LogConstants.CTX_DQP, QueryPlugin.Util.getString("failed_to_cache")); //$NON-NLS-1$
+		try {
+			cancelCancelTask();
+			if (this.resultsBuffer != null) {
+				if (this.processor != null) {
+					this.processor.closeProcessing();
+				
+					if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+				        LogManager.logDetail(LogConstants.CTX_DQP, "Removing tuplesource for the request " + requestID); //$NON-NLS-1$
+				    }
+					rowcount = resultsBuffer.getRowCount();
+					if (this.cid == null || !this.doneProducingBatches) {
+						resultsBuffer.remove();
+					} else {
+						try {
+							this.resultsBuffer.persistLobs();
+						} catch (TeiidComponentException e) {
+							LogManager.logDetail(LogConstants.CTX_DQP, QueryPlugin.Util.getString("failed_to_cache")); //$NON-NLS-1$
+						}
+					}
+					
+					for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
+						connectorRequest.fullyCloseSource();
+				    }
+				}
+	
+				this.resultsBuffer = null;
+				
+				if (!this.lobStreams.isEmpty()) {
+					List<LobWorkItem> lobs = null;
+					synchronized (lobStreams) {
+						lobs = new ArrayList<LobWorkItem>(this.lobStreams.values());
+					}
+					for (LobWorkItem lobWorkItem : lobs) {
+						lobWorkItem.close();
 					}
 				}
-				
-				for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
-					connectorRequest.fullyCloseSource();
-			    }
 			}
-
-			this.resultsBuffer = null;
+	
+			if (this.transactionState == TransactionState.ACTIVE) { 
+				this.transactionState = TransactionState.DONE;
+	            if (transactionContext.getTransactionType() == TransactionContext.Scope.REQUEST) {
+					try {
+		        		this.transactionService.rollback(transactionContext);
+		            } catch (XATransactionException e1) {
+		                LogManager.logWarning(LogConstants.CTX_DQP, e1, QueryPlugin.Util.getString("ProcessWorker.failed_rollback")); //$NON-NLS-1$           
+		            } 
+				} else {
+					suspend();
+				}
+			}
+		} catch (Throwable t) {
+			handleThrowable(t);
+		} finally {
+			isClosed = true;
 			
-			if (!this.lobStreams.isEmpty()) {
-				List<LobWorkItem> lobs = null;
-				synchronized (lobStreams) {
-					lobs = new ArrayList<LobWorkItem>(this.lobStreams.values());
-				}
-				for (LobWorkItem lobWorkItem : lobs) {
-					lobWorkItem.close();
-				}
-			}
-		}
-
-		if (this.transactionState == TransactionState.ACTIVE) { 
-			this.transactionState = TransactionState.DONE;
-            if (transactionContext.getTransactionType() == TransactionContext.Scope.REQUEST) {
-				try {
-	        		this.transactionService.rollback(transactionContext);
-	            } catch (XATransactionException e1) {
-	                LogManager.logWarning(LogConstants.CTX_DQP, e1, QueryPlugin.Util.getString("ProcessWorker.failed_rollback")); //$NON-NLS-1$           
-	            } 
+			dqpCore.removeRequest(this);
+		    
+			if (this.processingException != null) {
+				sendError();			
 			} else {
-				suspend();
+		        dqpCore.logMMCommand(this, Event.END, rowcount);
 			}
 		}
-		
-		isClosed = true;
+	}
 
-		dqpCore.removeRequest(this);
-	    
-		if (this.processingException != null) {
-			sendError();			
-		} else {
-	        dqpCore.logMMCommand(this, Event.END, rowcount);
+	private void cancelCancelTask() {
+		if (this.cancelTask != null) {
+			this.cancelTask.cancel();
+			this.cancelTask = null;
 		}
 	}
 
@@ -643,6 +662,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
             receiver = this.resultsReceiver;
             this.resultsReceiver = null;    
 		}
+		cancelCancelTask();
         receiver.receiveResults(response);
         return result;
 	}
@@ -936,5 +956,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     void scheduleWork(Runnable r, int priority, long delay) {
     	dqpCore.scheduleWork(r, priority, delay);
     }
+    
+    public void setCancelTask(Task cancelTask) {
+		this.cancelTask = cancelTask;
+	}
 
 }

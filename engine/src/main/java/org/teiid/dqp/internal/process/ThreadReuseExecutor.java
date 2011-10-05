@@ -291,7 +291,8 @@ public class ThreadReuseExecutor implements Executor {
 						synchronized (poolLock) {
 							if (success) {
 								completedCount++;
-								r = queue.poll();		
+								//we only poll if successful, to let the exception handling happen immediately otherwise
+								r = queue.poll();
 							}
 							if (!success || r == null) {
 								threads.remove(t);
@@ -301,10 +302,12 @@ public class ThreadReuseExecutor implements Executor {
 								}		
 							}
 						}
-						long warnTime = warnWaitTime;
-						if (r != null && System.currentTimeMillis() - r.getCreationTime() > warnTime) {
-							LogManager.logWarning(LogConstants.CTX_RUNTIME, QueryPlugin.Util.getString("WorkerPool.Max_thread", maximumPoolSize, poolName, highestQueueSize, warnTime)); //$NON-NLS-1$
-							warnWaitTime*=2; //we don't really care if this is synchronized
+						if (success) {
+							long warnTime = warnWaitTime;
+							if (r != null && System.currentTimeMillis() - r.getCreationTime() > warnTime) {
+								LogManager.logWarning(LogConstants.CTX_RUNTIME, QueryPlugin.Util.getString("WorkerPool.Max_thread", maximumPoolSize, poolName, highestQueueSize, warnTime)); //$NON-NLS-1$
+								warnWaitTime*=2; //we don't really care if this is synchronized
+							}
 						}
 						t.setName(name);
 					}

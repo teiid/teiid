@@ -138,6 +138,8 @@
         <property name="objectReplicatorName">teiid/replicator</property>
         <!-- Set to true for the engine to detect local change events. Should be disabled if using external change data capture tools. (default true) -->
         <property name="detectingChangeEvents">true</property>
+        <!-- Set the default query timeout for all queries in milliseconds. 0 indicates no timeout.  Lesser timeout values may be set per VDB or by clients. (default 0) -->
+        <property name="queryTimeout">0</property>
     </bean>
     
     <!-- An authorization validator that by default uses data role information stored in VDBs -->

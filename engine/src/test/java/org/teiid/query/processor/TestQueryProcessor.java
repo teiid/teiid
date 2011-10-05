@@ -22,39 +22,30 @@
 
 package org.teiid.query.processor;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
+import org.junit.Test;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
-import org.teiid.query.processor.BatchCollector;
-import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.util.CommandContext;
 
-import junit.framework.TestCase;
-
-
 /**
  */
-public class TestQueryProcessor extends TestCase {
+public class TestQueryProcessor {
 
-    /**
-     * Constructor for TestQueryProcessor.
-     * @param name
-     */
-    public TestQueryProcessor(String name) {
-        super(name);
-    }
-    
-    public void helpTestProcessor(FakeProcessorPlan plan, long timeslice, List[] expectedResults) throws TeiidException {
+    public void helpTestProcessor(FakeProcessorPlan plan, List[] expectedResults) throws TeiidException {
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
         FakeDataManager dataManager = new FakeDataManager();
 
@@ -85,14 +76,14 @@ public class TestQueryProcessor extends TestCase {
         tsID.remove();
     }
     
-    public void testNoResults() throws Exception {
+    @Test public void testNoResults() throws Exception {
         List elements = new ArrayList();
         elements.add(new ElementSymbol("a")); //$NON-NLS-1$
         FakeProcessorPlan plan = new FakeProcessorPlan(elements, null);
-        helpTestProcessor(plan, 1000, new List[0]);    
+        helpTestProcessor(plan, new List[0]);    
     }
 
-    public void testBlockNoResults() throws Exception {
+    @Test public void testBlockNoResults() throws Exception {
         List elements = new ArrayList();
         elements.add(new ElementSymbol("a")); //$NON-NLS-1$
         
@@ -103,10 +94,10 @@ public class TestQueryProcessor extends TestCase {
         batches.add(batch);
         
         FakeProcessorPlan plan = new FakeProcessorPlan(elements, batches);
-        helpTestProcessor(plan, 1000, new List[0]);    
+        helpTestProcessor(plan, new List[0]);    
     }
     
-    public void testProcessWithOccasionalBlocks() throws Exception {
+    @Test public void testProcessWithOccasionalBlocks() throws Exception {
         List elements = new ArrayList();
         elements.add(new ElementSymbol("a")); //$NON-NLS-1$
                 
@@ -137,6 +128,18 @@ public class TestQueryProcessor extends TestCase {
         }
         
         FakeProcessorPlan plan = new FakeProcessorPlan(elements, batches);
-        helpTestProcessor(plan, 1000, expectedResults);                    
+        helpTestProcessor(plan, expectedResults);                    
     }
+    
+    @Test public void testCloseBeforeInitialization() throws TeiidComponentException {
+        BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
+        FakeDataManager dataManager = new FakeDataManager();
+
+        CommandContext context = new CommandContext("pid", "group", null, null, 1); //$NON-NLS-1$ //$NON-NLS-2$
+
+    	QueryProcessor processor = new QueryProcessor(null, context, bufferMgr, dataManager);
+    	processor.closeProcessing();
+    }
+    
+    
 }
