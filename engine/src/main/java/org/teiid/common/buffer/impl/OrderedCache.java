@@ -22,30 +22,24 @@
 
 package org.teiid.common.buffer.impl;
 
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.NavigableMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 public abstract class OrderedCache<K, V> {
 	
-	protected HashMap<K, V> map = new HashMap<K, V>(); 
-	protected TreeMap<V, K> expirationQueue;
-	
-	public OrderedCache() {
-		expirationQueue = new TreeMap<V, K>();
-	}
-	
-	public OrderedCache(Comparator<? super V> comparator) {
-		expirationQueue = new TreeMap<V, K>(comparator);
-	}
-	
+	protected Map<K, V> map = new ConcurrentHashMap<K, V>(); 
+	protected NavigableMap<V, K> expirationQueue = new ConcurrentSkipListMap<V, K>();
+		
 	public V get(K key) {
 		V result = map.get(key);
 		if (result != null) {
-			expirationQueue.remove(result);
-			recordAccess(key, result, false);
-			expirationQueue.put(result, key);
+			synchronized (result) {
+				expirationQueue.remove(result);
+				recordAccess(key, result, false);
+				expirationQueue.put(result, key);
+			}
 		}
 		return result;
 	}
@@ -53,7 +47,9 @@ public abstract class OrderedCache<K, V> {
 	public V remove(K key) {
 		V result = map.remove(key);
 		if (result != null) {
-			expirationQueue.remove(result);
+			synchronized (result) {
+				expirationQueue.remove(result);
+			}
 		}
 		return result;
 	}
@@ -61,10 +57,14 @@ public abstract class OrderedCache<K, V> {
 	public V put(K key, V value) {
 		V result = map.put(key, value);
 		if (result != null) {
-			expirationQueue.remove(result);
+			synchronized (result) {
+				expirationQueue.remove(result);
+			}
 		}
-		recordAccess(key, value, result == null);
-		expirationQueue.put(value, key);
+		synchronized (value) {
+			recordAccess(key, value, result == null);
+			expirationQueue.put(value, key);
+		}
 		return result;
 	}
 	
@@ -73,8 +73,7 @@ public abstract class OrderedCache<K, V> {
 		if (entry == null) {
 			return null;
 		}
-		map.remove(entry.getValue());
-		return entry.getKey();
+		return map.remove(entry.getValue());
 	}
 	
 	public int size() {

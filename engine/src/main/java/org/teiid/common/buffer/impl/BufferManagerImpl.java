@@ -296,8 +296,6 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			value.setOrderingValue(orderingValue);
 		}
 	};
-	
-	//private LinkedHashMap<Long, CacheEntry> memoryEntries = new LinkedHashMap<Long, CacheEntry>();
     
     //limited size reference caches based upon the memory settings
     private WeakReferenceHashedValueCache<CacheEntry> weakReferenceCache; 
@@ -554,14 +552,13 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		int maxToFree = Math.max(maxProcessingKB>>1, reserveBatchKB>>3);
 		int freed = 0;
 		while (true) {
-			CacheEntry ce = null;
-			synchronized (memoryEntries) {
-				if (freed > maxToFree || activeBatchKB.get() == 0 || activeBatchKB.get() < reserveBatchKB * .8) {
-					break;
-				}
-				ce = memoryEntries.evict();
-				freed += ce.getSizeEstimate();
-				activeBatchKB.addAndGet(-ce.getSizeEstimate());
+			if (freed > maxToFree || activeBatchKB.get() == 0 || activeBatchKB.get() < reserveBatchKB * .8) {
+				break;
+			}
+			CacheEntry ce = memoryEntries.evict();
+			freed += ce.getSizeEstimate();
+			activeBatchKB.addAndGet(-ce.getSizeEstimate());
+			synchronized (ce) {
 				if (ce.isPersistent()) {
 					continue;
 				}
@@ -603,12 +600,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	 */
 	CacheEntry fastGet(Long batch, boolean prefersMemory, boolean retain) {
 		CacheEntry ce = null;
-		synchronized (memoryEntries) {
-			if (retain) {
-				ce = memoryEntries.get(batch);
-			} else {
-				ce = memoryEntries.remove(batch);
-			}
+		if (retain) {
+			ce = memoryEntries.get(batch);
+		} else {
+			ce = memoryEntries.remove(batch);
 		}
 		if (ce != null) {
 			if (!retain) {
@@ -667,7 +662,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	
 	void addMemoryEntry(CacheEntry ce, CacheEntry previous) {
 		persistBatchReferences();
-		synchronized (memoryEntries) {
+		synchronized (ce) {
 			if (previous != null) {
 				ce.setOrderingValue(previous.getOrderingValue());
 			}
