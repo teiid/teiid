@@ -56,7 +56,7 @@ public class TestJDBCSocketTransport {
 		
 		DQPConfiguration dqpConfig = new DQPConfiguration();
 		dqpConfig.setMaxActivePlans(2);
-		FakeServer server = new FakeServer();
+		FakeServer server = new FakeServer(dqpConfig);
 		server.setUseCallingThread(false);
 		server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
 		

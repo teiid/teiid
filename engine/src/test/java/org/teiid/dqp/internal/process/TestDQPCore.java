@@ -529,6 +529,20 @@ public class TestDQPCore {
         assertNotNull(t.chunkFuture.get().getBytes());
     }
     
+    @Test public void testServerTimeout() throws Exception {
+    	RequestMessage reqMsg = exampleRequestMessage("select to_bytes(stringkey, 'utf-8') FROM BQT1.SmallA"); 
+        reqMsg.setTxnAutoWrapMode(RequestMessage.TXN_WRAP_OFF);
+        agds.setSleep(100);
+        String sessionid = "1";
+        String userName = "A";
+		DQPWorkContext.getWorkContext().getSession().setSessionId(String.valueOf(sessionid));
+        DQPWorkContext.getWorkContext().getSession().setUserName(userName);
+
+        Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
+        core.cancelRequest(reqMsg.getExecutionId());
+        assertNotNull(message.get().getException());
+    }
+    
 	public void helpTestVisibilityFails(String sql) throws Exception {
         RequestMessage reqMsg = exampleRequestMessage(sql); 
         reqMsg.setTxnAutoWrapMode(RequestMessage.TXN_WRAP_OFF);

@@ -197,11 +197,13 @@ public class QueryProcessor implements BatchProducer {
 		this.bufferMgr.releaseBuffers(reserved);
 		reserved = 0;
         processorClosed = true;
-        try {
-        	processPlan.close();
-		} catch (TeiidComponentException e1){
-			LogManager.logDetail(LogConstants.CTX_DQP, e1, "Error closing processor"); //$NON-NLS-1$
-		}
+        if (initialized) {
+	        try {
+	        	processPlan.close();
+			} catch (TeiidComponentException e1){
+				LogManager.logDetail(LogConstants.CTX_DQP, e1, "Error closing processor"); //$NON-NLS-1$
+			}
+        }
     }
 
     @Override
