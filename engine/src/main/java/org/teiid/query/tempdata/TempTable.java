@@ -230,7 +230,6 @@ public class TempTable implements Cloneable {
 		
 		int process() throws ExpressionEvaluationException, TeiidComponentException, TeiidProcessingException {
 			int reserved = reserveBuffers();
-			boolean held = lock.writeLock().isHeldByCurrentThread();
 			lock.writeLock().lock();
 			boolean success = false;
 			try {
@@ -265,9 +264,7 @@ public class TempTable implements Cloneable {
 					}
 				} finally {
 					bm.releaseBuffers(reserved);
-					if (!held) {
-						lock.writeLock().unlock();
-					}
+					lock.writeLock().unlock();
 					close();
 				}
 			}

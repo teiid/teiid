@@ -277,6 +277,19 @@ public class TestTempTables {
 		}
 		//should revert back to original
 		execute("select count(*) from x", new List[] {Arrays.asList(2)}); //$NON-NLS-1$
+		
+		Thread t = new Thread() {
+			public void run() {
+				try {
+					execute("select count(e1) from x", new List[] {Arrays.asList(2)});
+				} catch (Exception e) {
+					e.printStackTrace();
+				} 
+			}
+		};
+		t.start();
+		t.join(2000);
+		assertFalse(t.isAlive());
 	}
 	
 	@Test public void testAtomicDelete() throws Exception {
