@@ -210,7 +210,6 @@ class TempTable {
 		
 		int process() throws ExpressionEvaluationException, TeiidComponentException, TeiidProcessingException {
 			int reserved = reserveBuffers();
-			boolean held = lock.writeLock().isHeldByCurrentThread();
 			lock.writeLock().lock();
 			boolean success = false;
 			try {
@@ -240,9 +239,7 @@ class TempTable {
 				} catch (TeiidException e) {
 					LogManager.logError(LogConstants.CTX_DQP, e, e.getMessage());
 				} finally {
-					if (!held) {
-						lock.writeLock().unlock();
-					}
+					lock.writeLock().unlock();
 					close();
 				}
 			}
