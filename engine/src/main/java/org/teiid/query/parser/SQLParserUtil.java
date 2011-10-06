@@ -73,7 +73,7 @@ public class SQLParserUtil {
   		return result;
 	}
 	
-	String normalizeId(String s) {
+	public static String normalizeId(String s) {
 		if (s.indexOf('"') == -1) {
 			return s;
 		}
@@ -164,7 +164,7 @@ public class SQLParserUtil {
         return validateName(id, true);
     }
     
-    String removeEscapeChars(String str, String tickChar) {
+    static String removeEscapeChars(String str, String tickChar) {
         return StringUtil.replaceAll(str, tickChar + tickChar, tickChar);
     }
     
