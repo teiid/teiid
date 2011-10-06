@@ -367,6 +367,8 @@
     <property name="truststorePassword">passwd</property>
     <!--  1-way, 2-way, anonymous -->
     <property name="authenticationMode">1-way</property>
+    <!-- an optional property to constrain the cipher suites to be negotiated between server and client -->
+    <property name="enabledCipherSuites">SSL_RSA_WITH_RC4_128_MD5,SSL_RSA_WITH_RC4_128_SHA</property>
 </bean>]]></programlisting>       
 </example>
            <itemizedlist>
@@ -387,6 +389,7 @@
             public key for the client. Depending upon how you created the keystore and truststores, 
             this may be same file as defined under  "keystoreFilename" property.</para></listitem>
             <listitem><para>truststorePassword - password for the truststore. </para></listitem>
+            <listitem><para>enabledCipherSuites - A comma separated list of cipher suites allowed for encryption between server and client</para></listitem>
            </itemizedlist>  
       	<section id="ssl_auth">
       		<title>SSL Authentication Modes</title>
@@ -408,8 +411,9 @@
       	</section>
       	<section id="encryption_strength">
       		<title>Encryption Strength</title>
-      		<para>Both anonymous SSL and login only encryption are configured to use 128 bit AES encryption.  
-      		1-way and 2-way SSL allow for cipher suite negotiation based upon the default cipher suites supported by the respective Java platforms of the client and server.		
+      		<para>Both anonymous SSL and login only encryption are configured to use 128 bit AES encryption by default.  By default,
+      		1-way and 2-way SSL allow for cipher suite negotiation based upon the default cipher suites supported by the respective Java platforms of the client and server.
+            User can restrict the cipher suites used for encryption by specifying the <emphasis>enabledCipherSuites</emphasis> property above in ssl configuration.     		
       		</para>
       	</section> 
     </section>
