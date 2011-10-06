@@ -39,6 +39,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.XMLType;
 import org.teiid.dqp.internal.process.DQPCore.ClientState;
+import org.teiid.dqp.internal.process.DQPWorkContext.Version;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.dqp.message.RequestID;
@@ -77,6 +78,8 @@ public class MetaDataProcessor {
     private int vdbVersion;
     private RequestID requestID;
     
+    private boolean labelAsName;
+    
     public MetaDataProcessor(DQPCore requestManager, SessionAwareCache<PreparedPlan> planCache, String vdbName, int vdbVersion) {
         this.requestManager = requestManager;
         this.planCache = planCache;
@@ -97,6 +100,7 @@ public class MetaDataProcessor {
         this.requestID = requestId;
         
         this.metadata = workContext.getVDB().getAttachment(QueryMetadataInterface.class);
+        this.labelAsName = workContext.getClientVersion().compareTo(Version.SEVEN_3) <= 0;
         
         // If multi-source, use the multi-source wrapper as well
         Set<String> multiModels = workContext.getVDB().getMultiSourceModelNames();
@@ -243,7 +247,7 @@ public class MetaDataProcessor {
         Class<?> type = symbol.getType();
         column.put(ResultsMetadataConstants.DATA_TYPE, DataTypeManager.getDataTypeName(type));
         column.put(ResultsMetadataConstants.ELEMENT_LABEL, label); 
-        column.put(ResultsMetadataConstants.ELEMENT_NAME, metadata.getName(elementID));
+        column.put(ResultsMetadataConstants.ELEMENT_NAME, labelAsName?label:metadata.getName(elementID));
         
         GroupSymbol group = symbol.getGroupSymbol();        
         if(group == null || group.getMetadataID() == null) {
@@ -396,7 +400,7 @@ public class MetaDataProcessor {
         column.put(ResultsMetadataConstants.VIRTUAL_DATABASE_NAME, vdbName);
         column.put(ResultsMetadataConstants.VIRTUAL_DATABASE_VERSION, vdbVersion);
         column.put(ResultsMetadataConstants.GROUP_NAME, tableName);
-        column.put(ResultsMetadataConstants.ELEMENT_NAME, columnName);
+        column.put(ResultsMetadataConstants.ELEMENT_NAME, labelAsName?columnLabel:columnName);
         column.put(ResultsMetadataConstants.ELEMENT_LABEL, columnLabel);
         column.put(ResultsMetadataConstants.AUTO_INCREMENTING, Boolean.FALSE);
         column.put(ResultsMetadataConstants.CASE_SENSITIVE, Boolean.FALSE);
