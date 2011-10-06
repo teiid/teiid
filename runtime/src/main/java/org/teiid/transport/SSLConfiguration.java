@@ -24,7 +24,9 @@ package org.teiid.transport;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.StringTokenizer;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -59,8 +61,10 @@ public class SSLConfiguration {
     private String trustStoreFileName;
     private String trustStorePassword = ""; //$NON-NLS-1$
     private String authenticationMode = ONEWAY;
+    private String[] enabledCipherSuites;
     
-    public SSLEngine getServerSSLEngine() throws IOException, GeneralSecurityException {
+
+	public SSLEngine getServerSSLEngine() throws IOException, GeneralSecurityException {
         if (!isSslEnabled()) {
         	return null;
         }
@@ -86,10 +90,13 @@ public class SSLConfiguration {
             if (!(Arrays.asList(result.getSupportedCipherSuites()).contains(SocketUtil.ANON_CIPHER_SUITE))) {
             	throw new GeneralSecurityException(RuntimePlugin.Util.getString("SSLConfiguration.no_anonymous")); //$NON-NLS-1$
             }
-            result.setEnabledCipherSuites(new String[] {
-            		SocketUtil.ANON_CIPHER_SUITE
-            });
-        } 
+            result.setEnabledCipherSuites(this.enabledCipherSuites == null?new String[] {SocketUtil.ANON_CIPHER_SUITE}:this.enabledCipherSuites);
+        } else {
+        	if (this.enabledCipherSuites != null) {
+        		result.setEnabledCipherSuites(this.enabledCipherSuites);
+        	}
+        }
+        
         result.setNeedClientAuth(TWOWAY.equals(authenticationMode));
         return result;
     }
@@ -142,4 +149,15 @@ public class SSLConfiguration {
     	this.authenticationMode = value;
     }
     
+	public void setEnabledCipherSuites(String enabledCipherSuites) {
+		ArrayList<String> ciphers = new ArrayList<String>();
+		StringTokenizer st = new StringTokenizer(enabledCipherSuites);
+		while(st.hasMoreTokens()) {
+			ciphers.add(st.nextToken().trim());
+		}
+		
+		if (!ciphers.isEmpty()) {
+			this.enabledCipherSuites = ciphers.toArray(new String[ciphers.size()]);
+		}
+	}    
 }
