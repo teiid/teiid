@@ -19,26 +19,29 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+
 package org.teiid.translator.jdbc.ingres;
 
-import java.util.List;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.jdbc.TranslationHelper;
 
-import org.teiid.language.Expression;
-import org.teiid.language.Function;
-import org.teiid.translator.jdbc.FunctionModifier;
+public class TestIngresExecutionFactory {
+	
+    private static IngresExecutionFactory TRANSLATOR; 
 
-public class LocateFunctionModifier extends FunctionModifier {
-
-    public LocateFunctionModifier() {
-    }	
-    
-	@Override
-	public List<?> translate(Function function) {
-        Expression a = function.getParameters().get(0);
-        Expression b = function.getParameters().get(1);
-        function.getParameters().set(0, b);
-        function.getParameters().set(1, a);
-        return null;
+    @BeforeClass
+    public static void setUp() throws TranslatorException {
+        TRANSLATOR = new IngresExecutionFactory();        
+        TRANSLATOR.start();
+    }
+	
+	@Test public void testLocate() throws Exception {
+		String input = "SELECT INTKEY FROM BQT1.SmallA WHERE LOCATE(1, INTKEY) = 1 ORDER BY INTKEY"; //$NON-NLS-1$       
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE locate(cast(SmallA.IntKey AS varchar(4000)), '1') = 1 ORDER BY SmallA.IntKey";  //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 	}
-
+	
 }
