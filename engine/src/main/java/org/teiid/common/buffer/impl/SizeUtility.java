@@ -26,8 +26,10 @@ import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.teiid.core.types.DataTypeManager;
 
@@ -43,7 +45,7 @@ public final class SizeUtility {
 	public static final int REFERENCE_SIZE = 8;
 	
 	private static Map<Class<?>, int[]> SIZE_ESTIMATES = new HashMap<Class<?>, int[]>(128);
-	
+	private static Set<Class<?>> VARIABLE_SIZE_TYPES = new HashSet<Class<?>>();
 	static {
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.STRING, new int[] {100, 256});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.DATE, new int[] {20, 28});
@@ -61,13 +63,17 @@ public final class SizeUtility {
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.BOOLEAN, new int[] {1, 1});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.BIG_INTEGER, new int[] {75, 100});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.BIG_DECIMAL, new int[] {150, 200});
+		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.STRING);
+		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.OBJECT);
+		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.BIG_INTEGER);
+		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
 	}
 	
 	private long bigIntegerEstimate;
 	private long bigDecimalEstimate;
-	private String[] types;
+	private Class<?>[] types;
 	
-	public SizeUtility(String[] types) {
+	public SizeUtility(Class<?>[] types) {
 		boolean isValueCacheEnabled = DataTypeManager.isValueCacheEnabled();
 		bigIntegerEstimate = getSize(isValueCacheEnabled, DataTypeManager.DefaultDataClasses.BIG_INTEGER);
 		bigDecimalEstimate = getSize(isValueCacheEnabled, DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
@@ -83,12 +89,8 @@ public final class SizeUtility {
         // array overhead for all the columns ( 8 object overhead + 4 ref + 4 int)
         size += (rowLength * (48 + alignMemory(colLength * REFERENCE_SIZE))); 
         for (int col = 0; col < colLength; col++) {
-            Class<?> type = DataTypeManager.getDataTypeClass(types[col]);
-                        
-            if (type == DataTypeManager.DefaultDataClasses.STRING 
-            		|| type == DataTypeManager.DefaultDataClasses.OBJECT
-            		|| type == DataTypeManager.DefaultDataClasses.BIG_INTEGER
-            		|| type == DataTypeManager.DefaultDataClasses.BIG_DECIMAL) {
+            Class<?> type = types[col];
+			if (VARIABLE_SIZE_TYPES.contains(type)) {
             	int estRow = 0;
                 for (int row = 0; row < rowLength; row++) {
                 	boolean updateEst = row == estRow;

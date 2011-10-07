@@ -34,6 +34,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -87,10 +88,13 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		String[] types;
 		private LobManager lobManager;
 
-		private BatchManagerImpl(Long newID, String[] types) {
+		private BatchManagerImpl(Long newID, Class<?>[] types) {
 			this.id = newID;
 			this.sizeUtility = new SizeUtility(types);
-			this.types = types;
+			this.types = new String[types.length];
+			for (int i = 0; i < types.length; i++) {
+				this.types[i] = DataTypeManager.getDataTypeName(types[i]);
+			}
 			cache.createCacheGroup(newID);
 		}
 		
@@ -381,7 +385,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     		TupleSourceType tupleSourceType) {
     	final Long newID = this.tsId.getAndIncrement();
     	int[] lobIndexes = LobManager.getLobIndexes(elements);
-    	String[] types = TupleBuffer.getTypeNames(elements);
+    	Class<?>[] types = getTypeClasses(elements);
     	BatchManagerImpl batchManager = createBatchManager(newID, types);
     	LobManager lobManager = null;
     	FileStore lobStore = null;
@@ -404,7 +408,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     public STree createSTree(final List elements, String groupName, int keyLength) {
     	Long newID = this.tsId.getAndIncrement();
     	int[] lobIndexes = LobManager.getLobIndexes(elements);
-    	String[] types = TupleBuffer.getTypeNames(elements);
+    	Class<?>[] types = getTypeClasses(elements);
     	BatchManagerImpl bm = createBatchManager(newID, types);
     	LobManager lobManager = null;
     	if (lobIndexes != null) {
@@ -422,7 +426,16 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     	return new STree(keyManager, bm, new ListNestedSortComparator(compareIndexes), getProcessorBatchSize(elements), getProcessorBatchSize(elements.subList(0, keyLength)), keyLength, lobManager);
     }
 
-	private BatchManagerImpl createBatchManager(final Long newID, String[] types) {
+	private static Class<?>[] getTypeClasses(final List elements) {
+		Class<?>[] types = new Class[elements.size()];
+        for (ListIterator<? extends Expression> i = elements.listIterator(); i.hasNext();) {
+            Expression expr = i.next();
+            types[i.previousIndex()] = expr.getType();
+        }
+		return types;
+	}
+
+	private BatchManagerImpl createBatchManager(final Long newID, Class<?>[] types) {
 		BatchManagerImpl bm = new BatchManagerImpl(newID, types);
 		final AtomicBoolean prefersMemory = bm.prefersMemory;
     	AutoCleanupUtil.setCleanupReference(bm, new Removable() {
@@ -480,12 +493,14 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		if (this.maxProcessingKBOrig < 0) {
 			this.maxProcessingKB = Math.max(Math.min(8 * processorBatchSize, Integer.MAX_VALUE), (int)(.1 * maxMemory)/maxActivePlans);
 		} 
-		int memoryBatches = (this.maxProcessingKB * maxActivePlans + this.getMaxReserveKB()) / (processorBatchSize * targetBytesPerRow / 1024);
-		int logSize = 39 - Integer.numberOfLeadingZeros(memoryBatches);
+		//make a guess at the max number of batches
+		int memoryBatches = maxMemory / (processorBatchSize * targetBytesPerRow / 1024);
+		//memoryBatches represents a full batch, so assume that most will be smaller
+		int logSize = 35 - Integer.numberOfLeadingZeros(memoryBatches);
 		if (useWeakReferences) {
-			weakReferenceCache = new WeakReferenceHashedValueCache<CacheEntry>(Math.min(20, logSize));
+			weakReferenceCache = new WeakReferenceHashedValueCache<CacheEntry>(Math.min(30, logSize));
 		}
-		this.maxSoftReferences = 1 << Math.max(28, logSize+2);
+		this.maxSoftReferences = 1 << Math.min(30, logSize);
 	}
 	
     @Override
@@ -538,8 +553,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     }
     
 	void persistBatchReferences() {
-		if (activeBatchKB.get() == 0 || activeBatchKB.get() <= reserveBatchKB) {
-    		int memoryCount = activeBatchKB.get() + getMaxReserveKB() - reserveBatchKB;
+		int activeBatch = activeBatchKB.get();
+		if (activeBatch <= reserveBatchKB) {
+    		int memoryCount = activeBatch + getMaxReserveKB() - reserveBatchKB;
 			if (DataTypeManager.isValueCacheEnabled()) {
     			if (memoryCount < getMaxReserveKB() / 8) {
 					DataTypeManager.setValueCacheEnabled(false);
@@ -551,11 +567,11 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		}
 		int maxToFree = Math.max(maxProcessingKB>>1, reserveBatchKB>>3);
 		int freed = 0;
-		while (true) {
-			if (freed > maxToFree || activeBatchKB.get() == 0 || activeBatchKB.get() < reserveBatchKB * .8) {
+		while (freed <= maxToFree && activeBatchKB.get() > reserveBatchKB * .8) {
+			CacheEntry ce = memoryEntries.evict();
+			if (ce == null) {
 				break;
 			}
-			CacheEntry ce = memoryEntries.evict();
 			freed += ce.getSizeEstimate();
 			activeBatchKB.addAndGet(-ce.getSizeEstimate());
 			synchronized (ce) {

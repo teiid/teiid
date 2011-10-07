@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.core.types.DataTypeManager;
 
 public class TestSizeUtility {
 
@@ -161,7 +162,12 @@ public class TestSizeUtility {
                 Arrays.asList(new Object[] { "c",   new Integer(1),     Boolean.FALSE,  new Double(0.0),    "c",    new Integer(1) })  //$NON-NLS-1$ //$NON-NLS-2$
            };     
         
-        String[] types = {"string", "integer", "boolean", "double", "string", "integer"};     //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$//$NON-NLS-4$ //$NON-NLS-5$//$NON-NLS-6$
+        Class<?>[] types = {DataTypeManager.DefaultDataClasses.STRING,
+        		DataTypeManager.DefaultDataClasses.INTEGER,
+        		DataTypeManager.DefaultDataClasses.BOOLEAN,
+        		DataTypeManager.DefaultDataClasses.DOUBLE,
+        		DataTypeManager.DefaultDataClasses.STRING,
+        		DataTypeManager.DefaultDataClasses.INTEGER};
 
         long actualSize = new SizeUtility(types).getBatchSize(false, Arrays.asList(expected));
         assertEquals("Got unexpected size: ", 2667, actualSize); //$NON-NLS-1$        
