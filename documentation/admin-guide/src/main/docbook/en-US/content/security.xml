@@ -87,23 +87,79 @@
                 The default name of JDBC connection's security-domain is "teiid-security". The default name for Admin connection
                 is "jmx-console". For the Admin connection's security domain, the user is allowed
                 to change which LoginModule that "jmx-console" pointing to, however should not change the name of the domain, as this name is
-                shared between the "admin-console" application.</para>
+                shared between the "admin-console" application.  In existing installations an appropriate security domain may already be configured for use by administrative clients (typically "jmx-console").
+		In this case it may be perfectly valid to reuse this existing security domain instead of creating a new teiid-security security domain.</para>
         </note>    
 			
 		<section>
 			<title>Built-in LoginModules</title>
-			<para>JBossAS provides several LoginModules for common authentication needs, such as authenticating from text files or LDAP.</para>
-			<para>The UsersRolesLoginModule, which utilizes simple text files
-				to authenticate users and to define
-				their groups.  The teiid-jboss-beans.xml configuration file contains an example of how to use UsersRolesLoginModule.  
-				Note that this is typically not for production use and is strongly recommended that you replace this login module. Please 
-                also note that, you can install multiple login modules as part of single security domain configuration and configure them 
+			<para>JBossAS provides several LoginModules for common authentication needs, such as authenticating from a <xref linkend="text-login"/> or a <xref linkend="ldap-login"/>.</para>
+			<para>You can install multiple login modules as part of single security domain configuration and configure them 
                 to part of login process. For example, for "teiid-security" domain, you can configure a file based and also LDAP based login modules, 
-                and have your user authenticated with either both or single login module.  
+                and have your user authenticated with either or both login modules.  If you want to write your own custom login module, check out the Developer's Guide for instructions.  
 	        </para>
-	        <para>See <ulink url="http://community.jboss.org/docs/DOC-11253">LDAP LoginModule configuration</ulink> for utilizing LDAP based authentication.
-            If you want write your own Custom Login module, check out the Developer's Guide for instructions.
-	        </para>
+
+		<section id="text-login">
+			<title>Text Based LoginModule</title>
+			<para>The UsersRolesLoginModule utilizes simple text files to authenticate users and to define their groups.  
+The teiid-jboss-beans.xml configuration file contains an example of how to use UsersRolesLoginModule.  
+<note><para>The UsersRolesLoginModule is not recommended for production use and is strongly recommended that you replace this login module.</para></note>
+			</para>
+			<para>User names and passwords are stored in the &lt;profile&gt;conf/props/teiid-security-users.properties file.
+<example><title>Example user.properties file</title>
+<programlisting><![CDATA[# A users.properties file for use with the UsersRolesLoginModule
+# username=password
+
+fred=password
+george=password
+...]]></programlisting></example>
+
+JAAS role assignments are stored in the &lt;profile&gt;conf/props/teiid-security-roles.properties file.
+<example><title>Example user.properties file</title>
+<programlisting><![CDATA[# A roles.properties file for use with the UsersRolesLoginModule
+# username=role1,role2,...
+
+data_role_1=fred,sally
+data_role_2=george
+]]></programlisting></example>
+
+User and role names are entirely up to the needs of the given deployment.  For example each application team can set their own security constraints for their VDBs, by mapping their VDB data roles to application specific JAAS roles, e.g. app_role_1=user1,user2,user3.
+<note><para>Teiid data roles names are independent of JAAS roles.  VDB creators can choose whatever name they want for their data roles, which are then mapped at deployment time to JAAS roles.</para></note>
+</para>
+		</section>
+
+			<section id="ldap-login">
+				<title>LDAP Based LoginModule</title>
+				<para>See <ulink url="http://community.jboss.org/docs/DOC-11253">LDAP LoginModule configuration</ulink> for the AS community guide.  The following are streamlined installation instruction.
+					<orderedlist>
+						<listitem><para>If using SSL to the LDAP server, ensure that the Corporate CA Certificate is added to the JRE trust store.</para>
+						</listitem>
+	
+						<listitem><para>Include LDAP LoginModule in the JAAS Configuration</para>
+						<para>Configure LDAP authentication by editing &lt;profile&gt;conf/login-config.xml.  If you wish to configure specifically for teiid, then the security domain teiid-security will need to be created/altered.
+						In new installations the more likely option is that you want to configure LDAP based authentication for the AS itself by modifying the "jmx-console" security domain.
+						You could do one of the following for Teiid:
+						<itemizedlist>
+						 	<listitem>
+						 	<para>Reuse the jmx-console (or whatever name you choose) security domain for Teiid by changing the teiid configuration &jboss-beans; to point to jmx-console, rather than teiid-security.
+						 	</para>
+						 	</listitem>
+						 	<listitem>
+						 	<para>Follow the same steps to configure an LDAP security domain named teiid-security.
+						 	</para>
+						 	</listitem>
+						 	<listitem>
+						 	<para>Leave Teiid to use the default file based LoginModule secuirty domain or create an entirely custom security domain configuration.
+						 	</para>
+						 	</listitem>
+						</itemizedlist>
+						</para></listitem>
+						<listitem><para>Obscure the LDAP Password</para><para>Finally, protect the password following <ulink url="http://docs.redhat.com/docs/en-US/JBoss_Enterprise_Application_Platform/5/html/Security_Guide/Using_LdapExtLoginModule_with_JaasSecurityDomain.html">these instructions.</ulink>
+						Note that the salt must be 8 chars andd see also http://community.jboss.org/message/137756#137756 for more on securing passwords.
+						</para></listitem>
+					</orderedlist>
+				</para>
+			</section>
 		</section>
         
         <section>
@@ -389,7 +445,7 @@
             public key for the client. Depending upon how you created the keystore and truststores, 
             this may be same file as defined under  "keystoreFilename" property.</para></listitem>
             <listitem><para>truststorePassword - password for the truststore. </para></listitem>
-            <listitem><para>enabledCipherSuites - A comma separated list of cipher suites allowed for encryption between server and client</para></listitem>
+            <listitem><para>enabledCipherSuites - A comma separated list of cipher suites allowed for encryption between server and client.  The values must be valid supported cipher suites otherwise SSL connections will fail.</para></listitem>
            </itemizedlist>  
       	<section id="ssl_auth">
       		<title>SSL Authentication Modes</title>
