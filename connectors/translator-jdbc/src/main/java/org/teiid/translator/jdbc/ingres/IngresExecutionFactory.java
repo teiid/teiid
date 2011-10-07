@@ -57,13 +57,14 @@ public class IngresExecutionFactory extends JDBCExecutionFactory {
 		convert.addTypeMapping("decimal(38,19)", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
 		convert.addTypeMapping("decimal(15,0)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
 		convert.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
-		convert.addTypeMapping("time with time zone", FunctionModifier.TIME); //$NON-NLS-1$
-		convert.addTypeMapping("timestamp with time zone", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+		convert.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
+		convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
 		convert.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
 		convert.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
 		convert.addTypeMapping("blob", FunctionModifier.BLOB); //$NON-NLS-1$
 		convert.addTypeMapping("clob", FunctionModifier.CLOB); //$NON-NLS-1$
 		convert.addNumericBooleanConversions();
+		convert.setWideningNumericImplicit(true);
 		registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);		
 		
         registerFunctionModifier(SourceSystemFunctions.BITAND, new AliasModifier("bit_and")); //$NON-NLS-1$

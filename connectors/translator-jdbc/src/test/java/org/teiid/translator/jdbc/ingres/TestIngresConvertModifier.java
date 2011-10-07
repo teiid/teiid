@@ -68,7 +68,7 @@ public class TestIngresConvertModifier {
     }
 
     @Test public void testBooleanToBigDecimal() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "bigdecimal", "cast(1 AS decimal(38,19))"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "bigdecimal", "1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     // Source = BYTE
@@ -82,7 +82,7 @@ public class TestIngresConvertModifier {
     }
 
     @Test public void testBigIntegerToDouble() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "double", "cast(1 AS float)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "double", "1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     // Source = FLOAT
@@ -106,7 +106,7 @@ public class TestIngresConvertModifier {
     // Source = DATE
 
     @Test public void testDateToTimestamp() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createDate(103, 10, 1), java.sql.Date.class), "timestamp", "cast(DATE '2003-11-01' AS timestamp with time zone)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createDate(103, 10, 1), java.sql.Date.class), "timestamp", "cast(DATE '2003-11-01' AS timestamp)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // Source = TIME
