@@ -66,6 +66,7 @@ import org.teiid.query.QueryPlugin;
 public class FileStoreCache implements Cache {
 	
 	private static class CacheGroup {
+		private static final int RECLAIM_TAIL_SIZE = IO_BUFFER_SIZE << 5;
 		private static final int MAX_FREE_SPACE = 1 << 11;
 		FileStore store;
 		long tail;
@@ -83,7 +84,7 @@ public class FileStoreCache implements Cache {
 			if (info != null) { 
 				if (info[0] + info[1] == tail) {
 					tail -= info[1];
-					if (store.getLength() - tail > IO_BUFFER_SIZE << 5) {
+					if (store.getLength() - tail > RECLAIM_TAIL_SIZE) {
 						store.setLength(tail);						
 					}
 				} else {
@@ -228,9 +229,9 @@ public class FileStoreCache implements Cache {
 				}
 				
 				@Override
-				protected int flushDirect() throws IOException {
-					group.store.write(offset + bytesWritten, buffer.array(), 0, buf.position());
-					return buf.position();
+				protected int flushDirect(int i) throws IOException {
+					group.store.write(offset + bytesWritten, buffer.array(), 0, i);
+					return i;
 				}
 			};
 	        ObjectOutputStream oos = new ObjectOutputStream(fsos);
