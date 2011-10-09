@@ -31,9 +31,13 @@ public abstract class OrderedCache<K, V> {
 	
 	protected Map<K, V> map = new ConcurrentHashMap<K, V>(); 
 	protected NavigableMap<V, K> expirationQueue = new ConcurrentSkipListMap<V, K>();
+	protected Map<K, V> limbo = new ConcurrentHashMap<K, V>();
 		
 	public V get(K key) {
 		V result = map.get(key);
+		if (result == null) {
+			result = limbo.get(key);
+		}
 		if (result != null) {
 			synchronized (result) {
 				expirationQueue.remove(result);
@@ -73,7 +77,12 @@ public abstract class OrderedCache<K, V> {
 		if (entry == null) {
 			return null;
 		}
+		limbo.put(entry.getValue(), entry.getKey());
 		return map.remove(entry.getValue());
+	}
+	
+	public void finishedEviction(K key) {
+		limbo.remove(key);
 	}
 	
 	public int size() {

@@ -45,6 +45,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.teiid.client.BatchSerializer;
+import org.teiid.client.ResizingArrayList;
 import org.teiid.common.buffer.AutoCleanupUtil;
 import org.teiid.common.buffer.BatchManager;
 import org.teiid.common.buffer.BufferManager;
@@ -178,8 +179,21 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		@Override
 		public void serialize(List<? extends List<?>> obj,
 				ObjectOutputStream oos) throws IOException {
-			//it's expected that the containing structure has updated the lob manager
-			BatchSerializer.writeBatch(oos, types, obj);
+			int expectedModCount = 0;
+			ResizingArrayList<?> list = null;
+			if (obj instanceof ResizingArrayList<?>) {
+				list = (ResizingArrayList<?>)obj;
+			}
+			try {
+				//it's expected that the containing structure has updated the lob manager
+				BatchSerializer.writeBatch(oos, types, obj);
+			} catch (IndexOutOfBoundsException e) {
+				//there is a chance of a concurrent persist while modifying 
+				//in which case we want to swallow this exception
+				if (list == null || list.getModCount() == expectedModCount) {
+					throw e;
+				}
+			}
 		}
 		
 		public int getSizeEstimate(List<? extends List<?>> obj) {
@@ -574,29 +588,34 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			}
 			freed += ce.getSizeEstimate();
 			activeBatchKB.addAndGet(-ce.getSizeEstimate());
-			synchronized (ce) {
-				if (ce.isPersistent()) {
-					continue;
-				}
-				ce.setPersistent(true);
+			try {
+				evict(ce);
+			} catch (Throwable e) {
+				LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, "Error persisting batch, attempts to read batch "+ ce.getId() +" later will result in an exception"); //$NON-NLS-1$ //$NON-NLS-2$
+			} finally {
+				this.memoryEntries.finishedEviction(ce.getId());
 			}
-			persist(ce);
 		}
 	}
 
-	void persist(CacheEntry ce) {
+	void evict(CacheEntry ce) throws Exception {
 		Serializer<?> s = ce.getSerializer().get();
 		if (s == null) {
 			return;
 		}
-		long count = writeCount.incrementAndGet();
-		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-			LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, ce.getId(), "writing batch to storage, total writes: ", count); //$NON-NLS-1$
+		boolean persist = false;
+		synchronized (ce) {
+			if (!ce.isPersistent()) {
+				persist = true;
+				ce.setPersistent(true);
+			}
 		}
-		try {
+		if (persist) {
+			long count = writeCount.incrementAndGet();
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, ce.getId(), "writing batch to storage, total writes: ", count); //$NON-NLS-1$
+			}
 			cache.add(ce, s);
-		} catch (Throwable e) {
-			LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, "Error persisting batch, attempts to read batch "+ ce.getId() +" later will result in an exception"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		if (s.useSoftCache()) {
 			createSoftReference(ce);

@@ -63,8 +63,13 @@ public class ResizingArrayList<T> extends AbstractList<T> implements RandomAcces
 		return (T) elementData[index];
 	}
 	
+	public int getModCount() {
+		return modCount;
+	}
+	
 	public void add(int index, T element) {
 		rangeCheck(index, true);
+		modCount++;
 		ensureCapacity(size+1); 
 		System.arraycopy(elementData, index, elementData, index + 1,
 				 size - index);
@@ -99,6 +104,7 @@ public class ResizingArrayList<T> extends AbstractList<T> implements RandomAcces
 	@Override
 	public boolean addAll(int index, Collection<? extends T> c) {
 		rangeCheck(index, true);
+		modCount++;
         int numNew = c.size();
         ensureCapacity(size + numNew);
         for (T t : c) {
@@ -111,6 +117,7 @@ public class ResizingArrayList<T> extends AbstractList<T> implements RandomAcces
 	@Override
 	public T remove(int index) {
 		T oldValue = get(index);
+		modCount++;
 		int numMoved = size - index - 1;
 		if (numMoved > 0) {
 		    System.arraycopy(elementData, index+1, elementData, index, numMoved);
@@ -134,6 +141,7 @@ public class ResizingArrayList<T> extends AbstractList<T> implements RandomAcces
 	
 	@Override
 	public void clear() {
+		modCount++;
 		if (size <= MIN_SHRINK_SIZE) {
 			for (int i = 0; i < size; i++) {
 				elementData[i] = null;

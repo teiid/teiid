@@ -64,14 +64,17 @@ public abstract class ExtensibleBufferedOutputStream extends OutputStream {
 
 	public void flush() throws IOException {
 		if (buf != null && buf.position() > 0) {
-			bytesWritten += flushDirect();
+			bytesWritten += flushDirect(buf.position());
 		}
 		buf = null;
 	}
 
 	protected abstract ByteBuffer newBuffer();
 	
-	protected abstract int flushDirect() throws IOException;
+	/**
+	 * Flush up to i bytes where i is the current position of the buffer
+	 */
+	protected abstract int flushDirect(int i) throws IOException;
     
     @Override
     public void close() throws IOException {

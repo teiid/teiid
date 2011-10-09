@@ -25,7 +25,6 @@ package org.teiid.common.buffer;
 import java.lang.ref.PhantomReference;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -120,10 +119,10 @@ class SPage implements Cloneable {
 			SPage clone = (SPage) super.clone();
 			clone.stree = tree;
 			if (children != null) {
-				clone.children = new ArrayList<SPage>(children);
+				clone.children = new ResizingArrayList<SPage>(children);
 			}
 			if (values != null) {
-				clone.values = new ArrayList<List<?>>(values);
+				clone.values = new ResizingArrayList<List<?>>(values);
 			}
 			return clone;
 		} catch (CloneNotSupportedException e) {
