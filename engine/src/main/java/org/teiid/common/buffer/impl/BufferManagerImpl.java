@@ -187,7 +187,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			try {
 				//it's expected that the containing structure has updated the lob manager
 				BatchSerializer.writeBatch(oos, types, obj);
-			} catch (IndexOutOfBoundsException e) {
+			} catch (RuntimeException e) {
 				//there is a chance of a concurrent persist while modifying 
 				//in which case we want to swallow this exception
 				if (list == null || list.getModCount() == expectedModCount) {
@@ -219,7 +219,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 					return (List<List<?>>)(!retain?ce.nullOut():ce.getObject());
 				}
 				long count = readCount.incrementAndGet();
-				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
 					LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, id, id, "reading batch", batch, "from storage, total reads:", count); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 				ce = cache.get(batch, this);
@@ -268,6 +268,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		}
 	}
 
+	static final int CONCURRENCY_LEVEL = 32; //TODO: make this configurable
 	private static final int TARGET_BYTES_PER_ROW = 1 << 11; //2k bytes per row
 	private static ReferenceQueue<CacheEntry> SOFT_QUEUE = new ReferenceQueue<CacheEntry>();
 	
@@ -292,11 +293,11 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     
     //combined recency/frequency lamda value between 0 and 1 lower -> LFU, higher -> LRU
     //TODO: adaptively adjust this value.  more hits should move closer to lru
-    private final double crfLamda = .0002;
+    private final double crfLamda = .001;
     //implements a LRFU cache using the a customized crf function.  we store the value with
     //the cache entry to make a better decision about reuse of the batch
     //TODO: consider the size estimate in the weighting function
-    private OrderedCache<Long, CacheEntry> memoryEntries = new OrderedCache<Long, CacheEntry>() {
+    private PartiallyOrderedCache<Long, CacheEntry> memoryEntries = new PartiallyOrderedCache<Long, CacheEntry>(16, .75f, CONCURRENCY_LEVEL) {
 		
 		@Override
 		protected void recordAccess(Long key, CacheEntry value, boolean initial) {
@@ -599,7 +600,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	}
 
 	void evict(CacheEntry ce) throws Exception {
-		Serializer<?> s = ce.getSerializer().get();
+		Serializer<?> s = ce.getSerializer();
 		if (s == null) {
 			return;
 		}
@@ -615,8 +616,8 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
 				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, ce.getId(), "writing batch to storage, total writes: ", count); //$NON-NLS-1$
 			}
-			cache.add(ce, s);
 		}
+		cache.add(ce, s);
 		if (s.useSoftCache()) {
 			createSoftReference(ce);
 		} else if (useWeakReferences) {
@@ -689,7 +690,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		if (inMemory) {
 			activeBatchKB.addAndGet(-ce.getSizeEstimate());
 		}
-		Serializer<?> s = ce.getSerializer().get();
+		Serializer<?> s = ce.getSerializer();
 		if (s != null) {
 			cache.remove(s.getId(), ce.getId());
 		}

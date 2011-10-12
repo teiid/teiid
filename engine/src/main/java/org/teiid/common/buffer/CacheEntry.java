@@ -24,26 +24,14 @@ package org.teiid.common.buffer;
 
 import java.lang.ref.WeakReference;
 
-public class CacheEntry implements Comparable<CacheEntry>{
+public class CacheEntry extends BaseCacheEntry {
 	private boolean persistent;
 	private Object object;
 	private int sizeEstimate;
-	private long lastAccess;
-	private double orderingValue;
 	private WeakReference<? extends Serializer<?>> serializer;
-	private Long id;
 	
 	public CacheEntry(Long id) {
-		this.id = id;
-	}
-	
-	public Long getId() {
-		return id;
-	}
-
-	@Override
-	public int hashCode() {
-		return getId().hashCode();
+		super(id);
 	}
 	
 	public int getSizeEstimate() {
@@ -53,35 +41,7 @@ public class CacheEntry implements Comparable<CacheEntry>{
 	public void setSizeEstimate(int sizeEstimate) {
 		this.sizeEstimate = sizeEstimate;
 	}
-	
-	public long getLastAccess() {
-		return lastAccess;
-	}
-	
-	public void setLastAccess(long lastAccess) {
-		this.lastAccess = lastAccess;
-	}
-	
-	public double getOrderingValue() {
-		return orderingValue;
-	}
-	
-	public void setOrderingValue(double orderingValue) {
-		this.orderingValue = orderingValue;
-	}
-	
-	@Override
-	public int compareTo(CacheEntry o) {
-		int result = (int) Math.signum(orderingValue - o.orderingValue);
-		if (result == 0) {
-			result = Long.signum(lastAccess - o.lastAccess);
-			if (result == 0) {
-				return Long.signum(id - o.id);
-			}
-		}
-		return result;
-	}
-	
+		
 	public boolean equals(Object obj) {
 		if (obj == this) {
 			return true;
@@ -92,10 +52,6 @@ public class CacheEntry implements Comparable<CacheEntry>{
 		return getId().equals(((CacheEntry)obj).getId());
 	}
 
-	@Override
-	public String toString() {
-		return getId().toString();
-	}
 	
 	public Object nullOut() {
 		Object result = getObject();
@@ -124,8 +80,12 @@ public class CacheEntry implements Comparable<CacheEntry>{
 		this.serializer = serializer;
 	}
 
-	public WeakReference<? extends Serializer<?>> getSerializer() {
-		return serializer;
+	public Serializer<?> getSerializer() {
+		WeakReference<? extends Serializer<?>> ref = this.serializer;
+		if (ref == null) {
+			return null;
+		}
+		return ref.get();
 	}
 
 }
