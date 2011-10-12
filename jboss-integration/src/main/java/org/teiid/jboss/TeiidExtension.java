@@ -21,8 +21,13 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
-import static org.teiid.jboss.Configuration.addAttribute;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ATTRIBUTES;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIBE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.HEAD_COMMENT_ALLOWED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REMOVE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TAIL_COMMENT_ALLOWED;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -36,7 +41,6 @@ import org.jboss.as.controller.parsing.ExtensionParsingContext;
 import org.jboss.as.controller.registry.AttributeAccess.Storage;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.dmr.ModelNode;
-import org.jboss.dmr.ModelType;
 import org.teiid.logging.Log4jListener;
 import org.teiid.logging.LogManager;
 
@@ -47,8 +51,8 @@ public class TeiidExtension implements Extension {
 	
 	public static final String TEIID_SUBSYSTEM = "teiid"; //$NON-NLS-1$
 	private static TeiidSubsystemParser parser = new TeiidSubsystemParser();
-	private static QueryEngineAdd ENGINE_ADD = new QueryEngineAdd();
-	private static QueryEngineRemove ENGINE_REMOVE = new QueryEngineRemove();
+	private static TransportAdd TRANSPORT_ADD = new TransportAdd();
+	private static TransportRemove TRANSPORT_REMOVE = new TransportRemove();
 	private static TranslatorAdd TRANSLATOR_ADD = new TranslatorAdd();
 	private static TranslatorRemove TRANSLATOR_REMOVE = new TranslatorRemove();
 	private static TeiidBootServicesAdd TEIID_BOOT_ADD = new TeiidBootServicesAdd();
@@ -69,16 +73,16 @@ public class TeiidExtension implements Extension {
 		teiidSubsystem.registerOperationHandler(DESCRIBE, TEIID_DESCRIBE, TEIID_DESCRIBE, false);     
 				
 		// Translator Subsystem
-        final ManagementResourceRegistration translatorSubsystem = teiidSubsystem.registerSubModel(PathElement.pathElement(Configuration.TRANSLATOR), new DescriptionProvider() {
+        final ManagementResourceRegistration translatorSubsystem = teiidSubsystem.registerSubModel(PathElement.pathElement(Element.TRANSLATOR_ELEMENT.getLocalName()), new DescriptionProvider() {
 			@Override
 			public ModelNode getModelDescription(Locale locale) {
 				final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
 
 				final ModelNode node = new ModelNode();
-	            node.get(DESCRIPTION).set(bundle.getString(Configuration.TRANSLATOR+Configuration.DESC));
+	            node.get(DESCRIPTION).set(Element.TRANSLATOR_ELEMENT.getDescription(bundle));
 	            node.get(HEAD_COMMENT_ALLOWED).set(true);
 	            node.get(TAIL_COMMENT_ALLOWED).set(true);
-	            addAttribute(node, Configuration.TRANSLATOR_MODULE, ATTRIBUTES, bundle.getString(Configuration.TRANSLATOR_MODULE+Configuration.DESC), ModelType.STRING, true, null);
+	            Element.TRANSLATOR_MODULE_ATTRIBUTE.describe(node, ATTRIBUTES, bundle);
 	            return node;
 			}
 		});
@@ -87,25 +91,27 @@ public class TeiidExtension implements Extension {
 
         
         // Query engine subsystem
-        final ManagementResourceRegistration engineSubsystem = teiidSubsystem.registerSubModel(PathElement.pathElement(Configuration.QUERY_ENGINE), new DescriptionProvider() {
+        final ManagementResourceRegistration transportModel = teiidSubsystem.registerSubModel(PathElement.pathElement(Element.TRANSPORT_ELEMENT.getLocalName()), new DescriptionProvider() {
 			@Override
 			public ModelNode getModelDescription(Locale locale) {
 				final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
 				
 				final ModelNode node = new ModelNode();
-	            node.get(DESCRIPTION).set(bundle.getString(Configuration.QUERY_ENGINE+Configuration.DESC));
+	            node.get(DESCRIPTION).set(Element.TRANSPORT_ELEMENT.getDescription(bundle));
 	            node.get(HEAD_COMMENT_ALLOWED).set(true);
 	            node.get(TAIL_COMMENT_ALLOWED).set(true);
-	            QueryEngineAdd.describeQueryEngine(node, ATTRIBUTES, bundle);
+	            
+	            TransportAdd.transportDescribe(node, ATTRIBUTES, bundle);
+	            
 	            return node;
 			}
 		});
-        engineSubsystem.registerOperationHandler(ADD, ENGINE_ADD, ENGINE_ADD, false);
-        engineSubsystem.registerOperationHandler(REMOVE, ENGINE_REMOVE, ENGINE_REMOVE, false);     
+        transportModel.registerOperationHandler(ADD, TRANSPORT_ADD, TRANSPORT_ADD, false);
+        transportModel.registerOperationHandler(REMOVE, TRANSPORT_REMOVE, TRANSPORT_REMOVE, false);     
         
 		
-		engineSubsystem.registerReadOnlyAttribute(RUNTIME_VERSION, new GetRuntimeVersion(RUNTIME_VERSION), Storage.RUNTIME); 
-		engineSubsystem.registerReadOnlyAttribute(ACTIVE_SESSION_COUNT, new GetActiveSessionsCount(ACTIVE_SESSION_COUNT), Storage.RUNTIME); 
+        teiidSubsystem.registerReadOnlyAttribute(RUNTIME_VERSION, new GetRuntimeVersion(RUNTIME_VERSION), Storage.RUNTIME); 
+        teiidSubsystem.registerReadOnlyAttribute(ACTIVE_SESSION_COUNT, new GetActiveSessionsCount(ACTIVE_SESSION_COUNT), Storage.RUNTIME); 
 		
 		// teiid level admin api operation handlers
 		new GetTranslator().register(teiidSubsystem);
@@ -124,17 +130,17 @@ public class TeiidExtension implements Extension {
 		new RemoveAnyAuthenticatedDataRole().register(teiidSubsystem);
 		
 		// engine level admin api handlers
-		new ListRequests().register(engineSubsystem);
-		new ListSessions().register(engineSubsystem);
-		new RequestsPerSession().register(engineSubsystem);
-		new RequestsPerVDB().register(engineSubsystem);
-		new GetLongRunningQueries().register(engineSubsystem);
-		new TerminateSession().register(engineSubsystem);
-		new CancelRequest().register(engineSubsystem);
-		new WorkerPoolStatistics().register(engineSubsystem);
-		new ListTransactions().register(engineSubsystem);
-		new TerminateTransaction().register(engineSubsystem);
-		new ExecuteQuery().register(engineSubsystem);
+		new ListRequests().register(teiidSubsystem);
+		new ListSessions().register(teiidSubsystem);
+		new RequestsPerSession().register(teiidSubsystem);
+		new RequestsPerVDB().register(teiidSubsystem);
+		new GetLongRunningQueries().register(teiidSubsystem);
+		new TerminateSession().register(teiidSubsystem);
+		new CancelRequest().register(teiidSubsystem);
+		new WorkerPoolStatistics().register(teiidSubsystem);
+		new ListTransactions().register(teiidSubsystem);
+		new TerminateTransaction().register(teiidSubsystem);
+		new ExecuteQuery().register(teiidSubsystem);
 	}
 
 	@Override

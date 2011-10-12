@@ -22,117 +22,132 @@
 
 package org.teiid.jboss;
 
-import static org.teiid.jboss.Configuration.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.MAX_OCCURS;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ResourceBundle;
+import java.util.Set;
 
+import org.jboss.dmr.ModelNode;
+import org.jboss.dmr.ModelType;
+import org.teiid.core.TeiidRuntimeException;
+
+@SuppressWarnings("nls")
 enum Element {
     // must be first
     UNKNOWN(null),
 
     // VM wide elements
-    ASYNC_THREAD_GROUP_ELEMENT(ASYNC_THREAD_GROUP),
-    ALLOW_ENV_FUNCTION_ELEMENT(ALLOW_ENV_FUNCTION),
-    POLICY_DECIDER_MODULE_ELEMENT(POLICY_DECIDER_MODULE),
-	BUFFER_SERVICE_ELEMENT(BUFFER_SERVICE),
-	PREPAREDPLAN_CACHE_ELEMENT(PREPAREDPLAN_CACHE),	
-	RESULTSET_CACHE_ELEMENT(RESULTSET_CACHE),
-    OBJECT_REPLICATOR_ELEMENT(OBJECT_REPLICATOR),
-    QUERY_ENGINE_ELEMENT(QUERY_ENGINE),
-    	
-	// Query-ENGINE
-    ENGINE_NAME_ATTRIBUTE(ENGINE_NAME),
-	MAX_THREADS_ELEMENT(MAX_THREADS),
-	MAX_ACTIVE_PLANS_ELEMENT(MAX_ACTIVE_PLANS),
-	USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT(USER_REQUEST_SOURCE_CONCURRENCY),
-	TIME_SLICE_IN_MILLI_ELEMENT(TIME_SLICE_IN_MILLI),
-	MAX_ROWS_FETCH_SIZE_ELEMENT(MAX_ROWS_FETCH_SIZE),
-	LOB_CHUNK_SIZE_IN_KB_ELEMENT(LOB_CHUNK_SIZE_IN_KB),
-	AUTHORIZATION_VALIDATOR_MODULE_ELEMENT(AUTHORIZATION_VALIDATOR_MODULE),
-	QUERY_THRESHOLD_IN_SECS_ELEMENT(QUERY_THRESHOLD_IN_SECS),
-	MAX_SOURCE_ROWS_ELEMENT(MAX_SOURCE_ROWS),
-	EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT(EXCEPTION_ON_MAX_SOURCE_ROWS),
-	MAX_ODBC_LOB_SIZE_ALLOWED_ELEMENT(MAX_ODBC_LOB_SIZE_ALLOWED),
-	DETECTING_CHANGE_EVENTS_ELEMENT(DETECTING_CHANGE_EVENTS),
-	MAX_SESSIONS_ALLOWED_ELEMENT(MAX_SESSIONS_ALLOWED),
-	SESSION_EXPIRATION_TIME_LIMIT_ELEMENT(SESSION_EXPIRATION_TIME_LIMIT),
-	SECURITY_DOMAIN_ELEMENT(SECURITY_DOMAIN),
-	JDBC_ELEMENT(JDBC),
-	ODBC_ELEMENT(ODBC),	
+    ASYNC_THREAD_POOL_ELEMENT("async-thread-pool", "async-thread-pool", ModelType.STRING, true, null),
+    ALLOW_ENV_FUNCTION_ELEMENT("allow-env-function", "allow-env-function", ModelType.BOOLEAN, false, "false"),
+            	
+	MAX_THREADS_ELEMENT("max-threads", "max-threads", ModelType.INT, false, "64"),
+	MAX_ACTIVE_PLANS_ELEMENT("max-active-plans", "max-active-plans", ModelType.INT, false, "20"),
+	USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT("thread-count-for-source-concurrency", "thread-count-for-source-concurrency", ModelType.INT, false, "0"),
+	TIME_SLICE_IN_MILLI_ELEMENT("time-slice-in-millseconds", "time-slice-in-millseconds", ModelType.INT, false, "2000"),
+	MAX_ROWS_FETCH_SIZE_ELEMENT("max-row-fetch-size", "max-row-fetch-size", ModelType.INT, false, "20480"),
+	LOB_CHUNK_SIZE_IN_KB_ELEMENT("lob-chunk-size-in-kb", "lob-chunk-size-in-kb", ModelType.INT, false, "100"),
+	QUERY_THRESHOLD_IN_SECS_ELEMENT("query-threshold-in-seconds", "query-threshold-in-seconds", ModelType.INT, false, "600"),
+	MAX_SOURCE_ROWS_ELEMENT("max-source-rows-allowed", "max-source-rows-allowed", ModelType.INT, false, "-1"),
+	EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT("exception-on-max-source-rows", "exception-on-max-source-rows", ModelType.BOOLEAN, false, "true"),	
+	DETECTING_CHANGE_EVENTS_ELEMENT("detect-change-events", "detect-change-events", ModelType.BOOLEAN, false, "true"),
+	
+    POLICY_DECIDER_ELEMENT("policy-decider"),
+    POLICY_DECIDER_MODULE_ATTRIBUTE("module", "policy-decider-module", ModelType.STRING, false, null),
+    
+    AUTHORIZATION_VALIDATOR_ELEMENT("authorization-validator"),
+    AUTHORIZATION_VALIDATOR_MODULE_ATTRIBUTE("module", "authorization-validator-module", ModelType.STRING, false, null),
 	
 	// buffer manager
-	USE_DISK_ELEMENT(USE_DISK, BUFFER_SERVICE),
-	PROCESSOR_BATCH_SIZE_ELEMENT(PROCESSOR_BATCH_SIZE, BUFFER_SERVICE),
-	CONNECTOR_BATCH_SIZE_ELEMENT(CONNECTOR_BATCH_SIZE, BUFFER_SERVICE),
-	MAX_PROCESSING_KB_ELEMENT(MAX_PROCESSING_KB, BUFFER_SERVICE),
-	MAX_RESERVED_KB_ELEMENT(MAX_RESERVED_KB, BUFFER_SERVICE),
-	MAX_FILE_SIZE_ELEMENT(MAX_FILE_SIZE, BUFFER_SERVICE),
-	MAX_BUFFER_SPACE_ELEMENT(MAX_BUFFER_SPACE, BUFFER_SERVICE),
-	MAX_OPEN_FILES_ELEMENT(MAX_OPEN_FILES, BUFFER_SERVICE),
+	BUFFER_SERVICE_ELEMENT("buffer-service"),
+	USE_DISK_ATTRIBUTE("use-disk", "buffer-service-use-disk", ModelType.BOOLEAN, false, "true"),
+	PROCESSOR_BATCH_SIZE_ATTRIBUTE("processor-batch-size", "buffer-service-processor-batch-size", ModelType.INT, false, "512"),
+	CONNECTOR_BATCH_SIZE_ATTRIBUTE("connector-batch-size", "buffer-service-connector-batch-size", ModelType.INT, false, "1024"),
+	MAX_PROCESSING_KB_ATTRIBUTE("max-processing-kb", "buffer-service-max-processing-kb", ModelType.INT, false, "-1"),
+	MAX_RESERVED_KB_ATTRIBUTE("max-reserve-kb", "buffer-service-max-reserve-kb", ModelType.INT, false, "-1"),
+	MAX_FILE_SIZE_ATTRIBUTE("max-file-size", "buffer-service-max-file-size", ModelType.LONG, false, "2048"),
+	MAX_BUFFER_SPACE_ATTRIBUTE("max-buffer-space", "buffer-service-max-buffer-space", ModelType.LONG, false, "51200"),
+	MAX_OPEN_FILES_ATTRIBUTE("max-open-files", "buffer-service-max-open-files", ModelType.INT, false, "64"),
 	
 	//prepared-plan-cache-config
-	PPC_MAX_ENTRIES_ATTRIBUTE(MAX_ENTRIES, PREPAREDPLAN_CACHE),
-	PPC_MAX_AGE_IN_SECS_ATTRIBUTE(MAX_AGE_IN_SECS, PREPAREDPLAN_CACHE),
-	PPC_MAX_STALENESS_ATTRIBUTE(MAX_STALENESS, PREPAREDPLAN_CACHE),
-	
+	PREPAREDPLAN_CACHE_ELEMENT("preparedplan-cache"),
+	PPC_MAX_ENTRIES_ATTRIBUTE("max-entries", "preparedplan-cache-max-entries", ModelType.INT, false, "512"),
+	PPC_MAX_AGE_IN_SECS_ATTRIBUTE("max-age-in-seconds", "preparedplan-cache-max-age-in-seconds", ModelType.INT, false, "28800"),
+	PPC_MAX_STALENESS_ATTRIBUTE("max-staleness", "preparedplan-cache-max-staleness",  ModelType.INT, false, "0"),
 	
 	// Object Replicator
-	OR_STACK_ATTRIBUTE(STACK, OBJECT_REPLICATOR),
-	OR_CLUSTER_NAME_ATTRIBUTE(CLUSTER_NAME, OBJECT_REPLICATOR),
+	OBJECT_REPLICATOR_ELEMENT("object-replicator"),
+	OR_STACK_ATTRIBUTE("stack", "object-replicator-stack", ModelType.STRING, false, null),
+	OR_CLUSTER_NAME_ATTRIBUTE("cluster-name", "object-replicator-cluster-name", ModelType.STRING, false, null),
 	
-	// Result set cache
-	RSC_ENABLE_ATTRIBUTE(ENABLE, RESULTSET_CACHE),
-	RSC_NAME_ELEMENT(NAME, RESULTSET_CACHE),
-	RSC_CONTAINER_NAME_ELEMENT(CONTAINER_NAME, RESULTSET_CACHE),
-	RSC_MAX_STALENESS_ELEMENT(MAX_STALENESS, RESULTSET_CACHE),
+	// Result set cache	
+	RESULTSET_CACHE_ELEMENT("resultset-cache"),
+	RSC_ENABLE_ATTRIBUTE("enable", "resultset-cache-enable", ModelType.BOOLEAN, false, null),
+	RSC_NAME_ELEMENT("name", "resultset-cache-name", ModelType.STRING, false, "resultset"),
+	RSC_CONTAINER_NAME_ELEMENT("container-name", "resultset-cache-container-name", ModelType.STRING, false, null),
+	RSC_MAX_STALENESS_ELEMENT("max-staleness", "resultset-cache-max-staleness", ModelType.INT, false, "60"),
 	
-	//socket config
-	JDBC_MAX_SOCKET_THREAD_SIZE_ATTRIBUTE(MAX_SOCKET_THREAD_SIZE,JDBC),
-	JDBC_IN_BUFFER_SIZE_ATTRIBUTE(IN_BUFFER_SIZE,JDBC),
-	JDBC_OUT_BUFFER_SIZE_ATTRIBUTE(OUT_BUFFER_SIZE,JDBC),
-	JDBC_SOCKET_BINDING_ATTRIBUTE(SOCKET_BINDING,JDBC),
+	//transport
+	TRANSPORT_ELEMENT("transport"),
+	TRANSPORT_PROTOCOL_ATTRIBUTE("protocol", "protocol", ModelType.STRING, false, "teiid"),
+	TRANSPORT_NAME_ATTRIBUTE("name", "name", ModelType.STRING, true, null),
+	TRANSPORT_SOCKET_BINDING_ATTRIBUTE("socket-binding", "socket-binding", ModelType.STRING, true, null),
+	TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE("max-socket-threads", "max-socket-threads", ModelType.INT, false, "0"),
+	TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE("input-buffer-size", "input-buffer-size",ModelType.INT, false, "0"),
+	TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE("output-buffer-size", "output-buffer-size", ModelType.INT, false, "0"),
 	
-	JDBC_SSL_ELEMENT(SSL, JDBC),
-	JDBC_SSL_MODE_ELEMENT(SSL_MODE,JDBC,SSL),
-	JDBC_KEY_STORE_FILE_ELEMENT(KEY_STORE_FILE,JDBC,SSL),
-	JDBC_KEY_STORE_PASSWD_ELEMENT(KEY_STORE_PASSWD,JDBC,SSL),
-	JDBC_KEY_STORE_TYPE_ELEMENT(KEY_STORE_TYPE,JDBC,SSL),
-	JDBC_SSL_PROTOCOL_ELEMENT(SSL_PROTOCOL,JDBC,SSL),
-	JDBC_KEY_MANAGEMENT_ALG_ELEMENT(KEY_MANAGEMENT_ALG,JDBC,SSL),
-	JDBC_TRUST_FILE_ELEMENT(TRUST_FILE,JDBC,SSL),
-	JDBC_TRUST_PASSWD_ELEMENT(TRUST_PASSWD,JDBC,SSL),
-	JDBC_AUTH_MODE_ELEMENT(AUTH_MODE,JDBC,SSL),
-	    
+	AUTHENTICATION_ELEMENT("authentication"),
+	AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE("security-domain", "authentication-security-domain", ModelType.STRING, false, null),	
+	AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE("max-sessions-allowed", "authentication-max-sessions-allowed",ModelType.INT, false, "5000"),
+	AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE("sessions-expiration-timelimit", "authentication-sessions-expiration-timelimit", ModelType.INT, false, "0"),
 	
-	ODBC_MAX_SOCKET_THREAD_SIZE_ATTRIBUTE(MAX_SOCKET_THREAD_SIZE,ODBC),
-	ODBC_IN_BUFFER_SIZE_ATTRIBUTE(IN_BUFFER_SIZE,ODBC),
-	ODBC_OUT_BUFFER_SIZE_ATTRIBUTE(OUT_BUFFER_SIZE,ODBC),
-	ODBC_SOCKET_BINDING_ATTRIBUTE(SOCKET_BINDING,ODBC),
+	PG_ELEMENT("pg"), //$NON-NLS-1$
+	PG_MAX_LOB_SIZE_ALLOWED_ELEMENT("max-lob-size-in-bytes", "pg-max-lob-size-in-bytes", ModelType.INT, false, "5242880"), //$NON-NLS-1$ //$NON-NLS-2$
+	PG_AUTHENTICATION_TYPE_ATTRIBUTE("type", "pg-auth-type", ModelType.STRING, false, "CLEARTEXT"),
 	
-	ODBC_SSL_ELEMENT(SSL, ODBC),
-	ODBC_SSL_MODE_ELEMENT(SSL_MODE,ODBC,SSL),
-	ODBC_KEY_STORE_FILE_ELEMENT(KEY_STORE_FILE,ODBC,SSL),
-	ODBC_KEY_STORE_PASSWD_ELEMENT(KEY_STORE_PASSWD,ODBC,SSL),
-	ODBC_KEY_STORE_TYPE_ELEMENT(KEY_STORE_TYPE,ODBC,SSL),
-	ODBC_SSL_PROTOCOL_ELEMENT(SSL_PROTOCOL,ODBC,SSL),
-	ODBC_KEY_MANAGEMENT_ALG_ELEMENT(KEY_MANAGEMENT_ALG,ODBC,SSL),
-	ODBC_TRUST_FILE_ELEMENT(TRUST_FILE,ODBC,SSL),
-	ODBC_TRUST_PASSWD_ELEMENT(TRUST_PASSWD,ODBC,SSL),
-	ODBC_AUTH_MODE_ELEMENT(AUTH_MODE,ODBC,SSL),
-	     
+	SSL_ELEMENT("ssl"),
+	SSL_MODE_ATTRIBUTE("mode", "ssl-mode", ModelType.STRING, false, "login"),
+	SSL_AUTH_MODE_ATTRIBUTE("authentication-mode", "ssl-authentication-mode", ModelType.STRING, false, "anonymous"),
+	SSL_SSL_PROTOCOL_ATTRIBUTE("ssl-protocol", "ssl-ssl-protocol", ModelType.STRING, false, "SSLv3"),
+	SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE("keymanagement-algorithm", "ssl-keymanagement-algorithm", ModelType.STRING, false, null),
+	SSL_KETSTORE_ELEMENT("keystore"),
+	SSL_KETSTORE_NAME_ATTRIBUTE("name", "keystore-name", ModelType.STRING, false, null),
+	SSL_KETSTORE_PASSWORD_ATTRIBUTE("password", "keystore-password", ModelType.STRING, false, null),
+	SSL_KETSTORE_TYPE_ATTRIBUTE("type", "keystore-type", ModelType.STRING, false, "JKS"),
+	SSL_TRUSTSTORE_ELEMENT("truststore"),
+	SSL_TRUSTSTORE_NAME_ATTRIBUTE("name", "truststore-name", ModelType.STRING, false, null),
+	SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE("password", "truststore-password", ModelType.STRING, false, null),	
 
 	// Translator
-    TRANSLATOR_ELEMENT(TRANSLATOR),
-    TRANSLATOR_NAME_ATTRIBUTE(TRANSLATOR_NAME),
-    TRANSLATOR_MODULE_ATTRIBUTE(TRANSLATOR_MODULE);
+    TRANSLATOR_ELEMENT("translator"),
+    TRANSLATOR_NAME_ATTRIBUTE("name", "name", ModelType.STRING, true, null),
+    TRANSLATOR_MODULE_ATTRIBUTE("module", "module", ModelType.STRING, true, null);
     
     private final String name;
-    private String[] prefix;
+    private final String modelName;
+    private final boolean required;
+    private final ModelType modelType;
+    private final String defaultValue;
 
-    Element(final String name, String... prefix) {
+    private Element(String name) {
+    	this.name = name;
+    	this.modelName = name;
+    	this.required = false;
+    	this.modelType = null;
+    	this.defaultValue = null;
+    }
+    
+    Element(final String name, String modelName, ModelType type, boolean required, String defltValue) {
         this.name = name;
-        this.prefix = prefix;
+        this.modelName = modelName;
+        this.modelType = type;
+        this.required = required;
+        this.defaultValue = defltValue;
     }
 
     /**
@@ -145,29 +160,9 @@ enum Element {
     }
     
     public String getModelName() {
-    	return buildModelName(this.name, this.prefix);
+    	return this.modelName;
     }
     
-    private static String buildModelName(String name, String... prefix) {
-    	if (prefix == null || prefix.length == 0) {
-    		return name;
-    	}
-    	
-    	StringBuilder sb = new StringBuilder();
-        sb.append(prefix[0]);
-        for (int i = 1; i < prefix.length; i++) {
-        	sb.append("-"); //$NON-NLS-1$
-        	sb.append(prefix[i]);
-        }
-        sb.append("-"); //$NON-NLS-1$
-        sb.append(name);
-    	return sb.toString();    	
-    }
-    
-    public String[] getPrefix() {
-    	return this.prefix;
-    }
-
     private static final Map<String, Element> elements;
 
     static {
@@ -179,10 +174,106 @@ enum Element {
         elements = map;
     }
 
-    public static Element forName(String localName, String... prefix) {
-    	String modelName = buildModelName(localName, prefix);
+    public static Element forName(String localName, Element parentNode) {
+    	String modelName = parentNode.getLocalName()+"-"+localName;
         final Element element = elements.get(modelName);
         return element == null ? UNKNOWN : element;
     }
+    
+    public static Element forName(String localName) {
+        final Element element = elements.get(localName);
+        return element == null ? UNKNOWN : element;
+    }    
+    
+    public void describe(ModelNode node, String type, ResourceBundle bundle) {
+		String name = getModelName();
+		node.get(type, name, TYPE).set(this.modelType);
+        node.get(type, name, DESCRIPTION).set(getDescription(bundle));
+        node.get(type, name, REQUIRED).set(this.required);
+        node.get(type, name, MAX_OCCURS).set(1);
+        
+        if (this.defaultValue != null) {
+        	if (ModelType.INT == this.modelType) {
+        		node.get(type, name, DEFAULT).set(Integer.parseInt(this.defaultValue));
+        	}
+        	else if (ModelType.BOOLEAN == this.modelType) {
+        		node.get(type, name, DEFAULT).set(Boolean.parseBoolean(this.defaultValue));
+        	}
+        	else if (ModelType.LONG == this.modelType) {
+        		node.get(type, name, DEFAULT).set(Long.parseLong(this.defaultValue));
+        	}        	
+        	else if (ModelType.STRING == this.modelType) {
+        		node.get(type, name, DEFAULT).set(this.defaultValue);
+        	}
+        	else {
+        		throw new TeiidRuntimeException();
+        	}
+        }        
+    }
+    
+    public void populate(ModelNode operation, ModelNode model) {
+    	if (getModelName() == null) {
+    		return;
+    	}
+    	
+    	if (operation.hasDefined(getModelName())) {
+    		if (ModelType.STRING == this.modelType) {
+    			model.get(getModelName()).set(operation.get(getModelName()).asString());
+    		}
+    		else if (ModelType.INT == this.modelType) {
+    			model.get(getModelName()).set(operation.get(getModelName()).asInt());
+    		}
+    		else if (ModelType.LONG == this.modelType) {
+    			model.get(getModelName()).set(operation.get(getModelName()).asLong());
+    		}
+    		else if (ModelType.BOOLEAN == this.modelType) {
+    			model.get(getModelName()).set(operation.get(getModelName()).asBoolean());
+    		}
+    		else {
+    			throw new TeiidRuntimeException();
+    		}
+    	}
+    }
+    
+    public boolean isDefined(ModelNode node) {
+    	return node.hasDefined(getModelName());
+    }
+    
+    public int asInt(ModelNode node) {
+    	return node.get(getModelName()).asInt();
+    }
+    
+    public long asLong(ModelNode node) {
+    	return node.get(getModelName()).asLong();
+    }
+    
+    public String asString(ModelNode node) {
+    	return node.get(getModelName()).asString();
+    }
+    
+    public boolean asBoolean(ModelNode node) {
+    	return node.get(getModelName()).asBoolean();
+    }
+    
+    public boolean isLike(ModelNode node) {
+    	Set<String> keys = node.keys();
+    	for(String key:keys) {
+    		if (key.startsWith(this.name)) {
+    			return true;
+    		}
+    	}
+    	return false; 
+    }
+    
+    public String getDescription(ResourceBundle bundle) {
+    	return bundle.getString(this.modelName+".describe");
+    }
+
+	public boolean sameAsDefault(String value) {
+		if (this.defaultValue == null) {
+			return (value == null);
+		}
+		return this.defaultValue.equalsIgnoreCase(value);
+	}
 }
 

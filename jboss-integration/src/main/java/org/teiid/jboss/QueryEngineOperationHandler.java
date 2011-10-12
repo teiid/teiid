@@ -21,12 +21,27 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REPLY_PROPERTIES;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.SQLException;
+import java.sql.SQLXML;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -36,31 +51,57 @@ import org.jboss.as.controller.PathAddress;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceName;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.impl.*;
 import org.teiid.adminapi.impl.VDBMetadataMapper.TransactionMetadataMapper;
 import org.teiid.adminapi.impl.VDBMetadataMapper.VDBTranslatorMetaDataMapper;
+import org.teiid.client.RequestMessage;
+import org.teiid.client.ResultsMessage;
+import org.teiid.client.security.SessionToken;
+import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
+import org.teiid.dqp.internal.process.DQPCore;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.SessionAwareCache;
-import org.teiid.jboss.deployers.RuntimeEngineDeployer;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 
-abstract class QueryEngineOperationHandler extends BaseOperationHandler<RuntimeEngineDeployer> {
+abstract class QueryEngineOperationHandler extends BaseOperationHandler<DQPCore> {
+	List<Transport> transports = new ArrayList<Transport>();
+	protected VDBRepository vdbRepo;
+	protected DQPCore engine;
 	
 	protected QueryEngineOperationHandler(String operationName){
 		super(operationName);
 	}
 	
 	@Override
-	protected RuntimeEngineDeployer getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException {
-		String serviceName = pathAddress.getLastElement().getValue();
-        ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.engineServiceName(serviceName));
-        return RuntimeEngineDeployer.class.cast(sc.getValue());	
-	}
+	protected DQPCore getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException {        
+        List<ServiceName> services = context.getServiceRegistry(false).getServiceNames();
+        for (ServiceName name:services) {
+        	if (name.isParentOf(TeiidServiceNames.TRANSPORT_BASE)) {
+        		ServiceController<?> transport = context.getServiceRegistry(false).getService(name);
+        		if (transport != null) {
+        			this.transports.add(Transport.class.cast(transport.getValue()));
+        		}
+        	}
+        }
+        ServiceController<?> repo = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.VDB_REPO);
+        if (repo != null) {
+        	this.vdbRepo = VDBRepository.class.cast(repo.getValue());
+        }
+        
+        ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.ENGINE);
+        if (sc != null) {
+        	this.engine = DQPCore.class.cast(sc.getValue());
+        }
+        return this.engine;	
+	}	
 }
 
 abstract class TranslatorOperationHandler extends BaseOperationHandler<TranslatorRepository> {
@@ -81,7 +122,7 @@ class GetRuntimeVersion extends QueryEngineOperationHandler{
 		super(operationName);
 	}
 	@Override
-	protected void executeOperation(OperationContext context, RuntimeEngineDeployer engine, ModelNode operation) throws OperationFailedException{
+	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
 		context.getResult().set(engine.getRuntimeVersion());
 	}
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
@@ -94,9 +135,13 @@ class GetActiveSessionsCount extends QueryEngineOperationHandler{
 		super(operationName);
 	}
 	@Override
-	protected void executeOperation(OperationContext context, RuntimeEngineDeployer engine, ModelNode operation) throws OperationFailedException{
+	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
 		try {
-			context.getResult().set(String.valueOf(engine.getActiveSessionsCount()));
+			int count = 0;
+			for (Transport t: this.transports) {
+				count += t.getActiveSessionsCount();
+			}
+			context.getResult().set(String.valueOf(count));
 		} catch (AdminException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
 		}
@@ -111,13 +156,15 @@ class ListSessions extends QueryEngineOperationHandler{
 		super("list-sessions"); //$NON-NLS-1$
 	}
 	@Override
-	protected void executeOperation(OperationContext context, RuntimeEngineDeployer engine, ModelNode operation) throws OperationFailedException{
+	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
 		try {
 			ModelNode result = context.getResult();
-			Collection<SessionMetadata> sessions = engine.getActiveSessions();
-			for (SessionMetadata session:sessions) {
-				VDBMetadataMapper.SessionMetadataMapper.INSTANCE.wrap(session, result.add());
-			}
+			for (Transport t: this.transports) {
+				Collection<SessionMetadata> sessions = t.getActiveSessions();
+				for (SessionMetadata session:sessions) {
+					VDBMetadataMapper.SessionMetadataMapper.INSTANCE.wrap(session, result.add());
+				}
+			}			
 		} catch (AdminException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
 		}
@@ -133,7 +180,7 @@ class RequestsPerSession extends QueryEngineOperationHandler{
 		super("requests-per-session"); //$NON-NLS-1$
 	}
 	@Override
-	protected void executeOperation(OperationContext context, RuntimeEngineDeployer engine, ModelNode operation) throws OperationFailedException{
+	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
 		if (!operation.hasDefined(OperationsConstants.SESSION)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.SESSION+MISSING)));
 		}
@@ -158,7 +205,7 @@ class ListRequests extends QueryEngineOperationHandler{
 		super("list-requests"); //$NON-NLS-1$
 	}
 	@Override
-	protected void executeOperation(OperationContext context, RuntimeEngineDeployer engine, ModelNode operation) throws OperationFailedException{
+	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
 		ModelNode result = context.getResult();
 		List<RequestMetadata> requests = engine.getRequests();
 		for (RequestMetadata request:requests) {
@@ -175,7 +222,7 @@ class RequestsPerVDB extends QueryEngineOperationHandler{
 		super("requests-per-vdb"); //$NON-NLS-1$
 	}
 	@Override
-	protected void executeOperation(OperationContext context, RuntimeEngineDeployer engine, ModelNode operation) throws OperationFailedException{
+	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
 		try {
 			
 			if (!operation.hasDefined(OperationsConstants.VDB_NAME)) {
@@ -188,9 +235,11 @@ class RequestsPerVDB extends QueryEngineOperationHandler{
 			ModelNode result = context.getResult();
 			String vdbName = operation.get(OperationsConstants.VDB_NAME).asString();
 			int vdbVersion = operation.get(OperationsConstants.VDB_VERSION).asInt();
-			List<RequestMetadata> requests = engine.getRequestsUsingVDB(vdbName,vdbVersion);
-			for (RequestMetadata request:requests) {
-				VDBMetadataMapper.RequestMetadataMapper.INSTANCE.wrap(request, result.add());
+				for (Transport t: this.transports) {
+				List<RequestMetadata> requests = t.getRequestsUsingVDB(vdbName,vdbVersion);
+				for (RequestMetadata request:requests) {
+					VDBMetadataMapper.RequestMetadataMapper.INSTANCE.wrap(request, result.add());
+				}
 			}
 		} catch (AdminException e) {
 			throw new OperationFailedException(e, new ModelNode().set(e.getMessage()));
@@ -215,7 +264,7 @@ class GetLongRunningQueries extends QueryEngineOperationHandler{
 		super("long-running-queries"); //$NON-NLS-1$
 	}
 	@Override
-	protected void executeOperation(OperationContext context, RuntimeEngineDeployer engine, ModelNode operation) throws OperationFailedException{
+	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
 		ModelNode result = context.getResult();
 		List<RequestMetadata> requests = engine.getLongRunningRequests();
 		for (RequestMetadata request:requests) {
@@ -232,11 +281,13 @@ class TerminateSession extends QueryEngineOperationHandler{
 		super("terminate-session"); //$NON-NLS-1$
 	}
 	@Override
-	protected void executeOperation(OperationContext context, RuntimeEngineDeployer engine, ModelNode operation) throws OperationFailedException{
+	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
 		if (!operation.hasDefined(OperationsConstants.SESSION)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.SESSION+MISSING)));
 		}		
-		engine.terminateSession(operation.get(OperationsConstants.SESSION).asString());
+		for (Transport t: this.transports) {
+			t.terminateSession(operation.get(OperationsConstants.SESSION).asString());
+		}
 	}
 	
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
@@ -251,7 +302,7 @@ class CancelRequest extends QueryEngineOperationHandler{
 		super("cancel-request"); //$NON-NLS-1$
 	}
 	@Override
-	protected void executeOperation(OperationContext context, RuntimeEngineDeployer engine, ModelNode operation) throws OperationFailedException{
+	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
 		try {
 			if (!operation.hasDefined(OperationsConstants.SESSION)) {
 				throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.SESSION+MISSING)));
@@ -262,7 +313,7 @@ class CancelRequest extends QueryEngineOperationHandler{
 			boolean pass = engine.cancelRequest(operation.get(OperationsConstants.SESSION).asString(), operation.get(OperationsConstants.EXECUTION_ID).asLong());
 			ModelNode result = context.getResult();
 			result.set(pass);
-		} catch (AdminException e) {
+		} catch (TeiidComponentException e) {
 			throw new OperationFailedException(e, new ModelNode().set(e.getMessage()));
 		} 
 	}
@@ -413,7 +464,7 @@ class WorkerPoolStatistics extends QueryEngineOperationHandler{
 		super("workerpool-statistics"); //$NON-NLS-1$
 	}
 	@Override
-	protected void executeOperation(OperationContext context, RuntimeEngineDeployer engine, ModelNode operation) throws OperationFailedException {
+	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException {
 		ModelNode result = context.getResult();
 		WorkerPoolStatisticsMetadata stats = engine.getWorkerPoolStatistics();
 		VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE.wrap(stats, result);
@@ -429,7 +480,7 @@ class ListTransactions extends QueryEngineOperationHandler{
 		super("list-transactions"); //$NON-NLS-1$
 	}
 	@Override
-	protected void executeOperation(OperationContext context, RuntimeEngineDeployer engine, ModelNode operation) throws OperationFailedException {
+	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException {
 		ModelNode result = context.getResult();
 		Collection<TransactionMetadata> txns = engine.getTransactions();
 		for (TransactionMetadata txn:txns) {
@@ -448,7 +499,7 @@ class TerminateTransaction extends QueryEngineOperationHandler{
 		super("terminate-transaction"); //$NON-NLS-1$
 	}
 	@Override
-	protected void executeOperation(OperationContext context, RuntimeEngineDeployer engine, ModelNode operation) throws OperationFailedException {
+	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException {
 		
 		if (!operation.hasDefined(OperationsConstants.XID)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.XID+MISSING)));
@@ -533,7 +584,7 @@ class ExecuteQuery extends QueryEngineOperationHandler{
 		super("execute-query"); //$NON-NLS-1$
 	}
 	@Override
-	protected void executeOperation(OperationContext context, RuntimeEngineDeployer engine, ModelNode operation) throws OperationFailedException {
+	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException {
 		
 		if (!operation.hasDefined(OperationsConstants.VDB_NAME)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.VDB_NAME+MISSING)));
@@ -553,26 +604,10 @@ class ExecuteQuery extends QueryEngineOperationHandler{
 		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION).asInt();
 		String sql = operation.get(OperationsConstants.SQL_QUERY).asString();
 		int timeout = operation.get(OperationsConstants.TIMEOUT_IN_MILLI).asInt();
-		try {
-			List<List> results = engine.executeQuery(vdbName, vdbVersion, sql, timeout);
-			List colNames = results.get(0);
-			for (int rowNum = 1; rowNum < results.size(); rowNum++) {
-				
-				List row = results.get(rowNum);
-				ModelNode rowNode = new ModelNode();
-				rowNode.get(TYPE).set(ModelType.OBJECT);
-				
-				for (int colNum = 0; colNum < colNames.size(); colNum++) {
-					//TODO: support in native types instead of string here.
-					rowNode.get(ATTRIBUTES, colNames.get(colNum).toString()).set(row.get(colNum).toString());
-				}
-				result.add(rowNode);
-			}
-		} catch (AdminException e) {
-			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
-		}
+		
+		result.set(executeQuery(vdbName, vdbVersion, sql, timeout, new ModelNode()));
 	}
-	
+
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_NAME, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_NAME, REQUIRED).set(true);
@@ -591,6 +626,133 @@ class ExecuteQuery extends QueryEngineOperationHandler{
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TIMEOUT_IN_MILLI, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.TIMEOUT_IN_MILLI));
 		
 		operationNode.get(REPLY_PROPERTIES).set(ModelType.LIST);
+	}	
+	
+	public ModelNode executeQuery(final String vdbName, final int version, final String command, final long timoutInMilli, final ModelNode resultsNode) throws OperationFailedException {
+		String user = "CLI ADMIN"; //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("admin_executing", user, command)); //$NON-NLS-1$
+		
+		SessionMetadata session = createTemporarySession(vdbName, version, user);
+
+		final long requestID =  0L;
+		
+		DQPWorkContext context = new DQPWorkContext();
+		context.setSession(session);
+		
+		try {
+			return context.runInContext(new Callable<ModelNode>() {
+				@Override
+				public ModelNode call() throws Exception {
+					
+					long start = System.currentTimeMillis();
+					RequestMessage request = new RequestMessage(command);
+					request.setExecutionId(0L);
+					request.setRowLimit(engine.getMaxRowsFetchSize()); // this would limit the number of rows that are returned.
+					Future<ResultsMessage> message = engine.executeRequest(requestID, request);
+					ResultsMessage rm = null;
+					if (timoutInMilli < 0) {
+						rm = message.get();
+					} else {
+						rm = message.get(timoutInMilli, TimeUnit.MILLISECONDS);
+					}
+			        if (rm.getException() != null) {
+			            throw new AdminProcessingException(rm.getException());
+			        }
+			        
+			        if (rm.isUpdateResult()) {
+			        	writeResults(resultsNode, Arrays.asList("update-count"), rm.getResultsList()); //$NON-NLS-1$
+			        }
+			        else {
+			        	writeResults(resultsNode, Arrays.asList(rm.getColumnNames()), rm.getResultsList()); 
+				        
+				        while (rm.getFinalRow() == -1 || rm.getLastRow() < rm.getFinalRow()) {
+				        	long elapsed = System.currentTimeMillis() - start;
+							message = engine.processCursorRequest(requestID, rm.getLastRow()+1, 1024);
+							rm = message.get(timoutInMilli-elapsed, TimeUnit.MILLISECONDS);
+							writeResults(resultsNode, Arrays.asList(rm.getColumnNames()), rm.getResultsList());
+				        }
+			        }
+
+			        long elapsed = System.currentTimeMillis() - start;
+			        ResultsFuture<?> response = engine.closeRequest(requestID);
+			        response.get(timoutInMilli-elapsed, TimeUnit.MILLISECONDS);
+					return resultsNode;
+				}
+			});
+		} catch (Throwable t) {
+			throw new OperationFailedException(new ModelNode().set(t.getMessage()));
+		} 
+	}
+	
+	private void writeResults(ModelNode resultsNode, List<String> columns,  List<? extends List<?>> results) throws SQLException {
+		for (List<?> row:results) {
+			ModelNode rowNode = new ModelNode();
+
+			for (int colNum = 0; colNum < columns.size(); colNum++) {
+				
+				Object aValue = row.get(colNum);
+				if (aValue != null) {
+					if (aValue instanceof Integer) {
+						rowNode.get(columns.get(colNum)).set((Integer)aValue);
+					}
+					else if (aValue instanceof Long) {
+						rowNode.get(columns.get(colNum)).set((Long)aValue);
+					}
+					else if (aValue instanceof Double) {
+						rowNode.get(columns.get(colNum)).set((Double)aValue);
+					}
+					else if (aValue instanceof Boolean) {
+						rowNode.get(columns.get(colNum)).set((Boolean)aValue);
+					}
+					else if (aValue instanceof BigInteger) {
+						rowNode.get(columns.get(colNum)).set((BigInteger)aValue);
+					}
+					else if (aValue instanceof BigDecimal) {
+						rowNode.get(columns.get(colNum)).set((BigDecimal)aValue);
+					}
+					else if (aValue instanceof String) {
+						rowNode.get(columns.get(colNum), TYPE).set(ModelType.STRING);
+						rowNode.get(columns.get(colNum)).set((String)aValue);
+					}
+					else if (aValue instanceof Blob) {
+						rowNode.get(columns.get(colNum), TYPE).set(ModelType.OBJECT);
+						rowNode.get(columns.get(colNum)).set("blob"); //$NON-NLS-1$
+					}
+					else if (aValue instanceof Clob) {
+						rowNode.get(columns.get(colNum), TYPE).set(ModelType.OBJECT);
+						rowNode.get(columns.get(colNum)).set("clob"); //$NON-NLS-1$
+					}
+					else if (aValue instanceof SQLXML) {
+						SQLXML xml = (SQLXML)aValue;
+						rowNode.get(columns.get(colNum), TYPE).set(ModelType.STRING);
+						rowNode.get(columns.get(colNum)).set(xml.getString());					
+					}
+					else {
+						rowNode.get(columns.get(colNum), TYPE).set(ModelType.STRING);
+						rowNode.get(columns.get(colNum)).set(aValue.toString());						
+					}
+				}
+			}
+			resultsNode.add(rowNode);
+		}
+	}
+	
+	private SessionMetadata createTemporarySession(final String vdbName, final int version, final String userName) {
+		
+        long creationTime = System.currentTimeMillis();
+
+        // Return a new session info object
+        SessionMetadata newSession = new SessionMetadata();
+        newSession.setSessionToken(new SessionToken(userName));
+        newSession.setSessionId(newSession.getSessionToken().getSessionID());
+        newSession.setUserName(userName);
+        newSession.setCreatedTime(creationTime);
+        newSession.setApplicationName("admin-console"); //$NON-NLS-1$
+        newSession.setVDBName(vdbName);
+        newSession.setVDBVersion(version);
+        
+        newSession.setVdb(this.vdbRepo.getVDB(vdbName, version));
+		return newSession;
 	}	
 }
 

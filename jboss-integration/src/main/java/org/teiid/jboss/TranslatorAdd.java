@@ -21,18 +21,24 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
-import static org.teiid.jboss.Configuration.addAttribute;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OPERATION_NAME;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.ServiceLoader;
 
-import org.jboss.as.controller.*;
+import org.jboss.as.controller.AbstractAddStepHandler;
+import org.jboss.as.controller.OperationContext;
+import org.jboss.as.controller.OperationFailedException;
+import org.jboss.as.controller.PathAddress;
+import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
 import org.jboss.dmr.ModelNode;
-import org.jboss.dmr.ModelType;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
@@ -55,7 +61,7 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
         operation.get(OPERATION_NAME).set(ADD);
         operation.get(DESCRIPTION).set(bundle.getString("translator.add")); //$NON-NLS-1$
         
-        addAttribute(operation, Configuration.TRANSLATOR_MODULE, REQUEST_PROPERTIES, bundle.getString(Configuration.TRANSLATOR_MODULE+Configuration.DESC), ModelType.STRING, true, null);
+        Element.TRANSLATOR_MODULE_ATTRIBUTE.describe(operation, REQUEST_PROPERTIES, bundle);
         return operation;
     }
     
@@ -65,8 +71,7 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
 	}
 	
 	static void populate(ModelNode operation, ModelNode model) {
-		final String moduleName = operation.require(Configuration.TRANSLATOR_MODULE).asString();
-		model.get(Configuration.TRANSLATOR_MODULE).set(moduleName);		
+		Element.TRANSLATOR_MODULE_ATTRIBUTE.populate(operation, model);
 	}
 	
 	@Override
@@ -78,7 +83,7 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
 
     	final String translatorName = pathAddress.getLastElement().getValue();
 		
-        final String moduleName = operation.require(Configuration.TRANSLATOR_MODULE).asString();
+        final String moduleName = Element.TRANSLATOR_MODULE_ATTRIBUTE.asString(operation);
 		
         final ServiceTarget target = context.getServiceTarget();
 
@@ -104,7 +109,7 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
 	        		TranslatorService translatorService = new TranslatorService(metadata);
 	        		ServiceBuilder<VDBTranslatorMetaData> builder = target.addService(TeiidServiceNames.translatorServiceName(metadata.getName()), translatorService);
 	        		builder.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class, translatorService.repositoryInjector);
-	                builder.setInitialMode(ServiceController.Mode.ACTIVE).install();
+	        		newControllers.add(builder.setInitialMode(ServiceController.Mode.ACTIVE).install());
 	                added = true;
         		}
         	}

@@ -22,7 +22,12 @@
 
 package org.teiid.dqp.internal.process;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.FutureTask;
@@ -31,11 +36,9 @@ import java.util.concurrent.TimeUnit;
 import javax.resource.spi.work.Work;
 import javax.transaction.xa.Xid;
 
-import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.Request.ThreadState;
-import org.teiid.adminapi.impl.CacheStatisticsMetadata;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.TransactionMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
@@ -53,6 +56,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.Streamable;
+import org.teiid.core.util.ApplicationInfo;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
@@ -61,8 +65,11 @@ import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.dqp.service.TransactionService;
 import org.teiid.events.EventDistributor;
-import org.teiid.logging.*;
+import org.teiid.logging.CommandLogMessage;
 import org.teiid.logging.CommandLogMessage.Event;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.tempdata.TempTableDataManager;
@@ -801,6 +808,10 @@ public class DQPCore implements DQP {
 		return this.config.getMaxSourceRows();
 	}
 	
+	public int getMaxRowsFetchSize() {
+		return this.config.getMaxRowsFetchSize();
+	}
+	
 	public void setResultsetCache(SessionAwareCache<CachedResults> cache) {
 		this.rsCache = cache;
 	}
@@ -824,4 +835,8 @@ public class DQPCore implements DQP {
 	SessionAwareCache<PreparedPlan> getPrepPlanCache() {
 		return prepPlanCache;
 	}
+	
+	public String getRuntimeVersion() {
+		return ApplicationInfo.getInstance().getBuildNumber();
+	}	
 }

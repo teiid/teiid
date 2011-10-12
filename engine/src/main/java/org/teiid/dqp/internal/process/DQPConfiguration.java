@@ -45,7 +45,7 @@ public class DQPConfiguration{
 	private boolean exceptionOnMaxSourceRows = true;
 	private int maxSourceRows = -1;
 	private int maxActivePlans = DEFAULT_MAX_ACTIVE_PLANS;
-	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
+	
     private int userRequestSourceConcurrency = DEFAULT_USER_REQUEST_SOURCE_CONCURRENCY;
     private boolean detectingChangeEvents = true;
     
@@ -144,15 +144,7 @@ public class DQPConfiguration{
 	public void setMaxSourceRows(int maxSourceRows) {
 		this.maxSourceRows = maxSourceRows;
 	}
-	
-	public int getMaxODBCLobSizeAllowed() {
-		return this.maxODBCLobSizeAllowed;
-	}
-	
-	public void setMaxODBCLobSizeAllowed(int lobSize) {
-		this.maxODBCLobSizeAllowed = lobSize;
-	}
-	
+		
 	public AuthorizationValidator getAuthorizationValidator() {
 		return authorizationValidator;
 	}

@@ -90,8 +90,6 @@ public class TeiidURL {
 		public enum AuthenticationType {
 			CLEARTEXT,KRB5
 		};
-		
-		public static final String ENGINE_NAME = "engineName"; //$NON-NLS-1$
 	}
 
 	public static final String DOT_DELIMITER = "."; //$NON-NLS-1$

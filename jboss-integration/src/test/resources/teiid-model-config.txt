@@ -1,4 +1,17 @@
 {"attributes" => {
+    "allow-env-function" => {
+        "type" => BOOLEAN,
+        "description" => "Allow the execution of ENV function. (default false)",
+        "required" => false,
+        "max-occurs" => 1,
+        "default" => false
+    },
+    "async-thread-pool" => {
+        "type" => STRING,
+        "description" => "Thread Pool to be used with Asynchronous operations in Teiid",
+        "required" => true,
+        "max-occurs" => 1
+    },
     "max-threads" => {
         "type" => INT,
         "description" => "Process pool maximum thread count. (default 64)",
@@ -62,13 +75,6 @@
         "max-occurs" => 1,
         "default" => true
     },
-    "max-odbc-lob-size-allowed" => {
-        "type" => INT,
-        "description" => "Maximum size of lob allowed through ODBC connection in bytes (default 5MB)",
-        "required" => false,
-        "max-occurs" => 1,
-        "default" => 5242880
-    },
     "detect-change-events" => {
         "type" => BOOLEAN,
         "description" => "Set to true for the engine to detect local change events. Should be disabled if using external change data capture tools. (default true)",
@@ -76,194 +82,131 @@
         "max-occurs" => 1,
         "default" => true
     },
-    "security-domain" => {
-        "type" => LIST,
-        "description" => "List of domains to be used to login into Teiid",
+    "authorization-validator-module" => {
+        "type" => STRING,
+        "description" => "Authorization Module; Implementation of org.teiid.dqp.internal.process.AuthorizationValidator class.",
         "required" => false,
         "max-occurs" => 1
     },
-    "max-sessions-allowed" => {
-        "type" => INT,
-        "description" => "Maximum number of sessions allowed by the system (default 5000)",
+    "policy-decider-module" => {
+        "type" => STRING,
+        "description" => "Policy Module; Implementation of org.teiid.PolicyDecider class ",
+        "required" => false,
+        "max-occurs" => 1
+    },
+    "object-replicator-stack" => {
+        "type" => STRING,
+        "description" => "JGroups stack name for cache replication channel",
+        "required" => false,
+        "max-occurs" => 1
+    },
+    "object-replicator-cluster-name" => {
+        "type" => STRING,
+        "description" => "cache channel cluster name for cache replication",
+        "required" => false,
+        "max-occurs" => 1
+    },
+    "buffer-service-use-disk" => {
+        "type" => BOOLEAN,
+        "description" => "Use disk for buffer management",
         "required" => false,
         "max-occurs" => 1,
-        "default" => 5000
+        "default" => true
     },
-    "sessions-expiration-timelimit" => {
+    "buffer-service-processor-batch-size" => {
         "type" => INT,
-        "description" => "Max allowed time before the session is terminated by the system, 0 indicates unlimited (default 0)",
+        "description" => "The max row count of a batch sent internally within the query processor. Should be <= the connectorBatchSize. (default 512)",
+        "required" => false,
+        "max-occurs" => 1,
+        "default" => 512
+    },
+    "buffer-service-connector-batch-size" => {
+        "type" => INT,
+        "description" => "The max row count of a batch from a connector. Should be even multiple of processorBatchSize. (default 1024)",
+        "required" => false,
+        "max-occurs" => 1,
+        "default" => 1024
+    },
+    "buffer-service-max-processing-kb" => {
+        "type" => INT,
+        "description" => "The approximate amount of buffer memory in kilobytes allowable for a single processing operation (sort, grouping, etc.) regardless of existing memory commitments. -1 means to automatically calculate a value (default -1)",
+        "required" => false,
+        "max-occurs" => 1,
+        "default" => -1
+    },
+    "buffer-service-max-reserve-kb" => {
+        "type" => INT,
+        "description" => "The approximate amount of memory in kilobytes allowed to be held by the buffer manager. -1 means to automatically calculate a value (default -1)",
+        "required" => false,
+        "max-occurs" => 1,
+        "default" => -1
+    },
+    "buffer-service-max-file-size" => {
+        "type" => LONG,
+        "description" => "Max File size in MB (default 2GB)",
+        "required" => false,
+        "max-occurs" => 1,
+        "default" => 2048L
+    },
+    "buffer-service-max-buffer-space" => {
+        "type" => LONG,
+        "description" => "Max storage space, in MB, to be used for buffer files (default 50G)",
+        "required" => false,
+        "max-occurs" => 1,
+        "default" => 51200L
+    },
+    "buffer-service-max-open-files" => {
+        "type" => INT,
+        "description" => "Max open buffer files (default 64)",
+        "required" => false,
+        "max-occurs" => 1,
+        "default" => 64
+    },
+    "preparedplan-cache-max-entries" => {
+        "type" => INT,
+        "description" => "Max Entries allowed",
+        "required" => false,
+        "max-occurs" => 1,
+        "default" => 512
+    },
+    "preparedplan-cache-max-age-in-seconds" => {
+        "type" => INT,
+        "description" => "Max age in seconds",
+        "required" => false,
+        "max-occurs" => 1,
+        "default" => 28800
+    },
+    "preparedplan-cache-max-staleness" => {
+        "type" => INT,
+        "description" => "Max staleness in seconds.  Modifications are based upon data updates -1 indicates no max. (default 60 - 1 minute)",
         "required" => false,
         "max-occurs" => 1,
         "default" => 0
     },
-    "jdbc-max-socket-threads" => {
+    "resultset-cache-name" => {
+        "type" => STRING,
+        "description" => "Infinispan cache name for resultset",
+        "required" => false,
+        "max-occurs" => 1,
+        "default" => "resultset"
+    },
+    "resultset-cache-container-name" => {
+        "type" => STRING,
+        "description" => "Infinispan cache container name            ",
+        "required" => false,
+        "max-occurs" => 1
+    },
+    "resultset-cache-max-staleness" => {
         "type" => INT,
-        "description" => "Max number of threads dedicated to initial request processing. Zero indicates the system default of max available processors. (default 0)  Setting this value above the max available processors is not recommended.",
+        "description" => "Max staleness in seconds.  Modifications are based upon data updates -1 indicates no max. (default 60 - 1 minute)",
         "required" => false,
         "max-occurs" => 1,
-        "default" => 0
+        "default" => 60
     },
-    "jdbc-input-buffer-size" => {
-        "type" => INT,
-        "description" => "SO_RCVBUF size, 0 indicates that system default should be used (default 0)",
-        "required" => false,
-        "max-occurs" => 1,
-        "default" => 0
-    },
-    "jdbc-output-buffer-size" => {
-        "type" => INT,
-        "description" => "SO_SNDBUF size, 0 indicates that system default should be used (default 0)",
-        "required" => false,
-        "max-occurs" => 1,
-        "default" => 0
-    },
-    "jdbc-socket-binding" => {
-        "type" => STRING,
-        "description" => "Socket binding for the profile",
+    "resultset-cache-enable" => {
+        "type" => BOOLEAN,
+        "description" => "Resultset cache enabled	",
         "required" => false,
         "max-occurs" => 1
-    },
-    "jdbc-ssl-mode" => {
-        "type" => STRING,
-        "description" => "can be one of disabled, login, or enabled disabled = no transport or message level security will be used; login = only the login traffic will be encrypted at a message level using 128 bit AES with an ephemerial DH key exchange. No other config values are needed in this mode; enabled = traffic will be secured using this configuration,if the client supports SSL",
-        "required" => false,
-        "max-occurs" => 1,
-        "default" => "login"
-    },
-    "jdbc-ssl-keystore-name" => {
-        "type" => STRING,
-        "description" => "Keystore File Name",
-        "required" => false,
-        "max-occurs" => 1
-    },
-    "jdbc-ssl-keystore-password" => {
-        "type" => STRING,
-        "description" => "Keystore password",
-        "required" => false,
-        "max-occurs" => 1
-    },
-    "jdbc-ssl-keystore-type" => {
-        "type" => STRING,
-        "description" => "Keystore type",
-        "required" => false,
-        "max-occurs" => 1,
-        "default" => "JKS"
-    },
-    "jdbc-ssl-ssl-protocol" => {
-        "type" => STRING,
-        "description" => "SSL protocol used",
-        "required" => false,
-        "max-occurs" => 1,
-        "default" => "SSLv3"
-    },
-    "jdbc-ssl-keymanagement-algorithm" => {
-        "type" => STRING,
-        "description" => "Use key management algorithm",
-        "required" => false,
-        "max-occurs" => 1
-    },
-    "jdbc-ssl-truststore-name" => {
-        "type" => STRING,
-        "description" => "Truststore Name",
-        "required" => false,
-        "max-occurs" => 1
-    },
-    "jdbc-ssl-truststore-password" => {
-        "type" => STRING,
-        "description" => "Truststore Password",
-        "required" => false,
-        "max-occurs" => 1
-    },
-    "jdbc-ssl-authentication-mode" => {
-        "type" => STRING,
-        "description" => "Authentication Mode (1-way, 2-way, anonymous)",
-        "required" => false,
-        "max-occurs" => 1,
-        "default" => "anonymous"
-    },
-    "odbc-max-socket-threads" => {
-        "type" => INT,
-        "description" => "Max number of threads dedicated to initial request processing. Zero indicates the system default of max available processors. (default 0)  Setting this value above the max available processors is not recommended.",
-        "required" => false,
-        "max-occurs" => 1,
-        "default" => 0
-    },
-    "odbc-input-buffer-size" => {
-        "type" => INT,
-        "description" => "SO_RCVBUF size, 0 indicates that system default should be used (default 0)",
-        "required" => false,
-        "max-occurs" => 1,
-        "default" => 0
-    },
-    "odbc-output-buffer-size" => {
-        "type" => INT,
-        "description" => "SO_SNDBUF size, 0 indicates that system default should be used (default 0)",
-        "required" => false,
-        "max-occurs" => 1,
-        "default" => 0
-    },
-    "odbc-socket-binding" => {
-        "type" => STRING,
-        "description" => "Socket binding for the profile",
-        "required" => false,
-        "max-occurs" => 1
-    },
-    "odbc-ssl-mode" => {
-        "type" => STRING,
-        "description" => "can be one of disabled, login, or enabled disabled = no transport or message level security will be used; login = only the login traffic will be encrypted at a message level using 128 bit AES with an ephemerial DH key exchange. No other config values are needed in this mode; enabled = traffic will be secured using this configuration,if the client supports SSL",
-        "required" => false,
-        "max-occurs" => 1,
-        "default" => "login"
-    },
-    "odbc-ssl-keystore-name" => {
-        "type" => STRING,
-        "description" => "Keystore File Name",
-        "required" => false,
-        "max-occurs" => 1
-    },
-    "odbc-ssl-keystore-password" => {
-        "type" => STRING,
-        "description" => "Keystore password",
-        "required" => false,
-        "max-occurs" => 1
-    },
-    "odbc-ssl-keystore-type" => {
-        "type" => STRING,
-        "description" => "Keystore type",
-        "required" => false,
-        "max-occurs" => 1,
-        "default" => "JKS"
-    },
-    "odbc-ssl-ssl-protocol" => {
-        "type" => STRING,
-        "description" => "SSL protocol used",
-        "required" => false,
-        "max-occurs" => 1,
-        "default" => "SSLv3"
-    },
-    "odbc-ssl-keymanagement-algorithm" => {
-        "type" => STRING,
-        "description" => "Use key management algorithm",
-        "required" => false,
-        "max-occurs" => 1
-    },
-    "odbc-ssl-truststore-name" => {
-        "type" => STRING,
-        "description" => "Truststore Name",
-        "required" => false,
-        "max-occurs" => 1
-    },
-    "odbc-ssl-truststore-password" => {
-        "type" => STRING,
-        "description" => "Truststore Password",
-        "required" => false,
-        "max-occurs" => 1
-    },
-    "odbc-ssl-authentication-mode" => {
-        "type" => STRING,
-        "description" => "Authentication Mode (1-way, 2-way, anonymous)",
-        "required" => false,
-        "max-occurs" => 1,
-        "default" => "anonymous"
     }
 }}

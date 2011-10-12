@@ -49,7 +49,7 @@ import org.teiid.runtime.RuntimePlugin;
 
 
 public class LocalServerConnection implements ServerConnection {
-	public static final String TEIID_RUNTIME_CONTEXT = "teiid/queryengine/"; //$NON-NLS-1$
+	public static final String TEIID_RUNTIME_CONTEXT = "teiid/queryengine"; //$NON-NLS-1$
 	
 	private LogonResult result;
 	private boolean shutdown;
@@ -69,9 +69,8 @@ public class LocalServerConnection implements ServerConnection {
 
 	protected ClientServiceRegistry getClientServiceRegistry() {
 		try {
-			String engineName = this.connectionProperties.getProperty(TeiidURL.CONNECTION.ENGINE_NAME, "default"); //$NON-NLS-1$
 			InitialContext ic = new InitialContext();
-			return (ClientServiceRegistry)ic.lookup(TEIID_RUNTIME_CONTEXT+engineName);
+			return (ClientServiceRegistry)ic.lookup(TEIID_RUNTIME_CONTEXT);
 		} catch (NamingException e) {
 			throw new TeiidRuntimeException(e);
 		}

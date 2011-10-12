@@ -323,15 +323,16 @@
                 </security-domains>
             </subsystem>
             <subsystem xmlns="urn:jboss:domain:teiid:1.0">
-                <async-thread-group>teiid-async</async-thread-group>
+                <async-thread-pool>teiid-async</async-thread-pool>
                 <object-replicator stack="udp" cluster-name="teiid-rep"/>
                 <resultset-cache container-name="teiid" name="resultset"/>
                 
-                <query-engine name = "default">
-                    <security-domain>teiid-security</security-domain>
-                    <jdbc socket-binding="teiid-jdbc"/>
-                    <odbc socket-binding="teiid-odbc"/>
-                </query-engine>
+                <transport name="jdbc" protocol="teiid" socket-binding="teiid-jdbc">
+                    <authentication security-domain="teiid-security" />
+                </transport>
+                <transport name="odbc" protocol="pg" socket-binding="teiid-odbc">
+                    <authentication security-domain="teiid-security" />
+                </transport>
                 
                 <translator name="jdbc-simple" module="org.jboss.teiid.translator.jdbc"/>
                 <translator name="jdbc-ansi" module="org.jboss.teiid.translator.jdbc"/>

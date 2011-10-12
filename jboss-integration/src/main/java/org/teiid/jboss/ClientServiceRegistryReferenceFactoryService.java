@@ -32,16 +32,16 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.ImmediateValue;
 import org.jboss.msc.value.InjectedValue;
-import org.teiid.jboss.deployers.RuntimeEngineDeployer;
+import org.teiid.transport.ClientServiceRegistry;
 
 
-class QueryEngineReferenceFactoryService implements Service<ManagedReferenceFactory>, ManagedReferenceFactory {
-    private final InjectedValue<RuntimeEngineDeployer> engineInjector = new InjectedValue<RuntimeEngineDeployer>();
+class ClientServiceRegistryReferenceFactoryService implements Service<ManagedReferenceFactory>, ManagedReferenceFactory {
+    private final InjectedValue<ClientServiceRegistry> csrInjector = new InjectedValue<ClientServiceRegistry>();
 
     private ManagedReference reference;
 
     public synchronized void start(StartContext startContext) throws StartException {
-        reference = new ValueManagedReference(new ImmediateValue<Object>(engineInjector.getValue()));
+        reference = new ValueManagedReference(new ImmediateValue<Object>(csrInjector.getValue()));
     }
 
     public synchronized void stop(StopContext stopContext) {
@@ -56,7 +56,7 @@ class QueryEngineReferenceFactoryService implements Service<ManagedReferenceFact
         return reference;
     }
 
-    public Injector<RuntimeEngineDeployer> getQueryEngineInjector() {
-        return engineInjector; 
+    public Injector<ClientServiceRegistry> getCSRInjector() {
+        return csrInjector; 
     }
 }

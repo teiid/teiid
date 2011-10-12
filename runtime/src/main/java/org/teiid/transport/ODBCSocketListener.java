@@ -42,9 +42,9 @@ public class ODBCSocketListener extends SocketListener {
 	private TeiidDriver driver;
 	private ILogon logonService;
 	
-	public ODBCSocketListener(InetSocketAddress address, SocketConfiguration config, StorageManager storageManager, int maxLobSize, ILogon logon) {
+	public ODBCSocketListener(InetSocketAddress address, SocketConfiguration config, final ClientServiceRegistryImpl csr, StorageManager storageManager, int maxLobSize, ILogon logon) {
 		//the clientserviceregistry isn't actually used by ODBC 
-		super(address, config, new ClientServiceRegistryImpl(ClientServiceRegistry.Type.ODBC), storageManager);
+		super(address, config, csr, storageManager);
 		this.maxLobSize = maxLobSize;
 		this.driver = new TeiidDriver();
 		this.driver.setEmbeddedProfile(new EmbeddedProfile() {
@@ -52,7 +52,11 @@ public class ODBCSocketListener extends SocketListener {
 			protected ServerConnection createServerConnection(Properties info)
 					throws TeiidException {
 				//When using the non-blocking api, we don't want to use the calling thread
-				return new LocalServerConnection(info, false);
+				return new LocalServerConnection(info, false) {
+        			protected ClientServiceRegistry getClientServiceRegistry() {
+        				return csr;
+        			}					
+				};
 			}
 		});
 		this.logonService = logon;

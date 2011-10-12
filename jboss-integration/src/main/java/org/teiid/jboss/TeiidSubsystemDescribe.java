@@ -49,12 +49,12 @@ public class TeiidSubsystemDescribe implements OperationStepHandler, Description
         node.get(ModelDescriptionConstants.TAIL_COMMENT_ALLOWED).set(true);
         node.get(ModelDescriptionConstants.NAMESPACE).set(Namespace.CURRENT.getUri());
         
-        TeiidBootServicesAdd.describeTeiidRoot(bundle, ATTRIBUTES, node);
-        node.get(CHILDREN, Configuration.QUERY_ENGINE, DESCRIPTION).set(bundle.getString(Configuration.QUERY_ENGINE+Configuration.DESC)); 
-        node.get(CHILDREN, Configuration.QUERY_ENGINE, REQUIRED).set(true);
+        TeiidBootServicesAdd.describeTeiid(node, ATTRIBUTES, bundle);
+        node.get(CHILDREN, Element.TRANSPORT_ELEMENT.getLocalName(), DESCRIPTION).set(Element.TRANSPORT_ELEMENT.getDescription(bundle)); 
+        node.get(CHILDREN, Element.TRANSPORT_ELEMENT.getLocalName(), REQUIRED).set(true);
         
-        node.get(CHILDREN, Configuration.TRANSLATOR, DESCRIPTION).set(bundle.getString(Configuration.TRANSLATOR+Configuration.DESC));
-        node.get(CHILDREN, Configuration.TRANSLATOR, REQUIRED).set(true);
+        node.get(CHILDREN, Element.TRANSLATOR_ELEMENT.getLocalName(), DESCRIPTION).set(Element.TRANSLATOR_ELEMENT.getDescription(bundle));
+        node.get(CHILDREN, Element.TRANSLATOR_ELEMENT.getLocalName(), REQUIRED).set(true);
 
         return node;
     }
@@ -72,25 +72,25 @@ public class TeiidSubsystemDescribe implements OperationStepHandler, Description
         TeiidBootServicesAdd.populate(subModel, subsystemAdd);
         result.add(subsystemAdd);
         
-        if (subModel.hasDefined(Configuration.QUERY_ENGINE)) {
-            for (Property container : subModel.get(Configuration.QUERY_ENGINE).asPropertyList()) {
+        if (subModel.hasDefined(Element.TRANSPORT_ELEMENT.getLocalName())) {
+            for (Property container : subModel.get(Element.TRANSPORT_ELEMENT.getLocalName()).asPropertyList()) {
                 ModelNode address = rootAddress.toModelNode();
-                address.add(Configuration.QUERY_ENGINE, container.getName());
+                address.add(Element.TRANSPORT_ELEMENT.getLocalName(), container.getName());
                 
                 final ModelNode addOperation = new ModelNode();
                 addOperation.get(OP).set(ADD);
                 addOperation.get(OP_ADDR).set(address);
                 
-                QueryEngineAdd.populate(container.getValue(), addOperation);
+                TransportAdd.populate(container.getValue(), addOperation);
                 
                 result.add(addOperation);
             }
         }
         
-        if (subModel.hasDefined(Configuration.TRANSLATOR)) {
-            for (Property container : subModel.get(Configuration.TRANSLATOR).asPropertyList()) {
+        if (subModel.hasDefined(Element.TRANSLATOR_ELEMENT.getLocalName())) {
+            for (Property container : subModel.get(Element.TRANSLATOR_ELEMENT.getLocalName()).asPropertyList()) {
                 ModelNode address = rootAddress.toModelNode();
-                address.add(Configuration.TRANSLATOR, container.getName());
+                address.add(Element.TRANSLATOR_ELEMENT.getLocalName(), container.getName());
                 
                 final ModelNode addOperation = new ModelNode();
                 addOperation.get(OP).set(ADD);

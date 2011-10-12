@@ -136,6 +136,9 @@
                     <driver name="h2" module="com.h2database.h2">
                         <xa-datasource-class>org.h2.jdbcx.JdbcDataSource</xa-datasource-class>
                     </driver>
+                    <driver name="mysql" module="com.mysql">
+                        <xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>
+                    </driver>                    
                     <driver name="oracle" module="com.oracle">
                         <xa-datasource-class>oracle.jdbc.xa.client.OracleXADataSource</xa-datasource-class>
                     </driver>    
@@ -313,15 +316,17 @@
             </security-domains>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:teiid:1.0">
-            <async-thread-group>teiid-async</async-thread-group>
+            <async-thread-pool>teiid-async</async-thread-pool>
             <resultset-cache container-name="teiid" name="resultset"/>
             
-            <query-engine name = "default">
-                <security-domain>teiid-security</security-domain>
-                <jdbc socket-binding="teiid-jdbc"/>
-                <odbc socket-binding="teiid-odbc"/>
-            </query-engine>
-            
+            <transport name="embedded"/>
+            <transport name="jdbc" protocol="teiid" socket-binding="teiid-jdbc">
+                <authentication security-domain="teiid-security"/>
+            </transport>
+            <transport name="odbc" protocol="pg" socket-binding="teiid-odbc">
+                <authentication security-domain="teiid-security"/>
+            </transport>
+                    
             <translator name="jdbc-simple" module="org.jboss.teiid.translator.jdbc"/>
             <translator name="jdbc-ansi" module="org.jboss.teiid.translator.jdbc"/>
             <translator name="access" module="org.jboss.teiid.translator.jdbc"/>

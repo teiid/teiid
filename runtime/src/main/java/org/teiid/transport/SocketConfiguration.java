@@ -37,7 +37,7 @@ public class SocketConfiguration {
 	private SSLConfiguration sslConfiguration;
 	private String hostName;
 	private String name;
-	private String socketBinding;
+	private String protocol = "teiid"; //$NON-NLS-1$
 	
 	public String getName() {
 		return name;
@@ -46,14 +46,6 @@ public class SocketConfiguration {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
-	public String getSocketBinding() {
-		return socketBinding;
-	}
-
-	public void setSocketBinding(String socketBinding) {
-		this.socketBinding = socketBinding;
-	}	
 	
 	public void setBindAddress(String addr) {
 		this.hostName = addr;
@@ -140,5 +132,13 @@ public class SocketConfiguration {
 	
 	public boolean getSslEnabled() {
 		return this.sslConfiguration != null && this.sslConfiguration.isSslEnabled();
+	}
+
+	public String getProtocol() {
+		return protocol;
+	}
+
+	public void setProtocol(String protocol) {
+		this.protocol = protocol;
 	}
 }

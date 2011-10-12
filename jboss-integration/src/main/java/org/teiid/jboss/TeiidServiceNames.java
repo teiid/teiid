@@ -24,10 +24,11 @@ package org.teiid.jboss;
 import org.jboss.msc.service.ServiceName;
 
 public class TeiidServiceNames {
-	private static ServiceName ENGINE = ServiceName.JBOSS.append("teiid", "query-engine"); //$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName ENGINE = ServiceName.JBOSS.append("teiid", "query-engine"); //$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName TRANSLATOR_REPO = ServiceName.JBOSS.append("teiid", "translator-repository");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName VDB_REPO = ServiceName.JBOSS.append("teiid", "vdb-repository");//$NON-NLS-1$ //$NON-NLS-2$
-	private static ServiceName TRANSLATOR_BASE = ServiceName.JBOSS.append("teiid", "translator");//$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName TRANSLATOR_BASE = ServiceName.JBOSS.append("teiid", "translator");//$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName TRANSPORT_BASE = ServiceName.JBOSS.append("teiid", "transport");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName BUFFER_DIR = ServiceName.JBOSS.append("teiid", "buffer.dir");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName DATA_DIR = ServiceName.JBOSS.append("teiid", "data.dir");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName BUFFER_MGR = ServiceName.JBOSS.append("teiid", "buffer-mgr");//$NON-NLS-1$ //$NON-NLS-2$
@@ -41,11 +42,7 @@ public class TeiidServiceNames {
 	
 	
 	public static ServiceName translatorServiceName(String name) {
-		return TRANSLATOR_BASE.append(name);
-	}
-	
-	public static ServiceName engineServiceName(String name) {
-		return ENGINE.append(name);
+		return ServiceName.of(TRANSLATOR_BASE, name);
 	}
 	
 	public static ServiceName vdbServiceName(String vdbName, int version) {
@@ -54,5 +51,9 @@ public class TeiidServiceNames {
 	
 	public static ServiceName executorServiceName(String poolName) {
 		return ServiceName.JBOSS.append("thread", "executor", poolName); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	public static ServiceName transportServiceName(String name) {
+		return ServiceName.of(TRANSPORT_BASE, name);
 	}
 }
