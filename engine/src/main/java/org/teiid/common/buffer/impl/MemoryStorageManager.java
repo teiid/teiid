@@ -38,7 +38,7 @@ import org.teiid.common.buffer.Serializer;
 import org.teiid.core.TeiidComponentException;
 
 
-public class MemoryStorageManager implements Cache {
+public class MemoryStorageManager implements Cache<Long> {
 	
 	public static final int MAX_FILE_SIZE = 1 << 17;
     
@@ -132,7 +132,17 @@ public class MemoryStorageManager implements Cache {
 	}
 	
 	@Override
-	public CacheEntry get(Long id, Serializer<?> serializer)
+	public Long lockForLoad(Long oid, Serializer<?> serializer) {
+		return oid;
+	}
+	
+	@Override
+	public void unlockForLoad(Long o) {
+		//nothing to do no locking
+	}
+	
+	@Override
+	public CacheEntry get(Long lock, Long id, Serializer<?> serializer)
 			throws TeiidComponentException {
 		Map<Long, CacheEntry> group = groups.get(serializer.getId());
 		if (group != null) {

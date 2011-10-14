@@ -77,8 +77,7 @@ public class TestBufferFrontedFileStoreCache {
 		ce.setObject(cacheObject);
 		cache.addToCacheGroup(s.getId(), ce.getId());
 		cache.add(ce, s);
-		
-		ce = cache.get(2l, s);
+		ce = get(cache, 2l, s);
 		assertEquals(cacheObject, ce.getObject());
 		
 		//test something that exceeds the direct inode data blocks
@@ -88,7 +87,7 @@ public class TestBufferFrontedFileStoreCache {
 		cache.addToCacheGroup(s.getId(), ce.getId());
 		cache.add(ce, s);
 		
-		ce = cache.get(3l, s);
+		ce = get(cache, 3l, s);
 		assertEquals(cacheObject, ce.getObject());
 		
 		cache.removeCacheGroup(1l);
@@ -104,7 +103,7 @@ public class TestBufferFrontedFileStoreCache {
 		cache.addToCacheGroup(s.getId(), ce.getId());
 		cache.add(ce, s);
 		
-		ce = cache.get(3l, s);
+		ce = get(cache, 3l, s);
 		assertEquals(cacheObject, ce.getObject());
 
 		cache.removeCacheGroup(1l);
@@ -120,13 +119,21 @@ public class TestBufferFrontedFileStoreCache {
 		cache.addToCacheGroup(s.getId(), ce.getId());
 		cache.add(ce, s);
 		
-		ce = cache.get(3l, s);
+		ce = get(cache, 3l, s);
 		assertNull(ce);
 
 		cache.removeCacheGroup(1l);
 		
 		assertEquals(0, cache.getDataBlocksInUse());
 		assertEquals(0, cache.getInodesInUse());
+	}
+
+	private CacheEntry get(BufferFrontedFileStoreCache cache, Long oid,
+			Serializer<Integer> s) throws TeiidComponentException {
+		PhysicalInfo o = cache.lockForLoad(oid, s);
+		CacheEntry ce = cache.get(o, oid, s);
+		cache.unlockForLoad(o);
+		return ce;
 	}
 	
 	@Test public void testEviction() throws Exception {
@@ -144,7 +151,7 @@ public class TestBufferFrontedFileStoreCache {
 		
 		ce = new CacheEntry(3l);
 		ce.setSerializer(ref);
-		cacheObject = Integer.valueOf(5000);
+		cacheObject = Integer.valueOf(5001);
 		ce.setObject(cacheObject);
 		cache.addToCacheGroup(s.getId(), ce.getId());
 		cache.add(ce, s);
@@ -152,8 +159,11 @@ public class TestBufferFrontedFileStoreCache {
 		assertEquals(3, cache.getDataBlocksInUse());
 		assertEquals(1, cache.getInodesInUse());
 
-		ce = cache.get(2l, s);
+		ce = get(cache, 2l, s);
 		assertEquals(Integer.valueOf(5000), ce.getObject());
+		
+		ce = get(cache, 3l, s);
+		assertEquals(Integer.valueOf(5001), ce.getObject());
 	}
 
 	private BufferFrontedFileStoreCache createLayeredCache(int bufferSpace, int objectSize) throws TeiidComponentException {

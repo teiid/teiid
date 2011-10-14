@@ -98,10 +98,17 @@ public class ConcurrentBitSet {
 	
 	/**
 	 * Makes a best effort to atomically find the next clear bit and set it
-	 * @return the next bit index or -1 if no clear bits are founds
+	 * @return the next bit index or -1 if no clear bits are found
 	 */
 	public int getAndSetNextClearBit() {
-		int start = counter.getAndIncrement();
+		return getAndSetNextClearBit(counter.getAndIncrement());
+	}
+	
+	public int getNextSegment() {
+		return counter.getAndIncrement();
+	}
+	
+	public int getAndSetNextClearBit(int start) {
 		int nextBit = -1;
 		for (int i = 0; i < segments.length; i++) {
 			Segment s = segments[(start+i)&(segments.length-1)];

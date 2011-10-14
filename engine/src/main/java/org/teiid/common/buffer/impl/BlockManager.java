@@ -43,6 +43,6 @@ public interface BlockManager {
 	
 	void freeBlock(int index);
 	
-	int free(boolean steal);
+	int free(boolean acquireDataBlock);
 
 }

@@ -68,7 +68,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
     private int maxReserveKb = BufferManager.DEFAULT_RESERVE_BUFFER_KB;
     private long maxBufferSpace = FileStorageManager.DEFAULT_MAX_BUFFERSPACE>>20;
     private boolean inlineLobs = true;
-    private int maxMemoryBufferSpace = -1;
+    private int memoryBufferSpace = -1;
     private int maxStorageObjectSize = BufferFrontedFileStoreCache.DEFAuLT_MAX_OBJECT_SIZE;
 	private FileStorageManager fsm;
 	
@@ -93,7 +93,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
             this.bufferMgr.setProcessorBatchSize(Integer.valueOf(processorBatchSize));
             this.bufferMgr.setMaxReserveKB(this.maxReserveKb);
             this.bufferMgr.setMaxProcessingKB(this.maxProcessingKb);
-            
+            this.bufferMgr.setMemoryBufferSpace(Math.min(BufferFrontedFileStoreCache.MAX_ADDRESSABLE_MEMORY, this.memoryBufferSpace));
             this.bufferMgr.initialize();
             
             // If necessary, add disk storage manager
@@ -110,11 +110,11 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 ssm.setMaxFileSize(maxFileSize);
                 BufferFrontedFileStoreCache fsc = new BufferFrontedFileStoreCache();
                 fsc.setMaxStorageObjectSize(maxStorageObjectSize);
-                if (maxMemoryBufferSpace <= 0) {
-                	//use approximately 20% of what's set aside for the reserved
-                	fsc.setMemoryBufferSpace(this.bufferMgr.getMaxReserveKB() * 200);
+                if (memoryBufferSpace < 0) {
+                	//use approximately 25% of what's set aside for the reserved
+                	fsc.setMemoryBufferSpace(this.bufferMgr.getMaxReserveKB() << 8);
                 } else {
-                	fsc.setMemoryBufferSpace(maxMemoryBufferSpace);
+                	fsc.setMemoryBufferSpace(memoryBufferSpace);
                 }
                 fsc.setStorageManager(ssm);
                 fsc.initialize();
@@ -254,21 +254,21 @@ public class BufferServiceImpl implements BufferService, Serializable {
 	public long getReadAttempts() {
 		return bufferMgr.getReadAttempts();
 	}
-    
-    public int getMaxMemoryBufferSpace() {
-		return maxMemoryBufferSpace;
+
+    @ManagementProperty(description="Direct memory buffer space used by the buffer manager in MB.  -1 determines the setting automatically from the maxReserveKB (default -1).  This value cannot be smaller than maxStorageObjectSize.")
+    public int getMemoryBufferSpace() {
+		return memoryBufferSpace;
 	}
     
     public int getMaxStorageObjectSize() {
 		return maxStorageObjectSize;
 	}
 
-    @ManagementProperty(description="Max direct memory buffer space used by the buffer manager in MB.  -1 determines the setting automatically from the maxReserveKB (default -1).  This value cannot be smaller than maxStorageObjectSize.")
-    public void setMaxMemoryBufferSpace(int maxMemoryBufferSpace) {
-		this.maxMemoryBufferSpace = maxMemoryBufferSpace;
+    @ManagementProperty(description="The maximum size of a buffer managed object (typically a table page or a results batch) in bytes (default 8388608).")
+    public void setMemoryBufferSpace(int maxMemoryBufferSpace) {
+		this.memoryBufferSpace = maxMemoryBufferSpace;
 	}
 
-    @ManagementProperty(description="The maximum size of a buffer managed object (typically a table page or a results batch) in bytes (default 8388608).")
     public void setMaxStorageObjectSize(int maxStorageObjectSize) {
 		this.maxStorageObjectSize = maxStorageObjectSize;
 	}

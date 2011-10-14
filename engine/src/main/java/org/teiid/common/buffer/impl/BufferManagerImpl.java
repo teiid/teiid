@@ -213,7 +213,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			if (ce != null) {
 				return (List<List<?>>)(!retain?ce.nullOut():ce.getObject());
 			}
-			synchronized (this) {
+			//obtain a granular lock to prevent double memory loading
+			Object o = cache.lockForLoad(batch, this);
+			try {
 				ce = fastGet(batch, prefersMemory.get(), retain);
 				if (ce != null) {
 					return (List<List<?>>)(!retain?ce.nullOut():ce.getObject());
@@ -222,7 +224,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
 					LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, id, id, "reading batch", batch, "from storage, total reads:", count); //$NON-NLS-1$ //$NON-NLS-2$
 				}
-				ce = cache.get(batch, this);
+				ce = cache.get(o, batch, this);
 				if (ce == null) {
 					throw new AssertionError("Batch not found in storage " + batch); //$NON-NLS-1$
 				}
@@ -234,7 +236,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				if (retain) {
 					addMemoryEntry(ce, null);
 				}
-			}	
+			} finally {
+				cache.unlockForLoad(o);
+			}
 			return (List<List<?>>)ce.getObject();
 		}
 		
@@ -281,6 +285,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     private AtomicInteger maxReserveKB = new AtomicInteger(1 << 18);
     private volatile int reserveBatchKB;
     private int maxActivePlans = DQPConfiguration.DEFAULT_MAX_ACTIVE_PLANS; //used as a hint to set the reserveBatchKB
+    private long memoryBufferSpace; //used as a hint to account for batch overhead (only useful in large scenarios)
     private boolean useWeakReferences = true;
     private boolean inlineLobs = true;
     private int targetBytesPerRow = TARGET_BYTES_PER_ROW;
@@ -313,7 +318,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     	};
     });
     
-    Cache cache;
+    private Cache cache;
     
 	private Map<String, TupleReference> tupleBufferMap = new ConcurrentHashMap<String, TupleReference>();
 	private ReferenceQueue<TupleBuffer> tupleBufferQueue = new ReferenceQueue<TupleBuffer>();
@@ -459,6 +464,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		this.maxActivePlans = maxActivePlans;
 	}
     
+    public void setMemoryBufferSpace(long memoryBufferSpace) {
+		this.memoryBufferSpace = memoryBufferSpace;
+	}
+    
     public void setMaxProcessingKB(int maxProcessingKB) {
 		this.maxProcessingKB = maxProcessingKB;
 	}
@@ -479,6 +488,8 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				this.maxReserveKB.addAndGet(((int)Math.max(0, (maxMemory - one_gig) * .75)));
 			}
 			this.maxReserveKB.addAndGet(((int)Math.max(0, Math.min(one_gig, maxMemory) * .5)));
+			int batchOverheadKB = (int)(this.memoryBufferSpace<0?(this.maxReserveKB.get()<<8):this.memoryBufferSpace)>>20;
+    		this.maxReserveKB.set(Math.max(0, this.maxReserveKB.get() - batchOverheadKB));
     	}
 		this.reserveBatchKB = this.getMaxReserveKB();
 		if (this.maxProcessingKBOrig == null) {

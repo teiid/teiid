@@ -62,6 +62,13 @@ public class TestConcurrentBitSet {
 		}
 	}
 	
+	@Test public void testSegmentUse() {
+		ConcurrentBitSet bst = new ConcurrentBitSet(50001, 4);
+		assertEquals(0, bst.getAndSetNextClearBit(0));
+		assertEquals(1, bst.getAndSetNextClearBit(0));
+		assertEquals(2, bst.getAndSetNextClearBit(4));
+	}
+	
 	@Test public void testCompactBitSet() {
 		ConcurrentBitSet bst = new ConcurrentBitSet(100000, 1);
 		bst.setCompact(true);

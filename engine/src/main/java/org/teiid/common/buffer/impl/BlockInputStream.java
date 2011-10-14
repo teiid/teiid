@@ -70,7 +70,4 @@ final class BlockInputStream extends InputStream {
 		return len;
 	}
 	
-	public int free(boolean steal) {
-		return manager.free(steal);
-	}
 }
