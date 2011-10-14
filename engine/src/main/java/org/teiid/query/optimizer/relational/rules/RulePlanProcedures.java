@@ -134,10 +134,12 @@ public class RulePlanProcedures implements OptimizerRule {
             
             Criteria crit = Criteria.combineCriteria(conjuncts);
             
-            accessNode.setProperty(NodeConstants.Info.PROCEDURE_CRITERIA, crit);
-            accessNode.setProperty(NodeConstants.Info.PROCEDURE_INPUTS, inputReferences);
-            accessNode.setProperty(NodeConstants.Info.PROCEDURE_DEFAULTS, defaults);
-            accessNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
+            if (crit != null) {
+	            accessNode.setProperty(NodeConstants.Info.PROCEDURE_CRITERIA, crit);
+	            accessNode.setProperty(NodeConstants.Info.PROCEDURE_INPUTS, inputReferences);
+	            accessNode.setProperty(NodeConstants.Info.PROCEDURE_DEFAULTS, defaults);
+	            accessNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
+            }
         }
         
         return plan;

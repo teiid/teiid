@@ -753,4 +753,16 @@ public class TestProcedureRelational {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
+    @Test public void testProcRelationalWithNoInputs1() {
+    	String sql = "select e1 from pm1.sp1"; //$NON-NLS-1$
+
+        List<?>[] expected = new List[] {
+        		Arrays.asList("c") //$NON-NLS-1$
+        };        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("EXEC pm1.sp1()", expected);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Store(), "e1"));  
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
+    
 }
