@@ -31,9 +31,9 @@ import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.common.buffer.impl.FileStorageManager;
-import org.teiid.common.buffer.impl.FileStoreCache;
 import org.teiid.common.buffer.impl.MemoryStorageManager;
 import org.teiid.common.buffer.impl.SplittableStorageManager;
 import org.teiid.core.TeiidComponentException;
@@ -68,6 +68,8 @@ public class BufferServiceImpl implements BufferService, Serializable {
     private int maxReserveKb = BufferManager.DEFAULT_RESERVE_BUFFER_KB;
     private long maxBufferSpace = FileStorageManager.DEFAULT_MAX_BUFFERSPACE>>20;
     private boolean inlineLobs = true;
+    private int maxMemoryBufferSpace = -1;
+    private int maxStorageObjectSize = BufferFrontedFileStoreCache.DEFAuLT_MAX_OBJECT_SIZE;
 	private FileStorageManager fsm;
 	
     /**
@@ -106,7 +108,14 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 fsm.setMaxBufferSpace(maxBufferSpace*MB);
                 SplittableStorageManager ssm = new SplittableStorageManager(fsm);
                 ssm.setMaxFileSize(maxFileSize);
-                FileStoreCache fsc = new FileStoreCache();
+                BufferFrontedFileStoreCache fsc = new BufferFrontedFileStoreCache();
+                fsc.setMaxStorageObjectSize(maxStorageObjectSize);
+                if (maxMemoryBufferSpace <= 0) {
+                	//use approximately 20% of what's set aside for the reserved
+                	fsc.setMemoryBufferSpace(this.bufferMgr.getMaxReserveKB() * 200);
+                } else {
+                	fsc.setMemoryBufferSpace(maxMemoryBufferSpace);
+                }
                 fsc.setStorageManager(ssm);
                 fsc.initialize();
                 this.bufferMgr.setCache(fsc);
@@ -244,5 +253,23 @@ public class BufferServiceImpl implements BufferService, Serializable {
     @ManagementProperty(description="The total number of batch read attempts.", readOnly=true)
 	public long getReadAttempts() {
 		return bufferMgr.getReadAttempts();
+	}
+    
+    public int getMaxMemoryBufferSpace() {
+		return maxMemoryBufferSpace;
+	}
+    
+    public int getMaxStorageObjectSize() {
+		return maxStorageObjectSize;
+	}
+
+    @ManagementProperty(description="Max direct memory buffer space used by the buffer manager in MB.  -1 determines the setting automatically from the maxReserveKB (default -1).  This value cannot be smaller than maxStorageObjectSize.")
+    public void setMaxMemoryBufferSpace(int maxMemoryBufferSpace) {
+		this.maxMemoryBufferSpace = maxMemoryBufferSpace;
+	}
+
+    @ManagementProperty(description="The maximum size of a buffer managed object (typically a table page or a results batch) in bytes (default 8388608).")
+    public void setMaxStorageObjectSize(int maxStorageObjectSize) {
+		this.maxStorageObjectSize = maxStorageObjectSize;
 	}
 }

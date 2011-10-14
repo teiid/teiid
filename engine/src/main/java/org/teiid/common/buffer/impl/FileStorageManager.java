@@ -29,6 +29,7 @@ import java.io.RandomAccessFile;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.common.buffer.FileStore;
@@ -50,6 +51,7 @@ public class FileStorageManager implements StorageManager {
 	
 	private long maxBufferSpace = DEFAULT_MAX_BUFFERSPACE;
 	private AtomicLong usedBufferSpace = new AtomicLong();
+	private AtomicInteger fileCounter = new AtomicInteger();
 	
 	private class FileInfo {
     	private File file;
@@ -175,6 +177,9 @@ public class FileStorageManager implements StorageManager {
     private int maxOpenFiles = DEFAULT_MAX_OPEN_FILES;
     private String directory;
     private File dirFile;
+    //use subdirectories to hold the files since we may create a relatively unbounded amount of lob files and 
+    //fs performance will typically degrade if a single directory is too large
+    private File[] subDirectories = new File[256];
 
     // State
     private Map<File, RandomAccessFile> fileCache = Collections.synchronizedMap(new LinkedHashMap<File, RandomAccessFile>() {
@@ -201,13 +206,20 @@ public class FileStorageManager implements StorageManager {
         }
 
         dirFile = new File(this.directory);
-        if(dirFile.exists()) {
-            if(! dirFile.isDirectory()) {
-            	throw new TeiidComponentException(QueryPlugin.Util.getString("FileStoreageManager.not_a_directory", dirFile.getAbsoluteFile())); //$NON-NLS-1$
-
+    	makeDir(dirFile);
+        for (int i = 0; i < subDirectories.length; i++) {
+        	subDirectories[i] = new File(this.directory, "b" +i); //$NON-NLS-1$
+        	makeDir(subDirectories[i]);
+        }
+    }
+    
+    private static void makeDir(File file) throws TeiidComponentException {
+    	if(file.exists()) {
+            if(! file.isDirectory()) {
+            	throw new TeiidComponentException(QueryPlugin.Util.getString("FileStoreageManager.not_a_directory", file.getAbsoluteFile())); //$NON-NLS-1$
             }
-        } else if(! dirFile.mkdirs()) {
-        	throw new TeiidComponentException(QueryPlugin.Util.getString("FileStoreageManager.error_creating", dirFile.getAbsoluteFile())); //$NON-NLS-1$
+        } else if(! file.mkdirs()) {
+        	throw new TeiidComponentException(QueryPlugin.Util.getString("FileStoreageManager.error_creating", file.getAbsoluteFile())); //$NON-NLS-1$
         }
     }
     
@@ -220,7 +232,8 @@ public class FileStorageManager implements StorageManager {
 	}
     
     File createFile(String name) throws IOException {
-    	File storageFile = File.createTempFile(FILE_PREFIX + name + "_", null, this.dirFile); //$NON-NLS-1$
+    	//spray the files into separate different directories in a round robin fashion.
+    	File storageFile = File.createTempFile(FILE_PREFIX + name + "_", null, this.subDirectories[fileCounter.getAndIncrement()&(this.subDirectories.length-1)]); //$NON-NLS-1$
         if (LogManager.isMessageToBeRecorded(org.teiid.logging.LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
             LogManager.logDetail(org.teiid.logging.LogConstants.CTX_BUFFER_MGR, "Created temporary storage area file " + storageFile.getAbsoluteFile()); //$NON-NLS-1$
         }

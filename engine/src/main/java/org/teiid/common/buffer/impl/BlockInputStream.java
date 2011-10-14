@@ -25,17 +25,18 @@ package org.teiid.common.buffer.impl;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
+/**
+ * TODO: support freeing of datablocks as we go
+ */
 final class BlockInputStream extends InputStream {
 	private final BlockManager manager;
 	private final int maxBlock;
 	int blockIndex;
 	ByteBuffer buf;
-	boolean free;
 	boolean done;
 
-	BlockInputStream(BlockManager manager, int blockCount, boolean free) {
+	BlockInputStream(BlockManager manager, int blockCount) {
 		this.manager = manager;
-		this.free = free;
 		this.maxBlock = blockCount;
 	}
 
@@ -52,15 +53,9 @@ final class BlockInputStream extends InputStream {
 		if (buf == null || buf.remaining() == 0) {
 			if (maxBlock == blockIndex) {
 				done = true;
-				if (blockIndex > 1 && free) {
-					manager.freeBlock(blockIndex - 1, false);
-				}
 				return;
 			}
 			buf = manager.getBlock(blockIndex++);
-			if (blockIndex > 2 && free) {
-				manager.freeBlock(blockIndex - 2, false);
-			}
 		}
 	}
 

@@ -41,7 +41,7 @@ public interface BlockManager {
 	 */
 	ByteBuffer getBlock(int index);
 	
-	int freeBlock(int index, boolean steal);
+	void freeBlock(int index);
 	
 	int free(boolean steal);
 

@@ -25,16 +25,20 @@ package org.teiid.common.buffer.impl;
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.StorageManager;
 
+/**
+ * Represents a FileStore that holds blocks of a fixed size.
+ */
 class BlockStore {
 	final long blockSize;
 	final ConcurrentBitSet blocksInUse;
 	final FileStore[] stores;
 	
-	public BlockStore(StorageManager storageManager, int blockSize, int blockCountLog) {
+	public BlockStore(StorageManager storageManager, int blockSize, int blockCountLog, int concurrencyLevel) {
 		this.blockSize = blockSize;
 		int blockCount = 1 << blockCountLog;
-		this.blocksInUse = new ConcurrentBitSet(blockCount, BufferManagerImpl.CONCURRENCY_LEVEL/2);
-		this.stores = new FileStore[BufferManagerImpl.CONCURRENCY_LEVEL/2];
+		this.blocksInUse = new ConcurrentBitSet(blockCount, concurrencyLevel);
+		this.blocksInUse.setCompact(true);
+		this.stores = new FileStore[concurrencyLevel];
 		for (int i = 0; i < stores.length; i++) {
 			this.stores[i] = storageManager.createFileStore(String.valueOf(blockSize) + '_' + i); 
 		}

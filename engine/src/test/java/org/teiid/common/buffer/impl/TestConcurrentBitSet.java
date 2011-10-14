@@ -62,4 +62,16 @@ public class TestConcurrentBitSet {
 		}
 	}
 	
+	@Test public void testCompactBitSet() {
+		ConcurrentBitSet bst = new ConcurrentBitSet(100000, 1);
+		bst.setCompact(true);
+		for (int i = 0; i < 100000; i++) {
+			assertEquals(i, bst.getAndSetNextClearBit());
+		}
+		bst.clear(50);
+		bst.clear(500);
+		bst.clear(5000);
+		assertEquals(50, bst.getAndSetNextClearBit());
+	}
+	
 }

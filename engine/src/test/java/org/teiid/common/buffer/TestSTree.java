@@ -29,8 +29,8 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.common.buffer.STree.InsertMode;
+import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
-import org.teiid.common.buffer.impl.FileStoreCache;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
@@ -102,15 +102,14 @@ public class TestSTree {
 				
 	}
 	
-	/**
-	 * Forces the logic through several compaction cycles by using large strings
-	 * @throws TeiidComponentException
-	 */
-	@Test public void testCompaction() throws TeiidComponentException {
+	@Test public void testStorageWrites() throws TeiidComponentException {
 		BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
 		bm.setProcessorBatchSize(32);
 		bm.setMaxReserveKB(0);//force all to disk
-		((FileStoreCache)bm.getCache()).setCompactionThreshold(0);
+		BufferFrontedFileStoreCache fsc =(BufferFrontedFileStoreCache)bm.getCache();
+		fsc.setMaxStorageObjectSize(1 << 19);
+		fsc.setMemoryBufferSpace(1 << 19);
+		fsc.initialize();
 		bm.initialize();
 		
 		ElementSymbol e1 = new ElementSymbol("x");

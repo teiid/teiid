@@ -25,8 +25,8 @@ package org.teiid.common.buffer;
 public class BaseCacheEntry implements Comparable<BaseCacheEntry> {
 
 	private Long id;
-	protected long lastAccess;
-	protected double orderingValue;
+	protected float lastAccess;
+	protected float orderingValue;
 	
 	public BaseCacheEntry(Long id) {
 		this.id = id;
@@ -46,19 +46,19 @@ public class BaseCacheEntry implements Comparable<BaseCacheEntry> {
 		return getId().toString();
 	}
 
-	public long getLastAccess() {
+	public float getLastAccess() {
 		return lastAccess;
 	}
 	
-	public void setLastAccess(long lastAccess) {
+	public void setLastAccess(float lastAccess) {
 		this.lastAccess = lastAccess;
 	}
 	
-	public double getOrderingValue() {
+	public float getOrderingValue() {
 		return orderingValue;
 	}
 	
-	public void setOrderingValue(double orderingValue) {
+	public void setOrderingValue(float orderingValue) {
 		this.orderingValue = orderingValue;
 	}
 	
@@ -66,7 +66,7 @@ public class BaseCacheEntry implements Comparable<BaseCacheEntry> {
 	public int compareTo(BaseCacheEntry o) {
 		int result = (int) Math.signum(orderingValue - o.orderingValue);
 		if (result == 0) {
-			result = Long.signum(lastAccess - o.lastAccess);
+			result = (int)Math.signum(lastAccess - o.lastAccess);
 			if (result == 0) {
 				return Long.signum(id - o.id);
 			}

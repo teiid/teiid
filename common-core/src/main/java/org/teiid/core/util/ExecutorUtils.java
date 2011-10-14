@@ -25,6 +25,7 @@ package org.teiid.core.util;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -38,9 +39,13 @@ public class ExecutorUtils {
 	 * @return
 	 */
     public static ExecutorService newFixedThreadPool(int nThreads, String name) {
+        return newFixedThreadPool(nThreads, Integer.MAX_VALUE, name);
+    }
+    
+    public static ExecutorService newFixedThreadPool(int nThreads, int maxQueue, String name) {
         ThreadPoolExecutor tpe = new ThreadPoolExecutor(nThreads, nThreads,
                                       60L, TimeUnit.SECONDS,
-                                      new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory(name));
+                                      maxQueue==0?new SynchronousQueue<Runnable>():new LinkedBlockingQueue<Runnable>(maxQueue), new NamedThreadFactory(name));
         tpe.allowCoreThreadTimeOut(true);
         return tpe;
     }

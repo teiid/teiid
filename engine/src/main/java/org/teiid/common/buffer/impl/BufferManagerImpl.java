@@ -291,30 +291,11 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     
     private AtomicInteger activeBatchKB = new AtomicInteger();
     
-    //combined recency/frequency lamda value between 0 and 1 lower -> LFU, higher -> LRU
-    //TODO: adaptively adjust this value.  more hits should move closer to lru
-    private final double crfLamda = .001;
+    private AtomicLong readAttempts = new AtomicLong();
     //implements a LRFU cache using the a customized crf function.  we store the value with
     //the cache entry to make a better decision about reuse of the batch
     //TODO: consider the size estimate in the weighting function
-    private PartiallyOrderedCache<Long, CacheEntry> memoryEntries = new PartiallyOrderedCache<Long, CacheEntry>(16, .75f, CONCURRENCY_LEVEL) {
-		
-		@Override
-		protected void recordAccess(Long key, CacheEntry value, boolean initial) {
-			long lastAccess = value.getLastAccess();
-			value.setLastAccess(readAttempts.get());
-			if (initial && lastAccess == 0) {
-				return;
-			}
-			double orderingValue = value.getOrderingValue();
-			orderingValue = 
-				//Frequency component
-				orderingValue*Math.pow(1-crfLamda, value.getLastAccess() - lastAccess)
-				//recency component
-				+ Math.pow(value.getLastAccess(), crfLamda);
-			value.setOrderingValue(orderingValue);
-		}
-	};
+    private OrderedCache<Long, CacheEntry> memoryEntries = new OrderedCache<Long, CacheEntry>(16, .75f, CONCURRENCY_LEVEL, readAttempts);
     
     //limited size reference caches based upon the memory settings
     private WeakReferenceHashedValueCache<CacheEntry> weakReferenceCache; 
@@ -341,7 +322,6 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     private AtomicLong batchAdded = new AtomicLong();
     private AtomicLong readCount = new AtomicLong();
 	private AtomicLong writeCount = new AtomicLong();
-	private AtomicLong readAttempts = new AtomicLong();
 	private AtomicLong referenceHit = new AtomicLong();
 	
 	public long getBatchesAdded() {

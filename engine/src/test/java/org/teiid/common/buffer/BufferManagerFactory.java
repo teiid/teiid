@@ -22,8 +22,8 @@
 
 package org.teiid.common.buffer;
 
+import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
-import org.teiid.common.buffer.impl.FileStoreCache;
 import org.teiid.common.buffer.impl.MemoryStorageManager;
 import org.teiid.common.buffer.impl.SplittableStorageManager;
 import org.teiid.core.TeiidComponentException;
@@ -85,7 +85,11 @@ public class BufferManagerFactory {
 			MemoryStorageManager storageManager = new MemoryStorageManager();
 			SplittableStorageManager ssm = new SplittableStorageManager(storageManager);
 			ssm.setMaxFileSizeDirect(MemoryStorageManager.MAX_FILE_SIZE);
-			FileStoreCache fsc = new FileStoreCache();
+			BufferFrontedFileStoreCache fsc = new BufferFrontedFileStoreCache();
+			//use conservative allocations
+			fsc.setDirect(false); //allow the space to be GCed easily
+			fsc.setMaxStorageObjectSize(1<<20);
+			fsc.setMemoryBufferSpace(1<<21);
 			fsc.setStorageManager(ssm);
 			fsc.initialize();
 		    bufferManager.setCache(fsc);

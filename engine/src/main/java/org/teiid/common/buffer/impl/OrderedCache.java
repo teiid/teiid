@@ -26,12 +26,35 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicLong;
 
-public abstract class OrderedCache<K, V> {
+import org.teiid.common.buffer.BaseCacheEntry;
+
+/**
+ * A Concurrent LRFU cache.  Has assumptions that match buffermanager usage.
+ * Null values are not allowed.
+ * @param <K>
+ * @param <V>
+ */
+public class OrderedCache<K, V extends BaseCacheEntry> {
 	
-	protected Map<K, V> map = new ConcurrentHashMap<K, V>(); 
-	protected NavigableMap<V, K> expirationQueue = new ConcurrentSkipListMap<V, K>();
-	protected Map<K, V> limbo = new ConcurrentHashMap<K, V>();
+	protected Map<K, V> map; 
+	//TODO: until Java 7 ConcurrentSkipListMap has a scaling bug in that
+	//the level limits the effective map size to ~ 2^16
+	//above which it performs comparably under load to a synchronized LinkedHashMap
+	//just with more CPU overhead vs. wait time.
+	protected NavigableMap<V, K> evictionQueue = new ConcurrentSkipListMap<V, K>();
+	protected Map<K, V> limbo;
+	protected AtomicLong clock;
+    //combined recency/frequency lamda value between 0 and 1 lower -> LFU, higher -> LRU
+    //TODO: adaptively adjust this value.  more hits should move closer to lru
+	protected float crfLamda = .0002f;
+	
+	public OrderedCache(int initialCapacity, float loadFactor, int concurrencyLevel, AtomicLong clock) {
+		map = new ConcurrentHashMap<K, V>(initialCapacity, loadFactor, concurrencyLevel);
+		limbo = new ConcurrentHashMap<K, V>(initialCapacity, loadFactor, concurrencyLevel);
+		this.clock = clock;
+	}
 		
 	public V get(K key) {
 		V result = map.get(key);
@@ -40,9 +63,9 @@ public abstract class OrderedCache<K, V> {
 		}
 		if (result != null) {
 			synchronized (result) {
-				expirationQueue.remove(result);
-				recordAccess(key, result, false);
-				expirationQueue.put(result, key);
+				evictionQueue.remove(result);
+				recordAccess(result, false);
+				evictionQueue.put(result, key);
 			}
 		}
 		return result;
@@ -52,7 +75,7 @@ public abstract class OrderedCache<K, V> {
 		V result = map.remove(key);
 		if (result != null) {
 			synchronized (result) {
-				expirationQueue.remove(result);
+				evictionQueue.remove(result);
 			}
 		}
 		return result;
@@ -62,18 +85,18 @@ public abstract class OrderedCache<K, V> {
 		V result = map.put(key, value);
 		if (result != null) {
 			synchronized (result) {
-				expirationQueue.remove(result);
+				evictionQueue.remove(result);
 			}
 		}
 		synchronized (value) {
-			recordAccess(key, value, result == null);
-			expirationQueue.put(value, key);
+			recordAccess(value, result == null);
+			evictionQueue.put(value, key);
 		}
 		return result;
 	}
 	
 	public V evict() {
-		Map.Entry<V, K> entry = expirationQueue.pollFirstEntry();
+		Map.Entry<V, K> entry = evictionQueue.pollFirstEntry();
 		if (entry == null) {
 			return null;
 		}
@@ -89,6 +112,42 @@ public abstract class OrderedCache<K, V> {
 		return map.size();
 	}
 	
-	protected abstract void recordAccess(K key, V value, boolean initial);
+	public Map<V, K> getEvictionQueue() {
+		return evictionQueue;
+	}
+	
+	public Map.Entry<V, K> firstEntry() {
+		return evictionQueue.firstEntry();
+	}
+	
+	protected void recordAccess(BaseCacheEntry value, boolean initial) {
+		float lastAccess = value.getLastAccess();
+		value.setLastAccess(clock.get());
+		if (initial && lastAccess == 0) {
+			return; //we just want to timestamp this as created and not give it an ordering value
+		}
+		float orderingValue = value.getOrderingValue();
+		orderingValue = computeNextOrderingValue(value.getLastAccess(), lastAccess,
+				orderingValue);
+		value.setOrderingValue(orderingValue);
+	}
+
+	float computeNextOrderingValue(float currentTime,
+			float lastAccess, float orderingValue) {
+		orderingValue = 
+			(float) (//Frequency component
+			orderingValue*Math.pow(1-crfLamda, currentTime - lastAccess)
+			//recency component
+			+ Math.pow(currentTime, crfLamda));
+		return orderingValue;
+	}
+	
+	public float getCrfLamda() {
+		return crfLamda;
+	}
+	
+	public void setCrfLamda(float crfLamda) {
+		this.crfLamda = crfLamda;
+	}
 	
 }
