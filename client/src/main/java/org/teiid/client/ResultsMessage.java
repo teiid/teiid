@@ -72,6 +72,8 @@ public class ResultsMessage implements Externalizable {
 
     /** OPTION DEBUG log if OPTION DEBUG was used */
     private String debugLog;
+    
+    private byte clientSerializationVersion;
         
     /** 
      * Query plan annotations, if OPTION SHOWPLAN or OPTION PLANONLY was used:
@@ -346,6 +348,14 @@ public class ResultsMessage implements Externalizable {
 
 	public boolean isUpdateResult() {
 		return isUpdateResult;
+	}
+	
+	public byte getClientSerializationVersion() {
+		return clientSerializationVersion;
+	}
+	
+	public void setClientSerializationVersion(byte clientSerializationVersion) {
+		this.clientSerializationVersion = clientSerializationVersion;
 	}
 }
 

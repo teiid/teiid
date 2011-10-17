@@ -27,34 +27,30 @@ import java.lang.ref.WeakReference;
 public class CacheEntry extends BaseCacheEntry {
 	private boolean persistent;
 	private Object object;
-	private int sizeEstimate;
+	private final int sizeEstimate;
 	private WeakReference<? extends Serializer<?>> serializer;
 	
 	public CacheEntry(Long oid) {
-		super(new CacheKey(oid, 0, 0));
+		this(new CacheKey(oid, 0, 0), 0, null, null, false);
 	}
 	
-	public CacheEntry(CacheKey key) {
+	public CacheEntry(CacheKey key, int sizeEstimate, Object object, WeakReference<? extends Serializer<?>> serializer, boolean persistent) {
 		super(key);
+		this.sizeEstimate = sizeEstimate;
+		this.object = object;
+		this.serializer = serializer;
+		this.persistent = persistent;
 	}
 	
 	public int getSizeEstimate() {
 		return sizeEstimate;
 	}
 	
-	public void setSizeEstimate(int sizeEstimate) {
-		this.sizeEstimate = sizeEstimate;
-	}
-		
 	public Object nullOut() {
 		Object result = getObject();
-		setObject(null);
-		setSerializer(null);
+		this.object = null;
+		this.serializer = null;
 		return result;
-	}
-
-	public void setObject(Object object) {
-		this.object = object;
 	}
 
 	public Object getObject() {

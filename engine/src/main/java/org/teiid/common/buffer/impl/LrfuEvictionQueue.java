@@ -47,10 +47,13 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 	protected AtomicLong clock;
     //combined recency/frequency lamda value between 0 and 1 lower -> LFU, higher -> LRU
     //TODO: adaptively adjust this value.  more hits should move closer to lru
-	protected float crfLamda = .0002f;
+	protected double crfLamda;
+	protected double inverseCrfLamda = 1 - crfLamda;
+	protected int maxInterval;
 	
 	public LrfuEvictionQueue(AtomicLong clock) {
 		this.clock = clock;
+		setCrfLamda(.0002);
 	}
 
 	public boolean remove(V value) {
@@ -85,33 +88,47 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 	protected void recordAccess(V value, boolean initial) {
 		assert Thread.holdsLock(value);
 		CacheKey key = value.getKey();
-		float lastAccess = key.getLastAccess();
-		float currentClock = clock.get();
+		int lastAccess = key.getLastAccess();
+		long currentClock = clock.get();
 		if (initial && lastAccess == 0) {
 			return; //we just want to timestamp this as created and not give it an ordering value
 		}
 		float orderingValue = key.getOrderingValue();
 		orderingValue = computeNextOrderingValue(currentClock, lastAccess,
 				orderingValue);
-		value.setKey(new CacheKey(key.getId(), currentClock, orderingValue));
+		value.setKey(new CacheKey(key.getId(), (int)currentClock, orderingValue));
 	}
 
-	float computeNextOrderingValue(float currentTime,
-			float lastAccess, float orderingValue) {
+	float computeNextOrderingValue(long currentTime,
+			int lastAccess, float orderingValue) {
+		long longLastAccess = lastAccess&0xffffffffl;
+		currentTime &= 0xffffffffl;
+		if (longLastAccess > currentTime) {
+			currentTime += (1l<<32);
+		}
+		long delta = currentTime - longLastAccess;
 		orderingValue = 
 			(float) (//Frequency component
-			orderingValue*Math.pow(1-crfLamda, currentTime - lastAccess)
+			(delta>maxInterval?0:orderingValue*Math.pow(inverseCrfLamda, delta))
 			//recency component
 			+ Math.pow(currentTime, crfLamda));
 		return orderingValue;
 	}
 	
-	public float getCrfLamda() {
+	public double getCrfLamda() {
 		return crfLamda;
 	}
 	
-	public void setCrfLamda(float crfLamda) {
+	public void setCrfLamda(double crfLamda) {
 		this.crfLamda = crfLamda;
+		this.inverseCrfLamda = 1 - crfLamda;
+		int i = 0;
+		for (; i < 30; i++) {
+			if ((float)Math.pow(inverseCrfLamda, 1<<i) == 0) {
+				break;
+			}
+		}
+		this.maxInterval = i-1;
 	}
 	
 }

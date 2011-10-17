@@ -22,6 +22,7 @@
 
 package org.teiid.common.buffer.impl;
 
+import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -143,11 +144,12 @@ public class MemoryStorageManager implements Cache<Long> {
 	}
 	
 	@Override
-	public CacheEntry get(Long lock, Long id, Serializer<?> serializer)
+	public CacheEntry get(Long lock, Long oid,
+			WeakReference<? extends Serializer<?>> ref)
 			throws TeiidComponentException {
-		Map<Long, CacheEntry> group = groups.get(serializer.getId());
+		Map<Long, CacheEntry> group = groups.get(ref.get().getId());
 		if (group != null) {
-			return group.get(id);
+			return group.get(oid);
 		}
 		return null;
 	}

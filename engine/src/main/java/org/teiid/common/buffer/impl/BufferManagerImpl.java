@@ -36,6 +36,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -81,6 +83,42 @@ import org.teiid.query.sql.symbol.Expression;
  *       - this is not necessary for already persistent batches, since we hold a weak reference
  */
 public class BufferManagerImpl implements BufferManager, StorageManager {
+
+	private static final class Cleaner extends TimerTask {
+		WeakReference<BufferManagerImpl> bufferRef;
+		
+		public Cleaner(BufferManagerImpl bufferManagerImpl) {
+			this.bufferRef = new WeakReference<BufferManagerImpl>(bufferManagerImpl);
+		}
+		
+		@Override
+		public void run() {
+			while (true) {
+				BufferManagerImpl impl = this.bufferRef.get();
+				if (impl == null) {
+					this.cancel();
+					return;
+				}
+				if (impl.reserveBatchKB.get() < impl.maxReserveKB.get()*.9 || impl.activeBatchKB.get() < (impl.maxReserveKB.get()>>3)) {
+					CacheEntry entry = impl.evictionQueue.firstEntry(false);
+					if (entry == null) {
+						return;
+					}
+					//we aren't holding too many memory entries, ensure that
+					//entries aren't old
+					int lastAccess = 0x1fffffff&entry.getKey().getLastAccess();
+					int currentTime = 0x1fffffff&(int)impl.readAttempts.get();
+					if (lastAccess > currentTime) {
+						currentTime += 1<<29;
+					}
+					if (currentTime - lastAccess < 1<<28) {
+						return;
+					}
+				}
+				impl.doEvictions(0, false);
+			}
+		}
+	}
 
 	final class BatchManagerImpl implements BatchManager, Serializer<List<? extends List<?>>> {
 		final Long id;
@@ -150,10 +188,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				}
 			}
 			CacheKey key = new CacheKey(oid, 0, old!=null?old.getKey().getOrderingValue():0);
-			CacheEntry ce = new CacheEntry(key);
-			ce.setObject(batch);
-			ce.setSizeEstimate(sizeEstimate);
-			ce.setSerializer(this.ref);
+			CacheEntry ce = new CacheEntry(key, sizeEstimate, batch, this.ref, false);
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
 				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Add batch to BufferManager", ce.getId(), "with size estimate", ce.getSizeEstimate()); //$NON-NLS-1$ //$NON-NLS-2$
 			}
@@ -226,15 +261,13 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
 					LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, id, id, "reading batch", batch, "from storage, total reads:", count); //$NON-NLS-1$ //$NON-NLS-2$
 				}
-				ce = cache.get(o, batch, this);
+				ce = cache.get(o, batch, this.ref);
 				if (ce == null) {
 					throw new AssertionError("Batch not found in storage " + batch); //$NON-NLS-1$
 				}
 				if (!retain) {
 					cache.remove(this.id, batch);
 				}
-				ce.setSerializer(this.ref);
-				ce.setPersistent(true);
 				if (retain) {
 					addMemoryEntry(ce);
 				}
@@ -284,8 +317,8 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     //set to acceptable defaults for testing
     private int maxProcessingKB = 1 << 11; 
     private Integer maxProcessingKBOrig;
-    private AtomicInteger maxReserveKB = new AtomicInteger(1 << 18);
-    private volatile int reserveBatchKB;
+    AtomicInteger maxReserveKB = new AtomicInteger(1 << 18);
+    AtomicInteger reserveBatchKB = new AtomicInteger();
     private int maxActivePlans = DQPConfiguration.DEFAULT_MAX_ACTIVE_PLANS; //used as a hint to set the reserveBatchKB
     private boolean useWeakReferences = true;
     private boolean inlineLobs = true;
@@ -295,7 +328,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     private ReentrantLock lock = new ReentrantLock(true);
     private Condition batchesFreed = lock.newCondition();
     
-    private AtomicInteger activeBatchKB = new AtomicInteger();
+    AtomicInteger activeBatchKB = new AtomicInteger();
     
     private AtomicLong readAttempts = new AtomicLong();
     //TODO: consider the size estimate in the weighting function
@@ -311,6 +344,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     		if (size() > maxSoftReferences) {
     			BatchSoftReference bsr = eldest.getValue();
     			maxReserveKB.addAndGet(bsr.sizeEstimate);
+    			reserveBatchKB.addAndGet(bsr.sizeEstimate);
     			bsr.clear();
     			return true;
     		}
@@ -328,6 +362,12 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     private AtomicLong readCount = new AtomicLong();
 	private AtomicLong writeCount = new AtomicLong();
 	private AtomicLong referenceHit = new AtomicLong();
+	
+	private static final Timer timer = new Timer("BufferManager Cleaner", true); //$NON-NLS-1$
+	
+	public BufferManagerImpl() {
+		//timer.schedule(new Cleaner(this), 30000, 30000);
+	}
 	
 	public long getBatchesAdded() {
 		return batchAdded.get();
@@ -470,12 +510,15 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     
     public void setMaxReserveKB(int maxReserveBatchKB) {
 		this.maxReserveKB.set(maxReserveBatchKB);
+		if (maxReserveBatchKB > -1) {
+			this.reserveBatchKB.set(maxReserveBatchKB);
+		}
 	}
     
 	@Override
 	public void initialize() throws TeiidComponentException {
 		int maxMemory = (int)Math.min(Runtime.getRuntime().maxMemory() / 1024, Integer.MAX_VALUE);
-		maxMemory -= 300 * 1024; //assume 300 megs of overhead for the AS/system stuff
+		maxMemory = Math.max(0, maxMemory - 300 * 1024); //assume 300 megs of overhead for the AS/system stuff
 		if (getMaxReserveKB() < 0) {
 			this.setMaxReserveKB(0);
 			int one_gig = 1024 * 1024;
@@ -485,7 +528,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			}
 			this.maxReserveKB.addAndGet(((int)Math.max(0, Math.min(one_gig, maxMemory) * .5)));
     	}
-		this.reserveBatchKB = this.getMaxReserveKB();
+		this.reserveBatchKB.set(this.getMaxReserveKB());
 		if (this.maxProcessingKBOrig == null) {
 			//store the config value so that we can be reinitialized (this is not a clean approach)
 			this.maxProcessingKBOrig = this.maxProcessingKB;
@@ -513,7 +556,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     	}
     	lock.lock();
     	try {
-	    	this.reserveBatchKB += count;
+	    	this.reserveBatchKB.addAndGet(count);
 	    	batchesFreed.signalAll();
     	} finally {
     		lock.unlock();
@@ -530,7 +573,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	    	if (mode == BufferReserveMode.WAIT) {
 	    		//don't wait for more than is available
 	    		int waitCount = Math.min(count, this.getMaxReserveKB());
-		    	while (waitCount > 0 && waitCount > this.reserveBatchKB) {
+		    	while (waitCount > 0 && waitCount > this.reserveBatchKB.get()) {
 		    		try {
 						batchesFreed.await(100, TimeUnit.MILLISECONDS);
 					} catch (InterruptedException e) {
@@ -539,12 +582,12 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 					waitCount /= 2;
 		    	}	
 	    	}
-	    	if (this.reserveBatchKB >= count || mode == BufferReserveMode.FORCE) {
-		    	this.reserveBatchKB -= count;
+	    	if (this.reserveBatchKB.get() >= count || mode == BufferReserveMode.FORCE) {
+		    	this.reserveBatchKB.addAndGet(-count);
 	    		return count;
 	    	}
-	    	int result = Math.max(0, this.reserveBatchKB);
-	    	this.reserveBatchKB -= result;
+	    	int result = Math.max(0, this.reserveBatchKB.get());
+	    	this.reserveBatchKB.addAndGet(-result);
 	    	return result;
 	    } finally {
     		lock.unlock();
@@ -554,8 +597,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     
 	void persistBatchReferences() {
 		int activeBatch = activeBatchKB.get();
-		if (activeBatch <= reserveBatchKB) {
-    		int memoryCount = activeBatch + getMaxReserveKB() - reserveBatchKB;
+		int reserveBatch = reserveBatchKB.get();
+		if (activeBatch <= reserveBatch) {
+    		int memoryCount = activeBatch + getMaxReserveKB() - reserveBatch;
 			if (DataTypeManager.isValueCacheEnabled()) {
     			if (memoryCount < getMaxReserveKB() / 8) {
 					DataTypeManager.setValueCacheEnabled(false);
@@ -565,9 +609,13 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			}
 			return;
 		}
-		int maxToFree = Math.max(maxProcessingKB>>1, reserveBatchKB>>3);
+		int maxToFree = Math.max(maxProcessingKB>>1, reserveBatch>>3);
+		doEvictions(maxToFree, true);
+	}
+
+	void doEvictions(int maxToFree, boolean checkActiveBatch) {
 		int freed = 0;
-		while (freed <= maxToFree && activeBatchKB.get() > reserveBatchKB * .8) {
+		while (freed <= maxToFree && (!checkActiveBatch || activeBatchKB.get() > reserveBatchKB.get() * .8)) {
 			CacheEntry ce = evictionQueue.firstEntry(true);
 			if (ce == null) {
 				break;
@@ -623,6 +671,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		BatchSoftReference ref = new BatchSoftReference(ce, SOFT_QUEUE, ce.getSizeEstimate()/2);
 		softCache.put(ce.getId(), ref);
 		maxReserveKB.addAndGet(- ce.getSizeEstimate()/2);
+		reserveBatchKB.addAndGet(- ce.getSizeEstimate()/2);
 	}
 	
 	/**
@@ -658,6 +707,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				ce = bsr.get();
 				if (ce != null) {
 					maxReserveKB.addAndGet(bsr.sizeEstimate);
+					reserveBatchKB.addAndGet(bsr.sizeEstimate);
 				}
 			}
 		} else if (useWeakReferences) {
@@ -727,6 +777,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			}
 			softCache.remove(ref.key);
 			maxReserveKB.addAndGet(ref.sizeEstimate);
+			reserveBatchKB.addAndGet(ref.sizeEstimate);
 			ref.clear();
 		}
 	}

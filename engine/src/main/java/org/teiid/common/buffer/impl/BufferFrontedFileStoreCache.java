@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -383,13 +384,13 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 	public void initialize() throws TeiidComponentException {
 		storageManager.initialize();
 		memoryBufferSpace = Math.max(memoryBufferSpace, maxStorageObjectSize);
-		blocks = (int) Math.min(Integer.MAX_VALUE, (memoryBufferSpace>>LOG_BLOCK_SIZE));
+		blocks = (int) Math.min(Integer.MAX_VALUE, (memoryBufferSpace>>LOG_BLOCK_SIZE)*ADDRESSES_PER_BLOCK/(ADDRESSES_PER_BLOCK+1));
 		inodesInuse = new ConcurrentBitSet(blocks+1, BufferManagerImpl.CONCURRENCY_LEVEL);
 		blocksInuse = new ConcurrentBitSet(blocks, BufferManagerImpl.CONCURRENCY_LEVEL);
 		this.blockByteBuffer = new BlockByteBuffer(30, blocks, LOG_BLOCK_SIZE, direct);
 		//ensure that we'll run out of blocks first
 		this.inodeByteBuffer = new BlockByteBuffer(30, blocks+1, LOG_INODE_SIZE, direct);
-		memoryWritePermits = new Semaphore(Math.max(1, (int)Math.min(memoryBufferSpace/maxStorageObjectSize, Integer.MAX_VALUE)));
+		memoryWritePermits = new Semaphore(Math.max(1, (int)Math.min((((long)blocks)<<LOG_BLOCK_SIZE)/maxStorageObjectSize, Integer.MAX_VALUE)));
 		maxMemoryBlocks = Math.min(MAX_DOUBLE_INDIRECT, maxStorageObjectSize>>LOG_BLOCK_SIZE);
 		//try to maintain enough freespace so that writers don't block in cleaning
 		cleaningThreshold = Math.min(maxMemoryBlocks<<4, blocks>>1);
@@ -547,8 +548,14 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 	}
 	
 	@Override
-	public CacheEntry get(PhysicalInfo info, Long oid, Serializer<?> serializer) throws TeiidComponentException {
+	public CacheEntry get(PhysicalInfo info, Long oid,
+			WeakReference<? extends Serializer<?>> ref)
+			throws TeiidComponentException {
 		if (info == null) {
+			return null;
+		}
+		Serializer<?> serializer = ref.get();
+		if (serializer == null) {
 			return null;
 		}
 		long currentTime = readAttempts.incrementAndGet();
@@ -604,11 +611,8 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 					}
 				}
 			}
-			CacheEntry ce = new CacheEntry(new CacheKey(oid, 1, 1));
 			ObjectInputStream ois = new ObjectInputStream(is);
-			ce.setSizeEstimate(ois.readInt());
-			ce.setObject(serializer.deserialize(ois));
-			ce.setPersistent(true);
+			CacheEntry ce = new CacheEntry(new CacheKey(oid, 1, 1), ois.readInt(), serializer.deserialize(ois), ref, true);
 			return ce;
         } catch(IOException e) {
         	throw new TeiidComponentException(e, QueryPlugin.Util.getString("FileStoreageManager.error_reading", oid)); //$NON-NLS-1$
@@ -728,6 +732,9 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 				BlockInputStream is = new BlockInputStream(bm, memoryBlockCount);
 				BlockStore blockStore = sizeBasedStores[sizeIndex];
 				block = getAndSetNextClearBit(blockStore);
+				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+					LogManager.logDetail(LogConstants.CTX_DQP, "Allocating storage data block", info.block, "of size", blockStore.blockSize, "to", info); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-1$
+				}
 				FileStore fs = blockStore.stores[block/blockStore.blocksInUse.getBitsPerSegment()];
 				long blockOffset = (block%blockStore.blocksInUse.getBitsPerSegment())*blockStore.blockSize;
 				byte[] b = new byte[BLOCK_SIZE];
@@ -763,6 +770,9 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 					} else {
 						BlockStore blockStore = sizeBasedStores[info.sizeIndex];
 						blockStore.blocksInUse.clear(info.block);
+						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+							LogManager.logDetail(LogConstants.CTX_DQP, "Freed storage data block", info.block, "of size", blockStore.blockSize); //$NON-NLS-1$ //$NON-NLS-2$
+						}
 						info.block = EMPTY_ADDRESS;
 					}
 				}
@@ -915,6 +925,7 @@ final class PhysicalInfo extends BaseCacheEntry {
 	public void setSize(int size) {
 		this.memoryBlockCount = (size>>BufferFrontedFileStoreCache.LOG_BLOCK_SIZE) + ((size&BufferFrontedFileStoreCache.BLOCK_MASK)>0?1:0);
 		int blocks = memoryBlockCount;
+		this.sizeIndex = 0;
 		while (blocks >= 1) {
 			this.sizeIndex++;
 			blocks>>=2;

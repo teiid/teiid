@@ -24,13 +24,11 @@
  */
 package org.teiid.translator.jdbc;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import org.teiid.client.BatchSerializer;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
-import org.teiid.translator.TypeFacility;
 
 
 /**
@@ -43,52 +41,28 @@ public abstract class FunctionModifier {
     /*
      * Public sharing part for the mapping between class and type in format of Map<class->Integer>.
      */
-    public static final int STRING = 0;
-    public static final int CHAR = 1;
-    public static final int BOOLEAN = 2;
-    public static final int BYTE = 3;
-    public static final int SHORT = 4;
-    public static final int INTEGER = 5;
-    public static final int LONG = 6;
-    public static final int BIGINTEGER = 7;
-    public static final int FLOAT = 8;
-    public static final int DOUBLE = 9;
-    public static final int BIGDECIMAL = 10;
-    public static final int DATE = 11;
-    public static final int TIME = 12;
-    public static final int TIMESTAMP = 13;
-    public static final int OBJECT = 14;
-    public static final int BLOB = 15;
-    public static final int CLOB = 16;
-    public static final int XML = 17;
-    public static final int NULL = 18;
+    public static final int STRING = BatchSerializer.STRING;
+    public static final int CHAR = BatchSerializer.CHAR;
+    public static final int BOOLEAN = BatchSerializer.BOOLEAN;
+    public static final int BYTE = BatchSerializer.BYTE;
+    public static final int SHORT = BatchSerializer.SHORT;
+    public static final int INTEGER = BatchSerializer.INTEGER;
+    public static final int LONG = BatchSerializer.LONG;
+    public static final int BIGINTEGER = BatchSerializer.BIGINTEGER;
+    public static final int FLOAT = BatchSerializer.FLOAT;
+    public static final int DOUBLE = BatchSerializer.DOUBLE;
+    public static final int BIGDECIMAL = BatchSerializer.BIGDECIMAL;
+    public static final int DATE = BatchSerializer.DATE;
+    public static final int TIME = BatchSerializer.TIME;
+    public static final int TIMESTAMP = BatchSerializer.TIMESTAMP;
+    public static final int OBJECT = BatchSerializer.OBJECT;
+    public static final int BLOB = BatchSerializer.BLOB;
+    public static final int CLOB = BatchSerializer.CLOB;
+    public static final int XML = BatchSerializer.XML;
+    public static final int NULL = BatchSerializer.NULL;
 
-    private static final Map<Class<?>, Integer> typeMap = new HashMap<Class<?>, Integer>();
-    
-    static {
-        typeMap.put(TypeFacility.RUNTIME_TYPES.STRING, STRING);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.CHAR, CHAR);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.BOOLEAN, BOOLEAN);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.BYTE, BYTE);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.SHORT, SHORT);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.INTEGER, INTEGER);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.LONG, LONG);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.BIG_INTEGER, BIGINTEGER);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.FLOAT, FLOAT);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.DOUBLE, DOUBLE);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL, BIGDECIMAL);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.DATE, DATE);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.TIME, TIME);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.TIMESTAMP, TIMESTAMP);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.OBJECT, OBJECT);        
-        typeMap.put(TypeFacility.RUNTIME_TYPES.BLOB, BLOB);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.CLOB, CLOB);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.XML, XML);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.NULL, NULL);
-    }    
-    
     public static int getCode(Class<?> source) {
-        return typeMap.get(source).intValue();
+        return BatchSerializer.getCode(source);
     }
     
     /**

@@ -63,6 +63,38 @@
 			if your installation makes use of internal materialization, makes
 			heavy use of SQL/XML, or processes large row counts.
 		</para>
+		<section>
+			<title>Big Data/Memory</title>
+			<para>Usage of extremely large VM sizes and or datasets requires additional considerations.
+			Teiid has a non-negligible amount of overhead per batch/table page on the order of 100-200 bytes.  Depending on the data types involved each
+			full batch/table page will represent between 64 and 4096 rows.  If you are dealing with datasets with billions of rows and you run into OutOfMemory issues, consider increasing the processor
+			batch size in the &jboss-beans; file to force the allocation of larger batches and table pages.  If the processor batch size is increased and/or you are dealing with extremely wide result sets (several hundred columns),
+			then the default setting of 8MB for the maxStorageObjectSize in the &jboss-beans; file may be too low.  The sizing for maxStorageObjectSize is terms of serialized size, which will be much
+			closer to the raw data size then the Java memory footprint estimation used for maxReservedKB.  
+			maxStorageObjectSize should not be set too large relative to memoryBufferSpace since it will reduce the performance of the memory buffer.  The memory buffer supports only 1 concurrent writer for each maxStorageObjectSize of the memoryBufferSpace.
+			</para>
+			<note><para>Teiid temporary tables (also used for internal materialization) can only support 2^31-1 rows per table.</para></note> 
+			<para>
+			The memoryBufferSpace setting controls the amount of on or off heap memory allocated as byte buffers for use by the Teiid buffer manager.  This setting defaults to -1, which automatically determines a setting based upon whether it is on or off heap and the value for maxReserveKB.
+			</para>
+			<para>You can take advantage of the buffer manager memory buffer to access system memory without allocating it to the heap.  Setting memoryBufferOffHeap to true in &jboss-beans; will allocate the 
+			Teiid memory buffer off heap.  Depending on whether your installation is dedicated to Teiid and the amount of system memory available, this may be perferable to on-heap allocation.  The primary
+			benefit is additional memory usage for Teiid without additional garbage collection tuning.  This becomes especially important in situations where more than 32GB of memory is desired for the VM.
+			Note that when using off-heap allocation, the memory must still be available to the java process and that setting the value of memoryBufferSpace too high may cause the VM to swap rather than reside in memory.
+			With large off-heap buffer sizes (greater than several gigabytes) you may also need to adjust VM settings.  For Sun VMs the relevant VM settings are MaxDirectMemorySize and UseLargePages.  For example adding:
+			<programlisting>-XX:MaxDirectMemorySize=12g -XX:+UseLargePages</programlisting>
+			to the VM process arguments would allow for an effective allocation of approximately an 11GB Teiid memory buffer (the memoryBufferSpace setting) accounting for any additional direct memory that may be needed
+			by the AS or applications running in the AS.
+		</section>
+		<section>
+			<title>Disk Usage</title>
+			<para>For table page and result batches the buffer manager will we a limited number of files that are dedicated to a particular storage size.
+			However, as mentioned in the installation, creation of Teiid lob values (for example through SQL/XML) will typically create one file per lob once the lob exceeds the allowable
+        	in memory size of 8KB.  In heavy usage scenarios, consider pointing the buffer directory on a partition that is routinely defragmented. 
+        	By default Teiid will use up to 50GB of disk space.  This is tracked in terms of the number of bytes written by Teiid.  For large data sets, you may need to increase the
+        	maxBufferSpace setting in the &jboss-beans; file.
+        	</para>
+		</section>
 	</section>
 	<section>
 		<title>Threading</title>

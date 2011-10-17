@@ -22,6 +22,7 @@
 
 package org.teiid.common.buffer;
 
+import java.lang.ref.WeakReference;
 import java.util.Collection;
 
 import org.teiid.core.TeiidComponentException;
@@ -74,7 +75,7 @@ public interface Cache<T> extends StorageManager {
 	 * @return
 	 * @throws TeiidComponentException
 	 */
-	CacheEntry get(T lock, Long oid, Serializer<?> serializer) throws TeiidComponentException;
+	CacheEntry get(T lock, Long oid, WeakReference<? extends Serializer<?>> ref) throws TeiidComponentException;
 	
 	/**
 	 * Adds an entry to the cache.

@@ -49,8 +49,8 @@
              property if using older clients utilizing lobs. (default true) -->
         <property name="inlineLobs">true</property>
         <!-- Memory buffer space used by the buffer manager in MB.  -1 determines the setting automatically from the maxReserveKB (default -1).  
-    	     This value cannot be smaller than maxStorageObjectSize. -->
-        <property name="maxMemoryBufferSpace">-1</property>
+    	     This value cannot be smaller than maxStorageObjectSize.-->
+        <property name="memoryBufferSpace">-1</property>
         <!-- Set to true to hold the memory buffer off-heap. If true you must ensure that the VM can allocate that much direct memory (default false). -->
         <property name="memoryBufferOffHeap">false</property>
         <!-- The maximum size of a buffer managed object (typically a table page or a results batch) in bytes (default 8388608 or 8MB).  
