@@ -22,34 +22,61 @@
 
 package org.teiid.common.buffer;
 
-public class BaseCacheEntry {
+public class CacheKey implements Comparable<CacheKey> {
 
-	private CacheKey key;
-
-	public BaseCacheEntry(CacheKey key) {
-		this.key = key;
+	private Long id;
+	protected float lastAccess;
+	protected float orderingValue;
+	
+	public CacheKey(Long id, float lastAccess, float orderingValue) {
+		this.id = id;
+		this.lastAccess = lastAccess;
+		this.orderingValue = orderingValue;
 	}
 	
 	public Long getId() {
-		return key.getId();
+		return id;
 	}
 
 	@Override
 	public int hashCode() {
-		return key.hashCode();
+		return id.hashCode();
 	}
 	
 	@Override
 	public String toString() {
-		return key.toString();
-	}
-
-	public void setKey(CacheKey key) {
-		this.key = key;
+		return id.toString();
 	}
 	
-	public CacheKey getKey() {
-		return key;
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == this) {
+			return true;
+		}
+		if (!(obj instanceof CacheKey)) {
+			return false;
+		}
+		return this.id.equals(((CacheKey)obj).getId());
+	}
+
+	public float getLastAccess() {
+		return lastAccess;
+	}
+	
+	public float getOrderingValue() {
+		return orderingValue;
+	}
+	
+	@Override
+	public int compareTo(CacheKey o) {
+		int result = (int) Math.signum(orderingValue - o.orderingValue);
+		if (result == 0) {
+			result = (int)Math.signum(lastAccess - o.lastAccess);
+			if (result == 0) {
+				return Long.signum(id - o.id);
+			}
+		}
+		return result;
 	}
 
 }

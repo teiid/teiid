@@ -68,8 +68,9 @@ public class BufferServiceImpl implements BufferService, Serializable {
     private int maxReserveKb = BufferManager.DEFAULT_RESERVE_BUFFER_KB;
     private long maxBufferSpace = FileStorageManager.DEFAULT_MAX_BUFFERSPACE>>20;
     private boolean inlineLobs = true;
-    private int memoryBufferSpace = -1;
+    private long memoryBufferSpace = -1;
     private int maxStorageObjectSize = BufferFrontedFileStoreCache.DEFAuLT_MAX_OBJECT_SIZE;
+    private boolean memoryBufferOffHeap;
 	private FileStorageManager fsm;
 	
     /**
@@ -93,7 +94,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
             this.bufferMgr.setProcessorBatchSize(Integer.valueOf(processorBatchSize));
             this.bufferMgr.setMaxReserveKB(this.maxReserveKb);
             this.bufferMgr.setMaxProcessingKB(this.maxProcessingKb);
-            this.bufferMgr.setMemoryBufferSpace(Math.min(BufferFrontedFileStoreCache.MAX_ADDRESSABLE_MEMORY, this.memoryBufferSpace));
             this.bufferMgr.initialize();
             
             // If necessary, add disk storage manager
@@ -110,11 +110,19 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 ssm.setMaxFileSize(maxFileSize);
                 BufferFrontedFileStoreCache fsc = new BufferFrontedFileStoreCache();
                 fsc.setMaxStorageObjectSize(maxStorageObjectSize);
+                fsc.setDirect(memoryBufferOffHeap);
+                int batchOverheadKB = (int)(this.memoryBufferSpace<0?(this.bufferMgr.getMaxReserveKB()<<8):this.memoryBufferSpace)>>20;
+        		this.bufferMgr.setMaxReserveKB(Math.max(0, this.bufferMgr.getMaxReserveKB() - batchOverheadKB));
                 if (memoryBufferSpace < 0) {
                 	//use approximately 25% of what's set aside for the reserved
-                	fsc.setMemoryBufferSpace(this.bufferMgr.getMaxReserveKB() << 8);
+                	fsc.setMemoryBufferSpace(((long)this.bufferMgr.getMaxReserveKB()) << 8);
                 } else {
-                	fsc.setMemoryBufferSpace(memoryBufferSpace);
+                	//scale from MB to bytes
+                	fsc.setMemoryBufferSpace(memoryBufferSpace << 20);
+                }
+                if (!memoryBufferOffHeap && this.maxReserveKb < 0) {
+            		//adjust the value
+            		this.bufferMgr.setMaxReserveKB(this.bufferMgr.getMaxReserveKB() - (int)Math.min(this.bufferMgr.getMaxReserveKB(), (fsc.getMemoryBufferSpace()>>10)));
                 }
                 fsc.setStorageManager(ssm);
                 fsc.initialize();
@@ -255,18 +263,27 @@ public class BufferServiceImpl implements BufferService, Serializable {
 		return bufferMgr.getReadAttempts();
 	}
 
-    @ManagementProperty(description="Direct memory buffer space used by the buffer manager in MB.  -1 determines the setting automatically from the maxReserveKB (default -1).  This value cannot be smaller than maxStorageObjectSize.")
-    public int getMemoryBufferSpace() {
+    @ManagementProperty(description="Memory buffer space used by the buffer manager in MB.  -1 determines the setting automatically from the maxReserveKB (default -1).  This value cannot be smaller than maxStorageObjectSize.")
+    public long getMemoryBufferSpace() {
 		return memoryBufferSpace;
 	}
-    
+
+    @ManagementProperty(description="The maximum size of a buffer managed object (typically a table page or a results batch) in bytes (default 8388608).")
     public int getMaxStorageObjectSize() {
 		return maxStorageObjectSize;
 	}
 
-    @ManagementProperty(description="The maximum size of a buffer managed object (typically a table page or a results batch) in bytes (default 8388608).")
-    public void setMemoryBufferSpace(int maxMemoryBufferSpace) {
-		this.memoryBufferSpace = maxMemoryBufferSpace;
+    @ManagementProperty(description="Set to true to hold the memory buffer off-heap. If true you must ensure that the VM can allocate that much direct memory (default false).")
+    public boolean isMemoryBufferOffHeap() {
+		return memoryBufferOffHeap;
+	}
+    
+    public void setMemoryBufferOffHeap(boolean memoryBufferOffHeap) {
+		this.memoryBufferOffHeap = memoryBufferOffHeap;
+	}
+
+    public void setMemoryBufferSpace(int memoryBufferSpace) {
+		this.memoryBufferSpace = memoryBufferSpace;
 	}
 
     public void setMaxStorageObjectSize(int maxStorageObjectSize) {

@@ -30,8 +30,12 @@ public class CacheEntry extends BaseCacheEntry {
 	private int sizeEstimate;
 	private WeakReference<? extends Serializer<?>> serializer;
 	
-	public CacheEntry(Long id) {
-		super(id);
+	public CacheEntry(Long oid) {
+		super(new CacheKey(oid, 0, 0));
+	}
+	
+	public CacheEntry(CacheKey key) {
+		super(key);
 	}
 	
 	public int getSizeEstimate() {
@@ -42,17 +46,6 @@ public class CacheEntry extends BaseCacheEntry {
 		this.sizeEstimate = sizeEstimate;
 	}
 		
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof CacheEntry)) {
-			return false;
-		}
-		return getId().equals(((CacheEntry)obj).getId());
-	}
-
-	
 	public Object nullOut() {
 		Object result = getObject();
 		setObject(null);

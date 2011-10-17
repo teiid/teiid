@@ -168,8 +168,8 @@ jboss.bind.address=&lt;bind address&gt;
     <section>
         <title>tmp/teiid</title>
         <para>This directory contains temporary files created by Teiid.  These are mostly created by the buffer manager.  
-        These files are not needed across a VM restart.  Heavy usage of large data sets will create lots of temporary files.
-        In heavy usage scenarios, consider pointing the buffer directory at a partition that is routinely defragmented.
+        These files are not needed across a VM restart.  Creation of Teiid lob values (for example through SQL/XML) will typically create one file per lob once it exceeds the allowable
+        in memory size of 8KB.  In heavy usage scenarios, consider pointing the buffer directory at a partition that is routinely defragmented.
         </para>
     </section>
          

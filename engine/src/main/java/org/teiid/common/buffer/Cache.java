@@ -82,7 +82,7 @@ public interface Cache<T> extends StorageManager {
 	 * @param s
 	 * @throws Exception
 	 */
-	void add(CacheEntry entry, Serializer<?> s) throws Exception;
+	boolean add(CacheEntry entry, Serializer<?> s) throws Exception;
 	
 	/**
 	 * Remove an entry from the cache

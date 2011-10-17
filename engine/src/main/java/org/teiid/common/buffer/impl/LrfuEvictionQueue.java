@@ -22,114 +22,78 @@
 
 package org.teiid.common.buffer.impl;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.NavigableMap;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.common.buffer.BaseCacheEntry;
+import org.teiid.common.buffer.CacheKey;
 
 /**
- * A Concurrent LRFU cache.  Has assumptions that match buffermanager usage.
+ * A Concurrent LRFU eviction queue.  Has assumptions that match buffermanager usage.
  * Null values are not allowed.
  * @param <K>
  * @param <V>
  */
-public class OrderedCache<K, V extends BaseCacheEntry> {
+public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 	
-	protected Map<K, V> map; 
 	//TODO: until Java 7 ConcurrentSkipListMap has a scaling bug in that
-	//the level limits the effective map size to ~ 2^16
-	//above which it performs comparably under load to a synchronized LinkedHashMap
+	//the level function limits the effective map size to ~ 2^16
+	//above which it performs comparably under multi-threaded load to a synchronized LinkedHashMap
 	//just with more CPU overhead vs. wait time.
-	protected NavigableMap<V, K> evictionQueue = new ConcurrentSkipListMap<V, K>();
-	protected Map<K, V> limbo;
+	protected NavigableMap<CacheKey, V> evictionQueue = new ConcurrentSkipListMap<CacheKey, V>();
 	protected AtomicLong clock;
     //combined recency/frequency lamda value between 0 and 1 lower -> LFU, higher -> LRU
     //TODO: adaptively adjust this value.  more hits should move closer to lru
 	protected float crfLamda = .0002f;
 	
-	public OrderedCache(int initialCapacity, float loadFactor, int concurrencyLevel, AtomicLong clock) {
-		map = new ConcurrentHashMap<K, V>(initialCapacity, loadFactor, concurrencyLevel);
-		limbo = new ConcurrentHashMap<K, V>(initialCapacity, loadFactor, concurrencyLevel);
+	public LrfuEvictionQueue(AtomicLong clock) {
 		this.clock = clock;
 	}
+
+	public boolean remove(V value) {
+		return evictionQueue.remove(value.getKey()) != null;
+	}
+	
+	public void touch(V value, boolean initial) {
+		if (!initial) {
+			initial = evictionQueue.remove(value.getKey()) == null;			
+		}
+		recordAccess(value, initial);
+		evictionQueue.put(value.getKey(), value);
+	}
 		
-	public V get(K key) {
-		V result = map.get(key);
-		if (result == null) {
-			result = limbo.get(key);
+	public Collection<V> getEvictionQueue() {
+		return evictionQueue.values();
+	}
+	
+	public V firstEntry(boolean poll) {
+		Map.Entry<CacheKey, V> entry = null;
+		if (poll) {
+			entry = evictionQueue.pollFirstEntry();
+		} else {
+			entry = evictionQueue.firstEntry();
 		}
-		if (result != null) {
-			synchronized (result) {
-				evictionQueue.remove(result);
-				recordAccess(result, false);
-				evictionQueue.put(result, key);
-			}
+		if (entry != null) {
+			return entry.getValue();
 		}
-		return result;
+		return null;
 	}
 	
-	public V remove(K key) {
-		V result = map.remove(key);
-		if (result != null) {
-			synchronized (result) {
-				evictionQueue.remove(result);
-			}
-		}
-		return result;
-	}
-	
-	public V put(K key, V value) {
-		V result = map.put(key, value);
-		if (result != null) {
-			synchronized (result) {
-				evictionQueue.remove(result);
-			}
-		}
-		synchronized (value) {
-			recordAccess(value, result == null);
-			evictionQueue.put(value, key);
-		}
-		return result;
-	}
-	
-	public V evict() {
-		Map.Entry<V, K> entry = evictionQueue.pollFirstEntry();
-		if (entry == null) {
-			return null;
-		}
-		limbo.put(entry.getValue(), entry.getKey());
-		return map.remove(entry.getValue());
-	}
-	
-	public void finishedEviction(K key) {
-		limbo.remove(key);
-	}
-	
-	public int size() {
-		return map.size();
-	}
-	
-	public Map<V, K> getEvictionQueue() {
-		return evictionQueue;
-	}
-	
-	public Map.Entry<V, K> firstEntry() {
-		return evictionQueue.firstEntry();
-	}
-	
-	protected void recordAccess(BaseCacheEntry value, boolean initial) {
-		float lastAccess = value.getLastAccess();
-		value.setLastAccess(clock.get());
+	protected void recordAccess(V value, boolean initial) {
+		assert Thread.holdsLock(value);
+		CacheKey key = value.getKey();
+		float lastAccess = key.getLastAccess();
+		float currentClock = clock.get();
 		if (initial && lastAccess == 0) {
 			return; //we just want to timestamp this as created and not give it an ordering value
 		}
-		float orderingValue = value.getOrderingValue();
-		orderingValue = computeNextOrderingValue(value.getLastAccess(), lastAccess,
+		float orderingValue = key.getOrderingValue();
+		orderingValue = computeNextOrderingValue(currentClock, lastAccess,
 				orderingValue);
-		value.setOrderingValue(orderingValue);
+		value.setKey(new CacheKey(key.getId(), currentClock, orderingValue));
 	}
 
 	float computeNextOrderingValue(float currentTime,

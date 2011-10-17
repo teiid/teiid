@@ -29,15 +29,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
 import junit.framework.TestCase;
 
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.TimestampWithTimezone;
 
 
 
@@ -47,22 +45,6 @@ import org.teiid.core.types.DataTypeManager;
  */
 public class TestBatchSerializer extends TestCase {
 
-    private static void assertEqual(List[] expectedBatch, List[] batch) {
-        if (expectedBatch == null) {
-            assertNull(batch);
-            return;
-        }
-        assertEquals(expectedBatch.length, batch.length);
-        if (expectedBatch.length > 0) {
-            int columns = expectedBatch[0].size();
-            for (int row = 0; row < expectedBatch.length; row++) {
-                for (int col = 0; col < columns; col++) {
-                    assertEquals(expectedBatch[row].get(col), batch[row].get(col));
-                }
-            }
-        }
-    }
-    
     private static void helpTestSerialization(String[] types, List<?>[] batch) throws IOException, ClassNotFoundException {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         ObjectOutputStream out = new ObjectOutputStream(byteStream);
@@ -108,21 +90,21 @@ public class TestBatchSerializer extends TestCase {
         List[] batch = new List[rows];
         
         for (int i = 0; i < rows; i++) {
-            long currentTime = System.currentTimeMillis();
+            java.util.Date d = new java.util.Date();
             Object[] data = { new BigDecimal("" + i), //$NON-NLS-1$
                               new BigInteger(Integer.toString(i)),
                               (i%2 == 0) ? Boolean.FALSE: Boolean.TRUE,
                               new Byte((byte)i),
                               new Character((char)i),
-                              new Date(currentTime),
+                              TimestampWithTimezone.createDate(d),
                               new Double(i),
                               new Float(i),
                               new Integer(i),
                               new Long(i),
                               new Short((short)i),
                               sampleString(i),
-                              new Time(currentTime),
-                              new Timestamp(currentTime)
+                              TimestampWithTimezone.createTime(d),
+                              TimestampWithTimezone.createTimestamp(d)
                             };
             batch[i] = Arrays.asList(data);
         }
@@ -133,22 +115,22 @@ public class TestBatchSerializer extends TestCase {
         List[] batch = new List[rows];
         
         for (int i = 0; i < rows; i++) {
-            long currentTime = System.currentTimeMillis();
+        	java.util.Date d = new java.util.Date();
             int mod = i%14;
             Object[] data = { (mod == 0) ? null : new BigDecimal("" + i), //$NON-NLS-1$
                               (mod == 1) ? null : new BigInteger(Integer.toString(i)),
                               (mod == 2) ? null : ((i%2 == 0) ? Boolean.FALSE: Boolean.TRUE),
                               (mod == 3) ? null : new Byte((byte)i),
                               (mod == 4) ? null : new Character((char)i),
-                              (mod == 5) ? null : new Date(currentTime),
+                              (mod == 5) ? null : TimestampWithTimezone.createDate(d),
                               (mod == 6) ? null : new Double(i),
                               (mod == 7) ? null : new Float(i),
                               (mod == 8) ? null : new Integer(i),
                               (mod == 9) ? null : new Long(i),
                               (mod == 10) ? null : new Short((short)i),
                               (mod == 11) ? null : sampleString(i),
-                              (mod == 12) ? null : new Time(currentTime),
-                              (mod == 13) ? null : new Timestamp(currentTime)
+                              (mod == 12) ? null : TimestampWithTimezone.createTime(d),
+                              (mod == 13) ? null : TimestampWithTimezone.createTimestamp(d)
                             };
             batch[i] = Arrays.asList(data);
         }

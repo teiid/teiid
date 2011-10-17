@@ -22,21 +22,28 @@
 
 package org.teiid.client;
 
+import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.ObjectStreamConstants;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.XMLType;
 import org.teiid.jdbc.JDBCPlugin;
 
 
@@ -67,6 +74,90 @@ public class BatchSerializer {
         serializers.put(DataTypeManager.DefaultDataTypes.TIMESTAMP,     new TimestampColumnSerializer());
     }
     
+    private static final Map<String, ColumnSerializer> version1serializers = new HashMap<String, ColumnSerializer>(128);
+    static {
+    	version1serializers.put(DataTypeManager.DefaultDataTypes.DATE,          new DateColumnSerializer1());
+    	version1serializers.put(DataTypeManager.DefaultDataTypes.TIME,          new TimeColumnSerializer1());
+    	version1serializers.put(DataTypeManager.DefaultDataTypes.STRING,     	new StringColumnSerializer1());
+    	version1serializers.put(DataTypeManager.DefaultDataTypes.CLOB,     		new ClobColumnSerializer1());
+    	version1serializers.put(DataTypeManager.DefaultDataTypes.BLOB,     		new BlobColumnSerializer1());
+    	version1serializers.put(DataTypeManager.DefaultDataTypes.XML,     		new XmlColumnSerializer1());
+    	version1serializers.put(DataTypeManager.DefaultDataTypes.NULL,     		new NullColumnSerializer1());
+    	//TODO: do better with just an object column
+    }
+    
+    private static final int MAX_UTF = 0xFFFF/3; //this is greater than the expected max length of Teiid Strings
+    
+    private static class StringColumnSerializer1 extends ColumnSerializer {
+    	@Override
+    	protected void writeObject(ObjectOutput out, Object obj) throws IOException {
+    		String str = (String)obj;
+        	if (str.length() <= MAX_UTF) {
+        		//skip object serialization if we have a short string
+        	    out.writeByte(ObjectStreamConstants.TC_STRING);
+        	    out.writeUTF(str);
+        	} else {
+        		out.writeByte(ObjectStreamConstants.TC_LONGSTRING);
+        		out.writeObject(obj);
+        	}
+        }
+    	
+    	@Override
+    	protected Object readObject(ObjectInput in) throws IOException,
+    			ClassNotFoundException {
+    		if (in.readByte() == ObjectStreamConstants.TC_STRING) {
+    			return in.readUTF();
+    		}
+    		return super.readObject(in);
+    	}
+    }
+
+    private static class NullColumnSerializer1 extends ColumnSerializer {
+    	@Override
+    	public void writeColumn(ObjectOutput out, int col,
+    			List<? extends List<?>> batch) throws IOException {
+    	}
+    	
+    	@Override
+    	public void readColumn(ObjectInput in, int col,
+    			List<List<Object>> batch, byte[] isNull) throws IOException,
+    			ClassNotFoundException {
+    	}
+    }
+    
+    private static class ClobColumnSerializer1 extends ColumnSerializer {
+        protected void writeObject(ObjectOutput out, Object obj) throws IOException {
+        	((Externalizable)obj).writeExternal(out);
+        }
+        protected Object readObject(ObjectInput in) throws IOException, ClassNotFoundException {
+        	ClobType ct = new ClobType();
+        	ct.readExternal(in);
+            return ct;
+        }
+    }
+
+    private static class BlobColumnSerializer1 extends ColumnSerializer {
+        protected void writeObject(ObjectOutput out, Object obj) throws IOException {
+        	((Externalizable)obj).writeExternal(out);
+        }
+        protected Object readObject(ObjectInput in) throws IOException, ClassNotFoundException {
+        	BlobType bt = new BlobType();
+        	bt.readExternal(in);
+            return bt;
+        }
+    }
+
+    private static class XmlColumnSerializer1 extends ColumnSerializer {
+        protected void writeObject(ObjectOutput out, Object obj) throws IOException {
+        	((Externalizable)obj).writeExternal(out);
+        }
+        protected Object readObject(ObjectInput in) throws IOException, ClassNotFoundException {
+        	XMLType xt = new XMLType();
+        	xt.readExternal(in);
+            return xt;
+        }
+    }
+
     /**
      * Packs the (boolean) information about whether data values in the column are null
      * into bytes so that we send ~n/8 instead of n bytes.
@@ -338,6 +429,34 @@ public class BatchSerializer {
         }
     }
     
+    static int DATE_NORMALIZER = 0;
+    	
+	static {
+		Calendar c = Calendar.getInstance();
+		c.setTimeZone(TimeZone.getTimeZone("GMT")); //$NON-NLS-1$
+		c.set(1900, 0, 1, 0, 0, 0);
+		c.set(Calendar.MILLISECOND, 0);
+		DATE_NORMALIZER = -(int)(c.getTime().getTime()/60000); //support a 32 bit range starting at this value
+	}
+
+    private static class DateColumnSerializer1 extends ColumnSerializer {
+        protected void writeObject(ObjectOutput out, Object obj) throws IOException {
+            out.writeInt((int)(((java.sql.Date)obj).getTime()/60000) + DATE_NORMALIZER);
+        }
+        protected Object readObject(ObjectInput in) throws IOException {
+            return new java.sql.Date(((in.readInt()&0xffffffffL) - DATE_NORMALIZER)*60000);
+        }
+    }
+    
+    private static class TimeColumnSerializer1 extends ColumnSerializer {
+        protected void writeObject(ObjectOutput out, Object obj) throws IOException {
+            out.writeInt((int)(((Time)obj).getTime()/1000));
+        }
+        protected Object readObject(ObjectInput in) throws IOException {
+            return new Time((in.readInt()&0xffffffffL)*1000);
+        }
+    }
+    
     private static class TimestampColumnSerializer extends ColumnSerializer {
         protected void writeObject(ObjectOutput out, Object obj) throws IOException {
             Timestamp ts =  (Timestamp)obj;
@@ -351,15 +470,25 @@ public class BatchSerializer {
         }
     }
         
-    private static ColumnSerializer getSerializer(String type) {
-        ColumnSerializer cs = serializers.get((type == null) ? DataTypeManager.DefaultDataTypes.OBJECT : type);
+    private static ColumnSerializer getSerializer(String type, byte version) {
+    	ColumnSerializer cs = null;
+    	if (version == 1) {
+    		cs = version1serializers.get((type == null) ? DataTypeManager.DefaultDataTypes.OBJECT : type);
+    	}
+    	if (cs == null) {
+    		cs = serializers.get((type == null) ? DataTypeManager.DefaultDataTypes.OBJECT : type);
+    	}
         if (cs == null) {
         	return defaultSerializer;
         }
         return cs;
     }
-    
+
     public static void writeBatch(ObjectOutput out, String[] types, List<? extends List<?>> batch) throws IOException {
+    	writeBatch(out, types, batch, (byte)1);
+    }
+    
+    public static void writeBatch(ObjectOutput out, String[] types, List<? extends List<?>> batch, byte version) throws IOException {
         if (batch == null) {
             out.writeInt(-1);
         } else {
@@ -368,7 +497,7 @@ public class BatchSerializer {
 	            int columns = types.length;
 	            out.writeInt(columns);
 	            for(int i = 0; i < columns; i++) {
-	            	ColumnSerializer serializer = getSerializer(types[i]);
+	            	ColumnSerializer serializer = getSerializer(types[i], version);
 	                try {
 	                    serializer.writeColumn(out, i, batch);
 	                } catch (ClassCastException e) {
@@ -389,6 +518,10 @@ public class BatchSerializer {
     }
     
     public static List<List<Object>> readBatch(ObjectInput in, String[] types) throws IOException, ClassNotFoundException {
+    	return readBatch(in, types, (byte)1);
+    }
+    
+    public static List<List<Object>> readBatch(ObjectInput in, String[] types, byte version) throws IOException, ClassNotFoundException {
         int rows = in.readInt();
         if (rows == 0) {
             return new ArrayList<List<Object>>(0);
@@ -402,7 +535,7 @@ public class BatchSerializer {
             }
             byte[] isNullBuffer = new byte[(extraRows > 0) ? numBytes + 1: numBytes];
             for (int col = 0; col < columns; col++) {
-                getSerializer(types[col]).readColumn(in, col, batch, isNullBuffer);
+                getSerializer(types[col], version).readColumn(in, col, batch, isNullBuffer);
             }
             return batch;
         }

@@ -111,11 +111,12 @@ public class MemoryStorageManager implements Cache<Long> {
 	}
 	
 	@Override
-	public void add(CacheEntry entry, Serializer<?> s) {
+	public boolean add(CacheEntry entry, Serializer<?> s) {
 		Map<Long, CacheEntry> group = groups.get(s.getId());
 		if (group != null) {
 			group.put(entry.getId(), entry);
 		}
+		return true;
 	}
 	
 	@Override
