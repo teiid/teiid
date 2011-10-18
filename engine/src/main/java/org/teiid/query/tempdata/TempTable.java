@@ -96,7 +96,7 @@ class TempTable {
 				}
 				for (int i = 0; i < indexes.length; i++) {
 					if (indexes[i] == -1) {
-						AtomicInteger sequence = sequences.get(i);
+						AtomicInteger sequence = sequences.get(i + (addRowId?1:0));
 						if (sequence != null) {
 							newTuple.add(sequence.getAndIncrement());
 						} else {
