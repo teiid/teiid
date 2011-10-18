@@ -328,6 +328,15 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         terminateBatches();
         return pullBatch();
 	}
+	
+	@Override
+	protected void addBatchRow(List row) {
+		if (this.getOutputElements().isEmpty()) {
+			//a dummy column was added to the query, just remove it now
+			row = Collections.emptyList();
+		}
+		super.addBatchRow(row);
+	}
 
 	private void registerNext() throws TeiidComponentException,
 			TeiidProcessingException {

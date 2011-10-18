@@ -29,7 +29,9 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
@@ -47,6 +49,39 @@ import org.teiid.security.SecurityHelper;
 public class DQPWorkContext implements Serializable {
 	
 	private static final long serialVersionUID = -6389893410233192977L;
+	
+	public enum Version {
+		SEVEN_1("7.1"), //$NON-NLS-1$
+		SEVEN_2("7.2"), //$NON-NLS-1$
+		SEVEN_3("7.3"), //$NON-NLS-1$
+		SEVEN_4("7.4"); //$NON-NLS-1$
+		
+		private String string;
+		
+		private Version(String string) {
+			this.string = string;
+		}
+		
+		@Override
+		public String toString() {
+			return string;
+		}
+		
+		private static TreeMap<String, Version> versionMap = new TreeMap<String, Version>();
+		static {
+			for (Version v : Version.values()) {
+				versionMap.put(v.toString(), v);
+			}
+		}
+		
+		public static Version getVersion(String version) {
+			Map.Entry<String, Version> v = versionMap.floorEntry(version);
+			if (v == null) {
+				return SEVEN_1;
+			}
+			return v.getValue();
+		}
+	}
 	
 	private static ThreadLocal<DQPWorkContext> CONTEXTS = new ThreadLocal<DQPWorkContext>() {
 		protected DQPWorkContext initialValue() {
@@ -72,6 +107,7 @@ public class DQPWorkContext implements Serializable {
     private SecurityHelper securityHelper;
     private HashMap<String, DataPolicy> policies;
     private boolean useCallingThread;
+    private Version clientVersion = Version.SEVEN_4;
     
     public DQPWorkContext() {
 	}
@@ -257,5 +293,13 @@ public class DQPWorkContext implements Serializable {
 			}
 		}
 		return roles;
-	}	
+	}
+	
+	public Version getClientVersion() {
+		return clientVersion;
+	}
+	
+	public void setClientVersion(Version clientVersion) {
+		this.clientVersion = clientVersion;
+	}
 }

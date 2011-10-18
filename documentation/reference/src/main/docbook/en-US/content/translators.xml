@@ -239,6 +239,11 @@
                 </listitem>
                 <listitem>
                     <para>
+                    <emphasis>access</emphasis> - for use with Microsoft Access 2003 or later.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
                     <emphasis>db2</emphasis> - for use with DB2 8 or later.
                     </para>
                 </listitem>

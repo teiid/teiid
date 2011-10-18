@@ -7608,5 +7608,17 @@ public class TestProcessor {
         helpProcess(plan, dataManager, expected);
     }
     
+    @Test public void testCrossJoinReduction() throws Exception {
+        String sql = "select x.e2 from pm1.g2 y, pm1.g1 x where x.e1 = y.e1 and x.e1 = 'a'"; //$NON-NLS-1$
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 = 'a'", new List[] {Arrays.asList(3)});
+        dataManager.addData("SELECT 1 FROM pm1.g2 AS g_0 WHERE g_0.e1 = 'a'", new List[] {Arrays.asList(1)});
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder(false));
+        
+        helpProcess(plan, dataManager, new List[] {
+        		Arrays.asList(3)});
+    }
+    
     private static final boolean DEBUG = false;
 }
