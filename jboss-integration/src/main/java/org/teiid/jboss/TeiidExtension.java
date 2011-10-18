@@ -55,7 +55,7 @@ public class TeiidExtension implements Extension {
 	private static TransportRemove TRANSPORT_REMOVE = new TransportRemove();
 	private static TranslatorAdd TRANSLATOR_ADD = new TranslatorAdd();
 	private static TranslatorRemove TRANSLATOR_REMOVE = new TranslatorRemove();
-	private static TeiidBootServicesAdd TEIID_BOOT_ADD = new TeiidBootServicesAdd();
+	private static TeiidAdd TEIID_BOOT_ADD = new TeiidAdd();
 	private static TeiidSubsystemDescribe TEIID_DESCRIBE = new TeiidSubsystemDescribe();
 	
 	@Override
@@ -128,8 +128,6 @@ public class TeiidExtension implements Extension {
 		new AssignDataSource().register(teiidSubsystem);
 		new ChangeVDBConnectionType().register(teiidSubsystem);
 		new RemoveAnyAuthenticatedDataRole().register(teiidSubsystem);
-		
-		// engine level admin api handlers
 		new ListRequests().register(teiidSubsystem);
 		new ListSessions().register(teiidSubsystem);
 		new RequestsPerSession().register(teiidSubsystem);

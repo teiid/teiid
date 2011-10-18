@@ -35,7 +35,7 @@ import org.jboss.msc.value.InjectedValue;
 import org.teiid.transport.ClientServiceRegistry;
 
 
-class ClientServiceRegistryReferenceFactoryService implements Service<ManagedReferenceFactory>, ManagedReferenceFactory {
+class CSRReferenceFactoryService implements Service<ManagedReferenceFactory>, ManagedReferenceFactory {
     private final InjectedValue<ClientServiceRegistry> csrInjector = new InjectedValue<ClientServiceRegistry>();
 
     private ManagedReference reference;

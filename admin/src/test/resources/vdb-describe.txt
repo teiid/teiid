@@ -1,7 +1,4 @@
 {
-    "type" : {
-        "TYPE_MODEL_VALUE" : "OBJECT"
-    },
     "attributes" : {
         "vdb-name" : {
             "type" : {
@@ -60,9 +57,6 @@
     "children" : {
         "properties" : {
             "description" : "properties",
-            "type" : {
-                "TYPE_MODEL_VALUE" : "OBJECT"
-            },
             "attributes" : {
                 "property-name" : {
                     "type" : {
@@ -81,9 +75,6 @@
             }
         },
         "models" : {
-            "type" : {
-                "TYPE_MODEL_VALUE" : "OBJECT"
-            },
             "attributes" : {
                 "model-name" : {
                     "type" : {
@@ -130,9 +121,6 @@
             "children" : {
                 "properties" : {
                     "description" : "properties",
-                    "type" : {
-                        "TYPE_MODEL_VALUE" : "OBJECT"
-                    },
                     "attributes" : {
                         "property-name" : {
                             "type" : {
@@ -152,9 +140,6 @@
                 },
                 "source-mappings" : {
                     "description" : "Model to source mapping",
-                    "type" : {
-                        "TYPE_MODEL_VALUE" : "OBJECT"
-                    },
                     "attributes" : {
                         "source-name" : {
                             "type" : {
@@ -181,9 +166,6 @@
                 },
                 "validity-errors" : {
                     "description" : "Model validation errors",
-                    "type" : {
-                        "TYPE_MODEL_VALUE" : "OBJECT"
-                    },
                     "attributes" : {
                         "error-path" : {
                             "type" : {
@@ -214,9 +196,6 @@
         },
         "override-translators" : {
             "description" : "Overridden translators for the Virtual Database",
-            "type" : {
-                "TYPE_MODEL_VALUE" : "OBJECT"
-            },
             "attributes" : {
                 "translator-name" : {
                     "type" : {
@@ -249,9 +228,6 @@
             },
             "children" : {"properties" : {
                 "description" : "properties",
-                "type" : {
-                    "TYPE_MODEL_VALUE" : "OBJECT"
-                },
                 "attributes" : {
                     "property-name" : {
                         "type" : {
@@ -272,9 +248,6 @@
         },
         "data-policies" : {
             "description" : "Data access policies defined for the Virtual Database",
-            "type" : {
-                "TYPE_MODEL_VALUE" : "OBJECT"
-            },
             "attributes" : {
                 "policy-name" : {
                     "type" : {

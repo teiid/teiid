@@ -101,7 +101,7 @@ public interface SessionService {
      * @return The collection of MetaMatrixSessionInfo objects of active users on
      * the system - possibly empty, never null.
      */
-    Collection<SessionMetadata> getActiveSessions() throws SessionServiceException;
+    Collection<SessionMetadata> getActiveSessions();
 
     /**
      * Get the number of active user sessions on the system.

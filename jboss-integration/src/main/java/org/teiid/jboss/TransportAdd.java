@@ -56,7 +56,6 @@ import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
-import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.services.BufferServiceImpl;
@@ -177,8 +176,6 @@ public class TransportAdd extends AbstractAddStepHandler implements DescriptionP
     	}
     	transportBuilder.addDependency(TeiidServiceNames.BUFFER_MGR, BufferServiceImpl.class, transport.getBufferServiceInjector());
     	transportBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, transport.getVdbRepositoryInjector());
-    	transportBuilder.addDependency(TeiidServiceNames.CACHE_RESULTSET, SessionAwareCache.class, transport.getResultSetCacheInjector());
-    	transportBuilder.addDependency(TeiidServiceNames.CACHE_PREPAREDPLAN, SessionAwareCache.class, transport.getPreparedPlanCacheInjector());
     	transportBuilder.addDependency(TeiidServiceNames.ENGINE, DQPCore.class, transport.getDqpInjector());
 
     	
@@ -193,7 +190,7 @@ public class TransportAdd extends AbstractAddStepHandler implements DescriptionP
         
         // register a JNDI name, this looks hard.
         if (transport.isEmbedded() && !isEmbeddedRegistered()) {
-			final ClientServiceRegistryReferenceFactoryService referenceFactoryService = new ClientServiceRegistryReferenceFactoryService();
+			final CSRReferenceFactoryService referenceFactoryService = new CSRReferenceFactoryService();
 			final ServiceName referenceFactoryServiceName =TeiidServiceNames.transportServiceName(transportName).append("reference-factory"); //$NON-NLS-1$
 			final ServiceBuilder<?> referenceBuilder = target.addService(referenceFactoryServiceName,referenceFactoryService);
 			referenceBuilder.addDependency(TeiidServiceNames.transportServiceName(transportName), ClientServiceRegistry.class, referenceFactoryService.getCSRInjector());

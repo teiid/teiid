@@ -23,7 +23,7 @@
     
     <resultset-cache name="cache" container-name="container" enable="false" max-staleness="90"/>
     
-    <preparedplan-cache max-entries="512" max-age-in-seconds="28800" max-staleness="90"/>
+    <preparedplan-cache max-entries="512" max-age-in-seconds="28800"/>
     
     <object-replicator stack="stack" cluster-name="cluster"/>
     

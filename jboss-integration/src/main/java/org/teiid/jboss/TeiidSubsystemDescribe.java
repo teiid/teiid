@@ -49,7 +49,7 @@ public class TeiidSubsystemDescribe implements OperationStepHandler, Description
         node.get(ModelDescriptionConstants.TAIL_COMMENT_ALLOWED).set(true);
         node.get(ModelDescriptionConstants.NAMESPACE).set(Namespace.CURRENT.getUri());
         
-        TeiidBootServicesAdd.describeTeiid(node, ATTRIBUTES, bundle);
+        TeiidAdd.describeTeiid(node, ATTRIBUTES, bundle);
         node.get(CHILDREN, Element.TRANSPORT_ELEMENT.getLocalName(), DESCRIPTION).set(Element.TRANSPORT_ELEMENT.getDescription(bundle)); 
         node.get(CHILDREN, Element.TRANSPORT_ELEMENT.getLocalName(), REQUIRED).set(true);
         
@@ -69,7 +69,7 @@ public class TeiidSubsystemDescribe implements OperationStepHandler, Description
         subsystemAdd.get(OP).set(ADD);
         subsystemAdd.get(OP_ADDR).set(rootAddress.toModelNode());
 
-        TeiidBootServicesAdd.populate(subModel, subsystemAdd);
+        TeiidAdd.populate(subModel, subsystemAdd);
         result.add(subsystemAdd);
         
         if (subModel.hasDefined(Element.TRANSPORT_ELEMENT.getLocalName())) {

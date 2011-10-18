@@ -209,6 +209,13 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.jboss.teiid.connectors</groupId>
+      <artifactId>translator-jdbc</artifactId>
+      <version>${version}</version>
+      <scope>test</scope>
+    </dependency>    
+    
   </dependencies>
   
 </project>

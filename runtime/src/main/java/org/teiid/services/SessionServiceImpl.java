@@ -272,7 +272,7 @@ public class SessionServiceImpl implements SessionService {
 	}
 	
 	@Override
-	public Collection<SessionMetadata> getActiveSessions() throws SessionServiceException {
+	public Collection<SessionMetadata> getActiveSessions() {
 		return new ArrayList<SessionMetadata>(this.sessionCache.values());
 	}
 	

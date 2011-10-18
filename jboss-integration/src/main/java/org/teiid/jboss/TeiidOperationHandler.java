@@ -71,12 +71,12 @@ import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 
-abstract class QueryEngineOperationHandler extends BaseOperationHandler<DQPCore> {
+abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
 	List<Transport> transports = new ArrayList<Transport>();
 	protected VDBRepository vdbRepo;
 	protected DQPCore engine;
 	
-	protected QueryEngineOperationHandler(String operationName){
+	protected TeiidOperationHandler(String operationName){
 		super(operationName);
 	}
 	
@@ -117,7 +117,7 @@ abstract class TranslatorOperationHandler extends BaseOperationHandler<Translato
 	}
 }
 
-class GetRuntimeVersion extends QueryEngineOperationHandler{
+class GetRuntimeVersion extends TeiidOperationHandler{
 	protected GetRuntimeVersion(String operationName) {
 		super(operationName);
 	}
@@ -130,7 +130,7 @@ class GetRuntimeVersion extends QueryEngineOperationHandler{
 	}	
 }
 
-class GetActiveSessionsCount extends QueryEngineOperationHandler{
+class GetActiveSessionsCount extends TeiidOperationHandler{
 	protected GetActiveSessionsCount(String operationName) {
 		super(operationName);
 	}
@@ -151,23 +151,19 @@ class GetActiveSessionsCount extends QueryEngineOperationHandler{
 	}		
 }
 
-class ListSessions extends QueryEngineOperationHandler{
+class ListSessions extends TeiidOperationHandler{
 	protected ListSessions() {
 		super("list-sessions"); //$NON-NLS-1$
 	}
 	@Override
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
-		try {
-			ModelNode result = context.getResult();
-			for (Transport t: this.transports) {
-				Collection<SessionMetadata> sessions = t.getActiveSessions();
-				for (SessionMetadata session:sessions) {
-					VDBMetadataMapper.SessionMetadataMapper.INSTANCE.wrap(session, result.add());
-				}
-			}			
-		} catch (AdminException e) {
-			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
-		}
+		ModelNode result = context.getResult();
+		for (Transport t: this.transports) {
+			Collection<SessionMetadata> sessions = t.getActiveSessions();
+			for (SessionMetadata session:sessions) {
+				VDBMetadataMapper.SessionMetadataMapper.INSTANCE.wrap(session, result.add());
+			}
+		}			
 	}
 	
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
@@ -175,7 +171,7 @@ class ListSessions extends QueryEngineOperationHandler{
 	}	
 }
 
-class RequestsPerSession extends QueryEngineOperationHandler{
+class RequestsPerSession extends TeiidOperationHandler{
 	protected RequestsPerSession() {
 		super("requests-per-session"); //$NON-NLS-1$
 	}
@@ -200,7 +196,7 @@ class RequestsPerSession extends QueryEngineOperationHandler{
 	}	
 }
 
-class ListRequests extends QueryEngineOperationHandler{
+class ListRequests extends TeiidOperationHandler{
 	protected ListRequests() {
 		super("list-requests"); //$NON-NLS-1$
 	}
@@ -217,33 +213,28 @@ class ListRequests extends QueryEngineOperationHandler{
 	}	
 }
 
-class RequestsPerVDB extends QueryEngineOperationHandler{
+class RequestsPerVDB extends TeiidOperationHandler{
 	protected RequestsPerVDB() {
 		super("requests-per-vdb"); //$NON-NLS-1$
 	}
 	@Override
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
-		try {
-			
-			if (!operation.hasDefined(OperationsConstants.VDB_NAME)) {
-				throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.VDB_NAME+MISSING)));
+		if (!operation.hasDefined(OperationsConstants.VDB_NAME)) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.VDB_NAME+MISSING)));
+		}
+		if (!operation.hasDefined(OperationsConstants.VDB_VERSION)) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.VDB_VERSION+MISSING)));
+		}
+		
+		ModelNode result = context.getResult();
+		String vdbName = operation.get(OperationsConstants.VDB_NAME).asString();
+		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION).asInt();
+			for (Transport t: this.transports) {
+			List<RequestMetadata> requests = t.getRequestsUsingVDB(vdbName,vdbVersion);
+			for (RequestMetadata request:requests) {
+				VDBMetadataMapper.RequestMetadataMapper.INSTANCE.wrap(request, result.add());
 			}
-			if (!operation.hasDefined(OperationsConstants.VDB_VERSION)) {
-				throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.VDB_VERSION+MISSING)));
-			}
-			
-			ModelNode result = context.getResult();
-			String vdbName = operation.get(OperationsConstants.VDB_NAME).asString();
-			int vdbVersion = operation.get(OperationsConstants.VDB_VERSION).asInt();
-				for (Transport t: this.transports) {
-				List<RequestMetadata> requests = t.getRequestsUsingVDB(vdbName,vdbVersion);
-				for (RequestMetadata request:requests) {
-					VDBMetadataMapper.RequestMetadataMapper.INSTANCE.wrap(request, result.add());
-				}
-			}
-		} catch (AdminException e) {
-			throw new OperationFailedException(e, new ModelNode().set(e.getMessage()));
-		} 
+		}
 	}
 	
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
@@ -259,7 +250,7 @@ class RequestsPerVDB extends QueryEngineOperationHandler{
 	}	
 }
 
-class GetLongRunningQueries extends QueryEngineOperationHandler{
+class GetLongRunningQueries extends TeiidOperationHandler{
 	protected GetLongRunningQueries() {
 		super("long-running-queries"); //$NON-NLS-1$
 	}
@@ -276,7 +267,7 @@ class GetLongRunningQueries extends QueryEngineOperationHandler{
 	}	
 }
 
-class TerminateSession extends QueryEngineOperationHandler{
+class TerminateSession extends TeiidOperationHandler{
 	protected TerminateSession() {
 		super("terminate-session"); //$NON-NLS-1$
 	}
@@ -297,7 +288,7 @@ class TerminateSession extends QueryEngineOperationHandler{
 	}		
 }
 
-class CancelRequest extends QueryEngineOperationHandler{
+class CancelRequest extends TeiidOperationHandler{
 	protected CancelRequest() {
 		super("cancel-request"); //$NON-NLS-1$
 	}
@@ -458,7 +449,7 @@ class CacheStatistics extends BaseCachehandler {
 	}	
 }
 
-class WorkerPoolStatistics extends QueryEngineOperationHandler{
+class WorkerPoolStatistics extends TeiidOperationHandler{
 	
 	protected WorkerPoolStatistics() {
 		super("workerpool-statistics"); //$NON-NLS-1$
@@ -474,7 +465,7 @@ class WorkerPoolStatistics extends QueryEngineOperationHandler{
 	}		
 }
 
-class ListTransactions extends QueryEngineOperationHandler{
+class ListTransactions extends TeiidOperationHandler{
 	
 	protected ListTransactions() {
 		super("list-transactions"); //$NON-NLS-1$
@@ -493,7 +484,7 @@ class ListTransactions extends QueryEngineOperationHandler{
 	}	
 }
 
-class TerminateTransaction extends QueryEngineOperationHandler{
+class TerminateTransaction extends TeiidOperationHandler{
 	
 	protected TerminateTransaction() {
 		super("terminate-transaction"); //$NON-NLS-1$
@@ -578,7 +569,7 @@ class MergeVDBs extends BaseOperationHandler<VDBRepository>{
 	}	
 }
 
-class ExecuteQuery extends QueryEngineOperationHandler{
+class ExecuteQuery extends TeiidOperationHandler{
 	
 	protected ExecuteQuery() {
 		super("execute-query"); //$NON-NLS-1$

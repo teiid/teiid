@@ -83,19 +83,26 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
 
     	final String translatorName = pathAddress.getLastElement().getValue();
 		
-        final String moduleName = Element.TRANSLATOR_MODULE_ATTRIBUTE.asString(operation);
+    	String moduleName = null;
+    	if (Element.TRANSLATOR_MODULE_ATTRIBUTE.isDefined(operation)) {
+    		moduleName = Element.TRANSLATOR_MODULE_ATTRIBUTE.asString(operation);
+    	}
 		
         final ServiceTarget target = context.getServiceTarget();
 
         final Module module;
-        try {
-            module = Module.getCallerModuleLoader().loadModule(ModuleIdentifier.create(moduleName));
-        } catch (ModuleLoadException e) {
-            throw new OperationFailedException(e, new ModelNode().set(IntegrationPlugin.Util.getString("failed_load_module", moduleName, translatorName))); //$NON-NLS-1$
+        ClassLoader translatorLoader = this.getClass().getClassLoader();
+        if (moduleName != null) {
+	        try {
+	            module = Module.getCallerModuleLoader().loadModule(ModuleIdentifier.create(moduleName));
+	            translatorLoader = module.getClassLoader();
+	        } catch (ModuleLoadException e) {
+	            throw new OperationFailedException(e, new ModelNode().set(IntegrationPlugin.Util.getString("failed_load_module", moduleName, translatorName))); //$NON-NLS-1$
+	        }
         }
         
         boolean added = false;
-        final ServiceLoader<ExecutionFactory> serviceLoader = module.loadService(ExecutionFactory.class);
+        final ServiceLoader<ExecutionFactory> serviceLoader =  ServiceLoader.load(ExecutionFactory.class, translatorLoader);
         if (serviceLoader != null) {
         	for (ExecutionFactory ef:serviceLoader) {
         		VDBTranslatorMetaData metadata = TranslatorUtil.buildTranslatorMetadata(ef, moduleName);

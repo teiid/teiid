@@ -213,7 +213,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 	private void writePreparedPlanCacheConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
 		writeAttribute(writer, Element.PPC_MAX_ENTRIES_ATTRIBUTE, node);
 		writeAttribute(writer, Element.PPC_MAX_AGE_IN_SECS_ATTRIBUTE, node);
-		writeAttribute(writer, Element.PPC_MAX_STALENESS_ATTRIBUTE, node);
 	}
 
 	private boolean has(ModelNode node, String name) {
@@ -680,9 +679,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
                 	node.get(element.getModelName()).set(Integer.parseInt(attrValue));
                 	break;
                 	
-                case PPC_MAX_STALENESS_ATTRIBUTE:
-                	node.get(element.getModelName()).set(Integer.parseInt(attrValue));
-                	break;
                 default: 
                     throw ParseUtils.unexpectedAttribute(reader, i);
     			}

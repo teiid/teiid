@@ -332,6 +332,7 @@ public class AdminFactory {
 	                return builder.buildRequest();                
 				}
 				
+				//add
 		        ModelNode composite = new ModelNode();
 		        composite.get("operation").set("composite");
 		        composite.get("address").setEmptyList();

@@ -25,8 +25,11 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
@@ -34,12 +37,18 @@ import javax.transaction.TransactionManager;
 
 import org.jboss.modules.Module;
 import org.jboss.msc.service.Service;
+import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.LRUCache;
+import org.teiid.deployers.CompositeVDB;
+import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.process.AuthorizationValidator;
@@ -53,6 +62,8 @@ import org.teiid.dqp.service.TransactionService;
 import org.teiid.events.EventDistributor;
 import org.teiid.events.EventDistributorFactory;
 import org.teiid.jboss.IntegrationPlugin;
+import org.teiid.jboss.TeiidServiceNames;
+import org.teiid.jboss.Transport;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -71,6 +82,7 @@ import org.teiid.query.processor.DdlPlan;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.transport.LocalServerConnection;
+import org.teiid.vdb.runtime.VDBKey;
 
 
 public class RuntimeEngineDeployer extends DQPConfiguration implements Serializable, EventDistributor, EventDistributorFactory, Service<DQPCore>  {
@@ -93,7 +105,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements Serializa
 	private final InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
 	
 	@Override
-    public void start(StartContext context) {
+    public void start(final StartContext context) {
 		this.transactionServerImpl.setWorkManager(getWorkManagerInjector().getValue());
 		this.transactionServerImpl.setXaTerminator(getXaTerminatorInjector().getValue());
 		this.transactionServerImpl.setTransactionManager(getTxnManagerInjector().getValue());
@@ -132,6 +144,44 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements Serializa
 				return null;
 			}
 		});
+		
+    	// add vdb life cycle listeners
+    	getVdbRepository().addListener(new VDBLifeCycleListener() {
+			
+			private Set<VDBKey> recentlyRemoved = Collections.newSetFromMap(new LRUCache<VDBKey, Boolean>(10000));
+			
+			@Override
+			public void removed(String name, int version, CompositeVDB vdb) {
+				recentlyRemoved.add(new VDBKey(name, version));
+			}
+			
+			@Override
+			public void added(String name, int version, CompositeVDB vdb) {
+				if (!recentlyRemoved.remove(new VDBKey(name, version))) {
+					return;
+				}
+				// terminate all the previous sessions
+		        List<ServiceName> services = context.getController().getServiceContainer().getServiceNames();
+		        for (ServiceName service:services) {
+		        	if (service.isParentOf(TeiidServiceNames.TRANSPORT_BASE)) {
+		        		ServiceController<?> transport = context.getController().getServiceContainer().getService(service);
+		        		if (transport != null) {
+		        			Transport t = Transport.class.cast(transport.getValue());					
+		        			Collection<SessionMetadata> sessions = t.getActiveSessions();
+							for (SessionMetadata session:sessions) {
+								if (name.equalsIgnoreCase(session.getVDBName()) && version == session.getVDBVersion()){
+									t.terminateSession(session.getSessionId());
+								}
+							}
+		        		}
+		        	}
+		        }
+			        
+				// dump the caches. 
+				getResultSetCacheInjector().getValue().clearForVDB(name, version);
+				getPreparedPlanCacheInjector().getValue().clearForVDB(name, version);
+			}			
+		}); 		
 
     	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("engine_started", this.dqpCore.getRuntimeVersion(), new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
 	}	

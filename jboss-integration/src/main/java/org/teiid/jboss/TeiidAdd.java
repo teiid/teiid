@@ -80,7 +80,7 @@ import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.replication.jboss.JGroupsObjectReplicator;
 import org.teiid.services.BufferServiceImpl;
 
-class TeiidBootServicesAdd extends AbstractAddStepHandler implements DescriptionProvider {
+class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 
 	private static Element[] attributes = {
 		Element.ALLOW_ENV_FUNCTION_ELEMENT,
@@ -115,7 +115,6 @@ class TeiidBootServicesAdd extends AbstractAddStepHandler implements Description
 		// prepared plan cache
 		Element.PPC_MAX_ENTRIES_ATTRIBUTE,
 		Element.PPC_MAX_AGE_IN_SECS_ATTRIBUTE,
-		Element.PPC_MAX_STALENESS_ATTRIBUTE,
 		
 		// resultset cache
 		Element.RSC_NAME_ELEMENT,
@@ -423,12 +422,6 @@ class TeiidBootServicesAdd extends AbstractAddStepHandler implements Description
     		cacheConfig.setMaxAgeInSeconds(28800);
     	}
     	
-    	if (Element.PPC_MAX_STALENESS_ATTRIBUTE.isDefined(node)) {
-    		cacheConfig.setMaxStaleness(Element.PPC_MAX_STALENESS_ATTRIBUTE.asInt(node));
-    	}
-    	else {
-    		cacheConfig.setMaxStaleness(0);
-    	}
 		cacheConfig.setType(Policy.LRU.name());
     	
     	cacheConfig.setLocation("prepared"); //$NON-NLS-1$

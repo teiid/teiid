@@ -74,7 +74,7 @@ public class TestFileStoreCache {
 		fsc.setStorageManager(ssm);
 		fsc.initialize();
 		
-		UnitTestUtil.enableTraceLogging("org.teiid");  //$NON-NLS-1$
+		//UnitTestUtil.enableTraceLogging("org.teiid");  //$NON-NLS-1$
 		
 		CacheEntry ce = new CacheEntry(2l);
 		Serializer<Integer> s = new SimpleSerializer();

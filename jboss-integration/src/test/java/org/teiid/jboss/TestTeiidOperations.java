@@ -5,6 +5,7 @@ import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -22,23 +23,29 @@ import javax.xml.validation.Validator;
 
 import junit.framework.Assert;
 
+import org.jboss.as.cli.Util;
+import org.jboss.as.cli.operation.impl.DefaultOperationRequestAddress;
+import org.jboss.as.cli.operation.impl.DefaultOperationRequestBuilder;
 import org.jboss.as.controller.OperationContext.Type;
+import org.jboss.as.controller.client.OperationBuilder;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.subsystem.test.AbstractSubsystemTest;
 import org.jboss.as.subsystem.test.AdditionalInitialization;
 import org.jboss.as.subsystem.test.KernelServices;
 import org.jboss.dmr.ModelNode;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.UnitTestUtil;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 @SuppressWarnings("nls")
-public class TestTeiidAdminOperations extends AbstractSubsystemTest {
+public class TestTeiidOperations extends AbstractSubsystemTest {
 
-	public TestTeiidAdminOperations() {
+	public TestTeiidOperations() {
 		super(TeiidExtension.TEIID_SUBSYSTEM, new TeiidExtension());
 	}
 
@@ -79,7 +86,7 @@ public class TestTeiidAdminOperations extends AbstractSubsystemTest {
     						  "    <async-thread-pool>teiid-async</async-thread-pool>"+
     						  "</subsystem>";
         KernelServices services = super.installInController(subsystemXml);
-        ModelNode model = services.readWholeModel();
+        services.readWholeModel();
     }
 
     @Test
@@ -186,7 +193,7 @@ public class TestTeiidAdminOperations extends AbstractSubsystemTest {
     @Test
     public void testSubSystemDescription() throws IOException {
     	ModelNode node = new ModelNode();
-    	TeiidBootServicesAdd.describeTeiid(node, ATTRIBUTES, IntegrationPlugin.getResourceBundle(null));
+    	TeiidAdd.describeTeiid(node, ATTRIBUTES, IntegrationPlugin.getResourceBundle(null));
     	assertEquals(ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-model-config.txt")), node.toString());
     }
     
@@ -210,7 +217,7 @@ public class TestTeiidAdminOperations extends AbstractSubsystemTest {
     }
     
     @Test
-    public void testQueryOperatrions() throws Exception {
+    public void testQueryOperations() throws Exception {
     	KernelServices services = buildSubsystem();
         
         PathAddress addr = PathAddress.pathAddress(
@@ -281,9 +288,9 @@ public class TestTeiidAdminOperations extends AbstractSubsystemTest {
 
         // add transport
         ModelNode remove = new ModelNode();
-        addOp.get(OP).set("remove");
-        addOp.get(OP_ADDR).set(addr.toModelNode().add("transport", "jdbc")); //$NON-NLS-1$);
-        result = services.executeOperation(addOp);
+        remove.get(OP).set("remove");
+        remove.get(OP_ADDR).set(addr.toModelNode().add("transport", "jdbc")); //$NON-NLS-1$);
+        result = services.executeOperation(remove);
         Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());   
         
         result = services.executeOperation(read);
@@ -298,14 +305,7 @@ public class TestTeiidAdminOperations extends AbstractSubsystemTest {
 			FileNotFoundException, Exception {
 		String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config.xml"));
 
-        KernelServices services = super.installInController(
-                new AdditionalInitialization() {
-                    @Override
-                    protected Type getType() {
-                        return Type.MANAGEMENT;
-                    }
-                },
-                subsystemXml);
+        KernelServices services = super.installInController(subsystemXml);
 		return services;
 	}
     
@@ -323,4 +323,97 @@ public class TestTeiidAdminOperations extends AbstractSubsystemTest {
         }
         return list;
     }    
+
+    private ModelNode buildProperty(String name, String value) {
+    	ModelNode node = new ModelNode();
+    	node.get("property-name").set(name);
+    	node.get("property-value").set(value);
+    	return node;
+    }
+    
+    @Test
+    public void testTranslator() throws Exception {
+    	KernelServices services = buildSubsystem();
+        
+        PathAddress addr = PathAddress.pathAddress(PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM));
+        
+        ModelNode addOp = new ModelNode();
+        addOp.get(OP).set("add");
+        addOp.get(OP_ADDR).set(addr.toModelNode().add("translator", "oracle"));
+        services.executeOperation(addOp);        
+        
+        ModelNode listOp = new ModelNode();
+        listOp.get(OP).set("list-translators");
+        listOp.get(OP_ADDR).set(addr.toModelNode());
+        
+        ModelNode result = services.executeOperation(listOp);
+        Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
+        
+        List<ModelNode> translators = result.get("result").asList();
+        
+        ModelNode oracle = new ModelNode();
+        oracle.get("translator-name").set("oracle");
+        oracle.get("description").set("A translator for Oracle 9i Database or later");
+        oracle.get("children", "properties").add(buildProperty("execution-factory-class","org.teiid.translator.jdbc.oracle.OracleExecutionFactory"));
+        oracle.get("children", "properties").add(buildProperty("TrimStrings","false"));
+        oracle.get("children", "properties").add(buildProperty("SupportedJoinCriteria","ANY"));
+        oracle.get("children", "properties").add(buildProperty("requiresCriteria","false"));
+        oracle.get("children", "properties").add(buildProperty("supportsOuterJoins","true"));
+        oracle.get("children", "properties").add(buildProperty("useCommentsInSourceQuery","false"));
+        oracle.get("children", "properties").add(buildProperty("useBindVariables","true"));
+        oracle.get("children", "properties").add(buildProperty("MaxPreparedInsertBatchSize","2048"));
+        oracle.get("children", "properties").add(buildProperty("supportsInnerJoins","true"));
+        oracle.get("children", "properties").add(buildProperty("MaxInCriteriaSize","1000"));
+        oracle.get("children", "properties").add(buildProperty("supportsSelectDistinct","true"));
+        oracle.get("children", "properties").add(buildProperty("supportsOrderBy","true"));
+        oracle.get("children", "properties").add(buildProperty("supportsFullOuterJoins","true"));
+        oracle.get("children", "properties").add(buildProperty("Immutable","false"));
+        oracle.get("children", "properties").add(buildProperty("MaxDependentInPredicates","50"));
+        
+        super.compare(translators.get(0), oracle);
+    }    
+    
+    @Ignore
+    public void testVDBOperations() throws Exception {
+    	KernelServices services = buildSubsystem();
+    	String fileName = "bqt.vdb";
+    	
+		byte[] bytes = ObjectConverterUtil.convertToByteArray(new FileInputStream(UnitTestUtil.getTestDataFile(fileName)));
+        PathAddress addr = PathAddress.pathAddress(PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM));
+        
+        // add
+        ModelNode composite = new ModelNode();
+        composite.get("operation").set("composite");
+        composite.get("address").setEmptyList();
+        ModelNode steps = composite.get("steps");			
+		
+		DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+        builder.setOperationName("add");
+        builder.addNode("deployment", fileName);
+
+		builder.getModelNode().get("content").get(0).get("bytes").set(bytes);
+		steps.add(builder.buildRequest());
+    
+        // deploy
+        builder = new DefaultOperationRequestBuilder();
+        builder.setOperationName("deploy");
+        builder.addNode("deployment", fileName);
+        steps.add(builder.buildRequest());
+        
+        ModelNode result = services.executeOperation(composite);
+
+        Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
+            
+        ModelNode addOp = new ModelNode();
+        addOp.get(OP).set("list-vdbs");
+        addOp.get(OP_ADDR).set(addr.toModelNode());
+        
+        result = services.executeOperation(addOp);
+        Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
+        
+        List<String> opNames = getList(result);
+        assertEquals(2, opNames.size());
+        String [] ops3 = {"newbie", "odbc"};
+        assertEquals(Arrays.asList(ops3), opNames);     	
+    }
 }

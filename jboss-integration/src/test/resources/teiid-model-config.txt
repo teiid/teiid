@@ -176,13 +176,6 @@
         "max-occurs" => 1,
         "default" => 28800
     },
-    "preparedplan-cache-max-staleness" => {
-        "type" => INT,
-        "description" => "Max staleness in seconds.  Modifications are based upon data updates -1 indicates no max. (default 60 - 1 minute)",
-        "required" => false,
-        "max-occurs" => 1,
-        "default" => 0
-    },
     "resultset-cache-name" => {
         "type" => STRING,
         "description" => "Infinispan cache name for resultset",
@@ -192,7 +185,7 @@
     },
     "resultset-cache-container-name" => {
         "type" => STRING,
-        "description" => "Infinispan cache container name            ",
+        "description" => "Infinispan cache container name",
         "required" => false,
         "max-occurs" => 1
     },
@@ -205,7 +198,7 @@
     },
     "resultset-cache-enable" => {
         "type" => BOOLEAN,
-        "description" => "Resultset cache enabled	",
+        "description" => "Resultset cache enabled",
         "required" => false,
         "max-occurs" => 1
     }

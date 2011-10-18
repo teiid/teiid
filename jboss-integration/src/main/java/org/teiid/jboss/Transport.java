@@ -27,10 +27,8 @@ import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -49,13 +47,9 @@ import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.core.ComponentNotFoundException;
-import org.teiid.core.util.LRUCache;
-import org.teiid.deployers.CompositeVDB;
-import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -70,7 +64,6 @@ import org.teiid.transport.LogonImpl;
 import org.teiid.transport.ODBCSocketListener;
 import org.teiid.transport.SocketConfiguration;
 import org.teiid.transport.SocketListener;
-import org.teiid.vdb.runtime.VDBKey;
 
 public class Transport implements Service<ClientServiceRegistry>, ClientServiceRegistry {
 	private enum Protocol {teiid, pg};
@@ -89,8 +82,6 @@ public class Transport implements Service<ClientServiceRegistry>, ClientServiceR
 	
 	private final InjectedValue<SocketBinding> socketBindingInjector = new InjectedValue<SocketBinding>();
 	private final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
-	private final InjectedValue<SessionAwareCache> preparedPlanCacheInjector = new InjectedValue<SessionAwareCache>();
-	private final InjectedValue<SessionAwareCache> resultSetCacheInjector = new InjectedValue<SessionAwareCache>();	
 	private final InjectedValue<DQPCore> dqpInjector = new InjectedValue<DQPCore>();	
 	private final InjectedValue<BufferServiceImpl> bufferServiceInjector = new InjectedValue<BufferServiceImpl>();
 	
@@ -155,39 +146,6 @@ public class Transport implements Service<ClientServiceRegistry>, ClientServiceR
 		DQP dqpProxy = proxyService(DQP.class, getDQP(), LogConstants.CTX_DQP);
     	this.csr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
     	this.csr.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);
-    	
-    	// add vdb life cycle listeners
-    	getVdbRepository().addListener(new VDBLifeCycleListener() {
-			
-			private Set<VDBKey> recentlyRemoved = Collections.newSetFromMap(new LRUCache<VDBKey, Boolean>(10000));
-			
-			@Override
-			public void removed(String name, int version, CompositeVDB vdb) {
-				recentlyRemoved.add(new VDBKey(name, version));
-			}
-			
-			@Override
-			public void added(String name, int version, CompositeVDB vdb) {
-				if (!recentlyRemoved.remove(new VDBKey(name, version))) {
-					return;
-				}
-				// terminate all the previous sessions
-				try {
-					Collection<SessionMetadata> sessions = sessionService.getActiveSessions();
-					for (SessionMetadata session:sessions) {
-						if (name.equalsIgnoreCase(session.getVDBName()) && version == session.getVDBVersion()){
-							sessionService.terminateSession(session.getSessionId(), null);
-						}
-					}
-				} catch (SessionServiceException e) {
-					//ignore
-				}
-
-				// dump the caches. 
-				getResultSetCacheInjector().getValue().clearForVDB(name, version);
-				getPreparedPlanCacheInjector().getValue().clearForVDB(name, version);
-			}			
-		});    	
 	}
 
 	@Override
@@ -222,17 +180,13 @@ public class Transport implements Service<ClientServiceRegistry>, ClientServiceR
 		}));
 	}	
 	
-    public List<RequestMetadata> getRequestsUsingVDB(String vdbName, int vdbVersion) throws AdminException {
+    public List<RequestMetadata> getRequestsUsingVDB(String vdbName, int vdbVersion) {
 		List<RequestMetadata> requests = new ArrayList<RequestMetadata>();
-		try {
-			Collection<SessionMetadata> sessions = this.sessionService.getActiveSessions();
-			for (SessionMetadata session:sessions) {
-				if (session.getVDBName().equals(vdbName) && session.getVDBVersion() == vdbVersion) {
-					requests.addAll(getDQP().getRequestsForSession(session.getSessionId()));
-				}
+		Collection<SessionMetadata> sessions = this.sessionService.getActiveSessions();
+		for (SessionMetadata session:sessions) {
+			if (session.getVDBName().equals(vdbName) && session.getVDBVersion() == vdbVersion) {
+				requests.addAll(getDQP().getRequestsForSession(session.getSessionId()));
 			}
-		} catch (SessionServiceException e) {
-			throw new AdminComponentException(e);
 		}
 		return requests;
 	}	
@@ -241,12 +195,8 @@ public class Transport implements Service<ClientServiceRegistry>, ClientServiceR
 		this.sessionService.terminateSession(terminateeId, DQPWorkContext.getWorkContext().getSessionId());
     }    
     
-	public Collection<SessionMetadata> getActiveSessions() throws AdminException {
-		try {
-			return this.sessionService.getActiveSessions();
-		} catch (SessionServiceException e) {
-			throw new AdminComponentException(e);
-		}
+	public Collection<SessionMetadata> getActiveSessions(){
+		return this.sessionService.getActiveSessions();
 	}
 	
 	public int getActiveSessionsCount() throws AdminException{
@@ -300,14 +250,6 @@ public class Transport implements Service<ClientServiceRegistry>, ClientServiceR
 	private VDBRepository getVdbRepository() {
 		return vdbRepositoryInjector.getValue();
 	}	
-	
-	public InjectedValue<SessionAwareCache> getResultSetCacheInjector() {
-		return resultSetCacheInjector;
-	}
-	
-	public InjectedValue<SessionAwareCache> getPreparedPlanCacheInjector() {
-		return preparedPlanCacheInjector;
-	}
 
 	private DQPCore getDQP() {
 		return getDqpInjector().getValue();

@@ -20,7 +20,6 @@
     "object-replicator-stack" : "stack",
     "preparedplan-cache-max-age-in-seconds" : 28800,
     "preparedplan-cache-max-entries" : 512,
-    "preparedplan-cache-max-staleness" : 90,
     "query-threshold-in-seconds" : 600,
     "resultset-cache-container-name" : "container",
     "resultset-cache-enable" : false,

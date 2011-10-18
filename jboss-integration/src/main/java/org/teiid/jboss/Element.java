@@ -78,7 +78,6 @@ enum Element {
 	PREPAREDPLAN_CACHE_ELEMENT("preparedplan-cache"),
 	PPC_MAX_ENTRIES_ATTRIBUTE("max-entries", "preparedplan-cache-max-entries", ModelType.INT, false, "512"),
 	PPC_MAX_AGE_IN_SECS_ATTRIBUTE("max-age-in-seconds", "preparedplan-cache-max-age-in-seconds", ModelType.INT, false, "28800"),
-	PPC_MAX_STALENESS_ATTRIBUTE("max-staleness", "preparedplan-cache-max-staleness",  ModelType.INT, false, "0"),
 	
 	// Object Replicator
 	OBJECT_REPLICATOR_ELEMENT("object-replicator"),
