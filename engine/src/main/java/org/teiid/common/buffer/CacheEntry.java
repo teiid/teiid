@@ -42,6 +42,10 @@ public class CacheEntry extends BaseCacheEntry {
 		this.persistent = persistent;
 	}
 	
+	public void setObject(Object object) {
+		this.object = object;
+	}
+	
 	public int getSizeEstimate() {
 		return sizeEstimate;
 	}

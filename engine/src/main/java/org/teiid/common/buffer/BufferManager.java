@@ -52,15 +52,11 @@ public interface BufferManager extends StorageManager {
 	
 	public enum BufferReserveMode {
 		/**
-		 * Claim unused buffers up to the amount requested, using a progressive decaying algorithm
-		 */
-		WAIT,
-		/**
 		 * Claim all of the buffers requested, even if they are not available, without waiting
 		 */
 		FORCE,
 		/**
-		 * Claim unused buffers up to the amount requested witout waiting
+		 * Claim unused buffers up to the amount requested without waiting
 		 */
 		NO_WAIT
 	}
@@ -135,5 +131,12 @@ public interface BufferManager extends StorageManager {
 	 * Set the maxActivePlans as a hint at determining the maxProcessingKB
 	 * @param maxActivePlans
 	 */
-	void setMaxActivePlans(int maxActivePlans);		
+	void setMaxActivePlans(int maxActivePlans);
+
+	/**
+	 * Wait for additional buffers to become available.
+	 * @param additional
+	 * @return
+	 */
+	int reserveAdditionalBuffers(int additional);		
 }

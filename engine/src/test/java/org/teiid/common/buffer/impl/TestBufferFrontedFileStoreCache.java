@@ -131,7 +131,7 @@ public class TestBufferFrontedFileStoreCache {
 	private CacheEntry get(BufferFrontedFileStoreCache cache, Long oid,
 			Serializer<Integer> s) throws TeiidComponentException {
 		PhysicalInfo o = cache.lockForLoad(oid, s);
-		CacheEntry ce = cache.get(o, oid, s);
+		CacheEntry ce = cache.get(o, oid, new WeakReference<Serializer<?>>(s));
 		cache.unlockForLoad(o);
 		return ce;
 	}

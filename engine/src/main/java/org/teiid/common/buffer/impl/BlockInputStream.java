@@ -34,10 +34,12 @@ final class BlockInputStream extends InputStream {
 	int blockIndex;
 	ByteBuffer buf;
 	boolean done;
+	private final boolean threadSafe;
 
-	BlockInputStream(BlockManager manager, int blockCount) {
+	BlockInputStream(BlockManager manager, int blockCount, boolean threadSafe) {
 		this.manager = manager;
 		this.maxBlock = blockCount;
+		this.threadSafe = threadSafe;
 	}
 
 	@Override
@@ -56,6 +58,9 @@ final class BlockInputStream extends InputStream {
 				return;
 			}
 			buf = manager.getBlock(blockIndex++);
+			if (threadSafe) {
+				buf = buf.duplicate();
+			}
 		}
 	}
 

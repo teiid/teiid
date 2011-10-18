@@ -37,6 +37,7 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
+import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
@@ -52,7 +53,8 @@ public class TestSortNode {
     public static final int BATCH_SIZE = 100;
     
     private void helpTestSort(List elements, List[] data, List sortElements, List sortTypes, List[] expected, Mode mode) throws TeiidComponentException, TeiidProcessingException {
-        BufferManager mgr = BufferManagerFactory.getTestBufferManager(100, BATCH_SIZE, BATCH_SIZE);
+        BufferManagerImpl mgr = BufferManagerFactory.getTestBufferManager(10000, BATCH_SIZE, BATCH_SIZE);
+        int reserve = mgr.getReserveBatchKB();
         CommandContext context = new CommandContext ("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         BlockingFakeRelationalNode dataNode = new BlockingFakeRelationalNode(2, data);
@@ -87,6 +89,7 @@ public class TestSortNode {
         	}
         }
         assertEquals(expected.length, currentRow - 1);
+        assertEquals(reserve, mgr.getReserveBatchKB());
     }
 
     /*

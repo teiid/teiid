@@ -241,8 +241,8 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 					memoryEvictionLock.readLock().unlock();
 				}
 			}
-			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.TRACE)) {
-				LogManager.logTrace(LogConstants.CTX_DQP, "Allocating", data?"data":"index", "block", next, "to", gid, oid); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Allocating", data?"data":"index", "block", next, "to", gid, oid); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 			}
 			return next;
 		}
@@ -254,8 +254,8 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 		}
 
 		private void freeDataBlock(int dataBlock) {
-			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.TRACE)) {
-				LogManager.logTrace(LogConstants.CTX_DQP, "freeing data block", dataBlock, "for", gid, oid); //$NON-NLS-1$ //$NON-NLS-2$
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "freeing data block", dataBlock, "for", gid, oid); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			blocksInuse.clear(dataBlock);
 		}
@@ -267,8 +267,8 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 					if (this.inode == -1) {
 						throw new AssertionError("Out of inodes"); //$NON-NLS-1$
 					}
-					if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-						LogManager.logDetail(LogConstants.CTX_DQP, "Allocating inode", this.inode, "to", gid, oid); //$NON-NLS-1$ //$NON-NLS-2$
+					if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+						LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Allocating inode", this.inode, "to", gid, oid); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 					ByteBuffer bb = getInodeBlock();
 					bb.putInt(EMPTY_ADDRESS);
@@ -288,8 +288,8 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 			int indirectIndexBlock = bb.getInt(BYTES_PER_BLOCK_ADDRESS*DIRECT_POINTERS);
 			int doublyIndirectIndexBlock = bb.getInt(BYTES_PER_BLOCK_ADDRESS*(DIRECT_POINTERS+1));
 			boolean freedAll = freeBlock(acquire?BYTES_PER_BLOCK_ADDRESS:0, bb, DIRECT_POINTERS-(acquire?1:0), true);
-			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-				LogManager.logDetail(LogConstants.CTX_DQP, "freeing inode", inode, "for", gid, oid); //$NON-NLS-1$ //$NON-NLS-2$
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "freeing inode", inode, "for", gid, oid); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			inodesInuse.clear(inode);
 			if (!freedAll || indirectIndexBlock == EMPTY_ADDRESS) {
@@ -427,8 +427,8 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean add(CacheEntry entry, Serializer s) {
-		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-			LogManager.logDetail(LogConstants.CTX_DQP, "adding object", s.getId(), entry.getId()); //$NON-NLS-1$
+		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+			LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "adding object", s.getId(), entry.getId()); //$NON-NLS-1$
 		}
 		boolean newEntry = false;
 		InodeBlockManager blockManager = null;
@@ -469,7 +469,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 			//proactively create freespace
 			if (!cleanerRunning.get()) {
 				if (lowBlocks(false) && cleanerRunning.compareAndSet(false, true)) {
-					LogManager.logDetail(LogConstants.CTX_DQP, "Starting memory buffer cleaner"); //$NON-NLS-1$
+					LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Starting memory buffer cleaner"); //$NON-NLS-1$
 					asynchPool.execute(cleaningTask);
 					if (lowBlocks(true)) {
 						//do a non-blocking removal before we're forced to block
@@ -563,21 +563,21 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 		boolean inStorage = false;
 		try {
 			synchronized (info) {
-				await(info, true, false);
+				assert !info.pinned && info.loading; //load should be locked
+				await(info, true, false); //not necessary, but should make things safer
 				if (info.inode != EMPTY_ADDRESS) {
 					info.pinned = true;
 					memoryBufferEntries.touch(info, false); 
-					if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-						LogManager.logDetail(LogConstants.CTX_DQP, "Getting object at inode", info.inode, serializer.getId(), oid); //$NON-NLS-1$
+					if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+						LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Getting object at inode", info.inode, serializer.getId(), oid); //$NON-NLS-1$
 					}
 					BlockManager manager = getBlockManager(serializer.getId(), oid, info.inode);
-					is = new BlockInputStream(manager, info.memoryBlockCount);
+					is = new BlockInputStream(manager, info.memoryBlockCount, info.evicting);
 				} else if (info.block != EMPTY_ADDRESS) {
-					assert !info.pinned;
 					inStorage = true;
 					storageReads.incrementAndGet();
-					if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-						LogManager.logDetail(LogConstants.CTX_DQP, "Getting object at block", info.block, info.sizeIndex, serializer.getId(), oid); //$NON-NLS-1$
+					if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+						LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Getting object at block", info.block, info.sizeIndex, serializer.getId(), oid); //$NON-NLS-1$
 					}
 					BlockStore blockStore = sizeBasedStores[info.sizeIndex];
 					FileStore fs = blockStore.stores[info.block/blockStore.blocksInUse.getBitsPerSegment()];
@@ -595,19 +595,17 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 					ExtensibleBufferedOutputStream os = new BlockOutputStream(manager);
 		            ObjectConverterUtil.write(os, is, -1);
 		            synchronized (info) {
+		            	assert !info.pinned;
 			            info.inode = manager.getInode();
 			            info.pinned = true;
 						memoryBufferEntries.touch(info, false);
+						is = new BlockInputStream(manager, info.memoryBlockCount, info.evicting);
 					}
-					is = new BlockInputStream(manager, info.memoryBlockCount);
 					success = true;
 				} finally {
 					this.memoryWritePermits.release();
 					if (!success && manager != null) {
 						manager.free(false);
-						synchronized (info) {
-							info.inode = EMPTY_ADDRESS;
-						}
 					}
 				}
 			}
@@ -707,10 +705,10 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 		synchronized (info) {
 			//if we're a demotion then the free flag was already checked and set 
 			if (!demote) {
-				//let a pending free finish - it would be nice if we could pre-empt
+				//let any pending finish - it would be nice if we could pre-empt
 				//since we can save some work, but this should be rare enough 
 				//to just block
-				await(info, false, true);
+				await(info, true, true);
 				info.evicting = true;
 			} else {
 				assert info.evicting;
@@ -729,11 +727,11 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 		try {
 			if (demote && block == EMPTY_ADDRESS) {
 				storageWrites.getAndIncrement();
-				BlockInputStream is = new BlockInputStream(bm, memoryBlockCount);
+				BlockInputStream is = new BlockInputStream(bm, memoryBlockCount, false); //we know this can always be single threaded
 				BlockStore blockStore = sizeBasedStores[sizeIndex];
 				block = getAndSetNextClearBit(blockStore);
-				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-					LogManager.logDetail(LogConstants.CTX_DQP, "Allocating storage data block", info.block, "of size", blockStore.blockSize, "to", info); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-1$
+				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+					LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Allocating storage data block", info.block, "of size", blockStore.blockSize, "to", info); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 				}
 				FileStore fs = blockStore.stores[block/blockStore.blocksInUse.getBitsPerSegment()];
 				long blockOffset = (block%blockStore.blocksInUse.getBitsPerSegment())*blockStore.blockSize;
@@ -748,7 +746,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 					//shouldn't happen, but we'll invalidate this write and continue
 					demote = false;
 					//just continue to free
-					LogManager.logError(LogConstants.CTX_DQP, e, "Error transferring block to storage " + oid); //$NON-NLS-1$
+					LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, "Error transferring block to storage " + oid); //$NON-NLS-1$
 				}
 			}
 		} finally {
@@ -756,6 +754,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 			synchronized (info) {
 				//it is possible for a read to happen while evicting.
 				//that's ok, we'll just wait for it to finish
+				assert info.evicting;
 				await(info, true, false);
 				info.evicting = false;
 				info.notifyAll();
@@ -770,8 +769,8 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 					} else {
 						BlockStore blockStore = sizeBasedStores[info.sizeIndex];
 						blockStore.blocksInUse.clear(info.block);
-						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-							LogManager.logDetail(LogConstants.CTX_DQP, "Freed storage data block", info.block, "of size", blockStore.blockSize); //$NON-NLS-1$ //$NON-NLS-2$
+						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+							LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Freed storage data block", info.block, "of size", blockStore.blockSize); //$NON-NLS-1$ //$NON-NLS-2$
 						}
 						info.block = EMPTY_ADDRESS;
 					}

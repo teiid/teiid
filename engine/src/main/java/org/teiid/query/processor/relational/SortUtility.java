@@ -234,10 +234,10 @@ public class SortUtility {
 		        	if (workingTuples.size() >= maxRows) {
 	        			int reserved = bufferManager.reserveBuffers(schemaSize, 
 	        					(totalReservedBuffers + schemaSize <= bufferManager.getMaxProcessingKB())?BufferReserveMode.FORCE:BufferReserveMode.NO_WAIT);
+		        		totalReservedBuffers += reserved;
 	        			if (reserved != schemaSize) {
 		        			break;
 		        		} 
-		        		totalReservedBuffers += reserved;
 		        		maxRows += this.batchSize;	
 		        	}
 		            try {
@@ -301,7 +301,7 @@ public class SortUtility {
             int reserved = Math.min(desiredSpace, this.bufferManager.getMaxProcessingKB());
             bufferManager.reserveBuffers(reserved, BufferReserveMode.FORCE);
             if (desiredSpace > reserved) {
-            	reserved += bufferManager.reserveBuffers(desiredSpace - reserved, BufferReserveMode.WAIT);
+            	reserved += bufferManager.reserveAdditionalBuffers(desiredSpace - reserved);
             }
             int maxSortIndex = Math.max(2, reserved / schemaSize); //always allow progress
             //release any partial excess
