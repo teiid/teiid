@@ -220,8 +220,8 @@ public class PreparedStatementRequest extends Request {
 			} else { //just accumulate copies of the command/plan - clones are not necessary
 				if (command == null) {
 					command = this.prepPlan.getCommand();
-					command.setProcessorPlan(this.processPlan);
 				}
+				command.setProcessorPlan(this.processPlan);
 				commands.add(command);
 			}
 		}
