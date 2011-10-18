@@ -81,7 +81,7 @@ public class TestThreadReuseExecutor {
         pool.shutdown();                
         
         WorkerPoolStatisticsMetadata stats = pool.getStats();
-        assertEquals("Expected 1 thread for serial execution", 1, stats.getHighestActiveThreads()); //$NON-NLS-1$
+        assertTrue("Expected approximately 1 thread for serial execution", stats.getHighestActiveThreads() <= 2); //$NON-NLS-1$
         
         pool.awaitTermination(1000, TimeUnit.MILLISECONDS);
     }
