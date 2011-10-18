@@ -43,7 +43,7 @@ public class TestSizeUtility {
     }
 
     public void helpTestGetSize(Object obj, long expectedSize) {  
-        long actualSize = new SizeUtility(null).getSize(obj, true, false);
+        long actualSize = new SizeUtility(null).getSize(obj, DataTypeManager.determineDataTypeClass(obj), true, false);
         assertEquals("Got unexpected size: ", expectedSize, actualSize); //$NON-NLS-1$
     }
 

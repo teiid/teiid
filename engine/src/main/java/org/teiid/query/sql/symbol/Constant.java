@@ -75,7 +75,13 @@ public class Constant implements Expression, Comparable<Constant> {
 	 */
 	public Constant(Object value) {
 		this.value = DataTypeManager.convertToRuntimeType(value);
-		this.type = DataTypeManager.determineDataTypeClass(this.value);
+		if (this.value == null) {
+			this.type = DataTypeManager.DefaultDataClasses.NULL;
+		} else if (DataTypeManager.getAllDataTypeClasses().contains(this.value.getClass())) {
+			this.type = this.value.getClass();
+		} else {
+			this.type = DataTypeManager.DefaultDataClasses.OBJECT; 
+		}
 	}
 
 	/**

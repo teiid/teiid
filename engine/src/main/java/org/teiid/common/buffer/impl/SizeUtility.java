@@ -90,15 +90,14 @@ public final class SizeUtility {
         size += (rowLength * (48 + alignMemory(colLength * REFERENCE_SIZE))); 
         for (int col = 0; col < colLength; col++) {
             Class<?> type = types[col];
+            int rowsSampled = 0;
+            int estimatedSize = 0;
 			if (VARIABLE_SIZE_TYPES.contains(type)) {
-            	int estRow = 0;
-                for (int row = 0; row < rowLength; row++) {
-                	boolean updateEst = row == estRow;
-                    size += getSize(data.get(row).get(col), updateEst, accountForValueCache);
-                    if (updateEst) {
-                    	estRow = estRow * 2 + 1;
-                    }
+                for (int row = 0; row < rowLength; row=(row*2)+1) {
+                	rowsSampled++;
+                    estimatedSize += getSize(data.get(row).get(col), types[col], true, accountForValueCache);
                 }
+                size += estimatedSize/(float)rowsSampled * rowLength;
             } else {
             	size += getSize(accountForValueCache, type) * rowLength;
             }
@@ -120,25 +119,17 @@ public final class SizeUtility {
      * Get size of object
      * @return Size in bytes
      */
-    protected long getSize(Object obj, boolean updateEstimate, boolean accountForValueCache) {
+    protected long getSize(Object obj, Class<?> type, boolean updateEstimate, boolean accountForValueCache) {
         if(obj == null) {
             return 0;
         }
 
-        Class<?> type = DataTypeManager.determineDataTypeClass(obj);
         if(type == DataTypeManager.DefaultDataClasses.STRING) {
             int length = ((String)obj).length();
             if (length > 0) {
                 return alignMemory(40 + (2 * length));
             }
             return 40;
-        } else if(obj instanceof Iterable<?>) {
-        	Iterable<?> i = (Iterable<?>)obj;
-        	long total = 16;
-        	for (Object object : i) {
-				total += getSize(object, true, false) + REFERENCE_SIZE;
-			}
-        	return total;
         } else if(type == DataTypeManager.DefaultDataClasses.BIG_DECIMAL) {
         	if (!updateEstimate) {
         		return bigDecimalEstimate;
@@ -160,13 +151,20 @@ public final class SizeUtility {
             	bigIntegerEstimate = (bigIntegerEstimate + result)/2;
             }
             return result;
+        } else if(obj instanceof Iterable<?>) {
+        	Iterable<?> i = (Iterable<?>)obj;
+        	long total = 16;
+        	for (Object object : i) {
+				total += getSize(object, DataTypeManager.determineDataTypeClass(object), true, false) + REFERENCE_SIZE;
+			}
+        	return total;
         } else if(obj.getClass().isArray()) {
         	Class<?> componentType = obj.getClass().getComponentType(); 
         	if (!componentType.isPrimitive()) {
 	            Object[] rows = (Object[]) obj;
 	            long total = 16 + alignMemory(rows.length * REFERENCE_SIZE); // Array overhead
 	            for(int i=0; i<rows.length; i++) {
-	                total += getSize(rows[i], true, false);
+	                total += getSize(rows[i], DataTypeManager.determineDataTypeClass(rows[i]), true, false);
 	            }
 	            return total;
         	}

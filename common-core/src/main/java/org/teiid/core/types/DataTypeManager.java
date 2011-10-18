@@ -340,14 +340,20 @@ public class DataTypeManager {
 	 * this is simply the class of the object. Some special cases are when the
 	 * value is of type Object or Null.
 	 */
-	public static Class determineDataTypeClass(Object value) {
+	public static Class<?> determineDataTypeClass(Object value) {
 		// Handle null case
 		if (value == null) {
 			return DefaultDataClasses.NULL;
 		}
-
-		return getDataTypeClass(getDataTypeName(convertToRuntimeType(value)
-				.getClass()));
+		Class<?> clazz = value.getClass();
+		if (DATA_TYPE_CLASSES.contains(clazz)) {
+			return clazz;
+		}
+		clazz = convertToRuntimeType(value).getClass();
+		if (DATA_TYPE_CLASSES.contains(clazz)) {
+			return clazz;
+		}
+		return DefaultDataClasses.OBJECT;
 	}
 
 	/**
@@ -748,7 +754,7 @@ public class DataTypeManager {
 			return null;
 		}
 		Class<?> c = value.getClass();
-		if (getAllDataTypeClasses().contains(c)) {
+		if (DATA_TYPE_CLASSES.contains(c)) {
 			return value;
 		}
 		SourceTransform t = sourceConverters.get(c);
