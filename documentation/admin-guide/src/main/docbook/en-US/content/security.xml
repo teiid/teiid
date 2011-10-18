@@ -180,53 +180,47 @@ User and role names are entirely up to the needs of the given deployment.  For e
             <section>
                 <title>Remote Connections</title>
                 <para>On the server, edit the &jboss-beans; under the "SessionService" bean definition, as follows:
-                <programlisting><![CDATA[   
-    <!-- Sets the authentication Type -->         
-    <property name="authenticationType">KRB5</property>
-    <!-- Security domain used for kerberos authentication -->
-    <property name="krb5SecurityDomain">teiid-krb5</property>    
-                ]]></programlisting>    
+                <programlisting><![CDATA[<!-- Sets the authentication Type -->         
+<property name="authenticationType">KRB5</property>
+<!-- Security domain used for kerberos authentication -->
+<property name="krb5SecurityDomain">teiid-krb5</property>]]></programlisting>    
                 
                 Now we need to define a security domain context for kerberos with the name mentioned in above.
                 Since kerberos authorization cannot define authorization roles, we'll define them using another login context. 
                 Given below is a sample configuration to define roles using a UserRolesLoginModule. 
                 <note><para>This configuration replaces the default Teiid login configuration, and you should change the principal 
                 and key tab locations accordingly.</para></note>
-                <programlisting><![CDATA[   
-    <!--login module that negotiates the login conext for kerberos --> 
-    <application-policy xmlns="urn:jboss:security-beans:1.0" name="teiid-krb5">
-        <authentication>
-            <login-module code="com.sun.security.auth.module.Krb5LoginModule" flag="required">
-                <module-option name="storeKey">true</module-option>
-                <module-option name="useKeyTab">true</module-option>
-                <module-option  name="principal">demo@EXAMPLE.COM</module-option>
-                <module-option  name="keyTab">path/to/krb5.keytab</module-option>
-                <module-option name="doNotPrompt">true</module-option>
-                <module-option name="debug">false</module-option>
-            </login-module>  
-        </authentication>
-    </application-policy>      
-    
-    <!-- teiid's default security domain, replace this with your own if needs to be any other JAAS domain  -->
-    <application-policy xmlns="urn:jboss:security-beans:1.0" name="teiid-security">
-        <authentication>
-            <!-- This module assosiates kerberos user with this login set of login modules -->
-            <login-module code="org.teiid.jboss.AssosiateCallerIdentityLoginModule" flag="required"/>
-            <!-- Login module used for defining roles for user authencated using kerberos, keep the users file empty
-            but provide roles in the roles file for users -->
-            <login-module code="org.jboss.security.auth.spi.UsersRolesLoginModule" flag="required">
-                <module-option name="password-stacking">useFirstPass</module-option>
-                <module-option name="usersProperties">props/teiid-security-users.properties</module-option>
-                <module-option name="rolesProperties">props/teiid-security-roles.properties</module-option>
-            </login-module>
-        </authentication>
-    </application-policy>    
-                ]]></programlisting>
+                <programlisting><![CDATA[<!--login module that negotiates the login conext for kerberos --> 
+<application-policy xmlns="urn:jboss:security-beans:1.0" name="teiid-krb5">
+    <authentication>
+        <login-module code="com.sun.security.auth.module.Krb5LoginModule" flag="required">
+            <module-option name="storeKey">true</module-option>
+            <module-option name="useKeyTab">true</module-option>
+            <module-option  name="principal">demo@EXAMPLE.COM</module-option>
+            <module-option  name="keyTab">path/to/krb5.keytab</module-option>
+            <module-option name="doNotPrompt">true</module-option>
+            <module-option name="debug">false</module-option>
+        </login-module>  
+    </authentication>
+</application-policy>      
+
+<!-- teiid's default security domain, replace this with your own if needs to be any other JAAS domain  -->
+<application-policy xmlns="urn:jboss:security-beans:1.0" name="teiid-security">
+    <authentication>
+        <!-- This module assosiates kerberos user with this login set of login modules -->
+        <login-module code="org.teiid.jboss.AssosiateCallerIdentityLoginModule" flag="required"/>
+        <!-- Login module used for defining roles for user authencated using kerberos, keep the users file empty
+        but provide roles in the roles file for users -->
+        <login-module code="org.jboss.security.auth.spi.UsersRolesLoginModule" flag="required">
+            <module-option name="password-stacking">useFirstPass</module-option>
+            <module-option name="usersProperties">props/teiid-security-users.properties</module-option>
+            <module-option name="rolesProperties">props/teiid-security-roles.properties</module-option>
+        </login-module>
+    </authentication>
+</application-policy>]]></programlisting>
                Edit the "run.conf" or "run.conf.bat" file depending upon the environment in the "${jboss-as}/bin" directory 
                and add the following JVM options (changing the realm and KDC settings according to your environment)
-               <programlisting><![CDATA[   
-               JAVA_OPTS = "$JAVA_OPTS -Djava.security.krb5.realm=EXAMPLE.COM -Djava.security.krb5.kdc=kerberos.example.com -Djavax.security.auth.useSubjectCredsOnly=false"
-                ]]></programlisting>                                          
+               <programlisting><![CDATA[JAVA_OPTS = "$JAVA_OPTS -Djava.security.krb5.realm=EXAMPLE.COM -Djava.security.krb5.kdc=kerberos.example.com -Djavax.security.auth.useSubjectCredsOnly=false"]]></programlisting>                                          
             This finishes the configuration on the server side, restart the server and make sure that there were no errors during startup. 
             </para>
             
@@ -235,33 +229,27 @@ User and role names are entirely up to the needs of the given deployment.  For e
 	            <para>In you client VM the JAAS 
 	            configuration for kerberos authentication needs to be written. A sample configuration file (client.conf) is show below
 	            
-	           <programlisting><![CDATA[   
-	    Client {
-	        com.sun.security.auth.module.Krb5LoginModule required
-	        useTicketCache=true
-	        storeKey=true
-	        useKeyTab=true 
-	        keyTab="/path/to/krb5.keytab" 
-	        doNotPrompt=false 
-	        debug=false
-	        principal="demo@EXAMPLE.COM";
-	    };
-	            ]]></programlisting>                                          
+	           <programlisting><![CDATA[Client {
+    com.sun.security.auth.module.Krb5LoginModule required
+    useTicketCache=true
+    storeKey=true
+    useKeyTab=true 
+    keyTab="/path/to/krb5.keytab" 
+    doNotPrompt=false 
+    debug=false
+    principal="demo@EXAMPLE.COM";
+};]]></programlisting>                                          
 	            
 	            Add the following JVM options to your client's startup script - change Realm and KDC settings according to 
 	            your environment
-	           <programlisting><![CDATA[   
-	        -Djava.security.krb5.realm=EXAMPLE.COM
-	        -Djava.security.krb5.kdc=kerberos.example.com
-	        -Djavax.security.auth.useSubjectCredsOnly=false
-	        -Dsun.security.krb5.debug=false
-	        -Djava.security.auth.login.config=/path/to/client.conf
-	            ]]></programlisting>              
+	           <programlisting><![CDATA[-Djava.security.krb5.realm=EXAMPLE.COM
+-Djava.security.krb5.kdc=kerberos.example.com
+-Djavax.security.auth.useSubjectCredsOnly=false
+-Dsun.security.krb5.debug=false
+-Djava.security.auth.login.config=/path/to/client.conf]]></programlisting>              
 	            
 	            Add the following URL connection properties to Teiid JDBC connection string
-	            <programlisting><![CDATA[
-	            authenticationType=KRB5;jaasName=Client;kerberosServicePrincipleName=demo@EXAMPLE.COM
-	            ]]></programlisting>
+	            <programlisting><![CDATA[authenticationType=KRB5;jaasName=Client;kerberosServicePrincipleName=demo@EXAMPLE.COM]]></programlisting>
 	            There is no need to provide the user name and password, when the application is trying to make JDBC connection it
 	            will authenticate locally and use the same user credetinals to neogitiate service token with server and grant the
 	            connection. See Client Developer's guide for information on connection properties and how to configure data sources.
@@ -292,31 +280,27 @@ User and role names are entirely up to the needs of the given deployment.  For e
                 data source. Here is a sample configuration, this needs to be configured in "teiid-jboss-beans.xml" file.
                 </para>
                 
-            <programlisting><![CDATA[            
-    <application-policy xmlns="urn:jboss:security-beans:1.0" name="teiid-security">
-        <authentication>
-            
-            <login-module code="org.jboss.security.auth.spi.UsersRolesLoginModule" flag="required">
-                <module-option name = "password-stacking">useFirstPass</module-option>
-                <module-option name="usersProperties">props/teiid-security-users.properties</module-option>
-                <module-option name="rolesProperties">props/teiid-security-roles.properties</module-option>
-            </login-module>
-            
-            <login-module code="org.jboss.resource.security.CallerIdentityLoginModule" flag="required">
-                <module-option name = "password-stacking">useFirstPass</module-option>
-                <module-option name = "managedConnectionFactoryName">jboss.jca:service=LocalTxCM,name=DefaultDS</module-option>
-            </login-module>
-                        
-        </authentication>
-    </application-policy>  
-            ]]></programlisting>
+            <programlisting><![CDATA[<application-policy xmlns="urn:jboss:security-beans:1.0" name="teiid-security">
+    <authentication>
+        
+        <login-module code="org.jboss.security.auth.spi.UsersRolesLoginModule" flag="required">
+            <module-option name = "password-stacking">useFirstPass</module-option>
+            <module-option name="usersProperties">props/teiid-security-users.properties</module-option>
+            <module-option name="rolesProperties">props/teiid-security-roles.properties</module-option>
+        </login-module>
+        
+        <login-module code="org.jboss.resource.security.CallerIdentityLoginModule" flag="required">
+            <module-option name = "password-stacking">useFirstPass</module-option>
+            <module-option name = "managedConnectionFactoryName">jboss.jca:service=LocalTxCM,name=DefaultDS</module-option>
+        </login-module>
+                    
+    </authentication>
+</application-policy>]]></programlisting>
             
             <para>In the -ds.xml file that is defined as the "managedConnectionFactoryName" in the above configuration, 
             you need to add the following element</para>
             
-            <programlisting><![CDATA[
-                <security-domain>teiid-security</security-domain>
-            ]]></programlisting>
+            <programlisting><![CDATA[<security-domain>teiid-security</security-domain>]]></programlisting>
             
             <para>In the above configuration example, in the primary login module "UsersRolesLoginModule" is setup to hold the 
             passwords in the file, and when user logs in with password, the same password will be also set on the logged in Subject after 
@@ -341,31 +325,27 @@ User and role names are entirely up to the needs of the given deployment.  For e
             map to different roles. If a user has multiple roles, the first role that has the credential will be chosen.
             Below find the sample configuration.</para>
             
-            <programlisting><![CDATA[            
-    <application-policy xmlns="urn:jboss:security-beans:1.0" name="teiid-security">
-        <authentication>
-            
-            <login-module code="org.jboss.security.auth.spi.UsersRolesLoginModule" flag="required">
-                <module-option name = "password-stacking">useFirstPass</module-option>
-                <module-option name="usersProperties">props/teiid-security-users.properties</module-option>
-                <module-option name="rolesProperties">props/teiid-security-roles.properties</module-option>
-            </login-module>
-            
-            <login-module code="org.teiid.jboss.RoleBasedCredentialMapIdentityLoginModule" flag="required">
-                <module-option name = "password-stacking">useFirstPass</module-option>
-                <module-option name="credentialMap">props/teiid-credentialmap.properties</module-option>
-                <module-option name = "managedConnectionFactoryName">jboss.jca:service=LocalTxCM,name=DefaultDS</module-option>
-            </login-module>            
-                        
-        </authentication>
-    </application-policy>  
-            ]]></programlisting>         
+            <programlisting><![CDATA[<application-policy xmlns="urn:jboss:security-beans:1.0" name="teiid-security">
+    <authentication>
+        
+        <login-module code="org.jboss.security.auth.spi.UsersRolesLoginModule" flag="required">
+            <module-option name = "password-stacking">useFirstPass</module-option>
+            <module-option name="usersProperties">props/teiid-security-users.properties</module-option>
+            <module-option name="rolesProperties">props/teiid-security-roles.properties</module-option>
+        </login-module>
+        
+        <login-module code="org.teiid.jboss.RoleBasedCredentialMapIdentityLoginModule" flag="required">
+            <module-option name = "password-stacking">useFirstPass</module-option>
+            <module-option name="credentialMap">props/teiid-credentialmap.properties</module-option>
+            <module-option name = "managedConnectionFactoryName">jboss.jca:service=LocalTxCM,name=DefaultDS</module-option>
+        </login-module>            
+                    
+    </authentication>
+</application-policy>]]></programlisting>         
             <para>In the -ds.xml file that is defined as the "managedConnectionFactoryName" in the above configuration, 
             you need to add the following element</para>
             
-            <programlisting><![CDATA[
-                <security-domain>teiid-security</security-domain>
-            ]]></programlisting>
+            <programlisting><![CDATA[<security-domain>teiid-security</security-domain>]]></programlisting>
             
             <para>In the above configuration example, in the primary login module "UsersRolesLoginModule" is setup for logging in
             the primary user and assign some roles. The "RoleBasedCredentialMap" login module is configured to hold 
@@ -378,19 +358,17 @@ User and role names are entirely up to the needs of the given deployment.  For e
              password in the file defined by the "credentialMap" property, and define following properties in 
              the "RoleBasedCredentialMap" login module.</para>
              
-            <programlisting><![CDATA[            
-            <login-module code="org.teiid.jboss.RoleBasedCredentialMapIdentityLoginModule" flag="required">
-                <module-option name = "password-stacking">useFirstPass</module-option>
-                <module-option name="credentialMap">props/teiid-credentialmap.properties</module-option>
-                <module-option name = "managedConnectionFactoryName">jboss.jca:service=LocalTxCM,name=DefaultDS</module-option>
-                
-               <!-- below properties are only required when passwords are encrypted -->
-               <module-option name = "pbealgo">PBEWithMD5AndDES</module-option>
-               <module-option name = "pbepass">testPBEIdentityLoginModule</module-option>
-               <module-option name = "salt">abcdefgh</module-option>
-               <module-option name = "iterationCount">19</module-option>
-            </login-module>            
-            ]]></programlisting>         
+            <programlisting><![CDATA[<login-module code="org.teiid.jboss.RoleBasedCredentialMapIdentityLoginModule" flag="required">
+    <module-option name = "password-stacking">useFirstPass</module-option>
+    <module-option name="credentialMap">props/teiid-credentialmap.properties</module-option>
+    <module-option name = "managedConnectionFactoryName">jboss.jca:service=LocalTxCM,name=DefaultDS</module-option>
+    
+   <!-- below properties are only required when passwords are encrypted -->
+   <module-option name = "pbealgo">PBEWithMD5AndDES</module-option>
+   <module-option name = "pbepass">testPBEIdentityLoginModule</module-option>
+   <module-option name = "salt">abcdefgh</module-option>
+   <module-option name = "iterationCount">19</module-option>
+</login-module>]]></programlisting>         
              
             <para>For full details about encryption of the password, please follow this 
             <ulink url="http://community.jboss.org/docs/DOC-9703">document</ulink>'s 
