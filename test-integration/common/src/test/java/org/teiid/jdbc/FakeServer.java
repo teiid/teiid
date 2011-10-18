@@ -38,6 +38,7 @@ import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.MetadataStoreGroup;
 import org.teiid.deployers.UDFMetaData;
@@ -65,6 +66,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.GlobalTableStoreImpl;
+import org.teiid.services.BufferServiceImpl;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
@@ -91,6 +93,10 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 	}
 	
 	public FakeServer(DQPConfiguration config) {
+		this(config, false);
+	}
+
+	public FakeServer(DQPConfiguration config, boolean realBufferMangaer) {
 		this.logon = new LogonImpl(sessionService, null);
 		this.repo.addListener(new VDBLifeCycleListener() {
 			
@@ -118,7 +124,14 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 		this.repo.start();
 		
         this.sessionService.setVDBRepository(repo);
-        this.dqp.setBufferService(new FakeBufferService());
+        if (!realBufferMangaer) {
+        	this.dqp.setBufferService(new FakeBufferService());
+        } else {
+        	BufferServiceImpl bsi = new BufferServiceImpl();
+        	bsi.setDiskDirectory(UnitTestUtil.getTestScratchPath());
+        	this.dqp.setBufferService(bsi);
+        }
+        
         this.dqp.setCacheFactory(new DefaultCacheFactory());
         this.dqp.setTransactionService(new FakeTransactionService());
         
@@ -142,6 +155,10 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         
         registerClientService(ILogon.class, logon, null);
         registerClientService(DQP.class, dqp, null);
+	}
+	
+	public DQPCore getDqp() {
+		return dqp;
 	}
 	
 	public void setConnectorManagerRepository(ConnectorManagerRepository cmr) {

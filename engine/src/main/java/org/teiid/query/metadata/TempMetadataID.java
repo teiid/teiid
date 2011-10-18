@@ -62,11 +62,15 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 		List<List<TempMetadataID>> keys;
 		List<List<TempMetadataID>> indexes;
 		long lastDataModification;
-		long lastModified;
+		long lastModified = System.currentTimeMillis();
 		int modCount;
 		
 		public long getLastDataModification() {
 			return lastDataModification;
+		}
+		
+		public void removed() {
+			this.lastModified = -1;
 		}
 		
 		public void dataModified(int updateCount) {

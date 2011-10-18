@@ -52,7 +52,7 @@ public class AccessInfo implements Serializable {
 	private static final long serialVersionUID = -2608267960584191359L;
 	
 	private transient Set<Object> objectsAccessed;
-	
+	private boolean sensitiveToMetadataChanges = true;
 	private List<List<String>> externalNames;
 	
 	private transient long creationTime = System.currentTimeMillis();
@@ -65,6 +65,14 @@ public class AccessInfo implements Serializable {
 	private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
 		in.defaultReadObject();
 		this.creationTime = System.currentTimeMillis();
+	}
+	
+	public boolean isSensitiveToMetadataChanges() {
+		return sensitiveToMetadataChanges;
+	}
+	
+	public void setSensitiveToMetadataChanges(boolean sensitiveToMetadataChanges) {
+		this.sensitiveToMetadataChanges = sensitiveToMetadataChanges;
 	}
 	
 	private static List<List<String>> initExternalList(List<List<String>> externalNames, Set<? extends Object> accessed) {
@@ -153,8 +161,14 @@ public class AccessInfo implements Serializable {
 		}
 		for (Object o : this.objectsAccessed) {
 			if (!data) {
-				if (o instanceof Modifiable && ((Modifiable)o).getLastModified() - modTime > this.creationTime) {
-					return false;
+				if (o instanceof Modifiable) {
+					Modifiable m = (Modifiable)o;
+					if (m.getLastModified() < 0) {
+						return false; //invalid object
+					}
+					if (sensitiveToMetadataChanges && m.getLastModified() - modTime > this.creationTime) {
+						return false;
+					}
 				}
 			} else if (o instanceof DataModifiable && ((DataModifiable)o).getLastDataModification() - modTime > this.creationTime) {
 				return false;

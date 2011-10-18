@@ -29,6 +29,8 @@ import org.teiid.cache.Cache;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.relational.AccessNode;
+import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.util.CommandContext;
@@ -77,6 +79,13 @@ public class PreparedPlan implements Cachable {
 	public void setPlan(ProcessorPlan planValue, CommandContext context){
 		plan = planValue;
 		this.accessInfo.populate(context, false);
+		//TODO: expand this logic
+		if (planValue instanceof RelationalPlan) {
+			RelationalPlan rp = (RelationalPlan)planValue;
+			if (rp.getRootNode() instanceof AccessNode) {
+				this.accessInfo.setSensitiveToMetadataChanges(false);
+			}
+		}
 	}
 	
 	/**

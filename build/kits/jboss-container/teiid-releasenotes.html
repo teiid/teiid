@@ -33,6 +33,7 @@
   <LI><B>Buffering Improvements</B> - Added the ability to inline memory based or small lobs and added tracking of the memory held by soft references.  Also switched to a LFRU algorithm that significantly reduces writes and read misses with temporary tables.
   <LI><B>GSSAPI</B> - both the Teiid JDBC client/server and the ODBC pg backend can now support GSSAPI for single sign-on. 
   <LI><B>Server-side Query Timeouts</B> - default query timeouts can be configured at both the VDB (via the query-timeout VDB property) and entire server (via the teiid-jboss-beans.xml queryTimeout property).
+  <LI><B>Memory Improvements</B> - buffering was optimized for concurrency and to better handle table querying instead of tuple buffers.  Added a memory buffer to better handle file storage.  The memory buffer may be optional configured as off-heap for better large memory performance.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

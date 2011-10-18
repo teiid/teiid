@@ -441,22 +441,35 @@ public class TestDQPCore {
         assertNull(rm.getException());
         assertEquals(0, rm.getResultsList().size());
     }
-    
+
     @Test public void testPreparedPlanInvalidation() throws Exception {
-        String sql = "insert into #temp select * FROM vqt.SmallB"; //$NON-NLS-1$
+        helpTestPlanInvalidation("select * from #temp a, #temp b limit 10");
+        
+        assertEquals(2, this.core.getPrepPlanCache().getCacheHitCount());
+    }
+
+    @Test public void testPreparedPlanSimpleNoInvalidation() throws Exception {
+        helpTestPlanInvalidation("select * from #temp");
+        
+        assertEquals(3, this.core.getPrepPlanCache().getCacheHitCount());
+    }
+
+	private void helpTestPlanInvalidation(String query) throws InterruptedException,
+			ExecutionException, TimeoutException {
+		String sql = "insert into #temp select * FROM vqt.SmallB"; //$NON-NLS-1$
         String userName = "1"; //$NON-NLS-1$
         int sessionid = 1; //$NON-NLS-1$
         RequestMessage reqMsg = exampleRequestMessage(sql);
         ResultsMessage rm = execute(userName, sessionid, reqMsg);
         assertEquals(1, rm.getResultsList().size()); //$NON-NLS-1$
         
-        sql = "select * from #temp"; //$NON-NLS-1$
+        sql = query;
         reqMsg = exampleRequestMessage(sql);
         reqMsg.setStatementType(StatementType.PREPARED);
         rm = execute(userName, sessionid, reqMsg);
         assertEquals(10, rm.getResultsList().size()); //$NON-NLS-1$
         
-        sql = "select * from #temp"; //$NON-NLS-1$
+        sql = query; 
         reqMsg = exampleRequestMessage(sql);
         reqMsg.setStatementType(StatementType.PREPARED);
         rm = execute(userName, sessionid, reqMsg);
@@ -472,7 +485,7 @@ public class TestDQPCore {
         rm = execute(userName, sessionid, reqMsg);
         assertEquals(1, rm.getResultsList().size()); //$NON-NLS-1$
 
-        sql = "select * from #temp"; //$NON-NLS-1$
+        sql = query;
         reqMsg = exampleRequestMessage(sql);
         reqMsg.setStatementType(StatementType.PREPARED);
         rm = execute(userName, sessionid, reqMsg);
@@ -480,20 +493,18 @@ public class TestDQPCore {
         
         assertEquals(2, this.core.getPrepPlanCache().getCacheHitCount());
 
-        //perform a major update, we will purge the plan
+        //perform a major update, it might purge the plan
         sql = "delete from #temp"; //$NON-NLS-1$
         reqMsg = exampleRequestMessage(sql);
         rm = execute(userName, sessionid, reqMsg);
         assertEquals(1, rm.getResultsList().size()); //$NON-NLS-1$
         
-        sql = "select * from #temp"; //$NON-NLS-1$
+        sql = query;
         reqMsg = exampleRequestMessage(sql);
         reqMsg.setStatementType(StatementType.PREPARED);
         rm = execute(userName, sessionid, reqMsg);
         assertEquals(0, rm.getResultsList().size()); //$NON-NLS-1$
-        
-        assertEquals(2, this.core.getPrepPlanCache().getCacheHitCount());
-    }
+	}
     
     @Test public void testRsCacheInvalidation() throws Exception {
         String sql = "select * FROM vqt.SmallB"; //$NON-NLS-1$

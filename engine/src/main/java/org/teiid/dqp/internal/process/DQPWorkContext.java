@@ -54,7 +54,9 @@ public class DQPWorkContext implements Serializable {
 		SEVEN_1("7.1"), //$NON-NLS-1$
 		SEVEN_2("7.2"), //$NON-NLS-1$
 		SEVEN_3("7.3"), //$NON-NLS-1$
-		SEVEN_4("7.4"); //$NON-NLS-1$
+		SEVEN_4("7.4"), //$NON-NLS-1$
+		SEVEN_5("7.5"), //$NON-NLS-1$
+		SEVEN_6("7.6"); //$NON-NLS-1$
 		
 		private String string;
 		
