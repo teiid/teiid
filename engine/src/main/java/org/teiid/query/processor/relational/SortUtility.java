@@ -230,10 +230,10 @@ public class SortUtility {
 		        	if (workingTuples.size() >= maxRows) {
 	        			int reserved = bufferManager.reserveBuffers(schemaSize, 
 	        					(totalReservedBuffers + schemaSize <= bufferManager.getMaxProcessingKB())?BufferReserveMode.FORCE:BufferReserveMode.NO_WAIT);
-	        			if (reserved != schemaSize) {
-		        			break;
-		        		} 
 		        		totalReservedBuffers += reserved;
+		        		if (reserved != schemaSize) {
+		        			break;
+		        		}
 		        		maxRows += bufferManager.getProcessorBatchSize();	
 		        	}
 		            try {

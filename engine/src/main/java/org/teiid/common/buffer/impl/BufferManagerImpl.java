@@ -457,6 +457,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     public int getMaxProcessingKB() {
 		return maxProcessingKB;
 	}
+	
+	public int getReserveBatchKB() {
+		return reserveBatchKB;
+	}
     
     /**
      * Get processor batch size
@@ -597,12 +601,17 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	    		//don't wait for more than is available
 	    		int waitCount = Math.min(count, this.maxReserveKB);
 		    	while (waitCount > 0 && waitCount > this.reserveBatchKB) {
+		    		int reserveBatchSample = this.reserveBatchKB;
 		    		try {
-						batchesFreed.await(100, TimeUnit.MILLISECONDS);
+						batchesFreed.await(50, TimeUnit.MILLISECONDS);
 					} catch (InterruptedException e) {
 						throw new TeiidRuntimeException(e);
 					}
-					waitCount /= 2;
+					if (reserveBatchSample >= this.reserveBatchKB) {
+						waitCount >>= 3;
+					} else {
+						waitCount >>= 1;
+					}
 		    	}	
 	    	}
 	    	if (this.reserveBatchKB >= count || mode == BufferReserveMode.FORCE) {
