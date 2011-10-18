@@ -114,7 +114,7 @@ public class TempTable implements Cloneable {
 				}
 				for (int i = 0; i < indexes.length; i++) {
 					if (indexes[i] == -1) {
-						AtomicInteger sequence = sequences.get(i);
+						AtomicInteger sequence = sequences.get(i + (addRowId?1:0));
 						if (sequence != null) {
 							newTuple.add(sequence.getAndIncrement());
 						} else {
@@ -560,6 +560,7 @@ public class TempTable implements Cloneable {
 	public void remove() {
 		lock.writeLock().lock();
 		try {
+			tid.getTableData().removed();
 			tree.remove();
 			if (this.indexTables != null) {
 				for (TempTable indexTable : this.indexTables.values()) {

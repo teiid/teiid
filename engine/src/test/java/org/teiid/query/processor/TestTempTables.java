@@ -434,6 +434,13 @@ public class TestTempTables {
 		execute("select * from x", new List[] {Arrays.asList(1, 1), Arrays.asList(2, 3)});
 	}
 	
+	@Test public void testAutoIncrement1() throws Exception {
+		execute("create local temporary table x (e1 serial, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		execute("insert into x (e2) values (1)", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		execute("insert into x (e2) values (3)", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		execute("select * from x", new List[] {Arrays.asList(1, 1), Arrays.asList(2, 3)});
+	}
+	
 	@Test(expected=TeiidProcessingException.class) public void testNotNull() throws Exception {
 		execute("create local temporary table x (e1 serial, e2 integer not null, primary key (e1))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
 		execute("insert into x (e1, e2) values ((select null), 1)", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
