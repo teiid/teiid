@@ -93,13 +93,13 @@ public class BatchSerializer {
     			throws IOException {
     		int code = DataTypeManager.getTypeCode(obj.getClass());
     		out.writeByte((byte)code);
-    		if (code == DataTypeManager.BOOLEAN) {
+    		if (code == DataTypeManager.DefaultTypeCodes.BOOLEAN) {
     			if (Boolean.TRUE.equals(obj)) {
     				out.write((byte)1);
     			} else {
     				out.write((byte)0);
     			}
-    		} else if (code != DataTypeManager.OBJECT) {
+    		} else if (code != DataTypeManager.DefaultTypeCodes.OBJECT) {
     			ColumnSerializer s = getSerializer(DataTypeManager.getDataTypeName(obj.getClass()), (byte)1);
     			s.writeObject(out, obj);
     		} else {
@@ -111,13 +111,13 @@ public class BatchSerializer {
     	protected Object readObject(ObjectInput in) throws IOException,
     			ClassNotFoundException {
     		int code = in.readByte();
-    		if (code == DataTypeManager.BOOLEAN) {
+    		if (code == DataTypeManager.DefaultTypeCodes.BOOLEAN) {
     			if (in.readByte() == (byte)0) {
     				return Boolean.FALSE;
     			}
     			return Boolean.TRUE;
     		}
-    		if (code != DataTypeManager.OBJECT) {
+    		if (code != DataTypeManager.DefaultTypeCodes.OBJECT) {
     			ColumnSerializer s = getSerializer(DataTypeManager.getDataTypeName(DataTypeManager.getClass(code)), (byte)1);
     			return s.readObject(in);
     		}
