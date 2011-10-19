@@ -26,7 +26,7 @@ package org.teiid.translator.jdbc;
 
 import java.util.List;
 
-import org.teiid.client.BatchSerializer;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
 
@@ -41,28 +41,28 @@ public abstract class FunctionModifier {
     /*
      * Public sharing part for the mapping between class and type in format of Map<class->Integer>.
      */
-    public static final int STRING = BatchSerializer.STRING;
-    public static final int CHAR = BatchSerializer.CHAR;
-    public static final int BOOLEAN = BatchSerializer.BOOLEAN;
-    public static final int BYTE = BatchSerializer.BYTE;
-    public static final int SHORT = BatchSerializer.SHORT;
-    public static final int INTEGER = BatchSerializer.INTEGER;
-    public static final int LONG = BatchSerializer.LONG;
-    public static final int BIGINTEGER = BatchSerializer.BIGINTEGER;
-    public static final int FLOAT = BatchSerializer.FLOAT;
-    public static final int DOUBLE = BatchSerializer.DOUBLE;
-    public static final int BIGDECIMAL = BatchSerializer.BIGDECIMAL;
-    public static final int DATE = BatchSerializer.DATE;
-    public static final int TIME = BatchSerializer.TIME;
-    public static final int TIMESTAMP = BatchSerializer.TIMESTAMP;
-    public static final int OBJECT = BatchSerializer.OBJECT;
-    public static final int BLOB = BatchSerializer.BLOB;
-    public static final int CLOB = BatchSerializer.CLOB;
-    public static final int XML = BatchSerializer.XML;
-    public static final int NULL = BatchSerializer.NULL;
+    public static final int STRING = DataTypeManager.DefaultTypeCodes.STRING;
+    public static final int CHAR = DataTypeManager.DefaultTypeCodes.CHAR;
+    public static final int BOOLEAN = DataTypeManager.DefaultTypeCodes.BOOLEAN;
+    public static final int BYTE = DataTypeManager.DefaultTypeCodes.BYTE;
+    public static final int SHORT = DataTypeManager.DefaultTypeCodes.SHORT;
+    public static final int INTEGER = DataTypeManager.DefaultTypeCodes.INTEGER;
+    public static final int LONG = DataTypeManager.DefaultTypeCodes.LONG;
+    public static final int BIGINTEGER = DataTypeManager.DefaultTypeCodes.BIGINTEGER;
+    public static final int FLOAT = DataTypeManager.DefaultTypeCodes.FLOAT;
+    public static final int DOUBLE = DataTypeManager.DefaultTypeCodes.DOUBLE;
+    public static final int BIGDECIMAL = DataTypeManager.DefaultTypeCodes.BIGDECIMAL;
+    public static final int DATE = DataTypeManager.DefaultTypeCodes.DATE;
+    public static final int TIME = DataTypeManager.DefaultTypeCodes.TIME;
+    public static final int TIMESTAMP = DataTypeManager.DefaultTypeCodes.TIMESTAMP;
+    public static final int OBJECT = DataTypeManager.DefaultTypeCodes.OBJECT;
+    public static final int BLOB = DataTypeManager.DefaultTypeCodes.BLOB;
+    public static final int CLOB = DataTypeManager.DefaultTypeCodes.CLOB;
+    public static final int XML = DataTypeManager.DefaultTypeCodes.XML;
+    public static final int NULL = DataTypeManager.DefaultTypeCodes.NULL;
 
     public static int getCode(Class<?> source) {
-        return BatchSerializer.getCode(source);
+        return DataTypeManager.getTypeCode(source);
     }
     
     /**

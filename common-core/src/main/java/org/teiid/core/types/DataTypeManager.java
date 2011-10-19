@@ -75,6 +75,8 @@ import org.teiid.core.util.PropertiesUtils;
  * need to load the Class object, which may not be in the classpath. The
  * advantage of the Class option is speed.
  * </p>
+ * 
+ * TODO: refactor the string/class/code into an enum
  */
 public class DataTypeManager {
 	
@@ -224,6 +226,62 @@ public class DataTypeManager {
 		public static final Class<ClobType> CLOB = ClobType.class;
 		public static final Class<XMLType> XML = XMLType.class;
 	}
+	
+	public static final class DefaultTypeCodes {
+		public static final int STRING = 0;
+		public static final int CHAR = 1;
+		public static final int BOOLEAN = 2;
+		public static final int BYTE = 3;
+		public static final int SHORT = 4;
+		public static final int INTEGER = 5;
+		public static final int LONG = 6;
+		public static final int BIGINTEGER = 7;
+		public static final int FLOAT = 8;
+		public static final int DOUBLE = 9;
+		public static final int BIGDECIMAL = 10;
+		public static final int DATE = 11;
+		public static final int TIME = 12;
+		public static final int TIMESTAMP = 13;
+		public static final int OBJECT = 14;
+		public static final int BLOB = 15;
+		public static final int CLOB = 16;
+		public static final int XML = 17;
+		public static final int NULL = 18;
+	}
+	
+    private static final Map<Class<?>, Integer> typeMap = new LinkedHashMap<Class<?>, Integer>(64);
+    private static final List<Class<?>> typeList;
+    
+    static {
+        typeMap.put(DataTypeManager.DefaultDataClasses.STRING, DefaultTypeCodes.STRING);
+        typeMap.put(DataTypeManager.DefaultDataClasses.CHAR, DefaultTypeCodes.CHAR);
+        typeMap.put(DataTypeManager.DefaultDataClasses.BOOLEAN, DefaultTypeCodes.BOOLEAN);
+        typeMap.put(DataTypeManager.DefaultDataClasses.BYTE, DefaultTypeCodes.BYTE);
+        typeMap.put(DataTypeManager.DefaultDataClasses.SHORT, DefaultTypeCodes.SHORT);
+        typeMap.put(DataTypeManager.DefaultDataClasses.INTEGER, DefaultTypeCodes.INTEGER);
+        typeMap.put(DataTypeManager.DefaultDataClasses.LONG, DefaultTypeCodes.LONG);
+        typeMap.put(DataTypeManager.DefaultDataClasses.BIG_INTEGER, DefaultTypeCodes.BIGINTEGER);
+        typeMap.put(DataTypeManager.DefaultDataClasses.FLOAT, DefaultTypeCodes.FLOAT);
+        typeMap.put(DataTypeManager.DefaultDataClasses.DOUBLE, DefaultTypeCodes.DOUBLE);
+        typeMap.put(DataTypeManager.DefaultDataClasses.BIG_DECIMAL, DefaultTypeCodes.BIGDECIMAL);
+        typeMap.put(DataTypeManager.DefaultDataClasses.DATE, DefaultTypeCodes.DATE);
+        typeMap.put(DataTypeManager.DefaultDataClasses.TIME, DefaultTypeCodes.TIME);
+        typeMap.put(DataTypeManager.DefaultDataClasses.TIMESTAMP, DefaultTypeCodes.TIMESTAMP);
+        typeMap.put(DataTypeManager.DefaultDataClasses.OBJECT, DefaultTypeCodes.OBJECT);        
+        typeMap.put(DataTypeManager.DefaultDataClasses.BLOB, DefaultTypeCodes.BLOB);
+        typeMap.put(DataTypeManager.DefaultDataClasses.CLOB, DefaultTypeCodes.CLOB);
+        typeMap.put(DataTypeManager.DefaultDataClasses.XML, DefaultTypeCodes.XML);
+        typeMap.put(DataTypeManager.DefaultDataClasses.NULL, DefaultTypeCodes.NULL);
+        typeList = new ArrayList<Class<?>>(typeMap.keySet());
+    }    
+    
+    public static int getTypeCode(Class<?> source) {
+        return typeMap.get(source).intValue();
+    }
+    
+    public static Class<?> getClass(int code) {
+    	return typeList.get(code);
+    }
 
 	/**
 	 * Doubly-nested map of String srcType --> Map of String targetType -->
