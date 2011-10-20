@@ -84,7 +84,7 @@
 			With large off-heap buffer sizes (greater than several gigabytes) you may also need to adjust VM settings.  For Sun VMs the relevant VM settings are MaxDirectMemorySize and UseLargePages.  For example adding:
 			<programlisting>-XX:MaxDirectMemorySize=12g -XX:+UseLargePages</programlisting>
 			to the VM process arguments would allow for an effective allocation of approximately an 11GB Teiid memory buffer (the memoryBufferSpace setting) accounting for any additional direct memory that may be needed
-			by the AS or applications running in the AS.
+			by the AS or applications running in the AS.</para>
 		</section>
 		<section>
 			<title>Disk Usage</title>
