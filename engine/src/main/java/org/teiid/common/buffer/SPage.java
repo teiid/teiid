@@ -49,8 +49,6 @@ import org.teiid.core.TeiidRuntimeException;
 @SuppressWarnings("unchecked")
 class SPage implements Cloneable {
 	
-	static final int MIN_PERSISTENT_SIZE = 16;
-
 	static class SearchResult {
 		int index;
 		SPage page;
@@ -186,7 +184,7 @@ class SPage implements Cloneable {
 		if (values instanceof LightWeightCopyOnWriteList<?>) {
 			values = ((LightWeightCopyOnWriteList<List<?>>)values).getList();
 		}
-		if (values.size() < MIN_PERSISTENT_SIZE) {
+		if (values.size() < stree.minPageSize) {
 			setDirectValues(values);
 			return;
 		} else if (stree.batchInsert && children == null && values.size() < stree.leafSize) {

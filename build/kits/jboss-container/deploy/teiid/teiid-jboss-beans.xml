@@ -24,10 +24,10 @@
         <property name="useDisk">true</property>
         <!-- Directory location for the buffer files -->
         <property name="diskDirectory">${jboss.server.temp.dir}/teiid</property>
-        <!-- The max row count of a batch sent internally within the query processor. Should be <= the connectorBatchSize. (default 512) -->
-        <property name="processorBatchSize">512</property>
-        <!-- The max row count of a batch from a connector. Should be even multiple of processorBatchSize. (default 1024) -->
-        <property name="connectorBatchSize">1024</property>
+        <!-- The max row count of a batch sent internally within the query processor. Should be <= the connectorBatchSize. (default 256) -->
+        <property name="processorBatchSize">256</property>
+        <!-- The max row count of a batch from a connector. Should be even multiple of processorBatchSize. (default 512) -->
+        <property name="connectorBatchSize">512</property>
         <!-- 
             The approximate amount of buffer memory in kilobytes allowable for a single processing operation (sort, grouping, etc.) regardless of existing memory commitments. -1 means to automatically calculate a value (default -1).  
             See the admin guide for more.          

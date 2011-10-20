@@ -30,6 +30,7 @@ public abstract class ExtensibleBufferedOutputStream extends OutputStream {
 	
     protected ByteBuffer buf;
     protected int bytesWritten;
+    private int startPosition;
     
     public ExtensibleBufferedOutputStream() {
 	}
@@ -45,6 +46,7 @@ public abstract class ExtensibleBufferedOutputStream extends OutputStream {
 	private void ensureBuffer() {
 		if (buf == null) {
     		buf = newBuffer();
+    		startPosition = buf.position();
     	}
 	}
 
@@ -63,8 +65,11 @@ public abstract class ExtensibleBufferedOutputStream extends OutputStream {
     }
 
 	public void flush() throws IOException {
-		if (buf != null && buf.position() > 0) {
-			bytesWritten += flushDirect(buf.position());
+		if (buf != null) {
+			int bytes = buf.position() - startPosition;
+			if (bytes > 0) {
+				bytesWritten += flushDirect(bytes);
+			}
 		}
 		buf = null;
 	}

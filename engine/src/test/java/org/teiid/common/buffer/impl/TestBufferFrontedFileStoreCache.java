@@ -90,6 +90,16 @@ public class TestBufferFrontedFileStoreCache {
 		ce = get(cache, 3l, s);
 		assertEquals(cacheObject, ce.getObject());
 		
+		//repeat the test to ensure proper cleanup
+		ce = new CacheEntry(4l);
+		cacheObject = Integer.valueOf(60000);
+		ce.setObject(cacheObject);
+		cache.addToCacheGroup(s.getId(), ce.getId());
+		cache.add(ce, s);
+		
+		ce = get(cache, 4l, s);
+		assertEquals(cacheObject, ce.getObject());
+		
 		cache.removeCacheGroup(1l);
 		
 		assertEquals(0, cache.getDataBlocksInUse());

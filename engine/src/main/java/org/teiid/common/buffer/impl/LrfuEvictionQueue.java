@@ -60,11 +60,13 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 		return evictionQueue.remove(value.getKey()) != null;
 	}
 	
-	public void touch(V value, boolean initial) {
-		if (!initial) {
-			initial = evictionQueue.remove(value.getKey()) == null;			
-		}
-		recordAccess(value, initial);
+	public boolean add(V value) {
+		return evictionQueue.put(value.getKey(), value) == null;
+	}
+	
+	public void touch(V value) {
+		evictionQueue.remove(value.getKey());
+		recordAccess(value);
 		evictionQueue.put(value.getKey(), value);
 	}
 		
@@ -85,14 +87,13 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 		return null;
 	}
 	
-	protected void recordAccess(V value, boolean initial) {
-		assert Thread.holdsLock(value);
+	/**
+     * Callers should be synchronized on value
+     */
+	public void recordAccess(V value) {
 		CacheKey key = value.getKey();
 		int lastAccess = key.getLastAccess();
 		long currentClock = clock.get();
-		if (initial && lastAccess == 0) {
-			return; //we just want to timestamp this as created and not give it an ordering value
-		}
 		float orderingValue = key.getOrderingValue();
 		orderingValue = computeNextOrderingValue(currentClock, lastAccess,
 				orderingValue);
@@ -128,7 +129,7 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 				break;
 			}
 		}
-		this.maxInterval = i-1;
+		this.maxInterval = 1<<(i-1);
 	}
 	
 }

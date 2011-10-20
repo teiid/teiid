@@ -42,22 +42,12 @@ public class BlockByteBuffer {
 		}
 	}
 
-	private static class BlockInfo {
-		final ByteBuffer bb;
-		final int block;
-		public BlockInfo(ByteBuffer bb, int block) {
-			this.bb = bb;
-			this.block = block;
-		}
-	}
-	
 	private int blockAddressBits;
 	private int segmentAddressBits;
 	private int segmentSize;
 	private int blockSize;
 	private int blockCount;
 	private ThreadLocal<ByteBuffer>[] buffers;
-	private BlockInfo[] bufferCache;
 	
 	/**
 	 * Creates a new {@link BlockByteBuffer} where each buffer segment will be
@@ -88,8 +78,6 @@ public class BlockByteBuffer {
 		if (lastSegmentSize > 0) {
 			buffers[fullSegments] = new ThreadLocalByteBuffer(allocate(lastSegmentSize, direct));
 		}
-		int logSize = 32 - Integer.numberOfLeadingZeros(blockCount);
-		bufferCache = new BlockInfo[Math.min(logSize, 20)];
 	}
 
 	public static ByteBuffer allocate(int size, boolean direct) {
@@ -106,7 +94,7 @@ public class BlockByteBuffer {
 	}
 	
 	/**
-	 * Return a buffer containing the given start byte.
+	 * Return a buffer positioned at the given start byte.
 	 * It is assumed that the caller will handle blocks in
 	 * a thread safe manner.
 	 * @param startIndex
@@ -116,21 +104,12 @@ public class BlockByteBuffer {
 		if (block < 0 || block >= blockCount) {
 			throw new IndexOutOfBoundsException("Invalid block " + block); //$NON-NLS-1$
 		}
-		int cacheIndex = block&(bufferCache.length -1);
-		BlockInfo info = bufferCache[cacheIndex];
-		if (info != null && info.block == block) {
-			info.bb.rewind();
-			return info.bb;
-		}
 		int segment = block>>(segmentAddressBits-blockAddressBits);
 		ByteBuffer bb = buffers[segment].get();
-		bb.limit(bb.capacity());
+		bb.rewind();
 		int position = (block<<blockAddressBits)&(segmentSize-1);
-		bb.position(position);
 		bb.limit(position + blockSize);
-		bb = bb.slice();
-		info = new BlockInfo(bb, block);
-		bufferCache[cacheIndex] = info;
+		bb.position(position);
 		return bb;
 	}
 	

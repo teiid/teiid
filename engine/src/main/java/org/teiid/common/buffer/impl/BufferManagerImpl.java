@@ -203,13 +203,13 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 					old = fastGet(previous, prefersMemory.get(), true);
 				}
 			}
-			CacheKey key = new CacheKey(oid, 0, old!=null?old.getKey().getOrderingValue():0);
+			CacheKey key = new CacheKey(oid, (int)readAttempts.get(), old!=null?old.getKey().getOrderingValue():0);
 			CacheEntry ce = new CacheEntry(key, sizeEstimate, batch, this.ref, false);
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
 				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Add batch to BufferManager", ce.getId(), "with size estimate", ce.getSizeEstimate()); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			cache.addToCacheGroup(id, ce.getId());
-			addMemoryEntry(ce);
+			addMemoryEntry(ce, true);
 			return oid;
 		}
 
@@ -285,7 +285,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 					cache.remove(this.id, batch);
 				}
 				if (retain) {
-					addMemoryEntry(ce);
+					addMemoryEntry(ce, false);
 				}
 			} finally {
 				cache.unlockForLoad(o);
@@ -693,8 +693,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			if (ce == null) {
 				break;
 			}
-			if (!memoryEntries.containsKey(ce.getId())) {
-				continue; //not currently a valid eviction
+			synchronized (ce) {
+				if (!memoryEntries.containsKey(ce.getId())) {
+					continue; //not currently a valid eviction
+				}
 			}
 			boolean evicted = true;
 			try {
@@ -763,7 +765,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 					//there is a minute chance the batch was evicted
 					//this call ensures that we won't leak
 					if (memoryEntries.containsKey(batch)) {
-						evictionQueue.touch(ce, false);
+						evictionQueue.touch(ce);
 					}
 				} else {
 					evictionQueue.remove(ce);
@@ -791,7 +793,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		if (ce != null && ce.getObject() != null) {
 			referenceHit.getAndIncrement();
 			if (retain) {
-				addMemoryEntry(ce);
+				addMemoryEntry(ce, false);
 			} else {
 				BufferManagerImpl.this.remove(ce, false);
 			}
@@ -823,11 +825,15 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		}
 	}
 	
-	void addMemoryEntry(CacheEntry ce) {
+	void addMemoryEntry(CacheEntry ce, boolean initial) {
 		persistBatchReferences();
 		synchronized (ce) {
 			memoryEntries.put(ce.getId(), ce);
-			evictionQueue.touch(ce, true);
+			if (initial) {
+				evictionQueue.add(ce);
+			} else {
+				evictionQueue.touch(ce);
+			}
 		}
 		activeBatchKB.getAndAdd(ce.getSizeEstimate());
 	}

@@ -67,7 +67,7 @@
 			<title>Big Data/Memory</title>
 			<para>Usage of extremely large VM sizes and or datasets requires additional considerations.
 			Teiid has a non-negligible amount of overhead per batch/table page on the order of 100-200 bytes.  Depending on the data types involved each
-			full batch/table page will represent between 64 and 4096 rows.  If you are dealing with datasets with billions of rows and you run into OutOfMemory issues, consider increasing the processor
+			full batch/table page will represent a variable number of rows (a power of two multiple above or below the processor batch size).  If you are dealing with datasets with billions of rows and you run into OutOfMemory issues, consider increasing the processor
 			batch size in the &jboss-beans; file to force the allocation of larger batches and table pages.  If the processor batch size is increased and/or you are dealing with extremely wide result sets (several hundred columns),
 			then the default setting of 8MB for the maxStorageObjectSize in the &jboss-beans; file may be too low.  The sizing for maxStorageObjectSize is terms of serialized size, which will be much
 			closer to the raw data size then the Java memory footprint estimation used for maxReservedKB.  

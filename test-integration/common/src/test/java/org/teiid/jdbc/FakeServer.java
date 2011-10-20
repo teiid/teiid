@@ -130,6 +130,7 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         	BufferServiceImpl bsi = new BufferServiceImpl();
         	bsi.setDiskDirectory(UnitTestUtil.getTestScratchPath());
         	this.dqp.setBufferService(bsi);
+        	bsi.start();
         }
         
         this.dqp.setCacheFactory(new DefaultCacheFactory());
