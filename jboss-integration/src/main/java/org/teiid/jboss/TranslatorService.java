@@ -28,13 +28,15 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 
 class TranslatorService implements Service<VDBTranslatorMetaData> {
 	private VDBTranslatorMetaData translator;
 	
 	final InjectedValue<TranslatorRepository> repositoryInjector = new InjectedValue<TranslatorRepository>();
-	
+	final InjectedValue<VDBStatusChecker> statusCheckerInjector = new InjectedValue<VDBStatusChecker>();
+		
 	public TranslatorService(VDBTranslatorMetaData translator) {
 		this.translator = translator;
 	}
@@ -42,11 +44,13 @@ class TranslatorService implements Service<VDBTranslatorMetaData> {
 	@Override
 	public void start(StartContext context) throws StartException {
 		this.repositoryInjector.getValue().addTranslatorMetadata(this.translator.getName(), this.translator);
+		this.statusCheckerInjector.getValue().translatorAdded(this.translator.getName());
 	}
 
 	@Override
 	public void stop(StopContext context) {
 		this.repositoryInjector.getValue().removeTranslatorMetadata(this.translator.getName());
+		this.statusCheckerInjector.getValue().translatorRemoved(this.translator.getName());
 	}
 
 	@Override

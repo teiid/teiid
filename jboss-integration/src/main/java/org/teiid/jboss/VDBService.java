@@ -234,24 +234,31 @@ class VDBService implements Service<VDBMetaData> {
 
 				String name = model.getSourceTranslatorName(source);
 				ConnectorManager cm = new ConnectorManager(name, model.getSourceConnectionJndiName(source));
-				ExecutionFactory<Object, Object> ef = getExecutionFactory(name, repo, deployment, map, new HashSet<String>());
-				cm.setExecutionFactory(ef);
-				cm.setModelName(model.getName());
-				cmr.addConnectorManager(source, cm);
+				try {
+					ExecutionFactory<Object, Object> ef = getExecutionFactory(name, repo, getTranslatorRepository(), deployment, map, new HashSet<String>());
+					cm.setExecutionFactory(ef);
+					cm.setModelName(model.getName());
+					cmr.addConnectorManager(source, cm);
+				} catch (TranslatorNotFoundException e) {
+					if (e.getCause() != null) {
+						throw new StartException(e.getCause());
+					}
+					throw new StartException(e.getMessage());
+				}
 			}
 		}
 	}
 	
-	private ExecutionFactory<Object, Object> getExecutionFactory(String name, TranslatorRepository repo, VDBMetaData deployment, IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map, HashSet<String> building) throws StartException {
+	static ExecutionFactory<Object, Object> getExecutionFactory(String name, TranslatorRepository vdbRepo, TranslatorRepository repo, VDBMetaData deployment, IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map, HashSet<String> building) throws TranslatorNotFoundException {
 		if (!building.add(name)) {
-			throw new StartException(RuntimePlugin.Util.getString("recursive_delegation", deployment.getName(), deployment.getVersion(), building)); //$NON-NLS-1$
+			throw new TranslatorNotFoundException(RuntimePlugin.Util.getString("recursive_delegation", deployment.getName(), deployment.getVersion(), building)); //$NON-NLS-1$
 		}
-		VDBTranslatorMetaData translator = repo.getTranslatorMetaData(name);
+		VDBTranslatorMetaData translator = vdbRepo.getTranslatorMetaData(name);
 		if (translator == null) {
-			translator = getTranslatorRepository().getTranslatorMetaData(name);
+			translator = repo.getTranslatorMetaData(name);
 		}
 		if (translator == null) {
-			throw new StartException(RuntimePlugin.Util.getString("translator_not_found", deployment.getName(), deployment.getVersion(), name)); //$NON-NLS-1$
+			throw new TranslatorNotFoundException(RuntimePlugin.Util.getString("translator_not_found", deployment.getName(), deployment.getVersion(), name)); //$NON-NLS-1$
 		}
 		try {
 		ExecutionFactory<Object, Object> ef = map.get(translator);
@@ -261,7 +268,7 @@ class VDBService implements Service<VDBMetaData> {
 				DelegatingExecutionFactory delegator = (DelegatingExecutionFactory)ef;
 				String delegateName = delegator.getDelegateName();
 				if (delegateName != null) {
-					ExecutionFactory<Object, Object> delegate = getExecutionFactory(delegateName, repo, deployment, map, building);
+					ExecutionFactory<Object, Object> delegate = getExecutionFactory(delegateName, vdbRepo, repo, deployment, map, building);
 					((DelegatingExecutionFactory) ef).setDelegate(delegate);
 				}
 			}
@@ -269,7 +276,7 @@ class VDBService implements Service<VDBMetaData> {
 		}
 		return ef;
 		} catch(TeiidException e) {
-			throw new StartException(e);
+			throw new TranslatorNotFoundException(e);
 		}
 	}
 
@@ -525,6 +532,16 @@ class VDBService implements Service<VDBMetaData> {
 			throw new AdminProcessingException(e);
 		} catch (XMLStreamException e) {
 			throw new AdminProcessingException(e);
+		}
+	}
+	
+	@SuppressWarnings("serial")
+	static class TranslatorNotFoundException extends TeiidException {
+		public TranslatorNotFoundException(String msg) {
+			super(msg);
+		}
+		public TranslatorNotFoundException(Throwable t) {
+			super(t);
 		}
 	}
 }

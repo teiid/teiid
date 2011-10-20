@@ -10,7 +10,7 @@
 	<properties>
 		<ant.version>1.7.0</ant.version>
 		<site.url>http://www.jboss.org/teiid</site.url>
-        <jbossas-version>7.0.1.Final</jbossas-version>
+        <jbossas-version>7.1.0.Alpha1-SNAPSHOT</jbossas-version>
 	</properties>
 	<scm>
         <connection>scm:svn:https://anonsvn.jboss.org/repos/teiid/trunk</connection>

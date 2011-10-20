@@ -220,6 +220,10 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		this.translators.getMap().put(t.getName(), t);
 	}
 	
+	public boolean isOverideTranslator(String name) {
+		return this.translators.getMap().containsKey(name);
+	}
+	
 	@Override
 	public String getDescription() {
 		return this.description;

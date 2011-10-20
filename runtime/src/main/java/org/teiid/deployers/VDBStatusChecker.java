@@ -22,8 +22,9 @@
 package org.teiid.deployers;
 
 import java.util.LinkedList;
+import java.util.concurrent.Executor;
 
-import org.jboss.util.threadpool.ThreadPool;
+import org.jboss.msc.value.InjectedValue;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -36,14 +37,14 @@ import org.teiid.runtime.RuntimePlugin;
 
 
 public class VDBStatusChecker {
-	private static final String JAVA_CONTEXT = "java:"; //$NON-NLS-1$
+	private static final String JAVA_CONTEXT = "java:/"; //$NON-NLS-1$
 	private VDBRepository vdbRepository;
-	private ThreadPool threadPool;
+	private final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
 	
-	public VDBStatusChecker(VDBRepository vdbRepository, ThreadPool threadPool) {
+	public VDBStatusChecker(VDBRepository vdbRepository) {
 		this.vdbRepository = vdbRepository;
-		this.threadPool = threadPool;
 	}
+	
 	public void translatorAdded(String translatorName) {
 		resourceAdded(translatorName, true);
 	}
@@ -113,7 +114,7 @@ public class VDBStatusChecker {
 				if (!runnables.isEmpty()) {
 					//the task themselves will set the status on completion/failure
 					for (Runnable runnable : runnables) {
-						this.threadPool.run(runnable);
+						getExecutor().execute(runnable);
 					}
 				} else if (valid) {
 					vdb.setStatus(VDB.Status.ACTIVE);
@@ -140,7 +141,7 @@ public class VDBStatusChecker {
 							msg = RuntimePlugin.Util.getString("translator_not_found", vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName)); //$NON-NLS-1$
 						}
 						else {
-							msg = RuntimePlugin.Util.getString("datasource_not_found", vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName)); //$NON-NLS-1$
+							msg = RuntimePlugin.Util.getString("datasource_not_found", vdb.getName(), vdb.getVersion(), resourceName); //$NON-NLS-1$
 						}
 						model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
 						LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);					
@@ -168,5 +169,13 @@ public class VDBStatusChecker {
 			}
 		}
 		return null;
+	}
+	
+	public InjectedValue<Executor> getExecutorInjector(){
+		return this.executorInjector;
+	}
+	
+	private Executor getExecutor() {
+		return this.executorInjector.getValue();
 	}
 }

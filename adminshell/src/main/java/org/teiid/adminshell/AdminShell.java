@@ -413,11 +413,4 @@ public class AdminShell {
 			@Doc(text = "method name") String method) {
 		help.help(method);
 	}
-	
-	@Doc(text = "Tell the engine that the given source is available. Pending dynamic vdb metadata loads will be resumed.")
-	public static void markDataSourceAvailable(
-			@Doc(text = "jndi name") String name) throws AdminException {
-		getAdmin().markDataSourceAvailable(name);
-	}
-	
 }

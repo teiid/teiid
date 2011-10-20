@@ -39,7 +39,8 @@ public class TeiidServiceNames {
 	public static ServiceName CACHE_RESULTSET = ServiceName.JBOSS.append("teiid", "cache", "resultset"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	public static ServiceName CACHE_PREPAREDPLAN = ServiceName.JBOSS.append("teiid", "cache", "prepared-plan"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	public static ServiceName OBJECT_REPLICATOR = ServiceName.JBOSS.append("teiid", "object-replicator"); //$NON-NLS-1$ //$NON-NLS-2$
-	
+	public static ServiceName VDB_STATUS_CHECKER = ServiceName.JBOSS.append("teiid", "vdb-status-checker"); //$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName DS_LISTENER_BASE = ServiceName.JBOSS.append("teiid", "ds-listener"); //$NON-NLS-1$ //$NON-NLS-2$
 	
 	public static ServiceName translatorServiceName(String name) {
 		return ServiceName.of(TRANSLATOR_BASE, name);
@@ -55,5 +56,9 @@ public class TeiidServiceNames {
 	
 	public static ServiceName transportServiceName(String name) {
 		return ServiceName.of(TRANSPORT_BASE, name);
+	}
+	
+	public static ServiceName dsListenerServiceName(String name) {
+		return ServiceName.of(DS_LISTENER_BASE, name);
 	}
 }

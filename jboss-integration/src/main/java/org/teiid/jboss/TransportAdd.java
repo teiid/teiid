@@ -43,7 +43,7 @@ import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
 import org.jboss.as.naming.ManagedReferenceFactory;
-import org.jboss.as.naming.NamingStore;
+import org.jboss.as.naming.ServiceBasedNamingStore;
 import org.jboss.as.naming.deployment.ContextNames;
 import org.jboss.as.naming.service.BinderService;
 import org.jboss.as.network.SocketBinding;
@@ -200,7 +200,7 @@ public class TransportAdd extends AbstractAddStepHandler implements DescriptionP
 			final BinderService embedded = new BinderService(bindInfo.getBindName());
 			final ServiceBuilder<?> embeddedBinderBuilder = target.addService(bindInfo.getBinderServiceName(), embedded);
 			embeddedBinderBuilder.addDependency(referenceFactoryServiceName, ManagedReferenceFactory.class, embedded.getManagedObjectInjector());
-			embeddedBinderBuilder.addDependency(bindInfo.getParentContextServiceName(), NamingStore.class, embedded.getNamingStoreInjector());        
+			embeddedBinderBuilder.addDependency(bindInfo.getParentContextServiceName(), ServiceBasedNamingStore.class, embedded.getNamingStoreInjector());        
 			embeddedBinderBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
 				
 			newControllers.add(referenceBuilder.install());

@@ -47,6 +47,7 @@ import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceTarget;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.deployers.TranslatorUtil;
+import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -116,6 +117,7 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
 	        		TranslatorService translatorService = new TranslatorService(metadata);
 	        		ServiceBuilder<VDBTranslatorMetaData> builder = target.addService(TeiidServiceNames.translatorServiceName(metadata.getName()), translatorService);
 	        		builder.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class, translatorService.repositoryInjector);
+	        		builder.addDependency(TeiidServiceNames.VDB_STATUS_CHECKER, VDBStatusChecker.class, translatorService.statusCheckerInjector);
 	        		newControllers.add(builder.setInitialMode(ServiceController.Mode.ACTIVE).install());
 	                added = true;
         		}

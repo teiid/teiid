@@ -27,6 +27,8 @@ import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.UnknownHostException;
 import java.util.*;
 
@@ -41,6 +43,8 @@ import org.jboss.as.cli.operation.impl.DefaultOperationRequestBuilder;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.protocol.old.StreamUtils;
 import org.jboss.dmr.ModelNode;
+import org.jboss.dmr.ModelType;
+import org.teiid.adminapi.PropertyDefinition.RestartType;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.impl.*;
 import org.teiid.adminapi.impl.VDBMetadataMapper.RequestMetadataMapper;
@@ -187,23 +191,10 @@ public class AdminFactory {
 			}
 		}
 		
-		private void createConnectionFactoryRequest(String deploymentName,	String templateName, Properties properties)	throws AdminException {
-			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
-			try {
-				builder.operationName("add");
-				builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
-				builder.addNode("resource-adapter", templateName); //$NON-NLS-1$
-				
-				builder.addProperty("archive", templateName);
-				builder.addProperty("transaction-support", properties.getProperty("transaction-support", "NoTransaction"));
-				properties.remove("transaction-support");
-				
-				
-			} catch (OperationFormatException e) {
-				throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
-			}
-            
-            
+		private void createConnectionFactoryRequest(String deploymentName,	String templateName, Properties properties, DefaultOperationRequestBuilder builder)	throws AdminException {
+			builder.addProperty("archive", templateName);
+			builder.addProperty("transaction-support", properties.getProperty("transaction-support", "NoTransaction"));
+			properties.remove("transaction-support");
 		}
 
 		@Override
@@ -223,9 +214,10 @@ public class AdminFactory {
 	        	else if (templateName.equals("resource-adapters")) {
 		            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
 		            builder.addNode("resource-adapter", deploymentName); //$NON-NLS-1$
+		            createConnectionFactoryRequest(deploymentName, templateName, properties, builder);
 	        	}
 	        	
-	            builder.operationName("add"); 
+	            builder.setOperationName("add"); 
 	            request = builder.buildRequest();
 	            
 	            builder.addProperty("jndi-name", "java:/"+deploymentName);
@@ -433,7 +425,7 @@ public class AdminFactory {
 		        try {
 		            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
 		            builder.addNode("resource-adapter", resource); //$NON-NLS-1$ //$NON-NLS-2$
-		            builder.operationName("read-resource"); 
+		            builder.setOperationName("read-resource"); 
 		            ModelNode request = builder.buildRequest();
 		            
 		            ModelNode outcome = this.connection.execute(request);
@@ -490,7 +482,7 @@ public class AdminFactory {
 		
 		@Override
 		public WorkerPoolStatistics getWorkerPoolStats() throws AdminException {
-			final ModelNode request = buildEngineRequest("workerpool-statistics");//$NON-NLS-1$
+			final ModelNode request = buildRequest("teiid", "workerpool-statistics");//$NON-NLS-1$
 			if (request != null) {
 		        try {
 		            ModelNode outcome = this.connection.execute(request);
@@ -510,7 +502,7 @@ public class AdminFactory {
 		
 		@Override
 		public void cancelRequest(String sessionId, long executionId) throws AdminException {
-			final ModelNode request = buildEngineRequest("terminate-session", "session", sessionId, "execution-id", String.valueOf(executionId));//$NON-NLS-1$
+			final ModelNode request = buildRequest("teiid", "terminate-session", "session", sessionId, "execution-id", String.valueOf(executionId));//$NON-NLS-1$
 			if (request == null) {
 				return;
 			}
@@ -526,7 +518,7 @@ public class AdminFactory {
 		
 		@Override
 		public Collection<? extends Request> getRequests() throws AdminException {
-			final ModelNode request = buildEngineRequest("list-requests");//$NON-NLS-1$
+			final ModelNode request = buildRequest("teiid", "list-requests");//$NON-NLS-1$
 			if (request != null) {
 		        try {
 		            ModelNode outcome = this.connection.execute(request);
@@ -542,7 +534,7 @@ public class AdminFactory {
 
 		@Override
 		public Collection<? extends Request> getRequestsForSession(String sessionId) throws AdminException {
-			final ModelNode request = buildEngineRequest("requests-per-session", "session", sessionId);//$NON-NLS-1$
+			final ModelNode request = buildRequest("teiid", "requests-per-session", "session", sessionId);//$NON-NLS-1$
 			if (request != null) {
 		        try {
 		            ModelNode outcome = this.connection.execute(request);
@@ -558,7 +550,7 @@ public class AdminFactory {
 
 		@Override
 		public Collection<? extends Session> getSessions() throws AdminException {
-			final ModelNode request = buildEngineRequest("list-sessions");//$NON-NLS-1$
+			final ModelNode request = buildRequest("teiid", "list-sessions");//$NON-NLS-1$
 			if (request != null) {
 		        try {
 		            ModelNode outcome = this.connection.execute(request);
@@ -572,15 +564,133 @@ public class AdminFactory {
 	        return Collections.emptyList();
 		}
 
-		@Override
+		/**
+		 * pattern on CLI
+		 * /subsystem=datasources/data-source=foo:read-resource-description
+		 */
+		@Override		
 		public Collection<PropertyDefinition> getTemplatePropertyDefinitions(String templateName) throws AdminException {
-			// rameshTODO Auto-generated method stub
-			return null;
+			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+			ModelNode request = null;
+			try {
+				//	data-source,xa-data-source,resource-adapters
+	        	if (templateName.equals("data-source")) {
+		            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
+		            builder.addNode("data-source", "any"); //$NON-NLS-1$	        		
+	        	}
+	        	else if (templateName.equals("xa-data-source")) {
+		            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
+		            builder.addNode("xa-data-source", "any"); //$NON-NLS-1$	        		
+	        	}
+	        	else {
+		            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
+		            builder.addNode("resource-adapter", templateName); //$NON-NLS-1$
+	        	}
+	        	
+	            builder.setOperationName("read-resource-description"); 
+	            request = builder.buildRequest();
+	        } catch (OperationFormatException e) {
+	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
+	        }
+        
+			ModelNode result = null;
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            if (!Util.isSuccess(outcome)) {
+	                throw new AdminProcessingException(Util.getFailureDescription(outcome));
+	            }
+	            result = outcome.get("result");
+	        } catch (IOException e) {
+	        	throw new AdminProcessingException(e);
+	        }	
+	        
+	        ArrayList<PropertyDefinition> propDefinitions = new ArrayList<PropertyDefinition>();
+	        List<ModelNode> propsNodes = null;
+        	if (templateName.equals("data-source") || templateName.equals("xa-data-source")) {
+        		propsNodes = result.get("attributes").asList();
+        	}
+        	else {
+        		propsNodes = result.get("connection-definitions", "attributes").asList();
+        	}	 
+        	
+        	for (ModelNode node:propsNodes) {
+        		PropertyDefinitionMetadata def = new PropertyDefinitionMetadata();
+        		Set<String> keys = node.keys();
+        		
+        		String name = keys.iterator().next();
+        		def.setName(name);
+        		node = node.get(name);
+
+        		if (node.hasDefined("description")) {
+        			def.setDescription(node.get("description").asString());
+        		}
+        		
+        		if (node.hasDefined("required")) {
+        			def.setRequired(node.get("required").asBoolean());
+        		}
+        		
+        		if (node.hasDefined("access-type")) {
+        			String access = node.get("access-type").asString();
+        			if ("read-only".equals(access)) {
+        				def.setModifiable(false);
+        			}
+        			else if ("read-write".equals(access)) {
+        				def.setModifiable(true);
+        			}
+        		}
+        		
+        		if (node.hasDefined("restart-required")) {
+        			def.setRequiresRestart(RestartType.CLUSTER);
+        		}
+
+        		String type = node.get("type").asString();
+        		if (ModelType.STRING.name().equals(type)) {
+        			def.setPropertyTypeClassName(String.class.getName());
+        		}
+        		else if (ModelType.INT.name().equals(type)) {
+        			def.setPropertyTypeClassName(Integer.class.getName());
+        		}
+        		else if (ModelType.LONG.name().equals(type)) {
+        			def.setPropertyTypeClassName(Long.class.getName());
+        		}        		
+        		else if (ModelType.BOOLEAN.name().equals(type)) {
+        			def.setPropertyTypeClassName(Boolean.class.getName());
+        		}
+        		else if (ModelType.BIG_INTEGER.name().equals(type)) {
+        			def.setPropertyTypeClassName(BigInteger.class.getName());
+        		}        		
+        		else if (ModelType.BIG_DECIMAL.name().equals(type)) {
+        			def.setPropertyTypeClassName(BigDecimal.class.getName());
+        		}     
+        		
+        		if (node.hasDefined("default")) {
+            		if (ModelType.STRING.name().equals(type)) {
+            			def.setDefaultValue(node.get("default").asString());
+            		}
+            		else if (ModelType.INT.name().equals(type)) {
+            			def.setDefaultValue(node.get("default").asInt());
+            		}
+            		else if (ModelType.LONG.name().equals(type)) {
+            			def.setDefaultValue(node.get("default").asLong());
+            		}        		
+            		else if (ModelType.BOOLEAN.name().equals(type)) {
+            			def.setDefaultValue(node.get("default").asBoolean());
+            		}
+            		else if (ModelType.BIG_INTEGER.name().equals(type)) {
+            			def.setDefaultValue(node.get("default").asBigInteger());
+            		}        		
+            		else if (ModelType.BIG_DECIMAL.name().equals(type)) {
+            			def.setDefaultValue(node.get("default").asBigDecimal());
+            		}          			
+        		}
+        		propDefinitions.add(def);
+        	}
+        	return propDefinitions;
 		}
 
 		@Override
 		public Collection<? extends Transaction> getTransactions() throws AdminException {
-			final ModelNode request = buildEngineRequest("list-transactions");//$NON-NLS-1$
+			final ModelNode request = buildRequest("teiid", "list-transactions");//$NON-NLS-1$
 			if (request != null) {
 		        try {
 		            ModelNode outcome = this.connection.execute(request);
@@ -596,7 +706,7 @@ public class AdminFactory {
 		
 		@Override
 		public void terminateSession(String sessionId) throws AdminException {
-			final ModelNode request = buildEngineRequest("terminate-session", "session", sessionId);//$NON-NLS-1$
+			final ModelNode request = buildRequest("teiid", "terminate-session", "session", sessionId);//$NON-NLS-1$
 			if (request == null) {
 				return;
 			}
@@ -612,7 +722,7 @@ public class AdminFactory {
 
 		@Override
 		public void terminateTransaction(String transactionId) throws AdminException {
-			final ModelNode request = buildEngineRequest("terminate-transaction", "xid", transactionId);//$NON-NLS-1$
+			final ModelNode request = buildRequest("teiid", "terminate-transaction", "xid", transactionId);//$NON-NLS-1$
 			if (request == null) {
 				return;
 			}
@@ -662,20 +772,20 @@ public class AdminFactory {
 	        return Collections.emptyList();
 		}
 		
-	    private List<String> getEngines(ModelControllerClient client) {
+	    public List<String> getTransports() {
 	        DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 	        final ModelNode request;
 	        try {
 	        	builder.addNode("subsystem", "teiid"); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.operationName("read-children-names");
-	            builder.addProperty("child-type", "query-engine");
+	            builder.setOperationName("read-children-names");
+	            builder.addProperty("child-type", "transport");
 	            request = builder.buildRequest();
 	        } catch (OperationFormatException e) {
 	            throw new IllegalStateException("Failed to build operation", e);
 	        }
 
 	        try {
-	            ModelNode outcome = client.execute(request);
+	            ModelNode outcome = this.connection.execute(request);
 	            if (Util.isSuccess(outcome)) {
 	                return Util.getList(outcome);
 	            }
@@ -685,41 +795,12 @@ public class AdminFactory {
 	        return Collections.emptyList();
 	    }		
 		
-		private ModelNode buildEngineRequest(String operationName, String... params) {
-			ModelNode composite = new ModelNode();
-	        composite.get("operation").set("composite");
-	        composite.get("address").setEmptyList();
-	        ModelNode steps = composite.get("steps");
-	        
-			List<String> engines = getEngines(this.connection);
-			
-			for (String engine:engines) {
-				DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
-		        final ModelNode request;
-		        try {
-		            builder.addNode("subsystem", "teiid"); //$NON-NLS-1$ //$NON-NLS-2$
-		            builder.addNode("query-engine", engine); //$NON-NLS-1$ //$NON-NLS-2$
-		            builder.operationName(operationName); 
-		            request = builder.buildRequest();
-		            if (params != null && params.length % 2 == 0) {
-		            	for (int i = 0; i < params.length; i+=2) {
-		            		builder.addProperty(params[i], params[i+1]);
-		            	}
-		            }
-		           steps.add(request);
-		        } catch (OperationFormatException e) {
-		            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
-		        }
-			}
-			return composite;
-		}		
-
 		private ModelNode buildRequest(String subsystem, String operationName, String... params) {
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 	        final ModelNode request;
 	        try {
 	            builder.addNode("subsystem", subsystem); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.operationName(operationName); 
+	            builder.setOperationName(operationName); 
 	            request = builder.buildRequest();
 	            if (params != null && params.length % 2 == 0) {
 	            	for (int i = 0; i < params.length; i+=2) {
@@ -801,12 +882,6 @@ public class AdminFactory {
 	        }
 
 	        return Collections.emptySet();
-		}
-
-		@Override
-		public void markDataSourceAvailable(String jndiName) throws AdminException {
-			// rameshTODO Auto-generated method stub
-			
 		}
 
 		@Override

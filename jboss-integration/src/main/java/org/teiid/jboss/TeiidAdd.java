@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.ServiceLoader;
+import java.util.concurrent.Executor;
 
 import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
@@ -66,6 +67,7 @@ import org.teiid.cache.jboss.ClusterableCacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.deployers.SystemVDBDeployer;
 import org.teiid.deployers.VDBRepository;
+import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.process.AuthorizationValidator;
 import org.teiid.dqp.internal.process.CachedResults;
@@ -190,6 +192,18 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	VDBRepositoryService vdbRepositoryService = new VDBRepositoryService(vdbRepository);
     	newControllers.add(target.addService(TeiidServiceNames.VDB_REPO, vdbRepositoryService).install());
 		
+    	// VDB Status manager
+    	final VDBStatusChecker statusChecker = new VDBStatusChecker(vdbRepository);
+    	ValueService<VDBStatusChecker> statusService = new ValueService<VDBStatusChecker>(new org.jboss.msc.value.Value<VDBStatusChecker>() {
+			@Override
+			public VDBStatusChecker getValue() throws IllegalStateException, IllegalArgumentException {
+				return statusChecker;
+			}
+    	});
+    	ServiceBuilder<VDBStatusChecker> statusBuilder = target.addService(TeiidServiceNames.VDB_STATUS_CHECKER, statusService);
+    	statusBuilder.addDependency(TeiidServiceNames.executorServiceName(asyncThreadPoolName), Executor.class,  statusChecker.getExecutorInjector());
+    	newControllers.add(statusBuilder.install());    	
+    	
     	// System VDB Service
     	SystemVDBDeployer systemVDB = new SystemVDBDeployer();
     	systemVDB.setVDBRepository(vdbRepository);
@@ -307,7 +321,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 				processorTarget.addDeploymentProcessor(Phase.STRUCTURE, Phase.STRUCTURE_WAR_DEPLOYMENT_INIT|0x0001,new VDBStructureDeployer());
 				processorTarget.addDeploymentProcessor(Phase.PARSE, Phase.PARSE_WEB_DEPLOYMENT|0x0001, new VDBParserDeployer());
 				processorTarget.addDeploymentProcessor(Phase.DEPENDENCIES, Phase.DEPENDENCIES_WAR_MODULE|0x0001, new VDBDependencyDeployer());
-				processorTarget.addDeploymentProcessor(Phase.INSTALL, Phase.INSTALL_WAR_DEPLOYMENT|0x0001, new VDBDeployer(translatorRepo, asyncThreadPoolName));            			
+				processorTarget.addDeploymentProcessor(Phase.INSTALL, Phase.INSTALL_WAR_DEPLOYMENT|0x0001, new VDBDeployer(translatorRepo, asyncThreadPoolName, statusChecker));            			
 			}
         	
         }, OperationContext.Stage.RUNTIME);    	
