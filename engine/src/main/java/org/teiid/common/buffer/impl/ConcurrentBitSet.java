@@ -180,7 +180,7 @@ public class ConcurrentBitSet {
 	}
 	
 	/**
-	 * Set to try to always allocate against the first available block in a segment.
+	 * Set to always allocate against the first available block in a segment.
 	 * @param compact
 	 */
 	public void setCompact(boolean compact) {

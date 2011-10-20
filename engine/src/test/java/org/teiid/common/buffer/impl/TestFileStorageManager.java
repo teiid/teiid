@@ -59,6 +59,25 @@ public class TestFileStorageManager {
         store.remove();
         assertEquals(0, sm.getUsedBufferSpace());
     }
+    
+    @Test public void testPositionalWrite() throws Exception {
+        FileStorageManager sm = getStorageManager(null, null);        
+        String tsID = "0";     //$NON-NLS-1$
+        FileStore store = sm.createFileStore(tsID);
+        byte[] expectedBytes = writeBytes(store, 2048);
+        assertEquals(4096, sm.getUsedBufferSpace());
+        
+        writeBytes(store, 4096);
+        assertEquals(6144, sm.getUsedBufferSpace());
+        
+        byte[] bytesRead = new byte[2048];        
+        store.readFully(2048, bytesRead, 0, bytesRead.length);
+        
+        assertArrayEquals(expectedBytes, bytesRead);
+        
+        store.remove();
+        assertEquals(0, sm.getUsedBufferSpace());
+    }
             
     @Test(expected=IOException.class) public void testMaxSpace() throws Exception {
     	FileStorageManager sm = getStorageManager(null, null); 
@@ -81,15 +100,19 @@ public class TestFileStorageManager {
 
     static Random r = new Random();
     
-	static void writeBytes(FileStore store)
+	static void writeBytes(FileStore store) throws IOException {
+		writeBytes(store, store.getLength());
+	}
+
+	static byte[] writeBytes(FileStore store, long start)
 			throws IOException {
 		byte[] bytes = new byte[2048];
         r.nextBytes(bytes);
-        long start = store.getLength(); 
-        store.write(bytes, 0, bytes.length);
+        store.write(start, bytes, 0, bytes.length);
         byte[] bytesRead = new byte[2048];        
         store.readFully(start, bytesRead, 0, bytesRead.length);
         assertTrue(Arrays.equals(bytes, bytesRead));
+        return bytes;
 	}
     
     @Test public void testWritingMultipleFiles() throws Exception {

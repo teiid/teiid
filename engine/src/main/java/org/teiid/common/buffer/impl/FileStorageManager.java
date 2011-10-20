@@ -133,11 +133,10 @@ public class FileStorageManager implements StorageManager {
 	            if (bytesUsed > 0) {
 		    		long used = usedBufferSpace.addAndGet(bytesUsed);
 					if (used > maxBufferSpace) {
-						usedBufferSpace.addAndGet(-bytesUsed);
 						//TODO: trigger a compaction before this is thrown
 						throw new IOException(QueryPlugin.Util.getString("FileStoreageManager.space_exhausted", maxBufferSpace)); //$NON-NLS-1$
 					}
-	            	fileAccess.setLength(bytesUsed);
+	            	fileAccess.setLength(newLength);
 	            	bytesUsed = 0;
 	            }
 	            fileAccess.seek(fileOffset);

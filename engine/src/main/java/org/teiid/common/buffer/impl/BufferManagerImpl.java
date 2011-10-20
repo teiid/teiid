@@ -323,7 +323,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		}
 	}
 
-	static final int CONCURRENCY_LEVEL = 32; //TODO: make this configurable
+	static final int CONCURRENCY_LEVEL = 32; //TODO: make this configurable since it is roughly the same as max active plans
 	private static final int TARGET_BYTES_PER_ROW = 1 << 11; //2k bytes per row
 	private static ReferenceQueue<CacheEntry> SOFT_QUEUE = new ReferenceQueue<CacheEntry>();
 	

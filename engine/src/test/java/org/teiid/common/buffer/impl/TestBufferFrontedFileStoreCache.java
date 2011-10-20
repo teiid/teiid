@@ -188,4 +188,26 @@ public class TestBufferFrontedFileStoreCache {
 		return fsc;
 	}
 	
+	@Test public void testSizeIndex() throws Exception {
+		PhysicalInfo info = new PhysicalInfo(1l, 1l, -1, 0);
+		info.setSize(1<<13);
+		assertEquals(0, info.sizeIndex);
+		
+		info = new PhysicalInfo(1l, 1l, -1, 0);
+		info.setSize(1 + (1<<13));
+		assertEquals(1, info.sizeIndex);
+
+		info = new PhysicalInfo(1l, 1l, -1, 0);
+		info.setSize(2 + (1<<15));
+		assertEquals(3, info.sizeIndex);
+	}
+	
+	@Test(expected=Exception.class) public void testSizeChanged() throws Exception {
+		PhysicalInfo info = new PhysicalInfo(1l, 1l, -1, 0);
+		info.setSize(1<<13);
+		assertEquals(0, info.sizeIndex);
+		
+		info.setSize(1 + (1<<13));
+	}
+	
 }

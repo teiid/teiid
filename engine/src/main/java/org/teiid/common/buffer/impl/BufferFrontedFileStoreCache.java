@@ -405,12 +405,9 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 		List<BlockStore> stores = new ArrayList<BlockStore>();
 		int size = BLOCK_SIZE;
 		do {
-			if ((size>>1) >= maxStorageObjectSize) {
-				size>>=1;  //adjust the last block size if needed
-			}
-			stores.add(new BlockStore(this.storageManager, size, 15, BufferManagerImpl.CONCURRENCY_LEVEL>>2));
-			size <<=2;
-		} while (size>>2 < maxStorageObjectSize);
+			stores.add(new BlockStore(this.storageManager, size, 30, BufferManagerImpl.CONCURRENCY_LEVEL));
+			size <<=1;
+		} while ((size>>1) < maxStorageObjectSize);
 		this.sizeBasedStores = stores.toArray(new BlockStore[stores.size()]);
 	}
 	
@@ -503,7 +500,6 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 			}
 		} catch (Throwable e) {
 			if (e == PhysicalInfo.sizeChanged) {
-				//System.out.println("size changed " + info.inode + " " + info.block + " " + info);
 				//entries are mutable after adding, the original should be removed shortly so just ignore
 				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Object "+ entry.getId() +" changed size since first persistence, keeping the original."); //$NON-NLS-1$ //$NON-NLS-2$
 			} else {
@@ -587,7 +583,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 						LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Getting object at inode", info.inode, serializer.getId(), oid); //$NON-NLS-1$
 					}
 					BlockManager manager = getBlockManager(serializer.getId(), oid, info.inode);
-					is = new BlockInputStream(manager, info.memoryBlockCount, info.evicting);
+					is = new BlockInputStream(manager, info.memoryBlockCount);
 				} else if (info.block != EMPTY_ADDRESS) {
 					memoryBufferEntries.recordAccess(info);
 					storageReads.incrementAndGet();
@@ -720,7 +716,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 		try {
 			if (demote && block == EMPTY_ADDRESS) {
 				storageWrites.getAndIncrement();
-				BlockInputStream is = new BlockInputStream(bm, memoryBlockCount, false); //we know this can always be single threaded
+				BlockInputStream is = new BlockInputStream(bm, memoryBlockCount); 
 				BlockStore blockStore = sizeBasedStores[sizeIndex];
 				block = getAndSetNextClearBit(blockStore);
 				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
@@ -930,9 +926,9 @@ final class PhysicalInfo extends BaseCacheEntry {
 			return; //no changes
 		}
 		this.memoryBlockCount = newMemoryBlockCount;
-		while (newMemoryBlockCount >= 1) {
+		while (newMemoryBlockCount > 1) {
 			this.sizeIndex++;
-			newMemoryBlockCount>>=2;
+			newMemoryBlockCount = (newMemoryBlockCount>>1) + ((newMemoryBlockCount&0x01)==0?0:1);
 		}
 	}
 	
