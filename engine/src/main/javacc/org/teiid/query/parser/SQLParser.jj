@@ -3588,6 +3588,7 @@ Expression function(ParseInfo info) :
     
 	Expression expression = null;
 	ArrayList args = new ArrayList(2);
+	ArrayList otherArgs = null;
 	Token funcToken = null;
 }
 {
@@ -3620,14 +3621,14 @@ Expression function(ParseInfo info) :
 		<RPAREN>				
 	)
 	|
-	LOOKAHEAD(4, {getToken(1).image.equalsIgnoreCase("SUBSTRING")}) (
+	LOOKAHEAD(2, {getToken(1).image.equalsIgnoreCase("SUBSTRING")}) (
 	   funcName = nonReserved("SUBSTRING")
 	   <LPAREN>
 	   expression = expression(info)
 	   {
 	      args.add(expression);
 	   }
-	   <FROM> expression = expression(info)
+	   ((<FROM> expression = expression(info)
 	   {
 	      args.add(expression);
 	   }
@@ -3635,7 +3636,7 @@ Expression function(ParseInfo info) :
 	    {
 	      args.add(expression);
 	    }
-	   ]
+	   ])|(<COMMA> otherArgs = expressionList(info)) {args.addAll(otherArgs);})
 	   <RPAREN>
 	)
 	|

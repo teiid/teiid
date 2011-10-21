@@ -6862,5 +6862,11 @@ public class TestParser {
     @Test public void testTrim1() {
     	helpException("select trim('xy' from e1) from pm1.g1");
     }
+    
+    @Test public void testSubString() throws QueryParserException {
+		Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT substring(RTRIM(MED.BATDAT), 4, 4) FROM FCC.MEDMAS AS MED", new ParseInfo());
+		String actualString = actualCommand.toString();
+		assertEquals("SELECT substring(RTRIM(MED.BATDAT), 4, 4) FROM FCC.MEDMAS AS MED", actualString);
+    }
 
 }
