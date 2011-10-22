@@ -20,31 +20,50 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.common.buffer.impl;
+package org.teiid.common.buffer;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 
-import org.teiid.common.buffer.ExtensibleBufferedInputStream;
-
-/**
- * TODO: support freeing of datablocks as we go
- */
-final class BlockInputStream extends ExtensibleBufferedInputStream {
-	private final BlockManager manager;
-	private final int maxBlock;
-	int blockIndex;
-
-	BlockInputStream(BlockManager manager, int blockCount) {
-		this.manager = manager;
-		this.maxBlock = blockCount;
-	}
+public abstract class ExtensibleBufferedInputStream extends InputStream {
+	ByteBuffer buf;
 
 	@Override
-	protected ByteBuffer nextBuffer() {
-		if (maxBlock == blockIndex) {
-			return null;
+	public int read() throws IOException {
+		if (!ensureBytes()) {
+			return -1;
 		}
-		return manager.getBlock(blockIndex++);
+		return buf.get() & 0xff;
+	}
+
+	private boolean ensureBytes() throws IOException {
+		if (buf == null || buf.remaining() == 0) {
+			buf = nextBuffer();
+			if (buf == null) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	protected abstract ByteBuffer nextBuffer() throws IOException;
+
+	@Override
+	public int read(byte[] b, int off, int len) throws IOException {
+		if (!ensureBytes()) {
+			return -1;
+		}
+		len = Math.min(len, buf.remaining());
+		buf.get(b, off, len);
+		return len;
+	}
+	
+	@Override
+	public void reset() throws IOException {
+		if (buf != null) {
+			buf.rewind();
+		}
 	}
 	
 }

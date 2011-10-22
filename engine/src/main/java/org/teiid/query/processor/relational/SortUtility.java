@@ -298,7 +298,7 @@ public class SortUtility {
             TupleBuffer merged = createTupleBuffer();
 
             int desiredSpace = activeTupleBuffers.size() * schemaSize;
-            int reserved = Math.min(desiredSpace, this.bufferManager.getMaxProcessingKB());
+            int reserved = Math.min(desiredSpace, Math.max(2*schemaSize, this.bufferManager.getMaxProcessingKB()));
             bufferManager.reserveBuffers(reserved, BufferReserveMode.FORCE);
             if (desiredSpace > reserved) {
             	reserved += bufferManager.reserveAdditionalBuffers(desiredSpace - reserved);

@@ -81,4 +81,34 @@ public class TestConcurrentBitSet {
 		assertEquals(50, bst.getAndSetNextClearBit());
 	}
 	
+	@Test public void testCompactHighest() {
+		ConcurrentBitSet bst = new ConcurrentBitSet(1 << 19, 1);
+		bst.setCompact(true);
+		for (int i = 0; i < bst.getTotalBits(); i++) {
+			bst.getAndSetNextClearBit();
+		}
+		assertEquals(bst.getTotalBits()-1, bst.getHighestBitSet(0));
+		assertEquals(bst.getTotalBits()-1, bst.getHighestBitSet(1));
+		
+		for (int i = bst.getTotalBits()-20; i < bst.getTotalBits(); i++) {
+			bst.clear(i);
+		}
+
+		assertEquals(bst.getTotalBits()-21, bst.compactHighestBitSet(0));
+		
+		for (int i = bst.getTotalBits()-20; i < bst.getTotalBits(); i++) {
+			bst.getAndSetNextClearBit();
+		}
+		
+		assertEquals(-1, bst.getAndSetNextClearBit());
+		
+		for (int i = 20; i < bst.getTotalBits(); i++) {
+			bst.clear(i);
+		}
+		
+		assertEquals(bst.getTotalBits()-1, bst.getHighestBitSet(0));
+		assertEquals(19, bst.compactHighestBitSet(0));
+		
+	}
+	
 }

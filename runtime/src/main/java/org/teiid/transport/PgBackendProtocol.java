@@ -113,19 +113,20 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			while (true) {
 				try {
 			    	nextFuture = rs.submitNext();
-			    	if (!nextFuture.isDone()) {
-				    	nextFuture.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
-				    		@Override
-				    		public void onCompletion(ResultsFuture<Boolean> future) {
-				    			if (processRow(future)) {
-				    				if (rowsSent != rows2Send) {
-				    					//this can be recursive, but ideally won't be called many times 
-				    					ResultsWorkItem.this.run();
-				    				}
-				    			}
-				    		}
-						});
-				    	return;
+			    	synchronized (nextFuture) {
+				    	if (!nextFuture.isDone()) {
+					    	nextFuture.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
+					    		@Override
+					    		public void onCompletion(ResultsFuture<Boolean> future) {
+					    			if (processRow(future)) {
+					    				if (rowsSent != rows2Send) {
+					    					ResultsWorkItem.this.run();
+					    				}
+					    			}
+					    		}
+							});
+					    	return;
+				    	}
 			    	}
 			    	if (!processRow(nextFuture)) {
 			    		break;

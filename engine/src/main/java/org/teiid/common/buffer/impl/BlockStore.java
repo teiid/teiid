@@ -22,8 +22,16 @@
 
 package org.teiid.common.buffer.impl;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.StorageManager;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 
 /**
  * Represents a FileStore that holds blocks of a fixed size.
@@ -32,6 +40,7 @@ class BlockStore {
 	final long blockSize;
 	final ConcurrentBitSet blocksInUse;
 	final FileStore[] stores;
+	final ReentrantReadWriteLock[] locks;
 	
 	public BlockStore(StorageManager storageManager, int blockSize, int blockCountLog, int concurrencyLevel) {
 		this.blockSize = blockSize;
@@ -39,9 +48,50 @@ class BlockStore {
 		this.blocksInUse = new ConcurrentBitSet(blockCount, concurrencyLevel);
 		this.blocksInUse.setCompact(true);
 		this.stores = new FileStore[concurrencyLevel];
+		this.locks = new ReentrantReadWriteLock[concurrencyLevel];
 		for (int i = 0; i < stores.length; i++) {
-			this.stores[i] = storageManager.createFileStore(String.valueOf(blockSize) + '_' + i); 
+			this.stores[i] = storageManager.createFileStore(String.valueOf(blockSize) + '_' + i);
+			this.locks[i] = new ReentrantReadWriteLock();
 		}
+		
+	}
+	
+	int getAndSetNextClearBit(PhysicalInfo info) {
+		int result = blocksInUse.getAndSetNextClearBit();
+		if (result == -1) {
+			throw new TeiidRuntimeException("Out of blocks of size " + blockSize); //$NON-NLS-1$
+		}
+		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+			LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Allocating storage data block", result, "of size", blockSize, "to", info); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+		}
+		return result;
+	}
+	
+	int writeToStorageBlock(PhysicalInfo info,
+			InputStream is) throws IOException {
+		int block = getAndSetNextClearBit(info);
+		int segment = block/blocksInUse.getBitsPerSegment();
+		boolean success = false;
+		//we're using the read lock here so that defrag can lock the write out
+		locks[segment].readLock().lock();
+		try {
+			FileStore fs = stores[segment];
+			long blockOffset = (block%blocksInUse.getBitsPerSegment())*blockSize;
+			byte[] b = new byte[BufferFrontedFileStoreCache.BLOCK_SIZE];
+			int read = 0;
+			while ((read = is.read(b, 0, b.length)) != -1) {
+				fs.write(blockOffset, b, 0, read);
+				blockOffset+=read;
+			}
+			success = true;
+		} finally {
+			locks[segment].readLock().unlock();
+			if (!success) {
+				blocksInUse.clear(block);
+				block = BufferFrontedFileStoreCache.EMPTY_ADDRESS;
+			}
+		}
+		return block;
 	}
 
 }

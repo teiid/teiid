@@ -23,8 +23,8 @@
 package org.teiid.common.buffer.impl;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
@@ -81,6 +81,8 @@ import org.teiid.query.sql.symbol.Expression;
  * 
  * TODO: add detection of pinned batches to prevent unnecessary purging of non-persistent batches
  *       - this is not necessary for already persistent batches, since we hold a weak reference
+ *       
+ * TODO: add a pre-fetch for tuplebuffers or some built-in correlation logic with the queue.      
  */
 public class BufferManagerImpl implements BufferManager, StorageManager {
 
@@ -214,7 +216,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		}
 
 		@Override
-		public List<? extends List<?>> deserialize(ObjectInputStream ois)
+		public List<? extends List<?>> deserialize(ObjectInput ois)
 				throws IOException, ClassNotFoundException {
 			List<? extends List<?>> batch = BatchSerializer.readBatch(ois, types);
 			if (lobManager != null) {
@@ -231,7 +233,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		
 		@Override
 		public void serialize(List<? extends List<?>> obj,
-				ObjectOutputStream oos) throws IOException {
+				ObjectOutput oos) throws IOException {
 			int expectedModCount = 0;
 			ResizingArrayList<?> list = null;
 			if (obj instanceof ResizingArrayList<?>) {
@@ -626,7 +628,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				} else {
 					waitCount >>= 1;
 				}
-		    	int result = noWaitReserve(additional - committed);
+		    	int result = noWaitReserve(additional - committed, false);
 		    	committed += result;
 	    	}	
 	    	return committed;
@@ -645,16 +647,19 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     	if (mode == BufferReserveMode.FORCE) {
     		this.reserveBatchKB.addAndGet(-count);
     	} else {
-    		result = noWaitReserve(count);
+    		result = noWaitReserve(count, true);
     	}
     	reservedByThread.set(reservedByThread.get() + result);
 		persistBatchReferences();
     	return result;
     }
 
-	private int noWaitReserve(int count) {
+	private int noWaitReserve(int count, boolean allOrNothing) {
 		for (int i = 0; i < 2; i++) {
 			int reserveBatch = this.reserveBatchKB.get();
+			if (allOrNothing && count > reserveBatch) {
+				return 0;
+			}
 			count = Math.min(count, Math.max(0, reserveBatch));
 			if (count == 0) {
 				return 0;
@@ -828,8 +833,11 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	void addMemoryEntry(CacheEntry ce, boolean initial) {
 		persistBatchReferences();
 		synchronized (ce) {
-			memoryEntries.put(ce.getId(), ce);
+			boolean added = memoryEntries.put(ce.getId(), ce) == null;
 			if (initial) {
+				evictionQueue.add(ce);
+			} else if (added) {
+				evictionQueue.recordAccess(ce);
 				evictionQueue.add(ce);
 			} else {
 				evictionQueue.touch(ce);

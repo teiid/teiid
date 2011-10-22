@@ -25,8 +25,8 @@ package org.teiid.common.buffer.impl;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.lang.ref.WeakReference;
 
 import org.junit.Test;
@@ -38,7 +38,7 @@ public class TestBufferFrontedFileStoreCache {
 	
 	private final class SimpleSerializer implements Serializer<Integer> {
 		@Override
-		public Integer deserialize(ObjectInputStream ois)
+		public Integer deserialize(ObjectInput ois)
 				throws IOException, ClassNotFoundException {
 			Integer result = ois.readInt();
 			for (int i = 0; i < result; i++) {
@@ -53,7 +53,7 @@ public class TestBufferFrontedFileStoreCache {
 		}
 
 		@Override
-		public void serialize(Integer obj, ObjectOutputStream oos)
+		public void serialize(Integer obj, ObjectOutput oos)
 				throws IOException {
 			oos.writeInt(obj);
 			for (int i = 0; i < obj; i++) {

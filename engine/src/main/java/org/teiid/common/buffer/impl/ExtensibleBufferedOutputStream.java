@@ -37,17 +37,18 @@ public abstract class ExtensibleBufferedOutputStream extends OutputStream {
     
     public void write(int b) throws IOException {
     	ensureBuffer();
-		if (buf.remaining() == 0) {
-		    flush();
-		}
 		buf.put((byte)b);
     }
 
-	private void ensureBuffer() {
-		if (buf == null) {
-    		buf = newBuffer();
-    		startPosition = buf.position();
-    	}
+	private void ensureBuffer() throws IOException {
+		if (buf != null) {
+			if (buf.remaining() != 0) {
+				return;
+			}
+			flush();
+		}
+		buf = newBuffer();
+		startPosition = buf.position();
 	}
 
     public void write(byte b[], int off, int len) throws IOException {
@@ -60,7 +61,6 @@ public abstract class ExtensibleBufferedOutputStream extends OutputStream {
 			if (buf.remaining() > 0) {
 				break;
 			}
-			flush();
     	}
     }
 

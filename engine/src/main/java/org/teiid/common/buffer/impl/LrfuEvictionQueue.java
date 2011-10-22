@@ -34,7 +34,6 @@ import org.teiid.common.buffer.CacheKey;
 /**
  * A Concurrent LRFU eviction queue.  Has assumptions that match buffermanager usage.
  * Null values are not allowed.
- * @param <K>
  * @param <V>
  */
 public class LrfuEvictionQueue<V extends BaseCacheEntry> {
@@ -49,11 +48,13 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
     //TODO: adaptively adjust this value.  more hits should move closer to lru
 	protected double crfLamda;
 	protected double inverseCrfLamda = 1 - crfLamda;
-	protected int maxInterval;
+	protected int maxInterval; //don't consider the old ordering value after the maxInterval
+	protected int minInterval; //cap the frequency gain under this interval (we can make some values too hot otherwise)
+	private float minVal;
 	
 	public LrfuEvictionQueue(AtomicLong clock) {
 		this.clock = clock;
-		setCrfLamda(.0002);
+		setCrfLamda(.00005); //smaller values tend to work better since we're using interval bounds
 	}
 
 	public boolean remove(V value) {
@@ -110,7 +111,7 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 		long delta = currentTime - longLastAccess;
 		orderingValue = 
 			(float) (//Frequency component
-			(delta>maxInterval?0:orderingValue*Math.pow(inverseCrfLamda, delta))
+			(delta<maxInterval?(delta<minInterval?minVal:Math.pow(inverseCrfLamda, delta)):0)*orderingValue
 			//recency component
 			+ Math.pow(currentTime, crfLamda));
 		return orderingValue;
@@ -125,8 +126,13 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 		this.inverseCrfLamda = 1 - crfLamda;
 		int i = 0;
 		for (; i < 30; i++) {
-			if ((float)Math.pow(inverseCrfLamda, 1<<i) == 0) {
+			float val = (float)Math.pow(inverseCrfLamda, 1<<i);
+			if (val == 0) {
 				break;
+			}
+			if (val > .8) {
+				minInterval = 1<<i;
+				this.minVal = val;
 			}
 		}
 		this.maxInterval = 1<<(i-1);

@@ -33,6 +33,7 @@ import org.teiid.core.util.Assertion;
  */
 public class ConcurrentBitSet {
 	
+	private static final int CONCURRENT_MODIFICATION = -2;
 	private static final int ADDRESS_BITS_PER_TOP_VALUE = 18;
 	private static final int MAX_TOP_VALUE = 1 << ADDRESS_BITS_PER_TOP_VALUE;
 	
@@ -40,6 +41,7 @@ public class ConcurrentBitSet {
 		int offset;
 		int maxBits;
 		int startSearch;
+		int highestBitSet = -1;
 		int bitsSet;
 		int[] topVals;
 		final BitSet bitSet;
@@ -58,6 +60,10 @@ public class ConcurrentBitSet {
 	private Segment[] segments;
 	private boolean compact;
 	
+	/**
+	 * @param maxBits
+	 * @param concurrencyLevel - should be a power of 2
+	 */
 	public ConcurrentBitSet(int maxBits, int concurrencyLevel) {
 		Assertion.assertTrue(maxBits > 0);
 		while ((bitsPerSegment = maxBits/concurrencyLevel) < concurrencyLevel) {
@@ -108,10 +114,34 @@ public class ConcurrentBitSet {
 		return counter.getAndIncrement();
 	}
 	
-	public int getAndSetNextClearBit(int start) {
+	/**
+	 * return an estimate of the number of bits set
+	 * @param segment
+	 * @return
+	 */
+	public int getBitsSet(int segment) {
+		Segment s = segments[segment&(segments.length-1)];
+		return s.bitsSet;
+	}
+	
+	/**
+	 * return an estimate of the highest bit (relative index) that has been set
+	 * @param segment
+	 * @return
+	 */
+	public int getHighestBitSet(int segment) {
+		Segment s = segments[segment&(segments.length-1)];
+		return s.highestBitSet;	
+	}
+	
+	/**
+	 * @param segment
+	 * @return the next clear bit index as an absolute index - not relative to a segment
+	 */
+	public int getAndSetNextClearBit(int segment) {
 		int nextBit = -1;
 		for (int i = 0; i < segments.length; i++) {
-			Segment s = segments[(start+i)&(segments.length-1)];
+			Segment s = segments[(segment+i)&(segments.length-1)];
 			synchronized (s) {
 				if (s.bitsSet == s.maxBits) {
 					continue;
@@ -122,7 +152,7 @@ public class ConcurrentBitSet {
 						continue;
 					}
 					if (s.topVals[j] == 0) {
-						if (j == start) {
+						if (j == segment) {
 							nextBit = s.startSearch;
 							break;
 						}
@@ -148,6 +178,7 @@ public class ConcurrentBitSet {
 				s.bitsSet++;
 				s.bitSet.set(nextBit);
 				s.startSearch = nextBit + 1;
+				s.highestBitSet = Math.max(s.highestBitSet, nextBit);
 				if (s.startSearch == s.maxBits) {
 					s.startSearch = 0;
 				}
@@ -185,6 +216,86 @@ public class ConcurrentBitSet {
 	 */
 	public void setCompact(boolean compact) {
 		this.compact = compact;
+	}
+	
+	
+	public int compactHighestBitSet(int segment) {
+		Segment s = segments[segment&(segments.length-1)];
+		//first do an unlocked compact
+		for (int i = 0; i < 3; i++) {
+			int result = tryCompactHighestBitSet(s);
+			if (result != CONCURRENT_MODIFICATION) {
+				return result;
+			}
+		}
+		synchronized (s) {
+			return tryCompactHighestBitSet(s);
+		}
+	}
+
+	private int tryCompactHighestBitSet(Segment s) {
+		int highestBitSet = 0;
+		synchronized (s) {
+			highestBitSet = s.highestBitSet;
+			if (highestBitSet <= 0) {
+				return 0;
+			}
+			if (s.bitSet.get(highestBitSet)) {
+				return highestBitSet;
+			}
+		}
+		int indexSearchStart = highestBitSet >> ADDRESS_BITS_PER_TOP_VALUE;
+		for (int j = indexSearchStart; j >= 0; j--) {
+			if (s.topVals[j] == 0) {
+				if (j==0) {
+					synchronized (s) {
+						if (s.highestBitSet != highestBitSet) {
+							return CONCURRENT_MODIFICATION;
+						}
+						s.highestBitSet = -1;
+					}
+				}
+				continue;
+			}
+			if (s.topVals[j] == MAX_TOP_VALUE) {
+				synchronized (s) {
+					if (s.highestBitSet != highestBitSet) {
+						return CONCURRENT_MODIFICATION;
+					}
+					s.highestBitSet = ((j + 1) * MAX_TOP_VALUE) -1;
+				}
+				break;
+			}
+			int index = j * MAX_TOP_VALUE;
+			int end = index + s.maxBits;
+			if (j == indexSearchStart) {
+				end = highestBitSet;
+			}
+			BitSet bs = s.bitSet;
+			int offset = 0;
+			if (j == indexSearchStart) {
+				bs = s.bitSet.get(index, end); //ensures that we look only at a subset of the words
+				offset = index;
+			}
+			index = index - offset;
+			end = end - offset - 1;
+			while (index < end) {
+				int next = bs.nextSetBit(index);
+				if (next == -1) {
+					index--;
+					break;
+				}
+				index = next + 1;
+			}
+			synchronized (s) {
+				if (s.highestBitSet != highestBitSet) {
+					return CONCURRENT_MODIFICATION;
+				}
+				s.highestBitSet = index + offset;
+				return s.highestBitSet;
+			}
+		}			
+		return -1;
 	}
 	
 }
