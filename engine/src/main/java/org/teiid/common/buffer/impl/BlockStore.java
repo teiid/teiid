@@ -72,11 +72,11 @@ class BlockStore {
 		int block = getAndSetNextClearBit(info);
 		int segment = block/blocksInUse.getBitsPerSegment();
 		boolean success = false;
-		//we're using the read lock here so that defrag can lock the write out
-		locks[segment].readLock().lock();
+		this.locks[segment].writeLock().lock();
 		try {
 			FileStore fs = stores[segment];
 			long blockOffset = (block%blocksInUse.getBitsPerSegment())*blockSize;
+			//TODO: there is still an extra buffer being created here, we could FileChannels to do better
 			byte[] b = new byte[BufferFrontedFileStoreCache.BLOCK_SIZE];
 			int read = 0;
 			while ((read = is.read(b, 0, b.length)) != -1) {
@@ -85,7 +85,7 @@ class BlockStore {
 			}
 			success = true;
 		} finally {
-			locks[segment].readLock().unlock();
+			locks[segment].writeLock().unlock();
 			if (!success) {
 				blocksInUse.clear(block);
 				block = BufferFrontedFileStoreCache.EMPTY_ADDRESS;

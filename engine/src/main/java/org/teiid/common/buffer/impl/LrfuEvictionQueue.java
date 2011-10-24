@@ -54,7 +54,7 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 	
 	public LrfuEvictionQueue(AtomicLong clock) {
 		this.clock = clock;
-		setCrfLamda(.00005); //smaller values tend to work better since we're using interval bounds
+		setCrfLamda(.1); //smaller values tend to work better since we're using interval bounds
 	}
 
 	public boolean remove(V value) {

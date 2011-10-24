@@ -74,7 +74,7 @@ public abstract class ExtensibleBufferedOutputStream extends OutputStream {
 		buf = null;
 	}
 
-	protected abstract ByteBuffer newBuffer();
+	protected abstract ByteBuffer newBuffer() throws IOException;
 	
 	/**
 	 * Flush up to i bytes where i is the current position of the buffer

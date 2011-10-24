@@ -41,10 +41,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.teiid.common.buffer.AutoCleanupUtil;
-import org.teiid.common.buffer.BaseCacheEntry;
 import org.teiid.common.buffer.Cache;
 import org.teiid.common.buffer.CacheEntry;
 import org.teiid.common.buffer.CacheKey;
@@ -96,7 +96,7 @@ import org.teiid.query.QueryPlugin;
  */
 public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, StorageManager {
 	
-	private static final int DEFAULT_MIN_DEFRAG = 1 << 23;
+	private static final int DEFAULT_MIN_DEFRAG = 1 << 26;
 	private static final byte[] HEADER_SKIP_BUFFER = new byte[16];
 	private static final int EVICTION_SCANS = 5;
 
@@ -154,8 +154,8 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 		}
 				
 		private int getOrUpdateDataBlockIndex(int index, int value, Mode mode) {
-			if (index >= MAX_DOUBLE_INDIRECT || (mode == Mode.ALLOCATE && index >= maxMemoryBlocks)) {
-				throw new TeiidRuntimeException("Max block number exceeded.  Increase the maxStorageObjectSize to support larger storage objects.  Alternatively you could make the processor batch size smaller."); //$NON-NLS-1$
+			if (index >= MAX_DOUBLE_INDIRECT) {
+				throw new TeiidRuntimeException("Max block number exceeded.  You could try making the processor batch size smaller."); //$NON-NLS-1$
 			}
 			int dataBlock = 0;
 			int position = 0;
@@ -372,25 +372,28 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 							continue;
 						}
 						try {
+							boolean sleep = false;
 							do {
-								int blockToMove = blockStore.blocksInUse.compactHighestBitSet(segment);
+								if (sleep) {
+									Thread.sleep(100); //let the file activity quite down
+								}
+								sleep = true;
+								int relativeBlockToMove = blockStore.blocksInUse.compactHighestBitSet(segment);
 								if (!shouldDefrag(blockStore, segment)) {
-									//truncate the file
-									blockStore.locks[segment].writeLock().lock();
-									try {
-										int endBlock = blockStore.blocksInUse.getHighestBitSet(segment);
-										long length = endBlock * blockStore.blockSize; 
-										blockStore.stores[segment].setLength(length);
-									} finally {
-										blockStore.locks[segment].writeLock().unlock();
-									}
+									truncate(blockStore, segment);
 									break;
 								}
 								//move the block if possible
-								InputStream is = blockStore.stores[segment].createInputStream(blockToMove * blockStore.blockSize);
+								InputStream is = blockStore.stores[segment].createInputStream(relativeBlockToMove * blockStore.blockSize, blockStore.blockSize);
 								DataInputStream dis = new DataInputStream(is);
-								Long gid = dis.readLong();
-								Long oid = dis.readLong();
+								Long gid = null;
+								Long oid = null;
+								try {
+									gid = dis.readLong();
+									oid = dis.readLong();
+								} catch (IOException e) {
+									continue; //can happen the bit was set and no data exists
+								}
 								dis.reset(); //move back to the beginning
 								Map<Long, PhysicalInfo> map = physicalMapping.get(gid);
 								if (map == null) {
@@ -400,16 +403,20 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 								if (info == null) {
 									continue;
 								}
+								int bitIndex = relativeBlockToMove + (segment * blockStore.blocksInUse.getBitsPerSegment());
 								synchronized (info) {
-									await(info, true, false);
+									info.await(true, false);
 									if (info.block == EMPTY_ADDRESS) {
 										continue;
 									}
-									assert info.block == blockToMove;
+									if (info.block != bitIndex) {
+										//we've marked a bit in use, but haven't yet written new data
+										continue;
+									}
 								}
 								int newBlock = blockStore.writeToStorageBlock(info, dis);
 								synchronized (info) {
-									await(info, true, true);
+									info.await(true, true);
 									if (info.block == EMPTY_ADDRESS) {
 										//already removed;
 										if (newBlock != EMPTY_ADDRESS) {
@@ -418,16 +425,33 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 										continue;
 									}
 									info.block = newBlock;
-									blockStore.blocksInUse.clear(blockToMove);
+									blockStore.blocksInUse.clear(bitIndex);
 								}
+								sleep = false;
 							} while (shouldDefrag(blockStore, segment));
 						} catch (IOException e) {
 							LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, e, "Error performing defrag"); //$NON-NLS-1$
+						} catch (InterruptedException e) {
+							throw new TeiidRuntimeException(e);
 						}
 					}
 				}
 			} finally {
 				defragRunning.set(false);
+			}
+		}
+
+		private void truncate(BlockStore blockStore, int segment) {
+			//truncate the file
+			blockStore.locks[segment].writeLock().lock();
+			try {
+				int endBlock = blockStore.blocksInUse.getHighestBitSet(segment);
+				long newLength = (endBlock + 1) * blockStore.blockSize; 
+				blockStore.stores[segment].setLength(newLength);
+			} catch (IOException e) {
+				LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, e, "Error performing defrag truncate"); //$NON-NLS-1$
+			} finally {
+				blockStore.locks[segment].writeLock().unlock();
 			}
 		}
 	};
@@ -465,8 +489,8 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 		this.blockByteBuffer = new BlockByteBuffer(30, blocks, LOG_BLOCK_SIZE, direct);
 		//ensure that we'll run out of blocks first
 		this.inodeByteBuffer = new BlockByteBuffer(30, blocks+1, LOG_INODE_SIZE, direct);
-		memoryWritePermits = new Semaphore(Math.max(1, (int)Math.min((((long)blocks)<<LOG_BLOCK_SIZE)/maxStorageObjectSize, Integer.MAX_VALUE)));
-		maxMemoryBlocks = Math.min(MAX_DOUBLE_INDIRECT, maxStorageObjectSize>>LOG_BLOCK_SIZE);
+		memoryWritePermits = new Semaphore(blocks);
+		maxMemoryBlocks = Math.min(MAX_DOUBLE_INDIRECT, blocks);
 		//try to maintain enough freespace so that writers don't block in cleaning
 		cleaningThreshold = Math.min(maxMemoryBlocks<<4, blocks>>1);
 		criticalCleaningThreshold = Math.min(maxMemoryBlocks<<2, blocks>>2);
@@ -480,9 +504,13 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 		}
 		List<BlockStore> stores = new ArrayList<BlockStore>();
 		int size = BLOCK_SIZE;
+		int files = 32; //this allows us to have 64 terabytes of smaller block sizes
 		do {
-			stores.add(new BlockStore(this.storageManager, size, 30, BufferManagerImpl.CONCURRENCY_LEVEL));
+			stores.add(new BlockStore(this.storageManager, size, 30, files));
 			size <<=1;
+			if (files > 1) {
+				files >>= 1;
+			}
 		} while ((size>>1) < maxStorageObjectSize);
 		this.sizeBasedStores = stores.toArray(new BlockStore[stores.size()]);
 	}
@@ -507,6 +535,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 		boolean hasPermit = false;
 		PhysicalInfo info = null;
 		boolean success = false;
+		int memoryBlocks = this.maxMemoryBlocks;
 		try {
 			Map<Long, PhysicalInfo> map = physicalMapping.get(s.getId());
 			if (map == null) {
@@ -538,26 +567,14 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 					}
 					info.adding = true;
 					//second chance re-add to the cache, we assume that serialization would be faster than a disk read
+					memoryBlocks = info.memoryBlockCount;
 				}
 			}
-			//proactively create freespace
-			if (!cleanerRunning.get()) {
-				if (lowBlocks(false) && cleanerRunning.compareAndSet(false, true)) {
-					LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Starting memory buffer cleaner"); //$NON-NLS-1$
-					asynchPool.execute(cleaningTask);
-					if (lowBlocks(true)) {
-						//do a non-blocking removal before we're forced to block
-						evictFromMemoryBuffer(false);
-					}
-				}
-			} else if (lowBlocks(true)) {
-				//do a non-blocking removal before we're forced to block
-				evictFromMemoryBuffer(false);
-			}
-			memoryWritePermits.acquire();
+			checkForLowMemory();
+			memoryWritePermits.acquire(memoryBlocks);
 			hasPermit = true;
 			blockManager = getBlockManager(s.getId(), entry.getId(), EMPTY_ADDRESS);
-			BlockOutputStream bos = new BlockOutputStream(blockManager);
+			BlockOutputStream bos = new BlockOutputStream(blockManager, memoryBlocks);
 			ObjectOutput dos = new DataObjectOutputStream(bos);
 			dos.writeLong(s.getId());
 			dos.writeLong(entry.getId());
@@ -577,15 +594,17 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
             	}
 			}
 		} catch (Throwable e) {
-			if (e == PhysicalInfo.sizeChanged) {
+			if ((e == BlockOutputStream.exceededMax && newEntry) || e == PhysicalInfo.sizeChanged) {
 				//entries are mutable after adding, the original should be removed shortly so just ignore
 				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Object "+ entry.getId() +" changed size since first persistence, keeping the original."); //$NON-NLS-1$ //$NON-NLS-2$
+			} else if (e == BlockOutputStream.exceededMax){
+				LogManager.logError(LogConstants.CTX_BUFFER_MGR, "Max block number exceeded.  Increase the maxStorageObjectSize to support larger storage objects.  Alternatively you could make the processor batch size smaller."); //$NON-NLS-1$
 			} else {
 				LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, "Error persisting, attempts to read "+ entry.getId() +" later will result in an exception."); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		} finally {
 			if (hasPermit) {
-				memoryWritePermits.release();
+				memoryWritePermits.release(memoryBlocks);
 			}
 			if (info != null) {
 				synchronized (info) {
@@ -602,6 +621,23 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 		}
         return true;
 	}
+
+	private void checkForLowMemory() {
+		//proactively create freespace
+		if (!cleanerRunning.get()) {
+			if (lowBlocks(false) && cleanerRunning.compareAndSet(false, true)) {
+				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Starting memory buffer cleaner"); //$NON-NLS-1$
+				asynchPool.execute(cleaningTask);
+				if (lowBlocks(true)) {
+					//do a non-blocking removal before we're forced to block
+					evictFromMemoryBuffer(false);
+				}
+			}
+		} else if (lowBlocks(true)) {
+			//do a non-blocking removal before we're forced to block
+			evictFromMemoryBuffer(false);
+		}
+	}
 	
 	@Override
 	public PhysicalInfo lockForLoad(Long oid, Serializer<?> serializer) {
@@ -613,16 +649,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 		if (info == null) {
 			return null;
 		}
-		synchronized (info) {
-			while (info.loading) {
-				try {
-					info.wait();
-				} catch (InterruptedException e) {
-					throw new TeiidRuntimeException(e);
-				}
-			}
-			info.loading = true;
-		}
+		info.lockForLoad();
 		return info;
 	}
 	
@@ -631,11 +658,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 		if (info == null) {
 			return;
 		}
-		synchronized (info) {
-			assert info.loading;
-			info.loading = false;
-			info.notifyAll();
-		}
+		info.unlockForLoad();
 	}
 	
 	@Override
@@ -650,10 +673,12 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 			return null;
 		}
 		InputStream is = null;
+		Lock lock = null;
+		int memoryBlocks = 0;
 		try {
 			synchronized (info) {
 				assert !info.pinned && info.loading; //load should be locked
-				await(info, true, false); //not necessary, but should make things safer
+				info.await(true, false); //not necessary, but should make things safer
 				if (info.inode != EMPTY_ADDRESS) {
 					info.pinned = true;
 					memoryBufferEntries.touch(info); 
@@ -670,12 +695,18 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 						LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Getting object at block", info.block, info.sizeIndex, serializer.getId(), oid); //$NON-NLS-1$
 					}
 					BlockStore blockStore = sizeBasedStores[info.sizeIndex];
-					FileStore fs = blockStore.stores[info.block/blockStore.blocksInUse.getBitsPerSegment()];
+					int segment = info.block/blockStore.blocksInUse.getBitsPerSegment();
+					FileStore fs = blockStore.stores[segment];
 					long blockOffset = (info.block%blockStore.blocksInUse.getBitsPerSegment())*blockStore.blockSize;
 					is = fs.createInputStream(blockOffset, info.memoryBlockCount<<LOG_BLOCK_SIZE);
+					lock = blockStore.locks[segment].writeLock();
+					memoryBlocks = info.memoryBlockCount;
 				} else {
 					return null;
 				}
+			}
+			if (lock != null) {
+				is = readIntoMemory(info, is, lock, memoryBlocks);
 			}
 			ObjectInput dis = new DataObjectInputStream(is);
 			dis.readFully(HEADER_SKIP_BUFFER);
@@ -686,12 +717,64 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
         	throw new TeiidComponentException(e, QueryPlugin.Util.getString("FileStoreageManager.error_reading", oid)); //$NON-NLS-1$
         } catch (ClassNotFoundException e) {
         	throw new TeiidComponentException(e, QueryPlugin.Util.getString("FileStoreageManager.error_reading", oid)); //$NON-NLS-1$
-        } finally {
+        } catch (InterruptedException e) {
+        	throw new TeiidRuntimeException(e);
+		} finally {
         	synchronized (info) {
 				info.pinned = false;
 				info.notifyAll();
 			}
         }
+	}
+
+	/**
+	 * Transfer into memory to release memory/file locks
+	 */
+	private InputStream readIntoMemory(PhysicalInfo info, InputStream is,
+			Lock fileLock, int memoryBlocks) throws InterruptedException,
+			IOException {
+		checkForLowMemory();
+		this.memoryWritePermits.acquire(memoryBlocks);
+		BlockManager manager = null;
+		boolean success = false;
+		boolean locked = false;
+		try {
+			manager = getBlockManager(info.gid, info.getId(), EMPTY_ADDRESS);
+			//preallocate the memory area, to ensure we won't exhaust memory while holding
+			//the file lock
+			for (int i = 0; i < memoryBlocks; i++) {
+				manager.allocateBlock(i);
+			}
+			
+			fileLock.lock();
+			locked = true;
+			ExtensibleBufferedOutputStream os = new BlockOutputStream(manager, -1);
+			//TODO: there is still an extra buffer being created here, we could FileChannels to do better
+			int b = -1;
+			while ((b = is.read()) != -1) {
+				os.write(b);
+			}
+			fileLock.unlock();
+			locked = false;
+		    synchronized (info) {
+		        info.inode = manager.getInode();
+				memoryBufferEntries.add(info);
+				is = new BlockInputStream(manager, info.memoryBlockCount);
+			}
+			success = true;
+		} finally {
+			try {
+				if (locked) {
+					fileLock.unlock();
+				}
+				if (!success && manager != null) {
+					manager.free(false);
+				}
+			} finally {
+				this.memoryWritePermits.release(memoryBlocks);
+			}
+		}
+		return is;
 	}
 
 	/**
@@ -778,7 +861,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 				//let any pending finish - it would be nice if we could pre-empt
 				//since we can save some work, but this should be rare enough 
 				//to just block
-				await(info, true, true);
+				info.await(true, true);
 				info.evicting = true;
 			} else {
 				assert info.evicting;
@@ -809,7 +892,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 				//it is possible for a read to happen while evicting.
 				//that's ok, we'll just wait for it to finish
 				assert info.evicting;
-				await(info, true, false);
+				info.await(true, false);
 				info.evicting = false;
 				info.notifyAll();
 				assert bm == null || info.inode != EMPTY_ADDRESS;
@@ -833,7 +916,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 						if (!defragRunning.get() 
 								&& shouldDefrag(blockStore, segment) 
 								&& defragRunning.compareAndSet(false, true)) {
-								this.asynchPool.execute(defragTask);
+							this.asynchPool.execute(defragTask);
 						}
 						info.block = EMPTY_ADDRESS;
 					}
@@ -849,21 +932,14 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 	boolean shouldDefrag(BlockStore blockStore, int segment) {
 		int highestBitSet = blockStore.blocksInUse.getHighestBitSet(segment);
 		int bitsSet = blockStore.blocksInUse.getBitsSet(segment);
-		highestBitSet = Math.max(bitsSet, Math.max(1, highestBitSet));
+		highestBitSet = Math.max(bitsSet, Math.max(0, highestBitSet));
+		if (highestBitSet == 0) {
+			return false;
+		}
 		int freeBlocks = highestBitSet-bitsSet;
 		return freeBlocks > (highestBitSet>>2) && freeBlocks*blockStore.blockSize > minDefrag;
 	}
 
-	private void await(PhysicalInfo info, boolean pinned, boolean evicting) {
-		while ((pinned && info.pinned) || (evicting && info.evicting)) {
-			try {
-				info.wait();
-			} catch (InterruptedException e) {
-				throw new TeiidRuntimeException(e);
-			}
-		}
-	}
-	
 	/**
 	 * Eviction routine.  When space is exhausted data blocks are acquired from
 	 * memory entries.
@@ -896,7 +972,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 								writeLocked = true;
 							}
 							//wait for the read/eviction to be over 
-							await(info, true, true);
+							info.await(true, true);
 							if (info.inode == EMPTY_ADDRESS) {
 								continue;
 							}
@@ -962,49 +1038,4 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 		this.minDefrag = minDefrag;
 	}
 
-}
-
-/**
- * Represents the memory buffer and storage state of an object.
- * It is important to minimize the amount of data held here.
- * Currently should be 48 bytes.
- */
-final class PhysicalInfo extends BaseCacheEntry {
-	
-	static final Exception sizeChanged = new Exception();  
-	
-	final Long gid;
-	//the memory inode and block count
-	int inode = BufferFrontedFileStoreCache.EMPTY_ADDRESS;
-	int memoryBlockCount;
-	//the storage block and BlockStore index
-	int block = BufferFrontedFileStoreCache.EMPTY_ADDRESS;
-	byte sizeIndex = 0;
-	//state flags
-	boolean pinned; //indicates that the entry is being read
-	boolean evicting; //indicates that the entry will be moved out of the memory buffer
-	boolean loading; //used by tier 1 cache to prevent double loads
-	boolean adding; //used to prevent double adds
-	
-	public PhysicalInfo(Long gid, Long id, int inode, int lastAccess) {
-		super(new CacheKey(id, lastAccess, 0));
-		this.inode = inode;
-		this.gid = gid;
-	}
-	
-	public void setSize(int size) throws Exception {
-		int newMemoryBlockCount = (size>>BufferFrontedFileStoreCache.LOG_BLOCK_SIZE) + ((size&BufferFrontedFileStoreCache.BLOCK_MASK)>0?1:0);
-		if (this.memoryBlockCount != 0) {
-			if (newMemoryBlockCount != memoryBlockCount) {
-				throw sizeChanged; 
-			}
-			return; //no changes
-		}
-		this.memoryBlockCount = newMemoryBlockCount;
-		while (newMemoryBlockCount > 1) {
-			this.sizeIndex++;
-			newMemoryBlockCount = (newMemoryBlockCount>>1) + ((newMemoryBlockCount&0x01)==0?0:1);
-		}
-	}
-	
 }

@@ -114,6 +114,9 @@ public class FileStorageManager implements StorageManager {
 	    protected synchronized int readWrite(long fileOffset, byte[] b, int offSet,
 	    		int length, boolean write) throws IOException {
 	    	if (!write) {
+	    		if (fileInfo == null) {
+	    			return -1;
+	    		}
 				try {
 					RandomAccessFile fileAccess = fileInfo.open();
 			        fileAccess.seek(fileOffset);

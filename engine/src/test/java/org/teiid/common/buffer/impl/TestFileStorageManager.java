@@ -49,7 +49,14 @@ public class TestFileStorageManager {
         sm.initialize();
         return sm;
 	}
-    
+
+    @Test public void testInitialRead() throws Exception {
+        FileStorageManager sm = getStorageManager(null, null);        
+        String tsID = "0";     //$NON-NLS-1$
+        FileStore store = sm.createFileStore(tsID);
+        assertEquals(-1, store.read(0, new byte[1], 0, 1));
+    }
+	
     @Test public void testWrite() throws Exception {
         FileStorageManager sm = getStorageManager(null, null);        
         String tsID = "0";     //$NON-NLS-1$
