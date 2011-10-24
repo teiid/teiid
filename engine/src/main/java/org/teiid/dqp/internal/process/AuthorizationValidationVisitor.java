@@ -284,7 +284,6 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         Map<String, LanguageObject> nameToSymbolMap = new LinkedHashMap<String, LanguageObject>();
         for (LanguageObject symbol : symbols) {
             try {
-                String fullName = null;
                 Object metadataID = null;
                 if(symbol instanceof ElementSymbol) {                    
                     metadataID = ((ElementSymbol)symbol).getMetadataID();
@@ -294,20 +293,18 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                 } else if(symbol instanceof GroupSymbol) {
                     GroupSymbol group = (GroupSymbol)symbol;
                     metadataID = group.getMetadataID();
-                    if (metadataID instanceof TempMetadataID && !group.isProcedure()) {
-                    	if (group.isTempTable()) {
+                    if (metadataID instanceof TempMetadataID) {
+                    	if (group.isProcedure()) {
+                    		Map<String, LanguageObject> procMap = new LinkedHashMap<String, LanguageObject>();
+                    		addToNameMap(((TempMetadataID)metadataID).getOriginalMetadataID(), symbol, procMap);
+                    		validateEntitlements(PermissionType.EXECUTE, auditContext, procMap);
+                    	} else if (group.isTempTable()) {
                     		validateTemp(actionCode, group, auditContext);
                     	}
                         continue;
                     }
                 }
-                fullName = getMetadata().getFullName(metadataID);
-                Object modelId = getMetadata().getModelID(metadataID);
-                String modelName = getMetadata().getFullName(modelId);
-                if (isSystemSchema(modelName)) {
-                	continue;
-                }
-                nameToSymbolMap.put(fullName, symbol);
+                addToNameMap(metadataID, symbol, nameToSymbolMap);
             } catch(QueryMetadataException e) {
                 handleException(e);
             } catch(TeiidComponentException e) {
@@ -317,6 +314,15 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 
         validateEntitlements(actionCode, auditContext, nameToSymbolMap);
 	}
+    
+    private void addToNameMap(Object metadataID, LanguageObject symbol, Map<String, LanguageObject> nameToSymbolMap) throws QueryMetadataException, TeiidComponentException {
+    	String fullName = getMetadata().getFullName(metadataID);
+        Object modelId = getMetadata().getModelID(metadataID);
+        String modelName = getMetadata().getFullName(modelId);
+        if (!isSystemSchema(modelName)) {
+        	nameToSymbolMap.put(fullName, symbol);
+        }
+    }
 
 	private boolean isSystemSchema(String modelName) {
 		return CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(modelName) || CoreConstants.ODBC_MODEL.equalsIgnoreCase(modelName);

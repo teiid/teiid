@@ -116,7 +116,8 @@ public class TestAuthorizationValidationVisitor {
         svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, "pm1.g1.e3")); //$NON-NLS-1$
         svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, "pm1.g1.e4")); //$NON-NLS-1$
         
-
+        svc.addPermission(addResource(PermissionType.EXECUTE, "pm1.sp1"));
+        
         // pm1.g2
         svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g2")); //$NON-NLS-1$
         svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, false, "pm1.g2.e1")); //$NON-NLS-1$
@@ -204,6 +205,12 @@ public class TestAuthorizationValidationVisitor {
         } else if(expectedInaccesible.length > 0) {
             fail("Expected inaccessible objects, but got none.");                 //$NON-NLS-1$
         }
+    }
+    
+    @Test public void testProcRelational() throws Exception {
+    	helpTest("select * from sp1", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB(), exampleAuthSvc1()); //$NON-NLS-1$
+    	helpTest("select * from pm1.sp1", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB(), exampleAuthSvc1()); //$NON-NLS-1$
+    	helpTest("select * from sp1", RealMetadataFactory.example1Cached(), new String[] {"sp1"}, RealMetadataFactory.example1VDB(), exampleAuthSvc2()); //$NON-NLS-1$
     }
     
     @Test public void testTemp() throws Exception {
