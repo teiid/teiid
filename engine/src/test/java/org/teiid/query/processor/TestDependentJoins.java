@@ -638,6 +638,44 @@ public class TestDependentJoins {
     	helpTestLargeSetInDepAccessMultiJoinCriteria(1, 10, 2, 2);
     }
     
+    @Test public void testLargeSetMultipleDependentSources() throws Exception {
+    	String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 makedep, /*+ makeind */ pm1.g2 where pm1.g1.e1=pm2.g1.e1 AND pm1.g2.e2=pm2.g1.e2 order by e1"; //$NON-NLS-1$
+    	
+        // Plan query
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities depcaps = new BasicSourceCapabilities();
+        depcaps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        depcaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 1);
+        depcaps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 3);
+
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm2", depcaps); //$NON-NLS-1$
+
+        List[] expected = new List[] {
+            Arrays.asList("a"), //$NON-NLS-1$
+            Arrays.asList("a"), //$NON-NLS-1$
+        	}; 
+
+        Command command = TestProcessor.helpParse(sql);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
+        TestOptimizer.checkAtomicQueries(new String[] {
+        		"SELECT pm1.g2.e2 FROM pm1.g2", 
+        		"SELECT pm2.g1.e1, pm2.g1.e2 FROM pm2.g1 WHERE (pm2.g1.e1 IN (<dependent values>)) AND (pm2.g1.e2 IN (<dependent values>))", 
+        		"SELECT pm1.g1.e1 FROM pm1.g1"
+        }, plan);
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT pm1.g1.e1 FROM pm1.g1", new List<?>[] {Arrays.asList("a")});
+        dataManager.addData("SELECT pm1.g2.e2 FROM pm1.g2", new List<?>[] {Arrays.asList(1), Arrays.asList(2), Arrays.asList(3)});
+        dataManager.addData("SELECT pm2.g1.e1, pm2.g1.e2 FROM pm2.g1 WHERE (pm2.g1.e1 = 'a') AND ((pm2.g1.e2 = 1) OR (pm2.g1.e2 = 2))", new List<?>[] {Arrays.asList("a", 1)});
+        dataManager.addData("SELECT pm2.g1.e1, pm2.g1.e2 FROM pm2.g1 WHERE (pm2.g1.e1 = 'a') AND (pm2.g1.e2 = 3)", new List<?>[] {Arrays.asList("a", 3)});
+        CommandContext cc = TestProcessor.createCommandContext();
+        TestProcessor.helpProcess(plan, cc, dataManager, expected);
+    }
+    
     /**
      * concurrentOpen will be minimum of 2 to gather the pm1 results.
      */
@@ -647,10 +685,6 @@ public class TestDependentJoins {
         // Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData1(dataManager);
-
-        // Slightly modify metadata to set max set size to just a few rows - this
-        // will allow us to test the dependent overflow case
-        QueryMetadataInterface fakeMetadata = RealMetadataFactory.example1Cached();
 
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -679,7 +713,7 @@ public class TestDependentJoins {
         	}; 
 
         Command command = TestProcessor.helpParse(sql);
-        ProcessorPlan plan = TestProcessor.helpGetPlan(command, fakeMetadata, capFinder);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
         TestOptimizer.checkAtomicQueries(new String[] {
         		"SELECT pm1.g2.e4 FROM pm1.g2", 
         		"SELECT pm2.g1.e1, pm2.g1.e2, pm2.g1.e4 FROM pm2.g1 WHERE (pm2.g1.e1 IN (<dependent values>)) AND (pm2.g1.e2 IN (<dependent values>)) AND (pm2.g1.e4 IN (<dependent values>))", 
