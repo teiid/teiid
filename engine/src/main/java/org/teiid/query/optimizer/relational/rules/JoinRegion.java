@@ -250,7 +250,7 @@ class JoinRegion {
         
         HashSet<PlanNode> criteria = new HashSet<PlanNode>(this.criteriaNodes);
         HashSet<GroupSymbol> groups = new HashSet<GroupSymbol>(this.joinSourceNodes.size());
-        
+        boolean hasUnknown = false;
         for (int i = 0; i < joinOrder.length; i++) {
             Integer source = (Integer)joinOrder[i];
             
@@ -286,6 +286,7 @@ class JoinRegion {
             
         	if (sourceCost == NewCalculateCostUtil.UNKNOWN_VALUE) {
         		sourceCost = UNKNOWN_TUPLE_EST;
+        		hasUnknown = true;
                 if (applicableCriteria != null && !applicableCriteria.isEmpty()) {
                 	CompoundCriteria cc = new CompoundCriteria();
                 	for (PlanNode planNode : applicableCriteria) {
@@ -322,6 +323,10 @@ class JoinRegion {
                 	sourceCost = depJoinCost;
                 }
             }
+        	
+        	if (i > 0 && (applicableCriteria == null || applicableCriteria.isEmpty()) && hasUnknown) {
+        		sourceCost *= 10; //cross join penalty
+        	}
         
             cost *= sourceCost;
             
