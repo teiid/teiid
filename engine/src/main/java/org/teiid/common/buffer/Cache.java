@@ -90,6 +90,6 @@ public interface Cache<T> extends StorageManager {
 	 * @param gid
 	 * @param id
 	 */
-	void remove(Long gid, Long id);
+	boolean remove(Long gid, Long id);
 	
 }

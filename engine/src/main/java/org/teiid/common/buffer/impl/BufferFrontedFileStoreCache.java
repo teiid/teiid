@@ -109,6 +109,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 	static final int LOG_INODE_SIZE = 6;
 	static final int DIRECT_POINTERS = 14;
 	static final int EMPTY_ADDRESS = -1;
+	static final int FREED = -2;
 	
 	//TODO allow the block size to be configurable. 8k is a reasonable default up to a gig, but we could be more efficient with larger blocks from there.
 	//the rationale for a smaller block size is to reduce internal fragmentation, which is critical when maintaining a relatively small buffer < 256MB
@@ -290,16 +291,16 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 			}
 			inodesInuse.clear(inode);
 			if (!freedAll || indirectIndexBlock == EMPTY_ADDRESS) {
-				return acquire?dataBlockToAcquire:EMPTY_ADDRESS;
+				return acquire?dataBlockToAcquire:FREED;
 			}
 			freedAll = freeIndirectBlock(indirectIndexBlock);
 			if (!freedAll || doublyIndirectIndexBlock == EMPTY_ADDRESS) {
-				return acquire?dataBlockToAcquire:EMPTY_ADDRESS;
+				return acquire?dataBlockToAcquire:FREED;
 			}
 			bb = blockByteBuffer.getByteBuffer(doublyIndirectIndexBlock).slice();
 			freeBlock(0, bb, ADDRESSES_PER_BLOCK, false);
 			freeDataBlock(doublyIndirectIndexBlock);
-			return acquire?dataBlockToAcquire:EMPTY_ADDRESS;
+			return acquire?dataBlockToAcquire:FREED;
 		}
 
 		private boolean freeIndirectBlock(int indirectIndexBlock) {
@@ -787,7 +788,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 	private boolean shouldPlaceInMemoryBuffer(long currentTime, PhysicalInfo info) {
 		PhysicalInfo lowest = memoryBufferEntries.firstEntry(false);
 		CacheKey key = info.getKey();
-		return (blocksInuse.getTotalBits() - blocksInuse.getBitsSet()) > (criticalCleaningThreshold + info.memoryBlockCount)
+		return (blocksInuse.getTotalBits() - blocksInuse.getBitsSet()) > (cleaningThreshold + info.memoryBlockCount)
 				|| (lowest != null && lowest.block != EMPTY_ADDRESS 
 						&& lowest.getKey().getOrderingValue() < (currentTime>0?memoryBufferEntries.computeNextOrderingValue(currentTime, key.getLastAccess(), key.getOrderingValue()):key.getOrderingValue()));
 	}
@@ -816,13 +817,20 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 	}
 	
 	@Override
-	public void remove(Long gid, Long id) {
+	public boolean remove(Long gid, Long id) {
 		Map<Long, PhysicalInfo> map = physicalMapping.get(gid);
 		if (map == null) {
-			return;
+			return false;
 		}
-		PhysicalInfo info = map.remove(id);
+		PhysicalInfo info = null;
+		boolean result = false;
+		synchronized (map) {
+			int size = map.size();
+			info = map.remove(id);
+			result = size != map.size();
+		}
 		free(info, false, false);
+		return result;
 	}
 
 	@Override
@@ -850,7 +858,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 			return EMPTY_ADDRESS;
 		}
 		Long oid = info.getId();
-		int result = EMPTY_ADDRESS;
+		int result = FREED;
 		BlockManager bm = null;
 		int block = EMPTY_ADDRESS;
 		int memoryBlockCount;
@@ -948,7 +956,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 	 */
 	int evictFromMemoryBuffer(boolean acquire) {
 		boolean writeLocked = false;
-		int next = -1;
+		int next = EMPTY_ADDRESS;
 		try {
 			for (int i = 0; i < EVICTION_SCANS && next == EMPTY_ADDRESS; i++) {
 				//doing a cleanup may trigger the purging of resources
@@ -981,13 +989,10 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 						info.evicting = true;
 					}
 					next = free(info, true, acquire);
-					if (!acquire) {
-						next = 0; //let the cleaner know that we made progress
-					}
 					break;
 				}
 			} 
-			if (acquire && next == -1) {
+			if (acquire && next == EMPTY_ADDRESS) {
 				throw new AssertionError("Could not free space for pending write"); //$NON-NLS-1$
 			}
 		} finally {

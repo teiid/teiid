@@ -54,7 +54,7 @@ public class TestSortNode {
     
     private void helpTestSort(List elements, List[] data, List sortElements, List sortTypes, List[] expected, Mode mode) throws TeiidComponentException, TeiidProcessingException {
         BufferManagerImpl mgr = BufferManagerFactory.getTestBufferManager(10000, BATCH_SIZE, BATCH_SIZE);
-        int reserve = mgr.getReserveBatchKB();
+        long reserve = mgr.getReserveBatchBytes();
         CommandContext context = new CommandContext ("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         BlockingFakeRelationalNode dataNode = new BlockingFakeRelationalNode(2, data);
@@ -89,7 +89,7 @@ public class TestSortNode {
         	}
         }
         assertEquals(expected.length, currentRow - 1);
-        assertEquals(reserve, mgr.getReserveBatchKB());
+        assertEquals(reserve, mgr.getReserveBatchBytes());
     }
 
     /*

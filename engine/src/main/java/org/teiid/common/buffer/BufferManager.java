@@ -88,11 +88,11 @@ public interface BufferManager extends StorageManager {
     throws TeiidComponentException;
 	
 	/**
-	 * Return the maximum KB that can be temporarily held potentially 
+	 * Return the max that can be temporarily held potentially 
 	 * across even a blocked exception.
 	 * @return
 	 */
-    int getMaxProcessingKB();
+    int getMaxProcessingSize();
     
     /**
      * Creates a new {@link FileStore}.  See {@link FileStore#setCleanupReference(Object)} to
@@ -117,7 +117,7 @@ public interface BufferManager extends StorageManager {
     void releaseBuffers(int count);
     
     /**
-     * Get the size estimate in KB for the given schema.
+     * Get the size estimate for the given schema.
      */
     int getSchemaSize(List<? extends Expression> elements);
     
@@ -128,7 +128,7 @@ public interface BufferManager extends StorageManager {
 	TupleBuffer getTupleBuffer(String id);
 
 	/**
-	 * Set the maxActivePlans as a hint at determining the maxProcessingKB
+	 * Set the maxActivePlans as a hint at determining the maxProcessing
 	 * @param maxActivePlans
 	 */
 	void setMaxActivePlans(int maxActivePlans);

@@ -155,11 +155,12 @@ public class MemoryStorageManager implements Cache<Long> {
 	}
 		
 	@Override
-	public void remove(Long gid, Long id) {
+	public boolean remove(Long gid, Long id) {
 		Map<Long, CacheEntry> group = groups.get(gid);
 		if (group != null) {
-			group.remove(id);
+			return group.remove(id) != null;
 		}
+		return false;
 	}
 	
 	@Override

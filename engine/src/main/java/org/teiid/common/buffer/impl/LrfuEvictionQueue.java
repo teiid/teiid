@@ -54,7 +54,7 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 	
 	public LrfuEvictionQueue(AtomicLong clock) {
 		this.clock = clock;
-		setCrfLamda(.1); //smaller values tend to work better since we're using interval bounds
+		setCrfLamda(.00005); //smaller values tend to work better since we're using interval bounds
 	}
 
 	public boolean remove(V value) {
@@ -93,27 +93,21 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
      */
 	public void recordAccess(V value) {
 		CacheKey key = value.getKey();
-		int lastAccess = key.getLastAccess();
+		long lastAccess = key.getLastAccess();
 		long currentClock = clock.get();
-		float orderingValue = key.getOrderingValue();
+		double orderingValue = key.getOrderingValue();
 		orderingValue = computeNextOrderingValue(currentClock, lastAccess,
 				orderingValue);
 		value.setKey(new CacheKey(key.getId(), (int)currentClock, orderingValue));
 	}
 
-	float computeNextOrderingValue(long currentTime,
-			int lastAccess, float orderingValue) {
-		long longLastAccess = lastAccess&0xffffffffl;
-		currentTime &= 0xffffffffl;
-		if (longLastAccess > currentTime) {
-			currentTime += (1l<<32);
-		}
-		long delta = currentTime - longLastAccess;
+	double computeNextOrderingValue(long currentTime,
+			long lastAccess, double orderingValue) {
+		long delta = currentTime - lastAccess;
 		orderingValue = 
-			(float) (//Frequency component
 			(delta<maxInterval?(delta<minInterval?minVal:Math.pow(inverseCrfLamda, delta)):0)*orderingValue
 			//recency component
-			+ Math.pow(currentTime, crfLamda));
+			+ Math.pow(currentTime, crfLamda);
 		return orderingValue;
 	}
 	

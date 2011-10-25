@@ -29,7 +29,7 @@ import org.teiid.core.TeiidRuntimeException;
 /**
  * Represents the memory buffer and storage state of an object.
  * It is important to minimize the amount of data held here.
- * Currently should be 48 bytes.
+ * Currently should be 56 bytes.
  */
 final class PhysicalInfo extends BaseCacheEntry {
 	
