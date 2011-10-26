@@ -576,6 +576,17 @@ public class TestDQPCore {
         assertNotNull(rm.getException());
     }
     
+    @Test public void testLongRunningQuery() throws Exception {
+    	RequestMessage reqMsg = exampleRequestMessage("select * FROM BQT1.SmallA"); 
+        execute("A", 1, reqMsg);
+        this.config.setQueryThresholdInMilli(5000);
+        assertEquals(1, this.core.getRequests().size());
+    	assertEquals(0, this.core.getLongRunningRequests().size());
+    	this.config.setQueryThresholdInMilli(10);
+    	Thread.sleep(20);
+    	assertEquals(1, this.core.getLongRunningRequests().size());
+    }
+    
 	public void helpTestVisibilityFails(String sql) throws Exception {
         RequestMessage reqMsg = exampleRequestMessage(sql); 
         reqMsg.setTxnAutoWrapMode(RequestMessage.TXN_WRAP_OFF);

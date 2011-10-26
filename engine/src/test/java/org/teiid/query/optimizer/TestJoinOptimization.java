@@ -39,6 +39,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.rules.JoinUtil;
@@ -1025,6 +1026,26 @@ public class TestJoinOptimization {
             0,      // Sort
             0       // UnionAll
         });
+    }
+    
+    @Test public void testCrossJoinAvoidance() throws Exception {
+
+        CapabilitiesFinder capFinder = TestOptimizer.getGenericFinder();
+
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQT();
+        RealMetadataFactory.setCardinality("bqt1.smallb", 1800, metadata); //$NON-NLS-1$
+        RealMetadataFactory.setCardinality("bqt1.smalla", 0, metadata); //$NON-NLS-1$
+        RealMetadataFactory.setCardinality("bqt2.smallb", 15662, metadata); //$NON-NLS-1$
+         
+        TestOptimizer.helpPlan(
+            "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallB, BQT1.Smalla, bqt2.smallb where bqt2.smallb.intkey = bqt1.smallb.intkey and bqt2.smallb.intkey = bqt1.smalla.intkey",  //$NON-NLS-1$
+            metadata,
+            null, capFinder,
+            new String[] {"SELECT g_0.intkey AS c_0 FROM BQT1.Smalla AS g_0 ORDER BY c_0", 
+            		"SELECT g_0.intkey AS c_0 FROM BQT1.SmallB AS g_0 ORDER BY c_0", 
+            		"SELECT g_0.intkey AS c_0 FROM bqt2.smallb AS g_0 ORDER BY c_0"}, //$NON-NLS-1$ //$NON-NLS-2$
+            ComparisonMode.EXACT_COMMAND_STRING );
+
     }
         
 }

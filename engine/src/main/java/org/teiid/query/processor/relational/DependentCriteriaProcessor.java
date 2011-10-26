@@ -299,8 +299,8 @@ public class DependentCriteriaProcessor {
 
 	            List<SetState> source = sources.get(i);
 
-	        	if (i == currentIndex++) {
-		
+	        	if (i == currentIndex) {
+	        		currentIndex++;
 		            int doneCount = 0;
 		
 		            while (doneCount < source.size()) {

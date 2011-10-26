@@ -73,7 +73,7 @@
 
 
 <plugin name="TeiidPlugin" displayName="Teiid Plugin" package="org.teiid.rhq.plugin"
-	version="2.0.0" description="Supports management and monitoring of JBoss Teiid"
+	version="2.0.1" description="Supports management and monitoring of JBoss Teiid"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:xmlns:rhq-plugin"
 	xmlns:c="urn:xmlns:rhq-configuration">
 
@@ -93,23 +93,18 @@
 			<results>
 				<c:list-property name="list">
 					<c:map-property name="map">
+						<c:simple-property displayName="Request ID"
+							name="getExecutionId" type="string" description="The id for the request" />
 						<c:simple-property displayName="Session ID"
 							name="getSessionId" type="string"
-							description="The name of the resource whose availability is being reported" />
-						<c:simple-property displayName="Request ID"
-							name="getRequestId" type="string" description="The id for the request" />
+							description="The session id the request is using" />
 						<c:simple-property displayName="SQL String"
 							name="getCommand" type="string" description="The SQL string for this query" />
 						<c:simple-property displayName="Source Request"
 							name="sourceRequest" type="string"
 							description="If false,this is the top level query. If true, this a physical source query." />
-						<c:simple-property displayName="Execution ID"
-							name="getExecutionId" type="string"
-							description="The execution id for this request (if this is a physical source query)" />
 						<c:simple-property displayName="Start Time"
-							name="getCreatedTime" type="string" description="The time this query began" />
-						<c:simple-property displayName="Start Time"
-							name="getProcessingTime" type="string" description="Processing time for this request" />
+							name="getStartTime" type="string" description="The time this query began" />
 						<c:simple-property displayName="Transaction ID"
 							name="getTransactionId" type="string"
 							description="The transaction XID if there is a transaction involved" />
@@ -187,15 +182,11 @@
 					required="false">
 					<c:map-property name="map">
 						<c:simple-property displayName="Request ID"
-							name="getRequestId" type="string" description="The request identifier" />
+							name="getExecutionId" type="string" description="The request identifier" />
 						<c:simple-property displayName="Session ID"
 							name="getSessionId" type="string" description="Session identifier" />
-						<c:simple-property displayName="Execution ID"
-							name="getExecutionId" type="string" description="Unique Identifier for Request" />
-						<c:simple-property displayName="Created Time"
-							name="getCreatedTime" type="string" description="Time when request submitted" />
-						<c:simple-property displayName="Processing Time"
-							name="getProcessingTime" type="string" description="Processing time for the request" />
+						<c:simple-property displayName="Start Time"
+							name="getStartTime" type="string" description="Time when request submitted" />
 						<c:simple-property displayName="Last ping time"
 							name="getCommand" type="string" description="SQL Command" />
 						<c:simple-property displayName="Connector level request?"
@@ -203,7 +194,7 @@
 							description="True if this is a connector level request" />
 						<c:simple-property displayName="Node ID" name="getNodeId"
 							type="string" description="The node identifier" />
-						<c:simple-property displayName="Tansaction identifier"
+						<c:simple-property displayName="Transaction identifier"
 							name="getTransactionId" type="string"
 							description="Transaction XID if a transaction is involved" />
 					</c:map-property>
@@ -484,8 +475,8 @@
 								name="getSessionId" type="string" description="Session identifier" />
 							<c:simple-property displayName="Execution ID"
 								name="getExecutionId" type="string" description="Unique Identifier for Request" />
-							<c:simple-property displayName="Created Time"
-								name="getCreatedTime" type="string" description="Time when request submitted" />
+							<c:simple-property displayName="Start Time"
+								name="getStartTime" type="string" description="Time when request submitted" />
 							<c:simple-property displayName="Processing Time"
 								name="getProcessingTime" type="string" description="Processing time for the request" />
 							<c:simple-property displayName="Last ping time"
@@ -495,7 +486,7 @@
 								description="True if this is a connector level request" />
 							<c:simple-property displayName="Node ID" name="getNodeId"
 								type="string" description="The node identifier" />
-							<c:simple-property displayName="Tansaction identifier"
+							<c:simple-property displayName="Transaction identifier"
 								name="getTransactionId" type="string"
 								description="Transaction XID if a transaction is involved" />
 						</c:map-property>

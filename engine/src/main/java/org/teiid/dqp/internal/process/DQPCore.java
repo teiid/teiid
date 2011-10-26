@@ -259,16 +259,16 @@ public class DQPCore implements DQP {
     } 
     
     public List<RequestMetadata> getLongRunningRequests(){
-    	return buildRequestInfos(requests.keySet(), this.config.getQueryThresholdInSecs());
+    	return buildRequestInfos(requests.keySet(), System.currentTimeMillis() - this.config.getQueryThresholdInMilli() );
     }
 
-    private List<RequestMetadata> buildRequestInfos(Collection<RequestID> ids, int longRunningQueryThreshold) {
+    private List<RequestMetadata> buildRequestInfos(Collection<RequestID> ids, long longRunningQueryThreshold) {
 		List<RequestMetadata> results = new ArrayList<RequestMetadata>();
     	
 		for (RequestID requestID : ids) {
             RequestWorkItem holder = requests.get(requestID);
             
-            if(holder != null && !holder.isCanceled()) {
+            if(holder != null && !holder.isCanceled() && (longRunningQueryThreshold == -1 || holder.getProcessingTimestamp() < longRunningQueryThreshold)) {
             	RequestMetadata req = new RequestMetadata();
             	
             	req.setExecutionId(holder.requestID.getExecutionID());
@@ -319,11 +319,7 @@ public class DQPCore implements DQP {
         			results.add(info);
                 }
                 
-                // check if only need long running queries.
-                long elapsedTime = System.currentTimeMillis() - req.getStartTime();
-                if (longRunningQueryThreshold == -1 || elapsedTime > longRunningQueryThreshold) {
-                	results.add(req);
-                }
+            	results.add(req);
             }
         }
     	return results;

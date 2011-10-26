@@ -211,8 +211,8 @@ public class DQPManagementView implements PluginConstants {
 			getTransactionCollectionValue(transactionMetaValue,transactionsCollection);
 			operationResult.setContent(createReportResultList(fieldNameList,	resultObject.iterator()));
 		} else if (operationName.equals(Platform.Operations.KILL_TRANSACTION)) {
-			String sessionID = (String) valueMap.get(Operation.Value.TRANSACTION_ID);
-			MetaValue[] args = new MetaValue[] { SimpleValueSupport.wrap(sessionID) };
+			String transactionID = (String) valueMap.get(Operation.Value.TRANSACTION_ID);
+			MetaValue[] args = new MetaValue[] { SimpleValueSupport.wrap(transactionID) };
 			try {
 				executeManagedOperation(connection, getRuntimeEngineDeployer(connection, mc), Platform.Operations.KILL_TRANSACTION, args);
 			} catch (Exception e) {
@@ -232,8 +232,8 @@ public class DQPManagementView implements PluginConstants {
 			Long requestID = (Long) valueMap.get(Operation.Value.REQUEST_ID);
 			String sessionID = (String) valueMap.get(Operation.Value.SESSION_ID);
 			MetaValue[] args = new MetaValue[] {
-					SimpleValueSupport.wrap(requestID),
-					SimpleValueSupport.wrap(sessionID) };
+					SimpleValueSupport.wrap(sessionID),
+					SimpleValueSupport.wrap(requestID) };
 			try {
 				executeManagedOperation(connection, getRuntimeEngineDeployer(connection, mc), Platform.Operations.KILL_REQUEST, args);
 			} catch (Exception e) {
@@ -876,7 +876,7 @@ public class DQPManagementView implements PluginConstants {
 			request.setSourceRequest((Boolean) ProfileServiceUtil.booleanValue(compositeValue.get(SOURCE_REQUEST)));
 			request.setNodeId((Integer) ProfileServiceUtil.integerValue(compositeValue.get(NODE_ID)));
 			request.setTransactionId((String) ProfileServiceUtil.stringValue(compositeValue.get(TRANSACTION_ID)));
-			request.setState((ProcessingState) ProfileServiceUtil.getSimpleValue(compositeValue.get(STATE), ProcessingState.class));
+			request.setState((ProcessingState.valueOf(ProfileServiceUtil.getSimpleValue(compositeValue.get(STATE), String.class))));
 			return request;
 		}
 		throw new IllegalStateException("Unable to unwrap RequestMetadata " + metaValue); //$NON-NLS-1$
