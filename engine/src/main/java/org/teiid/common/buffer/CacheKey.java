@@ -26,9 +26,9 @@ public class CacheKey implements Comparable<CacheKey> {
 
 	private Long id;
 	protected long lastAccess;
-	protected double orderingValue;
+	protected long orderingValue;
 	
-	public CacheKey(Long id, long lastAccess, double orderingValue) {
+	public CacheKey(Long id, long lastAccess, long orderingValue) {
 		this.id = id;
 		this.lastAccess = lastAccess;
 		this.orderingValue = orderingValue;
@@ -63,7 +63,7 @@ public class CacheKey implements Comparable<CacheKey> {
 		return lastAccess;
 	}
 	
-	public double getOrderingValue() {
+	public long getOrderingValue() {
 		return orderingValue;
 	}
 	

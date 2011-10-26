@@ -139,7 +139,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	/**
 	 * This estimate is based upon adding the value to 2/3 maps and having CacheEntry/PhysicalInfo keys
 	 */
-	private static final int BATCH_OVERHEAD = 128;
+	private static final long BATCH_OVERHEAD = 128;
 	
 	final class BatchManagerImpl implements BatchManager, Serializer<List<? extends List<?>>> {
 		final Long id;
@@ -200,9 +200,6 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				throws TeiidComponentException {
 			int sizeEstimate = getSizeEstimate(batch);
 			Long oid = batchAdded.getAndIncrement();
-			if (oid.longValue() == 56) {
-				this.toString();
-			}
 			CacheEntry old = null;
 			if (previous != null) {
 				if (removeOld) {
@@ -875,7 +872,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	void removeCacheGroup(Long id, boolean prefersMemory) {
 		cleanSoftReferences();
 		Collection<Long> vals = cache.removeCacheGroup(id);
-		int overhead = vals.size() * BATCH_OVERHEAD;
+		long overhead = vals.size() * BATCH_OVERHEAD;
 		maxReserveBytes.addAndGet(overhead);
 		reserveBatchBytes.addAndGet(overhead);
 		for (Long val : vals) {

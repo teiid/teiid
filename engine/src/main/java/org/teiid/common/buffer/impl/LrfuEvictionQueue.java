@@ -44,17 +44,12 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 	//just with more CPU overhead vs. wait time.
 	protected NavigableMap<CacheKey, V> evictionQueue = new ConcurrentSkipListMap<CacheKey, V>();
 	protected AtomicLong clock;
-    //combined recency/frequency lamda value between 0 and 1 lower -> LFU, higher -> LRU
-    //TODO: adaptively adjust this value.  more hits should move closer to lru
-	protected double crfLamda;
-	protected double inverseCrfLamda = 1 - crfLamda;
-	protected int maxInterval; //don't consider the old ordering value after the maxInterval
-	protected int minInterval; //cap the frequency gain under this interval (we can make some values too hot otherwise)
-	private float minVal;
+	protected long maxInterval;
+	protected long halfLife;
 	
 	public LrfuEvictionQueue(AtomicLong clock) {
 		this.clock = clock;
-		setCrfLamda(.00005); //smaller values tend to work better since we're using interval bounds
+		setHalfLife(1<<17);
 	}
 
 	public boolean remove(V value) {
@@ -95,41 +90,38 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 		CacheKey key = value.getKey();
 		long lastAccess = key.getLastAccess();
 		long currentClock = clock.get();
-		double orderingValue = key.getOrderingValue();
+		long orderingValue = key.getOrderingValue();
 		orderingValue = computeNextOrderingValue(currentClock, lastAccess,
 				orderingValue);
-		value.setKey(new CacheKey(key.getId(), (int)currentClock, orderingValue));
+		value.setKey(new CacheKey(key.getId(), currentClock, orderingValue));
 	}
-
-	double computeNextOrderingValue(long currentTime,
-			long lastAccess, double orderingValue) {
+	
+	long computeNextOrderingValue(long currentTime,
+			long lastAccess, long orderingValue) {
 		long delta = currentTime - lastAccess;
-		orderingValue = 
-			(delta<maxInterval?(delta<minInterval?minVal:Math.pow(inverseCrfLamda, delta)):0)*orderingValue
-			//recency component
-			+ Math.pow(currentTime, crfLamda);
-		return orderingValue;
-	}
-	
-	public double getCrfLamda() {
-		return crfLamda;
-	}
-	
-	public void setCrfLamda(double crfLamda) {
-		this.crfLamda = crfLamda;
-		this.inverseCrfLamda = 1 - crfLamda;
-		int i = 0;
-		for (; i < 30; i++) {
-			float val = (float)Math.pow(inverseCrfLamda, 1<<i);
-			if (val == 0) {
-				break;
-			}
-			if (val > .8) {
-				minInterval = 1<<i;
-				this.minVal = val;
+		if (delta > maxInterval) {
+			return currentTime;
+		}
+		long increase = Math.min(orderingValue, currentTime);
+		
+		//scale the increase based upon how hot we previously were
+		increase>>=1;
+		increase *= orderingValue/(double)lastAccess;
+		
+		if (delta > halfLife) {
+			while ((delta-=halfLife) > halfLife && (increase>>=1) > 0) {
 			}
 		}
-		this.maxInterval = 1<<(i-1);
+		if (delta > 0 && increase > 0) {
+			//linear interpolate the rest of the delta (between 1 and 1/2)
+			increase = (long) (increase*(halfLife/((double)halfLife + delta)));
+		}
+		return currentTime + increase;
+	}
+	
+	public void setHalfLife(long halfLife) {
+		this.halfLife = halfLife;
+		this.maxInterval = 62*this.halfLife;
 	}
 	
 }

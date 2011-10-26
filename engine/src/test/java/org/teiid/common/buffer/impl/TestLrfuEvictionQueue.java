@@ -33,9 +33,9 @@ public class TestLrfuEvictionQueue {
 	
 	@Test public void testPrecision() {
 		LrfuEvictionQueue<?> q = new LrfuEvictionQueue<BaseCacheEntry>(new AtomicLong());
-		double value = 0;
+		long value = 0;
 		for (long i = Integer.MAX_VALUE; i < 10l + Integer.MAX_VALUE; i++) {
-			double valueNext = q.computeNextOrderingValue(i, i-1, value);
+			long valueNext = q.computeNextOrderingValue(i, i-1, value);
 			assertTrue(valueNext > value);
 			value = valueNext;
 		}

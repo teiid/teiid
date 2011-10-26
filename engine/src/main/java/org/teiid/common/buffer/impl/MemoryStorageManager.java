@@ -158,7 +158,11 @@ public class MemoryStorageManager implements Cache<Long> {
 	public boolean remove(Long gid, Long id) {
 		Map<Long, CacheEntry> group = groups.get(gid);
 		if (group != null) {
-			return group.remove(id) != null;
+			synchronized (group) {
+				int size = group.size();
+				group.remove(id);
+				return group.size() != size;
+			}
 		}
 		return false;
 	}
