@@ -47,6 +47,7 @@
 <ul>
   <li>Leave was added as a reserved word.
   <li>Lob inlining is incompatible with clients older than 7.6.  If a 7.6 server will have older clients that use lobs connect to it, then the BufferService property inlineLobs should be set to false in the teiid-jboss-beans.xml file.
+  <li>Oracle translators assume they are using Oracle supplied drivers.  If that is not the case, set the Oracle translator execution property oracleSuppliedDriver to false.
 </ul>
 
 <h4>from 7.4</h4>
@@ -119,7 +120,8 @@ See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on c
 
 <h4>from 7.4</h4>
 <ul>
-  <li>The configuration for the buffer service now defaults to 256/512 for processor and connector batch sizes respectively.  The buffer service also has 4 new properties inlineLobs, memoryBufferSpace, memoryBufferOffHeap, and maxStorageObjectSize.
+  <li>The configuration for the buffer service now defaults to 256/512 for processor and connector batch sizes respectively.  The buffer service also has 4 new properties inlineLobs, memoryBufferSpace, memoryBufferOffHeap, and maxStorageObjectSize.  
+  If you were explicitly setting the value for maxReserveKb, you should consider lowering that value to account for the memory buffer and/or explicitly set the memoryBufferSpace. 
 </ul>
 
 <h4>from 7.4</h4>
