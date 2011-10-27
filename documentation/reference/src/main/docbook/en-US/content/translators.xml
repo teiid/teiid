@@ -322,6 +322,12 @@
                     A rownum colum should have a name in source of <code>rownum</code>.  These rownum columns do not 
                     have the same semantics as the Oracle rownum construct so care must be taken in their usage. 
                     </para>
+                    <para>Oracle specific execution properties:</para>
+		            <itemizedlist>
+		            	<listitem>
+		            		<para><emphasis>OracleSuppliedDriver</emphasis> - indicates that the Oracle supplied driver (typically prefixed by ojdbc) is being used.  Defaults to true.  Set to false when using DataDirect or other Oracle JDBC drivers.</para>
+		            	</listitem>
+	            	</itemizedlist>
                 </listitem>
                 <listitem>
                     <para>

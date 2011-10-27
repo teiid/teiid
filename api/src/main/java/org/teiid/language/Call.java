@@ -93,6 +93,9 @@ public class Call extends BaseLanguageObject implements Command, MetadataReferen
     	return null;
     }
 
+    /**
+     * @return the result set types or a zero length array if no result set is returned
+     */
     public Class<?>[] getResultSetColumnTypes() {
     	ColumnSet<Procedure> resultSet = this.metadataObject.getResultSet();
     	if (resultSet == null) {

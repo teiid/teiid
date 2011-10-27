@@ -24,10 +24,15 @@ package org.teiid.translator.jdbc.oracle;
 
 import static org.junit.Assert.*;
 
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.cdk.CommandBuilder;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.types.DataTypeManager;
@@ -45,6 +50,7 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.jdbc.JDBCProcedureExecution;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
 
@@ -789,5 +795,32 @@ public class TestOracleTranslator {
                 input, output, 
                 TRANSLATOR);
     }
+    
+    @Test public void testCallWithResultSet() throws Exception {
+        String input = "call spTest5(1)"; //$NON-NLS-1$
+        String output = "{ ?= call spTest5(?)}";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
+    
+	@Test public void testProcedureExecution() throws Exception {
+		Command command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "call spTest8(1)"); //$NON-NLS-1$
+		Connection connection = Mockito.mock(Connection.class);
+		CallableStatement cs = Mockito.mock(CallableStatement.class);
+		Mockito.stub(cs.getUpdateCount()).toReturn(-1);
+		ResultSet rs = Mockito.mock(ResultSet.class);
+		Mockito.stub(cs.getObject(1)).toReturn(rs);
+		Mockito.stub(cs.getInt(3)).toReturn(4);
+		Mockito.stub(connection.prepareCall("{ ?= call spTest8(?,?)}")).toReturn(cs); //$NON-NLS-1$
+		OracleExecutionFactory ef = new OracleExecutionFactory();
+		
+		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
+		procedureExecution.execute();
+		assertEquals(Arrays.asList(4), procedureExecution.getOutputParameterValues());
+		Mockito.verify(cs, Mockito.times(1)).registerOutParameter(1, OracleExecutionFactory.CURSOR_TYPE);
+		Mockito.verify(cs, Mockito.times(1)).getObject(1);
+	}
 
 }
