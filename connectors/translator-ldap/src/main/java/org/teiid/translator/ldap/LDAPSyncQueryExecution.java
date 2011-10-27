@@ -124,6 +124,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	private LDAPExecutionFactory executionFactory;
 	private ExecutionContext executionContext;
 	private SearchControls ctrls;
+	private int resultCount;
 
 	/** 
 	 * Constructor
@@ -323,16 +324,21 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 		        return next();
 			}
 
+			if (result != null) {
+				resultCount++;
+			}
 			return result;
 		} catch (SizeLimitExceededException e) {
-			LogManager.logWarning(LogConstants.CTX_CONNECTOR, "Search results exceeded size limit. Results may be incomplete."); //$NON-NLS-1$
-			searchEnumeration = null; // GHH 20080326 - NamingEnumartion's are no longer good after an exception so toss it
+			if (resultCount != searchDetails.getCountLimit()) {
+				String msg = "LDAP Search results exceeded size limit. Results may be incomplete."; //$NON-NLS-1$
+				if (executionFactory.isExceptionOnSizeLimitExceeded()) {
+					throw new TranslatorException(e, msg);
+				}
+				LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, msg); 
+			}
 			return null; // GHH 20080326 - if size limit exceeded don't try to read more results
 		} catch (NamingException ne) {
-			final String msg = "Ldap error while processing next batch of results: " + ne.getExplanation(); //$NON-NLS-1$
-			LogManager.logError(LogConstants.CTX_CONNECTOR, msg);  // GHH 20080326 - changed to output explanation from LDAP server
-			searchEnumeration = null; // GHH 20080326 - NamingEnumertion's are no longer good after an exception so toss it
-			throw new TranslatorException(msg);
+			throw new TranslatorException(ne, "Ldap error while processing next batch of results"); //$NON-NLS-1$
 		}
 	}
 

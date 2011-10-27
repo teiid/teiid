@@ -566,6 +566,11 @@
                         <entry>Use a PagedResultsControl to page through large results.  This is not supported by all directory servers.</entry>
                         <entry>false</entry>
                     </row>
+                    <row>
+                    	<entry>ExceptionOnSizeLimitExceeded</entry>
+                        <entry>Set to true to throw an exception when a SizeLimitExceededException is received and a LIMIT is not properly enforced.</entry>
+                        <entry>false</entry>
+                    </row>
                 </tbody>
             </tgroup>
         </table>
