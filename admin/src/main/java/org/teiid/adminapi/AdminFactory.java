@@ -191,41 +191,197 @@ public class AdminFactory {
 			}
 		}
 		
-		private void createConnectionFactoryRequest(String deploymentName,	String templateName, Properties properties, DefaultOperationRequestBuilder builder)	throws AdminException {
-			builder.addProperty("archive", templateName);
-			builder.addProperty("transaction-support", properties.getProperty("transaction-support", "NoTransaction"));
-			properties.remove("transaction-support");
+		private void createConnectionFactory(String deploymentName,	String templateName, Properties properties)	throws AdminException {
+			Set<String> resourceAdapters = getDeployedResourceAdapterNames();
+			if (!resourceAdapters.contains(templateName)) {
+				addResourceAdapter(templateName);
+			}
+			
+			///subsystem=resource-adapters/resource-adapter=teiid-connector-file.rar/connection-definitions=fooDS:add(class-name=org.teiid.resource.adapter.file.FileManagedConnectionFactory, jndi-name=java\:\/fooDS, pool-name=foo-pool)
+			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+	        final ModelNode request;
+
+	        try {
+	            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.addNode("resource-adapter", templateName); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.addNode("connection-definitions", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.setOperationName("add"); 
+	            builder.addProperty("jndi-name", "java:/"+deploymentName);
+	            builder.addProperty("pool-name", deploymentName);
+	            request = builder.buildRequest();
+	        } catch (OperationFormatException e) {
+	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
+	        }
+			
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            if (!Util.isSuccess(outcome)) {
+	                throw new AdminProcessingException(Util.getFailureDescription(outcome));
+	            }
+	        } catch (IOException e) {
+	        	throw new AdminProcessingException(e);
+	        }
+	        
+	        // add all the config properties
+            Enumeration keys = properties.propertyNames();
+            while (keys.hasMoreElements()) {
+            	String key = (String)keys.nextElement();
+            	addConfigProperty(templateName, deploymentName, key, properties.getProperty(key));
+            }
 		}
 
-		@Override
-		public void createDataSource(String deploymentName,	String templateName, Properties properties)	throws AdminException {
+		// /subsystem=resource-adapters/resource-adapter=teiid-connector-file.rar/connection-definitions=fooDS/config-properties=ParentDirectory2:add(value=/home/rareddy/testing)
+		private void addConfigProperty(String templateName, String deploymentName, String key, String value) throws AdminProcessingException {
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 	        final ModelNode request;
 	        try {
-	        	//	data-source      jdbc-driver      xa-data-source resource-adapters
-	        	if (templateName.equals("data-source")) {
-		            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
-		            builder.addNode("data-source", deploymentName); //$NON-NLS-1$	        		
-	        	}
-	        	else if (templateName.equals("xa-data-source")) {
-		            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
-		            builder.addNode("xa-data-source", deploymentName); //$NON-NLS-1$	        		
-	        	}
-	        	else if (templateName.equals("resource-adapters")) {
-		            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
-		            builder.addNode("resource-adapter", deploymentName); //$NON-NLS-1$
-		            createConnectionFactoryRequest(deploymentName, templateName, properties, builder);
-	        	}
-	        	
+	            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.addNode("resource-adapter", templateName); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.addNode("connection-definitions", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.addNode("config-properties", key); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.setOperationName("add"); 
+	            builder.addProperty("value", value);
+	            request = builder.buildRequest();
+	        } catch (OperationFormatException e) {
+	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
+	        }
+			
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            if (!Util.isSuccess(outcome)) {
+	                throw new AdminProcessingException(Util.getFailureDescription(outcome));
+	            }
+	        } catch (IOException e) {
+	        	throw new AdminProcessingException(e);
+	        }
+		}
+
+		// /subsystem=resource-adapters/resource-adapter=teiid-connector-ws.rar:add(archive=teiid-connector-ws.rar, transaction-support=NoTransaction)
+		private void addResourceAdapter(String rarName) throws AdminProcessingException {
+			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+	        final ModelNode request;
+
+	        try {
+	            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.addNode("resource-adapter", rarName); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.setOperationName("add"); 
 	            request = builder.buildRequest();
-	            
-	            builder.addProperty("jndi-name", "java:/"+deploymentName);
-	            Enumeration keys = properties.propertyNames();
-	            while (keys.hasMoreElements()) {
-	            	String key = (String)keys.nextElement(); 
-	            	builder.addProperty(key, properties.getProperty(key));
+	            request.get("archive").set(rarName);
+	            request.get("transaction-support").set("NoTransaction");
+	        } catch (OperationFormatException e) {
+	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
+	        }
+			
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            if (!Util.isSuccess(outcome)) {
+	                throw new AdminProcessingException(Util.getFailureDescription(outcome));
 	            }
+	        } catch (IOException e) {
+	        	throw new AdminProcessingException(e);
+	        }				
+		}
+		
+		class AbstractMetadatMapper implements MetadataMapper<String>{
+			@Override
+			public ModelNode wrap(String obj, ModelNode node) {
+				return null;
+			}
+			@Override
+			public String unwrap(ModelNode node) {
+				return null;
+			}
+			@Override
+			public ModelNode describe(ModelNode node) {
+				return null;
+			}
+		}
+		
+		public List<String> getInstalledJDBCDrivers() throws AdminException {
+			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+	        final ModelNode request;
+
+	        try {
+	            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.setOperationName("installed-drivers-list"); 
+	            request = builder.buildRequest();
+
+	        } catch (OperationFormatException e) {
+	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
+	        }
+			
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            if (!Util.isSuccess(outcome)) {
+	                throw new AdminProcessingException(Util.getFailureDescription(outcome));
+	            }
+	            List<String> drivers = getList(outcome, new AbstractMetadatMapper() {
+					@Override
+					public String unwrap(ModelNode node) {
+						if (node.hasDefined("driver-name")) {
+							return node.get("driver-name").asString();
+						}
+						return null;
+					}
+				});
+	            return drivers;
+	        } catch (IOException e) {
+	        	throw new AdminProcessingException(e);
+	        }	
+		}
+		
+		@Override
+		public void createDataSource(String deploymentName,	String templateName, Properties properties)	throws AdminException {
+			
+			Collection<String> dsNames = getDataSourceNames();
+			if (dsNames.contains(deploymentName) || (deploymentName.startsWith("java:/") && dsNames.contains(deploymentName.substring(6)))) {
+				throw new AdminProcessingException(AdminPlugin.Util.getString("datasource_exists", deploymentName));
+			}
+			
+			Set<String> resourceAdapters = getAvailableResourceAdapterNames();
+        	if (resourceAdapters.contains(templateName)) {
+	            createConnectionFactory(deploymentName, templateName, properties);
+	            return;
+        	}
+			
+        	List<String> drivers = getInstalledJDBCDrivers();
+        	if (!drivers.contains(templateName)) {
+        		throw new AdminProcessingException(AdminPlugin.Util.getString("driver_not_defined", templateName));
+        	}
+        	
+			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+	        final ModelNode request;
+	        try {
+	            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.addNode("data-source", deploymentName); //$NON-NLS-1$	        		
+	        	
+	            builder.setOperationName("add"); 
+	            
+	            builder.addProperty("jndi-name", deploymentName.startsWith("java:/")?deploymentName:"java:/"+deploymentName);
+	            builder.addProperty("driver-name", templateName);
+	            
+	            builder.addProperty("pool-name", deploymentName);
+	            builder.addProperty("pool-prefill", "false");
+	            builder.addProperty("max-pool-size", "20");
+	            builder.addProperty("min-pool-size", "10");
+	            
+	            if (properties != null) {
+		            builder.addProperty("connection-url", properties.getProperty("connection-url"));
+		            if (properties.getProperty("user-name") != null) {
+		            	builder.addProperty("user-name", properties.getProperty("user-name"));
+		            }
+		            if (properties.getProperty("password") != null) {
+		            	builder.addProperty("password", properties.getProperty("password"));
+		            }
+		            if (properties.getProperty("check-valid-connection-sql") != null) {
+		            	builder.addProperty("check-valid-connection-sql", properties.getProperty("check-valid-connection-sql"));
+		            }
+	            }
+	            else {
+	            	throw new AdminProcessingException(AdminPlugin.Util.getString("connection_url_required"));
+	            }
+	            
+	            request = builder.buildRequest();
 	        } catch (OperationFormatException e) {
 	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
 	        }
@@ -235,15 +391,60 @@ public class AdminFactory {
 	            if (!Util.isSuccess(outcome)) {
 	                throw new AdminProcessingException(Util.getFailureDescription(outcome));
 	            }
-	        } catch (Exception e) {
+	        } catch (IOException e) {
 	        	throw new AdminProcessingException(e);
 	        }	        
 		}
 
 		@Override
 		public void deleteDataSource(String deployedName) throws AdminException {
-			// rameshTODO Auto-generated method stub
+			Collection<String> dsNames = getDataSourceNames();
+			if (!dsNames.contains(deployedName) || (deployedName.startsWith("java:/") && !dsNames.contains(deployedName.substring(6)))) {
+				throw new AdminProcessingException(AdminPlugin.Util.getString("datasource_doesnot_exists", deployedName));
+			}
 			
+			boolean deleted = deleteDS(deployedName, false, "datasources", "data-source");
+			
+			// check xa connections
+			if (!deleted) {
+				deleted = deleteDS(deployedName, false, "datasources", "xa-data-source");
+			}
+			
+			// check connection factories
+			if (!deleted) {
+				Map<String, String> raDSMap = getResourceAdapterDataSources();
+				String rarName = raDSMap.get(deployedName);
+				if (rarName != null) {
+					deleted = deleteDS(rarName, true, "resource-adapters", "resource-adapter", deployedName);	
+				}
+			}
+		}
+
+		private boolean deleteDS(String deployedName, boolean connFactory, String... subsystem) throws AdminProcessingException {
+			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+	        final ModelNode request;
+
+	        try {
+	            builder.addNode("subsystem", subsystem[0]); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.addNode(subsystem[1], deployedName);
+	            if (connFactory) {
+	            	builder.addNode("connection-definitions", subsystem[2]);
+	            }
+	            builder.setOperationName("remove"); 
+	            request = builder.buildRequest();
+	        } catch (OperationFormatException e) {
+	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
+	        }
+			
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            if (!Util.isSuccess(outcome)) {
+	                return false;
+	            }
+	            return true;
+	        } catch (IOException e) {
+	        	throw new AdminProcessingException(e);
+	        }
 		}
 
 		@Override
@@ -418,35 +619,43 @@ public class AdminFactory {
 			datasourceNames.addAll(getChildNodeNames("datasources", "data-source"));
 			datasourceNames.addAll(getChildNodeNames("datasources", "xa-data-source"));
 
-			Set<String> resourceAdapters = getResourceAdapterNames();
-			for (String resource:resourceAdapters) {
-				
-				DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
-		        try {
-		            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
-		            builder.addNode("resource-adapter", resource); //$NON-NLS-1$ //$NON-NLS-2$
-		            builder.setOperationName("read-resource"); 
-		            ModelNode request = builder.buildRequest();
-		            
-		            ModelNode outcome = this.connection.execute(request);
-		            if (Util.isSuccess(outcome)) {
-		            	if (outcome.hasDefined("result")) {
-		            		ModelNode result = outcome.get("result");
-			            	if (result.hasDefined("connection-definitions")) {
-			            		List<ModelNode> connDefs = result.get("connection-definitions").asList();
-			            		for (ModelNode conn:connDefs) {
-			            			datasourceNames.add(conn.get("jndi-name").asString());
-			            		}
-			            	}
-		            	}
-		            }
-		        } catch (OperationFormatException e) {
-		            throw new AdminProcessingException("Failed to build operation", e); //$NON-NLS-1$
-		        } catch (IOException e) {
-		        	throw new AdminProcessingException("Failed to build operation", e); //$NON-NLS-1$
-		        }
-			}
+			datasourceNames.addAll(getResourceAdapterDataSources().keySet());
 	        return datasourceNames;	
+		}
+
+		private Map<String, String> getResourceAdapterDataSources() throws AdminException {
+			HashMap<String, String> datasourceNames = new HashMap<String, String>();
+			Set<String> resourceAdapters = getDeployedResourceAdapterNames();
+			for (String resource:resourceAdapters) {
+				DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+				try {
+				    builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
+				    builder.addNode("resource-adapter", resource); //$NON-NLS-1$ //$NON-NLS-2$
+				    builder.setOperationName("read-resource"); 
+				    ModelNode request = builder.buildRequest();
+				    
+				    ModelNode outcome = this.connection.execute(request);
+				    if (Util.isSuccess(outcome)) {
+				    	if (outcome.hasDefined("result")) {
+				    		ModelNode result = outcome.get("result");
+				        	if (result.hasDefined("connection-definitions")) {
+				        		List<ModelNode> connDefs = result.get("connection-definitions").asList();
+				        		for (ModelNode conn:connDefs) {
+				        			Iterator<String> it = conn.keys().iterator();
+				        			if (it.hasNext()) {
+				        				datasourceNames.put(it.next(), resource);
+				        			}
+				        		}
+				        	}
+				    	}
+				    }
+				} catch (OperationFormatException e) {
+				    throw new AdminProcessingException("Failed to build operation", e); //$NON-NLS-1$
+				} catch (IOException e) {
+					throw new AdminProcessingException("Failed to build operation", e); //$NON-NLS-1$
+				}
+			}
+			return datasourceNames;
 		}
 		
 		/**
@@ -455,7 +664,7 @@ public class AdminFactory {
 		 * @return
 		 * @throws AdminException
 		 */
-		private Set<String> getResourceAdapterNames() throws AdminException {
+		private Set<String> getDeployedResourceAdapterNames() throws AdminException {
 			Set<String> templates = new HashSet<String>();
 	        final ModelNode request = buildRequest("resource-adapters", "read-children-names", "child-type", "resource-adapter");//$NON-NLS-1$
 	        try {
@@ -469,14 +678,39 @@ public class AdminFactory {
 	        }
 	        return Collections.emptySet();					
 		}
-		
+
+		// :read-children-names(child-type=deployment)
+		private Set<String> getAvailableResourceAdapterNames() throws AdminException {
+			Set<String> templates = new HashSet<String>();
+			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+	        final ModelNode request;
+	        try {
+	            builder.setOperationName("read-children-names"); 
+	            builder.addProperty("child-type", "deployment");
+	            request = builder.buildRequest();
+	        } catch (OperationFormatException e) {
+	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
+	        }
+			
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            List<String> deployments = Util.getList(outcome);
+	            for (String deployment:deployments) {
+	            	if (deployment.endsWith(".rar")) {
+	            		templates.add(deployment);
+	            	}
+	            }
+	        } catch (IOException e) {
+	        	throw new AdminProcessingException(e);
+	        }
+	        return templates;
+		}
 
 		@Override
 		public Set<String> getDataSourceTemplateNames() throws AdminException {
 			Set<String> templates = new HashSet<String>();
-			templates.add("data-source");
-			templates.add("xa-data-source");
-			templates.addAll(getResourceAdapterNames());
+			templates.addAll(getInstalledJDBCDrivers());
+			templates.addAll(getAvailableResourceAdapterNames());
 			return templates;
 		}
 		
@@ -570,24 +804,27 @@ public class AdminFactory {
 		 */
 		@Override		
 		public Collection<PropertyDefinition> getTemplatePropertyDefinitions(String templateName) throws AdminException {
+
+			boolean connectionFactory = false;
+			Set<String> resourceAdapters = getAvailableResourceAdapterNames();
+        	if (resourceAdapters.contains(templateName)) {
+        		connectionFactory = true;
+        	}
+			
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 			ModelNode request = null;
 			try {
-				//	data-source,xa-data-source,resource-adapters
-	        	if (templateName.equals("data-source")) {
-		            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
-		            builder.addNode("data-source", "any"); //$NON-NLS-1$	        		
-	        	}
-	        	else if (templateName.equals("xa-data-source")) {
-		            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
-		            builder.addNode("xa-data-source", "any"); //$NON-NLS-1$	        		
-	        	}
-	        	else {
+				if (connectionFactory) {
 		            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
 		            builder.addNode("resource-adapter", templateName); //$NON-NLS-1$
-	        	}
+		            builder.addNode("connection-definitions", "any"); //$NON-NLS-1$
+				}
+				else {
+		            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
+		            builder.addNode("data-source", "any"); //$NON-NLS-1$	        		
+				}
 	        	
-	            builder.setOperationName("read-resource-description"); 
+	            builder.setOperationName("read-resource-description"); //$NON-NLS-1$
 	            request = builder.buildRequest();
 	        } catch (OperationFormatException e) {
 	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
@@ -772,29 +1009,6 @@ public class AdminFactory {
 	        return Collections.emptyList();
 		}
 		
-	    public List<String> getTransports() {
-	        DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
-	        final ModelNode request;
-	        try {
-	        	builder.addNode("subsystem", "teiid"); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.setOperationName("read-children-names");
-	            builder.addProperty("child-type", "transport");
-	            request = builder.buildRequest();
-	        } catch (OperationFormatException e) {
-	            throw new IllegalStateException("Failed to build operation", e);
-	        }
-
-	        try {
-	            ModelNode outcome = this.connection.execute(request);
-	            if (Util.isSuccess(outcome)) {
-	                return Util.getList(outcome);
-	            }
-	        } catch (Exception e) {
-	        }
-
-	        return Collections.emptyList();
-	    }		
-		
 		private ModelNode buildRequest(String subsystem, String operationName, String... params) {
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 	        final ModelNode request;
@@ -823,13 +1037,7 @@ public class AdminFactory {
 
 	        List<T> list = new ArrayList<T>(nodeList.size());
 	        for(ModelNode node : nodeList) {
-	        	Set<String> keys = node.keys();
-	        	if (!keys.isEmpty()) {
-	        		list.addAll(getList(node.get(0), mapper));
-	        	}
-	        	else {
-	        		list.add(mapper.unwrap(node));
-	        	}
+        		list.add(mapper.unwrap(node));
 	        }
 	        return list;
 	    }		
@@ -994,7 +1202,19 @@ public class AdminFactory {
 	        } catch (Exception e) {
 	        	throw new AdminProcessingException(e);
 	        }				
-		}		
+		}
+		
+	    @Override
+	    public void markDataSourceAvailable(String jndiName) throws AdminException {
+	        final ModelNode request = buildRequest("teiid", "mark-datasource-available","ds-name", jndiName);//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            if (!Util.isSuccess(outcome)) {
+	            	throw new AdminProcessingException(Util.getFailureDescription(outcome));
+	            }
+	        } catch (Exception e) {
+	        	throw new AdminProcessingException(e);
+	        }	    	
+	    }		
     }
-    
 }

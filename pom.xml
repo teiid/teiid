@@ -450,7 +450,12 @@
                 <groupId>org.jboss.logging</groupId>
                 <artifactId>jboss-logging</artifactId>
                 <version>3.0.0.GA</version>
-            </dependency>               
+            </dependency>   
+            <dependency>
+                <groupId>org.jboss.logging</groupId>
+                <artifactId>jboss-logging-generator</artifactId>
+                <version>1.0.0.CR1</version>            
+            </dependency>            
             <dependency>
               <groupId>org.jboss.as</groupId>
               <artifactId>jboss-as-clustering-jgroups</artifactId>

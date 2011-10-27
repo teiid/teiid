@@ -64,6 +64,7 @@ import org.teiid.client.security.SessionToken;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.deployers.VDBRepository;
+import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
@@ -446,6 +447,29 @@ class CacheStatistics extends BaseCachehandler {
 		
 		ModelNode node = new ModelNode();
 		operationNode.get(REPLY_PROPERTIES).add(VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE.describe(node));
+	}	
+}
+
+class MarkDataSourceAvailable extends TeiidOperationHandler{
+	protected MarkDataSourceAvailable() {
+		super("mark-datasource-available"); //$NON-NLS-1$
+	}
+	
+	@Override
+	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException {
+		if (!operation.hasDefined(OperationsConstants.DS_NAME)) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.DS_NAME+MISSING)));
+		}
+		String dsName = operation.get(OperationsConstants.DS_NAME).asString();
+		ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.VDB_STATUS_CHECKER);
+		VDBStatusChecker vsc = VDBStatusChecker.class.cast(sc.getValue());
+		vsc.dataSourceAdded(dsName);
+	}
+	
+	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.DS_NAME, TYPE).set(ModelType.STRING);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.DS_NAME, REQUIRED).set(true);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.DS_NAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.DS_NAME));
 	}	
 }
 

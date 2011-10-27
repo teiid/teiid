@@ -203,10 +203,8 @@ class VDBDeployer implements DeploymentUnitProcessor {
 				String dsName = model.getSourceConnectionJndiName(sourceName);
 				ServiceName svcName = ServiceName.JBOSS.append("data-source", getJndiName(dsName)); //$NON-NLS-1$
 				if (!jdbcSource) {
-					// TODO: add service dependency on connection-factory (this is pending in AS7)
-					svcName = ServiceName.JBOSS.append("resource-adaptor", getJndiName(dsName)); //$NON-NLS-1$
+					svcName = ServiceName.JBOSS.append("connector", "connection-factory", getJndiName(dsName)); //$NON-NLS-1$ //$NON-NLS-2$
 				}
-				
 				svcListener.serviceFound(dsName, svcName);				
 			}
 		}
