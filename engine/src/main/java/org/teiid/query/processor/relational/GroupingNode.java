@@ -167,7 +167,7 @@ public class GroupingNode extends RelationalNode {
 		}
 		
         // Incoming elements and lookup map for evaluating expressions
-        List<SingleElementSymbol> sourceElements = this.getChildren()[0].getElements();
+        List<? extends SingleElementSymbol> sourceElements = this.getChildren()[0].getElements();
         this.elementMap = createLookupMap(sourceElements);
 
     	// List should contain all grouping columns / expressions as we need those for sorting

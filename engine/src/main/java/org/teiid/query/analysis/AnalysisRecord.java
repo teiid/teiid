@@ -23,7 +23,6 @@
 package org.teiid.query.analysis;
 
 import java.io.PrintWriter;
-import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -209,7 +208,7 @@ public class AnalysisRecord {
 	 * @param projectedSymbols The list of SingleElementSymbol projected from a plan or node
 	 * @return List of output columns for sending to the client as part of the plan
 	 */                
-	public static List<String> getOutputColumnProperties(List<SingleElementSymbol> projectedSymbols) {
+	public static List<String> getOutputColumnProperties(List<? extends SingleElementSymbol> projectedSymbols) {
 	    if(projectedSymbols != null) {
 	        List<String> outputCols = new ArrayList<String>(projectedSymbols.size());
 	        for(int i=0; i<projectedSymbols.size() ; i++) {

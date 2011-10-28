@@ -46,6 +46,7 @@ import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.util.CommandContext;
 
 
@@ -53,7 +54,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	
 	static class NodeData {
 		int nodeID;
-		List elements;
+		List<? extends SingleElementSymbol> elements;
 		Number estimateNodeCardinality;
 		Number setSizeEstimate;
 		Number depAccessEstimate;
@@ -165,16 +166,16 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         }
     }
 
-	public void setElements(List elements) {
+	public void setElements(List<? extends SingleElementSymbol> elements) {
 		this.data.elements = elements;
 	}
 	
 	@Override
-	public List getOutputElements() {
+	public List<? extends SingleElementSymbol> getOutputElements() {
 		return getElements();
 	}
 
-	public List getElements() {
+	public List<? extends SingleElementSymbol> getElements() {
 		return this.data.elements;
 	}
     	
@@ -373,13 +374,21 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 
 		return result;
 	}
-	
+
 	public static <T> List<T> projectTuple(int[] indexes, List<T> tupleValues) {
+		return projectTuple(indexes, tupleValues, false);
+	}
+	
+	public static <T> List<T> projectTuple(int[] indexes, List<T> tupleValues, boolean omitMissing) {
 	
 		List<T> projectedTuple = new ArrayList<T>(indexes.length);
 	
 		for (int index : indexes) {
-			projectedTuple.add(tupleValues.get(index));
+			if (omitMissing && index == -1) {
+				projectedTuple.add(null);
+			} else {
+				projectedTuple.add(tupleValues.get(index));
+			}
 		}
 	
 		return projectedTuple;

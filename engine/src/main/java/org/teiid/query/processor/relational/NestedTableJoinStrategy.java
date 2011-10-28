@@ -164,7 +164,7 @@ public class NestedTableJoinStrategy extends JoinStrategy {
 	}
 
 	private void updateContext(List<?> tuple,
-			List<SingleElementSymbol> elements) {
+			List<? extends SingleElementSymbol> elements) {
 		for (int i = 0; i < elements.size(); i++) {
 			SingleElementSymbol element = elements.get(i);
 			if (element instanceof ElementSymbol) {
