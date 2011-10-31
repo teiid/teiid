@@ -34,6 +34,7 @@
   The memory buffer may be optional be configured as off-heap for better large memory performance - see the Admin Guide for more.  Overhead is now tracked to help prevent memory errors when dealing with 10s of millions or more of batches/pages.  Serialization and disk utilization were also improved.
   <LI><B>GSSAPI</B> - both the Teiid JDBC client/server and the ODBC pg backend can now support GSSAPI for single sign-on. 
   <LI><B>Server-side Query Timeouts</B> - default query timeouts can be configured at both the VDB (via the query-timeout VDB property) and entire server (via the teiid-jboss-beans.xml queryTimeout property).
+  <LI><B>Native Queries</B> - added the ability to specify native query SQL for JDBC physical tables and stored procedures via extension metadata.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

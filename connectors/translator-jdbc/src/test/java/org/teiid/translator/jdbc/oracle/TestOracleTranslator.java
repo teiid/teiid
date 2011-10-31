@@ -41,20 +41,25 @@ import org.teiid.dqp.internal.datamgr.ExecutionContextImpl;
 import org.teiid.dqp.internal.datamgr.FakeExecutionContextImpl;
 import org.teiid.language.Command;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.JDBCProcedureExecution;
+import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
 
-
+@SuppressWarnings("nls")
 public class TestOracleTranslator {
 	
     private OracleExecutionFactory TRANSLATOR;
@@ -716,6 +721,8 @@ public class TestOracleTranslator {
     	MetadataStore metadataStore = new MetadataStore();
     	Schema foo = RealMetadataFactory.createPhysicalModel("BQT1", metadataStore); //$NON-NLS-1$
         Table table = RealMetadataFactory.createPhysicalGroup("SmallA", foo); //$NON-NLS-1$
+        Table x = RealMetadataFactory.createPhysicalGroup("x", foo); //$NON-NLS-1$
+        x.setProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, "select c from d");
         Table dual = RealMetadataFactory.createPhysicalGroup("DUAL", foo); //$NON-NLS-1$
         table.setNameInSource("SmallishA");//$NON-NLS-1$
         String[] elemNames = new String[] {
@@ -728,11 +735,18 @@ public class TestOracleTranslator {
             DataTypeManager.DefaultDataTypes.INTEGER,
             DataTypeManager.DefaultDataTypes.TIMESTAMP,
         };
+        RealMetadataFactory.createElements(x, elemNames, elemTypes);
         List<Column> cols = RealMetadataFactory.createElements(table, elemNames, elemTypes);
         cols.get(1).setAutoIncremented(true);
         cols.get(1).setNameInSource("ID:SEQUENCE=MYSEQUENCE.nextVal"); //$NON-NLS-1$
         cols.get(2).setNativeType("date"); //$NON-NLS-1$
         RealMetadataFactory.createElements(dual, new String[] {"something"}, new String[] {DataTypeManager.DefaultDataTypes.STRING}); //$NON-NLS-1$
+        
+        ProcedureParameter in1 = RealMetadataFactory.createParameter("in1", SPParameter.IN, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+		ColumnSet<Procedure> rs3 = RealMetadataFactory.createResultSet("proc.rs1", new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ 
+        Procedure p = RealMetadataFactory.createStoredProcedure("proc", foo, Arrays.asList(in1));
+        p.setResultSet(rs3);
+        p.setProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, "select x from y where z = $1");
         
         CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
         return new TransformationMetadata(null, store, null, RealMetadataFactory.SFM.getSystemFunctions(), null);
@@ -821,6 +835,24 @@ public class TestOracleTranslator {
 		assertEquals(Arrays.asList(4), procedureExecution.getOutputParameterValues());
 		Mockito.verify(cs, Mockito.times(1)).registerOutParameter(1, OracleExecutionFactory.CURSOR_TYPE);
 		Mockito.verify(cs, Mockito.times(1)).getObject(1);
+	}
+	
+	@Test public void testNativeQuery() throws Exception {
+		String input = "SELECT (DoubleNum * 1.0) FROM x"; //$NON-NLS-1$
+        String output = "SELECT (x.DoubleNum * 1.0) FROM (select c from d) x"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = getOracleSpecificMetadata();
+
+        helpTestVisitor(metadata, input, EMPTY_CONTEXT, null, output);
+	}
+	
+	@Test public void testNativeQueryProc() throws Exception {
+		String input = "call proc(2)"; //$NON-NLS-1$
+        String output = "select x from y where z = 2"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = getOracleSpecificMetadata();
+
+        helpTestVisitor(metadata, input, EMPTY_CONTEXT, null, output);
 	}
 
 }
