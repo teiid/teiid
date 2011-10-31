@@ -37,8 +37,6 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
 
 class TranslatorRemove extends AbstractRemoveStepHandler implements DescriptionProvider {
 
@@ -63,7 +61,6 @@ class TranslatorRemove extends AbstractRemoveStepHandler implements DescriptionP
         final ServiceName serviceName = TeiidServiceNames.translatorServiceName(translatorName);
         final ServiceController<?> controller = registry.getService(serviceName);
         if (controller != null) {
-            LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("translator.removed", translatorName)); //$NON-NLS-1$
         	context.removeService(serviceName);
         }
 	}

@@ -188,6 +188,14 @@ public class TranslatorUtil {
 		}
 		return value;
 	}
+	
+	public static String getTranslatorName(ExecutionFactory factory) {
+		org.teiid.translator.Translator translator = factory.getClass().getAnnotation(org.teiid.translator.Translator.class);
+		if (translator == null) {
+			return null;
+		}
+		return translator.name();
+	}
 
 	public static VDBTranslatorMetaData buildTranslatorMetadata(ExecutionFactory factory, String moduleName) {
 		

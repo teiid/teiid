@@ -1,11 +1,18 @@
 package org.teiid.jboss;
 
 import static junit.framework.Assert.assertEquals;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ATTRIBUTES;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CHILD_TYPE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIBE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OUTCOME;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUCCESS;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -24,20 +31,15 @@ import javax.xml.validation.Validator;
 import junit.framework.Assert;
 
 import org.jboss.as.cli.Util;
-import org.jboss.as.cli.operation.impl.DefaultOperationRequestAddress;
-import org.jboss.as.cli.operation.impl.DefaultOperationRequestBuilder;
 import org.jboss.as.controller.OperationContext.Type;
-import org.jboss.as.controller.client.OperationBuilder;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.subsystem.test.AbstractSubsystemTest;
 import org.jboss.as.subsystem.test.AdditionalInitialization;
 import org.jboss.as.subsystem.test.KernelServices;
 import org.jboss.dmr.ModelNode;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.core.util.ObjectConverterUtil;
-import org.teiid.core.util.UnitTestUtil;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -230,13 +232,14 @@ public class TestTeiidOperations extends AbstractSubsystemTest {
         Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
         
         List<String> opNames = getList(result);
-        assertEquals(36, opNames.size());
+        assertEquals(37, opNames.size());
 		String[] ops = { "add", "add-anyauthenticated-role", "add-data-role",
 				"assign-datasource", "cache-statistics", "cache-types",
 				"cancel-request", "change-vdb-connection-type", "clear-cache",
 				"describe", "execute-query", "get-translator", "get-vdb",
 				"list-requests", "list-sessions", "list-transactions",
 				"list-translators", "list-vdbs", "long-running-queries",
+				"mark-datasource-available",
 				"merge-vdbs", "read-attribute", "read-children-names",
 				"read-children-resources", "read-children-types",
 				"read-operation-description", "read-operation-names",
@@ -324,12 +327,12 @@ public class TestTeiidOperations extends AbstractSubsystemTest {
         return list;
     }    
 
-    private ModelNode buildProperty(String name, String value) {
-    	ModelNode node = new ModelNode();
-    	node.get("property-name").set(name);
-    	node.get("property-value").set(value);
-    	return node;
-    }
+//    private ModelNode buildProperty(String name, String value) {
+//    	ModelNode node = new ModelNode();
+//    	node.get("property-name").set(name);
+//    	node.get("property-value").set(value);
+//    	return node;
+//    }
     
     @Test
     public void testTranslator() throws Exception {
@@ -340,80 +343,49 @@ public class TestTeiidOperations extends AbstractSubsystemTest {
         ModelNode addOp = new ModelNode();
         addOp.get(OP).set("add");
         addOp.get(OP_ADDR).set(addr.toModelNode().add("translator", "oracle"));
-        services.executeOperation(addOp);        
-        
-        ModelNode listOp = new ModelNode();
-        listOp.get(OP).set("list-translators");
-        listOp.get(OP_ADDR).set(addr.toModelNode());
-        
-        ModelNode result = services.executeOperation(listOp);
+        ModelNode result = services.executeOperation(addOp);   
         Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
         
-        List<ModelNode> translators = result.get("result").asList();
+        ModelNode read = new ModelNode();
+        read.get(OP).set("read-children-names");
+        read.get(OP_ADDR).set(addr.toModelNode());
+        read.get(CHILD_TYPE).set("translator");        
         
-        ModelNode oracle = new ModelNode();
-        oracle.get("translator-name").set("oracle");
-        oracle.get("description").set("A translator for Oracle 9i Database or later");
-        oracle.get("children", "properties").add(buildProperty("execution-factory-class","org.teiid.translator.jdbc.oracle.OracleExecutionFactory"));
-        oracle.get("children", "properties").add(buildProperty("TrimStrings","false"));
-        oracle.get("children", "properties").add(buildProperty("SupportedJoinCriteria","ANY"));
-        oracle.get("children", "properties").add(buildProperty("requiresCriteria","false"));
-        oracle.get("children", "properties").add(buildProperty("supportsOuterJoins","true"));
-        oracle.get("children", "properties").add(buildProperty("useCommentsInSourceQuery","false"));
-        oracle.get("children", "properties").add(buildProperty("useBindVariables","true"));
-        oracle.get("children", "properties").add(buildProperty("MaxPreparedInsertBatchSize","2048"));
-        oracle.get("children", "properties").add(buildProperty("supportsInnerJoins","true"));
-        oracle.get("children", "properties").add(buildProperty("MaxInCriteriaSize","1000"));
-        oracle.get("children", "properties").add(buildProperty("supportsSelectDistinct","true"));
-        oracle.get("children", "properties").add(buildProperty("supportsOrderBy","true"));
-        oracle.get("children", "properties").add(buildProperty("supportsFullOuterJoins","true"));
-        oracle.get("children", "properties").add(buildProperty("Immutable","false"));
-        oracle.get("children", "properties").add(buildProperty("MaxDependentInPredicates","50"));
+        result = services.executeOperation(read);
+        Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
+
+        List<String> translators = Util.getList(result);
+        Assert.assertTrue(translators.contains("oracle"));
+
+        ModelNode resourceRead = new ModelNode();
+        resourceRead.get(OP).set("read-resource");
+        resourceRead.get(OP_ADDR).set(addr.toModelNode());
+        resourceRead.get("translator").set("oracle");        
         
-        super.compare(translators.get(0), oracle);
+        result = services.executeOperation(resourceRead);
+        Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
+        
+//        ModelNode oracleNode = result.get("result");
+//        
+//        ModelNode oracle = new ModelNode();
+//        oracle.get("translator-name").set("oracle");
+//        oracle.get("description").set("A translator for Oracle 9i Database or later");
+//        oracle.get("children", "properties").add(buildProperty("execution-factory-class","org.teiid.translator.jdbc.oracle.OracleExecutionFactory"));
+//        oracle.get("children", "properties").add(buildProperty("TrimStrings","false"));
+//        oracle.get("children", "properties").add(buildProperty("SupportedJoinCriteria","ANY"));
+//        oracle.get("children", "properties").add(buildProperty("requiresCriteria","false"));
+//        oracle.get("children", "properties").add(buildProperty("supportsOuterJoins","true"));
+//        oracle.get("children", "properties").add(buildProperty("useCommentsInSourceQuery","false"));
+//        oracle.get("children", "properties").add(buildProperty("useBindVariables","true"));
+//        oracle.get("children", "properties").add(buildProperty("MaxPreparedInsertBatchSize","2048"));
+//        oracle.get("children", "properties").add(buildProperty("supportsInnerJoins","true"));
+//        oracle.get("children", "properties").add(buildProperty("MaxInCriteriaSize","1000"));
+//        oracle.get("children", "properties").add(buildProperty("supportsSelectDistinct","true"));
+//        oracle.get("children", "properties").add(buildProperty("supportsOrderBy","true"));
+//        oracle.get("children", "properties").add(buildProperty("supportsFullOuterJoins","true"));
+//        oracle.get("children", "properties").add(buildProperty("Immutable","false"));
+//        oracle.get("children", "properties").add(buildProperty("MaxDependentInPredicates","50"));
+//        
+//        super.compare(oracleNode, oracle);
     }    
-    
-    @Ignore
-    public void testVDBOperations() throws Exception {
-    	KernelServices services = buildSubsystem();
-    	String fileName = "bqt.vdb";
-    	
-		byte[] bytes = ObjectConverterUtil.convertToByteArray(new FileInputStream(UnitTestUtil.getTestDataFile(fileName)));
-        PathAddress addr = PathAddress.pathAddress(PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM));
-        
-        // add
-        ModelNode composite = new ModelNode();
-        composite.get("operation").set("composite");
-        composite.get("address").setEmptyList();
-        ModelNode steps = composite.get("steps");			
-		
-		DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
-        builder.setOperationName("add");
-        builder.addNode("deployment", fileName);
-
-		builder.getModelNode().get("content").get(0).get("bytes").set(bytes);
-		steps.add(builder.buildRequest());
-    
-        // deploy
-        builder = new DefaultOperationRequestBuilder();
-        builder.setOperationName("deploy");
-        builder.addNode("deployment", fileName);
-        steps.add(builder.buildRequest());
-        
-        ModelNode result = services.executeOperation(composite);
-
-        Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
-            
-        ModelNode addOp = new ModelNode();
-        addOp.get(OP).set("list-vdbs");
-        addOp.get(OP_ADDR).set(addr.toModelNode());
-        
-        result = services.executeOperation(addOp);
-        Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
-        
-        List<String> opNames = getList(result);
-        assertEquals(2, opNames.size());
-        String [] ops3 = {"newbie", "odbc"};
-        assertEquals(Arrays.asList(ops3), opNames);     	
-    }
 }

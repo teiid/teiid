@@ -120,6 +120,7 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
 	        		builder.addDependency(TeiidServiceNames.VDB_STATUS_CHECKER, VDBStatusChecker.class, translatorService.statusCheckerInjector);
 	        		newControllers.add(builder.setInitialMode(ServiceController.Mode.ACTIVE).install());
 	                added = true;
+	                break;
         		}
         	}
         }

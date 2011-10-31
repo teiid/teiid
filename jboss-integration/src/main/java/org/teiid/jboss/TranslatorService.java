@@ -30,6 +30,8 @@ import org.jboss.msc.value.InjectedValue;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 
 class TranslatorService implements Service<VDBTranslatorMetaData> {
 	private VDBTranslatorMetaData translator;
@@ -51,6 +53,7 @@ class TranslatorService implements Service<VDBTranslatorMetaData> {
 	public void stop(StopContext context) {
 		this.repositoryInjector.getValue().removeTranslatorMetadata(this.translator.getName());
 		this.statusCheckerInjector.getValue().translatorRemoved(this.translator.getName());
+		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("translator.removed", this.translator.getName())); //$NON-NLS-1$
 	}
 
 	@Override

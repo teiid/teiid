@@ -32,7 +32,11 @@ import java.math.BigInteger;
 import java.net.UnknownHostException;
 import java.util.*;
 
-import javax.security.auth.callback.*;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.NameCallback;
+import javax.security.auth.callback.PasswordCallback;
+import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.sasl.RealmCallback;
 import javax.security.sasl.RealmChoiceCallback;
 
@@ -46,7 +50,9 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.teiid.adminapi.PropertyDefinition.RestartType;
 import org.teiid.adminapi.VDB.ConnectionType;
-import org.teiid.adminapi.impl.*;
+import org.teiid.adminapi.impl.MetadataMapper;
+import org.teiid.adminapi.impl.PropertyDefinitionMetadata;
+import org.teiid.adminapi.impl.VDBMetadataMapper;
 import org.teiid.adminapi.impl.VDBMetadataMapper.RequestMetadataMapper;
 import org.teiid.adminapi.impl.VDBMetadataMapper.SessionMetadataMapper;
 import org.teiid.adminapi.impl.VDBMetadataMapper.TransactionMetadataMapper;
@@ -142,7 +148,8 @@ public class AdminFactory {
     }    
     
     private class AdminImpl implements Admin{
-    	private ModelControllerClient connection;
+    	private static final String JAVA_CONTEXT = "java:/";
+		private ModelControllerClient connection;
     	private boolean domainMode = false;
     	
     	public AdminImpl (ModelControllerClient connection) {
@@ -206,7 +213,7 @@ public class AdminFactory {
 	            builder.addNode("resource-adapter", templateName); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.addNode("connection-definitions", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.setOperationName("add"); 
-	            builder.addProperty("jndi-name", "java:/"+deploymentName);
+	            builder.addProperty("jndi-name", addJavaContext(deploymentName));
 	            builder.addProperty("pool-name", deploymentName);
 	            request = builder.buildRequest();
 	        } catch (OperationFormatException e) {
@@ -332,9 +339,10 @@ public class AdminFactory {
 		
 		@Override
 		public void createDataSource(String deploymentName,	String templateName, Properties properties)	throws AdminException {
+			deploymentName = removeJavaContext(deploymentName);
 			
 			Collection<String> dsNames = getDataSourceNames();
-			if (dsNames.contains(deploymentName) || (deploymentName.startsWith("java:/") && dsNames.contains(deploymentName.substring(6)))) {
+			if (dsNames.contains(deploymentName)) {
 				throw new AdminProcessingException(AdminPlugin.Util.getString("datasource_exists", deploymentName));
 			}
 			
@@ -357,7 +365,7 @@ public class AdminFactory {
 	        	
 	            builder.setOperationName("add"); 
 	            
-	            builder.addProperty("jndi-name", deploymentName.startsWith("java:/")?deploymentName:"java:/"+deploymentName);
+	            builder.addProperty("jndi-name", addJavaContext(deploymentName));
 	            builder.addProperty("driver-name", templateName);
 	            
 	            builder.addProperty("pool-name", deploymentName);
@@ -398,8 +406,10 @@ public class AdminFactory {
 
 		@Override
 		public void deleteDataSource(String deployedName) throws AdminException {
+			deployedName = removeJavaContext(deployedName);
+			
 			Collection<String> dsNames = getDataSourceNames();
-			if (!dsNames.contains(deployedName) || (deployedName.startsWith("java:/") && !dsNames.contains(deployedName.substring(6)))) {
+			if (!dsNames.contains(deployedName)) {
 				throw new AdminProcessingException(AdminPlugin.Util.getString("datasource_doesnot_exists", deployedName));
 			}
 			
@@ -419,6 +429,20 @@ public class AdminFactory {
 				}
 			}
 		}
+
+		private String removeJavaContext(String deployedName) {
+			if (deployedName.startsWith(JAVA_CONTEXT)) {
+				deployedName = deployedName.substring(6);
+			}
+			return deployedName;
+		}
+		
+		private String addJavaContext(String deployedName) {
+			if (!deployedName.startsWith(JAVA_CONTEXT)) {
+				deployedName = JAVA_CONTEXT+deployedName;
+			}
+			return deployedName;
+		}		
 
 		private boolean deleteDS(String deployedName, boolean connFactory, String... subsystem) throws AdminProcessingException {
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
@@ -618,9 +642,18 @@ public class AdminFactory {
 			Set<String> datasourceNames = new HashSet<String>();
 			datasourceNames.addAll(getChildNodeNames("datasources", "data-source"));
 			datasourceNames.addAll(getChildNodeNames("datasources", "xa-data-source"));
-
 			datasourceNames.addAll(getResourceAdapterDataSources().keySet());
-	        return datasourceNames;	
+			
+			Set<String> dsNames = new HashSet<String>();
+			for (String s:datasourceNames) {
+				if (s.startsWith(JAVA_CONTEXT)) {
+					dsNames.add(s.substring(6));
+				}
+				else {
+					dsNames.add(s);
+				}
+			}
+	        return dsNames;	
 		}
 
 		private Map<String, String> getResourceAdapterDataSources() throws AdminException {
@@ -1042,7 +1075,7 @@ public class AdminFactory {
 	        return list;
 	    }		
 	    
-	    public <T> Set<T> getSet(ModelNode operationResult,  MetadataMapper<T> mapper) {
+	    private <T> Set<T> getSet(ModelNode operationResult,  MetadataMapper<T> mapper) {
 	        if(!operationResult.hasDefined("result")) //$NON-NLS-1$
 	            return Collections.emptySet();
 

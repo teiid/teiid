@@ -29,7 +29,7 @@ import org.teiid.metadata.index.IndexMetadataFactory;
 
 public final class TeiidAttachments {
 	
-	enum DeploymentType{VDB, DYNAMIC_VDB};
+	enum DeploymentType{VDB, DYNAMIC_VDB, TRANSLATOR};
 	
     public static final AttachmentKey<VDBMetaData> VDB_METADATA = AttachmentKey.create(VDBMetaData.class);
     public static final AttachmentKey<UDFMetaData> UDF_METADATA = AttachmentKey.create(UDFMetaData.class);
@@ -52,4 +52,12 @@ public final class TeiidAttachments {
     public static void setAsDynamicVDBDeployment(final DeploymentUnit deploymentUnit) {
         deploymentUnit.putAttachment(DEPLOYMENT_TYPE, DeploymentType.DYNAMIC_VDB);
     }
+    
+    public static void setAsTranslatorDeployment(final DeploymentUnit deploymentUnit) {
+        deploymentUnit.putAttachment(DEPLOYMENT_TYPE, DeploymentType.TRANSLATOR);
+    }
+    
+    public static boolean isTranslator(final DeploymentUnit deploymentUnit) {
+        return DeploymentType.TRANSLATOR == deploymentUnit.getAttachment(DEPLOYMENT_TYPE);
+    }    
 }
