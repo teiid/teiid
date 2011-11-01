@@ -389,4 +389,37 @@ if(warning instanceof PartialResultsWarning) {
         </section>
        </section>
        
+	<section>
+		<title>Non-blocking Statement Execution</title>	
+		<para>JDBC query execution can indefinitely block the calling thread when a statement is executed or a resultset is being iterated.  
+		In some situations you may wish to have your calling threads held in these blocked states.  When using embedded connections, you may optionally use the 
+		<code>org.teiid.jdbc.TeiidStatement</code> and <code>org.teiid.jdbc.TeiidPreparedStatement</code> interfaces to execute queries with a callback <code>org.teiid.jdbc.StatementCallback</code> that will be notified
+		of statement events, such as an available row, an exception, or completion.  Your calling thread will be free to perform other work.  The callback will be executed by an engine processing thread as needed.  If your results processing is itself blocking and you want query processing to be concurrent with results processing, then your callback should implement onRow
+		 handling in a multi-threaded manner to allow the engine thread to continue.  
+		</para>
+        <example>
+          <title>Non-blocking Prepared Statement Execution</title>
+          <programlisting>PreparedStatemnt stmt = connection.prepareStatement(sql);
+TeiidPreparedStatement tStmt = stmt.unwrap(TeiidPreparedStatement.class);
+tStmt.submitExecute(new StatementCallback() {
+    @Override
+    public void onRow(Statement s, ResultSet rs) {
+	    //any logic that accesses the current row ...
+        System.out.println(rs.getString(1));
+    }
+			
+    @Override
+    public void onException(Statement s, Exception e) throws Exception {
+        s.close();	
+    }
+			
+    @Override
+    public void onComplete(Statement s) throws Exception {
+        s.close();
+    }
+);</programlisting>
+		</example>
+		<note><para>The non-blocking logic is limited to statement execution only.  Other JDBC operations, such as connection creation or batched executions do not yet have non-blocking options.</para></note>
+	</section>
+ 
 </chapter>

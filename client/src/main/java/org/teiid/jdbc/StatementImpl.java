@@ -307,6 +307,12 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         }
     }
     
+    @Override
+    public void submitExecute(String sql, StatementCallback callback) throws SQLException {
+    	NonBlockingRowProcessor processor = new NonBlockingRowProcessor(this, callback);
+    	submitExecute(sql).addCompletionListener(processor);
+    }
+    
     public ResultsFuture<Boolean> submitExecute(String sql) throws SQLException {
     	return executeSql(new String[] {sql}, false, ResultsMode.EITHER, false);
     }

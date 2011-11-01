@@ -25,13 +25,18 @@ package org.teiid.systemmodel;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.FakeServer;
+import org.teiid.jdbc.StatementCallback;
+import org.teiid.jdbc.TeiidStatement;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
 
 
@@ -181,5 +186,29 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	
 	@Test(expected=SQLException.class) public void testLogMsg1() throws Exception {
 		execute("call logMsg(level=>'foo', context=>'org.teiid.foo', msg=>'hello world')"); //$NON-NLS-1$
+	}
+	
+	@Test public void testAsynch() throws Exception {
+		Statement s = this.internalConnection.createStatement();
+		TeiidStatement ts = s.unwrap(TeiidStatement.class);
+		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
+		ts.submitExecute("select * from SYS.Schemas", new StatementCallback() {
+			int rowCount;
+			@Override
+			public void onRow(Statement s, ResultSet rs) {
+				rowCount++;
+			}
+			
+			@Override
+			public void onException(Statement s, Exception e) {
+				result.getResultsReceiver().exceptionOccurred(e);
+			}
+			
+			@Override
+			public void onComplete(Statement s) {
+				result.getResultsReceiver().receiveResults(rowCount);
+			}
+		});
+		assertEquals(4, result.get().intValue());
 	}
 }

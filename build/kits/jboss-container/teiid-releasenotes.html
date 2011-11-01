@@ -36,6 +36,7 @@
   <LI><B>Server-side Query Timeouts</B> - default query timeouts can be configured at both the VDB (via the query-timeout VDB property) and entire server (via the teiid-jboss-beans.xml queryTimeout property).
   <LI><B>Native Queries</B> - added the ability to specify native query SQL for JDBC physical tables and stored procedures via extension metadata.
   <LI><B>View removal hint</B> - the NO_UNNEST hint now also applies to from clause views and subqueries.  It will instruct the planner to not perform view flattening.
+  <LI><B>Non-blocking statement execution</B> - Teiid JDBC extensions TeiidStatement and TeiidPreparedStatement can be used to submit queries against embedded connections with a callback to process results in a non-blocking manner.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

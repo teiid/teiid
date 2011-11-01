@@ -23,6 +23,7 @@
 package org.teiid.jdbc;
 
 import java.io.Serializable;
+import java.sql.SQLException;
 import java.util.Collection;
 
 import org.teiid.client.plan.Annotation;
@@ -99,4 +100,12 @@ public interface TeiidStatement extends java.sql.Statement {
      * @since 4.2
      */
     void setPayload(Serializable payload);
+    
+    /**
+     * Execute the given statement using a non-blocking callback.
+     * This method is only valid for use with embedded connections.
+     * @param callback
+     * @throws SQLException 
+     */
+    void submitExecute(String sql, StatementCallback callback) throws SQLException;
 }

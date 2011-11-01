@@ -33,7 +33,6 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
 import java.sql.ParameterMetaData;
-import java.sql.PreparedStatement;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -80,7 +79,7 @@ import org.teiid.core.util.TimestampWithTimezone;
  * preparedstatement object.</p>
  */
 
-public class PreparedStatementImpl extends StatementImpl implements PreparedStatement {
+public class PreparedStatementImpl extends StatementImpl implements TeiidPreparedStatement {
     // sql, which this prepared statement is operating on
     protected String prepareSql;
 
@@ -174,6 +173,12 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
     }
     
     @Override
+    public void submitExecute(String sql, StatementCallback callback) throws TeiidSQLException {
+    	String msg = JDBCPlugin.Util.getString("JDBC.Method_not_supported"); //$NON-NLS-1$
+        throw new TeiidSQLException(msg);
+    }
+    
+    @Override
     public ResultSet executeQuery(String sql) throws SQLException {
     	String msg = JDBCPlugin.Util.getString("JDBC.Method_not_supported"); //$NON-NLS-1$
         throw new TeiidSQLException(msg);
@@ -189,6 +194,12 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
     public void addBatch(String sql) throws SQLException {
     	String msg = JDBCPlugin.Util.getString("JDBC.Method_not_supported"); //$NON-NLS-1$
         throw new TeiidSQLException(msg);
+    }
+    
+    @Override
+    public void submitExecute(StatementCallback callback) throws SQLException {
+    	NonBlockingRowProcessor processor = new NonBlockingRowProcessor(this, callback);
+    	submitExecute(ResultsMode.EITHER).addCompletionListener(processor);
     }
     
     public ResultsFuture<Boolean> submitExecute(ResultsMode mode) throws SQLException {
