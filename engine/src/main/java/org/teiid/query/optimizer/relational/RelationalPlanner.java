@@ -839,6 +839,9 @@ public class RelationalPlanner {
             if (group.getModelMetadataId() != null) {
             	node.setProperty(Info.MODEL_ID, group.getModelMetadataId());
             }
+            if (ufc.isNoUnnest()) {
+            	node.setProperty(Info.NO_UNNEST, Boolean.TRUE);
+            }
             node.addGroup(group);
             if (nestedCommand != null) {
             	UpdateInfo info = ProcedureContainerResolver.getUpdateInfo(group, metadata);
@@ -881,6 +884,9 @@ public class RelationalPlanner {
             node = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
             if (sfc.isTable()) {
     		    sfc.getCommand().setCorrelatedReferences(getCorrelatedReferences(parent, node, sfc));
+            }
+            if (sfc.isNoUnnest()) {
+            	node.setProperty(Info.NO_UNNEST, Boolean.TRUE);
             }
             node.addGroup(group);
             addNestedCommand(node, group, nestedCommand, nestedCommand, true);

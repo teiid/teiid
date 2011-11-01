@@ -49,14 +49,15 @@
         <listitem><para>FROM table1 JOIN /*+ MAKEDEP */ table2 ON join-criteria</para></listitem>
         <listitem><para>FROM table1 JOIN /*+ MAKENOTDEP */ table2 ON join-criteria</para></listitem>
         <listitem><para>FROM /*+ MAKEIND */ table1 JOIN table2 ON join-criteria</para></listitem>
+        <listitem><para>FROM /*+ NO_UNNEST */ vw1 JOIN table2 ON join-criteria</para></listitem>
         <listitem><para>FROM table1 left outer join <link linkend="optional_join">/*+ optional */</link> table2 ON join-criteria</para></listitem>
         <listitem><para>FROM <link linkend="texttable">TEXTTABLE...</link></para></listitem>
         <listitem><para>FROM <link linkend="xmltable">XMLTABLE...</link></para></listitem>
         <listitem><para>FROM <link linkend="arraytable">ARRAYTABLE...</link></para></listitem>
         <listitem><para>FROM <link linkend="from_subquery">(SELECT ...</link></para></listitem>
       </itemizedlist> 
-      <note>
-        <title>DEP Hints</title>
+      <section>
+        <title>From Clause Hints</title>
         <para>
           MAKEIND, MAKEDEP, and MAKENOTDEP are hints used to control
           <link linkend="dependent_joins">dependent join</link>
@@ -65,7 +66,12 @@
           metadata, and costing information.  The hints may appear in a comment that proceeds the from clause.  
           The hints can be specified against any from clause, not just a named table.
         </para>
-      </note>
+        <para>
+          NO_UNNEST can be specified against a subquery from clause or view to instruct the planner to not merge 
+          the nested SQL in the surrounding query - also known as view flattening.  This hint only applies to Teiid
+          planning and is not passed to source queries.  NO_UNNEST may appear in a comment that proceeds the from clause.
+        </para>
+      </section>
       <section id="nested_table">
 		<title>Nested Table Reference</title>
 		<para>Nested tables may appear in the FROM clause with the TABLE

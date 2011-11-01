@@ -126,6 +126,7 @@ public final class NodeConstants {
         CORRELATED_REFERENCES,  // SymbolMap
         MAKE_NOT_DEP,       // Boolean
         INLINE_VIEW,        // If the source node represents an inline view
+        NO_UNNEST,
         MAKE_IND,
         
         // Group node properties

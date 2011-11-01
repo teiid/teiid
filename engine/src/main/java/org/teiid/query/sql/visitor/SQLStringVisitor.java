@@ -530,6 +530,10 @@ public class SQLStringVisitor extends LanguageVisitor {
                 append(FromClause.MAKEIND);
                 append(SPACE);
             }
+            if (obj.isNoUnnest()) {
+                append(SubqueryHint.NOUNNEST);
+                append(SPACE);
+            }
             append(END_HINT);
             append(SPACE);
     	}

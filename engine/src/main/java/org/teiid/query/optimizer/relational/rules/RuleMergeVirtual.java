@@ -81,7 +81,9 @@ public final class RuleMergeVirtual implements
     static PlanNode doMerge(PlanNode frame,
                             PlanNode root, boolean beforeDecomposeJoin,
                             QueryMetadataInterface metadata) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
-
+    	if (frame.hasBooleanProperty(Info.NO_UNNEST)) {
+    		return root;
+    	}
         GroupSymbol virtualGroup = frame.getGroups().iterator().next();
 
         // check to see if frame represents a proc relational query.

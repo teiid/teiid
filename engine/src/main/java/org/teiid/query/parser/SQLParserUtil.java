@@ -180,7 +180,9 @@ public class SQLParserUtil {
                 fromClause.setMakeNotDep(true);
             } else if (parts[i].equalsIgnoreCase(FromClause.MAKEIND)) {
                 fromClause.setMakeInd(true);
-            }       
+            } else if (parts[i].equalsIgnoreCase(SubqueryHint.NOUNNEST)) {
+            	fromClause.setNoUnnest(true);
+            }
         }
     }
     

@@ -45,6 +45,7 @@ public abstract class FromClause implements LanguageObject {
     private boolean makeDep;
     private boolean makeNotDep;
     private boolean makeInd;
+    private boolean noUnnest;
 
     public boolean isOptional() {
         return optional;
@@ -72,8 +73,17 @@ public abstract class FromClause implements LanguageObject {
     	clone.makeInd = makeInd;
     	clone.makeNotDep = makeNotDep;
     	clone.optional = optional;
+    	clone.noUnnest = noUnnest;
     	return clone;
     }
+    
+    public void setNoUnnest(boolean noUnnest) {
+		this.noUnnest = noUnnest;
+	}
+    
+    public boolean isNoUnnest() {
+		return noUnnest;
+	}
 
     public boolean isMakeDep() {
         return this.makeDep;
@@ -92,7 +102,7 @@ public abstract class FromClause implements LanguageObject {
     }
     
     public boolean hasHint() {
-        return optional || makeDep || makeNotDep || makeInd;
+        return optional || makeDep || makeNotDep || makeInd || noUnnest;
     }
     
     public boolean equals(Object obj) {
@@ -109,7 +119,8 @@ public abstract class FromClause implements LanguageObject {
         return other.isOptional() == this.isOptional()
                && other.isMakeDep() == this.isMakeDep()
                && other.isMakeNotDep() == this.isMakeNotDep()
-        	   && other.isMakeInd() == this.isMakeInd();
+        	   && other.isMakeInd() == this.isMakeInd()
+        	   && other.isNoUnnest() == this.isNoUnnest();
     }
     
     @Override

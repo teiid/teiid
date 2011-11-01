@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.query.sql.lang.AbstractCompareCriteria;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -57,12 +58,12 @@ import org.teiid.query.sql.proc.DeclareStatement;
 import org.teiid.query.sql.proc.HasCriteria;
 import org.teiid.query.sql.proc.IfStatement;
 import org.teiid.query.sql.proc.Statement;
-import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Reference;
 
 @SuppressWarnings("nls")
@@ -1154,6 +1155,11 @@ public class TestOptionsAndHints {
         String sql = "SELECT a FROM db.g WHERE b IN /*+ MJ */ (SELECT a FROM db.g WHERE a2 = 5)"; //$NON-NLS-1$
         Query q = TestParser.exampleIn(true);
         TestParser.helpTest(sql, "SELECT a FROM db.g WHERE b IN /*+ MJ */ (SELECT a FROM db.g WHERE a2 = 5)", q);         //$NON-NLS-1$
+    }
+    
+    @Test public void testNoUnnest() throws QueryParserException {
+        String sql = "SELECT a FROM /*+ no_unnest */ (SELECT a FROM db.g WHERE a2 = 5) x"; //$NON-NLS-1$
+        assertEquals("SELECT a FROM /*+ NO_UNNEST */ (SELECT a FROM db.g WHERE a2 = 5) AS x", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
     }
     
 }
