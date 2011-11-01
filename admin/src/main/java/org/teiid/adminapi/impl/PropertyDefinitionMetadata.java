@@ -50,6 +50,7 @@ public class PropertyDefinitionMetadata extends AdminObjectImpl implements Prope
     public String toString() {
         StringBuffer result = new StringBuffer();
         result.append("Display Name:").append(getDisplayName()); //$NON-NLS-1$
+        result.append(" Name:").append(getName()); //$NON-NLS-1$
         result.append(" Description:").append(getDescription()); //$NON-NLS-1$
         result.append(" Property Type Classname:").append(getPropertyTypeClassName()); //$NON-NLS-1$
         result.append(" Default Value:").append(getDefaultValue()); //$NON-NLS-1$

@@ -150,7 +150,7 @@ public class ExtendedPropertyMetadata {
 		return masked;
 	}
 	public boolean readOnly() {
-		return editable;
+		return !editable;
 	}
 	public boolean required() {
 		return required;

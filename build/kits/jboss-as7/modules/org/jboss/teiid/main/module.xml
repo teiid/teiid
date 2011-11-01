@@ -41,6 +41,10 @@
         <module name="javax.transaction.api"/>
         <module name="javax.activation.api"/>
         <module name="org.jboss.as.clustering.jgroups"/>
+        <!-- These dependencies here for ra.xml description -->
+        <module name="org.jboss.as.connector"/>
+        <module name="org.jboss.ironjacamar.api"/>
+        <module name="org.jboss.ironjacamar.impl"/>
     </dependencies>
 
 </module>

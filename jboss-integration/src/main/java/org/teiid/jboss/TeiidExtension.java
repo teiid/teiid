@@ -140,6 +140,7 @@ public class TeiidExtension implements Extension {
 		new TerminateTransaction().register(teiidSubsystem);
 		new ExecuteQuery().register(teiidSubsystem);
 		new MarkDataSourceAvailable().register(teiidSubsystem);
+		new ReadRARDescription().register(teiidSubsystem);
 	}
 
 	@Override

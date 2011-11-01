@@ -21,7 +21,10 @@
  */
 package org.teiid.jboss;
 
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ALLOWED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.READ_ONLY;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REPLY_PROPERTIES;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
@@ -45,11 +48,17 @@ import java.util.concurrent.TimeUnit;
 
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.as.connector.metadata.xmldescriptors.ConnectorXmlDescriptor;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.PathAddress;
+import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
+import org.jboss.jca.common.api.metadata.ra.ConfigProperty;
+import org.jboss.jca.common.api.metadata.ra.ConnectionDefinition;
+import org.jboss.jca.common.api.metadata.ra.ResourceAdapter;
+import org.jboss.jca.common.api.metadata.ra.ResourceAdapter1516;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.teiid.adminapi.Admin;
@@ -63,6 +72,7 @@ import org.teiid.client.ResultsMessage;
 import org.teiid.client.security.SessionToken;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.deployers.ExtendedPropertyMetadata;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
@@ -1205,5 +1215,95 @@ class AssignDataSource extends VDBOperations {
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.DS_NAME, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.DS_NAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.DS_NAME));
 		
+	}		
+}
+
+class ReadRARDescription extends TeiidOperationHandler {
+	
+	protected ReadRARDescription() {
+		super("read-rar-description"); //$NON-NLS-1$
+	}
+	@Override
+	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException {
+		ModelNode result = context.getResult();
+		
+		if (!operation.hasDefined(OperationsConstants.RAR_NAME)) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.RAR_NAME+MISSING)));
+		}
+		String rarName = operation.get(OperationsConstants.RAR_NAME).asString();
+				
+		ServiceName svcName = ServiceName.JBOSS.append("deployment", "unit").append(rarName); //$NON-NLS-1$ //$NON-NLS-2$
+		ServiceController<?> sc = context.getServiceRegistry(false).getService(svcName);
+		DeploymentUnit du = DeploymentUnit.class.cast(sc.getValue());
+		ConnectorXmlDescriptor cd = du.getAttachment(ConnectorXmlDescriptor.ATTACHMENT_KEY);
+		ResourceAdapter ra = cd.getConnector().getResourceadapter();
+		if (ra instanceof ResourceAdapter1516) {
+			ResourceAdapter1516 ra1516 = (ResourceAdapter1516)ra;
+			List<ConnectionDefinition> connDefinitions = ra1516.getOutboundResourceadapter().getConnectionDefinitions();
+			for (ConnectionDefinition p:connDefinitions) {
+				List<? extends ConfigProperty> props = p.getConfigProperties();
+				for (ConfigProperty prop:props) {
+					result.add(buildNode(prop));
+				}
+			}
+		}
+	}
+	private ModelNode buildNode(ConfigProperty prop) {
+		ModelNode node = new ModelNode();
+		String name = prop.getConfigPropertyName().getValue();
+		String type = prop.getConfigPropertyType().getValue();
+		
+		String defaltValue = null;
+		if (prop.getConfigPropertyValue() != null) {
+			defaltValue = prop.getConfigPropertyValue().getValue();
+		}
+		
+		String description = null;
+		if (prop.getDescriptions() != null) {
+			description = prop.getDescriptions().get(0).getValue();
+		}
+		
+		ExtendedPropertyMetadata extended = new ExtendedPropertyMetadata(name, type, description, defaltValue);
+		
+		if ("java.lang.String".equals(type)) { //$NON-NLS-1$
+			node.get(name, TYPE).set(ModelType.STRING);
+		}
+		else if ("java.lang.Integer".equals(type)) { //$NON-NLS-1$
+			node.get(name, TYPE).set(ModelType.INT);
+		}
+		else if ("java.lang.Long".equals(type)) { //$NON-NLS-1$
+			node.get(name, TYPE).set(ModelType.LONG);
+		}
+		else if ("java.lang.Boolean".equals(type)) { //$NON-NLS-1$
+			node.get(name, TYPE).set(ModelType.BOOLEAN);
+		}		
+		
+		node.get(name, REQUIRED).set(extended.required());
+		
+		if (extended.description() != null) {
+			node.get(name, DESCRIPTION).set(extended.description());
+		}
+		node.get(name, "display").set(extended.display()); //$NON-NLS-1$
+        node.get(name, READ_ONLY).set(extended.readOnly());
+        node.get(name, "advanced").set(extended.advanced()); //$NON-NLS-1$
+        
+        if (extended.allowed() != null) {
+        	for (String s:extended.allowed()) {
+        		node.get(name, ALLOWED).add(s);
+        	}
+        }
+        
+        node.get(name, "masked").set(extended.masked()); //$NON-NLS-1$
+        
+        if (extended.defaultValue() != null) {
+        	node.get(name, DEFAULT).set(extended.defaultValue());
+        }
+		return node;
+	}
+	
+	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.RAR_NAME, TYPE).set(ModelType.STRING);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.RAR_NAME, REQUIRED).set(true);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.RAR_NAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.RAR_NAME));		
 	}		
 }

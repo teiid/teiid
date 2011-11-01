@@ -838,51 +838,51 @@ public class AdminFactory {
 		@Override		
 		public Collection<PropertyDefinition> getTemplatePropertyDefinitions(String templateName) throws AdminException {
 
-			boolean connectionFactory = false;
-			Set<String> resourceAdapters = getAvailableResourceAdapterNames();
-        	if (resourceAdapters.contains(templateName)) {
-        		connectionFactory = true;
-        	}
-			
-			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 			ModelNode request = null;
+			ModelNode result = null;
 			try {
-				if (connectionFactory) {
-		            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
-		            builder.addNode("resource-adapter", templateName); //$NON-NLS-1$
-		            builder.addNode("connection-definitions", "any"); //$NON-NLS-1$
-				}
-				else {
-		            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
-		            builder.addNode("data-source", "any"); //$NON-NLS-1$	        		
-				}
+				Set<String> resourceAdapters = getAvailableResourceAdapterNames();
+	        	if (resourceAdapters.contains(templateName)) {
+	        		DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+		            builder.addNode("subsystem", "teiid"); //$NON-NLS-1$ //$NON-NLS-2$
+		            builder.setOperationName("read-rar-description"); //$NON-NLS-1$
+		            builder.addProperty("rar-name", templateName);
+		            request = builder.buildRequest();					
+			        try {
+			            ModelNode outcome = this.connection.execute(request);
+			            if (!Util.isSuccess(outcome)) {
+			                throw new AdminProcessingException(Util.getFailureDescription(outcome));
+			            }
+			            result = outcome.get("result");
+			        } catch (IOException e) {
+			        	throw new AdminProcessingException(e);
+			        }			            
+	        	}
+	        	else {
+	        		result = new ModelNode();
+	        		result.add(buildProperty("connection-url", "connection URL", ModelType.STRING, "connection url", true));
+	        		result.add(buildProperty("user-name", "User Name", ModelType.STRING, "user name", false));
+	        		result.add(buildProperty("password", "Password", ModelType.STRING, "password", false));
+	        		result.add(buildProperty("check-valid-connection-sql", "Connection Validate SQL", ModelType.STRING, "SQL to be used to validate the connection", false));
+	        	}
 	        	
-	            builder.setOperationName("read-resource-description"); //$NON-NLS-1$
-	            request = builder.buildRequest();
 	        } catch (OperationFormatException e) {
 	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
 	        }
-        
-			ModelNode result = null;
-	        try {
-	            ModelNode outcome = this.connection.execute(request);
-	            if (!Util.isSuccess(outcome)) {
-	                throw new AdminProcessingException(Util.getFailureDescription(outcome));
-	            }
-	            result = outcome.get("result");
-	        } catch (IOException e) {
-	        	throw new AdminProcessingException(e);
-	        }	
-	        
-	        ArrayList<PropertyDefinition> propDefinitions = new ArrayList<PropertyDefinition>();
-	        List<ModelNode> propsNodes = null;
-        	if (templateName.equals("data-source") || templateName.equals("xa-data-source")) {
-        		propsNodes = result.get("attributes").asList();
-        	}
-        	else {
-        		propsNodes = result.get("connection-definitions", "attributes").asList();
-        	}	 
-        	
+	        return buildPropertyDefinitions(result.asList());
+		}
+		
+		private ModelNode buildProperty(String name, String displayName, ModelType modelType, String description, boolean required) {
+			ModelNode node = new ModelNode();
+			node.get(name, "type").set(modelType);
+	        node.get(name, "description").set(description);
+	        node.get(name, "required").set(required);
+	        node.get(name, "display").set(displayName);
+	        return node;
+		}
+
+		private ArrayList<PropertyDefinition> buildPropertyDefinitions(List<ModelNode> propsNodes) {
+			ArrayList<PropertyDefinition> propDefinitions = new ArrayList<PropertyDefinition>();
         	for (ModelNode node:propsNodes) {
         		PropertyDefinitionMetadata def = new PropertyDefinitionMetadata();
         		Set<String> keys = node.keys();
@@ -891,26 +891,44 @@ public class AdminFactory {
         		def.setName(name);
         		node = node.get(name);
 
+        		if (node.hasDefined("display")) {
+        			def.setDisplayName(node.get("display").asString());
+        		}
+        		
         		if (node.hasDefined("description")) {
         			def.setDescription(node.get("description").asString());
         		}
+        		
+        		if (node.hasDefined("allowed")) {
+        			List<ModelNode> allowed = node.get("allowed").asList();
+        			ArrayList<String> list = new ArrayList<String>();
+        			for(ModelNode m:allowed) {
+        				list.add(m.asString());
+        			}
+        			def.setAllowedValues(list);
+        		}        		
         		
         		if (node.hasDefined("required")) {
         			def.setRequired(node.get("required").asBoolean());
         		}
         		
-        		if (node.hasDefined("access-type")) {
-        			String access = node.get("access-type").asString();
-        			if ("read-only".equals(access)) {
-        				def.setModifiable(false);
-        			}
-        			else if ("read-write".equals(access)) {
-        				def.setModifiable(true);
-        			}
+        		if (node.hasDefined("read-only")) {
+        			String access = node.get("read-only").asString();
+        			def.setModifiable(Boolean.parseBoolean(access));
         		}
         		
+        		if (node.hasDefined("advanced")) {
+        			String access = node.get("advanced").asString();
+        			def.setAdvanced(Boolean.parseBoolean(access));
+        		}        		
+        		
+        		if (node.hasDefined("masked")) {
+        			String access = node.get("masked").asString();
+        			def.setAdvanced(Boolean.parseBoolean(access));
+        		} 
+        		
         		if (node.hasDefined("restart-required")) {
-        			def.setRequiresRestart(RestartType.CLUSTER);
+        			def.setRequiresRestart(RestartType.NONE);
         		}
 
         		String type = node.get("type").asString();
@@ -955,7 +973,7 @@ public class AdminFactory {
         		}
         		propDefinitions.add(def);
         	}
-        	return propDefinitions;
+			return propDefinitions;
 		}
 
 		@Override
