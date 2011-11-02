@@ -33,6 +33,7 @@ import javax.security.auth.Subject;
 import org.teiid.adminapi.Session;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.translator.ExecutionContext;
 
 
@@ -66,6 +67,8 @@ public class ExecutionContextImpl implements ExecutionContext {
     private int batchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
 	private List<Exception> warnings = new LinkedList<Exception>();
 	private Session session;
+	private RequestWorkItem worktItem;
+	private boolean dataAvailable;
     
     public ExecutionContextImpl(String vdbName, int vdbVersion,  Serializable executionPayload, 
                                 String originalConnectionID, String connectorName, String requestId, String partId, String execCount) {
@@ -214,5 +217,24 @@ public class ExecutionContextImpl implements ExecutionContext {
 	
 	public void setSession(Session session) {
 		this.session = session;
+	}
+
+	public void setRequestWorkItem(RequestWorkItem item) {
+		this.worktItem = item;
+	}
+	
+	@Override
+	public synchronized void dataAvailable() {
+		RequestWorkItem requestWorkItem = this.worktItem;
+		dataAvailable = true;
+		if (requestWorkItem != null) {
+			requestWorkItem.moreWork();
+		}
+	}
+	
+	public synchronized boolean isDataAvailable() {
+		boolean result = dataAvailable;
+		dataAvailable = false;
+		return result;
 	}
 }

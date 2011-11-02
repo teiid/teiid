@@ -146,4 +146,10 @@ public interface ExecutionContext {
      * @return
      */
     Session getSession();
+    
+    /**
+     * Signal the engine that data is available and processing should be
+     * resumed.
+     */
+    void dataAvailable();
 }

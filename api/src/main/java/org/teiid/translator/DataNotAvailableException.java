@@ -25,7 +25,7 @@ import org.teiid.core.TeiidRuntimeException;
 
 /**
  * Used by asynch connectors to indicate data is not available 
- * and results should be polled for after the given delay.
+ * and results should be polled for after the given delay in milliseconds.
  */
 public class DataNotAvailableException extends TeiidRuntimeException {
 
@@ -33,9 +33,24 @@ public class DataNotAvailableException extends TeiidRuntimeException {
 
 	private long retryDelay = 0;
 	
+	/**
+	 * Indicate that the engine should not poll for results and will be notified
+	 * via the {@link ExecutionContext#dataAvailable()} method.
+	 */
+	public static final DataNotAvailableException NO_POLLING = new DataNotAvailableException(-1);
+	
+	/**
+	 * Uses a delay of 0, which implies an immediate poll for results.
+	 */
 	public DataNotAvailableException() {
 	}
 	
+	/**
+	 * Uses the given retryDelay.  Negative values indicate that the
+	 * engine should not poll for results (see also {@link DataNotAvailableException#NO_POLLING} and will be notified
+	 * via the {@link ExecutionContext#dataAvailable()} method.
+	 * @param retryDelay in milliseconds
+	 */
 	public DataNotAvailableException(long retryDelay) {
 		this.retryDelay = retryDelay;
 	}

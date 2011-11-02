@@ -202,6 +202,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		}
 		ConnectorManagerRepository cmr = workItem.getDqpWorkContext().getVDB().getAttachment(ConnectorManagerRepository.class);
 		ConnectorWork work = cmr.getConnectorManager(aqr.getConnectorName()).registerRequest(aqr);
+		work.setRequestWorkItem(workItem);
         return new DataTierTupleSource(aqr, workItem, work, this, limit);
 	}
 

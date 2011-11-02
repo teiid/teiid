@@ -238,12 +238,16 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     			} catch (TranslatorException e) {
     				results = exceptionOccurred(e, true);
     			} catch (DataNotAvailableException e) {
-    				workItem.scheduleWork(new Runnable() {
-    					@Override
-    					public void run() {
-							workItem.moreWork();
-    					}
-    				}, 10, e.getRetryDelay());
+    				if (e.getRetryDelay() >= 0) {
+	    				workItem.scheduleWork(new Runnable() {
+	    					@Override
+	    					public void run() {
+								workItem.moreWork();
+	    					}
+	    				}, 10, e.getRetryDelay());
+    				} else if (this.cwi.isDataAvailable()) {
+    					continue; 
+    				}
     				throw BlockedException.block(aqr.getAtomicRequestID(), "Blocking on DataNotAvailableException"); //$NON-NLS-1$
     			} 
     			receiveResults(results);
@@ -326,7 +330,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		return results;
 	}
 
-	private AtomicResultsMessage getResults()
+	AtomicResultsMessage getResults()
 			throws BlockedException, TeiidComponentException,
 			TranslatorException {
 		AtomicResultsMessage results = null;
@@ -443,7 +447,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 	@Override
 	public void onCompletion(FutureWork<AtomicResultsMessage> future) {
 		if (!cancelAsynch) {
-			workItem.moreWork();
+			workItem.moreWork(); //this is not necessary in some situations with DataNotAvailable
 		}
 		canAsynchClose = false;
 		if (closed.get()) {

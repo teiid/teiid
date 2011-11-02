@@ -21,16 +21,11 @@
  */
 package org.teiid.transport;
 
-import java.util.Properties;
-
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.DefaultChannelPipeline;
 import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.StorageManager;
-import org.teiid.core.TeiidException;
-import org.teiid.jdbc.EmbeddedProfile;
 import org.teiid.jdbc.TeiidDriver;
-import org.teiid.net.ServerConnection;
 import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
 import org.teiid.net.socket.ObjectChannel;
 
@@ -46,14 +41,6 @@ public class ODBCSocketListener extends SocketListener {
 		super(config, new ClientServiceRegistryImpl(ClientServiceRegistry.Type.ODBC), storageManager, portOffset);
 		this.maxLobSize = maxLobSize;
 		this.driver = new TeiidDriver();
-		this.driver.setEmbeddedProfile(new EmbeddedProfile() {
-			@Override
-			protected ServerConnection createServerConnection(Properties info)
-					throws TeiidException {
-				//When using the non-blocking api, we don't want to use the calling thread
-				return new LocalServerConnection(info, false);
-			}
-		});
 		this.logonService = logon;
 	}
 	

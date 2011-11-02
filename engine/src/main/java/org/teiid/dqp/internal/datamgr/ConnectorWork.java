@@ -23,6 +23,7 @@
 package org.teiid.dqp.internal.datamgr;
 
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.translator.TranslatorException;
 
@@ -39,5 +40,9 @@ public interface ConnectorWork {
 	void close();
 
 	AtomicResultsMessage execute() throws TranslatorException, BlockedException;
+	
+	void setRequestWorkItem(RequestWorkItem item);
+	
+	boolean isDataAvailable();
 	
 }

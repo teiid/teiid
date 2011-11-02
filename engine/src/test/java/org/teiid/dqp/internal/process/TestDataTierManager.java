@@ -168,4 +168,21 @@ public class TestDataTierManager {
     	}
     }
     
+    @Test public void testAsynch() throws Exception {
+    	this.connectorManager.dataNotAvailable = 10;
+    	this.connectorManager.setRows(0);
+    	helpSetup(3);
+    	boolean blocked = false;
+    	while (true) {
+	    	try {
+	        	assertNull(info.nextTuple());
+	    		break;
+	    	} catch (BlockedException e) {
+	    		blocked = true;
+	    		Thread.sleep(50);
+	    	}
+    	}
+    	assertTrue(blocked);
+    }
+    
 }
