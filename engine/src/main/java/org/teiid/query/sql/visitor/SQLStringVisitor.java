@@ -1777,6 +1777,14 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit( Limit obj ) {
+    	if (!obj.isStrict()) {
+    		append(BEGIN_HINT);
+    		append(SPACE);
+    		append(Limit.NON_STRICT);
+    		append(SPACE);
+    		append(END_HINT);
+    		append(SPACE);
+    	}
     	if (obj.getRowLimit() == null) {
     		append(OFFSET);
     		append(SPACE);

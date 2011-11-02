@@ -36,6 +36,7 @@ import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.lang.Limit;
 import org.teiid.query.sql.lang.Option;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SetQuery;
@@ -211,6 +212,16 @@ public class SQLParserUtil {
         	hint = hint.substring(1);
         }
         return hint;
+	}
+	
+	boolean isNonStrictHint(Token t) {
+		String[] parts = getComment(t).split("\\s"); //$NON-NLS-1$
+    	for (int i = 0; i < parts.length; i++) {
+    		if (parts[i].equalsIgnoreCase(Limit.NON_STRICT)) {
+    			return true;
+    		}
+    	}
+    	return false;
 	}
 	
 	private static Pattern CACHE_HINT = Pattern.compile("/\\*\\+?\\s*cache(\\(\\s*(pref_mem)?\\s*(ttl:\\d{1,19})?\\s*(updatable)?\\s*(scope:(session|vdb|user))?[^\\)]*\\))?[^\\*]*\\*\\/.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$

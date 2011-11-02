@@ -1162,4 +1162,15 @@ public class TestOptionsAndHints {
         assertEquals("SELECT a FROM /*+ NO_UNNEST */ (SELECT a FROM db.g WHERE a2 = 5) AS x", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
     }
     
+    @Test public void testNonStrictLimit() throws QueryParserException {
+        String sql = "SELECT a FROM x /*+ non_strict */ limit 1"; //$NON-NLS-1$
+        assertEquals("SELECT a FROM x /*+ NON_STRICT */ LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+        
+        sql = "SELECT a FROM x /*+ non_strict */ offset 1 row"; //$NON-NLS-1$
+        assertEquals("SELECT a FROM x /*+ NON_STRICT */ OFFSET 1 ROWS", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+
+        sql = "SELECT a FROM x /*+ non_strict */ fetch first 1 rows only"; //$NON-NLS-1$
+        assertEquals("SELECT a FROM x /*+ NON_STRICT */ LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+    }
+    
 }

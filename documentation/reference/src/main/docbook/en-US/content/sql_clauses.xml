@@ -438,6 +438,11 @@
           <para>The terms FIRST/NEXT are interchangable as well as ROW/ROWS.
           </para>
         </listitem>
+        <listitem>
+          <para>The limit clause may take an optional preceeding NON_STRICT hint to indicate that push operations should not be inhibited even if the results will not be consistent with the logical application of the limit.
+          The hint is only needed on unordered limits, e.g. "SELECT * FROM VW /*+ NON_STRICT */ LIMIT 2".
+          </para>
+        </listitem>
       </itemizedlist>
       <itemizedlist>
         <para>Examples:

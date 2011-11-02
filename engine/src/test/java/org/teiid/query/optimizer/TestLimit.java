@@ -709,7 +709,7 @@ public class TestLimit {
         // pm3 model supports order by
         capFinder.addCapabilities("pm3", caps); //$NON-NLS-1$
 
-        String sql = "SELECT * FROM (SELECT * FROM pm3.g1 limit 100) as v1 where v1.e1 = 1";//$NON-NLS-1$
+        String sql = "SELECT * FROM (SELECT * FROM pm3.g1 /*+ non_strict */ limit 100) as v1 where v1.e1 = 1";//$NON-NLS-1$
         String[] expectedSql = new String[] {
             "SELECT pm3.g1.e1, pm3.g1.e2, pm3.g1.e3, pm3.g1.e4 FROM pm3.g1 WHERE pm3.g1.e1 = '1' LIMIT 100" //$NON-NLS-1$
             };
@@ -852,7 +852,7 @@ public class TestLimit {
      * Note here that the criteria made it to the having clause 
      */
     @Test public void testAggregateCriteriaOverUnSortedLimit() {
-        String sql = "select a from (SELECT MAX(e2) as a FROM pm1.g1 GROUP BY e2 LIMIT 1) x where a = 0"; //$NON-NLS-1$
+        String sql = "select a from (SELECT MAX(e2) as a FROM pm1.g1 GROUP BY e2 /*+ non_strict */ LIMIT 1) x where a = 0"; //$NON-NLS-1$
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);

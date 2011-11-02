@@ -3164,8 +3164,10 @@ Limit limit(ParseInfo info) :
 {
 	Expression limit = null;
 	Expression offset = null;
+	Token t = null;
 }
 {
+    {t = getToken(1);}
     ((<LIMIT> offset = intParam(info)
 	[<COMMA> limit = intParam(info)])
 	{
@@ -3180,7 +3182,9 @@ Limit limit(ParseInfo info) :
     |
     (limit = fetchLimit(info)))
 	{
-		return new Limit(offset, limit);
+		Limit result = new Limit(offset, limit);
+		result.setStrict(!isNonStrictHint(t));
+		return result;
 	}
 }
 

@@ -148,6 +148,7 @@ public final class NodeConstants {
         MAX_TUPLE_LIMIT,     // Expression that evaluates to the max number of tuples generated
         OFFSET_TUPLE_COUNT,  // Expression that evaluates to the tuple offset of the starting tuple
         IS_IMPLICIT_LIMIT,   // Boolean if the limit is created by the rewriter as part of a subquery optimization
+        IS_STRICT,			 // Boolean if the unordered limit should be enforced strictly
 
         // Common AP Information
         ACCESS_PATTERNS,     // Collection <List <Object element ID> >

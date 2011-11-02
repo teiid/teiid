@@ -45,6 +45,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.SetQuery;
@@ -135,7 +136,9 @@ public class RulePushLimit implements OptimizerRule {
 				Expression childOffset = (Expression)child.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT);
 				
 				combineLimits(limitNode, metadata, parentLimit, parentOffset, childLimit, childOffset);
-                
+                if (child.hasBooleanProperty(Info.IS_STRICT)) {
+                	limitNode.setProperty(Info.IS_STRICT, true);
+                }
                 NodeEditor.removeChildNode(limitNode, child);
                 limitNodes.remove(child);
                 
@@ -143,10 +146,12 @@ public class RulePushLimit implements OptimizerRule {
             }
             case NodeConstants.Types.SET_OP:
             {
-                if (!SetQuery.Operation.UNION.equals(child.getProperty(NodeConstants.Info.SET_OPERATION)) 
-                		|| !child.hasBooleanProperty(NodeConstants.Info.USE_ALL)) {
-                    return false;
-                }                                
+                if (!SetQuery.Operation.UNION.equals(child.getProperty(NodeConstants.Info.SET_OPERATION))) {
+                	return false;
+                }   
+                if (!child.hasBooleanProperty(NodeConstants.Info.USE_ALL) && limitNode.hasBooleanProperty(Info.IS_STRICT)) {
+                	return false;
+                }
                 //distribute the limit
                 List<PlanNode> grandChildren = new LinkedList<PlanNode>(child.getChildren());
                 for (PlanNode grandChild : grandChildren) {
@@ -171,13 +176,16 @@ public class RulePushLimit implements OptimizerRule {
             {
                 GroupSymbol virtualGroup = child.getGroups().iterator().next();
                 if (virtualGroup.isProcedure()) {
-                        return false;
+                    return false;
                 }
                 if (FrameUtil.isProcedure(child.getFirstChild())) {
                     return false;
                 }
                 return true;
             }
+            case NodeConstants.Types.SELECT:
+            case NodeConstants.Types.DUP_REMOVE:
+            	return !limitNode.hasBooleanProperty(Info.IS_STRICT);
             default:
             {
                 return false;
