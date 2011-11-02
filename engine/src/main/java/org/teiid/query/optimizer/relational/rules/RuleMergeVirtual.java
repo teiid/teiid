@@ -202,11 +202,12 @@ public final class RuleMergeVirtual implements
      * Removes source layers that only do a simple projection of the elements below.
      * @throws TeiidComponentException 
      * @throws QueryMetadataException 
+     * @throws QueryPlannerException 
      */
     private static PlanNode checkForSimpleProjection(PlanNode frame,
                                                      PlanNode root,
                                                      PlanNode parentProject,
-                                                     QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+                                                     QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
         // check that the parent only performs projection
         PlanNode nodeToCheck = parentProject.getFirstChild();
         while (nodeToCheck != frame) {

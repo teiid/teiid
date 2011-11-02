@@ -28,6 +28,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.RandomAccess;
 
+import org.teiid.client.ResizingArrayList;
+
 /**
  * Creates a copy of a reference list when modified.
  * 
@@ -101,7 +103,7 @@ public class LightWeightCopyOnWriteList<T> extends AbstractList<T> implements Ra
 	@Override
 	public void clear() {
 		if (!modified) {
-			list = new ArrayList<T>();
+			list = new ResizingArrayList<T>();
 			modified = true;
 		} else {
 			list.clear();

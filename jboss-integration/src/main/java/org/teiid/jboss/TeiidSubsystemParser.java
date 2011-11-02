@@ -72,6 +72,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	writeElement(writer, Element.MAX_SOURCE_ROWS_ELEMENT, node);
     	writeElement(writer, Element.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT, node);
     	writeElement(writer, Element.DETECTING_CHANGE_EVENTS_ELEMENT, node);
+    	writeElement(writer, Element.QUERY_TIMEOUT, node);
     	
 
     	if (like(node, Element.AUTHORIZATION_VALIDATOR_ELEMENT)) {
@@ -173,6 +174,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 			writeAttribute(writer, Element.SSL_AUTH_MODE_ATTRIBUTE, node);
 			writeAttribute(writer, Element.SSL_SSL_PROTOCOL_ATTRIBUTE, node);
 			writeAttribute(writer, Element.SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE, node);
+			writeAttribute(writer, Element.SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE, node);
 
 			if (like(node, Element.SSL_KETSTORE_ELEMENT)) {
 				writer.writeStartElement(Element.SSL_KETSTORE_ELEMENT.getLocalName());
@@ -201,6 +203,9 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 		writeAttribute(writer, Element.MAX_FILE_SIZE_ATTRIBUTE, node);
 		writeAttribute(writer, Element.MAX_BUFFER_SPACE_ATTRIBUTE, node);
 		writeAttribute(writer, Element.MAX_OPEN_FILES_ATTRIBUTE, node);
+		writeAttribute(writer, Element.MEMORY_BUFFER_SPACE_ATTRIBUTE, node);
+		writeAttribute(writer, Element.MEMORY_BUFFER_OFFHEAP_ATTRIBUTE, node);
+		writeAttribute(writer, Element.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE, node);
 	}
 
 	private void writeResultsetCacheConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
@@ -285,6 +290,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				case LOB_CHUNK_SIZE_IN_KB_ELEMENT:
     				case QUERY_THRESHOLD_IN_SECS_ELEMENT:
     				case MAX_SOURCE_ROWS_ELEMENT:
+    				case QUERY_TIMEOUT:    					
     					bootServices.get(reader.getLocalName()).set(Integer.parseInt(reader.getElementText()));
     					break;
 
@@ -543,6 +549,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     			case SSL_AUTH_MODE_ATTRIBUTE:
     			case SSL_SSL_PROTOCOL_ATTRIBUTE:
     			case SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE:
+    			case SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE:
     				node.get(element.getModelName()).set(attrValue);
     				break;
 
@@ -655,6 +662,15 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     			case MAX_BUFFER_SPACE_ATTRIBUTE:
     				node.get(element.getModelName()).set(Long.parseLong(attrValue));
     				break;
+    			case MEMORY_BUFFER_SPACE_ATTRIBUTE:
+    				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
+    				break;
+    			case MEMORY_BUFFER_OFFHEAP_ATTRIBUTE:
+    				node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
+    				break;
+    			case MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE:
+    				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
+    				break;    				
     			default:
     				throw ParseUtils.unexpectedAttribute(reader, i);    			
     			}

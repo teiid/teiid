@@ -81,6 +81,7 @@ import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Table;
 
 
 /**
@@ -434,13 +435,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(NamedTable obj) {
-    	AbstractMetadataRecord groupID = obj.getMetadataObject();
-        if(groupID != null) {              
-            buffer.append(getName(groupID));
-        } else {
-            buffer.append(obj.getName());
-        }        
-        
+    	appendBaseName(obj);
         if (obj.getCorrelationName() != null) {
             buffer.append(Tokens.SPACE);
             if (useAsInGroupAlias()){
@@ -450,6 +445,15 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         	buffer.append(obj.getCorrelationName());
         }
     }
+
+	protected void appendBaseName(NamedTable obj) {
+    	Table groupID = obj.getMetadataObject();
+        if(groupID != null) {              
+    		buffer.append(getName(groupID));
+        } else {
+            buffer.append(obj.getName());
+        }        
+	}
     
     /**
      * Indicates whether group alias should be of the form

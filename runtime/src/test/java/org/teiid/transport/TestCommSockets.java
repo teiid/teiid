@@ -217,6 +217,7 @@ public class TestCommSockets {
 	@Test public void testAnonSSLConnect() throws Exception {
 		SSLConfiguration config = new SSLConfiguration();
 		config.setMode(SSLConfiguration.ENABLED);
+		config.setEnabledCipherSuites("x"); //ensure that this cipher suite is not used
 		config.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
 		Properties p = new Properties();
 		p.setProperty("org.teiid.sockets.soTimeout", "100");
@@ -253,6 +254,12 @@ public class TestCommSockets {
 		assertEquals(5, stats.objectsRead); // ping (pool test), assert identity, ping (isOpen)
 		assertEquals(1, stats.sockets);
 		conn.close();
+	}
+	
+	@Test public void testEnableCipherSuites() throws Exception {
+		SSLConfiguration config = new SSLConfiguration();
+		config.setEnabledCipherSuites("x,y,z");
+		assertArrayEquals(new String[] {"x","y","z"}, config.getEnabledCipherSuites());
 	}
 	
 }

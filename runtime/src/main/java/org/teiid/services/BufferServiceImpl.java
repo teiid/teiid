@@ -27,9 +27,9 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.common.buffer.impl.FileStorageManager;
-import org.teiid.common.buffer.impl.FileStoreCache;
 import org.teiid.common.buffer.impl.MemoryStorageManager;
 import org.teiid.common.buffer.impl.SplittableStorageManager;
 import org.teiid.core.TeiidComponentException;
@@ -63,6 +63,9 @@ public class BufferServiceImpl implements BufferService, Serializable {
     private int maxReserveKb = BufferManager.DEFAULT_RESERVE_BUFFER_KB;
     private long maxBufferSpace = FileStorageManager.DEFAULT_MAX_BUFFERSPACE>>20;
     private boolean inlineLobs = true;
+    private long memoryBufferSpace = -1;
+    private int maxStorageObjectSize = BufferFrontedFileStoreCache.DEFAuLT_MAX_OBJECT_SIZE;
+    private boolean memoryBufferOffHeap;
 	private FileStorageManager fsm;
 	
     /**
@@ -86,7 +89,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
             this.bufferMgr.setProcessorBatchSize(Integer.valueOf(processorBatchSize));
             this.bufferMgr.setMaxReserveKB(this.maxReserveKb);
             this.bufferMgr.setMaxProcessingKB(this.maxProcessingKb);
-            
             this.bufferMgr.initialize();
             
             // If necessary, add disk storage manager
@@ -101,9 +103,23 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 fsm.setMaxBufferSpace(maxBufferSpace*MB);
                 SplittableStorageManager ssm = new SplittableStorageManager(fsm);
                 ssm.setMaxFileSize(maxFileSize);
-                FileStoreCache fsc = new FileStoreCache();
+                BufferFrontedFileStoreCache fsc = new BufferFrontedFileStoreCache();
+                fsc.setMaxStorageObjectSize(maxStorageObjectSize);
+                fsc.setDirect(memoryBufferOffHeap);
+                int batchOverheadKB = (int)(this.memoryBufferSpace<0?(this.bufferMgr.getMaxReserveKB()<<8):this.memoryBufferSpace)>>20;
+        		this.bufferMgr.setMaxReserveKB(Math.max(0, this.bufferMgr.getMaxReserveKB() - batchOverheadKB));
+                if (memoryBufferSpace < 0) {
+                	//use approximately 25% of what's set aside for the reserved
+                	fsc.setMemoryBufferSpace(((long)this.bufferMgr.getMaxReserveKB()) << 8);
+                } else {
+                	//scale from MB to bytes
+                	fsc.setMemoryBufferSpace(memoryBufferSpace << 20);
+                }
+                if (!memoryBufferOffHeap && this.maxReserveKb < 0) {
+            		//adjust the value
+            		this.bufferMgr.setMaxReserveKB(this.bufferMgr.getMaxReserveKB() - (int)Math.min(this.bufferMgr.getMaxReserveKB(), (fsc.getMemoryBufferSpace()>>10)));
+                }
                 fsc.setStorageManager(ssm);
-                fsc.setMaxBufferSpace(maxBufferSpace*MB);
                 fsc.initialize();
                 this.bufferMgr.setCache(fsc);
             } else {
@@ -228,5 +244,29 @@ public class BufferServiceImpl implements BufferService, Serializable {
 
 	public long getReadAttempts() {
 		return bufferMgr.getReadAttempts();
+	}
+
+    public long getMemoryBufferSpace() {
+		return memoryBufferSpace;
+	}
+
+    public int getMaxStorageObjectSize() {
+		return maxStorageObjectSize;
+	}
+
+    public boolean isMemoryBufferOffHeap() {
+		return memoryBufferOffHeap;
+	}
+    
+    public void setMemoryBufferOffHeap(boolean memoryBufferOffHeap) {
+		this.memoryBufferOffHeap = memoryBufferOffHeap;
+	}
+
+    public void setMemoryBufferSpace(int memoryBufferSpace) {
+		this.memoryBufferSpace = memoryBufferSpace;
+	}
+
+    public void setMaxStorageObjectSize(int maxStorageObjectSize) {
+		this.maxStorageObjectSize = maxStorageObjectSize;
 	}
 }

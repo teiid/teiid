@@ -56,6 +56,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
 import org.teiid.odbc.PGUtil.PgColInfo;
+import org.teiid.query.parser.SQLParserUtil;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.ODBCClientInstance;
 import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStream;
@@ -71,11 +72,11 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	
 	private static Pattern pkPattern = Pattern.compile("select ta.attname, ia.attnum, ic.relname, n.nspname, tc.relname " +//$NON-NLS-1$
 			"from pg_catalog.pg_attribute ta, pg_catalog.pg_attribute ia, pg_catalog.pg_class tc, pg_catalog.pg_index i, " +//$NON-NLS-1$
-			"pg_catalog.pg_namespace n, pg_catalog.pg_class ic where tc.relname = (E?(?:'[^']*')+) AND n.nspname = (E?(?:'[^']*')+).*" );//$NON-NLS-1$
+			"pg_catalog.pg_namespace n, pg_catalog.pg_class ic where tc.relname = (E?(?:'[^']*')+) AND n.nspname = (E?(?:'[^']*')+).*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE);//$NON-NLS-1$
 	
 	private static Pattern pkKeyPattern = Pattern.compile("select ta.attname, ia.attnum, ic.relname, n.nspname, NULL from " + //$NON-NLS-1$
 			"pg_catalog.pg_attribute ta, pg_catalog.pg_attribute ia, pg_catalog.pg_class ic, pg_catalog.pg_index i, " + //$NON-NLS-1$
-			"pg_catalog.pg_namespace n where ic.relname = (E?(?:'[^']*')+) AND n.nspname = (E?(?:'[^']*')+) .*"); //$NON-NLS-1$
+			"pg_catalog.pg_namespace n where ic.relname = (E?(?:'[^']*')+) AND n.nspname = (E?(?:'[^']*')+) .*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
 	private Pattern fkPattern = Pattern.compile("select\\s+((?:'[^']*')+)::name as PKTABLE_CAT," + //$NON-NLS-1$
 			"\\s+n2.nspname as PKTABLE_SCHEM," +  //$NON-NLS-1$
@@ -141,21 +142,20 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"\\s+left outer join pg_catalog.pg_constraint cn" +  //$NON-NLS-1$
 			"\\s+on cn.conrelid = ref.confrelid" +  //$NON-NLS-1$
 			"\\s+and cn.contype = 'p'\\)" +  //$NON-NLS-1$
-			"\\s+order by ref.oid, ref.i"); //$NON-NLS-1$
+			"\\s+order by ref.oid, ref.i", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 		
 	private static Pattern preparedAutoIncrement = Pattern.compile("select 1 \\s*from pg_catalog.pg_attrdef \\s*where adrelid = \\$1 AND adnum = \\$2 " + //$NON-NLS-1$
-			"\\s*and pg_catalog.pg_get_expr\\(adbin, adrelid\\) \\s*like '%nextval\\(%'", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+			"\\s*and pg_catalog.pg_get_expr\\(adbin, adrelid\\) \\s*like '%nextval\\(%'", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
 	private static Pattern cursorSelectPattern = Pattern.compile("DECLARE \"(\\w+)\" CURSOR(\\s(WITH HOLD|SCROLL))? FOR (.*)", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
-	private static Pattern fetchPattern = Pattern.compile("FETCH (\\d+) IN \"(\\w+)\".*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-	private static Pattern movePattern = Pattern.compile("MOVE (\\d+) IN \"(\\w+)\".*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-	private static Pattern closePattern = Pattern.compile("CLOSE \"(\\w+)\"", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern fetchPattern = Pattern.compile("FETCH (\\d+) IN \"(\\w+)\".*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern movePattern = Pattern.compile("MOVE (\\d+) IN \"(\\w+)\".*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern closePattern = Pattern.compile("CLOSE \"(\\w+)\"", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
-	private static Pattern deallocatePattern = Pattern.compile("DEALLOCATE \"(\\w+\\d+_*)\"", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-	private static Pattern releasePattern = Pattern.compile("RELEASE (\\w+\\d?_*)", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-	private static Pattern savepointPattern = Pattern.compile("SAVEPOINT (\\w+\\d?_*)", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-	private static Pattern rollbackPattern = Pattern.compile("ROLLBACK\\s*(to)*\\s*(\\w+\\d+_*)*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-	
+	private static Pattern deallocatePattern = Pattern.compile("DEALLOCATE(?:\\s+PREPARE)?\\s+(.*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern releasePattern = Pattern.compile("RELEASE (\\w+\\d?_*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern savepointPattern = Pattern.compile("SAVEPOINT (\\w+\\d?_*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern rollbackPattern = Pattern.compile("ROLLBACK\\s*(to)*\\s*(\\w+\\d+_*)*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
 	private TeiidDriver driver;
 	private ODBCClientRemote client;
@@ -551,11 +551,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		if (sql == null) {
 			return null;
 		}
+		Matcher m = null;
 		// selects are coming with "select\t" so using a space after "select" does not always work
 		if (StringUtil.startsWithIgnoreCase(sql, "select")) { //$NON-NLS-1$
-			modified = sql.replace('\n', ' ');
-										
-			Matcher m = null;
 			if ((m = pkPattern.matcher(modified)).matches()) {
 				return new StringBuffer("SELECT k.Name AS attname, convert(Position, short) AS attnum, TableName AS relname, SchemaName AS nspname, TableName AS relname") //$NON-NLS-1$
 			          .append(" FROM SYS.KeyColumns k") //$NON-NLS-1$ 
@@ -606,19 +604,21 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		else if (sql.equalsIgnoreCase("show max_identifier_length")){ //$NON-NLS-1$
 			return "select 63"; //$NON-NLS-1$
 		}
-		else {
-			Matcher m = setPattern.matcher(sql);
-			if (m.matches()) {
-				return "SET " + m.group(2) + " " + m.group(4); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-			else if (modified.equalsIgnoreCase("BEGIN")) { //$NON-NLS-1$
-				return "START TRANSACTION"; //$NON-NLS-1$
-			}
-			else if ((m = rollbackPattern.matcher(modified)).matches()) {
-				return "ROLLBACK"; //$NON-NLS-1$
-			}					
+		else if ((m = setPattern.matcher(sql)).matches()) {
+			return "SET " + m.group(2) + " " + m.group(4); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		modified = sql;
+		else if (modified.equalsIgnoreCase("BEGIN")) { //$NON-NLS-1$
+			return "START TRANSACTION"; //$NON-NLS-1$
+		}
+		else if ((m = rollbackPattern.matcher(modified)).matches()) {
+			return "ROLLBACK"; //$NON-NLS-1$
+		}					
+		else if ((m = savepointPattern.matcher(sql)).matches()) {
+			return "SELECT 0"; //$NON-NLS-1$
+		}
+		else if ((m = releasePattern.matcher(sql)).matches()) {
+			return "SELECT 0"; //$NON-NLS-1$
+		}		
 		//these are somewhat dangerous
 		modified =  modified.replaceAll("::[A-Za-z0-9]*", " "); //$NON-NLS-1$ //$NON-NLS-2$
 		modified =  modified.replaceAll("'pg_toast'", "'SYS'"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -933,16 +933,10 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		    				cursorClose(m.group(1));
 		    				results.getResultsReceiver().receiveResults(1);
 		    			}
-		    			else if ((m = savepointPattern.matcher(sql)).matches()) {
-		    				client.sendCommandComplete("SAVEPOINT", 0); //$NON-NLS-1$
-		    				results.getResultsReceiver().receiveResults(1);
-		    			}
-		    			else if ((m = releasePattern.matcher(sql)).matches()) {
-		    				client.sendCommandComplete("RELEASE", 0); //$NON-NLS-1$
-		    				results.getResultsReceiver().receiveResults(1);
-		    			}		
 		    			else if ((m = deallocatePattern.matcher(sql)).matches()) { 
-		    				closePreparedStatement(m.group(1));
+		    				String plan_name = m.group(1);
+		    				plan_name = SQLParserUtil.normalizeId(plan_name);
+		    				closePreparedStatement(plan_name);
 		    				client.sendCommandComplete("DEALLOCATE", 0); //$NON-NLS-1$
 		    				results.getResultsReceiver().receiveResults(1);
 		    			}

@@ -114,7 +114,7 @@ public class TempTable implements Cloneable {
 				}
 				for (int i = 0; i < indexes.length; i++) {
 					if (indexes[i] == -1) {
-						AtomicInteger sequence = sequences.get(i);
+						AtomicInteger sequence = sequences.get(i + (addRowId?1:0));
 						if (sequence != null) {
 							newTuple.add(sequence.getAndIncrement());
 						} else {
@@ -230,7 +230,6 @@ public class TempTable implements Cloneable {
 		
 		int process() throws ExpressionEvaluationException, TeiidComponentException, TeiidProcessingException {
 			int reserved = reserveBuffers();
-			boolean held = lock.writeLock().isHeldByCurrentThread();
 			lock.writeLock().lock();
 			boolean success = false;
 			try {
@@ -265,9 +264,7 @@ public class TempTable implements Cloneable {
 					}
 				} finally {
 					bm.releaseBuffers(reserved);
-					if (!held) {
-						lock.writeLock().unlock();
-					}
+					lock.writeLock().unlock();
 					close();
 				}
 			}
@@ -563,6 +560,7 @@ public class TempTable implements Cloneable {
 	public void remove() {
 		lock.writeLock().lock();
 		try {
+			tid.getTableData().removed();
 			tree.remove();
 			if (this.indexTables != null) {
 				for (TempTable indexTable : this.indexTables.values()) {

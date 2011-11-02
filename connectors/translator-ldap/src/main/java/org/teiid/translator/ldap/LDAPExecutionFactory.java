@@ -54,6 +54,7 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 	private boolean restrictToObjectClass;
 	private SearchDefaultScope searchDefaultScope = SearchDefaultScope.ONELEVEL_SCOPE;
 	private boolean usePagination;
+	private boolean exceptionOnSizeLimitExceeded;
 	
 	public LDAPExecutionFactory() {
 		this.setMaxInCriteriaSize(1000);
@@ -152,6 +153,16 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 	
 	public void setUsePagination(boolean usePagination) {
 		this.usePagination = usePagination;
+	}
+	
+	@TranslatorProperty(display="Exception on Size Limit Exceeded", description="Set to true to throw an exception when a SizeLimitExceededException is received and a LIMIT is not properly enforced.")
+	public boolean isExceptionOnSizeLimitExceeded() {
+		return exceptionOnSizeLimitExceeded;
+	}
+	
+	public void setExceptionOnSizeLimitExceeded(
+			boolean exceptionOnSizeLimitExceeded) {
+		this.exceptionOnSizeLimitExceeded = exceptionOnSizeLimitExceeded;
 	}
 	
 }

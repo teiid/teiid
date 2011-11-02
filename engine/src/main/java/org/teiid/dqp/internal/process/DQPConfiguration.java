@@ -30,7 +30,7 @@ public class DQPConfiguration{
     static final int DEFAULT_FETCH_SIZE = RequestMessage.DEFAULT_FETCH_SIZE * 10;
     static final int DEFAULT_PROCESSOR_TIMESLICE = 2000;
     static final int DEFAULT_MAX_RESULTSET_CACHE_ENTRIES = 1024;
-    static final int DEFAULT_QUERY_THRESHOLD = 600;
+    static final int DEFAULT_QUERY_THRESHOLD = 600000;
     static final String PROCESS_PLAN_QUEUE_NAME = "QueryProcessorQueue"; //$NON-NLS-1$
     public static final int DEFAULT_MAX_PROCESS_WORKERS = 64;
 	public static final int DEFAULT_MAX_SOURCE_ROWS = -1;
@@ -41,13 +41,14 @@ public class DQPConfiguration{
 	private int timeSliceInMilli = DEFAULT_PROCESSOR_TIMESLICE;
 	private int maxRowsFetchSize = DEFAULT_FETCH_SIZE;
 	private int lobChunkSizeInKB = 100;
-	private int queryThresholdInSecs = DEFAULT_QUERY_THRESHOLD;
+	private long queryThresholdInMilli = DEFAULT_QUERY_THRESHOLD;
 	private boolean exceptionOnMaxSourceRows = true;
 	private int maxSourceRows = -1;
 	private int maxActivePlans = DEFAULT_MAX_ACTIVE_PLANS;
 	
     private int userRequestSourceConcurrency = DEFAULT_USER_REQUEST_SOURCE_CONCURRENCY;
     private boolean detectingChangeEvents = true;
+    private long queryTimeout;
     
     private transient AuthorizationValidator authorizationValidator;
 
@@ -114,11 +115,19 @@ public class DQPConfiguration{
 	}
 
 	public int getQueryThresholdInSecs() {
-		return queryThresholdInSecs;
+		return (int)queryThresholdInMilli/1000;
+	}
+	
+	public long getQueryThresholdInMilli() {
+		return queryThresholdInMilli;
+	}
+	
+	public void setQueryThresholdInMilli(long queryThreshold) {
+		this.queryThresholdInMilli = queryThreshold;
 	}
 
 	public void setQueryThresholdInSecs(int queryThresholdInSecs) {
-		this.queryThresholdInSecs = queryThresholdInSecs;
+		this.queryThresholdInMilli = queryThresholdInSecs * 1000;
 	}
 		
 	/**
@@ -160,6 +169,14 @@ public class DQPConfiguration{
 	
 	public void setDetectingChangeEvents(boolean detectingChangeEvents) {
 		this.detectingChangeEvents = detectingChangeEvents;
+	}
+	
+	public void setQueryTimeout(long queryTimeout) {
+		this.queryTimeout = queryTimeout;
+	}
+	
+	public long getQueryTimeout() {
+		return queryTimeout;
 	}
 
 }

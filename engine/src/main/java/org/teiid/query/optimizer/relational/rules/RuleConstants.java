@@ -36,7 +36,6 @@ public final class RuleConstants {
 	public static final OptimizerRule RAISE_ACCESS = new RuleRaiseAccess();
     public static final OptimizerRule CHOOSE_DEPENDENT = new RuleChooseDependent();
 	public static final OptimizerRule COLLAPSE_SOURCE = new RuleCollapseSource();
-	public static final OptimizerRule ASSIGN_OUTPUT_ELEMENTS = new RuleAssignOutputElements();
     public static final OptimizerRule COPY_CRITERIA = new RuleCopyCriteria();
     public static final OptimizerRule CLEAN_CRITERIA = new RuleCleanCriteria();    
     public static final OptimizerRule VALIDATE_WHERE_ALL = new RuleValidateWhereAll();    

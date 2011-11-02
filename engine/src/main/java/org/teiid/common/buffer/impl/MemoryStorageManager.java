@@ -22,7 +22,7 @@
 
 package org.teiid.common.buffer.impl;
 
-import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,7 +39,7 @@ import org.teiid.common.buffer.Serializer;
 import org.teiid.core.TeiidComponentException;
 
 
-public class MemoryStorageManager implements Cache {
+public class MemoryStorageManager implements Cache<Long> {
 	
 	public static final int MAX_FILE_SIZE = 1 << 17;
     
@@ -87,20 +87,6 @@ public class MemoryStorageManager implements Cache {
 		public synchronized long getLength() {
 			return buffer.limit();
 		}
-		
-		@Override
-		public synchronized ByteBuffer getBuffer(long start, int length, boolean allocate) {
-			int position = (int)start;
-			buffer.limit(position + length);
-			buffer.position(position);
-			return buffer.slice();
-		}
-		
-		@Override
-		public void updateFromBuffer(ByteBuffer bb, long start)
-				throws IOException {
-			//do nothing we are sharing the bytes
-		}
 
 	}
 
@@ -126,11 +112,12 @@ public class MemoryStorageManager implements Cache {
 	}
 	
 	@Override
-	public void add(CacheEntry entry, Serializer<?> s) {
+	public boolean add(CacheEntry entry, Serializer<?> s) {
 		Map<Long, CacheEntry> group = groups.get(s.getId());
 		if (group != null) {
 			group.put(entry.getId(), entry);
 		}
+		return true;
 	}
 	
 	@Override
@@ -147,21 +134,37 @@ public class MemoryStorageManager implements Cache {
 	}
 	
 	@Override
-	public CacheEntry get(Long id, Serializer<?> serializer)
+	public Long lockForLoad(Long oid, Serializer<?> serializer) {
+		return oid;
+	}
+	
+	@Override
+	public void unlockForLoad(Long o) {
+		//nothing to do no locking
+	}
+	
+	@Override
+	public CacheEntry get(Long lock, Long oid,
+			WeakReference<? extends Serializer<?>> ref)
 			throws TeiidComponentException {
-		Map<Long, CacheEntry> group = groups.get(serializer.getId());
+		Map<Long, CacheEntry> group = groups.get(ref.get().getId());
 		if (group != null) {
-			return group.get(id);
+			return group.get(oid);
 		}
 		return null;
 	}
 		
 	@Override
-	public void remove(Long gid, Long id) {
+	public boolean remove(Long gid, Long id) {
 		Map<Long, CacheEntry> group = groups.get(gid);
 		if (group != null) {
-			group.remove(id);
+			synchronized (group) {
+				int size = group.size();
+				group.remove(id);
+				return group.size() != size;
+			}
 		}
+		return false;
 	}
 	
 	@Override

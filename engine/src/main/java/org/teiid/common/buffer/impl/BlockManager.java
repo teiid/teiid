@@ -22,30 +22,27 @@
 
 package org.teiid.common.buffer.impl;
 
-import org.teiid.common.buffer.impl.FileStoreCache.BlockInfo;
+import java.nio.ByteBuffer;
+
 
 /**
  * Represents an INode
- * 
- * Returned BlockInfo may be shared.  If shared there and no guarantees about position and mark.
- * in particular system/index blocks can be used by multiple threads relative methods should be
- * avoided, but may be used for exclusive write operations.
- * Otherwise the position will be 0.
- * 
- * Due to buffermanager locking, non-index data blocks can be assumed to be thread-safe. 
  */
 public interface BlockManager {
 	
 	int getInode();
 	
-	BlockInfo allocateBlock(int index);
+	ByteBuffer allocateBlock(int index);
 	
-	BlockInfo getBlock(int index);
-	
-	void updateBlock(BlockInfo block);
+	/**
+	 * Get the block for a given index.  Returns null if the block does not exist.
+	 * @param index
+	 * @return
+	 */
+	ByteBuffer getBlock(int index);
 	
 	void freeBlock(int index);
 	
-	void free();
+	int free(boolean acquireDataBlock);
 
 }

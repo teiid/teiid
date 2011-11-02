@@ -94,6 +94,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	private VDB.Status status = VDB.Status.INACTIVE;
 	private ConnectionType connectionType = VDB.ConnectionType.BY_VERSION;
 	private boolean removed;
+	private long queryTimeout = Long.MIN_VALUE;
 
 	@XmlAttribute(name = "name", required = true)
 	public String getName() {
@@ -344,4 +345,15 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	public boolean isPreview() {
 		return Boolean.valueOf(getPropertyValue("preview")); //$NON-NLS-1$
 	}
+	public long getQueryTimeout() {
+		if (queryTimeout == Long.MIN_VALUE) {
+			String timeout = getPropertyValue("query-timeout"); //$NON-NLS-1$
+			if (timeout != null) {
+				queryTimeout = Math.max(0, Long.parseLong(timeout));
+			} else {
+				queryTimeout = 0;
+			}
+		}
+		return queryTimeout;
+	}	
 }

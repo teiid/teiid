@@ -24,10 +24,10 @@
         <property name="useDisk">true</property>
         <!-- Directory location for the buffer files -->
         <property name="diskDirectory">${jboss.server.temp.dir}/teiid</property>
-        <!-- The max row count of a batch sent internally within the query processor. Should be <= the connectorBatchSize. (default 512) -->
-        <property name="processorBatchSize">512</property>
-        <!-- The max row count of a batch from a connector. Should be even multiple of processorBatchSize. (default 1024) -->
-        <property name="connectorBatchSize">1024</property>
+        <!-- The max row count of a batch sent internally within the query processor. Should be <= the connectorBatchSize. (default 256) -->
+        <property name="processorBatchSize">256</property>
+        <!-- The max row count of a batch from a connector. Should be even multiple of processorBatchSize. (default 512) -->
+        <property name="connectorBatchSize">512</property>
         <!-- 
             The approximate amount of buffer memory in kilobytes allowable for a single processing operation (sort, grouping, etc.) regardless of existing memory commitments. -1 means to automatically calculate a value (default -1).  
             See the admin guide for more.          
@@ -48,6 +48,14 @@
              However inline lob values are not supported by pre-7.6 clients, so disable this 
              property if using older clients utilizing lobs. (default true) -->
         <property name="inlineLobs">true</property>
+        <!-- Memory buffer space used by the buffer manager in MB.  -1 determines the setting automatically from the maxReserveKB (default -1).  
+    	     This value cannot be smaller than maxStorageObjectSize.-->
+        <property name="memoryBufferSpace">-1</property>
+        <!-- Set to true to hold the memory buffer off-heap. If true you must ensure that the VM can allocate that much direct memory (default false). -->
+        <property name="memoryBufferOffHeap">false</property>
+        <!-- The maximum size of a buffer managed object (typically a table page or a results batch) in bytes (default 8388608 or 8MB).  
+        	 Setting this value too high will reduce the effectiveness of the memory buffer.-->
+        <property name="maxStorageObjectSize">8388608</property>
     </bean>
     
     <bean name="CacheFactory" class="org.teiid.cache.jboss.ClusterableCacheFactory">
@@ -138,6 +146,8 @@
         <property name="objectReplicatorName">teiid/replicator</property>
         <!-- Set to true for the engine to detect local change events. Should be disabled if using external change data capture tools. (default true) -->
         <property name="detectingChangeEvents">true</property>
+        <!-- Set the default query timeout for all queries in milliseconds. 0 indicates no timeout.  Lesser timeout values may be set per VDB or by clients. (default 0) -->
+        <property name="queryTimeout">0</property>
     </bean>
     
     <!-- An authorization validator that by default uses data role information stored in VDBs -->
@@ -229,6 +239,9 @@
         <property name="truststorePassword">passwd</property>
         <!--  1-way, 2-way, anonymous -->
         <property name="authenticationMode">anonymous</property>
+        <!-- uncomment for enforcing the minimum 128 bit encryption, edit or supply only supported cipher suites from JVM
+        <property name="enabledCipherSuites">SSL_RSA_WITH_RC4_128_MD5,SSL_RSA_WITH_RC4_128_SHA,SSL_RSA_WITH_3DES_EDE_CBC_SHA,SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA,SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA,TLS_DHE_RSA_WITH_AES_128_CBC_SHA,TLS_DHE_DSS_WITH_AES_128_CBC_SHA,TLS_KRB5_WITH_RC4_128_MD5,TLS_KRB5_WITH_RC4_128_SHA,TLS_RSA_WITH_AES_128_CBC_SHA,TLS_KRB5_WITH_3DES_EDE_CBC_MD5,TLS_KRB5_WITH_3DES_EDE_CBC_SHA,TLS_DHE_RSA_WITH_AES_256_CBC_SHA,TLS_DHE_DSS_WITH_AES_256_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA</property>
+         -->
     </bean>
     
     <!-- JDBC Socket connection properties (SSL see below) -->

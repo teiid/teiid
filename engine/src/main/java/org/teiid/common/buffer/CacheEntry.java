@@ -24,58 +24,37 @@ package org.teiid.common.buffer;
 
 import java.lang.ref.WeakReference;
 
-public class CacheEntry {
+public class CacheEntry extends BaseCacheEntry {
 	private boolean persistent;
 	private Object object;
-	private int sizeEstimate;
+	private final int sizeEstimate;
 	private WeakReference<? extends Serializer<?>> serializer;
-	private Long id;
 	
-	public CacheEntry(Long id) {
-		this.id = id;
+	public CacheEntry(Long oid) {
+		this(new CacheKey(oid, 0, 0), 0, null, null, false);
 	}
 	
-	public Long getId() {
-		return id;
+	public CacheEntry(CacheKey key, int sizeEstimate, Object object, WeakReference<? extends Serializer<?>> serializer, boolean persistent) {
+		super(key);
+		this.sizeEstimate = sizeEstimate;
+		this.object = object;
+		this.serializer = serializer;
+		this.persistent = persistent;
 	}
-
-	@Override
-	public int hashCode() {
-		return getId().hashCode();
+	
+	public void setObject(Object object) {
+		this.object = object;
 	}
 	
 	public int getSizeEstimate() {
 		return sizeEstimate;
 	}
 	
-	public void setSizeEstimate(int sizeEstimate) {
-		this.sizeEstimate = sizeEstimate;
-	}
-	
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof CacheEntry)) {
-			return false;
-		}
-		return getId().equals(((CacheEntry)obj).getId());
-	}
-
-	@Override
-	public String toString() {
-		return getId().toString();
-	}
-	
 	public Object nullOut() {
 		Object result = getObject();
-		setObject(null);
-		setSerializer(null);
+		this.object = null;
+		this.serializer = null;
 		return result;
-	}
-
-	public void setObject(Object object) {
-		this.object = object;
 	}
 
 	public Object getObject() {
@@ -94,8 +73,12 @@ public class CacheEntry {
 		this.serializer = serializer;
 	}
 
-	public WeakReference<? extends Serializer<?>> getSerializer() {
-		return serializer;
+	public Serializer<?> getSerializer() {
+		WeakReference<? extends Serializer<?>> ref = this.serializer;
+		if (ref == null) {
+			return null;
+		}
+		return ref.get();
 	}
 
 }

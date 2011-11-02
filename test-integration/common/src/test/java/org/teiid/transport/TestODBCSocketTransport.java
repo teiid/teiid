@@ -128,7 +128,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			config.setSSLConfiguration(sslConfig);
 			addr = new InetSocketAddress(0);
 			config.setBindAddress(addr.getHostName());
-			config.setPortNumber(0);
+			config.setPortNumber(addr.getPort());
 			odbcTransport = new ODBCSocketListener(addr, config, Mockito.mock(ClientServiceRegistryImpl.class), BufferManagerFactory.getStandaloneBufferManager(), 100000, Mockito.mock(ILogon.class));
 			odbcTransport.setMaxBufferSize(1000); //set to a small size to ensure buffering over the limit works
 			FakeServer server = new FakeServer();

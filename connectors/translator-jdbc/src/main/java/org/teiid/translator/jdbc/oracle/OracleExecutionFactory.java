@@ -26,7 +26,9 @@ package org.teiid.translator.jdbc.oracle;
 
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
@@ -35,6 +37,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.teiid.language.Call;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
 import org.teiid.language.DerivedColumn;
@@ -42,6 +45,7 @@ import org.teiid.language.Expression;
 import org.teiid.language.ExpressionValueSource;
 import org.teiid.language.Function;
 import org.teiid.language.Insert;
+import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
 import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
@@ -55,6 +59,7 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
@@ -62,6 +67,7 @@ import org.teiid.translator.jdbc.ExtractFunctionModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
+import org.teiid.translator.jdbc.TranslatedCommand;
 
 
 @Translator(name="oracle", description="A translator for Oracle 9i Database or later")
@@ -85,6 +91,14 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	public static final String WITHIN_DISTANCE = "sdo_within_distance"; //$NON-NLS-1$
 	public static final String NEAREST_NEIGHBOR_DISTANCE = "sdo_nn_distance"; //$NON-NLS-1$
 	public static final String ORACLE_SDO = "Oracle-SDO"; //$NON-NLS-1$
+
+	/*
+	 * Handling for cursor return values
+	 */
+	static final class RefCursorType {}
+	static int CURSOR_TYPE = -10;
+
+	private boolean oracleSuppliedDriver = true;
     
     public void start() throws TranslatorException {
         super.start();
@@ -546,6 +560,48 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     @Override
     public String getLikeRegexString() {
     	return "REGEXP_LIKE"; //$NON-NLS-1$
+    }
+    
+    public void setOracleSuppliedDriver(boolean oracleNative) {
+		this.oracleSuppliedDriver = oracleNative;
+	}
+    
+	@TranslatorProperty(display="Oracle Native Driver", description="True if the driver is an Oracle supplied driver",advanced=true)
+    public boolean isOracleSuppliedDriver() {
+		return oracleSuppliedDriver;
+	}
+		
+    @Override
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+    	if (oracleSuppliedDriver && obj instanceof Call) {
+    		Call call = (Call)obj;
+    		//oracle returns the resultset as a parameter
+    		if (call.getReturnType() == null) {
+    			call.setReturnType(RefCursorType.class);
+    		}
+    	}
+    	return super.translate(obj, context);
+    }
+    
+    @Override
+    protected void registerSpecificTypeOfOutParameter(
+    		CallableStatement statement, Class<?> runtimeType, int index)
+    		throws SQLException {
+    	if (oracleSuppliedDriver && index == 1 && runtimeType == RefCursorType.class) {
+    		statement.registerOutParameter(1, CURSOR_TYPE);
+    	} else {
+    		super.registerSpecificTypeOfOutParameter(statement, runtimeType, index);
+    	}
+    }
+    
+    @Override
+    public ResultSet executeStoredProcedure(CallableStatement statement,
+    		TranslatedCommand command, Class<?> returnType) throws SQLException {
+    	ResultSet rs = super.executeStoredProcedure(statement, command, returnType);
+    	if (!oracleSuppliedDriver || returnType != RefCursorType.class) {
+    		return rs;
+    	}
+    	return (ResultSet)statement.getObject(1);
     }
     
 }

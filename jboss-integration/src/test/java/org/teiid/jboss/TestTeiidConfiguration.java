@@ -45,9 +45,9 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 @SuppressWarnings("nls")
-public class TestTeiidOperations extends AbstractSubsystemTest {
+public class TestTeiidConfiguration extends AbstractSubsystemTest {
 
-	public TestTeiidOperations() {
+	public TestTeiidConfiguration() {
 		super(TeiidExtension.TEIID_SUBSYSTEM, new TeiidExtension());
 	}
 
@@ -232,7 +232,7 @@ public class TestTeiidOperations extends AbstractSubsystemTest {
         Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
         
         List<String> opNames = getList(result);
-        assertEquals(37, opNames.size());
+        assertEquals(38, opNames.size());
 		String[] ops = { "add", "add-anyauthenticated-role", "add-data-role",
 				"assign-datasource", "cache-statistics", "cache-types",
 				"cancel-request", "change-vdb-connection-type", "clear-cache",
@@ -242,7 +242,7 @@ public class TestTeiidOperations extends AbstractSubsystemTest {
 				"mark-datasource-available",
 				"merge-vdbs", "read-attribute", "read-children-names",
 				"read-children-resources", "read-children-types",
-				"read-operation-description", "read-operation-names",
+				"read-operation-description", "read-operation-names", "read-rar-description",
 				"read-resource", "read-resource-description",
 				"remove-anyauthenticated-role", "remove-data-role",
 				"requests-per-session", "requests-per-vdb",

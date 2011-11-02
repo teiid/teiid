@@ -22,6 +22,7 @@
 
 package org.teiid.common.buffer;
 
+import java.lang.ref.WeakReference;
 import java.util.Collection;
 
 import org.teiid.core.TeiidComponentException;
@@ -29,11 +30,66 @@ import org.teiid.core.TeiidComponentException;
 /**
  * Represents the storage strategy for the {@link BufferManager}
  */
-public interface Cache extends StorageManager {
-	void createCacheGroup(Long gid); //called prior to adding an entry
+public interface Cache<T> extends StorageManager {
+	/**
+	 * Must be called prior to adding any group entries
+	 * @param gid
+	 */
+	void createCacheGroup(Long gid); 
+	
+	/**
+	 * Remove an entire cache group
+	 * 
+	 * TODO: this should use a callback on the buffermangaer to remove memory entries
+	 * without materializing all group keys
+	 * @param gid
+	 * @return
+	 */
 	Collection<Long> removeCacheGroup(Long gid);
+
+	/**
+	 * Must be called prior to adding an entry
+	 * @param gid
+	 * @param oid
+	 */
 	void addToCacheGroup(Long gid, Long oid); 
-	CacheEntry get(Long id, Serializer<?> serializer) throws TeiidComponentException;
-	void add(CacheEntry entry, Serializer<?> s);
-	void remove(Long gid, Long id);
+
+	/**
+	 * Lock the object for load and return an identifier/lock
+	 * that can be used to retrieve the object.
+	 * @param oid
+	 * @param serializer
+	 * @return the identifier, may be null
+	 */
+	T lockForLoad(Long oid, Serializer<?> serializer);
+	
+	/**
+	 * Must be called after lockForLoad
+	 * @param o
+	 */
+	void unlockForLoad(T lock);
+
+	/**
+	 * Get method, must be called using the object obtained in the
+	 * lockForLoad method
+	 * @return
+	 * @throws TeiidComponentException
+	 */
+	CacheEntry get(T lock, Long oid, WeakReference<? extends Serializer<?>> ref) throws TeiidComponentException;
+	
+	/**
+	 * Adds an entry to the cache.
+	 * @param entry
+	 * @param s
+	 * @throws Exception
+	 */
+	boolean add(CacheEntry entry, Serializer<?> s) throws Exception;
+	
+	/**
+	 * Remove an entry from the cache
+	 * @param gid
+	 * @param id
+	 */
+	boolean remove(Long gid, Long id);
+	
 }

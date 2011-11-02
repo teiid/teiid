@@ -17,6 +17,7 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.ByteArrayAsset;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.teiid.adminapi.Admin;
@@ -31,6 +32,7 @@ import org.teiid.core.util.UnitTestUtil;
 
 @RunWith(Arquillian.class)
 @SuppressWarnings("nls")
+@Ignore
 public class TestDeployment {
 
 	@Test

@@ -2,7 +2,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-    <version>7.6.0.Alpha1-SNAPSHOT</version>
+    <version>7.6.0.Beta2-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jboss.teiid</groupId>
@@ -218,7 +218,7 @@
     <dependency>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>translator-jdbc</artifactId>
-      <version>${version}</version>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>    
     

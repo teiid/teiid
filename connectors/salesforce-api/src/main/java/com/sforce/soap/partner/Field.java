@@ -34,6 +34,7 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="digits" type="{http://www.w3.org/2001/XMLSchema}int"/>
  *         &lt;element name="externalId" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
  *         &lt;element name="filterable" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="groupable" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *         &lt;element name="htmlFormatted" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
  *         &lt;element name="idLookup" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *         &lt;element name="inlineHelpText" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
@@ -81,6 +82,7 @@ import javax.xml.bind.annotation.XmlType;
     "digits",
     "externalId",
     "filterable",
+    "groupable",
     "htmlFormatted",
     "idLookup",
     "inlineHelpText",
@@ -121,6 +123,7 @@ public class Field {
     protected int digits;
     protected Boolean externalId;
     protected boolean filterable;
+    protected boolean groupable;
     protected Boolean htmlFormatted;
     protected boolean idLookup;
     protected String inlineHelpText;
@@ -428,6 +431,22 @@ public class Field {
      */
     public void setFilterable(boolean value) {
         this.filterable = value;
+    }
+
+    /**
+     * Gets the value of the groupable property.
+     * 
+     */
+    public boolean isGroupable() {
+        return groupable;
+    }
+
+    /**
+     * Sets the value of the groupable property.
+     * 
+     */
+    public void setGroupable(boolean value) {
+        this.groupable = value;
     }
 
     /**

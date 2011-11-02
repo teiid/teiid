@@ -31,10 +31,10 @@ import java.util.List;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
+import org.teiid.translator.TranslatorException;
 
 /**
  */
@@ -87,7 +87,10 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
         	List<Object> result = new ArrayList<Object>();
         	int paramIndex = 1;
         	if (proc.getReturnType() != null) {
-        		addParameterValue(result, paramIndex++, proc.getReturnType());
+        		if (proc.getReturnParameter() != null) {
+        			addParameterValue(result, paramIndex, proc.getReturnType());
+        		}
+        		paramIndex++;
         	}
         	for (Argument parameter : proc.getArguments()) {
         		switch (parameter.getDirection()) {

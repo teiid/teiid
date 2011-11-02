@@ -30,10 +30,8 @@ import javax.naming.spi.InitialContextFactory;
 
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.teiid.resource.adapter.ldap.LDAPConnectionImpl;
-import org.teiid.resource.adapter.ldap.LDAPManagedConnectionFactory;
 
-
+@SuppressWarnings("nls")
 public class TestLDAPConnection {
 	
 	public static class FakeFactory implements InitialContextFactory {

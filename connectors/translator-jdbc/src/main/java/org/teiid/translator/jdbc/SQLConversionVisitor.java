@@ -24,15 +24,20 @@
  */
 package org.teiid.translator.jdbc;
 
+import static org.teiid.language.SQLConstants.Reserved.*;
+
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
@@ -45,6 +50,7 @@ import org.teiid.language.In;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Like;
 import org.teiid.language.Literal;
+import org.teiid.language.NamedTable;
 import org.teiid.language.SearchedCase;
 import org.teiid.language.SetClause;
 import org.teiid.language.Argument.Direction;
@@ -52,6 +58,7 @@ import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.visitor.SQLStringVisitor;
+import org.teiid.metadata.Procedure;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TypeFacility;
 
@@ -61,6 +68,9 @@ import org.teiid.translator.TypeFacility;
  * to produce a SQL String.  This class is expected to be subclassed.
  */
 public class SQLConversionVisitor extends SQLStringVisitor{
+	
+	public static final String TEIID_NATIVE_QUERY = "teiid:native-query"; //$NON-NLS-1$
+	public static final String TEIID_NON_PREPARED = "teiid:non-prepared"; //$NON-NLS-1$
 
     private static DecimalFormat DECIMAL_FORMAT = 
         new DecimalFormat("#############################0.0#############################"); //$NON-NLS-1$    
@@ -181,14 +191,71 @@ public class SQLConversionVisitor extends SQLStringVisitor{
      * @see org.teiid.language.visitor.SQLStringVisitor#visit(org.teiid.language.Call)
      */
     public void visit(Call obj) {
-        this.prepared = true;
-        /*
+    	Procedure p = obj.getMetadataObject();
+    	if (p != null) {
+	    	String nativeQuery = p.getProperties().get(TEIID_NATIVE_QUERY);
+	    	if (nativeQuery != null) {
+	    		List<Object> parts = parseNativeQueryParts(nativeQuery);
+	    		this.prepared = !Boolean.valueOf(p.getProperties().get(TEIID_NON_PREPARED));
+	    		if (this.prepared) {
+	    			this.preparedValues = new ArrayList<Object>();
+	    		}
+	    		for (Object o : parts) {
+	    			if (o instanceof String) {
+	    				buffer.append(o);
+	    			} else {
+	    				Integer i = (Integer)o;
+	    				if (obj.getArguments().size() <= i) {
+	    					throw new IllegalArgumentException("Invalid parameter {0}.  Must be less than or equal to {1}.");
+	    				}
+	    				if (obj.getArguments().get(i).getDirection() != Direction.IN) {
+	    					throw new IllegalArgumentException("Native query procedures cannot use non IN parameters.");
+	    				}
+	    				visit(obj.getArguments().get(i));
+	    				if (this.prepared) {
+	    					this.preparedValues.add(obj.getArguments());
+	    				}
+	    			}
+	    		}
+	    		return;
+	    	}
+    	}
+		this.prepared = true;
+		/*
          * preparedValues is now a list of procedure params instead of just values
          */
         this.preparedValues = obj.getArguments();
         buffer.append(generateSqlForStoredProcedure(obj));
     }
 
+	private List<Object> parseNativeQueryParts(String nativeQuery) {
+		Pattern pattern = Pattern.compile("\\$(\\$\\$)*\\d+"); //$NON-NLS-1$
+		List<Object> parts = new LinkedList<Object>();
+		Matcher m = pattern.matcher(nativeQuery);
+		for (int i = 0; i < nativeQuery.length(); i++) {
+			if (!m.find(i)) {
+				parts.add(nativeQuery.substring(i).replaceAll("\\$\\$", "\\$")); //$NON-NLS-1$ //$NON-NLS-2$
+				break;
+			}
+			if (m.start() != i) {
+				parts.add(nativeQuery.substring(i, m.start()).replaceAll("\\$\\$", "\\$")); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			String match = m.group();
+			int end = match.lastIndexOf('$');
+			if ((end&0x1) == 1) {
+				//escaped
+				parts.add(match.replaceAll("\\$\\$", "\\$")); //$NON-NLS-1$ //$NON-NLS-2$
+			} else {
+				if (end != 0) {
+					parts.add(match.substring(0, end/2));
+				}
+				parts.add(Integer.parseInt(match.substring(end + 1))-1);
+			}
+			i = m.end();
+		}
+		return parts;
+	}
+    
     /**
      * @see org.teiid.language.visitor.SQLStringVisitor#visit(org.teiid.language.Literal)
      */
@@ -354,5 +421,23 @@ public class SQLConversionVisitor extends SQLStringVisitor{
 	protected String getLikeRegexString() {
 		return executionFactory.getLikeRegexString();
 	}
+	
+	@Override
+	protected void appendBaseName(NamedTable obj) {
+		if (obj.getMetadataObject() != null) {
+			String nativeQuery = obj.getMetadataObject().getProperties().get(TEIID_NATIVE_QUERY);
+	    	if (nativeQuery != null) {
+	    		buffer.append(Tokens.LPAREN).append(nativeQuery).append(Tokens.RPAREN);
+	    		if (obj.getCorrelationName() == null) {
+	                buffer.append(Tokens.SPACE);
+	    			if (useAsInGroupAlias()){
+	                    buffer.append(AS).append(Tokens.SPACE);
+	                }
+	    		}
+	    	}
+		}
+		super.appendBaseName(obj);
+	}
+	
 	
 }

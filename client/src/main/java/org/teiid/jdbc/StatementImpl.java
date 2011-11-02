@@ -63,19 +63,18 @@ import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.util.SqlUtil;
 import org.teiid.core.util.StringUtil;
-import org.teiid.jdbc.CancellationTimer.CancelTask;
+import org.teiid.jdbc.EnhancedTimer.Task;
 import org.teiid.net.TeiidURL;
 
 
 public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 	
-	static CancellationTimer cancellationTimer = new CancellationTimer("Teiid Statement Timeout"); //$NON-NLS-1$
+	static EnhancedTimer cancellationTimer = new EnhancedTimer("Teiid Statement Timeout"); //$NON-NLS-1$
 	
-	private static final class QueryTimeoutCancelTask extends CancelTask {
+	private static final class QueryTimeoutCancelTask implements Runnable {
 		private WeakReference<StatementImpl> ref;
-		private QueryTimeoutCancelTask(long delay, StatementImpl stmt) {
-			super(delay);
+		private QueryTimeoutCancelTask(StatementImpl stmt) {
 			this.ref = new WeakReference<StatementImpl>(stmt);
 		}
 
@@ -98,6 +97,8 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 
     // integer indicating no maximum limit - used in some metadata-ish methods.
     private static final int NO_LIMIT = 0;
+    
+    private QueryTimeoutCancelTask cancelTask = new QueryTimeoutCancelTask(this);
 
     //######## Configuration state #############
     private ConnectionImpl driverConnection;
@@ -571,12 +572,11 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         
         ResultsFuture.CompletionListener<ResultsMessage> compeletionListener = null;
 		if (queryTimeoutMS > 0) {
-			final CancelTask c = new QueryTimeoutCancelTask(queryTimeoutMS, this);
-			cancellationTimer.add(c);
+			final Task c = cancellationTimer.add(cancelTask, queryTimeoutMS);
 			compeletionListener = new ResultsFuture.CompletionListener<ResultsMessage>() {
 				@Override
 				public void onCompletion(ResultsFuture<ResultsMessage> future) {
-					cancellationTimer.remove(c);
+					c.cancel();
 				}
 			};
 		} 

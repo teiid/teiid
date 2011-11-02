@@ -25,7 +25,6 @@ package org.teiid.common.buffer;
 import java.lang.ref.PhantomReference;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -34,6 +33,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.teiid.client.ResizingArrayList;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 
@@ -49,8 +49,6 @@ import org.teiid.core.TeiidRuntimeException;
 @SuppressWarnings("unchecked")
 class SPage implements Cloneable {
 	
-	static final int MIN_PERSISTENT_SIZE = 16;
-
 	static class SearchResult {
 		int index;
 		SPage page;
@@ -103,9 +101,9 @@ class SPage implements Cloneable {
 		this.stree = stree;
 		this.id = counter.getAndIncrement();
 		stree.pages.put(this.id, this);
-		this.values = new ArrayList<List<?>>();
+		this.values = new ResizingArrayList<List<?>>();
 		if (!leaf) {
-			children = new ArrayList<SPage>();
+			children = new ResizingArrayList<SPage>();
 		}
 	}
 	
@@ -119,10 +117,10 @@ class SPage implements Cloneable {
 			SPage clone = (SPage) super.clone();
 			clone.stree = tree;
 			if (children != null) {
-				clone.children = new ArrayList<SPage>(children);
+				clone.children = new ResizingArrayList<SPage>(children);
 			}
 			if (values != null) {
-				clone.values = new ArrayList<List<?>>(values);
+				clone.values = new ResizingArrayList<List<?>>(values);
 			}
 			return clone;
 		} catch (CloneNotSupportedException e) {
@@ -186,22 +184,26 @@ class SPage implements Cloneable {
 		if (values instanceof LightWeightCopyOnWriteList<?>) {
 			values = ((LightWeightCopyOnWriteList<List<?>>)values).getList();
 		}
+		if (values.size() < stree.minPageSize) {
+			setDirectValues(values);
+			return;
+		} else if (stree.batchInsert && children == null && values.size() < stree.leafSize) {
+			setDirectValues(values);
+			stree.incompleteInsert = this;
+			return;
+		}
+		this.values = null;
+		managedBatch = stree.getBatchManager(children == null).createManagedBatch(values, managedBatch, trackingObject == null);
+		this.trackingObject = null;
+	}
+
+	private void setDirectValues(List<List<?>> values) {
 		if (managedBatch != null && trackingObject == null) {
 			stree.getBatchManager(children == null).remove(managedBatch);
 			managedBatch = null;
 			trackingObject = null;
 		}
-		if (values.size() < MIN_PERSISTENT_SIZE) {
-			this.values = values;
-			return;
-		} else if (stree.batchInsert && children == null && values.size() < stree.leafSize) {
-			this.values = values;
-			stree.incompleteInsert = this;
-			return;
-		}
-		this.values = null;
-		this.trackingObject = null;
-		managedBatch = stree.getBatchManager(children == null).createManagedBatch(values);
+		this.values = values;
 	}
 	
 	protected void remove(boolean force) {

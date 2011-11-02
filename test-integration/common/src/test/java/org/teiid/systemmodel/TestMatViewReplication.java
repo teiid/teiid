@@ -35,6 +35,7 @@ import org.jboss.as.clustering.jgroups.ChannelFactory;
 import org.jgroups.Channel;
 import org.jgroups.JChannelFactory;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
@@ -46,6 +47,7 @@ import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.replication.jboss.JGroupsObjectReplicator;
 
 @SuppressWarnings("nls")
+@Ignore
 public class TestMatViewReplication {
 	
     private static final String MATVIEWS = "matviews";

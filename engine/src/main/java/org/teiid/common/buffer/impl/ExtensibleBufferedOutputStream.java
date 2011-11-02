@@ -29,22 +29,26 @@ import java.nio.ByteBuffer;
 public abstract class ExtensibleBufferedOutputStream extends OutputStream {
 	
     protected ByteBuffer buf;
+    protected int bytesWritten;
+    private int startPosition;
     
     public ExtensibleBufferedOutputStream() {
 	}
     
     public void write(int b) throws IOException {
     	ensureBuffer();
-		if (buf.remaining() == 0) {
-		    flush();
-		}
 		buf.put((byte)b);
     }
 
-	private void ensureBuffer() {
-		if (buf == null) {
-    		buf = newBuffer();
-    	}
+	private void ensureBuffer() throws IOException {
+		if (buf != null) {
+			if (buf.remaining() != 0) {
+				return;
+			}
+			flush();
+		}
+		buf = newBuffer();
+		startPosition = buf.position();
 	}
 
     public void write(byte b[], int off, int len) throws IOException {
@@ -57,24 +61,33 @@ public abstract class ExtensibleBufferedOutputStream extends OutputStream {
 			if (buf.remaining() > 0) {
 				break;
 			}
-			flush();
     	}
     }
 
 	public void flush() throws IOException {
-		if (buf != null && buf.position() > 0) {
-			flushDirect();
+		if (buf != null) {
+			int bytes = buf.position() - startPosition;
+			if (bytes > 0) {
+				bytesWritten += flushDirect(bytes);
+			}
 		}
 		buf = null;
 	}
 
-	protected abstract ByteBuffer newBuffer();
+	protected abstract ByteBuffer newBuffer() throws IOException;
 	
-	protected abstract void flushDirect() throws IOException;
+	/**
+	 * Flush up to i bytes where i is the current position of the buffer
+	 */
+	protected abstract int flushDirect(int i) throws IOException;
     
     @Override
     public void close() throws IOException {
 		flush();
     }
+    
+    public int getBytesWritten() {
+		return bytesWritten;
+	}
     
 }

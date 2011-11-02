@@ -51,83 +51,78 @@ public class TestSessionMetadata {
 		
 	}
 	
-	private static final String describe = "{\n" + 
-			"    \"type\" : {\n" + 
-			"        \"TYPE_MODEL_VALUE\" : \"OBJECT\"\n" + 
+	private static final String describe = "{\"attributes\" : {\n" + 
+			"    \"application-name\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+			"        },\n" + 
+			"        \"description\" : \"Application assosiated with Session\",\n" + 
+			"        \"required\" : false\n" + 
 			"    },\n" + 
-			"    \"attributes\" : {\n" + 
-			"        \"application-name\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"Application assosiated with Session\",\n" + 
-			"            \"required\" : false\n" + 
+			"    \"created-time\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
 			"        },\n" + 
-			"        \"created-time\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"When session created\",\n" + 
-			"            \"required\" : true\n" + 
+			"        \"description\" : \"When session created\",\n" + 
+			"        \"required\" : true\n" + 
+			"    },\n" + 
+			"    \"client-host-address\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
 			"        },\n" + 
-			"        \"client-host-address\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"Host name from where the session created\",\n" + 
-			"            \"required\" : true\n" + 
+			"        \"description\" : \"Host name from where the session created\",\n" + 
+			"        \"required\" : true\n" + 
+			"    },\n" + 
+			"    \"ip-address\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
 			"        },\n" + 
-			"        \"ip-address\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"IP address from where session is created\",\n" + 
-			"            \"required\" : true\n" + 
+			"        \"description\" : \"IP address from where session is created\",\n" + 
+			"        \"required\" : true\n" + 
+			"    },\n" + 
+			"    \"last-ping-time\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
 			"        },\n" + 
-			"        \"last-ping-time\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"Last ping time\",\n" + 
-			"            \"required\" : true\n" + 
+			"        \"description\" : \"Last ping time\",\n" + 
+			"        \"required\" : true\n" + 
+			"    },\n" + 
+			"    \"session-id\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
 			"        },\n" + 
-			"        \"session-id\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"Session Identifier\",\n" + 
-			"            \"required\" : true\n" + 
+			"        \"description\" : \"Session Identifier\",\n" + 
+			"        \"required\" : true\n" + 
+			"    },\n" + 
+			"    \"user-name\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
 			"        },\n" + 
-			"        \"user-name\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"User name associated with session\",\n" + 
-			"            \"required\" : true\n" + 
+			"        \"description\" : \"User name associated with session\",\n" + 
+			"        \"required\" : true\n" + 
+			"    },\n" + 
+			"    \"vdb-name\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
 			"        },\n" + 
-			"        \"vdb-name\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"The Virtual Database Name\",\n" + 
-			"            \"required\" : true\n" + 
+			"        \"description\" : \"The Virtual Database Name\",\n" + 
+			"        \"required\" : true\n" + 
+			"    },\n" + 
+			"    \"vdb-version\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"INT\"\n" + 
 			"        },\n" + 
-			"        \"vdb-version\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"INT\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"The Virtual Database Version\",\n" + 
-			"            \"required\" : true\n" + 
+			"        \"description\" : \"The Virtual Database Version\",\n" + 
+			"        \"required\" : true\n" + 
+			"    },\n" + 
+			"    \"security-domain\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
 			"        },\n" + 
-			"        \"security-domain\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"Security domain that session used for login\",\n" + 
-			"            \"required\" : false\n" + 
-			"        }\n" + 
+			"        \"description\" : \"Security domain that session used for login\",\n" + 
+			"        \"required\" : false\n" + 
 			"    }\n" + 
-			"}"; 
+			"}}"; 
 	
 	@Test public void testDescribe() {
 		ModelNode n = VDBMetadataMapper.SessionMetadataMapper.INSTANCE.describe(new ModelNode());

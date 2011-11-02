@@ -88,8 +88,7 @@ public class TestDataTierManager {
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(connectorManager);
         
         
-        dtm = new DataTierManagerImpl(rm,
-                                  bs, true);
+        dtm = new DataTierManagerImpl(rm,bs.getBufferManager(), true);
         command = helpGetCommand(sql, metadata);
         
         RequestMessage original = new RequestMessage();

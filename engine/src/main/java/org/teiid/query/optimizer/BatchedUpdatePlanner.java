@@ -90,8 +90,8 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                                   AnalysisRecord analysisRecord, CommandContext context)
     throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         BatchedUpdateCommand batchedUpdateCommand = (BatchedUpdateCommand)command;
-        List childPlans = new ArrayList(batchedUpdateCommand.getUpdateCommands().size());
-        List updateCommands = batchedUpdateCommand.getUpdateCommands();
+        List<ProcessorPlan> childPlans = new ArrayList<ProcessorPlan>(batchedUpdateCommand.getUpdateCommands().size());
+        List<Command> updateCommands = batchedUpdateCommand.getUpdateCommands();
         int numCommands = updateCommands.size();
         List<VariableContext> allContexts = batchedUpdateCommand.getVariableContexts();
         List<VariableContext> planContexts = null;
@@ -100,7 +100,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
         }
         for (int commandIndex = 0; commandIndex < numCommands; commandIndex++) {
             // Potentially the first command of a batch
-            Command updateCommand = (Command)updateCommands.get(commandIndex);
+            Command updateCommand = updateCommands.get(commandIndex);
             boolean commandWasBatched = false;
             // If this command can be placed in a batch
             if (isEligibleForBatching(updateCommand, metadata)) {
@@ -125,7 +125,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                     // Find out if there are other commands called on the same physical model
                     // immediately and contiguously after this one
                     batchLoop: for (int batchIndex = commandIndex+1; batchIndex < numCommands; batchIndex++) {
-                        Command batchingCandidate = (Command)updateCommands.get(batchIndex);
+                        Command batchingCandidate = updateCommands.get(batchIndex);
                         // If this command updates the same model, and is eligible for batching, add it to the batch
                         if (canBeAddedToBatch(batchingCandidate, batchModelID, metadata, capFinder)) {
                             batch.add(batchingCandidate);
@@ -165,7 +165,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                 }
             }
             if (!commandWasBatched) { // If the command wasn't batched, just add the plan for this command to the list of plans
-            	Command cmd = (Command)batchedUpdateCommand.getUpdateCommands().get(commandIndex);
+            	Command cmd = batchedUpdateCommand.getUpdateCommands().get(commandIndex);
             	ProcessorPlan plan = cmd.getProcessorPlan();
             	if (plan == null) {
             		plan = QueryOptimizer.optimizePlan(cmd, metadata, idGenerator, capFinder, analysisRecord, context);

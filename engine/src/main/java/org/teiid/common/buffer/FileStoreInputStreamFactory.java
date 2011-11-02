@@ -22,7 +22,6 @@
  
 package org.teiid.common.buffer;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,8 +49,7 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 		if (fsos != null && !fsos.bytesWritten()) {
 			return new ByteArrayInputStream(fsos.getBuffer(), 0, fsos.getCount());
 		}
-		//TODO: adjust the buffer size, and/or develop a shared buffer strategy
-		return new BufferedInputStream(lobBuffer.createInputStream(0));
+		return lobBuffer.createInputStream(0);
 	}
 
 	@Override

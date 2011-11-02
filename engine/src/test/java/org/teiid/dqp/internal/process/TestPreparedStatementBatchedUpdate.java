@@ -79,6 +79,37 @@ public class TestPreparedStatementBatchedUpdate {
     	assertTrue(((Constant)update.getChangeList().getClauses().get(0).getValue()).isMultiValued());
     }
     
+    @Test public void testBatchedUpdateNotPushdown() throws Exception {
+        // Create query 
+		String preparedSql = "UPDATE pm1.g1 SET pm1.g1.e1=?, pm1.g1.e3=? WHERE pm1.g1.e2=?"; //$NON-NLS-1$
+        
+		// Create a testable prepared plan cache
+		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>();
+		
+		// Construct data manager with data
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("UPDATE pm1.g1 SET e1 = 'a', e3 = FALSE WHERE pm1.g1.e2 = 0", new List[] {Arrays.asList(2)}); //$NON-NLS-1$
+		dataManager.addData("UPDATE pm1.g1 SET e1 = null, e3 = FALSE WHERE pm1.g1.e2 = 1", new List[] {Arrays.asList(2)}); //$NON-NLS-1$
+		// Source capabilities must support batched updates
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.BULK_UPDATE, false);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        // batch with two commands
+		ArrayList<ArrayList<Object>> values = new ArrayList<ArrayList<Object>>(2);
+		values.add(new ArrayList<Object>(Arrays.asList(new Object[] { "a",  Boolean.FALSE, new Integer(0) })));  //$NON-NLS-1$
+    	values.add(new ArrayList<Object>(Arrays.asList(new Object[] { null, Boolean.FALSE, new Integer(1) })));
+    	
+    	List<?>[] expected = new List[] { 
+                Arrays.asList(2),
+                Arrays.asList(2)
+        };
+    	
+    	// Create the plan and process the query
+    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, RealMetadataFactory.example1Cached(), prepPlanCache, false, false, false,RealMetadataFactory.example1VDB());
+    }
+    
     /**
      * Test prepared statements that use batched updates using the same prepared
      * command with same number of commands in the batch.

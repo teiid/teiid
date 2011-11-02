@@ -64,6 +64,7 @@ import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.optimizer.relational.rules.CriteriaCapabilityValidatorVisitor;
+import org.teiid.query.optimizer.relational.rules.RuleAssignOutputElements;
 import org.teiid.query.optimizer.relational.rules.RuleCollapseSource;
 import org.teiid.query.optimizer.relational.rules.RuleConstants;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
@@ -406,7 +407,7 @@ public class RelationalPlanner {
         
         rules.push(RuleConstants.CALCULATE_COST);
         
-        rules.push(RuleConstants.ASSIGN_OUTPUT_ELEMENTS);
+        rules.push(new RuleAssignOutputElements(true));
         
         if (hints.hasLimit) {
             rules.push(RuleConstants.PUSH_LIMIT);
@@ -454,7 +455,7 @@ public class RelationalPlanner {
         }
         if (hints.hasVirtualGroups || (hints.hasJoin && hints.hasOptionalJoin)) {
         	//do initial filtering to make merging and optional join logic easier
-            rules.push(RuleConstants.ASSIGN_OUTPUT_ELEMENTS);
+            rules.push(new RuleAssignOutputElements(false));
         }
         rules.push(RuleConstants.PLACE_ACCESS);
         return rules;

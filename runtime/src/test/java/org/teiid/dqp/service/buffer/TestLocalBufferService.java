@@ -22,7 +22,9 @@
 
 package org.teiid.dqp.service.buffer;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -32,12 +34,12 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
+import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.common.buffer.impl.FileStorageManager;
-import org.teiid.common.buffer.impl.FileStoreCache;
 import org.teiid.common.buffer.impl.SplittableStorageManager;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
@@ -63,7 +65,7 @@ public class TestLocalBufferService {
         assertTrue(svc.isUseDisk());
         
         BufferManagerImpl mgr = svc.getBufferManager();
-        SplittableStorageManager ssm = (SplittableStorageManager)((FileStoreCache)mgr.getCache()).getStorageManager();
+        SplittableStorageManager ssm = (SplittableStorageManager)((BufferFrontedFileStoreCache)mgr.getCache()).getStorageManager();
         assertTrue(((FileStorageManager)ssm.getStorageManager()).getDirectory().endsWith(svc.getBufferDirectory().getName()));
     }
 
@@ -102,8 +104,8 @@ public class TestLocalBufferService {
         svc.start();
         
         BufferManager mgr = svc.getBufferManager();
-        assertEquals(6570, mgr.getSchemaSize(schema));
-        assertEquals(256, mgr.getProcessorBatchSize(schema));
+        assertEquals(3364096, mgr.getSchemaSize(schema));
+        assertEquals(128, mgr.getProcessorBatchSize(schema));
     }
     
     @Test
@@ -128,36 +130,45 @@ public class TestLocalBufferService {
 			buffer.setBatchSize(50);
 			buffer.setId("state_id"+i);
 			
-			for(int batch = 0; batch < 3; batch++) {
+			for (int batch=0; batch<3; batch++) {
 				for (int row = 0; row < 50; row++) {
-					buffer.addTuple(Arrays.asList(new Object[] {"String"+row, new Integer(row)}));
+					int val = (i*150)+(batch*50)+row;
+					buffer.addTuple(Arrays.asList(new Object[] {"String"+val, new Integer(val)}));
 				}
 			}
+			buffer.close();
 			mgr.distributeTupleBuffer(buffer.getId(), buffer);
 		}
 		
-		((BufferManagerImpl)mgr).getState(new FileOutputStream(UnitTestUtil.getTestScratchPath()+"/teiid/statetest"));
+		FileOutputStream fo = new FileOutputStream(UnitTestUtil.getTestScratchPath()+"/teiid/statetest");
+		((BufferManagerImpl)mgr).getState(fo);
+		fo.close();
+		svc.stop();
 		
 		// now read back
     	BufferServiceImpl svc2 = new BufferServiceImpl();
-        svc2.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid/1");
+        svc2.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid/2");
         svc2.setUseDisk(true);
         svc2.start();
     	
-        BufferManager mgr2 = svc2.getBufferManager();		
-		((BufferManagerImpl)mgr2).setState(new FileInputStream(UnitTestUtil.getTestScratchPath()+"/teiid/statetest"));
+        BufferManagerImpl mgr2 = svc2.getBufferManager();
+        FileInputStream fis = new FileInputStream(UnitTestUtil.getTestScratchPath()+"/teiid/statetest");
+		mgr2.setState(fis);
+		fis.close();
 		
 		for (int i = 0; i < 5; i++) {
 			String id = "state_id"+i;
-			TupleBuffer buffer = mgr.getTupleBuffer(id);
-			
-			TupleBatch tb = buffer.getBatch(50);
-			List[] rows = tb.getAllTuples();
-			for (int row = 0; row < 50; row++) {
-				assertEquals("String"+row, rows[row].get(0));
-				assertEquals(row, rows[row].get(1));
+			TupleBuffer buffer = mgr2.getTupleBuffer(id);
+			for (int batch=0; batch<3; batch++) {
+				TupleBatch tb = buffer.getBatch((batch*50)+1);
+				List[] rows = tb.getAllTuples();
+				for (int row = 0; row < 50; row++) {
+					int val = (i*150)+(batch*50)+row;
+					assertEquals("String"+val, rows[row].get(0));
+					assertEquals(val, rows[row].get(1));
+				}
 			}
 		}
+		svc2.stop();
     }
-    
 }

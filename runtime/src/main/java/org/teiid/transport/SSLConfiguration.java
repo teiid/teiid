@@ -59,8 +59,10 @@ public class SSLConfiguration {
     private String trustStoreFileName;
     private String trustStorePassword = ""; //$NON-NLS-1$
     private String authenticationMode = ONEWAY;
+    private String[] enabledCipherSuites;
     
-    public SSLEngine getServerSSLEngine() throws IOException, GeneralSecurityException {
+
+	public SSLEngine getServerSSLEngine() throws IOException, GeneralSecurityException {
         if (!isSslEnabled()) {
         	return null;
         }
@@ -86,10 +88,13 @@ public class SSLConfiguration {
             if (!(Arrays.asList(result.getSupportedCipherSuites()).contains(SocketUtil.ANON_CIPHER_SUITE))) {
             	throw new GeneralSecurityException(RuntimePlugin.Util.getString("SSLConfiguration.no_anonymous")); //$NON-NLS-1$
             }
-            result.setEnabledCipherSuites(new String[] {
-            		SocketUtil.ANON_CIPHER_SUITE
-            });
-        } 
+            result.setEnabledCipherSuites(new String[] {SocketUtil.ANON_CIPHER_SUITE});
+        } else {
+        	if (this.enabledCipherSuites != null) {
+        		result.setEnabledCipherSuites(this.enabledCipherSuites);
+        	}
+        }
+        
         result.setNeedClientAuth(TWOWAY.equals(authenticationMode));
         return result;
     }
@@ -142,4 +147,11 @@ public class SSLConfiguration {
     	this.authenticationMode = value;
     }
     
+	public void setEnabledCipherSuites(String enabledCipherSuites) {
+		this.enabledCipherSuites = enabledCipherSuites.split(","); //$NON-NLS-1$
+	}    
+	
+	public String[] getEnabledCipherSuites() {
+		return enabledCipherSuites;
+	}
 }

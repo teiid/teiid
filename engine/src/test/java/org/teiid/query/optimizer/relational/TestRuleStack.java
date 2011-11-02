@@ -22,12 +22,10 @@
 
 package org.teiid.query.optimizer.relational;
 
-import org.teiid.query.optimizer.relational.OptimizerRule;
-import org.teiid.query.optimizer.relational.RuleStack;
+import junit.framework.TestCase;
+
 import org.teiid.query.optimizer.relational.rules.RuleConstants;
 import org.teiid.query.optimizer.relational.rules.RulePushSelectCriteria;
-
-import junit.framework.TestCase;
 
 
 /**
@@ -76,12 +74,12 @@ public class TestRuleStack extends TestCase {
     public void testRemove() {
         // Set up
         RuleStack stack = new RuleStack();
-        stack.push(RuleConstants.ASSIGN_OUTPUT_ELEMENTS);
+        stack.push(RuleConstants.ACCESS_PATTERN_VALIDATION);
         stack.push(RuleConstants.COLLAPSE_SOURCE);
-        stack.push(RuleConstants.ASSIGN_OUTPUT_ELEMENTS);
+        stack.push(RuleConstants.ACCESS_PATTERN_VALIDATION);
         
         // Remove all instances of ASSIGN_OUTPUT_ELEMENTS
-        stack.remove(RuleConstants.ASSIGN_OUTPUT_ELEMENTS);
+        stack.remove(RuleConstants.ACCESS_PATTERN_VALIDATION);
         
         // Verify size and pop'ed values
         assertEquals(1, stack.size());
@@ -92,10 +90,10 @@ public class TestRuleStack extends TestCase {
     public void testContains() {
         // Set up
         RuleStack stack = new RuleStack();
-        stack.push(RuleConstants.ASSIGN_OUTPUT_ELEMENTS);
+        stack.push(RuleConstants.ACCESS_PATTERN_VALIDATION);
         stack.push(RuleConstants.COLLAPSE_SOURCE);
         
-        assertEquals(true, stack.contains(RuleConstants.ASSIGN_OUTPUT_ELEMENTS));
+        assertEquals(true, stack.contains(RuleConstants.ACCESS_PATTERN_VALIDATION));
         assertEquals(false, stack.contains(RuleConstants.PLACE_ACCESS));
     }
 

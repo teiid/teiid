@@ -65,6 +65,7 @@ public class STree implements Cloneable {
     protected ListNestedSortComparator comparator;
     private int pageSize;
     protected int leafSize;
+    protected int minPageSize;
     protected int keyLength;
 	protected boolean batchInsert;
 	protected SPage incompleteInsert;
@@ -86,7 +87,7 @@ public class STree implements Cloneable {
 		manager.setPrefersMemory(true);
 		this.leafManager = leafManager;
 		this.comparator = comparator;
-		this.pageSize = Math.max(pageSize, SPage.MIN_PERSISTENT_SIZE);
+		this.pageSize = pageSize;
 		pageSize >>>= 3;
 		while (pageSize > 0) {
 			pageSize >>>= 1;
@@ -97,6 +98,7 @@ public class STree implements Cloneable {
 		this.leafSize = leafSize;
 		this.keyLength = keyLength;
 		this.lobManager = lobManager;
+		this.minPageSize = this.pageSize>>5;
 	}
 	
 	public STree clone() {

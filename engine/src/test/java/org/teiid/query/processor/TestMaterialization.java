@@ -29,13 +29,13 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Executor;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.util.ExecutorUtils;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.QueryProcessorFactoryImpl;
 import org.teiid.dqp.internal.process.SessionAwareCache;
@@ -75,13 +75,7 @@ public class TestMaterialization {
 		
 	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
 	    cache.setBufferManager(bm);
-	    Executor executor = new Executor() {
-			@Override
-			public void execute(Runnable command) {
-				command.run();
-			}
-	    };
-		dataManager = new TempTableDataManager(hdm, bm, executor, cache);
+		dataManager = new TempTableDataManager(hdm, bm, ExecutorUtils.getDirectExecutor(), cache);
 	}
 	
 	private void execute(String sql, List<?>... expectedResults) throws Exception {

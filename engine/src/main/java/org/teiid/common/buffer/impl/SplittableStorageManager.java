@@ -23,7 +23,6 @@
 package org.teiid.common.buffer.impl;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -79,7 +78,7 @@ public class SplittableStorageManager implements StorageManager {
 	    	FileStore store = null;
 	    	if (!write) {
 	    		synchronized (this) {
-		    		if (fileOffset + length > len) {
+		    		if (fileOffset > len) {
 		    			throw new IOException("Invalid file position " + fileOffset + " length " + length); //$NON-NLS-1$ //$NON-NLS-2$
 		    		}
 		    		store = storageFiles.get((int)(fileOffset/maxFileSize));
@@ -118,28 +117,6 @@ public class SplittableStorageManager implements StorageManager {
 			len = length;
 		}
 		
-		@Override
-		public ByteBuffer getBuffer(long start, int length, boolean allocate) throws IOException {
-			FileStore store = null;
-			synchronized (this) {
-				ensureLength(start + length);
-				store = storageFiles.get((int)(start/maxFileSize));
-			}
-	    	long fileBegin = start%maxFileSize;
-			return store.getBuffer(fileBegin, length, allocate);
-		}
-		
-		@Override
-		public void updateFromBuffer(ByteBuffer bb, long start)
-				throws IOException {
-			FileStore store = null;
-			synchronized (this) {
-				store = storageFiles.get((int)(start/maxFileSize));
-			}
-	    	long fileBegin = start%maxFileSize;
-			store.updateFromBuffer(bb, fileBegin);
-		}
-
 	    @Override
 	    public synchronized void setLength(long length) throws IOException {
 			if (length > len) {

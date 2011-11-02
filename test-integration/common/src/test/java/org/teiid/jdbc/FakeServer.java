@@ -23,7 +23,12 @@ package org.teiid.jdbc;
 
 import java.io.File;
 import java.security.Principal;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Properties;
 
 import javax.security.auth.Subject;
 
@@ -39,12 +44,21 @@ import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
-import org.teiid.deployers.*;
+import org.teiid.core.util.UnitTestUtil;
+import org.teiid.deployers.CompositeVDB;
+import org.teiid.deployers.MetadataStoreGroup;
+import org.teiid.deployers.UDFMetaData;
+import org.teiid.deployers.VDBLifeCycleListener;
+import org.teiid.deployers.VDBRepository;
+import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
-import org.teiid.dqp.internal.process.*;
-import org.teiid.dqp.service.BufferService;
+import org.teiid.dqp.internal.process.CachedResults;
+import org.teiid.dqp.internal.process.DQPConfiguration;
+import org.teiid.dqp.internal.process.DQPCore;
+import org.teiid.dqp.internal.process.PreparedPlan;
+import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.service.FakeBufferService;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataRepository;
@@ -63,6 +77,7 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.security.SecurityHelper;
+import org.teiid.services.BufferServiceImpl;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
@@ -89,10 +104,14 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 	}
 	
 	public FakeServer(DQPConfiguration config) {
-		
+		this(config, false);
+	}
+
+	public FakeServer(DQPConfiguration config, boolean realBufferMangaer) {
+
 		Map<String, SecurityDomainContext> securityDomainMap = new HashMap<String, SecurityDomainContext>();
-        SecurityDomainContext securityContext = Mockito.mock(SecurityDomainContext.class);
-        AuthenticationManager authManager = new AuthenticationManager() {
+		SecurityDomainContext securityContext = Mockito.mock(SecurityDomainContext.class);
+		AuthenticationManager authManager = new AuthenticationManager() {
 			@Override
 			public String getSecurityDomain() {
 				return null;
@@ -115,13 +134,13 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 					Map<String, Object> contextMap) {
 				return null;
 			}
-        	
-        };
-        Mockito.stub(securityContext.getAuthenticationManager()).toReturn(authManager);
-        securityDomainMap.put("somedomain", securityContext); //$NON-NLS-1$
-        sessionService.setSecurityHelper(Mockito.mock(SecurityHelper.class));
+			
+		};
+		Mockito.stub(securityContext.getAuthenticationManager()).toReturn(authManager);
+		securityDomainMap.put("somedomain", securityContext); //$NON-NLS-1$
+		sessionService.setSecurityHelper(Mockito.mock(SecurityHelper.class));
 		
-        sessionService.setSecurityDomains(Arrays.asList("somedomain"), securityDomainMap);		
+		sessionService.setSecurityDomains(Arrays.asList("somedomain"), securityDomainMap);
 		
 		this.logon = new LogonImpl(sessionService, null);
 		this.repo.addListener(new VDBLifeCycleListener() {
@@ -150,21 +169,27 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 		this.repo.start();
 		
         this.sessionService.setVDBRepository(repo);
-        BufferService fbs = new FakeBufferService();
-        this.dqp.setBufferService(fbs);
+        if (!realBufferMangaer) {
+        	this.dqp.setBufferService(new FakeBufferService());
+        } else {
+        	BufferServiceImpl bsi = new BufferServiceImpl();
+        	bsi.setDiskDirectory(UnitTestUtil.getTestScratchPath());
+        	this.dqp.setBufferService(bsi);
+        	bsi.start();
+        }
         DefaultCacheFactory dcf = new DefaultCacheFactory() {
         	@Override
         	public boolean isReplicated() {
         		return true; //pretend to be replicated for matview tests
         	}
-        };
-
-        SessionAwareCache rs = new SessionAwareCache<CachedResults>(dcf, SessionAwareCache.Type.RESULTSET, new CacheConfiguration(Policy.LRU, 60, 250, "resultsetcache"));
-        rs.setBufferManager(fbs.getBufferManager());
+        };        
+		SessionAwareCache rs = new SessionAwareCache<CachedResults>(dcf, SessionAwareCache.Type.RESULTSET, new CacheConfiguration(Policy.LRU, 60, 250, "resultsetcache"));
+		SessionAwareCache ppc = new SessionAwareCache<PreparedPlan>(dcf, SessionAwareCache.Type.PREPAREDPLAN, new CacheConfiguration());
+        rs.setBufferManager(this.dqp.getBufferManager());
         this.dqp.setResultsetCache(rs);
-        SessionAwareCache ppc = new SessionAwareCache<PreparedPlan>(dcf, SessionAwareCache.Type.PREPAREDPLAN, new CacheConfiguration());
-        ppc.setBufferManager(fbs.getBufferManager());
-        this.dqp.setPreparedPlanCache(ppc);
+        
+        ppc.setBufferManager(this.dqp.getBufferManager());
+        this.dqp.setPreparedPlanCache(ppc);		
         
         this.dqp.setTransactionService(new FakeTransactionService());
         
@@ -181,6 +206,10 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         
         registerClientService(ILogon.class, logon, null);
         registerClientService(DQP.class, dqp, null);
+	}
+	
+	public DQPCore getDqp() {
+		return dqp;
 	}
 	
 	public void setConnectorManagerRepository(ConnectorManagerRepository cmr) {

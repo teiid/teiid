@@ -40,7 +40,7 @@ public interface BatchManager {
 	
 	boolean prefersMemory();
 	
-	Long createManagedBatch(List<? extends List<?>> batch) throws TeiidComponentException;
+	Long createManagedBatch(List<? extends List<?>> batch, Long previous, boolean removeOld) throws TeiidComponentException;
 	
 	void remove();
 	

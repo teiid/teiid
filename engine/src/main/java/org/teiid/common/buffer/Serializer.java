@@ -23,16 +23,16 @@
 package org.teiid.common.buffer;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
 /**
  * Responsible for serializing {@link CacheEntry}s
  * @param <T>
  */
 public interface Serializer<T> {
-	void serialize(T obj, ObjectOutputStream oos) throws IOException;
-	T deserialize(ObjectInputStream ois) throws IOException, ClassNotFoundException;
+	void serialize(T obj, ObjectOutput oos) throws IOException;
+	T deserialize(ObjectInput ois) throws IOException, ClassNotFoundException;
 	boolean useSoftCache();
 	Long getId();
 }

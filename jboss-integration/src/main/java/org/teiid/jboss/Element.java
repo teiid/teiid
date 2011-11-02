@@ -56,7 +56,8 @@ enum Element {
 	MAX_SOURCE_ROWS_ELEMENT("max-source-rows-allowed", "max-source-rows-allowed", ModelType.INT, false, "-1"),
 	EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT("exception-on-max-source-rows", "exception-on-max-source-rows", ModelType.BOOLEAN, false, "true"),	
 	DETECTING_CHANGE_EVENTS_ELEMENT("detect-change-events", "detect-change-events", ModelType.BOOLEAN, false, "true"),
-	
+    QUERY_TIMEOUT("query-timeout", "query-timeout", ModelType.LONG, false, "0"),
+    
     POLICY_DECIDER_ELEMENT("policy-decider"),
     POLICY_DECIDER_MODULE_ATTRIBUTE("module", "policy-decider-module", ModelType.STRING, false, null),
     
@@ -66,13 +67,16 @@ enum Element {
 	// buffer manager
 	BUFFER_SERVICE_ELEMENT("buffer-service"),
 	USE_DISK_ATTRIBUTE("use-disk", "buffer-service-use-disk", ModelType.BOOLEAN, false, "true"),
-	PROCESSOR_BATCH_SIZE_ATTRIBUTE("processor-batch-size", "buffer-service-processor-batch-size", ModelType.INT, false, "512"),
-	CONNECTOR_BATCH_SIZE_ATTRIBUTE("connector-batch-size", "buffer-service-connector-batch-size", ModelType.INT, false, "1024"),
+	PROCESSOR_BATCH_SIZE_ATTRIBUTE("processor-batch-size", "buffer-service-processor-batch-size", ModelType.INT, false, "256"),
+	CONNECTOR_BATCH_SIZE_ATTRIBUTE("connector-batch-size", "buffer-service-connector-batch-size", ModelType.INT, false, "512"),
 	MAX_PROCESSING_KB_ATTRIBUTE("max-processing-kb", "buffer-service-max-processing-kb", ModelType.INT, false, "-1"),
 	MAX_RESERVED_KB_ATTRIBUTE("max-reserve-kb", "buffer-service-max-reserve-kb", ModelType.INT, false, "-1"),
 	MAX_FILE_SIZE_ATTRIBUTE("max-file-size", "buffer-service-max-file-size", ModelType.LONG, false, "2048"),
 	MAX_BUFFER_SPACE_ATTRIBUTE("max-buffer-space", "buffer-service-max-buffer-space", ModelType.LONG, false, "51200"),
 	MAX_OPEN_FILES_ATTRIBUTE("max-open-files", "buffer-service-max-open-files", ModelType.INT, false, "64"),
+	MEMORY_BUFFER_SPACE_ATTRIBUTE("memory-buffer-space", "buffer-service-memory-buffer-space", ModelType.INT, false, "-1"),
+	MEMORY_BUFFER_OFFHEAP_ATTRIBUTE("memory-buffer-off-heap", "buffer-service-memory-buffer-off-heap", ModelType.BOOLEAN, false, "false"),
+	MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE("max-storage-object-size", "buffer-service-max-storage-object-size", ModelType.INT, false, "8388608"),
 	
 	//prepared-plan-cache-config
 	PREPAREDPLAN_CACHE_ELEMENT("preparedplan-cache"),
@@ -114,6 +118,7 @@ enum Element {
 	SSL_AUTH_MODE_ATTRIBUTE("authentication-mode", "ssl-authentication-mode", ModelType.STRING, false, "anonymous"),
 	SSL_SSL_PROTOCOL_ATTRIBUTE("ssl-protocol", "ssl-ssl-protocol", ModelType.STRING, false, "SSLv3"),
 	SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE("keymanagement-algorithm", "ssl-keymanagement-algorithm", ModelType.STRING, false, null),
+	SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE("enabled-cipher-suites", "enabled-cipher-suites", ModelType.STRING, false, null),
 	SSL_KETSTORE_ELEMENT("keystore"),
 	SSL_KETSTORE_NAME_ATTRIBUTE("name", "keystore-name", ModelType.STRING, false, null),
 	SSL_KETSTORE_PASSWORD_ATTRIBUTE("password", "keystore-password", ModelType.STRING, false, null),

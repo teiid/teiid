@@ -190,61 +190,34 @@ public abstract class FileStore implements Removable {
 	protected abstract void removeDirect();
 	
 	public InputStream createInputStream(final long start, final long length) {
-		return new InputStream() {
+		return new ExtensibleBufferedInputStream() {
 			private long offset = start;
 			private long streamLength = length;
+			private ByteBuffer bb = ByteBuffer.allocate(1<<13);
 			
 			@Override
-			public int read() throws IOException {
-				byte[] buffer = new byte[1];
-				int read = read(buffer, 0, 1);
-				if (read == -1) {
-					return -1;
-				}
-				return buffer[0];
-			}
-			
-			@Override
-			public int read(byte[] b, int off, int len) throws IOException {
+			protected ByteBuffer nextBuffer() throws IOException {
+				int len = bb.capacity();
 				if (this.streamLength != -1 && len > this.streamLength) {
 					len = (int)this.streamLength;
 				}
 				if (this.streamLength == -1 || this.streamLength > 0) {
-					int bytes = FileStore.this.read(offset, b, off, len);
-					if (bytes != -1) {
-						this.offset += bytes;
-						if (this.streamLength != -1) {
-							this.streamLength -= bytes;
-						}
+					int bytes = FileStore.this.read(offset, bb.array(), 0, len);
+					if (bytes == -1) {
+						return null;
 					}
-					return bytes;
+					bb.rewind();
+					bb.limit(bytes);
+					this.offset += bytes;
+					if (this.streamLength != -1) {
+						this.streamLength -= bytes;
+					}
+					return bb;
 				}
-				return -1;
+				return null;
 			}
 		};
 	}
-	
-    public ByteBuffer getBuffer(long start, int length, boolean allocate) throws IOException {
-    	byte[] b = new byte[length];
-    	if (!allocate) {
-    		readFully(start, b, 0, length);
-    	}
-    	return ByteBuffer.wrap(b);
-    }
-    
-    public void updateFromBuffer(ByteBuffer bb, long start) throws IOException {
-    	byte[] b = null;
-    	int offset = 0;
-    	bb.rewind();
-    	if (bb.hasArray()) {
-    		b = bb.array();
-    		offset = bb.arrayOffset();
-    	} else {
-    		b = new byte[bb.limit()];
-    		bb.get(b);
-    	}
-    	write(start, b, offset, bb.limit());
-    }
 	
 	public InputStream createInputStream(final long start) {
 		return createInputStream(start, -1);

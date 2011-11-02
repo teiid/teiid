@@ -24,13 +24,11 @@
  */
 package org.teiid.translator.jdbc;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
-import org.teiid.translator.TypeFacility;
 
 
 /**
@@ -43,52 +41,28 @@ public abstract class FunctionModifier {
     /*
      * Public sharing part for the mapping between class and type in format of Map<class->Integer>.
      */
-    public static final int STRING = 0;
-    public static final int CHAR = 1;
-    public static final int BOOLEAN = 2;
-    public static final int BYTE = 3;
-    public static final int SHORT = 4;
-    public static final int INTEGER = 5;
-    public static final int LONG = 6;
-    public static final int BIGINTEGER = 7;
-    public static final int FLOAT = 8;
-    public static final int DOUBLE = 9;
-    public static final int BIGDECIMAL = 10;
-    public static final int DATE = 11;
-    public static final int TIME = 12;
-    public static final int TIMESTAMP = 13;
-    public static final int OBJECT = 14;
-    public static final int BLOB = 15;
-    public static final int CLOB = 16;
-    public static final int XML = 17;
-    public static final int NULL = 18;
+    public static final int STRING = DataTypeManager.DefaultTypeCodes.STRING;
+    public static final int CHAR = DataTypeManager.DefaultTypeCodes.CHAR;
+    public static final int BOOLEAN = DataTypeManager.DefaultTypeCodes.BOOLEAN;
+    public static final int BYTE = DataTypeManager.DefaultTypeCodes.BYTE;
+    public static final int SHORT = DataTypeManager.DefaultTypeCodes.SHORT;
+    public static final int INTEGER = DataTypeManager.DefaultTypeCodes.INTEGER;
+    public static final int LONG = DataTypeManager.DefaultTypeCodes.LONG;
+    public static final int BIGINTEGER = DataTypeManager.DefaultTypeCodes.BIGINTEGER;
+    public static final int FLOAT = DataTypeManager.DefaultTypeCodes.FLOAT;
+    public static final int DOUBLE = DataTypeManager.DefaultTypeCodes.DOUBLE;
+    public static final int BIGDECIMAL = DataTypeManager.DefaultTypeCodes.BIGDECIMAL;
+    public static final int DATE = DataTypeManager.DefaultTypeCodes.DATE;
+    public static final int TIME = DataTypeManager.DefaultTypeCodes.TIME;
+    public static final int TIMESTAMP = DataTypeManager.DefaultTypeCodes.TIMESTAMP;
+    public static final int OBJECT = DataTypeManager.DefaultTypeCodes.OBJECT;
+    public static final int BLOB = DataTypeManager.DefaultTypeCodes.BLOB;
+    public static final int CLOB = DataTypeManager.DefaultTypeCodes.CLOB;
+    public static final int XML = DataTypeManager.DefaultTypeCodes.XML;
+    public static final int NULL = DataTypeManager.DefaultTypeCodes.NULL;
 
-    private static final Map<Class<?>, Integer> typeMap = new HashMap<Class<?>, Integer>();
-    
-    static {
-        typeMap.put(TypeFacility.RUNTIME_TYPES.STRING, STRING);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.CHAR, CHAR);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.BOOLEAN, BOOLEAN);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.BYTE, BYTE);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.SHORT, SHORT);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.INTEGER, INTEGER);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.LONG, LONG);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.BIG_INTEGER, BIGINTEGER);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.FLOAT, FLOAT);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.DOUBLE, DOUBLE);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL, BIGDECIMAL);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.DATE, DATE);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.TIME, TIME);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.TIMESTAMP, TIMESTAMP);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.OBJECT, OBJECT);        
-        typeMap.put(TypeFacility.RUNTIME_TYPES.BLOB, BLOB);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.CLOB, CLOB);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.XML, XML);
-        typeMap.put(TypeFacility.RUNTIME_TYPES.NULL, NULL);
-    }    
-    
     public static int getCode(Class<?> source) {
-        return typeMap.get(source).intValue();
+        return DataTypeManager.getTypeCode(source);
     }
     
     /**

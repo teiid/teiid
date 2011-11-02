@@ -48,41 +48,36 @@ public class TestTransactionMetadata {
 		assertEquals(tm.getScope(), tm1.getScope());
 	}
 
-	private static final String describe = "{\n" + 
-			"    \"type\" : {\n" + 
-			"        \"TYPE_MODEL_VALUE\" : \"OBJECT\"\n" + 
+	private static final String describe = "{\"attributes\" : {\n" + 
+			"    \"session-id\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
+			"        },\n" + 
+			"        \"description\" : \"Session Identifier\",\n" + 
+			"        \"required\" : true\n" + 
 			"    },\n" + 
-			"    \"attributes\" : {\n" + 
-			"        \"session-id\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"Session Identifier\",\n" + 
-			"            \"required\" : true\n" + 
+			"    \"txn-created-time\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
 			"        },\n" + 
-			"        \"txn-created-time\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"Transaction created time\",\n" + 
-			"            \"required\" : true\n" + 
+			"        \"description\" : \"Transaction created time\",\n" + 
+			"        \"required\" : true\n" + 
+			"    },\n" + 
+			"    \"txn-scope\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
 			"        },\n" + 
-			"        \"txn-scope\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"Transaction scope (Request, Local, Global)\",\n" + 
-			"            \"required\" : true\n" + 
+			"        \"description\" : \"Transaction scope (Request, Local, Global)\",\n" + 
+			"        \"required\" : true\n" + 
+			"    },\n" + 
+			"    \"txn-id\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
 			"        },\n" + 
-			"        \"txn-id\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"Transaction Identifier (XID)\",\n" + 
-			"            \"required\" : true\n" + 
-			"        }\n" + 
+			"        \"description\" : \"Transaction Identifier (XID)\",\n" + 
+			"        \"required\" : true\n" + 
 			"    }\n" + 
-			"}";
+			"}}";
 	@Test
 	public void testDescribe() {
 		ModelNode n = VDBMetadataMapper.TransactionMetadataMapper.INSTANCE.describe(new ModelNode());

@@ -452,7 +452,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
      * @throws QueryMetadataException
      * @since 4.1.2
      */
-    private static boolean canPushSymbol(Expression symbol, boolean inSelectClause, Object modelID, 
+    static boolean canPushSymbol(Expression symbol, boolean inSelectClause, Object modelID, 
     		QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord record) 
     throws TeiidComponentException, QueryMetadataException {
 

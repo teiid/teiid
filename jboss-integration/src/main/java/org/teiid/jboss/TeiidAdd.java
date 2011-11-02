@@ -97,6 +97,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 		Element.MAX_SOURCE_ROWS_ELEMENT,
 		Element.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT, 
 		Element.DETECTING_CHANGE_EVENTS_ELEMENT,
+		Element.QUERY_TIMEOUT,
 		Element.AUTHORIZATION_VALIDATOR_MODULE_ATTRIBUTE,
 		Element.POLICY_DECIDER_MODULE_ATTRIBUTE,
 		
@@ -113,6 +114,9 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 		Element.MAX_FILE_SIZE_ATTRIBUTE,
 		Element.MAX_BUFFER_SPACE_ATTRIBUTE,
 		Element.MAX_OPEN_FILES_ATTRIBUTE,
+		Element.MEMORY_BUFFER_SPACE_ATTRIBUTE,
+		Element.MEMORY_BUFFER_OFFHEAP_ATTRIBUTE,
+		Element.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE,
 		
 		// prepared plan cache
 		Element.PPC_MAX_ENTRIES_ATTRIBUTE,
@@ -377,7 +381,16 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	}
     	if (Element.MAX_OPEN_FILES_ATTRIBUTE.isDefined(node)) {
     		bufferManger.setMaxOpenFiles(Element.MAX_OPEN_FILES_ATTRIBUTE.asInt(node));
-    	}	                	
+    	}	    
+    	if (Element.MEMORY_BUFFER_SPACE_ATTRIBUTE.isDefined(node)) {
+    		bufferManger.setMemoryBufferSpace(Element.MEMORY_BUFFER_SPACE_ATTRIBUTE.asInt(node));
+    	}  
+    	if (Element.MEMORY_BUFFER_OFFHEAP_ATTRIBUTE.isDefined(node)) {
+    		bufferManger.setMemoryBufferOffHeap(Element.MEMORY_BUFFER_OFFHEAP_ATTRIBUTE.asBoolean(node));
+    	} 
+    	if (Element.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE.isDefined(node)) {
+    		bufferManger.setMaxStorageObjectSize(Element.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE.asInt(node));
+    	}     	
     	return bufferManger;
     }	
 
@@ -484,7 +497,10 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	}
     	if (Element.DETECTING_CHANGE_EVENTS_ELEMENT.isDefined(node)) {
     		engine.setDetectingChangeEvents(Element.DETECTING_CHANGE_EVENTS_ELEMENT.asBoolean(node));
-    	}	             
+    	}	 
+    	if (Element.QUERY_TIMEOUT.isDefined(node)) {
+    		engine.setQueryTimeout(Element.QUERY_TIMEOUT.asLong(node));
+    	}
 		return engine;
 	}    
 }

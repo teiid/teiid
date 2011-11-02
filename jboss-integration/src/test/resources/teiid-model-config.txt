@@ -82,6 +82,13 @@
         "max-occurs" => 1,
         "default" => true
     },
+    "query-timeout" => {
+        "type" => LONG,
+        "description" => "Set the default query timeout for all queries in milliseconds. 0 indicates no timeout.  Lesser timeout values may be set per VDB or by clients. (default 0)",
+        "required" => false,
+        "max-occurs" => 1,
+        "default" => 0L
+    },
     "authorization-validator-module" => {
         "type" => STRING,
         "description" => "Authorization Module; Implementation of org.teiid.dqp.internal.process.AuthorizationValidator class.",
@@ -115,17 +122,17 @@
     },
     "buffer-service-processor-batch-size" => {
         "type" => INT,
-        "description" => "The max row count of a batch sent internally within the query processor. Should be <= the connectorBatchSize. (default 512)",
+        "description" => "The max row count of a batch sent internally within the query processor. Should be <= the connectorBatchSize. (default 256)",
         "required" => false,
         "max-occurs" => 1,
-        "default" => 512
+        "default" => 256
     },
     "buffer-service-connector-batch-size" => {
         "type" => INT,
-        "description" => "The max row count of a batch from a connector. Should be even multiple of processorBatchSize. (default 1024)",
+        "description" => "The max row count of a batch from a connector. Should be even multiple of processorBatchSize. (default 512)",
         "required" => false,
         "max-occurs" => 1,
-        "default" => 1024
+        "default" => 512
     },
     "buffer-service-max-processing-kb" => {
         "type" => INT,
@@ -161,6 +168,27 @@
         "required" => false,
         "max-occurs" => 1,
         "default" => 64
+    },
+    "buffer-service-memory-buffer-space" => {
+        "type" => INT,
+        "description" => "Memory buffer space used by the buffer manager in MB.  -1 determines the setting automatically from the max-reserve-kb (default -1). This value cannot be smaller than max-storage-object-size",
+        "required" => false,
+        "max-occurs" => 1,
+        "default" => -1
+    },
+    "buffer-service-memory-buffer-off-heap" => {
+        "type" => BOOLEAN,
+        "description" => "Set to true to hold the memory buffer off-heap. If true you must ensure that the VM can allocate that much direct memory (default false).",
+        "required" => false,
+        "max-occurs" => 1,
+        "default" => false
+    },
+    "buffer-service-max-storage-object-size" => {
+        "type" => INT,
+        "description" => "The maximum size of a buffer managed object (typically a table page or a results batch) in bytes (default 8388608 or 8MB). Setting this value too high will reduce the effectiveness of the memory buffer.",
+        "required" => false,
+        "max-occurs" => 1,
+        "default" => 8388608
     },
     "preparedplan-cache-max-entries" => {
         "type" => INT,

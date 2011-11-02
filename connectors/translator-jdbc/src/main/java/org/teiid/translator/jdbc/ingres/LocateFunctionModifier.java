@@ -21,28 +21,24 @@
  */
 package org.teiid.translator.jdbc.ingres;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
-import org.teiid.language.LanguageFactory;
-import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.FunctionModifier;
 
 public class LocateFunctionModifier extends FunctionModifier {
 
-    private LanguageFactory languageFactory;
-
-    public LocateFunctionModifier(LanguageFactory languageFactory) {
-        this.languageFactory = languageFactory;
+    public LocateFunctionModifier() {
     }	
+    
 	@Override
 	public List<?> translate(Function function) {
         Expression a = function.getParameters().get(0);
         Expression b = function.getParameters().get(1);
-        
-        return Arrays.asList(languageFactory.createFunction("locate", new Expression[] {b, a}, TypeFacility.RUNTIME_TYPES.INTEGER)); //$NON-NLS-1$
+        function.getParameters().set(0, b);
+        function.getParameters().set(1, a);
+        return null;
 	}
 
 }

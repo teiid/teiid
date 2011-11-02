@@ -68,8 +68,8 @@ public class BatchedUpdatePlan extends ProcessorPlan {
      * commands have been batched together.
      * @since 4.2
      */
-    public BatchedUpdatePlan(List childPlans, int commandsInBatch, List<VariableContext> contexts) {
-        this.updatePlans = (ProcessorPlan[])childPlans.toArray(new ProcessorPlan[childPlans.size()]);
+    public BatchedUpdatePlan(List<? extends ProcessorPlan> childPlans, int commandsInBatch, List<VariableContext> contexts) {
+        this.updatePlans = childPlans.toArray(new ProcessorPlan[childPlans.size()]);
         this.planOpened = new boolean[updatePlans.length];
         this.updateCounts = new List[commandsInBatch];
         this.contexts = contexts;

@@ -33,6 +33,7 @@ import org.teiid.core.crypto.Cryptor;
 import org.teiid.core.crypto.DhKeyGenerator;
 import org.teiid.core.crypto.NullCryptor;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.dqp.internal.process.DQPWorkContext.Version;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -125,6 +126,8 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 	}
 
 	private void receivedHahdshake(Handshake handshake) throws CommunicationException {
+		String clientVersion = handshake.getVersion();
+		this.workContext.setClientVersion(Version.getVersion(clientVersion));
 		if (usingEncryption) {
             byte[] returnedPublicKey = handshake.getPublicKey();
             

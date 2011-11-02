@@ -26,8 +26,10 @@ import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.teiid.core.types.DataTypeManager;
 
@@ -43,7 +45,7 @@ public final class SizeUtility {
 	public static final int REFERENCE_SIZE = 8;
 	
 	private static Map<Class<?>, int[]> SIZE_ESTIMATES = new HashMap<Class<?>, int[]>(128);
-	
+	private static Set<Class<?>> VARIABLE_SIZE_TYPES = new HashSet<Class<?>>();
 	static {
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.STRING, new int[] {100, 256});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.DATE, new int[] {20, 28});
@@ -61,24 +63,24 @@ public final class SizeUtility {
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.BOOLEAN, new int[] {1, 1});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.BIG_INTEGER, new int[] {75, 100});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.BIG_DECIMAL, new int[] {150, 200});
+		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.STRING);
+		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.OBJECT);
+		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.BIG_INTEGER);
+		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
 	}
 	
 	private long bigIntegerEstimate;
 	private long bigDecimalEstimate;
-	private String[] types;
+	private Class<?>[] types;
 	
-	public SizeUtility(String[] types) {
+	public SizeUtility(Class<?>[] types) {
 		boolean isValueCacheEnabled = DataTypeManager.isValueCacheEnabled();
 		bigIntegerEstimate = getSize(isValueCacheEnabled, DataTypeManager.DefaultDataClasses.BIG_INTEGER);
 		bigDecimalEstimate = getSize(isValueCacheEnabled, DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
 		this.types = types;
 	}
 	
-    public long getBatchSize(List<? extends List<?>> data) {
-    	return getBatchSize(DataTypeManager.isValueCacheEnabled(), data);
-    }
-	
-    private long getBatchSize(boolean accountForValueCache, List<? extends List<?>> data) {
+    public long getBatchSize(boolean accountForValueCache, List<? extends List<?>> data) {
         int colLength = types.length;
         int rowLength = data.size();
     
@@ -87,20 +89,15 @@ public final class SizeUtility {
         // array overhead for all the columns ( 8 object overhead + 4 ref + 4 int)
         size += (rowLength * (48 + alignMemory(colLength * REFERENCE_SIZE))); 
         for (int col = 0; col < colLength; col++) {
-            Class<?> type = DataTypeManager.getDataTypeClass(types[col]);
-                        
-            if (type == DataTypeManager.DefaultDataClasses.STRING 
-            		|| type == DataTypeManager.DefaultDataClasses.OBJECT
-            		|| type == DataTypeManager.DefaultDataClasses.BIG_INTEGER
-            		|| type == DataTypeManager.DefaultDataClasses.BIG_DECIMAL) {
-            	int estRow = 0;
-                for (int row = 0; row < rowLength; row++) {
-                	boolean updateEst = row == estRow;
-                    size += getSize(data.get(row).get(col), updateEst, accountForValueCache);
-                    if (updateEst) {
-                    	estRow = estRow * 2 + 1;
-                    }
+            Class<?> type = types[col];
+            int rowsSampled = 0;
+            int estimatedSize = 0;
+			if (VARIABLE_SIZE_TYPES.contains(type)) {
+                for (int row = 0; row < rowLength; row=(row*2)+1) {
+                	rowsSampled++;
+                    estimatedSize += getSize(data.get(row).get(col), types[col], true, accountForValueCache);
                 }
+                size += estimatedSize/(float)rowsSampled * rowLength;
             } else {
             	size += getSize(accountForValueCache, type) * rowLength;
             }
@@ -122,25 +119,17 @@ public final class SizeUtility {
      * Get size of object
      * @return Size in bytes
      */
-    protected long getSize(Object obj, boolean updateEstimate, boolean accountForValueCache) {
+    protected long getSize(Object obj, Class<?> type, boolean updateEstimate, boolean accountForValueCache) {
         if(obj == null) {
             return 0;
         }
 
-        Class<?> type = DataTypeManager.determineDataTypeClass(obj);
         if(type == DataTypeManager.DefaultDataClasses.STRING) {
             int length = ((String)obj).length();
             if (length > 0) {
                 return alignMemory(40 + (2 * length));
             }
             return 40;
-        } else if(obj instanceof Iterable<?>) {
-        	Iterable<?> i = (Iterable<?>)obj;
-        	long total = 16;
-        	for (Object object : i) {
-				total += getSize(object, true, false) + REFERENCE_SIZE;
-			}
-        	return total;
         } else if(type == DataTypeManager.DefaultDataClasses.BIG_DECIMAL) {
         	if (!updateEstimate) {
         		return bigDecimalEstimate;
@@ -162,13 +151,20 @@ public final class SizeUtility {
             	bigIntegerEstimate = (bigIntegerEstimate + result)/2;
             }
             return result;
+        } else if(obj instanceof Iterable<?>) {
+        	Iterable<?> i = (Iterable<?>)obj;
+        	long total = 16;
+        	for (Object object : i) {
+				total += getSize(object, DataTypeManager.determineDataTypeClass(object), true, false) + REFERENCE_SIZE;
+			}
+        	return total;
         } else if(obj.getClass().isArray()) {
         	Class<?> componentType = obj.getClass().getComponentType(); 
         	if (!componentType.isPrimitive()) {
 	            Object[] rows = (Object[]) obj;
 	            long total = 16 + alignMemory(rows.length * REFERENCE_SIZE); // Array overhead
 	            for(int i=0; i<rows.length; i++) {
-	                total += getSize(rows[i], true, false);
+	                total += getSize(rows[i], DataTypeManager.determineDataTypeClass(rows[i]), true, false);
 	            }
 	            return total;
         	}

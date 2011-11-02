@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.concurrent.Executor;
 
 import org.junit.Test;
 import org.teiid.client.metadata.ParameterInfo;
@@ -55,6 +54,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.XMLType;
+import org.teiid.core.util.ExecutorUtils;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.QueryProcessorFactoryImpl;
@@ -254,13 +254,7 @@ public class TestProcessor {
         if (!(dataManager instanceof TempTableDataManager)) {
     	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
     	    cache.setBufferManager(bufferMgr);
-    	    Executor executor = new Executor() {
-    			@Override
-    			public void execute(Runnable command) {
-    				command.run();
-    			}
-    	    };        	
-        	dataManager = new TempTableDataManager(dataManager, bufferMgr, executor, cache);
+        	dataManager = new TempTableDataManager(dataManager, bufferMgr, ExecutorUtils.getDirectExecutor(), cache);
         }        
         if (context.getQueryProcessorFactory() == null) {
         	context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(bufferMgr, dataManager, new DefaultCapabilitiesFinder(), null, context.getMetadata()));
@@ -7612,6 +7606,18 @@ public class TestProcessor {
         ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
         
         helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testCrossJoinReduction() throws Exception {
+        String sql = "select x.e2 from pm1.g2 y, pm1.g1 x where x.e1 = y.e1 and x.e1 = 'a'"; //$NON-NLS-1$
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 = 'a'", new List[] {Arrays.asList(3)});
+        dataManager.addData("SELECT 1 FROM pm1.g2 AS g_0 WHERE g_0.e1 = 'a'", new List[] {Arrays.asList(1)});
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder(false));
+        
+        helpProcess(plan, dataManager, new List[] {
+        		Arrays.asList(3)});
     }
     
     private static final boolean DEBUG = false;

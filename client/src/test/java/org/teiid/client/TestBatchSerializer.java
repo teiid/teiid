@@ -29,15 +29,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
 import junit.framework.TestCase;
 
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.TimestampWithTimezone;
 
 
 
@@ -47,22 +45,6 @@ import org.teiid.core.types.DataTypeManager;
  */
 public class TestBatchSerializer extends TestCase {
 
-    private static void assertEqual(List[] expectedBatch, List[] batch) {
-        if (expectedBatch == null) {
-            assertNull(batch);
-            return;
-        }
-        assertEquals(expectedBatch.length, batch.length);
-        if (expectedBatch.length > 0) {
-            int columns = expectedBatch[0].size();
-            for (int row = 0; row < expectedBatch.length; row++) {
-                for (int col = 0; col < columns; col++) {
-                    assertEquals(expectedBatch[row].get(col), batch[row].get(col));
-                }
-            }
-        }
-    }
-    
     private static void helpTestSerialization(String[] types, List<?>[] batch) throws IOException, ClassNotFoundException {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         ObjectOutputStream out = new ObjectOutputStream(byteStream);
@@ -94,7 +76,8 @@ public class TestBatchSerializer extends TestCase {
                                                       DataTypeManager.DefaultDataTypes.SHORT,
                                                       DataTypeManager.DefaultDataTypes.STRING,
                                                       DataTypeManager.DefaultDataTypes.TIME,
-                                                      DataTypeManager.DefaultDataTypes.TIMESTAMP
+                                                      DataTypeManager.DefaultDataTypes.TIMESTAMP,
+                                                      DataTypeManager.DefaultDataTypes.OBJECT,
                                                      };
     private static String sampleString(int length) {
         char[] chars = new char[length];
@@ -104,51 +87,27 @@ public class TestBatchSerializer extends TestCase {
         return new String(chars);
     }
     
-    private static List[] sampleBatch(int rows) {
-        List[] batch = new List[rows];
+    private static List<?>[] sampleBatchWithNulls(int rows) {
+        List<?>[] batch = new List[rows];
         
         for (int i = 0; i < rows; i++) {
-            long currentTime = System.currentTimeMillis();
-            Object[] data = { new BigDecimal("" + i), //$NON-NLS-1$
-                              new BigInteger(Integer.toString(i)),
-                              (i%2 == 0) ? Boolean.FALSE: Boolean.TRUE,
-                              new Byte((byte)i),
-                              new Character((char)i),
-                              new Date(currentTime),
-                              new Double(i),
-                              new Float(i),
-                              new Integer(i),
-                              new Long(i),
-                              new Short((short)i),
-                              sampleString(i),
-                              new Time(currentTime),
-                              new Timestamp(currentTime)
-                            };
-            batch[i] = Arrays.asList(data);
-        }
-        return batch;
-    }
-    
-    private static List[] sampleBatchWithNulls(int rows) {
-        List[] batch = new List[rows];
-        
-        for (int i = 0; i < rows; i++) {
-            long currentTime = System.currentTimeMillis();
+        	java.util.Date d = new java.util.Date();
             int mod = i%14;
             Object[] data = { (mod == 0) ? null : new BigDecimal("" + i), //$NON-NLS-1$
                               (mod == 1) ? null : new BigInteger(Integer.toString(i)),
                               (mod == 2) ? null : ((i%2 == 0) ? Boolean.FALSE: Boolean.TRUE),
                               (mod == 3) ? null : new Byte((byte)i),
                               (mod == 4) ? null : new Character((char)i),
-                              (mod == 5) ? null : new Date(currentTime),
+                              (mod == 5) ? null : TimestampWithTimezone.createDate(d),
                               (mod == 6) ? null : new Double(i),
                               (mod == 7) ? null : new Float(i),
                               (mod == 8) ? null : new Integer(i),
                               (mod == 9) ? null : new Long(i),
                               (mod == 10) ? null : new Short((short)i),
                               (mod == 11) ? null : sampleString(i),
-                              (mod == 12) ? null : new Time(currentTime),
-                              (mod == 13) ? null : new Timestamp(currentTime)
+                              (mod == 12) ? null : TimestampWithTimezone.createTime(d),
+                              (mod == 13) ? null : TimestampWithTimezone.createTimestamp(d),
+                              (mod == 14) ? null : TimestampWithTimezone.createTimestamp(d),
                             };
             batch[i] = Arrays.asList(data);
         }
@@ -158,23 +117,16 @@ public class TestBatchSerializer extends TestCase {
     public void testSerializeBasicTypes() throws Exception {
         // The number 8 is important here because boolean isNull information is packed into bytes,
         // so we want to make sure the boundary cases are handled correctly
-        helpTestSerialization(sampleBatchTypes, sampleBatch(1)); // Less than 8 rows
-        helpTestSerialization(sampleBatchTypes, sampleBatch(8)); // Exactly 8 rows
-        helpTestSerialization(sampleBatchTypes, sampleBatch(17)); // More than 8 rows, but not a multiple of 8
-        helpTestSerialization(sampleBatchTypes, sampleBatch(120)); // A multiple of 8 rows
-        helpTestSerialization(sampleBatchTypes, sampleBatch(833)); // A bunch of rows. This should also test large strings
-    }
-    
-    public void testSerializeBasicTypesWithNulls() throws Exception {
-        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(1));
-        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(8));
-        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(17));
-        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(120));
-        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(833));
+        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(1)); // Less than 8 rows
+        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(8)); // Exactly 8 rows
+        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(17)); // More than 8 rows, but not a multiple of 8
+        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(120)); // A multiple of 8 rows
+        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(833)); // A bunch of rows. This should also test large strings
+        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(4096)); // A bunch of rows. This should also test large strings
     }
     
     public void testSerializeLargeStrings() throws Exception {
-        List row = Arrays.asList(new Object[] {sampleString(66666)});
+        List<?> row = Arrays.asList(new Object[] {sampleString(66666)});
         helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.STRING}, new List[] {row});
     }
     

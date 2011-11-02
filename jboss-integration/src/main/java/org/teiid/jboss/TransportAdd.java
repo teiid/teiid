@@ -83,11 +83,13 @@ public class TransportAdd extends AbstractAddStepHandler implements DescriptionP
 		Element.SSL_AUTH_MODE_ATTRIBUTE,
 		Element.SSL_SSL_PROTOCOL_ATTRIBUTE,
 		Element.SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE,
+		Element.SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE,
 		Element.SSL_KETSTORE_NAME_ATTRIBUTE,
 		Element.SSL_KETSTORE_PASSWORD_ATTRIBUTE,
 		Element.SSL_KETSTORE_TYPE_ATTRIBUTE,
 		Element.SSL_TRUSTSTORE_NAME_ATTRIBUTE,
 		Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE
+		
 	};
 	
 	@Override
@@ -260,6 +262,10 @@ public class TransportAdd extends AbstractAddStepHandler implements DescriptionP
     	if (Element.SSL_KETSTORE_NAME_ATTRIBUTE.isDefined(node)) {
     		ssl.setKeystoreFilename(Element.SSL_KETSTORE_NAME_ATTRIBUTE.asString(node));
     	}	
+    	
+    	if (Element.SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE.isDefined(node)) {
+    		ssl.setEnabledCipherSuites(Element.SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE.asString(node));
+    	}
     	
     	if (Element.SSL_KETSTORE_PASSWORD_ATTRIBUTE.isDefined(node)) {
     		ssl.setKeystorePassword(Element.SSL_KETSTORE_PASSWORD_ATTRIBUTE.asString(node));

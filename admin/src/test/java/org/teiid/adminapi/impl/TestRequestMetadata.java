@@ -57,76 +57,71 @@ public class TestRequestMetadata {
 		return request;
 	}
 	
-	public static final String desc = "{\n" + 
-			"    \"type\" : {\n" + 
-			"        \"TYPE_MODEL_VALUE\" : \"OBJECT\"\n" + 
+	public static final String desc = "{\"attributes\" : {\n" + 
+			"    \"execution-id\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
+			"        },\n" + 
+			"        \"description\" : \"Unique Identifier for Request\",\n" + 
+			"        \"required\" : true\n" + 
 			"    },\n" + 
-			"    \"attributes\" : {\n" + 
-			"        \"execution-id\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"Unique Identifier for Request\",\n" + 
-			"            \"required\" : true\n" + 
+			"    \"session-id\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
 			"        },\n" + 
-			"        \"session-id\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"Session Identifier\",\n" + 
-			"            \"required\" : true\n" + 
+			"        \"description\" : \"Session Identifier\",\n" + 
+			"        \"required\" : true\n" + 
+			"    },\n" + 
+			"    \"start-time\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
 			"        },\n" + 
-			"        \"start-time\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"Start time for the request\",\n" + 
-			"            \"required\" : true\n" + 
+			"        \"description\" : \"Start time for the request\",\n" + 
+			"        \"required\" : true\n" + 
+			"    },\n" + 
+			"    \"command\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
 			"        },\n" + 
-			"        \"command\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"Executing Command\",\n" + 
-			"            \"required\" : true\n" + 
+			"        \"description\" : \"Executing Command\",\n" + 
+			"        \"required\" : true\n" + 
+			"    },\n" + 
+			"    \"source-request\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"BOOLEAN\"\n" + 
 			"        },\n" + 
-			"        \"source-request\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"BOOLEAN\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"Is this Connector level request\",\n" + 
-			"            \"required\" : true\n" + 
+			"        \"description\" : \"Is this Connector level request\",\n" + 
+			"        \"required\" : true\n" + 
+			"    },\n" + 
+			"    \"node-id\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"INT\"\n" + 
 			"        },\n" + 
-			"        \"node-id\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"INT\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"Node Identifier\",\n" + 
-			"            \"required\" : false\n" + 
+			"        \"description\" : \"Node Identifier\",\n" + 
+			"        \"required\" : false\n" + 
+			"    },\n" + 
+			"    \"transaction-id\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
 			"        },\n" + 
-			"        \"transaction-id\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"Get Transaction XID if transaction involved\",\n" + 
-			"            \"required\" : false\n" + 
+			"        \"description\" : \"Get Transaction XID if transaction involved\",\n" + 
+			"        \"required\" : false\n" + 
+			"    },\n" + 
+			"    \"processing-state\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
 			"        },\n" + 
-			"        \"processing-state\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"State of the Request\",\n" + 
-			"            \"required\" : true\n" + 
+			"        \"description\" : \"State of the Request\",\n" + 
+			"        \"required\" : true\n" + 
+			"    },\n" + 
+			"    \"thread-state\" : {\n" + 
+			"        \"type\" : {\n" + 
+			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
 			"        },\n" + 
-			"        \"thread-state\" : {\n" + 
-			"            \"type\" : {\n" + 
-			"                \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
-			"            },\n" + 
-			"            \"description\" : \"Thread state\",\n" + 
-			"            \"required\" : true\n" + 
-			"        }\n" + 
+			"        \"description\" : \"Thread state\",\n" + 
+			"        \"required\" : true\n" + 
 			"    }\n" + 
-			"}";
+			"}}";
 	@Test public void testDescribe() {
 		assertEquals(desc, VDBMetadataMapper.RequestMetadataMapper.INSTANCE.describe(new ModelNode()).toJSONString(false));
 	}
