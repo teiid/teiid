@@ -117,9 +117,6 @@ public class IndexMetadataFactory {
 				if (abstractMetadataRecord == null) {
 					return null; //record type no longer used
 				}
-				if (record[0] == MetadataConstants.RECORD_TYPE.SELECT_TRANSFORM) {
-					this.toString();
-				}
 				String parentName = null;
 				if (record[0] == MetadataConstants.RECORD_TYPE.TABLE) {
 					parentName = ((Table)abstractMetadataRecord).getParent().getName();
