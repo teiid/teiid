@@ -157,13 +157,13 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 			writeAttribute(writer, Element.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE, node);
 			writeAttribute(writer, Element.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE, node);
 			writeAttribute(writer, Element.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE, node);
+			writeAttribute(writer, Element.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE, node);
 			writer.writeEndElement();
     	}
     	
     	if (like(node, Element.PG_ELEMENT)) {
 			writer.writeStartElement(Element.PG_ELEMENT.getLocalName());
-			writeAttribute(writer, Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT, node);
-			writeAttribute(writer, Element.PG_AUTHENTICATION_TYPE_ATTRIBUTE, node);
+			writeAttribute(writer, Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT, node);			
 			writer.writeEndElement();
     	}    	
     	
@@ -196,6 +196,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     
 	private void writeBufferService(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
 		writeAttribute(writer, Element.USE_DISK_ATTRIBUTE, node);
+		writeAttribute(writer, Element.INLINE_LOBS, node);
 		writeAttribute(writer, Element.PROCESSOR_BATCH_SIZE_ATTRIBUTE, node);
 		writeAttribute(writer, Element.CONNECTOR_BATCH_SIZE_ATTRIBUTE, node);
 		writeAttribute(writer, Element.MAX_PROCESSING_KB_ATTRIBUTE, node);
@@ -499,6 +500,10 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     			case AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE:
     				node.get(element.getModelName()).set(attrValue);
     				break;
+
+    			case AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE:
+    				node.get(element.getModelName()).set(attrValue);
+    				break;
     				
     			case AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE:
     				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
@@ -639,6 +644,9 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     			
     			switch(element) {
     			case USE_DISK_ATTRIBUTE:
+    				node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
+    				break;
+    			case INLINE_LOBS:
     				node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
     				break;
     			case PROCESSOR_BATCH_SIZE_ATTRIBUTE:

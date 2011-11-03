@@ -100,24 +100,49 @@
 </section>
 <section>
 	<title>Custom Authorization</title>
-	<para>In situations where Teiid's built-in role mechanism is not sufficient, a custom 
-	<code>org.teiid.PolicyDecider</code> can be installed via the &jboss-beans; configuration file under the "AuthorizationValidator" bean.
-	<example>
-		<title>Example Configuration Snippet</title>
-		<programlisting role="XML" language="XML"><![CDATA[
-	<bean name="AuthorizationValidator" class="org.teiid.dqp.internal.process.DefaultAuthorizationValidator">
-        <property name="enabled">true</property>
-        <property name="policyDecider"><inject bean="PolicyDecider"/></property>
-    </bean>
-   
-    <bean name="PolicyDecider" class="com.company.CustomPolicyDecider">
-        <property name="someProperty">some value</property>
-    </bean>]]>
-		</programlisting>
-	</example>  
-	Your custom <code>PolicyDecider</code> should be installed in a jar that is made available to the same classloader as Teiid, typically the profile lib directory.  
-	A <code>PolicyDecider</code> may be consulted many times for a single user command, but it is only called to make decisions based upon resources that 
-	appear in user queries.  Any further access of resources through views or stored procedures, just as with data roles, is not checked against a <code>PolicyDecider.</code>
+	<para>In situations where Teiid's built-in role mechanism is not sufficient, a  
+	<code>org.teiid.PolicyDecider</code> can be installed via JBoss module. Extend the <code>org.teiid.PolicyDecider</code> interface
+    and build a custom java class. If you are using maven as your build process, you can use following dependencies</para>
+    
+    <programlisting role="XML" language="XML"><![CDATA[
+   <dependencies>
+      <dependency>
+         <groupId>org.jboss.teiid</groupId>
+         <artifactId>teiid-api</artifactId>
+         <scope>provided</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.jboss.teiid</groupId>
+         <artifactId>teiid-common-core</artifactId>
+         <scope>provided</scope>
+      </dependency>
+   </dependencies>
+    ]]></programlisting>     
+	
+    <para> For adding Teiid API dependencies,
+    add MANIFEST.MF file in the MATA-INF directory, and the following line. 
+    <emphasis>Dependencies: org.jboss.teiid.common-core,org.jboss.teiid.api,javax.api</emphasis>.
+    PoilcyDecider is loaded by the Teiid using the Java's standard service loader mechanism. For this add the following named
+    file <emphasis>META-INF/services/org.teiid.PolicyDecider</emphasis> with full name of your PolicyDecider as the contents. 
+    Now package all these files into a jar file and build JBoss module in &gt;jboss-as&lt;/modules directory. If your PolicyDecider
+    has any third party dependencies those jar files can also be added to the same module. Make sure you list all the files in the
+    module.xml file.
+    </para>
+    
+    <para>
+     After the module has been added then configuration needs to be changed before the changes can take effect. Edit either 
+    standalone-teiid.xml or domain-teiid.xml file, and in the "teiid" subsystem xml fragment add the following xml with the 
+    module name created.
+    
+    <programlisting role="XML" language="XML"><![CDATA[
+        <policy-decider module="module-name"/>
+    ]]></programlisting>       
+    
+    then restart the system. 
+	A <code>PolicyDecider</code> may be consulted many times for a single user command, but it is only called to make 
+    decisions based upon resources that 
+	appear in user queries.  Any further access of resources through views or stored procedures, just as with data roles, 
+    is not checked against a <code>PolicyDecider.</code>
 	</para>
 </section>
 </chapter>

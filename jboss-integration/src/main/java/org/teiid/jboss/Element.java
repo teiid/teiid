@@ -77,6 +77,7 @@ enum Element {
 	MEMORY_BUFFER_SPACE_ATTRIBUTE("memory-buffer-space", "buffer-service-memory-buffer-space", ModelType.INT, false, "-1"),
 	MEMORY_BUFFER_OFFHEAP_ATTRIBUTE("memory-buffer-off-heap", "buffer-service-memory-buffer-off-heap", ModelType.BOOLEAN, false, "false"),
 	MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE("max-storage-object-size", "buffer-service-max-storage-object-size", ModelType.INT, false, "8388608"),
+	INLINE_LOBS("inline-lobs", "buffer-service-inline-lobs", ModelType.BOOLEAN, false, "true"),
 	
 	//prepared-plan-cache-config
 	PREPAREDPLAN_CACHE_ELEMENT("preparedplan-cache"),
@@ -108,10 +109,10 @@ enum Element {
 	AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE("security-domain", "authentication-security-domain", ModelType.STRING, false, null),	
 	AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE("max-sessions-allowed", "authentication-max-sessions-allowed",ModelType.INT, false, "5000"),
 	AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE("sessions-expiration-timelimit", "authentication-sessions-expiration-timelimit", ModelType.INT, false, "0"),
+	AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE("krb5-domain", "authentication-krb5-domain", ModelType.STRING, false, null),
 	
 	PG_ELEMENT("pg"), //$NON-NLS-1$
 	PG_MAX_LOB_SIZE_ALLOWED_ELEMENT("max-lob-size-in-bytes", "pg-max-lob-size-in-bytes", ModelType.INT, false, "5242880"), //$NON-NLS-1$ //$NON-NLS-2$
-	PG_AUTHENTICATION_TYPE_ATTRIBUTE("type", "pg-auth-type", ModelType.STRING, false, "CLEARTEXT"),
 	
 	SSL_ELEMENT("ssl"),
 	SSL_MODE_ATTRIBUTE("mode", "ssl-mode", ModelType.STRING, false, "login"),

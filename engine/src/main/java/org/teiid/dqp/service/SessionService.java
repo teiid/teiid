@@ -144,7 +144,7 @@ public interface SessionService {
 	
 	LoginContext createLoginContext(String securityDomain, String user, String password) throws LoginException;
 
-	AuthenticationType getAuthType();
+	AuthenticationType getAuthenticationType();
 	
 	String getKrb5SecurityDomain();
 	

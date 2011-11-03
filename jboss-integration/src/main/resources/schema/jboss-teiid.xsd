@@ -49,11 +49,16 @@
                     <xs:documentation>Buffer manager information</xs:documentation>
                 </xs:annotation>
                 <xs:complexType>
-                  <xs:attribute name="use-disk" type="xs:string">
+                  <xs:attribute name="use-disk" type="xs:boolean">
                         <xs:annotation>
                             <xs:documentation>Use disk for buffer management</xs:documentation>
                         </xs:annotation>
                     </xs:attribute>
+                  <xs:attribute name="inline-lobs" type="xs:boolean">
+                        <xs:annotation>
+                            <xs:documentation>Set to true to allow inlining of memory based and small lobs into results.</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>                    
                     <xs:attribute name="processor-batch-size" type="xs:int">
                         <xs:annotation>
                             <xs:documentation>The max row count of a batch sent internally within the query processor. Should be &lt;= the connectorBatchSize. (default 512)</xs:documentation>
@@ -271,6 +276,11 @@
                             <xs:documentation>Max allowed time before the session is terminated by the system, 0 indicates unlimited (default 0)</xs:documentation>
                         </xs:annotation>                    
                     </xs:attribute>
+                    <xs:attribute name="krb5-domain" type="xs:string">
+                        <xs:annotation>
+                            <xs:documentation>Kerberos domain name if GSS API based single sign on is being used</xs:documentation>
+                        </xs:annotation>                    
+                    </xs:attribute>                    
                 </xs:complexType>                
             </xs:element>
 

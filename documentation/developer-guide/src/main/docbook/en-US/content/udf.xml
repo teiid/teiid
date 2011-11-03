@@ -114,7 +114,7 @@
 		<para>
 			In addition to the normal steps outlined in the section to create and
 			install a function model (FunctionDefinitions.xmi), you will need to
-			extend the appropriate connector(s).
+			extend the appropriate translator(s).
       </para>
 		<itemizedlist>
 			<para>For example, to extend the Oracle Connector</para>
@@ -122,7 +122,8 @@
 				<para>
 					<emphasis>Required</emphasis>
 					- extend the OracleExecutionFactory and add SCORE and CONTAINS as
-					supported pushdown functions by either overriding or adding additional functions in "getPushDownFunctions" method. 
+					supported pushdown functions by either overriding or adding additional functions 
+                    in "getPushDownFunctions" method. 
                     For this example, we'll call the class MyOracleExecutionFactory. Add the
 					<code>org.teiid.translator.Translator</code>
 					annotation to the class, e.g.
@@ -146,6 +147,12 @@
 					</para>
 			</listitem>
 		</itemizedlist>
+        <section>
+            <title>Designer based Source Function Pushdown</title>
+            <para>If you are designing your VDB using the Designer, you can define a function on any
+            "source" model, and that function is automatically added as pushdown function when the VDB is deployed. There is
+            no additional need for adding Java code.</para>
+        </section>
 	</section>
 	<section>
 		<title>Non-pushdown Support for User-Defined Functions</title>
@@ -233,9 +240,7 @@ public class SessionInfo
 						code into a Java Archive (JAR) file.</para>
 				</listitem>
 				<listitem>
-					<para>The JAR should be available in the classpath of Teiid - this
-						could be the server profile lib, or the deployers/teiid.deployer
-						directory depending upon your preference.</para>
+					<para>The JAR file needs be attached to the VDB file under "lib" directory.</para>
 				</listitem>
 			</orderedlist>
 		</section>

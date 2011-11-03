@@ -58,6 +58,7 @@ import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.LocalServerConnection;
@@ -76,6 +77,7 @@ public class TransportAdd extends AbstractAddStepHandler implements DescriptionP
 		Element.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE,
 		Element.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE,
 		Element.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE,
+		Element.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE,
 		
 		Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT,
 		
@@ -164,9 +166,13 @@ public class TransportAdd extends AbstractAddStepHandler implements DescriptionP
    		if (Element.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.isDefined(operation)) {
    			transport.setSessionExpirationTimeLimit(Element.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.asLong(operation));
    		}   		
-   		if (Element.PG_AUTHENTICATION_TYPE_ATTRIBUTE.isDefined(operation)) {
-   			transport.setAuthenticationType(Element.PG_AUTHENTICATION_TYPE_ATTRIBUTE.asString(operation));
-   		}    		
+   		if (Element.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE.isDefined(operation)) {
+   			transport.setAuthenticationType(AuthenticationType.KRB5);
+   			transport.setKrb5Domain(Element.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE.asString(operation));
+   		}
+   		else {
+   			transport.setAuthenticationType(AuthenticationType.CLEARTEXT);
+   		}
    		
    		if (Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.isDefined(operation)) {
    			transport.setMaxODBCLobSizeAllowed(Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.asInt(operation));

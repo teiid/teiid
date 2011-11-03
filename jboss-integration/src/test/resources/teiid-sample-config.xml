@@ -4,7 +4,7 @@
 
     <buffer-service use-disk="true" processor-batch-size="512" connector-batch-size="1024" 
         max-processing-kb="-1" max-reserve-kb="-1" max-file-size="2048" max-buffer-space="51200" max-open-files="64"
-        memory-buffer-space="-2" memory-buffer-off-heap="true" max-storage-object-size="102400"/>
+        memory-buffer-space="-2" memory-buffer-off-heap="true" max-storage-object-size="102400" inline-lobs="false"/>
 
     <max-threads>64</max-threads>
     <max-active-plans>20</max-active-plans>
@@ -32,7 +32,7 @@
     <transport name="jdbc" protocol="teiid" socket-binding="teiid-jdbc" max-socket-threads="1" input-buffer-size="2" output-buffer-size="3"/>
 
     <transport name="odbc" protocol="pg" socket-binding="teiid-odbc" max-socket-threads="1" input-buffer-size="2" output-buffer-size="3">
-        <authentication security-domain="teiid-security,teiid-security2" max-sessions-allowed="5000" sessions-expiration-timelimit="0"/>
+        <authentication security-domain="teiid-security,teiid-security2" max-sessions-allowed="5000" sessions-expiration-timelimit="0" krb5-domain="krb5"/>
         <pg max-lob-size-in-bytes="5242880"/>
         <ssl mode="login" authentication-mode="1-way" ssl-protocol="ssl-protocol" keymanagement-algorithm="algo">
             <keystore name="keystore name" password="keystore passs" type="keystore type"/>

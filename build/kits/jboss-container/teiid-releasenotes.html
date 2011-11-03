@@ -33,7 +33,7 @@
   <LI><B>Buffering Improvements</B> - Added the ability to inline memory based or small lobs and added tracking of the memory held by soft references.  Also switched to a concurrent LFRU algorithm that significantly reduces writes and read misses with temporary tables.  Added a memory buffer to better handle file storage.  
   The memory buffer may be optional be configured as off-heap for better large memory performance - see the Admin Guide for more.  Overhead is now tracked to help prevent memory errors when dealing with 10s of millions or more of batches/pages.  Serialization and disk utilization were also improved.
   <LI><B>GSSAPI</B> - both the Teiid JDBC client/server and the ODBC pg backend can now support GSSAPI for single sign-on. 
-  <LI><B>Server-side Query Timeouts</B> - default query timeouts can be configured at both the VDB (via the query-timeout VDB property) and entire server (via the teiid-jboss-beans.xml queryTimeout property).
+  <LI><B>Server-side Query Timeouts</B> - default query timeouts can be configured at both the VDB (via the query-timeout VDB property) and entire server (via the teiid-jboss-beans.xml query-timeout property).
   <LI><B>Native Queries</B> - added the ability to specify native query SQL for JDBC physical tables and stored procedures via extension metadata.
 </UL>
 
@@ -47,7 +47,7 @@
 <h4>from 7.5</h4>
 <ul>
   <li>Leave was added as a reserved word.
-  <li>Lob inlining is incompatible with clients older than 7.6.  If a 7.6 server will have older clients that use lobs connect to it, then the BufferService property inlineLobs should be set to false in the teiid-jboss-beans.xml file.
+  <li>Lob inlining is incompatible with clients older than 7.6.  If a 7.6 server will have older clients that use lobs connect to it, then the BufferService property inline-lobs should be set to false in the teiid-jboss-beans.xml file.
   <li>Oracle translators assume they are using Oracle supplied drivers.  If that is not the case, set the Oracle translator execution property oracleSuppliedDriver to false.
 </ul>
 
@@ -121,8 +121,8 @@ See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on c
 
 <h4>from 7.4</h4>
 <ul>
-  <li>The configuration for the buffer service now defaults to 256/512 for processor and connector batch sizes respectively.  The buffer service also has 4 new properties inlineLobs, memoryBufferSpace, memoryBufferOffHeap, and maxStorageObjectSize.  
-  If you were explicitly setting the value for maxReserveKb, you should consider lowering that value to account for the memory buffer and/or explicitly set the memoryBufferSpace. 
+  <li>The configuration for the buffer service now defaults to 256/512 for processor and connector batch sizes respectively.  The buffer service also has 4 new properties inline-lobs, memory-buffer-space, memory-buffer-off-heap, and max-storage-object-size.  
+  If you were explicitly setting the value for 'max-reserve-kb', you should consider lowering that value to account for the memory buffer and/or explicitly set the memory-buffer-space. 
 </ul>
 
 <h4>from 7.4</h4>
@@ -186,7 +186,7 @@ temporary table access.
 	<li>For compatibility with the 7.0 release if a stored procedure parameter list begins with identifier=, then it will be parsed as a named parameter invocation even if the intent was to use a comparison predicate 
 	as the first parameter value.  The workaround is to use nesting parens, e.g. call proc((identifier=value), ...), which clarifies that this is positional value.  This workaround will not be needed in later releases.
 	<li><a url="https://issues.jboss.org/browse/TEIID-1511">TEIID-1511<a/> - When a VDB is deployed and undeployed a socket is left open, which may lead to "too manay open files". Check the defect comments for details.
-	<li>TEIID-1648 - Teradata lobs can only be consistently read from an embedded client (with the default option to use the calling thread) and in single threaded mode (transactional or userRequestSourceConcurrency=1). Usage of Teradata lobs under any other configuration is unlikely to work.	  
+	<li>TEIID-1648 - Teradata lobs can only be consistently read from an embedded client (with the default option to use the calling thread) and in single threaded mode (transactional or thread-count-for-source-concurrency=1). Usage of Teradata lobs under any other configuration is unlikely to work.	  
 </ul>
 <h4>from 7.0</h4>
 <ul>

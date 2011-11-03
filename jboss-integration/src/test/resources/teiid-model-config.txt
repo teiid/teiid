@@ -120,16 +120,23 @@
         "max-occurs" => 1,
         "default" => true
     },
+    "buffer-service-inline-lobs" => {
+        "type" => BOOLEAN,
+        "description" => "Set to true to allow inlining of memory based and small lobs into results. However inline lob values are not supported by pre-7.6 clients, so disable this property if using older clients utilizing lobs. (default true)	",
+        "required" => false,
+        "max-occurs" => 1,
+        "default" => true
+    },
     "buffer-service-processor-batch-size" => {
         "type" => INT,
-        "description" => "The max row count of a batch sent internally within the query processor. Should be <= the connectorBatchSize. (default 256)",
+        "description" => "The max row count of a batch sent internally within the query processor. Should be <= the 'connector-batch-size'. (default 256)",
         "required" => false,
         "max-occurs" => 1,
         "default" => 256
     },
     "buffer-service-connector-batch-size" => {
         "type" => INT,
-        "description" => "The max row count of a batch from a connector. Should be even multiple of processorBatchSize. (default 512)",
+        "description" => "The max row count of a batch from a connector. Should be even multiple of 'processor-batch-size'. (default 512)",
         "required" => false,
         "max-occurs" => 1,
         "default" => 512

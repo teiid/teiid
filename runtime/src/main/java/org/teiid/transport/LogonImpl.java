@@ -66,7 +66,7 @@ public class LogonImpl implements ILogon {
 	}
 
 	public LogonResult logon(Properties connProps) throws LogonException, TeiidComponentException, CommunicationException {
-		if (!AuthenticationType.CLEARTEXT.equals(service.getAuthType())) {
+		if (!AuthenticationType.CLEARTEXT.equals(service.getAuthenticationType())) {
 			throw new LogonException(RuntimePlugin.Util.getString("wrong_logon_type_jaas")); //$NON-NLS-1$
 		}
 		return logon(connProps, null);
@@ -144,7 +144,7 @@ public class LogonImpl implements ILogon {
 	@Override
 	public LogonResult neogitiateGssLogin(Properties connProps, byte[] serviceTicket, boolean createSession) throws LogonException {
 		
-		if (!AuthenticationType.KRB5.equals(service.getAuthType())) {
+		if (!AuthenticationType.KRB5.equals(service.getAuthenticationType())) {
 			throw new LogonException(RuntimePlugin.Util.getString("wrong_logon_type_krb5")); //$NON-NLS-1$
 		}		
 		

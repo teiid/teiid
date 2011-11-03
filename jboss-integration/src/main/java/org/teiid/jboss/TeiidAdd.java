@@ -107,6 +107,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 
 		// Buffer Service
 		Element.USE_DISK_ATTRIBUTE,
+		Element.INLINE_LOBS,
 		Element.PROCESSOR_BATCH_SIZE_ATTRIBUTE,
 		Element.CONNECTOR_BATCH_SIZE_ATTRIBUTE,
 		Element.MAX_PROCESSING_KB_ATTRIBUTE,
@@ -390,7 +391,11 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	} 
     	if (Element.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE.isDefined(node)) {
     		bufferManger.setMaxStorageObjectSize(Element.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE.asInt(node));
+    	}
+    	if (Element.INLINE_LOBS.isDefined(node)) {
+    		bufferManger.setInlineLobs(Element.INLINE_LOBS.asBoolean(node));
     	}     	
+    	
     	return bufferManger;
     }	
 

@@ -200,6 +200,13 @@ public class TestTeiidConfiguration extends AbstractSubsystemTest {
     }
     
     @Test
+    public void testtransportDescription() throws IOException {
+    	ModelNode node = new ModelNode();
+    	TransportAdd.describeTransport(node, ATTRIBUTES, IntegrationPlugin.getResourceBundle(null));
+    	assertEquals(ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-transport-config.txt")), node.toString());
+    }    
+    
+    @Test
     public void testParseSubsystem() throws Exception {
         //Parse the subsystem xml into operations
     	String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config.xml"));

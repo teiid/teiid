@@ -129,7 +129,7 @@
             
             <para>Note that, only when the resource adapters are XA capable, then Teiid can make them participate in a distributed
             transactions. If they are not XA capable, then source can participate in distributed query but will not participate 
-            in the transaction. Transaction semantics at that time defined by how you defined "-ds.xml" file. i.e. with local-tx or no-tx</para>
+            in the transaction. Transaction semantics are defined by how you you configured "connection-factory" in a "resource-adapter". i.e. jta=true/false.</para>
         </section>        
         
         <section>
@@ -139,9 +139,9 @@
             An example file is provided in <xref linkend="appendix_a"/>.
             </para>
             <para>
-            For every configuration property defined inside the ManagedConnectionFactory
-             class, define the following XML configuration 
-            fragment inside the "ra.xml" file. These properties are used by user to configure instance of this Connector inside a 
+            For every attribute defined inside the your ManagedConnectionFactory
+             class, define the following XML configuration for that attribute  inside the "ra.xml" file. 
+             These properties are used by user to configure instance of this Connector inside a 
             Container. Also, during the startup the Container reads these properties from this file and knows how to inject 
             provided values in the "-ds.xml" file into a instance of "ManagedConnectionFactory" to create the Connection.
             Refer to <xref linkend="managed_connection_factory"/>.
@@ -189,7 +189,7 @@
 	</section>
 
    <section id="ra_package">
-        <title>Packaging the Adapter</title>
+        <title>Build and Package the Adapter</title>
         <para>Once all the required code is developed, it is time to package them into a RAR artifact, that can be deployed
         into a Conainer. A RAR artifact is lot more similar to a WAR. To put together a RAR file it really depends upon 
         build system you are using.</para>
@@ -241,6 +241,16 @@
         you can embed the JAR file containing your connector code and any dependent library JAR files. </para>
     </section>
     
+    <section id="dependencies">
+        <title>Adding Dependent Libraries</title>
+        <para>Add MANIFEST.MF file in the MATA-INF directory, and the following line to add the core Teiid API dependencies for 
+        resource adapter. <emphasis>Dependencies: org.jboss.teiid.common-core,org.jboss.teiid.api,javax.api</emphasis> 
+        If your resource adapter depends upon any other third party jar files, .dll or .so files they can be placed at the
+        root of the rar file. If any of these libraries are already available as modules in JBoss AS, then you can add the module
+        name to the above MANIFEST.MF file to define as dependency.
+        </para>
+    </section>
+    
    <section id="ra_deploy">
         <title>Deploying the Adapter</title>
         <para>Once the RAR file is built, deploy it by copying the RAR file into "deploy" directory of JBoss AS's choosen profile. 
@@ -254,25 +264,26 @@
         <itemizedlist>
             <listitem>
                 <para>
-                Create "${name}-ds.xml" file, and copy it into "deploy" directory of JBoss AS.
+                Edit standalone.xml or domain.xml file, and add following XML in the "resource-adapters" subystem.
                 </para>
-                <programlisting language="XML" role="XML"><![CDATA[<!DOCTYPE connection-factories PUBLIC 
-   "-//JBoss//DTD JBOSS JCA Config 1.5//EN" "http://www.jboss.org/j2ee/dtd/jboss-ds_1_5.dtd">
-
-<connection-factories>
-      <no-tx-connection-factory>
-         <jndi-name>${jndi-name}</jndi-name>
-         <rar-name>${name}.rar</rar-name>
-         <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>
-
-   <!--  
-   define all the properties defined in the "ra.xml" that required or needs to be 
-   modified from defaults each property is defined in single element 
-   --> 
-         <config-property name="prop-name" type="java.lang.String">prop-value</config-property>
-
-</no-tx-connection-factory>
-</connection-factories>]]></programlisting>     
+                <programlisting language="XML" role="XML"><![CDATA[<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.0">
+    <resource-adapters>
+        <resource-adapter>
+            <archive>teiid-connector-sample.rar</archive>
+            <transaction-support>NoTransaction</transaction-support>
+            <connection-definitions>
+                <connection-definition class-name="org.teiid.resource.adapter.MyManagedConnectionFactory"  jndi-name="${jndi-name}" 
+                        enabled="true" 
+                        use-java-context="true" 
+                        pool-name="sample-ds">
+                      <config-property name="UserName">jdoe</config-property>
+                      <config-property name="Count">12</config-property>
+                </connection-definition>
+            </connection-definitions>
+        </resource-adapter>
+    </resource-adapters>
+</subsystem>]]></programlisting>     
                 <para>  
                 There are lot more properties that you can define for pooling, transactions, security etc in this file. 
                 Check JBoss AS documentation for all the avaialble properties.           

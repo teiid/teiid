@@ -54,6 +54,7 @@ import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
 import org.teiid.security.SecurityHelper;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.services.SessionServiceImpl;
@@ -76,9 +77,10 @@ public class Transport implements Service<ClientServiceRegistry>, ClientServiceR
 	private long sessionExpirationTimeLimit;
 	private SocketListener socketListener;
 	private transient SessionServiceImpl sessionService;
-	private String authenticationType;
+	private AuthenticationType authenticationType;
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
 	private boolean embedded;
+	private String krb5Domain;
 	
 	private final InjectedValue<SocketBinding> socketBindingInjector = new InjectedValue<SocketBinding>();
 	private final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
@@ -113,6 +115,8 @@ public class Transport implements Service<ClientServiceRegistry>, ClientServiceR
 		this.sessionService.setDqp(getDQP());
 		this.sessionService.setVDBRepository(getVdbRepository());
 		this.sessionService.setSecurityHelper(this.csr.getSecurityHelper());
+		this.sessionService.setAuthenticationType(getAuthenticationType());
+		this.sessionService.setKrb5SecurityDomain(this.krb5Domain);
 		this.sessionService.start();
 		
     	// create the necessary services
@@ -127,12 +131,8 @@ public class Transport implements Service<ClientServiceRegistry>, ClientServiceR
     		}
     		else if (protocol == Protocol.pg) {
         		getVdbRepository().odbcEnabled();
-        		
         		ODBCSocketListener odbc = new ODBCSocketListener(address, this.socketConfig, this.csr, getBufferServiceInjector().getValue().getBufferManager(), getMaxODBCLobSizeAllowed(), this.logon);
-        		if (getAuthenticationType() != null) {
-	        		this.sessionService.setAuthenticationType(getAuthenticationType());
-	        		odbc.setAuthenticationType(this.sessionService.getAuthType());
-        		}
+        		odbc.setAuthenticationType(this.sessionService.getAuthenticationType());
     	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("odbc_enabled","Teiid ODBC - SSL=", (this.socketConfig.getSSLConfiguration().isSslEnabled()?"ON":"OFF")+" Host = "+address.getHostName()+" Port = "+address.getPort())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
     		}
     		else {
@@ -235,11 +235,11 @@ public class Transport implements Service<ClientServiceRegistry>, ClientServiceR
 		this.sessionExpirationTimeLimit = limit;
 	}
 
-	public String getAuthenticationType() {
+	public AuthenticationType getAuthenticationType() {
 		return authenticationType;
 	}
 
-	public void setAuthenticationType(String authenticationType) {
+	public void setAuthenticationType(AuthenticationType authenticationType) {
 		this.authenticationType = authenticationType;
 	}
 	
@@ -277,5 +277,9 @@ public class Transport implements Service<ClientServiceRegistry>, ClientServiceR
 	
 	public boolean isEmbedded() {
 		return this.embedded;
+	}
+	
+	public void setKrb5Domain(String domain) {
+		this.krb5Domain = domain;
 	}
 }

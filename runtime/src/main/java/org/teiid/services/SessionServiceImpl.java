@@ -75,7 +75,7 @@ public class SessionServiceImpl implements SessionService {
 	 */
     private long sessionMaxLimit = DEFAULT_MAX_SESSIONS;
 	private long sessionExpirationTimeLimit = DEFAULT_SESSION_EXPIRATION;
-	private String authenticationType = AuthenticationType.CLEARTEXT.name();
+	private AuthenticationType authenticationType = AuthenticationType.CLEARTEXT;
 	private String krb5SecurityDomain;
 	
 	/*
@@ -357,11 +357,11 @@ public class SessionServiceImpl implements SessionService {
 	}
 	
 	@Override
-	public AuthenticationType getAuthType() {
-		return AuthenticationType.valueOf(this.authenticationType);
+	public AuthenticationType getAuthenticationType() {
+		return this.authenticationType;
 	}
 	
-	public void setAuthenticationType(String flag) {
+	public void setAuthenticationType(AuthenticationType flag) {
 		this.authenticationType = flag;
 		LogManager.logInfo(LogConstants.CTX_SECURITY, "Authentication Type set to: "+flag); //$NON-NLS-1$
 	}
