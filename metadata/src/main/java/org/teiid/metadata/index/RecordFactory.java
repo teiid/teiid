@@ -135,6 +135,8 @@ public class RecordFactory {
     
     private int version = NONVERSIONED_RECORD_INDEX_VERSION;
     
+    	protected String parentId;
+    
     /**
      * Return a collection of {@link AbstractMetadataRecord}
      * instances for the result obtained from executing <code>queryEntriesMatching</code>
@@ -157,7 +159,8 @@ public class RecordFactory {
      * instances for specified IEntryResult.
      * @param entryResult
      */
-    private AbstractMetadataRecord getMetadataRecord(final char[] record) {
+    protected AbstractMetadataRecord getMetadataRecord(final char[] record) {
+    	parentId = null;
         if (record == null || record.length == 0) {
             return null;
         }
@@ -182,7 +185,7 @@ public class RecordFactory {
             case MetadataConstants.RECORD_TYPE.MAPPING_TRANSFORM:
             case MetadataConstants.RECORD_TYPE.PROC_TRANSFORM: return createTransformationRecord(record);
             default:
-                throw new IllegalArgumentException("Invalid record type for creating MetadataRecord "+record[0]); //$NON-NLS-1$
+            	return null;
         }
     }
     
@@ -343,22 +346,23 @@ public class RecordFactory {
         int tokenIndex = 2;
         
         // The next token is the UUID of the transformed object
-        getObjectValue((String)tokens.get(tokenIndex++));
+        transform.setUUID(getObjectValue((String)tokens.get(tokenIndex++)));
 
         // The next token is the UUID of the transformation object
         if(includeTransformationUUID(indexVersion)) {
-            transform.setUUID(getObjectValue(((String)tokens.get(tokenIndex++))));
+           tokenIndex++;
+            //transform.setUUID(getObjectValue((tokens.get(tokenIndex++))));
         }        
 
         // The next token is the transformation definition
         transform.setTransformation(getObjectValue((String)tokens.get(tokenIndex++)));
 
         // The next token are the list of bindings
-        List bindings = getStrings((String)tokens.get(tokenIndex++), indexVersion);
+        List bindings = getStrings((String) tokens.get(tokenIndex++), indexVersion);
         transform.setBindings(bindings);
 
         // The next token are the list of schemaPaths
-        List schemaPaths = getStrings((String)tokens.get(tokenIndex++), indexVersion);
+        List schemaPaths = getStrings((String) tokens.get(tokenIndex++), indexVersion);
         transform.setSchemaPaths(schemaPaths);
 
 		// The next tokens are footer values
@@ -877,8 +881,8 @@ public class RecordFactory {
         final char listDelimiter = getListDelimiter(indexVersionNumber);
         final List tokens = StringUtil.split(values,String.valueOf(listDelimiter));
         final List<String> result = new ArrayList<String>(tokens.size());
-        for (Iterator iter = tokens.iterator(); iter.hasNext();) {
-            String token = (String)iter.next();
+        for (Iterator<String> iter = tokens.iterator(); iter.hasNext();) {
+            String token = iter.next();
             if (token != null) {
                 result.add(token);
             }
@@ -970,6 +974,7 @@ public class RecordFactory {
                                               final String parentObjectID) {
         
         record.setUUID(getObjectValue(objectID));
+        String parentName = fullName;
         if (fullName != null) {
         	String name = fullName;
             if (record instanceof ProcedureParameter || record instanceof KeyRecord) { //take only the last part
@@ -978,10 +983,23 @@ public class RecordFactory {
 	            int index = fullName.indexOf(IndexConstants.NAME_DELIM_CHAR);
 	            if (index > 0) {
 	            	name = fullName.substring(index + 1);
+	            	parentName = new String(fullName.substring(0, index));
 	            }
             }
             record.setName(name);
         }
+        if (parentName != null) {
+        	if (record instanceof Table) {
+        		Schema s = new Schema();
+        		s.setName(parentName);
+        		((Table)record).setParent(s);
+        	} else if (record instanceof Procedure) {
+        		Schema s = new Schema();
+        		s.setName(parentName);
+        		((Procedure)record).setParent(s);
+        	}
+        }
+        parentId = getObjectValue(parentObjectID);        
         record.setNameInSource(getObjectValue(nameInSource));
     }
 
