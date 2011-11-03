@@ -42,12 +42,9 @@ import org.jboss.virtual.plugins.context.zip.ZipEntryContext;
 import org.jboss.virtual.spi.VirtualFileHandler;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.id.UUID;
 import org.teiid.core.index.IEntryResult;
-import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.StringUtil;
 import org.teiid.internal.core.index.Index;
 import org.teiid.metadata.AbstractMetadataRecord;
@@ -72,12 +69,95 @@ import org.teiid.query.metadata.TransformationMetadata.Resource;
 public class IndexMetadataFactory {
 	
 	private Index[] indexes;
-	private RecordFactory recordFactory = new RecordFactory();
+	private RecordFactory recordFactory = new RecordFactory() {
+		
+		protected AbstractMetadataRecord getMetadataRecord(char[] record) {
+			if (record == null || record.length == 0) {
+				return null;
+			}
+			char c = record[0];
+			switch (c) {
+			case MetadataConstants.RECORD_TYPE.ANNOTATION: {
+				final String str = new String(record);
+		        final List<String> tokens = RecordFactory.getStrings(str, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
+
+		        // Extract the index version information from the record 
+		        int indexVersion = recordFactory.getIndexVersion(record);
+		        String uuid = tokens.get(2);
+		        
+		        // The tokens are the standard header values
+		        int tokenIndex = 6;
+
+		        if(recordFactory.includeAnnotationProperties(indexVersion)) {
+					// The next token are the properties, ignore it not going to be read any way
+		            tokenIndex++;
+		        }
+
+		        // The next token is the description
+		        annotationCache.put(uuid, tokens.get(tokenIndex++));
+		        return null;
+			}
+			case MetadataConstants.RECORD_TYPE.PROPERTY: {
+				final String str = new String(record);
+	            final List<String> tokens = RecordFactory.getStrings(str, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
+
+	            String uuid = tokens.get(1);
+		    	LinkedHashMap<String, String> result = extensionCache.get(uuid);
+		    	if (result == null) {
+		    		result = new LinkedHashMap<String, String>(); 
+		    		extensionCache.put(uuid, result);
+		    	}
+	            // The tokens are the standard header values
+	            int tokenIndex = 2;
+	            result.put( tokens.get(tokenIndex++), tokens.get(tokenIndex++));
+				return null;
+			}
+			default:
+				AbstractMetadataRecord abstractMetadataRecord = super.getMetadataRecord(record);
+				if (abstractMetadataRecord == null) {
+					return null; //record type no longer used
+				}
+				if (record[0] == MetadataConstants.RECORD_TYPE.SELECT_TRANSFORM) {
+					this.toString();
+				}
+				String parentName = null;
+				if (record[0] == MetadataConstants.RECORD_TYPE.TABLE) {
+					parentName = ((Table)abstractMetadataRecord).getParent().getName();
+				} else if (record[0] == MetadataConstants.RECORD_TYPE.CALLABLE) {
+					parentName = ((Procedure)abstractMetadataRecord).getParent().getName();
+				}
+				if (parentName != null) {
+					Map<Character, List<AbstractMetadataRecord>> map = schemaEntries.get(parentName);
+					if (map == null) {
+						map = new HashMap<Character, List<AbstractMetadataRecord>>();
+						schemaEntries.put(parentName, map);
+					}
+					List<AbstractMetadataRecord> typeRecords = map.get(record[0]);
+					if (typeRecords == null) {
+						typeRecords = new ArrayList<AbstractMetadataRecord>();
+						map.put(record[0], typeRecords);
+					}
+					typeRecords.add(abstractMetadataRecord);
+				}
+				Map<String, AbstractMetadataRecord> uuidMap = getByType(record[0]);
+				uuidMap.put(abstractMetadataRecord.getUUID(), abstractMetadataRecord);
+				if (parentId != null) {
+					List<AbstractMetadataRecord> typeChildren = getByParent(parentId, record[0], AbstractMetadataRecord.class, true);
+					typeChildren.add(abstractMetadataRecord);
+				}
+				return abstractMetadataRecord;
+			}
+		}
+
+	};
 	private Map<String, String> annotationCache = new HashMap<String, String>();
 	private Map<String, LinkedHashMap<String, String>> extensionCache = new HashMap<String, LinkedHashMap<String,String>>();
-    private Map<String, Datatype> datatypeCache;
-    private Map<String, KeyRecord> primaryKeyCache = new HashMap<String, KeyRecord>();
-    private Map<String, Table> tableCache = new HashMap<String, Table>();
+	//map of schema name to record entries
+	private Map<String, Map<Character, List<AbstractMetadataRecord>>> schemaEntries = new HashMap<String, Map<Character, List<AbstractMetadataRecord>>>();
+	//map of parent uuid to record entries
+	private Map<String, Map<Character, List<AbstractMetadataRecord>>> childRecords = new HashMap<String, Map<Character, List<AbstractMetadataRecord>>>();
+	//map of type to maps of uuids
+	private Map<Character, LinkedHashMap<String, AbstractMetadataRecord>> allRecords = new HashMap<Character, LinkedHashMap<String, AbstractMetadataRecord>>();
 	private MetadataStore store;
 	private HashSet<VirtualFile> indexFiles = new HashSet<VirtualFile>();
 	private LinkedHashMap<String, Resource> vdbEntries;
@@ -110,7 +190,53 @@ public class IndexMetadataFactory {
 		//just use the defaults for model visibility
 		addEntriesPlusVisibilities(vdb, new VDBMetaData());
 	}
-    
+	
+		Map<String, AbstractMetadataRecord> getByType(char type) {
+		LinkedHashMap<String, AbstractMetadataRecord> uuidMap = allRecords.get(type);
+		if (uuidMap == null) {
+			uuidMap = new LinkedHashMap<String, AbstractMetadataRecord>();
+			allRecords.put(type, uuidMap);
+		}
+		return uuidMap;
+	}
+	
+	<T extends AbstractMetadataRecord> List<T> getByParent(String parentId, char type, @SuppressWarnings("unused") Class<T> clazz, boolean create) {
+		Map<Character, List<AbstractMetadataRecord>> children = childRecords.get(parentId);
+		if (children == null) {
+			children = new HashMap<Character, List<AbstractMetadataRecord>>();
+			childRecords.put(parentId, children);
+		}
+		List<AbstractMetadataRecord> typeChildren = children.get(type);
+		if (typeChildren == null) {
+			if (!create) {
+				return Collections.emptyList();
+			} 
+			typeChildren = new ArrayList<AbstractMetadataRecord>(2);
+			children.put(type, typeChildren);
+		}
+		return (List<T>) typeChildren;
+	}
+
+    private void loadAll() {
+    	for (Index index : this.indexes) {
+    		try {
+				IEntryResult[] results = SimpleIndexUtil.queryIndex(new Index[] {index}, new char[0], true, true, false);
+				recordFactory.getMetadataRecord(results);
+			} catch (TeiidException e) {
+				throw new TeiidRuntimeException(e);
+			}
+    	}
+    	//associate the annotation/extension metadata
+    	for (Map<String, AbstractMetadataRecord> map : allRecords.values()) {
+    		for (AbstractMetadataRecord metadataRecord : map.values()) {
+				String uuid = metadataRecord.getUUID();
+				
+				metadataRecord.setAnnotation(this.annotationCache.get(uuid));
+				metadataRecord.setProperties(this.extensionCache.get(uuid));
+    		}
+    	}
+    }
+	
 	public MetadataStore getMetadataStore(Collection<Datatype> systemDatatypes) throws IOException {
 		if (this.store == null) {
 			this.store = new MetadataStore();
@@ -121,71 +247,26 @@ public class IndexMetadataFactory {
 	            tmp.add(index);
 			}
 			this.indexes = tmp.toArray(new Index[tmp.size()]);
-			getAnnotationCache();
-			getExtensionCache();			
-			Map<String, Datatype> datatypes = getDatatypeCache();
-			if (systemDatatypes != null) {
-				for (Datatype datatype : systemDatatypes) {
-					datatypes.put(datatype.getUUID(), datatype);
-				}
-			}
-			List<KeyRecord> keys = findMetadataRecords(MetadataConstants.RECORD_TYPE.PRIMARY_KEY, null, false);
-			for (KeyRecord keyRecord : keys) {
-				this.primaryKeyCache.put(keyRecord.getUUID(), keyRecord);
-			}
-			getModels();
-			getTables();
-			getProcedures();
+			loadAll();
 			//force close, since we cached the index files
 			for (Index index : tmp) {
 				index.close(); 
 			}
+			Map<String, AbstractMetadataRecord> uuidToRecord = getByType(MetadataConstants.RECORD_TYPE.DATATYPE);
+			for (AbstractMetadataRecord datatypeRecordImpl : uuidToRecord.values()) {
+				this.store.addDatatype((Datatype) datatypeRecordImpl);
+			}
+			if (systemDatatypes != null) {
+				for (Datatype datatype : systemDatatypes) {
+					uuidToRecord.put(datatype.getUUID(), datatype);
+				}
+			}
+			getModels();
+			getTables();
+			getProcedures();
 		}
 		return store;
     }
-
-	private void getExtensionCache() {
-		IEntryResult[] properties = queryIndex(MetadataConstants.RECORD_TYPE.PROPERTY, null, false);
-
-		for (IEntryResult iEntryResult : properties) {
-        	final String str = new String(iEntryResult.getWord());
-            final List<String> tokens = RecordFactory.getStrings(str, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
-
-            String uuid = tokens.get(1);
-	    	LinkedHashMap<String, String> result = this.extensionCache.get(uuid);
-	    	if (result == null) {
-	    		result = new LinkedHashMap<String, String>(); 
-	    		this.extensionCache.put(uuid, result);
-	    	}
-            // The tokens are the standard header values
-            int tokenIndex = 2;
-            result.put( tokens.get(tokenIndex++), tokens.get(tokenIndex++));
-		}
-	}
-
-	private void getAnnotationCache() {
-		IEntryResult[] results = queryIndex(MetadataConstants.RECORD_TYPE.ANNOTATION, null, false);
-		
-		for (IEntryResult iEntryResult : results) {
-	        final String str = new String(iEntryResult.getWord());
-	        final List<String> tokens = RecordFactory.getStrings(str, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
-
-	        // Extract the index version information from the record 
-	        int indexVersion = recordFactory.getIndexVersion(iEntryResult.getWord());
-	        String uuid = tokens.get(2);
-	        
-	        // The tokens are the standard header values
-	        int tokenIndex = 6;
-
-	        if(recordFactory.includeAnnotationProperties(indexVersion)) {
-				// The next token are the properties, ignore it not going to be read any way
-	            tokenIndex++;
-	        }
-
-	        // The next token is the description
-	        this.annotationCache.put(uuid, tokens.get(tokenIndex++));
-		}
-	}
 
     public void addIndexFile(VirtualFile f) {
     	this.indexFiles.add(f);
@@ -242,15 +323,24 @@ public class IndexMetadataFactory {
 	}
 	
     public void getModels() {
-    	Collection<Schema> records = findMetadataRecords(MetadataConstants.RECORD_TYPE.MODEL, null, false);
-    	for (Schema modelRecord : records) {
-			store.addSchema(modelRecord);
+    	Collection<AbstractMetadataRecord> records = getByType(MetadataConstants.RECORD_TYPE.MODEL).values();
+    	for (AbstractMetadataRecord modelRecord : records) {
+			store.addSchema((Schema) modelRecord);
 		}
     }
     
     public void getTables() {
     	for (Schema model : store.getSchemas().values()) {
-			List<Table> records = findMetadataRecords(MetadataConstants.RECORD_TYPE.TABLE, model.getName() + IndexConstants.NAME_DELIM_CHAR + IndexConstants.RECORD_STRING.MATCH_CHAR, true);
+    		Map<Character, List<AbstractMetadataRecord>> entries = schemaEntries.get(model.getName());
+    		if (entries == null) {
+    			continue;
+    		}
+    		List recs = entries.get(MetadataConstants.RECORD_TYPE.TABLE);
+    		if (recs == null) {
+    			continue;
+    		}
+    		List<Table> records = recs;
+    		
 			//load non-materialized first, so that the uuid->table cache is populated
 			Collections.sort(records, new Comparator<Table>() {
 				@Override
@@ -265,10 +355,9 @@ public class IndexMetadataFactory {
 				}
 			});
 			for (Table tableRecord : records) {
-				tableCache.put(tableRecord.getUUID(), tableRecord);
-		    	List<Column> columns = new ArrayList<Column>(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.COLUMN));
+		    	List<Column> columns = new ArrayList<Column>(getByParent(tableRecord.getUUID(), MetadataConstants.RECORD_TYPE.COLUMN, Column.class, false));
 		        for (Column columnRecordImpl : columns) {
-		    		columnRecordImpl.setDatatype(getDatatypeCache().get(columnRecordImpl.getDatatypeUUID()));
+		    		columnRecordImpl.setDatatype((Datatype) getByType(MetadataConstants.RECORD_TYPE.DATATYPE).get(columnRecordImpl.getDatatypeUUID()));
 		    		columnRecordImpl.setParent(tableRecord);
 		    		String fullName = columnRecordImpl.getName();
 		    		if (fullName.startsWith(tableRecord.getName() + '.')) {
@@ -277,7 +366,7 @@ public class IndexMetadataFactory {
 				}
 		        Collections.sort(columns);
 		        tableRecord.setColumns(columns);
-		        tableRecord.setAccessPatterns(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.ACCESS_PATTERN));
+		        tableRecord.setAccessPatterns(getByParent(tableRecord.getUUID(), MetadataConstants.RECORD_TYPE.ACCESS_PATTERN, KeyRecord.class, false));
 		        Map<String, Column> uuidColumnMap = new HashMap<String, Column>();
 		        for (Column columnRecordImpl : columns) {
 					uuidColumnMap.put(columnRecordImpl.getUUID(), columnRecordImpl);
@@ -286,18 +375,18 @@ public class IndexMetadataFactory {
 					loadColumnSetRecords(columnSetRecordImpl, uuidColumnMap);
 					columnSetRecordImpl.setParent(tableRecord);
 				}
-		        tableRecord.setForiegnKeys(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.FOREIGN_KEY));
+		        tableRecord.setForiegnKeys(getByParent(tableRecord.getUUID(), MetadataConstants.RECORD_TYPE.FOREIGN_KEY, ForeignKey.class, false));
 		        for (ForeignKey foreignKeyRecord : tableRecord.getForeignKeys()) {
 		        	foreignKeyRecord.setPrimaryKey(getPrimaryKey(foreignKeyRecord.getUniqueKeyID()));
 		        	loadColumnSetRecords(foreignKeyRecord, uuidColumnMap);
 		        	foreignKeyRecord.setParent(tableRecord);
 				}
-		        tableRecord.setUniqueKeys(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.UNIQUE_KEY));
+		        tableRecord.setUniqueKeys(getByParent(tableRecord.getUUID(), MetadataConstants.RECORD_TYPE.UNIQUE_KEY, KeyRecord.class, false));
 		        for (KeyRecord columnSetRecordImpl : tableRecord.getUniqueKeys()) {
 					loadColumnSetRecords(columnSetRecordImpl, uuidColumnMap);
 					columnSetRecordImpl.setParent(tableRecord);
 				}
-		        tableRecord.setIndexes(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.INDEX));
+		        tableRecord.setIndexes(getByParent(tableRecord.getUUID(), MetadataConstants.RECORD_TYPE.INDEX, KeyRecord.class, false));
 		        for (KeyRecord columnSetRecordImpl : tableRecord.getIndexes()) {
 					loadColumnSetRecords(columnSetRecordImpl, uuidColumnMap);
 					columnSetRecordImpl.setParent(tableRecord);
@@ -335,8 +424,8 @@ public class IndexMetadataFactory {
 			        }
 		        }
 		        if (tableRecord.isMaterialized()) {
-		        	tableRecord.setMaterializedStageTable(tableCache.get(tableRecord.getMaterializedStageTable().getUUID()));
-		        	tableRecord.setMaterializedTable(tableCache.get(tableRecord.getMaterializedTable().getUUID()));
+		        	tableRecord.setMaterializedStageTable((Table)getByType(MetadataConstants.RECORD_TYPE.TABLE).get(tableRecord.getMaterializedStageTable().getUUID()));
+		        	tableRecord.setMaterializedTable((Table)getByType(MetadataConstants.RECORD_TYPE.TABLE).get(tableRecord.getMaterializedTable().getUUID()));
 		        }
 				model.addTable(tableRecord);
 			}
@@ -344,28 +433,16 @@ public class IndexMetadataFactory {
     }
 
 	private KeyRecord getPrimaryKey(String uuid) {
-		KeyRecord key = this.primaryKeyCache.get(uuid);
+		KeyRecord key = (KeyRecord)this.getByType(MetadataConstants.RECORD_TYPE.PRIMARY_KEY).get(uuid);
 		if (key == null) {
             throw new TeiidRuntimeException(uuid+" PrimaryKey "+TransformationMetadata.NOT_EXISTS_MESSAGE); //$NON-NLS-1$
     	}
 		return key;
 	}
 	
-    public Map<String, Datatype> getDatatypeCache() {
-		if (this.datatypeCache == null) {
-			this.datatypeCache = new HashMap<String, Datatype>();
-			Collection<Datatype> dataTypes = findMetadataRecords(MetadataConstants.RECORD_TYPE.DATATYPE, null, false);
-			for (Datatype datatypeRecordImpl : dataTypes) {
-				datatypeCache.put(datatypeRecordImpl.getUUID(), datatypeRecordImpl);
-				this.store.addDatatype(datatypeRecordImpl);
-			}
-		}
-		return datatypeCache;
-	}
-	
 	private Column findElement(String fullName) {
-        Column columnRecord = (Column)getRecordByType(fullName, MetadataConstants.RECORD_TYPE.COLUMN);
-    	columnRecord.setDatatype(getDatatypeCache().get(columnRecord.getDatatypeUUID()));
+		Column columnRecord = (Column)getRecordByType(fullName, MetadataConstants.RECORD_TYPE.COLUMN);
+    	columnRecord.setDatatype((Datatype) getByType(MetadataConstants.RECORD_TYPE.DATATYPE).get(columnRecord.getDatatypeUUID()));
         return columnRecord;
     }
 	    
@@ -375,31 +452,34 @@ public class IndexMetadataFactory {
     
     private AbstractMetadataRecord getRecordByType(final String entityName, final char recordType, boolean mustExist) {
     	// Query the index files
-		final Collection results = findMetadataRecords(recordType,entityName,false);
-        
-		int resultSize = results.size();
-        if(resultSize == 1) {
-            // get the columnset record for this result            
-            return (AbstractMetadataRecord) results.iterator().next();
-        }
-        if(resultSize == 0) {
+		AbstractMetadataRecord record = getByType(recordType).get(entityName);
+    	
+        if(record == null) {
         	if (mustExist) {
 			// there should be only one for the UUID
 	            throw new TeiidRuntimeException(entityName+TransformationMetadata.NOT_EXISTS_MESSAGE);
         	} 
         	return null;
 		} 
-        throw new TeiidRuntimeException(RuntimeMetadataPlugin.Util.getString("TransformationMetadata.0", entityName)); //$NON-NLS-1$
+        return record;
     }
     
     public void getProcedures() {
     	for (Schema model : store.getSchemas().values()) {
-			Collection<Procedure> procedureRecordImpls = findMetadataRecords(MetadataConstants.RECORD_TYPE.CALLABLE, model.getName() + IndexConstants.NAME_DELIM_CHAR + IndexConstants.RECORD_STRING.MATCH_CHAR, true);
-			for (Procedure procedureRecord : procedureRecordImpls) {
+    		Map<Character, List<AbstractMetadataRecord>> entries = schemaEntries.get(model.getName());
+    		if (entries == null) {
+    			continue;
+    		}
+    		List recs = entries.get(MetadataConstants.RECORD_TYPE.CALLABLE);
+    		if (recs == null) {
+    			continue;
+    		}
+    		List<Procedure> records = recs;
+			for (Procedure procedureRecord : records) {
 		        // get the parameter metadata info
 		        for (int i = 0; i < procedureRecord.getParameters().size(); i++) {
 		            ProcedureParameter paramRecord = (ProcedureParameter) this.getRecordByType(procedureRecord.getParameters().get(i).getUUID(), MetadataConstants.RECORD_TYPE.CALLABLE_PARAMETER);
-		            paramRecord.setDatatype(getDatatypeCache().get(paramRecord.getDatatypeUUID()));
+		            paramRecord.setDatatype((Datatype) getByType(MetadataConstants.RECORD_TYPE.DATATYPE).get(paramRecord.getDatatypeUUID()));
 		            procedureRecord.getParameters().set(i, paramRecord);
 		            paramRecord.setProcedure(procedureRecord);
 		        }
@@ -431,22 +511,6 @@ public class IndexMetadataFactory {
     	}
     }
     
-    /**
-     * Finds children by parent uuid - note that this is not the best way to query for columns,
-     * but it removes the need to store the parent uuid
-     * @param parentRecord
-     * @param childRecordType
-     * @return
-     */
-    private List findChildRecords(final AbstractMetadataRecord parentRecord, final char childRecordType) {
-    	// construct the pattern string
-        String patternStr = getUUIDMatchPattern(childRecordType, parentRecord.getUUID(), true);
-		// Query the model index files
-		IEntryResult[] results = queryIndex(childRecordType, patternStr.toCharArray(), false, true, false);
-
-		return loadRecords(results);        
-    }
-    
 	private void loadColumnSetRecords(ColumnSet<?> indexRecord, Map<String, Column> columns) {
 		for (int i = 0; i < indexRecord.getColumns().size(); i++) {
 			String uuid = indexRecord.getColumns().get(i).getUUID();
@@ -463,180 +527,5 @@ public class IndexMetadataFactory {
 			}
 		}
 	}
-    
-	private List findMetadataRecords(final char recordType,
-			final String entityName, final boolean isPartialName) {
-		IEntryResult[] results = queryIndex(recordType, entityName, isPartialName);
-		List<AbstractMetadataRecord> records = loadRecords(results);
-		return records;
-	}
 
-	private List<AbstractMetadataRecord> loadRecords(
-			IEntryResult[] results) {
-		List<AbstractMetadataRecord> records = recordFactory.getMetadataRecord(results);
-		
-		for (AbstractMetadataRecord metadataRecord : records) {
-			String uuid = metadataRecord.getUUID();
-			
-			metadataRecord.setAnnotation(this.annotationCache.get(uuid));
-			metadataRecord.setProperties(this.extensionCache.get(uuid));
-		}
-		return records;
-	}
-    
-    /**
-     * Return the pattern match string that could be used to match a UUID in 
-     * an index record. All index records contain a header portion of the form:  
-     * recordType|pathInModel|UUID|nameInSource|parentObjectID|
-     * @param uuid The UUID for which the pattern match string is to be constructed.
-     * @return The pattern match string of the form: recordType|*|uuid|*
-     */
-    private String getUUIDMatchPattern(final char recordType, String uuid, boolean parent) {
-        ArgCheck.isNotNull(uuid);
-        // construct the pattern string
-        String patternStr = String.valueOf(recordType) + IndexConstants.RECORD_STRING.RECORD_DELIMITER + IndexConstants.RECORD_STRING.MATCH_CHAR + IndexConstants.RECORD_STRING.RECORD_DELIMITER;
-        if (parent) {
-        	for (int i = 0; i < 3;  i++) {
-        		patternStr += String.valueOf(IndexConstants.RECORD_STRING.MATCH_CHAR) + IndexConstants.RECORD_STRING.RECORD_DELIMITER;
-        	}
-        }
-        patternStr += uuid.toLowerCase() + IndexConstants.RECORD_STRING.RECORD_DELIMITER + IndexConstants.RECORD_STRING.MATCH_CHAR;                    
-        return patternStr;        
-    }
-        
-	/**
-	 * Return all index file records that match the specified entity name  
-	 * @param indexName
-	 * @param entityName the name to match
-	 * @param isPartialName true if the entity name is a partially qualified
-	 * @return results
-	 * @throws QueryMetadataException
-	 */
-	private IEntryResult[] queryIndex(final char recordType, final String entityName, final boolean isPartialName) {
-
-		IEntryResult[] results = null;
-
-		// Query based on UUID
-		if (StringUtil.startsWithIgnoreCase(entityName,UUID.PROTOCOL)) {
-            String patternString = null;
-            if (recordType == MetadataConstants.RECORD_TYPE.DATATYPE) {
-                patternString = getDatatypeUUIDMatchPattern(entityName);
-            } else {
-                patternString = getUUIDMatchPattern(recordType,entityName, false);
-            }
-			results = queryIndex(recordType, patternString.toCharArray(), false, true, true);
-		}
-
-		// Query based on partially qualified name
-		else if (isPartialName) {
-			String patternString = getMatchPattern(recordType,entityName);
-			results = queryIndex(recordType, patternString.toCharArray(), false, true, false);
-		}
-
-		// Query based on fully qualified name
-		else {
-			String prefixString  = getPrefixPattern(recordType,entityName);
-			results = queryIndex(recordType, prefixString.toCharArray(), true, true, entityName != null);
-		}
-
-		return results;
-	}
-	
-    /**
-     * Return the pattern match string that could be used to match a UUID in 
-     * a datatype index record. The RECORD_TYPE.DATATYPE records contain a header portion of the form:  
-     * recordType|datatypeID|basetypeID|fullName|objectID|nameInSource|...
-     * @param uuid The UUID for which the pattern match string is to be constructed.
-     * @return The pattern match string of the form: recordType|*|*|*|uuid|*
-     */
-    private String getDatatypeUUIDMatchPattern(final String uuid) {
-        ArgCheck.isNotNull(uuid);
-        String uuidString = uuid;
-        if (StringUtil.startsWithIgnoreCase(uuid,UUID.PROTOCOL)) {
-            uuidString = uuid.toLowerCase();
-        }
-        // construct the pattern string
-        String patternStr = "" //$NON-NLS-1$
-                          + MetadataConstants.RECORD_TYPE.DATATYPE            //recordType
-                          + IndexConstants.RECORD_STRING.RECORD_DELIMITER
-                          + IndexConstants.RECORD_STRING.MATCH_CHAR        //datatypeID 
-                          + IndexConstants.RECORD_STRING.RECORD_DELIMITER
-                          + IndexConstants.RECORD_STRING.MATCH_CHAR        //basetypeID 
-                          + IndexConstants.RECORD_STRING.RECORD_DELIMITER
-                          + IndexConstants.RECORD_STRING.MATCH_CHAR        //fullName 
-                          + IndexConstants.RECORD_STRING.RECORD_DELIMITER
-                          + uuidString                                     //objectID
-                          + IndexConstants.RECORD_STRING.RECORD_DELIMITER
-                          + IndexConstants.RECORD_STRING.MATCH_CHAR;                    
-        return patternStr;        
-    }
-	
-    /**
-     * Return the prefix match string that could be used to exactly match a fully 
-     * qualified entity name in an index record. All index records 
-     * contain a header portion of the form:  
-     * recordType|pathInModel|UUID|nameInSource|parentObjectID|
-     * @param name The fully qualified name for which the prefix match 
-     * string is to be constructed.
-     * @return The pattern match string of the form: recordType|name|
-     */
-    private String getPrefixPattern(final char recordType, final String name) {
-
-        // construct the pattern string
-        String patternStr = "" //$NON-NLS-1$
-                          + recordType
-                          + IndexConstants.RECORD_STRING.RECORD_DELIMITER;
-        if(name != null) {                          
-            patternStr = patternStr + name.trim().toUpperCase() + IndexConstants.RECORD_STRING.RECORD_DELIMITER;
-        }                    
-
-        return patternStr;
-    }
-	
-    /**
-     * Return the pattern match string that could be used to match a 
-     * partially/fully qualified entity name in an index record. All index records 
-     * contain a header portion of the form:  
-     * recordType|pathInModel|UUID|nameInSource|parentObjectID|
-     * @param name The partially/fully qualified name for which
-     * the pattern match string is to be constructed.
-     * @return The pattern match string of the form: recordType|name|* 
-     */
-    private String getMatchPattern(final char recordType, final String name) {
-        ArgCheck.isNotNull(name);
-
-        // construct the pattern string
-        String patternStr = "" //$NON-NLS-1$
-                          + recordType
-                          + IndexConstants.RECORD_STRING.RECORD_DELIMITER;
-        if(name != null) {
-            patternStr =  patternStr + name.trim().toUpperCase()
-                          + IndexConstants.RECORD_STRING.RECORD_DELIMITER
-                          + IndexConstants.RECORD_STRING.MATCH_CHAR;
-        }                    
-        return patternStr;        
-    }
-
-    /**
-     * Return all index file records that match the specified record pattern.
-     * @param indexes the array of MtkIndex instances to query
-     * @param pattern
-     * @return results
-     * @throws QueryMetadataException
-     */
-    private IEntryResult[] queryIndex(char recordType, final char[] pattern, boolean isPrefix, boolean isCaseSensitive, boolean returnFirstMatch) {
-    	// The the index file name for the record type
-        final String indexName = SimpleIndexUtil.getIndexFileNameForRecordType(recordType);
-        Index[] search = SimpleIndexUtil.getIndexes(indexName, this.indexes);       
-        
-        if (search.length == 0) {
-        	search = this.indexes;
-        }
-
-    	try {
-            return SimpleIndexUtil.queryIndex(search, pattern, isPrefix, isCaseSensitive, returnFirstMatch);
-        } catch (TeiidException e) {
-            throw new TeiidRuntimeException(e);
-        }
-    }    
 }
