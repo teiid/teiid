@@ -61,6 +61,7 @@ import org.teiid.jdbc.ResultSetImpl;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.net.socket.ServiceInvocationStruct;
 import org.teiid.odbc.ODBCClientRemote;
 import org.teiid.odbc.PGUtil.PgColInfo;
@@ -233,11 +234,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	
 	@Override
 	public void useClearTextAuthentication() {
-		try {
-			sendAuthenticationCleartextPassword();
-		} catch (IOException e) {
-			terminate(e);
-		}
+		sendAuthenticationCleartextPassword();
 	}
 	
 	@Override
@@ -609,7 +606,15 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	}
 	
 	private void sendErrorResponse(Throwable t) {
-		trace(t.getMessage());
+		if (t instanceof SQLException) {
+			//we are just re-logging an exception raised by the engine
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_ODBC, MessageLevel.DETAIL)) {
+				LogManager.logWarning(LogConstants.CTX_ODBC, t, "Error occurred"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		} else {
+			//should be in the odbc layer
+			LogManager.logError(LogConstants.CTX_ODBC, t, RuntimePlugin.Util.getString("PgBackendProtocol.unexpected_error")); //$NON-NLS-1$
+		}
 		SQLException e = TeiidSQLException.create(t);
 		startMessage('E');
 		write('S');
@@ -661,7 +666,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	}
 
 	private void sendErrorResponse(String message) {
-		trace("Exception:", message);
+		LogManager.logWarning(LogConstants.CTX_ODBC, message); //$NON-NLS-1$
 		startMessage('E');
 		write('S');
 		writeString("ERROR");
@@ -699,7 +704,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		sendMessage();
 	}	
 
-	private void sendAuthenticationCleartextPassword() throws IOException {
+	private void sendAuthenticationCleartextPassword() {
 		startMessage('R');
 		writeInt(3);
 		sendMessage();
