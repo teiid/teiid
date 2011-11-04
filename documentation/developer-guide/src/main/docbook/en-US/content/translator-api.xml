@@ -1538,7 +1538,7 @@ int count = visitor.getCount();]]></programlisting>
 		
 	</section>
     
-    <section id="dependencies">
+    <section>
         <title>Adding Dependent Libraries</title>
         <para>Add MANIFEST.MF file in the MATA-INF directory, and the following line to add the core Teiid API dependencies for 
         resource adapter. <emphasis>Dependencies: org.jboss.teiid.common-core,org.jboss.teiid.api,javax.api</emphasis> 
