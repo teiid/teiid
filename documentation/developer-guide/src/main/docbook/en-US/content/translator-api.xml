@@ -257,17 +257,27 @@ public void setFoo(String value)
          
 		<section>
 			<title>Asynchronous Executions</title>
-			<para>In some scenarios, a translator needs to execute
-				asynchronously and allow the executing thread to perform other work.  To allow this, you should Throw a <code>DataNotAvailableExecption</code> during a retrival method, rather than explicitly waiting or sleeping for the results. 
-				<note><para>A <code>DataNotAvailableException</code> should not be thrown by the execute method.</para><note>
-				The
-						<code>DataNotAvailableException</code> may take a delay parameter in its
-						constructor to indicate how long the system should wait befor polling
-						for results.  Any non-negative value indicates a time until the next polling should be performed.
-						The <code>DataNotAvailableException.NO_POLLING</code> exception (or any DataNotAvailableException with a negative delay) can be thrown to indicate that 
-						the execution will call <code>ExecutionContext.dataAvailable<c/ode> to indicate processing should resume.
-			</para>
-			<note><para>Since the exection and the associated connection are not closed until the work has completed, care should be taken if using asynchronous executions that hold a lot of state.</para></note>
+    <para>
+        In some scenarios, a translator needs to execute
+        asynchronously and allow the executing thread to perform other work. To allow this, you should Throw a
+        <code>DataNotAvailableExecption</code>
+        during a retrival method, rather than explicitly waiting or sleeping for the results.
+        <note>
+            <para>
+                A <code>DataNotAvailableException</code> should not be thrown by the execute method. The
+                <code>DataNotAvailableException</code> may take a delay parameter in its
+                constructor to indicate how long the system should wait befor polling
+                for results. Any non-negative value indicates a time until the next polling should be performed.
+                The
+                <code>DataNotAvailableException.NO_POLLING</code>
+                exception (or any DataNotAvailableException with a negative delay) can be thrown to indicate that
+                the execution will call <code>ExecutionContext.dataAvailable</code> to indicate processing should resume.
+           </para>
+       </note>
+    </para>
+    <note>
+        <para>Since the exection and the associated connection are not closed until the work has completed, care should be taken if using asynchronous executions that hold a lot of state.</para>
+    </note>
 		</section>
         
 		<section>
