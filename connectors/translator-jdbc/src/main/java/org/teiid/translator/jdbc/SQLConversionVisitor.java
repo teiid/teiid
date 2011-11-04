@@ -205,11 +205,11 @@ public class SQLConversionVisitor extends SQLStringVisitor{
 	    				buffer.append(o);
 	    			} else {
 	    				Integer i = (Integer)o;
-	    				if (obj.getArguments().size() <= i) {
-	    					throw new IllegalArgumentException("Invalid parameter {0}.  Must be less than or equal to {1}.");
+	    				if (i < 0 || i >= obj.getArguments().size()) {
+	    					throw new IllegalArgumentException(JDBCPlugin.Util.getString("SQLConversionVisitor.invalid_parameter", i+1, obj.getArguments().size())); //$NON-NLS-1$
 	    				}
 	    				if (obj.getArguments().get(i).getDirection() != Direction.IN) {
-	    					throw new IllegalArgumentException("Native query procedures cannot use non IN parameters.");
+	    					throw new IllegalArgumentException(JDBCPlugin.Util.getString("SQLConversionVisitor.not_in_parameter", i+1)); //$NON-NLS-1$
 	    				}
 	    				visit(obj.getArguments().get(i));
 	    				if (this.prepared) {
