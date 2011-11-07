@@ -246,11 +246,13 @@ public class TransportAdd extends AbstractAddStepHandler implements DescriptionP
     		socket.setOutputBufferSize(Element.TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE.asInt(node));
     	}		   
     	
+    	boolean sslEnabled = false;
     	SSLConfiguration ssl = new SSLConfiguration();
     	ssl.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
     	
     	if (Element.SSL_MODE_ATTRIBUTE.isDefined(node)) {
     		ssl.setMode(Element.SSL_MODE_ATTRIBUTE.asString(node));
+    		sslEnabled = true;
     	}
     	
     	if (Element.SSL_SSL_PROTOCOL_ATTRIBUTE.isDefined(node)) {
@@ -287,7 +289,9 @@ public class TransportAdd extends AbstractAddStepHandler implements DescriptionP
     	if (Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE.isDefined(node)) {
     		ssl.setTruststorePassword(Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE.asString(node));
     	}
-    	socket.setSSLConfiguration(ssl);
+    	if (sslEnabled) {
+    		socket.setSSLConfiguration(ssl);
+    	}
 		return socket;
 	}
 

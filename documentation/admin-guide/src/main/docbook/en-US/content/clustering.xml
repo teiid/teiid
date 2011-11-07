@@ -2,12 +2,11 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="clustering">
    <title>Clustering in Teiid</title>
-   <para>Since Teiid is installed in JBoss AS, there is no separate configuration needed on the part of the user to cluster the Teiid instances.
-   To cluster JBoss AS instances use these <ulink url="http://www.jboss.org/jbossas/docs/5-x.html">instructions</ulink> then Teiid instances
-   are clustered as well. Just make sure that you installed Teiid in every JBoss AS node before starting the cluster. 
-   There is one specific configuration that needs to be done for enabling the replicated (distributed) cache in Teiid. 
-   To enable distributed caching, rename the "&lt;jboss-as&gt;/server/&lt;profile&gt;/deploy/teiid/teiid-cache-manager-jboss-beans-rename-me.xml" file
-   to "&lt;jboss-as&gt;/server/&lt;profile&gt;/deploy/teiid/teiid-cache-manager-jboss-beans.xml".         
+   <para>Since Teiid is installed in JBoss AS, there is no separate configuration needed on the part of the user to cluster 
+   the Teiid instances.
+   To cluster JBoss AS instances use these <ulink url="https://docs.jboss.org/author/display/AS7/Documentation">instructions</ulink> then Teiid instances
+   are clustered as well. Just make sure that you installed Teiid in every JBoss AS node and started JBoss AS instances in the 
+   Domain mode before starting the cluster. 
    </para>
    
    <para>
@@ -20,11 +19,7 @@
         </orderedlist>          
    </para>   
    
-   <para>If would like a clustered deployment of the VDB and data-source artifacts, i.e. deploy artifacts to a central 
-   location and let the system propagate deployments every where, then look into 
-   <ulink url="http://community.jboss.org/wiki/JBossFarmDeployment">JBoss Farm Deployment</ulink>. Note that this only supports hot deployments. 
-   Take look at some commonly asked questions <ulink url="http://community.jboss.org/wiki/JoinTheClusterBeforeUpdatingTheFarmDirectory">here</ulink>. 
-   If you need more fine grained control, you can use script based deployment, where you control the deployment of artifacts into each node, or
-   JBoss AS "deploy" folder can be configured as a <emphasis>shared</emphasis> folder among all the clustered JBoss AS nodes to achieve farming.</para>
+   <para>In the domain mode, the only way user can deploy any artifacts is using either CLI or using the Admin API or Admin Shell. 
+   Copying VDB directly into the "deployments" directory is not supported. </para>
    
 </chapter>

@@ -21,7 +21,7 @@
      </listitem>
      <listitem>
        <para>quick administrative tool. The user can connect to a running Teiid Server and invoke any of
-         the AdminAPI methods, such as "deployVDB" or "stopConnectionFactory", to control the Teiid System. 
+         the AdminAPI methods, such as "deploy" or "createDataSource", to control the Teiid System. 
          Since this can be script driven, these tasks can be automated and re-run at a later time.</para>
      </listitem>
      <listitem>
@@ -96,7 +96,7 @@
 					declared inside "(" and ")".  A function may have more than
 					one parameter.  String parameters can be wrapped in double or single quotes.  Example:</para>
 				<programlisting><![CDATA[
-          connectAsAdmin("mm://localhost:34413", "user", "password")
+          connectAsAdmin("localhost", "9999", "user", "password", "conn1")
         ]]></programlisting>
 			</listitem>
 			<listitem>
@@ -136,7 +136,7 @@ myObject.doSomething();]]></programlisting>
 /*
  *Deploy a VDB from file
  */
-void deployVDB(
+void deploy(
     String /* file name */)
   throws AdminException
   throws FileNotFoundException]]></programlisting>
@@ -207,13 +207,14 @@ record stop]]></programlisting>
       connection properties with which user can connect to Teiid system. The following properties can be
       defined using this file</para>
     <programlisting><![CDATA[
-admin.url = <server host name or ip address>
-admin.name = <user name>
-admin.password = <password>
+jdbc.user=user
+jdbc.password=user
+jdbc.url=jdbc:teiid:admin@mm://localhost:31000;
 
-jdbc.url = <server host name or ip address>
-jdbc.user = <user name>
-jdbc.password = <password>
+admin.host=localhost
+admin.port=9999
+admin.user=admin
+admin.password=admin
       ]]></programlisting>
     <para>A call to "connect()" or "connectionAsAdmin()" without any input parameters, will connect to
       the Teiid system using the properties defined in properties file. However, a user can always pass in
@@ -259,14 +260,14 @@ connectAsAdmin();
 //capture the connection name
 conn1 = getConnectionName();
 
-deployVDB("file.vdb")
+deploy("file.vdb")
 
 // creates a second connection 
 connectAsAdmin();		
 
 conn2 = getConnectionName();
 
-deployVDB("file.vdb")
+deploy("file.vdb")
 
 // switch the connection to "conn1"
 useConnection(conn1);	
