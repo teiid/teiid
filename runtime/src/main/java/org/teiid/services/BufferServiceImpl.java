@@ -264,8 +264,8 @@ public class BufferServiceImpl implements BufferService, Serializable {
 	}
 
     @ManagementProperty(description="Memory buffer space used by the buffer manager in MB.  -1 determines the setting automatically from the maxReserveKB (default -1).  This value cannot be smaller than maxStorageObjectSize.")
-    public long getMemoryBufferSpace() {
-		return memoryBufferSpace;
+    public int getMemoryBufferSpace() {
+		return (int)memoryBufferSpace;
 	}
 
     @ManagementProperty(description="The maximum size of a buffer managed object (typically a table page or a results batch) in bytes (default 8388608).")
