@@ -23,6 +23,7 @@
 package org.teiid.translator;
 
 import java.io.Serializable;
+import java.sql.Statement;
 
 import javax.security.auth.Subject;
 
@@ -130,7 +131,9 @@ public interface ExecutionContext {
     int getBatchSize();
     
     /**
-     * Add an exception as a warning to this Execution.
+     * Add an exception as a warning to this Execution.  If the exception is not an instance of a SQLWarning
+     * it will be wrapped by a SQLWarning for the client.  The warnings can be consumed through the 
+     * {@link Statement#getWarnings()} method.  
      * @param ex
      */
     void addWarning(Exception ex);

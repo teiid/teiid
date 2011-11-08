@@ -655,55 +655,22 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		return reqMessage;
 	}
 
-    /**
-     * Retreives the fetch direction this Statement object set as a performance hint
-     * to the driver. The int returned will be one of the following constants from
-     * the ResultSet interface: FETCH_FORWARD, FETCH_REVERSE, or FETCH_UNKNOWN.
-     * @return int value indicating the direction in which results need to be fetched
-     * @throws SQLException should never occur.
-     */
     public int getFetchDirection() throws SQLException {
         return this.fetchDirection;
     }
 
-    /**
-     * Retreives the fetch size this Statement object set as a performance hint
-     * to the driver. This is the number of rows the server fetches at a time when
-     * the result set needs more rows.
-     * @return int value indicating the number of rows the server fetches
-     * @throws SQLException should never occur.
-     */
     public int getFetchSize() throws SQLException {
         return fetchSize;
     }
 
-    /**
-     * Retreives the maximum number of bytes that a result set column may contain.
-     * @return int value giving the maximum size of a field
-     * @throws SQLException should never occur.
-     */
     public int getMaxFieldSize() throws SQLException {
         return maxFieldSize;
     }
 
-    /**
-     * Retrives the maximum number of rows that a ResultSet object may contain.
-     * If the limit is exceeded the excess rows are dropped.
-     * @return Max limit on rows on ResultSet.
-     * @throws SQLException should never iccure.
-     */
     public int getMaxRows() throws SQLException {
         return maxRows;
     }
 
-    /**
-     * Moves to this Statement object's next result, returns true if
-     * it is a ResultSet object, and implicitly closes any current
-     * ResultSet object(s) obtained with the method #getResultSet.
-     * @return true if the next result is a ResultSet object;
-     * false if it is an update count or there are no more results
-     * @throws SQLException if there is an error in database.
-     */
     public boolean getMoreResults() throws SQLException {
         //Check to see the statement is closed and throw an exception
         checkStatement();
@@ -719,17 +686,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         return false;
     }
 
-    /**
-     * Moves to this Statement object's next result, deals with any current
-     * ResultSet object(s) according to the instructions specified by the
-     * given flag, and returns true if the next result is a ResultSet object.
-     * @param current flag that gives instruction on what should happen
-     * to current ResultSet objects obtained using the method getResultSet(
-     * CLOSE_CURRENT_RESULT, KEEP_CURRENT_RESULT, or CLOSE_ALL_RESULTS).
-     * @return true if the next result is a ResultSet object; false if it
-     *  is an update count or there are no more results
-     * @throws SQLException if there is an error in database.
-     */
     public boolean getMoreResults(int current) throws SQLException {
         checkStatement();
 
@@ -748,26 +704,12 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         return false;
     }
 
-
-    /**
-     * Return the number of seconds the driver will wait for a statement object
-     * to execute
-     * @return int value giving the query timeout in seconds
-     * @throws SQLException should never occur
-     */
     public int getQueryTimeout() throws SQLException {
         //Check to see the statement is closed and throw an exception
         checkStatement();
         return (int)this.queryTimeoutMS/1000;
     }
 
-    /**
-     * Returns a ResultSet object that was produced by a call to the method execute.
-     * We currently do not support execute method which could return multiple result
-     * sets.
-     * @return ResultSet object giving the next available ResultSet
-     * @throws SQLException should never occur
-     */
     public ResultSetImpl getResultSet() throws SQLException {
         //Check to see the statement is closed and throw an exception
         checkStatement();
@@ -777,32 +719,14 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         return resultSet;
     }
 
-    /**
-     * Retrieves the concurrency mode for the ResultSet objects generated from
-     * queries that this Statement object executes. All ResultSets are currently
-     * read only.
-     * @return intvalue giving the ResultSet concurrency
-     * @throws SQLException should never occur
-     */
     public int getResultSetConcurrency() throws SQLException {
         return this.resultSetConcurrency;
     }
 
-    /**
-     * Retrieves the type of the ResultSet objects generated from queries that this
-     * statement executes.
-     * @return int value indicating the type of the ResultSet
-     * @throws SQLException should never occur
-     */
     public int getResultSetType() {
         return this.resultSetType;
     }
 
-    /**
-     * This method returns the number of rows affected by a statement modifying a table.
-     * @return Number of rows affected.
-     * @throws SQLException should never occur
-     */
     public int getUpdateCount() throws SQLException {
         checkStatement();
         if (this.updateCounts == null) {
@@ -821,11 +745,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     	this.serverWarnings.addAll(serverWarnings);
     }
 
-    /**
-     * This method returns warnings returned by server.
-     * @return null value as there are no warnings
-     * @throws SQLException should never occur
-     */
     public SQLWarning getWarnings() throws SQLException {
         //Check to see the statement is closed and throw an exception
         checkStatement();
@@ -836,13 +755,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         return null;
     }
 
-    /**
-     * This method enbles/disables escape processing. When escape processing is
-     * enabled the driver will scan any escape syntax and do escape substitution
-     * before sending the escaped sql statement to the server
-     * @param enable boolean value indicating if the escape processing should be turned on
-     * @throws SQLException should never occur
-     */
     public void setEscapeProcessing(boolean enable) throws SQLException {
         //Check to see the statement is closed and throw an exception
         checkStatement();
@@ -868,24 +780,12 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         }
     }
 
-    /**
-     * Sets the limit on the maximum number of rows in a ResultSet object. This
-     * method is currently implemented to throw an exception as it is not possible
-     * to limit the number of rows.
-     * @param maxRows int value indicating maximum rows that can be returned in a ResultSet
-     */
     public void setMaxRows(int maxRows) throws SQLException {
         //Check to see the statement is closed and throw an exception
         checkStatement();
         this.maxRows = maxRows;
     }
 
-    /**
-     * This sets to seconds the time limit for the number of seconds for a driver
-     * to wait for a statement object to be executed.
-     * @param seconds Maximum number of seconds for a statement object to execute.
-     * throws SQLException, should never occur
-     */
     public void setQueryTimeout(int seconds) throws SQLException {
         //Check to see the statement is closed and throw an exception
         checkStatement();
@@ -985,20 +885,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		}
     }
 
-    /**
-     * Set the per-statement security payload.  This optional payload will 
-     * accompany each request to the data source(s) so that the connector
-     * will have access to it.
-     * <br>Once the payload is set, it will be used for each statment
-     * execution until it is set to <code>null</code>, a new payload is set on
-     * the statement or the statement is closed.</br>
-     * 
-     * <p>To remove an existing payload from a statement, call this method
-     * with a <code>null</code> argument.</p>  
-     * @param payload The payload that is to accompany requests executed
-     * from this statement.
-     * @since 4.2
-     */
     public void setPayload(Serializable payload) {
         this.payload = payload;
     }
@@ -1015,15 +901,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         return this.currentRequestID;
     }
 
-    /**
-     * Get Query plan description.
-     * If the Statement has a resultSet, we get the plan description from the result set
-     * If that plan description is null, though, we return the very first plan description
-     * that was created from the resultsMessage in the method: setAnalysisInfo.
-     * The plan description from the result set can be null if the resultsMsg stored in the
-     * result set hasn't been created when getPlanDescription is called.
-     * @return Query plan description, if it exists, otherwise null
-     */
     public PlanNode getPlanDescription() {
         if(this.resultSet != null) {
 			return this.resultSet.getUpdatedPlanDescription();
@@ -1034,18 +911,10 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         return null;
     }
 
-    /**
-     * Get query planner debug log.
-     * @return Query planner debug log, or null if it doesn't exist
-     */
     public String getDebugLog() {
         return this.debugLog;
     }
 
-    /**
-     * Get annotations
-     * @return Query planner annotations - Collection of Annotation
-     */
     public Collection<Annotation> getAnnotations() {
         return this.annotations;
     }
@@ -1057,10 +926,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         return null;
     }
     
-    /**
-     * Check is the statement is closed. Used primarily by the unit tests.
-     * @return true if the statement is closed; false otherwise.
-     */
     public boolean isClosed() {
         return this.isClosed;
     }

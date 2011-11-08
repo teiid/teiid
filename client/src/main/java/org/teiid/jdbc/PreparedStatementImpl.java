@@ -286,13 +286,6 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
     	setAsciiStream(parameterIndex, in);
     }
 
-    /**
-     * <p>Sets the IN parameter at paramaterIndex to a BigDecimal object. The parameter
-     * type is set to NUMERIC
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param BigDecimal object to which the parameter value is to be set.
-     * @throws SQLException, should not occur
-     */
     public void setBigDecimal (int parameterIndex, java.math.BigDecimal value) throws SQLException {
         setObject(parameterIndex, value);
     }
@@ -301,43 +294,18 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
     	setBlob(parameterIndex, in);
     }
 
-    /**
-     * <p>Sets the parameter in position parameterIndex to a Blob object.
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param Blob object to which the parameter value is to be set.
-     * @throws SQLException if parameter type/datatype do not match
-     */
     public void setBlob (int parameterIndex, Blob x) throws SQLException {
         setObject(parameterIndex, x);
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to b, a Java boolean value. The parameter
-     * type is set to BIT
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param boolean value to which the parameter value is to be set.
-     * @throws SQLException, if parameter type/datatype do not match
-     */
     public void setBoolean (int parameterIndex, boolean value) throws SQLException {
         setObject(parameterIndex, value);
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to x, a Java byte value. The parameter
-     * type is set to TINYINT
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param byte value to which the parameter value is to be set.
-     * @throws SQLException, if parameter type/datatype do not match
-     */
     public void setByte(int parameterIndex, byte value) throws SQLException {
         setObject(parameterIndex, Byte.valueOf(value));
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to x[], a Java array of bytes.
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param bytes array to which the parameter value is to be set.
-     */
     public void setBytes(int parameterIndex, byte bytes[]) throws SQLException {
     	setObject(parameterIndex, new SerialBlob(bytes));
     }
@@ -346,35 +314,14 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
     	setCharacterStream(parameterIndex, reader);
     }
 
-    /**
-     * <p>Sets the parameter in position parameterIndex to a Clob object.
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param Clob object to which the parameter value is to be set.
-     * @throws SQLException if parameter type/datatype do not match.
-     */
     public void setClob (int parameterIndex, Clob x) throws SQLException {
         setObject(parameterIndex, x);
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to x, a java.sql.Date object. The parameter
-     * type is set to DATE
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param Date object to which the parameter value is to be set.
-     * @throws SQLException, if parameter type/datatype do not match
-     */
     public void setDate(int parameterIndex, java.sql.Date value) throws SQLException {
         setDate(parameterIndex, value, null);
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to x, a java.sql.Date object. The parameter
-     * type is set to DATE
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param Date object to which the parameter value is to be set.
-     * @param Calendar object to constrct date(useful to get include timezone info)
-     * @throws SQLException, if parameter type/datatype do not match
-     */
     public void setDate(int parameterIndex, java.sql.Date x ,java.util.Calendar cal) throws SQLException {
 
         if (cal == null || x == null) {
@@ -386,79 +333,30 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
         setObject(parameterIndex, TimestampWithTimezone.createDate(x, cal.getTimeZone(), getDefaultCalendar()));
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to x, a double value. The parameter
-     * type is set to DOUBLE
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param double value to which the parameter value is to be set.
-     * @throws SQLException, if parameter type/datatype do not match
-     */
     public void setDouble(int parameterIndex, double value) throws SQLException {
         setObject(parameterIndex, new Double(value));
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to value, a float value. The parameter
-     * type is set to FLOAT
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param float value to which the parameter value is to be set.
-     * @throws SQLException, if parameter type/datatype do not match
-     */
     public void setFloat(int parameterIndex, float value) throws SQLException {
         setObject(parameterIndex, new Float(value));
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to value, a int value. The parameter
-     * type is set to INTEGER
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param int value to which the parameter value is to be set.
-     * @throws SQLException, if parameter type/datatype do not match
-     */
     public void setInt(int parameterIndex, int value) throws SQLException {
         setObject(parameterIndex, Integer.valueOf(value));
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to x, a long value. The parameter
-     * type is set to BIGINT
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param long value to which the parameter value is to be set.
-     * @throws SQLException, if parameter type/datatype do not match
-     */
     public void setLong(int parameterIndex, long value) throws SQLException {
         setObject(parameterIndex, Long.valueOf(value));
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to a null value.
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param jdbc type of the parameter whose value is to be set to null
-     * @throws SQLException, if parameter type/datatype do not match
-     */
     public void setNull(int parameterIndex, int jdbcType) throws SQLException {
         setObject(parameterIndex, null);
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to a null value.
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param jdbc type of the parameter whose value is to be set to null
-     * @param fully qualifies typename of the parameter being set.
-     * @throws SQLException, if parameter type/datatype do not match
-     */
     public void setNull(int parameterIndex, int jdbcType, String typeName) throws SQLException {
         setObject(parameterIndex, null);
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to an object value
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param an object value to which the parameter value is to be set.
-     * @param int value giving the JDBC type to conver the object to
-     * @param int value giving the scale to be set if the type is DECIMAL or NUMERIC
-     * @throws SQLException, if there is an error setting the parameter value
-     */
     public void setObject (int parameterIndex, Object value, int targetJdbcType, int scale) throws SQLException {
 
        if(value == null) {
@@ -527,12 +425,6 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
         setObject(parameterIndex, targetObject);
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to an object value
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param an object value to which the parameter value is to be set.
-     * @throws SQLException, if there is an error setting the parameter value
-     */
     public void setObject(int parameterIndex, Object value) throws SQLException {
         ArgCheck.isPositive(parameterIndex, JDBCPlugin.Util.getString("MMPreparedStatement.Invalid_param_index")); //$NON-NLS-1$
 
@@ -546,47 +438,18 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
         parameterMap.put(parameterIndex, value);
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to x, a short value. The parameter
-     * type is set to TINYINT
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param short value to which the parameter value is to be set.
-     * @throws SQLException, if there is an error setting the parameter value
-     */
     public void setShort(int parameterIndex, short value) throws SQLException {
         setObject(parameterIndex, value);
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to x, a String value. The parameter
-     * type is set to VARCHAR
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param String object to which the parameter value is to be set.
-     * @throws SQLException
-     */
     public void setString(int parameterIndex, String value) throws SQLException {
         setObject(parameterIndex, value);
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to x, a java.sql.Time object. The parameter
-     * type is set to TIME
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param Time object to which the parameter value is to be set.
-     * @throws SQLException, if parameter type/datatype do not match
-     */
     public void setTime(int parameterIndex, java.sql.Time value) throws SQLException {
         setTime(parameterIndex, value, null);
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to x, a java.sql.Time object. The parameter
-     * type is set to TIME
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param Time object to which the parameter value is to be set.
-     * @param Calendar object to constrct Time(useful to get include timezone info)
-     * @throws SQLException, if parameter type/datatype do not match
-     */
     public void setTime(int parameterIndex, java.sql.Time x, java.util.Calendar cal) throws SQLException {
 
        if (cal == null || x == null) {
@@ -598,25 +461,10 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
        setObject(parameterIndex, TimestampWithTimezone.createTime(x, cal.getTimeZone(), getDefaultCalendar()));
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to x, a java.sql.Timestamp object. The
-     * parameter type is set to TIMESTAMP
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param Timestamp object to which the parameter value is to be set.
-     * @throws SQLException, if parameter type/datatype do not match
-     */
     public void setTimestamp(int parameterIndex, java.sql.Timestamp value) throws SQLException {
         setTimestamp(parameterIndex, value, null);
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to x, a java.sql.Timestamp object. The
-     * parameter type is set to TIMESTAMP
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param Timestamp object to which the parameter value is to be set.
-     * @param Calendar object to constrct timestamp(useful to get include timezone info)
-     * @throws SQLException, if parameter type/datatype do not match
-     */
     public void setTimestamp(int parameterIndex, java.sql.Timestamp x, java.util.Calendar cal) throws SQLException {
 
         if (cal == null || x == null) {
@@ -628,13 +476,6 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
         setObject(parameterIndex, TimestampWithTimezone.createTimestamp(x, cal.getTimeZone(), getDefaultCalendar()));
     }
 
-    /**
-     * Sets the designated parameter to the given java.net.URL value. The driver
-     * converts this to an SQL DATALINK value when it sends it to the database.
-     * @param parameter int index
-     * @param x URL to be set
-     * @throws SQLException
-     */
     public void setURL(int parameterIndex, URL x) throws SQLException {
         setObject(parameterIndex, x);
     }
