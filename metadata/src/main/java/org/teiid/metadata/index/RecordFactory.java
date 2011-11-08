@@ -24,13 +24,11 @@ package org.teiid.metadata.index;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.core.id.UUID;
 import org.teiid.core.index.IEntryResult;
 import org.teiid.core.util.Assertion;
-import org.teiid.core.util.StringUtil;
 import org.teiid.internal.core.index.EntryResult;
 import org.teiid.internal.core.index.IIndexConstants;
 import org.teiid.metadata.AbstractMetadataRecord;
@@ -302,8 +300,7 @@ public class RecordFactory {
      * Create a ModelRecord instance from the specified index record
      */
     public Schema createModelRecord(final char[] record) {
-        final String str = new String(record);
-        final List<String> tokens = getStrings(str, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
+        final List<String> tokens = getStrings(record, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
         final Schema model = new Schema();
 
         // The tokens are the standard header values
@@ -335,8 +332,7 @@ public class RecordFactory {
      * Create a TransformationRecord instance from the specified index record
      */
     public TransformationRecordImpl createTransformationRecord(final char[] record) {
-        final String str = new String(record);
-        final List<String> tokens = getStrings(str, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
+        final List<String> tokens = getStrings(record, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
         final TransformationRecordImpl transform = new TransformationRecordImpl();
 
         // Extract the index version information from the record 
@@ -388,8 +384,7 @@ public class RecordFactory {
      * Create a TableRecord instance from the specified index record
      */
     public Table createTableRecord(final char[] record) {
-        final String str = new String(record);
-        final List<String> tokens = getStrings(str, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
+        final List<String> tokens = getStrings(record, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
         final Table table = new Table();
 
         // Extract the index version information from the record 
@@ -460,8 +455,7 @@ public class RecordFactory {
      * Create a ColumnRecord instance from the specified index record
      */
     public Column createColumnRecord(final char[] record) {
-        final String str = new String(record);
-        final List<String> tokens = getStrings(str, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
+        final List<String> tokens = getStrings(record, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
         final Column column = new Column();
 
         // Extract the index version information from the record 
@@ -547,8 +541,7 @@ public class RecordFactory {
      * Create a ColumnSetRecord instance from the specified index record
      */
     public ColumnSet createColumnSetRecord(final char[] record, ColumnSet columnSet) {
-        final String str = new String(record);
-        final List<String> tokens = getStrings(str, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
+        final List<String> tokens = getStrings(record, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
 
         // Extract the index version information from the record 
         int indexVersion = getIndexVersion(record);
@@ -577,8 +570,7 @@ public class RecordFactory {
      * Create a ForeignKeyRecord instance from the specified index record
      */
     public ForeignKey createForeignKeyRecord(final char[] record) {
-        final String str = new String(record);
-        final List<String> tokens = getStrings(str, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
+        final List<String> tokens = getStrings(record, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
         final ForeignKey fkRecord = new ForeignKey();
 
         // Extract the index version information from the record 
@@ -607,8 +599,7 @@ public class RecordFactory {
      * Create a DatatypeRecord instance from the specified index record
      */
     public Datatype createDatatypeRecord(final char[] record) {
-        final String str = new String(record);
-        final List<String> tokens = getStrings(str, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
+        final List<String> tokens = getStrings(record, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
         final Datatype dt = new Datatype();
 
         // Extract the index version information from the record 
@@ -690,9 +681,7 @@ public class RecordFactory {
      * Create a ProcedureRecord instance from the specified index record
      */
     public Procedure createProcedureRecord(final char[] record) {
-
-        final String str = new String(record);
-        final List<String> tokens = getStrings(str, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
+        final List<String> tokens = getStrings(record, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
         final Procedure procRd = new Procedure();
 
         // Extract the index version information from the record 
@@ -851,26 +840,35 @@ public class RecordFactory {
         } 
         return false;
     }
+    
+    public static List<String> getStrings(final String record, final char listDelimiter) {
+    	return getStrings(record.toCharArray(), listDelimiter);
+    }
 
-    public static List<String> getStrings(final String values, final char listDelimiter) {
-        if (StringUtil.isEmpty(values)) {
+    public static List<String> getStrings(final char[] record, final char listDelimiter) {
+        if (record == null || record.length == 0) {
             return Collections.emptyList();
         }
-        if (values.length() == 1 && values.charAt(0) == IndexConstants.RECORD_STRING.SPACE) {
+        if (record.length == 1 && record[0] == IndexConstants.RECORD_STRING.SPACE) {
             return Collections.emptyList();
         } 
-        final List<String> tokens = StringUtil.split(values,String.valueOf(listDelimiter));
-        final List<String> result = new ArrayList<String>(tokens.size());
-        for (Iterator<String> iter = tokens.iterator(); iter.hasNext();) {
-            String token = iter.next();
-            if (token != null) {
-                result.add(new String(token));
-            }
+        List<String> result = new ArrayList<String>();
+        int start = 0;
+        for (int i = 0; i < record.length; i++) {
+        	if (record[i] == listDelimiter) {
+        		if (i != start) {
+        			result.add(new String(record, start, i - start));
+        		}
+        		start = i+1;
+        	}
+        }
+        if (start < record.length) {
+        	result.add(new String(record, start, record.length - start));
         }
         return result;
     }
-
-	public char getListDelimiter(final int indexVersionNumber) {
+    
+    public char getListDelimiter(final int indexVersionNumber) {
         if (indexVersionNumber < DELIMITER_INDEX_VERSION) {
             return IndexConstants.RECORD_STRING.LIST_DELIMITER_OLD;
         }

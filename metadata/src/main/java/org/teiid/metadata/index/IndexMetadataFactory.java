@@ -78,8 +78,7 @@ public class IndexMetadataFactory {
 			char c = record[0];
 			switch (c) {
 			case MetadataConstants.RECORD_TYPE.ANNOTATION: {
-				final String str = new String(record);
-		        final List<String> tokens = RecordFactory.getStrings(str, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
+		        final List<String> tokens = RecordFactory.getStrings(record, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
 
 		        // Extract the index version information from the record 
 		        int indexVersion = recordFactory.getIndexVersion(record);
@@ -98,8 +97,7 @@ public class IndexMetadataFactory {
 		        return null;
 			}
 			case MetadataConstants.RECORD_TYPE.PROPERTY: {
-				final String str = new String(record);
-	            final List<String> tokens = RecordFactory.getStrings(str, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
+	            final List<String> tokens = RecordFactory.getStrings(record, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
 
 	            String uuid = tokens.get(1);
 		    	LinkedHashMap<String, String> result = extensionCache.get(uuid);
