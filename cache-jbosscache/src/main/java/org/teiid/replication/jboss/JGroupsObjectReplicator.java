@@ -297,6 +297,9 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 	}
 	
 	public void stop(Object object) {
+		if (!Proxy.isProxyClass(object.getClass())) {
+			return;
+		}
 		ReplicatedInvocationHandler<?> handler = (ReplicatedInvocationHandler<?>) Proxy.getInvocationHandler(object);
 		Channel c = handler.disp.getChannel();
 		handler.disp.stop();
@@ -423,24 +426,30 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
         });
         
 		T replicatedProxy = (T) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {iface}, proxy);
-
-		channel.connect(clusterName);
-		if (object instanceof ReplicatedObject) {
-			((ReplicatedObject)object).setLocalAddress(channel.getLocalAddress());
-			boolean getState = channel.getState(null, startTimeout);
-			if (getState) {
-				boolean loaded = proxy.state_promise.getResult(startTimeout);
-				if (loaded) {
-					LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "loaded"); //$NON-NLS-1$
+		boolean success = false;
+		try {
+			channel.connect(mux_id);
+			if (object instanceof ReplicatedObject) {
+				((ReplicatedObject)object).setLocalAddress(channel.getLocalAddress());
+				boolean getState = channel.getState(null, startTimeout);
+				if (getState) {
+					boolean loaded = proxy.state_promise.getResult(startTimeout);
+					if (loaded) {
+						LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "loaded"); //$NON-NLS-1$
+					} else {
+						LogManager.logWarning(LogConstants.CTX_RUNTIME, object + " load timeout"); //$NON-NLS-1$
+					}
 				} else {
-					LogManager.logWarning(LogConstants.CTX_RUNTIME, object + " load timeout"); //$NON-NLS-1$
+					LogManager.logInfo(LogConstants.CTX_RUNTIME, object + " first member or timeout exceeded"); //$NON-NLS-1$
 				}
-			} else {
-				LogManager.logInfo(LogConstants.CTX_RUNTIME, object + " first member or timeout exceeded"); //$NON-NLS-1$
+			}
+			success = true;
+			return replicatedProxy;
+		} finally {
+			if (!success) {
+				channel.close();
 			}
 		}
-
-		return replicatedProxy;
 	}
 	
 }
