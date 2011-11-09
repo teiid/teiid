@@ -206,12 +206,9 @@ public class Update extends TranslatableProcedureContainer {
 		Update other = (Update) obj;
         
         return 
-            // Compare the groups
             EquivalenceUtil.areEqual(getGroup(), other.getGroup()) &&
-            // Compare the changeList by checking to see if
-            // both objects contains exactly the same CompareCriteria objects.
             getChangeList().equals(other.getChangeList()) &&
-            // Compare the criteria clauses
+            sameOptionAndHint(other) &&
             EquivalenceUtil.areEqual(getCriteria(), other.getCriteria());
     }
 
@@ -261,12 +258,12 @@ public class Update extends TranslatableProcedureContainer {
         
     	LinkedHashMap<ElementSymbol, Expression> map = new LinkedHashMap<ElementSymbol, Expression>();
         
-        for (Iterator iter = getChangeList().getClauses().iterator(); iter.hasNext();) {
-        	SetClause setClause = (SetClause)iter.next();
-            ElementSymbol symbol = (ElementSymbol)(setClause.getSymbol()).clone();
+        for (Iterator<SetClause> iter = getChangeList().getClauses().iterator(); iter.hasNext();) {
+        	SetClause setClause = iter.next();
+            ElementSymbol symbol = setClause.getSymbol().clone();
             symbol.setGroupSymbol(new GroupSymbol(ProcedureReservedWords.INPUTS));
             map.put( symbol, setClause.getValue() );
-        } // for
+        }
         
         return map;
     }

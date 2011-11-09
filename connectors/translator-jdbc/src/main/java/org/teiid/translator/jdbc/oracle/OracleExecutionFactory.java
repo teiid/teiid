@@ -54,6 +54,8 @@ import org.teiid.language.Select;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.visitor.CollectorVisitor;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
@@ -66,6 +68,7 @@ import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.ExtractFunctionModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.JDBCPlugin;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
 import org.teiid.translator.jdbc.TranslatedCommand;
 
@@ -79,6 +82,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	private static final String TIMESTAMP_FORMAT = DATETIME_FORMAT + ".FF";  //$NON-NLS-1$
 
     public final static String HINT_PREFIX = "/*+"; //$NON-NLS-1$
+    public static final String HINT_SUFFIX = "*/";  //$NON-NLS-1$
     public final static String DUAL = "DUAL"; //$NON-NLS-1$
     public final static String ROWNUM = "ROWNUM"; //$NON-NLS-1$
     public final static String SEQUENCE = ":SEQUENCE="; //$NON-NLS-1$
@@ -345,15 +349,42 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public String getSourceComment(ExecutionContext context, Command command) {
     	String comment = super.getSourceComment(context, command);
     	
+    	boolean usingPayloadComment = false;
     	if (context != null) {
 	    	// Check for db hints
 		    Object payload = context.getExecutionPayload();
 		    if (payload instanceof String) {
 		        String payloadString = (String)payload;
 		        if (payloadString.startsWith(HINT_PREFIX)) {
-		            comment += payloadString + " "; //$NON-NLS-1$
+		        	int i = payloadString.indexOf(HINT_SUFFIX);
+		        	if (i > 0 && payloadString.substring(i + 2).trim().length() == 0) {
+			            comment += payloadString + " "; //$NON-NLS-1$
+			            usingPayloadComment = true;
+		        	} else {
+		        		String msg = JDBCPlugin.Util.getString("OraleExecutionFactory.invalid_hint", "Execution Payload", payloadString); //$NON-NLS-1$ //$NON-NLS-2$ 
+		        		context.addWarning(new TranslatorException(msg));
+		        		LogManager.logWarning(LogConstants.CTX_CONNECTOR, msg);
+		        	}
 		        }
 		    }
+    	}
+    	
+    	if (!usingPayloadComment && context != null) {
+    		String hint = null;
+    		hint = context.getSourceHint();
+    		if (hint == null) {
+    			hint = context.getGeneralHint();
+    		}
+    		if (hint != null) {
+    			//append a source hint
+    			if (!hint.contains(HINT_PREFIX)) {
+    				comment += HINT_PREFIX + ' ' + hint + ' ' + HINT_SUFFIX + ' ';
+    			} else {
+    				String msg = JDBCPlugin.Util.getString("OraleExecutionFactory.invalid_hint", "Source Hint", hint); //$NON-NLS-1$ //$NON-NLS-2$
+    				context.addWarning(new TranslatorException(msg));
+	        		LogManager.logWarning(LogConstants.CTX_CONNECTOR, msg);
+    			}
+    		}
     	}
     	
 		if (command instanceof Select) {

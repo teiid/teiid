@@ -56,6 +56,7 @@ import org.jboss.netty.handler.ssl.SslHandler;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReflectionHelper;
+import org.teiid.core.util.SqlUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.jdbc.ResultSetImpl;
 import org.teiid.jdbc.TeiidSQLException;
@@ -155,7 +156,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
     			} else {
     				sendContents();
     				if (sql != null) {
-		    			sendCommandComplete(sql, 0);
+		    			sendCommandComplete(sql, rowsSent);
 		    		}
     				result.getResultsReceiver().receiveResults(rowsSent);
     				processNext = false;
@@ -417,41 +418,27 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	}
 
 	@Override
-	public void sendCommandComplete(String sql, int updateCount) {
+	public void sendCommandComplete(String sql, Integer count) {
 		startMessage('C');
-		// TODO remove remarks at the beginning
 		String tag;
-		if (StringUtil.startsWithIgnoreCase(sql, "INSERT")) {
-			tag = "INSERT 0 " + updateCount;
-		} else if (StringUtil.startsWithIgnoreCase(sql, "DELETE")) {
-			tag = "DELETE " + updateCount;
-		} else if (StringUtil.startsWithIgnoreCase(sql, "UPDATE")) {
-			tag = "UPDATE " + updateCount;
-		} else if (StringUtil.startsWithIgnoreCase(sql, "SELECT") || StringUtil.startsWithIgnoreCase(sql, "CALL")) {
-			tag = "SELECT";
-		} else if (StringUtil.startsWithIgnoreCase(sql, "BEGIN") || StringUtil.startsWithIgnoreCase(sql, "START TRANSACTION")) {
+		if (StringUtil.startsWithIgnoreCase(sql, "BEGIN") || StringUtil.startsWithIgnoreCase(sql, "START TRANSACTION")) {
 			tag = "BEGIN";
-		} else if (StringUtil.startsWithIgnoreCase(sql, "COMMIT")) {
-			tag = "COMMIT";
-		} else if (StringUtil.startsWithIgnoreCase(sql, "ROLLBACK")) {
-			tag = "ROLLBACK";
+		} else if (sql.indexOf(' ') == -1) {
+			//should already be a completion tag
+			tag = sql.toUpperCase();
+			if (count != null) {
+				tag += " " + count;
+			}
 		} else if (StringUtil.startsWithIgnoreCase(sql, "SET ")) {
 			tag = "SET";
-		}  else if (StringUtil.startsWithIgnoreCase(sql, "DECLARE CURSOR")) {
-			tag = "DECLARE CURSOR";
-		} else if (StringUtil.startsWithIgnoreCase(sql, "CLOSE CURSOR")) {
-			tag = "CLOSE CURSOR";
-		} else if (StringUtil.startsWithIgnoreCase(sql, "FETCH")) {
-			tag = "FETCH "+ updateCount;
-		} else if (StringUtil.startsWithIgnoreCase(sql, "MOVE")) {
-			tag = "MOVE "+ updateCount;
-		} else if (StringUtil.startsWithIgnoreCase(sql, "RELEASE")) {
-			tag = "RELEASE "+ updateCount;
-		} else if (StringUtil.startsWithIgnoreCase(sql, "SAVEPOINT")) {
-			tag = "SAVEPOINT "+ updateCount;
-		}
-		else {
-			tag = sql;
+		} else {
+			tag = SqlUtil.getKeyword(sql).toUpperCase();
+			if (tag.equals("EXEC") || tag.equals("CALL")) {
+				tag = "SELECT"; 
+			}
+			if (count != null) {
+				tag += " " + count;
+			}
 		}
 		writeString(tag);
 		sendMessage();

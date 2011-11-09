@@ -100,6 +100,18 @@ public interface ExecutionContext {
      * @since 4.2
      */
     Serializable getExecutionPayload();
+    
+    /**
+     * Get the general hint passed to all executions under the user query.
+     * @return the general hint or null if none was specified
+     */
+    String getGeneralHint();
+   
+    /**
+     * Get the hint designated for this source.
+     * @return the source hint or null if none was specified
+     */
+    String getSourceHint();
         
     /**
      * Get the identifier for the connection through which 

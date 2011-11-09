@@ -80,7 +80,7 @@ public interface ODBCClientRemote {
 	
 	void sendMoveCursor(ResultSetImpl rs, int rowCount, ResultsFuture<Integer> results);
 	
-	void sendCommandComplete(String sql, int updateCount);	
+	void sendCommandComplete(String sql, Integer count);	
 
 	//	CommandComplete (B)
 	void sendUpdateCount(String sql, int updateCount);

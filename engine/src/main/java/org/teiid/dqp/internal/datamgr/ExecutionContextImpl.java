@@ -69,6 +69,8 @@ public class ExecutionContextImpl implements ExecutionContext {
 	private Session session;
 	private RequestWorkItem worktItem;
 	private boolean dataAvailable;
+	private String generalHint;
+	private String hint;
     
     public ExecutionContextImpl(String vdbName, int vdbVersion,  Serializable executionPayload, 
                                 String originalConnectionID, String connectorName, String requestId, String partId, String execCount) {
@@ -236,5 +238,23 @@ public class ExecutionContextImpl implements ExecutionContext {
 		boolean result = dataAvailable;
 		dataAvailable = false;
 		return result;
+	}
+	
+	@Override
+	public String getGeneralHint() {
+		return generalHint;
+	}
+	
+	@Override
+	public String getSourceHint() {
+		return hint;
+	}
+	
+	public void setGeneralHint(String generalHint) {
+		this.generalHint = generalHint;
+	}
+	
+	public void setHint(String hint) {
+		this.hint = hint;
 	}
 }

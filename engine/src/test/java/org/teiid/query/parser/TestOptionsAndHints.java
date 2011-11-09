@@ -425,6 +425,7 @@ public class TestOptionsAndHints {
         option.setNoCache(true);
         Criteria crit = new CompareCriteria(new ElementSymbol("b"), CompareCriteria.EQ, new Reference(1)); //$NON-NLS-1$
         update.setCriteria(crit);
+        update.setOption(option);
         TestParser.helpTest("UPDATE m.g SET a = ? WHERE b = ? OPTION NOCACHE",  //$NON-NLS-1$
                  "UPDATE m.g SET a = ? WHERE b = ? OPTION NOCACHE",  //$NON-NLS-1$
                  update);                     
@@ -1173,4 +1174,17 @@ public class TestOptionsAndHints {
         assertEquals("SELECT a FROM x /*+ NON_STRICT */ LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
     }
     
+    @Test public void testNestedComments() throws QueryParserException {
+        String sql = "/*+ /*nested*/ */ SELECT a FROM x limit 1"; //$NON-NLS-1$
+        assertEquals("SELECT a FROM x LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+    }
+    
+    @Test public void testSourceHint() throws QueryParserException {
+        String sql = "SELECT /*+ sh:'foo' oracle:'leading' */ a FROM x limit 1"; //$NON-NLS-1$
+        assertEquals("SELECT /*+sh:'foo' oracle:'leading' */ a FROM x LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+        
+        sql = "(SELECT /*+ sh:'foo' oracle:'leading' */ a FROM x limit 1) union all select 1"; //$NON-NLS-1$
+        assertEquals("(SELECT /*+sh:'foo' oracle:'leading' */ a FROM x LIMIT 1) UNION ALL SELECT 1", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString()); 
+    }
+
 }

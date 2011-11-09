@@ -754,13 +754,6 @@ public class QueryRewriter {
 		return true;
 	}
 
-	/**
-	 * Converts a group by with expressions into a group by with only element symbols and an inline view
-	 * @param query
-	 * @return
-	 * @throws TeiidProcessingException 
-	 * @throws TeiidComponentException 
-	 */
 	private Query rewriteGroupBy(Query query) throws TeiidComponentException, TeiidProcessingException {
 		if (query.getGroupBy() == null) {
 			rewriteAggs = false;
@@ -880,6 +873,8 @@ public class QueryRewriter {
         try {
             List<ElementSymbol> allIntoElements = Util.deepClone(ResolverUtil.resolveElementsInGroup(into.getGroup(), metadata), ElementSymbol.class);
             Insert insert = new Insert(into.getGroup(), allIntoElements, Collections.emptyList());
+            insert.setSourceHint(query.getSourceHint());
+            query.setSourceHint(null);
             query.setInto(null);
             insert.setQueryExpression(query);
             return rewriteInsert(correctDatatypes(insert));

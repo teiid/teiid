@@ -98,6 +98,8 @@ public class ConnectorWorkItem implements ConnectorWork {
                 Integer.toString(requestID.getNodeID()),
                 Integer.toString(requestID.getExecutionId())
                 );
+        this.securityContext.setGeneralHint(message.getGeneralHint());
+        this.securityContext.setHint(message.getHint());
         this.securityContext.setUser(requestMsg.getWorkContext().getSubject());
         this.securityContext.setBatchSize(this.requestMsg.getFetchSize());
         this.securityContext.setSession(requestMsg.getWorkContext().getSession());

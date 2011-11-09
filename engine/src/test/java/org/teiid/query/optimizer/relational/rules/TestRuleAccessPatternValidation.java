@@ -85,7 +85,7 @@ public class TestRuleAccessPatternValidation {
 		//Generate canonical plan
     	RelationalPlanner p = new RelationalPlanner();
     	p.initialize(query, null, METADATA, FINDER, null, new CommandContext());
-    	PlanNode planNode = p.generatePlan(query);
+    	PlanNode planNode = p.generatePlan(query, false);
     	RelationalPlanner planner = new RelationalPlanner();
 		final RuleStack rules = planner.buildRules();
 

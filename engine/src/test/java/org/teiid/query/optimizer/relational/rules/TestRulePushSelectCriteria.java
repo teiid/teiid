@@ -73,8 +73,8 @@ public class TestRulePushSelectCriteria {
     	RelationalPlanner p = new RelationalPlanner();
     	CommandContext cc = new CommandContext();
     	p.initialize(command, null, metadata, null, null, cc);
-    	PlanNode root = p.generatePlan(command);
-    	PlanNode child = p.generatePlan(subCommand);
+    	PlanNode root = p.generatePlan(command, false);
+    	PlanNode child = p.generatePlan(subCommand, false);
     	PlanNode sourceNode = NodeEditor.findNodePreOrder(root, NodeConstants.Types.SOURCE);
     	sourceNode.addFirstChild(child);
         sourceNode.setProperty(NodeConstants.Info.SYMBOL_MAP, SymbolMap.createSymbolMap(sourceNode.getGroups().iterator().next(), (List<SingleElementSymbol>)child.getFirstChild().getProperty(Info.PROJECT_COLS), metadata));

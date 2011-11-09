@@ -268,7 +268,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
                         try {
 		                	List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
                             cursorMap.put(cursorName, new Cursor(cursorName, sql, stmt, null, stmt.getResultSet(), cols));
-        					client.sendCommandComplete("DECLARE CURSOR", 0); //$NON-NLS-1$		                            
+        					client.sendCommandComplete("DECLARE CURSOR", null); //$NON-NLS-1$		                            
     						completion.getResultsReceiver().receiveResults(0);
     					} catch (Throwable e) {
     						completion.getResultsReceiver().exceptionOccurred(e);
@@ -336,7 +336,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		if (cursor != null) {
 			cursor.rs.close();
 			cursor.stmt.close();
-			this.client.sendCommandComplete("CLOSE CURSOR", 0); //$NON-NLS-1$
+			this.client.sendCommandComplete("CLOSE CURSOR", null); //$NON-NLS-1$
 		}
 	}	
 	
@@ -941,7 +941,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		    				String plan_name = m.group(1);
 		    				plan_name = SQLParserUtil.normalizeId(plan_name);
 		    				closePreparedStatement(plan_name);
-		    				client.sendCommandComplete("DEALLOCATE", 0); //$NON-NLS-1$
+		    				client.sendCommandComplete("DEALLOCATE", null); //$NON-NLS-1$
 		    				results.getResultsReceiver().receiveResults(1);
 		    			}
 		    			else {

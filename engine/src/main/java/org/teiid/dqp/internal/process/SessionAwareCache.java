@@ -227,7 +227,7 @@ public class SessionAwareCache<T> {
 		private static final long serialVersionUID = 8261905111156764744L;
 		private String sql;
 		private VDBKey vdbInfo;
-		private ParseInfo pi;
+		private boolean ansiIdentifiers;
 		private String sessionId;
 		private String originalSessionId;
 		private List<Serializable> parameters;
@@ -242,7 +242,7 @@ public class SessionAwareCache<T> {
 			Assertion.isNotNull(sql);
 			this.sql = sql;
 			this.vdbInfo = new VDBKey(vdbName, vdbVersion);
-			this.pi = pi;
+			this.ansiIdentifiers = pi.ansiQuotedIdentifiers;
 			this.originalSessionId = sessionId;
 			this.originalUserName = userName;
 		}
@@ -303,14 +303,14 @@ public class SessionAwareCache<T> {
 	            return false;
 	        } 
         	CacheID that = (CacheID)obj;
-            return EquivalenceUtil.areEqual(this.pi, that.pi) && this.vdbInfo.equals(that.vdbInfo) && this.sql.equals(that.sql) 
+            return ansiIdentifiers == that.ansiIdentifiers && this.vdbInfo.equals(that.vdbInfo) && this.sql.equals(that.sql) 
             	&& EquivalenceUtil.areEqual(this.userName, that.userName)            	
             	&& EquivalenceUtil.areEqual(this.sessionId, that.sessionId)
             	&& EquivalenceUtil.areEqual(this.parameters, that.parameters);
 		}
 		
 	    public int hashCode() {
-	        return HashCodeUtil.hashCode(0, vdbInfo, sql, pi, this.userName, sessionId, parameters);
+	        return HashCodeUtil.hashCode(0, vdbInfo, sql, this.userName, sessionId, parameters);
 	    }
 	    
 	    @Override

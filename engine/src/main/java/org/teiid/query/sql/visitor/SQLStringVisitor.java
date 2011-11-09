@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
@@ -78,6 +79,7 @@ import org.teiid.query.sql.lang.SetClause;
 import org.teiid.query.sql.lang.SetClauseList;
 import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.lang.SetQuery;
+import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryFromClause;
@@ -347,7 +349,7 @@ public class SQLStringVisitor extends LanguageVisitor {
             beginClause(2);
 
             // Columns clause
-            List vars = obj.getVariables();
+            List<ElementSymbol> vars = obj.getVariables();
             if (vars != null) {
                 append("("); //$NON-NLS-1$
                 registerNodes(vars, 0);
@@ -632,10 +634,10 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(MAKENOTDEP);
             append(" "); //$NON-NLS-1$
 
-            Iterator iter = groups.iterator();
+            Iterator<String> iter = groups.iterator();
 
             while (iter.hasNext()) {
-                outputDisplayName((String)iter.next());
+                outputDisplayName(iter.next());
 
                 if (iter.hasNext()) {
                     append(", ");//$NON-NLS-1$
@@ -649,10 +651,10 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(NOCACHE);
             append(" "); //$NON-NLS-1$
 
-            Iterator iter = groups.iterator();
+            Iterator<String> iter = groups.iterator();
 
             while (iter.hasNext()) {
-                outputDisplayName((String)iter.next());
+                outputDisplayName(iter.next());
 
                 if (iter.hasNext()) {
                     append(", ");//$NON-NLS-1$
@@ -777,7 +779,9 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit( Query obj ) {
     	addCacheHint(obj.getCacheHint());
     	addWithClause(obj);
-        visitNode(obj.getSelect());
+    	if (obj.getSelect() != null) {
+    		visitDirect(obj.getSelect(), obj);
+    	}
 
         if (obj.getInto() != null) {
             beginClause(1);
@@ -864,22 +868,54 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit( Select obj ) {
+        visitDirect(obj, null);
+    }
+
+	private void visitDirect(Select obj, Query query) {
         append(SELECT);
-        if (obj.isDistinct()) {
+
+        if (query != null) {
+        	SourceHint sh = query.getSourceHint();
+        	if (sh != null) {
+	        	append(SPACE);
+	        	append(BEGIN_HINT);
+	        	append("sh"); //$NON-NLS-1$
+	        	if (sh.getGeneralHint() != null) {
+	        		appendSourceHintValue(sh.getGeneralHint());
+	        	}
+	        	if (sh.getSourceHints() != null) {
+	        		for (Map.Entry<String, String> entry : sh.getSourceHints().entrySet()) {
+	        			append(entry.getKey());
+	        			appendSourceHintValue(entry.getValue());
+	        		}
+	        	}
+	        	append(END_HINT);
+        	}
+        }
+        
+		if (obj.isDistinct()) {
             append(SPACE);
             append(DISTINCT);
         }
         beginClause(2);
 
-        Iterator iter = obj.getSymbols().iterator();
+        Iterator<SelectSymbol> iter = obj.getSymbols().iterator();
         while (iter.hasNext()) {
-            SelectSymbol symbol = (SelectSymbol)iter.next();
+            SelectSymbol symbol = iter.next();
             visitNode(symbol);
             if (iter.hasNext()) {
                 append(", "); //$NON-NLS-1$
             }
         }
-    }
+	}
+
+	private void appendSourceHintValue(String sh) {
+		append(Tokens.COLON);
+		append('\'');
+		append(escapeStringValue(sh, "'")); //$NON-NLS-1$
+		append('\'');
+		append(SPACE);
+	}
 
     public void visit( SetCriteria obj ) {
         // variable
@@ -950,8 +986,8 @@ public class SQLStringVisitor extends LanguageVisitor {
     protected void appendSetQuery( SetQuery parent,
                                    QueryCommand obj,
                                    boolean right ) {
-        if (right && ((obj instanceof SetQuery
-            && ((parent.isAll() && !((SetQuery)obj).isAll()) || parent.getOperation() != ((SetQuery)obj).getOperation())) || obj.getLimit() != null || obj.getOrderBy() != null)) {
+        if (obj.getLimit() != null || obj.getOrderBy() != null || (right && ((obj instanceof SetQuery
+            && ((parent.isAll() && !((SetQuery)obj).isAll()) || parent.getOperation() != ((SetQuery)obj).getOperation()))))) {
             append(Tokens.LPAREN);
             visitNode(obj);
             append(Tokens.RPAREN);
@@ -1415,6 +1451,9 @@ public class SQLStringVisitor extends LanguageVisitor {
     	}
 	}
 
+    /**
+	 * @param level  
+	 */
     protected void addTabs( int level ) {
     }
 

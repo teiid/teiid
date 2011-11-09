@@ -38,6 +38,11 @@ public class SQLParser extends SQLParserUtil {
 
 PARSER_END(SQLParser)
 
+TOKEN_MGR_DECLS : 
+{
+    int commentNestingDepth; 
+} 
+
 SKIP :
 {
 	" " | "\t" | "\n" | "\r"
@@ -45,14 +50,23 @@ SKIP :
 
 MORE :
 {
-  "/*" : IN_MULTI_LINE_COMMENT
+  "/*" { commentNestingDepth = 1 ; } : IN_MULTI_LINE_COMMENT
 }
 
 <IN_MULTI_LINE_COMMENT>
-SPECIAL_TOKEN :
-{
-  <MULTI_LINE_COMMENT: "*/" > : DEFAULT
-}
+MORE : 
+{  
+  "/*" { commentNestingDepth += 1 ; } 
+} 
+
+<IN_MULTI_LINE_COMMENT>
+SPECIAL_TOKEN : 
+{  
+  "*/" { 
+    commentNestingDepth -= 1;
+    SwitchTo( commentNestingDepth==0 ? DEFAULT : IN_MULTI_LINE_COMMENT ) ; 
+  }
+} 
 
 <IN_MULTI_LINE_COMMENT>
 MORE :
@@ -596,8 +610,18 @@ TriggerAction forEachRowTriggerAction(ParseInfo info) :
 Command userCommand(ParseInfo info) :
 {
 	Command command = null;
+	SourceHint sourceHint = null;
 }
 {
+    {int index = 1; 
+     Token t = null;
+     do  
+       t = getToken(index++);
+     while (t != null && t.kind == LPAREN);
+     t = getToken(index);
+     if (t != null) 
+      sourceHint = getSourceHint(t); 
+    }
 	(command = queryExpression(info) |
 	command = storedProcedure(info, new StoredProcedure()) |
 	command = insert(info) |
@@ -609,6 +633,13 @@ Command userCommand(ParseInfo info) :
 	command = createTrigger(info)
 	)
 	{
+	    if (sourceHint != null) {
+	        if (command instanceof SetQuery) {
+	        	((SetQuery)command).getProjectedQuery().setSourceHint(sourceHint);
+	        } else {
+	    		command.setSourceHint(sourceHint);
+	    	}
+	    }
 		return command;
 	}
 }
@@ -1590,7 +1621,6 @@ Update update(ParseInfo info) :
 	String group = null;
 	SetClauseList setClauseList = null;
 	Criteria criteria = null;
-	ElementSymbol elementID = null;
 	Option option = null;
 }
 {
@@ -1650,9 +1680,6 @@ Delete delete(ParseInfo info) :
 	}
 }
 
-/**
- * Currently just a place holder to keep consistency with the spec
- */
 QueryCommand queryExpression(ParseInfo info) :
 {
 	QueryCommand query = null;

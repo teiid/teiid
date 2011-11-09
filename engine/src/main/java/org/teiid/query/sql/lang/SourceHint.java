@@ -20,35 +20,42 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.query.parser;
+package org.teiid.query.sql.lang;
 
-import java.io.Serializable;
 import java.util.Map;
+import java.util.TreeMap;
 
-import org.teiid.core.util.PropertiesUtils;
+import org.teiid.core.util.EquivalenceUtil;
 
-
-public class ParseInfo implements Serializable{
-
-	private static final long serialVersionUID = -7323683731955992888L;
-    private static final boolean ANSI_QUOTED_DEFAULT = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.ansiQuotedIdentifiers", true); //$NON-NLS-1$
-
-	public Map<String, Integer> nameCounts = null;
+public class SourceHint {
 	
-    public int referenceCount = 0;
-
-    // treat a double quoted variable as variable instead of string 
-    public boolean ansiQuotedIdentifiers=ANSI_QUOTED_DEFAULT;
-    
-	public ParseInfo() { }
+	private String generalHint;
+	private Map<String, String> sourceHints;
 	
-	public boolean useAnsiQuotedIdentifiers() {
-	    return ansiQuotedIdentifiers;
+	public String getGeneralHint() {
+		return generalHint;
 	}
 	
-	@Override
-	public int hashCode() {
-		return ansiQuotedIdentifiers?1:0;
+	public void setGeneralHint(String generalHint) {
+		this.generalHint = generalHint;
+	}
+	
+	public void setSourceHint(String translatorName, String hint) {
+		if (this.sourceHints == null) {
+			this.sourceHints = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+		}
+		this.sourceHints.put(translatorName, hint);
+	}
+	
+	public String getSourceHint(String sourceName) {
+		if (this.sourceHints == null) {
+			return null;
+		}
+		return this.sourceHints.get(sourceName);
+	}
+	
+	public Map<String, String> getSourceHints() {
+		return sourceHints;
 	}
 	
 	@Override
@@ -56,10 +63,12 @@ public class ParseInfo implements Serializable{
 		if (obj == this) {
 			return true;
 		}
-		if (!(obj instanceof ParseInfo)) {
+		if (!(obj instanceof SourceHint)) {
 			return false;
 		}
-		ParseInfo other = (ParseInfo)obj;
-		return this.ansiQuotedIdentifiers == other.ansiQuotedIdentifiers;
+		SourceHint other = (SourceHint)obj;
+		return EquivalenceUtil.areEqual(generalHint, other.generalHint) 
+		&& EquivalenceUtil.areEqual(this.sourceHints, other.sourceHints);
 	}
+	
 }

@@ -84,6 +84,7 @@ import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.symbol.Constant;
@@ -192,6 +193,11 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		}
 		
 		AtomicRequestMessage aqr = createRequest(context.getProcessorID(), command, modelName, connectorBindingId, nodeID);
+		SourceHint sh = context.getSourceHint();
+		if (sh != null) {
+			aqr.setGeneralHint(sh.getGeneralHint());
+			aqr.setHint(sh.getSourceHint(aqr.getConnectorName()));
+		}
 		if (limit > 0) {
 			aqr.setFetchSize(Math.min(limit, aqr.getFetchSize()));
 		}

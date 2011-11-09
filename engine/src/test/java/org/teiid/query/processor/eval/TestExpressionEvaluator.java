@@ -42,12 +42,14 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
+import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.resolver.TestFunctionResolving;
 import org.teiid.query.sql.lang.CollectionValueIterator;
 import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Constant;
@@ -294,7 +296,7 @@ public class TestExpressionEvaluator {
     }
 
     @Test public void testScalarSubqueryFails() throws Exception{
-        ScalarSubquery expr = new ScalarSubquery(new Query());
+        ScalarSubquery expr = new ScalarSubquery((QueryCommand) QueryParser.getQueryParser().parseCommand("select x from y"));
         ArrayList values = new ArrayList(2);
         values.add("a"); //$NON-NLS-1$
         values.add("b"); //$NON-NLS-1$
@@ -303,7 +305,7 @@ public class TestExpressionEvaluator {
         	helpTestWithValueIterator(expr, values, null);
             fail("Expected ExpressionEvaluationException but got none"); //$NON-NLS-1$
         } catch (ExpressionEvaluationException e) {
-            assertEquals("Error Code:ERR.015.006.0058 Message:Unable to evaluate (<undefined>): Error Code:ERR.015.006.0058 Message:The command of this scalar subquery returned more than one value: <undefined>", e.getMessage()); //$NON-NLS-1$
+            assertEquals("Error Code:ERR.015.006.0058 Message:Unable to evaluate (SELECT x FROM y): Error Code:ERR.015.006.0058 Message:The command of this scalar subquery returned more than one value: SELECT x FROM y", e.getMessage()); //$NON-NLS-1$
         } 
     }
 

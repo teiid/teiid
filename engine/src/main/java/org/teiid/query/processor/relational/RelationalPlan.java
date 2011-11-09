@@ -44,6 +44,7 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Create;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.tempdata.TempTableStore.TransactionMode;
@@ -62,6 +63,7 @@ public class RelationalPlan extends ProcessorPlan {
 	private QueryProcessor withProcessor;
 	private TempTableStore tempTableStore;
 	private boolean multisourceUpdate;
+	private SourceHint sourceHint;
 
     /**
      * Constructor for RelationalPlan.
@@ -82,10 +84,21 @@ public class RelationalPlan extends ProcessorPlan {
 		this.with = with;
 	}
     
+    public void setSourceHint(SourceHint sourceHint) {
+		this.sourceHint = sourceHint;
+	}
+    
+    public SourceHint getSourceHint() {
+		return sourceHint;
+	}
+    
     /**
      * @see ProcessorPlan#connectDataManager(ProcessorDataManager)
      */
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
+    	if (sourceHint != null && context.getSourceHint() == null) {
+    		context.setSourceHint(sourceHint);
+    	}
     	if (this.with != null) {
     		context = context.clone();
     		tempTableStore = new TempTableStore(context.getConnectionID(), TransactionMode.NONE);
@@ -207,6 +220,7 @@ public class RelationalPlan extends ProcessorPlan {
     
 	public RelationalPlan clone(){
 		RelationalPlan plan = new RelationalPlan((RelationalNode)root.clone());
+		plan.sourceHint = this.sourceHint;
 		plan.setOutputElements(outputCols);
 		if (with != null) {
 			List<WithQueryCommand> newWith = LanguageObject.Util.deepClone(this.with, WithQueryCommand.class);

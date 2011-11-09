@@ -22,17 +22,16 @@
 
 package org.teiid.query.optimizer;
 
+import org.junit.Test;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.unittest.RealMetadataFactory;
 
-import junit.framework.TestCase;
 
-
-public class TestRuleRemoveSorts extends TestCase {
+public class TestRuleRemoveSorts {
     
     /** Tests an order by in a query transformation */
-    public void testRemovedOrderByFromQueryTransform() {
+    @Test public void testRemovedOrderByFromQueryTransform() {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT e1, e2 FROM vm1.g14", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT pm3.g1.e1, pm3.g1.e2 FROM pm3.g1"}); //$NON-NLS-1$
 
@@ -43,7 +42,7 @@ public class TestRuleRemoveSorts extends TestCase {
      * Tests an order by in a query transformation, where the
      * physical model does not support pushing order bys
      */
-    public void testRemovedOrderByFromQueryTransform2() {
+    @Test public void testRemovedOrderByFromQueryTransform2() {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT e, e2 FROM vm1.g8", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT e1, e2 FROM pm1.g1"}); //$NON-NLS-1$
 
@@ -69,7 +68,7 @@ public class TestRuleRemoveSorts extends TestCase {
      * Tests an order by in a query transformation, where the
      * query transformation contains a function 
      */
-    public void testRemovedOrderByFromQueryTransform3() {
+    @Test public void testRemovedOrderByFromQueryTransform3() {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT e, e2 FROM vm1.g16", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT e1, e2 FROM pm3.g1"}); //$NON-NLS-1$
 
@@ -92,7 +91,7 @@ public class TestRuleRemoveSorts extends TestCase {
     }
     
     /** Tests an order by in a query transformation */
-    public void testRemovedOrderByFromQueryTransform4() {
+    @Test public void testRemovedOrderByFromQueryTransform4() {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT e1, e2 FROM vm1.g13", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT DISTINCT pm3.g1.e1, pm3.g1.e2, pm3.g1.e3, pm3.g1.e4 FROM pm3.g1"}); //$NON-NLS-1$
 
@@ -115,7 +114,7 @@ public class TestRuleRemoveSorts extends TestCase {
     } 
     
     /** Order by is not removed */
-    public void testOrderByWithLimit() throws Exception {
+    @Test public void testOrderByWithLimit() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select * from (SELECT e1, e2 FROM pm1.g1 order by e1 limit 10) x", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
