@@ -94,6 +94,8 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.XMLQuery;
+import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
@@ -2985,6 +2987,16 @@ public class TestResolver {
     
     @Test public void testTrim1() {
     	helpResolve("select trim('x' from e1) from pm1.g1");
+    }
+    
+    @Test public void testXmlTableWithParam() {
+    	helpResolve("select * from xmltable('/a' passing ?) as x");
+    }
+    
+    @Test public void testXmlQueryWithParam() {
+    	Query q = (Query)helpResolve("select xmlquery('/a' passing ?)");
+    	XMLQuery ex = (XMLQuery) SymbolMap.getExpression((Expression) q.getSelect().getSymbols().get(0));
+    	assertEquals(DataTypeManager.DefaultDataClasses.XML, ex.getPassing().get(0).getExpression().getType());
     }
 
 }

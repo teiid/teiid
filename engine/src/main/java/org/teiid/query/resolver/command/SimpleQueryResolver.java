@@ -343,6 +343,7 @@ public class SimpleQueryResolver implements CommandResolver {
         	visitNodes(obj.getPassing());
 			postTableFunctionReference(obj, saved);
 			try {
+	    		ResolverUtil.setDesiredType(obj.getPassing(), obj);
 				obj.compileXqueryExpression();
 				for (XMLTable.XMLColumn column : obj.getColumns()) {
 					if (column.getDefaultExpression() == null) {
