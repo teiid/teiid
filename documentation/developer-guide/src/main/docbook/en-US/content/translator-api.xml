@@ -227,6 +227,22 @@ public void setFoo(String value)
 				interface that defines how executions are
 				cancelled and closed.  ProcedureExecution also extends ResultSetExecution, since procedures may also return resultsets.</para>
 		</section>
+		
+		<section>
+			<title>ExecutionContext</title>
+			<para>The <code>org.teiid.translator.ExecutionContext</code> provides a considerable amount of information related to the current execution.  
+			An <code>ExecutionContext</code> instance is made available to each <code>Execution</code>.  Specific usage is highlighted in this guide where applicable, but you may use any informational getter method as desired.
+			Example usage would include calling <code>ExecutionContext.getRequestIdentifier()</code>, <code>ExecutionContext.getSession()</code>, etc. for logging purposes.</para>
+			
+			<section>
+				<title>Source Hints</title>
+				<para>The Teiid source meta-hint is used to provide hints directly to source executions via user or transformation queries.  See the reference for more on source hints.  If specified and applicable, the general and source specific
+				hint will be supplied via the ExecutionContext methods <code>getGeneralHint</code> and <code>getSourceHint</code>.  See the source for the <code>OracleExecutionFactory</code> for an example of how this source hint information
+				can be utilized.</para>
+			</section>
+			
+		</section>
+		
 		<section>
 			<title>ResultSetExecution</title>
 			<para>
@@ -234,14 +250,14 @@ public void setFoo(String value)
 				While the command is being executed, the translator provides results via the
 				ResultSetExecution's "next" method. The "next" method should return null to indicate the end
 				of results. Note: the expected batch size can be obtained from the
-				ExecutionContext and used as a hint in fetching results from the EIS.
+				<code>ExecutionContext.getBatchSize()</code> method and used as a hint in fetching results from the EIS.
 			</para>
 		</section>
 		<section>
 			<title>Update Execution</title>
 			<para>Each execution returns the update count(s) expected by the update command. 
 		          If possible BatchedUpdates should be executed atomically.  
-		          The ExecutionContext can be used to determine if the execution is already under a transaction.</para>
+		          The <code>ExecutionContext.isTransactional()</code> method can be used to determine if the execution is already under a transaction.</para>
 		</section>
 		<section>
 			<title>Procedure Execution</title>
@@ -271,7 +287,7 @@ public void setFoo(String value)
                 The
                 <code>DataNotAvailableException.NO_POLLING</code>
                 exception (or any DataNotAvailableException with a negative delay) can be thrown to indicate that
-                the execution will call <code>ExecutionContext.dataAvailable</code> to indicate processing should resume.
+                the execution will call <code>ExecutionContext.dataAvailable()</code> to indicate processing should resume.
            </para>
        </note>
     </para>
@@ -320,6 +336,7 @@ public void setFoo(String value)
 				termination of queries being processed and may allow the underlying data source to terminate its operations
 				faster as well.</para>
 		</section>
+				
 	</section>
 	
 	<section id="command_language">
@@ -1497,8 +1514,8 @@ int count = visitor.getCount();]]></programlisting>
 			connection is either closed/released as soon as all rows for that
 			execution have been retrieved. However, LOB	objects may need to be
 			read after their initial retrieval of results.  When LOBs are detected
-			the default closing behavior	is prevented by setting a flag on the
-			ExecutionContext. See ExecutionContext.keepAlive() method. </para>
+			the default closing behavior is prevented by setting a flag via the
+			<code>ExecutionContext.keepAlive</code> method. </para>
 
 		<para>When the "keepAlive" alive flag is set, then the execution object is only closed when user's Statement is closed.</para>
 

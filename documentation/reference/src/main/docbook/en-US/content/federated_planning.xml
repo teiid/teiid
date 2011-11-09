@@ -712,8 +712,19 @@ System.out.println(queryPlan);</programlisting>
             </tbody>
           </tgroup>
         </informaltable>
-        <para />
       </section>
+    </section>
+    <section>
+    	<title>Source Hints</title>
+    	<para>Teiid user and transformation queries can contain a meta source hint that can provide additional information to source queries.  
+    	The source hint has the form /*+ sh(:'arg') source-name:'arg1' ... */ and is expected to appear after the query keyword, e.g. "SELECT /*+ sh:'general hint' my-oracle:'oracle hint' */.  
+    	The sh arg is optional and is passed to all source queries via the <code>ExecutionContext.getGeneralHint</code> method.  See the Developer's Guide for more onThe additional args should have source-name that matches 
+    	the source name assigned to the translator in the VDB.  If the source-name matches the hint value will be supplied via the <code>ExecutionContext.getSourceHint</code> method.  
+    	See the Developer's Guide for more on using an ExecutionContext.
+    	Each of the arg values has the form of a string literal - it must be surrounded in single quotes and a single quote can be escaped with another signle quote.
+    	Only the Oracle translator does anything with source hints by default.  The Oracle translator will use either the source hint or the general hint (in that order) if available to form an Oracle hint enclosed in
+    	/*+ ... */.  Source hints in views will not be passed to the source if the view is used as a pushdown subquery, is joined, or is in a set operation.
+    	</para>
     </section>
   </section>
   <section id="query_planner">
