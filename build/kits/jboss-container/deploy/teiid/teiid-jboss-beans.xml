@@ -16,7 +16,7 @@
         <!-- authentication type are CLEARTEXT, GSS (default:CLEARTEXT) -->
         <property name="authenticationType">CLEARTEXT</property>
         <!-- When authenticationType=GSS, then it requires a kerberos security domain to authorize first before teiid-security takes over -->
-        <property name="krb5SecurityDomain">teiid-krb5</property>
+        <property name="gssSecurityDomain">teiid-krb5</property>
     </bean>
     
     <bean name="BufferService" class="org.teiid.services.BufferServiceImpl">

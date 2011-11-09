@@ -183,7 +183,7 @@ User and role names are entirely up to the needs of the given deployment.  For e
                 <programlisting><![CDATA[<!-- Sets the authentication Type -->         
 <property name="authenticationType">GSS</property>
 <!-- Security domain used for kerberos authentication -->
-<property name="krb5SecurityDomain">teiid-krb5</property>]]></programlisting>    
+<property name="gssSecurityDomain">teiid-krb5</property>]]></programlisting>    
                 
                 Now we need to define a security domain context for kerberos with the name mentioned in above.
                 Since kerberos authorization cannot define authorization roles, we'll define them using another login context. 

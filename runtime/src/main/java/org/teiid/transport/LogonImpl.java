@@ -66,8 +66,8 @@ public class LogonImpl implements ILogon {
 	}
 
 	public LogonResult logon(Properties connProps) throws LogonException, TeiidComponentException, CommunicationException {
-		if (this.service.getKrb5SecurityDomain() != null && connProps.get(ILogon.KRB5TOKEN) != null) {
-			Subject user = this.service.getSubjectInContext(this.service.getKrb5SecurityDomain());
+		if (this.service.getGssSecurityDomain() != null && connProps.get(ILogon.KRB5TOKEN) != null) {
+			Subject user = this.service.getSubjectInContext(this.service.getGssSecurityDomain());
 			if (user == null) {
 				throw new LogonException(RuntimePlugin.Util.getString("krb5_user_not_found")); //$NON-NLS-1$
 			}
@@ -161,7 +161,7 @@ public class LogonImpl implements ILogon {
         String password = connProps.getProperty(TeiidURL.CONNECTION.PASSWORD);		
 		
 		try {
-			String securityDomain = service.getKrb5SecurityDomain();
+			String securityDomain = service.getGssSecurityDomain();
 			if (securityDomain == null) {
 				throw new LogonException(RuntimePlugin.Util.getString("no_security_domains")); //$NON-NLS-1$
 			}

@@ -146,7 +146,7 @@ public interface SessionService {
 
 	AuthenticationType getAuthType();
 	
-	String getKrb5SecurityDomain();
+	String getGssSecurityDomain();
 	
 	void associateSubjectInContext(String securityDomain, Subject subject); 
 	

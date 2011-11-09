@@ -82,7 +82,7 @@ public class SessionServiceImpl implements SessionService {
     private long sessionMaxLimit = DEFAULT_MAX_SESSIONS;
 	private long sessionExpirationTimeLimit = DEFAULT_SESSION_EXPIRATION;
 	private String authenticationType = AuthenticationType.CLEARTEXT.name();
-	private String krb5SecurityDomain;
+	private String gssSecurityDomain;
 	
 	/*
 	 * Injected state
@@ -438,12 +438,12 @@ public class SessionServiceImpl implements SessionService {
 		return this.securityHelper.getSubjectInContext(securityDomain);
 	}
 	
-	public void setKrb5SecurityDomain(String domain) {
-		this.krb5SecurityDomain = domain;
+	public void setGssSecurityDomain(String domain) {
+		this.gssSecurityDomain = domain;
 	}
 	
 	@Override
-	public String getKrb5SecurityDomain(){
-		return this.krb5SecurityDomain;
+	public String getGssSecurityDomain(){
+		return this.gssSecurityDomain;
 	}	
 }
