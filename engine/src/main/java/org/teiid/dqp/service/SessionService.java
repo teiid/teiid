@@ -149,4 +149,6 @@ public interface SessionService {
 	String getKrb5SecurityDomain();
 	
 	void associateSubjectInContext(String securityDomain, Subject subject); 
+	
+	Subject getSubjectInContext(String securityDomain);
 }

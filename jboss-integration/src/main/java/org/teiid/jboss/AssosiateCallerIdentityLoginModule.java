@@ -33,6 +33,8 @@ import javax.security.auth.login.LoginException;
 import org.jboss.security.SecurityContext;
 import org.jboss.security.SubjectInfo;
 import org.jboss.security.auth.spi.AbstractServerLoginModule;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 
 /**
  * This login modules simply takes the subject in the current context and adds
@@ -69,6 +71,8 @@ public class AssosiateCallerIdentityLoginModule extends AbstractServerLoginModul
 			return true;
 		}
 
+		LogManager.logDetail(LogConstants.CTX_SECURITY, "Adding Passthrough principal="+principal.getName()); //$NON-NLS-1$
+		
 		// Put the principal name into the sharedState map
 		sharedState.put("javax.security.auth.login.name", principal.getName()); //$NON-NLS-1$
 		sharedState.put("javax.security.auth.login.password", ""); //$NON-NLS-1$ //$NON-NLS-2$

@@ -176,7 +176,7 @@ public class SocketServerConnection implements ServerConnection {
 		if (AuthenticationType.CLEARTEXT.equals(authType)) {
 			newResult = newLogon.logon(connProps);
 		}
-		else if (AuthenticationType.KRB5.equals(authType)) {
+		else if (AuthenticationType.GSS.equals(authType)) {
 			newResult = MakeGSS.authenticate(newLogon, connProps);
 		}
 		

@@ -181,7 +181,7 @@ User and role names are entirely up to the needs of the given deployment.  For e
                 <title>Remote Connections</title>
                 <para>On the server, edit the &jboss-beans; under the "SessionService" bean definition, as follows:
                 <programlisting><![CDATA[<!-- Sets the authentication Type -->         
-<property name="authenticationType">KRB5</property>
+<property name="authenticationType">GSS</property>
 <!-- Security domain used for kerberos authentication -->
 <property name="krb5SecurityDomain">teiid-krb5</property>]]></programlisting>    
                 

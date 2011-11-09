@@ -433,6 +433,11 @@ public class SessionServiceImpl implements SessionService {
     	this.securityHelper.associateSecurityContext(securityDomain, this.securityHelper.createSecurityContext(securityDomain, principal, null, subject));		
 	}
 	
+	@Override
+	public Subject getSubjectInContext(String securityDomain) {
+		return this.securityHelper.getSubjectInContext(securityDomain);
+	}
+	
 	public void setKrb5SecurityDomain(String domain) {
 		this.krb5SecurityDomain = domain;
 	}

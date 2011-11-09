@@ -189,7 +189,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		if (this.authType.equals(AuthenticationType.CLEARTEXT)) {
 			this.client.useClearTextAuthentication();
 		}
-		else if (this.authType.equals(AuthenticationType.KRB5)) {
+		else if (this.authType.equals(AuthenticationType.GSS)) {
 			this.client.useAuthenticationGSS();
 		}
 	}
@@ -205,17 +205,21 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			if (authType.equals(AuthenticationType.CLEARTEXT)) {
 				password = data.readString();
 			}
-			else if (authType.equals(AuthenticationType.KRB5)) {
+			else if (authType.equals(AuthenticationType.GSS)) {
 				byte[] serviceToken = data.readServiceToken();
             	LogonResult result = this.logon.neogitiateGssLogin(this.props, serviceToken, false);
-            	if (!Boolean.TRUE.equals(result.getProperty(ILogon.KRB5_ESTABLISHED))) {
-	            	serviceToken = (byte[])result.getProperty(ILogon.KRB5TOKEN);
-	            	this.client.authenticationGSSContinue(serviceToken);
-	            	return;
+            	serviceToken = (byte[])result.getProperty(ILogon.KRB5TOKEN);
+            	if (Boolean.TRUE.equals(result.getProperty(ILogon.KRB5_ESTABLISHED))) {
+                	passthroughAuthentication = ";PassthroughAuthentication=true;authenticationType=KRB5"; //$NON-NLS-1$
+                	info.put(ILogon.KRB5TOKEN, serviceToken);
             	}
-            	passthroughAuthentication = ";PassthroughAuthentication=true"; //$NON-NLS-1$
+            	else {
+	            	this.client.authenticationGSSContinue(serviceToken);
+	            	return;            		
+            	}
 			}
 			
+			// this is local connection
 			String url = "jdbc:teiid:"+databaseName+";ApplicationName=ODBC"+passthroughAuthentication; //$NON-NLS-1$ //$NON-NLS-2$
 
 			if (password != null) {

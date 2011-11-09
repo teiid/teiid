@@ -13,9 +13,9 @@
         <property name="sessionMaxLimit">5000</property>
         <!-- Max allowed time before the session is terminated by the system, 0 indicates unlimited (default 0) -->
         <property name="sessionExpirationTimeLimit">0</property>
-        <!-- authentication type are CLEARTEXT, KRB5 (default:CLEARTEXT) -->
+        <!-- authentication type are CLEARTEXT, GSS (default:CLEARTEXT) -->
         <property name="authenticationType">CLEARTEXT</property>
-        <!-- When authenticationType=KRB5, then it requires a kerberos security domain to authorize first before teiid-security takes over -->
+        <!-- When authenticationType=GSS, then it requires a kerberos security domain to authorize first before teiid-security takes over -->
         <property name="krb5SecurityDomain">teiid-krb5</property>
     </bean>
     

@@ -90,7 +90,7 @@ public class TeiidURL {
 		public static final String KERBEROS_SERVICE_PRINCIPLE_NAME = "kerberosServicePrincipleName"; //$NON-NLS-1$
         
 		public enum AuthenticationType {
-			CLEARTEXT,KRB5
+			CLEARTEXT,GSS
 		};
 	}
 
