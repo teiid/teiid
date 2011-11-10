@@ -90,5 +90,6 @@
     <module>sandbox</module>
     
     <module>translator-ws</module>
+    <module>translator-netezza</module>    
   </modules>
 </project>
