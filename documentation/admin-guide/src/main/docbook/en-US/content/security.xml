@@ -10,8 +10,9 @@
 	<section>
 		<title>Authentication</title>
 		<para>JDBC clients may use simple passwords to authenticate a user.</para>
+
 		<para>Typically a user name is required, however user names may be considered optional if the
-			identity of the user can be discerned by the password credential alone.  In
+			identity of the user can be discerned by the password credential alone.  In
 			any case it is up to the configured security domain to determine whether a user can be
 			authenticated. If you need authentication, the administrator must configure a LoginModule to be used with Teiid. 
             See below for more information on how configure the Login module in JBoss AS.</para>
@@ -25,25 +26,26 @@
             <section>
                 <title>Pass-through Authentication</title>
                 <para>If your client application (web application or Web service) resides in the same JBoss AS instance as Teiid and 
-                client application uses a security-domain to handle the security concerns, then you can configure Teiid to use the 
-                same security-domain and not force the user to re-authenticate for using Teiid. In this case Teiid looks for a authenticated 
-                subject in the calling thread context and uses for its session and authorization purposes. To configure Teiid for this
-                pass-through authentication mechanism, you need change the Teiid's security-domain name to same name as your 
+                the client application uses a security-domain, then you can configure Teiid to use the 
+                same security-domain and not force the user to re-authenticate. In this case Teiid looks for an authenticated 
+                subject in the calling thread context and uses it for sessioning and authorization. To configure Teiid for
+                pass-through authentication, change the Teiid security-domain name to the same name as your 
                 application's security domain name in the "teiid-jboss-beans.xml" file in the SessionService section. 
                 Please note that for this to work, the security-domain 
-                must be a JAAS based Login Module and your client application MUST obtain Teiid connection 
-                using <emphasis>Local</emphasis> Connection, with <emphasis>PassthroughAuthentication=true</emphasis> flag set.</para>
+                must be a JAAS based Login Module and your client application MUST obtain its Teiid connection 
+                using a <emphasis>local/embedded</emphasis> connection with the<emphasis>PassthroughAuthentication=true</emphasis> connection flag set.</para>
             </section>
 	</section>
 	<section>
 		<title>Authorization</title>
 		<para>Authorization covers both administrative activities and data
-			roles.  A data role is a collection of permissions (also referred to as entitlements) and a
+			roles.  A data role is a collection of permissions (also referred to as entitlements) and a
 			collection of entitled principals or groups. With the deployment of a VDB
 			the deployer can choose which principals and groups have which data roles.</para>
 	</section>
 	<section>
 		<title>Encryption</title>
+
 		<para>At a transport level Teiid provides built-in support for JDBC
 			over SSL or just sensitive message encryption when SSL is not in use.
 		</para>
@@ -57,6 +59,7 @@
 	</section>
 	<section>
 		<title>LoginModules</title>
+
 		<para>
 			LoginModules are an essential part of the JAAS security
 			framework and provide Teiid customizable user authentication and the
@@ -69,7 +72,7 @@
 			that group together relevant LoginModules. Each of these application
 			policy (or domains) names can be used to fully
 			qualify user names to
-			authenticate only against that domain.  The format for a qualified
+			authenticate only against that domain.  The format for a qualified
 			name is username@domainname.
 		</para>
 		<para>If a user name is not fully qualified, then the installed
@@ -77,6 +80,7 @@
 			successfully or unsuccessfully authenticates the
 			user.
 		</para>
+
 		<para>If no domain can authenticate the user, the login
 			attempt will fail.
 			Details of the failed attempt including invalid users, which
@@ -94,18 +98,20 @@
 		<section>
 			<title>Built-in LoginModules</title>
 			<para>JBossAS provides several LoginModules for common authentication needs, such as authenticating from a <xref linkend="text-login"/> or a <xref linkend="ldap-login"/>.</para>
+
 			<para>You can install multiple login modules as part of single security domain configuration and configure them 
                 to part of login process. For example, for "teiid-security" domain, you can configure a file based and also LDAP based login modules, 
-                and have your user authenticated with either or both login modules.  If you want to write your own custom login module, check out the Developer's Guide for instructions.  
+                and have your user authenticated with either or both login modules.  If you want to write your own custom login module, refer to the Developer's Guide for instructions.  
 	        </para>
 
 		<section id="text-login">
 			<title>Text Based LoginModule</title>
-			<para>The UsersRolesLoginModule utilizes simple text files to authenticate users and to define their groups.  
+			<para>The UsersRolesLoginModule utilizes simple text files to authenticate users and to define their groups.  
 The teiid-jboss-beans.xml configuration file contains an example of how to use UsersRolesLoginModule.  
-<note><para>The UsersRolesLoginModule is not recommended for production use and is strongly recommended that you replace this login module.</para></note>
+<note><para>The UsersRolesLoginModule is not recommended for production use and it is strongly recommended that you replace this login module.</para></note>
 			</para>
 			<para>User names and passwords are stored in the &lt;profile&gt;conf/props/teiid-security-users.properties file.
+
 <example><title>Example user.properties file</title>
 <programlisting><![CDATA[# A users.properties file for use with the UsersRolesLoginModule
 # username=password
@@ -144,6 +150,7 @@ User and role names are entirely up to the needs of the given deployment.  For e
 						 	<para>Reuse the jmx-console (or whatever name you choose) security domain for Teiid by changing the teiid configuration &jboss-beans; to point to jmx-console, rather than teiid-security.
 						 	</para>
 						 	</listitem>
+
 						 	<listitem>
 						 	<para>Follow the same steps to configure an LDAP security domain named teiid-security.
 						 	</para>
@@ -154,8 +161,9 @@ User and role names are entirely up to the needs of the given deployment.  For e
 						 	</listitem>
 						</itemizedlist>
 						</para></listitem>
+
 						<listitem><para>Obscure the LDAP Password</para><para>Finally, protect the password following <ulink url="http://docs.redhat.com/docs/en-US/JBoss_Enterprise_Application_Platform/5/html/Security_Guide/Using_LdapExtLoginModule_with_JaasSecurityDomain.html">these instructions.</ulink>
-						Note that the salt must be 8 chars andd see also http://community.jboss.org/message/137756#137756 for more on securing passwords.
+						Note that the salt must be 8 chars and see also http://community.jboss.org/message/137756#137756 for more on securing passwords.
 						</para></listitem>
 					</orderedlist>
 				</para>
@@ -163,6 +171,7 @@ User and role names are entirely up to the needs of the given deployment.  For e
 		</section>
         
         <section>
+
             <title>Kerberos support through GSSAPI</title>
             <para>Teiid supports kerberos authentication using GSSAPI, to be used with single sign-on applications.
             This service ticket negotiation based authentication is supported through remote JDBC and ODBC drivers and LocalConnections. 
@@ -175,6 +184,7 @@ User and role names are entirely up to the needs of the given deployment.  For e
                 authentication of your web-application with kerberos. When the web application authenticates with the provided
                 kerberos token, the same subject authenticated will be used in Teiid. For details about configuration, check the 
                 JBoss Negotiation documentation.</para>
+
             </section>
             
             <section>
@@ -218,6 +228,7 @@ User and role names are entirely up to the needs of the given deployment.  For e
         </login-module>
     </authentication>
 </application-policy>]]></programlisting>
+
                Edit the "run.conf" or "run.conf.bat" file depending upon the environment in the "${jboss-as}/bin" directory 
                and add the following JVM options (changing the realm and KDC settings according to your environment)
                <programlisting><![CDATA[JAVA_OPTS = "$JAVA_OPTS -Djava.security.krb5.realm=EXAMPLE.COM -Djava.security.krb5.kdc=kerberos.example.com -Djavax.security.auth.useSubjectCredsOnly=false"]]></programlisting>                                          
@@ -250,10 +261,11 @@ User and role names are entirely up to the needs of the given deployment.  For e
 	            
 	            Add the following URL connection properties to Teiid JDBC connection string
 	            <programlisting><![CDATA[authenticationType=KRB5;jaasName=Client;kerberosServicePrincipleName=demo@EXAMPLE.COM]]></programlisting>
-	            There is no need to provide the user name and password, when the application is trying to make JDBC connection it
-	            will authenticate locally and use the same user credetinals to neogitiate service token with server and grant the
+	            There is no need to provide the user name and password. When the application makes a JDBC connection, it
+	            will authenticate locally and use the same user credentials to negotiate a service token with server and grant the
 	            connection. See Client Developer's guide for information on connection properties and how to configure data sources.
 	            </para>
+
 	            </section>
 	
 	        </section>        
@@ -265,9 +277,10 @@ User and role names are entirely up to the needs of the given deployment.  For e
         </section>
 		
         <section>
+
             <title>Security at Data Source level</title>
-            <para>In some use cases, user might need to pass-in different credentials to their data sources based on the logged in user
-            than using the shared credentials for all the logged users. To support this feature, JBoss AS and Teiid provide multiple different 
+            <para>In some use cases, the user might need to pass-in different credentials to their data sources based on the logged in user
+            rather than using the shared credentials for all the logged users. To support this feature, JBoss AS and Teiid provide multiple different 
             login modules to be used in conjunction with Teiid's main security domain. See this 
             <ulink url="http://community.jboss.org/docs/DOC-9350">document</ulink> for details on configuration. Note that the below 
             directions need to be used in conjunction with this document.</para>
@@ -302,27 +315,28 @@ User and role names are entirely up to the needs of the given deployment.  For e
             
             <programlisting><![CDATA[<security-domain>teiid-security</security-domain>]]></programlisting>
             
-            <para>In the above configuration example, in the primary login module "UsersRolesLoginModule" is setup to hold the 
+            <para>In the above configuration example, in the primary login module "UsersRolesLoginModule" is set up to hold the 
             passwords in the file, and when user logs in with password, the same password will be also set on the logged in Subject after 
-            authentication. This credentials can be extracted by the data source by asking for Subject's private credentials.</para>
+            authentication. These credentials can be extracted by the data source by asking for Subject's private credentials.</para>
             
-            <para>To use a certificate or serialized object instead of plain password as the token, simply replace the simple text password
-                with Base64 encoded contents of the serialized object. Please note that, encoding and decoding of this object 
-                is strictly up to the user as JBoss AS and Teiid will only act like carrier of the information from 
+            <para>To use a certificate or serialized object instead of plain password as the token, replace the simple text password
+                with Base64 encoded contents of the serialized object. Please note that encoding and decoding of this object 
+                is strictly up to the user as JBoss AS and Teiid will only act as a carrier of the information from 
                 login module to connection factory. Using this CallerIdentity module, the connection pool for data source is segmented
                 by Subject.</para>
             </section>
         <section>
+
             <title>Role Based Credential Map</title>
-            <para>In some use cases, the users are divided by their functionality and they have varied level of security access to 
+            <para>In some use cases, the users are divided by their functionality and they have varied levels of security access to 
             data sources. These types of users are identified by their roles as to what they have access to. In the above "CallerIdentity" 
             login scenario, that may be too fine-grained security at data sources, that can lead resource exhaustion as every user has 
             their own separate connection. 
             Using Role based security gives a balance, where the users with same role are treated equally 
             for authentication purposes at the data source. Teiid provides a login module called "RoleBasedCredentialMap" 
-            for this purposes, where administrator can define a role based authentication module, where given the role of the user
-            from the primary login module, this module will hold credentail to that role. So, it is container of credentials that
-            map to different roles. If a user has multiple roles, the first role that has the credential will be chosen.
+            for this purposes, where administrator can define a role-based authentication module, where given the role of the user
+            from the primary login module, this module will hold a credential to that role. So, it is the container of credentials that
+            maps to different roles. If a user has multiple roles, the first role that has the credential will be chosen.
             Below find the sample configuration.</para>
             
             <programlisting><![CDATA[<application-policy xmlns="urn:jboss:security-beans:1.0" name="teiid-security">
@@ -347,7 +361,7 @@ User and role names are entirely up to the needs of the given deployment.  For e
             
             <programlisting><![CDATA[<security-domain>teiid-security</security-domain>]]></programlisting>
             
-            <para>In the above configuration example, in the primary login module "UsersRolesLoginModule" is setup for logging in
+            <para>In the above configuration example, in the primary login module "UsersRolesLoginModule" is set up for logging in
             the primary user and assign some roles. The "RoleBasedCredentialMap" login module is configured to hold 
             role to password information in the file defined by "credentialMap" property. When user logs in, the role information 
             from the primary login module is taken, and extracts the role's passsword and attaches as 
@@ -383,8 +397,9 @@ User and role names are entirely up to the needs of the given deployment.  For e
         <para>The Teiid's configuration file 
         <code>&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy/teiid/teiid-jboss-beans.xml</code>, 
         contains the properties to configure SSL per socket transport.</para>
+
         <itemizedlist>
-        	<para>There are three socket transports, each with it's own SSL configuration:</para>
+        	<para>There are three socket transports, each with its own SSL configuration:</para>
             <listitem><para>JDBC Connections - uses the <code>JdbcSslConfiguration</code> bean configuration.  Defaults to only encrypt login traffic, none of the other properties are used.</para></listitem>
             <listitem><para>Admin Connections - uses the <code>AdminSslConfiguration</code> bean configuration.  Defaults to encrypting all traffic with anonymous SSL, none of the other properties are used.</para></listitem>
             <listitem><para>ODBC Connections - uses the <code>OdbcSslConfiguration</code> bean configuration.  Defaults to no SSL.</para></listitem>
@@ -407,6 +422,7 @@ User and role names are entirely up to the needs of the given deployment.  For e
 </example>
            <itemizedlist>
            	<title>Properties</title>
+
             <listitem><para>mode - diabled|login|enabled, disabled = no transport or message level security will be used.  
             login = only the login traffic will be encrypted at a message level using 128 bit AES with an ephemerial DH key exchange. No other config values are needed in this mode.
             enabled = traffic will be secured using the other configuration properties.</para></listitem>
@@ -415,8 +431,10 @@ User and role names are entirely up to the needs of the given deployment.  For e
             <listitem><para>authenticationMode - anonymous|1-way|2-way,  Type of <link linkend="ssl_auth">SSL Authentication Mode</link>.</para></listitem>
             <listitem><para>keymanagementAlgorithm - Type of key algorithm used. Default 
             is based upon the VM, e.g. "SunX509"</para></listitem>
+
             <listitem><para>keystoreFilename - The file name of the keystore, which contains the 
-            private key of the Server. This must be available in the classpath of Teiid Server.</para></listitem>
+            private key of the Server. The file name can be relative resource path available to the Teiid deployer classloader or an absolute file system path.  
+            A typical installation would place the keystore file in the conf directory of the profile where Teiid is deployed with a file name relative to the conf path.</para></listitem>
             <listitem><para>keystorePassword - password for the keystore.</para></listitem>
             <listitem><para>truststoreFilename - if "authenticationMode" is chosen 
             as "2-way", then this property must be provided. This is the truststore that contains the 
@@ -426,6 +444,7 @@ User and role names are entirely up to the needs of the given deployment.  For e
             <listitem><para>enabledCipherSuites - A comma separated list of cipher suites allowed for encryption between server and client.  The values must be valid supported cipher suites otherwise SSL connections will fail.</para></listitem>
            </itemizedlist>  
       	<section id="ssl_auth">
+
       		<title>SSL Authentication Modes</title>
       		<para>SSL supports multiple authentication modes.  In most secure intranet environments, anonymous is suitable to just bulk encrypt traffic without the need
       		to setup SSL certificates. 
@@ -437,6 +456,7 @@ User and role names are entirely up to the needs of the given deployment.  For e
       			<listitem><para><emphasis>1-way</emphasis> - the server will present a certificate, which is obtained from the keystore related properties.  
       			The client should have a truststore configured to accept the server certificate. 
       			</para></listitem>
+
       			<listitem><para><emphasis>2-way</emphasis> - the server will present a certificate, which is obtained from the keystore related properties.
       			The client should have a truststore configured to accept the server certificate.  The client is also expected to present a certificate, which is obtained from its
       			keystore.  The client certificate should be accepted by the trust store configured by the truststore related properties.
@@ -449,6 +469,7 @@ User and role names are entirely up to the needs of the given deployment.  For e
       		1-way and 2-way SSL allow for cipher suite negotiation based upon the default cipher suites supported by the respective Java platforms of the client and server.
             User can restrict the cipher suites used for encryption by specifying the <emphasis>enabledCipherSuites</emphasis> property above in ssl configuration.     		
       		</para>
+
       	</section> 
     </section>
 </chapter>
