@@ -5,16 +5,16 @@
 	<artifactId>teiid-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>Teiid</name>
-	<version>7.6.0.Beta2</version>
+	<version>teiid-7.6.0.CR1-SNAPSHOT</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 		<ant.version>1.7.0</ant.version>
 		<site.url>http://www.jboss.org/teiid</site.url>
 	</properties>
 	<scm>
-        <connection>scm:svn:https://anonsvn.jboss.org/repos/teiid/tags/teiid-parent-7.6.0.Beta2</connection>
-		<developerConnection>scm:svn:https://svn.jboss.org/repos/teiid/tags/teiid-parent-7.6.0.Beta2</developerConnection>
-		<url>http://anonsvn.jboss.org/repos/teiid/tags/teiid-parent-7.6.0.Beta2</url>
+        <connection>scm:svn:https://anonsvn.jboss.org/repos/teiid/trunk</connection>
+		<developerConnection>scm:svn:https://svn.jboss.org/repos/teiid/trunk</developerConnection>
+		<url>http://anonsvn.jboss.org/repos/teiid/trunk</url>
 	</scm>
 	<licenses>
 		<license>
