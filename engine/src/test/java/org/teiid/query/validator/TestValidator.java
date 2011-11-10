@@ -1791,6 +1791,10 @@ public class TestValidator {
     @Test public void testXMLTablePassingMultipleContext() {
     	helpValidate("select * from pm1.g1, xmltable('/' passing xmlparse(DOCUMENT '<a/>'), xmlparse(DOCUMENT '<b/>')) as x", new String[] {"XMLTABLE('/' PASSING XMLPARSE(DOCUMENT '<a/>'), XMLPARSE(DOCUMENT '<b/>')) AS x"}, RealMetadataFactory.example1Cached());
     }
+    
+    @Test public void testInvalidDefault() {
+    	helpValidate("select * from pm1.g1, xmltable('/' passing xmlparse(DOCUMENT '<a/>') columns y string default 'a', x string default (select e1 from pm1.g1)) as x", new String[] {"XMLTABLE('/' PASSING XMLPARSE(DOCUMENT '<a/>') COLUMNS y string DEFAULT 'a', x string DEFAULT (SELECT e1 FROM pm1.g1)) AS x"}, RealMetadataFactory.example1Cached());
+    }
 
     @Ignore("this is actually handled by saxon and will show up during resolving")
     @Test public void testXMLTablePassingSameName() {

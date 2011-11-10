@@ -349,7 +349,7 @@ public class SimpleQueryResolver implements CommandResolver {
 					if (column.getDefaultExpression() == null) {
 						continue;
 					}
-					ResolverVisitor.resolveLanguageObject(column.getDefaultExpression(), metadata);
+					visitNode(column.getDefaultExpression());
 					Expression ex = ResolverUtil.convertExpression(column.getDefaultExpression(), DataTypeManager.getDataTypeName(column.getSymbol().getType()), metadata);
 					column.setDefaultExpression(ex);
 				}
