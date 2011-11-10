@@ -26,7 +26,7 @@ import org.jboss.netty.channel.DefaultChannelPipeline;
 import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.StorageManager;
 import org.teiid.jdbc.TeiidDriver;
-import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.ObjectChannel;
 
 public class ODBCSocketListener extends SocketListener {

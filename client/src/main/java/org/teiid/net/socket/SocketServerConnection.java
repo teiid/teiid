@@ -56,7 +56,6 @@ import org.teiid.net.ConnectionException;
 import org.teiid.net.HostInfo;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.TeiidURL;
-import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
 
 
 /**
@@ -172,7 +171,7 @@ public class SocketServerConnection implements ServerConnection {
 		SocketServerInstance instance = this.serverInstance;
 		LogonResult newResult = null;
 
-		AuthenticationType authType  = getAuthenticationType();
+		AuthenticationType authType  = instance.getAuthenticationType();
 		if (AuthenticationType.CLEARTEXT.equals(authType)) {
 			newResult = newLogon.logon(connProps);
 		}
@@ -194,14 +193,6 @@ public class SocketServerConnection implements ServerConnection {
 		this.connectionFactory.connected(instance, this.logonResult.getSessionToken());
 	}
 	
-	private AuthenticationType getAuthenticationType() {
-		String authStr = this.connProps.getProperty(TeiidURL.CONNECTION.AUTHENTICATION_TYPE);
-		if (authStr == null) {
-			return AuthenticationType.CLEARTEXT;
-		}
-		return AuthenticationType.valueOf(authStr);
-	}
-
 	private ILogon connect(HostInfo hostInfo) throws CommunicationException,
 			IOException {
 		hostInfo.setSsl(secure);

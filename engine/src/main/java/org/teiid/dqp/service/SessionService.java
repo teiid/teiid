@@ -32,7 +32,7 @@ import javax.security.auth.login.LoginException;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.client.security.InvalidSessionException;
 import org.teiid.dqp.internal.process.DQPCore;
-import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.Credentials;
 
 

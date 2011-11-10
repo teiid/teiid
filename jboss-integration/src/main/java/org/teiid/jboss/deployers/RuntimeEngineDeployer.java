@@ -113,6 +113,7 @@ import org.teiid.metadata.Table;
 import org.teiid.metadata.TableStats;
 import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.net.TeiidURL;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
@@ -230,6 +231,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	this.csr.registerClientService(Admin.class, adminProxy, LogConstants.CTX_ADMIN_API);
     	
     	ClientServiceRegistryImpl jdbcCsr = new ClientServiceRegistryImpl();
+    	jdbcCsr.setAuthenticationType(this.sessionService.getAuthType());
     	jdbcCsr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
     	jdbcCsr.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);
     	
@@ -241,6 +243,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	}
     	
     	ClientServiceRegistryImpl adminCsr = new ClientServiceRegistryImpl(Type.Admin);
+    	adminCsr.setAuthenticationType(this.sessionService.getAuthType());
     	adminCsr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
     	adminCsr.registerClientService(Admin.class, adminProxy, LogConstants.CTX_ADMIN_API);
     	
@@ -857,4 +860,9 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	 */
 	public void setContainerLifeCycleListener(ContainerLifeCycleListener listener) {
 	}	
+	
+	@Override
+	public AuthenticationType getAuthenticationType() {
+		return this.sessionService.getAuthType();
+	}
 }

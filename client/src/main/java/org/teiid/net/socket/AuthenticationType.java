@@ -22,37 +22,6 @@
 
 package org.teiid.net.socket;
 
-import java.io.Serializable;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import org.teiid.client.util.ResultsFuture;
-import org.teiid.client.util.ResultsReceiver;
-import org.teiid.core.crypto.Cryptor;
-import org.teiid.net.CommunicationException;
-import org.teiid.net.HostInfo;
-
-
-public interface SocketServerInstance {
-
-	<T> T getService(Class<T> iface);
-
-	void shutdown();
-	
-	HostInfo getHostInfo();
-	
-	boolean isOpen();
-	
-	Cryptor getCryptor();
-
-	long getSynchTimeout();
-
-	void send(Message message, ResultsReceiver<Object> receiver, Serializable key) throws CommunicationException, InterruptedException;
-
-	void read(long timeout, TimeUnit unit, ResultsFuture<?> resultsFuture) throws TimeoutException, InterruptedException;
-
-	String getServerVersion();
-
-	AuthenticationType getAuthenticationType();
-
+public enum AuthenticationType {
+	CLEARTEXT,GSS
 }

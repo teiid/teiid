@@ -213,6 +213,7 @@ public class TestSocketServerConnection {
 				Mockito.stub(instance.getHostInfo()).toReturn(hostInfo);
 				Mockito.stub(instance.getService(ILogon.class)).toReturn(logon);
 				Mockito.stub(instance.getServerVersion()).toReturn("7.3");
+				Mockito.stub(instance.getAuthenticationType()).toReturn(AuthenticationType.CLEARTEXT);
 				if (t != null) {
 					try {
 						Mockito.doAnswer(new Answer<Void>() {

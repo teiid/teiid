@@ -99,11 +99,6 @@ public class TeiidDataSource extends BaseDataSource {
     private boolean passthroughAuthentication = false;
     
     /**
-     * Authentication type to used from client. choices are simple - which is plain user/password; krb5 - kerberos
-     */
-    private String authenticationType;
-    
-    /**
      * Name of the jass configuration to use from the -Djava.security.auth.login.config=login.conf property
      */
     private String jaasName;
@@ -258,9 +253,6 @@ public class TeiidDataSource extends BaseDataSource {
 		Properties props = buildProperties(userName, password);
 		props.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, Boolean.toString(this.passthroughAuthentication));
 		
-		if (getAuthenticationType() != null) {
-			props.setProperty(TeiidURL.CONNECTION.AUTHENTICATION_TYPE, getAuthenticationType());
-		}
 		if (getJaasName() != null) {
 			props.setProperty(TeiidURL.CONNECTION.JAAS_NAME, getJaasName());
 		}
@@ -491,23 +483,6 @@ public class TeiidDataSource extends BaseDataSource {
 	public void setPassthroughAuthentication(final boolean passthroughAuthentication) {
 		this.passthroughAuthentication = passthroughAuthentication;
 	}	
-	
-    /**
-     * Authentication Type {simple, krb5} default:simple
-     * @return
-     */
-    public String getAuthenticationType() {
-		return authenticationType;
-	}
-    
-	/**
-	 * Authentication Type.
-	 * @since 7.6 
-	 * @return
-	 */
-	public void setAuthenticationType(final String authType) {
-		this.authenticationType = authType;
-	}
 	
 	/**
 	 * Application name from JAAS Login Config file

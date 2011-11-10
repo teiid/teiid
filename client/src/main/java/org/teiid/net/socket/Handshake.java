@@ -26,6 +26,7 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.OptionalDataException;
 
 import org.teiid.core.util.ApplicationInfo;
 
@@ -39,6 +40,7 @@ public class Handshake implements Externalizable {
     
     private String version = ApplicationInfo.getInstance().getReleaseNumber();
     private byte[] publicKey;
+    private AuthenticationType authType = AuthenticationType.CLEARTEXT;
     
     /** 
      * @return Returns the version.
@@ -68,17 +70,31 @@ public class Handshake implements Externalizable {
         this.publicKey = key;
     }
     
+    public AuthenticationType getAuthType() {
+		return authType;
+	}
+    
+    public void setAuthType(AuthenticationType authType) {
+		this.authType = authType;
+	}
+    
     @Override
     public void readExternal(ObjectInput in) throws IOException,
     		ClassNotFoundException {
     	version = (String)in.readObject();
     	publicKey = (byte[])in.readObject();
+    	try {
+    		authType = AuthenticationType.values()[in.readByte()];
+    	} catch (OptionalDataException e) {
+    		
+    	}
     }
     
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
     	out.writeObject(version);
     	out.writeObject(publicKey);
+    	out.writeByte(authType.ordinal());
     }
     
 }

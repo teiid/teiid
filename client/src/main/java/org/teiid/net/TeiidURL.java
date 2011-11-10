@@ -83,15 +83,9 @@ public class TeiidURL {
 		
 		public static final String PASSTHROUGH_AUTHENTICATION = "PassthroughAuthentication"; //$NON-NLS-1$
 		
-		public static final String AUTHENTICATION_TYPE = "authenticationType"; //$NON-NLS-1$
-		
 		public static final String JAAS_NAME = "jaasName"; //$NON-NLS-1$
 		
-		public static final String KERBEROS_SERVICE_PRINCIPLE_NAME = "kerberosServicePrincipleName"; //$NON-NLS-1$
-        
-		public enum AuthenticationType {
-			CLEARTEXT,GSS
-		};
+		public static final String KERBEROS_SERVICE_PRINCIPLE_NAME = "kerberosServicePrincipleName"; //$NON-NLS-1$;
 	}
 
 	public static final String DOT_DELIMITER = "."; //$NON-NLS-1$
