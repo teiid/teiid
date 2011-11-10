@@ -156,10 +156,6 @@ public class TestCriteriaEvaluator {
 		helpTestMatch("xx", "%", MatchCriteria.NULL_ESCAPE_CHAR, true);		 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	@Test public void testMatch6() throws Exception {
-		helpTestMatch("xx", "%", MatchCriteria.NULL_ESCAPE_CHAR, true);		 //$NON-NLS-1$ //$NON-NLS-2$
-	}
-
 	@Test public void testMatch7() throws Exception {
 		helpTestMatch("a", "a%", MatchCriteria.NULL_ESCAPE_CHAR, true);		 //$NON-NLS-1$ //$NON-NLS-2$
 	}
@@ -172,10 +168,6 @@ public class TestCriteriaEvaluator {
 		helpTestMatch("a.", "a%", MatchCriteria.NULL_ESCAPE_CHAR, true);		 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	@Test public void testMatch10() throws Exception {
-		helpTestMatch("a.", "a%", MatchCriteria.NULL_ESCAPE_CHAR, true);		 //$NON-NLS-1$ //$NON-NLS-2$
-	}
-	
 	@Test public void testMatch11() throws Exception {
 		helpTestMatch("ax.", "a%", MatchCriteria.NULL_ESCAPE_CHAR, true);		 //$NON-NLS-1$ //$NON-NLS-2$
 	}

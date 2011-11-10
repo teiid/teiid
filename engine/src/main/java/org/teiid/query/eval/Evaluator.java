@@ -435,7 +435,7 @@ public class Evaluator {
 		}
 		
         Matcher matcher = patternRegex.matcher(search);
-        return matcher.matches();
+        return matcher.find();
 	}
 
 	private Boolean evaluate(AbstractSetCriteria criteria, List<?> tuple)

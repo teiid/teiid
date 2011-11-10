@@ -504,6 +504,11 @@ public class TestExpressionEvaluator {
     	assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
     }
     
+    @Test public void testLikeRegex4() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("'xay' like_regex 'a'");
+    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+    }
+    
     @Test public void testLikePlus() throws Exception {
     	Expression ex = TestFunctionResolving.getExpression("'+' like '+'");
     	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
