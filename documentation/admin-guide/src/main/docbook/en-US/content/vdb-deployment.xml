@@ -175,6 +175,24 @@
 				 <code>ConfigName</code> property.  The namespace URI for the QName in your config file should be http://teiid.org.  
 				 See the sections on WS-Security, Logging, etc. for examples of using the CXF configuration file.</para>
 				 
+				 <example>
+				 	<title>Sample Spring XML Configuration To Set Timeouts</title>
+				 	<programlisting language="xml"><![CDATA[<beans xmlns="http://www.springframework.org/schema/beans"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:http-conf="http://cxf.apache.org/transports/http/configuration"
+		xsi:schemaLocation="http://cxf.apache.org/transports/http/configuration
+		http://cxf.apache.org/schemas/configuration/http-conf.xsd
+		http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<http-conf:conduit name="{http://teiid.org}configName.http-conduit">
+		<http-conf:client ConnectionTimeout="120000" ReceiveTimeout="240000"/>
+	</http-conf:conduit>
+</beans>
+]]></programlisting>
+					<para>In the conduit name {http://teiid.org}configName.http-conduit, the namespace, http://teiid.org, is not configurable.  The local name is followed by .http-conduit.  It will be based upon the configName setting, with a default value of teiid.</para>
+				 </example>
+				 
 				<para>See the <ulink url="http://cxf.apache.org/docs/">CXF documentation</ulink> for all possible configuration options.</para>
 				<note><para>The CXF configuration is currently only applicable to non-binary web service calls.</para></note>
 			</section>
