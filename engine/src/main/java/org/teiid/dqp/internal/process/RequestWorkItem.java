@@ -522,6 +522,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				}
 				addToCache();
 				synchronized (lobStreams) {
+					if (resultsBuffer.isLobs()) {
+						super.flushBatchDirect(batch, false);
+					}
 					add = sendResultsIfNeeded(batch);
 					if (cid != null) {
 						return;

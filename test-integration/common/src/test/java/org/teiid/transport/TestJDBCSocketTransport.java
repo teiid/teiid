@@ -90,6 +90,13 @@ public class TestJDBCSocketTransport {
 		TestMMDatabaseMetaData.compareResultSet(s.getResultSet());
 	}
 	
+	@Test public void testLobStreaming() throws Exception {
+		Statement s = conn.createStatement();
+		assertTrue(s.execute("select xmlelement(name \"root\") from tables"));
+		s.getResultSet().next();
+		assertEquals("<root></root>", s.getResultSet().getString(1));
+	}
+	
 	/**
 	 * Ensures if you start more than the maxActivePlans
 	 * where all the plans take up more than output buffer limit
