@@ -193,6 +193,21 @@ public class TestSQLXMLProcessing {
         process(sql, expected);
     }
     
+    @Test public void testXmlTablePassingSubquery() throws Exception {
+        String sql = "select * from xmltable('/a/b' passing (SELECT xmlelement(name a, xmlAgg(xmlelement(name b, e1))) from pm1.g1) columns val string path '/.') as x"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("a"),
+        		Arrays.asList(""),
+        		Arrays.asList("a"),
+        		Arrays.asList("c"),
+        		Arrays.asList("b"),
+        		Arrays.asList("a")
+        };    
+    
+        process(sql, expected);
+    }
+    
     @Test public void testXmlTableInView() throws Exception {
         String sql = "select * from g1"; //$NON-NLS-1$
         
