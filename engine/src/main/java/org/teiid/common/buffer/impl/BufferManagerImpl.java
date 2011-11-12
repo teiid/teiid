@@ -608,15 +608,12 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
     		LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Releasing buffer space", count); //$NON-NLS-1$
     	}
-    	if (lock.tryLock()) {
-	    	try {
-		    	this.reserveBatchBytes.addAndGet(count);
-		    	batchesFreed.signalAll();
-	    	} finally {
-	    		lock.unlock();
-	    	}
-    	} else {
-    		this.reserveBatchBytes.addAndGet(count);
+    	lock.lock();
+    	try {
+        	this.reserveBatchBytes.addAndGet(count);
+	    	batchesFreed.signalAll();
+    	} finally {
+    		lock.unlock();
     	}
     }
     
