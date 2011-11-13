@@ -44,11 +44,20 @@ import org.teiid.translator.TypeFacility;
  * etc. 
  * <p>The choice of conversion logic is as follows:
  * <ul>
- *  <li>Look for a specific conversion between the source and target - {@link #addConvert(int, int, FunctionModifier)}</li>
+ *  <li>Provide specific conversion between the source and target - {@link #addConvert(int, int, FunctionModifier)}
+ *  mostly one do not need to provide any conversion if the default is cast(srcType AS targetType), however if the source 
+ *  database requires different specific format for example to cast(srctype, targetType FORMAT 'more-info') this conversion needs to be added</li>
  *  <li>Filter common implicit conversions</li>
  *  <li>Look for a general source conversion - {@link #addSourceConversion(FunctionModifier, int...)}</li>
- *  <li>Look for a general target conversion - {@link #addTypeConversion(FunctionModifier, int...)}</li>
- *  <li>Look for a type mapping, which will replace the target type with the given native type - {@link #addTypeMapping(String, int...)}</li>
+ *  <li>Look for a general target conversion - {@link #addTypeConversion(FunctionModifier, int...)}. If the source
+ *  database provides a specific function for converting *any* source datatype to this target datatype then use this to define it.
+ *  Like in oracle "to_char" function will convert any other data type to string. Use this to define those kind of conversions
+ *  convert any data type to string. so you can use this for purpose.</li>
+ *  <li>Type maps from database data type to Teiid runtime types. - {@link #addTypeMapping(String, int...)}
+ *  define mappings for every datatype available in database. The cast operation will replace the target type (teiid type) with the given 
+ *  native type in the cast operation generated. Do not need to really look at implicit/explicit conversions that are 
+ *  supported by the source database, because when a cast is defined on the sql it is up to the source database to apply it
+ *  as implicit or explicit operation. Teiid generates cast always when needed</li>
  *  <li>Drop the conversion</li>
  * </ul>
  */

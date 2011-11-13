@@ -87,5 +87,6 @@
     <module>sandbox</module>
     <module>translator-ws</module>
     <module>translator-olap</module>
+    <module>translator-hive</module>
   </modules>
 </project>

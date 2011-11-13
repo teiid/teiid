@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<datasources>
+  <!-- 
+    Copy the following jars into the "lib" directory for Hive JDBC driver. These jar files can be 
+    found Hive/lib and Hadoop/lib directories.
+    
+      hadoop-core-0.20.203.0.jar
+      hive-exec-0.7.1.jar
+      hive-jdbc-0.7.1.jar
+      hive-metastore-0.7.1.jar
+      hive-service-0.7.1.jar
+      libfb303.jar
+  -->
+  <local-tx-datasource>
+    <jndi-name>HiveDS</jndi-name>
+    <connection-url>jdbc:hive://localhost:10000/default</connection-url>
+    <driver-class>org.apache.hadoop.hive.jdbc.HiveDriver</driver-class>
+  </local-tx-datasource>
+
+</datasources>

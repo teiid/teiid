@@ -259,6 +259,11 @@
                 </listitem>
                 <listitem>
                     <para>
+                    <emphasis>hive</emphasis> - For use with Hive database based on Hadoop
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
                     <emphasis>hsql</emphasis> - for use with HSQLDB 1.7 or later.
                     </para>
                 </listitem>

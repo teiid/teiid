@@ -185,6 +185,7 @@
             <include>org.jboss.teiid.connectors:translator-salesforce</include>
             <include>org.jboss.teiid.connectors:translator-ws</include>
             <include>org.jboss.teiid.connectors:translator-olap</include>
+            <include>org.jboss.teiid.connectors:translator-hive</include>
         </includes>
 
         <binaries>        
