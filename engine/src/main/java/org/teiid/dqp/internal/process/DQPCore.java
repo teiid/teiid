@@ -335,6 +335,7 @@ public class DQPCore implements DQP {
 	    request.initialize(requestMsg, bufferManager,
 				dataTierMgr, transactionService, state.sessionTables,
 				workContext, this.prepPlanCache);
+	    request.setExecutor(this.processWorkerPool);
 		request.setResultSetCacheEnabled(this.rsCache != null);
 		request.setAuthorizationValidator(this.authorizationValidator);
 		request.setUserRequestConcurrency(this.getUserRequestSourceConcurrency());

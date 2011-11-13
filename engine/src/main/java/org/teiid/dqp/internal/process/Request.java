@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -134,6 +135,7 @@ public class Request implements SecurityFunctionEvaluator {
 	private boolean resultSetCacheEnabled = true;
 	private int userRequestConcurrency;
 	private AuthorizationValidator authorizationValidator;
+	private Executor executor;
 
     void initialize(RequestMessage requestMsg,
                               BufferManager bufferManager,
@@ -240,7 +242,7 @@ public class Request implements SecurityFunctionEvaluator {
 					multiSourceModels, workContext, context);
             context.setPlanToProcessConverter(modifier);
         }
-
+        context.setExecutor(this.executor);
         context.setSecurityFunctionEvaluator(this);
         context.setTempTableStore(tempTableStore);
         context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(this.bufferManager, this.processorDataManager, this.capabilitiesFinder, idGenerator, metadata));
@@ -473,6 +475,10 @@ public class Request implements SecurityFunctionEvaluator {
 		if (this.authorizationValidator != null) {
 			this.authorizationValidator.validate(command, metadata, context);
 		}
+	}
+	
+	public void setExecutor(Executor executor) {
+		this.executor = executor;
 	}
 	
 }

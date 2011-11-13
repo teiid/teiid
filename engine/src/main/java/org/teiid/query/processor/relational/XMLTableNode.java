@@ -52,9 +52,11 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.XMLType;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
+import org.teiid.query.xquery.saxon.XQueryEvaluator;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.Result;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
 
@@ -76,6 +78,8 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		typeMapping.put(DataTypeManager.DefaultDataClasses.DOUBLE, BuiltInAtomicType.DOUBLE);
 	}
 	
+	private static RuntimeException EARLY_TERMINATION = new RuntimeException();
+	
 	private XMLTable table;
 	private List<XMLColumn> projectedColumns;
 	
@@ -84,6 +88,8 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	private Item item;
 	
 	private TupleBuffer buffer;
+	private boolean batchAvailable = false;
+	private TeiidRuntimeException asynchException;
 	private int outputRow = 1;
 	private boolean usingOutput;
 	
@@ -92,7 +98,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	}
 	
 	@Override
-	public void closeDirect() {
+	public synchronized void closeDirect() {
 		super.closeDirect();
 		if(this.buffer != null) {
 			if (!usingOutput) {
@@ -115,6 +121,8 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		outputRow = 1;
 		usingOutput = false;
 		this.buffer = null;
+		this.batchAvailable = false;
+		this.asynchException = null;
 	}
 	
 	public void setTable(XMLTable table) {
@@ -135,14 +143,23 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	}
 
 	@Override
-	protected TupleBatch nextBatchDirect() throws BlockedException,
+	protected synchronized TupleBatch nextBatchDirect() throws BlockedException,
 			TeiidComponentException, TeiidProcessingException {
 		
-		evaluate();
+		evaluate(false);
 		
 		if (this.table.getXQueryExpression().isStreaming()) {
+			while (!batchAvailable) {
+				try {
+					this.wait();
+				} catch (InterruptedException e) {
+					throw new TeiidRuntimeException(e);
+				}
+			}
+			unwrapException(asynchException);
 			TupleBatch batch = this.buffer.getBatch(outputRow);
 			outputRow = batch.getEndRow() + 1;
+			batchAvailable = hasNextBatch();
 			return batch;
 		}
 		
@@ -164,32 +181,68 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		return pullBatch();
 	}
 
-	private void evaluate() throws TeiidComponentException,
+	private void evaluate(final boolean useFinalBuffer) throws TeiidComponentException,
 			ExpressionEvaluationException, BlockedException,
 			TeiidProcessingException {
-		if (result == null) {
-			if (this.buffer == null && this.table.getXQueryExpression().isStreaming()) {
-				this.buffer = this.getBufferManager().createTupleBuffer(getOutputElements(), getConnectionID(), TupleSourceType.PROCESSOR); 
+		if (result != null || this.buffer != null) {
+			return;
+		}
+		setReferenceValues(this.table);
+		final HashMap<String, Object> parameters = new HashMap<String, Object>();
+		Evaluator eval = getEvaluator(Collections.emptyMap());
+		final Object contextItem = eval.evaluateParameters(this.table.getPassing(), null, parameters);
+
+		if (this.table.getXQueryExpression().isStreaming()) {
+			if (this.buffer == null) {
+				this.buffer = this.getBufferManager().createTupleBuffer(getOutputElements(), getConnectionID(), TupleSourceType.PROCESSOR);
 			}
-			setReferenceValues(this.table);
-			try {
-				result = getEvaluator(Collections.emptyMap()).evaluateXQuery(this.table.getXQueryExpression(), this.table.getPassing(), null, this);
-				if (this.buffer != null) {
-					this.buffer.close();
-					if (!usingOutput) {
-						this.buffer.setForwardOnly(true);
+			Runnable r = new Runnable() {
+				@Override
+				public void run() {
+					try {
+						if (!useFinalBuffer) {
+							buffer.setForwardOnly(true);
+						}
+						XQueryEvaluator.evaluateXQuery(table.getXQueryExpression(), contextItem, parameters, XMLTableNode.this, getContext());
+						buffer.close();
+					} catch (TeiidException e) {
+						asynchException = new TeiidRuntimeException(e);
+					} catch (TeiidRuntimeException e) {
+						asynchException = e;
+					} catch (RuntimeException e) {
+						if (e != EARLY_TERMINATION) {
+							asynchException = new TeiidRuntimeException(e);
+						}
+					} finally {
+						batchAvailable = true;
+						synchronized (XMLTableNode.this) {
+							XMLTableNode.this.notifyAll();
+						}
 					}
 				}
-			} catch (TeiidRuntimeException e) {
-				if (e.getCause() instanceof TeiidComponentException) {
-					throw (TeiidComponentException)e.getCause();
-				}
-				if (e.getCause() instanceof TeiidProcessingException) {
-					throw (TeiidProcessingException)e.getCause();
-				}
-				throw e;
-			}
+			};
+			this.getContext().getExecutor().execute(r);
+			return;
 		}
+		try {
+			result = XQueryEvaluator.evaluateXQuery(this.table.getXQueryExpression(), contextItem, parameters, null, this.getContext());
+		} catch (TeiidRuntimeException e) {
+			unwrapException(e);
+		}
+	}
+
+	private void unwrapException(TeiidRuntimeException e)
+			throws TeiidComponentException, TeiidProcessingException {
+		if (e == null) {
+			return;
+		}
+		if (e.getCause() instanceof TeiidComponentException) {
+			throw (TeiidComponentException)e.getCause();
+		}
+		if (e.getCause() instanceof TeiidProcessingException) {
+			throw (TeiidProcessingException)e.getCause();
+		}
+		throw e;
 	}
 
 	private List<?> processRow() throws ExpressionEvaluationException, BlockedException,
@@ -256,23 +309,35 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	@Override
 	public TupleBuffer getFinalBuffer() throws BlockedException,
 			TeiidComponentException, TeiidProcessingException {
-		evaluate();
+		evaluate(true);
 		usingOutput = true;
     	TupleBuffer finalBuffer = this.buffer;
-    	this.buffer = null;
-		close();
+    	if (!this.table.getXQueryExpression().isStreaming()) {
+			close();
+    	}
 		return finalBuffer;
 	}
 	
 	@Override
-	public void processRow(NodeInfo row) {
+	public synchronized void processRow(NodeInfo row) {
+		if (isClosed()) {
+			throw EARLY_TERMINATION;
+		}
 		this.item = row;
 		rowCount++;
 		try {
 			this.buffer.addTuple(processRow());
+			if (hasNextBatch()) {
+				this.batchAvailable = true;
+				this.notifyAll();
+			}
 		} catch (TeiidException e) {
 			throw new TeiidRuntimeException(e);
 		}
 	}
-		
+
+	private boolean hasNextBatch() {
+		return this.outputRow + this.buffer.getBatchSize() <= rowCount + 1;
+	}
+
 }

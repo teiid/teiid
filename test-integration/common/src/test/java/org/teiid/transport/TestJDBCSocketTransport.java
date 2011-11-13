@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import java.net.InetSocketAddress;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Properties;
 
@@ -95,6 +96,22 @@ public class TestJDBCSocketTransport {
 		assertTrue(s.execute("select xmlelement(name \"root\") from tables"));
 		s.getResultSet().next();
 		assertEquals("<root></root>", s.getResultSet().getString(1));
+	}
+	
+	@Test public void testXmlTableScrollable() throws Exception {
+		Statement s = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		assertTrue(s.execute("select * from xmltable('/root/row' passing (select xmlelement(name \"root\", xmlagg(xmlelement(name \"row\", xmlforest(t.name)) order by t.name)) from tables as t, columns as t1) columns \"Name\" string) as x"));
+		ResultSet rs = s.getResultSet();
+		int count = 0;
+		while (rs.next()) {
+			count++;
+		}
+		assertEquals(7812, count);
+		rs.beforeFirst();
+		while (rs.next()) {
+			count--;
+		}
+		assertEquals(0, count);
 	}
 	
 	/**

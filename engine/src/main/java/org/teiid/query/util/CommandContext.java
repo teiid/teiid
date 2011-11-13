@@ -32,6 +32,7 @@ import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.Executor;
 
 import javax.security.auth.Subject;
 
@@ -42,6 +43,7 @@ import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.ArgCheck;
+import org.teiid.core.util.ExecutorUtils;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
@@ -135,6 +137,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		private TransactionContext transactionContext;
 		private TransactionService transactionService;
 		private SourceHint sourceHint;
+		private Executor executor = ExecutorUtils.getDirectExecutor();
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -637,6 +640,14 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	public void setSourceHint(SourceHint hint) {
 		this.globalState.sourceHint = hint;
+	}
+	
+	public Executor getExecutor() {
+		return this.globalState.executor;
+	}
+	
+	public void setExecutor(Executor e) {
+		this.globalState.executor = e;
 	}
 	
 }

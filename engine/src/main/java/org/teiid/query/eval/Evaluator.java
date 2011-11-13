@@ -925,6 +925,17 @@ public class Evaluator {
 	public Result evaluateXQuery(SaxonXQueryExpression xquery, List<DerivedColumn> cols, List<?> tuple, RowProcessor processor) 
 	throws BlockedException, TeiidComponentException, TeiidProcessingException {
 		HashMap<String, Object> parameters = new HashMap<String, Object>();
+		Object contextItem = evaluateParameters(cols, tuple, parameters);
+		return XQueryEvaluator.evaluateXQuery(xquery, contextItem, parameters, processor, context);
+	}
+
+	/**
+	 * Evaluate the parameters and return the context item if it exists
+	 */
+	public Object evaluateParameters(List<DerivedColumn> cols, List<?> tuple,
+			HashMap<String, Object> parameters)
+			throws ExpressionEvaluationException, BlockedException,
+			TeiidComponentException {
 		Object contextItem = null;
 		for (DerivedColumn passing : cols) {
 			Object value = this.evaluate(passing.getExpression(), tuple);
@@ -934,7 +945,7 @@ public class Evaluator {
 				parameters.put(passing.getAlias(), value);
 			}
 		}
-		return XQueryEvaluator.evaluateXQuery(xquery, contextItem, parameters, processor, context);
+		return contextItem;
 	}
 
 	private Evaluator.NameValuePair<Object>[] getNameValuePairs(List<?> tuple, List<DerivedColumn> args, boolean xmlNames)
