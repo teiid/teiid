@@ -27,8 +27,9 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.jboss.logging.Logger;
 import org.teiid.core.util.ExecutorUtils;
 
 /**
@@ -38,7 +39,7 @@ import org.teiid.core.util.ExecutorUtils;
  */
 public class EnhancedTimer {
 	
-	private static final Logger LOGGER = Logger.getLogger(EnhancedTimer.class);
+	private static final Logger LOGGER = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 	private static AtomicLong id = new AtomicLong();
 	
 	public class Task implements Comparable<Task>, Runnable {
@@ -139,7 +140,7 @@ public class EnhancedTimer {
 		try {
 			taskExecutor.execute(task);
 		} catch (Throwable t) {
-			LOGGER.error("Unexpected exception running task", t); //$NON-NLS-1$
+			LOGGER.log(Level.SEVERE, "Unexpected exception running task", t); //$NON-NLS-1$
 		}
 		return true;
 	}
