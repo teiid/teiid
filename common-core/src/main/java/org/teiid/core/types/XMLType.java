@@ -54,9 +54,31 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 	
 	private static final long serialVersionUID = -7922647237095135723L;
 	
+	private static ThreadLocal<XMLInputFactory> threadLocalFactory = new ThreadLocal<XMLInputFactory>() {
+		protected XMLInputFactory initialValue() {
+			return XMLInputFactory.newInstance();
+		}
+	};
+	private static XMLInputFactory factory = XMLInputFactory.newInstance();
+	private static Boolean factoriesTreadSafe;
+
 	private transient Type type = Type.UNKNOWN;
 	private String encoding;
-    
+
+	public static boolean isThreadSafeXmlFactories() {
+		if (factoriesTreadSafe == null) {
+			factoriesTreadSafe = factory.getClass().getName().contains(".wstx."); //$NON-NLS-1$
+		}
+		return factoriesTreadSafe;
+	}
+	
+	public static XMLInputFactory getXmlInputFactory() {
+		if (isThreadSafeXmlFactories()) {
+			return factory;
+		}
+		return threadLocalFactory.get();
+	}
+	
     public XMLType(){
         
     }
@@ -175,7 +197,6 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 	}
 
 	public static String getEncoding(InputStream is) {
-		XMLInputFactory factory = XMLInputFactory.newInstance();
 		XMLStreamReader reader;
 		try {
 			reader = factory.createXMLStreamReader(is);

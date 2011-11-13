@@ -117,7 +117,7 @@ public class SQLXMLImpl extends BaseLob implements SQLXML {
 		if (sourceClass == null || sourceClass == StreamSource.class) {
 			return (T)new StreamSource(getBinaryStream(), this.getStreamFactory().getSystemId());
 		} else if (sourceClass == StAXSource.class) {
-			XMLInputFactory factory = XMLInputFactory.newInstance();
+			XMLInputFactory factory = XMLType.getXmlInputFactory();
 			try {
 				return (T) new StAXSource(factory.createXMLStreamReader(getBinaryStream()));
 			} catch (XMLStreamException e) {
