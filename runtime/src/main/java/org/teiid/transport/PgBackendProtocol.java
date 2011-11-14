@@ -801,7 +801,9 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			initBuffer(estimatedLength);
 		}
 		this.dataOut.writeByte((byte)newMessageType);
-		this.dataOut.writerIndex(this.dataOut.writerIndex() + 4);
+		int nextByte = this.dataOut.writerIndex() + 4;
+		this.dataOut.ensureWritableBytes(nextByte);
+		this.dataOut.writerIndex(nextByte);
 	}
 
 	private void initBuffer(int estimatedLength) {

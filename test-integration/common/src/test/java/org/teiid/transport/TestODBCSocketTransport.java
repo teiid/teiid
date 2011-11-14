@@ -221,6 +221,20 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		String clob = rs.getString(1);
 		assertEquals(3000, clob.length());
 	}
+	
+	@Test public void testMultiRowBuffering() throws Exception {
+		Statement s = conn.createStatement();
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < 11; i++) {
+			sb.append("select '' union all ");
+		}
+		sb.append("select ''");
+		assertTrue(s.execute(sb.toString()));
+		ResultSet rs = s.getResultSet();
+		assertTrue(rs.next());
+		String str = rs.getString(1);
+		assertEquals(0, str.length());
+	}
 
 	@Test public void testTransactionCycle() throws Exception {
 		//TODO: drill in to ensure that the underlying statement has been set to autocommit false
