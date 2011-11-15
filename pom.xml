@@ -73,6 +73,9 @@
           This profile is activated manually, as in "mvn ... -P release ..."
 		  -->
       <id>release</id>
+      <properties>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+      </properties>
       <modules>
         <module>documentation</module>
         <module>build</module>        
