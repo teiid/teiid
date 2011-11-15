@@ -22,13 +22,12 @@
 package org.teiid.jboss;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.concurrent.Executor;
 
 import javax.naming.InitialContext;
 
+import org.jboss.as.naming.deployment.ContextNames;
 import org.jboss.as.server.deployment.Attachments;
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
@@ -49,14 +48,12 @@ import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
-import org.teiid.jboss.VDBService.TranslatorNotFoundException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.services.BufferServiceImpl;
-import org.teiid.translator.ExecutionFactory;
 
 
 class VDBDeployer implements DeploymentUnitProcessor {
@@ -139,7 +136,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		// add dependencies to data-sources
 		dataSourceDependencies(deployment, new DependentServices() {
 			@Override
-			public void serviceFound(String dsName, ServiceName svcName) {
+			public void dependentService(final String dsName, final ServiceName svcName) {
 				DataSourceListener dsl = new DataSourceListener(dsName, svcName, vdbStatusChecker);									
 				ServiceBuilder<DataSourceListener> sb = context.getServiceTarget().addService(TeiidServiceNames.dsListenerServiceName(dsName), dsl);
 				sb.addDependency(svcName);
@@ -178,7 +175,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		}
 	}
 	
-	private void dataSourceDependencies(VDBMetaData deployment, DependentServices svcListener) throws DeploymentUnitProcessingException {
+	private void dataSourceDependencies(VDBMetaData deployment, DependentServices svcListener) {
 		
 		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
 			for (String sourceName:model.getSourceNames()) {
@@ -187,31 +184,17 @@ class VDBDeployer implements DeploymentUnitProcessor {
 					VDBTranslatorMetaData translator = deployment.getTranslator(translatorName);
 					translatorName = translator.getType();
 				}
-				
-				boolean jdbcSource = true;
-				try {
-					ExecutionFactory ef = VDBService.getExecutionFactory(translatorName, new TranslatorRepository(), this.translatorRepository, deployment, new IdentityHashMap<Translator, ExecutionFactory<Object, Object>>(), new HashSet<String>());
-					jdbcSource = ef.isJDBCSource();
-				} catch (TranslatorNotFoundException e) {
-					if (e.getCause() != null) {
-						throw new DeploymentUnitProcessingException(e.getCause());
-					}
-					throw new DeploymentUnitProcessingException(e.getMessage());						
-				}
 
 				// Need to make the data source service as dependency; otherwise dynamic vdbs will not work correctly.
 				String dsName = model.getSourceConnectionJndiName(sourceName);
-				ServiceName svcName = ServiceName.JBOSS.append("data-source", getJndiName(dsName)); //$NON-NLS-1$
-				if (!jdbcSource) {
-					svcName = ServiceName.JBOSS.append("connector", "connection-factory", getJndiName(dsName)); //$NON-NLS-1$ //$NON-NLS-2$
-				}
-				svcListener.serviceFound(dsName, svcName);				
+				final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(getJndiName(dsName));
+				svcListener.dependentService(dsName, bindInfo.getBinderServiceName());				
 			}
 		}
 	}
 	
 	interface DependentServices {
-		void serviceFound(String dsName, ServiceName svc);
+		void dependentService(String dsName, ServiceName svc);
 	}
 	
 	static class DataSourceListener implements Service<DataSourceListener>{
@@ -283,19 +266,15 @@ class VDBDeployer implements DeploymentUnitProcessor {
         	VDBService vdbService = (VDBService)controller.getService();
         	vdbService.undeployInProgress();
         	
-    		try {
-				dataSourceDependencies(deployment, new DependentServices() {
-					@Override
-					public void serviceFound(String dsName, ServiceName svcName) {
-						ServiceController<?> controller = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.dsListenerServiceName(dsName));
-						if (controller != null) {
-							controller.setMode(ServiceController.Mode.REMOVE);
-						}
+			dataSourceDependencies(deployment, new DependentServices() {
+				@Override
+				public void dependentService(String dsName, ServiceName svcName) {
+					ServiceController<?> controller = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.dsListenerServiceName(dsName));
+					if (controller != null) {
+						controller.setMode(ServiceController.Mode.REMOVE);
 					}
-				});
-			} catch (DeploymentUnitProcessingException e) {
-				LogManager.logDetail(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("vdb-undeploy-failed", deployment.getName(), deployment.getVersion())); //$NON-NLS-1$
-			}        	
+				}
+			});
             controller.setMode(ServiceController.Mode.REMOVE);
         }
 	}

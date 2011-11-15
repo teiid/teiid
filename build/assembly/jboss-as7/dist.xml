@@ -306,7 +306,7 @@
         </includes>
 
         <binaries>        
-          <includeDependencies>true</includeDependencies>
+          <includeDependencies>false</includeDependencies>
           <unpack>false</unpack>
             <dependencySets>
                 <dependencySet>
@@ -319,8 +319,30 @@
           <outputDirectory>modules/org/jboss/teiid/translator/salesforce/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
-      
     </moduleSet>
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid.connectors:salesforce-api</include>
+        </includes>
+
+        <binaries>        
+          <includeDependencies>true</includeDependencies>
+          <unpack>false</unpack>
+            <dependencySets>
+                <dependencySet>
+                    <useProjectArtifact>true</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>false</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+            </dependencySets>          
+          <outputDirectory>modules/org/jboss/teiid/translator/salesforce/api/main</outputDirectory>
+          <fileMode>0644</fileMode>
+        </binaries>
+    </moduleSet>    
     <moduleSet>
         <includeSubModules>true</includeSubModules>
         <useAllReactorProjects>true</useAllReactorProjects>

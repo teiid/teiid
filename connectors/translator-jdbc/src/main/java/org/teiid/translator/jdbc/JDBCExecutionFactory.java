@@ -224,11 +224,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 		return true;
 	}
 
-	@Override
-	public boolean isJDBCSource() {
-		return true;
-	}
-	
     @Override
     public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
     		throws TranslatorException {

@@ -210,14 +210,6 @@ public class ExecutionFactory<F, C> {
 		this.sourceRequired = value;
 	}
 	
-	/**
-	 * Flag to determine between if a underlying connection is a data source or connection-factory
-	 * @return false
-	 */
-	public boolean isJDBCSource() {
-		return false;
-	}
-    
     /**
      * Obtain a reference to the default LanguageFactory that can be used to construct
      * new language interface objects.  This is typically needed when modifying the language

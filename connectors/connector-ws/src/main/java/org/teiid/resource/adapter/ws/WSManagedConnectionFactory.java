@@ -53,7 +53,7 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 
 	private Bus bus;
 	private QName portQName;
-	private List<Interceptor> outInterceptors;
+	private List<? extends Interceptor> outInterceptors;
 
 	@Override
 	public BasicConnectionFactory createConnectionFactory() throws ResourceException {
@@ -135,7 +135,7 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 		return portQName;
 	}
 	
-	public List<Interceptor> getOutInterceptors() {
+	public List<? extends Interceptor> getOutInterceptors() {
 		return outInterceptors;
 	}
 	

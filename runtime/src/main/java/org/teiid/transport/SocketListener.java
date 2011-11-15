@@ -66,7 +66,9 @@ public class SocketListener implements ChannelListenerFactory {
      */
     public SocketListener(InetSocketAddress address, int inputBufferSize,
 			int outputBufferSize, int maxWorkers, SSLConfiguration config, ClientServiceRegistryImpl csr, StorageManager storageManager) {
-    	this.isClientEncryptionEnabled = config.isClientEncryptionEnabled();
+    	if (config != null) {
+    		this.isClientEncryptionEnabled = config.isClientEncryptionEnabled();
+    	}
     	this.csr = csr;
 
     	this.nettyPool = Executors.newCachedThreadPool(new NamedThreadFactory("NIO")); //$NON-NLS-1$

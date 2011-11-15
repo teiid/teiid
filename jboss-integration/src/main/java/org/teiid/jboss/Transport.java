@@ -125,15 +125,19 @@ public class Transport implements Service<ClientServiceRegistry>, ClientServiceR
     	if (this.socketConfig != null) {
     		InetSocketAddress address = getSocketBindingInjector().getValue().getSocketAddress();
     		Protocol protocol = Protocol.valueOf(socketConfig.getProtocol());
+    		boolean sslEnabled = false;
+    		if (this.socketConfig.getSSLConfiguration() != null) {
+    			sslEnabled = this.socketConfig.getSSLConfiguration().isSslEnabled();
+    		}
     		if (protocol == Protocol.teiid) {
     	    	this.socketListener = new SocketListener(address, this.socketConfig, this.csr, getBufferServiceInjector().getValue().getBufferManager());
-    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled","Teiid JDBC = ",(this.socketConfig.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+address.getHostName()+":"+address.getPort())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled","Teiid JDBC = ",(sslEnabled?"mms://":"mm://")+address.getHostName()+":"+address.getPort())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     		}
     		else if (protocol == Protocol.pg) {
         		getVdbRepository().odbcEnabled();
         		ODBCSocketListener odbc = new ODBCSocketListener(address, this.socketConfig, this.csr, getBufferServiceInjector().getValue().getBufferManager(), getMaxODBCLobSizeAllowed(), this.logon);
         		odbc.setAuthenticationType(this.sessionService.getAuthenticationType());
-    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("odbc_enabled","Teiid ODBC - SSL=", (this.socketConfig.getSSLConfiguration().isSslEnabled()?"ON":"OFF")+" Host = "+address.getHostName()+" Port = "+address.getPort())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("odbc_enabled","Teiid ODBC - SSL=", (sslEnabled?"ON":"OFF")+" Host = "+address.getHostName()+" Port = "+address.getPort())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
     		}
     		else {
     			throw new StartException(IntegrationPlugin.Util.getString("wrong_protocol")); //$NON-NLS-1$
