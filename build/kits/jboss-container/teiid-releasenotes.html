@@ -38,7 +38,8 @@
   <LI><B>View removal hint</B> - the NO_UNNEST hint now also applies to from clause views and subqueries.  It will instruct the planner to not perform view flattening.
   <LI><B>Non-blocking statement execution</B> - Teiid JDBC extensions TeiidStatement and TeiidPreparedStatement can be used to submit queries against embedded connections with a callback to process results in a non-blocking manner.
   <LI><B>NON_STRICT limit hint</B> - the NON_STRICT hint can be used with unordered limits to tell the optimizer to not inhibit push operations even if the results will not be consistent with the logical application of the limit.
-  <LI><B>Source Hints</B> - user and transformation queries can specify a meta source hint, e.g. SELECT /*+ sh my-oracle:'leading' */ * FROM TBL.  The hint information will be passed to the passed to the translator.  The Oracle translator will by default treat the source hint as an Oracle hint. 
+  <LI><B>Source Hints</B> - user and transformation queries can specify a meta source hint, e.g. SELECT /*+ sh my-oracle:'leading' */ * FROM TBL.  The hint information will be passed to the passed to the translator.  The Oracle translator will by default treat the source hint as an Oracle hint.
+  <LI><B>Hive Translator</B> - Hive translator has been added as technology preview.  
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

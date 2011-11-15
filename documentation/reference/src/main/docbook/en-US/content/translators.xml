@@ -259,8 +259,18 @@
                 </listitem>
                 <listitem>
                     <para>
-                    <emphasis>hive</emphasis> - For use with Hive database based on Hadoop
+                    <emphasis>hive</emphasis> - For use with Hive database based on Hadoop. Hive is a data warehousing 
+                    infrastructure based on the Hadoop. Hadoop provides massive scale out and fault tolerance capabilities 
+                    for data storage and processing (using the map-reduce programming paradigm) on commodity hardware.
                     </para>
+                    <para>Hive has limited support for data types as it supports integer varients, boolean, float, 
+                    double and string. It is does not have native support for time based types, xml or LOBs. These limitations
+                    are reflected in the translator capabilities. The view table can use these types, however the tranformation
+                    would need to specify the necessary transformations. Note that in those situations, the evaluations will be
+                    done in Teiid engine. Another limitation Hive has is, it only supports EQUI join, so using any other joins types
+                    on its source tables will result in in-effiecient queries. Currently there is no tooling support for metadata 
+                    import from Hive in Designer. To write criteria based on partitioned columns, they can be modeled 
+                    on source table, but do not include in selection columns.</para>
                 </listitem>
                 <listitem>
                     <para>
