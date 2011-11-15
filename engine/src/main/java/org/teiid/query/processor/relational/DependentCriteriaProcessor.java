@@ -38,6 +38,9 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.rewriter.QueryRewriter;
@@ -116,7 +119,8 @@ public class DependentCriteriaProcessor {
                     		}
                     		last = next;
                     	}
-                    	if (distinctCount > setState.maxNdv) {
+                    	if (!setState.overMax && distinctCount > setState.maxNdv) {
+                    		LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DependentCriteriaProcessor.dep_join_backoff", valueSource, setState.valueExpression, setState.maxNdv)); //$NON-NLS-1$
                     		setState.overMax = true;
                     	}
                     }
