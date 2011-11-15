@@ -28,6 +28,7 @@ import java.sql.Statement;
 import javax.security.auth.Subject;
 
 import org.teiid.adminapi.Session;
+import org.teiid.jdbc.TeiidSQLWarning;
 
 
 
@@ -143,9 +144,8 @@ public interface ExecutionContext {
     int getBatchSize();
     
     /**
-     * Add an exception as a warning to this Execution.  If the exception is not an instance of a SQLWarning
-     * it will be wrapped by a SQLWarning for the client.  The warnings can be consumed through the 
-     * {@link Statement#getWarnings()} method.  
+     * Add an exception as a warning to this Execution.  The exception will be wrapped by a {@link TeiidSQLWarning} for the client. 
+     * The warnings can be consumed through the {@link Statement#getWarnings()} method.  
      * @param ex
      */
     void addWarning(Exception ex);
