@@ -181,6 +181,18 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		TestMMDatabaseMetaData.compareResultSet(s.getResultSet());
 	}
 	
+	@Test public void testTransactionalMultibatch() throws Exception {
+		Statement s = conn.createStatement();
+		conn.setAutoCommit(false);
+		assertTrue(s.execute("select tables.name from tables, columns limit 1025"));
+		int count = 0;
+		while (s.getResultSet().next()) {
+			count++;
+		}
+		assertEquals(1025, count);
+		conn.setAutoCommit(true);
+	}
+	
 	@Test public void testMultibatchSelect() throws Exception {
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select * from tables, columns"));

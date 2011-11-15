@@ -533,6 +533,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					//restrict the buffer size for forward only results
 					if (add && !processor.hasFinalBuffer()
 							&& !batch.getTerminationFlag() 
+							&& transactionState != TransactionState.ACTIVE
 							&& this.getTupleBuffer().getManagedRowCount() >= OUTPUT_BUFFER_MAX_BATCHES * this.getTupleBuffer().getBatchSize()) {
 						if (!dqpCore.hasWaitingPlans(RequestWorkItem.this)) {
 							//requestMore will trigger more processing
