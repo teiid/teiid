@@ -68,6 +68,7 @@ import org.teiid.core.types.XMLType.Type;
 import org.teiid.core.types.basic.StringToSQLXMLTransform;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.language.Like.MatchMode;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
@@ -1058,6 +1059,11 @@ public class Evaluator {
 	    
 		// Execute function
 		Object result = fd.invokeFunction(values);
+		
+        if (context != null && fd.getDeterministic().ordinal() <= Determinism.USER_DETERMINISTIC.ordinal()) {
+        	context.setDeterminismLevel(fd.getDeterministic());
+        }
+
 		return result;        
 	}
 	
@@ -1082,7 +1088,15 @@ public class Evaluator {
 	    return result;
 	}
 	
-	protected ValueIterator evaluateSubquery(SubqueryContainer container, List<?> tuple) 
+	/**
+	 * @param container
+	 * @param tuple
+	 * @return
+	 * @throws TeiidProcessingException
+	 * @throws BlockedException
+	 * @throws TeiidComponentException
+	 */
+	protected ValueIterator evaluateSubquery(SubqueryContainer<?> container, List<?> tuple) 
 	throws TeiidProcessingException, BlockedException, TeiidComponentException {
 		throw new UnsupportedOperationException("Subquery evaluation not possible with a base Evaluator"); //$NON-NLS-1$
 	}

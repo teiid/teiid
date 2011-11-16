@@ -36,7 +36,6 @@ import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.util.CommandContext;
 
 
 /**
@@ -184,11 +183,6 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         Method method = getInvocationMethod();
         if(method == null) {
         	throw new FunctionExecutionException("ERR.015.001.0002", QueryPlugin.Util.getString("ERR.015.001.0002", getName())); //$NON-NLS-1$ //$NON-NLS-2$
-        }
-        
-        if (getDeterministic().compareTo(Determinism.USER_DETERMINISTIC) <= 0 && values.length > 0 && values[0] instanceof CommandContext) {
-        	CommandContext cc = (CommandContext)values[0];
-        	cc.setDeterminismLevel(getDeterministic());
         }
         
         // Invoke the method and return the result
