@@ -1532,6 +1532,49 @@ int count = visitor.getCount();]]></programlisting>
 	</section>
 		
 	</section>
+	
+	<section id="delegating_translator">
+		<title>Delegating Translator</title>
+		<para>In some instances you may wish to extend several differnt kinds of translators with the same functionality.  
+		Rather than create separate subclasses for each extension, you can use the delegating translator framework which provides you with a proxying mechanism to override translator behavior.
+		It implement a delegating translator, your common translator logic should be added to a subclass of BaseDelegatingExecutionFactory where you can override any of the delegation methods to perform whatever logic you want.
+        <example>
+        	<title>Example BaseDelegatingExecutionFactory Subclass</title>
+        	<programlisting language="JAVA"><![CDATA[@Translator(name="custom-delegator")
+public class MyTranslator extends BaseDelegatingExecutionFactory<Object, Object> {
+	
+	@Override
+	public Execution createExecution(Command command,
+			ExecutionContext executionContext, RuntimeMetadata metadata,
+			Object connection) throws TranslatorException {
+		if (command instanceof Select) {
+			//modify the command or return a different execution
+			...
+			
+		}
+		//the super call will be to the delegate instance
+		return super.createExecution(command, executionContext, metadata, connection);
+	}
+	...	
+}]]></programlisting>
+		</example>
+		</para>
+		<para>You will bundle and deploy your custom delegating translator is just like any other custom translator development.  
+		To you use your delegating translator in a vdb, you define a translator override that wires in the delegate.
+        <example>
+        	<title>Example Translator Override</title>
+        	<programlisting language="JAVA"><![CDATA[<translator type="custom-delegator" name="my-translator">
+
+     <property value="delegateName" name="name of the delegate instance"/>
+
+     <!-- any custom properties you may have on your custom translator -->
+
+</translator>]]></programlisting>
+			<para>From the previous example the translator type is custom-delegator.  Now my-translator can be used as a translator-name on a source and will proxy all calls to whatever delegate instance you assign.</para>
+		</example>
+		<note><para>Note that the delegate instance can be any translator instance, whether configured by it's own translator entry or just the name of a standard translator type.</para></note>
+		</para>
+	</section>
     
     <section id="translator_package">
         <title>Packaging</title>

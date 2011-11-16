@@ -33,15 +33,17 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 
 /**
- * Delegate translator. User can define a {@link ExecutionFactory} of their own and have this translator 
- * delegate all the calls to that class. Please note that your 'vdb.xml' file will contain
- * an xml fragment like the following to configure a delegating translator.
+ * Base delegating translator. Will proxy all calls to another {@link ExecutionFactory}. 
+ * You will create a custom translator as a subclass of this class containing overrides for
+ * any method you wish to intercept.
+ * Given that subclass is given a {@link Translator} name of 'custom-delegator', your 'vdb.xml' file will
+ * contain an XML fragment like the following to assign the delegate:
  * <pre>
  * {@code
-    <translator type="delegate" name="my-translator" description="custom translator">
-        <property value="delegateName" name="name of the delegate instance"/>
-    </translator>
-   }
+ <translator type="custom-delegator" name="my-translator" description="custom translator">
+    <property value="delegateName" name="name of the delegate instance"/>
+    <!-- any custom properties will also appear here -->
+ </translator>}
  * </pre>
  *  
  */
