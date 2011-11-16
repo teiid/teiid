@@ -52,7 +52,7 @@ public class HiveMetadataProcessor extends JDBCMetdataProcessor {
 		try {
 			Statement stmt = conn.createStatement();
 			ResultSet rs =  stmt.executeQuery("SHOW TABLES"); //$NON-NLS-1$
-			if (rs.next()){
+			while (rs.next()){
 				tables.add(rs.getString(1));
 			}
 			rs.close();
@@ -96,7 +96,7 @@ public class HiveMetadataProcessor extends JDBCMetdataProcessor {
 			table.setSupportsUpdate(true);
 			Statement stmt = conn.createStatement();
 			ResultSet rs =  stmt.executeQuery("DESCRIBE "+tableName); //$NON-NLS-1$
-			if (rs.next()){
+			while (rs.next()){
 				String name = rs.getString(1); 
 				String type = rs.getString(2); 
 				String runtimeType = getRuntimeType(type);
