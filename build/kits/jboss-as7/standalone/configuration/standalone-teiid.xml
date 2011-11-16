@@ -24,12 +24,15 @@
 
     <extensions>
         <extension module="org.jboss.as.clustering.infinispan"/>
+        <extension module="org.jboss.as.cmp"/>
         <extension module="org.jboss.as.connector"/>
         <extension module="org.jboss.as.deployment-scanner"/>
         <extension module="org.jboss.as.ee"/>
         <extension module="org.jboss.as.ejb3"/>
         <extension module="org.jboss.as.jacorb"/>
+        <extension module="org.jboss.as.jaxr"/>
         <extension module="org.jboss.as.jaxrs"/>
+        <extension module="org.jboss.as.jdr"/>
         <extension module="org.jboss.as.jmx"/>
         <extension module="org.jboss.as.jpa"/>
         <extension module="org.jboss.as.logging"/>
@@ -37,6 +40,7 @@
         <extension module="org.jboss.as.messaging"/>
         <extension module="org.jboss.as.naming"/>
         <extension module="org.jboss.as.osgi"/>
+        <extension module="org.jboss.as.pojo"/>
         <extension module="org.jboss.as.remoting"/>
         <extension module="org.jboss.as.sar"/>
         <extension module="org.jboss.as.security"/>
@@ -49,16 +53,20 @@
     </extensions>
 
     <management>
-	    <security-realms>
-		    <security-realm name="PropertiesMgmtSecurityRealm">
-			    <authentication>
-				    <properties path="mgmt-users.properties" relative-to="jboss.server.config.dir" />
-			    </authentication>
-		    </security-realm>
-	    </security-realms>
+        <security-realms>
+            <security-realm name="ManagementRealm">
+                <authentication>
+                    <properties path="mgmt-users.properties" relative-to="jboss.server.config.dir"/>
+                </authentication>
+            </security-realm>
+        </security-realms>
         <management-interfaces>
-           <native-interface interface="management" port="9999" />
-           <http-interface interface="management" port="9990"/>
+            <native-interface security-realm="ManagementRealm">
+                <socket-binding native="management-native"/>
+            </native-interface>
+            <http-interface security-realm="ManagementRealm">
+                <socket-binding http="management-http"/>
+            </http-interface>
         </management-interfaces>
     </management>
 
@@ -72,12 +80,12 @@
             </console-handler>
 
             <periodic-rotating-file-handler name="FILE">
-                <level name="INFO"/>
                 <formatter>
                     <pattern-formatter pattern="%d{HH:mm:ss,SSS} %-5p [%c] (%t) %s%E%n"/>
                 </formatter>
                 <file relative-to="jboss.server.log.dir" path="server.log"/>
                 <suffix value=".yyyy-MM-dd"/>
+                <append value="true"/>
             </periodic-rotating-file-handler>
 
             <logger category="com.arjuna">
@@ -105,6 +113,7 @@
                 </handlers>
             </root-logger>
         </subsystem>
+        <subsystem xmlns="urn:jboss:domain:cmp:1.0"/>
         <subsystem xmlns="urn:jboss:domain:datasources:1.0">
             <datasources>
                 <datasource jndi-name="java:jboss/datasources/ExampleDS" enabled="true" use-java-context="true"
@@ -213,7 +222,7 @@
                 </local-cache>
                 <local-cache name="timestamps">
                     <eviction strategy="NONE"/>
-                </local-cache>                 
+                </local-cache>
             </cache-container>
             <cache-container name="teiid" default-cache="resultset">
                 <local-cache name="resultset">
@@ -222,15 +231,9 @@
                 </local-cache>
             </cache-container>            
         </subsystem>
-        <subsystem xmlns="urn:jboss:domain:jacorb:1.0">
-            <orb name="JBoss" print-version="off" giop-minor-version="2">
-                <connection max-managed-buf-size="24" outbuf-cache-timeout="-1"/>
-                <naming root-context="JBoss/Naming/root" export-corbaloc="on"/>
-            </orb>
-            <poa monitoring="off" queue-wait="off">
-                <request-processors pool-size="2" max-threads="8"/>
-            </poa>
-            <interop sun="on" chunk-custom-rmi-valuetypes="on" strict-check-on-tc-creation="off"/>
+        <subsystem xmlns="urn:jboss:domain:jacorb:1.1"/>
+        <subsystem xmlns="urn:jboss:domain:jaxr:1.0">
+            <datasource jndi-name="java:jboss/datasources/ExampleDS"/>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:jaxrs:1.0"/>
         <subsystem xmlns="urn:jboss:domain:jca:1.0">
@@ -251,6 +254,7 @@
                 </long-running-threads>
             </default-workmanager>
         </subsystem>
+        <subsystem xmlns="urn:jboss:domain:jdr:1.0"/>
         <subsystem xmlns="urn:jboss:domain:jmx:1.1" show-model="true">
             <jmx-connector registry-binding="jmx-connector-registry" server-binding="jmx-connector-server" />
         </subsystem>
@@ -267,13 +271,12 @@
                 <!-- Default journal file size is 10Mb, reduced here to 100k for faster first boot -->
                 <journal-file-size>102400</journal-file-size>
                 <journal-min-files>2</journal-min-files>
-                <journal-type>NIO</journal-type>
                 <!-- disable messaging persistence -->
                 <persistence-enabled>false</persistence-enabled>
 
                 <connectors>
-                    <netty-connector name="netty" socket-binding="messaging"/>
-                    <netty-connector name="netty-throughput" socket-binding="messaging-throughput">
+                    <netty-connector name="netty" socket-binding="messaging-client"/>
+                    <netty-connector name="netty-throughput" socket-binding="messaging-throughput-client">
                         <param key="batch-delay" value="50"/>
                     </netty-connector>
                     <in-vm-connector name="in-vm" server-id="0"/>
@@ -387,6 +390,7 @@
                 <capability name="org.jboss.osgi.xerces" startlevel="3"/>
             </capabilities>
         </subsystem>
+        <subsystem xmlns="urn:jboss:domain:pojo:1.0" />
         <subsystem xmlns="urn:jboss:domain:remoting:1.0">
             <connector name="remoting-connector" socket-binding="remoting"/>
         </subsystem>
@@ -484,7 +488,7 @@
                 <max-threads count="2" per-cpu="2"/>
             </queueless-thread-pool>
         </subsystem>
-        <subsystem xmlns="urn:jboss:domain:transactions:1.0">
+        <subsystem xmlns="urn:jboss:domain:transactions:1.1">
             <recovery-environment socket-binding="txn-recovery-environment" status-socket-binding="txn-status-manager"/>
             <core-environment>
                 <process-id>
@@ -502,7 +506,7 @@
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:webservices:1.0">
             <modify-wsdl-address>true</modify-wsdl-address>
-            <wsdl-host>localhost</wsdl-host>
+            <wsdl-host>${jboss.bind.address:127.0.0.1}</wsdl-host>
             <!--
             <wsdl-port>8080</wsdl-port>
             <wsdl-secure-port>8443</wsdl-secure-port>
@@ -543,15 +547,22 @@
         <socket-binding name="jacorb-ssl" port="3529"/>
         <socket-binding name="jmx-connector-registry" interface="management" port="1090"/>
         <socket-binding name="jmx-connector-server" interface="management" port="1091"/>
-        <socket-binding name="jndi" port="1099"/>
+        <socket-binding name="management-native" interface="management" port="9999"/>
+        <socket-binding name="management-http" interface="management" port="9990"/>
         <socket-binding name="messaging" port="5445"/>
         <socket-binding name="messaging-throughput" port="5455"/>
         <socket-binding name="osgi-http" interface="management" port="8090"/>
         <socket-binding name="remoting" port="4447"/>
         <socket-binding name="txn-recovery-environment" port="4712"/>
         <socket-binding name="txn-status-manager" port="4713"/>
-       <socket-binding name="teiid-jdbc" port="31000"/>
-       <socket-binding name="teiid-odbc" port="35432"/>        
+        <socket-binding name="teiid-jdbc" port="31000"/>
+        <socket-binding name="teiid-odbc" port="35432"/>         
+        <outbound-socket-binding name="messaging-client">
+            <local-destination socket-binding-ref="messaging"/>
+        </outbound-socket-binding>
+        <outbound-socket-binding name="messaging-throughput-client">
+            <local-destination socket-binding-ref="messaging-throughput"/>
+        </outbound-socket-binding>
     </socket-binding-group>
 
 </server>

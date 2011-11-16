@@ -17,7 +17,7 @@
     <exception-on-max-source-rows>true</exception-on-max-source-rows>
     <detect-change-events>true</detect-change-events>
     <query-timeout>23</query-timeout>
-    
+    <workmanager>wm</workmanager>
     <!-- 
     <authorization-validator module="javax.api"/>
     <policy-decider module="javax.api"/>

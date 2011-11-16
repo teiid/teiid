@@ -98,6 +98,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 		Element.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT, 
 		Element.DETECTING_CHANGE_EVENTS_ELEMENT,
 		Element.QUERY_TIMEOUT,
+		Element.WORKMANAGER,
 		Element.AUTHORIZATION_VALIDATOR_MODULE_ATTRIBUTE,
 		Element.POLICY_DECIDER_MODULE_ATTRIBUTE,
 		
@@ -308,9 +309,13 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	
     	// Query Engine
     	final RuntimeEngineDeployer engine = buildQueryEngine(operation);
+    	String workManager = "default"; //$NON-NLS-1$
+    	if (Element.WORKMANAGER.isDefined(operation)) {
+    		workManager = Element.WORKMANAGER.asString(operation);
+    	}
     	
         ServiceBuilder<DQPCore> engineBuilder = target.addService(TeiidServiceNames.ENGINE, engine);
-        engineBuilder.addDependency(ServiceName.JBOSS.append("connector", "workmanager"), WorkManager.class, engine.getWorkManagerInjector()); //$NON-NLS-1$ //$NON-NLS-2$
+        engineBuilder.addDependency(ServiceName.JBOSS.append("connector", "workmanager", workManager), WorkManager.class, engine.getWorkManagerInjector()); //$NON-NLS-1$ //$NON-NLS-2$
         engineBuilder.addDependency(ServiceName.JBOSS.append("txn", "XATerminator"), XATerminator.class, engine.getXaTerminatorInjector()); //$NON-NLS-1$ //$NON-NLS-2$
         engineBuilder.addDependency(ServiceName.JBOSS.append("txn", "TransactionManager"), TransactionManager.class, engine.getTxnManagerInjector()); //$NON-NLS-1$ //$NON-NLS-2$
         engineBuilder.addDependency(TeiidServiceNames.BUFFER_MGR, BufferServiceImpl.class, engine.getBufferServiceInjector());

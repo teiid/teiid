@@ -184,7 +184,13 @@
                 <xs:annotation>
                     <xs:documentation>Set the default query timeout for all queries in milliseconds. 0 indicates no timeout.  Lesser timeout values may be set per VDB or by clients. (default 0)</xs:documentation>
                 </xs:annotation>
-            </xs:element>                      
+            </xs:element>      
+            
+            <xs:element name="workmanager" type="xs:string" minOccurs="0" maxOccurs="1" default="default">
+                <xs:annotation>
+                    <xs:documentation>WorkManager name to use in processing. (default name is "default")</xs:documentation>
+                </xs:annotation>
+            </xs:element>                             
             
             <xs:element name="authorization-validator" minOccurs="0" maxOccurs="1">
                 <xs:complexType>

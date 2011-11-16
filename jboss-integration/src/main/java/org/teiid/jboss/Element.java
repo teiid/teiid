@@ -57,6 +57,7 @@ enum Element {
 	EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT("exception-on-max-source-rows", "exception-on-max-source-rows", ModelType.BOOLEAN, false, "true"),	
 	DETECTING_CHANGE_EVENTS_ELEMENT("detect-change-events", "detect-change-events", ModelType.BOOLEAN, false, "true"),
     QUERY_TIMEOUT("query-timeout", "query-timeout", ModelType.LONG, false, "0"),
+    WORKMANAGER("workmanager", "workmanager", ModelType.STRING, false, "default"),
     
     POLICY_DECIDER_ELEMENT("policy-decider"),
     POLICY_DECIDER_MODULE_ATTRIBUTE("module", "policy-decider-module", ModelType.STRING, false, null),

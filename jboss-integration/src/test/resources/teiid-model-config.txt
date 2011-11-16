@@ -89,6 +89,13 @@
         "max-occurs" => 1,
         "default" => 0L
     },
+    "workmanager" => {
+        "type" => STRING,
+        "description" => "WorkManager name to use in processing. (default name is \"default\")",
+        "required" => false,
+        "max-occurs" => 1,
+        "default" => "default"
+    },
     "authorization-validator-module" => {
         "type" => STRING,
         "description" => "Authorization Module; Implementation of org.teiid.dqp.internal.process.AuthorizationValidator class.",

@@ -17,6 +17,7 @@
     "exception-on-max-source-rows" : true,
     "lob-chunk-size-in-kb" : 100,
     "query-timeout" : 23,
+    "workmanager" : "wm",
     "max-active-plans" : 20,
     "max-row-fetch-size" : 20480,
     "max-source-rows-allowed" : -1,

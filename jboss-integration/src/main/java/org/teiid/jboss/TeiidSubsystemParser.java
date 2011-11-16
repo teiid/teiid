@@ -73,6 +73,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	writeElement(writer, Element.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT, node);
     	writeElement(writer, Element.DETECTING_CHANGE_EVENTS_ELEMENT, node);
     	writeElement(writer, Element.QUERY_TIMEOUT, node);
+    	writeElement(writer, Element.WORKMANAGER, node);
     	
 
     	if (like(node, Element.AUTHORIZATION_VALIDATOR_ELEMENT)) {
@@ -281,6 +282,10 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				case EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT:
     				case DETECTING_CHANGE_EVENTS_ELEMENT:    					
     					bootServices.get(reader.getLocalName()).set(Boolean.parseBoolean(reader.getElementText()));
+    					break;
+
+    				case WORKMANAGER:    					
+    					bootServices.get(reader.getLocalName()).set(reader.getElementText());
     					break;
     					
     				case MAX_THREADS_ELEMENT:
