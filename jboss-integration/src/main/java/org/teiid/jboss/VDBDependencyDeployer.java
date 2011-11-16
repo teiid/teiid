@@ -45,7 +45,6 @@ import org.jboss.vfs.VirtualFile;
 import org.jboss.vfs.VirtualFileFilter;
 import org.jboss.vfs.VisitorAttributes;
 import org.jboss.vfs.util.SuffixMatchFilter;
-import org.teiid.deployers.TeiidAttachments;
 
 class VDBDependencyDeployer implements DeploymentUnitProcessor {
 	public static final String LIB = "/lib"; //$NON-NLS-1$

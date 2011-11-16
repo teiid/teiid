@@ -28,6 +28,7 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -44,7 +45,6 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
-import org.jboss.as.security.plugins.SecurityDomainContext;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.impl.SessionMetadata;
@@ -69,7 +69,8 @@ import org.teiid.security.SecurityHelper;
 /**
  * This class serves as the primary implementation of the Session Service.
  */
-public class SessionServiceImpl implements SessionService {
+public abstract class SessionServiceImpl implements SessionService {
+	public static final String AT = "@"; //$NON-NLS-1$
 	/*
 	 * Configuration state
 	 */
@@ -82,18 +83,16 @@ public class SessionServiceImpl implements SessionService {
 	 * Injected state
 	 */
 	private VDBRepository vdbRepository;
-    private SecurityHelper securityHelper;
+    protected SecurityHelper securityHelper;
 
     private DQPCore dqp;
 
     private Map<String, SessionMetadata> sessionCache = new ConcurrentHashMap<String, SessionMetadata>();
-    private Timer sessionMonitor = new Timer("SessionMonitor", true); //$NON-NLS-1$
-    private Map<String, SecurityDomainContext> securityDomainMap;
+    private Timer sessionMonitor = new Timer("SessionMonitor", true); //$NON-NLS-1$    
     private List<String> securityDomainNames;
         
-    public void setSecurityDomains(List<String> domainNames, Map<String, SecurityDomainContext> domains) {
+    public void setSecurityDomains(List<String> domainNames) {
     	this.securityDomainNames = domainNames;
-    	this.securityDomainMap = domains;
     }
     
     // -----------------------------------------------------------------------------------
@@ -163,7 +162,7 @@ public class SessionServiceImpl implements SessionService {
 	        // Authenticate user...
 	        // if not authenticated, this method throws exception
         	boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
-	        TeiidLoginContext membership = authenticate(userName, credentials, applicationName, domains, this.securityDomainMap, this.securityHelper, onlyAllowPassthrough);
+	        TeiidLoginContext membership = authenticate(userName, credentials, applicationName, domains, onlyAllowPassthrough);
 	        userName = membership.getUserName();
 	        securityDomain = membership.getSecurityDomain();
 	        securityContext = membership.getSecurityContext();
@@ -198,6 +197,9 @@ public class SessionServiceImpl implements SessionService {
         this.sessionCache.put(newSession.getSessionId(), newSession);
         return newSession;
 	}
+	
+	abstract protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains, boolean onlyallowPassthrough)
+			throws LoginException;	
 
 	VDBMetaData getActiveVDB(String vdbName, String vdbVersion) throws SessionServiceException {
 		VDBMetaData vdb = null;
@@ -239,12 +241,6 @@ public class SessionServiceImpl implements SessionService {
 		return vdb;
 	}
 
-	protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains, Map<String, SecurityDomainContext> securityDomainMap, SecurityHelper helper, boolean onlyallowPassthrough)
-			throws LoginException {
-		TeiidLoginContext membership = new TeiidLoginContext(helper);
-        membership.authenticateUser(userName, credentials, applicationName, domains, securityDomainMap, onlyallowPassthrough);                        
-		return membership;
-	}
 	
 	@Override
 	public LoginContext createLoginContext(final String securityDomain, final String user, final String password) throws LoginException{
@@ -267,8 +263,7 @@ public class SessionServiceImpl implements SessionService {
 			}
 		}; 		
 		
-		TeiidLoginContext context = new TeiidLoginContext(this.securityHelper);
-		return context.createLoginContext(securityDomain, handler);
+		return new LoginContext(securityDomain, handler);
 	}
 	
 	@Override
@@ -410,4 +405,86 @@ public class SessionServiceImpl implements SessionService {
 	public String getKrb5SecurityDomain(){
 		return this.krb5SecurityDomain;
 	}	
+	
+    protected Collection<String> getDomainsForUser(List<String> domains, String username) {
+    	// If username is null, return all domains
+        if (username == null) {
+            return domains;
+        }  
+        
+        String domain = getDomainName(username);
+        
+        if (domain == null) {
+        	return domains;
+        }
+        
+        // ------------------------------------------
+        // Handle usernames having @ sign
+        // ------------------------------------------
+        String domainHolder = null;
+        for (String d:domains) {
+        	if(d.equalsIgnoreCase(domain)) {
+        		domainHolder = d;
+        		break;
+        	}        	
+        }
+        
+        if (domainHolder == null) {
+            return Collections.emptyList();
+        }
+        
+        LinkedList<String> result = new LinkedList<String>();
+        result.add(domainHolder);
+        return result;
+    }	
+    
+    protected static String getBaseUsername(String username) {
+        if (username == null) {
+            return username;
+        }
+        
+        int index = getQualifierIndex(username);
+
+        String result = username;
+        
+        if (index != -1) {
+            result = username.substring(0, index);
+        }
+        
+        //strip the escape character from the remaining ats
+        return result.replaceAll("\\\\"+AT, AT); //$NON-NLS-1$
+    }
+    
+    static String escapeName(String name) {
+        if (name == null) {
+            return name;
+        }
+        
+        return name.replaceAll(AT, "\\\\"+AT); //$NON-NLS-1$
+    }
+    
+    static String getDomainName(String username) {
+        if (username == null) {
+            return username;
+        }
+        
+        int index = getQualifierIndex(username);
+        
+        if (index != -1) {
+            return username.substring(index + 1);
+        }
+        
+        return null;
+    }
+    
+    static int getQualifierIndex(String username) {
+        int index = username.length();
+        while ((index = username.lastIndexOf(AT, --index)) != -1) {
+            if (index > 0 && username.charAt(index - 1) != '\\') {
+                return index;
+            }
+        }
+        
+        return -1;
+    }    
 }

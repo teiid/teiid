@@ -34,7 +34,6 @@ import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceTarget;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.deployers.TeiidAttachments;
 import org.teiid.deployers.TranslatorUtil;
 import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;

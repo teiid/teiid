@@ -98,12 +98,18 @@
         <groupId>org.jboss.logging</groupId>
         <artifactId>jboss-logging</artifactId>
         <scope>test</scope>        
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.as</groupId>
+      <artifactId>jboss-as-clustering-jgroups</artifactId>
+      <scope>test</scope> 
     </dependency> 
     <dependency>
-        <groupId>org.jboss.as</groupId>
-        <artifactId>jboss-as-security</artifactId>
-        <scope>provided</scope>
-    </dependency>              
+        <groupId>org.jboss.netty</groupId>
+        <artifactId>netty</artifactId>
+        <scope>test</scope> 
+    </dependency>
+     
 	</dependencies>
 
   <modules>

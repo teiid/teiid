@@ -163,7 +163,17 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 	@Override
     protected void performRuntime(final OperationContext context, final ModelNode operation, final ModelNode model,
             final ServiceVerificationHandler verificationHandler, final List<ServiceController<?>> newControllers) throws OperationFailedException {
-		
+		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+		try {
+			Thread.currentThread().setContextClassLoader(Module.getCallerModule().getClassLoader());
+			initilaizeTeiidEngine(context, operation, newControllers);
+		} finally {
+			Thread.currentThread().setContextClassLoader(classloader);
+		}
+	}
+
+	private void initilaizeTeiidEngine(final OperationContext context, final ModelNode operation, final List<ServiceController<?>> newControllers)
+			throws OperationFailedException {
 		ServiceTarget target = context.getServiceTarget();
 		
 		final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener();
@@ -198,7 +208,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	newControllers.add(target.addService(TeiidServiceNames.VDB_REPO, vdbRepositoryService).install());
 		
     	// VDB Status manager
-    	final VDBStatusChecker statusChecker = new VDBStatusChecker(vdbRepository);
+    	final VDBStatusCheckerExecutorService statusChecker = new VDBStatusCheckerExecutorService(vdbRepository);
     	ValueService<VDBStatusChecker> statusService = new ValueService<VDBStatusChecker>(new org.jboss.msc.value.Value<VDBStatusChecker>() {
 			@Override
 			public VDBStatusChecker getValue() throws IllegalStateException, IllegalArgumentException {
@@ -206,7 +216,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 			}
     	});
     	ServiceBuilder<VDBStatusChecker> statusBuilder = target.addService(TeiidServiceNames.VDB_STATUS_CHECKER, statusService);
-    	statusBuilder.addDependency(TeiidServiceNames.executorServiceName(asyncThreadPoolName), Executor.class,  statusChecker.getExecutorInjector());
+    	statusBuilder.addDependency(TeiidServiceNames.executorServiceName(asyncThreadPoolName), Executor.class,  statusChecker.executorInjector);
     	newControllers.add(statusBuilder.install());    	
     	
     	// System VDB Service
@@ -335,7 +345,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 				processorTarget.addDeploymentProcessor(Phase.INSTALL, Phase.INSTALL_JDBC_DRIVER|0x0001, new TranslatorDeployer());
 			}
         	
-        }, OperationContext.Stage.RUNTIME);    	
+        }, OperationContext.Stage.RUNTIME);
 	}
 	
     private <T> T buildService(Class<T> type, String moduleName) throws OperationFailedException {
@@ -508,4 +518,17 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	}
 		return engine;
 	}    
+	
+	static class VDBStatusCheckerExecutorService extends VDBStatusChecker{
+		final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
+		
+		public VDBStatusCheckerExecutorService(VDBRepository vdbRepository) {
+			super(vdbRepository);
+		}
+		
+		@Override
+		public Executor getExecutor() {
+			return this.executorInjector.getValue();
+		}    		
+	}
 }

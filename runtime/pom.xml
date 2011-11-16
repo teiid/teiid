@@ -50,64 +50,24 @@
       <artifactId>teiid-metadata</artifactId>
     </dependency>
     <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <scope>provided</scope>
-    </dependency>    
-    <dependency>
-        <groupId>commons-logging</groupId>
-        <artifactId>commons-logging</artifactId>
-        <scope>provided</scope>
+        <groupId>org.jboss</groupId>
+        <artifactId>jboss-vfs</artifactId>
+        <scope>provided</scope>   
     </dependency>
     <dependency>
         <groupId>org.jboss.netty</groupId>
         <artifactId>netty</artifactId>
         <scope>provided</scope>
     </dependency>
-        
+    <dependency>
+        <groupId>org.jboss.modules</groupId>
+        <artifactId>jboss-modules</artifactId>
+        <scope>provided</scope>
+    </dependency>   
     <dependency>
         <groupId>javax.resource</groupId>
         <artifactId>connector-api</artifactId>
-        <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-        <groupId>org.jboss.as</groupId>
-        <artifactId>jboss-as-security</artifactId>
-        <scope>provided</scope>
-    </dependency> 
-    <dependency>
-        <groupId>org.jboss.logging</groupId>
-        <artifactId>jboss-logging-generator</artifactId>
-         <scope>provided</scope>          
-    </dependency>            
-    
-    <!-- 
-    <dependency>
-        <groupId>org.jboss.cache</groupId>
-        <artifactId>jbosscache-core</artifactId>
         <scope>test</scope>
-    </dependency>     
-    <dependency>
-        <groupId>org.jboss</groupId>
-        <artifactId>jboss-vfs</artifactId>
-        <scope>provided</scope>
-    </dependency>    
-    <dependency>
-        <groupId>org.jboss.deployers</groupId>
-        <artifactId>jboss-deployers-vfs-spi</artifactId>
-        <scope>provided</scope>
-    </dependency> 
-    <dependency>    
-        <groupId>org.jboss.deployers</groupId>
-        <artifactId>jboss-deployers-vfs</artifactId>
-        <scope>provided</scope>
-    </dependency>    
-    <dependency>
-        <groupId>org.jboss.integration</groupId>
-        <artifactId>jboss-profileservice-spi</artifactId>
-        <scope>provided</scope>
-    </dependency>     
-     --> 
+    </dependency>
   </dependencies>
 </project>

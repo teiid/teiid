@@ -20,10 +20,11 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.logging;
+package org.teiid.jboss;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.teiid.logging.MessageLevel;
 
 
 /**

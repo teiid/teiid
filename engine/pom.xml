@@ -71,24 +71,13 @@
             <artifactId>jta</artifactId>
             <scope>provided</scope>
         </dependency>
+        
         <dependency>
             <groupId>org.jboss</groupId>
             <artifactId>jboss-vfs</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!-- 
-		<dependency>
-			<groupId>org.jboss.deployers</groupId>
-			<artifactId>jboss-deployers-vfs-spi</artifactId>
-			<scope>provided</scope>
-		</dependency>
 
-		<dependency>
-			<groupId>org.jboss.deployers</groupId>
-			<artifactId>jboss-deployers-vfs</artifactId>
-			<scope>provided</scope>
-		</dependency>
-         -->
 		<dependency>
 			<groupId>net.sourceforge.saxon</groupId>
 			<artifactId>saxonhe</artifactId>

@@ -23,8 +23,10 @@ package org.teiid.deployers;
 
 import java.util.LinkedList;
 import java.util.concurrent.Executor;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
-import org.jboss.msc.value.InjectedValue;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -39,7 +41,6 @@ import org.teiid.runtime.RuntimePlugin;
 public class VDBStatusChecker {
 	private static final String JAVA_CONTEXT = "java:/"; //$NON-NLS-1$
 	private VDBRepository vdbRepository;
-	private final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
 	
 	public VDBStatusChecker(VDBRepository vdbRepository) {
 		this.vdbRepository = vdbRepository;
@@ -171,11 +172,8 @@ public class VDBStatusChecker {
 		return null;
 	}
 	
-	public InjectedValue<Executor> getExecutorInjector(){
-		return this.executorInjector;
-	}
 	
-	private Executor getExecutor() {
-		return this.executorInjector.getValue();
+	public Executor getExecutor() {
+		return new ThreadPoolExecutor(1, 1, 1, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
 	}
 }

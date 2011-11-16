@@ -29,9 +29,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
-import org.jboss.modules.Module;
-import org.jboss.modules.ModuleIdentifier;
-import org.jboss.modules.ModuleLoadException;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.core.TeiidException;
@@ -90,23 +87,11 @@ public class TranslatorUtil {
 		}
 	}	
 	
-	public static ExecutionFactory buildExecutionFactory(VDBTranslatorMetaData data) throws TeiidException {
+	public static ExecutionFactory buildExecutionFactory(VDBTranslatorMetaData data, ClassLoader classLoader) throws TeiidException {
 		ExecutionFactory executionFactory;
-		
-        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-        if (data.getModuleName() != null) {
-	        try {
-	        	final ModuleIdentifier moduleId = ModuleIdentifier.create(data.getModuleName());
-	        	final Module module = Module.getCallerModuleLoader().loadModule(moduleId);
-	        	classloader = module.getClassLoader();
-	        } catch (ModuleLoadException e) {
-	            throw new TeiidException(e, RuntimePlugin.Util.getString("failed_load_module", data.getModuleName(), data.getName())); //$NON-NLS-1$
-	        }		
-        }
-		
 		try {
 			String executionClass = data.getPropertyValue(VDBTranslatorMetaData.EXECUTION_FACTORY_CLASS);
-			Object o = ReflectionHelper.create(executionClass, null, classloader);
+			Object o = ReflectionHelper.create(executionClass, null, classLoader);
 			if(!(o instanceof ExecutionFactory)) {
 				throw new TeiidException(RuntimePlugin.Util.getString("invalid_class", executionClass));//$NON-NLS-1$	
 			}

@@ -25,9 +25,9 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.concurrent.Executors;
 
-import org.jboss.as.server.deployment.module.TempFileProviderService;
-import org.jboss.modules.Module;
+import org.jboss.vfs.TempFileProvider;
 import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
 import org.teiid.core.CoreConstants;
@@ -40,16 +40,26 @@ import org.teiid.runtime.RuntimePlugin;
 public class SystemVDBDeployer {
 	private VDBRepository vdbRepository;
 	private Closeable file;
+    
+	private static final TempFileProvider PROVIDER;
+    static {
+       try {
+          PROVIDER = TempFileProvider.create("teiid-deployment", Executors.newScheduledThreadPool(2)); //$NON-NLS-1$
+       }
+       catch (final IOException ioe) {
+          throw new RuntimeException("Failed to create temp file provider");//$NON-NLS-1$
+       }
+    }	
 
 	public void start() {
 		try {
 			VirtualFile mountPoint = VFS.getChild("content/" + CoreConstants.SYSTEM_VDB); //$NON-NLS-1$
 			if (!mountPoint.exists()) {
-				InputStream contents = Module.getCallerModule().getClassLoader().findResourceAsStream(CoreConstants.SYSTEM_VDB, false);
+				InputStream contents = Thread.currentThread().getContextClassLoader().getResourceAsStream(CoreConstants.SYSTEM_VDB);
 				if (contents == null) {
 					throw new TeiidRuntimeException(RuntimeMetadataPlugin.Util.getString("system_vdb_not_found")); //$NON-NLS-1$
 				}
-				this.file = VFS.mountZip(contents, CoreConstants.SYSTEM_VDB, mountPoint, TempFileProviderService.provider());
+				this.file = VFS.mountZip(contents, CoreConstants.SYSTEM_VDB, mountPoint, PROVIDER);
 			}
 			
 			// uri conversion is only to remove the spaces in URL, note this only with above kind situation  

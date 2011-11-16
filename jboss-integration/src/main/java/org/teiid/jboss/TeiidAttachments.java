@@ -20,11 +20,12 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.teiid.deployers;
+package org.teiid.jboss;
 
 import org.jboss.as.server.deployment.AttachmentKey;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.deployers.UDFMetaData;
 import org.teiid.metadata.index.IndexMetadataFactory;
 
 public final class TeiidAttachments {

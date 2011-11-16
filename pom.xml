@@ -412,6 +412,11 @@
                 <version>1.0.0.GA</version>
             </dependency> 
             <dependency>
+                <groupId>org.jboss.modules</groupId>
+                <artifactId>jboss-modules</artifactId>
+                <version>1.0.3.GA</version>
+            </dependency>             
+            <dependency>
                 <groupId>org.jboss</groupId>
                 <artifactId>jboss-vfs</artifactId>
                 <version>3.0.1.GA</version>
@@ -465,7 +470,12 @@
                 <groupId>org.jboss.logging</groupId>
                 <artifactId>jboss-logging-generator</artifactId>
                 <version>1.0.0.CR1</version>            
-            </dependency>            
+            </dependency>   
+            <dependency>
+                <groupId>org.jboss.logging</groupId>
+                <artifactId>jboss-logging-spi</artifactId>
+                <version>2.2.0.CR1</version>
+            </dependency>         
             <dependency>
               <groupId>org.jboss.as</groupId>
               <artifactId>jboss-as-clustering-jgroups</artifactId>

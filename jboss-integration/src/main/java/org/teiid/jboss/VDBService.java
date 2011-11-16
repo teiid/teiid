@@ -24,22 +24,42 @@ package org.teiid.jboss;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.modules.Module;
+import org.jboss.modules.ModuleIdentifier;
+import org.jboss.modules.ModuleLoadException;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
-import org.teiid.adminapi.*;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.Model;
+import org.teiid.adminapi.Translator;
+import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
-import org.teiid.adminapi.impl.*;
+import org.teiid.adminapi.impl.DataPolicyMetadata;
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.SourceMappingMetadata;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBMetadataParser;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidException;
-import org.teiid.deployers.*;
+import org.teiid.deployers.MetadataStoreGroup;
+import org.teiid.deployers.TranslatorUtil;
+import org.teiid.deployers.UDFMetaData;
+import org.teiid.deployers.VDBRepository;
+import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
@@ -86,7 +106,8 @@ class VDBService implements Service<VDBMetaData> {
 			VDBTranslatorMetaData data = (VDBTranslatorMetaData)t;
 			
 			String type = data.getType();
-			Translator parent = getTranslatorRepository().getTranslatorMetaData(type);
+			VDBTranslatorMetaData parent = getTranslatorRepository().getTranslatorMetaData(type);
+			data.setModuleName(parent.getModuleName());
 			
 			Set<String> keys = parent.getProperties().stringPropertyNames();
 			for (String key:keys) {
@@ -261,20 +282,32 @@ class VDBService implements Service<VDBMetaData> {
 			throw new TranslatorNotFoundException(RuntimePlugin.Util.getString("translator_not_found", deployment.getName(), deployment.getVersion(), name)); //$NON-NLS-1$
 		}
 		try {
-		ExecutionFactory<Object, Object> ef = map.get(translator);
-		if ( ef == null) {
-			ef = TranslatorUtil.buildExecutionFactory(translator);
-			if (ef instanceof DelegatingExecutionFactory) {
-				DelegatingExecutionFactory delegator = (DelegatingExecutionFactory)ef;
-				String delegateName = delegator.getDelegateName();
-				if (delegateName != null) {
-					ExecutionFactory<Object, Object> delegate = getExecutionFactory(delegateName, vdbRepo, repo, deployment, map, building);
-					((DelegatingExecutionFactory) ef).setDelegate(delegate);
+			ExecutionFactory<Object, Object> ef = map.get(translator);
+			if ( ef == null) {
+				
+		        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+		        if (translator.getModuleName() != null) {
+			        try {
+			        	final ModuleIdentifier moduleId = ModuleIdentifier.create(translator.getModuleName());
+			        	final Module module = Module.getCallerModuleLoader().loadModule(moduleId);
+			        	classloader = module.getClassLoader();
+			        } catch (ModuleLoadException e) {
+			            throw new TeiidException(e, RuntimePlugin.Util.getString("failed_load_module", translator.getModuleName(), translator.getName())); //$NON-NLS-1$
+			        }		
+		        }
+				
+				ef = TranslatorUtil.buildExecutionFactory(translator, classloader);
+				if (ef instanceof DelegatingExecutionFactory) {
+					DelegatingExecutionFactory delegator = (DelegatingExecutionFactory)ef;
+					String delegateName = delegator.getDelegateName();
+					if (delegateName != null) {
+						ExecutionFactory<Object, Object> delegate = getExecutionFactory(delegateName, vdbRepo, repo, deployment, map, building);
+						((DelegatingExecutionFactory) ef).setDelegate(delegate);
+					}
 				}
+				map.put(translator, ef);
 			}
-			map.put(translator, ef);
-		}
-		return ef;
+			return ef;
 		} catch(TeiidException e) {
 			throw new TranslatorNotFoundException(e);
 		}

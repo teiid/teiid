@@ -22,18 +22,16 @@
 package org.teiid.jdbc;
 
 import java.io.File;
-import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import javax.security.auth.Subject;
+import javax.security.auth.login.LoginException;
 
-import org.jboss.as.security.plugins.SecurityDomainContext;
-import org.jboss.security.AuthenticationManager;
 import org.mockito.Mockito;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.VDB;
@@ -76,9 +74,11 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.GlobalTableStoreImpl;
+import org.teiid.security.Credentials;
 import org.teiid.security.SecurityHelper;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.services.SessionServiceImpl;
+import org.teiid.services.TeiidLoginContext;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
 import org.teiid.transport.LocalServerConnection;
@@ -87,7 +87,16 @@ import org.teiid.transport.LogonImpl;
 @SuppressWarnings({"nls", "serial"})
 public class FakeServer extends ClientServiceRegistryImpl implements ConnectionProfile {
 
-	SessionServiceImpl sessionService = new SessionServiceImpl();
+	SessionServiceImpl sessionService = new SessionServiceImpl() {
+		@Override
+		protected TeiidLoginContext authenticate(String userName,
+				Credentials credentials, String applicationName,
+				List<String> domains, boolean onlyallowPassthrough)
+				throws LoginException {
+			return new TeiidLoginContext(userName+"@"+domains.get(0), new Subject(), domains.get(0), new Object());
+		}
+		
+	};
 	LogonImpl logon;
 	DQPCore dqp = new DQPCore();
 	VDBRepository repo = new VDBRepository();
@@ -108,39 +117,8 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 	}
 
 	public FakeServer(DQPConfiguration config, boolean realBufferMangaer) {
-
-		Map<String, SecurityDomainContext> securityDomainMap = new HashMap<String, SecurityDomainContext>();
-		SecurityDomainContext securityContext = Mockito.mock(SecurityDomainContext.class);
-		AuthenticationManager authManager = new AuthenticationManager() {
-			@Override
-			public String getSecurityDomain() {
-				return null;
-			}
-			@Override
-			public boolean isValid(Principal principal, Object credential) {
-				return true;
-			}
-			@Override
-			public boolean isValid(Principal principal, Object credential,Subject activeSubject) {
-				return true;
-			}
-			@Override
-			public Subject getActiveSubject() {
-				return null;
-			}
-			@Override
-			public Principal getTargetPrincipal(
-					Principal anotherDomainPrincipal,
-					Map<String, Object> contextMap) {
-				return null;
-			}
-			
-		};
-		Mockito.stub(securityContext.getAuthenticationManager()).toReturn(authManager);
-		securityDomainMap.put("somedomain", securityContext); //$NON-NLS-1$
 		sessionService.setSecurityHelper(Mockito.mock(SecurityHelper.class));
-		
-		sessionService.setSecurityDomains(Arrays.asList("somedomain"), securityDomainMap);
+		sessionService.setSecurityDomains(Arrays.asList("somedomain"));
 		
 		this.logon = new LogonImpl(sessionService, null);
 		this.repo.addListener(new VDBLifeCycleListener() {

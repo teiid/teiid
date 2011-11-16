@@ -31,7 +31,6 @@ import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.as.server.deployment.DeploymentUtils;
 import org.jboss.as.server.deployment.module.ResourceRoot;
 import org.jboss.vfs.VirtualFile;
-import org.teiid.deployers.TeiidAttachments;
 
 /**
  * Detects a Translator jar and sets flags for deployment.

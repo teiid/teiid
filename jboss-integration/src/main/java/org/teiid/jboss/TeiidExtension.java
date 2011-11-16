@@ -41,7 +41,6 @@ import org.jboss.as.controller.parsing.ExtensionParsingContext;
 import org.jboss.as.controller.registry.AttributeAccess.Storage;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.dmr.ModelNode;
-import org.teiid.logging.Log4jListener;
 import org.teiid.logging.LogManager;
 
 public class TeiidExtension implements Extension {

@@ -63,18 +63,6 @@
         <artifactId>jboss-vfs</artifactId>
         <scope>provided</scope>
     </dependency>    
-    <!-- 
-    <dependency>
-        <groupId>org.jboss</groupId>
-        <artifactId>jboss-vfs</artifactId>
-        <scope>provided</scope>
-    </dependency>
-
-	<dependency>
-		<groupId>org.jboss.man</groupId>
-		<artifactId>jboss-managed</artifactId>
-	</dependency>
-     -->
      
     <dependency>
         <groupId>org.jboss.logging</groupId>

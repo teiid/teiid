@@ -38,8 +38,7 @@ public class TestTranslatorUtil {
 		
 		tm.addProperty("MyProperty", "correctly-assigned");
 		tm.setExecutionFactoryClass(MyTranslator.class);
-		
-		MyTranslator my = (MyTranslator)TranslatorUtil.buildExecutionFactory(tm);
+		MyTranslator my = (MyTranslator)TranslatorUtil.buildExecutionFactory(tm, this.getClass().getClassLoader());
 		
 		assertEquals("correctly-assigned", my.getMyProperty());
 	}
@@ -49,8 +48,7 @@ public class TestTranslatorUtil {
 		
 		tm.addProperty("myproperty", "correctly-assigned");
 		tm.setExecutionFactoryClass(MyTranslator.class);
-		
-		MyTranslator my = (MyTranslator)TranslatorUtil.buildExecutionFactory(tm);
+		MyTranslator my = (MyTranslator)TranslatorUtil.buildExecutionFactory(tm, this.getClass().getClassLoader());
 		
 		assertEquals("correctly-assigned", my.getMyProperty());
 	}

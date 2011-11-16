@@ -29,18 +29,15 @@ import java.util.Properties;
 import java.util.Random;
 import java.util.UUID;
 
-import org.jboss.modules.Module;
-import org.jboss.modules.ModuleIdentifier;
-import org.jboss.modules.ModuleLoadException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.Table.Type;
 import org.teiid.translator.TranslatorException;
 
@@ -521,11 +518,6 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		FunctionMethod func = addFunction("has_function_privilege"); //$NON-NLS-1$
 		
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-		try {
-			classLoader = Module.getModuleFromCallerModuleLoader(ModuleIdentifier.create("org.jboss.teiid")).getClassLoader(); //$NON-NLS-1$
-		} catch (ModuleLoadException e) {
-			// only in test situations
-		}
 		
 		ArrayList<FunctionParameter> inParams = new ArrayList<FunctionParameter>();
 		inParams.add(new FunctionParameter("oid", DataTypeManager.DefaultDataTypes.INTEGER, ""));//$NON-NLS-1$ //$NON-NLS-2$

@@ -1,96 +1,36 @@
 package org.teiid.services;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.junit.Assert.assertEquals;
 
-import java.util.*;
+import java.util.List;
 
-import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
-import org.jboss.as.security.plugins.SecurityDomainContext;
-import org.jboss.security.AuthenticationManager;
-import org.jboss.security.SimplePrincipal;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.VDB.Status;
-import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.client.security.InvalidSessionException;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.security.Credentials;
-import org.teiid.security.SecurityHelper;
 
 @SuppressWarnings("nls")
 public class TestSessionServiceImpl {
-	
-	public void validateSession(boolean securityEnabled) throws Exception {
-		final TeiidLoginContext impl =  Mockito.mock(TeiidLoginContext.class);
-		Mockito.stub(impl.getUserName()).toReturn("steve@somedomain");
-		final ArrayList<String> domains = new ArrayList<String>();
-		domains.add("somedomain");				
+	SessionServiceImpl ssi;
+	@Before
+	public void setup() {
+		ssi = new SessionServiceImpl() {
 
-		SessionServiceImpl ssi = new SessionServiceImpl() {
 			@Override
-			protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains,  Map<String, SecurityDomainContext> securityDomainMap, SecurityHelper helper, boolean passthough)
-				throws LoginException {
-				impl.authenticateUser(userName, credentials, applicationName, domains, securityDomainMap, passthough);
-				return impl;
+			protected TeiidLoginContext authenticate(String userName,
+					Credentials credentials, String applicationName,
+					List<String> domains, boolean onlyallowPassthrough)
+					throws LoginException {
+				return null;
 			}
 		};
-	
-		Map<String, SecurityDomainContext> securityDomainMap = new HashMap<String, SecurityDomainContext>();
-        SecurityDomainContext securityContext = Mockito.mock(SecurityDomainContext.class);
-        AuthenticationManager authManager = Mockito.mock(AuthenticationManager.class);
-        Credentials credentials = new Credentials("pass1".toCharArray());
-        Mockito.stub(authManager.isValid(new SimplePrincipal("user1"), credentials, new Subject())).toReturn(true);
-        Mockito.stub(securityContext.getAuthenticationManager()).toReturn(authManager);
-        securityDomainMap.put("somedomain", securityContext); //$NON-NLS-1$
-		
-		ssi.setSecurityDomains(Arrays.asList("somedomain"), securityDomainMap);
-		
-		try {
-			ssi.validateSession(String.valueOf(1));
-			fail("exception expected"); //$NON-NLS-1$
-		} catch (InvalidSessionException e) {
-			
-		}
-		
-		SessionMetadata info = ssi.createSession("steve", null, "foo", new Properties(), true); //$NON-NLS-1$ //$NON-NLS-2$
-		if (securityEnabled) {
-			Mockito.verify(impl).authenticateUser("steve", null, "foo", domains, securityDomainMap, false); 
-		}
-		
-		String id1 = info.getSessionId();
-		ssi.validateSession(id1);
-		
-		assertEquals(1, ssi.getActiveSessionsCount());
-		assertEquals(0, ssi.getSessionsLoggedInToVDB("a", 1).size()); //$NON-NLS-1$ 
-		
-		ssi.closeSession(id1);
-		
-		try {
-			ssi.validateSession(id1);
-			fail("exception expected"); //$NON-NLS-1$
-		} catch (InvalidSessionException e) {
-			
-		}
-		
-		try {
-			ssi.closeSession(id1);
-			fail("exception expected"); //$NON-NLS-1$
-		} catch (InvalidSessionException e) {
-			
-		}
-	}
-	
-	@Test public void testvalidateSession() throws Exception{
-		validateSession(true);
-	}
-
-	@Test public void testvalidateSession2() throws Exception {
-		validateSession(false);
 	}
 	
 	@Test
@@ -104,7 +44,6 @@ public class TestSessionServiceImpl {
 		
 		Mockito.stub(repo.getVDB("name")).toReturn(vdb);
 		
-		SessionServiceImpl ssi = new SessionServiceImpl();
 		ssi.setVDBRepository(repo);
 		
 		ssi.getActiveVDB("name", null);
@@ -123,7 +62,6 @@ public class TestSessionServiceImpl {
 		
 		Mockito.stub(repo.getVDB("name", 1)).toReturn(vdb);
 		
-		SessionServiceImpl ssi = new SessionServiceImpl();
 		ssi.setVDBRepository(repo);
 		
 		ssi.getActiveVDB("name", "1");
@@ -143,7 +81,6 @@ public class TestSessionServiceImpl {
 		
 		Mockito.stub(repo.getVDB("name", 1)).toReturn(vdb);
 		
-		SessionServiceImpl ssi = new SessionServiceImpl();
 		ssi.setVDBRepository(repo);
 		
 		ssi.getActiveVDB("name.1", null);
@@ -162,7 +99,6 @@ public class TestSessionServiceImpl {
 		
 		Mockito.stub(repo.getVDB("name", 1)).toReturn(vdb);
 		
-		SessionServiceImpl ssi = new SessionServiceImpl();
 		ssi.setVDBRepository(repo);
 		
 		try {
@@ -183,7 +119,6 @@ public class TestSessionServiceImpl {
 		
 		Mockito.stub(repo.getVDB("name", 1)).toReturn(vdb);
 		
-		SessionServiceImpl ssi = new SessionServiceImpl();
 		ssi.setVDBRepository(repo);
 		
 		try {
@@ -198,4 +133,15 @@ public class TestSessionServiceImpl {
 		} catch (SessionServiceException e) {
 		}
 	}	
+	
+    public void testBaseUsername() throws Exception {
+        
+        assertEquals("foo@bar.com", SessionServiceImpl.getBaseUsername("foo\\@bar.com@foo")); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        assertEquals("foo", SessionServiceImpl.getDomainName("me\\@bar.com@foo")); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        assertEquals(null, SessionServiceImpl.getDomainName("@")); //$NON-NLS-1$
+        
+        assertEquals("@", SessionServiceImpl.getBaseUsername("@")); //$NON-NLS-1$ //$NON-NLS-2$
+    }	
 }

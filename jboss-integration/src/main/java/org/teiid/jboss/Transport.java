@@ -106,9 +106,9 @@ public class Transport implements Service<ClientServiceRegistry>, ClientServiceR
 	public void start(StartContext context) throws StartException {
 		this.csr.setSecurityHelper(new JBossSecurityHelper());
 		
-		this.sessionService = new SessionServiceImpl();
+		this.sessionService = new JBossSessionService(this.securityDomains);
 		if (this.authenticationDomains != null && !this.authenticationDomains.isEmpty()) {
-			this.sessionService.setSecurityDomains(this.authenticationDomains, this.securityDomains);			
+			this.sessionService.setSecurityDomains(this.authenticationDomains);			
 		}
 		this.sessionService.setSessionExpirationTimeLimit(this.sessionExpirationTimeLimit);
 		this.sessionService.setSessionMaxLimit(this.sessionMaxLimit);

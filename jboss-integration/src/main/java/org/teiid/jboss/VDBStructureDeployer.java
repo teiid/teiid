@@ -23,7 +23,6 @@ package org.teiid.jboss;
 
 import org.jboss.as.server.deployment.*;
 import org.jboss.vfs.VirtualFile;
-import org.teiid.deployers.TeiidAttachments;
 import org.teiid.metadata.VdbConstants;
 
 

@@ -34,7 +34,6 @@ import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
-import org.teiid.deployers.TeiidAttachments;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
