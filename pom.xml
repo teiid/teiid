@@ -12,8 +12,8 @@
 		<site.url>http://www.jboss.org/teiid</site.url>
 	</properties>
 	<scm>
-        <connection>scm:svn:https://anonsvn.jboss.org/repos/teiid/trunk</connection>
-		<developerConnection>scm:svn:https://svn.jboss.org/repos/teiid/trunk</developerConnection>
+        <connection>scm:svn:https://anonsvn.jboss.org/repos/teiid/branches/7.6.x</connection>
+		<developerConnection>scm:svn:https://svn.jboss.org/repos/teiid/branches/7.6.x</developerConnection>
 		<url>http://anonsvn.jboss.org/repos/teiid/trunk</url>
 	</scm>
 	<licenses>
