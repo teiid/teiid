@@ -30,16 +30,22 @@
   <LI><B>File Enhancements</B> - the file translator can now optionally (via the ExceptionIfFileNotFound property) throw an exception if the path refers to a file that doesn't exist.  The file resource adapter can be configured to map file names and can prevent parent path .. references.  See the Admin Guide or the file-ds.xml template for more.
   <LI><B>TEXTTABLE Enhancements</B> - TEXTTABLE can now parse fixed width files that do not use a row delimiter and can optionally produce fixed values that haven't been trimmed.
   <LI><B>Temp table transactions</B> - Internal materialized views and temp table usage from a session and within procedures can take advantage of greater transaction support.
-  <LI><B>Buffering Improvements</B> - Added the ability to inline memory based or small lobs and added tracking of the memory held by soft references.  Also switched to a concurrent LFRU algorithm that significantly reduces writes and read misses with temporary tables.  Added a memory buffer to better handle file storage.  
-  The memory buffer may be optional be configured as off-heap for better large memory performance - see the Admin Guide for more.  Overhead is now tracked to help prevent memory errors when dealing with 10s of millions or more of batches/pages.  Serialization and disk utilization were also improved.
+  <LI><B>Buffering Improvements</B>
+    <ul>
+      <li>Added the ability to inline memory based or small lobs.
+      <li>Added tracking of the memory held by soft references and general batch overhead.  This ensures more efficient cache/memory utilization when dealing with 10s of millions or more of batches/pages.
+      <li>Also switched to a concurrent LFRU algorithm that significantly reduces writes and read misses with temporary tables.
+      <li>Added a memory buffer to better handle file storage as fixed blocks.  The memory buffer may optionally be configured as off-heap for better large memory performance - see the Admin Guide for more.  
+      <li>Serialization was improved for both internal batches and client/server batches.
+    </ul>     
   <LI><B>GSSAPI</B> - both the Teiid JDBC client/server and the ODBC pg backend can now support GSSAPI for single sign-on. 
   <LI><B>Server-side Query Timeouts</B> - default query timeouts can be configured at both the VDB (via the query-timeout VDB property) and entire server (via the teiid-jboss-beans.xml queryTimeout property).
-  <LI><B>Native Queries</B> - added the ability to specify native query SQL for JDBC physical tables and stored procedures via extension metadata.
-  <LI><B>View removal hint</B> - the NO_UNNEST hint now also applies to from clause views and subqueries.  It will instruct the planner to not perform view flattening.
+  <LI><B>Native Queries</B> - added the ability to specify native query SQL for JDBC physical tables and stored procedures via extension metadata.  See the Reference for more.
+  <LI><B>View removal hint</B> - the NO_UNNEST hint now also applies to FROM clause views and subqueries.  It will instruct the planner to not perform view flattening.
   <LI><B>Non-blocking statement execution</B> - Teiid JDBC extensions TeiidStatement and TeiidPreparedStatement can be used to submit queries against embedded connections with a callback to process results in a non-blocking manner.
   <LI><B>NON_STRICT limit hint</B> - the NON_STRICT hint can be used with unordered limits to tell the optimizer to not inhibit push operations even if the results will not be consistent with the logical application of the limit.
-  <LI><B>Source Hints</B> - user and transformation queries can specify a meta source hint, e.g. SELECT /*+ sh my-oracle:'leading' */ * FROM TBL.  The hint information will be passed to the passed to the translator.  The Oracle translator will by default treat the source hint as an Oracle hint.
-  <LI><B>Hive Translator</B> - Hive translator has been added as technology preview.  
+  <LI><B>Source Hints</B> - user and transformation queries can specify a meta source hint, e.g. SELECT /*+ sh my-oracle:'leading' */ * FROM TBL. The hint information will be passed to the translator. The Oracle translator will by default treat the source hint as an Oracle hint.  See the Reference and Developers Guide for more.
+  <LI><B>Hive Translator</B> - Hive translator has been added as a technology preview.  
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
