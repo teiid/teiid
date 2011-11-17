@@ -74,6 +74,7 @@ import org.teiid.query.sql.symbol.AbstractCaseExpression;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.DerivedColumn;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
@@ -288,6 +289,15 @@ public class ResolverUtil {
 
         return conversion;
     }
+    
+    public static void setDesiredType(List<DerivedColumn> passing, LanguageObject obj) throws QueryResolverException {
+		for (DerivedColumn dc : passing) {
+			if (dc.getAlias() == null) {
+		    	ResolverUtil.setDesiredType(dc.getExpression(), DataTypeManager.DefaultDataClasses.XML, obj);
+		    	break;
+			}
+		}
+	}
 
     /**
      * Utility to set the type of an expression if it is a Reference and has a null type.

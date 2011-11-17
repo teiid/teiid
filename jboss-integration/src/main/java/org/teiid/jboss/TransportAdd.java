@@ -58,7 +58,7 @@ import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.LocalServerConnection;
@@ -167,7 +167,7 @@ public class TransportAdd extends AbstractAddStepHandler implements DescriptionP
    			transport.setSessionExpirationTimeLimit(Element.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.asLong(operation));
    		}   		
    		if (Element.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE.isDefined(operation)) {
-   			transport.setAuthenticationType(AuthenticationType.KRB5);
+   			transport.setAuthenticationType(AuthenticationType.GSS);
    			transport.setKrb5Domain(Element.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE.asString(operation));
    		}
    		else {

@@ -35,6 +35,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorWork;
 import org.teiid.dqp.internal.datamgr.ConnectorWorkItem;
+import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.query.optimizer.TestOptimizer;
@@ -55,7 +56,7 @@ public class AutoGenDataService extends ConnectorManager{
     private int rows = 10;
     private SourceCapabilities caps;
 	public boolean throwExceptionOnExecute;
-	public int dataNotAvailable = -1;
+	public int dataNotAvailable = -2;
 	public int sleep;
     private final AtomicInteger executeCount = new AtomicInteger();
     private final AtomicInteger closeCount = new AtomicInteger();
@@ -98,9 +99,31 @@ public class AutoGenDataService extends ConnectorManager{
         final AtomicResultsMessage msg = ConnectorWorkItem.createResultsMessage(results);
         msg.setFinalRow(rows);
         return new ConnectorWork() {
+        	
+        	RequestWorkItem item;
+        	boolean returnedInitial;
+        	
+        	@Override
+        	public boolean isDataAvailable() {
+        		return true;
+        	}
+        	
+        	@Override
+        	public void setRequestWorkItem(RequestWorkItem item) {
+        		this.item = item;
+        	}
 			
 			@Override
 			public AtomicResultsMessage more() throws TranslatorException {
+				if (dataNotAvailable == -1) {
+					dataNotAvailable = -2; 
+					item.moreWork(); //this alone is not sufficient, we have to call the data available method to prevent
+					                 //timing issues
+					throw DataNotAvailableException.NO_POLLING;
+				}
+				if (returnedInitial) {
+					return msg;
+				}
 				throw new RuntimeException("Should not be called"); //$NON-NLS-1$
 			}
 			
@@ -117,9 +140,13 @@ public class AutoGenDataService extends ConnectorManager{
 				if (throwExceptionOnExecute) {
 		    		throw new TranslatorException("Connector Exception"); //$NON-NLS-1$
 		    	}
-				if (dataNotAvailable > -1) {
+				if (dataNotAvailable > -2) {
 					int delay = dataNotAvailable;
-					dataNotAvailable = -1;
+					if (delay == -1 && !returnedInitial) {
+						returnedInitial = true;
+						return ConnectorWorkItem.createResultsMessage(new List[0]);
+					}
+					dataNotAvailable = -2;
 					throw new DataNotAvailableException(delay);
 				}
 				return msg;

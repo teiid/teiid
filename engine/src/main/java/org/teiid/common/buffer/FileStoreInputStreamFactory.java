@@ -26,12 +26,14 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.Charset;
 
 import org.teiid.common.buffer.FileStore.FileStoreOutputStream;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.util.InputStreamReader;
 
 public final class FileStoreInputStreamFactory extends InputStreamFactory {
 	private final FileStore lobBuffer;
@@ -50,6 +52,11 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 			return new ByteArrayInputStream(fsos.getBuffer(), 0, fsos.getCount());
 		}
 		return lobBuffer.createInputStream(0);
+	}
+	
+	@Override
+	public Reader getCharacterStream() throws IOException {
+		return new InputStreamReader(getInputStream(), Charset.forName(encoding).newDecoder());
 	}
 
 	@Override

@@ -1385,7 +1385,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	boolean hasOrdinal = false;
     	for (XMLColumn xc : obj.getColumns()) {
 			if (!xc.isOrdinal()) {
-				if (xc.getDefaultExpression() != null && !EvaluatableVisitor.isFullyEvaluatable(obj, false)) {
+				if (xc.getDefaultExpression() != null && !EvaluatableVisitor.isFullyEvaluatable(xc.getDefaultExpression(), false)) {
 					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.invalid_default", xc.getDefaultExpression()), obj); //$NON-NLS-1$
 				}
 				continue;

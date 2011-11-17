@@ -38,6 +38,7 @@ import java.util.Set;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.SubqueryContainer;
+import org.teiid.query.sql.lang.TableFunctionReference;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -374,6 +375,13 @@ public class PlanNode {
 			}
 			case NodeConstants.Types.JOIN: {
 				toSearch = (List<Criteria>) this.getProperty(NodeConstants.Info.JOIN_CRITERIA);
+				break;
+			}
+			case NodeConstants.Types.SOURCE: {
+				TableFunctionReference tfr = (TableFunctionReference)this.getProperty(NodeConstants.Info.TABLE_FUNCTION);
+				if (tfr != null) {
+					toSearch = Arrays.asList(tfr);
+				}
 				break;
 			}
 		}

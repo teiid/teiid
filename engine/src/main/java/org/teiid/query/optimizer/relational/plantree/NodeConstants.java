@@ -126,6 +126,7 @@ public final class NodeConstants {
         CORRELATED_REFERENCES,  // SymbolMap
         MAKE_NOT_DEP,       // Boolean
         INLINE_VIEW,        // If the source node represents an inline view
+        NO_UNNEST,
         MAKE_IND,
         
         // Group node properties
@@ -141,12 +142,14 @@ public final class NodeConstants {
         EST_JOIN_COST,       // Float value that represents the estimated cost of a merge join (the join strategy for this could be Nested Loop or Merge)
         EST_CARDINALITY,     // Float represents the estimated cardinality (amount of rows) produced by this node
         EST_COL_STATS,
-        EST_SELECTIVITY,     // Float that represents the selectivity of a criteria node 
+        EST_SELECTIVITY,     // Float that represents the selectivity of a criteria node
+        MAX_NDV,			 // The max NDV before the dependent join will be aborted
         
         // Tuple limit and offset
         MAX_TUPLE_LIMIT,     // Expression that evaluates to the max number of tuples generated
         OFFSET_TUPLE_COUNT,  // Expression that evaluates to the tuple offset of the starting tuple
         IS_IMPLICIT_LIMIT,   // Boolean if the limit is created by the rewriter as part of a subquery optimization
+        IS_STRICT,			 // Boolean if the unordered limit should be enforced strictly
 
         // Common AP Information
         ACCESS_PATTERNS,     // Collection <List <Object element ID> >

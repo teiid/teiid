@@ -60,7 +60,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.TeiidURL;
-import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.Credentials;
 import org.teiid.security.SecurityHelper;
@@ -77,7 +77,7 @@ public abstract class SessionServiceImpl implements SessionService {
     private long sessionMaxLimit = DEFAULT_MAX_SESSIONS;
 	private long sessionExpirationTimeLimit = DEFAULT_SESSION_EXPIRATION;
 	private AuthenticationType authenticationType = AuthenticationType.CLEARTEXT;
-	private String krb5SecurityDomain;
+	private String gssSecurityDomain;
 	
 	/*
 	 * Injected state
@@ -397,13 +397,18 @@ public abstract class SessionServiceImpl implements SessionService {
     	this.securityHelper.associateSecurityContext(securityDomain, this.securityHelper.createSecurityContext(securityDomain, principal, null, subject));		
 	}
 	
-	public void setKrb5SecurityDomain(String domain) {
-		this.krb5SecurityDomain = domain;
+	@Override
+	public Subject getSubjectInContext(String securityDomain) {
+		return this.securityHelper.getSubjectInContext(securityDomain);
+	}
+	
+	public void setGssSecurityDomain(String domain) {
+		this.gssSecurityDomain = domain;
 	}
 	
 	@Override
-	public String getKrb5SecurityDomain(){
-		return this.krb5SecurityDomain;
+	public String getGssSecurityDomain(){
+		return this.gssSecurityDomain;
 	}	
 	
     protected Collection<String> getDomainsForUser(List<String> domains, String username) {

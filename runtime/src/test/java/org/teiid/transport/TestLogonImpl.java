@@ -34,7 +34,7 @@ import org.teiid.client.security.SessionToken;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.net.TeiidURL;
-import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
+import org.teiid.net.socket.AuthenticationType;
 
 
 public class TestLogonImpl extends TestCase {

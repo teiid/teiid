@@ -161,6 +161,7 @@ public class Delete extends TranslatableProcedureContainer {
 		Delete other = (Delete) obj;
         
         return EquivalenceUtil.areEqual(getGroup(), other.getGroup()) &&
+        	   sameOptionAndHint(other) &&
                EquivalenceUtil.areEqual(getCriteria(), other.getCriteria());
     }
     

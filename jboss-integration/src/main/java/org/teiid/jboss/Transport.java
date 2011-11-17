@@ -54,7 +54,7 @@ import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.SecurityHelper;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.services.SessionServiceImpl;
@@ -116,7 +116,7 @@ public class Transport implements Service<ClientServiceRegistry>, ClientServiceR
 		this.sessionService.setVDBRepository(getVdbRepository());
 		this.sessionService.setSecurityHelper(this.csr.getSecurityHelper());
 		this.sessionService.setAuthenticationType(getAuthenticationType());
-		this.sessionService.setKrb5SecurityDomain(this.krb5Domain);
+		this.sessionService.setGssSecurityDomain(this.krb5Domain);
 		this.sessionService.start();
 		
     	// create the necessary services

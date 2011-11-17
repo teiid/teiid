@@ -181,6 +181,18 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		TestMMDatabaseMetaData.compareResultSet(s.getResultSet());
 	}
 	
+	@Test public void testTransactionalMultibatch() throws Exception {
+		Statement s = conn.createStatement();
+		conn.setAutoCommit(false);
+		assertTrue(s.execute("select tables.name from tables, columns limit 1025"));
+		int count = 0;
+		while (s.getResultSet().next()) {
+			count++;
+		}
+		assertEquals(1025, count);
+		conn.setAutoCommit(true);
+	}
+	
 	@Test public void testMultibatchSelect() throws Exception {
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select * from tables, columns"));
@@ -220,6 +232,20 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		//getting as a clob is unsupported, since it uses the lo logic
 		String clob = rs.getString(1);
 		assertEquals(3000, clob.length());
+	}
+	
+	@Test public void testMultiRowBuffering() throws Exception {
+		Statement s = conn.createStatement();
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < 11; i++) {
+			sb.append("select '' union all ");
+		}
+		sb.append("select ''");
+		assertTrue(s.execute(sb.toString()));
+		ResultSet rs = s.getResultSet();
+		assertTrue(rs.next());
+		String str = rs.getString(1);
+		assertEquals(0, str.length());
 	}
 
 	@Test public void testTransactionCycle() throws Exception {

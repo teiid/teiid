@@ -35,6 +35,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.source.XMLSystemFunctions;
 
 
 /**
@@ -59,7 +60,7 @@ public class MappingOutputter {
      */
     public void write(MappingDocument doc, PrintWriter stream) throws IOException {
         try {
-        	XMLOutputFactory xof = XMLOutputFactory.newInstance();
+        	XMLOutputFactory xof = XMLSystemFunctions.getOutputFactory();
         	writer = xof.createXMLStreamWriter(stream);
         	writer.writeStartDocument("UTF-8", "1.0"); //$NON-NLS-1$ //$NON-NLS-2$
         	writer.writeStartElement(ELEM_ROOT);

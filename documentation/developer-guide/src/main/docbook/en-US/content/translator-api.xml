@@ -263,6 +263,22 @@ public void setFoo(String value)
 				interface that defines how executions are
 				cancelled and closed.  ProcedureExecution also extends ResultSetExecution, since procedures may also return resultsets.</para>
 		</section>
+		
+		<section>
+			<title>ExecutionContext</title>
+			<para>The <code>org.teiid.translator.ExecutionContext</code> provides a considerable amount of information related to the current execution.  
+			An <code>ExecutionContext</code> instance is made available to each <code>Execution</code>.  Specific usage is highlighted in this guide where applicable, but you may use any informational getter method as desired.
+			Example usage would include calling <code>ExecutionContext.getRequestIdentifier()</code>, <code>ExecutionContext.getSession()</code>, etc. for logging purposes.</para>
+			
+			<section>
+				<title>Source Hints</title>
+				<para>The Teiid source meta-hint is used to provide hints directly to source executions via user or transformation queries.  See the reference for more on source hints.  If specified and applicable, the general and source specific
+				hint will be supplied via the ExecutionContext methods <code>getGeneralHint</code> and <code>getSourceHint</code>.  See the source for the <code>OracleExecutionFactory</code> for an example of how this source hint information
+				can be utilized.</para>
+			</section>
+			
+		</section>
+		
 		<section>
 			<title>ResultSetExecution</title>
 			<para>
@@ -270,14 +286,14 @@ public void setFoo(String value)
 				While the command is being executed, the translator provides results via the
 				ResultSetExecution's "next" method. The "next" method should return null to indicate the end
 				of results. Note: the expected batch size can be obtained from the
-				ExecutionContext and used as a hint in fetching results from the EIS.
+				<code>ExecutionContext.getBatchSize()</code> method and used as a hint in fetching results from the EIS.
 			</para>
 		</section>
 		<section>
 			<title>Update Execution</title>
 			<para>Each execution returns the update count(s) expected by the update command. 
 		          If possible BatchedUpdates should be executed atomically.  
-		          The ExecutionContext can be used to determine if the execution is already under a transaction.</para>
+		          The <code>ExecutionContext.isTransactional()</code> method can be used to determine if the execution is already under a transaction.</para>
 		</section>
 		<section>
 			<title>Procedure Execution</title>
@@ -293,13 +309,27 @@ public void setFoo(String value)
          
 		<section>
 			<title>Asynchronous Executions</title>
-			<para>In some scenarios, a translator needs to execute
-				asynchronously and allow the executing thread to perform other work.  To allow this, you should Throw a DataNotAvailableExecption during a retrival method, rather than explicitly waiting or sleeping for the results. The
-						DataNotAvailableException may take a delay parameter in its
-						constructor to indicate how long the system should wait befor polling
-						for results.  Any non-negative value is allowed. 
-			</para>
-			<para>Since the exection and the associated connection are not closed until the work has completed, care should be taken if using asynchronous executions that hold a lot of state.</para>
+    <para>
+        In some scenarios, a translator needs to execute
+        asynchronously and allow the executing thread to perform other work. To allow this, you should Throw a
+        <code>DataNotAvailableExecption</code>
+        during a retrival method, rather than explicitly waiting or sleeping for the results.
+        <note>
+            <para>
+                A <code>DataNotAvailableException</code> should not be thrown by the execute method. The
+                <code>DataNotAvailableException</code> may take a delay parameter in its
+                constructor to indicate how long the system should wait befor polling
+                for results. Any non-negative value indicates a time until the next polling should be performed.
+                The
+                <code>DataNotAvailableException.NO_POLLING</code>
+                exception (or any DataNotAvailableException with a negative delay) can be thrown to indicate that
+                the execution will call <code>ExecutionContext.dataAvailable()</code> to indicate processing should resume.
+           </para>
+       </note>
+    </para>
+    <note>
+        <para>Since the exection and the associated connection are not closed until the work has completed, care should be taken if using asynchronous executions that hold a lot of state.</para>
+    </note>
 		</section>
         
 		<section>
@@ -342,6 +372,7 @@ public void setFoo(String value)
 				termination of queries being processed and may allow the underlying data source to terminate its operations
 				faster as well.</para>
 		</section>
+				
 	</section>
 	
 	<section id="command_language">
@@ -1519,8 +1550,8 @@ int count = visitor.getCount();]]></programlisting>
 			connection is either closed/released as soon as all rows for that
 			execution have been retrieved. However, LOB	objects may need to be
 			read after their initial retrieval of results.  When LOBs are detected
-			the default closing behavior	is prevented by setting a flag on the
-			ExecutionContext. See ExecutionContext.keepAlive() method. </para>
+			the default closing behavior is prevented by setting a flag via the
+			<code>ExecutionContext.keepAlive</code> method. </para>
 
 		<para>When the "keepAlive" alive flag is set, then the execution object is only closed when user's Statement is closed.</para>
 
@@ -1536,6 +1567,49 @@ int count = visitor.getCount();]]></programlisting>
 			the large object and use it for insert or update.</para>
 	</section>
 		
+	</section>
+	
+	<section id="delegating_translator">
+		<title>Delegating Translator</title>
+		<para>In some instances you may wish to extend several differnt kinds of translators with the same functionality.  
+		Rather than create separate subclasses for each extension, you can use the delegating translator framework which provides you with a proxying mechanism to override translator behavior.
+		It implement a delegating translator, your common translator logic should be added to a subclass of BaseDelegatingExecutionFactory where you can override any of the delegation methods to perform whatever logic you want.
+        <example>
+        	<title>Example BaseDelegatingExecutionFactory Subclass</title>
+        	<programlisting language="JAVA"><![CDATA[@Translator(name="custom-delegator")
+public class MyTranslator extends BaseDelegatingExecutionFactory<Object, Object> {
+	
+	@Override
+	public Execution createExecution(Command command,
+			ExecutionContext executionContext, RuntimeMetadata metadata,
+			Object connection) throws TranslatorException {
+		if (command instanceof Select) {
+			//modify the command or return a different execution
+			...
+			
+		}
+		//the super call will be to the delegate instance
+		return super.createExecution(command, executionContext, metadata, connection);
+	}
+	...	
+}]]></programlisting>
+		</example>
+		</para>
+		<para>You will bundle and deploy your custom delegating translator is just like any other custom translator development.  
+		To you use your delegating translator in a vdb, you define a translator override that wires in the delegate.
+        <example>
+        	<title>Example Translator Override</title>
+        	<programlisting language="JAVA"><![CDATA[<translator type="custom-delegator" name="my-translator">
+
+     <property value="delegateName" name="name of the delegate instance"/>
+
+     <!-- any custom properties you may have on your custom translator -->
+
+</translator>]]></programlisting>
+			<para>From the previous example the translator type is custom-delegator.  Now my-translator can be used as a translator-name on a source and will proxy all calls to whatever delegate instance you assign.</para>
+		</example>
+		<note><para>Note that the delegate instance can be any translator instance, whether configured by it's own translator entry or just the name of a standard translator type.</para></note>
+		</para>
 	</section>
     
     <section>

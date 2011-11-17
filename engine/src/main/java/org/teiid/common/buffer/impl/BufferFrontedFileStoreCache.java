@@ -39,9 +39,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.teiid.common.buffer.AutoCleanupUtil;
@@ -98,7 +101,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 	
 	private static final int DEFAULT_MIN_DEFRAG = 1 << 26;
 	private static final byte[] HEADER_SKIP_BUFFER = new byte[16];
-	private static final int EVICTION_SCANS = 5;
+	private static final int EVICTION_SCANS = 2;
 
 	public static final int DEFAuLT_MAX_OBJECT_SIZE = 1 << 23;
 	
@@ -343,6 +346,8 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 	LrfuEvictionQueue<PhysicalInfo> memoryBufferEntries = new LrfuEvictionQueue<PhysicalInfo>(readAttempts);
 	private Semaphore memoryWritePermits; //prevents deadlock waiting for free blocks
 	private ReentrantReadWriteLock memoryEvictionLock = new ReentrantReadWriteLock(true);
+	private ReentrantLock freedLock = new ReentrantLock();
+	private Condition blocksFreed = freedLock.newCondition();
 	
 	private int blocks;
 	private ConcurrentBitSet blocksInuse;
@@ -625,16 +630,11 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 
 	private void checkForLowMemory() {
 		//proactively create freespace
-		if (!cleanerRunning.get()) {
-			if (lowBlocks(false) && cleanerRunning.compareAndSet(false, true)) {
-				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Starting memory buffer cleaner"); //$NON-NLS-1$
-				asynchPool.execute(cleaningTask);
-				if (lowBlocks(true)) {
-					//do a non-blocking removal before we're forced to block
-					evictFromMemoryBuffer(false);
-				}
-			}
-		} else if (lowBlocks(true)) {
+		if (!cleanerRunning.get() && lowBlocks(false) && cleanerRunning.compareAndSet(false, true)) {
+			LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Starting memory buffer cleaner"); //$NON-NLS-1$
+			asynchPool.execute(cleaningTask);
+		} 
+		if (lowBlocks(true)) {
 			//do a non-blocking removal before we're forced to block
 			evictFromMemoryBuffer(false);
 		}
@@ -931,6 +931,12 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 				}
 				if (bm != null) {
 					result = bm.free(acquireDataBlock);
+					freedLock.lock();
+					try {
+						blocksFreed.signalAll();
+					} finally {
+						freedLock.unlock();
+					}
 				}
 			}
 		}
@@ -993,8 +999,27 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 				}
 			} 
 			if (acquire && next == EMPTY_ADDRESS) {
-				throw new AssertionError("Could not free space for pending write"); //$NON-NLS-1$
+				if (!writeLocked) {
+					memoryEvictionLock.writeLock().lock();
+					writeLocked = true;
+				}
+				freedLock.lock();
+				try {
+					next = blocksInuse.getAndSetNextClearBit();
+					if (next != EMPTY_ADDRESS) {
+						return next;
+					}
+					blocksFreed.await(120, TimeUnit.SECONDS);
+				} finally {
+					freedLock.unlock();
+				}
+				next = blocksInuse.getAndSetNextClearBit();
+				if (next == EMPTY_ADDRESS) {
+					throw new AssertionError("Could not free space for pending write"); //$NON-NLS-1$
+				}
 			}
+		} catch (InterruptedException e) {
+			throw new TeiidRuntimeException(e);
 		} finally {
 			if (writeLocked) {
 				memoryEvictionLock.writeLock().unlock();

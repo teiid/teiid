@@ -44,7 +44,6 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.util.CommandContext;
@@ -205,10 +204,6 @@ public class RuleRemoveOptionalJoins implements
 		return NodeEditor.findAllNodes(optionalNode, NodeConstants.Types.JOIN);
     }
     
-    /**
-     * Ensure that the needed elements come only from the left hand side and 
-     * that cardinality won't matter
-     */
     static boolean useNonDistinctRows(PlanNode parent) {
 		while (parent != null) {
 			if (parent.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL)) {
@@ -229,16 +224,11 @@ public class RuleRemoveOptionalJoins implements
 					return AggregateSymbol.areAggregatesCardinalityDependent(aggs);
 				}
 				case NodeConstants.Types.TUPLE_LIMIT: {
-					if (!(parent.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT) instanceof Constant) 
-							|| parent.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT) != null) {
-						return true;
-					}
-					Constant constant = (Constant)parent.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT);
-					if (!Integer.valueOf(1).equals(constant.getValue())) {
+					if (FrameUtil.isOrderedOrStrictLimit(parent)) {
 						return true;
 					}
 				}
-				//we assmue that projects of non-deterministic expressions do not matter
+				//we assume that projects of non-deterministic expressions do not matter
 			}
 			parent = parent.getParent();
 		}

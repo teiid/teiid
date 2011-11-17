@@ -547,8 +547,8 @@ public class FrameUtil {
         return null;
     }
     
-    public static boolean isOrderedLimit(PlanNode node) {
-    	return node.getType() == NodeConstants.Types.TUPLE_LIMIT && NodeEditor.findNodePreOrder(node, NodeConstants.Types.SORT, NodeConstants.Types.PROJECT | NodeConstants.Types.SET_OP) != null;
+    public static boolean isOrderedOrStrictLimit(PlanNode node) {
+    	return node.getType() == NodeConstants.Types.TUPLE_LIMIT && (NodeEditor.findNodePreOrder(node, NodeConstants.Types.SORT, NodeConstants.Types.PROJECT | NodeConstants.Types.SET_OP) != null || node.hasProperty(Info.IS_STRICT));
     }
 
 }

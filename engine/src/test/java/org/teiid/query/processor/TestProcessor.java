@@ -2273,7 +2273,28 @@ public class TestProcessor {
 
         // Run query
         helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testCorrelatedSubqueryCaching() throws Exception {
+        String sql = "Select e1 from pm1.g1 where e2 in (select e2 FROM pm2.g1 WHERE pm1.g1.e3 = pm2.g1.e3)"; //$NON-NLS-1$
 
+        // Create expected results
+        List[] expected = new List[] {
+            Arrays.asList("a"), Arrays.asList((String)null), Arrays.asList("a"), Arrays.asList("c"), Arrays.asList("b"), Arrays.asList("a") //$NON-NLS-1$
+        };
+
+        // Construct data manager with data
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+
+        // Plan query
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+        // Run query
+        doProcess(plan, dataManager, expected, createCommandContext());
+
+        //three queries - 1 for the outer and 1 each for true/false
+        assertEquals(3, dataManager.getQueries().size());
     }
     
     /**

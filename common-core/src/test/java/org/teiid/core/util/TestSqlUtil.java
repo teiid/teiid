@@ -22,72 +22,71 @@
 
 package org.teiid.core.util;
 
-import org.teiid.core.util.SqlUtil;
+import static org.junit.Assert.*;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 /**
  */
-public class TestSqlUtil extends TestCase {
-
-    public TestSqlUtil(String name) {
-        super(name);
-    }
+public class TestSqlUtil {
 
     public void helpTest(String sql, boolean isUpdate) {
         boolean actual = SqlUtil.isUpdateSql(sql);
         assertEquals(isUpdate, actual);
     }
     
-    public void testSelect() {
+    @Test public void testSelect() {
         helpTest("SELECT x FROM y", false); //$NON-NLS-1$
     }
     
-    public void testInsert() {
+    @Test public void testInsert() {
         helpTest("Insert INTO g (a) VALUES (1)", true); //$NON-NLS-1$
     }
     
-    public void testUpdate() {
+    @Test public void testUpdate() {
         helpTest("upDate x set a=5", true); //$NON-NLS-1$
     }
     
-    public void testDelete() {
+    @Test public void testDelete() {
         helpTest("delete FROM x", true); //$NON-NLS-1$
     }
 
-    public void testInsertWithWhitespace() {
+    @Test public void testInsertWithWhitespace() {
         helpTest("\nINSERT INTO g (a) VALUES (1)", true); //$NON-NLS-1$
     }
     
-    public void testExec() {
+    @Test public void testExec() {
         helpTest("exec sq1()", false); //$NON-NLS-1$
     }
     
-    public void testXquery() {
+    @Test public void testXquery() {
         helpTest("<i/>", false); //$NON-NLS-1$
     }
     
-    public void testSelectInto1() {
+    @Test public void testSelectInto1() {
         helpTest("SELECT x INTO z FROM y", true); //$NON-NLS-1$
     }
     
-    public void testSelectInto2() {
+    @Test public void testSelectInto2() {
         helpTest("SELECT x, INTOz FROM y", false); //$NON-NLS-1$
     }
     
-    public void testSelectInto3() {
+    @Test public void testSelectInto3() {
         helpTest("SELECT x into z FROM y", true); //$NON-NLS-1$
     }
 
-    public void testSelectInto4() {
+    @Test public void testSelectInto4() {
         helpTest("SELECT x into z", true); //$NON-NLS-1$
     }
     
-    public void testCreate() {
+    @Test public void testSelectInto5() {
+        helpTest("SELECT x, ' into ' from z", false); //$NON-NLS-1$
+    }
+    
+    @Test public void testCreate() {
     	helpTest(" create table x", true); //$NON-NLS-1$
     }
     
-    public void testDrop() {
+    @Test public void testDrop() {
     	helpTest("/* */ drop table x", true); //$NON-NLS-1$
     }
 

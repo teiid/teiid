@@ -68,6 +68,7 @@ import org.teiid.core.types.XMLType.Type;
 import org.teiid.core.types.basic.StringToSQLXMLTransform;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.language.Like.MatchMode;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
@@ -435,7 +436,7 @@ public class Evaluator {
 		}
 		
         Matcher matcher = patternRegex.matcher(search);
-        return matcher.matches();
+        return matcher.find();
 	}
 
 	private Boolean evaluate(AbstractSetCriteria criteria, List<?> tuple)
@@ -925,6 +926,17 @@ public class Evaluator {
 	public Result evaluateXQuery(SaxonXQueryExpression xquery, List<DerivedColumn> cols, List<?> tuple, RowProcessor processor) 
 	throws BlockedException, TeiidComponentException, TeiidProcessingException {
 		HashMap<String, Object> parameters = new HashMap<String, Object>();
+		Object contextItem = evaluateParameters(cols, tuple, parameters);
+		return XQueryEvaluator.evaluateXQuery(xquery, contextItem, parameters, processor, context);
+	}
+
+	/**
+	 * Evaluate the parameters and return the context item if it exists
+	 */
+	public Object evaluateParameters(List<DerivedColumn> cols, List<?> tuple,
+			HashMap<String, Object> parameters)
+			throws ExpressionEvaluationException, BlockedException,
+			TeiidComponentException {
 		Object contextItem = null;
 		for (DerivedColumn passing : cols) {
 			Object value = this.evaluate(passing.getExpression(), tuple);
@@ -934,7 +946,7 @@ public class Evaluator {
 				parameters.put(passing.getAlias(), value);
 			}
 		}
-		return XQueryEvaluator.evaluateXQuery(xquery, contextItem, parameters, processor, context);
+		return contextItem;
 	}
 
 	private Evaluator.NameValuePair<Object>[] getNameValuePairs(List<?> tuple, List<DerivedColumn> args, boolean xmlNames)
@@ -1047,6 +1059,11 @@ public class Evaluator {
 	    
 		// Execute function
 		Object result = fd.invokeFunction(values);
+		
+        if (context != null && fd.getDeterministic().ordinal() <= Determinism.USER_DETERMINISTIC.ordinal()) {
+        	context.setDeterminismLevel(fd.getDeterministic());
+        }
+
 		return result;        
 	}
 	
@@ -1071,7 +1088,15 @@ public class Evaluator {
 	    return result;
 	}
 	
-	protected ValueIterator evaluateSubquery(SubqueryContainer container, List<?> tuple) 
+	/**
+	 * @param container
+	 * @param tuple
+	 * @return
+	 * @throws TeiidProcessingException
+	 * @throws BlockedException
+	 * @throws TeiidComponentException
+	 */
+	protected ValueIterator evaluateSubquery(SubqueryContainer<?> container, List<?> tuple) 
 	throws TeiidProcessingException, BlockedException, TeiidComponentException {
 		throw new UnsupportedOperationException("Subquery evaluation not possible with a base Evaluator"); //$NON-NLS-1$
 	}

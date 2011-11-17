@@ -534,6 +534,9 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 							if (function.getFunctionDescriptor().getPushdown() != PushDown.MUST_PUSHDOWN || EvaluatableVisitor.willBecomeConstant(function)) {
 								continue;
 							}
+							if (!getWindowFunctions(Arrays.asList(ss)).isEmpty()) {
+								break; //TODO: support subexpression pushing
+							}
 							//assume we need the whole thing
 							requiredSymbols.add(ss);
 							symbolRequired = true;

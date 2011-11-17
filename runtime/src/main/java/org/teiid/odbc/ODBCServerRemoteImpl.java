@@ -54,7 +54,7 @@ import org.teiid.jdbc.StatementImpl;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.odbc.PGUtil.PgColInfo;
 import org.teiid.query.parser.SQLParserUtil;
 import org.teiid.runtime.RuntimePlugin;
@@ -189,7 +189,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		if (this.authType.equals(AuthenticationType.CLEARTEXT)) {
 			this.client.useClearTextAuthentication();
 		}
-		else if (this.authType.equals(AuthenticationType.KRB5)) {
+		else if (this.authType.equals(AuthenticationType.GSS)) {
 			this.client.useAuthenticationGSS();
 		}
 	}
@@ -205,17 +205,21 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			if (authType.equals(AuthenticationType.CLEARTEXT)) {
 				password = data.readString();
 			}
-			else if (authType.equals(AuthenticationType.KRB5)) {
+			else if (authType.equals(AuthenticationType.GSS)) {
 				byte[] serviceToken = data.readServiceToken();
             	LogonResult result = this.logon.neogitiateGssLogin(this.props, serviceToken, false);
-            	if (!Boolean.TRUE.equals(result.getProperty(ILogon.KRB5_ESTABLISHED))) {
-	            	serviceToken = (byte[])result.getProperty(ILogon.KRB5TOKEN);
-	            	this.client.authenticationGSSContinue(serviceToken);
-	            	return;
+            	serviceToken = (byte[])result.getProperty(ILogon.KRB5TOKEN);
+            	if (Boolean.TRUE.equals(result.getProperty(ILogon.KRB5_ESTABLISHED))) {
+                	passthroughAuthentication = ";PassthroughAuthentication=true;authenticationType=KRB5"; //$NON-NLS-1$
+                	info.put(ILogon.KRB5TOKEN, serviceToken);
             	}
-            	passthroughAuthentication = ";PassthroughAuthentication=true"; //$NON-NLS-1$
+            	else {
+	            	this.client.authenticationGSSContinue(serviceToken);
+	            	return;            		
+            	}
 			}
 			
+			// this is local connection
 			String url = "jdbc:teiid:"+databaseName+";ApplicationName=ODBC"+passthroughAuthentication; //$NON-NLS-1$ //$NON-NLS-2$
 
 			if (password != null) {
@@ -264,7 +268,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
                         try {
 		                	List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
                             cursorMap.put(cursorName, new Cursor(cursorName, sql, stmt, null, stmt.getResultSet(), cols));
-        					client.sendCommandComplete("DECLARE CURSOR", 0); //$NON-NLS-1$		                            
+        					client.sendCommandComplete("DECLARE CURSOR", null); //$NON-NLS-1$		                            
     						completion.getResultsReceiver().receiveResults(0);
     					} catch (Throwable e) {
     						completion.getResultsReceiver().exceptionOccurred(e);
@@ -332,7 +336,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		if (cursor != null) {
 			cursor.rs.close();
 			cursor.stmt.close();
-			this.client.sendCommandComplete("CLOSE CURSOR", 0); //$NON-NLS-1$
+			this.client.sendCommandComplete("CLOSE CURSOR", null); //$NON-NLS-1$
 		}
 	}	
 	
@@ -937,7 +941,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		    				String plan_name = m.group(1);
 		    				plan_name = SQLParserUtil.normalizeId(plan_name);
 		    				closePreparedStatement(plan_name);
-		    				client.sendCommandComplete("DEALLOCATE", 0); //$NON-NLS-1$
+		    				client.sendCommandComplete("DEALLOCATE", null); //$NON-NLS-1$
 		    				results.getResultsReceiver().receiveResults(1);
 		    			}
 		    			else {

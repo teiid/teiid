@@ -587,6 +587,15 @@ public class TestDQPCore {
     	assertEquals(1, this.core.getLongRunningRequests().size());
     }
     
+    @Test public void testDataAvailable() throws Exception {
+    	agds.dataNotAvailable = -1;
+    	RequestMessage reqMsg = exampleRequestMessage("select * FROM BQT1.SmallA"); 
+        ResultsMessage results = execute("A", 1, reqMsg);
+        if (results.getException() != null) {
+        	throw results.getException();
+        }
+    }
+    
 	public void helpTestVisibilityFails(String sql) throws Exception {
         RequestMessage reqMsg = exampleRequestMessage(sql); 
         reqMsg.setTxnAutoWrapMode(RequestMessage.TXN_WRAP_OFF);

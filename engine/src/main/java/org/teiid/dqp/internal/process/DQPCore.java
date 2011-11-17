@@ -178,10 +178,6 @@ public class DQPCore implements DQP {
 		}
 	}
 	
-	public static interface ContextProvider {
-		DQPWorkContext getContext(String vdbName, int vdbVersion);
-	}
-	
 	private ThreadReuseExecutor processWorkerPool;
     
     // Resources
@@ -334,6 +330,7 @@ public class DQPCore implements DQP {
 	    request.initialize(requestMsg, bufferManager,
 				dataTierMgr, transactionService, state.sessionTables,
 				workContext, this.prepPlanCache);
+	    request.setExecutor(this.processWorkerPool);
 		request.setResultSetCacheEnabled(this.rsCache != null);
 		request.setAuthorizationValidator(this.authorizationValidator);
 		request.setUserRequestConcurrency(this.getUserRequestSourceConcurrency());
@@ -359,7 +356,7 @@ public class DQPCore implements DQP {
 				}
 			}, timeout));
         }
-        boolean runInThread = DQPWorkContext.getWorkContext().useCallingThread() || requestMsg.isSync();
+        boolean runInThread = requestMsg.isSync();
         synchronized (waitingPlans) {
 			if (runInThread || currentlyActivePlans <= maxActivePlans) {
 				startActivePlan(workItem, !runInThread);

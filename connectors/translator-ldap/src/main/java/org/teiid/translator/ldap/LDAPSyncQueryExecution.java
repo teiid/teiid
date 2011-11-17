@@ -331,9 +331,11 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 		} catch (SizeLimitExceededException e) {
 			if (resultCount != searchDetails.getCountLimit()) {
 				String msg = "LDAP Search results exceeded size limit. Results may be incomplete."; //$NON-NLS-1$
+				TranslatorException te = new TranslatorException(e, msg);
 				if (executionFactory.isExceptionOnSizeLimitExceeded()) {
-					throw new TranslatorException(e, msg);
+					throw te;
 				}
+				this.executionContext.addWarning(te);
 				LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, msg); 
 			}
 			return null; // GHH 20080326 - if size limit exceeded don't try to read more results

@@ -22,7 +22,6 @@
 
 package org.teiid.dqp.internal.datamgr;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -30,9 +29,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.resource.ResourceException;
 
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.client.ResizingArrayList;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
+import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
@@ -97,6 +98,8 @@ public class ConnectorWorkItem implements ConnectorWork {
                 Integer.toString(requestID.getNodeID()),
                 Integer.toString(requestID.getExecutionId())
                 );
+        this.securityContext.setGeneralHint(message.getGeneralHint());
+        this.securityContext.setHint(message.getHint());
         this.securityContext.setUser(requestMsg.getWorkContext().getSubject());
         this.securityContext.setBatchSize(this.requestMsg.getFetchSize());
         this.securityContext.setSession(requestMsg.getWorkContext().getSession());
@@ -106,6 +109,11 @@ public class ConnectorWorkItem implements ConnectorWork {
     	this.queryMetadata = vdb.getAttachment(QueryMetadataInterface.class);
         this.queryMetadata = new TempMetadataAdapter(this.queryMetadata, new TempMetadataStore());
 		this.securityContext.setTransactional(requestMsg.isTransactional());
+    }
+    
+    @Override
+    public void setRequestWorkItem(RequestWorkItem item) {
+    	this.securityContext.setRequestWorkItem(item);
     }
     
     public AtomicRequestID getId() {
@@ -137,6 +145,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     }
     
     public void close() {
+    	this.securityContext.setRequestWorkItem(null);
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing Close :", this.requestMsg.getCommand()}); //$NON-NLS-1$
     	if (!error) {
             manager.logSRCCommand(this.requestMsg, this.securityContext, Event.END, this.rowCount);
@@ -273,12 +282,12 @@ public class ConnectorWorkItem implements ConnectorWork {
     	Assertion.assertTrue(!this.lastBatch);
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Getting results from connector"}); //$NON-NLS-1$
         int batchSize = 0;
-        List<List> rows = new ArrayList<List>(batchSize/4);
+        List<List<?>> rows = new ResizingArrayList<List<?>>(batchSize/4);
         
         try {
 	        while (batchSize < this.requestMsg.getFetchSize()) {
 	        	
-        		List row = this.execution.next();
+        		List<?> row = this.execution.next();
             	if (row == null) {
             		this.lastBatch = true;
             		break;
@@ -306,14 +315,14 @@ public class ConnectorWorkItem implements ConnectorWork {
 	            }
 	        }
     	} catch (DataNotAvailableException e) {
-    		if (rows.size() == 0) {
+    		if (rows.size() == 0 && this.rowCount != 0) {
     			throw e;
     		}
     	}
                 
         if (lastBatch) {
         	if (this.procedureBatchHandler != null) {
-        		List row = this.procedureBatchHandler.getParameterRow();
+        		List<?> row = this.procedureBatchHandler.getParameterRow();
         		if (row != null) {
         			rows.add(row);
         			this.rowCount++;
@@ -356,6 +365,11 @@ public class ConnectorWorkItem implements ConnectorWork {
 	@Override
 	public String toString() {
 		return this.id.toString();
+	}
+	
+	@Override
+	public boolean isDataAvailable() {
+		return this.securityContext.isDataAvailable();
 	}
 
 }

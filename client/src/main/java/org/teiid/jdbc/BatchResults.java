@@ -251,8 +251,21 @@ public class BatchResults {
     		}
 			requestNextBatch();
         }
-        
-        return (this.currentRowNumber + next <= highestRowNumber);
+        boolean result = this.currentRowNumber + next <= highestRowNumber;
+        if (result && !wait) {
+        	for (int i = 0; i < batches.size(); i++) {
+        		Batch batch = batches.get(i);
+        		if (this.currentRowNumber + next < batch.getBeginRow()) {
+        			continue;
+        		}
+    			if (this.currentRowNumber + next> batch.getEndRow()) {
+    				continue;
+    			}
+    			return Boolean.TRUE;
+        	}
+        	return null; //needs to be fetched
+        }
+        return result;
 	}
 
 	public int getFinalRowNumber() {

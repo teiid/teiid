@@ -343,7 +343,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                 }  
             
                 satisfyAccessPatterns(critNode, currentNode);
-            } else if (FrameUtil.isOrderedLimit(currentNode)) {
+            } else if (FrameUtil.isOrderedOrStrictLimit(currentNode)) {
                 return currentNode;
             }
 		}
@@ -355,7 +355,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		throws QueryPlannerException {
         
         //ensure that the criteria can be pushed further
-        if (sourceNode.getChildCount() == 1 && FrameUtil.isOrderedLimit(sourceNode.getFirstChild())) {
+        if (sourceNode.getChildCount() == 1 && FrameUtil.isOrderedOrStrictLimit(sourceNode.getFirstChild())) {
             return false;
         }
         

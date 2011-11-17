@@ -205,11 +205,11 @@ public class SQLConversionVisitor extends SQLStringVisitor{
 	    				buffer.append(o);
 	    			} else {
 	    				Integer i = (Integer)o;
-	    				if (obj.getArguments().size() <= i) {
-	    					throw new IllegalArgumentException("Invalid parameter {0}.  Must be less than or equal to {1}.");
+	    				if (i < 0 || i >= obj.getArguments().size()) {
+	    					throw new IllegalArgumentException(JDBCPlugin.Util.getString("SQLConversionVisitor.invalid_parameter", i+1, obj.getArguments().size())); //$NON-NLS-1$
 	    				}
 	    				if (obj.getArguments().get(i).getDirection() != Direction.IN) {
-	    					throw new IllegalArgumentException("Native query procedures cannot use non IN parameters.");
+	    					throw new IllegalArgumentException(JDBCPlugin.Util.getString("SQLConversionVisitor.not_in_parameter", i+1)); //$NON-NLS-1$
 	    				}
 	    				visit(obj.getArguments().get(i));
 	    				if (this.prepared) {
@@ -229,22 +229,22 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     }
 
 	private List<Object> parseNativeQueryParts(String nativeQuery) {
-		Pattern pattern = Pattern.compile("\\$(\\$\\$)*\\d+"); //$NON-NLS-1$
+		Pattern pattern = Pattern.compile("\\$+\\d+"); //$NON-NLS-1$
 		List<Object> parts = new LinkedList<Object>();
 		Matcher m = pattern.matcher(nativeQuery);
 		for (int i = 0; i < nativeQuery.length(); i++) {
 			if (!m.find(i)) {
-				parts.add(nativeQuery.substring(i).replaceAll("\\$\\$", "\\$")); //$NON-NLS-1$ //$NON-NLS-2$
+				parts.add(nativeQuery.substring(i));
 				break;
 			}
 			if (m.start() != i) {
-				parts.add(nativeQuery.substring(i, m.start()).replaceAll("\\$\\$", "\\$")); //$NON-NLS-1$ //$NON-NLS-2$
+				parts.add(nativeQuery.substring(i, m.start()));
 			}
 			String match = m.group();
 			int end = match.lastIndexOf('$');
 			if ((end&0x1) == 1) {
 				//escaped
-				parts.add(match.replaceAll("\\$\\$", "\\$")); //$NON-NLS-1$ //$NON-NLS-2$
+				parts.add(match.substring((end+1)/2)); 
 			} else {
 				if (end != 0) {
 					parts.add(match.substring(0, end/2));

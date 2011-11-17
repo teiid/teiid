@@ -84,6 +84,8 @@ public class AtomicRequestMessage implements Serializable {
     private boolean serial;
     
     private DQPWorkContext workContext;
+    private String generalHint;
+    private String hint;
     
     public AtomicRequestMessage() {
         // This is only to honor the externalizable interface..
@@ -213,6 +215,22 @@ public class AtomicRequestMessage implements Serializable {
 
 	public DQPWorkContext getWorkContext() {
 		return workContext;
+	}
+	
+	public String getGeneralHint() {
+		return generalHint;
+	}
+	
+	public void setGeneralHint(String generalHint) {
+		this.generalHint = generalHint;
+	}
+	
+	public String getHint() {
+		return hint;
+	}
+	
+	public void setHint(String hint) {
+		this.hint = hint;
 	}
 
 }

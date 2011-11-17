@@ -291,9 +291,13 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
             	}
             }                  	            
         } catch (BlockedException e) {
-            LogManager.logDetail(LogConstants.CTX_DQP, "Request Thread", requestID, "- processor blocked"); //$NON-NLS-1$ //$NON-NLS-2$
+        	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+        		LogManager.logDetail(LogConstants.CTX_DQP, "Request Thread", requestID, "- processor blocked"); //$NON-NLS-1$ //$NON-NLS-2$
+        	}
         } catch (QueryProcessor.ExpiredTimeSliceException e) {
-            LogManager.logDetail(LogConstants.CTX_DQP, "Request Thread", requestID, "- time slice expired"); //$NON-NLS-1$ //$NON-NLS-2$
+        	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+        		LogManager.logDetail(LogConstants.CTX_DQP, "Request Thread", requestID, "- time slice expired"); //$NON-NLS-1$ //$NON-NLS-2$
+        	}
             this.moreWork();
         } catch (Throwable e) {
         	handleThrowable(e);
@@ -518,6 +522,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				}
 				addToCache();
 				synchronized (lobStreams) {
+					if (resultsBuffer.isLobs()) {
+						super.flushBatchDirect(batch, false);
+					}
 					add = sendResultsIfNeeded(batch);
 					if (cid != null) {
 						return;
@@ -526,6 +533,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					//restrict the buffer size for forward only results
 					if (add && !processor.hasFinalBuffer()
 							&& !batch.getTerminationFlag() 
+							&& transactionState != TransactionState.ACTIVE
 							&& this.getTupleBuffer().getManagedRowCount() >= OUTPUT_BUFFER_MAX_BATCHES * this.getTupleBuffer().getBatchSize()) {
 						if (!dqpCore.hasWaitingPlans(RequestWorkItem.this)) {
 							//requestMore will trigger more processing

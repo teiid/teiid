@@ -26,6 +26,7 @@ import java.util.HashMap;
 
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.util.ReflectionHelper;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.SecurityHelper;
 
@@ -58,6 +59,7 @@ public class ClientServiceRegistryImpl implements ClientServiceRegistry {
     private HashMap<String, ClientService> clientServices = new HashMap<String, ClientService>();
     private SecurityHelper securityHelper;
     private Type type = Type.JDBC;
+    private AuthenticationType authenticationType = AuthenticationType.CLEARTEXT;
     
     public ClientServiceRegistryImpl() {
     	
@@ -65,6 +67,10 @@ public class ClientServiceRegistryImpl implements ClientServiceRegistry {
     
     public ClientServiceRegistryImpl(Type type) {
     	this.type = type;
+	}
+    
+    public void setAuthenticationType(AuthenticationType authenticationType) {
+		this.authenticationType = authenticationType;
 	}
 
     public <T> T getClientService(Class<T> iface) throws ComponentNotFoundException {
@@ -91,6 +97,11 @@ public class ClientServiceRegistryImpl implements ClientServiceRegistry {
 	
 	public void setSecurityHelper(SecurityHelper securityHelper) {
 		this.securityHelper = securityHelper;
+	}
+
+	@Override
+	public AuthenticationType getAuthenticationType() {
+		return authenticationType;
 	}
 		
 }

@@ -50,7 +50,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.TeiidURL;
-import org.teiid.net.TeiidURL.CONNECTION.AuthenticationType;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.Credentials;
 
@@ -66,6 +66,14 @@ public class LogonImpl implements ILogon {
 	}
 
 	public LogonResult logon(Properties connProps) throws LogonException, TeiidComponentException, CommunicationException {
+		if (this.service.getGssSecurityDomain() != null && connProps.get(ILogon.KRB5TOKEN) != null) {
+			Subject user = this.service.getSubjectInContext(this.service.getGssSecurityDomain());
+			if (user == null) {
+				throw new LogonException(RuntimePlugin.Util.getString("krb5_user_not_found")); //$NON-NLS-1$
+			}
+			return logon(connProps, (byte[])connProps.get(ILogon.KRB5TOKEN));
+		}
+		
 		if (!AuthenticationType.CLEARTEXT.equals(service.getAuthenticationType())) {
 			throw new LogonException(RuntimePlugin.Util.getString("wrong_logon_type_jaas")); //$NON-NLS-1$
 		}
@@ -144,7 +152,7 @@ public class LogonImpl implements ILogon {
 	@Override
 	public LogonResult neogitiateGssLogin(Properties connProps, byte[] serviceTicket, boolean createSession) throws LogonException {
 		
-		if (!AuthenticationType.KRB5.equals(service.getAuthenticationType())) {
+		if (!AuthenticationType.GSS.equals(service.getAuthenticationType())) {
 			throw new LogonException(RuntimePlugin.Util.getString("wrong_logon_type_krb5")); //$NON-NLS-1$
 		}		
 		
@@ -152,7 +160,7 @@ public class LogonImpl implements ILogon {
         String password = connProps.getProperty(TeiidURL.CONNECTION.PASSWORD);		
 		
 		try {
-			String securityDomain = service.getKrb5SecurityDomain();
+			String securityDomain = service.getGssSecurityDomain();
 			if (securityDomain == null) {
 				throw new LogonException(RuntimePlugin.Util.getString("no_security_domains")); //$NON-NLS-1$
 			}
@@ -164,6 +172,11 @@ public class LogonImpl implements ILogon {
 			if (result == null) {
 				throw new LogonException(RuntimePlugin.Util.getString("krb5_login_failed")); //$NON-NLS-1$
 			}
+			
+			if (result.context.isEstablished()) {
+				service.associateSubjectInContext(securityDomain, subject);
+			}
+			
 			if (!result.context.isEstablished() || !createSession) {
 				LogonResult logonResult = new LogonResult(new SessionToken(0, "temp"), "internal", 0, "internal"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				logonResult.addProperty(ILogon.KRB5TOKEN, result.serviceTicket);
@@ -173,7 +186,6 @@ public class LogonImpl implements ILogon {
 			
 			LogManager.logDetail(LogConstants.CTX_SECURITY, "Kerberos context established"); //$NON-NLS-1$
 			//connProps.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$
-			service.associateSubjectInContext(securityDomain, subject);
 			return logon(connProps, result.serviceTicket);
 		} catch (LoginException e) {
 			throw new LogonException(e, RuntimePlugin.Util.getString("krb5_login_failed")); //$NON-NLS-1$

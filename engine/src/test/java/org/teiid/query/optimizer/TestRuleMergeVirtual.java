@@ -48,6 +48,24 @@ public class TestRuleMergeVirtual {
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
     
+    @Test public void testNoUnnest() {
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM /*+ no_unnest */ (SELECT e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
+                                      RealMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),
+                                      new String[] {
+                                          "SELECT v_0.c_0 FROM (SELECT MAX(g_0.e2) AS c_0 FROM pm1.g1 AS g_0 GROUP BY g_0.e1) AS v_0"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
+    
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
+    }
+    
+    @Test public void testNoUnnestView() {
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT e1 FROM /*+ no_unnest */ vm1.g1", //$NON-NLS-1$
+                                      RealMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),
+                                      new String[] {
+                                          "SELECT v_0.c_0 FROM (SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0) AS v_0"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
+    
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
+    }
+    
     @Test public void testSimpleMergeGroupBy1() {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM (SELECT distinct min(e1), max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
                                       RealMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),

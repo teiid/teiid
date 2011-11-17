@@ -100,6 +100,7 @@ import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.SetQuery;
+import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubqueryFromClause;
@@ -157,6 +158,7 @@ public class RelationalPlanner {
 	private QueryMetadataInterface metadata;
 	private PlanHints hints = new PlanHints();
 	private Option option;
+	private SourceHint sourceHint;
 	
     public ProcessorPlan optimize(
         Command command)
@@ -220,7 +222,7 @@ public class RelationalPlanner {
 				
         PlanNode plan;
 		try {
-			plan = generatePlan(command);
+			plan = generatePlan(command, true);
 		} catch (TeiidProcessingException e) {
 			throw new QueryPlannerException(e, e.getMessage());
 		}
@@ -259,7 +261,7 @@ public class RelationalPlanner {
         	result.setWith(withList);
         }
         result.setOutputElements(topCols);
-        
+        result.setSourceHint(sourceHint);
         return result;
     }
 
@@ -296,7 +298,7 @@ public class RelationalPlanner {
     private void connectSubqueryContainers(PlanNode plan) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         Set<GroupSymbol> groupSymbols = getGroupSymbols(plan);
 
-        for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT | NodeConstants.Types.SELECT | NodeConstants.Types.JOIN)) {
+        for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT | NodeConstants.Types.SELECT | NodeConstants.Types.JOIN | NodeConstants.Types.SOURCE)) {
             List<SubqueryContainer> subqueryContainers = node.getSubqueryContainers();
             if (subqueryContainers.isEmpty()){
             	continue;
@@ -483,7 +485,10 @@ public class RelationalPlanner {
         return plan;
     }
 	
-	public PlanNode generatePlan(Command cmd) throws TeiidComponentException, TeiidProcessingException {
+	public PlanNode generatePlan(Command cmd, boolean useSourceHint) throws TeiidComponentException, TeiidProcessingException {
+    	if (useSourceHint && cmd.getSourceHint() != null && sourceHint == null) {
+			sourceHint = cmd.getSourceHint();
+    	}
 		//cascade the option clause nocache
 		Option savedOption = option;
 		option = cmd.getOption();
@@ -564,7 +569,7 @@ public class RelationalPlanner {
         if(!usingTriggerAction && command instanceof Insert){
         	Insert insert = (Insert)command;
         	if (insert.getQueryExpression() != null) {
-	            PlanNode plan = generatePlan(insert.getQueryExpression());
+	            PlanNode plan = generatePlan(insert.getQueryExpression(), true);
 	            attachLast(sourceNode, plan);
 	            mergeTempMetadata(insert.getQueryExpression(), insert);
 	            projectNode.setProperty(NodeConstants.Info.INTO_GROUP, insert.getGroup());
@@ -699,9 +704,12 @@ public class RelationalPlanner {
         } else {
             hints.hasSetQuery = true;
             SetQuery query = (SetQuery)command;
+            boolean hasSourceHint = sourceHint != null;
             PlanNode leftPlan = createQueryPlan( query.getLeftQuery());
             PlanNode rightPlan = createQueryPlan( query.getRightQuery());
-
+            if (!hasSourceHint) {
+            	sourceHint = null;
+            }
             node = NodeFactory.getNewNode(NodeConstants.Types.SET_OP);
             node.setProperty(NodeConstants.Info.SET_OPERATION, query.getOperation());
             node.setProperty(NodeConstants.Info.USE_ALL, query.isAll());
@@ -839,11 +847,17 @@ public class RelationalPlanner {
             if (group.getModelMetadataId() != null) {
             	node.setProperty(Info.MODEL_ID, group.getModelMetadataId());
             }
+            if (ufc.isNoUnnest()) {
+            	node.setProperty(Info.NO_UNNEST, Boolean.TRUE);
+            }
             node.addGroup(group);
             if (nestedCommand != null) {
             	UpdateInfo info = ProcedureContainerResolver.getUpdateInfo(group, metadata);
             	if (info != null && info.getPartitionInfo() != null && !info.getPartitionInfo().isEmpty()) {
             		node.setProperty(NodeConstants.Info.PARTITION_INFO, info.getPartitionInfo());
+            	}
+            	if (parent.getType() != NodeConstants.Types.JOIN && nestedCommand.getSourceHint() != null && sourceHint == null) {
+        			sourceHint = nestedCommand.getSourceHint();
             	}
             	addNestedCommand(node, group, nestedCommand, nestedCommand, true);
             }
@@ -881,6 +895,9 @@ public class RelationalPlanner {
             node = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
             if (sfc.isTable()) {
     		    sfc.getCommand().setCorrelatedReferences(getCorrelatedReferences(parent, node, sfc));
+            }
+            if (sfc.isNoUnnest()) {
+            	node.setProperty(Info.NO_UNNEST, Boolean.TRUE);
             }
             node.addGroup(group);
             addNestedCommand(node, group, nestedCommand, nestedCommand, true);
@@ -978,7 +995,7 @@ public class RelationalPlanner {
 
 		if (merge) {
 			mergeTempMetadata(nestedCommand, parentCommand);
-		    PlanNode childRoot = generatePlan(nestedCommand);
+		    PlanNode childRoot = generatePlan(nestedCommand, false);
 		    node.addFirstChild(childRoot);
 			List<SingleElementSymbol> projectCols = nestedCommand.getProjectedSymbols();
 			SymbolMap map = SymbolMap.createSymbolMap(group, projectCols, metadata);
@@ -1144,6 +1161,9 @@ public class RelationalPlanner {
         if (attach) {
         	if (limit.isImplicit()) {
         		limitNode.setProperty(Info.IS_IMPLICIT_LIMIT, true);
+        	}
+        	if (limit.isStrict()) {
+        		limitNode.setProperty(Info.IS_STRICT, true);
         	}
             attachLast(limitNode, plan);
             plan = limitNode;

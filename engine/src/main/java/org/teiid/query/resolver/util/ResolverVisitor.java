@@ -402,6 +402,7 @@ public class ResolverVisitor extends LanguageVisitor {
     @Override
     public void visit(XMLQuery obj) {
     	try {
+	    	ResolverUtil.setDesiredType(obj.getPassing(), obj);
 			obj.compileXqueryExpression();
 		} catch (QueryResolverException e) {
 			handleException(e); 

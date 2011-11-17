@@ -76,6 +76,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
     private ObjectChannel socketChannel;
     private Cryptor cryptor;
     private String serverVersion;
+    private AuthenticationType authType = AuthenticationType.CLEARTEXT;
     
     private boolean hasReader;
     
@@ -130,6 +131,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
                 throw new CommunicationException(NetPlugin.Util.getString("SocketServerInstanceImpl.version_mismatch", getVersionInfo(), handshake.getVersion())); //$NON-NLS-1$
             }*/
             serverVersion = handshake.getVersion();
+            authType = handshake.getAuthType();
             handshake.setVersion();
             
             byte[] serverPublicKey = handshake.getPublicKey();
@@ -367,6 +369,11 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 		
 		protected abstract SocketServerInstance getInstance() throws CommunicationException;
 
+	}
+
+	@Override
+	public AuthenticationType getAuthenticationType() {
+		return authType;
 	}
 
 }

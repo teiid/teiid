@@ -32,10 +32,13 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 public class Limit implements LanguageObject {
+	
+	public static String NON_STRICT = "NON_STRICT"; //$NON-NLS-1$
     
     private Expression offset;
     private Expression rowLimit;
     private boolean implicit;
+    private boolean strict = true;
     
     public Limit(Expression offset, Expression rowLimit) {
         this.offset = offset;
@@ -45,6 +48,14 @@ public class Limit implements LanguageObject {
     private Limit() {
     	
     }
+    
+    public void setStrict(boolean strict) {
+		this.strict = strict;
+	}
+    
+    public boolean isStrict() {
+		return strict;
+	}
     
     public boolean isImplicit() {
 		return implicit;
@@ -96,6 +107,7 @@ public class Limit implements LanguageObject {
     public Limit clone() {
         Limit clone = new Limit();
         clone.implicit = this.implicit;
+        clone.strict = this.strict;
         if (this.rowLimit != null) {
         	clone.setRowLimit((Expression) this.rowLimit.clone());
         }

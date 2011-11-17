@@ -246,8 +246,8 @@ public class BufferServiceImpl implements BufferService, Serializable {
 		return bufferMgr.getReadAttempts();
 	}
 
-    public long getMemoryBufferSpace() {
-		return memoryBufferSpace;
+    public int getMemoryBufferSpace() {
+		return (int)memoryBufferSpace;
 	}
 
     public int getMaxStorageObjectSize() {

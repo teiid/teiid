@@ -26,6 +26,7 @@ import java.sql.SQLWarning;
 import java.util.List;
 
 import org.teiid.client.SourceWarning;
+import org.teiid.core.TeiidException;
 
 
 
@@ -44,6 +45,8 @@ class WarningUtil {
      * @param ex Throwable object which needs to be wrapped.
      */
     static SQLWarning createWarning(Throwable ex) {
+    	String sourceName = null;
+    	String modelName = null;
         if(ex instanceof SourceWarning) {
         	SourceWarning exception = (SourceWarning)ex;
         	if (exception.isPartialResultsError()) {
@@ -51,8 +54,15 @@ class WarningUtil {
         		warning.addConnectorFailure(exception.getConnectorBindingName(), TeiidSQLException.create(exception));
         		return warning;
         	}
+        	ex = exception.getCause();
+        	sourceName = exception.getConnectorBindingName();
+        	modelName = exception.getModelName();
         }
-        return new SQLWarning(ex);
+        String code = null;
+        if (ex instanceof TeiidException) {
+        	code = ((TeiidException)ex).getCode();
+        }
+        return new TeiidSQLWarning(ex.getMessage(), code, ex, sourceName, modelName);
     }
 
     /**

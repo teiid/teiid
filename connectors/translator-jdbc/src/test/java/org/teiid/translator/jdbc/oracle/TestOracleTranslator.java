@@ -77,6 +77,18 @@ public class TestOracleTranslator {
 		helpTestVisitor(getOracleSpecificMetadata(), input, EMPTY_CONTEXT, null, expectedOutput);
     }
 	
+	@Test public void testSourceHint() throws Exception {
+		ExecutionContextImpl impl = new FakeExecutionContextImpl();
+		impl.setHint("hello world");
+		helpTestVisitor(getTestVDB(), "select part_name from parts", impl, null, "SELECT /*+ hello world */ g_0.PART_NAME FROM PARTS g_0", true);
+	}
+	
+	@Test public void testSourceHint1() throws Exception {
+		ExecutionContextImpl impl = new FakeExecutionContextImpl();
+		impl.setHint("hello world");
+		helpTestVisitor(getTestVDB(), "select part_name from parts union select part_id from parts", impl, null, "SELECT /*+ hello world */ g_1.PART_NAME AS c_0 FROM PARTS g_1 UNION SELECT g_0.PART_ID AS c_0 FROM PARTS g_0", true);
+	}
+	
 	@Test public void testInsertWithSequnce() throws Exception {
 		helpTestVisitor("insert into smalla (doublenum) values (1)", "INSERT INTO SmallishA (DoubleNum, ID) VALUES (1.0, MYSEQUENCE.nextVal)"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
@@ -702,6 +714,21 @@ public class TestOracleTranslator {
             false);        
     }
     
+    @Test public void testOracleCommentPayload1() throws Exception {
+        String input = "SELECT part_name, rownum FROM parts"; //$NON-NLS-1$
+        String output = "SELECT PARTS.PART_NAME, ROWNUM FROM PARTS"; //$NON-NLS-1$
+               
+        String hint = "/*+ ALL_ROWS */ something else"; //$NON-NLS-1$
+        ExecutionContext context = new ExecutionContextImpl(null, 1, hint, null, "", null, null, null); //$NON-NLS-1$
+        
+        helpTestVisitor(getTestVDB(),
+            input, 
+            context,
+            null,
+            output,
+            false);        
+    }
+    
     /**
      * reproducing this case relies on the name in source for the table being different from
      * the name
@@ -788,7 +815,7 @@ public class TestOracleTranslator {
     
     @Test public void testRowLimitWithUnionOrderBy() throws Exception {
         String input = "(select intkey from bqt1.smalla limit 50, 100) union select intnum from bqt1.smalla order by intkey"; //$NON-NLS-1$
-        String output = "SELECT c_0 FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT g_1.IntKey AS c_0 FROM SmallA g_1) VIEW_FOR_LIMIT WHERE ROWNUM <= 150) WHERE ROWNUM_ > 50 UNION SELECT g_0.IntNum AS c_0 FROM SmallA g_0 ORDER BY c_0"; //$NON-NLS-1$
+        String output = "(SELECT c_0 FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT g_1.IntKey AS c_0 FROM SmallA g_1) VIEW_FOR_LIMIT WHERE ROWNUM <= 150) WHERE ROWNUM_ > 50) UNION SELECT g_0.IntNum AS c_0 FROM SmallA g_0 ORDER BY c_0"; //$NON-NLS-1$
                
 		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);

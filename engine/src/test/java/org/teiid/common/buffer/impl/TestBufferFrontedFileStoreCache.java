@@ -36,7 +36,7 @@ import org.teiid.core.TeiidComponentException;
 
 public class TestBufferFrontedFileStoreCache {
 	
-	private final class SimpleSerializer implements Serializer<Integer> {
+	private final static class SimpleSerializer implements Serializer<Integer> {
 		@Override
 		public Integer deserialize(ObjectInput ois)
 				throws IOException, ClassNotFoundException {
@@ -138,7 +138,7 @@ public class TestBufferFrontedFileStoreCache {
 		assertEquals(0, cache.getInodesInUse());
 	}
 
-	private CacheEntry get(BufferFrontedFileStoreCache cache, Long oid,
+	private static CacheEntry get(BufferFrontedFileStoreCache cache, Long oid,
 			Serializer<Integer> s) throws TeiidComponentException {
 		PhysicalInfo o = cache.lockForLoad(oid, s);
 		CacheEntry ce = cache.get(o, oid, new WeakReference<Serializer<?>>(s));
@@ -166,8 +166,8 @@ public class TestBufferFrontedFileStoreCache {
 		cache.addToCacheGroup(s.getId(), ce.getId());
 		cache.add(ce, s);
 
-		assertEquals(3, cache.getDataBlocksInUse());
-		assertEquals(1, cache.getInodesInUse());
+		assertTrue(cache.getDataBlocksInUse() < 4);
+		assertTrue(cache.getInodesInUse() < 2);
 
 		ce = get(cache, 2l, s);
 		assertEquals(Integer.valueOf(5000), ce.getObject());
@@ -176,7 +176,7 @@ public class TestBufferFrontedFileStoreCache {
 		assertEquals(Integer.valueOf(5001), ce.getObject());
 	}
 
-	private BufferFrontedFileStoreCache createLayeredCache(int bufferSpace, int objectSize) throws TeiidComponentException {
+	private static BufferFrontedFileStoreCache createLayeredCache(int bufferSpace, int objectSize) throws TeiidComponentException {
 		BufferFrontedFileStoreCache fsc = new BufferFrontedFileStoreCache();
 		fsc.setMemoryBufferSpace(bufferSpace);
 		fsc.setMaxStorageObjectSize(objectSize);

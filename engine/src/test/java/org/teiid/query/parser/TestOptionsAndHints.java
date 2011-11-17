@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.query.sql.lang.AbstractCompareCriteria;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -57,12 +58,12 @@ import org.teiid.query.sql.proc.DeclareStatement;
 import org.teiid.query.sql.proc.HasCriteria;
 import org.teiid.query.sql.proc.IfStatement;
 import org.teiid.query.sql.proc.Statement;
-import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Reference;
 
 @SuppressWarnings("nls")
@@ -424,6 +425,7 @@ public class TestOptionsAndHints {
         option.setNoCache(true);
         Criteria crit = new CompareCriteria(new ElementSymbol("b"), CompareCriteria.EQ, new Reference(1)); //$NON-NLS-1$
         update.setCriteria(crit);
+        update.setOption(option);
         TestParser.helpTest("UPDATE m.g SET a = ? WHERE b = ? OPTION NOCACHE",  //$NON-NLS-1$
                  "UPDATE m.g SET a = ? WHERE b = ? OPTION NOCACHE",  //$NON-NLS-1$
                  update);                     
@@ -1156,4 +1158,33 @@ public class TestOptionsAndHints {
         TestParser.helpTest(sql, "SELECT a FROM db.g WHERE b IN /*+ MJ */ (SELECT a FROM db.g WHERE a2 = 5)", q);         //$NON-NLS-1$
     }
     
+    @Test public void testNoUnnest() throws QueryParserException {
+        String sql = "SELECT a FROM /*+ no_unnest */ (SELECT a FROM db.g WHERE a2 = 5) x"; //$NON-NLS-1$
+        assertEquals("SELECT a FROM /*+ NO_UNNEST */ (SELECT a FROM db.g WHERE a2 = 5) AS x", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+    }
+    
+    @Test public void testNonStrictLimit() throws QueryParserException {
+        String sql = "SELECT a FROM x /*+ non_strict */ limit 1"; //$NON-NLS-1$
+        assertEquals("SELECT a FROM x /*+ NON_STRICT */ LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+        
+        sql = "SELECT a FROM x /*+ non_strict */ offset 1 row"; //$NON-NLS-1$
+        assertEquals("SELECT a FROM x /*+ NON_STRICT */ OFFSET 1 ROWS", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+
+        sql = "SELECT a FROM x /*+ non_strict */ fetch first 1 rows only"; //$NON-NLS-1$
+        assertEquals("SELECT a FROM x /*+ NON_STRICT */ LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+    }
+    
+    @Test public void testNestedComments() throws QueryParserException {
+        String sql = "/*+ /*nested*/ */ SELECT a FROM x limit 1"; //$NON-NLS-1$
+        assertEquals("SELECT a FROM x LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+    }
+    
+    @Test public void testSourceHint() throws QueryParserException {
+        String sql = "SELECT /*+ sh:'foo' oracle:'leading' */ a FROM x limit 1"; //$NON-NLS-1$
+        assertEquals("SELECT /*+sh:'foo' oracle:'leading' */ a FROM x LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+        
+        sql = "(SELECT /*+ sh:'foo' oracle:'leading' */ a FROM x limit 1) union all select 1"; //$NON-NLS-1$
+        assertEquals("(SELECT /*+sh:'foo' oracle:'leading' */ a FROM x LIMIT 1) UNION ALL SELECT 1", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString()); 
+    }
+
 }

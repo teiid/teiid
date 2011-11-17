@@ -97,6 +97,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     protected static final String UNDEFINED_PARAM = "?"; //$NON-NLS-1$
     
     protected StringBuilder buffer = new StringBuilder();
+    private boolean appendedSourceComment;
                 
     /**
      * Gets the name of a group or element from the RuntimeMetadata
@@ -230,7 +231,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     public void visit(Delete obj) {
         buffer.append(DELETE)
               .append(Tokens.SPACE);
-        buffer.append(getSourceComment(obj));
+        appendSourceComment(obj);
         buffer.append(FROM)
               .append(Tokens.SPACE);
         append(obj.getTable());
@@ -241,6 +242,14 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
             append(obj.getWhere());
         }
     }
+
+	private void appendSourceComment(Command obj) {
+		if (appendedSourceComment) {
+			return;
+		}
+		appendedSourceComment = true;
+		buffer.append(getSourceComment(obj));
+	}
 
     /**
      * Take the specified derived group and element short names and determine a 
@@ -502,7 +511,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
 
     public void visit(Insert obj) {
     	buffer.append(INSERT).append(Tokens.SPACE);
-		buffer.append(getSourceComment(obj));
+		appendSourceComment(obj);
 		buffer.append(INTO).append(Tokens.SPACE);
 		append(obj.getTable());
 		buffer.append(Tokens.SPACE).append(Tokens.LPAREN);
@@ -725,7 +734,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     		append(obj.getWith());
     	}
 		buffer.append(SELECT).append(Tokens.SPACE);
-        buffer.append(getSourceComment(obj));
+		appendSourceComment(obj);
         if (obj.isDistinct()) {
             buffer.append(DISTINCT).append(Tokens.SPACE);
         }
@@ -851,7 +860,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     public void visit(Update obj) {
         buffer.append(UPDATE)
               .append(Tokens.SPACE);
-        buffer.append(getSourceComment(obj));
+        appendSourceComment(obj);
         append(obj.getTable());
         buffer.append(Tokens.SPACE)
               .append(SET)
@@ -912,7 +921,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
 
     protected void appendSetQuery(SetQuery parent, QueryExpression obj, boolean right) {
         if((!(obj instanceof SetQuery) && useParensForSetQueries()) 
-        		|| (right && ((obj instanceof SetQuery 
+        		|| (!useSelectLimit() && (obj.getLimit() != null || obj.getOrderBy() != null)) || (right && ((obj instanceof SetQuery 
         				&& ((parent.isAll() && !((SetQuery)obj).isAll()) 
         						|| parent.getOperation() != ((SetQuery)obj).getOperation())) || obj.getLimit() != null || obj.getOrderBy() != null))) {
             buffer.append(Tokens.LPAREN);

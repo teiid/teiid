@@ -292,11 +292,17 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 
 		public String getPatternString(String pattern, char escape)
 				throws ExpressionEvaluationException {
-			StringBuffer newPattern = new StringBuffer("^"); //$NON-NLS-1$
+			int startChar = 0;
+			StringBuffer newPattern = new StringBuffer(pattern.length());
+			if (pattern.length() > 0 && pattern.charAt(0) == '%') {
+				startChar = 1;
+			} else {
+				newPattern.append('^');
+			}
 	        
 	        boolean escaped = false;
-	        
-	        for (int i = 0; i < pattern.length(); i++) {
+	        boolean endsWithMatchAny = false;
+	        for (int i = startChar; i < pattern.length(); i++) {
 	            char character = pattern.charAt(i);
 	            
 	            if (character == escape && character != NULL_ESCAPE_CHAR) {
@@ -313,6 +319,10 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 		                    appendCharacter(newPattern, character);
 		                    escaped = false;
 		                } else {
+		                	if (character == '%' && i == pattern.length() - 1) {
+		                		endsWithMatchAny = true;
+		                		continue;
+		                	}
 		                    newPattern.append(replacements[index]);
 		                }
 	            	} else {
@@ -328,7 +338,9 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	            throw new ExpressionEvaluationException(QueryPlugin.Util.getString("MatchCriteria.invalid_escape", new Object[] {pattern, new Character(escape)})); //$NON-NLS-1$	
 	        }
 	        
-	        newPattern.append('$');
+	        if (!endsWithMatchAny) {
+	        	newPattern.append('$');
+	        }
 			return newPattern.toString();
 		}
 	    

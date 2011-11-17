@@ -130,6 +130,7 @@ public abstract class Command implements LanguageObject {
 	private SymbolMap correlatedReferences;
 	
 	private CacheHint cacheHint;
+	private SourceHint sourceHint;
     
 	/**
 	 * Return type of command to make it easier to build switch statements by command type.
@@ -231,6 +232,7 @@ public abstract class Command implements LanguageObject {
             copy.setOption( (Option) this.getOption().clone() );
         }
         copy.cacheHint = this.cacheHint;
+        copy.sourceHint = this.sourceHint;
     }
     
     /**
@@ -324,6 +326,14 @@ public abstract class Command implements LanguageObject {
 		this.cacheHint = cacheHint;
 	}
     
+    public SourceHint getSourceHint() {
+		return sourceHint;
+	}
+    
+    public void setSourceHint(SourceHint sourceHint) {
+		this.sourceHint = sourceHint;
+	}
+    
     /**
      * Returns a string representation of an instance of this class.
      * @return String representation of object
@@ -333,7 +343,8 @@ public abstract class Command implements LanguageObject {
     }
     
     protected boolean sameOptionAndHint(Command cmd) {
-    	return EquivalenceUtil.areEqual(this.cacheHint, cmd.cacheHint) && 
+    	return EquivalenceUtil.areEqual(this.cacheHint, cmd.cacheHint) &&
+    	EquivalenceUtil.areEqual(this.cacheHint, cmd.cacheHint) &&
     	EquivalenceUtil.areEqual(this.option, cmd.option);
     }
     

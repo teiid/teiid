@@ -234,9 +234,39 @@ public class XMLSystemFunctions {
 			return true;
 		}
 	}
-
+	
+	private static ThreadLocal<TransformerFactory> threadLocalTransformerFactory = new ThreadLocal<TransformerFactory>() {
+		protected TransformerFactory initialValue() {
+			return TransformerFactory.newInstance();
+		}
+	};
+	static ThreadLocal<XMLOutputFactory> threadLocalOutputFactory = new ThreadLocal<XMLOutputFactory>() {
+		protected XMLOutputFactory initialValue() {
+			return newXmlOutputFactory();
+		}
+	};
+	static ThreadLocal<XMLEventFactory> threadLocalEventtFactory = new ThreadLocal<XMLEventFactory>() {
+		protected XMLEventFactory initialValue() {
+			return XMLEventFactory.newInstance();
+		}
+	};
 	private static final String P_OUTPUT_VALIDATE_STRUCTURE = "com.ctc.wstx.outputValidateStructure"; //$NON-NLS-1$
-    
+	static XMLOutputFactory newXmlOutputFactory() throws FactoryConfigurationError {
+		XMLOutputFactory factory = XMLOutputFactory.newInstance();
+		if (factory.isPropertySupported(P_OUTPUT_VALIDATE_STRUCTURE)) {
+			factory.setProperty(P_OUTPUT_VALIDATE_STRUCTURE, false);
+		}
+		return factory;
+	}
+	static XMLOutputFactory xmlOutputFactory = newXmlOutputFactory();
+	
+	public static XMLOutputFactory getOutputFactory() throws FactoryConfigurationError {
+		if (XMLType.isThreadSafeXmlFactories()) {
+			return xmlOutputFactory;
+		}
+		return threadLocalOutputFactory.get();
+	}
+
 	public static ClobType xslTransform(CommandContext context, Object xml, Object styleSheet) throws Exception {
     	Source styleSource = null; 
 		Source xmlSource = null;
@@ -244,7 +274,7 @@ public class XMLSystemFunctions {
 			styleSource = convertToSource(styleSheet);
 			xmlSource = convertToSource(xml);
 			final Source xmlParam = xmlSource;
-			TransformerFactory factory = TransformerFactory.newInstance();
+			TransformerFactory factory = threadLocalTransformerFactory.get();
             final Transformer transformer = factory.newTransformer(styleSource);
             
 			//this creates a non-validated sqlxml - it may not be valid xml/root-less xml
@@ -284,7 +314,7 @@ public class XMLSystemFunctions {
 				try {
 					XMLOutputFactory factory = getOutputFactory();
 					XMLEventWriter eventWriter = factory.createXMLEventWriter(writer);
-					XMLEventFactory eventFactory = XMLEventFactory.newInstance();
+					XMLEventFactory eventFactory = threadLocalEventtFactory.get();
 					for (Evaluator.NameValuePair nameValuePair : values) {
 						if (nameValuePair.value == null) {
 							continue;
@@ -320,7 +350,7 @@ public class XMLSystemFunctions {
 				try {
 					XMLOutputFactory factory = getOutputFactory();
 					XMLEventWriter eventWriter = factory.createXMLEventWriter(writer);
-					XMLEventFactory eventFactory = XMLEventFactory.newInstance();
+					XMLEventFactory eventFactory = threadLocalEventtFactory.get();
 					addElement(name, writer, eventWriter, eventFactory, namespaces, attributes, contents);
 					eventWriter.close();
 				} catch (XMLStreamException e) {
@@ -465,14 +495,6 @@ public class XMLSystemFunctions {
 		
 	}
 	
-	private static XMLOutputFactory getOutputFactory() throws FactoryConfigurationError {
-		XMLOutputFactory factory = XMLOutputFactory.newInstance();
-		if (factory.isPropertySupported(P_OUTPUT_VALIDATE_STRUCTURE)) {
-			factory.setProperty(P_OUTPUT_VALIDATE_STRUCTURE, false);
-		}
-		return factory;
-	}
-	
 	public static XMLType xmlPi(String name) {
 		return xmlPi(name, ""); //$NON-NLS-1$
 	}
@@ -555,7 +577,7 @@ public class XMLSystemFunctions {
 		}
 		case UNKNOWN:  //assume a document
 		case DOCUMENT: //filter the doc declaration
-			XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+			XMLInputFactory inputFactory = XMLType.getXmlInputFactory();
 			if (!(r instanceof BufferedReader)) {
 				r = new BufferedReader(r);
 			}
@@ -569,7 +591,7 @@ public class XMLSystemFunctions {
 			eventWriter.add(eventReader);
 			break;
 		case TEXT:
-			XMLEventFactory eventFactory = XMLEventFactory.newInstance();
+			XMLEventFactory eventFactory = threadLocalEventtFactory.get();
 			char[] buf = new char[1 << 13];
 			int read = -1;
 			while ((read = r.read(buf)) != -1) {

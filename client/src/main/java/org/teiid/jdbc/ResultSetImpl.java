@@ -238,7 +238,7 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
     	if (hasNext != null) {
     		return StatementImpl.booleanFuture(next());
     	}
-    	ResultsFuture<ResultsMessage> pendingResult = submitRequestBatch(batchResults.getHighestRowNumber() + 1);
+    	ResultsFuture<ResultsMessage> pendingResult = submitRequestBatch(batchResults.getCurrentRowNumber() + 1);
     	final ResultsFuture<Boolean> result = new ResultsFuture<Boolean>();
     	pendingResult.addCompletionListener(new ResultsFuture.CompletionListener<ResultsMessage>() {
     		@Override

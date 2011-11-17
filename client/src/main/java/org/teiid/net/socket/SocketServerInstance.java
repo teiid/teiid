@@ -53,4 +53,6 @@ public interface SocketServerInstance {
 
 	String getServerVersion();
 
+	AuthenticationType getAuthenticationType();
+
 }

@@ -200,7 +200,7 @@ public class XMLQueryPlanner {
             if (rsInfo.exceptionOnRowlimit()) {
                 limit++;
             }
-            rsQuery.setLimit(new Limit(null, new Constant(new Integer(limit))));
+            rsQuery.setLimit(new Limit(null, new Constant(limit)));
         }
         
         // this query is not eligible for staging; proceed normally.

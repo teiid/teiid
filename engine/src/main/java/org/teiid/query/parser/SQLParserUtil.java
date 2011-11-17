@@ -22,6 +22,7 @@
 
 package org.teiid.query.parser;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,9 +37,11 @@ import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.lang.Limit;
 import org.teiid.query.sql.lang.Option;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SetQuery;
+import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.CriteriaSelector;
@@ -180,7 +183,9 @@ public class SQLParserUtil {
                 fromClause.setMakeNotDep(true);
             } else if (parts[i].equalsIgnoreCase(FromClause.MAKEIND)) {
                 fromClause.setMakeInd(true);
-            }       
+            } else if (parts[i].equalsIgnoreCase(SubqueryHint.NOUNNEST)) {
+            	fromClause.setNoUnnest(true);
+            }
         }
     }
     
@@ -204,11 +209,50 @@ public class SQLParserUtil {
         if (optToken == null) { 
             return ""; //$NON-NLS-1$
         }
-        String hint = optToken.image.substring(2, optToken.image.length() - 2);
+        //handle nested comments
+        String image = optToken.image;
+        while (optToken.specialToken != null) {
+        	optToken = optToken.specialToken;
+        	image = optToken.image + image;
+        }
+        String hint = image.substring(2, image.length() - 2);
         if (hint.startsWith("+")) { //$NON-NLS-1$
         	hint = hint.substring(1);
         }
         return hint;
+	}
+	
+	private static Pattern SOURCE_HINT = Pattern.compile("\\s*sh(?::((?:'[^']*')+))?\\s*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
+	private static Pattern SOURCE_HINT_ARG = Pattern.compile("\\s*([^:]+):((?:'[^']*')+)", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
+	
+	SourceHint getSourceHint(Token t) {
+		String comment = getComment(t);
+		Matcher matcher = SOURCE_HINT.matcher(comment);
+		if (!matcher.find()) {
+			return null;
+		}
+		SourceHint sourceHint = new SourceHint();
+		String generalHint = matcher.group(1);
+		if (generalHint != null) {
+			sourceHint.setGeneralHint(normalizeStringLiteral(generalHint));
+		}
+		int end = matcher.end();
+		matcher = SOURCE_HINT_ARG.matcher(comment);
+		while (matcher.find(end)) {
+			end = matcher.end();
+			sourceHint.setSourceHint(matcher.group(1), normalizeStringLiteral(matcher.group(2)));
+		}
+		return sourceHint;
+	}
+	
+	boolean isNonStrictHint(Token t) {
+		String[] parts = getComment(t).split("\\s"); //$NON-NLS-1$
+    	for (int i = 0; i < parts.length; i++) {
+    		if (parts[i].equalsIgnoreCase(Limit.NON_STRICT)) {
+    			return true;
+    		}
+    	}
+    	return false;
 	}
 	
 	private static Pattern CACHE_HINT = Pattern.compile("/\\*\\+?\\s*cache(\\(\\s*(pref_mem)?\\s*(ttl:\\d{1,19})?\\s*(updatable)?\\s*(scope:(session|vdb|user))?[^\\)]*\\))?[^\\*]*\\*\\/.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
@@ -280,6 +324,9 @@ public class SQLParserUtil {
     		functionType = "expr"; //$NON-NLS-1$
     	} else {
     		functionType = functionType.toLowerCase();
+    	}
+    	if (info.nameCounts == null) {
+    		info.nameCounts = new HashMap<String, Integer>();
     	}
         Integer num = info.nameCounts.get(functionType);
         if (num == null) {

@@ -23,10 +23,12 @@
 package org.teiid.translator;
 
 import java.io.Serializable;
+import java.sql.Statement;
 
 import javax.security.auth.Subject;
 
 import org.teiid.adminapi.Session;
+import org.teiid.jdbc.TeiidSQLWarning;
 
 
 
@@ -99,6 +101,18 @@ public interface ExecutionContext {
      * @since 4.2
      */
     Serializable getExecutionPayload();
+    
+    /**
+     * Get the general hint passed to all executions under the user query.
+     * @return the general hint or null if none was specified
+     */
+    String getGeneralHint();
+   
+    /**
+     * Get the hint designated for this source.
+     * @return the source hint or null if none was specified
+     */
+    String getSourceHint();
         
     /**
      * Get the identifier for the connection through which 
@@ -130,7 +144,8 @@ public interface ExecutionContext {
     int getBatchSize();
     
     /**
-     * Add an exception as a warning to this Execution.
+     * Add an exception as a warning to this Execution.  The exception will be wrapped by a {@link TeiidSQLWarning} for the client. 
+     * The warnings can be consumed through the {@link Statement#getWarnings()} method.  
      * @param ex
      */
     void addWarning(Exception ex);
@@ -146,4 +161,10 @@ public interface ExecutionContext {
      * @return
      */
     Session getSession();
+    
+    /**
+     * Signal the engine that data is available and processing should be
+     * resumed.
+     */
+    void dataAvailable();
 }

@@ -223,6 +223,7 @@ public class Insert extends ProcedureContainer {
         return EquivalenceUtil.areEqual(getGroup(), other.getGroup()) &&
                EquivalenceUtil.areEqual(getValues(), other.getValues()) &&
                EquivalenceUtil.areEqual(getVariables(), other.getVariables()) &&
+               sameOptionAndHint(other) &&
                EquivalenceUtil.areEqual(getQueryExpression(), other.getQueryExpression());
     }
     
