@@ -233,7 +233,7 @@ public class ConnectorManager  {
      * Get the <code>Translator</code> object managed by this  manager.
      * @return the <code>ExecutionFactory</code>.
      */
-	protected ExecutionFactory<Object, Object> getExecutionFactory() {
+	public ExecutionFactory<Object, Object> getExecutionFactory() {
 		return this.executionFactory;
     }
     

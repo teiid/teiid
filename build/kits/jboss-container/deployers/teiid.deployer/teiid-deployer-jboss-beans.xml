@@ -88,6 +88,7 @@
     <bean name="VDBStatusChecker" class="org.teiid.deployers.VDBStatusChecker">
         <property name="VDBRepository"><inject bean="VDBRepository"/></property>
         <property name="threadPool"><inject bean="jboss.system:service=ThreadPool"/></property>
+        <property name="translatorRepository"><inject bean="translatorRepository"/></property>
     </bean>
      
     <!-- Persistence class for the VDB deployment file -->

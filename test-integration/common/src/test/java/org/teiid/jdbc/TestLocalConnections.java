@@ -102,7 +102,7 @@ public class TestLocalConnections {
     		public ConnectorManager getConnectorManager(String connectorName) {
     			return new ConnectorManager(connectorName, connectorName) {
     				@Override
-    				protected ExecutionFactory<Object, Object> getExecutionFactory() {
+    				public ExecutionFactory<Object, Object> getExecutionFactory() {
     					return new ExecutionFactory<Object, Object>() {
     						@Override
     						public Execution createExecution(Command command,

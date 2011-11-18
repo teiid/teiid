@@ -533,7 +533,10 @@ public class Admin implements org.teiid.adminapi.Admin, Serializable {
 			getView().updateComponent(mc);
 		} catch (Exception e) {
 			throw new AdminComponentException(e.getMessage(), e);
-		}		        
+		}	
+		
+		// enforce the changes in the engine.
+		this.statusChecker.dataSourceReplaced(vdbName, vdbVersion, modelName, sourceName, translatorName, dsName);
 	}
 
 	private void manageRoleToDataPolicy(String vdbName, int vdbVersion, String policyName, String role, boolean add)  throws AdminException {
