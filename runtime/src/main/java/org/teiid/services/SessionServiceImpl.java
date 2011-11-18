@@ -22,6 +22,7 @@
 
 package org.teiid.services;
 
+
 import java.io.IOException;
 import java.security.Principal;
 import java.util.ArrayList;
@@ -44,10 +45,6 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
-import org.jboss.managed.api.annotation.ManagementComponent;
-import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementProperties;
-import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.impl.SessionMetadata;
@@ -72,31 +69,31 @@ import org.teiid.security.SecurityHelper;
 /**
  * This class serves as the primary implementation of the Session Service.
  */
-@ManagementObject(name="SessionService", componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
-public class SessionServiceImpl implements SessionService {
-	public static final String SECURITY_DOMAINS = "securitydomains"; //$NON-NLS-1$
-	
+public abstract class SessionServiceImpl implements SessionService {
+	public static final String AT = "@"; //$NON-NLS-1$
 	/*
 	 * Configuration state
 	 */
     private long sessionMaxLimit = DEFAULT_MAX_SESSIONS;
 	private long sessionExpirationTimeLimit = DEFAULT_SESSION_EXPIRATION;
-	private String authenticationType = AuthenticationType.CLEARTEXT.name();
+	private AuthenticationType authenticationType = AuthenticationType.CLEARTEXT;
 	private String gssSecurityDomain;
 	
 	/*
 	 * Injected state
 	 */
 	private VDBRepository vdbRepository;
-    private SecurityHelper securityHelper;
+    protected SecurityHelper securityHelper;
 
     private DQPCore dqp;
 
     private Map<String, SessionMetadata> sessionCache = new ConcurrentHashMap<String, SessionMetadata>();
-    private Timer sessionMonitor = new Timer("SessionMonitor", true); //$NON-NLS-1$
-    private LinkedList<String> securityDomains = new LinkedList<String>();
-    private LinkedList<String> adminSecurityDomains = new LinkedList<String>();
-    
+    private Timer sessionMonitor = new Timer("SessionMonitor", true); //$NON-NLS-1$    
+    private List<String> securityDomainNames;
+        
+    public void setSecurityDomains(List<String> domainNames) {
+    	this.securityDomainNames = domainNames;
+    }
     
     // -----------------------------------------------------------------------------------
     // S E R V I C E - R E L A T E D M E T H O D S
@@ -136,31 +133,18 @@ public class SessionServiceImpl implements SessionService {
                 LogManager.logWarning(LogConstants.CTX_SECURITY,e,"Exception terminitating session"); //$NON-NLS-1$
             }
 		}
-
-        // try to log out of the context.
-        try {
-        	LoginContext context = info.getLoginContext();
-        	if (context != null) {
-        		context.logout();
-        	}
-		} catch (LoginException e) {
-			 LogManager.logWarning(LogConstants.CTX_SECURITY,e,"Exception terminitating session"); //$NON-NLS-1$
-		}
 	}
 	
 	@Override
-	public SessionMetadata createSession(String userName, Credentials credentials, String applicationName, Properties properties, boolean adminConnection, boolean authenticate) 
+	public SessionMetadata createSession(String userName, Credentials credentials, String applicationName, Properties properties, boolean authenticate) 
 		throws LoginException, SessionServiceException {
 		ArgCheck.isNotNull(applicationName);
         ArgCheck.isNotNull(properties);
         
-        LoginContext loginContext = null;
         String securityDomain = "none"; //$NON-NLS-1$
         Object securityContext = null;
-        List<String> domains = this.securityDomains;
-        if (adminConnection) {
-        	domains = this.adminSecurityDomains;
-        }
+        Subject subject = null;
+        List<String> domains = this.securityDomainNames;
         
         // Validate VDB and version if logging on to server product...
         VDBMetaData vdb = null;
@@ -174,16 +158,18 @@ public class SessionServiceImpl implements SessionService {
             throw new SessionServiceException(RuntimePlugin.Util.getString("SessionServiceImpl.reached_max_sessions", new Object[] {new Long(sessionMaxLimit)})); //$NON-NLS-1$
         }
         
-        if (!domains.isEmpty() && authenticate) {
+        if (domains!= null && !domains.isEmpty() && authenticate) {
 	        // Authenticate user...
 	        // if not authenticated, this method throws exception
         	boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
-	        TeiidLoginContext membership = authenticate(userName, credentials, applicationName, domains, this.securityHelper, onlyAllowPassthrough);
-	        loginContext = membership.getLoginContext();
+	        TeiidLoginContext membership = authenticate(userName, credentials, applicationName, domains, onlyAllowPassthrough);
 	        userName = membership.getUserName();
 	        securityDomain = membership.getSecurityDomain();
 	        securityContext = membership.getSecurityContext();
-        }        
+	        subject = membership.getSubject();
+        } else {
+        	LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"No Security Domain configured for Teiid for authentication"}); //$NON-NLS-1$
+        }
         
         long creationTime = System.currentTimeMillis();
 
@@ -204,13 +190,16 @@ public class SessionServiceImpl implements SessionService {
         }
         
         // these are local no need for monitoring.
-        newSession.setLoginContext(loginContext);
+        newSession.setSubject(subject);
         newSession.setSecurityContext(securityContext);
         newSession.setVdb(vdb);
         LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful, created", newSession }); //$NON-NLS-1$ 
         this.sessionCache.put(newSession.getSessionId(), newSession);
         return newSession;
 	}
+	
+	abstract protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains, boolean onlyallowPassthrough)
+			throws LoginException;	
 
 	VDBMetaData getActiveVDB(String vdbName, String vdbVersion) throws SessionServiceException {
 		VDBMetaData vdb = null;
@@ -252,12 +241,6 @@ public class SessionServiceImpl implements SessionService {
 		return vdb;
 	}
 
-	protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains, SecurityHelper helper, boolean onlyallowPassthrough)
-			throws LoginException {
-		TeiidLoginContext membership = new TeiidLoginContext(helper);
-        membership.authenticateUser(userName, credentials, applicationName, domains, onlyallowPassthrough);                        
-		return membership;
-	}
 	
 	@Override
 	public LoginContext createLoginContext(final String securityDomain, final String user, final String password) throws LoginException{
@@ -280,12 +263,11 @@ public class SessionServiceImpl implements SessionService {
 			}
 		}; 		
 		
-		TeiidLoginContext context = new TeiidLoginContext(this.securityHelper);
-		return context.createLoginContext(securityDomain, handler);
+		return new LoginContext(securityDomain, handler);
 	}
 	
 	@Override
-	public Collection<SessionMetadata> getActiveSessions() throws SessionServiceException {
+	public Collection<SessionMetadata> getActiveSessions() {
 		return new ArrayList<SessionMetadata>(this.sessionCache.values());
 	}
 	
@@ -353,7 +335,6 @@ public class SessionServiceImpl implements SessionService {
 		return info;
 	}
 	
-	@ManagementProperty (description="Maximum number of sessions allowed by the system (default 5000)")
 	public long getSessionMaxLimit() {
 		return this.sessionMaxLimit;
 	}
@@ -362,7 +343,6 @@ public class SessionServiceImpl implements SessionService {
 		this.sessionMaxLimit = limit;
 	}
 	
-	@ManagementProperty(description="Max allowed time before the session is terminated by the system, 0 indicates unlimited (default 0)")
 	public long getSessionExpirationTimeLimit() {
 		return this.sessionExpirationTimeLimit;
 	}
@@ -372,31 +352,15 @@ public class SessionServiceImpl implements SessionService {
 	}
 	
 	@Override
-	public AuthenticationType getAuthType() {
-		return AuthenticationType.valueOf(this.authenticationType);
+	public AuthenticationType getAuthenticationType() {
+		return this.authenticationType;
 	}
 	
-	public void setAuthenticationType(String flag) {
+	public void setAuthenticationType(AuthenticationType flag) {
 		this.authenticationType = flag;
 		LogManager.logInfo(LogConstants.CTX_SECURITY, "Authentication Type set to: "+flag); //$NON-NLS-1$
 	}
 	
-	public void setSecurityDomains(String domainNameOrder) {
-        if (domainNameOrder != null && domainNameOrder.trim().length()>0) {
-        	LogManager.logInfo(LogConstants.CTX_SECURITY, "Security Enabled: true"); //$NON-NLS-1$
-
-	        String[] domainNames = domainNameOrder.split(","); //$NON-NLS-1$
-	        for (String domainName : domainNames) {
-	            this.securityDomains.addLast(domainName);
-	        }
-        }		
-	}
-		
-	public void setAdminSecurityDomain(String domain) {
-		this.adminSecurityDomains.add(domain);
-		LogManager.logInfo(LogConstants.CTX_SECURITY, "Admin Security Enabled: true"); //$NON-NLS-1$
-	}
-
 	public void start() {
         this.sessionMonitor.schedule(new TimerTask() {
         	@Override
@@ -446,4 +410,86 @@ public class SessionServiceImpl implements SessionService {
 	public String getGssSecurityDomain(){
 		return this.gssSecurityDomain;
 	}	
+	
+    protected Collection<String> getDomainsForUser(List<String> domains, String username) {
+    	// If username is null, return all domains
+        if (username == null) {
+            return domains;
+        }  
+        
+        String domain = getDomainName(username);
+        
+        if (domain == null) {
+        	return domains;
+        }
+        
+        // ------------------------------------------
+        // Handle usernames having @ sign
+        // ------------------------------------------
+        String domainHolder = null;
+        for (String d:domains) {
+        	if(d.equalsIgnoreCase(domain)) {
+        		domainHolder = d;
+        		break;
+        	}        	
+        }
+        
+        if (domainHolder == null) {
+            return Collections.emptyList();
+        }
+        
+        LinkedList<String> result = new LinkedList<String>();
+        result.add(domainHolder);
+        return result;
+    }	
+    
+    protected static String getBaseUsername(String username) {
+        if (username == null) {
+            return username;
+        }
+        
+        int index = getQualifierIndex(username);
+
+        String result = username;
+        
+        if (index != -1) {
+            result = username.substring(0, index);
+        }
+        
+        //strip the escape character from the remaining ats
+        return result.replaceAll("\\\\"+AT, AT); //$NON-NLS-1$
+    }
+    
+    static String escapeName(String name) {
+        if (name == null) {
+            return name;
+        }
+        
+        return name.replaceAll(AT, "\\\\"+AT); //$NON-NLS-1$
+    }
+    
+    static String getDomainName(String username) {
+        if (username == null) {
+            return username;
+        }
+        
+        int index = getQualifierIndex(username);
+        
+        if (index != -1) {
+            return username.substring(index + 1);
+        }
+        
+        return null;
+    }
+    
+    static int getQualifierIndex(String username) {
+        int index = username.length();
+        while ((index = username.lastIndexOf(AT, --index)) != -1) {
+            if (index > 0 && username.charAt(index - 1) != '\\') {
+                return index;
+            }
+        }
+        
+        return -1;
+    }    
 }

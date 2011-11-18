@@ -79,8 +79,6 @@ public class TeiidURL {
 		// constant for password part of url
 		public static final String PASSWORD = "password"; //$NON-NLS-1$
 		
-		public static final String ADMIN = "admin"; //$NON-NLS-1$
-		
 		public static final String PASSTHROUGH_AUTHENTICATION = "PassthroughAuthentication"; //$NON-NLS-1$
 		
 		public static final String JAAS_NAME = "jaasName"; //$NON-NLS-1$

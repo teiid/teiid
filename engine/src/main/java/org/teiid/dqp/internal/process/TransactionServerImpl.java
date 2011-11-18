@@ -502,13 +502,13 @@ public class TransactionServerImpl implements TransactionService {
     }
 
 	@Override
-	public Collection<org.teiid.adminapi.Transaction> getTransactions() {
+	public Collection<TransactionMetadata> getTransactions() {
 		Set<TransactionContext> txnSet = Collections.newSetFromMap(new IdentityHashMap<TransactionContext, Boolean>());
 		synchronized (this.transactions) {
 			txnSet.addAll(this.transactions.threadToTransactionContext.values());
 			txnSet.addAll(this.transactions.xidToTransactionContext.values());
 		}
-		Collection<org.teiid.adminapi.Transaction> result = new ArrayList<org.teiid.adminapi.Transaction>(txnSet.size());
+		Collection<TransactionMetadata> result = new ArrayList<TransactionMetadata>(txnSet.size());
 		for (TransactionContext transactionContext : txnSet) {
 			if (transactionContext.getTransactionType() == Scope.NONE) {
 				continue;

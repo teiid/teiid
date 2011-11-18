@@ -111,8 +111,9 @@ public class FunctionMethod extends AbstractMetadataRecord {
     protected List<FunctionParameter> inParameters = new ArrayList<FunctionParameter>();
     private FunctionParameter outputParameter;
     private Schema parent;
+    private ClassLoader classLoader;
         
-    protected FunctionMethod() {
+    public FunctionMethod() {
     }
        
     public FunctionMethod(String name, String description, String category, FunctionParameter[] inputParams, FunctionParameter outputParam) {
@@ -463,5 +464,13 @@ public class FunctionMethod extends AbstractMetadataRecord {
     @Override
     public Schema getParent() {
     	return parent;
+    }
+    
+    public ClassLoader getClassLoader() {
+    	return this.classLoader;
+    }
+    
+    public void setClassloader(ClassLoader classloader) {
+    	this.classLoader = classloader;
     }
 }

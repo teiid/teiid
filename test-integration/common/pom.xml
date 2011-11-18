@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>teiid-test-integration</artifactId>
 		<groupId>org.jboss.teiid</groupId>
-		<version>7.6.0.CR2-SNAPSHOT</version>
+		<version>8.0.0-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>test-integration-common</artifactId>
@@ -20,18 +20,50 @@
   			<artifactId>h2</artifactId>
   			<version>1.2.147</version>
 		</dependency>
+        
 		<dependency>
   			<artifactId>teiid-cache-jbosscache</artifactId>
 			<groupId>org.jboss.teiid</groupId>
 		</dependency>
 		<dependency>
-			<groupId>jgroups</groupId>
-			<artifactId>jgroups</artifactId>
-		</dependency>
-		<dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
 		</dependency>
+        <dependency>
+           <groupId>org.jboss.arquillian.junit</groupId>
+           <artifactId>arquillian-junit-container</artifactId>
+           <version>1.0.0.CR5</version>
+           <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+           <groupId>javax.enterprise</groupId>
+           <artifactId>cdi-api</artifactId>
+           <version>1.0</version>
+        </dependency>        
 	</dependencies>
-     
+    <profiles>
+        <profile>
+            <id>jbossas-managed-7</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.jboss.spec</groupId>
+                    <artifactId>jboss-javaee-6.0</artifactId>
+                    <version>1.0.0.Final</version>
+                    <type>pom</type>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.jboss.as</groupId>
+                    <artifactId>jboss-as-arquillian-container-managed</artifactId>
+                    <version>7.0.2.Final</version>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>

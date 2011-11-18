@@ -26,8 +26,6 @@ import java.lang.reflect.Method;
 
 import junit.framework.TestCase;
 
-import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.AdminException;
 import org.teiid.client.DQP;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.client.xa.XATransactionException;
@@ -48,15 +46,6 @@ public class TestSocketServiceRegistry extends TestCase {
 		Throwable t = ExceptionUtil.convertException(m, new TeiidComponentException());
 		
 		assertTrue(t instanceof TeiidRuntimeException);
-	}
-	
-	public void testAdminExceptionConversion() throws Exception {
-		
-		Method m = Admin.class.getMethod("getCacheStats", new Class[] {String.class});
-		
-		Throwable t = ExceptionUtil.convertException(m, new TeiidComponentException());
-		
-		assertTrue(t instanceof AdminException);
 	}
 	
 	public void testComponentExceptionConversion() throws Exception {

@@ -22,14 +22,8 @@
 
 package org.teiid.cache;
 
-import org.jboss.managed.api.annotation.ManagementComponent;
-import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementObjectID;
-import org.jboss.managed.api.annotation.ManagementProperties;
-import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 
-@ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class CacheConfiguration {
 			
 	public enum Policy {
@@ -40,7 +34,6 @@ public class CacheConfiguration {
 	private Policy policy;
 	private int maxage = -1;
 	private int maxEntries = SessionAwareCache.DEFAULT_MAX_SIZE_TOTAL;
-	private boolean enabled = true;
 	private String name;
 	private String location;
 	
@@ -60,7 +53,6 @@ public class CacheConfiguration {
 		return this.policy;
 	}
 
-	@ManagementProperty(description="The maximum age of an entry in seconds. -1 indicates no max.")
 	public int getMaxAgeInSeconds(){
 		return maxage;
 	}
@@ -69,7 +61,6 @@ public class CacheConfiguration {
 		this.maxage = maxage;
 	}
 	
-	@ManagementProperty(description="The maximum staleness in seconds of an entry based upon modifications. -1 indicates no max.")
 	public int getMaxStaleness() {
 		return maxStaleness;
 	}
@@ -78,7 +69,6 @@ public class CacheConfiguration {
 		this.maxStaleness = maxStaleDataModification;
 	}
 	
-	@ManagementProperty(description="The maximum number of cache entries. -1 indicates no limit. (default 1024)")
 	public int getMaxEntries() {
 		return this.maxEntries;
 	}
@@ -91,8 +81,6 @@ public class CacheConfiguration {
 		this.policy = Policy.valueOf(type);
 	}
 	
-	@ManagementProperty(description="Name of the configuration", readOnly=true)
-	@ManagementObjectID(type="cache")	
 	public String getName() {
 		return this.name;
 	}
@@ -101,7 +89,6 @@ public class CacheConfiguration {
 		this.name = name;
 	}
 	
-	@ManagementProperty(description="location prefix in cache", readOnly=true)
 	public String getLocation() {
 		return location;
 	}
@@ -109,12 +96,4 @@ public class CacheConfiguration {
 	public void setLocation(String location) {
 		this.location = location;
 	}	
-	
-	public boolean isEnabled() {
-		return enabled;
-	}
-
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
 }

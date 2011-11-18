@@ -1,0 +1,344 @@
+{
+    "type" : {
+        "TYPE_MODEL_VALUE" : "OBJECT"
+    },
+    "attributes" : {
+        "vdb-name" : {
+            "type" : {
+                "TYPE_MODEL_VALUE" : "STRING"
+            },
+            "description" : "The Virtual Database Name",
+            "required" : true
+        },
+        "connection-type" : {
+            "type" : {
+                "TYPE_MODEL_VALUE" : "STRING"
+            },
+            "description" : "Allowable Connections: 1) NONE - disallow new connections 2) BY VERSION - allow connections only if the version is specified or if this is the earliest 'BY VERSION' vdb and there are no vdbs marked as 'ANY' 3) ANY - allow connections with or without a version specified. If multiple versions of same VDB are deployed, connect to one specified with ANY, or if there are multiple VDBs with ANY then connect to the latest version with ANY ",
+            "required" : false
+        },
+        "status" : {
+            "type" : {
+                "TYPE_MODEL_VALUE" : "STRING"
+            },
+            "description" : "The Virtual Database Status",
+            "required" : true
+        },
+        "vdb-version" : {
+            "type" : {
+                "TYPE_MODEL_VALUE" : "INT"
+            },
+            "description" : "The Virtual Database Version",
+            "required" : true
+        },
+        "url" : {
+            "type" : {
+                "TYPE_MODEL_VALUE" : "STRING"
+            },
+            "description" : "The Virtual Database URL",
+            "required" : false
+        },
+        "description" : {
+            "type" : {
+                "TYPE_MODEL_VALUE" : "STRING"
+            },
+            "description" : "Description",
+            "required" : false
+        },
+        "dynamic" : {
+            "type" : {
+                "TYPE_MODEL_VALUE" : "BOOLEAN"
+            },
+            "description" : "Dynamic Virtual Database",
+            "required" : false
+        }
+    },
+    "allowed" : [
+        "ACTIVE",
+        "INACTIVE"
+    ],
+    "children" : {
+        "properties" : {
+            "description" : "properties",
+            "type" : {
+                "TYPE_MODEL_VALUE" : "OBJECT"
+            },
+            "attributes" : {
+                "property-name" : {
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "STRING"
+                    },
+                    "description" : "Name",
+                    "required" : true
+                },
+                "property-value" : {
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "STRING"
+                    },
+                    "description" : "Property value",
+                    "required" : true
+                }
+            }
+        },
+        "models" : {
+            "type" : {
+                "TYPE_MODEL_VALUE" : "OBJECT"
+            },
+            "attributes" : {
+                "model-name" : {
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "STRING"
+                    },
+                    "description" : "Name of the model",
+                    "required" : true
+                },
+                "description" : {
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "STRING"
+                    },
+                    "description" : "Description",
+                    "required" : false
+                },
+                "visible" : {
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "BOOLEAN"
+                    },
+                    "description" : "Visibility of the model",
+                    "required" : false
+                },
+                "model-type" : {
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "STRING"
+                    },
+                    "description" : "Type of the Model(PHYSICAL, VIRTUAL, FUNCTION, OTHER)",
+                    "required" : true
+                },
+                "model-path" : {
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "STRING"
+                    },
+                    "description" : "Path to model file inside the archive",
+                    "required" : false
+                }
+            },
+            "allowed" : [
+                "PHYSICAL",
+                "VIRTUAL",
+                "FUNCTION",
+                "OTHER"
+            ],
+            "children" : {
+                "properties" : {
+                    "description" : "properties",
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "OBJECT"
+                    },
+                    "attributes" : {
+                        "property-name" : {
+                            "type" : {
+                                "TYPE_MODEL_VALUE" : "STRING"
+                            },
+                            "description" : "Name",
+                            "required" : true
+                        },
+                        "property-value" : {
+                            "type" : {
+                                "TYPE_MODEL_VALUE" : "STRING"
+                            },
+                            "description" : "Property value",
+                            "required" : true
+                        }
+                    }
+                },
+                "source-mappings" : {
+                    "description" : "Model to source mapping",
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "OBJECT"
+                    },
+                    "attributes" : {
+                        "source-name" : {
+                            "type" : {
+                                "TYPE_MODEL_VALUE" : "STRING"
+                            },
+                            "description" : "Source name for this model",
+                            "required" : true
+                        },
+                        "jndi-name" : {
+                            "type" : {
+                                "TYPE_MODEL_VALUE" : "STRING"
+                            },
+                            "description" : "Connection JNDI Name",
+                            "required" : true
+                        },
+                        "translator-name" : {
+                            "type" : {
+                                "TYPE_MODEL_VALUE" : "STRING"
+                            },
+                            "description" : "Name of the translator",
+                            "required" : true
+                        }
+                    }
+                },
+                "validity-errors" : {
+                    "description" : "Model validation errors",
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "OBJECT"
+                    },
+                    "attributes" : {
+                        "error-path" : {
+                            "type" : {
+                                "TYPE_MODEL_VALUE" : "STRING"
+                            },
+                            "description" : "Path to the error in the Virtual Database",
+                            "required" : false
+                        },
+                        "severity" : {
+                            "type" : {
+                                "TYPE_MODEL_VALUE" : "STRING"
+                            },
+                            "description" : "Severity",
+                            "required" : true
+                        },
+                        "message" : {
+                            "type" : {
+                                "TYPE_MODEL_VALUE" : "STRING"
+                            },
+                            "description" : "Error message",
+                            "required" : true
+                        }
+                    }
+                }
+            },
+            "description" : "Models inside a virtual database",
+            "min-occurs" : 1
+        },
+        "override-translators" : {
+            "description" : "Overridden translators for the Virtual Database",
+            "type" : {
+                "TYPE_MODEL_VALUE" : "OBJECT"
+            },
+            "attributes" : {
+                "translator-name" : {
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "STRING"
+                    },
+                    "description" : "Name of the translator",
+                    "required" : true
+                },
+                "base-type" : {
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "STRING"
+                    },
+                    "description" : "Translator Base Type",
+                    "required" : true
+                },
+                "description" : {
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "STRING"
+                    },
+                    "description" : "Description",
+                    "required" : false
+                },
+                "module-name" : {
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "STRING"
+                    },
+                    "description" : "Translator's Module name",
+                    "required" : false
+                }
+            },
+            "children" : {"properties" : {
+                "description" : "properties",
+                "type" : {
+                    "TYPE_MODEL_VALUE" : "OBJECT"
+                },
+                "attributes" : {
+                    "property-name" : {
+                        "type" : {
+                            "TYPE_MODEL_VALUE" : "STRING"
+                        },
+                        "description" : "Name",
+                        "required" : true
+                    },
+                    "property-value" : {
+                        "type" : {
+                            "TYPE_MODEL_VALUE" : "STRING"
+                        },
+                        "description" : "Property value",
+                        "required" : true
+                    }
+                }
+            }}
+        },
+        "data-policies" : {
+            "description" : "Data access policies defined for the Virtual Database",
+            "type" : {
+                "TYPE_MODEL_VALUE" : "OBJECT"
+            },
+            "attributes" : {
+                "policy-name" : {
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "STRING"
+                    },
+                    "description" : "Resource Name, for which permission defined",
+                    "required" : true
+                },
+                "description" : {
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "STRING"
+                    },
+                    "description" : "Description",
+                    "required" : false
+                },
+                "allow-create-temp-tables" : {
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "BOOLEAN"
+                    },
+                    "description" : "Allows create of temporary table",
+                    "required" : false
+                },
+                "any-authenticated" : {
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "BOOLEAN"
+                    },
+                    "description" : "Indicates if the role is mapped to any authenticated user",
+                    "required" : false
+                }
+            },
+            "children" : {
+                "data-permissions" : {
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "OBJECT"
+                    },
+                    "attributes" : {
+                        "property-name" : {
+                            "type" : {
+                                "TYPE_MODEL_VALUE" : "STRING"
+                            },
+                            "description" : "Name",
+                            "required" : true
+                        },
+                        "property-value" : {
+                            "type" : {
+                                "TYPE_MODEL_VALUE" : "STRING"
+                            },
+                            "description" : "Property value",
+                            "required" : true
+                        }
+                    },
+                    "description" : "Permissions defined for data access",
+                    "min-occurs" : 1
+                },
+                "mapped-role-names" : {
+                    "type" : {
+                        "TYPE_MODEL_VALUE" : "LIST"
+                    },
+                    "description" : "Policy name to role name mapping",
+                    "value-type" : {
+                        "TYPE_MODEL_VALUE" : "STRING"
+                    }
+                }
+            }
+        }
+    }
+}

@@ -23,20 +23,15 @@
 package org.teiid.dqp.internal.process;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.cache.Cachable;
 import org.teiid.cache.Cache;
 import org.teiid.common.buffer.BufferManager;
-import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -48,7 +43,6 @@ import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.symbol.ElementSymbol;
 
 
 public class CachedResults implements Serializable, Cachable {
@@ -57,11 +51,8 @@ public class CachedResults implements Serializable, Cachable {
 	private transient Command command;
 	private transient TupleBuffer results;
 
-	private String[] types;
 	private CacheHint hint;
-	private int batchSize;
 	private String uuid;
-	private int rowCount;
 	private boolean hasLobs;
 	
 	private AccessInfo accessInfo = new AccessInfo();
@@ -76,9 +67,6 @@ public class CachedResults implements Serializable, Cachable {
 	
 	public void setResults(TupleBuffer results, ProcessorPlan plan) {
 		this.results = results;
-		this.batchSize = results.getBatchSize();
-		this.types = TupleBuffer.getTypeNames(results.getSchema());
-		this.rowCount = results.getRowCount();
 		this.uuid = results.getId();
 		this.hasLobs = results.isLobs();
 		this.accessInfo.populate(plan.getContext(), true);
@@ -108,7 +96,7 @@ public class CachedResults implements Serializable, Cachable {
 	@Override
 	public boolean prepare(Cache cache, BufferManager bufferManager) {
 		Assertion.assertTrue(!this.results.isForwardOnly());
-		bufferManager.addTupleBuffer(this.results);
+		bufferManager.distributeTupleBuffer(this.results.getId(), results);
 		return true;
 	}
 
@@ -118,44 +106,19 @@ public class CachedResults implements Serializable, Cachable {
 			if (this.hasLobs) {
 				return false; //the lob store is local only and not distributed
 			}
-			TupleBuffer buffer = null;
+			TupleBuffer buffer = bufferManager.getTupleBuffer(this.uuid);
+			if (buffer != null) {
+				this.results = buffer;
+			}
+			
 			try {
-				List<ElementSymbol> schema = new ArrayList<ElementSymbol>(types.length);
-				for (String type : types) {
-					ElementSymbol es = new ElementSymbol("x"); //$NON-NLS-1$
-					es.setType(DataTypeManager.getDataTypeClass(type));
-					schema.add(es);
-				}
-				buffer = bufferManager.createTupleBuffer(schema, "cached", TupleSourceType.FINAL); //$NON-NLS-1$
-				buffer.setBatchSize(this.batchSize);
-				buffer.setId(this.uuid);
-				if (this.hint != null) {
-					buffer.setPrefersMemory(this.hint.getPrefersMemory());
-				}
-				
-				for (int row = 1; row <= this.rowCount; row+=this.batchSize) {
-					TupleBatch batch = (TupleBatch)cache.get(uuid+","+row); //$NON-NLS-1$
-					if (batch == null) {					
-						LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.getString("not_found_cache")); //$NON-NLS-1$
-						buffer.remove();
-						return false;
-					}		
-					buffer.addTupleBatch(batch, true);
-					cache.remove(uuid+","+row); //$NON-NLS-1$
-				}
-				this.results = buffer;	
-				bufferManager.addTupleBuffer(this.results);
-				this.results.close();
 				this.accessInfo.restore();
 			} catch (TeiidException e) {
 				LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("unexpected_exception_restoring_results")); //$NON-NLS-1$
-				if (buffer != null) {
-					buffer.remove();
-				}
 				return false;
 			}
 		}
-		return true;
+		return (this.results != null);
 	}	
 	
 	@Override

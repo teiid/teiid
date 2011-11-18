@@ -30,6 +30,7 @@ import javax.transaction.xa.Xid;
 
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.Transaction;
+import org.teiid.adminapi.impl.TransactionMetadata;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
 
@@ -76,7 +77,7 @@ public interface TransactionService {
 	void end(final String threadId, XidImpl xid, int flags, boolean singleTM) throws XATransactionException;
         
 	// management methods
-    Collection<Transaction> getTransactions();
+    Collection<TransactionMetadata> getTransactions();
     
     void terminateTransaction(String transactionId) throws AdminException;
 }

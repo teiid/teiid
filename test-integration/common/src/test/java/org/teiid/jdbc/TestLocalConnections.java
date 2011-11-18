@@ -80,6 +80,7 @@ public class TestLocalConnections {
 	static Semaphore sourceCounter = new Semaphore(0);
 	
 	public static int blocking() throws InterruptedException {
+
 		lock.lock();
 		try {
 			waiting.signal();
@@ -162,7 +163,7 @@ public class TestLocalConnections {
     	FunctionMethod function = new FunctionMethod("foo", null, FunctionCategoryConstants.MISCELLANEOUS, PushDown.CANNOT_PUSHDOWN, TestLocalConnections.class.getName(), "blocking", new FunctionParameter[0], new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER), true, FunctionMethod.Determinism.NONDETERMINISTIC);
     	HashMap<String, Collection<FunctionMethod>> udfs = new HashMap<String, Collection<FunctionMethod>>();
     	udfs.put("test", Arrays.asList(function));
-    	server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb", udfs);
+    	server.deployVDB("PartsSupplier", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb", udfs);
 	}
 	
 	@AfterClass public static void oneTimeTearDown() {
@@ -175,7 +176,7 @@ public class TestLocalConnections {
     		
     		public void run() {
     			try {
-	    	    	Connection c = server.createConnection("jdbc:teiid:test");
+	    	    	Connection c = server.createConnection("jdbc:teiid:PartsSupplier");
 	    	    	
 	    	    	Statement s = c.createStatement();
 	    	    	s.execute("select foo()");
@@ -195,7 +196,7 @@ public class TestLocalConnections {
     	} finally {
     		lock.unlock();
     	}
-    	Connection c = server.createConnection("jdbc:teiid:test");
+    	Connection c = server.createConnection("jdbc:teiid:PartsSupplier");
     	Statement s = c.createStatement();
     	s.execute("select * from tables");
     	
@@ -216,7 +217,7 @@ public class TestLocalConnections {
 	}
 	
 	@Test public void testUseInDifferentThreads() throws Throwable {
-		Connection c = server.createConnection("jdbc:teiid:test");
+		Connection c = server.createConnection("jdbc:teiid:PartsSupplier");
     	
     	final Statement s = c.createStatement();
     	s.execute("select 1");
@@ -248,7 +249,7 @@ public class TestLocalConnections {
 	}
 	
 	@Test public void testWait() throws Throwable {
-		final Connection c = server.createConnection("jdbc:teiid:test");
+		final Connection c = server.createConnection("jdbc:teiid:PartsSupplier");
     	
 		Thread t = new Thread() {
 			public void run() {
@@ -285,7 +286,7 @@ public class TestLocalConnections {
 	}
 	
 	@Test public void testWaitMultiple() throws Throwable {
-		final Connection c = server.createConnection("jdbc:teiid:test");
+		final Connection c = server.createConnection("jdbc:teiid:PartsSupplier");
     	
 		Thread t = new Thread() {
 			public void run() {

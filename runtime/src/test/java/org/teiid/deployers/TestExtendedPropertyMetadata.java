@@ -41,7 +41,7 @@ public class TestExtendedPropertyMetadata {
 		Assert.assertEquals(false, metadata.advanced());
 		Assert.assertEquals(false, metadata.required());
 		Assert.assertEquals(false, metadata.masked());
-		Assert.assertEquals(true , metadata.readOnly());
+		Assert.assertEquals(false , metadata.readOnly());
 	}
 	
 	@Test
@@ -57,7 +57,7 @@ public class TestExtendedPropertyMetadata {
 		Assert.assertEquals(true, metadata.advanced());
 		Assert.assertEquals(true, metadata.required());
 		Assert.assertEquals(false, metadata.masked());
-		Assert.assertEquals(true , metadata.readOnly());		
+		Assert.assertEquals(false , metadata.readOnly());		
 		Assert.assertEquals(allowed , Arrays.asList(metadata.allowed()));
 	}
 	
@@ -74,7 +74,7 @@ public class TestExtendedPropertyMetadata {
 		Assert.assertEquals(true, metadata.advanced());
 		Assert.assertEquals(true, metadata.required());
 		Assert.assertEquals(false, metadata.masked());
-		Assert.assertEquals(true , metadata.readOnly());		
+		Assert.assertEquals(false , metadata.readOnly());		
 		Assert.assertEquals(allowed , Arrays.asList(metadata.allowed()));
 	}	
 	
@@ -91,7 +91,7 @@ public class TestExtendedPropertyMetadata {
 		Assert.assertEquals(true, metadata.advanced());
 		Assert.assertEquals(true, metadata.required());
 		Assert.assertEquals(false, metadata.masked());
-		Assert.assertEquals(true , metadata.readOnly());		
+		Assert.assertEquals(false , metadata.readOnly());		
 		Assert.assertEquals(allowed , Arrays.asList(metadata.allowed()));
 	}	
 }

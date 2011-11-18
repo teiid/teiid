@@ -61,7 +61,7 @@ public class TestJDBCSocketTransport {
 		server.setUseCallingThread(false);
 		server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
 		
-		jdbcTransport = new SocketListener(config, server, BufferManagerFactory.getStandaloneBufferManager(), 0);
+		jdbcTransport = new SocketListener(addr, config, server, BufferManagerFactory.getStandaloneBufferManager());
 	}
 	
 	@AfterClass public static void oneTimeTearDown() throws Exception {

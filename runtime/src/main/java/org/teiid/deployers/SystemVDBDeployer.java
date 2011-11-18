@@ -21,11 +21,15 @@
  */
 package org.teiid.deployers;
 
+import java.io.Closeable;
 import java.io.IOException;
-import java.net.URI;
+import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.net.URL;
+import java.util.concurrent.Executors;
 
+import org.jboss.vfs.TempFileProvider;
+import org.jboss.vfs.VFS;
+import org.jboss.vfs.VirtualFile;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.metadata.index.IndexMetadataFactory;
@@ -35,17 +39,31 @@ import org.teiid.runtime.RuntimePlugin;
 
 public class SystemVDBDeployer {
 	private VDBRepository vdbRepository;
-	
+	private Closeable file;
+    
+	private static final TempFileProvider PROVIDER;
+    static {
+       try {
+          PROVIDER = TempFileProvider.create("teiid-deployment", Executors.newScheduledThreadPool(2)); //$NON-NLS-1$
+       }
+       catch (final IOException ioe) {
+          throw new RuntimeException("Failed to create temp file provider");//$NON-NLS-1$
+       }
+    }	
 
 	public void start() {
 		try {
-			URL url = Thread.currentThread().getContextClassLoader().getResource(CoreConstants.SYSTEM_VDB);
-			if (url == null) {
-				throw new TeiidRuntimeException(RuntimeMetadataPlugin.Util.getString("system_vdb_not_found")); //$NON-NLS-1$
+			VirtualFile mountPoint = VFS.getChild("content/" + CoreConstants.SYSTEM_VDB); //$NON-NLS-1$
+			if (!mountPoint.exists()) {
+				InputStream contents = Thread.currentThread().getContextClassLoader().getResourceAsStream(CoreConstants.SYSTEM_VDB);
+				if (contents == null) {
+					throw new TeiidRuntimeException(RuntimeMetadataPlugin.Util.getString("system_vdb_not_found")); //$NON-NLS-1$
+				}
+				this.file = VFS.mountZip(contents, CoreConstants.SYSTEM_VDB, mountPoint, PROVIDER);
 			}
+			
 			// uri conversion is only to remove the spaces in URL, note this only with above kind situation  
-			URI uri = new URI(url.getProtocol(), url.getPath(), null);
-			this.vdbRepository.setSystemStore(new IndexMetadataFactory(uri.toURL()).getMetadataStore(null));
+			this.vdbRepository.setSystemStore(new IndexMetadataFactory(mountPoint).getMetadataStore(null));
 		} catch (URISyntaxException e) {
 			throw new TeiidRuntimeException(e, RuntimePlugin.Util.getString("system_vdb_load_error")); //$NON-NLS-1$
 		} catch (IOException e) {
@@ -57,4 +75,13 @@ public class SystemVDBDeployer {
 		this.vdbRepository = repo;
 	}	
 	
+	public void stop() {
+		try {
+			if (file != null) {
+				file.close();
+			}
+		} catch (IOException e) {
+			//ignore
+		}
+	}
 }

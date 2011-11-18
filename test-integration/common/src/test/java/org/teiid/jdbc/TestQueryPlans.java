@@ -32,6 +32,7 @@ import java.sql.Types;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 

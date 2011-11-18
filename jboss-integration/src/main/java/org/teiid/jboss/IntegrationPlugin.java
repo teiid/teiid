@@ -21,6 +21,7 @@
  */
 package org.teiid.jboss;
 
+import java.util.Locale;
 import java.util.ResourceBundle;
 
 import org.teiid.core.BundleUtil;
@@ -28,7 +29,13 @@ import org.teiid.core.BundleUtil;
 
 public class IntegrationPlugin {
     private static final String PLUGIN_ID = "org.teiid.jboss" ; //$NON-NLS-1$
-    private static final String BUNDLE_NAME = PLUGIN_ID + ".i18n"; //$NON-NLS-1$
+    static final String BUNDLE_NAME = PLUGIN_ID + ".i18n"; //$NON-NLS-1$
     public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,BUNDLE_NAME,ResourceBundle.getBundle(BUNDLE_NAME));
-
+    
+    public static ResourceBundle getResourceBundle(Locale locale) {
+        if (locale == null) {
+            locale = Locale.getDefault();
+        }
+        return ResourceBundle.getBundle(IntegrationPlugin.BUNDLE_NAME, locale);
+    }	
 }

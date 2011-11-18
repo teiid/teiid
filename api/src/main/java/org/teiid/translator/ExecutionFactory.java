@@ -208,8 +208,8 @@ public class ExecutionFactory<F, C> {
 	
 	public void setSourceRequired(boolean value) {
 		this.sourceRequired = value;
-	}    
-    
+	}
+	
     /**
      * Obtain a reference to the default LanguageFactory that can be used to construct
      * new language interface objects.  This is typically needed when modifying the language

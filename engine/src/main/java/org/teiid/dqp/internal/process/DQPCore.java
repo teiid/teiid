@@ -40,15 +40,12 @@ import java.util.concurrent.TimeUnit;
 import javax.resource.spi.work.Work;
 import javax.transaction.xa.Xid;
 
-import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.Request.ThreadState;
-import org.teiid.adminapi.impl.CacheStatisticsMetadata;
 import org.teiid.adminapi.impl.RequestMetadata;
+import org.teiid.adminapi.impl.TransactionMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
-import org.teiid.cache.CacheConfiguration;
-import org.teiid.cache.CacheFactory;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
@@ -63,27 +60,27 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.Streamable;
+import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.ExecutorUtils;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.TransactionContext;
-import org.teiid.dqp.service.TransactionService;
 import org.teiid.dqp.service.TransactionContext.Scope;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.events.EventDistributor;
 import org.teiid.jdbc.EnhancedTimer;
 import org.teiid.logging.CommandLogMessage;
+import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.tempdata.TempTableStore.TransactionMode;
-
 
 /**
  * Implements the core DQP processing.
@@ -189,7 +186,6 @@ public class DQPCore implements DQP {
     private SessionAwareCache<PreparedPlan> prepPlanCache;
     private SessionAwareCache<CachedResults> rsCache;
     private TransactionService transactionService;
-    private BufferService bufferService;
     private EventDistributor eventDistributor;
     private MetadataRepository metadataRepository;
     
@@ -205,7 +201,6 @@ public class DQPCore implements DQP {
     private int userRequestSourceConcurrency;
     private LinkedList<RequestWorkItem> waitingPlans = new LinkedList<RequestWorkItem>();
     private LinkedHashSet<RequestWorkItem> bufferFullPlans = new LinkedHashSet<RequestWorkItem>();
-    private CacheFactory cacheFactory;
 
 	private AuthorizationValidator authorizationValidator;
 	
@@ -586,82 +581,7 @@ public class DQPCore implements DQP {
         }
     }
     
-    private void clearPlanCache(){
-        LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DQPCore.Clearing_prepared_plan_cache")); //$NON-NLS-1$
-        this.prepPlanCache.clearAll();
-    }
-
-	private void clearResultSetCache() {
-		//clear cache in server
-		if(rsCache != null){
-			rsCache.clearAll();
-		}
-	}
-	
-    private void clearPlanCache(String vdbName, int version){
-        LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DQPCore.Clearing_prepared_plan_cache_for_vdb", vdbName, version)); //$NON-NLS-1$
-        this.prepPlanCache.clearForVDB(vdbName, version);
-    }
-
-	private void clearResultSetCache(String vdbName, int version) {
-		//clear cache in server
-		if(rsCache != null){
-			LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DQPCore.clearing_resultset_cache", vdbName, version)); //$NON-NLS-1$
-			rsCache.clearForVDB(vdbName, version);
-		}
-	}
-	
-	public CacheStatisticsMetadata getCacheStatistics(String cacheType) {
-		if (cacheType.equalsIgnoreCase(Admin.Cache.PREPARED_PLAN_CACHE.toString())) {
-			return buildCacheStats(Admin.Cache.PREPARED_PLAN_CACHE.toString(), this.prepPlanCache);
-		}
-		else if (cacheType.equalsIgnoreCase(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.toString())) {
-			return buildCacheStats(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.toString(), this.rsCache);
-		}
-		return null;
-	}
-	
-	private CacheStatisticsMetadata buildCacheStats(String name, SessionAwareCache cache) {
-		CacheStatisticsMetadata stats = new CacheStatisticsMetadata();
-		stats.setName(name);
-		stats.setHitRatio(cache.getRequestCount() == 0?0:((double)cache.getCacheHitCount()/cache.getRequestCount())*100);
-		stats.setTotalEntries(cache.getTotalCacheEntries());
-		stats.setRequestCount(cache.getRequestCount());
-		return stats;
-	}
-	
-    public Collection<String> getCacheTypes(){
-    	ArrayList<String> caches = new ArrayList<String>();
-    	caches.add(Admin.Cache.PREPARED_PLAN_CACHE.toString());
-    	caches.add(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.toString());
-    	return caches;
-    }	
-	
-	public void clearCache(String cacheType) {
-		Admin.Cache cache = Admin.Cache.valueOf(cacheType);
-		switch (cache) {
-		case PREPARED_PLAN_CACHE:
-			clearPlanCache();
-			break;
-		case QUERY_SERVICE_RESULT_SET_CACHE:
-			clearResultSetCache();
-			break;
-		}
-	}
-	
-	public void clearCache(String cacheType, String vdbName, int version) {
-		Admin.Cache cache = Admin.Cache.valueOf(cacheType);
-		switch (cache) {
-		case PREPARED_PLAN_CACHE:
-			clearPlanCache(vdbName, version);
-			break;
-		case QUERY_SERVICE_RESULT_SET_CACHE:
-			clearResultSetCache(vdbName, version);
-			break;
-		}
-	}	
-    
-	public Collection<org.teiid.adminapi.Transaction> getTransactions() {
+	public Collection<TransactionMetadata> getTransactions() {
 		return this.transactionService.getTransactions();
 	}
 	
@@ -722,21 +642,6 @@ public class DQPCore implements DQP {
         this.authorizationValidator = config.getAuthorizationValidator();
         this.chunkSize = config.getLobChunkSizeInKB() * 1024;
 
-        //get buffer manager
-        this.bufferManager = bufferService.getBufferManager();
-        
-        //result set cache
-        CacheConfiguration rsCacheConfig = config.getResultsetCacheConfig();
-        if (rsCacheConfig != null && rsCacheConfig.isEnabled()) {
-			this.rsCache = new SessionAwareCache<CachedResults>(this.cacheFactory, SessionAwareCache.Type.RESULTSET, rsCacheConfig);
-			this.rsCache.setBufferManager(this.bufferManager);
-        }
-
-        //prepared plan cache
-        CacheConfiguration ppCacheConfig = config.getPreparedPlanCacheConfig();
-        prepPlanCache = new SessionAwareCache<PreparedPlan>(this.cacheFactory, SessionAwareCache.Type.PREPAREDPLAN,  ppCacheConfig); 
-        prepPlanCache.setBufferManager(this.bufferManager);
-		
         this.processWorkerPool = new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads());
         //we don't want cancellations waiting on normal processing, so they get a small dedicated pool
         //TODO: overflow to the worker pool
@@ -762,7 +667,7 @@ public class DQPCore implements DQP {
         	this.userRequestSourceConcurrency = Math.min(config.getMaxThreads(), 2*config.getMaxThreads()/this.maxActivePlans);
         }
         
-        DataTierManagerImpl processorDataManager = new DataTierManagerImpl(this,this.bufferService, this.config.isDetectingChangeEvents());
+        DataTierManagerImpl processorDataManager = new DataTierManagerImpl(this, this.bufferManager, this.config.isDetectingChangeEvents());
         processorDataManager.setEventDistributor(eventDistributor);
         processorDataManager.setMetadataRepository(metadataRepository);
 		dataTierMgr = new TempTableDataManager(processorDataManager, this.bufferManager, this.processWorkerPool, this.rsCache);
@@ -772,7 +677,7 @@ public class DQPCore implements DQP {
 	}
 	
 	public void setBufferService(BufferService service) {
-		this.bufferService = service;
+		this.bufferManager = service.getBufferManager();
 	}
 	
 	public void setTransactionService(TransactionService service) {
@@ -943,9 +848,17 @@ public class DQPCore implements DQP {
 		return this.config.getMaxSourceRows();
 	}
 	
-	public void setCacheFactory(CacheFactory factory) {
-		this.cacheFactory = factory;
+	public int getMaxRowsFetchSize() {
+		return this.config.getMaxRowsFetchSize();
 	}
+	
+	public void setResultsetCache(SessionAwareCache<CachedResults> cache) {
+		this.rsCache = cache;
+	}
+	
+	public void setPreparedPlanCache(SessionAwareCache<PreparedPlan> cache) {
+		this.prepPlanCache = cache;
+	}	
 	
 	public int getUserRequestSourceConcurrency() {
 		return userRequestSourceConcurrency;
@@ -962,4 +875,8 @@ public class DQPCore implements DQP {
 	SessionAwareCache<PreparedPlan> getPrepPlanCache() {
 		return prepPlanCache;
 	}
+	
+	public String getRuntimeVersion() {
+		return ApplicationInfo.getInstance().getBuildNumber();
+	}	
 }

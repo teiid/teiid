@@ -12,8 +12,7 @@
 			control logging level, contexts, and log locations, you should be
 			familiar with
 			<ulink url="http://logging.apache.org/log4j/">log4j</ulink>
-			and the container's jboss-log4j.xml configuration file.  
-			Teiid also provides a &lt;profile&gt;/conf/jboss-teiid-log4j.xml containing much of information from chapter.
+			and the container's standalone-teiid/domin-teiid.xml configuration file.  
 		</para>
 		<para>
 			All the logs
@@ -28,7 +27,7 @@
 				system. Note that logs originating from third-party code, including
 				integrated org.jboss components, will be logged through their
 				respective contexts and not through org.teiid. See the table below for information on contexts
-				relevant to Teiid. See the container's jboss-log4j.xml for a more
+				relevant to Teiid. See the container's standalone-teiid.xml for a more
 				complete listing of logging contexts used in the container.  
 				</para>
 			<informaltable frame="all">
@@ -185,20 +184,22 @@
 			To enable command logging to an alternative file location,
 			configure a separate file appender for the DETAIL logging of the
 			org.teiid.COMMAND_LOG context. An example of this is shown below and
-			can also be found in the jboss-log4j.xml distributed with Teiid.
-			<programlisting><![CDATA[<appender name="COMMAND" class="org.apache.log4j.RollingFileAppender">
-      <param name="File" value="log/command.log"/>
-     <param name="MaxFileSize" value="1000KB"/>
-     <param name="MaxBackupIndex" value="25"/>
-      <layout class="org.apache.log4j.PatternLayout">
-         <param name="ConversionPattern" value="%d %p [%t] %c - %m%n"/>
-      </layout>
-   </appender>   
+			can also be found in the standalone-teiid.xml distributed with Teiid.
+			<programlisting><![CDATA[<periodic-rotating-file-handler name="COMMAND_FILE">
+                <level name="INFO"/>
+                <formatter>
+                    <pattern-formatter pattern="%d{HH:mm:ss,SSS} %-5p [%c] (%t) %s%E%n"/>
+                </formatter>
+                <file relative-to="jboss.server.log.dir" path="command.log"/>
+                <suffix value=".yyyy-MM-dd"/>
+            </periodic-rotating-file-handler>
     
-   <category name="org.teiid.COMMAND_LOG">
-      <priority value="INFO"/>
-      <appender-ref ref="COMMAND"/>
-   </category>]]></programlisting>
+   <logger category="org.teiid.COMMAND_LOG">
+      <level name="INFO"/>
+      <handlers>
+        <handler name="COMMAND_FILE"/>
+      </handlers>
+   </logger>]]></programlisting>
             
             See the Developer's Guide to develop a custom logging solution if file based, or any other built-in Log4j, logging is not sufficient.
 		</para>
@@ -213,7 +214,7 @@
 			context.</para>
 		<para>To enable audit logging to an alternative file location,
 			configure a separate file appender for the DETAIL logging of the
-			org.teiid.AUDIT_LOG context. An example of this is already in
-			the	log4j.xml distributed with Teiid. See the Developer's Guide to develop a custom logging solution if file based, or any other built-in Log4j, logging is not sufficient.</para>
+			org.teiid.AUDIT_LOG context. See the Developer's Guide to develop a custom logging 
+            solution if file based, or any other built-in Log4j, logging is not sufficient.</para>
 	</section>
 </chapter>

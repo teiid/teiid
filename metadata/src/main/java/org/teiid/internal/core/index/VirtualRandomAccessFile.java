@@ -24,7 +24,7 @@ package org.teiid.internal.core.index;
 import java.io.File;
 import java.io.IOException;
 
-import org.jboss.virtual.VirtualFile;
+import org.jboss.vfs.VirtualFile;
 import org.teiid.core.util.ObjectConverterUtil;
 
 

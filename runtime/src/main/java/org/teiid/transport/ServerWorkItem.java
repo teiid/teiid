@@ -32,6 +32,7 @@ import java.util.concurrent.ExecutionException;
 
 import javax.crypto.SealedObject;
 
+import org.jboss.modules.Module;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.client.util.ExceptionHolder;
 import org.teiid.client.util.ResultsFuture;
@@ -67,7 +68,9 @@ public class ServerWorkItem implements Runnable {
 		Message result = null;
 		String loggingContext = null;
 		final boolean encrypt = message.getContents() instanceof SealedObject;
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         try {
+        	Thread.currentThread().setContextClassLoader(Module.getCallerModule().getClassLoader());
             message.setContents(this.socketClientInstance.getCryptor().unsealObject(message.getContents()));
 			if (!(message.getContents() instanceof ServiceInvocationStruct)) {
 				throw new AssertionError("unknown message contents"); //$NON-NLS-1$
@@ -109,6 +112,8 @@ public class ServerWorkItem implements Runnable {
 			Message holder = new Message();
 			holder.setContents(processException(t, loggingContext));
 			result = holder;
+		} finally {
+			Thread.currentThread().setContextClassLoader(classLoader);
 		}
 		
 		if (result != null) {

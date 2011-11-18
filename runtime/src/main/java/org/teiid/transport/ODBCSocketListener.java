@@ -21,6 +21,8 @@
  */
 package org.teiid.transport;
 
+import java.net.InetSocketAddress;
+
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.DefaultChannelPipeline;
 import org.teiid.client.security.ILogon;
@@ -36,9 +38,9 @@ public class ODBCSocketListener extends SocketListener {
 	private TeiidDriver driver;
 	private ILogon logonService;
 	
-	public ODBCSocketListener(SocketConfiguration config, StorageManager storageManager, int portOffset, int maxLobSize, ILogon logon) {
+	public ODBCSocketListener(InetSocketAddress address, SocketConfiguration config, final ClientServiceRegistryImpl csr, StorageManager storageManager, int maxLobSize, ILogon logon) {
 		//the clientserviceregistry isn't actually used by ODBC 
-		super(config, new ClientServiceRegistryImpl(ClientServiceRegistry.Type.ODBC), storageManager, portOffset);
+		super(address, config, csr, storageManager);
 		this.maxLobSize = maxLobSize;
 		this.driver = new TeiidDriver();
 		this.logonService = logon;

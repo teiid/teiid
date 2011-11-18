@@ -31,7 +31,7 @@
     </listitem>
   </orderedlist>
   
-  <para>A Resource Adapter:</para>
+  <para>A Resource Adapter is used to:</para>
   <itemizedlist>
     <listitem>
       <para>Handles all communications with individual enterprise information system (EIS), which can include databases, data feeds, flat files, etc.</para>

@@ -48,8 +48,8 @@ public class TestAdminShell {
 	}
 	
 	@Test public void testDeployVDB() throws AdminException, FileNotFoundException {
-		AdminShell.deployVDB(UnitTestUtil.getTestDataPath() + "/foo/bar.txt");
-		Mockito.verify(admin).deployVDB(Mockito.eq("bar.txt"), (InputStream)Mockito.anyObject());
+		AdminShell.deploy(UnitTestUtil.getTestDataPath() + "/foo/bar.txt");
+		Mockito.verify(admin).deploy(Mockito.eq("bar.txt"), (InputStream)Mockito.anyObject());
 	}
 	
 }

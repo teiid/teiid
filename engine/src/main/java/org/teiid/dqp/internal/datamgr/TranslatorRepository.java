@@ -23,14 +23,15 @@
 package org.teiid.dqp.internal.datamgr;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 
 
-public class TranslatorRepository implements Serializable{
+public class TranslatorRepository implements Serializable {
 	
 	private static final long serialVersionUID = -1212280886010974273L;
 	private Map<String, VDBTranslatorMetaData> translatorRepo = new ConcurrentHashMap<String, VDBTranslatorMetaData>();
@@ -39,8 +40,8 @@ public class TranslatorRepository implements Serializable{
 		this.translatorRepo.put(name, factory);
 	}	
 	
-	public Translator getTranslatorMetaData(String name) {
-		Translator factory = this.translatorRepo.get(name);
+	public VDBTranslatorMetaData getTranslatorMetaData(String name) {
+		VDBTranslatorMetaData factory = this.translatorRepo.get(name);
 		return factory;
 	}
 	
@@ -48,4 +49,7 @@ public class TranslatorRepository implements Serializable{
 		return this.translatorRepo.remove(name);
 	}	
 	
+	public List<VDBTranslatorMetaData> getTranslators(){
+		return new ArrayList<VDBTranslatorMetaData>(translatorRepo.values());
+	}
 }

@@ -77,7 +77,7 @@ public class TestCommSockets {
 
 	@Test(expected=CommunicationException.class) public void testFailedConnect() throws Exception {
 		SSLConfiguration config = new SSLConfiguration();
-		listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(),1024, 1024, 1, config, null, BufferManagerFactory.getStandaloneBufferManager());
+		listener = new SocketListener(addr,1024, 1024, 1, config, null, BufferManagerFactory.getStandaloneBufferManager());
 
 		Properties p = new Properties();
 		String url = new TeiidURL(addr.getHostName(), listener.getPort() - 1, false).getAppServerURL();
@@ -182,7 +182,7 @@ public class TestCommSockets {
 			}, null); 
 			server.registerClientService(FakeService.class, new TestSocketRemoting.FakeServiceImpl(), null);
 			storageManager = new MemoryStorageManager();
-			listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(), 1024, 1024, 1, config, server, storageManager);
+			listener = new SocketListener(addr, 1024, 1024, 1, config, server, storageManager);
 			
 			SocketListenerStats stats = listener.getStats();
 			assertEquals(0, stats.maxSockets);

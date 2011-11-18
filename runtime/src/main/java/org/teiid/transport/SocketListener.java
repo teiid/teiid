@@ -50,9 +50,8 @@ public class SocketListener implements ChannelListenerFactory {
     private ExecutorService nettyPool;
     private ClientServiceRegistryImpl csr;
     
-    public SocketListener(SocketConfiguration config, ClientServiceRegistryImpl csr, StorageManager storageManager, int portOffset) {
-		this(config.getPortNumber()+portOffset, config.getHostAddress().getHostAddress(), config.getInputBufferSize(), config.getOutputBufferSize(), config.getMaxSocketThreads(), config.getSSLConfiguration(), csr, storageManager);
-        
+    public SocketListener(InetSocketAddress address, SocketConfiguration config, ClientServiceRegistryImpl csr, StorageManager storageManager) {
+		this(address, config.getInputBufferSize(), config.getOutputBufferSize(), config.getMaxSocketThreads(), config.getSSLConfiguration(), csr, storageManager);
 		LogManager.logDetail(LogConstants.CTX_TRANSPORT, RuntimePlugin.Util.getString("SocketTransport.1", new Object[] {config.getHostAddress().getHostAddress(), String.valueOf(config.getPortNumber())})); //$NON-NLS-1$
     }
     
@@ -65,17 +64,16 @@ public class SocketListener implements ChannelListenerFactory {
      * @param bindaddress
      * @param server
      */
-    public SocketListener(int port, String bindAddress, int inputBufferSize,
+    public SocketListener(InetSocketAddress address, int inputBufferSize,
 			int outputBufferSize, int maxWorkers, SSLConfiguration config, ClientServiceRegistryImpl csr, StorageManager storageManager) {
-    	this.isClientEncryptionEnabled = config.isClientEncryptionEnabled();
+    	if (config != null) {
+    		this.isClientEncryptionEnabled = config.isClientEncryptionEnabled();
+    	}
     	this.csr = csr;
-    	if (port < 0 || port > 0xFFFF) {
-            throw new IllegalArgumentException("port out of range:" + port); //$NON-NLS-1$
-        }
 
     	this.nettyPool = Executors.newCachedThreadPool(new NamedThreadFactory("NIO")); //$NON-NLS-1$
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)) { 
-            LogManager.logDetail(LogConstants.CTX_TRANSPORT, "server = " + bindAddress + "binding to port:" + port); //$NON-NLS-1$ //$NON-NLS-2$
+            LogManager.logDetail(LogConstants.CTX_TRANSPORT, "server = " + address.getAddress() + "binding to port:" + address.getPort()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
         
         if (maxWorkers == 0) {
@@ -95,7 +93,7 @@ public class SocketListener implements ChannelListenerFactory {
         }
         bootstrap.setOption("keepAlive", Boolean.TRUE); //$NON-NLS-1$
         
-        this.serverChanel = bootstrap.bind(new InetSocketAddress(bindAddress, port));
+        this.serverChanel = bootstrap.bind(address);
     }
     
     public int getPort() {

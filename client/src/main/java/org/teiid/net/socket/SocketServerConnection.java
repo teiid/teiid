@@ -91,7 +91,6 @@ public class SocketServerConnection implements ServerConnection {
 		//ILogon that is allowed to failover
 		this.logon = this.getService(ILogon.class);
 		this.failOver = Boolean.valueOf(connProps.getProperty(TeiidURL.CONNECTION.AUTO_FAILOVER)).booleanValue();
-		this.failOver |= Boolean.valueOf(connProps.getProperty(TeiidURL.CONNECTION.ADMIN)).booleanValue();
 		selectServerInstance(false);
 	}
 	

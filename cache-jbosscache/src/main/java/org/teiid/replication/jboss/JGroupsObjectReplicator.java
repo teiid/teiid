@@ -29,27 +29,13 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-
-import org.jgroups.Address;
-import org.jgroups.Channel;
-import org.jgroups.ChannelFactory;
-import org.jgroups.ExtendedReceiverAdapter;
-import org.jgroups.Message;
-import org.jgroups.View;
+import org.jboss.as.clustering.jgroups.ChannelFactory;
+import org.jgroups.*;
 import org.jgroups.blocks.GroupRequest;
 import org.jgroups.blocks.MethodCall;
 import org.jgroups.blocks.MethodLookup;
@@ -63,7 +49,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.ReplicatedObject;
 
-public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
+public abstract class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 	
 	private static final long serialVersionUID = -6851804958313095166L;
 	private static final String CREATE_STATE = "createState"; //$NON-NLS-1$
@@ -236,65 +222,17 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		void finishState(String id);
 	}
 
-	private transient ChannelFactory channelFactory;
-	private String multiplexerStack;
+	
 	private String clusterName;
-	private String jndiName;
 	//TODO: this should be configurable, or use a common executor
 	private transient Executor executor = Executors.newCachedThreadPool();
 
-	public ChannelFactory getChannelFactory() {
-		return channelFactory;
-	}
-	
-	public void setJndiName(String jndiName) {
-		this.jndiName = jndiName;
-	}
-	
-	public String getJndiName() {
-		return jndiName;
-	}
-	
-	public String getMultiplexerStack() {
-		return multiplexerStack;
-	}
-	
-	public String getClusterName() {
-		return clusterName;
-	}
-	
-	public void setChannelFactory(ChannelFactory channelFactory) {
-		this.channelFactory = channelFactory;
-	}
-	
-	public void setClusterName(String clusterName) {
+	public JGroupsObjectReplicator(String clusterName) {
 		this.clusterName = clusterName;
 	}
 	
-	public void setMultiplexerStack(String multiplexerStack) {
-		this.multiplexerStack = multiplexerStack;
-	}
+	public abstract ChannelFactory getChannelFactory();
 	
-	public void start() throws Exception {
-		if (this.channelFactory == null) {
-			return; //no need to distribute events
-		}
-    	if (jndiName != null) {
-	    	final InitialContext ic = new InitialContext();
-    		org.jboss.util.naming.Util.bind(ic, jndiName, this);
-    	}
-	}
-
-	public void stop() {
-    	if (jndiName != null) {
-	    	final InitialContext ic ;
-	    	try {
-	    		ic = new InitialContext() ;
-	    		org.jboss.util.naming.Util.unbind(ic, jndiName) ;
-	    	} catch (final NamingException ne) {
-	    	}
-    	}
-	}
 	
 	public void stop(Object object) {
 		if (!Proxy.isProxyClass(object.getClass())) {
@@ -310,7 +248,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 	@Override
 	public <T, S> T replicate(String mux_id,
 			Class<T> iface, final S object, long startTimeout) throws Exception {
-		Channel channel = this.channelFactory.createMultiplexerChannel(this.multiplexerStack, mux_id);
+		Channel channel = getChannelFactory().createChannel(mux_id);
 		Method[] methods = iface.getMethods();
 		
 		final HashMap<Method, Short> methodMap = new HashMap<Method, Short>();

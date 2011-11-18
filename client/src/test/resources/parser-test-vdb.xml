@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="myVDB" version="1">
+    <description>vdb description</description>
+    <property value="vdb-value" name="vdb-property"/>
+    <property value="vdb-value2" name="vdb-property2"/>
+    <model name="model-one" visible="false" type="PHYSICAL">
+        <description>model description</description>
+        <property value="model-value-override" name="model-prop"/>
+        <source translator-name="translator" connection-jndi-name="java:mybinding" name="s1"/>
+        <validation-error severity="ERROR">There is an error in VDB</validation-error>
+    </model>
+    <model name="model-two" visible="true" type="VIRTUAL">
+        <property value="model-value" name="model-prop"/>
+        <source translator-name="translator" connection-jndi-name="java:binding-one" name="s1"/>
+        <source translator-name="translator" connection-jndi-name="java:binding-two" name="s2"/>
+    </model>
+    <translator type="oracle" name="oracleOverride" description="hello world">
+        <property value="my-value" name="my-property"/>
+    </translator>
+    <data-role allow-create-temporary-tables="true" any-authenticated="false" name="roleOne">
+        <description>roleOne described</description>
+        <permission>
+            <resource-name>myTable.T1</resource-name>
+            <allow-read>true</allow-read>
+        </permission>
+        <permission>
+            <resource-name>myTable.T2</resource-name>
+            <allow-read>false</allow-read>
+            <allow-delete>true</allow-delete>
+        </permission>
+        <mapped-role-name>ROLE1</mapped-role-name>
+        <mapped-role-name>ROLE2</mapped-role-name>
+    </data-role>
+</vdb>

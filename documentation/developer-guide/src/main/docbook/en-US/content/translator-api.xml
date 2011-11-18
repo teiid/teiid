@@ -4,40 +4,82 @@
 ]>
 <chapter id="translator_api">
 	<title>Translator Development</title>
+    <section>
+        <title>Setting up the build environment</title>
+        <para>For Eclipse create a empty java project and  add dependencies to "teiid-common-core", 
+        "teiid-api" and JEE "connector-api" jars.</para>
+        <para>For using maven use following as your dependencies.</para>
+        <programlisting language="XML" role="XML"><![CDATA[
+    <dependencies>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-common-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.resource</groupId>
+            <artifactId>connector-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>        
+        ]]></programlisting> 
+        <para>You can find teiid artifacts in the 
+        <ulink url="http://community.jboss.org/docs/DOC-15169">JBoss maven repository </ulink></para>
+    </section>
 	<section>
 		<title>Extending the ExecutionFactory Class</title>
-		<para>A component called the Connector Manager is controlling access to your translator. This chapter reviews
-			the basics of how the Connector Manager interacts with your translator while leaving reference details and
-			advanced topics to be covered in later chapters.</para>
-        <para>
-            A custom translator must extend <code>org.teiid.translator.ExecutionFactory</code>
+		<para>
+            The main class in the translator implementation is ExecutionFactory. A base class is provided in the Teiid API, 
+            so a custom translator must extend <code>org.teiid.translator.ExecutionFactory</code>
             to connect and query an enterprise data source. This  extended class must provide a no-arg constructor
             that can be constructed using Java reflection libraries. This Execution Factory need define/override following elements.  
         </para>
         
+        <programlisting language="Java" role="JAVA"><![CDATA[
+package org.teiid.translator.custom;
+
+@Translator(name="custom", description="Connect to My EIS")
+public class CustomExecutionFactory extends ExecutionFactory<MyConnectionFactory, MyConnection> {
+
+    public CustomExecutionFactory() {
+    }
+}                
+        ]]> </programlisting>
+        
+        <para>Define the annotation <code>@Translator</code> on extended "ExecutionFactory" class. This annotation defines name
+        and description of your translator, and also used as identifier during the deployment. This is name you would be using
+        in the VDB and else where in the configuration to refer to this translator.
+        </para>        
+        
         <section>
             <title>ConnectionFactory</title>
-            <para>Defines the "ConnectionFactory" interface that is expected from resource adapter. This defined as part of 
-            class definition using generics while extending the "ExecutionFactory" class</para>
+            <para>Defines the "ConnectionFactory" interface that is defined in resource adapter. 
+            This defined as part of class definition of extended "ExecutionFactory" class. Refer to "MyConnectionFactory" 
+            sample in the previous chapter.</para>
         </section>
         
         <section>
             <title>Connection</title>
-            <para>Defines the "Connection" interface that is expected from resource adapter. This defined as part of 
-            class definition using generics while extending the "ExecutionFactory" class</para>
+            <para>Defines the "Connection" interface that is defined in  resource adapter. This defined as part of 
+            class definition of extended "ExecutionFactory" class. Refer to "MyConnection" class sample in the previous chapter.</para>
         </section>        
         
         <section>
             <title>Configuration Properties</title>
-            <para>Every software program requires some external configuration, that defines ways user can alter the behavior of a program.
-             If this translator needs configurable properties define a variable for every property  as an attribute in the extended
-             "ExecutionFactory" class. Then define a "get" and "set" methods for each of them. Also, annotate each "get" method with
-              <code>@TranslatorProperty</code> annotation and provide the metadata about the property. 
-             </para>
+            <para>If the translator requires external configuration, that defines ways for the user to alter the 
+            behavior of a program, then define a attribute variable in the class and define "get" and "set" methods 
+            for that attribute. Also, annotate each "get" method with <code>@TranslatorProperty</code> 
+            annotation and provide the metadata about the property. 
+            </para>
              <para>
-             For example, if you need a property called "foo",  by providing the annotation on 
-             these properties, the Teiid tooling will automatically interrogate and provide 
-             graphical way to configure your Translator. 
+             For example, if you need a property called "foo", by providing the annotation on 
+             these properties, the Teiid tooling can automatically interrogate and provide 
+             graphical way to configure your Translator while designing your VDB.   
              </para>
                     <programlisting language="Java" role="JAVA"><![CDATA[private String foo = "blah";
 @TranslatorProperty(display="Foo property", description="description about Foo") 
@@ -51,9 +93,11 @@ public void setFoo(String value)
    return this.foo = value;
 }]]> </programlisting>
                     <para>
-                    Only java primitive (int), primitive object wrapper (java.lang.Integer), or Enum types are supported as Translator properties. 
-                    The default value will be derived from calling the getter, if available, on a newly constructed instance. 
-                    All properties <emphasis>should</emphasis> have a default value. If there is no applicable default, then the property should be marked in the annotation as required.  
+                    Only java primitive (int, boolean), primitive object wrapper (java.lang.Integer), or Enum types 
+                    are supported as Translator properties. Complex objects are not supported. The default value will be 
+                    derived from calling the getter method, if available, on a newly constructed instance. 
+                    All properties <emphasis>should</emphasis> have a default value. If there is no applicable default, 
+                    then the property should be marked in the annotation as required.  
                     Initialization will fail if a required property value is not provided.
                 </para>
                 
@@ -69,7 +113,8 @@ public void setFoo(String value)
                       <para>required: The property is a required property</para>
                     </listitem>
                     <listitem>
-                      <para>advanced: This is advanced property; A default should be provided. A property can not be "advanced" and "required" at same time.</para>
+                      <para>advanced: This is advanced property; A default value must be provided. A property 
+                      can not be "advanced" and "required" at same time.</para>
                     </listitem>    
                     <listitem>
                       <para>masked: The tools need to mask the property; Do not show in plain text; used for passwords</para>
@@ -98,14 +143,16 @@ public void setFoo(String value)
             
             <itemizedlist>
                 <listitem>
-                    <para><code>createResultSetExecution</code> - Define if you are doing read based operation that is 
-                    returning a rows of results.</para>
+                    <para><code>createResultSetExecution</code> - Override if you are doing read based operation that is 
+                    returning a rows of results. For ex: select</para>
                 </listitem>
                 <listitem>
-                    <para><code>createUpdateExecution</code> - Define if you are doing write based operations.</para>
+                    <para><code>createUpdateExecution</code> - Override if you are doing write based operations. 
+                    For ex:insert, update, delete</para>
                 </listitem>
                 <listitem>
-                    <para><code>createProcedureExecution</code> - Define if you are doing procedure based operations.</para>
+                    <para><code>createProcedureExecution</code> - Overide if you are doing procedure based operations. 
+                    For ex; stored procedures. This works well for non-relational sources.</para>
                 </listitem>
             </itemizedlist>       
             <para>You can choose to implement all the execution modes or just what you need. See more details on this below.</para>     
@@ -131,17 +178,6 @@ public void setFoo(String value)
             <para>If you need to bubble up any exception use <code>org.teiid.translator.TranslatorException</code>
                 class.</para>
         </section>    
-        
-        <section>
-            <title>Default Name</title>
-            <para>Finally, you can define a default instance of your Translator by defining the 
-                annotation <code>@Translator</code> on the "ExecutionFactory". When you define this, and after deployment 
-                a default instance of this 
-                Translator is available any VDB that would like to use by just mentioning its name in its "vdb.xml" configuration file.
-                VDB can also override the default properties and define another instance of this Translator too. The name you give here is the short 
-                name used every where else in the Teiid configuration to refer to this translator.</para>
-        </section>                        
-                        
 	</section>
     
 
@@ -1576,45 +1612,35 @@ public class MyTranslator extends BaseDelegatingExecutionFactory<Object, Object>
 		</para>
 	</section>
     
+    <section>
+        <title>Adding Dependent Libraries</title>
+        <para>Add MANIFEST.MF file in the MATA-INF directory, and the following line to add the core Teiid API dependencies for 
+        resource adapter. <emphasis>Dependencies: org.jboss.teiid.common-core,org.jboss.teiid.api,javax.api</emphasis> 
+        If your translator depends upon any other third party jar files, then those jar files need to be defined under a module
+        and then you can add the module name to the above MANIFEST.MF file to define as dependency.
+        </para>
+    </section>
+        
     <section id="translator_package">
         <title>Packaging</title>
         <para>
-        Once the "ExecutionFactory" class is implemented, package it in a JAR file. The only 
-        additional requirement is provide a file called "jboss-beans.xml" in the "META-INF" 
-        directory of the JAR file, with following contents.  Replace ${name} with name of your 
-        translator, and replace ${execution-factory-class} with your overridden ExecutionFactory 
-        class name. This will register the Translator for use with tooling and Admin API.
+        Once the "ExecutionFactory" class is implemented, package it in a JAR file. Then add the following named file in 
+        "META-INF/services/org.teiid.translator.ExecutionFactory" with contents specifying the name of your main Translator file.
+        Note that, the name must exactly match to above. This is java's standard service loader pattern.
+        This will register the Translator for deployment when the jar is deployed into JBoss AS.
         </para>
-        <programlisting role="XML" language="XML"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
-<deployment xmlns="urn:jboss:bean-deployer:2.0">
-
-   <bean name="translator-${name}-template" class="org.teiid.templates.TranslatorDeploymentTemplate">
-      <property name="info"><inject bean="translator-${name}"/></property>
-      <property name="managedObjectFactory"><inject bean="ManagedObjectFactory"/></property>
-   </bean>
-
-   <bean name="translator-${name}" class="org.teiid.templates.TranslatorTemplateInfo">
-      <constructor factoryMethod="createTemplateInfo">
-         <factory bean="TranslatorDeploymentTemplateInfoFactory"/>
-         <parameter class="java.lang.Class">org.teiid.templates.TranslatorTemplateInfo</parameter>
-         <parameter class="java.lang.Class">${execution-factory-class}</parameter>
-         <parameter class="java.lang.String">translator-${name}</parameter>
-         <parameter class="java.lang.String">${name}</parameter>         
-      </constructor>
-   </bean> 
-
-</deployment>]]></programlisting>
-                
-                
+        <programlisting role="XML" language="XML"><![CDATA[
+org.teiid.translator.custom.CustomExecutionFactory        
+        ]]></programlisting>
     </section>
     
     <section id="translator_deploy">
         <title>Deployment</title>
         <para>Copy the JAR file that defines the Translator into "deploy" directory of the JBoss AS's chosen profile, and 
-        the Translator will be deployed automatically. There is no restriction that, JBoss AS need to be restarted. However, if your Translator
-        has external dependencies to other JAR libraries, they need to be placed inside the "lib" directory of the JBoss AS's profile. 
-        This will require a restart of the JBoss Server. Another option to avoid the restart is to bundle all the required JAR files into 
-        the same JAR file as the Translator. It is user's responsibility to make sure they are not running into any conflicts with their
-        dependent libraries with those already exist in the JBoss environment.</para>
+        the Translator will be deployed automatically. There is no restriction that, JBoss AS need to be restarted. However, 
+        if your Translator
+        has external dependencies to other modules, they need to be placed inside the "modules" directory of the JBoss AS. 
+        This will require a restart of the JBoss Server. You can also use JBoss CLI, Admin API, admin-consle
+        to deploy the jar file into JBoss AS server.</para>
     </section>    
 </chapter>

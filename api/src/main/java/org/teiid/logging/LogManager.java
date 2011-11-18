@@ -399,4 +399,12 @@ public final class LogManager {
                                              final int level) {
         return Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), interfaces, new LoggingProxy(instance, loggingContext, level));
     }
+    
+    public static Object createLoggingProxy(final String loggingContext,
+            final Object instance,
+            final Class<?>[] interfaces,
+            final int level,
+            ClassLoader classLoader) {
+    		return Proxy.newProxyInstance(classLoader, interfaces, new LoggingProxy(instance, loggingContext, level));
+    }
 }

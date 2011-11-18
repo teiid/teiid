@@ -9,7 +9,7 @@
 		<title>Memory Management</title>
 		<para>The BufferManager is responsible for tracking both memory and disk usage
 			by Teiid. Configuring the BufferManager properly is one of the most
-			important parts of ensuring high performance. See the &jboss-beans;
+			important parts of ensuring high performance. See the 
 			file for all BufferManager settings.
 		</para>
 		<para>
@@ -18,7 +18,7 @@
 			accessing the Teiid server simultaneously.  
 		</para>
 		<para>
-			The <code>maxReserveKb</code>
+			The <code>max-reserve-kb</code>
 			setting determines the total size in kilobytes of batches that can be held by the BufferManager in memory.
 			This number does not account for persistent batches held by soft (such as
 			index pages) or weak references. 
@@ -37,62 +37,87 @@
 		</para>
 		<note>
 			<para>Memory consumption can be significantly more or less than the nominal target
-	            depending upon actual column values and whether value caching is enabled.  Large non built-in type objects can exceed their default size estimate.
-	            If an out of memory errors occur, then set a lower the maxReserveKb value.  Also note that source lob values are held by memory references that are not cleared when a batch is persisted.  
-	            With heavy lob usage you should ensure that buffers of other memory associated with lob references are appropiately sized.
+	            depending upon actual column values and whether value caching is enabled.  Large non built-in type objects can 
+                exceed their default size estimate.
+	            If an out of memory errors occur, then set a lower the max-reserve-kb value.  Also note that source lob values 
+                are held by memory references that are not cleared when a batch is persisted.  
+	            With heavy lob usage you should ensure that buffers of other memory associated with lob references are 
+                appropriately sized.
 			</para>
 		</note>
 		<para>
-			The <code>maxProcessingKb</code>
-			setting determines the total size in kilobytes of batches that can be used by active plans regardless of the memory held based on <code>maxReserveKb</code>.
-			The default value of -1 will auto-calculate a typical max based upon the max heap available to the VM and max active plans.  
+			The <code>max-processing-kb</code>
+			setting determines the total size in kilobytes of batches that can be used by active plans regardless of the 
+            memory held based on <code>max-reserve-kb</code>.
+			The default value of -1 will auto-calculate a typical max based upon the max heap available to the VM and max 
+            active plans.  
 			The auto-calculated value assumes a 64bit architecture and will limit processing batch usage to 10% of memory 
 			beyond the first 300 megabytes (which are assumed for use by the AS and other Teiid purposes).
 		</para>
 		<para>
-			In systems where large intermediate results are normal (scrolling cursors or sorting over millions of rows) you can consider increasing the <code>maxProcessingKb</code> and decreasing
-			the <code>maxReserveKb</code> so that each request has access to an effectively smaller buffer space.
+			In systems where large intermediate results are normal (scrolling cursors or sorting over millions of rows)
+             you can consider increasing the <code>max-processing-kb</code> and decreasing
+			the <code>max-reserve-kb</code> so that each request has access to an effectively smaller buffer space.
 		</para>
 		<para>
 			Each intermediate result buffer, temporary LOB, and temporary table
 			is stored in its own set of buffer files,
 			where an individual file is
-			limited to <code>maxFileSize</code> megabytes.
+			limited to <code>max-file-size</code> megabytes.
 			Consider increasing the storage space available to all such
-			files <code>maxBufferSpace</code>
+			files <code>max-buffer-space</code>
 			if your installation makes use of internal materialization, makes
 			heavy use of SQL/XML, or processes large row counts.
 		</para>
 		<section>
 			<title>Big Data/Memory</title>
 			<para>Usage of extremely large VM sizes and or datasets requires additional considerations.
-			Teiid has a non-negligible amount of overhead per batch/table page on the order of 100-200 bytes.  Depending on the data types involved each
-			full batch/table page will represent a variable number of rows (a power of two multiple above or below the processor batch size).  If you are dealing with datasets with billions of rows and you run into OutOfMemory issues, consider increasing the processor
-			batch size in the &jboss-beans; file to force the allocation of larger batches and table pages.  If the processor batch size is increased and/or you are dealing with extremely wide result sets (several hundred columns),
-			then the default setting of 8MB for the maxStorageObjectSize in the &jboss-beans; file may be too low.  The sizing for maxStorageObjectSize is terms of serialized size, which will be much
-			closer to the raw data size then the Java memory footprint estimation used for maxReservedKB.  
-			maxStorageObjectSize should not be set too large relative to memoryBufferSpace since it will reduce the performance of the memory buffer.  The memory buffer supports only 1 concurrent writer for each maxStorageObjectSize of the memoryBufferSpace.
+			Teiid has a non-negligible amount of overhead per batch/table page on the order of 100-200 bytes.  Depending on the 
+            data types involved each
+			full batch/table page will represent a variable number of rows (a power of two multiple above or below the processor
+             batch size).  If you are dealing with datasets with billions of rows and you run into OutOfMemory issues, consider 
+             increasing the processor-batch-size 
+             in the &jboss-beans; file to force the allocation of larger batches and table pages.  If the processor 
+            batch size is increased and/or you are dealing with extremely wide result sets (several hundred columns),
+			then the default setting of 8MB for the max-storage-object-size in the &jboss-beans; file may be too low.  The sizing 
+            for max-storage-object-size is terms of serialized size, which will be much
+			closer to the raw data size then the Java memory footprint estimation used for max-reserved-kb.  
+			max-storage-object-size should not be set too large relative to memory-buffer-space since it will reduce the 
+            performance of the memory buffer.  The memory buffer supports only 1 concurrent writer for each 
+            max-storage-object-size of the memory-buffer-space.
 			</para>
 			<note><para>Teiid temporary tables (also used for internal materialization) can only support 2^31-1 rows per table.</para></note> 
 			<para>
-			The memoryBufferSpace setting controls the amount of on or off heap memory allocated as byte buffers for use by the Teiid buffer manager.  This setting defaults to -1, which automatically determines a setting based upon whether it is on or off heap and the value for maxReserveKB.
+			The memory-buffer-space setting controls the amount of on or off heap memory allocated as byte buffers for 
+            use by the Teiid buffer manager.  This setting defaults to -1, which automatically determines a setting based 
+            upon whether it is on or off heap and the value for max-reserve-kb.
 			</para>
-			<para>You can take advantage of the buffer manager memory buffer to access system memory without allocating it to the heap.  Setting memoryBufferOffHeap to true in &jboss-beans; will allocate the 
-			Teiid memory buffer off heap.  Depending on whether your installation is dedicated to Teiid and the amount of system memory available, this may be perferable to on-heap allocation.  The primary
-			benefit is additional memory usage for Teiid without additional garbage collection tuning.  This becomes especially important in situations where more than 32GB of memory is desired for the VM.
-			Note that when using off-heap allocation, the memory must still be available to the java process and that setting the value of memoryBufferSpace too high may cause the VM to swap rather than reside in memory.
-			With large off-heap buffer sizes (greater than several gigabytes) you may also need to adjust VM settings.  For Sun VMs the relevant VM settings are MaxDirectMemorySize and UseLargePages.  For example adding:
+			<para>You can take advantage of the buffer manager memory buffer to access system memory without allocating it 
+            to the heap.  Setting memory-buffer-off-heap to true in &jboss-beans; will allocate the 
+			Teiid memory buffer off heap.  Depending on whether your installation is dedicated to Teiid and the amount of 
+            system memory available, this may be preferable to on-heap allocation.  The primary
+			benefit is additional memory usage for Teiid without additional garbage collection tuning.  This becomes 
+            especially important in situations where more than 32GB of memory is desired for the VM.
+			Note that when using off-heap allocation, the memory must still be available to the java process and that 
+            setting the value of memory-buffer-space too high may cause the VM to swap rather than reside in memory.
+			With large off-heap buffer sizes (greater than several gigabytes) you may also need to adjust VM settings.  
+            For Sun VMs the relevant VM settings are MaxDirectMemorySize and UseLargePages.  For example adding:
 			<programlisting>-XX:MaxDirectMemorySize=12g -XX:+UseLargePages</programlisting>
-			to the VM process arguments would allow for an effective allocation of approximately an 11GB Teiid memory buffer (the memoryBufferSpace setting) accounting for any additional direct memory that may be needed
+			to the VM process arguments would allow for an effective allocation of approximately an 11GB Teiid memory 
+            buffer (the memory-buffer-space setting) accounting for any additional direct memory that may be needed
 			by the AS or applications running in the AS.</para>
 		</section>
 		<section>
 			<title>Disk Usage</title>
-			<para>For table page and result batches the buffer manager will we a limited number of files that are dedicated to a particular storage size.
-			However, as mentioned in the installation, creation of Teiid lob values (for example through SQL/XML) will typically create one file per lob once the lob exceeds the allowable
-        	in memory size of 8KB.  In heavy usage scenarios, consider pointing the buffer directory on a partition that is routinely defragmented. 
-        	By default Teiid will use up to 50GB of disk space.  This is tracked in terms of the number of bytes written by Teiid.  For large data sets, you may need to increase the
-        	maxBufferSpace setting in the &jboss-beans; file.
+			<para>For table page and result batches the buffer manager will we a limited number of files that are dedicated 
+            to a particular storage size.
+			However, as mentioned in the installation, creation of Teiid lob values (for example through SQL/XML) will 
+            typically create one file per lob once the lob exceeds the allowable
+        	in memory size of 8KB.  In heavy usage scenarios, consider pointing the buffer directory on a partition that is 
+            routinely defragmented. 
+        	By default Teiid will use up to 50GB of disk space.  This is tracked in terms of the number of bytes written by 
+            Teiid.  For large data sets, you may need to increase the
+        	'max-buffer-space' setting in the &jboss-beans; file.
         	</para>
 		</section>
 	</section>
@@ -104,46 +129,56 @@
 		
 		<para>The query engine has several settings that determine its thread utilization.  
 		
-		<code>maxThreads</code> sets the total number of threads available for query engine work (processing plans, transaction control operations, processing source queries, etc.). 
+		<code>max-threads</code> sets the total number of threads available for query engine work (processing plans, transaction control operations, processing source queries, etc.). 
 		You should consider increasing the maximum threads on systems with a large number of available processors and/or when it's common to issue non-transactional queries with that 
 		issue a large number of concurrent source requests.
 		
-		<code>maxActivePlans</code>, which should always be smaller than maxThreads, sets the number of the maxThreads 
-		that should be used for user query processing.  Increasing the maxActivePlans should be considered for workloads with a high number of long 
+		<code>max-active-plans</code>, which should always be smaller than max-threads, sets the number of the max-threads 
+		that should be used for user query processing.  Increasing the max-active-plans should be considered for workloads with a high number of long 
 		running queries and/or systems with a large number of available processors.  If memory issues arise from increasing the max threads and the
 		max active plans, then consider decreasing the processor/connector batch sizes to limit the base number of memory rows consumed by each plan.
 		
-		<code>userRequestSourceConcurrency</code>, which should always be smaller than maxThreads, sets the number of concurrently executing source queries per user request.
-		Setting this value to 1 forces serial execution of all source queries by the processing thread.  The default value is computed based upon 2*maxThreads/maxActivePlans. 
+		<code>thread-count-for-source-concurrency</code>, which should always be smaller than max-threads, sets the number of concurrently executing source queries per user request.
+		Setting this value to 1 forces serial execution of all source queries by the processing thread.  The default value is computed based upon 2*max-threads/max-active-plans. 
 		Using the respective default values, this means that each user request would be allowed 6 concurrently executing source queries.  If the default calculated value is
 		not applicable to your workload, for example if you have queries that generate more concurrent long running source queries, you should adjust this value.   
 		</para>
 	</section>
 	<section>
 		<title>Cache Tuning</title>
-		<para>Caching can be tuned for cached result (including user query results and procedure results) and prepared plans (including user and stored procedure plans).  
-		Even though it is possible to disable or otherwise severely constrain these caches, this would probably never be done in practice as it would lead to poor performance.
-		</para><para>Cache statistics can be obtained through the Admin Console or Adminshell.  The statistics can be used to help tune cache parameters and ensure a hit ratio.</para>
-		<para>Plans are currently fully held in memory and may have a significant memory footprint.  When making extensive use of prepared statements and/or virtual procedures, 
+		<para>Caching can be tuned for cached result (including user query results and procedure results) and prepared 
+        plans (including user and stored procedure plans).  
+		Even though it is possible to disable or otherwise severely constrain these caches, this would probably never 
+        be done in practice as it would lead to poor performance.
+		</para><para>Cache statistics can be obtained through the Admin Console or Adminshell.  The statistics can be 
+        used to help tune cache parameters and ensure a hit ratio.</para>
+		<para>Plans are currently fully held in memory and may have a significant memory footprint.  When making 
+        extensive use of prepared statements and/or virtual procedures, 
 		the size of the plan cache may be increased proportionally to number of gigabytes intended for use by Teiid.
-		</para><para>While the result cache parameters control the cache result entries (max number, eviction, etc.), the result batches themselves are accessed through the <link linkend="memory_management">BufferManager</link>.
-		If the size of the result cache is increased, you may need to tune the BufferManager configuration to ensure there is enough buffer space.
+		</para><para>While the result cache parameters control the cache result entries (max number, eviction, etc.), 
+        the result batches themselves are accessed through the <link linkend="memory_management">BufferManager</link>.
+		If the size of the result cache is increased, you may need to tune the BufferManager configuration to ensure 
+        there is enough buffer space.
 		</para>
 		<para>Result set and prepared plan caches have their entries invalidated by data and metadata events.  
 		By default these events are captured by running commands through Teiid.  See the Developers Guide for further customization.
-		Teiid stores compiled forms of update plans or trigger actions with the prepared plan, so it is recommended to leave the maxStaleness of the prepared plan cache set to 0 so that metadata changes, for example disabling a trigger, may take effect immediately.
-		The default staleness for result set caching is 60 seconds to improve efficiency with rapidly changing sources.  Consider decreasing this value to make the result set cache more consistent with the underlying data.  Even with a setting of 0 full transactional consistency is not guaranteed.  
+		Teiid stores compiled forms of update plans or trigger actions with the prepared plan, so it is recommended to 
+        leave the max-staleness of the prepared plan cache set to 0 so that metadata changes, for example disabling a trigger, 
+        may take effect immediately.
+		The default staleness for result set caching is 60 seconds to improve efficiency with rapidly changing sources.  
+        Consider decreasing this value to make the result set cache more consistent with the underlying data.  Even with 
+        a setting of 0 full transactional consistency is not guaranteed.  
 		</para>
 	</section>
 	<section id="socket_transport">
 		<title>Socket Transports</title>
 		<para>Teiid separates the configuration of its socket transports for
-			JDBC, ODBC, and Admin access.
+			JDBC ans ODBC.
 			Typical installations will not need to adjust the default thread and buffer size settings.
 			The default input output buffer sizes are set to 0, which will use the system default.  
-			Before adjusting this value keep in mind that each JDBC, ODBC, and Admin client will create a new socket connection.  
+			Before adjusting this value keep in mind that each JDBC, ODBC will create a new socket connection.  
 			Setting these values to a large buffer size should only be done if the number of client is constrained.
-			All JDBC/ODBC socket operations are non-blocking, so setting the number of maxThreads
+			All JDBC/ODBC socket operations are non-blocking, so setting the number of max-threads
 			higher than the maximum effective parallelism of the machine should not result in greater performance.  
 			The default value 0 for JDBC socket threads will set the max to the number of available processors.
 			</para>
@@ -163,7 +198,7 @@
 		<para>
 			LOBs are broken into pieces when being created and streamed. 
 			The maximum size of each piece when fetched by the client can be
-			configured with the <code>"lobChunkSizeInKB"</code>
+			configured with the <code>"lob-chunk-size-in-kb"</code>
 			property in the &jboss-beans; file. The default value is 100 KB.
 			When dealing with extremely large LOBs, you may consider increasing this
 			value to decrease the amount of round-trips to stream the result.
@@ -180,10 +215,10 @@
 		<title>Other Considerations</title>
 		<para>When
 			using Teiid in a development environment, you may consider setting
-			the maxSourceRows property in the &jboss-beans;
+			the max-source-rows-allowed property in the &jboss-beans;
 			file to reasonably small level value (e.g. 10000) to prevent large
 			amounts of data from being pulled from sources.
-			Leaving the exceptionOnMaxSourceRows set to true will alert the developer
+			Leaving the exception-on-max-source-rows set to true will alert the developer
 			through an exception that an attempt was made to retrieve more than
 			the specified number of rows.
 		</para>

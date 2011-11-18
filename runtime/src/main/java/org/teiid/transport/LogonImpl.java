@@ -74,7 +74,7 @@ public class LogonImpl implements ILogon {
 			return logon(connProps, (byte[])connProps.get(ILogon.KRB5TOKEN));
 		}
 		
-		if (!AuthenticationType.CLEARTEXT.equals(service.getAuthType())) {
+		if (!AuthenticationType.CLEARTEXT.equals(service.getAuthenticationType())) {
 			throw new LogonException(RuntimePlugin.Util.getString("wrong_logon_type_jaas")); //$NON-NLS-1$
 		}
 		return logon(connProps, null);
@@ -94,9 +94,8 @@ public class LogonImpl implements ILogon {
             credential = new Credentials(password.toCharArray());
         }
         
-        boolean adminConnection = Boolean.parseBoolean(connProps.getProperty(TeiidURL.CONNECTION.ADMIN));
 		try {
-			SessionMetadata sessionInfo = service.createSession(user,credential, applicationName, connProps, adminConnection, true);
+			SessionMetadata sessionInfo = service.createSession(user,credential, applicationName, connProps, true);
 	        updateDQPContext(sessionInfo);
 	        if (DQPWorkContext.getWorkContext().getClientAddress() == null) {
 				sessionInfo.setEmbedded(true);
@@ -153,7 +152,7 @@ public class LogonImpl implements ILogon {
 	@Override
 	public LogonResult neogitiateGssLogin(Properties connProps, byte[] serviceTicket, boolean createSession) throws LogonException {
 		
-		if (!AuthenticationType.GSS.equals(service.getAuthType())) {
+		if (!AuthenticationType.GSS.equals(service.getAuthenticationType())) {
 			throw new LogonException(RuntimePlugin.Util.getString("wrong_logon_type_krb5")); //$NON-NLS-1$
 		}		
 		

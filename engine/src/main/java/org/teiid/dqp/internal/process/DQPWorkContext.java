@@ -143,8 +143,8 @@ public class DQPWorkContext implements Serializable {
     }
     
     public Subject getSubject() {
-    	if (session.getLoginContext() != null) {
-    		return session.getLoginContext().getSubject();
+    	if (session.getSubject() != null) {
+    		return session.getSubject();
     	}
     	return null;
     }

@@ -28,11 +28,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.bind.JAXBException;
+import javax.xml.stream.XMLStreamException;
 
-import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.virtual.VirtualFile;
-import org.teiid.api.exception.query.QueryMetadataException;
+import org.jboss.vfs.VirtualFile;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataReader;
@@ -42,7 +40,6 @@ import org.teiid.query.report.ReportItem;
 import org.teiid.runtime.RuntimePlugin;
 
 
-@ManagementObject
 public class UDFMetaData {
 	private HashMap<String, Collection <FunctionMethod>> methods = new HashMap<String, Collection<FunctionMethod>>();
 	private HashMap<String, VirtualFile> files = new HashMap<String, VirtualFile>();
@@ -52,7 +49,7 @@ public class UDFMetaData {
 	}
 	
 	
-	void buildFunctionModelFile(String name, String path) throws IOException, JAXBException, QueryMetadataException {
+	public void buildFunctionModelFile(String name, String path) throws IOException, XMLStreamException {
 		for (String f:files.keySet()) {
 			if (f.endsWith(path)) {
 				path = f;
@@ -67,7 +64,7 @@ public class UDFMetaData {
 		ActivityReport<ReportItem> report = new ActivityReport<ReportItem>("UDF load"); //$NON-NLS-1$
 		FunctionMetadataValidator.validateFunctionMethods(udfMethods,report);
 		if(report.hasItems()) {
-		    throw new QueryMetadataException(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$
+		    throw new IOException(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$
 		}
 		this.methods.put(name, udfMethods);
 	}
@@ -91,6 +88,15 @@ public class UDFMetaData {
 	public void addFunctions(UDFMetaData funcs){
 		for (Map.Entry<String, Collection<FunctionMethod>> entry : funcs.getFunctions().entrySet()) {
 			addFunctions(entry.getKey(), entry.getValue());
+		}
+	}
+
+	public void setFunctionClassLoader(ClassLoader functionClassLoader) {
+		for (String name : this.methods.keySet()) {
+			Collection <FunctionMethod> funcs = this.methods.get(name);
+			for(FunctionMethod fm:funcs) {
+				fm.setClassloader(functionClassLoader);
+			}
 		}
 	}	
 }

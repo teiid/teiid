@@ -224,10 +224,12 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 	public ChannelPipeline getPipeline() throws Exception {
 		ChannelPipeline pipeline = new DefaultChannelPipeline();
 
-		SSLEngine engine = config.getServerSSLEngine();
-	    if (engine != null) {
-	        pipeline.addLast("ssl", new SslHandler(engine)); //$NON-NLS-1$
-	    }
+		if (this.config != null) {
+			SSLEngine engine = config.getServerSSLEngine();
+		    if (engine != null) {
+		        pipeline.addLast("ssl", new SslHandler(engine)); //$NON-NLS-1$
+		    }
+		}
 	    pipeline.addLast("decoder", new ObjectDecoder(1 << 20, classLoader, storageManager)); //$NON-NLS-1$
 	    pipeline.addLast("chunker", new ChunkedWriteHandler()); //$NON-NLS-1$
 	    pipeline.addLast("encoder", new ObjectEncoder()); //$NON-NLS-1$

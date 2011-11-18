@@ -22,20 +22,24 @@
 package org.teiid.jdbc;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.jboss.deployers.spi.DeploymentException;
+import javax.security.auth.Subject;
+import javax.security.auth.login.LoginException;
+
 import org.mockito.Mockito;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.cache.CacheConfiguration;
-import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.cache.CacheConfiguration.Policy;
+import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.core.util.UnitTestUtil;
@@ -44,11 +48,15 @@ import org.teiid.deployers.MetadataStoreGroup;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
+import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
+import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
+import org.teiid.dqp.internal.process.PreparedPlan;
+import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.service.FakeBufferService;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataRepository;
@@ -66,8 +74,11 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.GlobalTableStoreImpl;
+import org.teiid.security.Credentials;
+import org.teiid.security.SecurityHelper;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.services.SessionServiceImpl;
+import org.teiid.services.TeiidLoginContext;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
 import org.teiid.transport.LocalServerConnection;
@@ -76,7 +87,16 @@ import org.teiid.transport.LogonImpl;
 @SuppressWarnings({"nls", "serial"})
 public class FakeServer extends ClientServiceRegistryImpl implements ConnectionProfile {
 
-	SessionServiceImpl sessionService = new SessionServiceImpl();
+	SessionServiceImpl sessionService = new SessionServiceImpl() {
+		@Override
+		protected TeiidLoginContext authenticate(String userName,
+				Credentials credentials, String applicationName,
+				List<String> domains, boolean onlyallowPassthrough)
+				throws LoginException {
+			return new TeiidLoginContext(userName+"@"+domains.get(0), new Subject(), domains.get(0), new Object());
+		}
+		
+	};
 	LogonImpl logon;
 	DQPCore dqp = new DQPCore();
 	VDBRepository repo = new VDBRepository();
@@ -97,6 +117,9 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 	}
 
 	public FakeServer(DQPConfiguration config, boolean realBufferMangaer) {
+		sessionService.setSecurityHelper(Mockito.mock(SecurityHelper.class));
+		sessionService.setSecurityDomains(Arrays.asList("somedomain"));
+		
 		this.logon = new LogonImpl(sessionService, null);
 		this.repo.addListener(new VDBLifeCycleListener() {
 			
@@ -132,8 +155,20 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         	this.dqp.setBufferService(bsi);
         	bsi.start();
         }
+        DefaultCacheFactory dcf = new DefaultCacheFactory() {
+        	@Override
+        	public boolean isReplicated() {
+        		return true; //pretend to be replicated for matview tests
+        	}
+        };        
+		SessionAwareCache rs = new SessionAwareCache<CachedResults>(dcf, SessionAwareCache.Type.RESULTSET, new CacheConfiguration(Policy.LRU, 60, 250, "resultsetcache"));
+		SessionAwareCache ppc = new SessionAwareCache<PreparedPlan>(dcf, SessionAwareCache.Type.PREPAREDPLAN, new CacheConfiguration());
+        rs.setBufferManager(this.dqp.getBufferManager());
+        this.dqp.setResultsetCache(rs);
         
-        this.dqp.setCacheFactory(new DefaultCacheFactory());
+        ppc.setBufferManager(this.dqp.getBufferManager());
+        this.dqp.setPreparedPlanCache(ppc);		
+        
         this.dqp.setTransactionService(new FakeTransactionService());
         
         cmr = Mockito.mock(ConnectorManagerRepository.class);
@@ -144,13 +179,6 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         	}
         });
         
-        config.setResultsetCacheConfig(new CacheConfiguration(Policy.LRU, 60, 250, "resultsetcache")); //$NON-NLS-1$
-        this.dqp.setCacheFactory(new DefaultCacheFactory() {
-        	@Override
-        	public boolean isReplicated() {
-        		return true; //pretend to be replicated for matview tests
-        	}
-        });
         this.dqp.start(config);
         this.sessionService.setDqp(this.dqp);
         
@@ -184,7 +212,7 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 	}
 	
 	public void deployVDB(String vdbName, String vdbPath, Map<String, Collection<FunctionMethod>> udfs) throws Exception {
-		IndexMetadataFactory imf = VDBMetadataFactory.loadMetadata(new File(vdbPath).toURI().toURL());
+		IndexMetadataFactory imf = VDBMetadataFactory.loadMetadata(vdbName, new File(vdbPath).toURI().toURL());
 		MetadataStore metadata = imf.getMetadataStore(repo.getSystemStore().getDatatypes());
 		LinkedHashMap<String, Resource> entries = imf.getEntriesPlusVisibilities();
         deployVDB(vdbName, metadata, entries, udfs);		
@@ -225,7 +253,7 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         	}
 			this.repo.addVDB(vdbMetaData, stores, entries, udfMetaData, cmr);
 			this.repo.finishDeployment(vdbName, 1);
-		} catch (DeploymentException e) {
+		} catch (VirtualDatabaseException e) {
 			throw new RuntimeException(e);
 		}
 	}

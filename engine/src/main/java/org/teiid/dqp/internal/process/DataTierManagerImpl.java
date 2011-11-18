@@ -59,22 +59,10 @@ import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorWork;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
-import org.teiid.dqp.service.BufferService;
 import org.teiid.events.EventDistributor;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnStats;
-import org.teiid.metadata.Datatype;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.MetadataRepository;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
-import org.teiid.metadata.TableStats;
+import org.teiid.metadata.*;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.TempMetadataID;
@@ -154,14 +142,14 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	
 	// Resources
 	private DQPCore requestMgr;
-    private BufferService bufferService;
+    private BufferManager bufferManager;
     private EventDistributor eventDistributor;
     private boolean detectChangeEvents;
     private MetadataRepository metadataRepository;
 
-    public DataTierManagerImpl(DQPCore requestMgr, BufferService bufferService, boolean detectChangeEvents) {
+    public DataTierManagerImpl(DQPCore requestMgr, BufferManager bufferMgr, boolean detectChangeEvents) {
 		this.requestMgr = requestMgr;
-        this.bufferService = bufferService;
+        this.bufferManager = bufferMgr;
         this.detectChangeEvents = detectChangeEvents;
 	}
     
@@ -575,7 +563,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         if (nodeID >= 0) {
         	aqr.setTransactionContext(workItem.getTransactionContext());
         }
-        aqr.setFetchSize(this.bufferService.getBufferManager().getConnectorBatchSize());
+        aqr.setFetchSize(this.bufferManager.getConnectorBatchSize());
         if (connectorBindingId == null) {
         	VDBMetaData vdb = workItem.getDqpWorkContext().getVDB();
         	ModelMetaData model = vdb.getModel(modelName);
@@ -602,7 +590,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
     }
 
     BufferManager getBufferManager() {
-		return bufferService.getBufferManager();
+		return this.bufferManager;
 	}
     
 }

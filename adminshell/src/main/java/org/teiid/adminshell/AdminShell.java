@@ -64,11 +64,12 @@ public class AdminShell {
 	
 	@Doc(text="Get a named Admin connection to the specified server")
 	public static void connectAsAdmin(
-			@Doc(text = "url - URL in the format \"mm[s]://host:port\"") String url,
+			@Doc(text = "host - hostname") String host,
+			@Doc(text = "port - port") int port,
 			@Doc(text = "username") String username,
 			@Doc(text = "password") String password, 
 			@Doc(text = "connection name") String connectionName) throws AdminException {
-		internalAdmin = AdminFactory.getInstance().createAdmin(username, password.toCharArray(), url);
+		internalAdmin = AdminFactory.getInstance().createAdmin(host, port, username, password.toCharArray());
 		currentName = connectionName;
 		Admin old = connections.put(connectionName, internalAdmin);
 		if (old != null) {
@@ -81,8 +82,7 @@ public class AdminShell {
 	@SuppressWarnings("nls")
 	public static void connectAsAdmin() throws AdminException {
 		loadConnectionProperties();
-		connectAsAdmin(p.getProperty("admin.url", "mm://localhost:31443"), p.getProperty("admin.user", "admin"), 
-				p.getProperty("admin.password", "admin"), "conn-" + connectionCount++);
+		connectAsAdmin(p.getProperty("admin.host", "localhost"), Integer.parseInt(p.getProperty("admin.port", "9999")), p.getProperty("admin.user", "admin"), p.getProperty("admin.password", "admin"), "conn-" + connectionCount++);
 	}
 
 	static void loadConnectionProperties() {
@@ -150,11 +150,9 @@ public class AdminShell {
 		getAdmin().clearCache(cacheType, vdbName, vdbVersion);
 	}	
 
-	@Doc(text = "Delete a VDB")
-	public static void deleteVDB(
-			@Doc(text = "vdb name") String vdbName, 
-			@Doc(text = "vdb version") int vdbVersion) throws AdminException {
-		getAdmin().deleteVDB(vdbName, vdbVersion);
+	@Doc(text = "Undeploy a artifact (JAR, RAR, VDB)")
+	public static void undeploy(@Doc(text = "deployed name") String deployedName) throws AdminException {
+		getAdmin().undeploy(deployedName);
 	}
 
 	@Doc(text = "Get all cache type Strings")
@@ -172,7 +170,7 @@ public class AdminShell {
 	}
 
 	@Doc(text = "Get all translator instances")
-	public static Collection<Translator> getTranslators()
+	public static Collection<? extends Translator> getTranslators()
 			throws AdminException {
 		return getAdmin().getTranslators();
 	}
@@ -185,30 +183,30 @@ public class AdminShell {
 	}
 
 	@Doc(text = "Get all PropertyDefinitions for the given template")
-	public static Collection<PropertyDefinition> getTemplatePropertyDefinitions(
+	public static Collection<? extends PropertyDefinition> getTemplatePropertyDefinitions(
 			@Doc(text = "template name") String templateName) throws AdminException {
 		return getAdmin().getTemplatePropertyDefinitions(templateName);
 	}
 
 	@Doc(text = "Get all Request instances")
-	public static Collection<Request> getRequests() throws AdminException {
+	public static Collection<? extends Request> getRequests() throws AdminException {
 		return getAdmin().getRequests();
 	}
 
 	@Doc(text = "Get all Request instances for the given session")
-	public static Collection<Request> getRequestsForSession(
+	public static Collection<? extends Request> getRequestsForSession(
 			@Doc(text = "session id") String sessionId)
 			throws AdminException {
 		return getAdmin().getRequestsForSession(sessionId);
 	}
 
 	@Doc(text = "Get all Session instances")
-	public static Collection<Session> getSessions() throws AdminException {
+	public static Collection<? extends Session> getSessions() throws AdminException {
 		return getAdmin().getSessions();
 	}
 
 	@Doc(text = "Get all Transaction instances")
-	public static Collection<Transaction> getTransactions() throws AdminException {
+	public static Collection<? extends Transaction> getTransactions() throws AdminException {
 		return getAdmin().getTransactions();
 	}
 
@@ -220,7 +218,7 @@ public class AdminShell {
 	}
 
 	@Doc(text = "Get all VDB instances")
-	public static Set<VDB> getVDBs() throws AdminException {
+	public static Set<? extends VDB> getVDBs() throws AdminException {
 		return getAdmin().getVDBs();
 	}
 
@@ -279,7 +277,7 @@ public class AdminShell {
 	
 	@Doc(text = "Checks if a translator exists")
 	public static boolean hasTranslator(@Doc(text = "deployed name") String factoryName) throws AdminException {
-	    Collection<Translator> bindings = getAdmin().getTranslators();
+	    Collection<? extends Translator> bindings = getAdmin().getTranslators();
 	    
 	    for (Translator binding:bindings) {
 	        if (binding.getName().equals(factoryName)) {
@@ -292,7 +290,7 @@ public class AdminShell {
 	@Doc(text = "Checks if a VDB exists")
 	public static boolean hasVDB(
 			@Doc(text = "vdb name") String vdbName) throws AdminException {
-	    Collection<VDB> vdbs = getAdmin().getVDBs();
+	    Collection<? extends VDB> vdbs = getAdmin().getVDBs();
 	    for (VDB vdb:vdbs) {
 	        if (vdb.getName().equals(vdbName)) {
 	            return true;
@@ -305,7 +303,7 @@ public class AdminShell {
 	public static boolean hasVDB(
 			@Doc(text = "vdb name") String vdbName, 
 			@Doc(text = "vdb version") int version) throws AdminException {
-	    Collection<VDB> vdbs = getAdmin().getVDBs();
+	    Collection<? extends VDB> vdbs = getAdmin().getVDBs();
 	    for (VDB vdb:vdbs) {
 	        if (vdb.getName().equals(vdbName) && vdb.getVersion() == version) {
 	            return true;
@@ -322,13 +320,12 @@ public class AdminShell {
 		ObjectConverterUtil.write(contents, fileName);	
 	}*/
 	
-	@Doc(text = "Deploy a VDB from file")
-	public static void deployVDB(
-			@Doc(text = "file name") String vdbFile) throws AdminException, FileNotFoundException {
+	@Doc(text = "Deploy a Artifact (JAR, RAR, VDB) from file")
+	public static void deploy(@Doc(text = "file name") String vdbFile) throws AdminException, FileNotFoundException {
 		File file = new File(vdbFile);
 		FileInputStream fis = new FileInputStream(file);
 		try {
-			getAdmin().deployVDB(file.getName(), fis);
+			getAdmin().deploy(file.getName(), fis);
 		} finally {
 			try {
 				fis.close();
@@ -416,11 +413,4 @@ public class AdminShell {
 			@Doc(text = "method name") String method) {
 		help.help(method);
 	}
-	
-	@Doc(text = "Tell the engine that the given source is available. Pending dynamic vdb metadata loads will be resumed.")
-	public static void markDataSourceAvailable(
-			@Doc(text = "jndi name") String name) throws AdminException {
-		getAdmin().markDataSourceAvailable(name);
-	}
-	
 }

@@ -13,7 +13,7 @@ package org.teiid.core.index;
 
 import java.io.IOException;
 
-import org.jboss.virtual.VirtualFile;
+import org.jboss.vfs.VirtualFile;
 
 /**
  * An IIndex is the interface used to generate an index file, and to make queries on

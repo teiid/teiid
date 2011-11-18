@@ -69,7 +69,7 @@ public interface SessionService {
     public SessionMetadata createSession(String userName,
                                                Credentials credentials,
                                                String applicationName,
-                                               Properties properties, boolean admin, boolean authenticate)
+                                               Properties properties, boolean authenticate)
             throws LoginException, SessionServiceException;
 
     /**
@@ -101,7 +101,7 @@ public interface SessionService {
      * @return The collection of MetaMatrixSessionInfo objects of active users on
      * the system - possibly empty, never null.
      */
-    Collection<SessionMetadata> getActiveSessions() throws SessionServiceException;
+    Collection<SessionMetadata> getActiveSessions();
 
     /**
      * Get the number of active user sessions on the system.
@@ -144,7 +144,7 @@ public interface SessionService {
 	
 	LoginContext createLoginContext(String securityDomain, String user, String password) throws LoginException;
 
-	AuthenticationType getAuthType();
+	AuthenticationType getAuthenticationType();
 	
 	String getGssSecurityDomain();
 	

@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.stream.XMLStreamException;
 
 import junit.framework.Assert;
 
@@ -57,7 +58,7 @@ public class TranslationHelper {
     public static TranslationUtility getTranslationUtility(String vdbFileName, String udf) {
     	TranslationUtility util = null;
     	if (PARTS_VDB.equals(vdbFileName)) {
-    		util = new TranslationUtility(TranslationHelper.class.getResource(vdbFileName));
+    		util = new TranslationUtility("PartsSupplier.vdb", TranslationHelper.class.getResource(vdbFileName)); //$NON-NLS-1$
     	} else if (BQT_VDB.equals(vdbFileName)){
     		util = FakeTranslationFactory.getInstance().getBQTTranslationUtility();
     	} else {
@@ -76,7 +77,7 @@ public class TranslationHelper {
 			util.addUDF("foo", methods); //$NON-NLS-1$
 		} catch (IOException e) {
 			throw new TeiidRuntimeException("failed to load UDF"); //$NON-NLS-1$
-		} catch (JAXBException e) {
+		} catch (XMLStreamException e) {
 			throw new TeiidRuntimeException("failed to load UDF"); //$NON-NLS-1$
 		}
 	}
@@ -91,7 +92,7 @@ public class TranslationHelper {
         	Collection <FunctionMethod> methods = new ArrayList<FunctionMethod>();
     		try {
 				methods.addAll(FunctionMetadataReader.loadFunctionMethods(TranslationHelper.class.getResource(udf).openStream()));
-			} catch (JAXBException e) {
+			} catch (XMLStreamException e) {
 				throw new TeiidRuntimeException("failed to load UDF"); //$NON-NLS-1$
 			} catch (IOException e) {
 				throw new TeiidRuntimeException("failed to load UDF"); //$NON-NLS-1$

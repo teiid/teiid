@@ -21,27 +21,18 @@
  */
 package org.teiid.adminapi.jboss;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jboss.managed.api.ManagedObject;
-import org.jboss.managed.api.factory.ManagedObjectFactory;
-import org.jboss.managed.plugins.factory.ManagedObjectFactoryBuilder;
+import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
-import org.teiid.adminapi.impl.DataPolicyMetadata;
-import org.teiid.adminapi.impl.ModelMetaData;
-import org.teiid.adminapi.impl.TranslatorMetaData;
-import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.*;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.translator.ExecutionFactory;
 
@@ -78,7 +69,7 @@ public class TestAdminObjectBuilder {
 		
 		vdb.addModel(modelTwo);
 		
-		TranslatorMetaData t1 = new TranslatorMetaData();
+		VDBTranslatorMetaData t1 = new VDBTranslatorMetaData();
 		t1.setName("oracleOverride");
 		t1.setType("oracle");
 		t1.addProperty("my-property", "my-value");
@@ -106,9 +97,8 @@ public class TestAdminObjectBuilder {
 		vdb.addDataPolicy(roleOne);
 		
 		// convert to managed object and build the VDB out of MO
-		ManagedObjectFactory mof = ManagedObjectFactoryBuilder.create();
-		ManagedObject mo = mof.initManagedObject(vdb, null, null);
-		vdb = AdminObjectBuilder.buildAO(mo, VDBMetaData.class);
+		ModelNode node = VDBMetadataMapper.INSTANCE.wrap(vdb, new ModelNode());
+		vdb = VDBMetadataMapper.INSTANCE.unwrap(node);
 		
 		assertEquals("myVDB", vdb.getName()); 
 		assertEquals("vdb description", vdb.getDescription()); 
@@ -172,19 +162,18 @@ public class TestAdminObjectBuilder {
 	
 	@Test
 	public void testTranslator() {
-		TranslatorMetaData tm = new TranslatorMetaData();
+		VDBTranslatorMetaData tm = new VDBTranslatorMetaData();
 		
 		tm.setExecutionFactoryClass(ExecutionFactory.class);
 		tm.setName("Oracle");
 		tm.addProperty("ExtensionTranslationClassName", "org.teiid.translator.jdbc.oracle.OracleSQLTranslator");
 		
 		// convert to managed object and build the VDB out of MO
-		ManagedObjectFactory mof = ManagedObjectFactoryBuilder.create();
-		ManagedObject mo = mof.initManagedObject(tm, null, null);
-		tm = AdminObjectBuilder.buildAO(mo, TranslatorMetaData.class);
+		ModelNode node = VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE.wrap(tm, new ModelNode());
+		VDBTranslatorMetaData tm1 = VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE.unwrap(node);
 		
-		assertEquals("Oracle", tm.getName());
-		assertEquals(ExecutionFactory.class.getName(), tm.getPropertyValue(Translator.EXECUTION_FACTORY_CLASS));
-		assertEquals("org.teiid.translator.jdbc.oracle.OracleSQLTranslator", tm.getPropertyValue("ExtensionTranslationClassName"));		
+		assertEquals("Oracle", tm1.getName());
+		assertEquals(ExecutionFactory.class.getName(), tm1.getPropertyValue(Translator.EXECUTION_FACTORY_CLASS));
+		assertEquals("org.teiid.translator.jdbc.oracle.OracleSQLTranslator", tm1.getPropertyValue("ExtensionTranslationClassName"));		
 	}
 }

@@ -17,23 +17,38 @@
      <orderedlist numeration="arabic">
      	<para>Steps to install Teiid</para>
         <listitem>
-            <para>Download the <ulink url="http://www.jboss.org/jbossas/downloads.html">JBoss AS 5.1.0</ulink> application server. 
-            Install the server by unzipping into a known location. Ex: /apps/jboss-5.1.0
-            <note><para>You may also choose to use an existing AS installation.  However if a previous version of Teiid was already installed, you must remove the old teiid distribution artifacts before installing the new version.</para></note></para>
+            <para>Download the <ulink url="http://www.jboss.org/jbossas/downloads.html">JBoss AS 7.1.0</ulink> application server. 
+            Install the server by unzipping into a known location. Ex: /apps/jboss-7.1.0
+            <note><para>You may also choose to use an existing AS installation.  However if a previous version of Teiid 
+            was already installed, you must remove the old teiid distribution artifacts before installing the new version.</para>
+            </note></para>
         </listitem>
         <listitem>
-            <para>Download <ulink url="http://www.jboss.org/teiid/downloads.html">Teiid &versionNumber;</ulink>. Unzip the downloaded artifact inside any "profile" 
-            in the JBoss AS installation. Teiid &versionNumber; uses a JBoss AS service called the "profile service" that 
-            is only installed in "default" and "all" profiles, so installing into one of these 
-            profiles is required.  The default profile is the typical installation location, for example "&lt;jboss-install&gt;/server/default". 
-            The Teiid runtime directory structure matches JBoss profiles directly - it is just an overlay.
+            <para>Download <ulink url="http://www.jboss.org/teiid/downloads.html">Teiid &versionNumber;</ulink>. 
+            Unzip the downloaded artifact inside the JBoss AS installation. Teiid &versionNumber; directory structure matches 
+            JBoss profiles directly - it is just an overlay. This will add necessary modules and configuration files to install Teiid
+            in JBoss AS 7.x. Teiid works in both Standalone and Domain modes. Teiid provides separate configuration files 
+            (standalone-teiid.xml and domain-teiid.xml) for both modes apart from the default configuration files come with JBoss AS 7.x
             </para>
-            <para>The all profile is recommended in a clustered environment to take advantage of clustered caching and cluster safe distribution of events.</para>
+            <para>The "Domain" mode recommended in a clustered environment to take advantage of clustered caching 
+            and cluster safe distribution of events.</para>
         </listitem>
         
         <listitem>
-        <para>Start the JBoss AS server by executing "&lt;jboss-install&gt;/bin/run.sh" if you installed in the 
-        "default" profile. Otherwise use "&lt;jboss-install&gt;/bin/run.sh -c &lt;profilename&gt;"
+        <para>Start the JBoss AS server by executing 
+        <programlisting><![CDATA[
+   <jboss-install>/bin/standalone.sh --server-config=standalone-teiid.xml
+         ]]></programlisting>
+        if you want to start the "standalone" profile. To start the server in "Domain" mode execute command
+        <programlisting><![CDATA[
+   <jboss-install>/bin/domain.sh --domain-config=domain-teiid.xml
+         ]]></programlisting>
+        To complete the installion for the domain mode, after the server has been started run the following command. Note that
+        this only needs to be run for once per whole domain install. Since in domain mode you can not statically deploy resources,
+        this script deploys default resources required for Teiid once the server starts using the CLI interface.
+        <programlisting><![CDATA[
+   <jboss-install>/bin/jboss-admin.sh --file=scripts/teiid-domain-mode-install.cli
+         ]]></programlisting>
         </para> 
         </listitem>
 
@@ -42,78 +57,68 @@
         </listitem>
 
         <listitem>
-            <para>Once VDBs have been deployed, users can now connect their JDBC applications to Teiid. If you need help on connecting your application to the 
-            Teiid using JDBC check out the "Client Developer's Guide".
+            <para>Once VDBs have been deployed, users can now connect their JDBC applications to Teiid. If you need help 
+            on connecting your application to the Teiid using JDBC check out the "Client Developer's Guide".
         </para> 
         </listitem>        
      </orderedlist>
    </section>
-   <section>
-     <title>CXF Installation</title>
-     <para>The usage of CXF is expected for utilizing Salesforce and Web Services connectivity through Teiid.  If you do not plan on integrating either of these features, then you may leave JBoss AS with the default "native" web services stack.</para>
-     <orderedlist>
-     	<listitem>
-     		<para>Download <ulink url="http://www.jboss.org/jbossws/downloads/">JBossWS-CXF 3.1.2</ulink> and unzip to a temporary location.</para>	
-     	</listitem>
-     	<listitem>
-     		<para>From the jbossws-cxf-bin-dist directory, save the ant.properties.example file as ant.properties and change the values for jboss510.home, jbossws.integration.target, jboss.server.instance, jboss.bind.address accordingly:
-     		<programlisting>
-...
-jboss510.home=&lt;jboss-install&gt;
 
-# The JBoss server under test. This can be [jboss500|jboss501|jboss510|jboss600]
-jbossws.integration.target=jboss510
-
-# The JBoss settings
-jboss.server.instance=&lt;profile&gt;
-jboss.bind.address=&lt;bind address&gt;
-</programlisting> The jboss-install location should be the root directory of your AS installation, profile (typically default) should indicate the profile selected for your Teiid installation, and the bind address should be the bind address used when launching JBoss AS (use the value localhost if you do not set the bind address when launching JBoss AS).</para>	
-     	</listitem>
-     	<listitem>
-     		<para>From the jbossws-cxf-bin-dist directory, install JBossWS-CXF by running the ANT build script: <programlisting>$ant deploy-jboss510</programlisting></para>
-     	</listitem>
-     	<listitem>
-     		<para>Optionally run tests to verify that there are no errors with the installation: <programlisting>$ant tests</programlisting></para>
-     	</listitem>
-     </orderedlist>
-   </section>
    <section>
      <title>Directory Structure Explained</title>
      <example>
      <title>Directory Structure</title>
      <para>This shows the contents of the Teiid &versionNumber; deployment. The directory 
      structure is exactly the same under any JBoss profile.</para>
-    <programlisting><![CDATA[teiid
-	/conf
-	   /props
-	      teiid-security-roles.properties
-	      teiid-security-users.properties
-	   jboss-teiid-log4j.xml
-	/deploy
+    <programlisting><![CDATA[
+    /bin
+        /scripts
+	/docs
 	   /teiid
-	       /connectors
-	       teiid-jboss-beans.xml
-	       teiid-connector-templates-jboss-beans.xml
-	   admin-console.war
-	/deployers
-	   /teiid.deployer
-	/lib
-	/teiid-examples
-	/tmp/teiid]]></programlisting>     
+            /datsources
+            /schema
+            /examples
+   	/domain
+	   /configuration
+            domain-teiid.xml
+	/modules
+        /org/jboss/teiid/*
+	/standalone
+        /configuration
+            standalone-teiid.xml
+        /deployments
+            teiid-*.rar
+    ]]></programlisting>     
 	</example>
     <section>
-        <title>/deploy/teiid/teiid-jboss-beans.xml</title>
-        <para>Master configuration file for Teiid system. This file contains its own documentation, 
-        so refer to the file for all the available properties to configure.</para>
+        <title>bin/scripts</title>
+        <para>Has installation and utility CLI scripts.</para>
+    </section>
+    <section>
+        <title>docs/teiid</title>
+        <para>Has documents, examples, sample data source XML fragments and schema files. Contains artifacts 
+        need by the Quick Start Example.</para>
+    </section>
+
+    <section>
+        <title>/standalone/configuration/standalone-teiid.xml</title>
+        <para>Master configuration file for Teiid system. This file contains Teiid subsystem in addtion to standard 
+        JBoss AS web profile  subsystems</para>
     </section>
     
     <section>
-        <title>/deploy/teiid/connectors</title>
-        <para>This directory contains all the translator JAR and connector RAR files that are supplied as part of the Teiid installation.</para>
+        <title>/standalone/deployments</title>
+        <para>This directory contains all the resource-adapter RAR files that are supplied as part of the Teiid installation. Note
+        that resource adaptors are not installed by default for the domain mode. </para>
+    </section>
+
+    <section>
+        <title>modules</title>
+        <para>This directory defines the modules for JBoss As system</para>
     </section>
     
     <section>
-        <title>/conf/props</title>
+        <title>/modules/org/jboss/teiid/main/conf</title>
         <itemizedlist>
         	<para>Relevant Files</para>
         	<listitem>
@@ -128,51 +133,31 @@ jboss.bind.address=&lt;bind address&gt;
     </section>  
     
     <section>
-        <title>/conf/jboss-teiid-log4j.xml</title>
-        <para>This file contains the Teiid specific logging contexts to be included in the "jboss-log4j.xml" file. 
-         If you need to turn ON or OFF specific logging in Teiid, 
-         then copy the contents of this file into "jboss-log4j.xml" in the 
-         installation directory.  See the Developers Guide for more on customizing logging.</para>
-    </section>
-     
-    <section>
-        <title>admin-console.war</title>
-        <para>This file has the required files for Teiid JOPR plugin. To see the 
-        Teiid's "admin-console", go to http://&lt;host&gt;:&lt;port&gt;/admin-console</para>
+        <title>/domain/configuration/domain-teiid.xml</title>
+        <para>Master configuration file for Domain mode. This file contains Teiid subsystem in addtion to standard 
+        JBoss AS web profile  subsystems.</para>
     </section>
 
-	<section>
-    	<title>/deployers/teiid.deployer</title>
-        <para>This directory contains Teiid runtime specific configuration files and its libraries. 
-        These configuration files define VDB deployers, connector binding deployers etc. 
-        Typically user never need to edit any files in this directory.</para>
-    </section>
-    
     <section>
-        <title>lib</title>
+        <title>modules/org/jboss/teiid/client</title>
         <para>This directory contains Teiid client libraries. It has the Teiid JDBC driver jar, "teiid-&versionNumber;-client.jar", 
         and also contains "teiid-hibernate-dialect-&versionNumber;.jar" that contains Teiid's Hibernate dialect.</para>
     </section>
     
     <section>
-        <title>teiid-examples</title>
-        <para>This directory contains some examples of how Teiid can be used. Contains artifacts 
-        need by the Quick Start Example. Also contains some sample XML files to define the connectors.</para>
-    </section>
-
-    <section>
-        <title>teiid-docs</title>
-        <para>This directory contains the PDF documents related Teiid and Teiid development. </para>
-    </section>
-    
-    <section>
-        <title>tmp/teiid</title>
+        <title>{standlaone or domain}tmp/teiid</title>
         <para>This directory contains temporary files created by Teiid.  These are mostly created by the buffer manager.  
         These files are not needed across a VM restart.  Creation of Teiid lob values (for example through SQL/XML) will typically create one file per lob once it exceeds the allowable
         in memory size of 8KB.  In heavy usage scenarios, consider pointing the buffer directory at a partition that is routinely defragmented.
         </para>
     </section>
          
+    <section>
+        <title>{standlaone or domain}data/teiid-data</title>
+        <para>This directory contains cached vdb metadata files. Do not edit them manually.
+        </para>
+    </section>         
+
    </section>   
    
 </chapter>

@@ -27,6 +27,7 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
 import org.teiid.common.buffer.BlockedException;
@@ -78,7 +79,8 @@ public class TestDataTierManager {
         rm = new DQPCore();
         rm.setTransactionService(new FakeTransactionService());
         rm.setBufferService(new FakeBufferService());
-        rm.setCacheFactory(new DefaultCacheFactory());
+        rm.setResultsetCache(new SessionAwareCache<CachedResults>(new DefaultCacheFactory(), SessionAwareCache.Type.RESULTSET, new CacheConfiguration()));
+        rm.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>(new DefaultCacheFactory(), SessionAwareCache.Type.PREPAREDPLAN, new CacheConfiguration()));
         rm.start(new DQPConfiguration());
         FakeBufferService bs = new FakeBufferService();
 
@@ -86,8 +88,7 @@ public class TestDataTierManager {
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(connectorManager);
         
         
-        dtm = new DataTierManagerImpl(rm,
-                                  bs, true);
+        dtm = new DataTierManagerImpl(rm,bs.getBufferManager(), true);
         command = helpGetCommand(sql, metadata);
         
         RequestMessage original = new RequestMessage();

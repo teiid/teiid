@@ -26,10 +26,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 
-import org.jboss.managed.api.annotation.ManagementComponent;
-import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementProperties;
-import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
@@ -51,7 +47,6 @@ import org.teiid.runtime.RuntimePlugin;
  * a mixed disk/memory model which requires use of a directory on the disk 
  * for file service access.
  */
-@ManagementObject(name="BufferService", componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class BufferServiceImpl implements BufferService, Serializable {
 	private static final long serialVersionUID = -6217808623863643531L;
 	private static final long MB = 1<<20;
@@ -184,12 +179,10 @@ public class BufferServiceImpl implements BufferService, Serializable {
 		return inlineLobs;
 	}
 
-	@ManagementProperty(description="The max row count of a batch sent internally within the query processor. Should be <= the connectorBatchSize. (default 256)")
 	public int getProcessorBatchSize() {
 		return this.processorBatchSize;
 	}
 
-	@ManagementProperty(description="The max row count of a batch from a connector. Should be even multiple of processorBatchSize. (default 512)")
 	public int getConnectorBatchSize() {
 		return this.connectorBatchSize;
 	}
@@ -198,22 +191,18 @@ public class BufferServiceImpl implements BufferService, Serializable {
     	this.maxFileSize = maxFileSize;
 	}
     
-    @ManagementProperty(description="Max file size, in MB, for buffer files (default 2GB)")
 	public long getMaxFileSize() {
 		return maxFileSize;
 	}
     
-    @ManagementProperty(description="Max open buffer files (default 64)")
     public void setMaxOpenFiles(int maxOpenFiles) {
 		this.maxOpenFiles = maxOpenFiles;
 	}
 
-    @ManagementProperty(description="The approximate amount of buffer memory in kilobytes allowable for a single processing operation (sort, grouping, etc.) regardless of existing memory commitments. -1 means to automatically calculate a value (default -1).")
     public int getMaxProcessingKb() {
 		return maxProcessingKb;
 	}
 
-    @ManagementProperty(description="The approximate amount of memory in kilobytes allowed to be held by the buffer manager. -1 means to automatically calculate a value (default -1)")
     public int getMaxReservedKb() {
 		return maxReserveKb;
 	}
@@ -226,7 +215,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
 		this.maxReserveKb = maxReserveKb;
 	}
     
-    @ManagementProperty(description="Max file storage space, in MB, to be used for buffer files (default 50G)")
 	public long getMaxBufferSpace() {
 		return maxBufferSpace;
 	}
@@ -235,7 +223,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
 		this.maxBufferSpace = maxBufferSpace;
 	}
 
-    @ManagementProperty(description="The currently used file buffer space in MB.", readOnly=true)
     public long getUserBufferSpace() {
     	if (fsm != null) {
     		return fsm.getUsedBufferSpace()/MB;
@@ -243,37 +230,30 @@ public class BufferServiceImpl implements BufferService, Serializable {
     	return 0;
     }
 
-    @ManagementProperty(description="The total number of batches added to the buffer mananger.", readOnly=true)
 	public long getBatchesAdded() {
 		return bufferMgr.getBatchesAdded();
 	}
 
-    @ManagementProperty(description="The total number of batches read from storage.", readOnly=true)
 	public long getReadCount() {
 		return bufferMgr.getReadCount();
 	}
 
-    @ManagementProperty(description="The total number of batches written to storage.", readOnly=true)
     public long getWriteCount() {
 		return bufferMgr.getWriteCount();
 	}
 
-    @ManagementProperty(description="The total number of batch read attempts.", readOnly=true)
 	public long getReadAttempts() {
 		return bufferMgr.getReadAttempts();
 	}
 
-    @ManagementProperty(description="Memory buffer space used by the buffer manager in MB.  -1 determines the setting automatically from the maxReserveKB (default -1).  This value cannot be smaller than maxStorageObjectSize.")
     public int getMemoryBufferSpace() {
 		return (int)memoryBufferSpace;
 	}
 
-    @ManagementProperty(description="The maximum size of a buffer managed object (typically a table page or a results batch) in bytes (default 8388608).")
     public int getMaxStorageObjectSize() {
 		return maxStorageObjectSize;
 	}
 
-    @ManagementProperty(description="Set to true to hold the memory buffer off-heap. If true you must ensure that the VM can allocate that much direct memory (default false).")
     public boolean isMemoryBufferOffHeap() {
 		return memoryBufferOffHeap;
 	}

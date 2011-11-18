@@ -25,13 +25,10 @@ package org.teiid.query.metadata;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
-import org.jboss.virtual.VirtualFile;
+import org.jboss.vfs.VFS;
+import org.jboss.vfs.VirtualFile;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.Model;
@@ -42,8 +39,6 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
-import org.teiid.query.metadata.CompositeMetadataStore;
-import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
@@ -90,7 +85,7 @@ public class TestTransformationMetadata {
 		table.setResourcePath("/a/b/doc.xmi");
 		
 		HashMap<String, Resource> resources = new HashMap<String, Resource>();
-		resources.put("/x.xsd", new Resource(Mockito.mock(VirtualFile.class), true));
+		resources.put("/x.xsd", new Resource(VFS.getRootVirtualFile(), true));
 		
 		CompositeMetadataStore cms = new CompositeMetadataStore(Arrays.asList(mf.getMetadataStore(), mf1.getMetadataStore()));
 		

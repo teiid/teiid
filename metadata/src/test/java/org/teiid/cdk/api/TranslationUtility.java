@@ -75,9 +75,9 @@ public class TranslationUtility {
         };
 	}
     
-    public TranslationUtility(URL url) {
+    public TranslationUtility(String vdbName, URL url) {
         try {
-    		initWrapper(VDBMetadataFactory.getVDBMetadata(url, null));
+    		initWrapper(VDBMetadataFactory.getVDBMetadata(vdbName, url, null));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}     

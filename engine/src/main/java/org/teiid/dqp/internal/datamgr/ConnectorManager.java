@@ -33,7 +33,6 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.resource.ResourceException;
 
 import org.teiid.core.TeiidComponentException;
@@ -41,10 +40,10 @@ import org.teiid.core.util.Assertion;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.logging.CommandLogMessage;
+import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
@@ -66,7 +65,7 @@ import org.teiid.translator.TranslatorException;
  */
 public class ConnectorManager  {
 	
-	private static final String JAVA_CONTEXT = "java:"; //$NON-NLS-1$
+	private static final String JAVA_CONTEXT = "java:/"; //$NON-NLS-1$
 
 	private String translatorName;
 	private String connectionName;
@@ -257,12 +256,12 @@ public class ConnectorManager  {
 				InitialContext ic = new InitialContext();    		
 				try {
 					return ic.lookup(jndiName);
-				} catch (NamingException e) {
+				} catch (Exception e) {
 					if (!jndiName.equals(this.connectionName)) {
 						return ic.lookup(this.connectionName);
 					}
 				}
-			} catch (NamingException e) {
+			} catch (Exception e) {
 				throw new TranslatorException(e, QueryPlugin.Util.getString("connection_factory_not_found", this.connectionName)); //$NON-NLS-1$
 			}   			
     	}

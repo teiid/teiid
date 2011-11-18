@@ -34,10 +34,10 @@ import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.Table.Type;
 import org.teiid.translator.TranslatorException;
 
@@ -517,6 +517,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	private FunctionMethod addHasFunctionPrivilage() throws TranslatorException  {
 		FunctionMethod func = addFunction("has_function_privilege"); //$NON-NLS-1$
 		
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+		
 		ArrayList<FunctionParameter> inParams = new ArrayList<FunctionParameter>();
 		inParams.add(new FunctionParameter("oid", DataTypeManager.DefaultDataTypes.INTEGER, ""));//$NON-NLS-1$ //$NON-NLS-2$
 		inParams.add(new FunctionParameter("permission", DataTypeManager.DefaultDataTypes.STRING, "")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -527,6 +529,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		func.setInvocationClass(ReturnTrue.class.getName());
 		func.setInvocationMethod("result"); //$NON-NLS-1$
 		func.setPushdown(PushDown.CANNOT_PUSHDOWN);
+		func.setClassloader(classLoader); 
+		
 		return func;
 	}
 	

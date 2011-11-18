@@ -24,15 +24,9 @@ package org.teiid.transport;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import org.jboss.managed.api.annotation.ManagementComponent;
-import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementObjectID;
-import org.jboss.managed.api.annotation.ManagementProperties;
-import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.core.TeiidRuntimeException;
 
 
-@ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class SocketConfiguration {
 	
 	private int outputBufferSize;
@@ -41,12 +35,10 @@ public class SocketConfiguration {
 	private int portNumber;
 	private InetAddress hostAddress;
 	private SSLConfiguration sslConfiguration;
-	private boolean enabled;
 	private String hostName;
 	private String name;
+	private String protocol = "teiid"; //$NON-NLS-1$
 	
-	@ManagementProperty(description="Name of the configuration", readOnly=true)
-	@ManagementObjectID(type="socket")
 	public String getName() {
 		return name;
 	}
@@ -90,31 +82,18 @@ public class SocketConfiguration {
 		}
 	}
 
- 	@ManagementProperty(description="enabled")
-	public boolean getEnabled() {
-		return enabled;
-	}
-
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
-
-	@ManagementProperty(description="SO_SNDBUF size, 0 indicates that system default should be used (default 0)")
 	public int getOutputBufferSize() {
 		return outputBufferSize;
 	}
 
-	@ManagementProperty(description="SO_RCVBUF size, 0 indicates that system default should be used (default 0)")
 	public int getInputBufferSize() {
 		return inputBufferSize;
 	}
 
-	@ManagementProperty(description="Max NIO threads")
 	public int getMaxSocketThreads() {
 		return maxSocketThreads;
 	}
 
-	@ManagementProperty(description="Port Number")
 	public int getPortNumber() {
 		return portNumber;
 	}
@@ -137,7 +116,11 @@ public class SocketConfiguration {
 		}		
 	}
 	
-	@ManagementProperty(description="Host Name")
+	public void setHostAddress(InetAddress hostAddress) {
+		this.hostAddress = hostAddress;
+		this.hostName = hostAddress.getHostName();
+	}	
+	
 	public String getHostName() {
 		resolveHostName();
 		return this.hostName;
@@ -147,8 +130,15 @@ public class SocketConfiguration {
 		return sslConfiguration;
 	}
 	
-	@ManagementProperty(description="SSL enabled")
 	public boolean getSslEnabled() {
 		return this.sslConfiguration != null && this.sslConfiguration.isSslEnabled();
+	}
+
+	public String getProtocol() {
+		return protocol;
+	}
+
+	public void setProtocol(String protocol) {
+		this.protocol = protocol;
 	}
 }

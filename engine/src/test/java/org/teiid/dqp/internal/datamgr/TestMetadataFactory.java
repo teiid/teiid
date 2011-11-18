@@ -24,18 +24,23 @@
  */
 package org.teiid.dqp.internal.datamgr;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import java.io.ByteArrayInputStream;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.jboss.virtual.VirtualFile;
+import org.jboss.vfs.VFS;
+import org.jboss.vfs.VirtualFile;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -45,17 +50,30 @@ import org.teiid.query.metadata.TransformationMetadata.Resource;
 public class TestMetadataFactory {
     private static final String MY_RESOURCE_PATH = "my/resource/path";
 	private RuntimeMetadataImpl metadataFactory;
+	static VirtualFile root;
+	static Closeable fileMount;
+	
+	@BeforeClass public static void beforeClass() throws IOException {
+    	FileWriter f = new FileWriter(UnitTestUtil.getTestScratchPath()+"/foo");
+    	f.write("ResourceContents");
+    	f.close();
+    	
+    	root = VFS.getChild("location");
+    	fileMount = VFS.mountReal(new File(UnitTestUtil.getTestScratchPath()), root);		
+	}
+	
+	@AfterClass public static void afterClass() throws IOException {
+		fileMount.close();
+	}
     
-    @Before public void setUp() throws IOException{
+    @Before public void setUp() {
         MetadataStore metadataStore = new MetadataStore();
         CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
     	VDBMetaData vdbMetaData = new VDBMetaData();
     	vdbMetaData.setName("foo"); //$NON-NLS-1$
     	vdbMetaData.setVersion(1);
     	Map<String, Resource> vdbEntries = new LinkedHashMap<String, Resource>();
-    	VirtualFile vf = Mockito.mock(VirtualFile.class);
-    	Mockito.stub(vf.openStream()).toReturn(new ByteArrayInputStream("ResourceContents".getBytes()));
-    	vdbEntries.put(MY_RESOURCE_PATH, new Resource(vf, true));
+    	vdbEntries.put(MY_RESOURCE_PATH, new Resource(root.getChild("foo"), true));
         metadataFactory = new RuntimeMetadataImpl(new TransformationMetadata(vdbMetaData, store, vdbEntries, null, null));
     }
     

@@ -14,7 +14,7 @@ package org.teiid.internal.core.index;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import org.jboss.virtual.VirtualFile;
+import org.jboss.vfs.VirtualFile;
 
 /**
  * A blocksIndexOutput is used to save an index in a file with the given structure:<br>
