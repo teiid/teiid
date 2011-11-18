@@ -26,6 +26,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.teiid.Replicated;
+import org.teiid.Replicated.ReplicationMode;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
@@ -62,7 +63,7 @@ public interface GlobalTableStore {
 	boolean needsLoading(String matTableName, Serializable loadingAddress,
 			boolean firstPass, boolean refresh, boolean invalidate);
 	
-	@Replicated(replicateState=true)
+	@Replicated(replicateState=ReplicationMode.PUSH)
 	void loaded(String matTableName, TempTable table);
 
 }

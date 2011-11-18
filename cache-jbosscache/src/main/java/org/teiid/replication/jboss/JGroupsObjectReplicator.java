@@ -29,21 +29,34 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import org.jboss.as.clustering.jgroups.ChannelFactory;
-import org.jgroups.*;
+import org.jgroups.Address;
+import org.jgroups.Channel;
+import org.jgroups.ExtendedReceiverAdapter;
+import org.jgroups.Message;
+import org.jgroups.View;
 import org.jgroups.blocks.GroupRequest;
 import org.jgroups.blocks.MethodCall;
 import org.jgroups.blocks.MethodLookup;
+import org.jgroups.blocks.RequestOptions;
 import org.jgroups.blocks.RpcDispatcher;
 import org.jgroups.util.Promise;
 import org.jgroups.util.RspList;
 import org.jgroups.util.Util;
 import org.teiid.Replicated;
+import org.teiid.Replicated.ReplicationMode;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.ObjectReplicator;
@@ -89,6 +102,11 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 		private final HashMap<Method, Short> methodMap;
 	    protected Vector<Address> remoteMembers = new Vector<Address>();
 	    protected final transient Promise<Boolean> state_promise=new Promise<Boolean>();
+	    protected transient ThreadLocal<Promise<Boolean>> threadLocalPromise = new ThreadLocal<Promise<Boolean>>() {
+	    	protected org.jgroups.util.Promise<Boolean> initialValue() {
+	    		return new Promise<Boolean>();
+	    	}
+	    };
 	    
 		private ReplicatedInvocationHandler(S object,
 				HashMap<Method, Short> methodMap) {
@@ -119,7 +137,7 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 			}
 		    try {
 		    	Replicated annotation = method.getAnnotation(Replicated.class);
-		    	if (annotation.replicateState()) {
+		    	if (annotation.replicateState() != ReplicationMode.NONE) {
 		    		Object result = null;
 		    		try {
 						result = method.invoke(object, args);
@@ -132,12 +150,33 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 					}
 					ReplicatedObject ro = (ReplicatedObject)object;
 					String stateId = (String)args[0];
-					LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "replicating state", stateId); //$NON-NLS-1$
-					JGroupsOutputStream oStream = new JGroupsOutputStream(disp, dests, stateId, (short)(methodMap.size() - 3));
-					try {
-						ro.getState(stateId, oStream);
-					} finally {
-						oStream.close();
+					if (annotation.replicateState() == ReplicationMode.PUSH) {
+						LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "replicating state", stateId); //$NON-NLS-1$
+						JGroupsOutputStream oStream = new JGroupsOutputStream(disp, dests, stateId, (short)(methodMap.size() - 3));
+						try {
+							ro.getState(stateId, oStream);
+						} finally {
+							oStream.close();
+						}
+						LogManager.logTrace(LogConstants.CTX_RUNTIME, object, "sent state", stateId); //$NON-NLS-1$
+				        return result;
+					}
+					if (result != null) {
+						return result;
+					}
+					LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "pulling state", stateId); //$NON-NLS-1$
+					long timeout = annotation.timeout();
+					threadLocalPromise.set(new Promise<Boolean>());
+					boolean getState = this.disp.getChannel().getState(null, stateId, timeout);
+					if (getState) {
+						Boolean loaded = threadLocalPromise.get().getResult(timeout);
+						if (Boolean.TRUE.equals(loaded)) {
+							LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "loaded", stateId); //$NON-NLS-1$
+						} else {
+							LogManager.logWarning(LogConstants.CTX_RUNTIME, object + " load error or timeout " + stateId); //$NON-NLS-1$
+						}
+					} else {
+						LogManager.logInfo(LogConstants.CTX_RUNTIME, object + " first member or timeout exceeded " + stateId); //$NON-NLS-1$
 					}
 					LogManager.logTrace(LogConstants.CTX_RUNTIME, object, "sent state", stateId); //$NON-NLS-1$
 			        return result;
@@ -149,7 +188,7 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 						dests = new Vector<Address>(remoteMembers);
 					}
 		        }
-		        RspList responses = disp.callRemoteMethods(dests, call, annotation.asynch()?GroupRequest.GET_NONE:GroupRequest.GET_ALL, annotation.timeout());
+		        RspList responses = disp.callRemoteMethods(dests, call, new RequestOptions().setMode(annotation.asynch()?GroupRequest.GET_NONE:GroupRequest.GET_ALL).setTimeout(annotation.timeout()));
 		        if (annotation.asynch()) {
 			        return null;
 		        }
@@ -184,7 +223,7 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 					}
 					remoteMembers.clear();
 					remoteMembers.addAll(newView.getMembers());
-					remoteMembers.remove(this.disp.getChannel().getLocalAddress());
+					remoteMembers.remove(this.disp.getChannel().getAddress());
 				}
 			}
 		}
@@ -214,6 +253,32 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 				Util.close(ostream);
 			}
 		}
+		
+		@Override
+		public void setState(String stateId, InputStream istream) {
+			LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "loading state"); //$NON-NLS-1$
+			try {
+				((ReplicatedObject)object).setState(stateId, istream);
+				threadLocalPromise.get().setResult(Boolean.TRUE);
+			} catch (Exception e) {
+				threadLocalPromise.get().setResult(Boolean.FALSE);
+				LogManager.logError(LogConstants.CTX_RUNTIME, e, "error loading state"); //$NON-NLS-1$
+			} finally {
+				Util.close(istream);
+			}
+		}
+		
+		@Override
+		public void getState(String stateId, OutputStream ostream) {
+			LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "getting state"); //$NON-NLS-1$
+			try {
+				((ReplicatedObject)object).getState(stateId, ostream);
+			} catch (Exception e) {
+				LogManager.logError(LogConstants.CTX_RUNTIME, e, "error gettting state"); //$NON-NLS-1$
+			} finally {
+				Util.close(ostream);
+			}
+		}
 	}
 	
 	private interface Streaming {
@@ -222,13 +287,10 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 		void finishState(String id);
 	}
 
-	
-	private String clusterName;
 	//TODO: this should be configurable, or use a common executor
 	private transient Executor executor = Executors.newCachedThreadPool();
 
-	public JGroupsObjectReplicator(String clusterName) {
-		this.clusterName = clusterName;
+	public JGroupsObjectReplicator(@SuppressWarnings("unused") String clusterName) {
 	}
 	
 	public abstract ChannelFactory getChannelFactory();
@@ -368,14 +430,14 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 		try {
 			channel.connect(mux_id);
 			if (object instanceof ReplicatedObject) {
-				((ReplicatedObject)object).setLocalAddress(channel.getLocalAddress());
+				((ReplicatedObject)object).setLocalAddress(channel.getAddress());
 				boolean getState = channel.getState(null, startTimeout);
 				if (getState) {
-					boolean loaded = proxy.state_promise.getResult(startTimeout);
-					if (loaded) {
+					Boolean loaded = proxy.state_promise.getResult(startTimeout);
+					if (Boolean.TRUE.equals(loaded)) {
 						LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "loaded"); //$NON-NLS-1$
 					} else {
-						LogManager.logWarning(LogConstants.CTX_RUNTIME, object + " load timeout"); //$NON-NLS-1$
+						LogManager.logWarning(LogConstants.CTX_RUNTIME, object + " load error or timeout"); //$NON-NLS-1$
 					}
 				} else {
 					LogManager.logInfo(LogConstants.CTX_RUNTIME, object + " first member or timeout exceeded"); //$NON-NLS-1$

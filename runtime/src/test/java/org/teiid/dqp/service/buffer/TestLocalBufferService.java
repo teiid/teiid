@@ -22,9 +22,7 @@
 
 package org.teiid.dqp.service.buffer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -34,9 +32,9 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManager;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.common.buffer.impl.FileStorageManager;
@@ -125,23 +123,21 @@ public class TestLocalBufferService {
 		es2.setType(DataTypeManager.getDataTypeClass(DefaultDataTypes.INTEGER));
 		schema.add(es2);
 		
-		for (int i = 0; i < 5; i++) {
-			TupleBuffer buffer = mgr.createTupleBuffer(schema, "cached", TupleSourceType.FINAL); //$NON-NLS-1$
-			buffer.setBatchSize(50);
-			buffer.setId("state_id"+i);
-			
-			for (int batch=0; batch<3; batch++) {
-				for (int row = 0; row < 50; row++) {
-					int val = (i*150)+(batch*50)+row;
-					buffer.addTuple(Arrays.asList(new Object[] {"String"+val, new Integer(val)}));
-				}
+		TupleBuffer buffer = mgr.createTupleBuffer(schema, "cached", TupleSourceType.FINAL); //$NON-NLS-1$
+		buffer.setBatchSize(50);
+		buffer.setId("state_id");
+		
+		for (int batch=0; batch<3; batch++) {
+			for (int row = 0; row < 50; row++) {
+				int val = (batch*50)+row;
+				buffer.addTuple(Arrays.asList(new Object[] {"String"+val, new Integer(val)}));
 			}
-			buffer.close();
-			mgr.distributeTupleBuffer(buffer.getId(), buffer);
 		}
+		buffer.close();
+		mgr.distributeTupleBuffer(buffer.getId(), buffer);
 		
 		FileOutputStream fo = new FileOutputStream(UnitTestUtil.getTestScratchPath()+"/teiid/statetest");
-		((BufferManagerImpl)mgr).getState(fo);
+		((BufferManagerImpl)mgr).getState(buffer.getId(), fo);
 		fo.close();
 		svc.stop();
 		
@@ -153,20 +149,18 @@ public class TestLocalBufferService {
     	
         BufferManagerImpl mgr2 = svc2.getBufferManager();
         FileInputStream fis = new FileInputStream(UnitTestUtil.getTestScratchPath()+"/teiid/statetest");
-		mgr2.setState(fis);
+		mgr2.setState(buffer.getId(), fis);
 		fis.close();
 		
-		for (int i = 0; i < 5; i++) {
-			String id = "state_id"+i;
-			TupleBuffer buffer = mgr2.getTupleBuffer(id);
-			for (int batch=0; batch<3; batch++) {
-				TupleBatch tb = buffer.getBatch((batch*50)+1);
-				List[] rows = tb.getAllTuples();
-				for (int row = 0; row < 50; row++) {
-					int val = (i*150)+(batch*50)+row;
-					assertEquals("String"+val, rows[row].get(0));
-					assertEquals(val, rows[row].get(1));
-				}
+		String id = "state_id";
+		buffer = mgr2.getTupleBuffer(id);
+		for (int batch=0; batch<3; batch++) {
+			TupleBatch tb = buffer.getBatch((batch*50)+1);
+			List[] rows = tb.getAllTuples();
+			for (int row = 0; row < 50; row++) {
+				int val = (batch*50)+row;
+				assertEquals("String"+val, rows[row].get(0));
+				assertEquals(val, rows[row].get(1));
 			}
 		}
 		svc2.stop();

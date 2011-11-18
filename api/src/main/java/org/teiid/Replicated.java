@@ -37,6 +37,13 @@ import java.lang.annotation.Target;
 @Inherited
 @Documented
 public @interface Replicated {
+	
+	enum ReplicationMode {
+		PUSH,
+		PULL,
+		NONE
+	}
+	
 	/**
 	 * @return true if members should be called asynchronously.  asynch methods should be void. 
 	 */
@@ -50,9 +57,12 @@ public @interface Replicated {
 	 */
 	boolean remoteOnly() default false;
 	/**
-	 * @return true if the remote members should have a partial state replication called using the first argument as the state after
-	 *  the local method has been invoked. should not be used with remoteOnly.
+	 * Should not be used with remoteOnly.
+	 * 
+	 * @return PUSH if the remote members should have a partial state replication called using the first argument as the state after
+	 *  the local method has been invoked, or PULL if the local member should initial a partial state pull using the first argument
+	 *  as the state after the local method returns null 
 	 */
-	boolean replicateState() default false;
+	ReplicationMode replicateState() default ReplicationMode.NONE;
 
 }

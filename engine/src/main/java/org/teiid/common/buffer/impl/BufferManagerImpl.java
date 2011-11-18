@@ -975,21 +975,6 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 	
 	@Override
 	public void getState(OutputStream ostream) {
-		try {
-			ObjectOutputStream out = new ObjectOutputStream(ostream);
-			for(String id:this.tupleBufferMap.keySet()) {
-				TupleReference tr = this.tupleBufferMap.get(id);
-				TupleBuffer tb = tr.get();
-				if (tb != null) {
-					out.writeObject(tb.getId());
-					getTupleBufferState(out, tb);
-				}
-			}
-		} catch (TeiidComponentException e) {
-			throw new TeiidRuntimeException(e);
-		} catch (IOException e) {
-			throw new TeiidRuntimeException(e);
-		}				
 	}
 	
 	@Override
@@ -1019,27 +1004,6 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 
 	@Override
 	public void setState(InputStream istream) {
-		try {
-			ObjectInputStream in = new ObjectInputStream(istream);
-			while (true) {
-				String state_id = null;
-				try {
-					state_id = (String)in.readObject();
-				} catch (IOException e) {
-					break;
-				}
-				if (state_id != null) {
-					setTupleBufferState(state_id, in);
-				}
-			}
-		} catch (IOException e) {
-			throw new TeiidRuntimeException(e);
-		} catch(ClassNotFoundException e) {
-			throw new TeiidRuntimeException(e);
-		} catch(TeiidComponentException e) {
-			throw new TeiidRuntimeException(e);
-		}
-		
 	}	
 	
 	@Override
