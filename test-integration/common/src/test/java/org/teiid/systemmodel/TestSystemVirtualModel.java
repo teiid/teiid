@@ -25,9 +25,12 @@ package org.teiid.systemmodel;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.sql.CallableStatement;
+import java.sql.ParameterMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -211,4 +214,24 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		});
 		assertEquals(4, result.get().intValue());
 	}
+	
+	@Test public void testCallableParametersByName() throws Exception {
+		CallableStatement cs = this.internalConnection.prepareCall("{? = call logMsg(?, ?, ?)}");
+		ParameterMetaData pmd = cs.getParameterMetaData();
+		assertEquals(3, pmd.getParameterCount());
+		cs.registerOutParameter("logged", Types.BOOLEAN);
+		//different case
+		cs.setString("LEVEL", "DEBUG");
+		try {
+			//invalid param
+			cs.setString("n", "");
+			fail();
+		} catch (SQLException e) {
+		}
+		cs.setString("context", "org.teiid.foo");
+		cs.setString("msg", "hello world");
+		cs.execute();
+		assertEquals(cs.getBoolean(1), cs.getBoolean("logged"));
+	}
+	
 }

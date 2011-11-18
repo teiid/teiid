@@ -529,31 +529,10 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 		return getByte(findColumn(columnName));
 	}
 
-	/**
-	 * This method will return the value in the current row as an array of byte
-	 * values
-	 * 
-	 * @param columnIndex
-	 * 		The column position in the current row whose value is to be read.
-	 * @return The value of the column at columnIndex as an array of bytes.
-	 * @throws SQLException
-	 * 		if there is an error accessing or converting the result value
-	 */
 	public byte[] getBytes(int columnIndex) throws SQLException {
 		return DataTypeTransformer.getBytes(getObject(columnIndex));
 	}
 
-	/**
-	 * This method will return the value in the current row as an array of byte
-	 * values
-	 * 
-	 * @param columnName
-	 * 		The column name in the current row whose value is to be updated.
-	 * @return byte[]. The value of the column at columnIndex as an array of
-	 * 	bytes.
-	 * @throws SQLException
-	 * 		if there is an error accessing or converting the result value
-	 */
 	public byte[] getBytes(String columnName) throws SQLException {
 		return getBytes(findColumn(columnName));
 	}
@@ -574,28 +553,12 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 		return ResultSet.CONCUR_READ_ONLY;
 	}
 
-	/**
-	 * This method will attempt to return the value contained at the index as a
-	 * java.io.Reader object.
-	 * 
-	 * @param columnIndex
-	 * 		The column position in the current row whose value is to be read.
-	 * @return The value of the column as a java.io.Reader object.
-	 */
 	public java.io.Reader getCharacterStream(int columnIndex)
 			throws SQLException {
 		Object value = getObject(columnIndex);
 		return DataTypeTransformer.getCharacterStream(value);
 	}
 
-	/**
-	 * This method will attempt to return the value at the designated column
-	 * determined by the columName as a java.io.Reader object.
-	 * 
-	 * @param columnName
-	 * 		The column name in the current row whose value is to be updated.
-	 * @return The value of the column as a java.io.Reader object.
-	 */
 	public java.io.Reader getCharacterStream(String columnName)
 			throws SQLException {
 		return getCharacterStream(findColumn(columnName));
@@ -640,54 +603,19 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 		return getDate(findColumn(columnName), cal);
 	}
 
-	/**
-	 * This method will return the value in the current row as a Date object.
-	 * This will assume the default timeZone.
-	 * 
-	 * @param The
-	 * 		index of the column whose value needs to be fetched.
-	 * @return The value of the column as a Date object.
-	 * @throws SQLException
-	 * 		if a results access error occurs or transform fails.
-	 */
 	public Date getDate(int columnIndex) throws SQLException {
 		return getDate(columnIndex, null);
 	}
 
-	/**
-	 * Get the column value as a Date object
-	 * 
-	 * @param name
-	 * 		of the column in the resultset whose value is to be fetched.
-	 * @return value of the column as an int.
-	 * @throw a SQLException if a resultSet access error occurs.
-	 */
 	public Date getDate(String columnName) throws SQLException {
 		// find the columnIndex for the given column name.
 		return getDate(findColumn(columnName));
 	}
 
-	/**
-	 * This method will return the value in the current row as a double value.
-	 * 
-	 * @param The
-	 * 		index of the column whose value needs to be fetched.
-	 * @return The value of the column as a double value.
-	 * @throws SQLException
-	 * 		if a results access error occurs or transform fails.
-	 */
 	public double getDouble(int columnIndex) throws SQLException {
 		return DataTypeTransformer.getDouble(getObject(columnIndex));
 	}
 
-	/**
-	 * Get a double value based on the column name.
-	 * 
-	 * @param name
-	 * 		of the column in the resultset whose value is to be fetched.
-	 * @return value of the column as a double.
-	 * @throw a SQLException if a resultSet access error occurs.
-	 */
 	public double getDouble(String columnName) throws SQLException {
 		// find the columnIndex for the given column name.
 		return getDouble(findColumn(columnName));
@@ -1233,11 +1161,11 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 	}
 
 	public InputStream getAsciiStream(int columnIndex) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		return DataTypeTransformer.getAsciiStream(getObject(columnIndex)); 	
 	}
 
 	public InputStream getAsciiStream(String columnLabel) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		return getAsciiStream(findColumn(columnLabel));	
 	}
 
 	public Clob getClob(int columnIndex) throws SQLException {
@@ -1251,34 +1179,33 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 	public Clob getClob(String columnLabel) throws SQLException {
 		return getClob(findColumn(columnLabel));
 	}
-
 	
 	public int getHoldability() throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public Reader getNCharacterStream(int columnIndex) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return getCharacterStream(columnIndex);
 	}
 
 	public Reader getNCharacterStream(String columnLabel) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return getCharacterStream(columnLabel);
 	}
 
 	public NClob getNClob(int columnIndex) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getNClob(getObject(columnIndex));
 	}
 
 	public NClob getNClob(String columnLabel) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return getNClob(findColumn(columnLabel));
 	}
 	
 	public String getNString(int columnIndex) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return getString(columnIndex);
 	}
 
 	public String getNString(String columnLabel) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return getString(columnLabel);
 	}
 	
 	public Object getObject(int columnIndex, Map<String, Class<?>> map)
@@ -1308,7 +1235,7 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 	}
 
 	public SQLXML getSQLXML(String columnLabel) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return getSQLXML(findColumn(columnLabel));
 	}
 
 	public InputStream getUnicodeStream(int columnIndex) throws SQLException {

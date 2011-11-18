@@ -22,6 +22,7 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -43,6 +44,7 @@ import org.teiid.dqp.internal.process.DQPWorkContext.Version;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.dqp.message.RequestID;
+import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -52,10 +54,13 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.SPParameter;
+import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
@@ -165,10 +170,31 @@ public class MetaDataProcessor {
                 columnMetadata = createProjectedSymbolMetadata(originalCommand);                   
         }
         
+        Map<Reference, String> paramMap = Collections.emptyMap();
+        if (originalCommand instanceof StoredProcedure) {
+        	StoredProcedure sp = (StoredProcedure)originalCommand;
+        	paramMap = new HashMap<Reference, String>();
+        	List<SPParameter> params = sp.getParameters();
+        	for (SPParameter spParameter : params) {
+				if (spParameter.getParameterType() != SPParameter.INOUT 
+						&& spParameter.getParameterType() != SPParameter.IN
+						&& spParameter.getParameterType() != SPParameter.RETURN_VALUE) {
+					continue;
+				}
+				Expression ex = spParameter.getExpression();
+				if (ex instanceof Function && FunctionLibrary.isConvert((Function)ex)) {
+					ex = ((Function)ex).getArg(0);
+				}
+				if (ex instanceof Reference) {
+					paramMap.put((Reference)ex, SingleElementSymbol.getShortName(spParameter.getName()));
+				}
+			}
+        }
         List<Reference> params = ReferenceCollectorVisitor.getReferences(originalCommand);
         Map[] paramMetadata = new Map[params.size()];
         for (int i = 0; i < params.size(); i++) {
-			paramMetadata[i] = getDefaultColumn(null, null, params.get(i).getType());
+			Reference param = params.get(i);
+			paramMetadata[i] = getDefaultColumn(null, paramMap.get(param), param.getType());
 		}
         
         return new MetadataResult(columnMetadata, paramMetadata);

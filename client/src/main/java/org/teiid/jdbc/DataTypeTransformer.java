@@ -22,12 +22,20 @@
 
 package org.teiid.jdbc;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
+import java.nio.charset.Charset;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Date;
+import java.sql.NClob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.sql.Time;
@@ -36,6 +44,7 @@ import java.sql.Timestamp;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
+import org.teiid.core.util.ReaderInputStream;
 
 
 /**
@@ -281,4 +290,41 @@ final class DataTypeTransformer {
 		
 		return new StringReader(getString(value));
     }
+    
+    static final InputStream getAsciiStream(Object value) throws SQLException {
+    	if (value == null) {
+			return null;
+		}
+
+		if (value instanceof Clob) {
+			return ((Clob) value).getAsciiStream();
+		}
+		
+		if (value instanceof SQLXML) {
+			//TODO: could check the SQLXML encoding
+			return new ReaderInputStream(((SQLXML)value).getCharacterStream(), Charset.forName("ASCII")); //$NON-NLS-1$
+		}
+		
+		return new ByteArrayInputStream(getString(value).getBytes(Charset.forName("ASCII"))); //$NON-NLS-1$
+    }
+
+    static final NClob getNClob(Object value) throws SQLException {
+		final Clob clob = getClob(value);
+		if (clob == null) {
+			return null;
+		}
+		return (NClob) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {NClob.class}, new InvocationHandler() {
+			
+			@Override
+			public Object invoke(Object proxy, Method method, Object[] args)
+					throws Throwable {
+				try {
+					return method.invoke(clob, args);
+				} catch (InvocationTargetException e) {
+					throw e.getCause();
+				}
+			}
+		});
+    }
+
 }

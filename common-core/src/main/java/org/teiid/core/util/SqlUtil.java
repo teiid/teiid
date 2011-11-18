@@ -85,6 +85,8 @@ public class SqlUtil {
     }
     
     public static SQLException createFeatureNotSupportedException() {
-    	return new SQLFeatureNotSupportedException();
+    	StackTraceElement ste = new Exception().getStackTrace()[1];
+    	String methodName = ste.getMethodName();
+    	return new SQLFeatureNotSupportedException(methodName + " is not supported");
     }    
 }

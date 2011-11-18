@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -160,7 +161,8 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     private int maxFieldSize = NO_LIMIT;
     
     //Map<out/inout/return param index --> index in results>
-    protected Map outParamIndexMap = new HashMap();
+    protected Map<Integer, Integer> outParamIndexMap = new HashMap<Integer, Integer>();
+    protected Map<String, Integer> outParamByName = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
     
     private static Pattern TRANSACTION_STATEMENT = Pattern.compile("\\s*(commit|rollback|(start\\s+transaction))\\s*;?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     private static Pattern SET_STATEMENT = Pattern.compile("\\s*set\\s+((?:session authorization)|(?:\\w+))\\s+(?:([a-zA-Z](?:\\w|_)*)|((?:'[^']*')+));?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
@@ -239,6 +241,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         this.batchedUpdates = null;
         this.updateCounts = null;
         this.outParamIndexMap.clear();
+        this.outParamByName.clear();
         this.commandStatus = State.RUNNING;
     }
 
@@ -375,7 +378,9 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		        if(parameter.getType() == ParameterInfo.RETURN_VALUE){
 		            count++;
 		            index++;
-		            outParamIndexMap.put(new Integer(index), new Integer(resultSetSize + count));
+		            int resultIndex = resultSetSize + count;
+		            outParamIndexMap.put(index, resultIndex);
+		            outParamByName.put(resultsMsg.getColumnNames()[resultIndex - 1].toUpperCase(), resultIndex);
 		            break;
 		        }
 		    }
@@ -387,7 +392,9 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		            index++;
 		            if(parameter.getType() == ParameterInfo.OUT || parameter.getType() == ParameterInfo.INOUT){
 		                count++;
-		                outParamIndexMap.put(new Integer(index), new Integer(resultSetSize + count));
+		                int resultIndex = resultSetSize + count;
+		                outParamIndexMap.put(index, resultIndex);
+		                outParamByName.put(resultsMsg.getColumnNames()[resultIndex - 1].toUpperCase(), resultIndex);
 		            }
 		        }
 		    }

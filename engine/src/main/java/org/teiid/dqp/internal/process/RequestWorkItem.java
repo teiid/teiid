@@ -483,7 +483,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		
 		if (rsCache != null) {
 			if (!canUseCached) {
-				LogManager.logDetail(LogConstants.CTX_DQP, requestID, "No cache directive"); //$NON-NLS-1$
+				LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Non-cachable command."); //$NON-NLS-1$
 			} else {
 				ParseInfo pi = Request.createParseInfo(requestMsg);
 				cacheId = new CacheID(this.dqpWorkContext, pi, requestMsg.getCommandString());

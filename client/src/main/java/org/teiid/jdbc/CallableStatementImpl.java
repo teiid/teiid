@@ -31,16 +31,17 @@ import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Date;
+import java.sql.NClob;
 import java.sql.Ref;
+import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLXML;
-import java.sql.NClob;
-import java.sql.RowId;
-
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
+
+import javax.sql.rowset.serial.SerialBlob;
 
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.ResultsMode;
@@ -84,6 +85,12 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
         // set the connection on the super class
         super(connection, procedureCall, resultSetType, resultSetConcurrency);
         this.prepareSql = procedureCall;
+    }
+    
+    @Override
+    protected void resetExecutionState() throws SQLException {
+    	super.resetExecutionState();
+    	parameterValue = null;
     }
     
     @Override
@@ -160,26 +167,17 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
         return DataTypeTransformer.getClob(getObject(parameterIndex));
     }
 
-    /**
-     * <p>Gets the value of a OUTPUT parameter as a java.sql.Date object.
-     * @param parameterIndex whose value is to be fetched from the result.
-     * @return The parameter at the given index is returned as a Date object.
-     * @throws SQLException if param datatype is not DATE
-     */
     public java.sql.Date getDate(int parameterIndex) throws SQLException {
         return getDate(parameterIndex, null);
     }
 
-    /**
-     * <p>Gets the value of a OUTPUT parameter as a java.sql.Date object. Calender
-     * object contains the timezone info for the Date.
-     * @param parameterIndex whose value is to be fetched from the result.
-     * @param Calendar object used to construct the Date object.
-     * @return The parameter at the given index is returned as a Date object.
-     * @throws SQLException if param datatype is not DATE
-     */
     public java.sql.Date getDate(int parameterIndex, Calendar cal) throws SQLException {
-        Date value = DataTypeTransformer.getDate(getObject(parameterIndex));
+    	Object val = getObject(parameterIndex);
+        return getDate(cal, val);
+    }
+
+	private java.sql.Date getDate(Calendar cal, Object val) throws SQLException {
+		Date value = DataTypeTransformer.getDate(val);
 
         if (value == null) {
             return null;
@@ -190,7 +188,7 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
         }
         
         return value;
-    }
+	}
 
     /**
      * <p>Gets the value of a OUTPUT parameter as a double.
@@ -232,65 +230,45 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
         return DataTypeTransformer.getLong(getObject(parameterIndex));
     }
 
-    /**
-     * <p>Gets the value of a OUTPUT parameter as an object.
-     * @param parameterIndex whose value is to be fetched from the result.
-     * @return The parameter at the given index is returned as an object.
-     * @throws SQLException
-     */
     public Object getObject(int parameterIndex) throws SQLException {
-        //checkParameter(parameterIndex);
-
-        Object indexInResults = this.outParamIndexMap.get(new Integer(parameterIndex));
+    	return getObject(Integer.valueOf(parameterIndex));
+    }
+    
+    Object getObject(Object parameterIndex) throws SQLException {
+    	Integer indexInResults = null;
+    	if (parameterIndex instanceof String) {
+    		indexInResults = this.outParamByName.get(parameterIndex);
+    	} else {
+    		indexInResults = this.outParamIndexMap.get(parameterIndex);    		
+    	}
         if(indexInResults == null){
-            throw new IllegalArgumentException(JDBCPlugin.Util.getString("MMCallableStatement.Param_not_found", parameterIndex)); //$NON-NLS-1$
+            throw new TeiidSQLException(JDBCPlugin.Util.getString("MMCallableStatement.Param_not_found", parameterIndex)); //$NON-NLS-1$
         }
         checkStatement();
-        parameterValue = resultSet.getOutputParamValue(((Integer)indexInResults).intValue());
+        parameterValue = resultSet.getOutputParamValue(indexInResults);
         return parameterValue;
     }
 
-    /**
-     * <p>Gets the value of a OUTPUT parameter as a short.
-     * @param parameterIndex whose value is to be fetched from the result.
-     * @return The parameter at the given index is returned as a short value.
-     * @throws SQLException if param datatype is not SMALLINT
-     */
     public short getShort(int parameterIndex) throws SQLException {
         return DataTypeTransformer.getShort(getObject(parameterIndex));
     }
 
-    /**
-     * <p>Gets the value of a OUTPUT parameter as a String.
-     * @param parameterIndex whose value is to be fetched from the result.
-     * @return The parameter at the given index is returned as a String object.
-     * @throws SQLException if param datatype is not CHAR, VARCHAR, LONGVARCHAR
-     */
     public String getString(int parameterIndex) throws SQLException {
-        // return the parameter value a String object
-       return getObject(parameterIndex).toString();
+       return DataTypeTransformer.getString(getObject(parameterIndex));
     }
 
-    /**
-     * <p>Gets the value of a OUTPUT parameter as a java.sql.Time object.
-     * @param parameterIndex whose value is to be fetched from the result.
-     * @return The parameter at the given index is returned as a Time object.
-     * @throws SQLException if param datatype is not TIME
-     */
     public Time getTime(int parameterIndex) throws SQLException {
         return getTime(parameterIndex, null);
     }
 
-    /**
-     * <p>Gets the value of a OUTPUT parameter as a java.sql.Timestamp object. Calendar
-     * object contains the timezone information.
-     * @param parameterIndex whose value is to be fetched from the result.
-     * @param Calendar object used to construct the Date object.
-     * @return The parameter at the given index is returned as a Time object.
-     * @throws SQLException if param datatype is not TIME
-     */
     public Time getTime(int parameterIndex, java.util.Calendar cal) throws SQLException {
-        Time value = DataTypeTransformer.getTime(getObject(parameterIndex));
+    	Object val = getObject(parameterIndex);
+        return getTime(cal, val);
+    }
+
+	private Time getTime(java.util.Calendar cal, Object val)
+			throws SQLException {
+		Time value = DataTypeTransformer.getTime(val);
 
         if (value == null) {
             return null;
@@ -301,28 +279,20 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
         }
         
         return value;
-    }
+	}
 
-    /**
-     * <p>Gets the value of a OUTPUT parameter as a java.sql.Timestamp object.
-     * @param parameterIndex whose value is to be fetched from the result.
-     * @return The parameter at the given index is returned as a Timestamp object.
-     * @throws SQLException if param datatype is not TIMESTAMP
-     */
     public Timestamp getTimestamp(int parameterIndex) throws SQLException {
         return getTimestamp(parameterIndex, null);
     }
 
-    /**
-     * <p>Gets the value of a OUTPUT parameter as a java.sql.Timestamp object. Calendar
-     * object contains the timezone information.
-     * @param parameterIndex whose value is to be fetched from the result.
-     * @param Calendar object used to construct the Date object.
-     * @return The parameter at the given index is returned as a Timestamp object.
-     * @throws SQLException if param datatype is not TIMESTAMP
-     */
     public Timestamp getTimestamp(int parameterIndex, java.util.Calendar cal) throws SQLException {
-        Timestamp value = DataTypeTransformer.getTimestamp(getObject(parameterIndex));
+    	Object val = getObject(parameterIndex);
+        return getTimestamp(cal, val);
+    }
+
+	private Timestamp getTimestamp(java.util.Calendar cal, Object val)
+			throws SQLException {
+		Timestamp value = DataTypeTransformer.getTimestamp(val);
 
         if (value == null) {
             return null;
@@ -333,49 +303,20 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
         }
         
         return value;
-    }
+	}
 
-    /**
-     * <p>Register the OUT parameter in the ordinal position parameterIndex to jdbcsql
-     * type. Scale is used by setXXX methods to determine number of decimals.
-     * @param parameterIndex. Index of the OUT parameter in the stored procedure.
-     * @param jdbcSqlType. SQL type codes from java.sql.Types
-     * @param SQLException, should never occur
-     */
     public void registerOutParameter(int parameterIndex, int jdbcSqlType) throws SQLException {
         // ignore - we don't care
     }
 
-    /**
-     * <p>Register the OUT parameter in the ordinal position parameterIndex to jdbcsql
-     * type. Scale is used by setXXX methods to determine number of decimals.
-     * @param parameterIndex. Index of the OUT parameter in the stored procedure.
-     * @param jdbcSqlType. SQL type codes from java.sql.Types
-     * @param scale. The number of decimal digits on the OUT param.
-     * @param SQLException, should never occur
-     */
     public void registerOutParameter(int parameterIndex, int jdbcSqlType, int scale) throws SQLException {
         // ignore - we don't care
     }
 
-    /**
-     * <p>Register the OUT parameter in the ordinal position parameterIndex to jdbcsql
-     * type. The param typename(SQL name for user-named type) is ignored as SQL3
-     * datatypes are not supported.
-     * @param parameterIndex. Index of the OUT parameter in the stored procedure.
-     * @param jdbcSqlType. SQL type codes from java.sql.Types
-     * @param typeName. SQL name of user-named type being used
-     * @param SQLException, should never occur
-     */
     public void registerOutParameter (int parameterIndex, int jdbcSqlType, String typeName) throws SQLException {
         // ignore - we don't care
     }
    
-    /**
-     * <p>Indicates whether the last OUT parameter read was a return null.
-     * @return true if the last param read was null else false.
-     * @throws SQLException, if the statement is already closed.
-     */
     public boolean wasNull() throws SQLException {
         checkStatement();
 
@@ -395,19 +336,19 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 	}
 
 	public BigDecimal getBigDecimal(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getBigDecimal(getObject(parameterName));
 	}
 
 	public Blob getBlob(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getBlob(getObject(parameterName));
 	}
 	
 	public boolean getBoolean(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getBoolean(getObject(parameterName));
 	}
 
 	public byte getByte(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getByte(getObject(parameterName));
 	}
 
 	public byte[] getBytes(int parameterIndex) throws SQLException {
@@ -415,7 +356,7 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 	}
 
 	public byte[] getBytes(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getBytes(getObject(parameterName));
 	}
 
 	public Reader getCharacterStream(int parameterIndex) throws SQLException {
@@ -423,43 +364,43 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 	}
 
 	public Reader getCharacterStream(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getCharacterStream(getObject(parameterName));
 	}
 
 	public Clob getClob(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getClob(getObject(parameterName));
 	}
 
 	public Date getDate(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getDate(getObject(parameterName));
 	}
 
 	public Date getDate(String parameterName, Calendar cal) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return getDate(cal, getObject(parameterName));
 	}
 
 	public double getDouble(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getDouble(getObject(parameterName));
 	}
 
 	public float getFloat(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getFloat(getObject(parameterName));
 	}
 
 	public int getInt(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getInteger(getObject(parameterName));
 	}
 
 	public long getLong(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getLong(getObject(parameterName));
 	}
 
 	public Reader getNCharacterStream(int parameterIndex) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getCharacterStream(getObject(parameterIndex));
 	}
 
 	public Reader getNCharacterStream(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getCharacterStream(getObject(parameterName));
 	}
 
 	public NClob getNClob(int parameterIndex) throws SQLException {
@@ -467,19 +408,19 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 	}
 
 	public NClob getNClob(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getNClob(getObject(parameterName));
 	}
 
 	public String getNString(int parameterIndex) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getString(getObject(parameterIndex));
 	}
 
 	public String getNString(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getString(getObject(parameterName));
 	}
 
 	public Object getObject(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return getObject((Object)parameterName);
 	}
 
 	public Object getObject(int parameterIndex, Map<String, Class<?>> map) throws SQLException {
@@ -507,31 +448,31 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 	}
 	
 	public SQLXML getSQLXML(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getSQLXML(getObject(parameterName));
 	}
 
 	public short getShort(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getShort(getObject(parameterName));
 	}
 
 	public String getString(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getString(getObject(parameterName));
 	}
 
 	public Time getTime(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getTime(getObject(parameterName));
 	}
 
 	public Time getTime(String parameterName, Calendar cal) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return getTime(cal, getObject(parameterName));
 	}
 
 	public Timestamp getTimestamp(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getTimestamp(getObject(parameterName));
 	}
 
 	public Timestamp getTimestamp(String parameterName, Calendar cal) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return getTimestamp(cal, getObject(parameterName));
 	}
 
 	public URL getURL(int parameterIndex) throws SQLException {
@@ -543,176 +484,174 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 	}
 
 	public void registerOutParameter(String parameterName, int sqlType)	throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void registerOutParameter(String parameterName, int sqlType,int scale) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void registerOutParameter(String parameterName, int sqlType,	String typeName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void setAsciiStream(String parameterName, InputStream x)	throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setAsciiStream((Object)parameterName, x);
 	}
 
 	public void setAsciiStream(String parameterName, InputStream x, int length)	throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setAsciiStream((Object)parameterName, x);
 	}
 
 	public void setAsciiStream(String parameterName, InputStream x, long length) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setAsciiStream((Object)parameterName, x);
 	}
 
 	public void setBigDecimal(String parameterName, BigDecimal x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject(parameterName, x);
 	}
 
 	public void setBinaryStream(String parameterName, InputStream x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setBlob((Object)parameterName, x);
 	}
 
 	public void setBinaryStream(String parameterName, InputStream x, int length)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setBinaryStream(parameterName, x);
 	}
 
 	public void setBinaryStream(String parameterName, InputStream x, long length)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setBinaryStream(parameterName, x);
 	}
 
 	public void setBlob(String parameterName, Blob x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject(parameterName, x);
 	}
 
 	public void setBlob(String parameterName, InputStream inputStream)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setBlob((Object)parameterName, inputStream);
 	}
 
 	public void setBlob(String parameterName, InputStream inputStream,
 			long length) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setBlob((Object)parameterName, inputStream);
 	}
 
 	public void setBoolean(String parameterName, boolean x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, x);
 	}
 
 	public void setByte(String parameterName, byte x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, x);
 	}
 
 	public void setBytes(String parameterName, byte[] x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, new SerialBlob(x));
 	}
 
 	public void setCharacterStream(String parameterName, Reader reader)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	}
+		setClob(parameterName, reader);
+	}
 
 	public void setCharacterStream(String parameterName, Reader reader,
 			int length) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setClob(parameterName, reader);
 	}
 
 	public void setCharacterStream(String parameterName, Reader reader,
 			long length) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setClob(parameterName, reader);
 	}
 
 	public void setClob(String parameterName, Clob x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, x);
 	}
 
 	public void setClob(String parameterName, Reader reader)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setClob((Object)parameterName, reader);
 	}
 
 	public void setClob(String parameterName, Reader reader, long length)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setClob((Object)parameterName, reader);
 	}
 
 	public void setDate(String parameterName, Date x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, x);
 	}
 
 	public void setDate(String parameterName, Date x, Calendar cal)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setDate((Object)parameterName, x, cal);
 	}
 
 	public void setDouble(String parameterName, double x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, x);
 	}
 
 	public void setFloat(String parameterName, float x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, x);
 	}
 
 	public void setInt(String parameterName, int x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, x);
 	}
 
 	public void setLong(String parameterName, long x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, x);
 	}
 
 	public void setNCharacterStream(String parameterName, Reader value)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setClob((Object)parameterName, value);
 	}
 
 	public void setNCharacterStream(String parameterName, Reader value,
 			long length) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setClob((Object)parameterName, value);
 	}
 
 	public void setNClob(String parameterName, NClob value) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, value);
 	}
 
 	public void setNClob(String parameterName, Reader reader)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setClob((Object)parameterName, reader);
 	}
 
 	public void setNClob(String parameterName, Reader reader, long length)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setClob((Object)parameterName, reader);
 	}
 
 	public void setNString(String parameterName, String value)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, null);
 	}
 
 	public void setNull(String parameterName, int sqlType) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, null);
 	}		
 
 	public void setNull(String parameterName, int sqlType, String typeName)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, null);
 	}
 
 	public void setObject(String parameterName, Object x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, x);
 	}
 
 	public void setObject(String parameterName, Object x, int targetSqlType)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, x, targetSqlType);
 	}
 
 	public void setObject(String parameterName, Object x, int targetSqlType,
 			int scale) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, x, targetSqlType, scale);
 	}
 
 	public void setRowId(String parameterName, RowId x) throws SQLException {
@@ -721,39 +660,38 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 
 	public void setSQLXML(String parameterName, SQLXML xmlObject)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, xmlObject);
 	}
 
-
 	public void setShort(String parameterName, short x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, x);
 	}
 
 	public void setString(String parameterName, String x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, x);
 	}
 
 	public void setTime(String parameterName, Time x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, x);
 	}
 
 	public void setTime(String parameterName, Time x, Calendar cal)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setTime((Object)parameterName, x, cal);
 	}
 
 	public void setTimestamp(String parameterName, Timestamp x)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, x);
 	}
 
 	public void setTimestamp(String parameterName, Timestamp x, Calendar cal)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setTimestamp((Object)parameterName, x, cal);
 	}
 
 	public void setURL(String parameterName, URL val) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject((Object)parameterName, val);
 	}
 
 }

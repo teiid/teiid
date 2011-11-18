@@ -34,6 +34,9 @@ public interface TeiidPreparedStatement extends PreparedStatement {
     /**
      * Execute the given statement using a non-blocking callback.
      * This method is only valid for use with embedded connections.
+     * 
+     * Note that a single Statement may only have 1 asynch query executing at a time.
+     * 
      * @param callback
      * @throws SQLException 
      */

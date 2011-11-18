@@ -23,6 +23,8 @@
 
 package org.teiid.jdbc;
 
+import static org.junit.Assert.*;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -30,8 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
@@ -40,10 +41,10 @@ import org.teiid.client.security.LogonResult;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.net.ServerConnection;
 
-
-public class TestCallableStatement extends TestCase {
+@SuppressWarnings("nls")
+public class TestCallableStatement {
 	
-	public void testWasNull() throws Exception {
+	@Test public void testWasNull() throws Exception {
 		CallableStatementImpl mmcs = getCallableStatement();
 		
 		Map<Integer, Integer> params = new HashMap<Integer, Integer>();
@@ -60,13 +61,13 @@ public class TestCallableStatement extends TestCase {
 		assertFalse(mmcs.wasNull());
 	}
 	
-	public void testGetOutputParameter() throws Exception {
+	@Test public void testGetOutputParameter() throws Exception {
 		CallableStatementImpl mmcs = getCallableStatement();
 		
 		RequestMessage request = new RequestMessage();
 		request.setExecutionId(1);
 		ResultsMessage resultsMsg = new ResultsMessage();
-		List[] results = new List[] {Arrays.asList(null, null, null), Arrays.asList(null, 1, 2)};
+		List<?>[] results = new List[] {Arrays.asList(null, null, null), Arrays.asList(null, 1, 2)};
 		resultsMsg.setResults(results);
 		resultsMsg.setColumnNames(new String[] { "IntNum", "Out1", "Out2" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		resultsMsg.setDataTypes(new String[] { JDBCSQLTypeInfo.INTEGER, JDBCSQLTypeInfo.INTEGER, JDBCSQLTypeInfo.INTEGER }); 
@@ -77,9 +78,11 @@ public class TestCallableStatement extends TestCase {
 		mmcs.createResultSet(resultsMsg);
 		assertEquals(1, mmcs.getInt(1));
 		assertEquals(2, mmcs.getInt(2));
+		assertEquals(1, mmcs.getInt("Out1"));
+		assertEquals(2, mmcs.getInt("Out2"));
 	}
 	
-	public void testUnknownIndex() throws Exception {
+	@Test public void testUnknownIndex() throws Exception {
 		CallableStatementImpl mmcs = getCallableStatement();
 		
 		mmcs.outParamIndexMap = new HashMap<Integer, Integer>();
@@ -87,8 +90,8 @@ public class TestCallableStatement extends TestCase {
 		try {
 			mmcs.getBoolean(0);
 			fail("expected exception"); //$NON-NLS-1$
-		} catch (IllegalArgumentException e) {
-			assertEquals("Parameter is not found at index 0.", e.getMessage());
+		} catch (SQLException e) {
+			assertEquals("Parameter 0 was not found.", e.getMessage());
 		}
 	}
 

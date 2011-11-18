@@ -86,5 +86,9 @@ public class ParameterMetaDataImpl extends WrapperImpl implements ParameterMetaD
 	public boolean isSigned(int param) throws SQLException {
 		return metadata.isSigned(param);
 	}
+	
+	public String getParameterName(int param) throws SQLException {
+		return metadata.getColumnName(param);
+	}
 
 }

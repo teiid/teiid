@@ -32,7 +32,6 @@ import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
-import java.sql.ParameterMetaData;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -62,7 +61,6 @@ import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.types.Streamable;
-import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.SqlUtil;
 import org.teiid.core.util.TimestampWithTimezone;
@@ -80,11 +78,12 @@ import org.teiid.core.util.TimestampWithTimezone;
  */
 
 public class PreparedStatementImpl extends StatementImpl implements TeiidPreparedStatement {
-    // sql, which this prepared statement is operating on
+	// sql, which this prepared statement is operating on
     protected String prepareSql;
 
     //map that holds parameter index to values for prepared statements
     private Map<Integer, Object> parameterMap;
+    private TreeMap<String, Integer> paramsByName;
     
     //a list of map that holds parameter index to values for prepared statements
     protected List<List<Object>> batchParameterList;
@@ -92,7 +91,7 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
     // metadata
 	private MetadataResult metadataResults;
     private ResultSetMetaData metadata;
-    private ParameterMetaData parameterMetaData;
+    private ParameterMetaDataImpl parameterMetaData;
     
     private Calendar serverCalendar;
 
@@ -115,8 +114,9 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
     PreparedStatementImpl(ConnectionImpl connection, String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
         super(connection, resultSetType, resultSetConcurrency);
 
-        // this sql is for callable statement, don't check any more
-        ArgCheck.isNotNull(sql, JDBCPlugin.Util.getString("MMPreparedStatement.Err_prep_sql")); //$NON-NLS-1$
+        if (sql == null) {
+        	throw new TeiidSQLException(JDBCPlugin.Util.getString("MMPreparedStatement.Err_prep_sql")); //$NON-NLS-1$
+        }
         this.prepareSql = sql;
 
         TimeZone timezone = connection.getServerConnection().getLogonResult().getTimeZone();
@@ -299,7 +299,7 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
     }
 
     public void setBoolean (int parameterIndex, boolean value) throws SQLException {
-        setObject(parameterIndex, value);
+        setObject(parameterIndex, Boolean.valueOf(value));
     }
 
     public void setByte(int parameterIndex, byte value) throws SQLException {
@@ -321,8 +321,12 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
     public void setDate(int parameterIndex, java.sql.Date value) throws SQLException {
         setDate(parameterIndex, value, null);
     }
-
+    
     public void setDate(int parameterIndex, java.sql.Date x ,java.util.Calendar cal) throws SQLException {
+    	setDate(Integer.valueOf(parameterIndex), x, cal);
+    }
+
+    void setDate(Object parameterIndex, java.sql.Date x ,java.util.Calendar cal) throws SQLException {
 
         if (cal == null || x == null) {
             setObject(parameterIndex, x);
@@ -356,8 +360,12 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
     public void setNull(int parameterIndex, int jdbcType, String typeName) throws SQLException {
         setObject(parameterIndex, null);
     }
-
+    
     public void setObject (int parameterIndex, Object value, int targetJdbcType, int scale) throws SQLException {
+    	setObject(parameterIndex, value, targetJdbcType, scale);
+    }
+
+    void setObject (Object parameterIndex, Object value, int targetJdbcType, int scale) throws SQLException {
 
        if(value == null) {
             setObject(parameterIndex, null);
@@ -366,7 +374,7 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
 
        if(targetJdbcType != Types.DECIMAL || targetJdbcType != Types.NUMERIC) {
             setObject(parameterIndex, value, targetJdbcType);
-        // Decimal and NUMERIC types correspong to java.math.BigDecimal
+        // Decimal and NUMERIC types correspond to java.math.BigDecimal
         } else {
             // transform the object to a BigDecimal
             BigDecimal bigDecimalObject = DataTypeTransformer.getBigDecimal(value);
@@ -376,10 +384,13 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
     }
     
     public void setObject(int parameterIndex, Object value, int targetJdbcType) throws SQLException {
+    	setObject(Integer.valueOf(parameterIndex), value, targetJdbcType);
+    }
 
+    void setObject(Object parameterIndex, Object value, int targetJdbcType) throws SQLException {
         Object targetObject = null;
 
-       if(value == null) {
+        if(value == null) {
             setObject(parameterIndex, null);
             return;
         }
@@ -387,8 +398,10 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
         // get the java class name for the given JDBC type
         String javaClassName = JDBCSQLTypeInfo.getJavaClassName(targetJdbcType);
         // transform the value to the target datatype
-        if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.STRING_CLASS)) {
-           targetObject = value.toString();
+        if (targetJdbcType == Types.JAVA_OBJECT) {
+        	targetObject = value;
+        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.STRING_CLASS)) {
+            targetObject = DataTypeTransformer.getString(value);
         } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.CHAR_CLASS)) {
             targetObject = DataTypeTransformer.getCharacter(value);
         } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.INTEGER_CLASS)) {
@@ -417,6 +430,8 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
             targetObject = DataTypeTransformer.getBlob(value);
         } else if (javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.CLOB_CLASS)) {
             targetObject = DataTypeTransformer.getClob(value);
+        } else if (javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.XML_CLASS)) {
+        	targetObject = DataTypeTransformer.getSQLXML(value);
         } else {
             String msg = JDBCPlugin.Util.getString("MMPreparedStatement.Err_transform_obj"); //$NON-NLS-1$
             throw new TeiidSQLException(msg);
@@ -424,9 +439,30 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
 
         setObject(parameterIndex, targetObject);
     }
-
+    
     public void setObject(int parameterIndex, Object value) throws SQLException {
-        ArgCheck.isPositive(parameterIndex, JDBCPlugin.Util.getString("MMPreparedStatement.Invalid_param_index")); //$NON-NLS-1$
+    	setObject(Integer.valueOf(parameterIndex), value);
+    }
+
+    void setObject(Object parameterIndex, Object value) throws SQLException {
+    	if (parameterIndex instanceof String) {
+	    	String s = (String)parameterIndex;
+			if (paramsByName == null) {
+				paramsByName = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
+				ParameterMetaDataImpl pmdi = getParameterMetaData();
+				for (int i = 1; i <= pmdi.getParameterCount(); i++) {
+					String name = pmdi.getParameterName(i);
+					paramsByName.put(name, i);
+				}
+			}
+			parameterIndex = paramsByName.get(s);
+			if (parameterIndex == null) {
+				throw new TeiidSQLException(JDBCPlugin.Util.getString("MMCallableStatement.Param_not_found", s)); //$NON-NLS-1$
+			}
+    	}
+		if ((Integer)parameterIndex < 1) {
+			throw new TeiidSQLException(JDBCPlugin.Util.getString("MMPreparedStatement.Invalid_param_index")); //$NON-NLS-1$
+		}
 
         if(parameterMap == null){
             parameterMap = new TreeMap<Integer, Object>();
@@ -435,11 +471,11 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
         if (serverCalendar != null && value instanceof java.util.Date) {
             value = TimestampWithTimezone.create((java.util.Date)value, getDefaultCalendar().getTimeZone(), serverCalendar, value.getClass());
         }
-        parameterMap.put(parameterIndex, value);
+        parameterMap.put((Integer)parameterIndex, value);
     }
 
     public void setShort(int parameterIndex, short value) throws SQLException {
-        setObject(parameterIndex, value);
+        setObject(parameterIndex, Short.valueOf(value));
     }
 
     public void setString(int parameterIndex, String value) throws SQLException {
@@ -449,8 +485,12 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
     public void setTime(int parameterIndex, java.sql.Time value) throws SQLException {
         setTime(parameterIndex, value, null);
     }
-
+    
     public void setTime(int parameterIndex, java.sql.Time x, java.util.Calendar cal) throws SQLException {
+    	setTime(Integer.valueOf(parameterIndex), x, cal);
+    }
+
+    void setTime(Object parameterIndex, java.sql.Time x, java.util.Calendar cal) throws SQLException {
 
        if (cal == null || x == null) {
            setObject(parameterIndex, x);
@@ -464,8 +504,12 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
     public void setTimestamp(int parameterIndex, java.sql.Timestamp value) throws SQLException {
         setTimestamp(parameterIndex, value, null);
     }
-
+    
     public void setTimestamp(int parameterIndex, java.sql.Timestamp x, java.util.Calendar cal) throws SQLException {
+    	setTimestamp(Integer.valueOf(parameterIndex), x, cal);
+    }
+
+    void setTimestamp(Object parameterIndex, java.sql.Timestamp x, java.util.Calendar cal) throws SQLException {
 
         if (cal == null || x == null) {
             setObject(parameterIndex, x);
@@ -494,7 +538,7 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
         return new ArrayList<Object>(parameterMap.values());
     }
 
-	public ParameterMetaData getParameterMetaData() throws SQLException {
+	public ParameterMetaDataImpl getParameterMetaData() throws SQLException {
 		if (parameterMetaData == null) {
 			//TODO: some of the base implementation of ResultSetMetadata could be on the MetadataProvider
 			this.parameterMetaData = new ParameterMetaDataImpl(new ResultSetMetaDataImpl(new MetadataProvider(getMetadataResults().getParameterMetadata()), this.getExecutionProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS)));
@@ -517,8 +561,18 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	public void setAsciiStream(int parameterIndex, final InputStream x)
+	@Override
+	public void setAsciiStream(int parameterIndex, final InputStream x) 
+		throws SQLException {
+		setAsciiStream(Integer.valueOf(parameterIndex), x);
+	}
+
+	void setAsciiStream(Object parameterIndex, final InputStream x)
 			throws SQLException {
+		if (x == null) {
+			this.setObject(parameterIndex, null);
+			return;
+		}
 		this.setObject(parameterIndex, new ClobImpl(new InputStreamFactory() { 
 			@Override
 			public InputStream getInputStream() throws IOException {
@@ -543,6 +597,11 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
 	}
 
 	public void setBlob(int parameterIndex, final InputStream inputStream)
+	throws SQLException {
+		setBlob(parameterIndex, inputStream);
+	}
+	
+	void setBlob(Object parameterIndex, final InputStream inputStream)
 			throws SQLException {
 		if (inputStream == null) {
 			this.setObject(parameterIndex, null);
@@ -569,8 +628,12 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
 			long length) throws SQLException {
 		setCharacterStream(parameterIndex, reader);
 	}
-
+	
 	public void setClob(int parameterIndex, final Reader reader) throws SQLException {
+		setClob(Integer.valueOf(parameterIndex), reader);
+	}
+
+	void setClob(Object parameterIndex, final Reader reader) throws SQLException {
 		if (reader == null) {
 			this.setObject(parameterIndex, null);
 			return;
@@ -591,30 +654,30 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
 
 	public void setNCharacterStream(int parameterIndex, Reader value)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setClob(parameterIndex, value);
 	}
 
 	public void setNCharacterStream(int parameterIndex, Reader value,
 			long length) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setCharacterStream(parameterIndex, value);
 	}
 
 	public void setNClob(int parameterIndex, NClob value) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject(parameterIndex, value);
 	}
 
 	public void setNClob(int parameterIndex, Reader reader) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setClob(parameterIndex, reader);
 	}
 
 	public void setNClob(int parameterIndex, Reader reader, long length)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setClob(parameterIndex, reader);
 	}
 
 	public void setNString(int parameterIndex, String value)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setObject(parameterIndex, value);
 	}
 
 	public void setRef(int parameterIndex, Ref x) throws SQLException {

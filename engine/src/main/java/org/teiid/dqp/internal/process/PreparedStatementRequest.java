@@ -270,8 +270,7 @@ public class PreparedStatementRequest extends Request {
 	        Reference param = params.get(i);
 	        Object value = values.get(i);
 	        
-	        //TODO: why is the list check in here
-        	if(value != null && !(value instanceof List)) {
+        	if(value != null) {
                 try {
                     String targetTypeName = DataTypeManager.getDataTypeName(param.getType());
                     Expression expr = ResolverUtil.convertExpression(new Constant(value), targetTypeName, metadata);
