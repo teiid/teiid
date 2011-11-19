@@ -210,6 +210,9 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 				String defaultEndpoint = mcf.getEndPoint();
 				String defaultQueryString = null;
 				String defaultFragment = null;
+				if (defaultEndpoint == null) {
+					throw new WebServiceException(WSManagedConnectionFactory.UTIL.getString("null_default_endpoint")); //$NON-NLS-1$
+				}
 				String[] parts = defaultEndpoint.split("\\?", 2); //$NON-NLS-1$
 				defaultEndpoint = parts[0];
 				if (parts.length > 1) {
