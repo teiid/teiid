@@ -98,14 +98,11 @@ import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.BranchingStatement;
 import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
-import org.teiid.query.sql.proc.CriteriaSelector;
 import org.teiid.query.sql.proc.DeclareStatement;
-import org.teiid.query.sql.proc.HasCriteria;
 import org.teiid.query.sql.proc.IfStatement;
 import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.proc.RaiseErrorStatement;
 import org.teiid.query.sql.proc.Statement;
-import org.teiid.query.sql.proc.TranslateCriteria;
 import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.proc.Statement.Labeled;
@@ -1515,96 +1512,6 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     public void visit( AssignmentStatement obj ) {
         createAssignment(obj);
-    }
-
-    public void visit( HasCriteria obj ) {
-        append(HAS);
-        append(SPACE);
-        visitNode(obj.getSelector());
-    }
-
-    public void visit( TranslateCriteria obj ) {
-        append(TRANSLATE);
-        append(SPACE);
-        visitNode(obj.getSelector());
-
-        if (obj.hasTranslations()) {
-            append(SPACE);
-            append(WITH);
-            append(SPACE);
-            append("("); //$NON-NLS-1$
-            Iterator critIter = obj.getTranslations().iterator();
-
-            while (critIter.hasNext()) {
-                visitNode((Criteria)critIter.next());
-                if (critIter.hasNext()) {
-                    append(", "); //$NON-NLS-1$
-                }
-                if (!critIter.hasNext()) {
-                    append(")"); //$NON-NLS-1$
-                }
-            }
-        }
-    }
-
-    public void visit( CriteriaSelector obj ) {
-        int selectorType = obj.getSelectorType();
-
-        switch (selectorType) {
-            case CriteriaSelector.COMPARE_EQ:
-                append("= "); //$NON-NLS-1$
-                break;
-            case CriteriaSelector.COMPARE_GE:
-                append(">= "); //$NON-NLS-1$
-                break;
-            case CriteriaSelector.COMPARE_GT:
-                append("> "); //$NON-NLS-1$
-                break;
-            case CriteriaSelector.COMPARE_LE:
-                append("<= "); //$NON-NLS-1$
-                break;
-            case CriteriaSelector.COMPARE_LT:
-                append("< "); //$NON-NLS-1$
-                break;
-            case CriteriaSelector.COMPARE_NE:
-                append("<> "); //$NON-NLS-1$
-                break;
-            case CriteriaSelector.IN:
-                append(IN);
-                append(SPACE);
-                break;
-            case CriteriaSelector.IS_NULL:
-                append(IS);
-                append(SPACE);
-                append(NULL);
-                append(SPACE);
-                break;
-            case CriteriaSelector.LIKE:
-                append(LIKE);
-                append(SPACE);
-                break;
-            case CriteriaSelector.BETWEEN:
-                append(BETWEEN);
-                append(SPACE);
-                break;
-        }
-
-        append(CRITERIA);
-        if (obj.hasElements()) {
-            append(SPACE);
-            append(ON);
-            append(SPACE);
-            append("("); //$NON-NLS-1$
-
-            Iterator elmtIter = obj.getElements().iterator();
-            while (elmtIter.hasNext()) {
-                visitNode((ElementSymbol)elmtIter.next());
-                if (elmtIter.hasNext()) {
-                    append(", "); //$NON-NLS-1$
-                }
-            }
-            append(")"); //$NON-NLS-1$
-        }
     }
 
     public void visit( RaiseErrorStatement obj ) {

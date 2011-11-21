@@ -345,7 +345,7 @@ public class FrameUtil {
         }
         // Simplify criteria if possible
         try {
-            return QueryRewriter.rewriteCriteria(criteria, null, null, metadata);
+            return QueryRewriter.rewriteCriteria(criteria, null, metadata);
         } catch(TeiidProcessingException e) {
             throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0023", criteria)); //$NON-NLS-1$
         } catch (TeiidComponentException e) {

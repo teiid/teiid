@@ -30,7 +30,6 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import net.sf.saxon.om.Name11Checker;
@@ -55,92 +54,24 @@ import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.LanguageObject;
-import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.ProcedureReservedWords;
-import org.teiid.query.sql.lang.AlterProcedure;
-import org.teiid.query.sql.lang.AlterTrigger;
-import org.teiid.query.sql.lang.AlterView;
-import org.teiid.query.sql.lang.BatchedUpdateCommand;
-import org.teiid.query.sql.lang.BetweenCriteria;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.CompoundCriteria;
-import org.teiid.query.sql.lang.Create;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.Delete;
-import org.teiid.query.sql.lang.DependentSetCriteria;
-import org.teiid.query.sql.lang.Drop;
-import org.teiid.query.sql.lang.DynamicCommand;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.GroupBy;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.Into;
-import org.teiid.query.sql.lang.IsNullCriteria;
-import org.teiid.query.sql.lang.Limit;
-import org.teiid.query.sql.lang.MatchCriteria;
-import org.teiid.query.sql.lang.NotCriteria;
-import org.teiid.query.sql.lang.Option;
-import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.OrderByItem;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.SetClause;
-import org.teiid.query.sql.lang.SetClauseList;
-import org.teiid.query.sql.lang.SetCriteria;
-import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.SubqueryCompareCriteria;
-import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.lang.SubqueryFromClause;
-import org.teiid.query.sql.lang.SubquerySetCriteria;
-import org.teiid.query.sql.lang.TextTable;
-import org.teiid.query.sql.lang.Update;
-import org.teiid.query.sql.lang.WithQueryCommand;
-import org.teiid.query.sql.lang.XMLTable;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
-import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.BranchingStatement;
-import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
-import org.teiid.query.sql.proc.CriteriaSelector;
-import org.teiid.query.sql.proc.DeclareStatement;
-import org.teiid.query.sql.proc.HasCriteria;
 import org.teiid.query.sql.proc.LoopStatement;
-import org.teiid.query.sql.proc.TranslateCriteria;
 import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
 import org.teiid.query.sql.proc.Statement.Labeled;
-import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.DerivedColumn;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.QueryString;
-import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.query.sql.symbol.TextLine;
-import org.teiid.query.sql.symbol.WindowFunction;
-import org.teiid.query.sql.symbol.XMLAttributes;
-import org.teiid.query.sql.symbol.XMLElement;
-import org.teiid.query.sql.symbol.XMLForest;
-import org.teiid.query.sql.symbol.XMLNamespaces;
-import org.teiid.query.sql.symbol.XMLParse;
-import org.teiid.query.sql.symbol.XMLQuery;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
-import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
@@ -171,13 +102,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     private boolean isXML = false;	// only used for Query commands
     
     private boolean inQuery;
-    
-    // update procedure being validated
-    private CreateUpdateProcedureCommand updateProc;
-    
-    public void setUpdateProc(CreateUpdateProcedureCommand updateProc) {
-		this.updateProc = updateProc;
-	}
     
     public void reset() {
         super.reset();
@@ -406,26 +330,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 
     // ############### Visitor methods for stored procedure lang objects ##################
 
-    public void visit(AssignmentStatement obj) {
-    	
-    	ElementSymbol variable = obj.getVariable();
-
-    	validateAssignment(obj, variable);
-    }
-    
-    @Override
-    public void visit(CommandStatement obj) {
-    	if (obj.getCommand() instanceof StoredProcedure) {
-    		StoredProcedure proc = (StoredProcedure)obj.getCommand();
-    		for (SPParameter param : proc.getParameters()) {
-				if ((param.getParameterType() == SPParameter.RETURN_VALUE 
-						|| param.getParameterType() == SPParameter.OUT) && param.getExpression() instanceof ElementSymbol) {
-					validateAssignment(obj, (ElementSymbol)param.getExpression());
-				}
-			}
-    	}
-    }
-    
     @Override
     public void visit(StoredProcedure obj) {
 		for (SPParameter param : obj.getInputParameters()) {
@@ -451,15 +355,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 		}
     }
 
-	private void validateAssignment(LanguageObject obj,
-			ElementSymbol variable) {
-		String groupName = variable.getGroupSymbol().getCanonicalName();
-		//This will actually get detected by the resolver, since we inject an automatic declaration.
-    	if(groupName.equals(ProcedureReservedWords.CHANGING) || groupName.equals(ProcedureReservedWords.INPUTS)) {
-			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0012", ProcedureReservedWords.INPUTS, ProcedureReservedWords.CHANGING), obj); //$NON-NLS-1$
-		}
-	}
-    
     @Override
     public void visit(ScalarSubquery obj) {
     	validateSubquery(obj);
@@ -482,47 +377,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
             
             return;
         }
-
-		// set the state to validate this procedure
-        this.updateProc = obj;
-        validateContainsRowsUpdatedVariable(obj);
-    }
-
-    public void visit(DeclareStatement obj) {
-        validateAssignment(obj, obj.getVariable());
-    }
-    
-    @Override
-    public void visit(HasCriteria obj) {
-    	if (this.updateProc == null || !this.updateProc.isUpdateProcedure()) {
-			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0019"), obj); //$NON-NLS-1$
-    	}
-    }
-    
-    public void visit(TranslateCriteria obj) {
-    	if (this.updateProc == null || !this.updateProc.isUpdateProcedure()) {
-			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0019"), obj); //$NON-NLS-1$
-    	}
-		if(obj.hasTranslations()) {
-			Collection selectElmnts = null;
-			if(obj.getSelector().hasElements()) {
-				selectElmnts = obj.getSelector().getElements();
-			}
-			Iterator critIter = obj.getTranslations().iterator();
-			while(critIter.hasNext()) {
-				CompareCriteria transCrit = (CompareCriteria) critIter.next();
-				Collection<ElementSymbol> leftElmnts = ElementCollectorVisitor.getElements(transCrit.getLeftExpression(), true);
-				// there is always only one element
-				ElementSymbol leftExpr = leftElmnts.iterator().next();
-
-				if(selectElmnts != null && !selectElmnts.contains(leftExpr)) {
-					handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0021"), leftExpr); //$NON-NLS-1$
-				}
-			}
-		}
-
-		// additional validation checks
-		validateTranslateCriteria(obj);
     }
 
     public void visit(CompoundCriteria obj) {
@@ -562,85 +416,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
 
     // ######################### Validation methods #########################
-
-	/**
-	 * A valid translated expression is not an <code>AggregateSymbol</code> and
-	 * does not include elements not present on the groups of the command using
-	 * the translated criteria.
-	 */
-    protected void validateTranslateCriteria(TranslateCriteria obj) {
-    	if(this.currentCommand == null) {
-	    	return;
-    	}
-    	Map symbolMap = this.updateProc.getSymbolMap();
-		Command userCommand = this.updateProc.getUserCommand();
-    	// modeler validation
-    	if(userCommand == null) {
-    		return;
-    	}
-		Criteria userCrit = null;
-		int userCmdType = userCommand.getType();
-		switch(userCmdType) {
-			case Command.TYPE_DELETE:
-				userCrit = ((Delete)userCommand).getCriteria();
-				break;
-			case Command.TYPE_UPDATE:
-				userCrit = ((Update)userCommand).getCriteria();
-				break;
-			default:
-				break;
-		}
-		// nothing to validate if there is no user criteria
-		if(userCrit == null) {
-			return;
-		}
-
-    	Collection<ElementSymbol> transleElmnts = ElementCollectorVisitor.getElements(obj, true);
-    	Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(this.currentCommand, true);
-		int selectType = obj.getSelector().getSelectorType();
-
-		for (Criteria predCrit : Criteria.separateCriteriaByAnd(userCrit)) {
-			if(selectType != CriteriaSelector.NO_TYPE) {
-				if(predCrit instanceof CompareCriteria) {
-					CompareCriteria ccCrit = (CompareCriteria) predCrit;
-					if(selectType != ccCrit.getOperator()) {
-						continue;
-					}
-				} else if(predCrit instanceof MatchCriteria) {
-					if(selectType != CriteriaSelector.LIKE) {
-						continue;
-					}
-				} else if(predCrit instanceof IsNullCriteria) {
-					if(selectType != CriteriaSelector.IS_NULL) {
-						continue;
-					}
-                } else if(predCrit instanceof SetCriteria) {
-                    if(selectType != CriteriaSelector.IN) {
-                    	continue;
-                    }
-                } else if(predCrit instanceof BetweenCriteria) {
-                    if(selectType != CriteriaSelector.BETWEEN) {
-                    	continue;
-                    }
-				}
-			}
-	    	Iterator<ElementSymbol> critEmlntIter = ElementCollectorVisitor.getElements(predCrit, true).iterator();
-	    	// collect all elements elements on the criteria map to
-	    	while(critEmlntIter.hasNext()) {
-	    		ElementSymbol criteriaElement = critEmlntIter.next();
-	    		if(transleElmnts.contains(criteriaElement)) {
-		    		Expression mappedExpr = (Expression) symbolMap.get(criteriaElement);
-		    		if(mappedExpr instanceof AggregateSymbol) {
-						handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0022", criteriaElement), criteriaElement); //$NON-NLS-1$
-		    		}
-
-		    		if (!groups.containsAll(GroupsUsedByElementsVisitor.getGroups(mappedExpr))) {
-						handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0023", criteriaElement), criteriaElement); //$NON-NLS-1$
-			    	}
-				}
-	    	}
-		}
-    }
 
     protected void validateSelectElements(Select obj) {
     	if(isXML) {
@@ -978,32 +753,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         } catch (TeiidComponentException e) {
             handleException(e, query);
         } 
-    }
-    
-    /**
-     * Validate that the command assigns a value to the ROWS_UPDATED variable 
-     * @param obj
-     * @since 4.2
-     */
-    protected void validateContainsRowsUpdatedVariable(CreateUpdateProcedureCommand obj) {
-        final Collection<ElementSymbol> assignVars = new ArrayList<ElementSymbol>();
-       // Use visitor to find assignment statements
-        LanguageVisitor visitor = new LanguageVisitor() {
-            public void visit(AssignmentStatement stmt) {
-                assignVars.add(stmt.getVariable());
-            }
-        };
-        PreOrderNavigator.doVisit(obj, visitor);
-        boolean foundVar = false;
-        for (ElementSymbol variable : assignVars) {
-            if(variable.getShortName().equalsIgnoreCase(ProcedureReservedWords.ROWS_UPDATED)) {
-                foundVar = true;
-                break;
-            }
-        }
-        if(!foundVar) {
-            handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0016", ProcedureReservedWords.ROWS_UPDATED), obj); //$NON-NLS-1$
-        }
     }
     
     private void validateRowLimitFunctionNotInInvalidCriteria(Criteria obj) {

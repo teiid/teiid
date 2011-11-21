@@ -47,31 +47,9 @@ import org.teiid.query.metadata.GroupInfo;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.ProcedureReservedWords;
-import org.teiid.query.sql.lang.BetweenCriteria;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.ExpressionCriteria;
-import org.teiid.query.sql.lang.GroupContext;
-import org.teiid.query.sql.lang.IsNullCriteria;
-import org.teiid.query.sql.lang.MatchCriteria;
-import org.teiid.query.sql.lang.SetClause;
-import org.teiid.query.sql.lang.SetCriteria;
-import org.teiid.query.sql.lang.SubqueryCompareCriteria;
-import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
-import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.CaseExpression;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.DerivedColumn;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.QueryString;
-import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.SearchedCaseExpression;
-import org.teiid.query.sql.symbol.XMLQuery;
-import org.teiid.query.sql.symbol.XMLSerialize;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.ElementSymbol.DisplayMode;
 
 
@@ -217,15 +195,6 @@ public class ResolverVisitor extends LanguageVisitor {
                 resolveAgainstGroups(shortCanonicalName, matchedGroups, matches);
                 
                 if (matches.size() > 1) {
-                	if (isExternal && matches.size() == 2) {
-            			if ((isScalar(matches.get(0).element, ProcedureReservedWords.INPUTS) && isScalar(matches.get(1).element, ProcedureReservedWords.INPUT))) {
-            				matches.removeLast();
-            				break;
-            			} else if (isScalar(matches.get(1).element, ProcedureReservedWords.INPUTS) && isScalar(matches.get(0).element, ProcedureReservedWords.INPUT)) {
-            				matches.removeFirst();
-            				break;
-            			}
-                	}
             	    throw handleUnresolvedElement(elementSymbol, QueryPlugin.Util.getString("ERR.015.008.0053", elementSymbol)); //$NON-NLS-1$
                 }
                 
@@ -253,14 +222,6 @@ public class ResolverVisitor extends LanguageVisitor {
         if (expectedGroupContext != null && !ResolverUtil.nameMatchesGroup(expectedGroupContext, resolvedGroup.getCanonicalName())) {
         	return false;
         }
-        if (isExternal //convert input to inputs
-        		&& isScalar(resolvedSymbol, ProcedureReservedWords.INPUT)) {
-        	resolvedSymbol = new ElementSymbol(shortCanonicalName);
-        	resolvedSymbol.setGroupSymbol(new GroupSymbol(ProcedureReservedWords.INPUTS));
-        	resolveElementSymbol(resolvedSymbol);
-        	oldName = resolvedSymbol.getOutputName();
-        	resolvedGroup = resolvedSymbol.getGroupSymbol();
-        } 
         elementSymbol.setIsExternalReference(isExternal);
         elementSymbol.setType(resolvedSymbol.getType());
         elementSymbol.setMetadataID(resolvedSymbol.getMetadataID());
@@ -271,11 +232,6 @@ public class ResolverVisitor extends LanguageVisitor {
         return true;
 	}
     
-    private boolean isScalar(ElementSymbol resolvedSymbol, String group) throws QueryMetadataException, TeiidComponentException {
-    	return metadata.isScalarGroup(resolvedSymbol.getGroupSymbol().getMetadataID())
-		&& group.equals(resolvedSymbol.getGroupSymbol().getCanonicalName());
-    }
-
     private void resolveAgainstGroups(String elementShortName,
                                       Collection<GroupSymbol> matchedGroups, LinkedList<ElementMatch> matches) throws QueryMetadataException,
                                                          TeiidComponentException {
@@ -953,7 +909,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	
 	    // 2. Attempt to set the target types of all contained expressions,
 	    //    and collect their type names for the next step
-	    ArrayList thenTypeNames = new ArrayList(whenCount + 1);
+	    ArrayList<String> thenTypeNames = new ArrayList<String>(whenCount + 1);
 	    Expression then = null;
 	    // Set the types of the WHEN and THEN parts
 	    for (int i = 0; i < whenCount; i++) {
@@ -974,7 +930,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    // Invariants: all the expressions' types are non-null
 	
 	    // 3. Perform implicit type conversions
-	    String thenTypeName = ResolverUtil.getCommonType((String[])thenTypeNames.toArray(new String[thenTypeNames.size()]));
+	    String thenTypeName = ResolverUtil.getCommonType(thenTypeNames.toArray(new String[thenTypeNames.size()]));
 	    if (thenTypeName == null) {
 	        throw new QueryResolverException("ERR.015.008.0068", QueryPlugin.Util.getString("ERR.015.008.0068", "THEN/ELSE", obj)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	    }

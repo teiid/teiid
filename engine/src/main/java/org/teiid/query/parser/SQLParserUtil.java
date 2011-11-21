@@ -35,6 +35,7 @@ import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.sql.lang.CacheHint;
+import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.Limit;
@@ -44,7 +45,6 @@ import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.proc.Block;
-import org.teiid.query.sql.proc.CriteriaSelector;
 import org.teiid.query.sql.proc.Statement;
 
 public class SQLParserUtil {
@@ -338,25 +338,17 @@ public class SQLParserUtil {
     
     int getOperator(String opString) {
         if (opString.equals("=")) { //$NON-NLS-1$
-            return CriteriaSelector.COMPARE_EQ;
+            return CompareCriteria.EQ;
         } else if (opString.equals("<>") || opString.equals("!=")) { //$NON-NLS-1$ //$NON-NLS-2$
-            return CriteriaSelector.COMPARE_NE;
+            return CompareCriteria.NE;
         } else if (opString.equals("<")) { //$NON-NLS-1$
-            return CriteriaSelector.COMPARE_LT;
+            return CompareCriteria.LT;
         } else if (opString.equals(">")) { //$NON-NLS-1$
-            return CriteriaSelector.COMPARE_GT;
+            return CompareCriteria.GT;
         } else if (opString.equals("<=")) { //$NON-NLS-1$
-            return CriteriaSelector.COMPARE_LE;
+            return CompareCriteria.LE;
         } else if (opString.equals(">=")) { //$NON-NLS-1$
-            return CriteriaSelector.COMPARE_GE;
-        } else if (opString.equalsIgnoreCase("like")) { //$NON-NLS-1$
-            return CriteriaSelector.LIKE;
-        } else if (opString.equalsIgnoreCase("in")) { //$NON-NLS-1$
-            return CriteriaSelector.IN;
-        } else if (opString.equalsIgnoreCase("is")) { //$NON-NLS-1$
-            return CriteriaSelector.IS_NULL;
-        } else if (opString.equalsIgnoreCase("between")) { //$NON-NLS-1$
-            return CriteriaSelector.BETWEEN;
+            return CompareCriteria.GE;
         }
         
         Assertion.failed("unknown operator"); //$NON-NLS-1$

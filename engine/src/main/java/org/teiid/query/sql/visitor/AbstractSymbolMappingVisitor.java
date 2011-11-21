@@ -32,7 +32,6 @@ import org.teiid.query.sql.lang.SetClause;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
-import org.teiid.query.sql.proc.CriteriaSelector;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -171,27 +170,6 @@ public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisi
         super.visit(obj);
     }
 
-    /**
-     * Swap elements in CriteriaSelector
-     * @param obj Object to remap
-     */
-    public void visit(CriteriaSelector obj) {
-        CriteriaSelector selector = obj;
-        if(selector.hasElements()) {
-            // Map each element and reset
-            List elements = selector.getElements();
-            List mappedElements = new ArrayList(elements.size());
-
-            Iterator elemIter = elements.iterator();
-            while(elemIter.hasNext()) {
-                ElementSymbol elem = (ElementSymbol) elemIter.next();
-                mappedElements.add(getMappedElement(elem));    
-            }            
-            
-            selector.setElements(mappedElements);
-        }    
-    }
-        
     /* ############### Helper Methods ##################   */
     
     /** 

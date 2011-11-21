@@ -47,8 +47,6 @@ import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
-import org.teiid.query.sql.proc.CriteriaSelector;
-import org.teiid.query.sql.proc.TranslateCriteria;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -377,31 +375,4 @@ public class TestStaticSymbolMappingVisitor extends TestCase {
         assertEquals("Stored proc param did not get mapped correctly: ", exampleElement(false, 1), innerFunc.getArg(0)); //$NON-NLS-1$
     }
 
-    public void testCriteriaSelector() {
-        CriteriaSelector selector = new CriteriaSelector();
-        selector.setSelectorType(CriteriaSelector.COMPARE_EQ);
-        selector.addElement(exampleElement(true, 1));
-        
-        // Run symbol mapper
-        StaticSymbolMappingVisitor visitor = new StaticSymbolMappingVisitor(getSymbolMap());
-        DeepPreOrderNavigator.doVisit(selector, visitor);
-        
-        // Check that element got mapped
-        assertEquals("Criteria selector element did not get mapped correctly: ", exampleElement(false, 1), selector.getElements().get(0)); //$NON-NLS-1$
-    }
-    
-    public void testTranslateCriteria() {
-        TranslateCriteria trans = new TranslateCriteria();
-        trans.addTranslation(new CompareCriteria(exampleElement(false, 1), CompareCriteria.EQ, exampleElement(false, 2)));
-
-        // Run symbol mapper
-        StaticSymbolMappingVisitor visitor = new StaticSymbolMappingVisitor(getSymbolMap());
-        DeepPreOrderNavigator.doVisit(trans, visitor);
-
-        // Check that element got mapped
-        List elements = (List) ElementCollectorVisitor.getElements(trans, false);
-        assertEquals("Translate criteria element did not get mapped correctly: ", exampleElement(false, 1), elements.get(0)); //$NON-NLS-1$
-        assertEquals("Translate criteria element did not get mapped correctly: ", exampleElement(false, 2), elements.get(1)); //$NON-NLS-1$
-            
-    }
 }

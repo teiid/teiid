@@ -140,7 +140,7 @@ public class JoinUtil {
                                             Criteria crit) {
         Criteria simplifiedCrit = (Criteria)replaceWithNullValues(innerGroups, crit);
         try {
-            simplifiedCrit = QueryRewriter.rewriteCriteria(simplifiedCrit, null, null, metadata);
+            simplifiedCrit = QueryRewriter.rewriteCriteria(simplifiedCrit, null, metadata);
         } catch (TeiidException err) {
             //log the exception
             return true;

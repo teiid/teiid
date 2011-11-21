@@ -73,7 +73,6 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.util.CommandContext;
@@ -107,7 +106,6 @@ public class ProcedurePlan extends ProcessorPlan {
     private boolean lastBatch = false;
     private LinkedHashMap<ElementSymbol, Expression> params;
     private List<ElementSymbol> outParams;
-    private Map<ElementSymbol, Reference> implicitParams;
     private QueryMetadataInterface metadata;
 
     private Map<String, CursorState> cursorStates = new HashMap<String, CursorState>();
@@ -248,13 +246,6 @@ public class ProcedurePlan extends ProcessorPlan {
 		            checkNotNull(param, value);
 		            setParameterValue(param, context, value);
 		        }
-    		}
-    		if (this.implicitParams != null) {
-    			for (Map.Entry<ElementSymbol, Reference> entry : this.implicitParams.entrySet()) {
-		            VariableContext context = getCurrentVariableContext();
-		            Object value = this.evaluateExpression(entry.getValue());
-		            context.setValue(entry.getKey(), value);
-				}
     		}
     		this.push(originalProgram);
     	}
@@ -429,7 +420,6 @@ public class ProcedurePlan extends ProcessorPlan {
         plan.setOutputElements(this.getOutputElements());
         plan.setParams(params);
         plan.setOutParams(outParams);
-        plan.setImplicitParams(implicitParams);
         plan.setMetadata(metadata);
         plan.requiresTransaction = requiresTransaction;
         return plan;
@@ -494,10 +484,6 @@ public class ProcedurePlan extends ProcessorPlan {
         this.params = params;
     }
     
-    public void setImplicitParams(Map<ElementSymbol, Reference> implicitParams) {
-		this.implicitParams = implicitParams;
-	}
-        
 	private void createVariableContext() {
 		this.currentVarContext = new VariableContext(true);
         this.currentVarContext.setValue(ROWS_UPDATED, 0);

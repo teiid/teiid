@@ -22,33 +22,7 @@
 
 package org.teiid.query.sql.lang;
 
-import java.util.Map;
-
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Reference;
-
-
 public abstract class TranslatableProcedureContainer extends ProcedureContainer {
-	
-	private Map<ElementSymbol, Reference> implicitParams;
-	
-	public void addImplicitParameters(Map<ElementSymbol, Reference> parameters) {
-		if (parameters == null) {
-			return;
-		}
-		if (implicitParams == null) {
-			this.implicitParams = parameters;
-		}
-		this.implicitParams.putAll(parameters);
-	}
-	
-	/**
-	 * Get the implicit parameters (if any) created by translate criteria
-	 * @return
-	 */
-	public Map<ElementSymbol, Reference> getImplicitParams() {
-		return implicitParams;
-	}
 	
 	public abstract Criteria getCriteria();
 }

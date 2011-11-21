@@ -33,6 +33,7 @@ import java.util.Map.Entry;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.language.SQLConstants;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.resolver.ProcedureContainerResolver;
@@ -105,7 +106,7 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
             result.put(leftSymbol, new Constant(Boolean.TRUE));
             if (!changingOnly) {
             	leftSymbol = leftSymbol.clone();
-            	leftSymbol.getGroupSymbol().setName(ProcedureReservedWords.INPUTS);
+            	leftSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
             	result.put(leftSymbol, entry.getValue());
             }
         }

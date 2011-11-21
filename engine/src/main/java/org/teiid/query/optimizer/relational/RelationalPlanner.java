@@ -22,17 +22,7 @@
 
 package org.teiid.query.optimizer.relational;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -81,51 +71,11 @@ import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.LanguageObject.Util;
-import org.teiid.query.sql.lang.CacheHint;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.Delete;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.From;
-import org.teiid.query.sql.lang.FromClause;
-import org.teiid.query.sql.lang.GroupBy;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.JoinPredicate;
-import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.Limit;
-import org.teiid.query.sql.lang.Option;
-import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.ProcedureContainer;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.lang.SourceHint;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.lang.SubqueryFromClause;
-import org.teiid.query.sql.lang.TableFunctionReference;
-import org.teiid.query.sql.lang.TargetedCommand;
-import org.teiid.query.sql.lang.TranslatableProcedureContainer;
-import org.teiid.query.sql.lang.UnaryFromClause;
-import org.teiid.query.sql.lang.Update;
-import org.teiid.query.sql.lang.WithQueryCommand;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.TriggerAction;
-import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.MultipleElementSymbol;
-import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.SelectSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.query.sql.symbol.WindowFunction;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
@@ -605,15 +555,16 @@ public class RelationalPlanner {
 		if (c != null) {
 			if (c instanceof TriggerAction) {
 				TriggerAction ta = (TriggerAction)c;
-				ProcessorPlan plan = new TriggerActionPlanner().optimize(container, ta, idGenerator, metadata, capFinder, analysisRecord, context);
+				ProcessorPlan plan = new TriggerActionPlanner().optimize((ProcedureContainer)container.clone(), ta, idGenerator, metadata, capFinder, analysisRecord, context);
 			    sourceNode.setProperty(NodeConstants.Info.PROCESSOR_PLAN, plan);
 			    return true;
 			}
 			if (c.getCacheHint() != null) {
 				if (container instanceof StoredProcedure) {
-					boolean noCache = isNoCacheGroup(metadata, ((StoredProcedure) container).getProcedureID(), option);
+					StoredProcedure sp = (StoredProcedure)container;
+					boolean noCache = isNoCacheGroup(metadata, sp.getProcedureID(), option);
 					if (!noCache) {
-						if (context.isResultSetCacheEnabled() && container.areResultsCachable() && LobManager.getLobIndexes(new ArrayList<ElementSymbol>(container.getProcedureParameters().keySet())) == null) {
+						if (context.isResultSetCacheEnabled() && container.areResultsCachable() && LobManager.getLobIndexes(new ArrayList<ElementSymbol>(sp.getProcedureParameters().keySet())) == null) {
 							container.getGroup().setGlobalTable(true);
 							container.setCacheHint(c.getCacheHint());
 							recordAnnotation(analysisRecord, Annotation.CACHED_PROCEDURE, Priority.LOW, "SimpleQueryResolver.procedure_cache_used", container.getGroup()); //$NON-NLS-1$

@@ -933,85 +933,6 @@ IfStatement ifStatement(ParseInfo info) :
 }    
             
 /**
- * Parse criteria selector
- * @throws ParseException if parsing failed
- */
-CriteriaSelector criteriaSelector() :
-{
-    CriteriaSelector critSelector = new CriteriaSelector();
-    
-    String element = null;
-    List elements = new ArrayList(2);
-    Token operator = null;
-}
-{
-    [(operator = <EQ> |
-     operator = <NE> |
-     operator = <NE2> |
-     operator = <LE> |
-     operator = <GE> |
-     operator = <LT> |
-     operator = <GT> |
-     operator = <IN> |
-     operator = <LIKE> |
-     (operator = <IS> <NULL>) |
-     operator = <BETWEEN>)
-     {
-       critSelector.setSelectorType(getOperator(operator.image));
-	 }
-    ]
-         
-    <CRITERIA>
-     
-    [LOOKAHEAD(4)<ON> 
-    <LPAREN> 
-    
-    element = id()
-    
-    { 
-       elements.add(new ElementSymbol(element));
-    }       
-        
-    (<COMMA>
-        element = id()
-    
-    	{ 
-       		elements.add(new ElementSymbol(element));
-    	}           
-    )*    
-    <RPAREN>
-
-	{
-       critSelector.setElements(elements);
-
-    }   
-   ]
-   
-   {                   
-       return critSelector;    
-   }           
-} 
-
-/**
- * Parse has criteria
- * @throws ParseException
- */
-HasCriteria hasCriteria() :
-{
-    HasCriteria hasCrit = new HasCriteria();
-    CriteriaSelector critSelector = null;
-}
-{
-    <HAS>
-    critSelector = criteriaSelector()
-    
-    {
-        hasCrit.setSelector(critSelector);
-        return hasCrit;
-    }   
-}
-
-/**
  * Parse declare statement
  * @throws ParseException if parsing failed
  */
@@ -1134,69 +1055,6 @@ CommandStatement sqlStatement(ParseInfo info) :
     }   
 }
  
-TranslateCriteria translateCriteria(ParseInfo info) :
-{
-    String element = null;
-    Expression value = null;
-    ElementSymbol leftSymbol = null;
-    
-    CriteriaSelector critSelector = null;
-    TranslateCriteria transCriteria = new TranslateCriteria();       
-    
-    CompareCriteria compCrit = null;
-    
-    List critList = null;
-}
-{
-    
-    <TRANSLATE>    
-        critSelector = criteriaSelector()
-
-        [<WITH>
-         {
-            critList = new ArrayList(2);
-         }
-         <LPAREN>
-        element = id()
-        <EQ>
-        value = expression(info) 
-        {
-            compCrit = new CompareCriteria();
-            leftSymbol = new ElementSymbol(element);
-            compCrit.setLeftExpression(leftSymbol);
-            compCrit.setRightExpression(value);
-            compCrit.setOperator(CompareCriteria.EQ);  
-            critList.add(compCrit);
-            compCrit = null;
-        }
-        (   <COMMA>
-            element = id()
-            <EQ>
-            value = expression(info)
-         {
-            compCrit = new CompareCriteria();
-            leftSymbol = new ElementSymbol(element);
-            compCrit.setLeftExpression(leftSymbol);
-            compCrit.setRightExpression(value);
-            compCrit.setOperator(CompareCriteria.EQ);
-            critList.add(compCrit); 
-            compCrit = null; 
-         }  
-       )*
-       <RPAREN> 
-       ]
-            
-    {
-        transCriteria.setSelector(critSelector);
-        
-        if ( critList != null) {
-            transCriteria.setTranslations(critList);
-        }   
-                              
-        return transCriteria;   
-    }   
-}
-
 /**
  * Parse create update procedure command
  * @throws ParseException if parsing failed
@@ -2741,8 +2599,6 @@ Expression booleanPrimary(ParseInfo info) :
 }
 {
     (
-		LOOKAHEAD(2) ex = translateCriteria(info)
-		|
 	    (ex = commonValueExpression(info)
 	     [(
 			LOOKAHEAD(2) ex=betweenCrit(info, ex) |
@@ -2755,8 +2611,7 @@ Expression booleanPrimary(ParseInfo info) :
 	     )]
 	    )
 	    |
-		ex=existsCriteria(info) |
-		ex = hasCriteria() 
+		ex=existsCriteria(info)
     )
 	{
 		return ex;

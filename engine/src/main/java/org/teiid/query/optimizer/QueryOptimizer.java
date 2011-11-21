@@ -22,7 +22,6 @@
 
 package org.teiid.query.optimizer;
 
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -54,10 +53,8 @@ import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.TranslatableProcedureContainer;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.util.CommandContext;
 
 
@@ -143,7 +140,6 @@ public class QueryOptimizer {
 	        ProcedureContainer container = (ProcedureContainer)cupc.getUserCommand();
 	        ProcedurePlan plan = (ProcedurePlan)result;
 	        if (container != null) {
-	        	LinkedHashMap<ElementSymbol, Expression> params = container.getProcedureParameters();
 	        	if (container instanceof StoredProcedure) {
 	        		plan.setRequiresTransaction(container.getUpdateCount() > 0);
 	        		StoredProcedure sp = (StoredProcedure)container;
@@ -164,12 +160,9 @@ public class QueryOptimizer {
 	        				plan.setOutParams(outParams);
 	        			}
 	        		}
+	        		plan.setParams(sp.getProcedureParameters());
 	        	}
-	            plan.setParams(params);
 	            plan.setMetadata(metadata);
-	            if (container instanceof TranslatableProcedureContainer) {
-	            	plan.setImplicitParams(((TranslatableProcedureContainer)container).getImplicitParams());
-	            }
 	        }
 	        break;
 		case Command.TYPE_BATCHED_UPDATE:

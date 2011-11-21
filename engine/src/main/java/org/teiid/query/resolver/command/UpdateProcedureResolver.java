@@ -27,19 +27,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
-import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.api.exception.query.UnresolvedSymbolDescription;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
@@ -47,10 +43,8 @@ import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.resolver.CommandResolver;
 import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
-import org.teiid.query.resolver.util.ResolveVirtualGroupCriteriaVisitor;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
-import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
@@ -59,54 +53,17 @@ import org.teiid.query.sql.lang.GroupContext;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.proc.AssignmentStatement;
-import org.teiid.query.sql.proc.Block;
-import org.teiid.query.sql.proc.CommandStatement;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
-import org.teiid.query.sql.proc.DeclareStatement;
-import org.teiid.query.sql.proc.ExpressionStatement;
-import org.teiid.query.sql.proc.IfStatement;
-import org.teiid.query.sql.proc.LoopStatement;
-import org.teiid.query.sql.proc.Statement;
-import org.teiid.query.sql.proc.TriggerAction;
-import org.teiid.query.sql.proc.WhileStatement;
+import org.teiid.query.sql.proc.*;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 
 /**
  */
 public class UpdateProcedureResolver implements CommandResolver {
-
-    public void resolveVirtualGroupElements(CreateUpdateProcedureCommand procCommand, QueryMetadataInterface metadata)
-        throws QueryMetadataException, QueryResolverException, TeiidComponentException {
-
-		// virtual group on procedure
-		GroupSymbol virtualGroup = procCommand.getVirtualGroup();
-		
-		if (!metadata.isVirtualGroup(virtualGroup.getMetadataID())) {
-			//if this is a compensating procedure, just return
-			return;
-		}
-
-		ResolveVirtualGroupCriteriaVisitor.resolveCriteria(procCommand, virtualGroup, metadata);
-
-    	// get a symbol map between virtual elements and the elements that define
-    	// then in the query transformation, this info is used in evaluating/validating
-    	// has criteria/translate criteria clauses
-        Command transformCmd;
-		try {
-			transformCmd = QueryResolver.resolveView(virtualGroup, metadata.getVirtualPlan(virtualGroup.getMetadataID()), SQLConstants.Reserved.SELECT, metadata).getCommand();
-		} catch (QueryValidatorException e) {
-			throw new QueryResolverException(e, e.getMessage());
-		}
-		Map<ElementSymbol, Expression> symbolMap = SymbolMap.createSymbolMap(virtualGroup, LanguageObject.Util.deepClone(transformCmd.getProjectedSymbols(), SingleElementSymbol.class), metadata).asMap();
-		procCommand.setSymbolMap(symbolMap);
-    }
 
     /**
      * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, TempMetadataAdapter, boolean)
@@ -129,8 +86,6 @@ public class UpdateProcedureResolver implements CommandResolver {
         
         // virtual group elements in HAS and TRANSLATE criteria have to be resolved
         if(procCommand.isUpdateProcedure()){
-            resolveVirtualGroupElements(procCommand, metadata);
-
             //add the default variables
             String countVar = ProcedureReservedWords.VARIABLES + ElementSymbol.SEPARATOR + ProcedureReservedWords.ROWS_UPDATED;
             ElementSymbol updateCount = new ElementSymbol(countVar);

@@ -29,16 +29,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.*;
 
 import org.junit.Test;
 import org.teiid.client.metadata.ParameterInfo;
@@ -6118,27 +6109,6 @@ public class TestProcessor {
         dataManager.addData("SELECT 1 AS c_0 FROM p1.t AS g_1 UNION ALL SELECT 1 AS c_0 FROM p1.t AS g_0",  //$NON-NLS-1$
                             new List[] { Arrays.asList(1), Arrays.asList(1)});
         helpProcess(plan, dataManager, expected); 
-    }
-    
-    @Test public void testUpdatesInLoop() { 
-        String sql = "update vm1.g39 set e2=3"; //$NON-NLS-1$ 
- 
-        // Plan query 
-        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());        
-
-        // Construct data manager with data 
-        HardcodedDataManager dataManager = new HardcodedDataManager(); 
-        dataManager.addData("SELECT g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e2 = 3", //$NON-NLS-1$ 
-                            new List[] { Arrays.asList(new Object[] { new Integer(3) } )});
-        dataManager.addData("UPDATE pm1.g1 SET e2 = 3 WHERE pm1.g1.e2 = 3", //$NON-NLS-1$ 
-                            new List[] { Arrays.asList(new Object[] { new Integer(1) } )});
-        
-        // Create expected results 
-        List[] expected = new List[] { Arrays.asList(0)};        
-        
-        // Run query 
-        helpProcess(plan, dataManager, expected);  
-         
     }
     
     @Test public void testRand() { 

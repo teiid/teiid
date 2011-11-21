@@ -67,23 +67,7 @@ import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.ProcedureReservedWords;
-import org.teiid.query.sql.lang.BatchedUpdateCommand;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.From;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.ProcedureContainer;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.SetCriteria;
-import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.SubqueryFromClause;
-import org.teiid.query.sql.lang.SubquerySetCriteria;
-import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
@@ -2149,19 +2133,6 @@ public class TestResolver {
         QueryResolver.resolveCommand(command, metadata);
         Collection groups = GroupCollectorVisitor.getGroups(command, false);
         assertFalse(groups.contains(inputSet));
-    }
-    
-    @Test public void testInputToInputsConversion() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = (Select pm1.g1.e2 from pm1.g1 where e2=INPUTS.e2);\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e2=40"; //$NON-NLS-1$
-        
-        Command command = helpResolveUpdateProcedure(procedure, userUpdateStr);
-        assertEquals("CREATE PROCEDURE\nBEGIN\nDECLARE integer var1;\nROWS_UPDATED = (SELECT pm1.g1.e2 FROM pm1.g1 WHERE e2 = INPUTS.e2);\nEND", command.toString());
     }
     
     @Test public void testDefect16894_resolverException_1() {

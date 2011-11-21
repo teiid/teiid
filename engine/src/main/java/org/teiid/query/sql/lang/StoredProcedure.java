@@ -396,10 +396,6 @@ public class StoredProcedure extends ProcedureContainer {
 		this.isCallableStatement = isCallableStatement;
 	}
 	    
-	/** 
-	 * @see org.teiid.query.sql.lang.ProcedureContainer#getProcedureParameters()
-	 * @since 5.0
-	 */
 	public LinkedHashMap<ElementSymbol, Expression> getProcedureParameters() {
 		LinkedHashMap<ElementSymbol, Expression> map = new LinkedHashMap<ElementSymbol, Expression>();
 	    for (SPParameter element : this.getInputParameters()) {

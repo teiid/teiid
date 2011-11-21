@@ -48,21 +48,9 @@ import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.parser.QueryParser;
-import org.teiid.query.resolver.command.AlterResolver;
-import org.teiid.query.resolver.command.BatchedUpdateResolver;
-import org.teiid.query.resolver.command.DeleteResolver;
-import org.teiid.query.resolver.command.DynamicCommandResolver;
-import org.teiid.query.resolver.command.ExecResolver;
-import org.teiid.query.resolver.command.InsertResolver;
-import org.teiid.query.resolver.command.SetQueryResolver;
-import org.teiid.query.resolver.command.SimpleQueryResolver;
-import org.teiid.query.resolver.command.TempTableResolver;
-import org.teiid.query.resolver.command.UpdateProcedureResolver;
-import org.teiid.query.resolver.command.UpdateResolver;
-import org.teiid.query.resolver.command.XMLQueryResolver;
+import org.teiid.query.resolver.command.*;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
-import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.From;
@@ -97,7 +85,8 @@ import org.teiid.query.validator.UpdateValidator.UpdateType;
  */
 public class QueryResolver {
 
-    private static final CommandResolver SIMPLE_QUERY_RESOLVER = new SimpleQueryResolver();
+    private static final String BINDING_GROUP = "INPUTS"; //$NON-NLS-1$
+	private static final CommandResolver SIMPLE_QUERY_RESOLVER = new SimpleQueryResolver();
     private static final CommandResolver SET_QUERY_RESOLVER = new SetQueryResolver();
     private static final CommandResolver XML_QUERY_RESOLVER = new XMLQueryResolver();
     private static final CommandResolver EXEC_RESOLVER = new ExecResolver();
@@ -195,8 +184,7 @@ public class QueryResolver {
 		    	ResolverVisitor.resolveLanguageObject(elementSymbol, metadata);
 		    	elementSymbol.setIsExternalReference(true);
 		    	if (!positional) {
-		    		symbolMap.put(new ElementSymbol(ProcedureReservedWords.INPUT + ElementSymbol.SEPARATOR + name), elementSymbol.clone());
-		    		symbolMap.put(new ElementSymbol(ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + name), elementSymbol.clone());
+		    		symbolMap.put(new ElementSymbol(BINDING_GROUP + ElementSymbol.SEPARATOR + name), elementSymbol.clone());
 		    		elementSymbol.setShortName(name);
 		    	}
 		        elements.add(elementSymbol);
@@ -221,8 +209,8 @@ public class QueryResolver {
 		        
 		        GroupContext externalGroups = new GroupContext();
 		        
-		        ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.INPUT, rootExternalStore, externalGroups, elements);
-		        ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.INPUTS, rootExternalStore, externalGroups, elements);
+		        ProcedureContainerResolver.addScalarGroup("INPUT", rootExternalStore, externalGroups, elements); //$NON-NLS-1$
+		        ProcedureContainerResolver.addScalarGroup(BINDING_GROUP, rootExternalStore, externalGroups, elements);
 		        QueryResolver.setChildMetadata(currentCommand, rootExternalStore.getData(), externalGroups);
 		    }
 		}

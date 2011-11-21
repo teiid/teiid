@@ -61,7 +61,7 @@ public class TestCalculateCostUtil {
 
         Criteria result = QueryParser.getQueryParser().parseCriteria(critString);
         QueryResolver.resolveCriteria(result, metadata);
-        result = QueryRewriter.rewriteCriteria(result, null, new CommandContext(), metadata);
+        result = QueryRewriter.rewriteCriteria(result, new CommandContext(), metadata);
 
         return result;
     }

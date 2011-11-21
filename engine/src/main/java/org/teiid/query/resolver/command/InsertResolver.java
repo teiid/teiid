@@ -36,6 +36,7 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
+import org.teiid.language.SQLConstants;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -263,7 +264,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             result.put(varSymbol, new Constant(Boolean.TRUE));
             if (!changingOnly) {
             	varSymbol = varSymbol.clone();
-            	varSymbol.getGroupSymbol().setName(ProcedureReservedWords.INPUTS);
+            	varSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
             	result.put(varSymbol, (Expression)valIter.next());
             }
         }
@@ -281,7 +282,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             if (!changingOnly) {
                 Expression value = ResolverUtil.getDefault(varSymbol, metadata);
             	varSymbol = varSymbol.clone();
-            	varSymbol.getGroupSymbol().setName(ProcedureReservedWords.INPUTS);
+            	varSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
             	result.put(varSymbol, value);
             }
         }

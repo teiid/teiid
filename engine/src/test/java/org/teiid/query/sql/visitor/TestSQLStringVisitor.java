@@ -72,10 +72,7 @@ import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
-import org.teiid.query.sql.proc.CriteriaSelector;
 import org.teiid.query.sql.proc.DeclareStatement;
-import org.teiid.query.sql.proc.HasCriteria;
-import org.teiid.query.sql.proc.IfStatement;
 import org.teiid.query.sql.proc.RaiseErrorStatement;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
@@ -1413,78 +1410,6 @@ public class TestSQLStringVisitor {
 		helpTest(assigStmt, "a = (SELECT x FROM g);"); //$NON-NLS-1$
     }
     
-    @Test public void testCriteriaSelector1() {
-		ElementSymbol sy1 = new ElementSymbol("a"); //$NON-NLS-1$
-		ElementSymbol sy2 = new ElementSymbol("b"); //$NON-NLS-1$
-		ElementSymbol sy3 = new ElementSymbol("c"); //$NON-NLS-1$
-		List elmnts = new ArrayList(3);
-		elmnts.add(sy1);
-		elmnts.add(sy2);
-		elmnts.add(sy3);				
-		CriteriaSelector cs = new CriteriaSelector(CriteriaSelector.COMPARE_EQ, elmnts);
-		helpTest(cs, "= CRITERIA ON (a, b, c)"); //$NON-NLS-1$
-    }    
-    
-    @Test public void testCriteriaSelector2() {
-        ElementSymbol sy1 = new ElementSymbol("x"); //$NON-NLS-1$
-        ElementSymbol sy2 = new ElementSymbol("y"); //$NON-NLS-1$
-        ElementSymbol sy3 = new ElementSymbol("z"); //$NON-NLS-1$
-        List elmnts = new ArrayList(3);
-        elmnts.add(sy1);
-        elmnts.add(sy2);
-        elmnts.add(sy3);                
-        CriteriaSelector cs = new CriteriaSelector(CriteriaSelector.LIKE, elmnts);
-        helpTest(cs, "LIKE CRITERIA ON (x, y, z)"); //$NON-NLS-1$
-    }
-    
-    @Test public void testCriteriaSelector3() {
-        ElementSymbol sy1 = new ElementSymbol("x"); //$NON-NLS-1$
-        ElementSymbol sy2 = new ElementSymbol("y"); //$NON-NLS-1$
-        ElementSymbol sy3 = new ElementSymbol("z"); //$NON-NLS-1$
-        List elmnts = new ArrayList(3);
-        elmnts.add(sy1);
-        elmnts.add(sy2);
-        elmnts.add(sy3);                
-        CriteriaSelector cs = new CriteriaSelector(CriteriaSelector.BETWEEN, elmnts);
-        helpTest(cs, "BETWEEN CRITERIA ON (x, y, z)"); //$NON-NLS-1$
-    }
-    
-    @Test public void testHasCriteria1() {
-		ElementSymbol sy1 = new ElementSymbol("x"); //$NON-NLS-1$
-		ElementSymbol sy2 = new ElementSymbol("y"); //$NON-NLS-1$
-		ElementSymbol sy3 = new ElementSymbol("z"); //$NON-NLS-1$
-		List elmnts = new ArrayList(3);
-		elmnts.add(sy1);
-		elmnts.add(sy2);
-		elmnts.add(sy3);				
-		CriteriaSelector cs = new CriteriaSelector(CriteriaSelector.LIKE, elmnts);
-		helpTest(new HasCriteria(cs), "HAS LIKE CRITERIA ON (x, y, z)"); //$NON-NLS-1$
-    }
-    
-    @Test public void testHasCriteria2() {
-        ElementSymbol sy1 = new ElementSymbol("x"); //$NON-NLS-1$
-        ElementSymbol sy2 = new ElementSymbol("y"); //$NON-NLS-1$
-        ElementSymbol sy3 = new ElementSymbol("z"); //$NON-NLS-1$
-        List elmnts = new ArrayList(3);
-        elmnts.add(sy1);
-        elmnts.add(sy2);
-        elmnts.add(sy3);                
-        CriteriaSelector cs = new CriteriaSelector(CriteriaSelector.LIKE, elmnts);
-        helpTest(new HasCriteria(cs), "HAS LIKE CRITERIA ON (x, y, z)"); //$NON-NLS-1$
-    }
-    
-    @Test public void testHasCriteria3() {
-        ElementSymbol sy1 = new ElementSymbol("x"); //$NON-NLS-1$
-        ElementSymbol sy2 = new ElementSymbol("y"); //$NON-NLS-1$
-        ElementSymbol sy3 = new ElementSymbol("z"); //$NON-NLS-1$
-        List elmnts = new ArrayList(3);
-        elmnts.add(sy1);
-        elmnts.add(sy2);
-        elmnts.add(sy3);                
-        CriteriaSelector cs = new CriteriaSelector(CriteriaSelector.BETWEEN, elmnts);
-        helpTest(new HasCriteria(cs), "HAS BETWEEN CRITERIA ON (x, y, z)"); //$NON-NLS-1$
-    }
-    
     @Test public void testCommandStatement1() {
         Query q1 = new Query();
         Select select = new Select();
@@ -1518,98 +1443,6 @@ public class TestSQLStringVisitor {
 		helpTest(b, "BEGIN\nDELETE FROM g;\na = 1;\nERROR 'My Error';\nEND"); //$NON-NLS-1$
     }
     
-    @Test public void testBlock2() {    	
-		// construct If statement
-
-        Delete d1 = new Delete();
-        d1.setGroup(new GroupSymbol("g")); //$NON-NLS-1$
-    	CommandStatement cmdStmt =	new CommandStatement(d1);
-    	Block ifblock = new Block(cmdStmt);
-		// construct If criteria    	
-		ElementSymbol sy1 = new ElementSymbol("x"); //$NON-NLS-1$
-		List elmnts = new ArrayList(1);
-		elmnts.add(sy1);
-		CriteriaSelector cs = new CriteriaSelector(CriteriaSelector.LIKE, elmnts);    	
-    	Criteria crit = new HasCriteria(cs);    	
-    	IfStatement ifStmt = new IfStatement(crit, ifblock);    	
-    	
-    	// other statements
-    	RaiseErrorStatement errStmt =	new RaiseErrorStatement(new Constant("My Error")); //$NON-NLS-1$
-    	Block b = new Block();
-    	b.addStatement(cmdStmt);
-    	b.addStatement(ifStmt);
-    	b.addStatement(errStmt);    	
-
-		helpTest(b, "BEGIN\nDELETE FROM g;\nIF(HAS LIKE CRITERIA ON (x))\nBEGIN\nDELETE FROM g;\nEND\nERROR 'My Error';\nEND"); //$NON-NLS-1$
-    } 
-    
-    @Test public void testIfStatement1() {
-		// construct If block
-        Delete d1 = new Delete();
-        d1.setGroup(new GroupSymbol("g")); //$NON-NLS-1$
-    	CommandStatement cmdStmt =	new CommandStatement(d1);
-    	AssignmentStatement assigStmt =	new AssignmentStatement(new ElementSymbol("a"), new Constant(new Integer(1))); //$NON-NLS-1$
-    	RaiseErrorStatement errStmt =	new RaiseErrorStatement(new Constant("My Error")); //$NON-NLS-1$
-    	Block ifblock = new Block();
-    	ifblock.addStatement(cmdStmt);
-    	ifblock.addStatement(assigStmt);
-    	ifblock.addStatement(errStmt);
-
-		// construct If criteria    	
-		ElementSymbol sy1 = new ElementSymbol("x"); //$NON-NLS-1$
-		List elmnts = new ArrayList(1);
-		elmnts.add(sy1);
-		CriteriaSelector cs = new CriteriaSelector(CriteriaSelector.LIKE, elmnts);    	
-    	Criteria crit = new HasCriteria(cs);
-    	
-    	IfStatement ifStmt = new IfStatement(crit, ifblock);
-		helpTest(ifStmt, "IF(HAS LIKE CRITERIA ON (x))\nBEGIN\nDELETE FROM g;\na = 1;\nERROR 'My Error';\nEND"); //$NON-NLS-1$
-    }
-
-    @Test public void testIfStatement2() {
-		// construct If block
-        Delete d1 = new Delete();
-        d1.setGroup(new GroupSymbol("g")); //$NON-NLS-1$
-    	CommandStatement cmdStmt =	new CommandStatement(d1);
-    	Block ifblock = new Block(cmdStmt);
-
-		// construct If criteria    	
-		ElementSymbol sy1 = new ElementSymbol("x"); //$NON-NLS-1$
-		List elmnts = new ArrayList(1);
-		elmnts.add(sy1);
-		CriteriaSelector cs = new CriteriaSelector(CriteriaSelector.LIKE, elmnts);    	
-    	Criteria crit = new HasCriteria(cs);
-    	
-    	IfStatement ifStmt = new IfStatement(crit, ifblock);
-		helpTest(ifStmt, "IF(HAS LIKE CRITERIA ON (x))\nBEGIN\nDELETE FROM g;\nEND"); //$NON-NLS-1$
-    }
-
-    @Test public void testIfStatement3() {
-		// construct If block
-        Delete d1 = new Delete();
-        d1.setGroup(new GroupSymbol("g")); //$NON-NLS-1$
-    	CommandStatement cmdStmt =	new CommandStatement(d1);
-    	AssignmentStatement assigStmt =	new AssignmentStatement(new ElementSymbol("a"), new Constant(new Integer(1))); //$NON-NLS-1$
-    	RaiseErrorStatement errStmt =	new RaiseErrorStatement(new Constant("My Error")); //$NON-NLS-1$
-    	Block ifblock = new Block();
-    	ifblock.addStatement(cmdStmt);
-    	ifblock.addStatement(assigStmt);
-    	ifblock.addStatement(errStmt);
-
-		// construct If criteria    	
-		ElementSymbol sy1 = new ElementSymbol("x"); //$NON-NLS-1$
-		List elmnts = new ArrayList(1);
-		elmnts.add(sy1);
-		CriteriaSelector cs = new CriteriaSelector(CriteriaSelector.LIKE, elmnts);    	
-    	Criteria crit = new HasCriteria(cs);
-    	
-    	Block elseblock = new Block();
-    	elseblock.addStatement(cmdStmt);
-    	
-    	IfStatement ifStmt = new IfStatement(crit, ifblock, elseblock);
-		helpTest(ifStmt, "IF(HAS LIKE CRITERIA ON (x))\nBEGIN\nDELETE FROM g;\na = 1;\nERROR 'My Error';\nEND\nELSE\nBEGIN\nDELETE FROM g;\nEND"); //$NON-NLS-1$
-    }    
-
     @Test public void testCreateUpdateProcedure1() {
         Delete d1 = new Delete();
         d1.setGroup(new GroupSymbol("g")); //$NON-NLS-1$

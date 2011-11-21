@@ -46,14 +46,14 @@ public class TestIfStatement  extends TestCase {
 	public static final IfStatement sample1() {
 		Block ifBlock = TestBlock.sample1();
 		Block elseBlock = TestBlock.sample2();
-		Criteria criteria = TestHasCriteria.sample1();
+		Criteria criteria = TestSetCriteria.sample1();
 		return new IfStatement(criteria, ifBlock, elseBlock);
 	}
 
 	public static final IfStatement sample2() { 
 		Block ifBlock = TestBlock.sample2();
 		Block elseBlock = TestBlock.sample1();
-		Criteria criteria = TestHasCriteria.sample2();
+		Criteria criteria = TestSetCriteria.sample2();
 		return new IfStatement(criteria, ifBlock, elseBlock);
 	}
 	
@@ -72,7 +72,7 @@ public class TestIfStatement  extends TestCase {
 	
 	public void testGetCondition() {
 		IfStatement b1 = sample1();
-        assertTrue("Incorrect IfBlock on statement", b1.getCondition().equals(TestHasCriteria.sample1())); //$NON-NLS-1$
+        assertTrue("Incorrect IfBlock on statement", b1.getCondition().equals(TestSetCriteria.sample1())); //$NON-NLS-1$
 	}
 	
 	public void testSelfEquivalence(){

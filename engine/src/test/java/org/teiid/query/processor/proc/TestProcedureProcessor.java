@@ -57,7 +57,6 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.FakeDataManager;
-import org.teiid.query.processor.FakeDataStore;
 import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
@@ -269,114 +268,6 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, 5, dataMgr, metadata);
     }
 
-	// testing rows updated incremented, Input and assignment statements
-    @Test public void testProcedureProcessor3() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1 where e2=5;\n"; //$NON-NLS-1$
-		procedure = procedure + "var1 = INPUT.e2;\n"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED + var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e2=40"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
-        
-        FakeDataManager dataMgr = exampleDataManager(metadata);
-
-		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-									 
-		helpTestProcess(plan, 45, dataMgr, metadata);									 
-    }
-    
-    // if/else test
-    @Test public void testProcedureProcessor4() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = Select pm1.g1.e2 from pm1.g1 where e2=5;\n"; //$NON-NLS-1$
-		procedure = procedure + "if(var1 = 5)\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";		 //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED + var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "ELSE\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1 where e2=5;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1, pm1.g1.e2 = var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "var1 = INPUT.e2;\n"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED + var1;\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END";         //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e2=45"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
-        
-        FakeDataManager dataMgr = exampleDataManager(metadata);
-
-		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-									 
-		helpTestProcess(plan, 5, dataMgr, metadata);									 
-    }
-    
-    @Test public void testProcedureProcessor4WithBlockedException() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = Select pm1.g1.e2 from pm1.g1 where e2=5;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(var1 = 5)\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";       //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED + var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "ELSE\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1 where e2=5;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1, pm1.g1.e2 = var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = INPUT.e2;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED + var1;\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END";         //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e2=45"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
-        
-        FakeDataManager dataMgr = exampleDataManager(metadata);
-        dataMgr.setBlockOnce();
-
-        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-                                     
-        helpTestProcess(plan, 5, dataMgr, metadata);                                     
-    }
-
-    // if/else test    
-    @Test public void testProcedureProcessor5() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = Select pm1.g1.e2 from pm1.g1 where e2=15;\n"; //$NON-NLS-1$
-		procedure = procedure + "if(var1 = 5)\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";		 //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED + var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "ELSE\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1 where e2=5;\n"; //$NON-NLS-1$
-		procedure = procedure + "var1 = INPUT.e2;\n"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED + var1;\n";         //$NON-NLS-1$
-        procedure = procedure + "END"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e2=45"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
-        
-        FakeDataManager dataMgr = exampleDataManager(metadata);
-
-		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-									 
-		helpTestProcess(plan, 50, dataMgr, metadata);									 
-    }
-    
     // more rows than expected
     @Test public void testProcedureProcessor6() throws Exception {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
@@ -452,61 +343,6 @@ public class TestProcedureProcessor {
         helpTestProcessFailure(plan, dataMgr, ErrorInstruction.ERROR_PREFIX + expected, metadata); 
     }
     
-	/** test if statement's if block with lookup in if condition */
-	@Test public void testLookupFunction1() throws Exception {     
-		String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "DECLARE integer var2;\n"; //$NON-NLS-1$
-		procedure = procedure + "if('a' = lookup('pm1.g1','e1', 'e2', 0))\n"; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-		procedure = procedure + "var2 = INPUT.e2;\n"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED +1;\n"; //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-		procedure = procedure + "ELSE\n"; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "var2 = 100;\n"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED +13;\n"; //$NON-NLS-1$
-		procedure = procedure + "END\n";		 //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-		
-		String userUpdateStr = "UPDATE vm1.g1 SET e2=30";    //$NON-NLS-1$
-		 
-		QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
-		FakeDataManager dataMgr = new FakeDataManager();
-		FakeDataStore.sampleData2(dataMgr);
-
-		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);                         
-		helpTestProcess(plan, 1, dataMgr, metadata);        
-
-	}
-	
-	/** test if statement's else block with lookup in if condition */
-	@Test public void testLookupFunction2() throws Exception {     
-		String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "DECLARE integer var2;\n"; //$NON-NLS-1$
-		procedure = procedure + "if('a' = lookup('pm1.g1','e1', 'e2', 5))\n"; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-		procedure = procedure + "var2 = INPUT.e2;\n"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED +1;\n"; //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-		procedure = procedure + "ELSE\n"; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "var2 = 100;\n"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED +12;\n"; //$NON-NLS-1$
-		procedure = procedure + "END\n";		 //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-		
-		String userUpdateStr = "UPDATE vm1.g1 SET e2=30";    //$NON-NLS-1$
-		 
-		QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
-		FakeDataManager dataMgr = new FakeDataManager();
-		FakeDataStore.sampleData2(dataMgr);
-		
-		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);                         
-		helpTestProcess(plan, 12, dataMgr, metadata);        
-	}
-
     @Test public void testVirtualProcedure() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp2()"; //$NON-NLS-1$
     
@@ -866,32 +702,6 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
-    //procedure with Has Criteria and Translate Criteria 
-    @Test public void testDefect13625() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "IF(HAS CRITERIA ON (vm1.g4.e2))\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = Select pm1.g1.e2 from pm1.g1 where TRANSLATE = CRITERIA ON (vm1.g4.e2);\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";		 //$NON-NLS-1$
-        procedure = procedure + "if(var1 = 5)\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";		 //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED + var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";		 //$NON-NLS-1$
-        procedure = procedure + "END"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE g4 SET e1='x' where e2=5"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
-        
-        FakeDataManager dataMgr = exampleDataManager(metadata);
-
-		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-									 
-		helpTestProcess(plan, 5, dataMgr, metadata);
-    }
-    
     @Test public void testVirtualProcedure30() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp30()";     //$NON-NLS-1$
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
@@ -960,7 +770,7 @@ public class TestProcedureProcessor {
 
         // Set up data
         HardcodedDataManager dataMgr = new HardcodedDataManager();
-        dataMgr.addData("INSERT INTO pm1.g1 (e1, e2, e3, e4) VALUES (null, 5, UNKNOWN, null)", new List[] {Arrays.asList(1)});
+        dataMgr.addData("INSERT INTO pm1.g1 (pm1.g1.e2) VALUES (5)", new List[] {Arrays.asList(1)});
                     
         // Create expected results
         List[] expected = new List[] {
@@ -1083,34 +893,6 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
-    @Test public void testDefect17650() throws Exception {
-        String procedure1 = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure1 = procedure1 + "BEGIN\n"; //$NON-NLS-1$
-        procedure1 = procedure1 + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure1 = procedure1 + "IF(HAS CRITERIA ON (vm1.g1.e2))\n"; //$NON-NLS-1$
-        procedure1 = procedure1 + "BEGIN\n"; //$NON-NLS-1$
-        procedure1 = procedure1 + "ROWS_UPDATED = UPDATE vm1.g2 SET e1='x' where TRANSLATE = CRITERIA ON (vm1.g1.e2);\n"; //$NON-NLS-1$
-        procedure1 = procedure1 + "END\n";         //$NON-NLS-1$
-        procedure1 = procedure1 + "END"; //$NON-NLS-1$
-        
-        String procedure2 = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure2 = procedure2 + "BEGIN\n"; //$NON-NLS-1$
-        procedure2 = procedure2 + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure2 = procedure2 + "Select pm1.g2.e2 from pm1.g2 where TRANSLATE CRITERIA;\n";//$NON-NLS-1$
-        procedure2 = procedure2 + "ROWS_UPDATED = 5;\n"; //$NON-NLS-1$
-        procedure2 = procedure2 + "END"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x' where e2=5"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure1, procedure2);
-        
-        FakeDataManager dataMgr = exampleDataManager(metadata);
-
-        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-                                     
-        helpTestProcess(plan, 5, dataMgr, metadata);
-    }
-    
     @Test public void testDefect19982() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp55(5)";     //$NON-NLS-1$
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
@@ -1145,33 +927,6 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
 
-    //procedure with Has Criteria and Translate Criteria and changing
-    @Test public void testDynamicCommandWithTranslate() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "IF(HAS CRITERIA ON (vm1.g4.e2))\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "execute string 'Select pm1.g1.e2 x, changing.e1 y from pm1.g1 where TRANSLATE = CRITERIA ON (vm1.g4.e2)' as x integer, y boolean into #temp;\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = select x from #temp;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";		 //$NON-NLS-1$
-        procedure = procedure + "if(var1 = 5)\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";		 //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED + var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";		 //$NON-NLS-1$
-        procedure = procedure + "END"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE g4 SET e1='x' where e2=5"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
-        
-        FakeDataManager dataMgr = exampleDataManager(metadata);
-
-		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-									 
-		helpTestProcess(plan, 5, dataMgr, metadata);
-    }
-    
     @Test public void testDynamicCommandWithIntoExpression() throws Exception {
     	
     	//Test INTO clause with expression
@@ -1778,36 +1533,6 @@ public class TestProcedureProcessor {
     }
     
     /**
-     * defect 23976
-     * Also, even after the bug for passing procedure inputs to non-execs was fixed, the special case of
-     * if (below) and while statements popped up.  
-     */
-    @Test public void testIfEvaluation() throws Exception {
-        String procedure1 = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure1 += "BEGIN\n"; //$NON-NLS-1$
-        procedure1 += "DECLARE string var1 = INPUT.e1;\n"; //$NON-NLS-1$
-        procedure1 += "ROWS_UPDATED = UPDATE vm1.g2 SET e1=var1;\n"; //$NON-NLS-1$
-        procedure1 += "END"; //$NON-NLS-1$
-        
-        String procedure2 = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure2 += "BEGIN\n"; //$NON-NLS-1$
-        procedure2 += "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure2 += "IF (INPUT.e1 = 1)\n"; //$NON-NLS-1$
-        procedure2 += "ROWS_UPDATED = 5;\n"; //$NON-NLS-1$
-        procedure2 += "ELSE\n"; //$NON-NLS-1$
-        procedure2 += "ROWS_UPDATED = 4;\n"; //$NON-NLS-1$
-        procedure2 += "END"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x' where e2=5"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure1, procedure2);
-        
-        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-                                     
-        helpTestProcess(plan, 4, new FakeDataManager(), metadata);
-    }
-    
-    /**
      *  This is a slight variation of TestProcessor.testVariableInExecParam, where the proc wrapper can be 
      *  removed after rewrite
      */
@@ -1860,56 +1585,6 @@ public class TestProcedureProcessor {
             Arrays.asList(new Object[] {null}),  
             Arrays.asList(new Object[] {"b"})}, dataMgr, metadata); //$NON-NLS-1$
         
-    }
-    
-    /**
-     * the update will not be executed, but the assignment value should still be 0
-     */
-    @Test public void testUpdateAssignmentNotExecuted() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1 = UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e2;"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = var1 + 1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE g4 SET e1='x' where e2=5"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
-        
-        FakeDataManager dataMgr = exampleDataManager(metadata);
-
-        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-                                     
-        helpTestProcess(plan, 1, dataMgr, metadata);
-        
-        assertTrue(plan.requiresTransaction(false));
-    }
-    
-    @Test public void testUpdateAssignmentNotExecutedVirtual() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1 = UPDATE vm1.g2 SET e1 = INPUT.e2;"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = var1 + 1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END"; //$NON-NLS-1$
-        
-        String procedure2 = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure2 += "BEGIN\n"; //$NON-NLS-1$
-        procedure2 += "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure2 += "IF (INPUT.e1 = 1)\n"; //$NON-NLS-1$
-        procedure2 += "ROWS_UPDATED = 5;\n"; //$NON-NLS-1$
-        procedure2 += "ELSE\n"; //$NON-NLS-1$
-        procedure2 += "ROWS_UPDATED = 4;\n"; //$NON-NLS-1$
-        procedure2 += "END"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x' where e2=5"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure, procedure2);
-        
-        FakeDataManager dataMgr = exampleDataManager(metadata);
-
-        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-                                     
-        helpTestProcess(plan, 1, dataMgr, metadata);
     }
     
     @Test public void testEvaluatableSelectWithOrderBy() throws Exception {

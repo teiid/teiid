@@ -23,7 +23,6 @@
 package org.teiid.query.sql.lang;
 
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -32,7 +31,6 @@ import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -227,23 +225,6 @@ public class Insert extends ProcedureContainer {
                EquivalenceUtil.areEqual(getQueryExpression(), other.getQueryExpression());
     }
     
-    /** 
-     * @see org.teiid.query.sql.lang.ProcedureContainer#getParameters()
-     * @since 5.0
-     */
-    public LinkedHashMap<ElementSymbol, Expression> getProcedureParameters() {
-        
-        int iSize = getVariables().size();
-        LinkedHashMap<ElementSymbol, Expression> map = new LinkedHashMap<ElementSymbol, Expression>();
-        
-        for (int j = 0; j < iSize; j++) {
-            ElementSymbol symbol = (ElementSymbol)variables.get( j ).clone();
-            symbol.setGroupSymbol(new GroupSymbol(ProcedureReservedWords.INPUTS));
-            map.put(symbol, values.get( j ) );
-        } // for 
-        return map;
-    }
-
 	/**
 	 * Return a deep copy of this Insert.
 	 * @return Deep copy of Insert

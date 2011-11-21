@@ -23,7 +23,10 @@
 package org.teiid.dqp.internal.process;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.adminapi.Admin;
@@ -329,13 +332,6 @@ public class SessionAwareCache<T> {
     public void setModTime(long modTime) {
 		this.modTime = modTime;
 	}
-    
-    public Set<CacheID> replicatableKeys() {
-    	if (this.distributedCache == this.localCache) {
-    		return Collections.EMPTY_SET;
-    	}
-    	return this.distributedCache.keys();
-    }
     
     public static Collection<String> getCacheTypes(){
     	ArrayList<String> caches = new ArrayList<String>();

@@ -50,15 +50,6 @@ import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.lang.SetQuery.Operation;
-import org.teiid.query.sql.proc.AssignmentStatement;
-import org.teiid.query.sql.proc.Block;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
-import org.teiid.query.sql.proc.CriteriaSelector;
-import org.teiid.query.sql.proc.DeclareStatement;
-import org.teiid.query.sql.proc.HasCriteria;
-import org.teiid.query.sql.proc.IfStatement;
-import org.teiid.query.sql.proc.Statement;
-import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
@@ -754,90 +745,6 @@ public class TestOptionsAndHints {
         TestParser.helpTest(sql, "SELECT b FROM (t1 LEFT OUTER JOIN /*+ optional */ t2 ON t1.a = t2.a) LEFT OUTER JOIN /*+ optional */ t3 ON t1.a = t3.a", query);         //$NON-NLS-1$
     }
     
-    @Test public void testOptionalFromClause10(){
-        //declare var1
-        ElementSymbol var1 = new ElementSymbol("var1"); //$NON-NLS-1$
-        String shortType = new String("short"); //$NON-NLS-1$
-        Statement declStmt = new DeclareStatement(var1, shortType);
-        
-        //ifblock
-        List symbols = new ArrayList();
-        symbols.add(new ElementSymbol("a1"));  //$NON-NLS-1$
-        Select select = new Select(symbols);       
-        
-        From from = new From();
-        from.addGroup(new GroupSymbol("g")); //$NON-NLS-1$
-        
-        Criteria criteria = new CompareCriteria(new ElementSymbol("a2"), CompareCriteria.EQ,  //$NON-NLS-1$
-            new Constant(new Integer(5)));
-        
-        Query query = new Query();
-        query.setSelect(select);
-        query.setFrom(from);
-        query.setCriteria(criteria);
-        
-        AssignmentStatement queryStmt = new AssignmentStatement(var1, query);
-              
-        Block ifBlock = new Block();      
-        ifBlock.addStatement(queryStmt);
-        
-        //else block 
-        ElementSymbol var2 = new ElementSymbol("var2"); //$NON-NLS-1$
-        Statement elseDeclStmt = new DeclareStatement(var2, shortType);     
-        
-        List elseSymbols = new ArrayList();
-        elseSymbols.add(new ElementSymbol("b1"));  //$NON-NLS-1$
-        Select elseSelect = new Select(elseSymbols); 
-    
-        Query elseQuery = new Query();
-        elseQuery.setSelect(elseSelect);
-        From elseFrom = (From)from.clone();
-        UnaryFromClause ufc = new UnaryFromClause();
-        ufc.setGroup(new GroupSymbol("h")); //$NON-NLS-1$ 
-        ufc.setOptional(true);
-        elseFrom.addClause(ufc);
-        elseQuery.setFrom(elseFrom);
-        elseQuery.setCriteria(criteria);
-        
-        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQuery);
-        
-        Block elseBlock = new Block();
-        List elseStmts = new ArrayList();
-        elseStmts.add(elseDeclStmt);
-        elseStmts.add(elseQueryStmt);
-      
-        elseBlock.setStatements(elseStmts);
-   
-        //has criteria
-        ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
-        List elements = new ArrayList();
-        elements.add(a);
-        
-        CriteriaSelector critSelector = new CriteriaSelector();
-        critSelector.setSelectorType(CriteriaSelector.IN);
-        critSelector.setElements(elements);
-        
-        HasCriteria hasSelector = new HasCriteria();
-        hasSelector.setSelector(critSelector);
-        
-        IfStatement stmt = new IfStatement(hasSelector, ifBlock, elseBlock);
-        
-        Block block = new Block();        
-        block.addStatement(declStmt);
-        block.addStatement(stmt);
-                
-        CreateUpdateProcedureCommand cmd = new CreateUpdateProcedureCommand();
-        cmd.setBlock(block);
-       
-        TestParser.helpTest("CREATE PROCEDURE BEGIN DECLARE short var1;"+ //$NON-NLS-1$
-           " IF(HAS IN CRITERIA ON (a)) BEGIN var1 = (SELECT a1 FROM g WHERE a2 = 5); END"+ //$NON-NLS-1$
-           " ELSE BEGIN DECLARE short var2; var2 = SELECT b1 FROM g, /*+ optional */ h WHERE a2 = 5; END" + //$NON-NLS-1$
-           " END", "CREATE PROCEDURE"+"\n"+"BEGIN"+"\n"+"DECLARE short var1;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-           "IF(HAS IN CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = (SELECT a1 FROM g WHERE a2 = 5);"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-           "END"+"\n"+"ELSE"+"\n"+"BEGIN"+"\n"+"DECLARE short var2;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-           "var2 = (SELECT b1 FROM g, /*+ optional */ h WHERE a2 = 5);"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-    }
-
     @Test public void testStoredQueryWithOption(){
         StoredProcedure storedQuery = new StoredProcedure();
         storedQuery.setProcedureName("proc1"); //$NON-NLS-1$

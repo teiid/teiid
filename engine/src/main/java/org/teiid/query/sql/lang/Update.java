@@ -22,14 +22,11 @@
 
 package org.teiid.query.sql.lang;
 
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -249,24 +246,6 @@ public class Update extends TranslatableProcedureContainer {
 	public boolean areResultsCachable(){
 		return false;
 	}
-    
-    /** 
-     * @see org.teiid.query.sql.lang.ProcedureContainer#getProcedureParameters()
-     * @since 5.0
-     */
-    public LinkedHashMap<ElementSymbol, Expression> getProcedureParameters() {
-        
-    	LinkedHashMap<ElementSymbol, Expression> map = new LinkedHashMap<ElementSymbol, Expression>();
-        
-        for (Iterator<SetClause> iter = getChangeList().getClauses().iterator(); iter.hasNext();) {
-        	SetClause setClause = iter.next();
-            ElementSymbol symbol = setClause.getSymbol().clone();
-            symbol.setGroupSymbol(new GroupSymbol(ProcedureReservedWords.INPUTS));
-            map.put( symbol, setClause.getValue() );
-        }
-        
-        return map;
-    }
     
 }
 

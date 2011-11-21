@@ -119,7 +119,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 		List<ElementSymbol> changingElements = new ArrayList<ElementSymbol>(elements.size());
         for(int i=0; i<elements.size(); i++) {
             ElementSymbol virtualElmnt = elements.get(i);
-            ElementSymbol changeElement = (ElementSymbol)virtualElmnt.clone();
+            ElementSymbol changeElement = virtualElmnt.clone();
             changeElement.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
             changingElements.add(changeElement);
         }
@@ -278,34 +278,10 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 		        }
 
 		        ProcedureContainerResolver.addScalarGroup(procName, childMetadata, externalGroups, tempElements, updatable);
-			} else if (type != Command.TYPE_DELETE) {
-				createInputChangingMetadata(childMetadata, tma, container, externalGroups);
 			}
 		}
 		
 	    QueryResolver.setChildMetadata(currentCommand, childMetadata.getData(), externalGroups);
 	}
 
-	static void createInputChangingMetadata(
-			TempMetadataStore discoveredMetadata,
-			QueryMetadataInterface metadata, GroupSymbol group, GroupContext externalGroups)
-			throws QueryMetadataException, TeiidComponentException {
-        //Look up elements for the virtual group
-        List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(group, metadata);
-
-        // Create the INPUT variables
-        List<ElementSymbol> inputElments = new ArrayList<ElementSymbol>(elements.size());
-        for(int i=0; i<elements.size(); i++) {
-            ElementSymbol virtualElmnt = elements.get(i);
-            ElementSymbol inputElement = (ElementSymbol)virtualElmnt.clone();
-            inputElments.add(inputElement);
-        }
-
-        ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.INPUT, discoveredMetadata, externalGroups, inputElments, false);
-        ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.INPUTS, discoveredMetadata, externalGroups, inputElments, false);
-
-        // Switch type to be boolean for all CHANGING variables
-        ProcedureContainerResolver.addChanging(discoveredMetadata, externalGroups, elements);
-	}
-        
 }

@@ -46,17 +46,7 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
-import org.teiid.query.sql.ProcedureReservedWords;
-import org.teiid.query.sql.lang.Delete;
-import org.teiid.query.sql.lang.From;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.ProcedureContainer;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.TranslatableProcedureContainer;
-import org.teiid.query.sql.lang.UnaryFromClause;
-import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -72,7 +62,7 @@ public final class TriggerActionPlanner {
 	public ProcessorPlan optimize(ProcedureContainer userCommand, TriggerAction ta, IDGenerator idGenerator, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
 	throws QueryMetadataException, TeiidComponentException, QueryResolverException, TeiidProcessingException {
 		//TODO consider caching the plans without using the changing vars
-		QueryRewriter.rewrite(ta, null, metadata, context, QueryResolver.getVariableValues(userCommand, true, metadata), userCommand.getType());
+		QueryRewriter.rewrite(ta, metadata, context, QueryResolver.getVariableValues(userCommand, true, metadata));
 		
 		QueryCommand query = null;
 		Map<ElementSymbol, Expression> params = new HashMap<ElementSymbol, Expression>();
@@ -94,11 +84,9 @@ public final class TriggerActionPlanner {
 		}
 		
 		for (Map.Entry<ElementSymbol, Expression> entry : QueryResolver.getVariableValues(userCommand, false, metadata).entrySet()) {
-			if (entry.getKey().getGroupSymbol().getShortName().equalsIgnoreCase(ProcedureReservedWords.INPUTS)) {
+			if (entry.getKey().getGroupSymbol().getShortName().equalsIgnoreCase(SQLConstants.Reserved.NEW)) {
 				Expression value = entry.getValue() instanceof SingleElementSymbol ? entry.getValue() : new ExpressionSymbol("x", entry.getValue()); //$NON-NLS-1$
-				ElementSymbol newElementSymbol = entry.getKey().clone();
-				newElementSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
-				params.put(newElementSymbol, value);
+				params.put(entry.getKey(), value);
 				if (userCommand instanceof Update) {
 					((Query)query).getSelect().addSymbol((SelectSymbol) value);
 				}

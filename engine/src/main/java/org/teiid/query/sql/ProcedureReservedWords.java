@@ -27,17 +27,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.teiid.language.SQLConstants;
-import org.teiid.language.SQLConstants.Reserved;
 
 /**
  * Special variable names in stored procedure language.
  */
 public class ProcedureReservedWords {
-
-	@Deprecated
-    public static final String INPUT = Reserved.INPUT;
-    
-    public static final String INPUTS = "INPUTS"; //$NON-NLS-1$
 
     public static final String ROWS_UPDATED = "ROWS_UPDATED"; //$NON-NLS-1$
     

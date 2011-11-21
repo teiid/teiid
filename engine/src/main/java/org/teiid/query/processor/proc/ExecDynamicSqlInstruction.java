@@ -52,7 +52,6 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.resolver.QueryResolver;
-import org.teiid.query.resolver.util.ResolveVirtualGroupCriteriaVisitor;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
@@ -160,21 +159,13 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
                 command.addExternalGroupToContext(using);
             }
 
-			// Resolve any groups
-			if (parentProcCommand.isUpdateProcedure()) {
-				ResolveVirtualGroupCriteriaVisitor.resolveCriteria(command,
-						parentProcCommand.getVirtualGroup(), metadata);
-			}
-
 			QueryResolver.resolveCommand(command, metadata.getDesignTimeMetadata());
 
 			validateDynamicCommand(procEnv, command);
 
 			// create a new set of variables including vars
 			Map<ElementSymbol, Expression> nameValueMap = createVariableValuesMap(localContext);
-            nameValueMap.putAll(QueryResolver.getVariableValues(parentProcCommand.getUserCommand(), false, metadata));
             ValidationVisitor visitor = new ValidationVisitor();
-            visitor.setUpdateProc(parentProcCommand);
             Request.validateWithVisitor(visitor, metadata, command);
 
             if (dynamicCommand.getAsColumns() != null
@@ -187,8 +178,8 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 				}
 			}
             
-			command = QueryRewriter.rewrite(command, parentProcCommand, metadata,
-					procEnv.getContext(), nameValueMap, parentProcCommand.getUserCommand().getType());
+			command = QueryRewriter.rewrite(command, metadata, procEnv.getContext(),
+					nameValueMap);
 
             ProcessorPlan commandPlan = QueryOptimizer.optimizePlan(command, metadata,
 					idGenerator, capFinder, AnalysisRecord

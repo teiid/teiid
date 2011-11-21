@@ -56,24 +56,7 @@ import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.optimizer.relational.rules.RuleChooseDependent;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.processor.relational.AccessNode;
-import org.teiid.query.processor.relational.DependentAccessNode;
-import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
-import org.teiid.query.processor.relational.GroupingNode;
-import org.teiid.query.processor.relational.JoinNode;
-import org.teiid.query.processor.relational.JoinStrategy;
-import org.teiid.query.processor.relational.MergeJoinStrategy;
-import org.teiid.query.processor.relational.NestedLoopJoinStrategy;
-import org.teiid.query.processor.relational.NestedTableJoinStrategy;
-import org.teiid.query.processor.relational.NullNode;
-import org.teiid.query.processor.relational.PlanExecutionNode;
-import org.teiid.query.processor.relational.ProjectIntoNode;
-import org.teiid.query.processor.relational.ProjectNode;
-import org.teiid.query.processor.relational.RelationalNode;
-import org.teiid.query.processor.relational.RelationalPlan;
-import org.teiid.query.processor.relational.SelectNode;
-import org.teiid.query.processor.relational.SortNode;
-import org.teiid.query.processor.relational.UnionAllNode;
+import org.teiid.query.processor.relational.*;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.TestResolver;
@@ -5593,24 +5576,9 @@ public class TestOptimizer {
     
     @Test public void testCase3966() {
         ProcessorPlan plan = helpPlan("insert into vm1.g37 (e1, e2, e3, e4) values('test', 1, convert('true', boolean) , convert('12', double) )", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
-                                      new String[] {} ); 
+                                      new String[] {"INSERT INTO pm4.g1 (pm4.g1.e1, pm4.g1.e2, pm4.g1.e3, pm4.g1.e4) VALUES ('test', 1, TRUE, 12.0)"} ); 
 
-        checkNodeTypes(plan, new int[] {
-            0,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // Join
-            0,      // MergeJoin
-            0,      // Null
-            1,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        });    
+        checkNodeTypes(plan, FULL_PUSHDOWN);    
     }
     
     /*

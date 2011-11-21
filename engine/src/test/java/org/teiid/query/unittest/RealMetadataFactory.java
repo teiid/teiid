@@ -39,17 +39,7 @@ import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnSet;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionParameter;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ProcedureParameter.Type;
@@ -723,14 +713,14 @@ public class RealMetadataFactory {
         QueryNode vm1g37n1 = new QueryNode("SELECT * from pm4.g1");         //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1g37 = createVirtualGroup("g37", vm1, vm1g37n1); //$NON-NLS-1$
         vm1g37.setSupportsUpdate(true);
+        vm1g37.setDeletePlan("for each row begin atomic end");
 
         QueryNode vm1g38n1 = new QueryNode("SELECT a.e1, b.e2 from pm1.g1 as a, pm6.g1 as b where a.e1=b.e1");         //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1g38 = createVirtualGroup("g38", vm1, vm1g38n1); //$NON-NLS-1$
         
 		// Create virtual groups
 		QueryNode vm1g39n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vm1g39 = createUpdatableVirtualGroup("g39", vm1, vm1g39n1, "CREATE PROCEDURE BEGIN LOOP ON (SELECT pm1.g1.e2 FROM pm1.g1 where pm1.g1.e2=3) AS mycursor begin update pm1.g1 set pm1.g1.e1 = input.e1 where pm1.g1.e1 = input.e1; ROWS_UPDATED = ROWS_UPDATED + ROWCOUNT;\nupdate pm1.g1 set pm1.g1.e2 = input.e2 where pm1.g1.e2 = input.e2; END END"); //$NON-NLS-1$ //$NON-NLS-2$
-        
+		Table vm1g39 = createUpdatableVirtualGroup("g39", vm1, vm1g39n1, null); //$NON-NLS-1$ 
 		// Create virtual elements
 		createElements(vm1g39, 
 			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -1284,12 +1274,6 @@ public class RealMetadataFactory {
         Procedure vsp41 = createVirtualProcedure("vsp41", pm1, null, vspqn41); //$NON-NLS-1$
         vsp41.setResultSet(vsprs1());
 
-        vm1g1.setInsertPlan("CREATE PROCEDURE BEGIN ROWS_UPDATED = INSERT INTO pm1.g1(e1, e2, e3, e4) values(INPUT.e1, INPUT.e2, INPUT.e3, INPUT.e4); END"); //$NON-NLS-1$
-        vm1g1.setUpdatePlan("CREATE PROCEDURE BEGIN ROWS_UPDATED = UPDATE pm1.g1 SET e1 = INPUT.e1, e2 = INPUT.e2, e3 = INPUT.e3, e4=INPUT.e4 WHERE TRANSLATE CRITERIA; END"); //$NON-NLS-1$       
-        vm1g1.setDeletePlan("CREATE PROCEDURE BEGIN ROWS_UPDATED = DELETE FROM pm1.g1 WHERE TRANSLATE CRITERIA; END"); //$NON-NLS-1$       
-
-        vm1g37.setInsertPlan("CREATE PROCEDURE BEGIN ROWS_UPDATED = INSERT INTO pm4.g1(e1, e2, e3, e4) values(INPUT.e1, INPUT.e2, INPUT.e3, INPUT.e4); END"); //$NON-NLS-1$
-        vm1g37.setDeletePlan("CREATE PROCEDURE BEGIN ROWS_UPDATED = DELETE FROM pm4.g1 where translate criteria; END"); //$NON-NLS-1$
         QueryNode vspqn37 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; VARIABLES.x=5; INSERT INTO vm1.g1(e2) values(VARIABLES.x); SELECT ROWCOUNT; END"); //$NON-NLS-1$ //$NON-NLS-2$
         Procedure vsp37 = createVirtualProcedure("vsp37", pm1, null, vspqn37); //$NON-NLS-1$
         vsp37.setResultSet(vsprs1());

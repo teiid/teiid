@@ -48,7 +48,6 @@ import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.unittest.RealMetadataFactory;
@@ -293,216 +292,6 @@ public class TestProcedureResolving {
 									 Table.TriggerEvent.UPDATE);
     }    
     
-	// special variable ROWS_UPDATED resolution
-    @Test public void testCreateUpdateProcedure10() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUTS.e1, pm1.g1.e2 = var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED + var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-    }
-    
-	// special variable ROWS_UPDATED used with declared variable
-    @Test public void testCreateUpdateProcedure11() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUTS.e1, pm1.g1.e2 = var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-    }
-    
-	// special variable INPUT used with declared variable
-    @Test public void testCreateUpdateProcedure12() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, INPUTS.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUTS.e1, pm1.g1.e2 = INPUTS.e2;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-    }
-    
-	// special variable CHANGING used with declared variable
-    @Test public void testCreateUpdateProcedure14() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(CHANGING.e1 = 'true')\n";         //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, INPUTS.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUTS.e1, pm1.g1.e2 = INPUTS.e2;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-    }
-    
-	// special variable CHANGING and INPUT used in compound criteria
-    @Test public void testCreateUpdateProcedure15() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(CHANGING.e1='false' and INPUTS.e1=1)\n";         //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, INPUTS.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUTS.e1, pm1.g1.e2 = INPUTS.e2;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-    }
-    
-	// special variable CHANGING and INPUT used in compound criteria, with declared variables
-    @Test public void testCreateUpdateProcedure16() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(CHANGING.e4 ='true' and INPUTS.e2=1 or var1 < 30)\n";         //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, INPUTS.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUTS.e1, pm1.g1.e2 = INPUTS.e2;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-    }
-    
-	// special variable CHANGING compared against integer no implicit conversion available
-    @Test public void testCreateUpdateProcedure17() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "if(CHANGING.e4 = {d'2000-01-01'})\n";         //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, INPUTS.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE, "Error Code:ERR.015.008.0027 Message:The expressions in this criteria are being compared but are of differing types (boolean and date) and no implicit conversion is available:  CHANGING.e4 = {d'2000-01-01'}"); //$NON-NLS-1$
-    }       
-    
-	// virtual group elements used in procedure(HAS CRITERIA)
-    @Test public void testCreateUpdateProcedure18() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1 where HAS CRITERIA ON (vm1.g1.e1, vm1.g1.e1);\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = 'x', pm1.g1.e2 = var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-    }
-    
-	// virtual group elements used in procedure in if statement(HAS CRITERIA)
-    @Test public void testCreateUpdateProcedure19() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(HAS CRITERIA ON (vm1.g1.e1, vm1.g1.e1))\n";                 //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1 where HAS CRITERIA ON (vm1.g1.e1, vm1.g1.e1);\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = 'x', pm1.g1.e2 = var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-    }    
-    
-	// virtual group elements used in procedure(TRANSLATE CRITERIA)
-    @Test public void testCreateUpdateProcedure20() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1 where Translate CRITERIA WITH (vm1.g1.e1 = 1, vm1.g1.e1 = 2);\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = 'x', pm1.g1.e2 = var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-    }
-    
-	// virtual group elements used in procedure(TRANSLATE CRITERIA)
-    @Test public void testCreateUpdateProcedure21() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1 where Translate CRITERIA WITH (vm1.g1.e1 = 1, vm1.g1.e1 = 2);\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = 'x', pm1.g1.e2 = INPUTS.e2;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-    }
-    
-	// using undefined variable should fail
-    @Test public void testCreateUpdateProcedure22() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-//        procedure = procedure + "DECLARE integer var1;\n";
-        procedure = procedure + "var3 = var2+var1;\n";         //$NON-NLS-1$
-        procedure = procedure + "var2 = Select pm1.g1.e2 from pm1.g1 where Translate CRITERIA WITH (vm1.g1.e1 = 1, vm1.g1.e1 = 2);\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = 'x', pm1.g1.e2 = INPUTS.e2;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-    }
-    
-	// using undefined variable declared is of invalid datatype
-    @Test public void testCreateUpdateProcedure23() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE struct var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = Select pm1.g1.e2 from pm1.g1 where Translate CRITERIA WITH (vm1.g1.e1 = 1, vm1.g1.e1 = 2);\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = 'x', pm1.g1.e2 = INPUTS.e2;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-    }
-    
 	// using declare variable that has parts
     @Test public void testCreateUpdateProcedure24() {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
@@ -648,23 +437,6 @@ public class TestProcedureResolving {
 									 Table.TriggerEvent.UPDATE, "Symbol pm1.g1.e2 is specified with an unknown group context"); //$NON-NLS-1$
     }
     
-	// virtual elements used on criteria of the if statement
-    @Test public void testCreateUpdateProcedure35() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(HAS CRITERIA ON (vm1.g1.e1) and var1=1)\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-    }
-    
 	// physical elements used on criteria of the if statement
     @Test public void testCreateUpdateProcedure36() {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
@@ -681,38 +453,6 @@ public class TestProcedureResolving {
 		helpFailUpdateProcedure(procedure, userUpdateStr,
 									 Table.TriggerEvent.UPDATE);
     }          
-    
-	// TranslateCriteria on criteria of the if statement
-    @Test public void testCreateUpdateProcedure37() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(TRANSLATE CRITERIA ON (vm1.g1.e1) WITH (vm1.g1.e1 = 1))\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-    }
-    
-	// validating Translate CRITERIA, elements on it should be virtual group elements
-	// but can use variables
-    @Test public void testCreateUpdateProcedure38() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e1 from pm1.g1 where Translate CRITERIA WITH (pm1.g1.e2 = var1);\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-    }
     
 	// physical elements used on criteria of the if statement
     @Test public void testCreateUpdateProcedure39() {
@@ -731,221 +471,6 @@ public class TestProcedureResolving {
 									 Table.TriggerEvent.UPDATE);
     }
     
-	// TranslateCriteria on criteria of the if statement
-    @Test public void testCreateUpdateProcedure40() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(TRANSLATE CRITERIA ON (e1) WITH (g1.e1 = 1))\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-    }
-    
-	// TranslateCriteria on criteria of the if statement
-    @Test public void testCreateUpdateProcedure41() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(HAS CRITERIA ON (e1))\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1 where TRANSLATE CRITERIA ON (e1) WITH (g1.e1 = 1);\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-    }
-    
-	// TranslateCriteria on criteria of the if statement
-    @Test public void testCreateUpdateProcedure42() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(HAS CRITERIA ON (e1))\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1 where TRANSLATE CRITERIA ON (e1) WITH (g1.e1 = 1);\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-    }
-    
-	// TranslateCriteria on criteria of the if statement
-    @Test public void testCreateUpdateProcedure43() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1 where TRANSLATE CRITERIA ON (e1) WITH (g1.e1 = 1);\n";         //$NON-NLS-1$
-//        procedure = procedure + "Select pm1.g1.e2, INPUTS.e2 from pm1.g1;\n";
-//        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUTS.e1, pm1.g1.e2 = INPUTS.e2;\n";
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);
-
-        Command procCommand = QueryParser.getQueryParser().parseCommand(procedure);
-		GroupSymbol virtualGroup = new GroupSymbol("vm1.g1"); //$NON-NLS-1$
-		virtualGroup.setMetadataID(metadata.getGroupID("vm1.g1")); //$NON-NLS-1$
-        QueryResolver.resolveCommand(procCommand, virtualGroup, Command.TYPE_UPDATE, metadata);
-    }
-    
-	// special variable CHANGING compared against integer no implicit conversion available
-    @Test public void testCreateUpdateProcedure44() throws Exception {
-        String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "if(INPUTS.e1 = 10)\n";         //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, INPUTS.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        String userUpdateStr = "INSERT into vm1.g1 (e1) values('x')"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.INSERT);
-    }
-    
-	// special variable CHANGING compared against integer no implicit conversion available
-    @Test public void testCreateUpdateProcedure45() throws Exception {
-        String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "if(INPUTS.e1 = 10)\n";         //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, INPUTS.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        Command procCommand = QueryParser.getQueryParser().parseCommand(procedure);
-        
-        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.INSERT, procedure);        
-        
-		GroupSymbol virtualGroup = new GroupSymbol("vm1.g1"); //$NON-NLS-1$
-		virtualGroup.setMetadataID(metadata.getGroupID("vm1.g1")); //$NON-NLS-1$
-		
-        QueryResolver.resolveCommand(procCommand, virtualGroup, Command.TYPE_INSERT, metadata);
-    }
-    
-	// special variable CHANGING compared against integer no implicit conversion available
-    @Test public void testCreateUpdateProcedure46() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUTS.e1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        Command procCommand = QueryParser.getQueryParser().parseCommand(procedure);
-        
-        QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(Table.TriggerEvent.UPDATE, procedure);        
-        
-		GroupSymbol virtualGroup = new GroupSymbol("vm1.g1"); //$NON-NLS-1$
-		virtualGroup.setMetadataID(metadata.getGroupID("vm1.g1")); //$NON-NLS-1$
-
-        QueryResolver.resolveCommand(procCommand, virtualGroup, Command.TYPE_UPDATE, metadata);
-    }
-
-	// TranslateCriteria on criteria of the if statement
-	@Test public void testCreateUpdateProcedure47() throws Exception {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "if(HAS CRITERIA ON (e1))\n"; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "Select pm1.g1.e2 from pm1.g1 where TRANSLATE CRITERIA ON (e1) WITH (vm1.g1.e1 = pm1.g1.e1);\n"; //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-
-		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-	}
-	
-	// validating Translate CRITERIA, elements(left elements on  on it should be virtual group elements
-	@Test public void testCreateUpdateProcedure48() {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "Select pm1.g1.e1 from pm1.g1 where Translate CRITERIA WITH (vm1.g1.e1 = 1, INPUTS.e2 = 2);\n";         //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-
-		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-	}
-	
-	// resolving Translate CRITERIA, right element should be present on the command
-	@Test public void testCreateUpdateProcedure49() {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "Select pm1.g1.e1 from pm1.g1 where Translate CRITERIA WITH (vm1.g1.e1 = pm1.g2.e1);\n";         //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-
-		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-	}
-	
-	// resolving criteria selector(on HAS CRITERIA), elements on it should be virtual group elements
-	@Test public void testCreateUpdateProcedure50() {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "if(HAS CRITERIA ON (vm1.g1.E1, vm1.g1.e1, INPUTS.e1))\n";                 //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-
-		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-	}
-	
-	// resolving Translate CRITERIA, right side expression in the translate criteria should be elements on the command
-	@Test public void testCreateUpdateProcedure51() {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "var1=1;\n"; //$NON-NLS-1$
-		procedure = procedure + "Select pm1.g1.e1 from pm1.g1 where Translate CRITERIA WITH (vm1.g1.e2 = var1+vm1.g1.e2, vm1.g1.e1 = 2);\n"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-
-		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-	}
-	
-	// validating Translate CRITERIA, elements on it should be virtual group elements
-	// but can use variables, gut left exprs should always be virtual elements
-	@Test public void testCreateUpdateProcedure52() {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "Select pm1.g1.e1 from pm1.g1 where Translate CRITERIA WITH (var1 = vm1.g1.e2, vm1.g1.e1 = 2);\n"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-
-		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-	}
-	
 	// resolving AssignmentStatement, variable type and assigned type 
 	// do not match and no implicit conversion available
 	@Test public void testCreateUpdateProcedure53() {
@@ -1315,8 +840,8 @@ public class TestProcedureResolving {
     }
     
     @Test public void testAmbigousInput() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
+        procedure = procedure + "BEGIN ATOMIC\n"; //$NON-NLS-1$
         procedure = procedure + "select e1;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
@@ -1487,17 +1012,17 @@ public class TestProcedureResolving {
     
     // special variable INPUT compared against invalid type
     @Test public void testInvalidInputInUpdate() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure += "BEGIN\n"; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
+        procedure += "BEGIN ATOMIC\n"; //$NON-NLS-1$
         procedure += "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure += "Select pm1.g1.e2, INPUTS.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure += "ROWS_UPDATED = UPDATE pm1.g1 SET pm1.g1.e1 = INPUTS.e1, pm1.g1.e2 = INPUTS.e1;\n"; //$NON-NLS-1$
+        procedure += "Select pm1.g1.e2, new.e2 from pm1.g1;\n"; //$NON-NLS-1$
+        procedure += "UPDATE pm1.g1 SET pm1.g1.e1 = new.e1, pm1.g1.e2 = new.e1;\n"; //$NON-NLS-1$
         procedure += "END\n"; //$NON-NLS-1$
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-				 Table.TriggerEvent.UPDATE, "Error Code:ERR.015.008.0041 Message:Cannot set symbol 'pm1.g1.e2' with expected type integer to expression 'INPUTS.e1'"); //$NON-NLS-1$
+				 Table.TriggerEvent.UPDATE, "Error Code:ERR.015.008.0041 Message:Cannot set symbol 'pm1.g1.e2' with expected type integer to expression '\"new\".e1'"); //$NON-NLS-1$
     }
     
     @Test public void testVirtualProcedure() throws Exception {

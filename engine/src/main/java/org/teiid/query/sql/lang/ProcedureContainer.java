@@ -22,10 +22,6 @@
 
 package org.teiid.query.sql.lang;
 
-import java.util.LinkedHashMap;
-
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 
 
@@ -60,8 +56,6 @@ public abstract class ProcedureContainer extends Command implements TargetedComm
         }
         this.updateCount = updateCount;
     }
-    
-    public abstract LinkedHashMap<ElementSymbol, Expression> getProcedureParameters();
     
     public UpdateInfo getUpdateInfo() {
 		return updateInfo;

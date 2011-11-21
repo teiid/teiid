@@ -75,13 +75,10 @@ import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.BranchingStatement;
 import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
-import org.teiid.query.sql.proc.CriteriaSelector;
 import org.teiid.query.sql.proc.DeclareStatement;
-import org.teiid.query.sql.proc.HasCriteria;
 import org.teiid.query.sql.proc.IfStatement;
 import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.proc.RaiseErrorStatement;
-import org.teiid.query.sql.proc.TranslateCriteria;
 import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.AggregateSymbol;
@@ -221,11 +218,6 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
         visitNode(obj.getBlock());
         postVisitVisitor(obj);
     }
-    public void visit(CriteriaSelector obj) {
-        preVisitVisitor(obj);
-        visitNodes(obj.getElements());
-        postVisitVisitor(obj);
-    }
     public void visit(DeclareStatement obj) {
         preVisitVisitor(obj);
         visitNode(obj.getVariable());
@@ -282,11 +274,6 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     }
     public void visit(GroupSymbol obj) {
         preVisitVisitor(obj);
-        postVisitVisitor(obj);
-    }
-    public void visit(HasCriteria obj) {
-        preVisitVisitor(obj);
-        visitNode(obj.getSelector());
         postVisitVisitor(obj);
     }
     public void visit(IfStatement obj) {
@@ -477,12 +464,6 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
         if (deep) {
         	visitNode(obj.getCommand());
         }
-        postVisitVisitor(obj);
-    }
-    public void visit(TranslateCriteria obj) {
-        preVisitVisitor(obj);
-        visitNode(obj.getSelector());
-        visitNodes(obj.getTranslations());
         postVisitVisitor(obj);
     }
     public void visit(UnaryFromClause obj) {

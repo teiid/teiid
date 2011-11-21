@@ -24,12 +24,11 @@
  */
 package org.teiid.query.sql.proc;
 
+import junit.framework.TestCase;
+
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.proc.Block;
-import org.teiid.query.sql.proc.WhileStatement;
-
-import junit.framework.TestCase;
+import org.teiid.query.sql.lang.TestSetCriteria;
 
 
 public class TestWhileStatement  extends TestCase{
@@ -42,13 +41,13 @@ public class TestWhileStatement  extends TestCase{
 
     public static final WhileStatement sample1() {
         Block block = TestBlock.sample1();
-        Criteria criteria = TestHasCriteria.sample1();
+        Criteria criteria = TestSetCriteria.sample1();
         return new WhileStatement(criteria, block);
     }
 
     public static final WhileStatement sample2() { 
         Block block = TestBlock.sample2();
-        Criteria criteria = TestHasCriteria.sample2();
+        Criteria criteria = TestSetCriteria.sample2();
         return new WhileStatement(criteria, block);
     }
     
@@ -62,7 +61,7 @@ public class TestWhileStatement  extends TestCase{
     
     public void testGetCondition() {
         WhileStatement b1 = sample1();
-        assertTrue("Incorrect Block on statement", b1.getCondition().equals(TestHasCriteria.sample1())); //$NON-NLS-1$
+        assertTrue("Incorrect Block on statement", b1.getCondition().equals(TestSetCriteria.sample1())); //$NON-NLS-1$
     }
     
     public void testSelfEquivalence(){

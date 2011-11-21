@@ -22,14 +22,11 @@
 
 package org.teiid.query.sql.lang;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
@@ -165,14 +162,6 @@ public class Delete extends TranslatableProcedureContainer {
                EquivalenceUtil.areEqual(getCriteria(), other.getCriteria());
     }
     
-    /** 
-     * @see org.teiid.query.sql.lang.ProcedureContainer#getParameters()
-     * @since 5.0
-     */
-    public LinkedHashMap<ElementSymbol, Expression> getProcedureParameters() {
-        return new LinkedHashMap<ElementSymbol, Expression>();
-    }
-
 	/**
 	 * Return a copy of this Delete.
 	 */

@@ -71,13 +71,10 @@ import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.BranchingStatement;
 import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
-import org.teiid.query.sql.proc.CriteriaSelector;
 import org.teiid.query.sql.proc.DeclareStatement;
-import org.teiid.query.sql.proc.HasCriteria;
 import org.teiid.query.sql.proc.IfStatement;
 import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.proc.RaiseErrorStatement;
-import org.teiid.query.sql.proc.TranslateCriteria;
 import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.AggregateSymbol;
@@ -185,14 +182,11 @@ public abstract class LanguageVisitor {
     public void visit(Block obj) {}
     public void visit(CommandStatement obj) {}
     public void visit(CreateUpdateProcedureCommand obj) {}
-    public void visit(CriteriaSelector obj) {}
     public void visit(DeclareStatement obj) {
         visit((AssignmentStatement)obj);
     }    
-    public void visit(HasCriteria obj) {}
     public void visit(IfStatement obj) {}
     public void visit(RaiseErrorStatement obj) {}
-    public void visit(TranslateCriteria obj) {}
     public void visit(BranchingStatement obj) {}
     public void visit(WhileStatement obj) {}
     public void visit(LoopStatement obj) {}

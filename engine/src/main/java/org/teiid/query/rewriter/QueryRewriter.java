@@ -27,19 +27,7 @@ import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.*;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
@@ -74,90 +62,19 @@ import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
-import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.LanguageObject.Util;
-import org.teiid.query.sql.lang.AbstractSetCriteria;
-import org.teiid.query.sql.lang.ArrayTable;
-import org.teiid.query.sql.lang.BatchedUpdateCommand;
-import org.teiid.query.sql.lang.BetweenCriteria;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.CompoundCriteria;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.Delete;
-import org.teiid.query.sql.lang.DependentSetCriteria;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.ExpressionCriteria;
-import org.teiid.query.sql.lang.From;
-import org.teiid.query.sql.lang.FromClause;
-import org.teiid.query.sql.lang.GroupBy;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.Into;
-import org.teiid.query.sql.lang.IsNullCriteria;
-import org.teiid.query.sql.lang.JoinPredicate;
-import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.Limit;
-import org.teiid.query.sql.lang.MatchCriteria;
-import org.teiid.query.sql.lang.NotCriteria;
-import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.OrderByItem;
-import org.teiid.query.sql.lang.ProcedureContainer;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.SetClause;
-import org.teiid.query.sql.lang.SetClauseList;
-import org.teiid.query.sql.lang.SetCriteria;
-import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.SubqueryCompareCriteria;
-import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.lang.SubqueryFromClause;
-import org.teiid.query.sql.lang.SubquerySetCriteria;
-import org.teiid.query.sql.lang.TextTable;
-import org.teiid.query.sql.lang.TranslatableProcedureContainer;
-import org.teiid.query.sql.lang.UnaryFromClause;
-import org.teiid.query.sql.lang.Update;
-import org.teiid.query.sql.lang.WithQueryCommand;
-import org.teiid.query.sql.lang.XMLTable;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.PredicateCriteria.Negatable;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
-import org.teiid.query.sql.proc.AssignmentStatement;
-import org.teiid.query.sql.proc.Block;
-import org.teiid.query.sql.proc.CommandStatement;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
-import org.teiid.query.sql.proc.CriteriaSelector;
-import org.teiid.query.sql.proc.ExpressionStatement;
-import org.teiid.query.sql.proc.HasCriteria;
-import org.teiid.query.sql.proc.IfStatement;
-import org.teiid.query.sql.proc.LoopStatement;
-import org.teiid.query.sql.proc.Statement;
-import org.teiid.query.sql.proc.TranslateCriteria;
-import org.teiid.query.sql.proc.TriggerAction;
-import org.teiid.query.sql.proc.WhileStatement;
-import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.CaseExpression;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
-import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.SearchedCaseExpression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.proc.*;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
-import org.teiid.query.sql.visitor.CriteriaTranslatorVisitor;
-import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
@@ -197,40 +114,36 @@ public class QueryRewriter {
     
     private QueryMetadataInterface metadata;
     private CommandContext context;
-    private CreateUpdateProcedureCommand procCommand;
     
     private boolean rewriteSubcommands;
     private boolean processing;
     private Evaluator evaluator;
     private Map<ElementSymbol, Expression> variables; //constant propagation
-    private int commandType;
     
     private QueryRewriter(QueryMetadataInterface metadata,
-			CommandContext context, CreateUpdateProcedureCommand procCommand) {
+			CommandContext context) {
 		this.metadata = metadata;
 		this.context = context;
-		this.procCommand = procCommand;
 		this.evaluator = new Evaluator(Collections.emptyMap(), null, context);
 	}
     
     public static Command evaluateAndRewrite(Command command, Evaluator eval, CommandContext context, QueryMetadataInterface metadata) throws TeiidProcessingException, TeiidComponentException {
-    	QueryRewriter queryRewriter = new QueryRewriter(metadata, context, null);
+    	QueryRewriter queryRewriter = new QueryRewriter(metadata, context);
     	queryRewriter.evaluator = eval;
     	queryRewriter.rewriteSubcommands = true;
     	queryRewriter.processing = true;
 		return queryRewriter.rewriteCommand(command, false);
     }
 
-	public static Command rewrite(Command command, CreateUpdateProcedureCommand procCommand, QueryMetadataInterface metadata, CommandContext context, Map<ElementSymbol, Expression> variableValues, int commandType) throws TeiidComponentException, TeiidProcessingException{
-		QueryRewriter rewriter = new QueryRewriter(metadata, context, procCommand);
+	public static Command rewrite(Command command, QueryMetadataInterface metadata, CommandContext context, Map<ElementSymbol, Expression> variableValues) throws TeiidComponentException, TeiidProcessingException{
+		QueryRewriter rewriter = new QueryRewriter(metadata, context);
 		rewriter.rewriteSubcommands = true;
 		rewriter.variables = variableValues;
-		rewriter.commandType = commandType;
 		return rewriter.rewriteCommand(command, false);
 	}
     
 	public static Command rewrite(Command command, QueryMetadataInterface metadata, CommandContext context) throws TeiidComponentException, TeiidProcessingException{
-		return rewrite(command, null, metadata, context, null, Command.TYPE_UNKNOWN);
+		return rewrite(command, metadata, context, null);
     }
 
     /**
@@ -244,7 +157,6 @@ public class QueryRewriter {
 	private Command rewriteCommand(Command command, boolean removeOrderBy) throws TeiidComponentException, TeiidProcessingException{
 		boolean oldRewriteAggs = rewriteAggs;
 		QueryMetadataInterface oldMetadata = metadata;
-		CreateUpdateProcedureCommand oldProcCommand = procCommand;
         
 		Map tempMetadata = command.getTemporaryMetadata();
         if(tempMetadata != null) {
@@ -285,7 +197,6 @@ public class QueryRewriter {
                 command = rewriteDelete((Delete) command);
                 break;
             case Command.TYPE_UPDATE_PROCEDURE:
-                procCommand = (CreateUpdateProcedureCommand) command;
                 command = rewriteUpdateProcedure((CreateUpdateProcedureCommand) command);
                 break;
             case Command.TYPE_BATCHED_UPDATE:
@@ -304,23 +215,13 @@ public class QueryRewriter {
         
         this.rewriteAggs = oldRewriteAggs;
         this.metadata = oldMetadata;
-        this.procCommand = oldProcCommand;
         return command;
 	}
     
 	private Command rewriteUpdateProcedure(CreateUpdateProcedureCommand command)
 								 throws TeiidComponentException, TeiidProcessingException{
-        Map<ElementSymbol, Expression> oldVariables = variables;
-    	if (command.getUserCommand() != null) {
-            variables = QueryResolver.getVariableValues(command.getUserCommand(), false, metadata);                        
-            commandType = command.getUserCommand().getType();
-    	}
-
 		Block block = rewriteBlock(command.getBlock());
         command.setBlock(block);
-
-        variables = oldVariables;
-        
         return command;
 	}
 
@@ -439,163 +340,6 @@ public class QueryRewriter {
         }
     }
     
-	/**
-	 * <p>The HasCriteria evaluates to a TRUE_CRITERIA or a FALSE_CRITERIA, it checks to see
-	 * if type of criteria on the elements specified by the CriteriaSelector is specified on
-	 * the user's command.</p>
-	 */
-	private Criteria rewriteCriteria(HasCriteria hasCrit) {
-		Criteria userCrit = null;
-		Command userCommand = procCommand.getUserCommand();
-		int cmdType = userCommand.getType();
-		switch(cmdType) {
-			case Command.TYPE_DELETE:
-				userCrit = ((Delete)userCommand).getCriteria();
-				break;
-			case Command.TYPE_UPDATE:
-				userCrit = ((Update)userCommand).getCriteria();
-				break;
-			default:
-				return FALSE_CRITERIA;
-		}
-
-		if(userCrit == null) {
-			return FALSE_CRITERIA;
-		}
-
-		// get the CriteriaSelector, elements on the selector and the selector type
-		CriteriaSelector selector = hasCrit.getSelector();
-
-		Collection hasCritElmts = null;
-		if(selector.hasElements()) {
-			hasCritElmts = selector.getElements();
-			// collect elements present on the user's criteria and check if
-			// all of the hasCriteria elements are among them
-			Collection<ElementSymbol> userElmnts = ElementCollectorVisitor.getElements(userCrit, true);
-			if(!userElmnts.containsAll(hasCritElmts)) {
-				return FALSE_CRITERIA;
-			}
-		}
-
-		int selectorType = selector.getSelectorType();
-		// if no selector type specified return true
-		// already checked all HAS elements present on user criteria
-		if(selectorType == CriteriaSelector.NO_TYPE) {
-			return TRUE_CRITERIA;
-		}
-
-		// collect all predicate criteria present on the user's criteria
-		for (Criteria predicateCriteria : Criteria.separateCriteriaByAnd(userCrit)) {
-    		// atleast one of the hasElemnets should be on this predicate else
-    		// proceed to the next predicate
-			Collection<ElementSymbol> predElmnts = ElementCollectorVisitor.getElements(predicateCriteria, true);
-			if(selector.hasElements()) {
-				Iterator hasIter = hasCritElmts.iterator();
-				boolean containsElmnt = false;
-				while(hasIter.hasNext()) {
-					ElementSymbol hasElmnt = (ElementSymbol) hasIter.next();
-					if(predElmnts.contains(hasElmnt)) {
-						containsElmnt = true;
-					}
-				}
-
-				if(!containsElmnt) {
-					continue;
-				}
-			}
-
-			// check if the predicate criteria type maches the type specified
-			// by the criteria selector
-    		switch(selectorType) {
-	    		case CriteriaSelector.IN:
-		    		if(predicateCriteria instanceof SetCriteria) {
-	    				return TRUE_CRITERIA;
-		    		}
-                    break;
-	    		case CriteriaSelector.LIKE:
-		    		if(predicateCriteria instanceof MatchCriteria) {
-	    				return TRUE_CRITERIA;
-		    		}
-                    break;
-                case CriteriaSelector.IS_NULL:
-                    if(predicateCriteria instanceof IsNullCriteria) {
-                        return TRUE_CRITERIA;
-                    }
-                    break;
-                case CriteriaSelector.BETWEEN:
-                    if(predicateCriteria instanceof BetweenCriteria) {
-                        return TRUE_CRITERIA;
-                    }
-                    break;
-	    		default: // EQ, GT, LT, GE, LE criteria
-		    		if(predicateCriteria instanceof CompareCriteria) {
-		    			CompareCriteria compCrit = (CompareCriteria) predicateCriteria;
-		    			if(compCrit.getOperator() == selectorType) {
-		    				return TRUE_CRITERIA;
-		    			}
-		    		}
-                    break;
-			}
-		}
-
-		return FALSE_CRITERIA;
-	}
-
-	/**
-	 * <p>TranslateCriteria is evaluated by translating elements on parts(restricted by the type
-	 * of criteria and elements specified on the CriteriaSelector) the user's criteria
-	 * using the translations provided on the TranslateCriteria and symbol mapping between
-	 * virtual group elements and the expressions on the query transformation defining the
-	 * virtual group.</p>
-	 */
-	private Criteria rewriteCriteria(TranslateCriteria transCrit)
-			 throws TeiidComponentException, TeiidProcessingException{
-
-		// criteria translated
-		Criteria translatedCriteria = null;
-
-		// get the user's command from the procedure
-		Command userCmd = procCommand.getUserCommand();
-
-		if (!(userCmd instanceof TranslatableProcedureContainer)) {
-			return FALSE_CRITERIA;
-		}
-		
-		Criteria userCriteria = ((TranslatableProcedureContainer)userCmd).getCriteria();
-		
-		if (userCriteria == null) {
-			return TRUE_CRITERIA;
-		}
-
-		// get the symbolmap between virtual elements and theie counterpart expressions
-		// from the virtual group's query transform
-		CriteriaTranslatorVisitor translateVisitor = new CriteriaTranslatorVisitor(procCommand.getSymbolMap());
-
-		translateVisitor.setCriteriaSelector(transCrit.getSelector());
-		if(transCrit.hasTranslations()) {
-			translateVisitor.setTranslations(transCrit.getTranslations());
-		}
-
-		// create a clone of user's criteria that is then translated
-		Criteria userClone = (Criteria) userCriteria.clone();
-
-		userClone = translateVisitor.translate(userClone);
-
-		// translated criteria
-		((TranslatableProcedureContainer)userCmd).addImplicitParameters(translateVisitor.getImplicitParams());
-		
-		translatedCriteria = rewriteCriteria(userClone);
-
-		// apply any implicit conversions
-		try {
-            ResolverVisitor.resolveLanguageObject(translatedCriteria, metadata);
-		} catch(TeiidException ex) {
-            throw new QueryValidatorException(ex, "ERR.015.009.0002", QueryPlugin.Util.getString("ERR.015.009.0002", translatedCriteria)); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-
-		return translatedCriteria;
-	}
-
 	private Command rewriteQuery(Query query)
              throws TeiidComponentException, TeiidProcessingException{
         
@@ -997,8 +741,8 @@ public class QueryRewriter {
      * in the procedural language.
      * @return The re-written criteria
      */
-    public static Criteria rewriteCriteria(Criteria criteria, CreateUpdateProcedureCommand procCommand, CommandContext context, QueryMetadataInterface metadata) throws TeiidComponentException, TeiidProcessingException{
-    	return new QueryRewriter(metadata, context, procCommand).rewriteCriteria(criteria);
+    public static Criteria rewriteCriteria(Criteria criteria, CommandContext context, QueryMetadataInterface metadata) throws TeiidComponentException, TeiidProcessingException{
+    	return new QueryRewriter(metadata, context).rewriteCriteria(criteria);
     }
 
 	/**
@@ -1025,10 +769,6 @@ public class QueryRewriter {
             criteria = rewriteCriteria((IsNullCriteria)criteria);
         } else if(criteria instanceof BetweenCriteria) {
             criteria = rewriteCriteria((BetweenCriteria)criteria);
-		} else if(criteria instanceof HasCriteria) {
-            criteria = rewriteCriteria((HasCriteria)criteria);
-		} else if(criteria instanceof TranslateCriteria) {
-            criteria = rewriteCriteria((TranslateCriteria)criteria);
 		} else if (criteria instanceof ExistsCriteria) {
 			ExistsCriteria exists = (ExistsCriteria)criteria;
 			if (exists.shouldEvaluate() && processing) {
@@ -1111,7 +851,7 @@ public class QueryRewriter {
      */
     public static Criteria optimizeCriteria(CompoundCriteria criteria, QueryMetadataInterface metadata) {
         try {
-            return new QueryRewriter(metadata, null, null).rewriteCriteria(criteria, false);
+            return new QueryRewriter(metadata, null).rewriteCriteria(criteria, false);
         } catch (TeiidException err) {
             //shouldn't happen
             return criteria;
@@ -2133,7 +1873,7 @@ public class QueryRewriter {
 	}
 	
 	public static Expression rewriteExpression(Expression expression, CreateUpdateProcedureCommand procCommand, CommandContext context, QueryMetadataInterface metadata) throws TeiidComponentException, TeiidProcessingException{
-		return new QueryRewriter(metadata, context, procCommand).rewriteExpressionDirect(expression);
+		return new QueryRewriter(metadata, context).rewriteExpressionDirect(expression);
 	}
 
     private Expression rewriteExpressionDirect(Expression expression) throws TeiidComponentException, TeiidProcessingException{
@@ -2151,10 +1891,7 @@ public class QueryRewriter {
 
                 if (value == null) {
                 	if (es.getGroupSymbol().getSchema() == null) {
-                        String grpName = es.getGroupSymbol().getShortCanonicalName();
-		                if (grpName.equals(ProcedureReservedWords.INPUTS)) {
-		                	return new Constant(null, es.getType());
-		                } 
+                        String grpName = es.getGroupSymbol().getCanonicalName();
 		                if (grpName.equals(ProcedureReservedWords.CHANGING)) {
 		                    Assertion.failed("Changing value should not be null"); //$NON-NLS-1$
 		                } 
@@ -2813,18 +2550,6 @@ public class QueryRewriter {
 			return rewriteInherentUpdate(update, info);
 		}
 		
-		if (commandType == Command.TYPE_UPDATE && variables != null) {
-	        SetClauseList newChangeList = new SetClauseList();
-	        for (SetClause entry : update.getChangeList().getClauses()) {
-	            Expression rightExpr = entry.getValue();
-	            boolean retainChange = checkInputVariables(rightExpr);
-	            if (retainChange) {
-	                newChangeList.addClause(entry.getSymbol(), entry.getValue());
-	            }
-	        }
-	        update.setChangeList(newChangeList);
-        }
-
 		// Evaluate any function on the right side of set clauses
         for (SetClause entry : update.getChangeList().getClauses()) {
         	entry.setValue(rewriteExpressionDirect(entry.getValue()));
@@ -2959,38 +2684,6 @@ public class QueryRewriter {
 		return pkCriteria;
 	}
 	
-    /**
-     * Checks variables in an expression, if the variables are INPUT variables and if
-     * none of them are changing, then this method returns a false, if all of them
-     * are changing this returns a true, if some are changing and some are not, then
-     * that is an invalid case and the method adds to the list of invalid variables.
-     * @throws TeiidComponentException, MetaMatrixProcessingException
-     */
-    private boolean checkInputVariables(Expression expr) throws TeiidComponentException, TeiidProcessingException{
-        Boolean result = null;
-        for (ElementSymbol var : ElementCollectorVisitor.getElements(expr, false)) {
-            if (var.isExternalReference() && var.getGroupSymbol().getSchema() == null && var.getGroupSymbol().getShortName().equalsIgnoreCase(ProcedureReservedWords.INPUTS)) {
-                
-                var = var.clone();
-                var.getGroupSymbol().setShortName(ProcedureReservedWords.CHANGING);
-                
-                Boolean changingValue = (Boolean)((Constant)variables.get(var)).getValue();
-                
-                if (result == null) {
-                    result = changingValue;
-                } else if (!result.equals(changingValue)) {
-                	throw new QueryValidatorException(QueryPlugin.Util.getString("VariableSubstitutionVisitor.Input_vars_should_have_same_changing_state", expr)); //$NON-NLS-1$
-                }
-            }
-        }
-        
-        if (result != null) {
-            return result.booleanValue();
-        }
-        
-        return true;
-    }
-
 	private Command rewriteDelete(Delete delete) throws TeiidComponentException, TeiidProcessingException{
 		UpdateInfo info = delete.getUpdateInfo();
 		if (info != null && info.isInherentDelete()) {
@@ -3046,14 +2739,14 @@ public class QueryRewriter {
 	}
 	
 	public static Command createDeleteProcedure(Delete delete, QueryMetadataInterface metadata, CommandContext context) throws QueryResolverException, QueryMetadataException, TeiidComponentException, TeiidProcessingException {
-		QueryRewriter rewriter = new QueryRewriter(metadata, context, null);
+		QueryRewriter rewriter = new QueryRewriter(metadata, context);
 		Criteria crit = delete.getCriteria();
 		Query query = new Query(new Select(), new From(Arrays.asList(new UnaryFromClause(delete.getGroup()))), crit, null, null);
 		return rewriter.createDeleteProcedure(delete, query, delete.getGroup(), delete.getGroup().getName());
 	}
 	
 	public static Command createUpdateProcedure(Update update, QueryMetadataInterface metadata, CommandContext context) throws QueryResolverException, QueryMetadataException, TeiidComponentException, TeiidProcessingException {
-		QueryRewriter rewriter = new QueryRewriter(metadata, context, null);
+		QueryRewriter rewriter = new QueryRewriter(metadata, context);
 		Criteria crit = update.getCriteria();
 		ArrayList<SingleElementSymbol> selectSymbols = rewriter.mapChangeList(update, null);
 		Query query = new Query(new Select(selectSymbols), new From(Arrays.asList(new UnaryFromClause(update.getGroup()))), crit, null, null);

@@ -49,16 +49,7 @@ import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.mapping.relational.QueryNode;
-import org.teiid.query.mapping.xml.MappingAttribute;
-import org.teiid.query.mapping.xml.MappingChoiceNode;
-import org.teiid.query.mapping.xml.MappingCommentNode;
-import org.teiid.query.mapping.xml.MappingCriteriaNode;
-import org.teiid.query.mapping.xml.MappingDocument;
-import org.teiid.query.mapping.xml.MappingElement;
-import org.teiid.query.mapping.xml.MappingNodeConstants;
-import org.teiid.query.mapping.xml.MappingRecursiveElement;
-import org.teiid.query.mapping.xml.MappingSequenceNode;
-import org.teiid.query.mapping.xml.Namespace;
+import org.teiid.query.mapping.xml.*;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
@@ -211,7 +202,7 @@ public class TestXMLProcessor {
         Table rs = RealMetadataFactory.createVirtualGroup("group.items", xmltest, rsQuery); //$NON-NLS-1$
 
         // Created 2nd virtual group w/ nested result set & binding
-        QueryNode rsQuery2 = new QueryNode("SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = input.x"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery2 = new QueryNode("SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = inputs.x"); //$NON-NLS-1$ //$NON-NLS-2$
         //QueryNode rsQuery2 = new QueryNode("xmltest.suppliers", "SELECT stock.suppliers.supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = ?");
         rsQuery2.addBinding("xmltest.group.items.itemNum as x"); //$NON-NLS-1$
         Table rs2 = RealMetadataFactory.createVirtualGroup("suppliers", xmltest, rsQuery2); //$NON-NLS-1$
