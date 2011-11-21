@@ -1055,6 +1055,14 @@ public class TestOptionsAndHints {
         TestParser.helpTest(sql, "/*+ cache */ SELECT * FROM t1", query);         //$NON-NLS-1$
     }
     
+    @Test public void testCacheProc() {
+        String sql = "/*+ cache */ CREATE VIRTUAL PROCEDURE BEGIN END"; //$NON-NLS-1$
+        CreateUpdateProcedureCommand command = new CreateUpdateProcedureCommand(new Block());
+        command.setUpdateProcedure(false);
+        command.setCacheHint(new CacheHint());
+        TestParser.helpTest(sql, "/*+ cache */ CREATE VIRTUAL PROCEDURE\nBEGIN\nEND", command);         //$NON-NLS-1$
+    }
+    
     @Test public void testCacheScope() {
         String sql = "/*+ cache(pref_mem scope:session) */ SELECT * FROM t1"; //$NON-NLS-1$
         
