@@ -394,7 +394,7 @@
                 <c:simple-property name="JdbcSocketConfiguration.enabled" displayName="Enable"
                     description="Enable Socket based JDBC access" required="false" readOnly="false" />            
                 <c:simple-property name="JdbcSocketConfiguration.hostName" displayName="Host Name"
-                    description="Host Name" required="false" readOnly="false" />
+                    description="Host Name" required="false" readOnly="true" />
 				<c:simple-property name="JdbcSocketConfiguration.portNumber" displayName="Port Number"
 					description="Port Number" required="false" readOnly="false" />
 				<c:simple-property name="JdbcSocketConfiguration.sslEnabled" displayName="SSL Enabled"
