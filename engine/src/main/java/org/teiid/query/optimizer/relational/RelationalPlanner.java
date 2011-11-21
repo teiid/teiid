@@ -159,6 +159,11 @@ public class RelationalPlanner {
 	private PlanHints hints = new PlanHints();
 	private Option option;
 	private SourceHint sourceHint;
+	private static ThreadLocal<Boolean> planningLoop = new ThreadLocal<Boolean>() {
+		protected Boolean initialValue() {
+			return Boolean.FALSE;
+		}
+	};
 	
     public ProcessorPlan optimize(
         Command command)
@@ -314,17 +319,22 @@ public class RelationalPlanner {
                 CorrelatedReferenceCollectorVisitor.collectReferences(subCommand, localGroupSymbols, correlatedReferences);
                 ProcessorPlan procPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
                 container.getCommand().setProcessorPlan(procPlan);
-                if (!correlatedReferences.isEmpty()) {
-	                SymbolMap map = new SymbolMap();
-	                for (Reference reference : correlatedReferences) {
-	    				map.addMapping(reference.getExpression(), reference.getExpression());
-	    			}
-	                container.getCommand().setCorrelatedReferences(map);
-                }
+                setCorrelatedReferences(container, correlatedReferences);
             }
             node.addGroups(GroupsUsedByElementsVisitor.getGroups(node.getCorrelatedReferenceElements()));
         }
     }
+
+	private void setCorrelatedReferences(SubqueryContainer<?> container,
+			List<Reference> correlatedReferences) {
+		if (!correlatedReferences.isEmpty()) {
+		    SymbolMap map = new SymbolMap();
+		    for (Reference reference : correlatedReferences) {
+				map.addMapping(reference.getExpression(), reference.getExpression());
+			}
+		    container.getCommand().setCorrelatedReferences(map);
+		}
+	}
 
 	private static Set<GroupSymbol> getGroupSymbols(PlanNode plan) {
 		Set<GroupSymbol> groupSymbols = new HashSet<GroupSymbol>();
@@ -588,6 +598,14 @@ public class RelationalPlanner {
 				context.accessedPlanningObject(sp.getProcedureID());
 			}
 		}
+		for (SubqueryContainer<?> subqueryContainer : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(container)) {
+			if (subqueryContainer.getCommand().getCorrelatedReferences() != null) {
+				continue;
+			}
+			List<Reference> correlatedReferences = new ArrayList<Reference>();
+			CorrelatedReferenceCollectorVisitor.collectReferences(subqueryContainer.getCommand(), Arrays.asList(container.getGroup()), correlatedReferences);
+			setCorrelatedReferences(subqueryContainer, correlatedReferences);
+		}
 		String cacheString = "transformation/" + container.getClass().getSimpleName().toUpperCase(); //$NON-NLS-1$
 		Command c = (Command)metadata.getFromMetadataCache(metadataId, cacheString);
 		if (c == null) {
@@ -637,13 +655,22 @@ public class RelationalPlanner {
 				throw new QueryPlannerException(QueryPlugin.Util.getString("RelationalPlanner.nonpushdown_command", container)); //$NON-NLS-1$
 			}
 			
-			//treat this as an update procedure
-			if (container instanceof Update) {
-				c = QueryRewriter.createUpdateProcedure((Update)container, metadata, context);
-			} else {
-				c = QueryRewriter.createDeleteProcedure((Delete)container, metadata, context);
+			try {
+				if (planningLoop.get()) {
+					throw new QueryPlannerException(QueryPlugin.Util.getString("RelationalPlanner.nonpushdown_expression", container)); //$NON-NLS-1$
+				}
+				planningLoop.set(Boolean.TRUE);
+				
+				//treat this as an update procedure
+				if (container instanceof Update) {
+					c = QueryRewriter.createUpdateProcedure((Update)container, metadata, context);
+				} else {
+					c = QueryRewriter.createDeleteProcedure((Delete)container, metadata, context);
+				}
+				addNestedCommand(sourceNode, container.getGroup(), container, c, false);
+			} finally {
+				planningLoop.set(Boolean.FALSE);
 			}
-			addNestedCommand(sourceNode, container.getGroup(), container, c, false);
 			return false;
 		}
 		

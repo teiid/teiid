@@ -1060,7 +1060,7 @@ public class QueryRewriter {
         } else if (criteria instanceof DependentSetCriteria) {
             criteria = rewriteDependentSetCriteria((DependentSetCriteria)criteria);
         } else if (criteria instanceof ExpressionCriteria) {
-        	return new CompareCriteria(((ExpressionCriteria) criteria).getExpression(), CompareCriteria.EQ, new Constant(Boolean.TRUE));
+        	return rewriteCriteria(new CompareCriteria(((ExpressionCriteria) criteria).getExpression(), CompareCriteria.EQ, new Constant(Boolean.TRUE)));
         }
     	
         return evaluateCriteria(criteria);
