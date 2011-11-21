@@ -58,6 +58,12 @@
 			<groupId>org.rhq</groupId>
 			<artifactId>rhq-jmx-plugin</artifactId>
 			<version>${org.rhq.version}</version>
+            <exclusions>
+                <exclusion>
+                 <groupId>com.sun</groupId>
+                 <artifactId>tools</artifactId>                 
+                </exclusion>
+            </exclusions>
 		</dependency>
 
 		<dependency>
