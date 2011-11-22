@@ -623,7 +623,7 @@ public class RelationalPlanner {
 		if (c != null) {
 			if (c instanceof TriggerAction) {
 				TriggerAction ta = (TriggerAction)c;
-				ProcessorPlan plan = new TriggerActionPlanner().optimize(container, ta, idGenerator, metadata, capFinder, analysisRecord, context);
+				ProcessorPlan plan = new TriggerActionPlanner().optimize((ProcedureContainer) container.clone(), ta, idGenerator, metadata, capFinder, analysisRecord, context);
 			    sourceNode.setProperty(NodeConstants.Info.PROCESSOR_PLAN, plan);
 			    return true;
 			}
