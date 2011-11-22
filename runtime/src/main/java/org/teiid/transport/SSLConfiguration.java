@@ -151,7 +151,7 @@ public class SSLConfiguration {
 		this.enabledCipherSuites = enabledCipherSuites.split(","); //$NON-NLS-1$
 	}    
 	
-	public String[] getEnabledCipherSuites() {
+	public String[] getEnabledCipherSuitesAsArray() {
 		return enabledCipherSuites;
 	}
 }
