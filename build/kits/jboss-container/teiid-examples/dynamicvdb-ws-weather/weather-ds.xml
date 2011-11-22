@@ -7,7 +7,7 @@
       <rar-name>teiid-connector-ws.rar</rar-name>
       <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>      
 
-      <config-property name="EndPoint">http://www.weather.gov/forecasts/xml/sample_products/browser_interface/ndfdXMLclient.php</config-property>
+      <config-property name="EndPoint">http://graphical.weather.gov/xml/sample_products/browser_interface/ndfdXMLclient.php</config-property>
             
       <max-pool-size>20</max-pool-size>
 
