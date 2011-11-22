@@ -211,9 +211,9 @@ public class SQLConversionVisitor extends SQLStringVisitor{
 	    				if (obj.getArguments().get(i).getDirection() != Direction.IN) {
 	    					throw new IllegalArgumentException(JDBCPlugin.Util.getString("SQLConversionVisitor.not_in_parameter", i+1)); //$NON-NLS-1$
 	    				}
-	    				visit(obj.getArguments().get(i));
+	    				buffer.append('?');
 	    				if (this.prepared) {
-	    					this.preparedValues.add(obj.getArguments());
+	    					this.preparedValues = obj.getArguments();
 	    				}
 	    			}
 	    		}

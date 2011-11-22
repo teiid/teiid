@@ -70,6 +70,7 @@ import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCPlugin;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
+import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.TranslatedCommand;
 
 
@@ -606,8 +607,8 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
     	if (oracleSuppliedDriver && obj instanceof Call) {
     		Call call = (Call)obj;
-    		//oracle returns the resultset as a parameter
-    		if (call.getReturnType() == null) {
+    		if (call.getReturnType() == null && call.getMetadataObject() != null && call.getMetadataObject().getProperties().get(SQLConversionVisitor.TEIID_NATIVE_QUERY) == null) { 
+    			//oracle returns the resultset as a parameter
     			call.setReturnType(RefCursorType.class);
     		}
     	}

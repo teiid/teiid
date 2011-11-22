@@ -27,6 +27,7 @@ import static org.junit.Assert.*;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.Types;
 import java.util.Arrays;
 import java.util.List;
 
@@ -875,11 +876,30 @@ public class TestOracleTranslator {
 	
 	@Test public void testNativeQueryProc() throws Exception {
 		String input = "call proc(2)"; //$NON-NLS-1$
-        String output = "select x from y where z = 2"; //$NON-NLS-1$
+        String output = "select x from y where z = ?"; //$NON-NLS-1$
 
         QueryMetadataInterface metadata = getOracleSpecificMetadata();
 
         helpTestVisitor(metadata, input, EMPTY_CONTEXT, null, output);
+	}
+	
+	@Test public void testNativeQueryProcPreparedExecution() throws Exception {
+		CommandBuilder commandBuilder = new CommandBuilder(getOracleSpecificMetadata());
+        Command command = commandBuilder.getCommand("call proc(2)");
+		Connection connection = Mockito.mock(Connection.class);
+		CallableStatement cs = Mockito.mock(CallableStatement.class);
+		Mockito.stub(cs.getUpdateCount()).toReturn(-1);
+		ResultSet rs = Mockito.mock(ResultSet.class);
+		Mockito.stub(cs.getObject(1)).toReturn(rs);
+		Mockito.stub(cs.getInt(3)).toReturn(4);
+		Mockito.stub(connection.prepareCall("select x from y where z = ?")).toReturn(cs); //$NON-NLS-1$
+		OracleExecutionFactory ef = new OracleExecutionFactory();
+		
+		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
+		procedureExecution.execute();
+		Mockito.verify(cs, Mockito.never()).registerOutParameter(1, OracleExecutionFactory.CURSOR_TYPE);
+		Mockito.verify(cs, Mockito.never()).getObject(1);
+		Mockito.verify(cs, Mockito.times(1)).setObject(1, 2, Types.INTEGER);
 	}
 
 }
