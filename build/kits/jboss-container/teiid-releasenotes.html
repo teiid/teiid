@@ -38,6 +38,7 @@
 <h4>from 7.6</h4>
 <ul>
   <li>TRANSLATE/HAS CRITERIA has been removed.  INSTEAD OF trigger actions should be used instead.  ROWS_UPDATED, INPUTS, and INPUT are no longer procedure reserved words.
+  <li>7.6 or earlier VDBs with table cardinalities set the old unknown value 0 will now report that value as -1 via the metadata API or SYS.TABLES.
 </ul>
 
 <h4>from 7.5</h4>
