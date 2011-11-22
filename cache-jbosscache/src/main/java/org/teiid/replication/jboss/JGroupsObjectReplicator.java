@@ -44,13 +44,17 @@ import java.util.concurrent.Executors;
 import org.jboss.as.clustering.jgroups.ChannelFactory;
 import org.jgroups.Address;
 import org.jgroups.Channel;
-import org.jgroups.ExtendedReceiverAdapter;
+import org.jgroups.MembershipListener;
 import org.jgroups.Message;
+import org.jgroups.MessageListener;
+import org.jgroups.Receiver;
+import org.jgroups.ReceiverAdapter;
 import org.jgroups.View;
 import org.jgroups.blocks.GroupRequest;
 import org.jgroups.blocks.MethodCall;
 import org.jgroups.blocks.MethodLookup;
 import org.jgroups.blocks.RequestOptions;
+import org.jgroups.blocks.ResponseMode;
 import org.jgroups.blocks.RpcDispatcher;
 import org.jgroups.util.Promise;
 import org.jgroups.util.RspList;
@@ -93,23 +97,24 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 		}
 	}
 
-	private final static class ReplicatedInvocationHandler<S> extends ExtendedReceiverAdapter implements
-			InvocationHandler, Serializable {
+	private final static class ReplicatedInvocationHandler<S> implements
+			InvocationHandler, Serializable, MessageListener, Receiver,
+			MembershipListener {
 		
 		private static final long serialVersionUID = -2943462899945966103L;
 		private final S object;
 		private RpcDispatcher disp;
 		private final HashMap<Method, Short> methodMap;
-	    protected Vector<Address> remoteMembers = new Vector<Address>();
+	    protected List<Address> remoteMembers = new ArrayList<Address>();
 	    protected final transient Promise<Boolean> state_promise=new Promise<Boolean>();
+	    
 	    protected transient ThreadLocal<Promise<Boolean>> threadLocalPromise = new ThreadLocal<Promise<Boolean>>() {
 	    	protected org.jgroups.util.Promise<Boolean> initialValue() {
 	    		return new Promise<Boolean>();
 	    	}
 	    };
 	    
-		private ReplicatedInvocationHandler(S object,
-				HashMap<Method, Short> methodMap) {
+		private ReplicatedInvocationHandler(S object,HashMap<Method, Short> methodMap) {
 			this.object = object;
 			this.methodMap = methodMap;
 		}
@@ -144,9 +149,9 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 					} catch (InvocationTargetException e) {
 						throw e.getCause();
 					}
-					Vector<Address> dests = null;
+					List<Address> dests = null;
 					synchronized (remoteMembers) {
-						dests = new Vector<Address>(remoteMembers);
+						dests = new ArrayList<Address>(remoteMembers);
 					}
 					ReplicatedObject ro = (ReplicatedObject)object;
 					String stateId = (String)args[0];
@@ -188,11 +193,11 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 						dests = new Vector<Address>(remoteMembers);
 					}
 		        }
-		        RspList responses = disp.callRemoteMethods(dests, call, new RequestOptions().setMode(annotation.asynch()?GroupRequest.GET_NONE:GroupRequest.GET_ALL).setTimeout(annotation.timeout()));
+		        RspList responses = disp.callRemoteMethods(dests, call, new RequestOptions().setMode(annotation.asynch()?ResponseMode.GET_NONE:ResponseMode.GET_ALL).setTimeout(annotation.timeout()));
 		        if (annotation.asynch()) {
 			        return null;
 		        }
-		        Vector<Object> results = responses.getResults();
+		        List<Object> results = responses.getResults();
 		        if (method.getReturnType() == boolean.class) {
 		        	for (Object o : results) {
 						if (!Boolean.TRUE.equals(o)) {
@@ -212,7 +217,7 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 		        throw new RuntimeException(method + " " + args + " failed"); //$NON-NLS-1$ //$NON-NLS-2$
 		    }
 		}
-
+		
 		@Override
 		public void viewAccepted(View newView) {
 			if (newView.getMembers() != null) {
@@ -254,7 +259,6 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 			}
 		}
 		
-		@Override
 		public void setState(String stateId, InputStream istream) {
 			LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "loading state"); //$NON-NLS-1$
 			try {
@@ -268,7 +272,6 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 			}
 		}
 		
-		@Override
 		public void getState(String stateId, OutputStream ostream) {
 			LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "getting state"); //$NON-NLS-1$
 			try {

@@ -30,7 +30,17 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.UnknownHostException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
@@ -45,7 +55,6 @@ import org.jboss.as.cli.operation.OperationFormatException;
 import org.jboss.as.cli.operation.impl.DefaultOperationRequestAddress;
 import org.jboss.as.cli.operation.impl.DefaultOperationRequestBuilder;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.protocol.old.StreamUtils;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.teiid.adminapi.PropertyDefinition.RestartType;
@@ -192,8 +201,12 @@ public class AdminFactory {
 		@Override
 		public void close() {
 			if (this.connection != null) {
-				StreamUtils.safeClose(this.connection);
-				this.connection = null;
+		        try {
+		        	connection.close();
+		        } catch (Throwable t) {
+		        	//ignore
+		        }				
+		        this.connection = null;
 				this.domainMode = false;
 			}
 		}

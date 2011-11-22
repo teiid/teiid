@@ -26,8 +26,8 @@
             <scope>provided</scope>
 		</dependency>
         <dependency>
-          <groupId>org.infinispan</groupId>
-          <artifactId>infinispan-core</artifactId>
+          <groupId>org.jboss.as</groupId>
+          <artifactId>jboss-as-clustering-infinispan</artifactId>
           <scope>provided</scope>
         </dependency>
         <dependency>

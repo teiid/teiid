@@ -303,7 +303,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     		JGroupsObjectReplicatorService replicatorService = new JGroupsObjectReplicatorService(clusterName);
     		replicatorService.setBufferManager(bufferManager.getBufferManager());
 			ServiceBuilder<JGroupsObjectReplicator> serviceBuilder = target.addService(TeiidServiceNames.OBJECT_REPLICATOR, replicatorService);
-			serviceBuilder.addDependency(ServiceName.JBOSS.append("jgroups", stack), ChannelFactory.class, replicatorService.channelFactoryInjector); //$NON-NLS-1$
+			serviceBuilder.addDependency(ServiceName.JBOSS.append("jgroups", "stack", stack), ChannelFactory.class, replicatorService.channelFactoryInjector); //$NON-NLS-1$ //$NON-NLS-2$
 			newControllers.add(serviceBuilder.install());
     	}
     	

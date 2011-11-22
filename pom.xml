@@ -10,7 +10,7 @@
 	<properties>
 		<ant.version>1.7.0</ant.version>
 		<site.url>http://www.jboss.org/teiid</site.url>
-        <jbossas-version>7.1.0.Alpha1-SNAPSHOT</jbossas-version>
+        <jbossas-version>7.1.0.Alpha2-SNAPSHOT</jbossas-version>
 	</properties>
 	<scm>
         <connection>scm:svn:https://anonsvn.jboss.org/repos/teiid/trunk</connection>
@@ -389,6 +389,11 @@
                 <version>${jbossas-version}</version>
             </dependency>
             <dependency>
+              <groupId>org.jboss.as</groupId>
+              <artifactId>jboss-as-clustering</artifactId>
+              <version>${jbossas-version}</version>
+            </dependency>            
+            <dependency>
                 <groupId>org.jboss</groupId>
                 <artifactId>staxmapper</artifactId>
                 <version>1.0.0.Final</version>
@@ -466,6 +471,11 @@
                 <version>1.0.0.CR1</version>            
             </dependency>   
             <dependency>
+              <groupId>org.jboss.as</groupId>
+              <artifactId>jboss-as-clustering-infinispan</artifactId>
+              <version>${jbossas-version}</version>
+            </dependency>            
+            <dependency>
                 <groupId>org.jboss.logging</groupId>
                 <artifactId>jboss-logging-spi</artifactId>
                 <version>2.2.0.CR1</version>
@@ -480,11 +490,6 @@
                 <artifactId>jboss-as-subsystem-test</artifactId>
                 <version>${jbossas-version}</version>
             </dependency>                                
-            <dependency>
-              <groupId>org.infinispan</groupId>
-              <artifactId>infinispan-core</artifactId>
-              <version>5.0.0.FINAL</version>
-            </dependency>
 			<dependency>
 				<groupId>net.sourceforge.saxon</groupId>
 				<artifactId>saxonhe</artifactId>
