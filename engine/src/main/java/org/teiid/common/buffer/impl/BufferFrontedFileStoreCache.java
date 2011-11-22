@@ -193,7 +193,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 				position = BYTES_PER_BLOCK_ADDRESS*index;
 			}
 			if (mode == Mode.ALLOCATE) {
-				dataBlock = nextBlock(true);
+				dataBlock = nextBlock(info, true);
 				info.putInt(position, dataBlock);
 				if (mode == Mode.ALLOCATE && position + BYTES_PER_BLOCK_ADDRESS < info.limit()) {
 					//maintain the invariant that the next pointer is empty
@@ -212,7 +212,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 			int sib_index = buf.getInt(position);
 			if (index == cutOff) {
 				if (mode == Mode.ALLOCATE) {
-					sib_index = nextBlock(false);
+					sib_index = nextBlock(buf, false);
 					buf.putInt(position, sib_index);
 				} else if (mode == Mode.UPDATE && value == EMPTY_ADDRESS) {
 					freeDataBlock(sib_index);
@@ -225,9 +225,12 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 		/**
 		 * Get the next dataBlock.  When the memory buffer is full we have some
 		 * book keeping to do.
+		 * @param reading 
 		 * @return
 		 */
-		private int nextBlock(boolean data) {
+		private int nextBlock(ByteBuffer reading, boolean data) {
+			int limit = reading.limit();
+			int position = reading.position();
 			int next = EMPTY_ADDRESS;
 			memoryEvictionLock.readLock().lock();
 			boolean readLocked = true;
@@ -244,6 +247,12 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 			}
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
 				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Allocating", data?"data":"index", "block", next, "to", gid, oid); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+			}
+			//restore the reading buffer
+			if (reading.limit() != limit) {
+				reading.rewind();
+				reading.limit(limit);
+				reading.position(position);
 			}
 			return next;
 		}
