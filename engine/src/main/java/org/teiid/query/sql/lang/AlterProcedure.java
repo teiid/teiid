@@ -22,9 +22,9 @@
 package org.teiid.query.sql.lang;
 
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
+import org.teiid.query.sql.proc.CreateProcedureCommand;
 
-public class AlterProcedure extends Alter<CreateUpdateProcedureCommand> {
+public class AlterProcedure extends Alter<CreateProcedureCommand> {
 	
 	@Override
 	public void acceptVisitor(LanguageVisitor visitor) {

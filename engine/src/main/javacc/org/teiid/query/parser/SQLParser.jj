@@ -1066,10 +1066,7 @@ CreateUpdateProcedureCommand  createUpdateProcedure(ParseInfo info) :
     Statement stmt = null;  
 }
 { 
-    <CREATE> [<VIRTUAL> {updateProcCmd.setUpdateProcedure(false);}] 
-    [<UPDATE>] 
-    <PROCEDURE>
-
+    <CREATE> [<VIRTUAL>] <PROCEDURE>
     stmt = statement(info)
     {        
         updateProcCmd.setBlock(asBlock(stmt));

@@ -73,26 +73,17 @@ public class UpdateProcedureResolver implements CommandResolver {
     	
     	if (command instanceof TriggerAction) {
     		TriggerAction ta = (TriggerAction)command;
-            resolveBlock(new CreateUpdateProcedureCommand(), ta.getBlock(), ta.getExternalGroupContexts(), metadata);
+            resolveBlock(new CreateProcedureCommand(), ta.getBlock(), ta.getExternalGroupContexts(), metadata);
     		return;
     	}
 
-        CreateUpdateProcedureCommand procCommand = (CreateUpdateProcedureCommand) command;
+        CreateProcedureCommand procCommand = (CreateProcedureCommand) command;
 
         //by creating a new group context here it means that variables will resolve with a higher precedence than input/changing
         GroupContext externalGroups = command.getExternalGroupContexts();
         
         List<ElementSymbol> symbols = new LinkedList<ElementSymbol>();
         
-        // virtual group elements in HAS and TRANSLATE criteria have to be resolved
-        if(procCommand.isUpdateProcedure()){
-            //add the default variables
-            String countVar = ProcedureReservedWords.VARIABLES + ElementSymbol.SEPARATOR + ProcedureReservedWords.ROWS_UPDATED;
-            ElementSymbol updateCount = new ElementSymbol(countVar);
-            updateCount.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-            symbols.add(updateCount);
-        }
-
         String countVar = ProcedureReservedWords.VARIABLES + ElementSymbol.SEPARATOR + ProcedureReservedWords.ROWCOUNT;
         ElementSymbol updateCount = new ElementSymbol(countVar);
         updateCount.setType(DataTypeManager.DefaultDataClasses.INTEGER);
@@ -102,7 +93,7 @@ public class UpdateProcedureResolver implements CommandResolver {
         resolveBlock(procCommand, procCommand.getBlock(), externalGroups, metadata);
     }
 
-	public void resolveBlock(CreateUpdateProcedureCommand command, Block block, GroupContext externalGroups, 
+	public void resolveBlock(CreateProcedureCommand command, Block block, GroupContext externalGroups, 
                               TempMetadataAdapter metadata)
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving block", block}); //$NON-NLS-1$
@@ -120,7 +111,7 @@ public class UpdateProcedureResolver implements CommandResolver {
         }
     }
 
-	private void resolveStatement(CreateUpdateProcedureCommand command, Statement statement, GroupContext externalGroups, GroupSymbol variables, TempMetadataAdapter metadata)
+	private void resolveStatement(CreateProcedureCommand command, Statement statement, GroupContext externalGroups, GroupSymbol variables, TempMetadataAdapter metadata)
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving statement", statement}); //$NON-NLS-1$
 
@@ -172,26 +163,24 @@ public class UpdateProcedureResolver implements CommandResolver {
                 if (subCommand instanceof DynamicCommand) {
                     DynamicCommand dynCommand = (DynamicCommand)subCommand;
                     
-                    if(dynCommand.getIntoGroup() == null && !command.isUpdateProcedure() 
+                    if(dynCommand.getIntoGroup() == null
                     		&& !dynCommand.isAsClauseSet() && !command.getProjectedSymbols().isEmpty()) {
                         dynCommand.setAsColumns(command.getProjectedSymbols());
                     }
                 }
                 
-                if(!command.isUpdateProcedure()){
-                    //don't bother using the metadata when it doesn't matter
-                    if (command.getResultsCommand() != null && command.getResultsCommand().getType() == Command.TYPE_DYNAMIC) {
-                        DynamicCommand dynamicCommand = (DynamicCommand)command.getResultsCommand();
-                        if (!dynamicCommand.isAsClauseSet()) {
-                            dynamicCommand.setAsColumns(Collections.EMPTY_LIST);
-                        }
+                //don't bother using the metadata when it doesn't matter
+                if (command.getResultsCommand() != null && command.getResultsCommand().getType() == Command.TYPE_DYNAMIC) {
+                    DynamicCommand dynamicCommand = (DynamicCommand)command.getResultsCommand();
+                    if (!dynamicCommand.isAsClauseSet()) {
+                        dynamicCommand.setAsColumns(Collections.EMPTY_LIST);
                     }
-                    
-                    if (subCommand.returnsResultSet()) {
-	                    //this could be the last select statement, set the projected symbol
-	                    //on the virtual procedure command
-	                    command.setResultsCommand(subCommand);
-                    }
+                }
+                
+                if (subCommand.returnsResultSet()) {
+                    //this could be the last select statement, set the projected symbol
+                    //on the virtual procedure command
+                    command.setResultsCommand(subCommand);
                 }
 
                 break;

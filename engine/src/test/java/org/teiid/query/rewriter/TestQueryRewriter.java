@@ -1143,7 +1143,7 @@ public class TestQueryRewriter {
         
         String userQuery = "Insert into vm1.g1 (e1, e2) values ('String', 1)"; //$NON-NLS-1$
         
-        String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
+        String rewritProc = "CREATE VIRTUAL PROCEDURE\n"; //$NON-NLS-1$
         rewritProc = rewritProc + "BEGIN\n";         //$NON-NLS-1$
         rewritProc = rewritProc + "END"; //$NON-NLS-1$
         
@@ -1165,7 +1165,7 @@ public class TestQueryRewriter {
         
         String userQuery = "Insert into vm1.g1 (e1, e2) values ('String', 1)"; //$NON-NLS-1$
         
-        String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
+        String rewritProc = "CREATE VIRTUAL PROCEDURE\n"; //$NON-NLS-1$
         rewritProc = rewritProc + "BEGIN\n";         //$NON-NLS-1$
         rewritProc = rewritProc + "SELECT COUNT(*) FROM pm1.g1;\n";         //$NON-NLS-1$
         rewritProc = rewritProc + "END"; //$NON-NLS-1$

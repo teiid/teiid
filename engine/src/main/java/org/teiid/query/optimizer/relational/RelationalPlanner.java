@@ -73,7 +73,7 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.LanguageObject.Util;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
+import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
@@ -548,8 +548,8 @@ public class RelationalPlanner {
 			}
 		} else {
 			c = (Command)c.clone();
-			if (c instanceof CreateUpdateProcedureCommand) {
-				((CreateUpdateProcedureCommand)c).setUserCommand(container);
+			if (c instanceof CreateProcedureCommand) {
+				((CreateProcedureCommand)c).setUserCommand(container);
 			}
 		}
 		if (c != null) {

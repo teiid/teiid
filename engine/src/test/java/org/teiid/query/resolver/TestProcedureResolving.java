@@ -44,7 +44,7 @@ import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.CommandStatement;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
+import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -109,19 +109,19 @@ public class TestProcedureResolving {
         assertNull(tempIDs.get("LOOPCURSOR2")); //$NON-NLS-1$
     }
     
-	private CreateUpdateProcedureCommand helpResolveUpdateProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType) throws QueryParserException, QueryResolverException, TeiidComponentException {
+	private CreateProcedureCommand helpResolveUpdateProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType) throws QueryParserException, QueryResolverException, TeiidComponentException {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(procedureType, procedure);
 		return resolveProcedure(userUpdateStr, metadata);
 	}
 
-	private CreateUpdateProcedureCommand resolveProcedure(String userUpdateStr,
+	private CreateProcedureCommand resolveProcedure(String userUpdateStr,
 			QueryMetadataInterface metadata) throws QueryParserException,
 			QueryResolverException, TeiidComponentException,
 			QueryMetadataException {
 		ProcedureContainer userCommand = (ProcedureContainer)QueryParser.getQueryParser().parseCommand(userUpdateStr); 
         QueryResolver.resolveCommand(userCommand, metadata);
         metadata = new TempMetadataAdapter(metadata, new TempMetadataStore(userCommand.getTemporaryMetadata()));
-        return (CreateUpdateProcedureCommand)QueryResolver.expandCommand(userCommand, metadata, null);
+        return (CreateProcedureCommand)QueryResolver.expandCommand(userCommand, metadata, null);
 	}
 
 	private void helpResolveException(String userUpdateStr, QueryMetadataInterface metadata, String msg) throws QueryParserException, TeiidComponentException {
@@ -133,7 +133,7 @@ public class TestProcedureResolving {
 		}
 	}
 
-	private CreateUpdateProcedureCommand helpResolve(String userUpdateStr, QueryMetadataInterface metadata) throws QueryParserException, QueryResolverException, TeiidComponentException {
+	private CreateProcedureCommand helpResolve(String userUpdateStr, QueryMetadataInterface metadata) throws QueryParserException, QueryResolverException, TeiidComponentException {
 		return resolveProcedure(userUpdateStr, metadata);
 	}
     
@@ -141,7 +141,7 @@ public class TestProcedureResolving {
      *  Constants will now auto resolve if they are consistently representable in the target type
      */
     @Test public void testDefect23257() throws Exception{
-    	CreateUpdateProcedureCommand command = helpResolve("EXEC pm6.vsp59()", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    	CreateProcedureCommand command = helpResolve("EXEC pm6.vsp59()", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         
         CommandStatement cs = (CommandStatement)command.getBlock().getStatements().get(1);
         
@@ -165,7 +165,7 @@ public class TestProcedureResolving {
         
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
-        CreateUpdateProcedureCommand command = helpResolveUpdateProcedure(proc.toString(), userUpdateStr,
+        CreateProcedureCommand command = helpResolveUpdateProcedure(proc.toString(), userUpdateStr,
                                      Table.TriggerEvent.UPDATE);
         
         Block block = command.getBlock();
@@ -494,7 +494,6 @@ public class TestProcedureResolving {
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "DECLARE string var1;\n"; //$NON-NLS-1$
 		procedure = procedure + "var1 = 1+1;"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 
 		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
@@ -503,22 +502,6 @@ public class TestProcedureResolving {
 									 Table.TriggerEvent.UPDATE);
 	}
     
-	// resolving AssignmentStatement, variable type and assigned type 
-	// do not match, but implicit conversion available
-	@Test public void testCreateUpdateProcedure55() throws Exception {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "DECLARE string var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "var1 = 1+ROWS_UPDATED;"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-
-		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-	}	
-
     @Test public void testDefect14912_CreateUpdateProcedure57_FunctionWithElementParamInAssignmentStatement() {
         // Tests that the function params are resolved before the function for assignment statements
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
@@ -538,7 +521,6 @@ public class TestProcedureResolving {
     @Test public void testCase4624() {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "VARIABLES.ROWS_UPDATED = 0;\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE boolean var1;\n"; //$NON-NLS-1$
         procedure = procedure + "var1 = {b'false'};\n"; //$NON-NLS-1$
         procedure = procedure + "IF(var1 = {b 'true'})\n"; //$NON-NLS-1$
@@ -617,7 +599,6 @@ public class TestProcedureResolving {
                                 .append("BEGIN\n") //$NON-NLS-1$
                                 .append("execute string 'SELECT e1, e2, e3, e4 FROM pm1.g2' as e1 string, e2 string, e3 string, e4 string INTO #myTempTable;\n") //$NON-NLS-1$
                                 .append("select e1 from #myTempTable;\n") //$NON-NLS-1$
-                                .append("ROWS_UPDATED =0;\n") //$NON-NLS-1$
                                 .append("END\n"); //$NON-NLS-1$
         helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
                                    Table.TriggerEvent.UPDATE);
@@ -629,7 +610,6 @@ public class TestProcedureResolving {
         StringBuffer procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
                                 .append("BEGIN\n") //$NON-NLS-1$
                                 .append("execute string 'SELECT e1, e2, e3, e4 FROM pm1.g2';\n") //$NON-NLS-1$
-                                .append("ROWS_UPDATED =0;\n") //$NON-NLS-1$
                                 .append("END\n"); //$NON-NLS-1$
         helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
                                    Table.TriggerEvent.UPDATE);
@@ -682,7 +662,6 @@ public class TestProcedureResolving {
         StringBuffer procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
                                             .append("BEGIN\n") //$NON-NLS-1$
                                             .append("SELECT e1, e2, e3, e4 INTO pm1.g1 FROM pm1.g2;\n") //$NON-NLS-1$
-                                            .append("ROWS_UPDATED =0;\n") //$NON-NLS-1$
                                             .append("END\n"); //$NON-NLS-1$
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
@@ -693,7 +672,6 @@ public class TestProcedureResolving {
         procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
                                 .append("BEGIN\n") //$NON-NLS-1$
                                 .append("SELECT e1, e2, e3, e4 INTO #myTempTable FROM pm1.g2;\n") //$NON-NLS-1$
-                                .append("ROWS_UPDATED =0;\n") //$NON-NLS-1$
                                 .append("END\n"); //$NON-NLS-1$
         helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
                                    Table.TriggerEvent.UPDATE);
@@ -703,7 +681,6 @@ public class TestProcedureResolving {
         StringBuffer procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
                                             .append("BEGIN\n") //$NON-NLS-1$
                                             .append("SELECT 'a', 19, {b'true'}, 13.999 INTO pm1.g1;\n") //$NON-NLS-1$
-                                            .append("ROWS_UPDATED =0;\n") //$NON-NLS-1$
                                             .append("END\n"); //$NON-NLS-1$
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
@@ -714,54 +691,9 @@ public class TestProcedureResolving {
         procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
                                 .append("BEGIN\n") //$NON-NLS-1$
                                 .append("SELECT 'a', 19, {b'true'}, 13.999 INTO #myTempTable;\n") //$NON-NLS-1$
-                                .append("ROWS_UPDATED =0;\n") //$NON-NLS-1$
                                 .append("END\n"); //$NON-NLS-1$
         helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
                                    Table.TriggerEvent.UPDATE);
-    }
-    
-    /*@Test public void testCommandUpdating3() throws Exception{
-        StringBuffer procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
-        .append("BEGIN\n") //$NON-NLS-1$
-        .append("INSERT INTO pm1.g1 (e1) VALUES (INPUTS.e1);\n") //$NON-NLS-1$
-        .append("ROWS_UPDATED = INSERT INTO pm1.g2 (e1) VALUES (INPUTS.e1);\n") //$NON-NLS-1$
-        .append("END\n"); //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-        Command command = helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
-                                   Table.TriggerEvent.UPDATE);
-        assertEquals(2, command.updatingModelCount(metadata));
-    }*/
-
-    /*@Test public void testCommandUpdatingCount6() throws Exception{
-        String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "if(INPUTS.e1 = 10)\n";         //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "INSERT INTO pm1.g1 (e2) VALUES (INPUTS.e2);\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        String userUpdateStr = "INSERT into vm1.g1 (e1) values('x')"; //$NON-NLS-1$
-        
-        Command command = helpResolveUpdateProcedure(procedure, userUpdateStr,
-                                     Table.TriggerEvent.INSERT);
-        assertEquals(2, command.updatingModelCount(metadata));
-    }*/
-    
-    // variable declared is of special type ROWS_RETURNED
-    @Test public void testDeclareRowsUpdated() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer rows_updated;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-        helpFailUpdateProcedure(procedure, userUpdateStr,
-                                     Table.TriggerEvent.UPDATE, "Variable rows_updated was previously declared."); //$NON-NLS-1$
     }
     
     // validating INPUT element assigned
@@ -796,7 +728,7 @@ public class TestProcedureResolving {
     
     // variables cannot be used among insert elements
     @Test public void testVariableInInsert() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "CREATE VIRTUAL PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "Insert into pm1.g1 (pm1.g1.e2, var1) values (1, 2);\n"; //$NON-NLS-1$
@@ -811,7 +743,7 @@ public class TestProcedureResolving {
     
     // variables cannot be used among insert elements
     @Test public void testVariableInInsert2() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "CREATE VIRTUAL PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "Insert into pm1.g1 (pm1.g1.e2, INPUTS.x) values (1, 2);\n"; //$NON-NLS-1$
@@ -826,11 +758,10 @@ public class TestProcedureResolving {
     
     //should resolve first to the table's column
     @Test public void testVariableInInsert3() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "CREATE VIRTUAL PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer e2;\n"; //$NON-NLS-1$
         procedure = procedure + "Insert into pm1.g1 (e2) values (1);\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userQuery = "UPDATE vm1.g3 SET x='x' where e3= 1"; //$NON-NLS-1$
@@ -852,7 +783,7 @@ public class TestProcedureResolving {
     }
     
     @Test public void testLoopRedefinition() {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
+        StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$
         .append("\n  declare string var1;") //$NON-NLS-1$
         .append("\n  LOOP ON (SELECT pm1.g1.e1 FROM pm1.g1) AS loopCursor") //$NON-NLS-1$
@@ -871,7 +802,7 @@ public class TestProcedureResolving {
     }
     
     @Test public void testTempGroupElementShouldNotBeResolable() {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
+        StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$
         .append("\n  select 1 as a into #temp;") //$NON-NLS-1$
         .append("\n  select #temp.a from pm1.g1;") //$NON-NLS-1$
@@ -884,7 +815,7 @@ public class TestProcedureResolving {
     }
     
     @Test public void testTempGroupElementShouldNotBeResolable1() {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
+        StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$
         .append("\n  select 1 as a into #temp;") //$NON-NLS-1$
         .append("\n  insert into #temp (a) values (#temp.a);") //$NON-NLS-1$
@@ -897,7 +828,7 @@ public class TestProcedureResolving {
     }
     
     @Test public void testProcedureCreate() throws Exception {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
+        StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$
         .append("\n  create local temporary table t1 (e1 string);") //$NON-NLS-1$
         .append("\n  select e1 from t1;") //$NON-NLS-1$
@@ -914,7 +845,7 @@ public class TestProcedureResolving {
      * it is not ok to redefine the loopCursor 
      */
     @Test public void testProcedureCreate1() {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
+        StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$
         .append("\n  LOOP ON (SELECT pm1.g1.e1 FROM pm1.g1) AS loopCursor") //$NON-NLS-1$
         .append("\n  BEGIN") //$NON-NLS-1$
@@ -928,7 +859,7 @@ public class TestProcedureResolving {
     }
     
     @Test public void testProcedureCreateDrop() {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
+        StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$
         .append("\n drop table t1;") //$NON-NLS-1$
         .append("\n  create local temporary table t1 (e1 string);") //$NON-NLS-1$
@@ -940,7 +871,7 @@ public class TestProcedureResolving {
     }
     
     @Test public void testProcedureCreateDrop1() throws Exception {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
+        StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$
         .append("\n  create local temporary table t1 (e1 string);") //$NON-NLS-1$
         .append("\n  drop table t1;") //$NON-NLS-1$
@@ -952,7 +883,7 @@ public class TestProcedureResolving {
     }
     
     @Test public void testCreateAfterImplicitTempTable() throws Exception {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
+        StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$
         .append("\n  select e1 into #temp from pm1.g1;") //$NON-NLS-1$
         .append("\n  create local temporary table #temp (e1 string);") //$NON-NLS-1$
@@ -979,16 +910,15 @@ public class TestProcedureResolving {
 	 * delete procedures should not reference input or changing vars.
 	 */
 	@Test public void testDefect16451() {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure += "BEGIN\n"; //$NON-NLS-1$
-        procedure += "Select pm1.g1.e2 from pm1.g1 where e1 = INPUTS.e1;\n"; //$NON-NLS-1$
-        procedure += "ROWS_UPDATED = 0;"; //$NON-NLS-1$
+		String procedure = "FOR EACH ROW "; //$NON-NLS-1$
+        procedure += "BEGIN ATOMIC\n"; //$NON-NLS-1$
+        procedure += "Select pm1.g1.e2 from pm1.g1 where e1 = NEW.e1;\n"; //$NON-NLS-1$
         procedure += "END\n"; //$NON-NLS-1$
         
         String userUpdateStr = "delete from vm1.g1 where e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.DELETE, "Symbol INPUTS.e1 is specified with an unknown group context"); //$NON-NLS-1$
+									 Table.TriggerEvent.DELETE, "Symbol \"NEW\".e1 is specified with an unknown group context"); //$NON-NLS-1$
 	}
 	
     @Test public void testInvalidVirtualProcedure3() throws Exception {

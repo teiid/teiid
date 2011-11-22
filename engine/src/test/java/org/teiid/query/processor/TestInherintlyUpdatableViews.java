@@ -60,8 +60,8 @@ public class TestInherintlyUpdatableViews {
         	CommandContext context = createCommandContext();
 	        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
 	        caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
-	        ProcessorPlan plan = helpGetPlan(command, metadata, new DefaultCapabilitiesFinder(caps), context);
-	        List[] expected = new List[] {Arrays.asList(1)};
+	        ProcessorPlan plan = helpGetPlan(helpParse(userSql), metadata, new DefaultCapabilitiesFinder(caps), context);
+	        List<?>[] expected = new List[] {Arrays.asList(1)};
         	helpProcess(plan, context, dm, expected);
         }
         
@@ -116,7 +116,7 @@ public class TestInherintlyUpdatableViews {
         dm.addData("SELECT g_1.e2, g_1.e2 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_1.e3 IS NULL)", new List[] {Arrays.asList(1, 1)});
         dm.addData("UPDATE pm1.g2 SET e1 = pm1.g2.e2 WHERE pm1.g2.e2 = 1", new List[] {Arrays.asList(1)});
         
-		helpTest(userSql, viewSql, "CREATE PROCEDURE\nBEGIN\nLOOP ON (SELECT pm1.g2.e2 AS s_0, pm1.g2.e2 AS s_1 FROM pm1.g1 INNER JOIN pm1.g2 ON g1.e1 = g2.e1 WHERE pm1.g2.e3 IS NULL) AS X\nBEGIN\nUPDATE pm1.g2 SET e1 = pm1.g2.e2 WHERE pm1.g2.e2 = X.s_1;\nVARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\nEND\nEND",
+		helpTest(userSql, viewSql, "CREATE VIRTUAL PROCEDURE\nBEGIN ATOMIC\nDECLARE integer VARIABLES.ROWS_UPDATED = 0;\nLOOP ON (SELECT pm1.g2.e2 AS s_0, pm1.g2.e2 AS s_1 FROM pm1.g1 INNER JOIN pm1.g2 ON g1.e1 = g2.e1 WHERE pm1.g2.e3 IS NULL) AS X\nBEGIN\nUPDATE pm1.g2 SET e1 = pm1.g2.e2 WHERE pm1.g2.e2 = X.s_1;\nVARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\nEND\nSELECT VARIABLES.ROWS_UPDATED;\nEND",
 				dm);
 	}
 	
@@ -128,7 +128,7 @@ public class TestInherintlyUpdatableViews {
         dm.addData("SELECT g_1.e2 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_1.e2 < 10)", new List[] {Arrays.asList(2)});
         dm.addData("DELETE FROM pm1.g2 WHERE pm1.g2.e2 = 2", new List[] {Arrays.asList(1)});
         
-		helpTest(userSql, viewSql, "CREATE PROCEDURE\nBEGIN\nLOOP ON (SELECT pm1.g2.e2 AS s_0 FROM pm1.g1 INNER JOIN pm1.g2 ON g1.e1 = g2.e1 WHERE pm1.g2.e2 < 10) AS X\nBEGIN\nDELETE FROM pm1.g2 WHERE pm1.g2.e2 = X.s_0;\nVARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\nEND\nEND",
+		helpTest(userSql, viewSql, "CREATE VIRTUAL PROCEDURE\nBEGIN ATOMIC\nDECLARE integer VARIABLES.ROWS_UPDATED = 0;\nLOOP ON (SELECT pm1.g2.e2 AS s_0 FROM pm1.g1 INNER JOIN pm1.g2 ON g1.e1 = g2.e1 WHERE pm1.g2.e2 < 10) AS X\nBEGIN\nDELETE FROM pm1.g2 WHERE pm1.g2.e2 = X.s_0;\nVARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\nEND\nSELECT VARIABLES.ROWS_UPDATED;\nEND",
 				dm);
 	}
 	

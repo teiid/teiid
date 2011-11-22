@@ -70,7 +70,7 @@ import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.BranchingStatement;
 import org.teiid.query.sql.proc.CommandStatement;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
+import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.DeclareStatement;
 import org.teiid.query.sql.proc.IfStatement;
 import org.teiid.query.sql.proc.LoopStatement;
@@ -181,7 +181,7 @@ public abstract class LanguageVisitor {
     public void visit(AssignmentStatement obj) {}
     public void visit(Block obj) {}
     public void visit(CommandStatement obj) {}
-    public void visit(CreateUpdateProcedureCommand obj) {}
+    public void visit(CreateProcedureCommand obj) {}
     public void visit(DeclareStatement obj) {
         visit((AssignmentStatement)obj);
     }    

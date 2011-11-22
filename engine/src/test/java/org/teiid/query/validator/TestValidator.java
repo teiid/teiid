@@ -916,7 +916,6 @@ public class TestValidator {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
@@ -932,7 +931,6 @@ public class TestValidator {
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "var1 = Select pm1.g1.e2, pm1.g1.e1 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
@@ -948,7 +946,6 @@ public class TestValidator {
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "var1 = Select pm1.g1.e2, pm1.g1.e1 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
@@ -963,7 +960,6 @@ public class TestValidator {
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE string MaxTran;\n"; //$NON-NLS-1$
         procedure = procedure + "MaxTran = SELECT MAX(e1) FROM pm1.g1;\n";         //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
@@ -978,7 +974,6 @@ public class TestValidator {
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "DECLARE string var;\n"; //$NON-NLS-1$
 		procedure = procedure + "var = null;\n";         //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED =0;\n"; //$NON-NLS-1$
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 
 		String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
@@ -995,7 +990,6 @@ public class TestValidator {
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "var1 = SELECT COUNT(*) FROM myCursor;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n";         //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = 0;\n";         //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
@@ -1028,10 +1022,10 @@ public class TestValidator {
     }
     
     @Test public void testSelectIntoTempGroup() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "CREATE VIRTUAL PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "SELECT e1, e2, e3, e4 INTO #myTempTable FROM pm1.g2;\n";         //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = SELECT COUNT(*) FROM #myTempTable;\n"; //$NON-NLS-1$
+        procedure = procedure + "SELECT COUNT(*) FROM #myTempTable;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
@@ -1048,7 +1042,7 @@ public class TestValidator {
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "SELECT e1, e2, e3, e4 INTO #myTempTable FROM pm1.g2;\n";         //$NON-NLS-1$
         procedure = procedure + "SELECT e1, e2, e3 INTO #myTempTable FROM pm1.g2;\n";         //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = SELECT COUNT(*) FROM #myTempTable;\n"; //$NON-NLS-1$
+        procedure = procedure + "SELECT COUNT(*) FROM #myTempTable;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
@@ -1057,15 +1051,12 @@ public class TestValidator {
                 Table.TriggerEvent.UPDATE);
     }
     
-    /**
-     * Defect 24346 with type mismatch
-     */
     @Test public void testInvalidSelectIntoTempGroup1() {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "create local temporary table #myTempTable (e1 integer);\n";         //$NON-NLS-1$
         procedure = procedure + "SELECT e1 INTO #myTempTable FROM pm1.g2;\n";         //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = SELECT COUNT(*) FROM #myTempTable;\n"; //$NON-NLS-1$
+        procedure = procedure + "SELECT COUNT(*) FROM #myTempTable;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
@@ -1081,7 +1072,6 @@ public class TestValidator {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "SELECT e1, e2, e3, e4 INTO pm1.g1 FROM pm1.g2;\n";         //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = 0;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
@@ -1104,7 +1094,6 @@ public class TestValidator {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "SELECT e1, e2, e3, e4, 'val' INTO pm1.g1 FROM pm1.g2;\n";         //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = 0;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
@@ -1119,7 +1108,6 @@ public class TestValidator {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "SELECT e1, e2, e3 INTO pm1.g1 FROM pm1.g2;\n";         //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = 0;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
@@ -1134,7 +1122,6 @@ public class TestValidator {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "SELECT e1, convert(e2, string), e3, e4 INTO pm1.g1 FROM pm1.g2;\n";         //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = 0;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
@@ -1153,7 +1140,6 @@ public class TestValidator {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "SELECT * INTO pm1.g1 FROM pm1.g2, pm1.g1;\n";         //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = 0;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
@@ -1168,7 +1154,6 @@ public class TestValidator {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "SELECT e1, e2, e3, e4 INTO vm1.g1 FROM pm1.g2;\n";         //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = 0;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$

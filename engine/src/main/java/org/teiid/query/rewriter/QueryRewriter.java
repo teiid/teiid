@@ -197,7 +197,7 @@ public class QueryRewriter {
                 command = rewriteDelete((Delete) command);
                 break;
             case Command.TYPE_UPDATE_PROCEDURE:
-                command = rewriteUpdateProcedure((CreateUpdateProcedureCommand) command);
+                command = rewriteUpdateProcedure((CreateProcedureCommand) command);
                 break;
             case Command.TYPE_BATCHED_UPDATE:
             	List subCommands = ((BatchedUpdateCommand)command).getUpdateCommands();
@@ -218,7 +218,7 @@ public class QueryRewriter {
         return command;
 	}
     
-	private Command rewriteUpdateProcedure(CreateUpdateProcedureCommand command)
+	private Command rewriteUpdateProcedure(CreateProcedureCommand command)
 								 throws TeiidComponentException, TeiidProcessingException{
 		Block block = rewriteBlock(command.getBlock());
         command.setBlock(block);
@@ -1872,7 +1872,7 @@ public class QueryRewriter {
 		return criteria;
 	}
 	
-	public static Expression rewriteExpression(Expression expression, CreateUpdateProcedureCommand procCommand, CommandContext context, QueryMetadataInterface metadata) throws TeiidComponentException, TeiidProcessingException{
+	public static Expression rewriteExpression(Expression expression, CreateProcedureCommand procCommand, CommandContext context, QueryMetadataInterface metadata) throws TeiidComponentException, TeiidProcessingException{
 		return new QueryRewriter(metadata, context).rewriteExpressionDirect(expression);
 	}
 
@@ -2651,15 +2651,23 @@ public class QueryRewriter {
 			TeiidComponentException, TeiidProcessingException {
 		Block b = new Block();
 		b.addStatement(new CommandStatement(newUpdate));
-		CreateUpdateProcedureCommand cupc = new CreateUpdateProcedureCommand();
+		CreateProcedureCommand cupc = new CreateProcedureCommand();
+		cupc.setUpdateProcedure(false);
 		Block parent = new Block();
+		parent.setAtomic(true);
+		ElementSymbol rowsUpdated = new ElementSymbol(ProcedureReservedWords.VARIABLES+ElementSymbol.SEPARATOR+"ROWS_UPDATED"); //$NON-NLS-1$
+		DeclareStatement ds = new DeclareStatement(rowsUpdated, DataTypeManager.DefaultDataTypes.INTEGER, new Constant(0));
+		parent.addStatement(ds);
 		LoopStatement ls = new LoopStatement(b, query, "X"); //$NON-NLS-1$
 		parent.addStatement(ls);
 		AssignmentStatement as = new AssignmentStatement();
-		ElementSymbol rowsUpdate = new ElementSymbol(ProcedureReservedWords.VARIABLES+ElementSymbol.SEPARATOR+ProcedureReservedWords.ROWS_UPDATED);
-		as.setVariable(rowsUpdate);
-		as.setExpression(new Function("+", new Expression[] {rowsUpdate, new Constant(1)})); //$NON-NLS-1$
+		rowsUpdated.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+		as.setVariable(rowsUpdated);
+		as.setExpression(new Function("+", new Expression[] {rowsUpdated, new Constant(1)})); //$NON-NLS-1$
 		b.addStatement(as);
+		Query returnQuery = new Query();
+		returnQuery.setSelect(new Select(Arrays.asList(rowsUpdated.clone())));
+		parent.addStatement(new CommandStatement(returnQuery));
 		cupc.setBlock(parent);
 		cupc.setVirtualGroup(group);
 		QueryResolver.resolveCommand(cupc, metadata);

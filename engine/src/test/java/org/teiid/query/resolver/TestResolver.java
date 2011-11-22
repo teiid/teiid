@@ -70,7 +70,7 @@ import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.proc.CommandStatement;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
+import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -2407,7 +2407,7 @@ public class TestResolver {
             +"select * from xmltest.doc1 where node1 = x; " //$NON-NLS-1$
             +"end "; //$NON-NLS-1$
 
-        CreateUpdateProcedureCommand command = (CreateUpdateProcedureCommand) helpResolve(sql); 
+        CreateProcedureCommand command = (CreateProcedureCommand) helpResolve(sql); 
         
         CommandStatement cmdStmt = (CommandStatement)command.getBlock().getStatements().get(1);
         
@@ -2887,7 +2887,7 @@ public class TestResolver {
         helpResolveUpdateProcedure(procedure, userUpdateStr);
     }
 
-	CreateUpdateProcedureCommand helpResolveUpdateProcedure(String procedure,
+	CreateProcedureCommand helpResolveUpdateProcedure(String procedure,
 			String userUpdateStr) throws QueryParserException,
 			QueryResolverException, TeiidComponentException,
 			QueryMetadataException {
@@ -2896,7 +2896,7 @@ public class TestResolver {
         ProcedureContainer userCommand = (ProcedureContainer)QueryParser.getQueryParser().parseCommand(userUpdateStr);
         QueryResolver.resolveCommand(userCommand, metadata);
         
-        return (CreateUpdateProcedureCommand)QueryResolver.expandCommand(userCommand, metadata, AnalysisRecord.createNonRecordingRecord());
+        return (CreateProcedureCommand)QueryResolver.expandCommand(userCommand, metadata, AnalysisRecord.createNonRecordingRecord());
 	}
     
 	// validating AssignmentStatement, variable type and assigned type 

@@ -40,7 +40,7 @@ import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
+import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.Validator;
@@ -61,10 +61,10 @@ public class TestProcedurePlanner {
         QueryParser parser = QueryParser.getQueryParser();
         Command userCommand = userQuery != null ? parser.parseCommand(userQuery) : parser.parseCommand(procedure);
         
-        if (userCommand instanceof CreateUpdateProcedureCommand) {
+        if (userCommand instanceof CreateProcedureCommand) {
         	GroupSymbol gs = new GroupSymbol("proc");
         	gs.setMetadataID(new TempMetadataID("proc", Collections.EMPTY_LIST));
-        	((CreateUpdateProcedureCommand)userCommand).setVirtualGroup(gs);
+        	((CreateProcedureCommand)userCommand).setVirtualGroup(gs);
         }
         
         QueryResolver.resolveCommand(userCommand, metadata);

@@ -110,19 +110,14 @@ public class ProcedurePlan extends ProcessorPlan {
 
     private Map<String, CursorState> cursorStates = new HashMap<String, CursorState>();
 
-	private static ElementSymbol ROWS_UPDATED =
-			new ElementSymbol(ProcedureReservedWords.VARIABLES+"."+ProcedureReservedWords.ROWS_UPDATED); //$NON-NLS-1$
-
 	static ElementSymbol ROWCOUNT =
 		new ElementSymbol(ProcedureReservedWords.VARIABLES+"."+ProcedureReservedWords.ROWCOUNT); //$NON-NLS-1$
 	
 	static {
-		ROWS_UPDATED.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 		ROWCOUNT.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 	}
 
 	private VariableContext currentVarContext;
-    private boolean isUpdateProcedure = true;
 
     private TupleSource lastTupleSource;
     
@@ -377,10 +372,6 @@ public class ProcedurePlan extends ProcessorPlan {
             program.incrementProgramCounter();
 	    }
 
-        if(this.isUpdateProcedure){
-            return this.getUpdateCountAsToupleSource();
-        }
-
         if(lastTupleSource == null){
             return CollectionTupleSource.createNullTupleSource();
         }
@@ -416,7 +407,6 @@ public class ProcedurePlan extends ProcessorPlan {
 
 	public ProcessorPlan clone(){
         ProcedurePlan plan = new ProcedurePlan((Program)originalProgram.clone());
-        plan.setUpdateProcedure(this.isUpdateProcedure());
         plan.setOutputElements(this.getOutputElements());
         plan.setParams(params);
         plan.setOutParams(outParams);
@@ -486,17 +476,8 @@ public class ProcedurePlan extends ProcessorPlan {
     
 	private void createVariableContext() {
 		this.currentVarContext = new VariableContext(true);
-        this.currentVarContext.setValue(ROWS_UPDATED, 0);
         this.currentVarContext.setValue(ROWCOUNT, 0);
 	}
-
-    private TupleSource getUpdateCountAsToupleSource() {
-    	Object rowCount = currentVarContext.getValue(ROWS_UPDATED);
-    	if(rowCount == null) {
-			rowCount = 0;
-    	}
-        return CollectionTupleSource.createUpdateCountTupleSource((Integer)rowCount);
-    }
 
     /**
      * <p> Get the current <code>VariavleContext</code> on this environment.
@@ -712,20 +693,6 @@ public class ProcedurePlan extends ProcessorPlan {
     		context.setVariableContext(currentVarContext);
     	}
     	return context;
-    }
-
-    /**
-     * @return
-     */
-    public boolean isUpdateProcedure() {
-        return isUpdateProcedure;
-    }
-
-    /**
-     * @param b
-     */
-    public void setUpdateProcedure(boolean b) {
-        isUpdateProcedure = b;
     }
 
     public List getOutputElements() {

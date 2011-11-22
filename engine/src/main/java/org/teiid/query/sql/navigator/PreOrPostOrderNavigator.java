@@ -74,7 +74,7 @@ import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.BranchingStatement;
 import org.teiid.query.sql.proc.CommandStatement;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
+import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.DeclareStatement;
 import org.teiid.query.sql.proc.IfStatement;
 import org.teiid.query.sql.proc.LoopStatement;
@@ -213,7 +213,7 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
         preVisitVisitor(obj);
         postVisitVisitor(obj);
     }
-    public void visit(CreateUpdateProcedureCommand obj) {
+    public void visit(CreateProcedureCommand obj) {
         preVisitVisitor(obj);
         visitNode(obj.getBlock());
         postVisitVisitor(obj);

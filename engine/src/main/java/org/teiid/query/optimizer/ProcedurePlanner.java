@@ -35,31 +35,12 @@ import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.processor.proc.AssignmentInstruction;
-import org.teiid.query.processor.proc.BranchingInstruction;
-import org.teiid.query.processor.proc.CreateCursorResultSetInstruction;
-import org.teiid.query.processor.proc.ErrorInstruction;
-import org.teiid.query.processor.proc.ExecDynamicSqlInstruction;
-import org.teiid.query.processor.proc.IfInstruction;
-import org.teiid.query.processor.proc.LoopInstruction;
-import org.teiid.query.processor.proc.ProcedurePlan;
-import org.teiid.query.processor.proc.Program;
-import org.teiid.query.processor.proc.ProgramInstruction;
-import org.teiid.query.processor.proc.WhileInstruction;
+import org.teiid.query.processor.proc.*;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.DynamicCommand;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.proc.AssignmentStatement;
-import org.teiid.query.sql.proc.Block;
-import org.teiid.query.sql.proc.BranchingStatement;
-import org.teiid.query.sql.proc.CommandStatement;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
-import org.teiid.query.sql.proc.IfStatement;
-import org.teiid.query.sql.proc.LoopStatement;
-import org.teiid.query.sql.proc.RaiseErrorStatement;
-import org.teiid.query.sql.proc.Statement;
-import org.teiid.query.sql.proc.WhileStatement;
+import org.teiid.query.sql.proc.*;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Reference;
@@ -69,7 +50,7 @@ import org.teiid.query.util.CommandContext;
 
 /**
  * <p> This prepares an {@link org.teiid.query.processor.proc.ProcedurePlan ProcedurePlan} from
- * a CreateUpdateProcedureCommand {@link org.teiid.query.sql.proc.CreateUpdateProcedureCommand CreateUpdateProcedureCommand}.
+ * a CreateUpdateProcedureCommand {@link org.teiid.query.sql.proc.CreateProcedureCommand CreateUpdateProcedureCommand}.
  * </p>
  */
 public final class ProcedurePlanner implements CommandPlanner {
@@ -94,7 +75,7 @@ public final class ProcedurePlanner implements CommandPlanner {
             analysisRecord.println("PROCEDURE COMMAND: " + procCommand); //$NON-NLS-1$
         }
 
-        CreateUpdateProcedureCommand cupc = Assertion.isInstanceOf(procCommand, CreateUpdateProcedureCommand.class, "Wrong command type"); //$NON-NLS-1$
+        CreateProcedureCommand cupc = Assertion.isInstanceOf(procCommand, CreateProcedureCommand.class, "Wrong command type"); //$NON-NLS-1$
 
         if(debug) {
             analysisRecord.println("OPTIMIZING SUB-COMMANDS: "); //$NON-NLS-1$
@@ -117,7 +98,6 @@ public final class ProcedurePlanner implements CommandPlanner {
         // create plan from program and initialized environment
         ProcedurePlan plan = new ProcedurePlan(programBlock);
         
-        plan.setUpdateProcedure(cupc.isUpdateProcedure());
         plan.setOutputElements(cupc.getProjectedSymbols());
         
         if(debug) {
@@ -142,7 +122,7 @@ public final class ProcedurePlanner implements CommandPlanner {
 	 * @throws QueryMetadataException if there is an error accessing metadata
 	 * @throws TeiidComponentException if unexpected error occurs
 	 */
-    private Program planBlock(CreateUpdateProcedureCommand parentProcCommand, Block block, QueryMetadataInterface metadata, boolean debug, IDGenerator idGenerator, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
+    private Program planBlock(CreateProcedureCommand parentProcCommand, Block block, QueryMetadataInterface metadata, boolean debug, IDGenerator idGenerator, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
         throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 
         // Generate program and add instructions
@@ -184,7 +164,7 @@ public final class ProcedurePlanner implements CommandPlanner {
 	 * @throws QueryMetadataException if there is an error accessing metadata
 	 * @throws TeiidComponentException if unexpected error occurs
 	 */
-    private Object planStatement(CreateUpdateProcedureCommand parentProcCommand, Statement statement, QueryMetadataInterface metadata, boolean debug, IDGenerator idGenerator, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
+    private Object planStatement(CreateProcedureCommand parentProcCommand, Statement statement, QueryMetadataInterface metadata, boolean debug, IDGenerator idGenerator, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
         throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 
 		int stmtType = statement.getType();

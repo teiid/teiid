@@ -53,7 +53,7 @@ import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
+import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.util.CommandContext;
 
@@ -106,8 +106,9 @@ public class QueryOptimizer {
 
 		switch (command.getType()) {
 		case Command.TYPE_UPDATE_PROCEDURE:
-			CreateUpdateProcedureCommand cupc = (CreateUpdateProcedureCommand)command;
-			if (cupc.isUpdateProcedure()) {
+			CreateProcedureCommand cupc = (CreateProcedureCommand)command;
+			if (cupc.getUserCommand() == null) {
+				//row update procedure
 				result = planProcedure(command, metadata, idGenerator, capFinder, analysisRecord, context);
 			} else {
 				StoredProcedure c = (StoredProcedure)cupc.getUserCommand();

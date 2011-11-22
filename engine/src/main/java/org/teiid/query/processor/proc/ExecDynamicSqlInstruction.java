@@ -60,7 +60,7 @@ import org.teiid.query.sql.lang.DynamicCommand;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SetClause;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
+import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -94,12 +94,12 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 	private QueryMetadataInterface metadata;
 
 	// The parent command
-	CreateUpdateProcedureCommand parentProcCommand;
+	CreateProcedureCommand parentProcCommand;
     
     private Program dynamicProgram;
 
 	public ExecDynamicSqlInstruction(
-			CreateUpdateProcedureCommand parentProcCommand,
+			CreateProcedureCommand parentProcCommand,
 			DynamicCommand command, QueryMetadataInterface metadata,
 			IDGenerator idGenerator, CapabilitiesFinder capFinder) {
 		this.parentProcCommand = parentProcCommand;

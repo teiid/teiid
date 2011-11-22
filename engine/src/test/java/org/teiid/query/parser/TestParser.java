@@ -3888,7 +3888,7 @@ public class TestParser {
         CommandStatement cmdStmt = new CommandStatement(query);
         block.addStatement(cmdStmt);
         
-        CreateUpdateProcedureCommand virtualProcedureCommand = new CreateUpdateProcedureCommand();
+        CreateProcedureCommand virtualProcedureCommand = new CreateProcedureCommand();
         virtualProcedureCommand.setBlock(block);
         virtualProcedureCommand.setUpdateProcedure(false);
         
@@ -4913,8 +4913,8 @@ public class TestParser {
     }
     
     @Test public void testIfElseWithoutBeginEnd() {
-        String sql = "CREATE PROCEDURE BEGIN IF (x > 1) select 1; IF (x > 1) select 1; ELSE select 1; END"; //$NON-NLS-1$
-        String expected = "CREATE PROCEDURE\nBEGIN\nIF(x > 1)\nBEGIN\nSELECT 1;\nEND\nIF(x > 1)\nBEGIN\nSELECT 1;\nEND\nELSE\nBEGIN\nSELECT 1;\nEND\nEND"; //$NON-NLS-1$
+        String sql = "CREATE VIRTUAL PROCEDURE BEGIN IF (x > 1) select 1; IF (x > 1) select 1; ELSE select 1; END"; //$NON-NLS-1$
+        String expected = "CREATE VIRTUAL PROCEDURE\nBEGIN\nIF(x > 1)\nBEGIN\nSELECT 1;\nEND\nIF(x > 1)\nBEGIN\nSELECT 1;\nEND\nELSE\nBEGIN\nSELECT 1;\nEND\nEND"; //$NON-NLS-1$
         
         Query query = new Query();
         query.setSelect(new Select(Arrays.asList(new ExpressionSymbol("expr", new Constant(1))))); //$NON-NLS-1$
@@ -4930,7 +4930,7 @@ public class TestParser {
         Block block3 = new Block();
         block3.addStatement(ifStmt);
         block3.addStatement(ifStmt1);
-        CreateUpdateProcedureCommand command = new CreateUpdateProcedureCommand(block3);
+        CreateProcedureCommand command = new CreateProcedureCommand(block3);
         
         helpTest(sql, expected, command);
     }

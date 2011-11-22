@@ -60,7 +60,7 @@ import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.BranchingStatement;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
+import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
@@ -367,15 +367,10 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         }
     }
 
-    public void visit(CreateUpdateProcedureCommand obj) {
-        if(!obj.isUpdateProcedure()){
-        	
-            //check that the procedure does not contain references to itself
-            if (GroupCollectorVisitor.getGroups(obj,true).contains(obj.getVirtualGroup())) {
-            	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.Procedure_has_group_self_reference"),obj); //$NON-NLS-1$
-            }
-            
-            return;
+    public void visit(CreateProcedureCommand obj) {
+        //check that the procedure does not contain references to itself
+        if (GroupCollectorVisitor.getGroups(obj,true).contains(obj.getVirtualGroup())) {
+        	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.Procedure_has_group_self_reference"),obj); //$NON-NLS-1$
         }
     }
 

@@ -47,7 +47,7 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
+import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -99,7 +99,7 @@ public final class TriggerActionPlanner {
 		ProcessorPlan queryPlan = QueryOptimizer.optimizePlan(query, metadata, idGenerator, capFinder, analysisRecord, context);
 		result.setQueryPlan(queryPlan);
 		result.setLookupMap(RelationalNode.createLookupMap(query.getProjectedSymbols()));
-		ProcedurePlan rowProcedure = (ProcedurePlan)QueryOptimizer.optimizePlan(new CreateUpdateProcedureCommand(ta.getBlock()), metadata, idGenerator, capFinder, analysisRecord, context);
+		ProcedurePlan rowProcedure = (ProcedurePlan)QueryOptimizer.optimizePlan(new CreateProcedureCommand(ta.getBlock()), metadata, idGenerator, capFinder, analysisRecord, context);
 		result.setRowProcedure(rowProcedure);
 		return result;
 	}

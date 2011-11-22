@@ -24,9 +24,7 @@ package org.teiid.query.sql.proc;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
@@ -44,15 +42,11 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  * It extends the <code>Command</code> and represents the command for Insert , Update
  * and Delete procedures.</p>
  */
-public class CreateUpdateProcedureCommand extends Command {
+public class CreateProcedureCommand extends Command {
 	
 	// top level block for the procedure
 	private Block block;
 	
-	// map between elements on the virtual groups and the elements in the
-	// transformation query that define it.
-	private Map symbolMap;
-
 	// the command the user submitted against the virtual group being updated
 	private Command userCommand;
 	
@@ -68,7 +62,7 @@ public class CreateUpdateProcedureCommand extends Command {
 	/**
 	 * Constructor for CreateUpdateProcedureCommand.
 	 */
-	public CreateUpdateProcedureCommand() {
+	public CreateProcedureCommand() {
 		super();
 	}
 
@@ -77,7 +71,7 @@ public class CreateUpdateProcedureCommand extends Command {
 	 * @param block The block on this command
 	 * @param type The procedure type 
 	 */
-	public CreateUpdateProcedureCommand(Block block) {
+	public CreateProcedureCommand(Block block) {
 		this.block = block;
 	}	
 
@@ -121,24 +115,6 @@ public class CreateUpdateProcedureCommand extends Command {
 		return this.userCommand;	
 	}	
 
-	/**
-	 * Set the symbol map between elements on the virtual group being updated and the
-	 * elements on the transformation query.
-	 * @param symbolMap Map of virtual group elements -> elements that define those
-	 */
-	public void setSymbolMap(Map symbolMap) {
-		this.symbolMap = symbolMap;
-	}
-
-	/**
-	 * Get the symbol map between elements on the virtual group being updated and the
-	 * elements on the transformation query.
-	 * @return Map of virtual group elements -> elements that define those
-	 */
-	public Map getSymbolMap() {
-		return this.symbolMap;
-	}
-
     // =========================================================================
     //                  P R O C E S S I N G     M E T H O D S
     // =========================================================================
@@ -152,16 +128,12 @@ public class CreateUpdateProcedureCommand extends Command {
 	 * @return Deep clone 
 	 */
 	public Object clone() {		
-		CreateUpdateProcedureCommand copy = new CreateUpdateProcedureCommand();
+		CreateProcedureCommand copy = new CreateProcedureCommand();
 
         //Clone this class state
         if (this.block != null) {
             copy.setBlock(this.block.clone());
         }
-        if (this.getSymbolMap() != null) {
-            copy.setSymbolMap(new HashMap(this.getSymbolMap()));
-        }
-        copy.setUpdateProcedure(isUpdateProcedure());
         if (this.projectedSymbols != null) {
             copy.setProjectedSymbols(new ArrayList(this.projectedSymbols));
         }
@@ -185,11 +157,11 @@ public class CreateUpdateProcedureCommand extends Command {
 		}
 
 		// Quick fail tests		
-    	if(! (obj instanceof CreateUpdateProcedureCommand)) {
+    	if(! (obj instanceof CreateProcedureCommand)) {
     		return false;
 		}
     	
-    	CreateUpdateProcedureCommand other = (CreateUpdateProcedureCommand)obj;
+    	CreateProcedureCommand other = (CreateProcedureCommand)obj;
         
         // Compare the block
         return sameOptionAndHint(other) && EquivalenceUtil.areEqual(getBlock(), other.getBlock());
@@ -250,13 +222,6 @@ public class CreateUpdateProcedureCommand extends Command {
 	}  
 
     /**
-     * @return
-     */
-    public boolean isUpdateProcedure() {
-        return isUpdateProcedure;
-    }
-
-    /**
      * @param isUpdateProcedure
      */
     public void setUpdateProcedure(boolean isUpdateProcedure) {
@@ -288,9 +253,6 @@ public class CreateUpdateProcedureCommand extends Command {
 	 * @see org.teiid.query.sql.lang.Command#areResultsCachable()
 	 */
 	public boolean areResultsCachable() {
-		if(isUpdateProcedure()){
-			return false;
-		}
 		return Query.areResultsCachable(getProjectedSymbols());
 	}
     

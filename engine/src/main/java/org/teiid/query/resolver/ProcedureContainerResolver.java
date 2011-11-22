@@ -49,7 +49,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.GroupContext;
 import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
+import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -255,8 +255,8 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 		    if (type == Command.TYPE_UPDATE || type == Command.TYPE_DELETE) {
 		    	ProcedureContainerResolver.addScalarGroup(SQLConstants.Reserved.OLD, tma.getMetadataStore(), externalGroups, viewElements, false);
 		    }
-		} else if (currentCommand instanceof CreateUpdateProcedureCommand) {
-			CreateUpdateProcedureCommand cupc = (CreateUpdateProcedureCommand)currentCommand;
+		} else if (currentCommand instanceof CreateProcedureCommand) {
+			CreateProcedureCommand cupc = (CreateProcedureCommand)currentCommand;
 			cupc.setVirtualGroup(container);
 
 			if (type == Command.TYPE_STORED_PROCEDURE) {
