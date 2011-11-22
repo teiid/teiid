@@ -50,9 +50,6 @@ public class CreateProcedureCommand extends Command {
 	// the command the user submitted against the virtual group being updated
 	private Command userCommand;
 	
-    //whether it is update procedure or virtual stored procedure, default to update procedure
-    private boolean isUpdateProcedure = true;
-    
     private List projectedSymbols;
     
     private GroupSymbol virtualGroup;
@@ -202,31 +199,20 @@ public class CreateProcedureCommand extends Command {
         if(this.projectedSymbols != null){
             return this.projectedSymbols;
         }
-        if(!isUpdateProcedure){
-            if(this.resultsCommand == null){
-                //user may have not entered any query yet
-                return Collections.EMPTY_LIST;
-            }
-            List<? extends SingleElementSymbol> symbols = this.resultsCommand.getProjectedSymbols();
-            if (this.resultsCommand instanceof StoredProcedure) {
-            	StoredProcedure sp = (StoredProcedure)this.resultsCommand;
-            	if (sp.isCallableStatement()) {
-            		symbols = sp.getResultSetColumns();
-            	}
-            }
-            setProjectedSymbols(symbols);
-            return this.projectedSymbols;
+        if(this.resultsCommand == null){
+            //user may have not entered any query yet
+            return Collections.EMPTY_LIST;
         }
-        this.projectedSymbols = Command.getUpdateCommandSymbol();
-    	return this.projectedSymbols;        
+        List<? extends SingleElementSymbol> symbols = this.resultsCommand.getProjectedSymbols();
+        if (this.resultsCommand instanceof StoredProcedure) {
+        	StoredProcedure sp = (StoredProcedure)this.resultsCommand;
+        	if (sp.isCallableStatement()) {
+        		symbols = sp.getResultSetColumns();
+        	}
+        }
+        setProjectedSymbols(symbols);
+        return this.projectedSymbols;
 	}  
-
-    /**
-     * @param isUpdateProcedure
-     */
-    public void setUpdateProcedure(boolean isUpdateProcedure) {
-        this.isUpdateProcedure = isUpdateProcedure;
-    }
 
     /**
      * @param projSymbols

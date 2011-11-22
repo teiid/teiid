@@ -551,7 +551,6 @@ Command alter(ParseInfo info) :
 		| (<PROCEDURE> target = id() <AS> { comment = getToken(1).specialToken; } stmt = statement(info)) 
 		{
 			CreateProcedureCommand cup = new CreateProcedureCommand(asBlock(stmt));
-			cup.setUpdateProcedure(false);
 			if (comment != null) {
 		 	    cup.setCacheHint(getQueryCacheOption(comment.image));
 	 	    }
@@ -1069,8 +1068,8 @@ CreateProcedureCommand  createProcedure(ParseInfo info) :
     <CREATE> [<VIRTUAL>] <PROCEDURE>
     stmt = statement(info)
     {        
-        updateProcCmd.setBlock(asBlock(stmt));
-        return updateProcCmd;        
+        procCmd.setBlock(asBlock(stmt));
+        return procCmd;        
     }    
 }   
 

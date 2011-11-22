@@ -101,7 +101,6 @@ public class TestCreateUpdateProcedureCommand  extends TestCase {
     
     public void testProjectedSymbols() {
     	CreateProcedureCommand cupc = new CreateProcedureCommand();
-    	cupc.setUpdateProcedure(false);
     	StoredProcedure sp = (StoredProcedure)TestResolver.helpResolve("call TEIIDSP9(p1=>1, p2=>?)", RealMetadataFactory.exampleBQTCached());
     	sp.setCallableStatement(true);
     	cupc.setResultsCommand(sp);

@@ -3890,7 +3890,6 @@ public class TestParser {
         
         CreateProcedureCommand virtualProcedureCommand = new CreateProcedureCommand();
         virtualProcedureCommand.setBlock(block);
-        virtualProcedureCommand.setUpdateProcedure(false);
         
         helpTest("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT c1, c2 FROM m.g) AS mycursor BEGIN x=mycursor.c1; IF(x > 5) BEGIN CONTINUE; END END SELECT c1, c2 FROM m.g; END", //$NON-NLS-1$
         "CREATE VIRTUAL PROCEDURE\nBEGIN\nDECLARE integer x;\n" //$NON-NLS-1$

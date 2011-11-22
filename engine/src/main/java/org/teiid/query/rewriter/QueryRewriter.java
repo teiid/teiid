@@ -2652,7 +2652,6 @@ public class QueryRewriter {
 		Block b = new Block();
 		b.addStatement(new CommandStatement(newUpdate));
 		CreateProcedureCommand cupc = new CreateProcedureCommand();
-		cupc.setUpdateProcedure(false);
 		Block parent = new Block();
 		parent.setAtomic(true);
 		ElementSymbol rowsUpdated = new ElementSymbol(ProcedureReservedWords.VARIABLES+ElementSymbol.SEPARATOR+"ROWS_UPDATED"); //$NON-NLS-1$
