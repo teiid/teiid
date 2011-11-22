@@ -465,7 +465,7 @@ Command command(ParseInfo info) :
 	Command command = null;
 }
 {
-	 (LOOKAHEAD(2) command = createUpdateProcedure(info) |
+	 (LOOKAHEAD(2) command = createProcedure(info) |
 	  command = userCommand(info) |
 	  command = callableStatement(info)
 	)
@@ -496,7 +496,7 @@ Command updateProcedure(ParseInfo info) :
 	Command command = null;
 }
 {
-	(command = createUpdateProcedure(info) |
+	(command = createProcedure(info) |
 	 command = forEachRowTriggerAction(info))
 	<EOF>
 	{
@@ -550,7 +550,7 @@ Command alter(ParseInfo info) :
 	 	}
 		| (<PROCEDURE> target = id() <AS> { comment = getToken(1).specialToken; } stmt = statement(info)) 
 		{
-			CreateUpdateProcedureCommand cup = new CreateUpdateProcedureCommand(asBlock(stmt));
+			CreateProcedureCommand cup = new CreateProcedureCommand(asBlock(stmt));
 			cup.setUpdateProcedure(false);
 			if (comment != null) {
 		 	    cup.setCacheHint(getQueryCacheOption(comment.image));
@@ -1059,10 +1059,10 @@ CommandStatement sqlStatement(ParseInfo info) :
  * Parse create update procedure command
  * @throws ParseException if parsing failed
  */
-CreateUpdateProcedureCommand  createUpdateProcedure(ParseInfo info) :
+CreateProcedureCommand  createProcedure(ParseInfo info) :
 {
-    CreateUpdateProcedureCommand updateProcCmd = 
-        new CreateUpdateProcedureCommand();
+    CreateProcedureCommand procCmd = 
+        new CreateProcedureCommand();
     Statement stmt = null;  
 }
 { 
