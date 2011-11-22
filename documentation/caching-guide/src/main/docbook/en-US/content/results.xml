@@ -55,7 +55,7 @@ ps.execute();
 			</para> 
 	   		<example>
 	   			<title>Advanced ResultSet Caching</title>
-	   			<programlisting>/*+ cache(pref_mem ttl:60000 */ select col from t</programlisting>
+	   			<programlisting>/*+ cache(pref_mem ttl:60000) */ select col from t</programlisting>
 	   			<para>In this example the memory preference has been enabled and the time to live is set to 60000 milliseconds or 1 minute.  
 	   			The ttl for an entry is actually treated as it's maximum age and the entry may be purged sooner if the maximum number of cache entries has been reached.</para>
 	   		</example>
