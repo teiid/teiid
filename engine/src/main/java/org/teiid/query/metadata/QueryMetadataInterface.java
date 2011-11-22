@@ -44,7 +44,7 @@ public interface QueryMetadataInterface {
 	/**
 	 * Unknown cardinality.
 	 */
-	int UNKNOWN_CARDINALITY = 0;
+	int UNKNOWN_CARDINALITY = -1;
 	
     /**
      * Get the metadata-implementation identifier object for the given element name.  

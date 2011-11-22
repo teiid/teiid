@@ -31,16 +31,7 @@ import org.teiid.core.index.IEntryResult;
 import org.teiid.core.util.Assertion;
 import org.teiid.internal.core.index.EntryResult;
 import org.teiid.internal.core.index.IIndexConstants;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnSet;
-import org.teiid.metadata.Datatype;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.Datatype.Variety;
@@ -125,6 +116,8 @@ public class RecordFactory {
      * @since 5.0
      */
     public static final int PROCEDURE_UPDATE_COUNT_VERSION = 9;
+    
+    public static final int NONZERO_UNKNOWN_CARDINALITY = 10;
 
     /**
      * The version number that is encoded with all newly created index records
@@ -397,7 +390,11 @@ public class RecordFactory {
                              tokens.get(tokenIndex++), tokens.get(tokenIndex++));
 
         // The next token is the cardinality
-        table.setCardinality( Integer.parseInt(tokens.get(tokenIndex++)) );
+        int cardinality = Integer.parseInt(tokens.get(tokenIndex++));
+        if (indexVersion < NONZERO_UNKNOWN_CARDINALITY && cardinality == 0) {
+        	cardinality = -1;
+        }
+        table.setCardinality(cardinality);
 
         // The next token is the tableType
         table.setTableType(Table.Type.values()[Integer.parseInt(tokens.get(tokenIndex++))]);

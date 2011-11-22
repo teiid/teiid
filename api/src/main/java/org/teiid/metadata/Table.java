@@ -51,7 +51,7 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 		DELETE
 	}
 
-	private int cardinality;
+	private int cardinality = -1;
     private Type tableType;
     private boolean isVirtual;
     private boolean isSystem;
