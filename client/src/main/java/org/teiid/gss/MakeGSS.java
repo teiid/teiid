@@ -67,8 +67,42 @@ public class MakeGSS {
 
         Object result = null;
 
-        String jaasApplicationName = props.getProperty(TeiidURL.CONNECTION.JAAS_NAME, "teiid"); //$NON-NLS-1$
-        String kerberosPrincipalName =  props.getProperty(TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME, "teiid"); //$NON-NLS-1$
+        StringBuilder errors = new StringBuilder();
+        String jaasApplicationName = props.getProperty(TeiidURL.CONNECTION.JAAS_NAME);
+        String nl = System.getProperty("line.separator");//$NON-NLS-1$
+        if (jaasApplicationName == null) {
+        	errors.append(JDBCPlugin.Util.getString("client_prop_missing", TeiidURL.CONNECTION.JAAS_NAME)); //$NON-NLS-1$
+        	errors.append(nl);
+        }
+        
+        String kerberosPrincipalName =  props.getProperty(TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME);
+        if (kerberosPrincipalName == null) {
+        	errors.append(JDBCPlugin.Util.getString("client_prop_missing", TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME)); //$NON-NLS-1$
+        	errors.append(nl);
+        }
+        
+        String realm = System.getProperty("java.security.krb5.realm"); //$NON-NLS-1$
+        if (realm == null) {
+        	errors.append(JDBCPlugin.Util.getString("system_prop_missing", "java.security.krb5.realm")); //$NON-NLS-1$ //$NON-NLS-2$
+        	errors.append(nl);
+        }
+        
+        String kdc = System.getProperty("java.security.krb5.kdc"); //$NON-NLS-1$
+        if (kdc == null) {
+        	errors.append(JDBCPlugin.Util.getString("system_prop_missing", "java.security.krb5.kdc")); //$NON-NLS-1$ //$NON-NLS-2$
+        	errors.append(nl);
+        }  
+        
+        String config = System.getProperty("java.security.auth.login.config"); //$NON-NLS-1$
+        if (config == null) {
+        	errors.append(JDBCPlugin.Util.getString("system_prop_missing", "java.security.auth.login.config")); //$NON-NLS-1$ //$NON-NLS-2$
+        	errors.append(nl);
+        }         
+        
+        if (errors.length() > 0) {
+        	throw  new LogonException(errors.toString()); 
+        }
+        
         String user = props.getProperty(TeiidURL.CONNECTION.USER_NAME);
         String password = props.getProperty(TeiidURL.CONNECTION.PASSWORD);
         

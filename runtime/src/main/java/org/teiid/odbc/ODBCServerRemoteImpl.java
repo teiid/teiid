@@ -201,7 +201,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			info.put("user", user); //$NON-NLS-1$
 			
 			String password = null; 
-			String passthroughAuthentication = ""; //$NON-NLS-1$
 			if (authType.equals(AuthenticationType.CLEARTEXT)) {
 				password = data.readString();
 			}
@@ -210,7 +209,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
             	LogonResult result = this.logon.neogitiateGssLogin(this.props, serviceToken, false);
             	serviceToken = (byte[])result.getProperty(ILogon.KRB5TOKEN);
             	if (Boolean.TRUE.equals(result.getProperty(ILogon.KRB5_ESTABLISHED))) {
-                	passthroughAuthentication = ";PassthroughAuthentication=true;authenticationType=KRB5"; //$NON-NLS-1$
                 	info.put(ILogon.KRB5TOKEN, serviceToken);
             	}
             	else {
@@ -220,7 +218,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			}
 			
 			// this is local connection
-			String url = "jdbc:teiid:"+databaseName+";ApplicationName=ODBC"+passthroughAuthentication; //$NON-NLS-1$ //$NON-NLS-2$
+			String url = "jdbc:teiid:"+databaseName+";ApplicationName=ODBC"; //$NON-NLS-1$ //$NON-NLS-2$
 
 			if (password != null) {
 				info.put("password", password); //$NON-NLS-1$
