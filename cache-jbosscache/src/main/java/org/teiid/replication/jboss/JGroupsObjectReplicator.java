@@ -350,6 +350,10 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		            if(log.isErrorEnabled()) log.error("message or message buffer is null"); //$NON-NLS-1$
 		            return null;
 		        }
+		        
+		        if (req.getSrc().equals(local_addr)) {
+		        	return null;
+		        }
 
 		        try {
 		            body=req_marshaller != null?
