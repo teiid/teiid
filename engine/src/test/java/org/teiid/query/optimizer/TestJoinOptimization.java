@@ -1034,7 +1034,7 @@ public class TestJoinOptimization {
 
         QueryMetadataInterface metadata = RealMetadataFactory.exampleBQT();
         RealMetadataFactory.setCardinality("bqt1.smallb", 1800, metadata); //$NON-NLS-1$
-        RealMetadataFactory.setCardinality("bqt1.smalla", 0, metadata); //$NON-NLS-1$
+        RealMetadataFactory.setCardinality("bqt1.smalla", -1, metadata); //$NON-NLS-1$
         RealMetadataFactory.setCardinality("bqt2.smallb", 15662, metadata); //$NON-NLS-1$
          
         TestOptimizer.helpPlan(
