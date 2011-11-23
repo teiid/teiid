@@ -352,12 +352,12 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject 
 	//begin replication methods
 	
 	@Override
-	public void setLocalAddress(Serializable address) {
+	public void setAddress(Serializable address) {
 		this.localAddress = address;
 	}
 	
 	@Override
-	public Serializable getLocalAddress() {
+	public Serializable getAddress() {
 		return localAddress;
 	}
 	

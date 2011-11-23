@@ -49,7 +49,7 @@ public interface GlobalTableStore {
 	
 	TempTableStore getTempTableStore();
 
-	Serializable getLocalAddress();
+	Serializable getAddress();
 	
 	List<?> updateMatViewRow(String matTableName, List<?> tuple, boolean delete) throws TeiidComponentException;
 

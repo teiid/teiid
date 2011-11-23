@@ -284,7 +284,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			String matTableName = metadata.getFullName(matTableId);
 			LogManager.logDetail(LogConstants.CTX_MATVIEWS, "processing refreshmatview for", matViewName); //$NON-NLS-1$
 			boolean invalidate = Boolean.TRUE.equals(((Constant)proc.getParameter(2).getExpression()).getValue());
-			boolean needsLoading = globalStore.needsLoading(matTableName, globalStore.getLocalAddress(), true, true, invalidate);
+			boolean needsLoading = globalStore.needsLoading(matTableName, globalStore.getAddress(), true, true, invalidate);
 			if (!needsLoading) {
 				return CollectionTupleSource.createUpdateCountTupleSource(-1);
 			}
@@ -367,9 +367,9 @@ public class TempTableDataManager implements ProcessorDataManager {
 			final MatTableInfo info = globalStore.getMatTableInfo(tableName);
 			boolean load = false;
 			while (!info.isUpToDate()) {
-				load = globalStore.needsLoading(tableName, globalStore.getLocalAddress(), true, false, false);
+				load = globalStore.needsLoading(tableName, globalStore.getAddress(), true, false, false);
 				if (load) {
-					load = globalStore.needsLoading(tableName, globalStore.getLocalAddress(), false, false, false);
+					load = globalStore.needsLoading(tableName, globalStore.getAddress(), false, false, false);
 					if (load) {
 						break;
 					}

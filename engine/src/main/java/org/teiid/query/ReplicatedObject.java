@@ -67,7 +67,7 @@ public interface ReplicatedObject {
 	 * Allows the replicator to set the local address from the channel
 	 * @param address
 	 */
-	void setLocalAddress(Serializable address);
+	void setAddress(Serializable address);
 
 	/**
 	 * Called when members are dropped

@@ -22,7 +22,11 @@
 
 package org.teiid.replication.jboss;
 
+import java.io.Externalizable;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
@@ -44,13 +48,9 @@ import java.util.concurrent.Executors;
 import org.jboss.as.clustering.jgroups.ChannelFactory;
 import org.jgroups.Address;
 import org.jgroups.Channel;
-import org.jgroups.MembershipListener;
 import org.jgroups.Message;
-import org.jgroups.MessageListener;
-import org.jgroups.Receiver;
 import org.jgroups.ReceiverAdapter;
 import org.jgroups.View;
-import org.jgroups.blocks.GroupRequest;
 import org.jgroups.blocks.MethodCall;
 import org.jgroups.blocks.MethodLookup;
 import org.jgroups.blocks.RequestOptions;
@@ -61,12 +61,65 @@ import org.jgroups.util.RspList;
 import org.jgroups.util.Util;
 import org.teiid.Replicated;
 import org.teiid.Replicated.ReplicationMode;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.ReplicatedObject;
 
 public abstract class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
+	
+	public static final class AddressWrapper implements Externalizable {
+		
+		private Address address;
+		
+		public AddressWrapper() {
+			
+		}
+		
+		public AddressWrapper(Address address) {
+			this.address = address;
+		}
+		
+		@Override
+		public int hashCode() {
+			return address.hashCode();
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == this) {
+				return true;
+			}
+			if (!(obj instanceof AddressWrapper)) {
+				return false;
+			}
+			return address.equals(((AddressWrapper)obj).address);
+		}
+		
+		@Override
+		public void readExternal(ObjectInput in) throws IOException,
+				ClassNotFoundException {
+			String className = in.readUTF();
+			try {
+				this.address = (Address) ReflectionHelper.create(className, null, Thread.currentThread().getContextClassLoader());
+				this.address.readFrom(in);
+			} catch (Exception e) {
+				throw new IOException(e);
+			}
+		}
+		
+		@Override
+		public void writeExternal(ObjectOutput out) throws IOException {
+			out.writeUTF(address.getClass().getName());
+			try {
+				address.writeTo(out);
+			} catch (Exception e) {
+				throw new IOException(e);
+			}
+		}
+		
+	}
 	
 	private static final long serialVersionUID = -6851804958313095166L;
 	private static final String CREATE_STATE = "createState"; //$NON-NLS-1$
@@ -97,9 +150,8 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 		}
 	}
 
-	private final static class ReplicatedInvocationHandler<S> implements
-			InvocationHandler, Serializable, MessageListener, Receiver,
-			MembershipListener {
+	private final static class ReplicatedInvocationHandler<S> extends ReceiverAdapter implements
+			InvocationHandler, Serializable {
 		
 		private static final long serialVersionUID = -2943462899945966103L;
 		private final S object;
@@ -172,7 +224,7 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 					LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "pulling state", stateId); //$NON-NLS-1$
 					long timeout = annotation.timeout();
 					threadLocalPromise.set(new Promise<Boolean>());
-					boolean getState = this.disp.getChannel().getState(null, stateId, timeout);
+					/*boolean getState = this.disp.getChannel().getState(null, stateId, timeout);
 					if (getState) {
 						Boolean loaded = threadLocalPromise.get().getResult(timeout);
 						if (Boolean.TRUE.equals(loaded)) {
@@ -182,7 +234,7 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 						}
 					} else {
 						LogManager.logInfo(LogConstants.CTX_RUNTIME, object + " first member or timeout exceeded " + stateId); //$NON-NLS-1$
-					}
+					}*/
 					LogManager.logTrace(LogConstants.CTX_RUNTIME, object, "sent state", stateId); //$NON-NLS-1$
 			        return result;
 				}
@@ -193,7 +245,7 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 						dests = new Vector<Address>(remoteMembers);
 					}
 		        }
-		        RspList responses = disp.callRemoteMethods(dests, call, new RequestOptions().setMode(annotation.asynch()?ResponseMode.GET_NONE:ResponseMode.GET_ALL).setTimeout(annotation.timeout()));
+		        RspList<Object> responses = disp.callRemoteMethods(dests, call, new RequestOptions().setMode(annotation.asynch()?ResponseMode.GET_NONE:ResponseMode.GET_ALL).setTimeout(annotation.timeout()));
 		        if (annotation.asynch()) {
 			        return null;
 		        }
@@ -224,7 +276,11 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 				synchronized (remoteMembers) {
 					remoteMembers.removeAll(newView.getMembers());
 					if (object instanceof ReplicatedObject && !remoteMembers.isEmpty()) {
-						((ReplicatedObject)object).droppedMembers(new HashSet<Serializable>(remoteMembers));
+						HashSet<Serializable> dropped = new HashSet<Serializable>();
+						for (Address address : remoteMembers) {
+							dropped.add(new AddressWrapper(address));
+						}
+						((ReplicatedObject)object).droppedMembers(dropped);
 					}
 					remoteMembers.clear();
 					remoteMembers.addAll(newView.getMembers());
@@ -353,10 +409,14 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 		            if(log.isErrorEnabled()) log.error("message or message buffer is null"); //$NON-NLS-1$
 		            return null;
 		        }
+		        
+		        if (req.getSrc().equals(local_addr)) {
+		        	return null;
+		        }
 
 		        try {
 		            body=req_marshaller != null?
-		                    req_marshaller.objectFromByteBuffer(req.getBuffer(), req.getOffset(), req.getLength())
+		                    req_marshaller.objectFromBuffer(req.getBuffer(), req.getOffset(), req.getLength())
 		                    : req.getObject();
 		        }
 		        catch(Throwable e) {
@@ -381,7 +441,7 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 	                    throw new Exception("MethodCall uses ID=" + method_call.getId() + ", but method_lookup has not been set"); //$NON-NLS-1$ //$NON-NLS-2$
 
 		            if (method_call.getId() >= methodList.size() - 3) {
-		            	Serializable address = req.getSrc();
+		            	Serializable address = new AddressWrapper(req.getSrc());
 		            	String stateId = (String)method_call.getArgs()[0];
 		            	List<?> key = Arrays.asList(stateId, address);
 		            	JGroupsInputStream is = inputStreams.get(key);
@@ -433,17 +493,15 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 		try {
 			channel.connect(mux_id);
 			if (object instanceof ReplicatedObject) {
-				((ReplicatedObject)object).setLocalAddress(channel.getAddress());
-				boolean getState = channel.getState(null, startTimeout);
-				if (getState) {
-					Boolean loaded = proxy.state_promise.getResult(startTimeout);
-					if (Boolean.TRUE.equals(loaded)) {
-						LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "loaded"); //$NON-NLS-1$
-					} else {
-						LogManager.logWarning(LogConstants.CTX_RUNTIME, object + " load error or timeout"); //$NON-NLS-1$
-					}
+				((ReplicatedObject)object).setAddress(new AddressWrapper(channel.getAddress()));
+				channel.getState(null, startTimeout);
+				Boolean loaded = proxy.state_promise.getResult(1);
+				if (loaded == null) {
+					LogManager.logInfo(LogConstants.CTX_RUNTIME, object + " timeout exceeded or first member"); //$NON-NLS-1$
+				} else if (loaded) {
+					LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "loaded"); //$NON-NLS-1$
 				} else {
-					LogManager.logInfo(LogConstants.CTX_RUNTIME, object + " first member or timeout exceeded"); //$NON-NLS-1$
+					LogManager.logWarning(LogConstants.CTX_RUNTIME, object + " load error"); //$NON-NLS-1$
 				}
 			}
 			success = true;

@@ -22,8 +22,7 @@
 
 package org.teiid.systemmodel;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -33,22 +32,20 @@ import java.util.Collection;
 import java.util.HashMap;
 
 import org.jboss.as.clustering.jgroups.ChannelFactory;
-import org.jboss.as.clustering.jgroups.JChannelFactory;
 import org.jgroups.Channel;
+import org.jgroups.JChannel;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
-import org.teiid.metadata.FunctionParameter;
 import org.teiid.replication.jboss.JGroupsObjectReplicator;
 
 @SuppressWarnings("nls")
-@Ignore
 public class TestMatViewReplication {
 	
     private static final String MATVIEWS = "matviews";
@@ -114,6 +111,7 @@ public class TestMatViewReplication {
 		server2.stop();
     }
 
+	@SuppressWarnings("serial")
 	private FakeServer createServer() throws Exception {
 		FakeServer server = new FakeServer();
 		
@@ -123,9 +121,7 @@ public class TestMatViewReplication {
 				return new ChannelFactory() {
 					@Override
 					public Channel createChannel(String id) throws Exception {
-				        JChannelFactory jcf = new JChannelFactory();
-				        jcf.setMultiplexerConfig(this.getClass().getClassLoader().getResource("stacks.xml")); //$NON-NLS-1$
-				        return jcf.createMultiplexerChannel("tcp", id);
+						return new JChannel(this.getClass().getClassLoader().getResource("tcp.xml"));
 					}
 				};
 			}

@@ -1051,7 +1051,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 	}
 
 	@Override
-	public void setLocalAddress(Serializable address) {
+	public void setAddress(Serializable address) {
 	}
 
 	@Override
