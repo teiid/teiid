@@ -22,26 +22,39 @@
 package org.teiid.jdbc;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
 import org.mockito.Mockito;
+import org.teiid.Replicated;
+import org.teiid.Replicated.ReplicationMode;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.cache.Cache;
 import org.teiid.cache.CacheConfiguration;
-import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.cache.DefaultCacheFactory;
+import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
+import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.MetadataStoreGroup;
@@ -57,7 +70,7 @@ import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
-import org.teiid.dqp.service.FakeBufferService;
+import org.teiid.dqp.service.BufferService;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
@@ -67,6 +80,7 @@ import org.teiid.metadata.index.VDBMetadataFactory;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.query.ObjectReplicator;
+import org.teiid.query.ReplicatedObject;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
@@ -84,8 +98,107 @@ import org.teiid.transport.ClientServiceRegistryImpl;
 import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.LogonImpl;
 
-@SuppressWarnings({"nls", "serial"})
+@SuppressWarnings({"nls"})
 public class FakeServer extends ClientServiceRegistryImpl implements ConnectionProfile {
+	
+	public interface ReplicatedCache<K, V> extends Cache<K, V>  {
+		
+		@Replicated(replicateState=ReplicationMode.PULL)
+		public V get(K key);
+
+		@Replicated(replicateState=ReplicationMode.PUSH)
+		V put(K key, V value, Long ttl);
+			
+		@Replicated()
+		V remove(K key);
+		
+	}
+	
+	public static class ReplicatedCacheImpl<K extends Serializable, V> implements ReplicatedCache<K, V>, ReplicatedObject<K> {
+		private Cache<K, V> cache;
+		
+		public ReplicatedCacheImpl(Cache<K, V> cache) {
+			this.cache = cache;
+		}
+
+		public void clear() {
+			cache.clear();
+		}
+
+		public V get(K key) {
+			return cache.get(key);
+		}
+
+		public String getName() {
+			return cache.getName();
+		}
+
+		public Set<K> keys() {
+			return cache.keys();
+		}
+
+		public V put(K key, V value, Long ttl) {
+			return cache.put(key, value, ttl);
+		}
+
+		public V remove(K key) {
+			return cache.remove(key);
+		}
+
+		public int size() {
+			return cache.size();
+		}
+		
+		@Override
+		public void getState(K stateId, OutputStream ostream) {
+			V value = get(stateId);
+			if (value != null) {
+				try {
+					ObjectOutputStream oos = new ObjectOutputStream(ostream);
+					oos.writeObject(value);
+					oos.close();
+				} catch (IOException e) {
+					throw new TeiidRuntimeException(e);
+				}
+			}
+		}
+		
+		@Override
+		public void setState(K stateId, InputStream istream) {
+			try {
+				ObjectInputStream ois = new ObjectInputStream(istream);
+				V value = (V) ois.readObject();
+				this.put(stateId, value, null);
+			} catch (IOException e) {
+				throw new TeiidRuntimeException(e);
+			} catch (ClassNotFoundException e) {
+				throw new TeiidRuntimeException(e);
+			}
+		}
+
+		@Override
+		public boolean hasState(K stateId) {
+			return cache.get(stateId) != null;
+		}
+
+		@Override
+		public void droppedMembers(Collection<Serializable> addresses) {
+		}
+
+		@Override
+		public void getState(OutputStream ostream) {
+		}
+
+		@Override
+		public void setAddress(Serializable address) {
+		}
+
+		@Override
+		public void setState(InputStream istream) {
+		}
+
+		
+	}
 
 	SessionServiceImpl sessionService = new SessionServiceImpl() {
 		@Override
@@ -113,10 +226,17 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 	}
 	
 	public FakeServer(DQPConfiguration config) {
-		this(config, false);
+		start(config, false);
 	}
 
-	public FakeServer(DQPConfiguration config, boolean realBufferMangaer) {
+	public FakeServer(boolean start) {
+		if (start) {
+			start(new DQPConfiguration(), false);
+		}
+	}
+
+	@SuppressWarnings("serial")
+	public void start(DQPConfiguration config, boolean realBufferMangaer) {
 		sessionService.setSecurityHelper(Mockito.mock(SecurityHelper.class));
 		sessionService.setSecurityDomains(Arrays.asList("somedomain"));
 		
@@ -147,20 +267,57 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 		this.repo.start();
 		
         this.sessionService.setVDBRepository(repo);
+        BufferService bs = null;
         if (!realBufferMangaer) {
-        	this.dqp.setBufferService(new FakeBufferService());
+        	bs = new BufferService() {
+				
+				@Override
+				public BufferManager getBufferManager() {
+					return BufferManagerFactory.createBufferManager();
+				}
+			};
         } else {
         	BufferServiceImpl bsi = new BufferServiceImpl();
         	bsi.setDiskDirectory(UnitTestUtil.getTestScratchPath());
-        	this.dqp.setBufferService(bsi);
         	bsi.start();
+        	bs = bsi;
         }
+        if (replicator != null) {
+			try {
+				final BufferManager bm = replicator.replicate("$BM$", BufferManager.class, bs.getBufferManager(), 0);
+				bs = new BufferService() {
+					
+					@Override
+					public BufferManager getBufferManager() {
+						return bm;
+					}
+				};
+			} catch (Exception e) {
+				throw new TeiidRuntimeException(e);
+			}
+        }
+        this.dqp.setBufferService(bs);
+    	
+        //TODO: wire in an infinispan cluster rather than this dummy replicated cache
         DefaultCacheFactory dcf = new DefaultCacheFactory() {
-        	@Override
         	public boolean isReplicated() {
-        		return true; //pretend to be replicated for matview tests
+        		return true;
         	}
-        };        
+        	
+        	@Override
+        	public <K, V> Cache<K, V> get(String location,
+        			CacheConfiguration config) {
+        		Cache<K, V> result = super.get(location, config);
+        		if (replicator != null) {
+        			try {
+						return (Cache<K, V>) replicator.replicate("$RS$", ReplicatedCache.class, new ReplicatedCacheImpl(result), 0);
+					} catch (Exception e) {
+						throw new TeiidRuntimeException(e);
+					}
+        		}
+        		return result;
+        	}
+        };
 		SessionAwareCache rs = new SessionAwareCache<CachedResults>(dcf, SessionAwareCache.Type.RESULTSET, new CacheConfiguration(Policy.LRU, 60, 250, "resultsetcache"));
 		SessionAwareCache ppc = new SessionAwareCache<PreparedPlan>(dcf, SessionAwareCache.Type.PREPAREDPLAN, new CacheConfiguration());
         rs.setBufferManager(this.dqp.getBufferManager());

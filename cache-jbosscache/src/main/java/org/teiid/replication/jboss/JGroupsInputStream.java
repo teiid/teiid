@@ -31,13 +31,16 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class JGroupsInputStream extends InputStream {
 	
-	static long TIME_OUT = 15000; //TODO make configurable
-	
+	private long timeout = 15000;
     private volatile byte[] buf;
     private volatile int index=0;
     private ReentrantLock lock = new ReentrantLock();
     private Condition write = lock.newCondition();
     private Condition doneReading = lock.newCondition();
+    
+    public JGroupsInputStream(long timeout) {
+    	this.timeout = timeout;
+	}
     
     @Override
     public int read() throws IOException {
@@ -47,7 +50,7 @@ public class JGroupsInputStream extends InputStream {
         if (buf == null) {
         	lock.lock();
             try {
-                write.await(TIME_OUT, TimeUnit.MILLISECONDS);
+                write.await(timeout, TimeUnit.MILLISECONDS);
                 if (index < 0) {
                 	return -1;
                 }

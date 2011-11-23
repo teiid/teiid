@@ -22,11 +22,8 @@
 
 package org.teiid.replication.jboss;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
@@ -40,7 +37,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -48,7 +44,9 @@ import java.util.concurrent.Executors;
 import org.jboss.as.clustering.jgroups.ChannelFactory;
 import org.jgroups.Address;
 import org.jgroups.Channel;
+import org.jgroups.MembershipListener;
 import org.jgroups.Message;
+import org.jgroups.MessageListener;
 import org.jgroups.ReceiverAdapter;
 import org.jgroups.View;
 import org.jgroups.blocks.MethodCall;
@@ -57,92 +55,164 @@ import org.jgroups.blocks.RequestOptions;
 import org.jgroups.blocks.ResponseMode;
 import org.jgroups.blocks.RpcDispatcher;
 import org.jgroups.util.Promise;
+import org.jgroups.util.Rsp;
 import org.jgroups.util.RspList;
 import org.jgroups.util.Util;
 import org.teiid.Replicated;
 import org.teiid.Replicated.ReplicationMode;
-import org.teiid.core.util.ReflectionHelper;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.ReplicatedObject;
 
-public abstract class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
+public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 	
-	public static final class AddressWrapper implements Externalizable {
-		
-		private Address address;
-		
-		public AddressWrapper() {
-			
+	private final class ReplicatorRpcDispatcher<S> extends RpcDispatcher {
+		private final S object;
+		private final HashMap<Method, Short> methodMap;
+		private final ArrayList<Method> methodList;
+		Map<List<?>, JGroupsInputStream> inputStreams = new ConcurrentHashMap<List<?>, JGroupsInputStream>();
+
+		private ReplicatorRpcDispatcher(Channel channel, MessageListener l,
+				MembershipListener l2, Object serverObj, S object,
+				HashMap<Method, Short> methodMap, ArrayList<Method> methodList) {
+			super(channel, l, l2, serverObj);
+			this.object = object;
+			this.methodMap = methodMap;
+			this.methodList = methodList;
 		}
-		
-		public AddressWrapper(Address address) {
-			this.address = address;
-		}
-		
+
 		@Override
-		public int hashCode() {
-			return address.hashCode();
+		public Object handle(Message req) {
+			Object      body=null;
+
+		    if(req == null || req.getLength() == 0) {
+		        if(log.isErrorEnabled()) log.error("message or message buffer is null"); //$NON-NLS-1$
+		        return null;
+		    }
+		    
+		    try {
+		        body=req_marshaller != null?
+		                req_marshaller.objectFromBuffer(req.getBuffer(), req.getOffset(), req.getLength())
+		                : req.getObject();
+		    }
+		    catch(Throwable e) {
+		        if(log.isErrorEnabled()) log.error("exception marshalling object", e); //$NON-NLS-1$
+		        return e;
+		    }
+
+		    if(!(body instanceof MethodCall)) {
+		        if(log.isErrorEnabled()) log.error("message does not contain a MethodCall object"); //$NON-NLS-1$
+
+		        // create an exception to represent this and return it
+		        return  new IllegalArgumentException("message does not contain a MethodCall object") ; //$NON-NLS-1$
+		    }
+
+		    final MethodCall method_call=(MethodCall)body;
+
+		    try {
+		        if(log.isTraceEnabled())
+		            log.trace("[sender=" + req.getSrc() + "], method_call: " + method_call); //$NON-NLS-1$ //$NON-NLS-2$
+
+		        if(method_lookup == null)
+		            throw new Exception("MethodCall uses ID=" + method_call.getId() + ", but method_lookup has not been set"); //$NON-NLS-1$ //$NON-NLS-2$
+
+		        if (method_call.getId() >= methodList.size() - 3) {
+		        	Serializable address = new AddressWrapper(req.getSrc());
+		        	Serializable stateId = (Serializable)method_call.getArgs()[0];
+		        	List<?> key = Arrays.asList(stateId, address);
+		        	JGroupsInputStream is = inputStreams.get(key);
+		        	if (method_call.getId() == methodList.size() - 3) {
+		        		LogManager.logTrace(LogConstants.CTX_RUNTIME, object, "create state", stateId); //$NON-NLS-1$
+		        		if (is != null) {
+		        			is.receive(null);
+		        		}
+		        		is = new JGroupsInputStream(15000);
+		        		this.inputStreams.put(key, is);
+		        		executor.execute(new StreamingRunner(object, stateId, is, null));
+		        	} else if (method_call.getId() == methodList.size() - 2) {
+		        		LogManager.logTrace(LogConstants.CTX_RUNTIME, object, "building state", stateId); //$NON-NLS-1$
+		        		if (is != null) {
+		        			is.receive((byte[])method_call.getArgs()[1]);
+		        		}
+		        	} else if (method_call.getId() == methodList.size() - 1) {
+		        		LogManager.logTrace(LogConstants.CTX_RUNTIME, object, "finished state", stateId); //$NON-NLS-1$
+		        		if (is != null) {
+		        			is.receive(null);
+		        		}
+		        		this.inputStreams.remove(key);
+		        	}  
+		        	return null;
+		        } else if (method_call.getId() == methodList.size() - 5) {
+		        	//hasState
+		        	ReplicatedObject ro = (ReplicatedObject)object;
+		        	Serializable stateId = (Serializable)method_call.getArgs()[0];
+		        	
+		        	if (ro.hasState(stateId)) {
+		        		return Boolean.TRUE;
+		        	}
+		        	return null;
+		        } else if (method_call.getId() == methodList.size() - 4) {
+		        	//sendState
+		        	ReplicatedObject ro = (ReplicatedObject)object;
+		        	String stateId = (String)method_call.getArgs()[0];
+		        	AddressWrapper dest = (AddressWrapper)method_call.getArgs()[1];
+		        	
+		        	JGroupsOutputStream oStream = new JGroupsOutputStream(this, Arrays.asList(dest.address), stateId, (short)(methodMap.size() - 3), false);
+					try {
+						ro.getState(stateId, oStream);
+					} finally {
+						oStream.close();
+					}
+					LogManager.logTrace(LogConstants.CTX_RUNTIME, object, "sent state", stateId); //$NON-NLS-1$
+			        return null;
+		        }
+		        
+		        Method m=method_lookup.findMethod(method_call.getId());
+		        if(m == null)
+		            throw new Exception("no method found for " + method_call.getId()); //$NON-NLS-1$
+		        method_call.setMethod(m);
+		        
+		    	return method_call.invoke(server_obj);
+		    }
+		    catch(Throwable x) {
+		        return x;
+		    }
 		}
-		
-		@Override
-		public boolean equals(Object obj) {
-			if (obj == this) {
-				return true;
-			}
-			if (!(obj instanceof AddressWrapper)) {
-				return false;
-			}
-			return address.equals(((AddressWrapper)obj).address);
-		}
-		
-		@Override
-		public void readExternal(ObjectInput in) throws IOException,
-				ClassNotFoundException {
-			String className = in.readUTF();
-			try {
-				this.address = (Address) ReflectionHelper.create(className, null, Thread.currentThread().getContextClassLoader());
-				this.address.readFrom(in);
-			} catch (Exception e) {
-				throw new IOException(e);
-			}
-		}
-		
-		@Override
-		public void writeExternal(ObjectOutput out) throws IOException {
-			out.writeUTF(address.getClass().getName());
-			try {
-				address.writeTo(out);
-			} catch (Exception e) {
-				throw new IOException(e);
-			}
-		}
-		
 	}
-	
+
 	private static final long serialVersionUID = -6851804958313095166L;
+	private static final String HAS_STATE = "hasState"; //$NON-NLS-1$
+	private static final String SEND_STATE = "sendState"; //$NON-NLS-1$
 	private static final String CREATE_STATE = "createState"; //$NON-NLS-1$
 	private static final String BUILD_STATE = "buildState"; //$NON-NLS-1$
 	private static final String FINISH_STATE = "finishState"; //$NON-NLS-1$
 
-	private final class StreamingRunner implements Runnable {
+	private final static class StreamingRunner implements Runnable {
 		private final Object object;
-		private final String stateId;
+		private final Serializable stateId;
 		private final JGroupsInputStream is;
+		private Promise<Boolean> promise;
 
-		private StreamingRunner(Object object, String stateId, JGroupsInputStream is) {
+		private StreamingRunner(Object object, Serializable stateId, JGroupsInputStream is, Promise<Boolean> promise) {
 			this.object = object;
 			this.stateId = stateId;
 			this.is = is;
+			this.promise = promise;
 		}
 
 		@Override
 		public void run() {
 			try {
 				((ReplicatedObject)object).setState(stateId, is);
+				if (promise != null) { 
+					promise.setResult(Boolean.TRUE);
+				}
 				LogManager.logDetail(LogConstants.CTX_RUNTIME, "state set " + stateId); //$NON-NLS-1$
 			} catch (Exception e) {
+				if (promise != null) {
+					promise.setResult(Boolean.FALSE);
+				}
 				LogManager.logError(LogConstants.CTX_RUNTIME, e, "error setting state " + stateId); //$NON-NLS-1$
 			} finally {
 				is.close();
@@ -150,28 +220,24 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 		}
 	}
 
-	private final static class ReplicatedInvocationHandler<S> extends ReceiverAdapter implements
+	private final class ReplicatedInvocationHandler<S> extends ReceiverAdapter implements
 			InvocationHandler, Serializable {
 		
+		private static final int PULL_RETRIES = 3;
 		private static final long serialVersionUID = -2943462899945966103L;
 		private final S object;
-		private RpcDispatcher disp;
+		private transient ReplicatorRpcDispatcher<S> disp;
 		private final HashMap<Method, Short> methodMap;
 	    protected List<Address> remoteMembers = new ArrayList<Address>();
 	    protected final transient Promise<Boolean> state_promise=new Promise<Boolean>();
-	    
-	    protected transient ThreadLocal<Promise<Boolean>> threadLocalPromise = new ThreadLocal<Promise<Boolean>>() {
-	    	protected org.jgroups.util.Promise<Boolean> initialValue() {
-	    		return new Promise<Boolean>();
-	    	}
-	    };
+		private Map<Serializable, Promise<Boolean>> loadingStates = new HashMap<Serializable, Promise<Boolean>>();
 	    
 		private ReplicatedInvocationHandler(S object,HashMap<Method, Short> methodMap) {
 			this.object = object;
 			this.methodMap = methodMap;
 		}
 		
-		public void setDisp(RpcDispatcher disp) {
+		public void setDisp(ReplicatorRpcDispatcher<S> disp) {
 			this.disp = disp;
 		}
 		
@@ -195,57 +261,16 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 		    try {
 		    	Replicated annotation = method.getAnnotation(Replicated.class);
 		    	if (annotation.replicateState() != ReplicationMode.NONE) {
-		    		Object result = null;
-		    		try {
-						result = method.invoke(object, args);
-					} catch (InvocationTargetException e) {
-						throw e.getCause();
-					}
-					List<Address> dests = null;
+		    		return handleReplicateState(method, args, annotation);
+				}
+		        MethodCall call=new MethodCall(methodNum, args);
+		        ArrayList<Address> dests = null;
+		        if (annotation.remoteOnly()) {
 					synchronized (remoteMembers) {
 						dests = new ArrayList<Address>(remoteMembers);
 					}
-					ReplicatedObject ro = (ReplicatedObject)object;
-					String stateId = (String)args[0];
-					if (annotation.replicateState() == ReplicationMode.PUSH) {
-						LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "replicating state", stateId); //$NON-NLS-1$
-						JGroupsOutputStream oStream = new JGroupsOutputStream(disp, dests, stateId, (short)(methodMap.size() - 3));
-						try {
-							ro.getState(stateId, oStream);
-						} finally {
-							oStream.close();
-						}
-						LogManager.logTrace(LogConstants.CTX_RUNTIME, object, "sent state", stateId); //$NON-NLS-1$
-				        return result;
-					}
-					if (result != null) {
-						return result;
-					}
-					LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "pulling state", stateId); //$NON-NLS-1$
-					long timeout = annotation.timeout();
-					threadLocalPromise.set(new Promise<Boolean>());
-					/*boolean getState = this.disp.getChannel().getState(null, stateId, timeout);
-					if (getState) {
-						Boolean loaded = threadLocalPromise.get().getResult(timeout);
-						if (Boolean.TRUE.equals(loaded)) {
-							LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "loaded", stateId); //$NON-NLS-1$
-						} else {
-							LogManager.logWarning(LogConstants.CTX_RUNTIME, object + " load error or timeout " + stateId); //$NON-NLS-1$
-						}
-					} else {
-						LogManager.logInfo(LogConstants.CTX_RUNTIME, object + " first member or timeout exceeded " + stateId); //$NON-NLS-1$
-					}*/
-					LogManager.logTrace(LogConstants.CTX_RUNTIME, object, "sent state", stateId); //$NON-NLS-1$
-			        return result;
-				}
-		        MethodCall call=new MethodCall(methodNum, args);
-		        Vector<Address> dests = null;
-		        if (annotation.remoteOnly()) {
-					synchronized (remoteMembers) {
-						dests = new Vector<Address>(remoteMembers);
-					}
 		        }
-		        RspList<Object> responses = disp.callRemoteMethods(dests, call, new RequestOptions().setMode(annotation.asynch()?ResponseMode.GET_NONE:ResponseMode.GET_ALL).setTimeout(annotation.timeout()));
+		        RspList<Object> responses = disp.callRemoteMethods(dests, call, new RequestOptions().setMode(annotation.asynch()?ResponseMode.GET_NONE:ResponseMode.GET_ALL).setTimeout(annotation.timeout()).setAnycasting(dests != null));
 		        if (annotation.asynch()) {
 			        return null;
 		        }
@@ -266,8 +291,111 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 		        }
 	        	return null;
 		    } catch(Exception e) {
-		        throw new RuntimeException(method + " " + args + " failed"); //$NON-NLS-1$ //$NON-NLS-2$
+		        throw new RuntimeException(method + " " + args + " failed", e); //$NON-NLS-1$ //$NON-NLS-2$
 		    }
+		}
+
+		private Object handleReplicateState(Method method, Object[] args,
+				Replicated annotation) throws IllegalAccessException,
+				Throwable, IOException, IllegalStateException, Exception {
+			Object result = null;
+			try {
+				result = method.invoke(object, args);
+			} catch (InvocationTargetException e) {
+				throw e.getCause();
+			}
+			List<Address> dests = null;
+			synchronized (remoteMembers) {
+				dests = new ArrayList<Address>(remoteMembers);
+			}
+			ReplicatedObject ro = (ReplicatedObject)object;
+			Serializable stateId = (Serializable)args[0];
+			if (annotation.replicateState() == ReplicationMode.PUSH) {
+				LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "replicating state", stateId); //$NON-NLS-1$
+				JGroupsOutputStream oStream = new JGroupsOutputStream(disp, dests, stateId, (short)(methodMap.size() - 3), true);
+				try {
+					ro.getState(stateId, oStream);
+				} finally {
+					oStream.close();
+				}
+				LogManager.logTrace(LogConstants.CTX_RUNTIME, object, "sent state", stateId); //$NON-NLS-1$
+			    return result;
+			}
+			if (result != null) {
+				return result;
+			}
+			if (!(object instanceof ReplicatedObject)) {
+				throw new IllegalStateException("A non-ReplicatedObject cannot use state pulling."); //$NON-NLS-1$
+			}
+			for (int i = 0; i < PULL_RETRIES; i++) {
+				Promise<Boolean> p = null;
+				boolean wait = true;
+				synchronized (loadingStates) {
+					p = loadingStates.get(stateId);
+					if (p == null) {
+						wait = false;
+						try {
+							result = method.invoke(object, args);
+						} catch (InvocationTargetException e) {
+							throw e.getCause();
+						}
+						if (result != null) {
+							return result;
+						}
+						p = new Promise<Boolean>();
+						loadingStates.put(stateId, p);
+					}
+				}
+				long timeout = annotation.timeout();
+				if (wait) {
+					p.getResult(timeout);
+					continue;
+				}
+				try {
+					LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "pulling state", stateId); //$NON-NLS-1$
+					RspList<Boolean> resp = this.disp.callRemoteMethods(null, new MethodCall((short)(methodMap.size() - 5), stateId), new RequestOptions(ResponseMode.GET_ALL, timeout));
+					Collection<Rsp<Boolean>> values = resp.values();
+					Rsp<Boolean> rsp = null;
+					for (Rsp<Boolean> response : values) {
+						if (Boolean.TRUE.equals(response.getValue())) {
+							rsp = response;
+							break;
+						}
+					}
+					if (rsp == null || this.disp.getChannel().getAddress().equals(rsp.getSender())) {
+						break;
+					}
+					JGroupsInputStream is = new JGroupsInputStream(15000);
+					StreamingRunner runner = new StreamingRunner(object, stateId, is, p);
+					List<?> key = Arrays.asList(stateId, new AddressWrapper(rsp.getSender()));
+					disp.inputStreams.put(key, is);
+					executor.execute(runner);
+					
+					this.disp.callRemoteMethod(rsp.getSender(), new MethodCall((short)(methodMap.size() - 4), stateId, new AddressWrapper(this.disp.getChannel().getAddress())), new RequestOptions(ResponseMode.GET_NONE, 0).setAnycasting(true));
+					
+					Boolean fetched = p.getResult(timeout);
+
+					if (fetched != null) {
+						if (fetched) {
+							LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "pulled state", stateId); //$NON-NLS-1$
+						} else {
+							LogManager.logWarning(LogConstants.CTX_RUNTIME, object + " failed to pull " + stateId); //$NON-NLS-1$
+						}
+					} else {
+						LogManager.logWarning(LogConstants.CTX_RUNTIME, object + " timeout pulling " + stateId); //$NON-NLS-1$
+					}
+					try {
+						result = method.invoke(object, args);
+					} catch (InvocationTargetException e) {
+						throw e.getCause();
+					}
+				} finally {
+					synchronized (loadingStates) {
+						loadingStates.remove(stateId);
+					}
+				}
+			}
+			return null; //could not fetch the remote state
 		}
 		
 		@Override
@@ -315,45 +443,22 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 			}
 		}
 		
-		public void setState(String stateId, InputStream istream) {
-			LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "loading state"); //$NON-NLS-1$
-			try {
-				((ReplicatedObject)object).setState(stateId, istream);
-				threadLocalPromise.get().setResult(Boolean.TRUE);
-			} catch (Exception e) {
-				threadLocalPromise.get().setResult(Boolean.FALSE);
-				LogManager.logError(LogConstants.CTX_RUNTIME, e, "error loading state"); //$NON-NLS-1$
-			} finally {
-				Util.close(istream);
-			}
-		}
-		
-		public void getState(String stateId, OutputStream ostream) {
-			LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "getting state"); //$NON-NLS-1$
-			try {
-				((ReplicatedObject)object).getState(stateId, ostream);
-			} catch (Exception e) {
-				LogManager.logError(LogConstants.CTX_RUNTIME, e, "error gettting state"); //$NON-NLS-1$
-			} finally {
-				Util.close(ostream);
-			}
-		}
 	}
 	
 	private interface Streaming {
-		void createState(String id);
-		void buildState(String id, byte[] bytes);
-		void finishState(String id);
+		void sendState(Serializable id, AddressWrapper dest);
+		void createState(Serializable id);
+		void buildState(Serializable id, byte[] bytes);
+		void finishState(Serializable id);
 	}
 
 	//TODO: this should be configurable, or use a common executor
 	private transient Executor executor = Executors.newCachedThreadPool();
+	private transient ChannelFactory channelFactory;
 
-	public JGroupsObjectReplicator(@SuppressWarnings("unused") String clusterName) {
+	public JGroupsObjectReplicator(ChannelFactory channelFactory) {
+		this.channelFactory = channelFactory;
 	}
-	
-	public abstract ChannelFactory getChannelFactory();
-	
 	
 	public void stop(Object object) {
 		if (!Proxy.isProxyClass(object.getClass())) {
@@ -369,7 +474,7 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 	@Override
 	public <T, S> T replicate(String mux_id,
 			Class<T> iface, final S object, long startTimeout) throws Exception {
-		Channel channel = getChannelFactory().createChannel(mux_id);
+		Channel channel = channelFactory.createChannel(mux_id);
 		Method[] methods = iface.getMethods();
 		
 		final HashMap<Method, Short> methodMap = new HashMap<Method, Short>();
@@ -383,14 +488,22 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
 			methodMap.put(method, (short)(methodList.size() - 1));
 		}
 		
+		Method hasState = ReplicatedObject.class.getMethod(HAS_STATE, new Class<?>[] {Serializable.class});
+		methodList.add(hasState);
+		methodMap.put(hasState, (short)(methodList.size() - 1));
+		
+		Method sendState = JGroupsObjectReplicator.Streaming.class.getMethod(SEND_STATE, new Class<?>[] {Serializable.class, AddressWrapper.class});
+		methodList.add(sendState);
+		methodMap.put(sendState, (short)(methodList.size() - 1));
+		
 		//add in streaming methods
-		Method createState = JGroupsObjectReplicator.Streaming.class.getMethod(CREATE_STATE, new Class<?>[] {String.class});
+		Method createState = JGroupsObjectReplicator.Streaming.class.getMethod(CREATE_STATE, new Class<?>[] {Serializable.class});
 		methodList.add(createState);
 		methodMap.put(createState, (short)(methodList.size() - 1));
-		Method buildState = JGroupsObjectReplicator.Streaming.class.getMethod(BUILD_STATE, new Class<?>[] {String.class, byte[].class});
+		Method buildState = JGroupsObjectReplicator.Streaming.class.getMethod(BUILD_STATE, new Class<?>[] {Serializable.class, byte[].class});
 		methodList.add(buildState);
 		methodMap.put(buildState, (short)(methodList.size() - 1));
-		Method finishState = JGroupsObjectReplicator.Streaming.class.getMethod(FINISH_STATE, new Class<?>[] {String.class});
+		Method finishState = JGroupsObjectReplicator.Streaming.class.getMethod(FINISH_STATE, new Class<?>[] {Serializable.class});
 		methodList.add(finishState);
 		methodMap.put(finishState, (short)(methodList.size() - 1));
 		
@@ -399,87 +512,8 @@ public abstract class JGroupsObjectReplicator implements ObjectReplicator, Seria
          * TODO: could have an object implement streaming
          * Override the normal handle method to support streaming
          */
-		RpcDispatcher disp = new RpcDispatcher(channel, proxy, proxy, object) {
-			Map<List<?>, JGroupsInputStream> inputStreams = new ConcurrentHashMap<List<?>, JGroupsInputStream>();
-			@Override
-			public Object handle(Message req) {
-				Object      body=null;
-
-		        if(req == null || req.getLength() == 0) {
-		            if(log.isErrorEnabled()) log.error("message or message buffer is null"); //$NON-NLS-1$
-		            return null;
-		        }
-		        
-		        if (req.getSrc().equals(local_addr)) {
-		        	return null;
-		        }
-
-		        try {
-		            body=req_marshaller != null?
-		                    req_marshaller.objectFromBuffer(req.getBuffer(), req.getOffset(), req.getLength())
-		                    : req.getObject();
-		        }
-		        catch(Throwable e) {
-		            if(log.isErrorEnabled()) log.error("exception marshalling object", e); //$NON-NLS-1$
-		            return e;
-		        }
-
-		        if(!(body instanceof MethodCall)) {
-		            if(log.isErrorEnabled()) log.error("message does not contain a MethodCall object"); //$NON-NLS-1$
-
-		            // create an exception to represent this and return it
-		            return  new IllegalArgumentException("message does not contain a MethodCall object") ; //$NON-NLS-1$
-		        }
-
-		        final MethodCall method_call=(MethodCall)body;
-
-		        try {
-		            if(log.isTraceEnabled())
-		                log.trace("[sender=" + req.getSrc() + "], method_call: " + method_call); //$NON-NLS-1$ //$NON-NLS-2$
-
-	                if(method_lookup == null)
-	                    throw new Exception("MethodCall uses ID=" + method_call.getId() + ", but method_lookup has not been set"); //$NON-NLS-1$ //$NON-NLS-2$
-
-		            if (method_call.getId() >= methodList.size() - 3) {
-		            	Serializable address = new AddressWrapper(req.getSrc());
-		            	String stateId = (String)method_call.getArgs()[0];
-		            	List<?> key = Arrays.asList(stateId, address);
-		            	JGroupsInputStream is = inputStreams.get(key);
-		            	if (method_call.getId() == methodList.size() - 3) {
-		            		LogManager.logTrace(LogConstants.CTX_RUNTIME, object, "create state", stateId); //$NON-NLS-1$
-		            		if (is != null) {
-		            			is.receive(null);
-		            		}
-		            		is = new JGroupsInputStream();
-		            		this.inputStreams.put(key, is);
-		            		executor.execute(new StreamingRunner(object, stateId, is));
-		            	} else if (method_call.getId() == methodList.size() - 2) {
-		            		LogManager.logTrace(LogConstants.CTX_RUNTIME, object, "building state", stateId); //$NON-NLS-1$
-		            		if (is != null) {
-		            			is.receive((byte[])method_call.getArgs()[1]);
-		            		}
-		            	} else if (method_call.getId() == methodList.size() - 1) {
-		            		LogManager.logTrace(LogConstants.CTX_RUNTIME, object, "finished state", stateId); //$NON-NLS-1$
-		            		if (is != null) {
-		            			is.receive(null);
-		            		}
-		            		this.inputStreams.remove(key);
-		            	}  
-		            	return null;
-		            }
-		            
-	                Method m=method_lookup.findMethod(method_call.getId());
-	                if(m == null)
-	                    throw new Exception("no method found for " + method_call.getId()); //$NON-NLS-1$
-	                method_call.setMethod(m);
-		            
-	            	return method_call.invoke(server_obj);
-		        }
-		        catch(Throwable x) {
-		            return x;
-		        }
-			}
-		};
+        ReplicatorRpcDispatcher disp = new ReplicatorRpcDispatcher<S>(channel, proxy, proxy, object,
+				object, methodMap, methodList);
 		
 		proxy.setDisp(disp);
         disp.setMethodLookup(new MethodLookup() {

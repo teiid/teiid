@@ -63,7 +63,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 
-public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject {
+public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<String> {
 	
 	public enum MatState {
 		NEEDS_LOADING,
@@ -483,6 +483,11 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject 
 				}
 			}
 		}
+	}
+	
+	@Override
+	public boolean hasState(String stateId) {
+		return this.tableStore.getTempTable(stateId) != null;
 	}
 
 }

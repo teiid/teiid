@@ -61,7 +61,7 @@ public @interface Replicated {
 	 * 
 	 * @return PUSH if the remote members should have a partial state replication called using the first argument as the state after
 	 *  the local method has been invoked, or PULL if the local member should initial a partial state pull using the first argument
-	 *  as the state after the local method returns null 
+	 *  as the state after the local method returns null.  PULL cannot be asynch.
 	 */
 	ReplicationMode replicateState() default ReplicationMode.NONE;
 

@@ -37,9 +37,8 @@ public class JBossCacheFactory implements CacheFactory, Serializable{
 	private volatile boolean destroyed = false;
 	
 
-	public JBossCacheFactory(String name, Object cm) throws Exception {
-		CacheContainer cachemanager = (CacheContainer)cm;
-		this.cacheStore = cachemanager.getCache(name);
+	public JBossCacheFactory(String name, CacheContainer cm) {
+		this.cacheStore = cm.getCache(name);
 	}
 	
 	/**

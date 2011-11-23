@@ -94,7 +94,7 @@ public class TestCachedResults {
 			cache.put(results.getId()+","+row, tb.getBatch(row), null); //$NON-NLS-1$ 
 		}
 		
-		results.prepare(cache, bm);
+		results.prepare(bm);
 		
 		//simulate distribute
 		TupleBuffer distributedTb = bm.getTupleBuffer(results.getId());
@@ -106,7 +106,7 @@ public class TestCachedResults {
 		BufferManager bm2 = fbs.getBufferManager();
 		bm2.distributeTupleBuffer(results.getId(), distributedTb);
 		
-		assertTrue(cachedResults.restore(cache, bm2));
+		assertTrue(cachedResults.restore(bm2));
 		
 		// since restored, simulate a async cache flush
 		cache.clear();

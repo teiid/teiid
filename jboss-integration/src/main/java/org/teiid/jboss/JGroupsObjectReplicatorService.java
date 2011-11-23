@@ -27,34 +27,22 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
-import org.teiid.common.buffer.BufferManager;
 import org.teiid.replication.jboss.JGroupsObjectReplicator;
 
 class JGroupsObjectReplicatorService implements Service<JGroupsObjectReplicator> {
 
 	public final InjectedValue<ChannelFactory> channelFactoryInjector = new InjectedValue<ChannelFactory>();
 	private JGroupsObjectReplicator replicator; 
-	private String clusterName;
-	private BufferManager buffermanager;
 	
+	/**
+	 * @param clusterName TODO see if this is still useful 
+	 */
 	public JGroupsObjectReplicatorService(String clusterName){
-		this.clusterName = clusterName;
 	}
 	
 	@Override
 	public void start(StartContext context) throws StartException {
-		this.replicator = new JGroupsObjectReplicator(this.clusterName) {
-			@Override
-			public ChannelFactory getChannelFactory() {
-				return channelFactoryInjector.getValue();
-			}
-		};
-		
-		try {
-			this.replicator.replicate(clusterName, BufferManager.class, this.buffermanager, 0);
-		} catch (Exception e) {
-			throw new StartException(e);
-		}
+		this.replicator = new JGroupsObjectReplicator(channelFactoryInjector.getValue());
 	}
 
 	@Override
@@ -66,8 +54,4 @@ class JGroupsObjectReplicatorService implements Service<JGroupsObjectReplicator>
 		return replicator;
 	}
 	
-	public void setBufferManager(BufferManager buffermanager) {
-		this.buffermanager = buffermanager;
-	}
-
 }

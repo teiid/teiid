@@ -30,7 +30,6 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.cache.Cachable;
-import org.teiid.cache.Cache;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.metadata.FunctionMethod.Determinism;
@@ -54,11 +53,11 @@ public class TestSessionAwareCache {
 		
 		// make sure that in the case of session specific; we do not call prepare
 		// as session is local only call for distributed
-		Mockito.verify(result, times(0)).prepare((Cache)anyObject(), (BufferManager)anyObject());
+		Mockito.verify(result, times(0)).prepare((BufferManager)anyObject());
 		
 		Object c = cache.get(id);
 		
-		Mockito.verify(result, times(0)).restore((Cache)anyObject(), (BufferManager)anyObject());
+		Mockito.verify(result, times(0)).restore((BufferManager)anyObject());
 		
 		assertTrue(result==c);
 	}
@@ -71,20 +70,20 @@ public class TestSessionAwareCache {
 		CacheID id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
 		
 		Cachable result = Mockito.mock(Cachable.class);
-		Mockito.stub(result.prepare((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);
-		Mockito.stub(result.restore((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);
+		Mockito.stub(result.prepare((BufferManager)anyObject())).toReturn(true);
+		Mockito.stub(result.restore((BufferManager)anyObject())).toReturn(true);
 				
 		cache.put(id, Determinism.USER_DETERMINISTIC, result, null);
 		
 		// make sure that in the case of session specific; we do not call prepare
 		// as session is local only call for distributed
-		Mockito.verify(result, times(1)).prepare((Cache)anyObject(), (BufferManager)anyObject());
+		Mockito.verify(result, times(1)).prepare((BufferManager)anyObject());
 		
 		id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
 		
 		Object c = cache.get(id);
 		
-		Mockito.verify(result, times(1)).restore((Cache)anyObject(), (BufferManager)anyObject());		
+		Mockito.verify(result, times(1)).restore((BufferManager)anyObject());		
 		
 		assertTrue(result==c);
 	}
@@ -97,20 +96,20 @@ public class TestSessionAwareCache {
 		CacheID id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
 		
 		Cachable result = Mockito.mock(Cachable.class);
-		Mockito.stub(result.prepare((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);
-		Mockito.stub(result.restore((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);		
+		Mockito.stub(result.prepare((BufferManager)anyObject())).toReturn(true);
+		Mockito.stub(result.restore((BufferManager)anyObject())).toReturn(true);		
 		
 		cache.put(id, Determinism.VDB_DETERMINISTIC, result, null);
 		
 		// make sure that in the case of session specific; we do not call prepare
 		// as session is local only call for distributed
-		Mockito.verify(result, times(1)).prepare((Cache)anyObject(), (BufferManager)anyObject());
+		Mockito.verify(result, times(1)).prepare((BufferManager)anyObject());
 		
 		id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
 		
 		Object c = cache.get(id);
 		
-		Mockito.verify(result, times(1)).restore((Cache)anyObject(), (BufferManager)anyObject());		
+		Mockito.verify(result, times(1)).restore((BufferManager)anyObject());		
 		
 		assertTrue(result==c);
 	}
@@ -123,8 +122,8 @@ public class TestSessionAwareCache {
 		CacheID id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
 		
 		Cachable result = Mockito.mock(Cachable.class);
-		Mockito.stub(result.prepare((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);
-		Mockito.stub(result.restore((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);		
+		Mockito.stub(result.prepare((BufferManager)anyObject())).toReturn(true);
+		Mockito.stub(result.restore((BufferManager)anyObject())).toReturn(true);		
 		
 		id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
 		cache.put(id, Determinism.VDB_DETERMINISTIC, result, null);

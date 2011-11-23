@@ -27,6 +27,7 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+import org.infinispan.manager.CacheContainer;
 import org.teiid.cache.Cache;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
@@ -49,7 +50,7 @@ public class ClusterableCacheFactory implements CacheFactory, Serializable {
 			}
 			else {
 				try {
-					this.delegate = new JBossCacheFactory(this.resultsetCacheName, cacheManager);
+					this.delegate = new JBossCacheFactory(this.resultsetCacheName, (CacheContainer) cacheManager);
 				} catch (Exception e) {
 					throw new TeiidRuntimeException("Failed to obtain the clusted cache"); //$NON-NLS-1$
 				}

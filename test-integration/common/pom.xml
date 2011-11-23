@@ -47,11 +47,10 @@
            <version>1.0</version>
         </dependency>   
         <dependency>
-          <groupId>org.jgroups</groupId>
-          <artifactId>jgroups</artifactId>
-          <version>3.0.0.CR5</version>
-          <scope>test</scope>
-        </dependency>              
+          <groupId>org.jboss.as</groupId>
+          <artifactId>jboss-as-clustering-jgroups</artifactId>
+          <scope>provided</scope>
+        </dependency>
 	</dependencies>
     <profiles>
         <profile>

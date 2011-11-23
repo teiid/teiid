@@ -26,9 +26,9 @@ import org.teiid.dqp.internal.process.AccessInfo;
 
 public interface Cachable {
 	
-	boolean prepare(Cache cache, BufferManager bufferManager);
+	boolean prepare(BufferManager bufferManager);
 	
-	boolean restore(Cache cache, BufferManager bufferManager);
+	boolean restore(BufferManager bufferManager);
 
 	AccessInfo getAccessInfo();
 }

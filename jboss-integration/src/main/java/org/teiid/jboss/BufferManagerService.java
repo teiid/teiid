@@ -26,30 +26,53 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
+import org.teiid.common.buffer.BufferManager;
+import org.teiid.dqp.service.BufferService;
+import org.teiid.query.ObjectReplicator;
 import org.teiid.services.BufferServiceImpl;
 
-class BufferManagerService implements Service<BufferServiceImpl> {
+class BufferManagerService implements Service<BufferService>, BufferService {
 
 	private BufferServiceImpl bufferMgr;
+	private ObjectReplicator replicator;
 	public final InjectedValue<String> pathInjector = new InjectedValue<String>();
+	private BufferManager manager;
 	
-	public BufferManagerService(BufferServiceImpl buffer) {
+	public BufferManagerService(BufferServiceImpl buffer, ObjectReplicator replicator) {
 		this.bufferMgr = buffer;
+		this.replicator = replicator;
 	}
 	
 	@Override
 	public void start(StartContext context) throws StartException {
 		bufferMgr.setDiskDirectory(pathInjector.getValue());
 		bufferMgr.start();
+		manager = bufferMgr.getBufferManager();
+		if (replicator != null) {
+			try {
+				//use a mux name that will not conflict with any vdb
+				manager = this.replicator.replicate("$BM$", BufferManager.class, this.manager, 0); //$NON-NLS-1$
+			} catch (Exception e) {
+				throw new StartException(e);
+			}
+		}
 	}
 
 	@Override
 	public void stop(StopContext context) {
 		bufferMgr.stop();
+		if (this.replicator != null) {
+			this.replicator.stop(bufferMgr);
+		}
+	}
+	
+	@Override
+	public BufferManager getBufferManager() {
+		return manager;
 	}
 
 	@Override
-	public BufferServiceImpl getValue() throws IllegalStateException,IllegalArgumentException {
+	public BufferService getValue() throws IllegalStateException,IllegalArgumentException {
 		return this.bufferMgr;
 	}
 

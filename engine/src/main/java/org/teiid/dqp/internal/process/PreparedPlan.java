@@ -25,7 +25,6 @@ package org.teiid.dqp.internal.process;
 import java.util.List;
 
 import org.teiid.cache.Cachable;
-import org.teiid.cache.Cache;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.processor.ProcessorPlan;
@@ -115,12 +114,12 @@ public class PreparedPlan implements Cachable {
 	}
 	
 	@Override
-	public boolean prepare(Cache cache, BufferManager bufferManager) {
+	public boolean prepare(BufferManager bufferManager) {
 		return true; //no remotable actions
 	}
 	
 	@Override
-	public boolean restore(Cache cache, BufferManager bufferManager) {
+	public boolean restore(BufferManager bufferManager) {
 		return true; //no remotable actions
 	}
 		

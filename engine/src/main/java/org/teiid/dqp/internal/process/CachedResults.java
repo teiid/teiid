@@ -27,7 +27,6 @@ import java.io.Serializable;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.cache.Cachable;
-import org.teiid.cache.Cache;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
@@ -94,14 +93,14 @@ public class CachedResults implements Serializable, Cachable {
 	}
 
 	@Override
-	public boolean prepare(Cache cache, BufferManager bufferManager) {
+	public boolean prepare(BufferManager bufferManager) {
 		Assertion.assertTrue(!this.results.isForwardOnly());
 		bufferManager.distributeTupleBuffer(this.results.getId(), results);
 		return true;
 	}
 
 	@Override
-	public synchronized boolean restore(Cache cache, BufferManager bufferManager) {
+	public synchronized boolean restore(BufferManager bufferManager) {
 		if (this.results == null) {
 			if (this.hasLobs) {
 				return false; //the lob store is local only and not distributed

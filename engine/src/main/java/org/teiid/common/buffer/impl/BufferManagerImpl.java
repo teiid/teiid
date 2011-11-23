@@ -74,7 +74,7 @@ import org.teiid.query.sql.symbol.Expression;
  *       
  * TODO: add a pre-fetch for tuplebuffers or some built-in correlation logic with the queue.      
  */
-public class BufferManagerImpl implements BufferManager, StorageManager, ReplicatedObject {
+public class BufferManagerImpl implements BufferManager, StorageManager, ReplicatedObject<String> {
 
 	/**
 	 * Asynch cleaner attempts to age out old entries and to reduce the memory size when 
@@ -1069,8 +1069,14 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 	public void setCache(Cache cache) {
 		this.cache = cache;
 	}
+	
 	public int getMemoryCacheEntries() {
 		return memoryEntries.size();
+	}
+	
+	@Override
+	public boolean hasState(String stateId) {
+		return this.getTupleBuffer(stateId) != null;
 	}
 	
 }

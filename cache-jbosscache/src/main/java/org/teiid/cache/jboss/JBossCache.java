@@ -56,7 +56,10 @@ public class JBossCache<K, V> implements Cache<String, V> {
 	
 	@Override
 	public V put(String key, V value, Long ttl) {
-		return this.cacheStore.put(fqn(key), value, ttl, TimeUnit.SECONDS);
+		if (ttl != null) {
+			return this.cacheStore.put(fqn(key), value, ttl, TimeUnit.MILLISECONDS);
+		}
+		return this.cacheStore.put(fqn(key), value);
 	}
 
 	@Override

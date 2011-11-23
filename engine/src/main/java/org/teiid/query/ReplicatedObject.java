@@ -31,7 +31,7 @@ import java.util.Collection;
  * Optional interface to be implemented by a replicated object to support full and partial state transfer.
  * 
  */
-public interface ReplicatedObject {
+public interface ReplicatedObject<K extends Serializable> {
 	
 	/**
 	 * Allows an application to write a state through a provided OutputStream.
@@ -46,7 +46,7 @@ public interface ReplicatedObject {
 	 * @param state_id id of the partial state requested
 	 * @param ostream the OutputStream
 	 */
-	void getState(String state_id, OutputStream ostream);
+	void getState(K state_id, OutputStream ostream);
 
 	/**
 	 * Allows an application to read a state through a provided InputStream.
@@ -61,7 +61,7 @@ public interface ReplicatedObject {
 	 * @param state_id id of the partial state requested
 	 * @param istream the InputStream
 	 */
-	void setState(String state_id, InputStream istream);
+	void setState(K state_id, InputStream istream);
 	
 	/**
 	 * Allows the replicator to set the local address from the channel
@@ -74,5 +74,7 @@ public interface ReplicatedObject {
 	 * @param addresses
 	 */
 	void droppedMembers(Collection<Serializable> addresses);
+	
+	boolean hasState(K state_id);
 	
 }

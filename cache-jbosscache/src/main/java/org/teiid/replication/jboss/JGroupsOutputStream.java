@@ -24,6 +24,7 @@ package org.teiid.replication.jboss;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
@@ -40,22 +41,24 @@ public class JGroupsOutputStream extends OutputStream {
     
 	protected final RpcDispatcher disp;
     protected final List<Address> dests;
-    protected final String stateId;
+    protected final Serializable stateId;
     protected final short methodOffset;
 	
     private volatile boolean closed=false;
     private final byte[] buffer=new byte[CHUNK_SIZE];
     private int index=0;
 
-    public JGroupsOutputStream(RpcDispatcher disp, List<Address> dests, String stateId, short methodOffset) throws IOException {
+    public JGroupsOutputStream(RpcDispatcher disp, List<Address> dests, Serializable stateId, short methodOffset, boolean sendCreate) throws IOException {
         this.disp=disp;
         this.dests=dests;
         this.stateId=stateId;
         this.methodOffset = methodOffset;
-        try {
-        	disp.callRemoteMethods(this.dests, new MethodCall(methodOffset, new Object[] {stateId}), new RequestOptions(ResponseMode.GET_NONE, 0));
-        } catch(Exception e) {
-        	throw new IOException(e);
+        if (sendCreate) {
+	        try {
+	        	disp.callRemoteMethods(this.dests, new MethodCall(methodOffset, new Object[] {stateId}), new RequestOptions(ResponseMode.GET_NONE, 0).setAnycasting(true));
+	        } catch(Exception e) {
+	        	throw new IOException(e);
+	        }
         }
     }
 
@@ -65,7 +68,7 @@ public class JGroupsOutputStream extends OutputStream {
         }
         flush();
         try {
-        	disp.callRemoteMethods(dests, new MethodCall((short)(methodOffset + 2), new Object[] {stateId}), new RequestOptions(ResponseMode.GET_NONE, 0));
+        	disp.callRemoteMethods(dests, new MethodCall((short)(methodOffset + 2), new Object[] {stateId}), new RequestOptions(ResponseMode.GET_NONE, 0).setAnycasting(true));
         } catch(Exception e) {
         }
         closed=true;
@@ -77,7 +80,7 @@ public class JGroupsOutputStream extends OutputStream {
             if(index == 0) {
                 return;
             }
-        	disp.callRemoteMethods(dests, new MethodCall((short)(methodOffset + 1), new Object[] {stateId, Arrays.copyOf(buffer, index)}), new RequestOptions(ResponseMode.GET_NONE, 0));
+        	disp.callRemoteMethods(dests, new MethodCall((short)(methodOffset + 1), new Object[] {stateId, Arrays.copyOf(buffer, index)}), new RequestOptions(ResponseMode.GET_NONE, 0).setAnycasting(true));
             index=0;
         } catch(Exception e) {
         	throw new IOException(e);

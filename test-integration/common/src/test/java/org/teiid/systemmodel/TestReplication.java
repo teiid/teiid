@@ -38,6 +38,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
@@ -46,7 +47,7 @@ import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.replication.jboss.JGroupsObjectReplicator;
 
 @SuppressWarnings("nls")
-public class TestMatViewReplication {
+public class TestReplication {
 	
     private static final String MATVIEWS = "matviews";
     private static final boolean DEBUG = false;
@@ -107,28 +108,35 @@ public class TestMatViewReplication {
 		rs.next();
 		assertEquals("matviews", rs.getString(1));
 		
+		//result set cache replication
+		
+		rs = stmt.executeQuery("/*+ cache(scope:vdb) */ select rand()"); //$NON-NLS-1$
+		assertTrue(rs.next());
+		d1 = rs.getDouble(1);
+		
+		//no wait is needed as we perform a synch pull
+		rs2 = stmt2.executeQuery("/*+ cache(scope:vdb) */ select rand()"); //$NON-NLS-1$
+		assertTrue(rs2.next());
+		d2 = rs2.getDouble(1);
+		
+		assertEquals(d1, d2, 0);
+		
 		server1.stop();
 		server2.stop();
     }
 
-	@SuppressWarnings("serial")
 	private FakeServer createServer() throws Exception {
-		FakeServer server = new FakeServer();
+		FakeServer server = new FakeServer(false);
 		
-		JGroupsObjectReplicator jor = new JGroupsObjectReplicator("demo") {
-			@Override
-			public ChannelFactory getChannelFactory() {
-				return new ChannelFactory() {
+		JGroupsObjectReplicator jor = new JGroupsObjectReplicator(new ChannelFactory() {
 					@Override
 					public Channel createChannel(String id) throws Exception {
 						return new JChannel(this.getClass().getClassLoader().getResource("tcp.xml"));
 					}
-				};
-			}
-			
-		};
+				});
 
 		server.setReplicator(jor);
+		server.start(new DQPConfiguration(), true);
     	HashMap<String, Collection<FunctionMethod>> udfs = new HashMap<String, Collection<FunctionMethod>>();
     	udfs.put("funcs", Arrays.asList(new FunctionMethod("pause", null, null, PushDown.CANNOT_PUSHDOWN, TestMatViews.class.getName(), "pause", null, new FunctionParameter("return", DataTypeManager.DefaultDataTypes.INTEGER), false, Determinism.NONDETERMINISTIC)));
     	server.deployVDB(MATVIEWS, UnitTestUtil.getTestDataPath() + "/matviews.vdb", udfs);
