@@ -351,10 +351,6 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		            return null;
 		        }
 		        
-		        if (req.getSrc().equals(local_addr)) {
-		        	return null;
-		        }
-
 		        try {
 		            body=req_marshaller != null?
 		                    req_marshaller.objectFromByteBuffer(req.getBuffer(), req.getOffset(), req.getLength())
