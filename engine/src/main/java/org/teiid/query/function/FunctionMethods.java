@@ -390,8 +390,16 @@ public final class FunctionMethods {
 
 	// ================== Function = dayofweek =====================
 
-	public static Object dayOfWeek(Date x) {
-		return Integer.valueOf(getField(x, Calendar.DAY_OF_WEEK));
+	public static int dayOfWeek(Date x) {
+		int result = getField(x, Calendar.DAY_OF_WEEK);
+		if (TimestampWithTimezone.ISO8601_WEEK) {
+			result -= 1;
+			if (result == 0) {
+				return 7;
+			}
+			return result;
+		}
+		return getField(x, Calendar.DAY_OF_WEEK);
 	}
 
 	// ================== Function = dayofyear =====================
@@ -436,8 +444,8 @@ public final class FunctionMethods {
 
 	// ================== Function = week =====================
 
-	public static Object week(Date x) {
-		return Integer.valueOf(getField(x, Calendar.WEEK_OF_YEAR));
+	public static int week(Date x) {
+		return getField(x, Calendar.WEEK_OF_YEAR);
 	}
 
 	// ================== Function = year =====================

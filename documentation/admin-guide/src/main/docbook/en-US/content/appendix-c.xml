@@ -35,5 +35,10 @@
 			Target size in bytes of the ODBC results buffer.  This is not a hard maximum, lobs and wide rows may use larger buffers.
 			</para>
 		</listitem>
+		<listitem>
+			<para><emphasis>org.teiid.iso8601Week</emphasis> - defaults to false.  
+			Set to true to use ISO 8601 rules for week calculations regardless of the locale.  When true the dayOfWeek function will begin with 1 for MONDAY rather than SUNDAY, and the week function will require that week 1 of a year contains the year's first Thursday.
+			</para>
+		</listitem>
 	</itemizedlist>
 </appendix>

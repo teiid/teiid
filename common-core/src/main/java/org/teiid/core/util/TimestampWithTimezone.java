@@ -46,9 +46,12 @@ import org.teiid.core.types.DataTypeManager;
  */
 public class TimestampWithTimezone {
 	
+	public static final String ISO8601_WEEK_PROP = "org.teiid.iso8601Week"; //$NON-NLS-1$
+	public static boolean ISO8601_WEEK = PropertiesUtils.getBooleanProperty(System.getProperties(), ISO8601_WEEK_PROP, false); 
+	
 	private static ThreadLocal<Calendar> CALENDAR = new ThreadLocal<Calendar>() {
 		protected Calendar initialValue() {
-			return Calendar.getInstance();
+			return initialCalendar();
 		}
 	};
 	
@@ -58,7 +61,16 @@ public class TimestampWithTimezone {
 	
 	public static void resetCalendar(TimeZone tz) {
 		TimeZone.setDefault(tz);
-		CALENDAR.set(Calendar.getInstance());
+		CALENDAR.set(initialCalendar());
+	}
+	
+	static Calendar initialCalendar() {
+		Calendar result = Calendar.getInstance();
+		if (ISO8601_WEEK) {
+			result.setMinimalDaysInFirstWeek(4);
+			result.setFirstDayOfWeek(Calendar.MONDAY);
+		}
+		return result;
 	}
 
     public static Object create(java.util.Date date, TimeZone initial, Calendar target, Class<?> type) {

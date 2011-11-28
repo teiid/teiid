@@ -24,10 +24,24 @@ package org.teiid.query.function;
 
 import static org.junit.Assert.*;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.query.unittest.TimestampUtil;
 
 @SuppressWarnings("nls")
 public class TestFunctionMethods {
+	
+	@BeforeClass public static void oneTimeSetup() {
+		TimestampWithTimezone.ISO8601_WEEK = true;
+		TimestampWithTimezone.resetCalendar(null);
+	}
+	
+	@AfterClass public static void oneTimeTearDown() {
+		TimestampWithTimezone.ISO8601_WEEK = false;
+		TimestampWithTimezone.resetCalendar(null);
+	}
 	
 	@Test public void testUnescape() {
 		assertEquals("a\t\n\n%6", FunctionMethods.unescape("a\\t\\n\\012\\456"));
@@ -36,5 +50,18 @@ public class TestFunctionMethods {
 	@Test public void testUnescape1() {
 		assertEquals("a\u45AA'", FunctionMethods.unescape("a\\u45Aa\'"));
 	}
+	
+	@Test public void testIso8601Week() {
+		assertEquals(53, FunctionMethods.week(TimestampUtil.createDate(105, 0, 1)));
+	}
+	
+	@Test public void testIso8601Week1() {
+		assertEquals(52, FunctionMethods.week(TimestampUtil.createDate(106, 0, 1)));
+	}
+	
+	@Test public void testIso8601Week2() {
+		assertEquals(1, FunctionMethods.dayOfWeek(TimestampUtil.createDate(111, 10, 28)));
+	}
+
 
 }
