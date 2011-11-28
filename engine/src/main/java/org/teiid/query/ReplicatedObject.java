@@ -75,6 +75,11 @@ public interface ReplicatedObject<K extends Serializable> {
 	 */
 	void droppedMembers(Collection<Serializable> addresses);
 	
+	/**
+	 * Return true if the object has the given state
+	 * @param state_id
+	 * @return
+	 */
 	boolean hasState(K state_id);
 	
 }
