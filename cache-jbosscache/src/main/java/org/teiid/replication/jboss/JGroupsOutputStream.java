@@ -55,7 +55,7 @@ public class JGroupsOutputStream extends OutputStream {
         this.methodOffset = methodOffset;
         if (sendCreate) {
 	        try {
-	        	disp.callRemoteMethods(this.dests, new MethodCall(methodOffset, new Object[] {stateId}), new RequestOptions(ResponseMode.GET_NONE, 0).setAnycasting(true));
+	        	disp.callRemoteMethods(this.dests, new MethodCall(methodOffset, new Object[] {stateId}), new RequestOptions(ResponseMode.GET_NONE, 0).setAnycasting(dests != null));
 	        } catch(Exception e) {
 	        	throw new IOException(e);
 	        }
@@ -68,7 +68,7 @@ public class JGroupsOutputStream extends OutputStream {
         }
         flush();
         try {
-        	disp.callRemoteMethods(dests, new MethodCall((short)(methodOffset + 2), new Object[] {stateId}), new RequestOptions(ResponseMode.GET_NONE, 0).setAnycasting(true));
+        	disp.callRemoteMethods(dests, new MethodCall((short)(methodOffset + 2), new Object[] {stateId}), new RequestOptions(ResponseMode.GET_NONE, 0).setAnycasting(dests != null));
         } catch(Exception e) {
         }
         closed=true;
@@ -80,7 +80,7 @@ public class JGroupsOutputStream extends OutputStream {
             if(index == 0) {
                 return;
             }
-        	disp.callRemoteMethods(dests, new MethodCall((short)(methodOffset + 1), new Object[] {stateId, Arrays.copyOf(buffer, index)}), new RequestOptions(ResponseMode.GET_NONE, 0).setAnycasting(true));
+        	disp.callRemoteMethods(dests, new MethodCall((short)(methodOffset + 1), new Object[] {stateId, Arrays.copyOf(buffer, index)}), new RequestOptions(ResponseMode.GET_NONE, 0).setAnycasting(dests != null));
             index=0;
         } catch(Exception e) {
         	throw new IOException(e);

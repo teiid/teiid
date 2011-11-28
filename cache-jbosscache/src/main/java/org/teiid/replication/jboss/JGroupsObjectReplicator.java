@@ -117,8 +117,9 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		        if(log.isTraceEnabled())
 		            log.trace("[sender=" + req.getSrc() + "], method_call: " + method_call); //$NON-NLS-1$ //$NON-NLS-2$
 
-		        if(method_lookup == null)
-		            throw new Exception("MethodCall uses ID=" + method_call.getId() + ", but method_lookup has not been set"); //$NON-NLS-1$ //$NON-NLS-2$
+		        if (method_call.getId() >= methodList.size() - 5 && req.getSrc().equals(local_addr)) {
+		        	return null;
+		        }
 
 		        if (method_call.getId() >= methodList.size() - 3) {
 		        	Serializable address = new AddressWrapper(req.getSrc());
@@ -292,6 +293,9 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		        List<Address> dests = null;
 		        if (annotation.remoteOnly()) {
 		        	dests = getRemoteMembersCopy();
+		        	if (dests.isEmpty()) {
+		        		return null;
+		        	}
 		        }
 		        RspList<Object> responses = disp.callRemoteMethods(dests, call, new RequestOptions().setMode(annotation.asynch()?ResponseMode.GET_NONE:ResponseMode.GET_ALL).setTimeout(annotation.timeout()).setAnycasting(dests != null));
 		        if (annotation.asynch()) {
@@ -346,18 +350,19 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 			} catch (InvocationTargetException e) {
 				throw e.getCause();
 			}
-			List<Address> dests = getRemoteMembersCopy();
 			ReplicatedObject ro = (ReplicatedObject)object;
 			Serializable stateId = (Serializable)args[0];
 			if (annotation.replicateState() == ReplicationMode.PUSH) {
-				LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "replicating state", stateId); //$NON-NLS-1$
-				JGroupsOutputStream oStream = new JGroupsOutputStream(disp, dests, stateId, (short)(methodMap.size() - 3), true);
-				try {
-					ro.getState(stateId, oStream);
-				} finally {
-					oStream.close();
+				if (!remoteMembers.isEmpty()) {
+					LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "replicating state", stateId); //$NON-NLS-1$
+					JGroupsOutputStream oStream = new JGroupsOutputStream(disp, null, stateId, (short)(methodMap.size() - 3), true);
+					try {
+						ro.getState(stateId, oStream);
+					} finally {
+						oStream.close();
+					}
+					LogManager.logTrace(LogConstants.CTX_RUNTIME, object, "sent state", stateId); //$NON-NLS-1$
 				}
-				LogManager.logTrace(LogConstants.CTX_RUNTIME, object, "sent state", stateId); //$NON-NLS-1$
 			    return result;
 			}
 			if (result != null) {
