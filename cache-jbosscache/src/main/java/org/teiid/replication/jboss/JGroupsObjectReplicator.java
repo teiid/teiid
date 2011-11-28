@@ -140,30 +140,31 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 					} catch (InvocationTargetException e) {
 						throw e.getCause();
 					}
-					Vector<Address> dests = null;
-					synchronized (remoteMembers) {
-						dests = new Vector<Address>(remoteMembers);
+					if (!remoteMembers.isEmpty()) {
+						ReplicatedObject ro = (ReplicatedObject)object;
+						String stateId = (String)args[0];
+						LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "replicating state", stateId); //$NON-NLS-1$
+						JGroupsOutputStream oStream = new JGroupsOutputStream(disp, null, stateId, (short)(methodMap.size() - 3));
+						try {
+							ro.getState(stateId, oStream);
+						} finally {
+							oStream.close();
+						}
+						LogManager.logTrace(LogConstants.CTX_RUNTIME, object, "sent state", stateId); //$NON-NLS-1$
 					}
-					ReplicatedObject ro = (ReplicatedObject)object;
-					String stateId = (String)args[0];
-					LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "replicating state", stateId); //$NON-NLS-1$
-					JGroupsOutputStream oStream = new JGroupsOutputStream(disp, dests, stateId, (short)(methodMap.size() - 3));
-					try {
-						ro.getState(stateId, oStream);
-					} finally {
-						oStream.close();
-					}
-					LogManager.logTrace(LogConstants.CTX_RUNTIME, object, "sent state", stateId); //$NON-NLS-1$
 			        return result;
 				}
 		        MethodCall call=new MethodCall(methodNum, args);
 		        Vector<Address> dests = null;
 		        if (annotation.remoteOnly()) {
 					synchronized (remoteMembers) {
+						if (remoteMembers.isEmpty()) {
+							return null;
+						}
 						dests = new Vector<Address>(remoteMembers);
 					}
 		        }
-		        RspList responses = disp.callRemoteMethods(dests, call, annotation.asynch()?GroupRequest.GET_NONE:GroupRequest.GET_ALL, annotation.timeout());
+		        RspList responses = disp.callRemoteMethods(dests, call, annotation.asynch()?GroupRequest.GET_NONE:GroupRequest.GET_ALL, annotation.timeout(), dests != null);
 		        if (annotation.asynch()) {
 			        return null;
 		        }
@@ -184,7 +185,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		        }
 	        	return null;
 		    } catch(Exception e) {
-		        throw new RuntimeException(method + " " + args + " failed"); //$NON-NLS-1$ //$NON-NLS-2$
+		        throw new RuntimeException(method + " " + args + " failed", e); //$NON-NLS-1$ //$NON-NLS-2$
 		    }
 		}
 
@@ -374,10 +375,10 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		            if(log.isTraceEnabled())
 		                log.trace("[sender=" + req.getSrc() + "], method_call: " + method_call); //$NON-NLS-1$ //$NON-NLS-2$
 
-	                if(method_lookup == null)
-	                    throw new Exception("MethodCall uses ID=" + method_call.getId() + ", but method_lookup has not been set"); //$NON-NLS-1$ //$NON-NLS-2$
-
 		            if (method_call.getId() >= methodList.size() - 3) {
+		            	if (req.getSrc().equals(local_addr)) {
+				        	return null;
+				        }
 		            	Serializable address = req.getSrc();
 		            	String stateId = (String)method_call.getArgs()[0];
 		            	List<?> key = Arrays.asList(stateId, address);
