@@ -241,6 +241,203 @@ The following components have been updated:
 
 <h2><a name="Details">Detailed Release Notes</a></h2>
         Detailed Release Notes - Teiid - Version ${project.version}
+
+<h2>        Bug
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1686'>TEIID-1686</a>] -         Assertion failure when using a plan result buffer
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1727'>TEIID-1727</a>] -         Undeploying a vdb inappropriately updates all vdbs
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1728'>TEIID-1728</a>] -         Materialized View cache TTL (in a transformation) does not expire/invalidate the cache automatically
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1729'>TEIID-1729</a>] -         EDS XML as source - results returned on 1st query only, subsequent query returns 0 rows - Streaming logic problem 
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1730'>TEIID-1730</a>] -         File resource adapter ra.xml is not valid
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1731'>TEIID-1731</a>] -         Incorrect results with low memory streaming dup removal
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1732'>TEIID-1732</a>] -         Native PG Connector does not pass back errors to client
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1736'>TEIID-1736</a>] -         Window function capabilities incorrect
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1737'>TEIID-1737</a>] -         Error: Temporary table does not exist when using WITH clause and SQL Server
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1739'>TEIID-1739</a>] -         VDB deployment fails if metadata index file has been removed due to NPE during Index.initialize
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1742'>TEIID-1742</a>] -         Page ids are not sufficiently unique
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1745'>TEIID-1745</a>] -         Forward only results that exceed the output buffer can hold active plans
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1746'>TEIID-1746</a>] -         Documentation for ENV &amp; COMMANDPAYLOAD is missing some details
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1747'>TEIID-1747</a>] -         hasROLE(rolename) function always returns false
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1751'>TEIID-1751</a>] -         Scalar function reference issues
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1753'>TEIID-1753</a>] -         FileStore compaction issues
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1758'>TEIID-1758</a>] -         ODBC protocol should implement DEALLOCATE command
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1760'>TEIID-1760</a>] -         The &quot;access&quot; translator shows up in the admin-console, but I don&#39;t find it mentioned in the docs.   Looking at the 7.5 docs
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1764'>TEIID-1764</a>] -         Hibernate Month Date Extraction
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1765'>TEIID-1765</a>] -         Incorrect comparison method in CancellationTimer
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1768'>TEIID-1768</a>] -         Temp table becomes unusable by other threads
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1769'>TEIID-1769</a>] -         Unhandled exceptions during close can hang the client
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1773'>TEIID-1773</a>] -         Ingres as source - Query with LOCATE causing stackoverflow error
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1776'>TEIID-1776</a>] -         Ingres as source - Source Error Codes 2118, 2501, and 263071 being returned
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1778'>TEIID-1778</a>] -         Cross source join reduced to cross join returns the wrong data
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1780'>TEIID-1780</a>] -         Stored procedure cannot be called using &quot;Procedural Relational Command&quot;
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1784'>TEIID-1784</a>] -         reserve batch accounting error
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1787'>TEIID-1787</a>] -         Prepared batch failure
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1789'>TEIID-1789</a>] -         Serial type failure
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1790'>TEIID-1790</a>] -         Error parsing substring with non-simple expression
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1791'>TEIID-1791</a>] -         Only the first 1000 items in the IN criteria are being pushed down in the query
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1792'>TEIID-1792</a>] -         Inefficient plan using cartesian join
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1793'>TEIID-1793</a>] -         Receive &quot; User &lt;user@teiid-security&gt; is not entitled to action &lt;READ&gt; for 1 or more of the groups/elements/procedures.&quot; error on unqualified SQL if data roles are active
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1795'>TEIID-1795</a>] -         Long Running Queries Are Calculated Incorrectly
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1803'>TEIID-1803</a>] -         VDB deployment in EDS can be extremely slow based upon indexing needs
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1812'>TEIID-1812</a>] -         Client Recieving java.lang.IndexOutOfBoundsException when performing query
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1816'>TEIID-1816</a>] -         Documentation changes for SSL configuration
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1818'>TEIID-1818</a>] -         XMLQuery/XMLTable prepared context type
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1820'>TEIID-1820</a>] -         like_regex only matches full string patterns
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1821'>TEIID-1821</a>] -         subqueries used in xmltable coulmn defaults are not resolved
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1823'>TEIID-1823</a>] -         XMLTable passing scalar subquery fails to evaluate
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1825'>TEIID-1825</a>] -         EnhancementTimer class using the wrong logger class, results in errors accessing the Teiid through JDBC
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1830'>TEIID-1830</a>] -         Perl client using DBD:Pg hangs with resultset &gt; 512 rows
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1832'>TEIID-1832</a>] -         Change to source model connection through AdminApi using assignToModel() does not reflect in jdbc queries to that source model
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1836'>TEIID-1836</a>] -         NPE running query of Web service (WSDL imported into Relational Model)
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1840'>TEIID-1840</a>] -         The Jdbc Socket Host Name Property cannot be changed in admin console
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1843'>TEIID-1843</a>] -         StackOverflow using a changing expression as a boolean condition
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1844'>TEIID-1844</a>] -         Missing paren invalidates code example in EDS documentation
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1845'>TEIID-1845</a>] -         Cache hint not being displayed after validation of Virtual Procedure in JBoss Developer Studio
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1846'>TEIID-1846</a>] -         Update or delete against a instead of trigger with an access pattern fails
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1849'>TEIID-1849</a>] -         enabledCipherSuites property gives error on startup of server
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1851'>TEIID-1851</a>] -         run.bat in simpleclient for teiid 7.5 incorrect path
+</li>
+</ul>
+                
+<h2>        Enhancement
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1610'>TEIID-1610</a>] -         Support kerberos authentication forwarding for remote clients
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1673'>TEIID-1673</a>] -         Co-ordinate Materialization Table loads accross the cluster
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1701'>TEIID-1701</a>] -         Misc procedure enhancements
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1702'>TEIID-1702</a>] -         Allow the file translator to abstract selecting a single file
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1703'>TEIID-1703</a>] -         Allow for the parsing of fixed width files that don&#39;t use delimiters.
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1797'>TEIID-1797</a>] -         When a message (i.e., WARN) is logged and its associated with a translator/connector, it would be nice to know to which one it applied
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1805'>TEIID-1805</a>] -         Allow no_unnest to apply to views/subquery from clauses
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1806'>TEIID-1806</a>] -         Make unordered limit handling consistent
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1824'>TEIID-1824</a>] -         SQL/XML performance enhancement
+</li>
+</ul>
+        
+<h2>        Feature Request
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-139'>TEIID-139</a>] -         Enhancement: Language support for transactions
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-942'>TEIID-942</a>] -         Make ad hoc temp tables transactional
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-964'>TEIID-964</a>] -         Must pushdown functions in select clause
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1518'>TEIID-1518</a>] -         Add a correlated subquery evaluation cache
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1573'>TEIID-1573</a>] -         Set Query Timeout on the Server 
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1629'>TEIID-1629</a>] -         provide maven snapshot jars
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1687'>TEIID-1687</a>] -         GSSAPI support for postgres emulation layer
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1726'>TEIID-1726</a>] -         Requesting ability to add/use Oracle hints in EDS
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1735'>TEIID-1735</a>] -         RF: Add the ability to use DISTINCT in windowed aggregates in EDS
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1772'>TEIID-1772</a>] -         Teiid ports need to have the ability to restrict cipher suites
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1800'>TEIID-1800</a>] -         Async Event Processing: Standardize JDBC Callback API
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1802'>TEIID-1802</a>] -         Async Event Processing:  Translator callback indicating data is available
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1810'>TEIID-1810</a>] -         Add Hive Translator that support HDFS
+</li>
+</ul>
+            
+<h2>        Quality Risk
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-832'>TEIID-832</a>] -         Support calling oracle stored functions returning result sets as stored procedures
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1738'>TEIID-1738</a>] -         Temp table permissions can be confusing
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1750'>TEIID-1750</a>] -         Memory handling improvements
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1771'>TEIID-1771</a>] -         7.3 or older clients see the wrong column metadata
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1788'>TEIID-1788</a>] -         Misc improvements
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1813'>TEIID-1813</a>] -         EDS performance tests shows a performance degradation against SOA-P 5.1.0.GA in case of selecting from XML datasource 
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1828'>TEIID-1828</a>] -         Dependent critiera in query plan but missing in actual query and additional information is provided
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1829'>TEIID-1829</a>] -         Clarify source warnings
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1833'>TEIID-1833</a>] -         Add documentation for the delegating translator
+</li>
+</ul>
+                
+<h2>        Task
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1716'>TEIID-1716</a>] -         Fix minor ODBC documentation
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1749'>TEIID-1749</a>] -         Update the LDAP configuration documentation
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1798'>TEIID-1798</a>] -         Document to show how the CXF configuration file can be configured for Web-Service source
+</li>
+</ul>
             
 <h2><a name="Documentation">Documentation and Help</a></h2>
 
