@@ -798,8 +798,8 @@ public class TestResolver {
 		helpResolveException("SELECT abc(e1) FROM pm1.g1", "Error Code:ERR.015.008.0039 Message:The function 'abc(e1)' is an unknown form.  Check that the function name and number of arguments is correct."); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	@Test public void testConversionNotPossible() {	    
-		helpResolveException("SELECT dayofmonth('2002-01-01') FROM pm1.g1", "Error Code:ERR.015.008.0040 Message:The function 'dayofmonth('2002-01-01')' is a valid function form, but the arguments do not match a known type signature and cannot be converted using implicit type conversions."); //$NON-NLS-1$ //$NON-NLS-2$
+	@Test public void testConversionPossible() {	    
+		helpResolve("SELECT dayofmonth('2002-01-01') FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
     
     @Test public void testResolveParameters() throws Exception {
@@ -1213,34 +1213,7 @@ public class TestResolver {
 	 * projected symbol of the subquery.
 	 */
 	@Test public void testSubQueryINClauseNoConversionFails(){
-		//select e1 from pm1.g1 where e1 in (select e2 from pm4.g1)
-
-		//sub command
-		Select innerSelect = new Select();
-		ElementSymbol e2inner = new ElementSymbol("e2"); //$NON-NLS-1$
-		innerSelect.addSymbol(e2inner);
-		From innerFrom = new From();
-		GroupSymbol pm4g1 = new GroupSymbol("pm4.g1"); //$NON-NLS-1$
-		innerFrom.addGroup(pm4g1);
-		Query innerQuery = new Query();
-		innerQuery.setSelect(innerSelect);
-		innerQuery.setFrom(innerFrom);
-
-		//outer command
-		Select outerSelect = new Select();
-		ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
-		outerSelect.addSymbol(e1);
-		From outerFrom = new From();
-		GroupSymbol pm1g1 = new GroupSymbol("pm1.g1"); //$NON-NLS-1$
-		outerFrom.addGroup(pm1g1);
-		SubquerySetCriteria crit = new SubquerySetCriteria(e1, innerQuery);
-		Query outerQuery = new Query();
-		outerQuery.setSelect(outerSelect);
-		outerQuery.setFrom(outerFrom);
-		outerQuery.setCriteria(crit);
-
-		//test
-		this.helpResolveFails(outerQuery);
+		helpResolveException("select e1 from pm1.g1 where e1 in (select e2 from pm4.g1)");
 	}
 
     @Test public void testSubQueryINClauseTooManyColumns(){
@@ -2246,7 +2219,7 @@ public class TestResolver {
         String sql = "SELECT CASE WHEN x > 0 THEN 1.0 ELSE 2.0 END FROM (SELECT e2 AS x FROM pm1.g1) AS g"; //$NON-NLS-1$
         Command c = helpResolve(sql);
         assertEquals(sql, c.toString());        
-        verifyProjectedTypes(c, new Class[] { Double.class });
+        verifyProjectedTypes(c, new Class[] { BigDecimal.class });
         
     }
     
@@ -2434,10 +2407,10 @@ public class TestResolver {
         helpResolveException(sql);
     }
     
-    @Test public void testPowerWithLong_Fails() throws Exception {
+    @Test public void testPowerWithLong() throws Exception {
         String sql = "SELECT power(10, 999999999999)"; //$NON-NLS-1$
         
-        helpResolveException(sql);
+        helpResolve(sql);
     }
     
     @Test public void testUpdateError() {

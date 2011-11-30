@@ -1108,7 +1108,7 @@ public class TestQueryRewriter {
     }
     
     @Test public void testRewiteCompoundCriteria() {
-        helpTestRewriteCriteria("(pm1.g1.e1 = 1 and pm1.g1.e2 = 2) and (pm1.g1.e3 = 1 and pm1.g1.e4 = 2)", "(pm1.g1.e1 = '1') AND (pm1.g1.e2 = 2) AND (pm1.g1.e3 = TRUE) AND (pm1.g1.e4 = 2.0)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("(pm1.g1.e1 = 1 and pm1.g1.e2 = 2) and (pm1.g1.e3 = 1 and pm1.g1.e4 = 2.0e0)", "(pm1.g1.e1 = '1') AND (pm1.g1.e2 = 2) AND (pm1.g1.e3 = TRUE) AND (pm1.g1.e4 = 2.0e0)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testRewriteWhile() throws Exception {

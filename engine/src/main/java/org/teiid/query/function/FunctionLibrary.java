@@ -32,8 +32,11 @@ import java.util.TreeSet;
 import org.teiid.api.exception.query.InvalidFunctionException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.Transform;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
+import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 
@@ -193,21 +196,20 @@ public class FunctionLibrary {
 	 * executing the function.
      * @param name Name of function
 	 * @param returnType
+	 * @param args 
 	 * @param types Existing types passed to the function
      * @return Null if no conversion could be found, otherwise an array of conversions
      * to apply to each argument.  The list should match 1-to-1 with the parameters.
      * Parameters that do not need a conversion are null; parameters that do are
      * FunctionDescriptors.
+	 * @throws InvalidFunctionException 
 	 * @throws QueryResolverException 
 	 */
-	public FunctionDescriptor[] determineNecessaryConversions(String name, Class<?> returnType, Class<?>[] types, boolean hasUnknownType) {
+	public FunctionDescriptor[] determineNecessaryConversions(String name, Class<?> returnType, Expression[] args, Class<?>[] types, boolean hasUnknownType) throws InvalidFunctionException {
 		// Check for no args - no conversion necessary
 		if(types.length == 0) {
-			return new FunctionDescriptor[0];
+			return null;
 		}
-
-		// Construct results array
-		FunctionDescriptor[] results = null;
 
         //First find existing functions with same name and same number of parameters
         final Collection<FunctionMethod> functionMethods = new LinkedList<FunctionMethod>();
@@ -223,12 +225,12 @@ public class FunctionLibrary {
         //Current best score (lower score is best.  Higher score results in more implicit conversions
         int bestScore = Integer.MAX_VALUE;
         boolean ambiguous = false;
+        FunctionMethod result = null;
                 
         for (FunctionMethod nextMethod : functionMethods) {
             int currentScore = 0; 
             final List<FunctionParameter> methodTypes = nextMethod.getInputParameters();
             //Holder for current signature with converts where required
-            FunctionDescriptor[] currentSignature = new FunctionDescriptor[types.length];
             
             //Iterate over the parameters adding conversions where required or failing when
             //no implicit conversion is possible
@@ -240,17 +242,21 @@ public class FunctionLibrary {
 
                 Class<?> sourceType = types[i];
                 if (sourceType == null) {
-                    FunctionDescriptor fd = findTypedConversionFunction(DataTypeManager.DefaultDataClasses.NULL, targetType);
-                    currentSignature[i] = fd;
                     currentScore++;
                     continue;
                 }
                 
 				try {
-					FunctionDescriptor fd = getConvertFunctionDescriptor(sourceType, targetType);
-					if (fd != null) {
-		                currentScore++;
-		                currentSignature[i] = fd;
+					Transform t = getConvertFunctionDescriptor(sourceType, targetType);
+					if (t != null) {
+		                if (t.isExplicit()) {
+		                	if (!(args[i] instanceof Constant) || ResolverUtil.convertConstant(DataTypeManager.getDataTypeName(sourceType), tmpTypeName, (Constant)args[i]) == null) {
+		                		break;
+		                	}
+		                	currentScore++;
+		                } else {
+		                	currentScore++;
+		                }
 					}
 				} catch (InvalidFunctionException e) {
 					break;
@@ -265,13 +271,18 @@ public class FunctionLibrary {
             if (hasUnknownType) {
             	if (returnType != null) {
             		try {
-						FunctionDescriptor fd = getConvertFunctionDescriptor(DataTypeManager.getDataTypeClass(nextMethod.getOutputParameter().getType()), returnType);
-						if (fd != null) {
-							currentScore++;
+						Transform t = getConvertFunctionDescriptor(DataTypeManager.getDataTypeClass(nextMethod.getOutputParameter().getType()), returnType);
+						if (t != null) {
+							if (t.isExplicit()) {
+								//there still may be a common type, but use any other valid conversion over this one
+								currentScore += types.length + 1;
+							} else {
+								currentScore++;
+							}
 						}
 					} catch (InvalidFunctionException e) {
 						//there still may be a common type, but use any other valid conversion over this one
-						currentScore += (types.length + 1);
+						currentScore += (types.length * types.length);
 					}
             	}
                 ambiguous = currentScore == bestScore;
@@ -281,38 +292,50 @@ public class FunctionLibrary {
 
                 if (currentScore == 0) {
                     //this must be an exact match
-                    return currentSignature;
+                    return null;
                 }    
                 
                 bestScore = currentScore;
-                results = currentSignature;
+                result = nextMethod;
             }            
         }
         
-        if (ambiguous) {
-            return null;
-        }
-        
-		return results;
-	}
-	
-	private FunctionDescriptor getConvertFunctionDescriptor(Class<?> sourceType, Class<?> targetType) throws InvalidFunctionException {
-		final String sourceTypeName = DataTypeManager.getDataTypeName(sourceType);
-        final String targetTypeName = DataTypeManager.getDataTypeName(targetType);
-        //If exact match no conversion necessary
-        if(sourceTypeName.equals(targetTypeName)) {
-            return null;
-        }
-        //Else see if an implicit conversion is possible.
-        if(!DataTypeManager.isImplicitConversion(sourceTypeName, targetTypeName)){
+        if (ambiguous || result == null) {
             throw new InvalidFunctionException();
         }
-        //Else no conversion is available and the current method is not a valid match
-        final FunctionDescriptor fd = findTypedConversionFunction(sourceType, targetType);
-        if(fd == null) {
-        	throw new InvalidFunctionException();
+        
+		return getConverts(result, types);
+	}
+	
+	private FunctionDescriptor[] getConverts(FunctionMethod method, Class<?>[] types) {
+        final List<FunctionParameter> methodTypes = method.getInputParameters();
+        FunctionDescriptor[] result = new FunctionDescriptor[types.length];
+        for(int i = 0; i < types.length; i++) {
+        	//treat all varags as the same type
+            final String tmpTypeName = methodTypes.get(Math.min(i, methodTypes.size() - 1)).getType();
+            Class<?> targetType = DataTypeManager.getDataTypeClass(tmpTypeName);
+
+            Class<?> sourceType = types[i];
+            if (sourceType == null) {
+                result[i] = findTypedConversionFunction(DataTypeManager.DefaultDataClasses.NULL, targetType);
+            } else if (sourceType != targetType){
+            	result[i] = findTypedConversionFunction(sourceType, targetType);
+            }
         }
-        return fd;
+        return result;
+	}
+	
+	private Transform getConvertFunctionDescriptor(Class<?> sourceType, Class<?> targetType) throws InvalidFunctionException {
+        //If exact match no conversion necessary
+        if(sourceType.equals(targetType)) {
+            return null;
+        }
+        Transform result = DataTypeManager.getTransform(sourceType, targetType);
+        //Else see if an implicit conversion is possible.
+        if(result == null){
+            throw new InvalidFunctionException();
+        }
+        return result;
 	}
 
     /**

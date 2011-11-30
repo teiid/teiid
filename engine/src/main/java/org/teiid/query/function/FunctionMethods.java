@@ -166,9 +166,15 @@ public final class FunctionMethods {
 		return x.divide(y);
 	}
 	
+	private static final BigDecimal ZERO = new BigDecimal(0);
+	
 	public static Object divide(BigDecimal x, BigDecimal y) {
 		BigDecimal bd = x.divide(y, Math.max(16, x.scale() + y.precision() + 1), RoundingMode.HALF_UP).stripTrailingZeros();
-		return bd.setScale(Math.max(x.scale(), bd.scale()));
+		bd = bd.setScale(Math.max(x.scale(), bd.scale()));
+		if (bd.compareTo(ZERO) == 0) {
+			return ZERO;
+		}
+		return bd;
 	}
 
 	// ================== Function = abs =====================

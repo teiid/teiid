@@ -40,5 +40,10 @@
 			Set to true to use ISO 8601 rules for week calculations regardless of the locale.  When true the dayOfWeek function will begin with 1 for MONDAY rather than SUNDAY, and the week function will require that week 1 of a year contains the year's first Thursday.
 			</para>
 		</listitem>
+		<listitem>
+			<para><emphasis>org.teiid.parseDecimalAsDouble</emphasis> - defaults to false.  
+			Set to true to parse exact fixed point literals, e.g. 1.0, as double values rather than as decimal/BigDecimal values in the same way as releases earlier than 8.0.
+			</para>
+		</listitem>
 	</itemizedlist>
 </appendix>

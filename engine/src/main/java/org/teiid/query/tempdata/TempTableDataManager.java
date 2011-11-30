@@ -66,20 +66,7 @@ import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.resolver.util.ResolverUtil;
-import org.teiid.query.sql.lang.CacheHint;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.Create;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.Delete;
-import org.teiid.query.sql.lang.Drop;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.Option;
-import org.teiid.query.sql.lang.ProcedureContainer;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -314,9 +301,12 @@ public class TempTableDataManager implements ProcessorDataManager {
 			}
 			Constant key = (Constant)proc.getParameter(2).getExpression();
 			LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.getString("TempTableDataManager.row_refresh", matViewName, key)); //$NON-NLS-1$
+			Object id = ids.iterator().next();
+			String targetTypeName = metadata.getElementType(id);
+			Object value = DataTypeManager.transformValue(key.getValue(), DataTypeManager.getDataTypeClass(targetTypeName));
 			String queryString = Reserved.SELECT + " * " + Reserved.FROM + ' ' + matViewName + ' ' + Reserved.WHERE + ' ' + //$NON-NLS-1$
-				metadata.getFullName(ids.iterator().next()) + " = ?" + ' ' + Reserved.OPTION + ' ' + Reserved.NOCACHE; //$NON-NLS-1$
-			QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(queryString, matViewName.toUpperCase(), context, key.getValue());
+				metadata.getFullName(id) + " = ?" + ' ' + Reserved.OPTION + ' ' + Reserved.NOCACHE; //$NON-NLS-1$
+			QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(queryString, matViewName.toUpperCase(), context, value);
 			qp.setNonBlocking(true);
 			qp.getContext().setDataObjects(null);
 			TupleSource ts = new BatchCollector.BatchProducerTupleSource(qp);
@@ -324,7 +314,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			boolean delete = false;
 			if (tuple == null) {
 				delete = true;
-				tuple = Arrays.asList(key.getValue());
+				tuple = Arrays.asList(value);
 			} else {
 				tuple = new ArrayList<Object>(tuple); //ensure the list is serializable 
 			}

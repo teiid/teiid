@@ -41,22 +41,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.teiid.core.CorePlugin;
-import org.teiid.core.types.basic.AnyToObjectTransform;
-import org.teiid.core.types.basic.AnyToStringTransform;
-import org.teiid.core.types.basic.BooleanToNumberTransform;
-import org.teiid.core.types.basic.FixedNumberToBigDecimalTransform;
-import org.teiid.core.types.basic.FixedNumberToBigIntegerTransform;
-import org.teiid.core.types.basic.FloatingNumberToBigDecimalTransform;
-import org.teiid.core.types.basic.FloatingNumberToBigIntegerTransform;
-import org.teiid.core.types.basic.NullToAnyTransform;
-import org.teiid.core.types.basic.NumberToBooleanTransform;
-import org.teiid.core.types.basic.NumberToByteTransform;
-import org.teiid.core.types.basic.NumberToDoubleTransform;
-import org.teiid.core.types.basic.NumberToFloatTransform;
-import org.teiid.core.types.basic.NumberToIntegerTransform;
-import org.teiid.core.types.basic.NumberToLongTransform;
-import org.teiid.core.types.basic.NumberToShortTransform;
-import org.teiid.core.types.basic.ObjectToAnyTransform;
+import org.teiid.core.types.basic.*;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.core.util.PropertiesUtils;
@@ -336,7 +321,7 @@ public class DataTypeManager {
 	 * @param dataType
 	 * 		New data type defined by Class
 	 */
-	static void addDataType(String typeName, Class dataType) {
+	static void addDataType(String typeName, Class<?> dataType) {
 		dataTypeNames.put(typeName, dataType);
 		dataTypeClasses.put(dataType, typeName);
 	}
@@ -361,13 +346,13 @@ public class DataTypeManager {
 	 * 		Data type name
 	 * @return Data type class
 	 */
-	public static Class getDataTypeClass(String name) {
+	public static Class<?> getDataTypeClass(String name) {
 		if (name == null) {
 			return DefaultDataClasses.NULL;
 		}
 
 		// Hope this is the correct case (as it will be if using the constants
-		Class dataTypeClass = dataTypeNames.get(name);
+		Class<?> dataTypeClass = dataTypeNames.get(name);
 
 		// If that fails, do a lower case to make sure we match
 		if (dataTypeClass == null) {
@@ -380,7 +365,7 @@ public class DataTypeManager {
 		return dataTypeClass;
 	}
 
-	public static String getDataTypeName(Class typeClass) {
+	public static String getDataTypeName(Class<?> typeClass) {
 		if (typeClass == null) {
 			return DefaultDataTypes.NULL;
 		}
@@ -424,7 +409,7 @@ public class DataTypeManager {
 	 * 		Outgoing value type
 	 * @return A transform if one exists, null otherwise
 	 */
-	public static Transform getTransform(Class sourceType, Class targetType) {
+	public static Transform getTransform(Class<?> sourceType, Class<?> targetType) {
 		if (sourceType == null || targetType == null) {
 			throw new IllegalArgumentException(CorePlugin.Util.getString(
 					"ERR.003.029.0002", sourceType, targetType)); //$NON-NLS-1$
@@ -464,14 +449,8 @@ public class DataTypeManager {
 	 * 		Outgoing value type
 	 * @return True if a transform exists
 	 */
-	public static boolean isTransformable(Class sourceType, Class targetType) {
-		if (sourceType == null || targetType == null) {
-			throw new IllegalArgumentException(CorePlugin.Util.getString(
-					"ERR.003.029.0002", sourceType, targetType)); //$NON-NLS-1$
-		}
-		return (getTransformFromMaps(DataTypeManager
-				.getDataTypeName(sourceType), DataTypeManager
-				.getDataTypeName(targetType)) != null);
+	public static boolean isTransformable(Class<?> sourceType, Class<?> targetType) {
+		return getTransform(sourceType, targetType) != null;
 	}
 
 	/**

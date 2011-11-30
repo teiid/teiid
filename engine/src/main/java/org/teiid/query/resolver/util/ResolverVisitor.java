@@ -31,6 +31,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.api.exception.query.InvalidFunctionException;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.UnresolvedSymbolDescription;
@@ -449,7 +450,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    // Look up types for all args
 	    boolean hasArgWithoutType = false;
 	    Expression[] args = function.getArgs();
-	    Class[] types = new Class[args.length];
+	    Class<?>[] types = new Class[args.length];
 	    for(int i=0; i<args.length; i++) {
 	        types[i] = args[i].getType();
 	        if(types[i] == null) {
@@ -527,29 +528,34 @@ public class ResolverVisitor extends LanguageVisitor {
 	private FunctionDescriptor findWithImplicitConversions(FunctionLibrary library, Function function, Expression[] args, Class<?>[] types, boolean hasArgWithoutType) throws QueryResolverException, TeiidComponentException {
 	    
 	    // Try to find implicit conversion path to still perform this function
-	    FunctionDescriptor[] conversions = library.determineNecessaryConversions(function.getName(), function.getType(), types, hasArgWithoutType);
+	    FunctionDescriptor[] conversions;
+		try {
+			conversions = library.determineNecessaryConversions(function.getName(), function.getType(), args, types, hasArgWithoutType);
+		} catch (InvalidFunctionException e) {
+			return null;
+		}
+		Class<?>[] newSignature = types;
 	    
-	    if(conversions == null) {
-	        return null;
-	    }
-	    // Insert new conversion functions as necessary, while building new signature
-	    Class<?>[] newSignature = new Class[conversions.length];
-	    for(int i=0; i<conversions.length; i++) {
-	        
-	        Class<?> newType = types[i];
-	        
-	        if(conversions[i] != null) {
-	            newType = conversions[i].getReturnType();
-	            
-	            setDesiredType(args[i], newType, function);
-	                                
-	            //only currently typed expressions need conversions
-	            if (types[i] != null && newType != DataTypeManager.DefaultDataClasses.OBJECT) {
-	                function.insertConversion(i, conversions[i]);
-	            }
-	        } 
-	                    
-	        newSignature[i] = newType;
+	    if(conversions != null) {
+		    newSignature = new Class[conversions.length];
+		    // Insert new conversion functions as necessary, while building new signature
+		    for(int i=0; i<conversions.length; i++) {
+		        
+		        Class<?> newType = types[i];
+		        
+		        if(conversions[i] != null) {
+		            newType = conversions[i].getReturnType();
+		            
+		            setDesiredType(args[i], newType, function);
+		                                
+		            //only currently typed expressions need conversions
+		            if (types[i] != null && newType != DataTypeManager.DefaultDataClasses.OBJECT) {
+		                function.insertConversion(i, conversions[i]);
+		            }
+		        } 
+		                    
+		        newSignature[i] = newType;
+		    }
 	    }
 	
 	    // Now resolve using the new signature to get the function's descriptor

@@ -47,7 +47,10 @@ public class Sum extends AggregateFunction {
     
     protected int accumulatorType = LONG;
     
-    private Object sum = null;
+    private long sumLong;
+    private double sumDouble;
+    private BigDecimal sumBigDecimal;
+    private boolean isNull = true;
 
     /**
      * Allows subclasses to determine type of accumulator for the SUM.
@@ -69,16 +72,16 @@ public class Sum extends AggregateFunction {
         
             this.accumulatorType = DOUBLE;
 
-        } else if(dataType.equals(DataTypeManager.DefaultDataClasses.BIG_INTEGER)) {
-        
-            this.accumulatorType = BIG_INTEGER;
         } else {
             this.accumulatorType = BIG_DECIMAL;
         }
     }
     
     public void reset() {
-        sum = null;
+        sumLong = 0;
+        sumDouble = 0;
+        sumBigDecimal = null;
+        isNull = true;
     }
 
     /**
@@ -87,39 +90,27 @@ public class Sum extends AggregateFunction {
     public void addInputDirect(Object input, List<?> tuple)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
         
-        if (this.sum == null) {
-            switch (this.accumulatorType) {
-                case LONG:
-                    this.sum = new Long(0);
-                    break;
-                case DOUBLE:
-                    this.sum = new Double(0);
-                    break;
-                case BIG_INTEGER:
-                    this.sum = new BigInteger(String.valueOf(0));
-                    break;
-                case BIG_DECIMAL:
-                    this.sum = new BigDecimal(0);
-                    break;
-            }
-        }
-            
+    	isNull = false;
+    	
         switch(this.accumulatorType) {        
             case LONG:
-                this.sum = new Long(((Long)this.sum).longValue() + ((Number)input).longValue());
+                this.sumLong += ((Number)input).longValue();
                 break;
             case DOUBLE:
-                this.sum = new Double(((Double)this.sum).doubleValue() + ((Number)input).doubleValue());
+                this.sumDouble += ((Number)input).doubleValue();
                 break;
             case BIG_INTEGER:
-                this.sum = ((BigInteger)this.sum).add( (BigInteger) input );
-                break;
             case BIG_DECIMAL:
+            	if (sumBigDecimal == null) {
+            		sumBigDecimal = BigDecimal.valueOf(0);
+            	}
                 if (input instanceof BigInteger) {
                     BigInteger bigIntegerInput = (BigInteger) input;
-                    this.sum = ((BigDecimal)this.sum).add( new BigDecimal(bigIntegerInput) );
+                    this.sumBigDecimal = this.sumBigDecimal.add( new BigDecimal(bigIntegerInput) );
+                } else if (input instanceof BigDecimal){
+                    this.sumBigDecimal = this.sumBigDecimal.add( (BigDecimal) input );
                 } else {
-                    this.sum = ((BigDecimal)this.sum).add( (BigDecimal) input );
+                	this.sumBigDecimal = this.sumBigDecimal.add( new BigDecimal(((Number)input).longValue()));
                 }
                 break;    
         }
@@ -131,6 +122,18 @@ public class Sum extends AggregateFunction {
     public Object getResult() 
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
         
-        return sum;        
+    	if (isNull){
+    		return null;
+    	}
+
+        switch(this.accumulatorType) {        
+        case LONG:
+        	return this.sumLong;
+        case DOUBLE:
+            return this.sumDouble;
+        case BIG_INTEGER:
+        	return this.sumBigDecimal.toBigInteger();
+        }
+        return this.sumBigDecimal;
     }
 }

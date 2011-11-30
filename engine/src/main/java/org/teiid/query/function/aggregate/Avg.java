@@ -30,6 +30,7 @@ import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.FunctionMethods;
 
 
 /**
@@ -39,8 +40,6 @@ import org.teiid.query.QueryPlugin;
  * integral type but will always be some kind of decimal type.
  */
 public class Avg extends Sum {
-
-    private static final int AVG_SCALE = 9;
 
     private int count = 0;
 
@@ -87,9 +86,9 @@ public class Avg extends Sum {
 
             case BIG_DECIMAL:
                 try {
-                    return ((BigDecimal)sum).divide(new BigDecimal(count), AVG_SCALE, BigDecimal.ROUND_HALF_UP);
+                    return FunctionMethods.divide((BigDecimal)sum, new BigDecimal(count));
                 } catch(ArithmeticException e) {
-                    throw new FunctionExecutionException(e, "ERR.015.001.0048", QueryPlugin.Util.getString("ERR.015.001.0048", sum, new Integer(count))); //$NON-NLS-1$ //$NON-NLS-2$
+                    throw new FunctionExecutionException(e, "ERR.015.001.0048", QueryPlugin.Util.getString("ERR.015.001.0048", sum, count)); //$NON-NLS-1$ //$NON-NLS-2$
                 }
             default:
                 throw new AssertionError("unknown accumulator type"); //$NON-NLS-1$

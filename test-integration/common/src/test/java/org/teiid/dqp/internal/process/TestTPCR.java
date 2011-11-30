@@ -58,8 +58,8 @@ public class TestTPCR extends BaseQueryTest {
         
         HardcodedDataManager dataMgr = new HardcodedDataManager();
     
-        List[] expected =
-            new List[] { Arrays.asList(new Object[] { new Double(2456423.0), new BigDecimal("406181.0111"), TimestampUtil.createDate(95, 2, 5), new Double(0.0) }), //$NON-NLS-1$
+        List<?>[] expected =
+            new List<?>[] { Arrays.asList(new Object[] { new Double(2456423.0), new BigDecimal("406181.0111"), TimestampUtil.createDate(95, 2, 5), new Double(0.0) }), //$NON-NLS-1$
                          Arrays.asList(new Object[] { new Double(3459808.0), new BigDecimal("405838.6989"), TimestampUtil.createDate(95, 2, 4), new Double(0.0) }), //$NON-NLS-1$
                          Arrays.asList(new Object[] { new Double(492164.0), new BigDecimal("390324.0610"), TimestampUtil.createDate(95, 1, 19), new Double(0.0) }) }; //$NON-NLS-1$
 
@@ -83,8 +83,8 @@ public class TestTPCR extends BaseQueryTest {
         finder.addCapabilities("TPCR_Ora", CapabilitiesConverter.convertCapabilities(new OracleExecutionFactory())); //$NON-NLS-1$
         
         HardcodedDataManager dataMgr = new HardcodedDataManager();
-        List[] expected =
-            new List[] { Arrays.asList(new Object[] { new Integer(5) } ) };
+        List<?>[] expected =
+            new List<?>[] { Arrays.asList(new Object[] { new Integer(5) } ) };
                 
         dataMgr.addData("SELECT COUNT(*) FROM TPCR_Ora.CUSTOMER AS g_0 LEFT OUTER JOIN TPCR_Ora.ORDERS AS g_1 ON g_0.C_CUSTKEY = g_1.O_CUSTKEY WHERE (g_1.O_ORDERKEY IS NULL) OR ((g_1.O_ORDERDATE < {ts'1992-01-02 00:00:00.0'}) AND (g_0.C_ACCTBAL > 0))", //$NON-NLS-1$
                        expected);
@@ -117,21 +117,21 @@ public class TestTPCR extends BaseQueryTest {
         
         HardcodedDataManager dataMgr = new HardcodedDataManager();
                 
-        List[] oracleExpected =
-            new List[] { Arrays.asList(new Object[] { new Long(5), "Bill", "101 Fake St.", "392839283", "21.12" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        List<?>[] oracleExpected =
+            new List<?>[] { Arrays.asList(new Object[] { new Long(5), "Bill", "101 Fake St.", "392839283", "21.12" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                          Arrays.asList(new Object[] { new Long(6), "Stu", "102 Fake St.", "385729385", "51.50" } )}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
         dataMgr.addData("SELECT g_0.C_CUSTKEY AS c_0, g_0.C_NAME AS c_1, g_0.C_ADDRESS AS c_2, g_0.C_PHONE AS c_3, g_0.C_ACCTBAL AS c_4 FROM TPCR_Ora.CUSTOMER AS g_0 WHERE g_0.C_ACCTBAL > 50 ORDER BY c_0 NULLS FIRST", //$NON-NLS-1$
                         oracleExpected);
 
-        List[] sqlServerExpected =
-            new List[] { Arrays.asList(new Object[] { new Integer(5), new Integer(12), new Long(5) } ),
+        List<?>[] sqlServerExpected =
+            new List<?>[] { Arrays.asList(new Object[] { new Integer(5), new Integer(12), new Long(5) } ),
                          Arrays.asList(new Object[] { new Integer(5), new Integer(13), new Long(5) } )};
         dataMgr.addData("SELECT g_0.O_CUSTKEY AS c_0, g_0.O_ORDERKEY AS c_1, g_0.O_CUSTKEY AS c_2 FROM TPCR_SQLS.ORDERS AS g_0 WHERE (g_0.O_ORDERDATE < {ts'1992-01-02 00:00:00.0'}) AND (g_0.O_CUSTKEY IN (5, 6)) ORDER BY c_2", //$NON-NLS-1$
                         sqlServerExpected);
         
-        List[] expected =
-            new List[] { Arrays.asList(new Object[] { new Long(5), "Bill", "101 Fake St.", "392839283", "21.12", new Integer(12) } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        List<?>[] expected =
+            new List<?>[] { Arrays.asList(new Object[] { new Long(5), "Bill", "101 Fake St.", "392839283", "21.12", new Integer(12) } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                          Arrays.asList(new Object[] { new Long(5), "Bill", "101 Fake St.", "392839283", "21.12", new Integer(13) } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                          Arrays.asList(new Object[] { new Long(6), "Stu", "102 Fake St.", "385729385", "51.50", null } )}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
@@ -157,21 +157,21 @@ public class TestTPCR extends BaseQueryTest {
         
         HardcodedDataManager dataMgr = new HardcodedDataManager();
                 
-        List[] oracleExpected =
-            new List[] { Arrays.asList(new Object[] { new Long(5), "Bill", "101 Fake St.", "392839283", "51.12" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        List<?>[] oracleExpected =
+            new List<?>[] { Arrays.asList(new Object[] { new Long(5), "Bill", "101 Fake St.", "392839283", "51.12" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                          Arrays.asList(new Object[] { new Long(6), "Stu", "102 Fake St.", "385729385", "51.50" } )}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
         dataMgr.addData("SELECT g_0.C_CUSTKEY AS c_0, g_0.C_NAME AS c_1, g_0.C_ADDRESS AS c_2, g_0.C_PHONE AS c_3, g_0.C_ACCTBAL AS c_4 FROM TPCR_Ora.CUSTOMER AS g_0 WHERE g_0.C_ACCTBAL > 50 ORDER BY c_0 NULLS FIRST", //$NON-NLS-1$
                         oracleExpected);
 
-        List[] sqlServerExpected =
-            new List[] { Arrays.asList(new Object[] { new Integer(5), new Integer(12), new Long(5) } ),
+        List<?>[] sqlServerExpected =
+            new List<?>[] { Arrays.asList(new Object[] { new Integer(5), new Integer(12), new Long(5) } ),
                          Arrays.asList(new Object[] { new Integer(5), new Integer(13), new Long(5) } )};
         dataMgr.addData("SELECT g_0.O_CUSTKEY AS c_0, g_0.O_ORDERKEY AS c_1, g_0.O_CUSTKEY AS c_2 FROM TPCR_SQLS.ORDERS AS g_0 WHERE (g_0.O_ORDERDATE < {ts'1992-01-02 00:00:00.0'}) AND (g_0.O_CUSTKEY IN (5, 6)) ORDER BY c_2", //$NON-NLS-1$
                         sqlServerExpected);
         
-        List[] expected =
-            new List[] { Arrays.asList(new Object[] { new Long(5), "Bill", "101 Fake St.", "392839283", "51.12", new Integer(12) } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        List<?>[] expected =
+            new List<?>[] { Arrays.asList(new Object[] { new Long(5), "Bill", "101 Fake St.", "392839283", "51.12", new Integer(12) } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                          Arrays.asList(new Object[] { new Long(5), "Bill", "101 Fake St.", "392839283", "51.12", new Integer(13) } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                          Arrays.asList(new Object[] { new Long(6), "Stu", "102 Fake St.", "385729385", "51.50", null } )}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
@@ -191,7 +191,7 @@ public class TestTPCR extends BaseQueryTest {
         
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT custsale.cntrycode, COUNT(*) AS numcust, SUM(c_acctbal) AS totacctbal FROM (SELECT left(C_PHONE, 2) AS cntrycode, CUSTOMER.C_ACCTBAL FROM CUSTOMER WHERE (left(C_PHONE, 2) IN ('13','31','23','29','30','18','17')) AND (CUSTOMER.C_ACCTBAL > (SELECT AVG(CUSTOMER.C_ACCTBAL) FROM CUSTOMER WHERE (CUSTOMER.C_ACCTBAL > 0.0) AND (left(C_PHONE, 2) IN ('13','31','23','29','30','18','17')))) AND (NOT (EXISTS (SELECT * FROM ORDERS WHERE O_CUSTKEY = C_CUSTKEY)))) AS custsale GROUP BY custsale.cntrycode ORDER BY custsale.cntrycode", //$NON-NLS-1$
         		METADATA, null, finder,
-        		new String[] {"SELECT left(g_0.C_PHONE, 2) AS c_0, COUNT(*) AS c_1, SUM(g_0.C_ACCTBAL) AS c_2 FROM TPCR_Oracle_9i.CUSTOMER AS g_0 WHERE (left(g_0.C_PHONE, 2) IN ('13', '31', '23', '29', '30', '18', '17')) AND (g_0.C_ACCTBAL > (SELECT AVG(g_1.C_ACCTBAL) FROM TPCR_Oracle_9i.CUSTOMER AS g_1 WHERE (g_1.C_ACCTBAL > 0E-15) AND (left(g_1.C_PHONE, 2) IN ('13', '31', '23', '29', '30', '18', '17')))) AND (NOT EXISTS (SELECT 1 FROM TPCR_Oracle_9i.ORDERS AS g_2 WHERE g_2.O_CUSTKEY = g_0.C_CUSTKEY)) GROUP BY left(g_0.C_PHONE, 2) ORDER BY c_0 NULLS FIRST"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        		new String[] {"SELECT left(g_0.C_PHONE, 2) AS c_0, COUNT(*) AS c_1, SUM(g_0.C_ACCTBAL) AS c_2 FROM TPCR_Oracle_9i.CUSTOMER AS g_0 WHERE (left(g_0.C_PHONE, 2) IN ('13', '31', '23', '29', '30', '18', '17')) AND (g_0.C_ACCTBAL > (SELECT AVG(g_1.C_ACCTBAL) FROM TPCR_Oracle_9i.CUSTOMER AS g_1 WHERE (g_1.C_ACCTBAL > 0.0) AND (left(g_1.C_PHONE, 2) IN ('13', '31', '23', '29', '30', '18', '17')))) AND (NOT EXISTS (SELECT 1 FROM TPCR_Oracle_9i.ORDERS AS g_2 WHERE g_2.O_CUSTKEY = g_0.C_CUSTKEY)) GROUP BY left(g_0.C_PHONE, 2) ORDER BY c_0 NULLS FIRST"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
     

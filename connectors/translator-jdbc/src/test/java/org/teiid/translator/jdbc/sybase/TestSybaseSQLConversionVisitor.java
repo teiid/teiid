@@ -227,7 +227,7 @@ public class TestSybaseSQLConversionVisitor {
     @Test
     public void testNonIntMod() throws Exception {
     	String input = "select mod(intkey/1.5, 3) from bqt1.smalla"; //$NON-NLS-1$
-        String output = "SELECT ((cast(SmallA.IntKey AS double precision) / 1.5) - (sign((cast(SmallA.IntKey AS double precision) / 1.5)) * floor(abs(((cast(SmallA.IntKey AS double precision) / 1.5) / 3.0))) * abs(3.0))) FROM SmallA"; //$NON-NLS-1$
+        String output = "SELECT ((cast(SmallA.IntKey AS numeric(38, 19)) / 1.5) - (sign((cast(SmallA.IntKey AS numeric(38, 19)) / 1.5)) * floor(abs(((cast(SmallA.IntKey AS numeric(38, 19)) / 1.5) / 3))) * abs(3))) FROM SmallA"; //$NON-NLS-1$
                
         helpTestVisitor(getBQTVDB(),
             input, 

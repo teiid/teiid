@@ -43,6 +43,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.api.exception.query.InvalidFunctionException;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
@@ -55,6 +56,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.CommandContext;
@@ -145,7 +147,15 @@ public class TestFunctionLibrary {
     
 	private void helpFindConversions(String fname, Class<?>[] types, FunctionDescriptor[] expected) {
 
-		FunctionDescriptor[] actual = library.determineNecessaryConversions(fname, null, types, false);
+		FunctionDescriptor[] actual;
+		try {
+			actual = library.determineNecessaryConversions(fname, null, new Expression[types.length], types, false);
+			if (actual == null) {
+				actual = new FunctionDescriptor[types.length];
+			}
+		} catch (InvalidFunctionException e) {
+			actual = null;
+		}
 		
 		if(expected == null) {
 			if(actual != null) { 

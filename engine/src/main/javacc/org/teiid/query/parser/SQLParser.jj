@@ -392,8 +392,9 @@ TOKEN : /* User variables and literals */
 | 	< BOOLEANTYPE: "{" "b" >
 |   < POS_REF: ["$"] (<DIGIT>)+ >
 |	< INTEGERVAL: (<MINUS>)?(<DIGIT>)+ >
-|   < FLOATVAL: (<MINUS>)? (<DIGIT>)* <PERIOD> (<DIGIT>)+ 
-				( ["e", "E"] (["+","-"])? (<DIGIT>)+ )? >
+|   < DECIMALVAL: (<MINUS>)? (<DIGIT>)* <PERIOD> (<DIGIT>)+ >
+|   < FLOATVAL: (<MINUS>)? <DIGIT> <PERIOD> (<DIGIT>)+ 
+				["e", "E"] (["+","-"])? (<DIGIT>)+  >
 |   < STRINGVAL: (("N"|"E")? "'" ( ("''") | ~["'"] )* "'") >
 |	< #LETTER: (["a"-"z","A"-"Z"] | ["\u0153"-"\ufffd"]) >
 |	< #DIGIT: ["0"-"9"] >
@@ -4001,7 +4002,18 @@ Constant literal() :
 				throw new ParseException(QueryPlugin.Util.getString("SQLParser.Float_parse", params)); //$NON-NLS-1$
 			}
 		}   |
-		
+		t=<DECIMALVAL>	{ 
+			try { 
+			    if (PARSE_DECIMAL_AS_DOUBLE) {
+			    	constant = new Constant(Double.valueOf(t.image), DataTypeManager.DefaultDataClasses.DOUBLE); 
+				} else {
+			    	constant = new Constant(new java.math.BigDecimal(t.image), DataTypeManager.DefaultDataClasses.BIG_DECIMAL); 
+				}
+			} catch(NumberFormatException e) {
+				Object[] params = new Object[] { t.image };
+				throw new ParseException(QueryPlugin.Util.getString("SQLParser.decimal_parse", params)); //$NON-NLS-1$
+			}
+		}   |
 		t=<FALSE>    { constant = new Constant(Boolean.FALSE, DataTypeManager.DefaultDataClasses.BOOLEAN); } |
 		t=<TRUE>     { constant = new Constant(Boolean.TRUE, DataTypeManager.DefaultDataClasses.BOOLEAN); }  |
         t=<UNKNOWN>  { constant = new Constant(null, DataTypeManager.DefaultDataClasses.BOOLEAN); }       |

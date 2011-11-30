@@ -35,10 +35,16 @@
   <li>Support for using the FROM clause post item hints MAKEDEP/MAKENOTDEP has been deprecated.  Use the pre item comment hint syntax instead, e.g. /*+ MAKEDEP */ tbl
 </ul>
 
-<h4>from 7.6</h4>
+<h4>from 7.x</h4>
 <ul>
   <li>TRANSLATE/HAS CRITERIA has been removed.  INSTEAD OF trigger actions should be used instead.  ROWS_UPDATED, INPUTS, and INPUT are no longer procedure reserved words.
-  <li>7.6 or earlier VDBs with table cardinalities set the old unknown value 0 will now report that value as -1 via the metadata API or SYS.TABLES.
+  <li>7.x or earlier VDBs with table cardinalities set the old unknown value 0 will now report that value as -1 via the metadata API or SYS.TABLES.
+  <li>Exact fixed point literals, e.g. 1.0, are now parsed as decimal/BigDecimal values as per the ANSI specification, rather than as double values.  
+  Also the AVG aggregate function will return an exact numeric (BigDecimal) value for integral types rather than returning a double value. 
+  Views that were projecting doubles from exact numeric literals or using AVG will need to be updated.  There is also a new system property org.teiid.parseDecimalAsDouble to 
+  enable the pre-8.0 parsing of exact fixed point literals as doubles.  The BigDecimal form of the AVG function now uses the same precision and scale logic as the division system function, rather than using a
+  fixed scale of 9.
+  <li>BigDecimal division that returns a quotient that is equal to zero will have a scale of zero as well. Prior releases would typically return a zero value with a scale of 16.
 </ul>
 
 <h4>from 7.5</h4>
@@ -90,27 +96,6 @@
 <h4>from 7.0</h4>
 <ul>
   <li>The term data policy was replaced with data role.  The AdminAPI methods for adding role mappings have changed from addRoleToDataPolicy and removeRoleFromDataPolicy to addDataRoleMapping and removeDataRoleMapping respectively.
-</ul>
-<h4>from 6.2</h4>
-<ul>
-  <li>The connector API has changed substantially.  Custom connectors need to be retargeted to the new Translator API.  See <a href="https://jira.jboss.org/browse/TEIID-1003">TEIID-1003</a> and the <a href="teiid-docs/teiid_developers_guide.pdf">Developer's Guide</a> for more information.
-  <li>Connector bindings are no longer valid.  Use the Designer Tooling or see the AdminShell download for a migration utility.
-  <li>Calling out to web services and xml processing has been dramatically simplified and improved, but is a breaking change from prior releases.
-  XML/Relational processing has been replaced by XMLTABLE, retrieving XML from file has been replaced by the File Translator/Resource Adapter, and
-  web service calls have been replaced by the WS Translator/Resource Adapter.  See <a href="https://jira.jboss.org/browse/TEIID-1118">TEIID-1118</a>, <a href="https://jira.jboss.org/browse/TEIID-1114">TEIID-1114</a>, and the <a href="teiid-docs/teiid_reference.pdf">Reference</a> guide for more information.
-  <li>The direct usage of XQuery has been replaced with the XMLQuery function.
-  <li>The text connector file processing has been replaced with the TEXTTABLE function.  See <a href="https://jira.jboss.org/browse/TEIID-1102">TEIID-1102</a> and the <a href="teiid-docs/teiid_reference.pdf">Reference</a> guide for more information
-  <li>Double quoted values are now parsed as identifiers by default.  See <a href="https://jira.jboss.org/browse/TEIID-145">TEIID-145</a> and the <a href="teiid-docs/teiid_reference.pdf">Reference</a> guide for more information.
-  <li>The system information schema has changed from System to SYS.  The tables and table structures have also changed.  See <a href="https://jira.jboss.org/browse/TEIID-871">TEIID-871</a> and the <a href="teiid-docs/teiid_reference.pdf">Reference</a> guide for more information.
-  <li>Client control over query plans has changed.  OPTION PLANONLY, DEBUG, and SHOWPLAN are no longer allowed.  This behavior should not be controlled by the SET statement, SET SHOWPLAN (ON|OFF|DEBUG) and SET NOEXEC (ON|OFF).  Usage of the client PlanNode class will also need to be updated.   
-  <li>Teiid specific JDBC client interfaces and methods have changed.  In general these custom features have mostly been moved to other more standard locations or been removed. See <a href="https://jira.jboss.org/browse/TEIID-1020">TEIID-1020</a> and the <a href="teiid-docs/teiid_client_developers_guide.pdf">Client Developers</a> guide for more information.  
-  <li>Teiid's reserved words have changed.  Many of the Teiid specific reserved words have become non-reserved words.  All of SQL Foundation and SQL/MED 2003, and SQL/XML from SQL 2006 reserved words have been added as reserved words.  It is generally required to double quote all reserved words.  It is advisable to double quote all non-reserved words as well.  The use of the INPUT qualifier for procedure inputs has been deprecated in favor of INPUTS.  The use of the USING qualifier for dynamic SQL inputs has been deprecated in favor of DVARS.
-  <li>The AdminApi has been redesigned for use with the new Translator/JCA split and for deployment in JBoss AS.
-  <li>The AdminShell is based on Groovy.  Most BeanShell syntax is also valid in Groovy, but there are extensive changes in the AdminAPI that may necessitate rewriting scripts.
-  <li>OPTION NO CACHE &lt;table list&gt; will now only by-pass cache for the given tables at their immediate view layer.  Previously all caches would have transitively been skipped.  See <a href="https://jira.jboss.org/browse/TEIID-900">TEIID-900</a> for more information.
-  <li>Nan and +-Infinity are no longer allowed as numerical results by default.  This may be changed via the system property org.teiid.allowNanInfinity.
-  <li>The scale of BigDecimal values is now adjusted to allow for more intuitive results.  Conversion from floating numeric types will preserve the approximate scale and division results will allow for additional scale.  See <a href="https://jira.jboss.org/browse/TEIID-159">TEIID-159</a> for more information.
-  <li>The 7.0 client is not compatible with 6.x or vice versa.  It is expected that 7.0 clients will be compatible with 7.x releases for standard JDBC operations.
 </ul>
 
 <h2><a name="Configuration">Configuration Issues</a></h2>
@@ -169,13 +154,6 @@ temporary table access.
 	<li>Code table relate configuration properties have been removed.  Code tables are now implemented as materialized views.
 </ul>
 
-<h4>from 6.2</h4>
-<ul>
-  <li>A JBoss AS instance is now required.  Embedded mode is also currently not supported.</li>
-  <li>Engine configuration is now handled through the admin console or deploy/teiid/teiid-jboss-beans.xml 
-  <li>Logging is now done through the container's log4j instance.  Any Teiid specific logging changes, see the conf/jboss-teiid-log4j.xml, need to be incorporated into the master jboss-log4j.xml.
-</ul>
-
 <h2><a name="Other">Other Issues</a></h2>
 <ul>
     <li>TEIID-1170 - correlated subqueries are not allowed in UPDATEs or DELETEs against internal Teiid tables (internal materialized views or temporary tables).
@@ -189,12 +167,6 @@ temporary table access.
 <h4>from 7.0</h4>
 <ul>
   <li>Fixed xsd type handling for SQL/XML and XML document models.  xsd:date, xsd:dateTime, and xsd:time types will now all be displayed using the GMT timezone (Z).  SQL types, such as timestamp, used for an XMLTABLE column will now expect their values to be in the form of the corresponding xsd type.
-</ul>
-<h4>From 6.2</h4>
-<ul>
-  <li>Start time is now significantly longer due to the container deployment.  However many operations can be performed on configruation files that will trigger a redeployment without the need for a restart.
-  <li>Inversion of parse, format, and convert system functions is not used if it can be narrowing.  In situations where a predicate has the form: parseTime(column, 'format') = {t 'time value'} may lead to reduced performance, since
-      the parseTime function cannot be pushed down.  This should be addressed in future releases.   
 </ul>
 
 <h2><a name="LibraryUpdates">Thirdparty Library Updates</a></h2>
@@ -217,13 +189,6 @@ The following components have been updated:
 	<li>Netty was upgraded to 3.2.0	
 	<li>JDOM was removed.
 </ul>
-<h4>From 6.2</h4>
-<ul>
-	<li>Netty was upgraded to 3.1.5
-	<li>Saxon was upgraded to 9.1.0.8
-    <li>A 5.1 container's version of Arjuna is newer than what was previously included in Teiid 6.x.
-	<li>Various other dependencies have been removed as they are no longer needed or now provided by the container.
-</ul> 
 
 <h2><a name="Details">Detailed Release Notes</a></h2>
         Detailed Release Notes - Teiid - Version ${project.version}

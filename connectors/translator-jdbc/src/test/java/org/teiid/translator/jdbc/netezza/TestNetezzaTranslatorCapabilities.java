@@ -21,35 +21,25 @@
  */
 package org.teiid.translator.jdbc.netezza;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.unittest.FakeTranslationFactory;
-import org.teiid.dqp.internal.datamgr.FakeExecutionContextImpl;
 import org.teiid.language.Command;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslatedCommand;
-import org.teiid.translator.jdbc.TranslationHelper;
 
-public class TestNetezzaTranslatorCapabilities  extends TestCase {
+@SuppressWarnings("nls")
+public class TestNetezzaTranslatorCapabilities {
 
     private static NetezzaExecutionFactory TRANSLATOR;
-    private static ExecutionContext EMPTY_CONTEXT = new FakeExecutionContextImpl();
 
-    static {
-        try {
-            TRANSLATOR = new NetezzaExecutionFactory();        
-            TRANSLATOR.start();
-        } catch(TranslatorException e) {
-            e.printStackTrace();    
-        }
-    }
-
-    
-    private String getTestBQTVDB() {
-        return TranslationHelper.BQT_VDB; 
+    @BeforeClass public static void oneTimeSetup() throws TranslatorException { 
+        TRANSLATOR = new NetezzaExecutionFactory();        
+        TRANSLATOR.start();
     }
     
     public void helpTestVisitor(String input, String expectedOutput) throws TranslatorException {
@@ -198,7 +188,7 @@ public class TestNetezzaTranslatorCapabilities  extends TestCase {
     
     @Test public void testScalarSubQuery() throws Exception {
         String input = "select intkey, intnum from bqt1.smalla where intnum < (0.01 * (select sum(intnum) from bqt1.smalla ))"; 
-        String output = "SELECT SmallA.IntKey, SmallA.IntNum FROM SmallA WHERE SmallA.IntNum < (0.010000000000000 * (SELECT SUM(SmallA.IntNum) FROM SmallA))";  
+        String output = "SELECT SmallA.IntKey, SmallA.IntNum FROM SmallA WHERE SmallA.IntNum < (0.01 * (SELECT SUM(SmallA.IntNum) FROM SmallA))";  
 
         helpTestVisitor(
             input, 

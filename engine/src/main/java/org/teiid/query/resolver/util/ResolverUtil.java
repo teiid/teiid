@@ -22,19 +22,7 @@
 
 package org.teiid.query.resolver.util;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -57,33 +45,8 @@ import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.relational.rules.RuleChooseJoinStrategy;
 import org.teiid.query.optimizer.relational.rules.RuleRaiseAccess;
 import org.teiid.query.sql.LanguageObject;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.FromClause;
-import org.teiid.query.sql.lang.JoinPredicate;
-import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.Limit;
-import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.lang.UnaryFromClause;
-import org.teiid.query.sql.symbol.AbstractCaseExpression;
-import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.DerivedColumn;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
-import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.SelectSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 
@@ -483,7 +446,7 @@ public class ResolverUtil {
      * @since 4.3
      */
     private static Constant getProperlyTypedConstant(Object defaultValue,
-                                                Class parameterType)
+                                                Class<?> parameterType)
     throws QueryResolverException{
         try {
             Object newValue = DataTypeManager.transformValue(defaultValue, parameterType);

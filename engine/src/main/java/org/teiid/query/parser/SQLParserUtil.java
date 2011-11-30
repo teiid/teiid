@@ -30,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.teiid.core.util.Assertion;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.query.QueryPlugin;
@@ -48,6 +49,8 @@ import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.Statement;
 
 public class SQLParserUtil {
+	
+	public static final boolean PARSE_DECIMAL_AS_DOUBLE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.parseDecimalAsDouble", false); //$NON-NLS-1$
 	
 	String matchesAny(String arg, String ... expected) {
 		for (String string : expected) {

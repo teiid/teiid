@@ -664,7 +664,7 @@ public class TestProcessor {
         
         // Create expected results
         List[] expected = new List[] { 
-            Arrays.asList(new Object[] { new Integer(0), new Integer(3), new Long(7), new Double(1.1666666666666667), new Long(6), new Double(1.5) }),
+            Arrays.asList(new Object[] { new Integer(0), new Integer(3), new Long(7), new BigDecimal("1.1666666666666667"), new Long(6), new BigDecimal(1.5) }),
         };    
     
         // Construct data manager with data
@@ -4180,7 +4180,7 @@ public class TestProcessor {
         
        // Create expected results
        List[] expected = new List[] { 
-           Arrays.asList(new Object[] { new Integer(1), Boolean.TRUE, new Double(2.0), TimestampUtil.createDate(103, 10, 4)  })
+           Arrays.asList(new Object[] { new Integer(1), Boolean.TRUE, new BigDecimal("2.0"), TimestampUtil.createDate(103, 10, 4)  })
        };    
     
        // Construct data manager with data
@@ -4772,7 +4772,7 @@ public class TestProcessor {
         
         // Create expected results
         List[] expected = new List[] { 
-            Arrays.asList(new Object[] { new Double(1.5), new Double(1.5), new Double(1.5), new Double(1.5), new Double(1.5), new Double(1.5), new Double(1.5), new BigDecimal("1.500000000"), new BigDecimal("1.500000000") }),  //$NON-NLS-1$//$NON-NLS-2$
+            Arrays.asList(new Object[] { new BigDecimal(1.5), new BigDecimal(1.5), new Double(1.5), new BigDecimal(1.5), new Double(1.5), new BigDecimal(1.5), new BigDecimal(1.5), new BigDecimal(1.5), new BigDecimal(1.5) }),  //$NON-NLS-1$//$NON-NLS-2$
         };    
     
         // Construct data manager with data

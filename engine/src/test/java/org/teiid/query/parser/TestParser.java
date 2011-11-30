@@ -5242,5 +5242,10 @@ public class TestParser {
 		String actualString = actualCommand.toString();
 		assertEquals("SELECT substring(RTRIM(MED.BATDAT), 4, 4) FROM FCC.MEDMAS AS MED", actualString);
     }
+    
+    @Test public void testExactFixedPoint() throws QueryParserException {
+		Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT 1.1", new ParseInfo());
+		assertEquals(DataTypeManager.DefaultDataClasses.BIG_DECIMAL, ((Expression)actualCommand.getSelect().getSymbol(0)).getType());
+    }
 
 }

@@ -54,7 +54,7 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "nls"})
 public class TestGroupingNode {
 
 	public static FakeTupleSource createTupleSource1() { 
@@ -158,14 +158,14 @@ public class TestGroupingNode {
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { null, new Integer(2), new Integer(1), new Integer(1), new Long(3), new Long(3), new Double(3.0), new Double(3.0), new Integer(3), new Integer(3), new Integer(3), new Integer(3) }),
-            Arrays.asList(new Object[] { new Integer(0), new Integer(1), new Integer(1), new Integer(1), new Long(4), new Long(4), new Double(4.0), new Double(4.0), new Integer(4), new Integer(4), new Integer(4), new Integer(4) }),
-            Arrays.asList(new Object[] { new Integer(1), new Integer(1), new Integer(1), new Integer(1), new Long(2), new Long(2), new Double(2.0), new Double(2.0), new Integer(2), new Integer(2), new Integer(2), new Integer(2) }),
-            Arrays.asList(new Object[] { new Integer(2), new Integer(4), new Integer(4), new Integer(2), new Long(5), new Long(3), new Double(1.25), new Double(1.5), new Integer(1), new Integer(1), new Integer(2), new Integer(2) }),
-            Arrays.asList(new Object[] { new Integer(3), new Integer(1), new Integer(1), new Integer(1), new Long(0), new Long(0), new Double(0.0), new Double(0.0), new Integer(0), new Integer(0), new Integer(0), new Integer(0) }),
-            Arrays.asList(new Object[] { new Integer(4), new Integer(3), new Integer(2), new Integer(2), new Long(5), new Long(5), new Double(2.5), new Double(2.5), new Integer(2), new Integer(2), new Integer(3), new Integer(3) }),
-            Arrays.asList(new Object[] { new Integer(5), new Integer(1), new Integer(1), new Integer(1), new Long(3), new Long(3), new Double(3.0), new Double(3.0), new Integer(3), new Integer(3), new Integer(3), new Integer(3) }),
-            Arrays.asList(new Object[] { new Integer(6), new Integer(2), new Integer(2), new Integer(2), new Long(7), new Long(7), new Double(3.5), new Double(3.5), new Integer(3), new Integer(3), new Integer(4), new Integer(4) })
+            Arrays.asList(new Object[] { null, new Integer(2), new Integer(1), new Integer(1), new Long(3), new Long(3), new BigDecimal(3.0), new BigDecimal(3.0), new Integer(3), new Integer(3), new Integer(3), new Integer(3) }),
+            Arrays.asList(new Object[] { new Integer(0), new Integer(1), new Integer(1), new Integer(1), new Long(4), new Long(4), new BigDecimal(4.0), new BigDecimal(4.0), new Integer(4), new Integer(4), new Integer(4), new Integer(4) }),
+            Arrays.asList(new Object[] { new Integer(1), new Integer(1), new Integer(1), new Integer(1), new Long(2), new Long(2), new BigDecimal(2.0), new BigDecimal(2.0), new Integer(2), new Integer(2), new Integer(2), new Integer(2) }),
+            Arrays.asList(new Object[] { new Integer(2), new Integer(4), new Integer(4), new Integer(2), new Long(5), new Long(3), new BigDecimal(1.25), new BigDecimal(1.5), new Integer(1), new Integer(1), new Integer(2), new Integer(2) }),
+            Arrays.asList(new Object[] { new Integer(3), new Integer(1), new Integer(1), new Integer(1), new Long(0), new Long(0), new BigDecimal(0.0), new BigDecimal(0.0), new Integer(0), new Integer(0), new Integer(0), new Integer(0) }),
+            Arrays.asList(new Object[] { new Integer(4), new Integer(3), new Integer(2), new Integer(2), new Long(5), new Long(5), new BigDecimal(2.5), new BigDecimal(2.5), new Integer(2), new Integer(2), new Integer(3), new Integer(3) }),
+            Arrays.asList(new Object[] { new Integer(5), new Integer(1), new Integer(1), new Integer(1), new Long(3), new Long(3), new BigDecimal(3.0), new BigDecimal(3.0), new Integer(3), new Integer(3), new Integer(3), new Integer(3) }),
+            Arrays.asList(new Object[] { new Integer(6), new Integer(2), new Integer(2), new Integer(2), new Long(7), new Long(7), new BigDecimal(3.5), new BigDecimal(3.5), new Integer(3), new Integer(3), new Integer(4), new Integer(4) })
         };
         
         helpProcess(mgr, node, context, expected, null);
@@ -243,7 +243,7 @@ public class TestGroupingNode {
         };
         
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { new BigDecimal("10.0"), new BigDecimal("2.000000000") }) //$NON-NLS-1$ //$NON-NLS-2$
+            Arrays.asList(new Object[] { new BigDecimal("10.0"), new BigDecimal("2.0") }) //$NON-NLS-1$ //$NON-NLS-2$
         };
                 
         List symbols = new ArrayList();
@@ -283,8 +283,8 @@ public class TestGroupingNode {
         };
         
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { new Integer(1), new BigDecimal("1.0"), new BigDecimal("0.500000000") }), //$NON-NLS-1$ //$NON-NLS-2$
-            Arrays.asList(new Object[] { new Integer(2), new BigDecimal("9.0"), new BigDecimal("3.000000000") }) //$NON-NLS-1$ //$NON-NLS-2$
+            Arrays.asList(new Object[] { new Integer(1), new BigDecimal("1.0"), new BigDecimal(.5) }), //$NON-NLS-1$ 
+            Arrays.asList(new Object[] { new Integer(2), new BigDecimal("9.0"), new BigDecimal("3.0") }) //$NON-NLS-1$ 
         };
                 
         List symbols = new ArrayList();
