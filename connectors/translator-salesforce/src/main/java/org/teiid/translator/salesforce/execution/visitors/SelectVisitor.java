@@ -61,7 +61,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	public void visit(Select query) {
 		super.visit(query);
 		if (query.isDistinct()) {
-			exceptions.add(new TranslatorException(SalesForcePlugin.Util.getString("SelectVisitor.distinct.not.supported")));
+			exceptions.add(new TranslatorException(SalesForcePlugin.Util.getString("SelectVisitor.distinct.not.supported"))); //$NON-NLS-1$
 		}
 		selectSymbols = query.getDerivedColumns();
 		selectSymbolCount = selectSymbols.size();
@@ -78,10 +78,10 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 				selectSymbolNameToIndex .put(qualifiedName, index);
 				String nameInSource = element.getNameInSource();
 				if (null == nameInSource || nameInSource.length() == 0) {
-					exceptions.add(new TranslatorException("name in source is null or empty for column "+ symbol.toString()));
+					exceptions.add(new TranslatorException("name in source is null or empty for column "+ symbol.toString())); //$NON-NLS-1$
 					continue;
 				}
-				if (nameInSource.equalsIgnoreCase("id")) {
+				if (nameInSource.equalsIgnoreCase("id")) { //$NON-NLS-1$
 					idIndex = index;
 				}
 			}
@@ -96,7 +96,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	        String supportsQuery = table.getProperties().get(Constants.SUPPORTS_QUERY);
 	        objectSupportsRetrieve = Boolean.valueOf(table.getProperties().get(Constants.SUPPORTS_RETRIEVE));
 	        if (!Boolean.valueOf(supportsQuery)) {
-	            throw new TranslatorException(table.getNameInSource() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported"));
+	            throw new TranslatorException(table.getNameInSource() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported")); //$NON-NLS-1$ //$NON-NLS-2$
 	        }
 			loadColumnMetadata(obj);
 		} catch (TranslatorException ce) {
@@ -118,7 +118,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 
 	public String getQuery() throws TranslatorException {
 		if (!exceptions.isEmpty()) {
-			throw ((TranslatorException) exceptions.get(0));
+			throw exceptions.get(0);
 		}
 		StringBuffer result = new StringBuffer();
 		result.append(SELECT).append(SPACE);
@@ -137,9 +137,9 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		boolean firstTime = true;
 		for (DerivedColumn symbol : selectSymbols) {
 			if (!firstTime) {
-				result.append(", ");
+				result.append(", "); //$NON-NLS-1$
 			} else {
-				firstTime = false;
+				firstTime = false; 
 			}
 			Expression expression = symbol.getExpression();
 			if (expression instanceof ColumnReference) {
@@ -153,7 +153,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 					if(parent instanceof Table) {
 						table = (Table)parent;
 					} else {
-						throw new TranslatorException("Could not resolve Table for column " + element.getName());
+						throw new TranslatorException("Could not resolve Table for column " + element.getName()); //$NON-NLS-1$
 					}
 				}
 				result.append(table.getNameInSource());
@@ -209,19 +209,19 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	}
 
 
-	public List<String> getIdInCriteria() throws TranslatorException {
+	public List<String> getIdInCriteria() {
 		assertRetrieveValidated();
 		List<Expression> expressions = this.idInCriteria.getRightExpressions();
 		List<String> result = new ArrayList<String>(expressions.size());
 		for(int i = 0; i < expressions.size(); i++) {
-			result.add(getValue(expressions.get(i)));
+			result.add(getValue(expressions.get(i), true));
 		}      
 		return result;
 	}
 
 	private void assertRetrieveValidated() throws AssertionError {
 		if(!hasOnlyIDCriteria()) {
-			throw new AssertionError("Must call hasOnlyIdInCriteria() before this method");
+			throw new AssertionError("Must call hasOnlyIdInCriteria() before this method"); //$NON-NLS-1$
 		}
 	}
 

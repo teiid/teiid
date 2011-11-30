@@ -21,8 +21,8 @@
  */
 package org.teiid.translator.salesforce;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.teiid.translator.TranslatorException;
 
@@ -56,16 +56,14 @@ public class Util {
 		}
 	}
 
-	public static SimpleDateFormat getSalesforceDateTimeFormat() {
-			return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS"); //$NON-NLS-1$
-	}
+	private static String timeZone;
 	
-	public static SimpleDateFormat getTimeZoneOffsetFormat() {
-		return new SimpleDateFormat("Z"); //$NON-NLS-1$
+	public static String getDefaultTimeZoneString() {
+		if (timeZone == null) {
+			String s = new SimpleDateFormat("Z").format(new Date(0)); //$NON-NLS-1$
+			timeZone = s.substring(0, 3) + ':'  + s.substring(3, 5);
+		}
+		return timeZone;
 	}
 
-	public static DateFormat getSalesforceDateFormat() {
-		return new SimpleDateFormat("yyyy-MM-dd"); //$NON-NLS-1$
-	}
-	
 }

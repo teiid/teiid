@@ -21,18 +21,23 @@
  */
 package org.teiid.translator.salesforce.execution;
 
+import java.sql.Time;
 import java.sql.Timestamp;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.resource.ResourceException;
 
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.AggregateFunction;
 import org.teiid.language.Join;
 import org.teiid.language.QueryExpression;
@@ -51,7 +56,6 @@ import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.SalesForcePlugin;
 import org.teiid.translator.salesforce.SalesforceConnection;
-import org.teiid.translator.salesforce.Util;
 import org.teiid.translator.salesforce.execution.visitors.JoinQueryVisitor;
 import org.teiid.translator.salesforce.execution.visitors.SelectVisitor;
 import org.w3c.dom.Element;
@@ -63,6 +67,8 @@ import com.sforce.soap.partner.sobject.SObject;
 
 public class QueryExecutionImpl implements ResultSetExecution {
 
+	private static final Pattern dateTimePattern = Pattern.compile("^(?:(\\d{4}-\\d{2}-\\d{2})T)?(\\d{2}:\\d{2}:\\d{2}(?:.\\d+)?)(.*)"); //$NON-NLS-1$
+	
 	private static final String SF_ID = "sf:Id"; //$NON-NLS-1$
 
 	private static final String SF_TYPE = "sf:type"; //$NON-NLS-1$
@@ -78,7 +84,6 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	private RuntimeMetadata metadata;
 
 	private ExecutionContext context;
-
 	
 	private SelectVisitor visitor;
 	
@@ -102,6 +107,8 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	Map<String, Map<String,Integer>> sObjectToResponseField = new HashMap<String, Map<String,Integer>>();
 	
 	private int topResultIndex = 0;
+	
+	private Calendar cal;
 	
 	public QueryExecutionImpl(QueryExpression command, SalesforceConnection connection, RuntimeMetadata metadata, ExecutionContext context) {
 		this.connection = connection;
@@ -355,7 +362,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		}
 	}
 
-	private void logFields(String sObjectName, List<Object> fields) throws TranslatorException {
+	private void logFields(String sObjectName, List<Object> fields) {
 		if (!LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
 			return;
 		}
@@ -369,53 +376,75 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		
 	}
 
+	/**
+	 * TODO: the logic here should be aware of xsi:type information and use a standard conversion
+	 * library.  Conversion to teiid types should then be a secondary effort - and will be automatically handled above here.
+	 */
 	@SuppressWarnings("unchecked")
 	private Object getCellDatum(Column element, Element elem) throws TranslatorException {
 		if(!element.getNameInSource().equals(elem.getLocalName())) {
 			throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.column.mismatch1") + element.getNameInSource() + SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.column.mismatch2") + elem.getLocalName()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
+		if (Boolean.parseBoolean(elem.getAttribute(XSI_NIL))) {
+			return null;
+		}
 		String value = elem.getTextContent();
-		Object result = null;
+		Object result = value;
 		Class type = element.getJavaType();
 		
 		if(type.equals(String.class)) {
 			result = value;
-		}
-		else if (type.equals(Boolean.class)) {
-			result = Boolean.valueOf(value);
-		} else if (type.equals(Double.class)) {
-			if (null != value) {
-				if(!value.isEmpty()) {
-					result = Double.valueOf(value);
-				}
-			}
-		} else if (type.equals(Integer.class)) {
-			if (null != value) {
-				if(!value.isEmpty()) {
-					result = Integer.valueOf(value);
-				}
-			}
-		} else if (type.equals(java.sql.Date.class)) {
-			if (null != value) {
-				if(!value.isEmpty()) {
-					result = java.sql.Date.valueOf(value);
-				}
-			}
-		} else if (type.equals(java.sql.Timestamp.class)) {
-			if (null != value) {
-				if(!value.isEmpty()) { 
-					try {
-						Date date = Util.getSalesforceDateTimeFormat().parse(value);
-						result = new Timestamp(date.getTime());
-					} catch (ParseException e) {
-						throw new TranslatorException(e, SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.datatime.parse") + value); //$NON-NLS-1$
-					}
-				}
-			}
-		} else {
+		} else if (!value.isEmpty()) {
 			result = value;
+			if (type.equals(java.sql.Timestamp.class) || type.equals(java.sql.Time.class)) {
+				if (cal == null) {
+					cal = Calendar.getInstance();
+				}
+				result = parseDateTime(value, type, cal);
+			}
 		}
 		return result;
+	}
+
+	static Object parseDateTime(String value, Class<?> type, Calendar cal)
+			throws TranslatorException {
+		try {
+			Matcher m = dateTimePattern.matcher(value);
+			if (m.matches()) {
+				String date = m.group(1);
+				String time = m.group(2);
+				String timeZone = m.group(3);
+				Date d = null;
+				if (date == null) {
+					//sql times don't care about fractional seconds
+					int milli = time.lastIndexOf('.');
+					if (milli > 0) {
+						time = time.substring(0, milli);
+					}
+					d = Time.valueOf(time);
+				} else {
+					d = Timestamp.valueOf(date + " " + time); //$NON-NLS-1$
+				}
+				TimeZone tz = null;
+				if (timeZone != null) {
+					if (timeZone.equals("Z")) { //$NON-NLS-1$
+						tz = TimeZone.getTimeZone("GMT"); //$NON-NLS-1$
+					} else if (timeZone.contains(":")) { //$NON-NLS-1$
+						tz = TimeZone.getTimeZone("GMT" + timeZone); //$NON-NLS-1$
+					} else {
+						//this is probably an exceptional case
+						tz = TimeZone.getTimeZone(timeZone); 
+					}
+					cal.setTimeZone(tz);
+				} else {
+					cal = null;
+				}
+				return TimestampWithTimezone.create(d, TimeZone.getDefault(), cal, type);
+			}
+			throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.datatime.parse") + value); //$NON-NLS-1$
+		} catch (IllegalArgumentException e) {
+			throw new TranslatorException(e, SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.datatime.parse") + value); //$NON-NLS-1$
+		}
 	}
 	
 	private boolean isSObject(Element element) {
