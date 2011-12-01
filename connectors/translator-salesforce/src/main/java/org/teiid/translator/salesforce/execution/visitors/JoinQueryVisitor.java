@@ -63,39 +63,34 @@ public class JoinQueryVisitor extends SelectVisitor {
 
 	@Override
 	public void visit(Comparison criteria) {
-		
 		// Find the criteria that joins the two tables
-		try {
-			Expression rExp = criteria.getRightExpression();
-			if (rExp instanceof ColumnReference) {
-				Expression lExp = criteria.getLeftExpression();
-				if (isIdColumn(rExp) || isIdColumn(lExp)) {
+		Expression rExp = criteria.getRightExpression();
+		if (rExp instanceof ColumnReference) {
+			Expression lExp = criteria.getLeftExpression();
+			if (isIdColumn(rExp) || isIdColumn(lExp)) {
 
-					Column rColumn = ((ColumnReference) rExp).getMetadataObject();
-					String rTableName = rColumn.getParent().getNameInSource();
+				Column rColumn = ((ColumnReference) rExp).getMetadataObject();
+				String rTableName = rColumn.getParent().getNameInSource();
 
-					Column lColumn = ((ColumnReference) lExp).getMetadataObject();
-					String lTableName = lColumn.getParent().getNameInSource();
+				Column lColumn = ((ColumnReference) lExp).getMetadataObject();
+				String lTableName = lColumn.getParent().getNameInSource();
 
-					if (leftTableInJoin.getNameInSource().equals(rTableName)
-							|| leftTableInJoin.getNameInSource().equals(lTableName)
-							&& rightTableInJoin.getNameInSource().equals(rTableName)
-							|| rightTableInJoin.getNameInSource().equals(lTableName)
-							&& !rTableName.equals(lTableName)) {
-						// This is the join criteria, the one that is the ID is the parent.
-						Expression fKey = !isIdColumn(lExp) ? lExp : rExp; 
-						table = childTable =  (Table)((ColumnReference) fKey).getMetadataObject().getParent();
-					} else {
-						// Only add the criteria to the query if it is not the join criteria.
-						// The join criteria is implicit in the salesforce syntax.
-						super.visit(criteria);
-					}
+				if (leftTableInJoin.getNameInSource().equals(rTableName)
+						|| leftTableInJoin.getNameInSource().equals(lTableName)
+						&& rightTableInJoin.getNameInSource().equals(rTableName)
+						|| rightTableInJoin.getNameInSource().equals(lTableName)
+						&& !rTableName.equals(lTableName)) {
+					// This is the join criteria, the one that is the ID is the parent.
+					Expression fKey = !isIdColumn(lExp) ? lExp : rExp; 
+					table = childTable =  (Table)((ColumnReference) fKey).getMetadataObject().getParent();
+				} else {
+					// Only add the criteria to the query if it is not the join criteria.
+					// The join criteria is implicit in the salesforce syntax.
+					super.visit(criteria);
 				}
-			} else {
-				super.visit(criteria);
 			}
-		} catch (TranslatorException e) {
-			exceptions.add(e);
+		} else {
+			super.visit(criteria);
 		}
 	}
 

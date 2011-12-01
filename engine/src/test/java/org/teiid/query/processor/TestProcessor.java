@@ -32,6 +32,7 @@ import java.sql.Timestamp;
 import java.util.*;
 
 import org.junit.Test;
+import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
@@ -7541,6 +7542,17 @@ public class TestProcessor {
         ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example4(), new DefaultCapabilitiesFinder(caps));
         
         helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test(expected=QueryPlannerException.class) public void testUpdateCompensationNotPossible() throws Exception {
+    	String sql = "update pm1.g1 set e4 = (select e4 from pm1.g2 where pm1.g2.e2 = pm1.g1.e2) where e1 = 'a'"; //$NON-NLS-1$
+    	
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, false);
+        helpGetPlan(helpParse(sql), RealMetadataFactory.example4(), new DefaultCapabilitiesFinder(caps), createCommandContext());
     }
     
     @Test public void testDupSelect() throws Exception {

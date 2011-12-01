@@ -21,14 +21,7 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ALLOWED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.READ_ONLY;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REPLY_PROPERTIES;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -1190,6 +1183,10 @@ class AssignDataSource extends VDBOperations {
 			source.setTranslatorName(translatorName);
 			source.setConnectionJndiName(dsName);
 			save(vdb);
+			ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.VDB_STATUS_CHECKER);
+			VDBStatusChecker vsc = VDBStatusChecker.class.cast(sc.getValue());
+			// enforce the changes in the engine.
+			vsc.dataSourceReplaced(vdb.getName(), vdb.getVersion(), modelName, sourceName, translatorName, dsName);
 		} catch (AdminProcessingException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
 		}

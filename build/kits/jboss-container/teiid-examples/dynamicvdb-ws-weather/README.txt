@@ -38,18 +38,20 @@ select t.* from
 2. SOAP11 RPC call providing all of the parameter values for the invoke procedure.  With a SOAP
 invocation, the action is used to convey the SOAPAction header value if needed.  Also note
 the use of the endpoint here with an absolute URL, which will be used instead of the default 
-on the datasource. 
+on the datasource.  We are also using the DefaultServiceMode of MESSAGE (see the weather-vdb.xml file)
+to use the full SOAP message request and response.
 
 select xmlserialize(document w.result as string) from 
-	(call weather.invoke(action=>'http://www.weather.gov/forecasts/xml/DWMLgen/wsdl/ndfdXML.wsdl#LatLonListZipCode', 
-		endpoint=>'http://www.weather.gov/forecasts/xml/SOAP_server/ndfdXMLserver.php',
+	(call weather.invoke(action=>'http://graphical.weather.gov/xml/SOAP_server/ndfdXMLserver.php#LatLonListZipCode', 
+		endpoint=>'http://graphical.weather.gov/xml/SOAP_server/ndfdXMLserver.php',
 		binding=>'SOAP11',
 		request=>'
-			<ns1:LatLonListZipCode xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
-					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" 
-					xmlns:ns1="http://www.weather.gov/forecasts/xml/DWMLgen/wsdl/ndfdXML.wsdl">
-				<zipCodeList xsi:type="ns2:zipCodeListType" xmlns:ns2="http://www.weather.gov/forecasts/xml/DWMLgen/schema/DWML.xsd">63303</zipCodeList>
-			</ns1:LatLonListZipCode>')) as w
+			<SOAP-ENV:Envelope SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/">
+				<SOAP-ENV:Body>
+					<ns8077:LatLonListZipCode xmlns:ns8077="uri:DWMLgen">
+						<listZipCodeList xsi:type="xsd:string">20910 25414</listZipCodeList>
+					</ns8077:LatLonListZipCode>
+				</SOAP-ENV:Body>
+			</SOAP-ENV:Envelope>')) as w
 
-See the DatabaseMetadata on the invoke procedure for a full description of the parameters.
-
+See the Reference or retrieve the JDBC DatabaseMetadata on the invoke procedure for a full description of the parameters.

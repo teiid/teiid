@@ -96,7 +96,7 @@ class VDBService implements Service<VDBMetaData> {
 	public void start(StartContext context) throws StartException {
 		ConnectorManagerRepository cmr = new ConnectorManagerRepository();
 		TranslatorRepository repo = new TranslatorRepository();
-
+		this.vdb.addAttchment(TranslatorRepository.class, repo);
 		// check if this is a VDB with index files, if there are then build the TransformationMetadata
 		UDFMetaData udf = this.vdb.getAttachment(UDFMetaData.class);
 		IndexMetadataFactory indexFactory = this.vdb.getAttachment(IndexMetadataFactory.class);

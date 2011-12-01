@@ -2,7 +2,7 @@
 <vdb name="weather" version="1">
 
 	<!-- 
-		See the dynamicvdb Portfolio example, or http://community.jboss.org/wiki/DynamicVDBinTeiid70 
+		See the dynamicvdb Portfolio example, or the Reference 
 		for more information on the format of a vdb.xml file.
 	 -->
 
@@ -16,6 +16,7 @@
 
     <translator name="MessageWeather" type="ws">
 		<property name="DefaultBinding" value="HTTP"/>
+		<property name="DefaultServiceMode" value="MESSAGE"/>
     </translator>
 
 </vdb>

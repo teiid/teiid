@@ -344,7 +344,6 @@ public abstract class Command implements LanguageObject {
     
     protected boolean sameOptionAndHint(Command cmd) {
     	return EquivalenceUtil.areEqual(this.cacheHint, cmd.cacheHint) &&
-    	EquivalenceUtil.areEqual(this.cacheHint, cmd.cacheHint) &&
     	EquivalenceUtil.areEqual(this.option, cmd.option);
     }
     

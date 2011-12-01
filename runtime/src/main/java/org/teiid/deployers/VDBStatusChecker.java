@@ -23,24 +23,27 @@ package org.teiid.deployers;
 
 import java.util.LinkedList;
 import java.util.concurrent.Executor;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
+import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.core.TeiidException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
+import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.runtime.RuntimePlugin;
+import org.teiid.translator.ExecutionFactory;
 
 
-public class VDBStatusChecker {
+public abstract class VDBStatusChecker {
 	private static final String JAVA_CONTEXT = "java:/"; //$NON-NLS-1$
 	private VDBRepository vdbRepository;
+	private TranslatorRepository translatorRepository;
 	
 	public VDBStatusChecker(VDBRepository vdbRepository) {
 		this.vdbRepository = vdbRepository;
@@ -66,6 +69,63 @@ public class VDBStatusChecker {
 			dataSourceName = dataSourceName.substring(5);
 		}
 		resourceremoved(dataSourceName, false);
+	}	
+
+	public void dataSourceReplaced(String vdbName, int vdbVersion,
+			String modelName, String sourceName, String translatorName,
+			String dsName) throws AdminProcessingException {
+		if (dsName.startsWith(JAVA_CONTEXT)) {
+			dsName = dsName.substring(5);
+		}		
+		
+		VDBMetaData vdb = this.vdbRepository.getVDB(vdbName, vdbVersion);
+		ModelMetaData model = vdb.getModel(modelName);
+
+		synchronized (vdb) {
+			ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
+			ConnectorManager cm = cmr.getConnectorManager(sourceName);
+			ExecutionFactory<Object, Object> ef = cm.getExecutionFactory();
+			
+			boolean dsReplaced = false;
+			if (!cm.getConnectionName().equals(dsName)){
+				vdb.setStatus(VDB.Status.INACTIVE);
+				String msg = RuntimePlugin.Util.getString("datasource_replaced", vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName), dsName); //$NON-NLS-1$
+				model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
+				cm = new ConnectorManager(translatorName, dsName); 
+				cm.setExecutionFactory(ef);
+				cm.setModelName(modelName);
+				cmr.addConnectorManager(sourceName, cm);
+				dsReplaced = true;
+			}
+			
+			if (!cm.getTranslatorName().equals(translatorName)) {
+				try {
+					TranslatorRepository repo = vdb.getAttachment(TranslatorRepository.class);
+					VDBTranslatorMetaData t = null;
+					if (repo != null) {
+						t = repo.getTranslatorMetaData(translatorName);
+					}
+					if (t == null) {
+						t = this.translatorRepository.getTranslatorMetaData(translatorName);
+					}
+					if (t == null) {
+						throw new AdminProcessingException(RuntimePlugin.Util.getString("translator_not_found", vdb.getName(), vdb.getVersion(), translatorName)); //$NON-NLS-1$
+					}
+					ef = TranslatorUtil.buildExecutionFactory(t, Thread.currentThread().getContextClassLoader());
+					cm.setExecutionFactory(ef);
+				} catch (TeiidException e) {
+					throw new AdminProcessingException(e.getCause());
+				}
+			}
+			
+			if (dsReplaced) {
+				resourceAdded(dsName, false);
+			}
+		}
+	}
+	
+	public void setVDBRepository(VDBRepository repo) {
+		this.vdbRepository = repo;
 	}	
 	
 	public void resourceAdded(String resourceName, boolean translator) {
@@ -172,8 +232,9 @@ public class VDBStatusChecker {
 		return null;
 	}
 	
+	public abstract Executor getExecutor();
 	
-	public Executor getExecutor() {
-		return new ThreadPoolExecutor(1, 1, 1, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
+	public void setTranslatorRepository(TranslatorRepository repo) {
+		this.translatorRepository = repo;
 	}
 }

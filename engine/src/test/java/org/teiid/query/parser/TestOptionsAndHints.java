@@ -30,26 +30,10 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryParserException;
-import org.teiid.query.sql.lang.AbstractCompareCriteria;
-import org.teiid.query.sql.lang.CacheHint;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.Delete;
-import org.teiid.query.sql.lang.From;
-import org.teiid.query.sql.lang.FromClause;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.JoinPredicate;
-import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.Option;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.SubqueryFromClause;
-import org.teiid.query.sql.lang.UnaryFromClause;
-import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
+import org.teiid.query.sql.proc.Block;
+import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
@@ -960,6 +944,13 @@ public class TestOptionsAndHints {
         query.setFrom(from);           
         query.setCacheHint(new CacheHint());
         TestParser.helpTest(sql, "/*+ cache */ SELECT * FROM t1", query);         //$NON-NLS-1$
+    }
+    
+    @Test public void testCacheProc() {
+        String sql = "/*+ cache */ CREATE VIRTUAL PROCEDURE BEGIN END"; //$NON-NLS-1$
+        CreateProcedureCommand command = new CreateProcedureCommand(new Block());
+        command.setCacheHint(new CacheHint());
+        TestParser.helpTest(sql, "/*+ cache */ CREATE VIRTUAL PROCEDURE\nBEGIN\nEND", command);         //$NON-NLS-1$
     }
     
     @Test public void testCacheScope() {

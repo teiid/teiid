@@ -24,18 +24,21 @@ package org.teiid.translator.salesforce.execution.visitors;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.AndOr;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Comparison;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.In;
+import org.teiid.language.IsNull;
 import org.teiid.language.Like;
 import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
@@ -80,7 +83,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
     protected Table table;
     boolean onlyIDCriteria;
     protected Boolean queryAll = Boolean.FALSE;
-	
+    
     // support for invoking a retrieve when possible.
     protected In idInCriteria = null;
 	
@@ -98,31 +101,26 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 
     @Override
     public void visit( Comparison criteria ) {
-        super.visit(criteria);
-        try {
-            addCompareCriteria(criteriaList, criteria);
-            boolean isAcceptableID = (Operator.EQ == criteria.getOperator() && isIdColumn(criteria.getLeftExpression()));
-            setHasCriteria(true, isAcceptableID);
-            if (isAcceptableID) {
-            	this.idInCriteria = new In(criteria.getLeftExpression(), Arrays.asList(criteria.getRightExpression()), false);
-            }
-        } catch (TranslatorException e) {
-            exceptions.add(e);
+        addCompareCriteria(criteria);
+        boolean isAcceptableID = (Operator.EQ == criteria.getOperator() && isIdColumn(criteria.getLeftExpression()));
+        setHasCriteria(true, isAcceptableID);
+        if (isAcceptableID) {
+        	this.idInCriteria = new In(criteria.getLeftExpression(), Arrays.asList(criteria.getRightExpression()), false);
         }
     }
-
+    
+    public void visit(IsNull obj) {
+    	visit(new Comparison(obj.getExpression(), new Literal(null, obj.getExpression().getType()), obj.isNegated()?Comparison.Operator.NE:Comparison.Operator.EQ));
+    }
+    
     @Override
     public void visit( Like criteria ) {
-        try {
-            if (isIdColumn(criteria.getLeftExpression())) {
-                TranslatorException e = new TranslatorException(SalesForcePlugin.Util.getString("CriteriaVisitor.LIKE.not.supported.on.Id")); //$NON-NLS-1$
-                exceptions.add(e);
-            }
-            if (isMultiSelectColumn(criteria.getLeftExpression())) {
-                TranslatorException e = new TranslatorException(SalesForcePlugin.Util.getString("CriteriaVisitor.LIKE.not.supported.on.multiselect")); //$NON-NLS-1$
-                exceptions.add(e);
-            }
-        } catch (TranslatorException e) {
+        if (isIdColumn(criteria.getLeftExpression())) {
+            TranslatorException e = new TranslatorException(SalesForcePlugin.Util.getString("CriteriaVisitor.LIKE.not.supported.on.Id")); //$NON-NLS-1$
+            exceptions.add(e);
+        }
+        if (isMultiSelectColumn(criteria.getLeftExpression())) {
+            TranslatorException e = new TranslatorException(SalesForcePlugin.Util.getString("CriteriaVisitor.LIKE.not.supported.on.multiselect")); //$NON-NLS-1$
             exceptions.add(e);
         }
         boolean negated = criteria.isNegated();
@@ -135,7 +133,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         // don't check if it's ID, Id LIKE '123%' still requires a query
         setHasCriteria(true, false);
     }
-    
+        
     @Override
     public void visit(AndOr obj) {
     	List<String> savedCriteria = new LinkedList<String>();
@@ -170,23 +168,19 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 
     @Override
     public void visit( In criteria ) {
-        try {
-            Expression lExpr = criteria.getLeftExpression();
-            if (lExpr instanceof ColumnReference) {
-            	ColumnReference cr = (ColumnReference)lExpr;
-                Column column = cr.getMetadataObject();
-                if (column != null && (MULTIPICKLIST.equalsIgnoreCase(column.getNativeType()) || RESTRICTEDMULTISELECTPICKLIST.equalsIgnoreCase(column.getNativeType()))) {
-                    appendMultiselectIn(column, criteria);
-                } else {
-                    appendCriteria(criteria);
-                }
+        Expression lExpr = criteria.getLeftExpression();
+        if (lExpr instanceof ColumnReference) {
+        	ColumnReference cr = (ColumnReference)lExpr;
+            Column column = cr.getMetadataObject();
+            if (column != null && (MULTIPICKLIST.equalsIgnoreCase(column.getNativeType()) || RESTRICTEDMULTISELECTPICKLIST.equalsIgnoreCase(column.getNativeType()))) {
+                appendMultiselectIn(column, criteria);
             } else {
-            	appendCriteria(criteria);
+                appendCriteria(criteria);
             }
-            setHasCriteria(true, isIdColumn(criteria.getLeftExpression()));
-        } catch (TranslatorException e) {
-            exceptions.add(e);
+        } else {
+        	appendCriteria(criteria);
         }
+        setHasCriteria(true, isIdColumn(criteria.getLeftExpression()));
     }
 
     public void parseFunction( Function func ) {
@@ -215,7 +209,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
     }
 
     private void appendMultiselectIn( Column column,
-                                      In criteria ) throws TranslatorException {
+                                      In criteria ) {
         StringBuffer result = new StringBuffer();
         result.append(column.getNameInSource()).append(SPACE);
         if (criteria.isNegated()) {
@@ -270,9 +264,8 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         }
         criterion.append(CLOSE);
     }
-
-    protected void addCompareCriteria( List criteriaList,
-                                       Comparison compCriteria ) throws TranslatorException {
+    
+    protected void addCompareCriteria(Comparison compCriteria ) {
         Expression lExpr = compCriteria.getLeftExpression();
         if (lExpr instanceof Function) {
             parseFunction((Function)lExpr);
@@ -280,38 +273,13 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
             ColumnReference left = (ColumnReference)lExpr;
             Column column = left.getMetadataObject();
             String columnName = column.getNameInSource();
-            StringBuffer queryString = new StringBuffer();
-            queryString.append(column.getParent().getNameInSource());
-            queryString.append('.');
-            queryString.append(columnName).append(SPACE);
+            StringBuilder queryString = new StringBuilder();
+            appendColumnReference(queryString, left);
+            queryString.append(SPACE);
             queryString.append(comparisonOperators.get(compCriteria.getOperator()));
             queryString.append(' ');
             Expression rExp = compCriteria.getRightExpression();
-            if(rExp instanceof Literal) {
-            	Literal literal = (Literal)rExp;
-            	if (column.getJavaType().equals(Boolean.class)) {
-            		queryString.append(((Boolean)literal.getValue()).toString());
-            	} else if (column.getJavaType().equals(java.sql.Timestamp.class)) {
-            		Timestamp datetime = (java.sql.Timestamp)literal.getValue();
-            		String value = Util.getSalesforceDateTimeFormat().format(datetime);
-            		String zoneValue = Util.getTimeZoneOffsetFormat().format(datetime);
-            		queryString.append(value).append(zoneValue.subSequence(0, 3)).append(':').append(zoneValue.subSequence(3, 5));
-            	} else if (column.getJavaType().equals(java.sql.Time.class)) {
-            		String value = Util.getSalesforceDateTimeFormat().format((java.sql.Time)literal.getValue());
-            		queryString.append(value);
-            	} else if (column.getJavaType().equals(java.sql.Date.class)) {
-            		String value = Util.getSalesforceDateFormat().format((java.sql.Date)literal.getValue());
-            		queryString.append(value);
-            	} else {
-            		queryString.append(compCriteria.getRightExpression().toString());
-            	}
-            } else if(rExp instanceof ColumnReference) {
-            	ColumnReference right = (ColumnReference)lExpr;
-                column = left.getMetadataObject();
-                columnName = column.getNameInSource();
-                queryString.append(columnName);
-            }
-
+            queryString.append(getValue(rExp, false));
             criteriaList.add(queryString.toString());
 
             if (columnName.equals("IsDeleted")) { //$NON-NLS-1$
@@ -324,56 +292,86 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         }
     }
 
-    private void appendCriteria( In criteria ) throws TranslatorException {
+	private void appendColumnReference(StringBuilder queryString,
+			ColumnReference ref) {
+		queryString.append(ref.getMetadataObject().getParent().getNameInSource());
+		queryString.append('.');
+		queryString.append(ref.getMetadataObject().getNameInSource());
+	}
+
+    private void appendCriteria( In criteria ) {
         StringBuffer queryString = new StringBuffer();
         Expression leftExp = criteria.getLeftExpression();
         if(isIdColumn(leftExp)) {
         	idInCriteria  = criteria;
         }
-        queryString.append(getValue(leftExp));
+        queryString.append(getValue(leftExp, false));
         queryString.append(' ');
         if (criteria.isNegated()) {
             queryString.append("NOT "); //$NON-NLS-1$
         }
         queryString.append("IN"); //$NON-NLS-1$
         queryString.append('(');
-        Column column = ((ColumnReference)criteria.getLeftExpression()).getMetadataObject();
-        boolean timeColumn = isTimeColumn(column);
-        boolean first = true;
-        Iterator iter = criteria.getRightExpressions().iterator();
+        Iterator<Expression> iter = criteria.getRightExpressions().iterator();
         while (iter.hasNext()) {
-            if (!first) queryString.append(',');
-            if (!timeColumn) queryString.append('\'');
-            queryString.append(getValue((Expression)iter.next()));
-            if (!timeColumn) queryString.append('\'');
-            first = false;
+            queryString.append(getValue(iter.next(), false));
+            if (iter.hasNext()) {
+            	queryString.append(',');
+            }
         }
         queryString.append(')');
         criteriaList.add(queryString.toString());
     }
-
-    private boolean isTimeColumn( Column column ) throws TranslatorException {
-        boolean result = false;
-        if (column.getJavaType().equals(java.sql.Timestamp.class) || column.getJavaType().equals(java.sql.Time.class)
-            || column.getJavaType().equals(java.sql.Date.class)) {
-            result = true;
-        }
-        return result;
-    }
-
-    protected String getValue( Expression expr ) throws TranslatorException {
-        String result;
+    
+    protected String getValue( Expression expr, boolean raw) {
+        StringBuilder result = new StringBuilder();
         if (expr instanceof ColumnReference) {
-            ColumnReference element = (ColumnReference)expr;
-            Column element2 = element.getMetadataObject();
-            result = element2.getNameInSource();
+        	appendColumnReference(result, (ColumnReference)expr);
         } else if (expr instanceof Literal) {
-            Literal literal = (Literal)expr;
-            result = literal.getValue().toString();
+        	Literal literal = (Literal)expr;
+        	if (literal.getValue() == null) {
+        		if (raw) {
+        			return null;
+        		}
+        		return "NULL"; //$NON-NLS-1$
+    		}
+        	if (raw) {
+        		return literal.getValue().toString();
+        	}
+        	if (literal.getValue().getClass().equals(Boolean.class)) {
+        		result.append(((Boolean)literal.getValue()).toString());
+        	} else if (literal.getValue().getClass().equals(java.sql.Timestamp.class)) {
+        		Timestamp datetime = (java.sql.Timestamp)literal.getValue();
+        		String value = datetime.toString();
+        		int fractionalPlace = value.lastIndexOf('.');
+        		int fractionalLength = value.length() - fractionalPlace - 1;
+				if (fractionalLength > 3) {
+        			value = value.substring(0, fractionalPlace + 3);
+        		} else if (fractionalLength < 3) {
+        			value += "00".substring(fractionalLength - 1); //$NON-NLS-1$
+        		}
+        		result.append(value).setCharAt(result.length()-value.length()+10, 'T');
+        		Calendar c = TimestampWithTimezone.getCalendar();
+        		c.setTime(datetime);
+        		int minutes = (c.get(Calendar.ZONE_OFFSET) +
+        			     c.get(Calendar.DST_OFFSET)) / 60000;
+        		int val = minutes/60;
+        		result.append(String.format("%1$+03d", val)); //$NON-NLS-1$
+        		result.append(':');
+        		val = minutes%60;
+    			result.append(val/10);
+    			result.append(val%10);
+        	} else if (literal.getValue().getClass().equals(java.sql.Time.class)) {
+        		result.append(literal.getValue()).append(".000").append(Util.getDefaultTimeZoneString()); //$NON-NLS-1$
+        	} else if (literal.getValue().getClass().equals(java.sql.Date.class)) {
+        		result.append(literal.getValue());
+        	} else {
+        		result.append(expr.toString());
+        	}
         } else {
             throw new RuntimeException("unknown type in SalesforceQueryExecution.getValue(): " + expr.toString()); //$NON-NLS-1$
         }
-        return result;
+        return result.toString();
     }
 
     protected void loadColumnMetadata( NamedTable group ) throws TranslatorException {
@@ -394,7 +392,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         }
     }
 
-    protected boolean isIdColumn( Expression expression ) throws TranslatorException {
+    protected boolean isIdColumn( Expression expression ) {
         boolean result = false;
         if (expression instanceof ColumnReference) {
             Column element = ((ColumnReference)expression).getMetadataObject();
@@ -406,7 +404,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         return result;
     }
 
-    protected boolean isMultiSelectColumn( Expression expression ) throws TranslatorException {
+    protected boolean isMultiSelectColumn( Expression expression ) {
         boolean result = false;
         if (expression instanceof ColumnReference) {
             Column element = ((ColumnReference)expression).getMetadataObject();

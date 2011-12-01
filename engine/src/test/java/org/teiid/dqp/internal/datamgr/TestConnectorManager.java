@@ -46,7 +46,7 @@ public final class TestConnectorManager extends TestCase {
 	static ConnectorManager getConnectorManager() throws Exception {
 		final FakeConnector c = new FakeConnector();
 		ConnectorManager cm = new ConnectorManager("FakeConnector","FakeConnector") { //$NON-NLS-1$ //$NON-NLS-2$
-			protected ExecutionFactory getExecutionFactory() {
+			public ExecutionFactory getExecutionFactory() {
 				return c;
 			}
 			protected Object getConnectionFactory(){

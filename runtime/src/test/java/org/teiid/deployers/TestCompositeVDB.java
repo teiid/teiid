@@ -78,7 +78,7 @@ public class TestCompositeVDB {
 		Mockito.stub(ef.getPushDownFunctions()).toReturn(funcs);
 		
 		ConnectorManager cm = new ConnectorManager(translatorName,connectionName) { 
-			protected ExecutionFactory getExecutionFactory() {
+			public ExecutionFactory getExecutionFactory() {
 				return ef;
 			}
 		};

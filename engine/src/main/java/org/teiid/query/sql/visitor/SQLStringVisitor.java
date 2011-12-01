@@ -1374,6 +1374,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit( CreateProcedureCommand obj ) {
+    	addCacheHint(obj.getCacheHint());
         append(CREATE);
         append(SPACE);
         append(VIRTUAL);
