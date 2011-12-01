@@ -79,7 +79,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		
 		TranslatorRepository repo = new TranslatorRepository();
 		ConnectorManagerRepository cmr = new ConnectorManagerRepository();
-		
+		deployment.addAttchment(TranslatorRepository.class, repo);
 		boolean preview = deployment.isPreview();
 		
 		if (!preview) {

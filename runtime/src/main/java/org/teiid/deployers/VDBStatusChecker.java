@@ -98,7 +98,17 @@ public class VDBStatusChecker {
 			
 			if (!cm.getTranslatorName().equals(translatorName)) {
 				try {
-					Translator t = this.translatorRepository.getTranslatorMetaData(translatorName);
+					TranslatorRepository repo = vdb.getAttachment(TranslatorRepository.class);
+					Translator t = null;
+					if (repo != null) {
+						t = repo.getTranslatorMetaData(translatorName);
+					}
+					if (t == null) {
+						t = this.translatorRepository.getTranslatorMetaData(translatorName);
+					}
+					if (t == null) {
+						throw new DeploymentException(RuntimePlugin.Util.getString("translator_not_found", vdb.getName(), vdb.getVersion(), translatorName)); //$NON-NLS-1$
+					}
 					ef = TranslatorUtil.buildExecutionFactory(t);
 					cm.setExecutionFactory(ef);
 				} catch (DeploymentException e) {
