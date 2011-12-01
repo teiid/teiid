@@ -37,6 +37,7 @@
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-admin</artifactId>
+      <scope>provided</scope>
     </dependency>    
     
     <dependency>
@@ -62,20 +63,32 @@
         <artifactId>jta</artifactId>
         <scope>provided</scope>
     </dependency>
-    
+
     <dependency>
         <groupId>org.jboss.as</groupId>
         <artifactId>jboss-as-security</artifactId>
-        <scope>provided</scope>
+        <scope>provided</scope>        
     </dependency>    
     
     <!-- This dependency is to read the ra.xml file details -->
     <dependency>
         <groupId>org.jboss.as</groupId>
         <artifactId>jboss-as-connector</artifactId>
-        <scope>provided</scope>
+        <scope>provided</scope>        
     </dependency>    
     
+    <dependency>
+        <groupId>org.jboss.as</groupId>
+        <artifactId>jboss-as-server</artifactId>
+        <scope>provided</scope>
+    </dependency> 
+    
+    <dependency>
+        <groupId>org.picketbox</groupId>
+        <artifactId>jbosssx-client</artifactId>
+        <scope>provided</scope>
+    </dependency>
+
     <dependency>
         <groupId>org.jboss.as</groupId>
         <artifactId>jboss-as-security</artifactId>
@@ -108,12 +121,6 @@
       <scope>test</scope>
     </dependency>    
 
-    <dependency>
-        <groupId>org.jboss.logging</groupId>
-        <artifactId>jboss-logging-spi</artifactId>
-        <scope>test</scope>
-    </dependency>     
-    
   </dependencies>
   
 </project>

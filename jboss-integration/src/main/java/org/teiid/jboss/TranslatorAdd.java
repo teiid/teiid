@@ -42,6 +42,7 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
+import org.jboss.modules.ModuleLoader;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceTarget;
@@ -93,10 +94,11 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
 
         final Module module;
         ClassLoader translatorLoader = this.getClass().getClassLoader();
-        if (moduleName != null) {
+        ModuleLoader ml = Module.getCallerModuleLoader();
+        if (moduleName != null && ml != null) {
 	        try {
-	            module = Module.getCallerModuleLoader().loadModule(ModuleIdentifier.create(moduleName));
-	            translatorLoader = module.getClassLoader();
+            	module = ml.loadModule(ModuleIdentifier.create(moduleName));
+            	translatorLoader = module.getClassLoader();
 	        } catch (ModuleLoadException e) {
 	            throw new OperationFailedException(e, new ModelNode().set(IntegrationPlugin.Util.getString("failed_load_module", moduleName, translatorName))); //$NON-NLS-1$
 	        }

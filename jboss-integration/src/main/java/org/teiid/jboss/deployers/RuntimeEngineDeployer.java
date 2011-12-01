@@ -35,7 +35,6 @@ import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
 import javax.transaction.TransactionManager;
 
-import org.jboss.modules.Module;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
@@ -114,7 +113,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements Serializa
 		
 		setBufferService(bufferServiceInjector.getValue());
 		
-		dqpCore.setTransactionService((TransactionService)LogManager.createLoggingProxy(LogConstants.CTX_TXN_LOG, transactionServerImpl, new Class[] {TransactionService.class}, MessageLevel.DETAIL, Module.getCallerModule().getClassLoader()));
+		dqpCore.setTransactionService((TransactionService)LogManager.createLoggingProxy(LogConstants.CTX_TXN_LOG, transactionServerImpl, new Class[] {TransactionService.class}, MessageLevel.DETAIL, Thread.currentThread().getContextClassLoader()));
 
 		if (getObjectReplicatorInjector().getValue() != null) {
 			try {
@@ -132,7 +131,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements Serializa
 		this.dqpCore.setResultsetCache(getResultSetCacheInjector().getValue());
 		this.dqpCore.setPreparedPlanCache(getPreparedPlanCacheInjector().getValue());
 		this.dqpCore.start(this);
-		this.eventDistributorProxy = (EventDistributor)Proxy.newProxyInstance(Module.getCallerModule().getClassLoader(), new Class[] {EventDistributor.class}, new InvocationHandler() {
+		this.eventDistributorProxy = (EventDistributor)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {EventDistributor.class}, new InvocationHandler() {
 			
 			@Override
 			public Object invoke(Object proxy, Method method, Object[] args)

@@ -22,7 +22,10 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OPERATION_NAME;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
 
 import java.util.List;
 import java.util.Locale;
@@ -49,19 +52,18 @@ import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
 import org.jboss.msc.service.ServiceBuilder;
+import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceContainer;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
 import org.jboss.msc.service.ValueService;
-import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.PolicyDecider;
 import org.teiid.cache.CacheConfiguration;
-import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.cache.CacheConfiguration.Policy;
+import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.cache.jboss.ClusterableCacheFactory;
-import org.teiid.common.buffer.BufferManager;
 import org.teiid.deployers.SystemVDBDeployer;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
@@ -164,7 +166,12 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
             final ServiceVerificationHandler verificationHandler, final List<ServiceController<?>> newControllers) throws OperationFailedException {
 		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 		try {
-			Thread.currentThread().setContextClassLoader(Module.getCallerModule().getClassLoader());
+			try {
+				classloader = Module.getCallerModule().getClassLoader();
+			} catch(Throwable t) {
+				//ignore..
+			}
+			Thread.currentThread().setContextClassLoader(classloader);
 			initilaizeTeiidEngine(context, operation, newControllers);
 		} finally {
 			Thread.currentThread().setContextClassLoader(classloader);
@@ -198,7 +205,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 		else {
 			systemFunctionManager.setAllowEnvFunction(false);
 		}
-		systemFunctionManager.setClassloader(Module.getCallerModule().getClassLoader()); 
+		systemFunctionManager.setClassloader(Thread.currentThread().getContextClassLoader()); 
     	
     	// VDB repository
     	final VDBRepository vdbRepository = new VDBRepository();
@@ -232,7 +239,6 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	newControllers.add(objectSerializerService.install());
     	
     	// Object Replicator
-    	JGroupsObjectReplicatorService replicatorService = null;
     	if (Element.OR_STACK_ATTRIBUTE.isDefined(operation)) {
     		String stack = Element.OR_STACK_ATTRIBUTE.asString(operation);
     		
@@ -241,7 +247,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     			clusterName = Element.OR_CLUSTER_NAME_ATTRIBUTE.asString(operation);
     		}
     		
-    		replicatorService = new JGroupsObjectReplicatorService(clusterName);
+    		JGroupsObjectReplicatorService replicatorService = new JGroupsObjectReplicatorService(clusterName);
 			ServiceBuilder<JGroupsObjectReplicator> serviceBuilder = target.addService(TeiidServiceNames.OBJECT_REPLICATOR, replicatorService);
 			serviceBuilder.addDependency(ServiceName.JBOSS.append("jgroups", "stack", stack), ChannelFactory.class, replicatorService.channelFactoryInjector); //$NON-NLS-1$ //$NON-NLS-2$
 			newControllers.add(serviceBuilder.install());
@@ -249,10 +255,10 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 
     	// TODO: remove verbose service by moving the buffer service from runtime project
     	newControllers.add(RelativePathService.addService(TeiidServiceNames.BUFFER_DIR, "teiid-buffer", "jboss.server.temp.dir", target)); //$NON-NLS-1$ //$NON-NLS-2$
-    	BufferManagerService bufferService = new BufferManagerService(buildBufferManager(operation), replicatorService.getValue());
+    	BufferManagerService bufferService = new BufferManagerService(buildBufferManager(operation));
     	ServiceBuilder<BufferService> bufferServiceBuilder = target.addService(TeiidServiceNames.BUFFER_MGR, bufferService);
     	bufferServiceBuilder.addDependency(TeiidServiceNames.BUFFER_DIR, String.class, bufferService.pathInjector);
-    	bufferServiceBuilder.addDependency(TeiidServiceNames.BUFFER_DIR, String.class, bufferService.pathInjector);
+    	bufferServiceBuilder.addDependency(DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, bufferService.replicatorInjector);
     	newControllers.add(bufferServiceBuilder.install());
     	
     	PolicyDecider policyDecider;
@@ -287,24 +293,18 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	newControllers.add(target.addService(TeiidServiceNames.AUTHORIZATION_VALIDATOR, authValidatorService).install());
     	
     	// resultset cache
-    	final SessionAwareCache<CachedResults> resultsetCache = buildResultsetCache(operation, bufferService.getValue().getBufferManager());
-    	ValueService<SessionAwareCache<CachedResults>> resultSetService = new ValueService<SessionAwareCache<CachedResults>>(new org.jboss.msc.value.Value<SessionAwareCache<CachedResults>>() {
-			@Override
-			public SessionAwareCache<CachedResults> getValue() throws IllegalStateException, IllegalArgumentException {
-				return resultsetCache;
-			}
-    	});
-    	newControllers.add(target.addService(TeiidServiceNames.CACHE_RESULTSET, resultSetService).install());
+    	final SessionAwareCache<CachedResults> resultsetCache = buildResultsetCache(operation);
+    	CacheService<CachedResults> resultSetService = new CacheService<CachedResults>(resultsetCache);
+    	ServiceBuilder<SessionAwareCache<CachedResults>> resultsCacheBuilder = target.addService(TeiidServiceNames.CACHE_RESULTSET, resultSetService);
+    	resultsCacheBuilder.addDependency(TeiidServiceNames.BUFFER_MGR, BufferService.class, resultSetService.bufferMgrInjector);
+    	newControllers.add(resultsCacheBuilder.install());
     	
     	// prepared-plan cache
-    	final SessionAwareCache<PreparedPlan> preparedPlanCache = buildPreparedPlanCache(operation, bufferService.getValue().getBufferManager());
-    	ValueService<SessionAwareCache<PreparedPlan>> preparedPlanService = new ValueService<SessionAwareCache<PreparedPlan>>(new org.jboss.msc.value.Value<SessionAwareCache<PreparedPlan>>() {
-			@Override
-			public SessionAwareCache<PreparedPlan> getValue() throws IllegalStateException, IllegalArgumentException {
-				return preparedPlanCache;
-			}
-    	});
-    	newControllers.add(target.addService(TeiidServiceNames.CACHE_PREPAREDPLAN, preparedPlanService).install());
+    	final SessionAwareCache<PreparedPlan> preparedPlanCache = buildPreparedPlanCache(operation);
+    	CacheService<PreparedPlan> preparedPlanService = new CacheService<PreparedPlan>(preparedPlanCache);
+    	ServiceBuilder<SessionAwareCache<PreparedPlan>> preparedPlanCacheBuilder = target.addService(TeiidServiceNames.CACHE_PREPAREDPLAN, preparedPlanService);
+    	preparedPlanCacheBuilder.addDependency(TeiidServiceNames.BUFFER_MGR, BufferService.class, preparedPlanService.bufferMgrInjector);
+    	newControllers.add(preparedPlanCacheBuilder.install());
     	
     	// Query Engine
     	final RuntimeEngineDeployer engine = buildQueryEngine(operation);
@@ -413,7 +413,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	return bufferManger;
     }	
 
-    private SessionAwareCache<CachedResults> buildResultsetCache(ModelNode node, BufferManager bufferManager) {
+    private SessionAwareCache<CachedResults> buildResultsetCache(ModelNode node) {
 
     	CacheConfiguration cacheConfig = new CacheConfiguration();
     	cacheConfig.setMaxEntries(1024);
@@ -436,7 +436,6 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	}
     	else {
     		SessionAwareCache<CachedResults> resultsetCache = new SessionAwareCache<CachedResults>(new DefaultCacheFactory(), SessionAwareCache.Type.RESULTSET, cacheConfig);
-        	resultsetCache.setBufferManager(bufferManager);
         	return resultsetCache;    		
     	}
     	
@@ -452,12 +451,11 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	}
 
    		SessionAwareCache<CachedResults> resultsetCache = new SessionAwareCache<CachedResults>(cacheFactory, SessionAwareCache.Type.RESULTSET, cacheConfig);
-    	resultsetCache.setBufferManager(bufferManager);
     	return resultsetCache;
 	}	      
     
     
-    private SessionAwareCache<PreparedPlan> buildPreparedPlanCache(ModelNode node, BufferManager bufferManager) {
+    private SessionAwareCache<PreparedPlan> buildPreparedPlanCache(ModelNode node) {
     	CacheConfiguration cacheConfig = new CacheConfiguration();
     	if (Element.PPC_MAX_ENTRIES_ATTRIBUTE.isDefined(node)) {
     		cacheConfig.setMaxEntries(Element.PPC_MAX_ENTRIES_ATTRIBUTE.asInt(node));
@@ -477,7 +475,6 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	
     	cacheConfig.setLocation("prepared"); //$NON-NLS-1$
     	SessionAwareCache<PreparedPlan> cache = new SessionAwareCache<PreparedPlan>(new DefaultCacheFactory(), SessionAwareCache.Type.PREPAREDPLAN, cacheConfig);
-    	cache.setBufferManager(bufferManager);
     	
     	return cache;
 	}	    

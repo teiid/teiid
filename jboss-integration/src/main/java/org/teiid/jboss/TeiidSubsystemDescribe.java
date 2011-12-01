@@ -22,7 +22,14 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIBE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OPERATION_NAME;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REPLY_PROPERTIES;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.VALUE_TYPE;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -35,8 +42,12 @@ import org.jboss.as.controller.descriptions.DescriptionProvider;
 import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.dmr.ModelNode;
+import org.jboss.dmr.ModelType;
 import org.jboss.dmr.Property;
 
+/**
+ * This is class that satisfies "describe" operation.
+ */
 public class TeiidSubsystemDescribe implements OperationStepHandler, DescriptionProvider {
 
 	@Override
@@ -44,18 +55,10 @@ public class TeiidSubsystemDescribe implements OperationStepHandler, Description
 		final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
 		
         ModelNode node = new ModelNode();
-        node.get(ModelDescriptionConstants.DESCRIPTION).set("teiid subsystem"); //$NON-NLS-1$
-        node.get(ModelDescriptionConstants.HEAD_COMMENT_ALLOWED).set(true);
-        node.get(ModelDescriptionConstants.TAIL_COMMENT_ALLOWED).set(true);
-        node.get(ModelDescriptionConstants.NAMESPACE).set(Namespace.CURRENT.getUri());
-        
-        TeiidAdd.describeTeiid(node, ATTRIBUTES, bundle);
-        node.get(CHILDREN, Element.TRANSPORT_ELEMENT.getLocalName(), DESCRIPTION).set(Element.TRANSPORT_ELEMENT.getDescription(bundle)); 
-        node.get(CHILDREN, Element.TRANSPORT_ELEMENT.getLocalName(), REQUIRED).set(true);
-        
-        node.get(CHILDREN, Element.TRANSLATOR_ELEMENT.getLocalName(), DESCRIPTION).set(Element.TRANSLATOR_ELEMENT.getDescription(bundle));
-        node.get(CHILDREN, Element.TRANSLATOR_ELEMENT.getLocalName(), REQUIRED).set(true);
-
+        node.get(OPERATION_NAME).set(DESCRIBE);
+        node.get(ModelDescriptionConstants.DESCRIPTION).set(bundle.getString("teiid_subsystem.describe")); //$NON-NLS-1$
+        node.get(REPLY_PROPERTIES).get(TYPE).set(ModelType.LIST);
+        TeiidAdd.describeTeiid(node.get(REPLY_PROPERTIES), VALUE_TYPE, bundle);
         return node;
     }
 

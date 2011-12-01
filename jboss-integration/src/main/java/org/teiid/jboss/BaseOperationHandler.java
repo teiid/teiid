@@ -24,6 +24,7 @@ package org.teiid.jboss;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OPERATION_NAME;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REPLY_PROPERTIES;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -38,6 +39,7 @@ import org.jboss.dmr.ModelNode;
 
 public abstract class BaseOperationHandler<T> implements DescriptionProvider, OperationStepHandler {
 	private static final String DESCRIBE = ".describe"; //$NON-NLS-1$
+	private static final String REPLY = ".reply"; //$NON-NLS-1$
 	protected static final String MISSING = ".missing"; //$NON-NLS-1$
 	
 	private String operationName; 
@@ -86,13 +88,13 @@ public abstract class BaseOperationHandler<T> implements DescriptionProvider, Op
         final ModelNode operation = new ModelNode();
         operation.get(OPERATION_NAME).set(this.operationName);
         operation.get(DESCRIPTION).set(bundle.getString(name()+DESCRIBE));
+		
+        ModelNode reply = operation.get(REPLY_PROPERTIES);
+		reply.get(DESCRIPTION).set(bundle.getString(name()+REPLY));
+		
         describeParameters(operation, bundle);
         return operation;
     }	
-    
-//    protected String getReplyName() {
-//    	return name()+".reply"+DESCRIBE; //$NON-NLS-1$
-//    }
     
     protected String getParameterDescription(ResourceBundle bundle, String paramName) {
     	return bundle.getString(name()+"."+paramName+DESCRIBE); //$NON-NLS-1$ 

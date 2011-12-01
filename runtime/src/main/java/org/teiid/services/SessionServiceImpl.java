@@ -357,11 +357,11 @@ public abstract class SessionServiceImpl implements SessionService {
 	}
 	
 	public void setAuthenticationType(AuthenticationType flag) {
-		this.authenticationType = flag;
-		LogManager.logInfo(LogConstants.CTX_SECURITY, "Authentication Type set to: "+flag); //$NON-NLS-1$
+		this.authenticationType = flag;		
 	}
 	
 	public void start() {
+		LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.getString("auth_type", authenticationType, securityDomainNames)); //$NON-NLS-1$
         this.sessionMonitor.schedule(new TimerTask() {
         	@Override
         	public void run() {

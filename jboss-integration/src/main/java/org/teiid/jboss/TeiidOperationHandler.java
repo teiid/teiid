@@ -21,7 +21,15 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ALLOWED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.READ_ONLY;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REPLY_PROPERTIES;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.VALUE_TYPE;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -130,7 +138,8 @@ class GetRuntimeVersion extends TeiidOperationHandler{
 		context.getResult().set(engine.getRuntimeVersion());
 	}
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
-		operationNode.get(REPLY_PROPERTIES).set(ModelType.STRING);
+		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
+		reply.get(TYPE).set(ModelType.STRING);		
 	}	
 }
 
@@ -145,13 +154,14 @@ class GetActiveSessionsCount extends TeiidOperationHandler{
 			for (Transport t: this.transports) {
 				count += t.getActiveSessionsCount();
 			}
-			context.getResult().set(String.valueOf(count));
+			context.getResult().set(count);
 		} catch (AdminException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
 		}
 	}
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
-		operationNode.get(REPLY_PROPERTIES).set(ModelType.INT);
+		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
+		reply.get(TYPE).set(ModelType.INT);		
 	}		
 }
 
@@ -171,7 +181,9 @@ class ListSessions extends TeiidOperationHandler{
 	}
 	
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
-		operationNode.get(REPLY_PROPERTIES).add(VDBMetadataMapper.SessionMetadataMapper.INSTANCE.describe(new ModelNode()));
+		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
+		reply.get(TYPE).set(ModelType.LIST);		
+		VDBMetadataMapper.SessionMetadataMapper.INSTANCE.describe(reply.get(VALUE_TYPE));
 	}	
 }
 
@@ -196,7 +208,9 @@ class RequestsPerSession extends TeiidOperationHandler{
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SESSION, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SESSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.SESSION));
 		
-		operationNode.get(REPLY_PROPERTIES).add(VDBMetadataMapper.RequestMetadataMapper.INSTANCE.describe(new ModelNode()));
+		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
+		reply.get(TYPE).set(ModelType.LIST);		
+		VDBMetadataMapper.RequestMetadataMapper.INSTANCE.describe(reply.get(VALUE_TYPE));
 	}	
 }
 
@@ -213,7 +227,9 @@ class ListRequests extends TeiidOperationHandler{
 		}
 	}
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
-		operationNode.get(REPLY_PROPERTIES).add(VDBMetadataMapper.RequestMetadataMapper.INSTANCE.describe(new ModelNode()));
+		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
+		reply.get(TYPE).set(ModelType.LIST);		
+		VDBMetadataMapper.RequestMetadataMapper.INSTANCE.describe(reply.get(VALUE_TYPE));
 	}	
 }
 
@@ -250,7 +266,9 @@ class RequestsPerVDB extends TeiidOperationHandler{
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.VDB_VERSION)); 
 		
-		operationNode.get(REPLY_PROPERTIES).add(VDBMetadataMapper.RequestMetadataMapper.INSTANCE.describe(new ModelNode()));
+		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
+		reply.get(TYPE).set(ModelType.LIST);		
+		VDBMetadataMapper.RequestMetadataMapper.INSTANCE.describe(reply.get(VALUE_TYPE));
 	}	
 }
 
@@ -267,7 +285,9 @@ class GetLongRunningQueries extends TeiidOperationHandler{
 		}
 	}
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
-		operationNode.get(REPLY_PROPERTIES).add(VDBMetadataMapper.RequestMetadataMapper.INSTANCE.describe(new ModelNode()));
+		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
+		reply.get(TYPE).set(ModelType.LIST);		
+		VDBMetadataMapper.RequestMetadataMapper.INSTANCE.describe(reply.get(VALUE_TYPE));
 	}	
 }
 
@@ -289,6 +309,7 @@ class TerminateSession extends TeiidOperationHandler{
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SESSION, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SESSION, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SESSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.SESSION));
+		operationNode.get(REPLY_PROPERTIES).setEmptyObject();
 	}		
 }
 
@@ -307,6 +328,7 @@ class CancelRequest extends TeiidOperationHandler{
 			}			
 			boolean pass = engine.cancelRequest(operation.get(OperationsConstants.SESSION).asString(), operation.get(OperationsConstants.EXECUTION_ID).asLong());
 			ModelNode result = context.getResult();
+			
 			result.set(pass);
 		} catch (TeiidComponentException e) {
 			throw new OperationFailedException(e, new ModelNode().set(e.getMessage()));
@@ -322,7 +344,7 @@ class CancelRequest extends TeiidOperationHandler{
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.EXECUTION_ID, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.EXECUTION_ID, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.EXECUTION_ID));
 		
-		operationNode.get(REPLY_PROPERTIES).set(ModelType.BOOLEAN);
+		operationNode.get(REPLY_PROPERTIES).get(TYPE).set(ModelType.BOOLEAN);
 	}		
 }
 
@@ -368,11 +390,12 @@ class CacheTypes extends BaseCachehandler {
 	}
 	
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
-		ModelNode node = new ModelNode();
+		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
+		reply.get(TYPE).set(ModelType.LIST);		
+		
+		ModelNode node = reply.get(VALUE_TYPE);
 		node.get(OperationsConstants.CACHE_TYPE, TYPE).set(ModelType.STRING);
-		node.get(OperationsConstants.CACHE_TYPE, REQUIRED).set(true);
 		node.get(OperationsConstants.CACHE_TYPE, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.CACHE_TYPE));
-		operationNode.get(REPLY_PROPERTIES).add(node);
 	}	
 }
 
@@ -413,7 +436,7 @@ class ClearCache extends BaseCachehandler {
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, TYPE).set(ModelType.INT);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, REQUIRED).set(false);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.VDB_VERSION)); 
-		
+		operationNode.get(REPLY_PROPERTIES).setEmptyObject();
 	}	
 }
 
@@ -448,8 +471,9 @@ class CacheStatistics extends BaseCachehandler {
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.CACHE_TYPE, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.CACHE_TYPE, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.CACHE_TYPE));
 		
-		ModelNode node = new ModelNode();
-		operationNode.get(REPLY_PROPERTIES).add(VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE.describe(node));
+		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
+		reply.get(TYPE).set(ModelType.OBJECT);		
+		VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE.describe(reply.get(VALUE_TYPE));
 	}	
 }
 
@@ -473,6 +497,7 @@ class MarkDataSourceAvailable extends TeiidOperationHandler{
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.DS_NAME, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.DS_NAME, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.DS_NAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.DS_NAME));
+		operationNode.get(REPLY_PROPERTIES).setEmptyObject();
 	}	
 }
 
@@ -488,7 +513,9 @@ class WorkerPoolStatistics extends TeiidOperationHandler{
 		VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE.wrap(stats, result);
 	}
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
-		operationNode.get(REPLY_PROPERTIES).add(VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE.describe(new ModelNode()));
+		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
+		reply.get(TYPE).set(ModelType.OBJECT);		
+		VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE.describe(reply.get(VALUE_TYPE));
 	}		
 }
 
@@ -506,8 +533,9 @@ class ListTransactions extends TeiidOperationHandler{
 		}
 	}
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
-		ModelNode node = new ModelNode();
-		operationNode.get(REPLY_PROPERTIES).add(TransactionMetadataMapper.INSTANCE.describe(node));
+		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
+		reply.get(TYPE).set(ModelType.LIST);		
+		TransactionMetadataMapper.INSTANCE.describe(reply.get(VALUE_TYPE));
 	}	
 }
 
@@ -535,6 +563,7 @@ class TerminateTransaction extends TeiidOperationHandler{
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.XID, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.XID, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.XID, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.XID));
+		operationNode.get(REPLY_PROPERTIES).setEmptyObject();
 	}	
 }
 
@@ -593,6 +622,7 @@ class MergeVDBs extends BaseOperationHandler<VDBRepository>{
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TARGET_VDBVERSION, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TARGET_VDBVERSION, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TARGET_VDBVERSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.TARGET_VDBVERSION));
+		operationNode.get(REPLY_PROPERTIES).setEmptyObject();
 	}	
 }
 
@@ -643,7 +673,8 @@ class ExecuteQuery extends TeiidOperationHandler{
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TIMEOUT_IN_MILLI, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TIMEOUT_IN_MILLI, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.TIMEOUT_IN_MILLI));
 		
-		operationNode.get(REPLY_PROPERTIES).set(ModelType.LIST);
+		operationNode.get(REPLY_PROPERTIES).get(TYPE).set(ModelType.LIST);
+		operationNode.get(REPLY_PROPERTIES).get(VALUE_TYPE).set(ModelType.STRING);
 	}	
 	
 	public ModelNode executeQuery(final String vdbName, final int version, final String command, final long timoutInMilli, final ModelNode resultsNode) throws OperationFailedException {
@@ -812,7 +843,9 @@ class GetVDB extends BaseOperationHandler<VDBRepository>{
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.VDB_VERSION));
 
-		operationNode.get(REPLY_PROPERTIES).set(VDBMetadataMapper.INSTANCE.describe(new ModelNode()));
+		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
+		reply.get(TYPE).set(ModelType.OBJECT);		
+		VDBMetadataMapper.INSTANCE.describe(reply.get(VALUE_TYPE));
 	}	
 }
 
@@ -837,7 +870,9 @@ class ListVDBs extends BaseOperationHandler<VDBRepository>{
 		}
 	}
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
-		operationNode.get(REPLY_PROPERTIES).add(VDBMetadataMapper.INSTANCE.describe(new ModelNode()));
+		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
+		reply.get(TYPE).set(ModelType.LIST);		
+		VDBMetadataMapper.INSTANCE.describe(reply.get(VALUE_TYPE));
 	}	
 }
 
@@ -857,7 +892,9 @@ class ListTranslators extends TranslatorOperationHandler{
 	}
 	
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
-		operationNode.get(REPLY_PROPERTIES).add(VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE.describe(new ModelNode()));
+		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
+		reply.get(TYPE).set(ModelType.LIST);		
+		VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE.describe(reply.get(VALUE_TYPE));
 	}	
 }
 
@@ -885,7 +922,9 @@ class GetTranslator extends TranslatorOperationHandler{
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TRANSLATOR_NAME, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TRANSLATOR_NAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.TRANSLATOR_NAME));
 		
-		operationNode.get(REPLY_PROPERTIES).set(VDBTranslatorMetaDataMapper.INSTANCE.describe(new ModelNode()));
+		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
+		reply.get(TYPE).set(ModelType.OBJECT);		
+		VDBTranslatorMetaDataMapper.INSTANCE.describe(reply.get(VALUE_TYPE));
 	}	
 }
 
@@ -981,6 +1020,7 @@ class AddDataRole extends VDBOperations {
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.MAPPED_ROLE, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.MAPPED_ROLE, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.MAPPED_ROLE, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.MAPPED_ROLE));
+		operationNode.get(REPLY_PROPERTIES).setEmptyObject();
 	}		
 }
 
@@ -1028,6 +1068,7 @@ class RemoveDataRole extends VDBOperations {
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.MAPPED_ROLE, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.MAPPED_ROLE, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.MAPPED_ROLE, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.MAPPED_ROLE));
+		operationNode.get(REPLY_PROPERTIES).setEmptyObject();
 	}		
 }
 
@@ -1066,6 +1107,7 @@ class AddAnyAuthenticatedDataRole extends VDBOperations {
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.DATA_ROLE, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.DATA_ROLE, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.DATA_ROLE, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.DATA_ROLE));
+		operationNode.get(REPLY_PROPERTIES).setEmptyObject();
 	}		
 	
 }
@@ -1105,6 +1147,7 @@ class RemoveAnyAuthenticatedDataRole extends VDBOperations {
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.DATA_ROLE, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.DATA_ROLE, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.DATA_ROLE, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.DATA_ROLE));
+		operationNode.get(REPLY_PROPERTIES).setEmptyObject();
 	}			
 }
 
@@ -1136,6 +1179,7 @@ class ChangeVDBConnectionType extends VDBOperations {
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.CONNECTION_TYPE, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.CONNECTION_TYPE, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.CONNECTION_TYPE, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.CONNECTION_TYPE));
+		operationNode.get(REPLY_PROPERTIES).setEmptyObject();
 	}		
 }
 
@@ -1211,7 +1255,7 @@ class AssignDataSource extends VDBOperations {
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.DS_NAME, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.DS_NAME, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.DS_NAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.DS_NAME));
-		
+		operationNode.get(REPLY_PROPERTIES).setEmptyObject();
 	}		
 }
 
@@ -1301,6 +1345,11 @@ class ReadRARDescription extends TeiidOperationHandler {
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.RAR_NAME, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.RAR_NAME, REQUIRED).set(true);
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.RAR_NAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.RAR_NAME));		
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.RAR_NAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.RAR_NAME));
+		
+		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
+		reply.get(TYPE).set(ModelType.LIST);	
+		// this is incomplete
+		reply.get(VALUE_TYPE).set(ModelType.STRING);		
 	}		
 }

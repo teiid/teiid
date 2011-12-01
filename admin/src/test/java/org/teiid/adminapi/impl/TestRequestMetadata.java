@@ -57,7 +57,7 @@ public class TestRequestMetadata {
 		return request;
 	}
 	
-	public static final String desc = "{\"attributes\" : {\n" + 
+	public static final String desc = "{\n" + 
 			"    \"execution-id\" : {\n" + 
 			"        \"type\" : {\n" + 
 			"            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" + 
@@ -121,7 +121,7 @@ public class TestRequestMetadata {
 			"        \"description\" : \"Thread state\",\n" + 
 			"        \"required\" : true\n" + 
 			"    }\n" + 
-			"}}";
+			"}";
 	@Test public void testDescribe() {
 		assertEquals(desc, VDBMetadataMapper.RequestMetadataMapper.INSTANCE.describe(new ModelNode()).toJSONString(false));
 	}

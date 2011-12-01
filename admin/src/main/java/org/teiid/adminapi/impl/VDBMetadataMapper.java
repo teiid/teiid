@@ -29,9 +29,9 @@ import org.jboss.dmr.ModelType;
 import org.teiid.adminapi.AdminPlugin;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
-import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.Request.ThreadState;
+import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
@@ -45,10 +45,11 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 	private static final String URL = "url"; //$NON-NLS-1$
 	private static final String MODELS = "models"; //$NON-NLS-1$
 	private static final String OVERRIDE_TRANSLATORS = "override-translators"; //$NON-NLS-1$
-	private static final String DESCRIPTION = "description"; //$NON-NLS-1$
+	private static final String VDB_DESCRIPTION = "vdb-description"; //$NON-NLS-1$
 	private static final String PROPERTIES = "properties"; //$NON-NLS-1$
 	private static final String DYNAMIC = "dynamic"; //$NON-NLS-1$
 	private static final String DATA_POLICIES = "data-policies"; //$NON-NLS-1$
+	private static final String DESCRIPTION = "description"; //$NON-NLS-1$
 	
 	public static VDBMetadataMapper INSTANCE = new VDBMetadataMapper();
 	
@@ -56,7 +57,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		if (vdb == null) {
 			return null;
 		}
-			
+		node.get(TYPE).set(ModelType.OBJECT);
 		node.get(VDBNAME).set(vdb.getName());
 		node.get(CONNECTIONTYPE).set(vdb.getConnectionType().toString());
 		node.get(STATUS).set(vdb.getStatus().toString());
@@ -64,14 +65,14 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		if (vdb.getUrl() != null) {
 		}
 		if (vdb.getDescription() != null) {
-			node.get(DESCRIPTION).set(vdb.getDescription());
+			node.get(VDB_DESCRIPTION).set(vdb.getDescription());
 		}
 		node.get(DYNAMIC).set(vdb.isDynamic());
 		
 		//PROPERTIES
 		List<PropertyMetadata> properties = vdb.getJAXBProperties();
 		if (properties!= null && !properties.isEmpty()) {
-			ModelNode propsNode = node.get(CHILDREN, PROPERTIES); 
+			ModelNode propsNode = node.get(PROPERTIES); 
 			for (PropertyMetadata prop:properties) {
 				propsNode.add(PropertyMetaDataMapper.INSTANCE.wrap(prop, new ModelNode()));
 			}
@@ -80,7 +81,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		// MODELS
 		Map<String, ModelMetaData> models = vdb.getModelMetaDatas();
 		if (models != null && !models.isEmpty()) {
-			ModelNode modelNodes = node.get(CHILDREN, MODELS);		
+			ModelNode modelNodes = node.get(MODELS);		
 			for(ModelMetaData model:models.values()) {
 				modelNodes.add(ModelMetadataMapper.INSTANCE.wrap(model, new ModelNode()));
 			}
@@ -89,7 +90,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		// OVERRIDE_TRANSLATORS
 		List<Translator> translators = vdb.getOverrideTranslators();
 		if (translators != null && !translators.isEmpty()) {
-			ModelNode translatorNodes = node.get(CHILDREN, OVERRIDE_TRANSLATORS);
+			ModelNode translatorNodes = node.get(OVERRIDE_TRANSLATORS);
 			for (Translator translator:translators) {
 				translatorNodes.add(VDBTranslatorMetaDataMapper.INSTANCE.wrap((VDBTranslatorMetaData)translator,  new ModelNode()));
 			}
@@ -98,7 +99,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		// DATA_POLICIES
 		List<DataPolicy> policies = vdb.getDataPolicies();
 		if (policies != null && !policies.isEmpty()) {
-			ModelNode dataPoliciesNodes = node.get(CHILDREN, DATA_POLICIES);
+			ModelNode dataPoliciesNodes = node.get(DATA_POLICIES);
 			for (DataPolicy policy:policies) {
 				dataPoliciesNodes.add(DataPolicyMetadataMapper.INSTANCE.wrap((DataPolicyMetadata)policy,  new ModelNode()));
 			}
@@ -126,16 +127,16 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		if (node.has(URL)) {
 			vdb.setUrl(node.get(URL).asString());
 		}
-		if(node.has(DESCRIPTION)) {
-			vdb.setDescription(node.get(DESCRIPTION).asString());
+		if(node.has(VDB_DESCRIPTION)) {
+			vdb.setDescription(node.get(VDB_DESCRIPTION).asString());
 		}
 		if (node.has(DYNAMIC)) {
 			vdb.setDynamic(node.get(DYNAMIC).asBoolean());
 		}
 
 		//PROPERTIES
-		if (node.get(CHILDREN, PROPERTIES).isDefined()) {
-			List<ModelNode> propNodes = node.get(CHILDREN, PROPERTIES).asList();
+		if (node.get(PROPERTIES).isDefined()) {
+			List<ModelNode> propNodes = node.get(PROPERTIES).asList();
 			for (ModelNode propNode:propNodes) {
 				PropertyMetadata prop = PropertyMetaDataMapper.INSTANCE.unwrap(propNode);
 				if (prop != null) {
@@ -145,8 +146,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		}
 		
 		// MODELS
-		if (node.get(CHILDREN, MODELS).isDefined()) {
-			List<ModelNode> modelNodes = node.get(CHILDREN, MODELS).asList();
+		if (node.get(MODELS).isDefined()) {
+			List<ModelNode> modelNodes = node.get(MODELS).asList();
 			for(ModelNode modelNode:modelNodes) {
 				ModelMetaData model = ModelMetadataMapper.INSTANCE.unwrap(modelNode);
 				if (model != null) {
@@ -156,8 +157,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		}
 		
 		// OVERRIDE_TRANSLATORS
-		if (node.get(CHILDREN, OVERRIDE_TRANSLATORS).isDefined()) {
-			List<ModelNode> translatorNodes = node.get(CHILDREN, OVERRIDE_TRANSLATORS).asList();
+		if (node.get(OVERRIDE_TRANSLATORS).isDefined()) {
+			List<ModelNode> translatorNodes = node.get(OVERRIDE_TRANSLATORS).asList();
 			for (ModelNode translatorNode:translatorNodes) {
 				VDBTranslatorMetaData translator = VDBTranslatorMetaDataMapper.INSTANCE.unwrap(translatorNode);
 				if (translator != null) {
@@ -167,8 +168,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		}
 		
 		// DATA_POLICIES
-		if (node.get(CHILDREN, DATA_POLICIES).isDefined()) {
-			List<ModelNode> policiesNodes = node.get(CHILDREN, DATA_POLICIES).asList();
+		if (node.get(DATA_POLICIES).isDefined()) {
+			List<ModelNode> policiesNodes = node.get(DATA_POLICIES).asList();
 			for (ModelNode policyNode:policiesNodes) {
 				DataPolicyMetadata policy = DataPolicyMetadataMapper.INSTANCE.unwrap(policyNode);
 				if (policy != null) {
@@ -187,34 +188,39 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		connectionsAllowed.add(ConnectionType.NONE.toString());
 		connectionsAllowed.add(ConnectionType.ANY.toString());
 		connectionsAllowed.add(ConnectionType.BY_VERSION.toString());
-		addAttribute(node, CONNECTIONTYPE, ModelType.STRING, false).get(ALLOWED).set(connectionsAllowed);
+		addAttribute(node, CONNECTIONTYPE, ModelType.STRING, false);
+		node.get(CONNECTIONTYPE).get(ALLOWED).set(connectionsAllowed);
 		
 		ModelNode statusAllowed = new ModelNode();
 		statusAllowed.add(Status.ACTIVE.toString());
 		statusAllowed.add(Status.INACTIVE.toString());
-		addAttribute(node, STATUS, ModelType.STRING, true).get(ALLOWED).set(statusAllowed);
+		addAttribute(node, STATUS, ModelType.STRING, true);
+		node.get(STATUS).get(ALLOWED).set(statusAllowed);
 		
 		addAttribute(node, VERSION, ModelType.INT, true);
 		addAttribute(node, URL, ModelType.STRING, false);
-		addAttribute(node, DESCRIPTION, ModelType.STRING, false);
+		addAttribute(node, VDB_DESCRIPTION, ModelType.STRING, false);
 		addAttribute(node, DYNAMIC, ModelType.BOOLEAN, false);
 		
-		ModelNode props = node.get(CHILDREN, PROPERTIES);
+		ModelNode props = node.get(PROPERTIES);
+		props.get(TYPE).set(ModelType.LIST);
 		props.get(DESCRIPTION).set(AdminPlugin.Util.getString(PROPERTIES+DOT_DESC));
-		PropertyMetaDataMapper.INSTANCE.describe(props);
+		PropertyMetaDataMapper.INSTANCE.describe(props.get(VALUE_TYPE));
 
-		ModelNode models = node.get(CHILDREN, MODELS);		
-		ModelMetadataMapper.INSTANCE.describe(models);
+		ModelNode models = node.get( MODELS);	
+		models.get(TYPE).set(ModelType.LIST);
+		ModelMetadataMapper.INSTANCE.describe(models.get(VALUE_TYPE));
 		models.get(DESCRIPTION).set(AdminPlugin.Util.getString(MODELS+DOT_DESC));
-		models.get(MIN_OCCURS).set(1);
 		
-		ModelNode translators = node.get(CHILDREN, OVERRIDE_TRANSLATORS);
+		ModelNode translators = node.get(OVERRIDE_TRANSLATORS);
+		translators.get(TYPE).set(ModelType.LIST);
 		translators.get(DESCRIPTION).set(AdminPlugin.Util.getString(OVERRIDE_TRANSLATORS+DOT_DESC));
-		VDBTranslatorMetaDataMapper.INSTANCE.describe(translators);
+		VDBTranslatorMetaDataMapper.INSTANCE.describe(translators.get(VALUE_TYPE));
 		
-		ModelNode dataPolicies = node.get(CHILDREN, DATA_POLICIES);
+		ModelNode dataPolicies = node.get(DATA_POLICIES);
+		dataPolicies.get(TYPE).set(ModelType.LIST);
 		dataPolicies.get(DESCRIPTION).set(AdminPlugin.Util.getString(DATA_POLICIES+DOT_DESC));
-		DataPolicyMetadataMapper.INSTANCE.describe(dataPolicies);
+		DataPolicyMetadataMapper.INSTANCE.describe(dataPolicies.get(VALUE_TYPE));
 		return node;
 	}
 	
@@ -250,7 +256,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 
 			List<PropertyMetadata> properties = model.getJAXBProperties();
 			if (properties!= null && !properties.isEmpty()) {
-				ModelNode propsNode = node.get(CHILDREN, PROPERTIES); 
+				ModelNode propsNode = node.get(PROPERTIES); 
 				for (PropertyMetadata prop:properties) {
 					propsNode.add(PropertyMetaDataMapper.INSTANCE.wrap(prop,  new ModelNode()));
 				}
@@ -258,7 +264,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			
 			List<SourceMappingMetadata> sources = model.getSourceMappings();
 			if (sources != null && !sources.isEmpty()) {
-				ModelNode sourceMappingNode = node.get(CHILDREN, SOURCE_MAPPINGS);
+				ModelNode sourceMappingNode = node.get(SOURCE_MAPPINGS);
 				for(SourceMappingMetadata source:sources) {
 					sourceMappingNode.add(SourceMappingMetadataMapper.INSTANCE.wrap(source,  new ModelNode()));
 				}
@@ -266,7 +272,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			
 			List<ValidationError> errors = model.getErrors();
 			if (errors != null && !errors.isEmpty()) {
-				ModelNode errorsNode = node.get(CHILDREN, VALIDITY_ERRORS);
+				ModelNode errorsNode = node.get(VALIDITY_ERRORS);
 				for (ValidationError error:errors) {
 					errorsNode.add(ValidationErrorMapper.INSTANCE.wrap(error, new ModelNode()));
 				}
@@ -296,8 +302,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				model.setPath(node.get(MODELPATH).asString());
 			}
 
-			if (node.get(CHILDREN, PROPERTIES).isDefined()) {
-				List<ModelNode> propNodes = node.get(CHILDREN, PROPERTIES).asList();
+			if (node.get(PROPERTIES).isDefined()) {
+				List<ModelNode> propNodes = node.get(PROPERTIES).asList();
 				for (ModelNode propNode:propNodes) {
 					PropertyMetadata prop = PropertyMetaDataMapper.INSTANCE.unwrap(propNode);
 					if (prop != null) {
@@ -306,8 +312,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				}
 			}
 		
-			if (node.get(CHILDREN, SOURCE_MAPPINGS).isDefined()) {
-				List<ModelNode> sourceMappingNodes = node.get(CHILDREN, SOURCE_MAPPINGS).asList();
+			if (node.get(SOURCE_MAPPINGS).isDefined()) {
+				List<ModelNode> sourceMappingNodes = node.get(SOURCE_MAPPINGS).asList();
 				for (ModelNode sourceMapping:sourceMappingNodes) {
 					SourceMappingMetadata source = SourceMappingMetadataMapper.INSTANCE.unwrap(sourceMapping);
 					if (source != null) {
@@ -316,8 +322,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				}
 			}
 			
-			if (node.get(CHILDREN, VALIDITY_ERRORS).isDefined()) {
-				List<ModelNode> errorNodes = node.get(CHILDREN, VALIDITY_ERRORS).asList();
+			if (node.get(VALIDITY_ERRORS).isDefined()) {
+				List<ModelNode> errorNodes = node.get(VALIDITY_ERRORS).asList();
 				for(ModelNode errorNode:errorNodes) {
 					ValidationError error = ValidationErrorMapper.INSTANCE.unwrap(errorNode);
 					if (error != null) {
@@ -334,24 +340,28 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			modelTypes.add(Model.Type.VIRTUAL.toString());
 			modelTypes.add(Model.Type.FUNCTION.toString());
 			modelTypes.add(Model.Type.OTHER.toString());
-			addAttribute(node, MODEL_NAME, ModelType.STRING, true).get(ALLOWED).set(modelTypes);
+			addAttribute(node, MODEL_NAME, ModelType.STRING, true);
+			node.get(MODEL_NAME).get(ALLOWED).set(modelTypes);
 			
 			addAttribute(node, DESCRIPTION, ModelType.STRING, false);
 			addAttribute(node, VISIBLE, ModelType.BOOLEAN, false);
 			addAttribute(node, MODEL_TYPE, ModelType.STRING, true);
 			addAttribute(node, MODELPATH, ModelType.STRING, false);
 			
-			ModelNode props = node.get(CHILDREN, PROPERTIES);
+			ModelNode props = node.get(PROPERTIES);
+			props.get(TYPE).set(ModelType.LIST);
 			props.get(DESCRIPTION).set(AdminPlugin.Util.getString(PROPERTIES+DOT_DESC));
-			PropertyMetaDataMapper.INSTANCE.describe(props);
+			PropertyMetaDataMapper.INSTANCE.describe(props.get(VALUE_TYPE));
 
-			ModelNode source = node.get(CHILDREN, SOURCE_MAPPINGS);
+			ModelNode source = node.get(SOURCE_MAPPINGS);
+			source.get(TYPE).set(ModelType.LIST);
 			source.get(DESCRIPTION).set(AdminPlugin.Util.getString(SOURCE_MAPPINGS+DOT_DESC));
-			SourceMappingMetadataMapper.INSTANCE.describe(source);
+			SourceMappingMetadataMapper.INSTANCE.describe(source.get(VALUE_TYPE));
 
-			ModelNode errors = node.get(CHILDREN, VALIDITY_ERRORS);
+			ModelNode errors = node.get(VALIDITY_ERRORS);
+			errors.get(TYPE).set(ModelType.LIST);
 			errors.get(DESCRIPTION).set(AdminPlugin.Util.getString(VALIDITY_ERRORS+DOT_DESC));
-			ValidationErrorMapper.INSTANCE.describe(errors);
+			ValidationErrorMapper.INSTANCE.describe(errors.get(VALUE_TYPE));
 			
 			return node; 
 		}
@@ -460,7 +470,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 	public static class VDBTranslatorMetaDataMapper implements MetadataMapper<VDBTranslatorMetaData>{
 		private static final String TRANSLATOR_NAME = "translator-name"; //$NON-NLS-1$
 		private static final String BASETYPE = "base-type"; //$NON-NLS-1$
-		private static final String DESCRIPTION = "description"; //$NON-NLS-1$
+		private static final String TRANSLATOR_DESCRIPTION = "translator-description"; //$NON-NLS-1$
 		private static final String PROPERTIES = "properties"; //$NON-NLS-1$
 		private static final String MODULE_NAME = "module-name"; //$NON-NLS-1$
 		
@@ -477,7 +487,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				node.get(BASETYPE).set(translator.getType());
 			}
 			if (translator.getDescription() != null) {
-				node.get(DESCRIPTION).set(translator.getDescription());
+				node.get(TRANSLATOR_DESCRIPTION).set(translator.getDescription());
 			}
 			
 			if (translator.getModuleName() != null) {
@@ -486,7 +496,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 
 			List<PropertyMetadata> properties = translator.getJAXBProperties();
 			if (properties!= null && !properties.isEmpty()) {
-				ModelNode propsNode = node.get(CHILDREN, PROPERTIES); 
+				ModelNode propsNode = node.get(PROPERTIES); 
 				for (PropertyMetadata prop:properties) {
 					propsNode.add(PropertyMetaDataMapper.INSTANCE.wrap(prop, new ModelNode()));
 				}
@@ -505,15 +515,15 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			if (node.has(BASETYPE)) {
 				translator.setType(node.get(BASETYPE).asString());
 			}
-			if (node.has(DESCRIPTION)) {
-				translator.setDescription(node.get(DESCRIPTION).asString());
+			if (node.has(TRANSLATOR_DESCRIPTION)) {
+				translator.setDescription(node.get(TRANSLATOR_DESCRIPTION).asString());
 			}
 			if (node.has(MODULE_NAME)) {
 				translator.setModuleName(node.get(MODULE_NAME).asString());
 			}
 			
-			if (node.get(CHILDREN,PROPERTIES).isDefined()) {
-				List<ModelNode> propNodes = node.get(CHILDREN, PROPERTIES).asList();
+			if (node.get(PROPERTIES).isDefined()) {
+				List<ModelNode> propNodes = node.get(PROPERTIES).asList();
 				for (ModelNode propNode:propNodes) {
 					PropertyMetadata prop = PropertyMetaDataMapper.INSTANCE.unwrap(propNode);
 					if (prop != null) {
@@ -527,12 +537,13 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		public ModelNode describe(ModelNode node) {
 			addAttribute(node, TRANSLATOR_NAME, ModelType.STRING, true); 
 			addAttribute(node, BASETYPE, ModelType.STRING, true);
-			addAttribute(node, DESCRIPTION, ModelType.STRING, false);
+			addAttribute(node, TRANSLATOR_DESCRIPTION, ModelType.STRING, false);
 			addAttribute(node, MODULE_NAME, ModelType.STRING, false);
 			
-			ModelNode props = node.get(CHILDREN, PROPERTIES);
+			ModelNode props = node.get(PROPERTIES);
+			props.get(TYPE).set(ModelType.LIST);
 			props.get(DESCRIPTION).set(AdminPlugin.Util.getString(PROPERTIES+DOT_DESC));
-			PropertyMetaDataMapper.INSTANCE.describe(props);
+			PropertyMetaDataMapper.INSTANCE.describe(props.get(VALUE_TYPE));
 			return node; 
 		}		
 	}	
@@ -593,6 +604,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		private static final String ALLOW_DELETE = "allow-delete"; //$NON-NLS-1$
 		private static final String ALLOW_EXECUTE = "allow-execute"; //$NON-NLS-1$
 		private static final String ALLOW_ALTER= "allow-alter"; //$NON-NLS-1$
+		private static final String POLICY_DESCRIPTION = "policy-description"; //$NON-NLS-1$
 		
 		public static DataPolicyMetadataMapper INSTANCE = new DataPolicyMetadataMapper();
 		
@@ -603,7 +615,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 
 			node.get(POLICY_NAME).set(policy.getName());
 			if (policy.getDescription() != null) {
-				node.get(DESCRIPTION).set(policy.getDescription());
+				node.get(POLICY_DESCRIPTION).set(policy.getDescription());
 			}
 			if (policy.isAllowCreateTemporaryTables() != null) {
 				node.get(ALLOW_CREATE_TEMP_TABLES).set(policy.isAllowCreateTemporaryTables());
@@ -613,7 +625,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			//DATA_PERMISSIONS
 			List<DataPolicy.DataPermission> permissions = policy.getPermissions();
 			if (permissions != null && !permissions.isEmpty()) {
-				ModelNode permissionNodes = node.get(CHILDREN, DATA_PERMISSIONS); 
+				ModelNode permissionNodes = node.get(DATA_PERMISSIONS); 
 				for (DataPolicy.DataPermission dataPermission:permissions) {
 					permissionNodes.add(PermissionMetaDataMapper.INSTANCE.wrap((PermissionMetaData)dataPermission,  new ModelNode()));
 				}			
@@ -621,7 +633,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			
 			//MAPPED_ROLE_NAMES
 			if (policy.getMappedRoleNames() != null && !policy.getMappedRoleNames().isEmpty()) {
-				ModelNode mappedRoleNodes = node.get(CHILDREN, MAPPED_ROLE_NAMES);
+				ModelNode mappedRoleNodes = node.get(MAPPED_ROLE_NAMES);
 				for (String role:policy.getMappedRoleNames()) {
 					mappedRoleNodes.add(role);
 				}
@@ -637,8 +649,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			if (node.has(POLICY_NAME)) {
 				policy.setName(node.get(POLICY_NAME).asString());
 			}
-			if (node.has(DESCRIPTION)) {
-				policy.setDescription(node.get(DESCRIPTION).asString());
+			if (node.has(POLICY_DESCRIPTION)) {
+				policy.setDescription(node.get(POLICY_DESCRIPTION).asString());
 			}
 			if (node.has(ALLOW_CREATE_TEMP_TABLES)) {
 				policy.setAllowCreateTemporaryTables(node.get(ALLOW_CREATE_TEMP_TABLES).asBoolean());
@@ -648,8 +660,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			}
 			
 			//DATA_PERMISSIONS
-			if (node.get(CHILDREN, DATA_PERMISSIONS).isDefined()) {
-				List<ModelNode> permissionNodes = node.get(CHILDREN, DATA_PERMISSIONS).asList();
+			if (node.get(DATA_PERMISSIONS).isDefined()) {
+				List<ModelNode> permissionNodes = node.get(DATA_PERMISSIONS).asList();
 				for (ModelNode permissionNode:permissionNodes) {
 					PermissionMetaData permission = PermissionMetaDataMapper.INSTANCE.unwrap(permissionNode);
 					if (permission != null) {
@@ -659,8 +671,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			}
 
 			//MAPPED_ROLE_NAMES
-			if (node.get(CHILDREN, MAPPED_ROLE_NAMES).isDefined()) {
-				List<ModelNode> roleNameNodes = node.get(CHILDREN, MAPPED_ROLE_NAMES).asList();
+			if (node.get(MAPPED_ROLE_NAMES).isDefined()) {
+				List<ModelNode> roleNameNodes = node.get(MAPPED_ROLE_NAMES).asList();
 				for (ModelNode roleNameNode:roleNameNodes) {
 					policy.addMappedRoleName(roleNameNode.asString());
 				}			
@@ -670,36 +682,42 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		
 		public ModelNode describe(ModelNode node) {
 			addAttribute(node, POLICY_NAME, ModelType.STRING, true);
-			addAttribute(node, DESCRIPTION, ModelType.STRING, false);
+			addAttribute(node, POLICY_DESCRIPTION, ModelType.STRING, false);
 			addAttribute(node, ALLOW_CREATE_TEMP_TABLES, ModelType.BOOLEAN, false);
 			addAttribute(node, ANY_AUTHENTICATED, ModelType.BOOLEAN, false);
 			
-			ModelNode permissions = node.get(CHILDREN, DATA_PERMISSIONS);
+			ModelNode permissions = node.get(DATA_PERMISSIONS);
+			permissions.get(TYPE).set(ModelType.LIST);
 			permissions.get(DESCRIPTION).set(AdminPlugin.Util.getString(DATA_PERMISSIONS+DOT_DESC));
-			permissions.get(MIN_OCCURS).set(1);
 			
-			ModelNode create = permissions.get(CHILDREN, ALLOW_CREATE);
+			ModelNode create = permissions.get(VALUE_TYPE, ALLOW_CREATE);
 			create.get(DESCRIPTION).set(AdminPlugin.Util.getString(ALLOW_CREATE+DOT_DESC));
+			create.get(TYPE).set(ModelType.STRING);
 			
-			ModelNode read = permissions.get(CHILDREN, ALLOW_READ);
+			ModelNode read = permissions.get(VALUE_TYPE, ALLOW_READ);
 			read.get(DESCRIPTION).set(AdminPlugin.Util.getString(ALLOW_READ+DOT_DESC));
+			read.get(TYPE).set(ModelType.STRING);
 
-			ModelNode update = permissions.get(CHILDREN, ALLOW_UPDATE);
+			ModelNode update = permissions.get(VALUE_TYPE, ALLOW_UPDATE);
 			update.get(DESCRIPTION).set(AdminPlugin.Util.getString(ALLOW_UPDATE+DOT_DESC));
+			update.get(TYPE).set(ModelType.STRING);
 
-			ModelNode delete = permissions.get(CHILDREN, ALLOW_DELETE);
+			ModelNode delete = permissions.get(VALUE_TYPE, ALLOW_DELETE);
 			delete.get(DESCRIPTION).set(AdminPlugin.Util.getString(ALLOW_DELETE+DOT_DESC));
+			delete.get(TYPE).set(ModelType.STRING);
 
-			ModelNode execute = permissions.get(CHILDREN, ALLOW_EXECUTE);
+			ModelNode execute = permissions.get(VALUE_TYPE, ALLOW_EXECUTE);
 			execute.get(DESCRIPTION).set(AdminPlugin.Util.getString(ALLOW_EXECUTE+DOT_DESC));
+			execute.get(TYPE).set(ModelType.STRING);
 
-			ModelNode alter = permissions.get(CHILDREN, ALLOW_ALTER);
+			ModelNode alter = permissions.get(VALUE_TYPE, ALLOW_ALTER);
 			alter.get(DESCRIPTION).set(AdminPlugin.Util.getString(ALLOW_ALTER+DOT_DESC));
+			alter.get(TYPE).set(ModelType.STRING);
 			
-			ModelNode roleNames = node.get(CHILDREN, MAPPED_ROLE_NAMES);
+			ModelNode roleNames = node.get(MAPPED_ROLE_NAMES);
 			roleNames.get(TYPE).set(ModelType.LIST);
 			roleNames.get(DESCRIPTION).set(AdminPlugin.Util.getString(MAPPED_ROLE_NAMES+DOT_DESC));
-			roleNames.get("value-type").set(ModelType.STRING); //$NON-NLS-1$
+			roleNames.get(VALUE_TYPE).set(ModelType.STRING);
 			return node; 
 		}
 	}	
@@ -1025,7 +1043,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		public ModelNode wrap(WorkerPoolStatisticsMetadata stats, ModelNode node) {
 			if (stats == null)
 				return null;
-			
+			node.get(TYPE).set(ModelType.OBJECT);
 			node.get(ACTIVE_THREADS).set(stats.getActiveThreads());
 			node.get(HIGHEST_ACTIVE_THREADS).set(stats.getHighestActiveThreads());
 			node.get(TOTAL_COMPLETED).set(stats.getTotalCompleted());
@@ -1067,17 +1085,15 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		}
 	}	
 	
-	private static final String CHILDREN = "children"; //$NON-NLS-1$
-	private static final String ATTRIBUTES = "attributes"; //$NON-NLS-1$
 	private static final String DOT_DESC = ".describe"; //$NON-NLS-1$
 	private static final String TYPE = "type"; //$NON-NLS-1$
-	private static final String MIN_OCCURS = "min-occurs"; //$NON-NLS-1$
 	private static final String REQUIRED = "required"; //$NON-NLS-1$
 	private static final String ALLOWED = "allowed"; //$NON-NLS-1$
+	private static final String VALUE_TYPE = "value-type"; //$NON-NLS-1$
 	static ModelNode addAttribute(ModelNode node, String name, ModelType dataType, boolean required) {
-		node.get(ATTRIBUTES, name, TYPE).set(dataType);
-        node.get(ATTRIBUTES, name, DESCRIPTION).set(AdminPlugin.Util.getString(name+DOT_DESC));
-        node.get(ATTRIBUTES, name, REQUIRED).set(required);
+		node.get(name, TYPE).set(dataType);
+        node.get(name, DESCRIPTION).set(AdminPlugin.Util.getString(name+DOT_DESC));
+        node.get(name, REQUIRED).set(required);
         return node;
     }
 }

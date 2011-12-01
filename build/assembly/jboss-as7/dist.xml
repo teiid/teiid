@@ -41,20 +41,7 @@
         <fileMode>0644</fileMode>
         <directoryMode>0755</directoryMode>        
     </fileSet>
-    
-	<!-- We may want to do this if including multiple doc types or languages
-	     as the parent directory structure will be copied.  However the parent
-	     directory permissions still seem wrong.
-	<fileSet>
-	  	<directory>target/distribution/teiid-${version}-docs</directory>
-	  	<includes>
-	  		<include>**/*.pdf</include>
-	  	</includes>
-	    <outputDirectory>teiid-docs</outputDirectory>
-	    <fileMode>0644</fileMode>
-	    <directoryMode>0755</directoryMode>
-	</fileSet> -->
-	
+    	
   </fileSets>
   
     <files>
@@ -166,6 +153,19 @@
             <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
+    
+    <!-- This is separated out so that we can avoid dragging in transitive dependencies, using pom build the adminshell correctly -->
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+        <include>org.jboss.teiid:teiid-admin</include>   
+      </includes>
+      <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>modules/org/jboss/teiid/main</outputDirectory>
+      </binaries>
+    </moduleSet>    
     
     <!-- These are built in connectors  -->
     <moduleSet>

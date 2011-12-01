@@ -65,7 +65,7 @@ import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.SSLConfiguration;
 import org.teiid.transport.SocketConfiguration;
 
-public class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider {
+class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider {
 
 	private static Element[] attributes = {
 		Element.TRANSPORT_PROTOCOL_ATTRIBUTE,
@@ -189,7 +189,7 @@ public class TransportAdd extends AbstractAddStepHandler implements DescriptionP
     	
         // add security domains
         for (String domain:domainList) {
-        	LogManager.logInfo(LogConstants.CTX_SECURITY, IntegrationPlugin.Util.getString("security_enabled", domain)); //$NON-NLS-1$
+        	LogManager.logInfo(LogConstants.CTX_SECURITY, IntegrationPlugin.Util.getString("security_enabled", domain, transportName)); //$NON-NLS-1$
         	transportBuilder.addDependency(ServiceName.JBOSS.append("security", "security-domain", domain), SecurityDomainContext.class, new ConcurrentMapInjector<String,SecurityDomainContext>(transport.securityDomains, domain)); //$NON-NLS-1$ //$NON-NLS-2$
         }
         

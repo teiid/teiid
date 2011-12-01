@@ -48,7 +48,7 @@ public class TestTransactionMetadata {
 		assertEquals(tm.getScope(), tm1.getScope());
 	}
 
-	private static final String describe = "{\"attributes\" : {\n" + 
+	private static final String describe = "{\n" + 
 			"    \"session-id\" : {\n" + 
 			"        \"type\" : {\n" + 
 			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
@@ -77,7 +77,7 @@ public class TestTransactionMetadata {
 			"        \"description\" : \"Transaction Identifier (XID)\",\n" + 
 			"        \"required\" : true\n" + 
 			"    }\n" + 
-			"}}";
+			"}";
 	@Test
 	public void testDescribe() {
 		ModelNode n = VDBMetadataMapper.TransactionMetadataMapper.INSTANCE.describe(new ModelNode());

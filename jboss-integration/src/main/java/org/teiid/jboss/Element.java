@@ -196,7 +196,7 @@ enum Element {
 		node.get(type, name, TYPE).set(this.modelType);
         node.get(type, name, DESCRIPTION).set(getDescription(bundle));
         node.get(type, name, REQUIRED).set(this.required);
-        node.get(type, name, MAX_OCCURS).set(1);
+        //node.get(type, name, MAX_OCCURS).set(1);
         
         if (this.defaultValue != null) {
         	if (ModelType.INT == this.modelType) {

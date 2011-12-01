@@ -26,53 +26,28 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
-import org.teiid.common.buffer.BufferManager;
+import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.service.BufferService;
-import org.teiid.query.ObjectReplicator;
-import org.teiid.services.BufferServiceImpl;
 
-class BufferManagerService implements Service<BufferService>, BufferService {
-
-	private BufferServiceImpl bufferService;
-	public final InjectedValue<String> pathInjector = new InjectedValue<String>();
-	public final InjectedValue<ObjectReplicator> replicatorInjector = new InjectedValue<ObjectReplicator>();
-	private BufferManager manager;
+class CacheService<T> implements Service<SessionAwareCache<T>> {
+	private SessionAwareCache<T> cache;
+	public final InjectedValue<BufferService> bufferMgrInjector = new InjectedValue<BufferService>();
 	
-	public BufferManagerService(BufferServiceImpl buffer) {
-		this.bufferService = buffer;
+	public CacheService(SessionAwareCache<T> t){
+		this.cache = t;
 	}
 	
 	@Override
 	public void start(StartContext context) throws StartException {
-		bufferService.setDiskDirectory(pathInjector.getValue());
-		bufferService.start();
-		manager = bufferService.getBufferManager();
-		if (replicatorInjector.getValue() != null) {
-			try {
-				//use a mux name that will not conflict with any vdb
-				manager = this.replicatorInjector.getValue().replicate("$BM$", BufferManager.class, this.manager, 0); //$NON-NLS-1$
-			} catch (Exception e) {
-				throw new StartException(e);
-			}
-		}
+		this.cache.setBufferManager(this.bufferMgrInjector.getValue().getBufferManager());
 	}
 
 	@Override
 	public void stop(StopContext context) {
-		bufferService.stop();
-		if (this.replicatorInjector.getValue() != null) {
-			this.replicatorInjector.getValue().stop(bufferService);
-		}
-	}
-	
-	@Override
-	public BufferManager getBufferManager() {
-		return manager;
 	}
 
 	@Override
-	public BufferService getValue() throws IllegalStateException,IllegalArgumentException {
-		return this.bufferService;
+	public SessionAwareCache<T> getValue() throws IllegalStateException, IllegalArgumentException {
+		return this.cache;
 	}
-
 }

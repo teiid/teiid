@@ -70,7 +70,11 @@ public class ServerWorkItem implements Runnable {
 		final boolean encrypt = message.getContents() instanceof SealedObject;
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         try {
-        	Thread.currentThread().setContextClassLoader(Module.getCallerModule().getClassLoader());
+        	try {
+        		Thread.currentThread().setContextClassLoader(Module.getCallerModule().getClassLoader());
+        	} catch(Throwable t) {
+        		// ignore
+        	}
             message.setContents(this.socketClientInstance.getCryptor().unsealObject(message.getContents()));
 			if (!(message.getContents() instanceof ServiceInvocationStruct)) {
 				throw new AssertionError("unknown message contents"); //$NON-NLS-1$

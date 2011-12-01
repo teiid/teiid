@@ -51,7 +51,7 @@ public class TestSessionMetadata {
 		
 	}
 	
-	private static final String describe = "{\"attributes\" : {\n" + 
+	private static final String describe = "{\n" + 
 			"    \"application-name\" : {\n" + 
 			"        \"type\" : {\n" + 
 			"            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" + 
@@ -122,7 +122,7 @@ public class TestSessionMetadata {
 			"        \"description\" : \"Security domain that session used for login\",\n" + 
 			"        \"required\" : false\n" + 
 			"    }\n" + 
-			"}}"; 
+			"}"; 
 	
 	@Test public void testDescribe() {
 		ModelNode n = VDBMetadataMapper.SessionMetadataMapper.INSTANCE.describe(new ModelNode());

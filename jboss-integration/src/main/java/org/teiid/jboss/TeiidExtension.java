@@ -23,11 +23,10 @@ package org.teiid.jboss;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ATTRIBUTES;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CHILDREN;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIBE;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.HEAD_COMMENT_ALLOWED;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REMOVE;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TAIL_COMMENT_ALLOWED;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -37,6 +36,7 @@ import org.jboss.as.controller.ExtensionContext;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.SubsystemRegistration;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
+import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
 import org.jboss.as.controller.parsing.ExtensionParsingContext;
 import org.jboss.as.controller.registry.AttributeAccess.Storage;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
@@ -67,7 +67,19 @@ public class TeiidExtension implements Extension {
 
 		// Main Teiid system, with children query engine and translators.
 		
-		final ManagementResourceRegistration teiidSubsystem = registration.registerSubsystemModel(TEIID_DESCRIBE);
+		final ManagementResourceRegistration teiidSubsystem = registration.registerSubsystemModel(new DescriptionProvider() {
+			@Override
+			public ModelNode getModelDescription(Locale locale) {
+				final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
+		        ModelNode node = new ModelNode();
+		        node.get(ModelDescriptionConstants.DESCRIPTION).set("teiid subsystem"); //$NON-NLS-1$
+		        
+		        TeiidAdd.describeTeiid(node, ATTRIBUTES, bundle);
+		        node.get(CHILDREN, Element.TRANSPORT_ELEMENT.getLocalName(), DESCRIPTION).set(Element.TRANSPORT_ELEMENT.getDescription(bundle)); 
+		        node.get(CHILDREN, Element.TRANSLATOR_ELEMENT.getLocalName(), DESCRIPTION).set(Element.TRANSLATOR_ELEMENT.getDescription(bundle));
+		        return node;
+			}
+		});
 		teiidSubsystem.registerOperationHandler(ADD, TEIID_BOOT_ADD, TEIID_BOOT_ADD, false);
 		teiidSubsystem.registerOperationHandler(DESCRIBE, TEIID_DESCRIBE, TEIID_DESCRIBE, false);     
 				
@@ -79,8 +91,6 @@ public class TeiidExtension implements Extension {
 
 				final ModelNode node = new ModelNode();
 	            node.get(DESCRIPTION).set(Element.TRANSLATOR_ELEMENT.getDescription(bundle));
-	            node.get(HEAD_COMMENT_ALLOWED).set(true);
-	            node.get(TAIL_COMMENT_ALLOWED).set(true);
 	            Element.TRANSLATOR_MODULE_ATTRIBUTE.describe(node, ATTRIBUTES, bundle);
 	            return node;
 			}
@@ -97,11 +107,7 @@ public class TeiidExtension implements Extension {
 				
 				final ModelNode node = new ModelNode();
 	            node.get(DESCRIPTION).set(Element.TRANSPORT_ELEMENT.getDescription(bundle));
-	            node.get(HEAD_COMMENT_ALLOWED).set(true);
-	            node.get(TAIL_COMMENT_ALLOWED).set(true);
-	            
 	            TransportAdd.transportDescribe(node, ATTRIBUTES, bundle);
-	            
 	            return node;
 			}
 		});

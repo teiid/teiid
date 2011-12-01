@@ -10,7 +10,17 @@
 	<properties>
 		<ant.version>1.7.0</ant.version>
 		<site.url>http://www.jboss.org/teiid</site.url>
-        <jbossas-version>7.1.0.Alpha2-SNAPSHOT</jbossas-version>
+        <jbossas-version>7.1.0.Beta1</jbossas-version>
+        <version.org.jboss.jboss-common-core>2.2.17.GA</version.org.jboss.jboss-common-core>
+        <version.org.jboss.staxmapper>1.0.0.Final</version.org.jboss.staxmapper>
+        <version.org.jboss.jboss-dmr>1.0.0.Final</version.org.jboss.jboss-dmr>
+        <version.org.jboss.msc.jboss-msc>1.0.1.GA</version.org.jboss.msc.jboss-msc>
+        <version.org.jboss.modules.jboss-modules>1.1.0.CR3</version.org.jboss.modules.jboss-modules>
+        <version.org.jboss.jboss-vfs>3.1.0.CR1</version.org.jboss.jboss-vfs>
+        <version.org.picketbox>4.0.6.Beta1</version.org.picketbox>
+        <version.org.jboss.logging.jboss-logging>3.1.0.CR1</version.org.jboss.logging.jboss-logging>
+        <version.org.jboss.logging.jboss-logging-tools>1.0.0.CR4</version.org.jboss.logging.jboss-logging-tools>
+        <version.org.picketbox.jbosssx-client>3.0.0.CR2</version.org.picketbox.jbosssx-client>
 	</properties>
 	<scm>
         <connection>scm:svn:https://anonsvn.jboss.org/repos/teiid/trunk</connection>
@@ -375,7 +385,7 @@
             <dependency>
                 <groupId>org.jboss</groupId>
                 <artifactId>jboss-common-core</artifactId>
-                <version>2.2.17.GA</version>
+                <version>${version.org.jboss.jboss-common-core}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.jboss.logging</groupId>
@@ -396,29 +406,34 @@
             <dependency>
                 <groupId>org.jboss</groupId>
                 <artifactId>staxmapper</artifactId>
-                <version>1.0.0.Final</version>
+                <version>${version.org.jboss.staxmapper}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.picketbox</groupId>
+                <artifactId>jbosssx-client</artifactId>
+                <version>${version.org.picketbox.jbosssx-client}</version>
             </dependency>
     
             <dependency>
                 <groupId>org.jboss</groupId>
                 <artifactId>jboss-dmr</artifactId>
-                <version>1.0.0.Final</version>
+                <version>${version.org.jboss.jboss-dmr}</version>
             </dependency>
             
             <dependency>
                 <groupId>org.jboss.msc</groupId>
                 <artifactId>jboss-msc</artifactId>
-                <version>1.0.0.GA</version>
+                <version>${version.org.jboss.msc.jboss-msc}</version>
             </dependency> 
             <dependency>
                 <groupId>org.jboss.modules</groupId>
                 <artifactId>jboss-modules</artifactId>
-                <version>1.0.3.GA</version>
+                <version>${version.org.jboss.modules.jboss-modules}</version>
             </dependency>             
             <dependency>
                 <groupId>org.jboss</groupId>
                 <artifactId>jboss-vfs</artifactId>
-                <version>3.0.1.GA</version>
+                <version>${version.org.jboss.jboss-vfs}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.jboss.logging</groupId>
@@ -433,22 +448,48 @@
             <dependency>
                 <groupId>org.picketbox</groupId>
                 <artifactId>picketbox</artifactId>
-                <version>4.0.1</version>
+                <version>${version.org.picketbox}</version>
             </dependency>           
             <dependency>
                 <groupId>org.jboss.as</groupId>
                 <artifactId>jboss-as-server</artifactId>
                 <version>${jbossas-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.jboss.as</groupId>
+                        <artifactId>jboss-as-transactions</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.jboss.as</groupId>
                 <artifactId>jboss-as-connector</artifactId>
                 <version>${jbossas-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.jboss.as</groupId>
+                        <artifactId>jboss-as-server</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.jboss.as</groupId>
+                        <artifactId>jboss-as-transactions</artifactId>
+                    </exclusion>                    
+                </exclusions>                  
             </dependency>   
             <dependency>
                 <groupId>org.jboss.as</groupId>
                 <artifactId>jboss-as-security</artifactId>
                 <version>${jbossas-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.jboss.as</groupId>
+                        <artifactId>jboss-as-server</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.jboss.as</groupId>
+                        <artifactId>jboss-as-transactions</artifactId>
+                    </exclusion>                    
+                </exclusions>                                                
             </dependency>  
             <dependency>
                 <groupId>org.jboss.as</groupId>
@@ -463,17 +504,23 @@
             <dependency>
                 <groupId>org.jboss.logging</groupId>
                 <artifactId>jboss-logging</artifactId>
-                <version>3.0.0.GA</version>
+                <version>${version.org.jboss.logging.jboss-logging}</version>
             </dependency>   
             <dependency>
                 <groupId>org.jboss.logging</groupId>
                 <artifactId>jboss-logging-generator</artifactId>
-                <version>1.0.0.CR1</version>            
+                <version>${version.org.jboss.logging.jboss-logging-tools}</version>            
             </dependency>   
             <dependency>
               <groupId>org.jboss.as</groupId>
               <artifactId>jboss-as-clustering-infinispan</artifactId>
               <version>${jbossas-version}</version>
+              <exclusions>
+                    <exclusion>
+                        <groupId>org.jboss.logging</groupId>
+                        <artifactId>jboss-logging-processor</artifactId>
+                    </exclusion>
+             </exclusions>              
             </dependency>            
             <dependency>
                 <groupId>org.jboss.logging</groupId>

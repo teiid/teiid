@@ -26,6 +26,9 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Properties;
 
+import org.jboss.modules.Module;
+import org.jboss.modules.ModuleIdentifier;
+import org.jboss.modules.ModuleLoadException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.PropertiesUtils;
@@ -62,9 +65,19 @@ public class EmbeddedProfile implements ConnectionProfile {
 		}
     }
 
-	protected ServerConnection createServerConnection(Properties info)
-			throws TeiidException {
-		return (ServerConnection)ReflectionHelper.create("org.teiid.transport.LocalServerConnection", Arrays.asList(info, PropertiesUtils.getBooleanProperty(info, USE_CALLING_THREAD, true)), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
+	protected ServerConnection createServerConnection(Properties info) throws TeiidException {
+		ClassLoader tccl = Thread.currentThread().getContextClassLoader();
+		try {
+	        try {
+	        	final Module module = Module.getCallerModuleLoader().loadModule(ModuleIdentifier.create("org.jboss.teiid")); //$NON-NLS-1$
+	        	Thread.currentThread().setContextClassLoader(module.getClassLoader());
+	        } catch (ModuleLoadException e) {
+	        	Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+	        } 
+	        return (ServerConnection)ReflectionHelper.create("org.teiid.transport.LocalServerConnection", Arrays.asList(info, PropertiesUtils.getBooleanProperty(info, USE_CALLING_THREAD, true)), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
+		} finally {
+        	Thread.currentThread().setContextClassLoader(tccl);
+        }
 	}
     
 }
