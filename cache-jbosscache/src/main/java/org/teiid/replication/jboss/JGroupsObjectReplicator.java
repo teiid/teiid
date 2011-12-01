@@ -22,7 +22,13 @@
 
 package org.teiid.replication.jboss;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -53,6 +59,7 @@ import org.jgroups.blocks.MethodLookup;
 import org.jgroups.blocks.RequestOptions;
 import org.jgroups.blocks.ResponseMode;
 import org.jgroups.blocks.RpcDispatcher;
+import org.jgroups.util.Buffer;
 import org.jgroups.util.Promise;
 import org.jgroups.util.Rsp;
 import org.jgroups.util.RspList;
@@ -83,6 +90,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 			this.object = object;
 			this.methodMap = methodMap;
 			this.methodList = methodList;
+			setMarshaller(new ContextAwareMarshaller(getClass().getClassLoader()));
 		}
 
 		@Override
@@ -570,5 +578,48 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 				}
 			}
 		}
+	}	
+	
+	// This class is used so that the objects are loaded with the current classes class loader
+	// rather than foreign class loader
+	static class ContextAwareMarshaller implements RpcDispatcher.Marshaller {
+		private ClassLoader classloader;
+		
+		public ContextAwareMarshaller(ClassLoader classloader) {
+			this.classloader = classloader;
+		}
+		
+		@Override
+		public Buffer objectToBuffer(Object obj) throws Exception {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ObjectOutputStream out = new ObjectOutputStream(baos);
+			out.writeObject(obj);
+			out.close();
+			return new Buffer(baos.toByteArray());
+		}
+
+		@Override
+		public Object objectFromBuffer(byte[] buf, int offset, int length) throws Exception {
+			ObjectInputStream in = new CLAwareObjectInputStream(new ByteArrayInputStream(buf, offset, length), this.classloader);
+			Object anObj = in.readObject();
+			in.close();
+			return anObj;
+		}
 	}
+	
+	static class CLAwareObjectInputStream extends ObjectInputStream {
+		private ClassLoader classloader;
+		@Override
+		public Class resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+			try {
+				return this.classloader.loadClass(desc.getName());
+			} catch (Throwable t) {
+			}
+			return super.resolveClass(desc);
+		}
+		public CLAwareObjectInputStream(InputStream in, ClassLoader classloader) throws IOException {
+			super(in);
+			this.classloader = classloader;
+		}
+	}	
 }

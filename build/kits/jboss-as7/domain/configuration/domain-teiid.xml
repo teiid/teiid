@@ -373,6 +373,14 @@
                             <login-module code="UsersRoles" flag="required"/>
                         </authentication>
                     </security-domain>
+                <security-domain name="teiid-security" cache-type="default">
+                    <authentication>
+                        <login-module code="UsersRoles" flag="required">
+                            <module-option name="usersProperties" value="teiid-security-users.properties"/>
+                            <module-option name="rolesProperties" value="teiid-security-roles.properties"/>
+                        </login-module>
+                    </authentication>
+                </security-domain>                     
                 </security-domains>
             </subsystem>
             <subsystem xmlns="urn:jboss:domain:teiid:1.0">
