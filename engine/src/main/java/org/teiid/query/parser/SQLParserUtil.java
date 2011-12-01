@@ -50,7 +50,7 @@ import org.teiid.query.sql.proc.Statement;
 
 public class SQLParserUtil {
 	
-	public static final boolean PARSE_DECIMAL_AS_DOUBLE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.parseDecimalAsDouble", false); //$NON-NLS-1$
+	public static final boolean DECIMAL_AS_DOUBLE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.decimalAsDouble", false); //$NON-NLS-1$
 	
 	String matchesAny(String arg, String ... expected) {
 		for (String string : expected) {

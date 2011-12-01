@@ -41,8 +41,8 @@
   <li>7.x or earlier VDBs with table cardinalities set the old unknown value 0 will now report that value as -1 via the metadata API or SYS.TABLES.
   <li>Exact fixed point literals, e.g. 1.0, are now parsed as decimal/BigDecimal values as per the ANSI specification, rather than as double values.  
   Also the AVG aggregate function will return an exact numeric (BigDecimal) value for integral types rather than returning a double value. 
-  Views that were projecting doubles from exact numeric literals or using AVG will need to be updated.  There is also a new system property org.teiid.parseDecimalAsDouble to 
-  enable the pre-8.0 parsing of exact fixed point literals as doubles.  The BigDecimal form of the AVG function now uses the same precision and scale logic as the division system function, rather than using a
+  Views that were projecting doubles from exact numeric literals or using AVG will need to be updated.  There is also a new system property org.teiid.decimalAsDouble to 
+  enable the pre-8.0 behavior.  The BigDecimal form of the AVG function now uses the same precision and scale logic as the division system function, rather than using a
   fixed scale of 9.
   <li>BigDecimal division that returns a quotient that is equal to zero will have a scale of zero as well. Prior releases would typically return a zero value with a scale of 16.
 </ul>

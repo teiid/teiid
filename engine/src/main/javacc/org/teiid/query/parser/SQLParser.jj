@@ -4004,7 +4004,7 @@ Constant literal() :
 		}   |
 		t=<DECIMALVAL>	{ 
 			try { 
-			    if (PARSE_DECIMAL_AS_DOUBLE) {
+			    if (DECIMAL_AS_DOUBLE) {
 			    	constant = new Constant(Double.valueOf(t.image), DataTypeManager.DefaultDataClasses.DOUBLE); 
 				} else {
 			    	constant = new Constant(new java.math.BigDecimal(t.image), DataTypeManager.DefaultDataClasses.BIG_DECIMAL); 

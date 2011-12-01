@@ -41,8 +41,8 @@
 			</para>
 		</listitem>
 		<listitem>
-			<para><emphasis>org.teiid.parseDecimalAsDouble</emphasis> - defaults to false.  
-			Set to true to parse exact fixed point literals, e.g. 1.0, as double values rather than as decimal/BigDecimal values in the same way as releases earlier than 8.0.
+			<para><emphasis>org.teiid.decimalAsDouble</emphasis> - defaults to false.  
+			Set to true to parse exact fixed point literals, e.g. 1.0, as double values rather than as decimal/BigDecimal values and to return a double value from the AVG function for integral values in the same way as releases earlier than 8.0.
 			</para>
 		</listitem>
 	</itemizedlist>
