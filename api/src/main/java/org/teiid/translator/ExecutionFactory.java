@@ -666,6 +666,7 @@ public class ExecutionFactory<F, C> {
     /**
      * Get list of all supported function names.  Arithmetic functions have names like
      * &quot;+&quot;.  
+     * @see SourceSystemFunctions
      * @since 3.1 SP3    
      */        
     public List<String> getSupportedFunctions() {
@@ -915,6 +916,29 @@ public class ExecutionFactory<F, C> {
 	 * @since 7.4
 	 */
 	public boolean supportsLikeRegex() {
+		return false;
+	}
+	
+	/**
+	 * Used for fine grained control of convert/cast pushdown.  If {@link #getSupportedFunctions()} contains
+	 * {@link SourceSystemFunctions#CONVERT}, then all of the default Teiid pushdown conversions are supported.
+	 * So typically this method will be implemented when {@link #getSupportedFunctions()} does not contain
+	 * {@link SourceSystemFunctions#CONVERT}. The engine will does not care about an unnecessary conversion 
+	 * where fromType == toType.
+	 * @param fromType @see RUNTIME_CODES
+	 * @param toType @see RUNTIME_CODES
+	 * @return true if the given conversion is supported.
+	 * @since 8.0
+	 */
+	public boolean supportsConvert(int fromType, int toType) {
+		return false;
+	}
+	
+	/**
+	 * @return true if only Literal comparisons (equality, ordered, like, etc.) are supported for non-join conditions.
+	 * @since 8.0
+	 */
+	public boolean supportsOnlyLiteralComparison() {
 		return false;
 	}
 

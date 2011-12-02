@@ -685,7 +685,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
     static boolean isSupportedJoinCriteria(SupportedJoinCriteria sjc, Criteria crit, Object accessModelID, 
     		QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord record) 
     throws QueryMetadataException, TeiidComponentException {
-    	if(!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(crit, accessModelID, metadata, capFinder, record) ) { 
+    	if(!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(crit, accessModelID, metadata, capFinder, record, true) ) { 
             return false;                        
         } 
         if (sjc == SupportedJoinCriteria.ANY) {

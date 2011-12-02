@@ -42,7 +42,6 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
@@ -224,15 +223,23 @@ public class CapabilitiesUtil {
         if (metadata.isVirtualModel(modelID)){
             return false;
         }
+
+        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
         
+        if (FunctionLibrary.isConvert(function)) {
+            Class<?> fromType = function.getArg(0).getType();
+            Class<?> targetType = function.getType();
+            if (fromType == targetType) {
+            	return true; //this should be removed in rewrite
+            }
+            return caps.supportsConvert(DataTypeManager.getTypeCode(fromType), DataTypeManager.getTypeCode(targetType));
+        }
         //capabilities check is only valid for non-schema scoped functions
         //technically the other functions are scoped to SYS or their function model, but that's 
         //not formally part of their metadata yet
         Schema schema = function.getFunctionDescriptor().getMethod().getParent();
         if (schema == null) {
             // Find capabilities
-            SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-
             if (!caps.supportsFunction(function.getFunctionDescriptor().getName())) {
                 return false;
             }
@@ -240,22 +247,6 @@ public class CapabilitiesUtil {
         	return false; //not the right schema
         }
         
-        //special check to ensure that special conversions are not pushed down (this can be removed after we support type based function pushdown)            
-        if (FunctionLibrary.isConvert(function)) {
-            Class<?> fromType = function.getArg(0).getType();
-            //object or clob to anything cannot be pushed down
-            if (DataTypeManager.DefaultDataClasses.OBJECT.equals(fromType) 
-                            || DataTypeManager.DefaultDataClasses.CLOB.equals(fromType)
-                            || DataTypeManager.DefaultDataClasses.XML.equals(fromType)) {
-                return false;                
-            }
-            String targetType = (String)((Constant)function.getArg(1)).getValue();
-            if (DataTypeManager.DefaultDataTypes.CLOB.equalsIgnoreCase(targetType) 
-                            || DataTypeManager.DefaultDataTypes.XML.equalsIgnoreCase(targetType)) {
-                return false;                
-            }
-        }
-
         return true;
     }
 

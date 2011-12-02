@@ -23,6 +23,7 @@
 package org.teiid.query.optimizer.relational.rules;
 
 import java.util.Arrays;
+import java.util.Collection;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
@@ -41,39 +42,9 @@ import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.lang.AbstractCompareCriteria;
-import org.teiid.query.sql.lang.AbstractSetCriteria;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.CompoundCriteria;
-import org.teiid.query.sql.lang.DependentSetCriteria;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.IsNullCriteria;
-import org.teiid.query.sql.lang.MatchCriteria;
-import org.teiid.query.sql.lang.NotCriteria;
-import org.teiid.query.sql.lang.OrderByItem;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.SetCriteria;
-import org.teiid.query.sql.lang.SubqueryCompareCriteria;
-import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
-import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.CaseExpression;
-import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.QueryString;
-import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.SearchedCaseExpression;
-import org.teiid.query.sql.symbol.TextLine;
-import org.teiid.query.sql.symbol.WindowFunction;
-import org.teiid.query.sql.symbol.XMLAttributes;
-import org.teiid.query.sql.symbol.XMLElement;
-import org.teiid.query.sql.symbol.XMLForest;
-import org.teiid.query.sql.symbol.XMLNamespaces;
-import org.teiid.query.sql.symbol.XMLParse;
-import org.teiid.query.sql.symbol.XMLQuery;
-import org.teiid.query.sql.symbol.XMLSerialize;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
@@ -95,6 +66,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     // Output state
     private TeiidComponentException exception;
     private boolean valid = true;
+    private boolean isJoin;
 
     /**
      * @param iterator
@@ -215,7 +187,20 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     
     public void visit(CompareCriteria obj) {
     	checkCompareCriteria(obj);
+        checkLiteralComparison(obj, Arrays.asList(obj.getRightExpression()));
     }
+
+	private void checkLiteralComparison(LanguageObject obj, Collection<? extends LanguageObject> toCheck) {
+		if (isJoin || !this.caps.supportsCapability(Capability.CRITERIA_ONLY_LITERAL_COMPARE)) {
+			return;
+		}
+		for (LanguageObject languageObject : toCheck) {
+			if (!EvaluatableVisitor.willBecomeConstant(languageObject, true)) {
+	        	markInvalid(obj, "Non-literal comparison not supported by source."); //$NON-NLS-1$
+	        	return;
+			}
+		}
+	}
     
     public void checkCompareCriteria(AbstractCompareCriteria obj) {
         boolean negated = false;
@@ -341,6 +326,8 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         } catch(TeiidComponentException e) {
             handleException(e);            
         }
+        
+        checkLiteralComparison(obj, Arrays.asList(obj.getRightExpression()));
     }
 
     public void visit(NotCriteria obj) {
@@ -371,6 +358,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         } catch(TeiidComponentException e) {
             handleException(e);            
         }
+        checkLiteralComparison(crit, crit.getValues());
     }
 
     /**
@@ -640,6 +628,10 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     }
 
     public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord) throws QueryMetadataException, TeiidComponentException {
+    	return canPushLanguageObject(obj, modelID, metadata, capFinder, analysisRecord, false);
+    }
+    
+    public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, boolean isJoin) throws QueryMetadataException, TeiidComponentException {
         if(obj == null) {
             return true;
         }
@@ -657,6 +649,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         }
         
         CriteriaCapabilityValidatorVisitor visitor = new CriteriaCapabilityValidatorVisitor(modelID, metadata, capFinder, caps);
+        visitor.isJoin = isJoin;
         PostOrderNavigator.doVisit(obj, visitor);
         
         if(visitor.getException() != null) {

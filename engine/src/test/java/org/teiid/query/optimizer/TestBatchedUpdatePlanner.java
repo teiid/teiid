@@ -26,13 +26,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
@@ -47,13 +48,12 @@ import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorReport;
-
-import junit.framework.TestCase;
 
 
 
@@ -73,7 +73,7 @@ public class TestBatchedUpdatePlanner extends TestCase {
             Command command = QueryParser.getQueryParser().parseCommand(sql[i]);
             QueryResolver.resolveCommand(command, md);
             ValidatorReport repo =  Validator.validate(command, md);
-            Collection failures = new ArrayList();
+            Collection<LanguageObject> failures = new ArrayList<LanguageObject>();
             repo.collectInvalidObjects(failures);
             if (failures.size() > 0){
                 fail("Exception during validation (" + repo); //$NON-NLS-1$
@@ -222,6 +222,10 @@ public class TestBatchedUpdatePlanner extends TestCase {
         public boolean supportsFunction(String functionName) {return false;}
         // since 4.4
         public Object getSourceProperty(Capability propertyName) {return null;}
+        @Override
+        public boolean supportsConvert(int sourceType, int targetType) {
+        	return false;
+        }
         
     }
     

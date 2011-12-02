@@ -39,6 +39,7 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.DataTypeManager.DefaultTypeCodes;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
@@ -117,7 +118,7 @@ public class TestOptimizer {
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.CRITERIA_BETWEEN, true);    
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);    
-        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);    
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true); 
         caps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);    
         caps.setCapabilitySupport(Capability.CRITERIA_LIKE_ESCAPE, true);    
         caps.setCapabilitySupport(Capability.CRITERIA_IN, true);    
@@ -6529,6 +6530,60 @@ public class TestOptimizer {
                 0,      // PlanExecution
                 1,      // Project
                 0,      // Select
+                0,      // Sort
+                0       // UnionAll
+            });                                    
+    }
+    
+    @Test public void testNonJoinComparison() throws Exception {
+    	BasicSourceCapabilities caps = new BasicSourceCapabilities();
+    	caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+    	caps.setCapabilitySupport(Capability.CRITERIA_ONLY_LITERAL_COMPARE, true);
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT intkey from bqt1.smalla where intkey = intnum", //$NON-NLS-1$
+                                      RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(caps),
+                                      new String[] {
+                                          "SELECT bqt1.smalla.intkey, bqt1.smalla.intnum FROM bqt1.smalla"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    
+        checkNodeTypes(plan, new int[] {
+                1,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                1,      // Select
+                0,      // Sort
+                0       // UnionAll
+            });                                    
+    }
+    
+    @Test public void testConvertSignature() throws Exception {
+    	BasicSourceCapabilities caps = new BasicSourceCapabilities();
+    	caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+    	caps.setSupportsConvert(DefaultTypeCodes.INTEGER, DefaultTypeCodes.STRING, true);
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT e1 from pm1.g1 where e1 = e2 and e1 = e3", //$NON-NLS-1$
+                                      RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
+                                      new String[] {
+                                          "SELECT pm1.g1.e1, pm1.g1.e3 FROM pm1.g1 WHERE pm1.g1.e1 = pm1.g1.e2"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    
+        checkNodeTypes(plan, new int[] {
+                1,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                1,      // Select
                 0,      // Sort
                 0       // UnionAll
             });                                    

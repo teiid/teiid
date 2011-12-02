@@ -234,6 +234,8 @@ public class DataTypeManager {
 		public static final int NULL = 18;
 	}
 	
+	public static int MAX_TYPE_CODE = DefaultTypeCodes.NULL;
+	
     private static final Map<Class<?>, Integer> typeMap = new LinkedHashMap<Class<?>, Integer>(64);
     private static final List<Class<?>> typeList;
     

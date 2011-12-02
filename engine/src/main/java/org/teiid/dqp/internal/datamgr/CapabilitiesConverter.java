@@ -25,6 +25,7 @@ package org.teiid.dqp.internal.datamgr;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.FunctionMethod;
@@ -109,6 +110,16 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_SIMILAR, srcCaps.supportsSimilarTo());
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_LIKE_REGEX, srcCaps.supportsLikeRegex());
         setSupports(connectorID, tgtCaps, Capability.WINDOW_FUNCTION_DISTINCT_AGGREGATES, srcCaps.supportsWindowDistinctAggregates(), Capability.ELEMENTARY_OLAP, Capability.QUERY_AGGREGATES_DISTINCT);
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_ONLY_LITERAL_COMPARE, srcCaps.supportsOnlyLiteralComparison());
+        
+        //TODO: as more types are added it may make more sense to just delegate calls to the executionfactory
+		for (int i = 0; i <= DataTypeManager.MAX_TYPE_CODE; i++) {
+			for (int j = 0; j <= DataTypeManager.MAX_TYPE_CODE; j++) {
+				if (i != j) {
+					tgtCaps.setSupportsConvert(i, j, srcCaps.supportsConvert(i, j));
+				}
+			}
+		}
         
         List<String> functions = srcCaps.getSupportedFunctions();
         if(functions != null && functions.size() > 0) {

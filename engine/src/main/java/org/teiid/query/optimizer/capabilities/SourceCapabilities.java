@@ -157,6 +157,8 @@ public interface SourceCapabilities {
          * @since 4.0
          */
         CRITERIA_QUANTIFIED_ALL,
+        
+        CRITERIA_ONLY_LITERAL_COMPARE,
         /**
          * Support indicates connector accepts ORDER BY clause
          * 
@@ -227,7 +229,7 @@ public interface SourceCapabilities {
          * 
          * @since 3.1 SP2
          */
-        QUERY_AGGREGATES_DISTINCT("AggregatesDistinct"),
+        QUERY_AGGREGATES_DISTINCT("AggregatesDistinct"), //$NON-NLS-1$
         /**
          * Support indicates connector can accept scalar subqueries in the SELECT, WHERE, and HAVING clauses
          * 
@@ -389,4 +391,12 @@ public interface SourceCapabilities {
      * @since 4.4
      */
     public Object getSourceProperty(Capability propertyName);
+    
+    /**
+     * 
+     * @param sourceType
+     * @param targetType
+     * @return
+     */
+    public boolean supportsConvert(int sourceType, int targetType);
 }

@@ -172,5 +172,10 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     public boolean supportsIsNullCriteria() {
     	return true;
     }
-
+    
+    @Override
+    public boolean supportsOnlyLiteralComparison() {
+    	return true;
+    }
+    
 }

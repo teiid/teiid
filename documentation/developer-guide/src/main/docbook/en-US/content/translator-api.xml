@@ -1061,6 +1061,30 @@ int count = visitor.getCount();]]></programlisting>
               </row>
               <row>
                 <entry>
+                  <para>OnlyLiteralComparison</para>
+                </entry>
+                <entry>
+                  <para></para>
+                </entry>
+                <entry>
+                  <para>Translator if only Literal comparisons (equality, ordered, like, etc.) are supported for non-join conditions.</para>
+                </entry>
+              </row>              
+              <row>
+                <entry>
+                  <para>Convert(int fromType, int toType)</para>
+                </entry>
+                <entry>
+                  <para></para>
+                </entry>
+                <entry>
+                  <para>Used for fine grained control of convert/cast pushdown.  If <code>ExecutionFactory.getSupportedFunctions()</code> contains <code>SourceSystemFunctions.CONVERT</code>, then all of the default Teiid pushdown conversions are supported.
+	 			  So typically this method will be implemented when <code>ExecutionFactory.getSupportedFunctions()</code> contains <code>SourceSystemFunctions.CONVERT</code>.  See <code>TypeFacility.RUNTIME_CODES</code> for the possible type codes. 
+	 			  The engine will does not care about an unnecessary conversion where fromType == toType.</para>
+                </entry>
+              </row>              
+              <row>
+                <entry>
                   <para>OrderBy</para>
                 </entry>
                 <entry>

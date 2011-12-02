@@ -222,7 +222,6 @@ public class TestDataTypeManager {
     	assertEquals("hello", DataTypeManager.transformValue(new Foo(), DataTypeManager.DefaultDataClasses.STRING)); //$NON-NLS-1$
     }
 	
-    @SuppressWarnings("unchecked")
 	@Test public void testObjectArrayToObject() throws Exception {
     	Object[] value = {1,2};
     	assertArrayEquals(value, (Object[])DataTypeManager.transformValue(value, value.getClass(), DataTypeManager.DefaultDataClasses.OBJECT)); 

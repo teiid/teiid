@@ -25,7 +25,6 @@
  */
 package org.teiid.query.optimizer.capabilities;
 
-import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 
 public class AllCapabilities implements SourceCapabilities {
     public boolean supportsCapability(Capability capability) {
@@ -46,6 +45,11 @@ public class AllCapabilities implements SourceCapabilities {
 
 	public Scope getScope() {
 		return Scope.SCOPE_GLOBAL;
+	}
+	
+	@Override
+	public boolean supportsConvert(int sourceType, int targetType) {
+		return true;
 	}
     
 }
