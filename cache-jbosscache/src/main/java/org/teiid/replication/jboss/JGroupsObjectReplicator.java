@@ -25,10 +25,8 @@ package org.teiid.replication.jboss;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.ObjectStreamClass;
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -66,6 +64,7 @@ import org.jgroups.util.RspList;
 import org.teiid.Replicated;
 import org.teiid.Replicated.ReplicationMode;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.ObjectInputStreamWithClassloader;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.ObjectReplicator;
@@ -600,26 +599,11 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 
 		@Override
 		public Object objectFromBuffer(byte[] buf, int offset, int length) throws Exception {
-			ObjectInputStream in = new CLAwareObjectInputStream(new ByteArrayInputStream(buf, offset, length), this.classloader);
+			ObjectInputStream in = new ObjectInputStreamWithClassloader(new ByteArrayInputStream(buf, offset, length), this.classloader);
 			Object anObj = in.readObject();
 			in.close();
 			return anObj;
 		}
 	}
 	
-	static class CLAwareObjectInputStream extends ObjectInputStream {
-		private ClassLoader classloader;
-		@Override
-		public Class resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
-			try {
-				return this.classloader.loadClass(desc.getName());
-			} catch (Throwable t) {
-			}
-			return super.resolveClass(desc);
-		}
-		public CLAwareObjectInputStream(InputStream in, ClassLoader classloader) throws IOException {
-			super(in);
-			this.classloader = classloader;
-		}
-	}	
 }
