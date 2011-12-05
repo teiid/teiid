@@ -113,6 +113,7 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
         			throw new OperationFailedException( new ModelNode().set(IntegrationPlugin.Util.getString("error_adding_translator", translatorName))); //$NON-NLS-1$ 
         		}
         		
+        		metadata.addAttchment(ClassLoader.class, translatorLoader);
         		if (translatorName.equalsIgnoreCase(metadata.getName())) {
 	        		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("translator.added", metadata.getName())); //$NON-NLS-1$
 	        		

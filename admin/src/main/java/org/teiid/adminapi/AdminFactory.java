@@ -172,14 +172,7 @@ public class AdminFactory {
 		@Override
 		public void clearCache(String cacheType) throws AdminException {
 	        final ModelNode request = buildRequest("teiid", "clear-cache", "cache-type", cacheType);//$NON-NLS-1$ //$NON-NLS-2$
-	        try {
-	            ModelNode outcome = this.connection.execute(request);
-	            if (!Util.isSuccess(outcome)) {
-	            	throw new AdminProcessingException(Util.getFailureDescription(outcome));
-	            }
-	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
-	        }
+	        execute(request);
 		}
 
 		@Override
@@ -188,14 +181,7 @@ public class AdminFactory {
 	        		"cache-type", cacheType,
 	        		"vdb-name", vdbName,
 	        		"vdb-version", String.valueOf(vdbVersion));//$NON-NLS-1$ //$NON-NLS-2$
-	        try {
-	            ModelNode outcome = this.connection.execute(request);
-	            if (!Util.isSuccess(outcome)) {
-	            	throw new AdminProcessingException(Util.getFailureDescription(outcome));
-	            }
-	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
-	        }
+	        execute(request);
 		}
 
 		@Override
@@ -233,14 +219,7 @@ public class AdminFactory {
 	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
 	        }
 			
-	        try {
-	            ModelNode outcome = this.connection.execute(request);
-	            if (!Util.isSuccess(outcome)) {
-	                throw new AdminProcessingException(Util.getFailureDescription(outcome));
-	            }
-	        } catch (IOException e) {
-	        	throw new AdminProcessingException(e);
-	        }
+	        execute(request);
 	        
 	        // add all the config properties
             Enumeration keys = properties.propertyNames();
@@ -266,14 +245,7 @@ public class AdminFactory {
 	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
 	        }
 			
-	        try {
-	            ModelNode outcome = this.connection.execute(request);
-	            if (!Util.isSuccess(outcome)) {
-	                throw new AdminProcessingException(Util.getFailureDescription(outcome));
-	            }
-	        } catch (IOException e) {
-	        	throw new AdminProcessingException(e);
-	        }
+	        execute(request);
 		}
 
 		// /subsystem=resource-adapters/resource-adapter=teiid-connector-ws.rar:add(archive=teiid-connector-ws.rar, transaction-support=NoTransaction)
@@ -292,14 +264,7 @@ public class AdminFactory {
 	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
 	        }
 			
-	        try {
-	            ModelNode outcome = this.connection.execute(request);
-	            if (!Util.isSuccess(outcome)) {
-	                throw new AdminProcessingException(Util.getFailureDescription(outcome));
-	            }
-	        } catch (IOException e) {
-	        	throw new AdminProcessingException(e);
-	        }				
+	        execute(request);				
 		}
 		
 		class AbstractMetadatMapper implements MetadataMapper<String>{
@@ -371,7 +336,7 @@ public class AdminFactory {
         	}
         	
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
-	        final ModelNode request;
+	        ModelNode request;
 	        try {
 	            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.addNode("data-source", deploymentName); //$NON-NLS-1$	        		
@@ -407,14 +372,32 @@ public class AdminFactory {
 	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
 	        }
 	        
+	        // execute request
+	        execute(request);
+
+	        // issue the "enable" operation
+			builder = new DefaultOperationRequestBuilder();
 	        try {
+	            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.addNode("data-source", deploymentName); //$NON-NLS-1$
+	            builder.setOperationName("enable"); 
+	            request = builder.buildRequest();
+	        } catch (OperationFormatException e) {
+	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
+	        }
+	        
+	        execute(request);
+		}
+
+		private void execute(final ModelNode request) throws AdminProcessingException {
+			try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (!Util.isSuccess(outcome)) {
 	                throw new AdminProcessingException(Util.getFailureDescription(outcome));
 	            }
 	        } catch (IOException e) {
 	        	throw new AdminProcessingException(e);
-	        }	        
+	        }
 		}
 
 		@Override
@@ -486,18 +469,13 @@ public class AdminFactory {
 
 		@Override
 		public void undeploy(String deployedName) throws AdminException {
-	        try {			
-				ModelNode request = buildUndeployRequest(deployedName);
-
-	            ModelNode outcome = this.connection.execute(request);
-	            if (!Util.isSuccess(outcome)) {
-	                throw new AdminProcessingException(Util.getFailureDescription(outcome));
-	            }
+			ModelNode request;
+			try {			
+				request = buildUndeployRequest(deployedName);
 	        } catch (OperationFormatException e) {
 	        	throw new AdminProcessingException(e);
-	        } catch (IOException e) {
-	        	throw new AdminProcessingException(e);
 	        }
+			execute(request);
 		}
 		
 	    public ModelNode buildUndeployRequest(String name) throws OperationFormatException {
@@ -539,14 +517,7 @@ public class AdminFactory {
 		@Override
 		public void deploy(String deployName, InputStream vdb)	throws AdminException {
 			ModelNode request = buildDeployVDBRequest(deployName, vdb);
-	        try {
-	            ModelNode outcome = this.connection.execute(request);
-	            if (!Util.isSuccess(outcome)) {
-	                throw new AdminProcessingException(Util.getFailureDescription(outcome));
-	            }
-	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
-	        }				
+			execute(request);
 		}
 
 		private ModelNode buildDeployVDBRequest(String fileName, InputStream vdb) throws AdminProcessingException {
@@ -620,7 +591,11 @@ public class AdminFactory {
 		@Override
 		public Collection<String> getCacheTypes() throws AdminException {
 	        final ModelNode request = buildRequest("teiid", "cache-types");//$NON-NLS-1$ //$NON-NLS-2$
-	        try {
+	        return executeList(request);
+		}
+
+		private Collection<String> executeList(final ModelNode request)	throws AdminProcessingException {
+			try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (Util.isSuccess(outcome)) {
 	            	return Util.getList(outcome);
@@ -814,7 +789,7 @@ public class AdminFactory {
 
 		@Override
 		public Collection<? extends Request> getRequestsForSession(String sessionId) throws AdminException {
-			final ModelNode request = buildRequest("teiid", "requests-per-session", "session", sessionId);//$NON-NLS-1$
+			final ModelNode request = buildRequest("teiid", "list-requests-per-session", "session", sessionId);//$NON-NLS-1$
 			if (request != null) {
 		        try {
 		            ModelNode outcome = this.connection.execute(request);
@@ -873,7 +848,7 @@ public class AdminFactory {
 	        	}
 	        	else {
 	        		result = new ModelNode();
-	        		result.add(buildProperty("connection-url", "connection URL", ModelType.STRING, "connection url", true));
+	        		result.add(buildProperty("connection-url", "Connection URL", ModelType.STRING, "connection url to database", true));
 	        		result.add(buildProperty("user-name", "User Name", ModelType.STRING, "user name", false));
 	        		result.add(buildProperty("password", "Password", ModelType.STRING, "password", false));
 	        		result.add(buildProperty("check-valid-connection-sql", "Connection Validate SQL", ModelType.STRING, "SQL to be used to validate the connection", false));

@@ -162,7 +162,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements Serializa
 				// terminate all the previous sessions
 		        List<ServiceName> services = context.getController().getServiceContainer().getServiceNames();
 		        for (ServiceName service:services) {
-		        	if (service.isParentOf(TeiidServiceNames.TRANSPORT_BASE)) {
+		        	if (TeiidServiceNames.TRANSPORT_BASE.isParentOf(service)) {
 		        		ServiceController<?> transport = context.getController().getServiceContainer().getService(service);
 		        		if (transport != null) {
 		        			Transport t = Transport.class.cast(transport.getValue());					

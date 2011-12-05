@@ -199,7 +199,7 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
         // register a JNDI name, this looks hard.
         if (transport.isEmbedded() && !isEmbeddedRegistered()) {
 			final CSRReferenceFactoryService referenceFactoryService = new CSRReferenceFactoryService();
-			final ServiceName referenceFactoryServiceName =TeiidServiceNames.transportServiceName(transportName).append("reference-factory"); //$NON-NLS-1$
+			final ServiceName referenceFactoryServiceName =TeiidServiceNames.embeddedTransportServiceName(transportName).append("reference-factory"); //$NON-NLS-1$
 			final ServiceBuilder<?> referenceBuilder = target.addService(referenceFactoryServiceName,referenceFactoryService);
 			referenceBuilder.addDependency(TeiidServiceNames.transportServiceName(transportName), ClientServiceRegistry.class, referenceFactoryService.getCSRInjector());
 			referenceBuilder.setInitialMode(ServiceController.Mode.ACTIVE);

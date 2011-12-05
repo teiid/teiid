@@ -135,9 +135,9 @@ public class TeiidExtension implements Extension {
 		new RemoveAnyAuthenticatedDataRole().register(teiidSubsystem);
 		new ListRequests().register(teiidSubsystem);
 		new ListSessions().register(teiidSubsystem);
-		new RequestsPerSession().register(teiidSubsystem);
-		new RequestsPerVDB().register(teiidSubsystem);
-		new GetLongRunningQueries().register(teiidSubsystem);
+		new ListRequestsPerSession().register(teiidSubsystem);
+		new ListRequestsPerVDB().register(teiidSubsystem);
+		new ListLongRunningRequests().register(teiidSubsystem);
 		new TerminateSession().register(teiidSubsystem);
 		new CancelRequest().register(teiidSubsystem);
 		new WorkerPoolStatistics().register(teiidSubsystem);

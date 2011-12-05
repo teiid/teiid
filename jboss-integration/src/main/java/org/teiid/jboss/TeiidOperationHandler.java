@@ -93,10 +93,15 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
 	}
 	
 	@Override
-	protected DQPCore getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException {        
+	protected DQPCore getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException {
+		
+		this.transports.clear();
+		this.vdbRepo = null;
+		this.engine = null;
+		
         List<ServiceName> services = context.getServiceRegistry(false).getServiceNames();
         for (ServiceName name:services) {
-        	if (name.isParentOf(TeiidServiceNames.TRANSPORT_BASE)) {
+        	if (TeiidServiceNames.TRANSPORT_BASE.isParentOf(name)) {
         		ServiceController<?> transport = context.getServiceRegistry(false).getService(name);
         		if (transport != null) {
         			this.transports.add(Transport.class.cast(transport.getValue()));
@@ -187,9 +192,9 @@ class ListSessions extends TeiidOperationHandler{
 	}	
 }
 
-class RequestsPerSession extends TeiidOperationHandler{
-	protected RequestsPerSession() {
-		super("requests-per-session"); //$NON-NLS-1$
+class ListRequestsPerSession extends TeiidOperationHandler{
+	protected ListRequestsPerSession() {
+		super("list-requests-per-session"); //$NON-NLS-1$
 	}
 	@Override
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
@@ -233,9 +238,9 @@ class ListRequests extends TeiidOperationHandler{
 	}	
 }
 
-class RequestsPerVDB extends TeiidOperationHandler{
-	protected RequestsPerVDB() {
-		super("requests-per-vdb"); //$NON-NLS-1$
+class ListRequestsPerVDB extends TeiidOperationHandler{
+	protected ListRequestsPerVDB() {
+		super("list-requests-per-vdb"); //$NON-NLS-1$
 	}
 	@Override
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
@@ -272,9 +277,9 @@ class RequestsPerVDB extends TeiidOperationHandler{
 	}	
 }
 
-class GetLongRunningQueries extends TeiidOperationHandler{
-	protected GetLongRunningQueries() {
-		super("long-running-queries"); //$NON-NLS-1$
+class ListLongRunningRequests extends TeiidOperationHandler{
+	protected ListLongRunningRequests() {
+		super("list-long-running-requests"); //$NON-NLS-1$
 	}
 	@Override
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{

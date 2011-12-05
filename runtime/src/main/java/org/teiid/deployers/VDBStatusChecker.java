@@ -111,7 +111,7 @@ public abstract class VDBStatusChecker {
 					if (t == null) {
 						throw new AdminProcessingException(RuntimePlugin.Util.getString("translator_not_found", vdb.getName(), vdb.getVersion(), translatorName)); //$NON-NLS-1$
 					}
-					ef = TranslatorUtil.buildExecutionFactory(t, Thread.currentThread().getContextClassLoader());
+					ef = TranslatorUtil.buildExecutionFactory(t, t.getAttachment(ClassLoader.class));
 					cm.setExecutionFactory(ef);
 				} catch (TeiidException e) {
 					throw new AdminProcessingException(e.getCause());

@@ -43,6 +43,7 @@ import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.deployers.ContainerLifeCycleListener;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
@@ -60,11 +61,13 @@ class VDBDeployer implements DeploymentUnitProcessor {
 	private TranslatorRepository translatorRepository;
 	private String asyncThreadPoolName;
 	private VDBStatusChecker vdbStatusChecker;
+	private ContainerLifeCycleListener shutdownListener;
 	
-	public VDBDeployer (TranslatorRepository translatorRepo, String poolName, VDBStatusChecker vdbStatusChecker) {
+	public VDBDeployer (TranslatorRepository translatorRepo, String poolName, VDBStatusChecker vdbStatusChecker, ContainerLifeCycleListener shutdownListener) {
 		this.translatorRepository = translatorRepo;
 		this.asyncThreadPoolName = poolName;
 		this.vdbStatusChecker = vdbStatusChecker;
+		this.shutdownListener = shutdownListener;
 	}
 	
 	public void deploy(final DeploymentPhaseContext context)  throws DeploymentUnitProcessingException {
@@ -122,7 +125,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		
 		// build a VDB service
 		ArrayList<String> unAvailableDS = new ArrayList<String>();
-		VDBService vdb = new VDBService(deployment);
+		VDBService vdb = new VDBService(deployment, this.shutdownListener);
 		final ServiceBuilder<VDBMetaData> vdbService = context.getServiceTarget().addService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()), vdb);
 		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
 			for (String sourceName:model.getSourceNames()) {
@@ -137,7 +140,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			@Override
 			public void dependentService(final String dsName, final ServiceName svcName) {
 				DataSourceListener dsl = new DataSourceListener(dsName, svcName, vdbStatusChecker);									
-				ServiceBuilder<DataSourceListener> sb = context.getServiceTarget().addService(TeiidServiceNames.dsListenerServiceName(dsName), dsl);
+				ServiceBuilder<DataSourceListener> sb = context.getServiceTarget().addService(TeiidServiceNames.dsListenerServiceName(deployment.getName(), deployment.getVersion(), dsName), dsl);
 				sb.addDependency(svcName);
 				sb.setInitialMode(Mode.PASSIVE).install();
 			}
@@ -258,24 +261,6 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		if (!TeiidAttachments.isVDBDeployment(deploymentUnit)) {
 			return;
 		}		
-		
-		final VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
-        final ServiceController<?> controller = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()));
-        if (controller != null) {
-        	VDBService vdbService = (VDBService)controller.getService();
-        	vdbService.undeployInProgress();
-        	
-			dataSourceDependencies(deployment, new DependentServices() {
-				@Override
-				public void dependentService(String dsName, ServiceName svcName) {
-					ServiceController<?> controller = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.dsListenerServiceName(dsName));
-					if (controller != null) {
-						controller.setMode(ServiceController.Mode.REMOVE);
-					}
-				}
-			});
-            controller.setMode(ServiceController.Mode.REMOVE);
-        }
 	}
 
 }

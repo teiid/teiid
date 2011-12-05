@@ -62,10 +62,11 @@ public final class TranslatorDeployer implements DeploymentUnitProcessor {
         final ServiceLoader<ExecutionFactory> serviceLoader =  ServiceLoader.load(ExecutionFactory.class, translatorLoader);
         if (serviceLoader != null) {
         	for (ExecutionFactory ef:serviceLoader) {
-        		VDBTranslatorMetaData metadata = TranslatorUtil.buildTranslatorMetadata(ef, moduleName);
+        		VDBTranslatorMetaData metadata = TranslatorUtil.buildTranslatorMetadata(ef, moduleName);        		
         		if (metadata == null) {
         			throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.getString("error_adding_translator_deployment", moduleName)); //$NON-NLS-1$ 
         		}
+        		metadata.addAttchment(ClassLoader.class, translatorLoader);
         		
         		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("translator.added", metadata.getName())); //$NON-NLS-1$
         		

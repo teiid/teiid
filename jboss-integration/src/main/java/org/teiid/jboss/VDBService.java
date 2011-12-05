@@ -55,6 +55,7 @@ import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidException;
+import org.teiid.deployers.ContainerLifeCycleListener;
 import org.teiid.deployers.MetadataStoreGroup;
 import org.teiid.deployers.TranslatorUtil;
 import org.teiid.deployers.UDFMetaData;
@@ -86,10 +87,11 @@ class VDBService implements Service<VDBMetaData> {
 	private final InjectedValue<ObjectSerializer> serializerInjector = new InjectedValue<ObjectSerializer>();
 	private final InjectedValue<BufferServiceImpl> bufferServiceInjector = new InjectedValue<BufferServiceImpl>();
 	private final InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
-	private boolean undeployInProgress = false;
+	private ContainerLifeCycleListener shutdownListener;
 	
-	public VDBService(VDBMetaData metadata) {
+	public VDBService(VDBMetaData metadata, ContainerLifeCycleListener shutdownListener) {
 		this.vdb = metadata;
+		this.shutdownListener = shutdownListener;
 	}
 	
 	@Override
@@ -231,7 +233,7 @@ class VDBService implements Service<VDBMetaData> {
 		this.vdb.setRemoved(true);
 
 		// service stopped not due to shutdown then clean-up the data files
-		if (undeployInProgress) {
+		if (!this.shutdownListener.isShutdownInProgress()) {
 			getSerializer().removeAttachments(vdb); 
 			LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+vdb.getName()+" metadata removed"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
@@ -487,10 +489,6 @@ class VDBService implements Service<VDBMetaData> {
 	public InjectedValue<ObjectReplicator> getObjectReplicatorInjector() {
 		return objectReplicatorInjector;
 	}	
-	
-	public void undeployInProgress() {
-		this.undeployInProgress = true;
-	}
 	
 	public void addDataRole(String policyName, String mappedRole) throws AdminProcessingException{
 		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
