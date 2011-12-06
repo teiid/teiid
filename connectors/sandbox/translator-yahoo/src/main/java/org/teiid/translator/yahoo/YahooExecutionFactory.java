@@ -87,5 +87,10 @@ public class YahooExecutionFactory extends ExecutionFactory<Object, Object> {
 		metadataFactory.addColumn("volume", DataTypeManager.DefaultDataTypes.BIG_INTEGER, t); //$NON-NLS-1$
 		metadataFactory.addAccessPattern("needs_symbol", Arrays.asList("symbol"), t); //$NON-NLS-1$ //$NON-NLS-2$
 	} 
+	
+	@Override
+	public boolean supportsOnlyLiteralComparison() {
+		return true;
+	}
     
 }
