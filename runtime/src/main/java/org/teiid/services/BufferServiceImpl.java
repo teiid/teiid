@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.common.buffer.impl.FileStorageManager;
@@ -146,6 +147,11 @@ public class BufferServiceImpl implements BufferService, Serializable {
 
     public BufferManagerImpl getBufferManager() {
         return this.bufferMgr;
+    }
+    
+    @Override
+    public TupleBufferCache getTupleBufferCache() {
+    	return this.bufferMgr;
     }
 	
 	public void setUseDisk(boolean flag) {

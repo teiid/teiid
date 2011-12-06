@@ -21,14 +21,14 @@
  */
 package org.teiid.cache;
 
-import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.dqp.internal.process.AccessInfo;
 
 public interface Cachable {
 	
-	boolean prepare(BufferManager bufferManager);
+	boolean prepare(TupleBufferCache bufferManager);
 	
-	boolean restore(BufferManager bufferManager);
+	boolean restore(TupleBufferCache bufferManager);
 
 	AccessInfo getAccessInfo();
 }

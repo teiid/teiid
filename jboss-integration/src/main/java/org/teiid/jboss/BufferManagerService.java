@@ -27,6 +27,7 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.services.BufferServiceImpl;
@@ -37,6 +38,7 @@ class BufferManagerService implements Service<BufferService>, BufferService {
 	public final InjectedValue<String> pathInjector = new InjectedValue<String>();
 	public final InjectedValue<ObjectReplicator> replicatorInjector = new InjectedValue<ObjectReplicator>();
 	private BufferManager manager;
+	private TupleBufferCache tupleBufferCache;
 	
 	public BufferManagerService(BufferServiceImpl buffer) {
 		this.bufferService = buffer;
@@ -47,10 +49,11 @@ class BufferManagerService implements Service<BufferService>, BufferService {
 		bufferService.setDiskDirectory(pathInjector.getValue());
 		bufferService.start();
 		manager = bufferService.getBufferManager();
+		tupleBufferCache = manager;
 		if (replicatorInjector.getValue() != null) {
 			try {
 				//use a mux name that will not conflict with any vdb
-				manager = this.replicatorInjector.getValue().replicate("$BM$", BufferManager.class, this.manager, 0); //$NON-NLS-1$
+				tupleBufferCache = this.replicatorInjector.getValue().replicate("$BM$", TupleBufferCache.class, this.manager, 0); //$NON-NLS-1$
 			} catch (Exception e) {
 				throw new StartException(e);
 			}
@@ -68,6 +71,11 @@ class BufferManagerService implements Service<BufferService>, BufferService {
 	@Override
 	public BufferManager getBufferManager() {
 		return manager;
+	}
+	
+	@Override
+	public TupleBufferCache getTupleBufferCache() {
+		return tupleBufferCache;
 	}
 
 	@Override

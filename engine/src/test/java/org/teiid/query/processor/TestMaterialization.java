@@ -74,7 +74,7 @@ public class TestMaterialization {
 		hdm.addData("SELECT mattable.info.e2, mattable.info.e1 FROM mattable.info", new List[] {Arrays.asList(1, "a"), Arrays.asList(2, "a")});
 		
 	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
-	    cache.setBufferManager(bm);
+	    cache.setTupleBufferCache(bm);
 		dataManager = new TempTableDataManager(hdm, bm, ExecutorUtils.getDirectExecutor(), cache);
 	}
 	

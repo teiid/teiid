@@ -93,7 +93,7 @@ public class TestTempTables {
 	    TestProcessor.sampleData1(fdm);
 	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
 	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
-	    cache.setBufferManager(bm);
+	    cache.setTupleBufferCache(bm);
 		dataManager = new TempTableDataManager(fdm, bm, ExecutorUtils.getDirectExecutor(), cache);
 	}
 	

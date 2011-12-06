@@ -24,19 +24,38 @@ package org.teiid.dqp.service;
 
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.common.buffer.TupleBufferCache;
 
 public class FakeBufferService implements BufferService {
 
     private BufferManager bufferMgr;
+    private TupleBufferCache tupleBufferCache;
     
     public FakeBufferService() {
-        super();
-        
-        bufferMgr = BufferManagerFactory.getStandaloneBufferManager();            
+    	this(true);
+    }
+    
+    public FakeBufferService(boolean shared) {
+    	if (shared) {
+    		bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
+    	} else {
+    		bufferMgr = BufferManagerFactory.createBufferManager();
+    	}
+    	this.tupleBufferCache = bufferMgr;
+    }
+    
+    public FakeBufferService(BufferManager buffManager, TupleBufferCache tupleBufferCache) {
+    	this.bufferMgr = buffManager;
+    	this.tupleBufferCache = tupleBufferCache;
     }
 
     public BufferManager getBufferManager() {
         return bufferMgr;
+    }
+    
+    @Override
+    public TupleBufferCache getTupleBufferCache() {
+    	return tupleBufferCache;
     }
 
 }

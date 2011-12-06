@@ -46,7 +46,6 @@ import org.teiid.client.ResultsMessage;
 import org.teiid.client.RequestMessage.StatementType;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.util.ResultsFuture;
-import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidProcessingException;
@@ -56,6 +55,7 @@ import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.internal.process.AbstractWorkItem.ThreadState;
 import org.teiid.dqp.service.AutoGenDataService;
 import org.teiid.dqp.service.BufferService;
+import org.teiid.dqp.service.FakeBufferService;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -114,15 +114,9 @@ public class TestDQPCore {
         ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
         context.getVDB().addAttchment(ConnectorManagerRepository.class, repo);
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(agds);
-        BufferService bs = new BufferService() {
-			
-			@Override
-			public BufferManager getBufferManager() {
-				BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
-				bm.setInlineLobs(false);
-				return bm;
-			}
-		};
+        BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
+		bm.setInlineLobs(false);
+        BufferService bs = new FakeBufferService(bm, bm);
         core = new DQPCore();
         core.setBufferService(bs);
         core.setResultsetCache(new SessionAwareCache<CachedResults>(new DefaultCacheFactory(), SessionAwareCache.Type.RESULTSET, new CacheConfiguration()));
@@ -137,7 +131,7 @@ public class TestDQPCore {
         config.setAuthorizationValidator(daa);
         core.start(config);
         core.getPrepPlanCache().setModTime(1);
-        core.getRsCache().setBufferManager(bs.getBufferManager());
+        core.getRsCache().setTupleBufferCache(bs.getBufferManager());
     }
     
     @After public void tearDown() throws Exception {

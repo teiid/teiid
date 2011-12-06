@@ -24,8 +24,6 @@ package org.teiid.common.buffer;
 
 import java.util.List;
 
-import org.teiid.Replicated;
-import org.teiid.Replicated.ReplicationMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.sql.symbol.Expression;
 
@@ -38,7 +36,7 @@ import org.teiid.query.sql.symbol.Expression;
  * how to store data.  The buffer manager should also be aware of memory 
  * management issues.
  */
-public interface BufferManager extends StorageManager {
+public interface BufferManager extends StorageManager, TupleBufferCache {
 	
 	public enum TupleSourceType {
 		/**
@@ -127,9 +125,6 @@ public interface BufferManager extends StorageManager {
     
 	void addTupleBuffer(TupleBuffer tb);
 	
-	@Replicated(replicateState=ReplicationMode.PULL)
-	TupleBuffer getTupleBuffer(String id);
-
 	/**
 	 * Set the maxActivePlans as a hint at determining the maxProcessing
 	 * @param maxActivePlans
@@ -142,6 +137,4 @@ public interface BufferManager extends StorageManager {
 	 * @return
 	 */
 	int reserveAdditionalBuffers(int additional);		
-	
-	void distributeTupleBuffer(String uuid, TupleBuffer tb);
 }

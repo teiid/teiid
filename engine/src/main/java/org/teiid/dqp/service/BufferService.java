@@ -23,9 +23,11 @@
 package org.teiid.dqp.service;
 
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.TupleBufferCache;
 
 
 public interface BufferService {
     BufferManager getBufferManager();
+    TupleBufferCache getTupleBufferCache();
 }
 

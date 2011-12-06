@@ -52,8 +52,7 @@ import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
-import org.teiid.common.buffer.BufferManager;
-import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.CompositeVDB;
@@ -71,6 +70,7 @@ import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.service.BufferService;
+import org.teiid.dqp.service.FakeBufferService;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
@@ -269,13 +269,7 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         this.sessionService.setVDBRepository(repo);
         BufferService bs = null;
         if (!realBufferMangaer) {
-        	bs = new BufferService() {
-				
-				@Override
-				public BufferManager getBufferManager() {
-					return BufferManagerFactory.createBufferManager();
-				}
-			};
+        	bs = new FakeBufferService(false);
         } else {
         	BufferServiceImpl bsi = new BufferServiceImpl();
         	bsi.setDiskDirectory(UnitTestUtil.getTestScratchPath());
@@ -284,14 +278,8 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         }
         if (replicator != null) {
 			try {
-				final BufferManager bm = replicator.replicate("$BM$", BufferManager.class, bs.getBufferManager(), 0);
-				bs = new BufferService() {
-					
-					@Override
-					public BufferManager getBufferManager() {
-						return bm;
-					}
-				};
+				final TupleBufferCache tbc = replicator.replicate("$BM$", TupleBufferCache.class, bs.getBufferManager(), 0);
+				bs = new FakeBufferService(bs.getBufferManager(), tbc);
 			} catch (Exception e) {
 				throw new TeiidRuntimeException(e);
 			}
@@ -320,10 +308,10 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         };
 		SessionAwareCache rs = new SessionAwareCache<CachedResults>(dcf, SessionAwareCache.Type.RESULTSET, new CacheConfiguration(Policy.LRU, 60, 250, "resultsetcache"));
 		SessionAwareCache ppc = new SessionAwareCache<PreparedPlan>(dcf, SessionAwareCache.Type.PREPAREDPLAN, new CacheConfiguration());
-        rs.setBufferManager(this.dqp.getBufferManager());
+        rs.setTupleBufferCache(bs.getTupleBufferCache());
         this.dqp.setResultsetCache(rs);
         
-        ppc.setBufferManager(this.dqp.getBufferManager());
+        ppc.setTupleBufferCache(bs.getTupleBufferCache());
         this.dqp.setPreparedPlanCache(ppc);		
         
         this.dqp.setTransactionService(new FakeTransactionService());

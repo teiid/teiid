@@ -37,7 +37,7 @@ import org.teiid.cache.CacheFactory;
 import org.teiid.cache.DefaultCache;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.cache.CacheConfiguration.Policy;
-import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.EquivalenceUtil;
@@ -69,7 +69,7 @@ public class SessionAwareCache<T> {
 	private AtomicInteger cacheHit = new AtomicInteger();
 	private AtomicInteger totalRequests = new AtomicInteger();
 	
-	private BufferManager bufferManager;
+	private TupleBufferCache bufferManager;
 	
 	public SessionAwareCache(){
 		this(DEFAULT_MAX_SIZE_TOTAL);
@@ -318,7 +318,7 @@ public class SessionAwareCache<T> {
         return maxSize;
     }
     
-    public void setBufferManager(BufferManager bufferManager) {
+    public void setTupleBufferCache(TupleBufferCache bufferManager) {
     	this.bufferManager = bufferManager;
     }
     

@@ -19,35 +19,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.jboss;
 
-import org.jboss.msc.service.Service;
-import org.jboss.msc.service.StartContext;
-import org.jboss.msc.service.StartException;
-import org.jboss.msc.service.StopContext;
-import org.jboss.msc.value.InjectedValue;
-import org.teiid.dqp.internal.process.SessionAwareCache;
-import org.teiid.dqp.service.BufferService;
+package org.teiid.common.buffer;
 
-class CacheService<T> implements Service<SessionAwareCache<T>> {
-	private SessionAwareCache<T> cache;
-	public final InjectedValue<BufferService> bufferMgrInjector = new InjectedValue<BufferService>();
+import org.teiid.Replicated;
+import org.teiid.Replicated.ReplicationMode;
+
+public interface TupleBufferCache {
 	
-	public CacheService(SessionAwareCache<T> t){
-		this.cache = t;
-	}
+	@Replicated(replicateState=ReplicationMode.PULL)
+	TupleBuffer getTupleBuffer(String id);
 	
-	@Override
-	public void start(StartContext context) throws StartException {
-		this.cache.setTupleBufferCache(this.bufferMgrInjector.getValue().getTupleBufferCache());
-	}
+	void distributeTupleBuffer(String uuid, TupleBuffer tb);
 
-	@Override
-	public void stop(StopContext context) {
-	}
-
-	@Override
-	public SessionAwareCache<T> getValue() throws IllegalStateException, IllegalArgumentException {
-		return this.cache;
-	}
 }

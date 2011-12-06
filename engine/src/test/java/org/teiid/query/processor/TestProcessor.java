@@ -245,7 +245,7 @@ public class TestProcessor {
         }
         if (!(dataManager instanceof TempTableDataManager)) {
     	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
-    	    cache.setBufferManager(bufferMgr);
+    	    cache.setTupleBufferCache(bufferMgr);
         	dataManager = new TempTableDataManager(dataManager, bufferMgr, ExecutorUtils.getDirectExecutor(), cache);
         }        
         if (context.getQueryProcessorFactory() == null) {
