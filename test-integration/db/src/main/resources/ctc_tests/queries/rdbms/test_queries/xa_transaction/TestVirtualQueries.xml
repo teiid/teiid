@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+
+<!--  * =====================================================================*   -->
+<!--  *    Testing simple transactions                     *   -->
+<!--  * =====================================================================* -->
+
+<query name="TestQuery1">delete from vm.g2</query>
+<query name="TestQuery2">delete from vm.g1</query>
+
+
+<query name="TestQuery5">
+	<sql updatecnt="1">insert into vm.g1 (pm1e1, pm1e2, pm2e1, pm2e2) values(?, ?, ?, ?)      
+		<parm type="integer">1000</parm>
+		<parm type="string">blah1</parm>
+		<parm type="integer">1000</parm>
+		<parm type="string">blah2</parm>
+	</sql>
+</query>
+
+<!-- revalidating the commit was successful -->
+<query name="TestQuery6">
+	<sql rowCount="1" >select * from pm1.g1 where e2 = 'blah1'</sql>
+    <sql rowCount="1" >select * from pm2.g1 where e2 = 'blah2'</sql>
+
+</query>
+
+<query numtimes="10" name="TestQuery7">
+    <sql>delete from vm.g2</sql>
+    <sql>delete from vm.g1</sql>
+    
+	<sql updatecnt="1">insert into vm.g1 (pm1e1, pm1e2, pm2e1, pm2e2) values(?, ?, ?, ?)      
+		<parm type="integer">1000</parm>
+		<parm type="string">blaha</parm>
+		<parm type="integer">1000</parm>
+		<parm type="string">blahb</parm>
+	</sql>
+
+	<sql rowCount="1" >select * from pm1.g1 where e2 = 'blaha'</sql>
+    <sql rowCount="1" >select * from pm2.g1 where e2 = 'blahb'</sql>
+
+</query>
+
+
+</root>
+

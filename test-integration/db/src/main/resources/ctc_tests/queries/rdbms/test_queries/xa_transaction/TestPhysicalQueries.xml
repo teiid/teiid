@@ -8,8 +8,6 @@
 <query name="TestQuery1">delete from pm1.g2</query>
 <query name="TestQuery2">delete from pm1.g1</query>
 
-<query name="TestQuery3">delete from pm2.G2</query>
-<query name="TestQuery4">delete from pm2.G1</query>
 
 <query name="TestQuery5">
 	<sql updatecnt="1">insert into pm1.g1 (e1, e2) values(?, ?)      
