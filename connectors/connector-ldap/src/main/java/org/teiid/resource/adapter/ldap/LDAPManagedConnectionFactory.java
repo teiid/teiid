@@ -38,6 +38,7 @@ public class LDAPManagedConnectionFactory extends BasicManagedConnectionFactory 
 	
 	
 	@Override
+	@SuppressWarnings("serial")
 	public BasicConnectionFactory createConnectionFactory() throws ResourceException {
 		return new BasicConnectionFactory() {
 			@Override
@@ -85,5 +86,45 @@ public class LDAPManagedConnectionFactory extends BasicManagedConnectionFactory 
 
 	public void setLdapContextFactory(String ldapContextFactory) {
 		this.ldapContextFactory = ldapContextFactory;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((ldapAdminUserDN == null) ? 0 : ldapAdminUserDN.hashCode());
+		result = prime * result	+ ((ldapAdminUserPassword == null) ? 0 : ldapAdminUserPassword.hashCode());
+		result = prime * result	+ ((ldapContextFactory == null) ? 0 : ldapContextFactory.hashCode());
+		result = prime * result	+ (int) (ldapTxnTimeoutInMillis ^ (ldapTxnTimeoutInMillis >>> 32));
+		result = prime * result + ((ldapUrl == null) ? 0 : ldapUrl.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		LDAPManagedConnectionFactory other = (LDAPManagedConnectionFactory) obj;
+		if (!checkEquals(this.ldapAdminUserDN, other.ldapAdminUserDN)) {
+			return false;
+		}
+		if (!checkEquals(this.ldapAdminUserPassword, other.ldapAdminUserPassword)) {
+			return false;
+		}
+		if (!checkEquals(this.ldapContextFactory, other.ldapContextFactory)) {
+			return false;
+		}
+		if (!checkEquals(this.ldapTxnTimeoutInMillis, other.ldapTxnTimeoutInMillis)) {
+			return false;
+		}
+		if (!checkEquals(this.ldapUrl, other.ldapUrl)) {
+			return false;
+		}
+		return true;
 	}	
+	
 }

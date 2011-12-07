@@ -198,21 +198,21 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
         
         // register a JNDI name, this looks hard.
         if (transport.isEmbedded() && !isEmbeddedRegistered()) {
-			final CSRReferenceFactoryService referenceFactoryService = new CSRReferenceFactoryService();
-			final ServiceName referenceFactoryServiceName =TeiidServiceNames.embeddedTransportServiceName(transportName).append("reference-factory"); //$NON-NLS-1$
+			final ReferenceFactoryService<ClientServiceRegistry> referenceFactoryService = new ReferenceFactoryService<ClientServiceRegistry>();
+			final ServiceName referenceFactoryServiceName = TeiidServiceNames.embeddedTransportServiceName(transportName).append("reference-factory"); //$NON-NLS-1$
 			final ServiceBuilder<?> referenceBuilder = target.addService(referenceFactoryServiceName,referenceFactoryService);
-			referenceBuilder.addDependency(TeiidServiceNames.transportServiceName(transportName), ClientServiceRegistry.class, referenceFactoryService.getCSRInjector());
+			referenceBuilder.addDependency(TeiidServiceNames.transportServiceName(transportName), ClientServiceRegistry.class, referenceFactoryService.getInjector());
 			referenceBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
 			  
 			final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(LocalServerConnection.TEIID_RUNTIME_CONTEXT);
-			final BinderService embedded = new BinderService(bindInfo.getBindName());
-			final ServiceBuilder<?> embeddedBinderBuilder = target.addService(bindInfo.getBinderServiceName(), embedded);
-			embeddedBinderBuilder.addDependency(referenceFactoryServiceName, ManagedReferenceFactory.class, embedded.getManagedObjectInjector());
-			embeddedBinderBuilder.addDependency(bindInfo.getParentContextServiceName(), ServiceBasedNamingStore.class, embedded.getNamingStoreInjector());        
-			embeddedBinderBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
+			final BinderService binderService = new BinderService(bindInfo.getBindName());
+			final ServiceBuilder<?> binderBuilder = target.addService(bindInfo.getBinderServiceName(), binderService);
+			binderBuilder.addDependency(referenceFactoryServiceName, ManagedReferenceFactory.class, binderService.getManagedObjectInjector());
+			binderBuilder.addDependency(bindInfo.getParentContextServiceName(), ServiceBasedNamingStore.class, binderService.getNamingStoreInjector());        
+			binderBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
 				
 			newControllers.add(referenceBuilder.install());
-			newControllers.add(embeddedBinderBuilder.install());         	
+			newControllers.add(binderBuilder.install());         	
         }
 	}
 	

@@ -19,15 +19,16 @@
     <query-timeout>23</query-timeout>
     <workmanager>wm</workmanager>
     <!-- 
-    <authorization-validator module="javax.api"/>
-    <policy-decider module="javax.api"/>
+    <authorization-validator-module="javax.api"/>
+    <policy-decider-module="javax.api"/>
+    <metadata-repository-module="javax.api"/>
      -->
     
     <resultset-cache name="cache" container-name="container" enable="false" max-staleness="90"/>
     
     <preparedplan-cache max-entries="512" max-age-in-seconds="28800"/>
     
-    <object-replicator stack="stack" cluster-name="cluster"/>
+    <distributed-cache jgroups-stack="stack" channel="cluster"/>
     
     <transport name="jdbc" protocol="teiid" socket-binding="teiid-jdbc" max-socket-threads="1" input-buffer-size="2" output-buffer-size="3"/>
 

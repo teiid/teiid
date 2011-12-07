@@ -1,0 +1,5 @@
+connect
+deploy --all-server-groups ../standalone/deployments/teiid-connector-file.rar
+deploy --all-server-groups ../standalone/deployments/teiid-connector-ldap.rar      
+deploy --all-server-groups ../standalone/deployments/teiid-connector-salesforce.rar
+deploy --all-server-groups ../standalone/deployments/teiid-connector-ws.rar

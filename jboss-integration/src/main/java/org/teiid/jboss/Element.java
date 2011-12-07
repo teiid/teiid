@@ -24,7 +24,6 @@ package org.teiid.jboss;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.MAX_OCCURS;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
 
@@ -59,11 +58,9 @@ enum Element {
     QUERY_TIMEOUT("query-timeout", "query-timeout", ModelType.LONG, false, "0"),
     WORKMANAGER("workmanager", "workmanager", ModelType.STRING, false, "default"),
     
-    POLICY_DECIDER_ELEMENT("policy-decider"),
-    POLICY_DECIDER_MODULE_ATTRIBUTE("module", "policy-decider-module", ModelType.STRING, false, null),
-    
-    AUTHORIZATION_VALIDATOR_ELEMENT("authorization-validator"),
-    AUTHORIZATION_VALIDATOR_MODULE_ATTRIBUTE("module", "authorization-validator-module", ModelType.STRING, false, null),
+    POLICY_DECIDER_MODULE_ELEMENT("policy-decider-module", "policy-decider-module", ModelType.STRING, false, null),
+    AUTHORIZATION_VALIDATOR_MODULE_ELEMENT("authorization-validator-module", "authorization-validator-module", ModelType.STRING, false, null),
+    METADATA_REPO_MODULE_ELEMENT("metadata-repository-module", "metadata-repository-module", ModelType.STRING, false, null),
 	
 	// buffer manager
 	BUFFER_SERVICE_ELEMENT("buffer-service"),
@@ -86,9 +83,9 @@ enum Element {
 	PPC_MAX_AGE_IN_SECS_ATTRIBUTE("max-age-in-seconds", "preparedplan-cache-max-age-in-seconds", ModelType.INT, false, "28800"),
 	
 	// Object Replicator
-	OBJECT_REPLICATOR_ELEMENT("object-replicator"),
-	OR_STACK_ATTRIBUTE("stack", "object-replicator-stack", ModelType.STRING, false, null),
-	OR_CLUSTER_NAME_ATTRIBUTE("cluster-name", "object-replicator-cluster-name", ModelType.STRING, false, null),
+	DISTRIBUTED_CACHE("distributed-cache"),
+	DC_STACK_ATTRIBUTE("jgroups-stack", "distributed-cache-jgroups-stack", ModelType.STRING, false, null),
+	DC_CHANNEL_NAME_ATTRIBUTE("channel", "distributed-cache-channel", ModelType.STRING, false, null),
 	
 	// Result set cache	
 	RESULTSET_CACHE_ELEMENT("resultset-cache"),

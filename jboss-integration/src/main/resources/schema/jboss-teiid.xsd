@@ -192,26 +192,24 @@
                 </xs:annotation>
             </xs:element>                             
             
-            <xs:element name="authorization-validator" minOccurs="0" maxOccurs="1">
-                <xs:complexType>
-                    <xs:attribute name="module" type="xs:string" use="required">
-                        <xs:annotation>
-                            <xs:documentation>An authorization validator that by default uses data role information stored in VDBs. Provide module name.</xs:documentation>
-                        </xs:annotation>
-                    </xs:attribute>
-                </xs:complexType>                
+            <xs:element name="authorization-validator-module" type="xs:string" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>An authorization validator that by default uses data role information stored in VDBs. Provide module name.</xs:documentation>
+                </xs:annotation>
             </xs:element>
             
-            <xs:element name="policy-decider" minOccurs="0" maxOccurs="1">
-                <xs:complexType>
-                    <xs:attribute name="module" type="xs:string" use="required">
-                        <xs:annotation>
-                            <xs:documentation>A policy decider that uses data role information stored in VDBs, Provide module name.</xs:documentation>
-                        </xs:annotation>
-                    </xs:attribute>
-                </xs:complexType>                 
+            <xs:element name="policy-decider-module" type="xs:string" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>A policy decider that uses data role information stored in VDBs, Provide module name.</xs:documentation>
+                </xs:annotation>
             </xs:element>
-
+            
+            <xs:element name="metadata-repository-module" type="xs:string" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Runtime Metadata Updates can be made persistent though by configuring a "org.teiid.metadata.MetadataRepository"</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            
             <xs:element name="resultset-cache" maxOccurs="1" minOccurs="0">
                 <xs:annotation>
                     <xs:documentation>Configuration for result set caching.</xs:documentation>
@@ -235,13 +233,13 @@
                 </xs:complexType>            
             </xs:element>
             
-            <xs:element name="object-replicator" maxOccurs="1" minOccurs="0">
+            <xs:element name="distributed-cache" maxOccurs="1" minOccurs="0">
                 <xs:annotation>
                     <xs:documentation>Cluster wide results distributor </xs:documentation>
                 </xs:annotation>
                 <xs:complexType>
-                    <xs:attribute name="stack" type="xs:string" use="required"/>
-                    <xs:attribute name="cluster-name" type="xs:string" use="required"/>
+                    <xs:attribute name="jgroups-stack" type="xs:string" use="required"/>
+                    <xs:attribute name="channel" type="xs:string" use="required"/>
                 </xs:complexType>
             </xs:element>            
         

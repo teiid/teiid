@@ -32,16 +32,15 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.ImmediateValue;
 import org.jboss.msc.value.InjectedValue;
-import org.teiid.transport.ClientServiceRegistry;
 
 
-class CSRReferenceFactoryService implements Service<ManagedReferenceFactory>, ManagedReferenceFactory {
-    private final InjectedValue<ClientServiceRegistry> csrInjector = new InjectedValue<ClientServiceRegistry>();
+class ReferenceFactoryService<T> implements Service<ManagedReferenceFactory>, ManagedReferenceFactory {
+    private final InjectedValue<T> injector = new InjectedValue<T>();
 
     private ManagedReference reference;
 
     public synchronized void start(StartContext startContext) throws StartException {
-        reference = new ValueManagedReference(new ImmediateValue<Object>(csrInjector.getValue()));
+        reference = new ValueManagedReference(new ImmediateValue<Object>(injector.getValue()));
     }
 
     public synchronized void stop(StopContext stopContext) {
@@ -56,7 +55,7 @@ class CSRReferenceFactoryService implements Service<ManagedReferenceFactory>, Ma
         return reference;
     }
 
-    public Injector<ClientServiceRegistry> getCSRInjector() {
-        return csrInjector; 
+    public Injector<T> getInjector() {
+        return injector; 
     }
 }

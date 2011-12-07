@@ -22,8 +22,9 @@
         
         <section>
             <title>Direct File Deployment</title>
-            <para>Copy the VDB file into the "&lt;jboss-install&gt;/standalone/deployments" directory. Also, create file a 
-            empty marker file with same name as the VDB with extension ".dodeploy" in the same directory.  
+            <para>Copy the VDB file into the "&lt;jboss-install&gt;/standalone/deployments" directory. The, create a 
+            empty marker file with same name as the VDB with extension ".dodeploy" in the same directory.  For eample, if your
+            vdb name is "enterprise.vdb", then marker file name must be "enterprise.vdb.dodeploy".
             Make sure that there are no other VDB files with the same name. If a VDB already exists with 
             the same name, then this VDB will be replaced with the new VDB. This is the simplest way to deploy a VDB. This is mostly
             designed for quick deployment during development, when the Teiid server is available locally on the developer machine.</para>
@@ -45,16 +46,18 @@
             <title>CLI based Deployment</title>
             <para>JBoss AS provides command line interface (CLI) for doing any kind of administrative task. 
             Execute "bin/jboss-admin.sh --connect" command and run
-            <programlisting><![CDATA[deploy /path/to/my.vdb]]></programlisting>
-            to deploy the VDB. Check out CLI documentation for more general usage of the CLI.</para>
+            <programlisting><![CDATA[deploy [--all-server-groups] /path/to/my.vdb]]></programlisting>
+            to deploy the VDB. Note that in domain mode, you need to either select a perticular "server-group" or all available
+            server groups are deployment options. Check out CLI documentation for more general usage of the CLI.</para>
         </section>         
                   
         <section>
             <title>AdminShell Deployment</title>
             <para>Teiid provides a groovy based AdminShell scripting tool, which can be used to deploy
-            a VDB. Check out the "deployVDB" method.  Consult the  
-            <link linkend="adminshell">AdminShell documentation</link> for more information. Note that using the AdminShell scripting, you can automate
-            the deployment of artifacts in your environment.</para>
+            a VDB. Check out the "deploy" method.  Consult the  
+            <link linkend="adminshell">AdminShell documentation</link> for more information. Note that using the 
+            AdminShell scripting, you can automate deployment of artifacts in your environment. When using AdminShell, 
+            in domain mode, the VDB is deployed to all the servers.</para>
         </section>         
 
         <section>
@@ -62,7 +65,8 @@
             <para>The Admin API (look in org.teiid.adminpi.*) provides Java API methods that 
             lets a user connect to a Teiid runtime and deploy a VDB. If you need to programmatically 
             deploy a VDB use this method. This method is preferable for OEM users, who are trying to extend the
-            Teiid's capabilities through their applications.</para>
+            Teiid's capabilities through their applications. When using Admin API, 
+            in domain mode, the VDB is deployed to all the servers.</para>
         </section>
         
    </section>
@@ -71,8 +75,8 @@
      <title>Deploying VDB Dependencies</title>
         <para>Apart from deploying the VDB, the user is also responsible for providing all the necessary 
         dependent libraries, configuration for creating the data sources that are needed by the models (schemas) 
-        defined in "META-INF/vdb.xml" file inside your VDB.  For example, if you are trying to integrate Oracle and File sources 
-        in your VDB, then you are responsible for 
+        defined in "META-INF/vdb.xml" file inside your VDB.  For example, if you are trying to integrate data from Oracle 
+        RDBMS and File sources in your VDB, then you are responsible for 
         providing the JDBC driver for the Oracle source and any necessary documents and configuration that are needed by 
         the File Translator.</para>
         
@@ -80,10 +84,11 @@
         as makes since for your deployments.  
         Consider sharing connections to sources that have heavy-weight and resource constrained connections.</para>
         
-        <para>With the exception of JDBC sources, other supported data sources have a corresponding .rar (zip format) file 
-        in &lt;jboss-install&gt;/standalone/deployments directory.
-        Either directly edit the standalone-teiid.xml or use CLI or Admin API to create the required data sources.
-        You can consult the .rar files META-INF/ra.xml for a full description of how the RAR based source needs to be configured. 
+        <para>With the exception of JDBC sources, other supported data sources have a corresponding JCA connector (.rar) files 
+        in "&lt;jboss-install&gt;/standalone/deployments"" directory.
+        Either directly edit the standalone-teiid.xml or use CLI or Admin API to create the required data sources by the VDB.        
+        Example configurations are provided for all the sources in  "&lt;jboss-install&gt;/docs/teiid/datasources" directory. 
+        Note that in the domain mode, you must either use CLI or admin-console or AdminShell to configure.
         </para>
         
         <para>Some data sources may contain passwords or other sensitive information.  
@@ -122,10 +127,18 @@
                 <user-name>{user}</user-name>
                 <password>{password}</password>
             </security>
-        </datasource> ]]></programlisting>     
+        </datasource> ]]></programlisting>
+                <para>Template files for different databases can found at {jboss-as}/docs/teiid/datasources directory</para>     
                 </listitem>
+                
+                <listitem> <para>If you like create using CLI, you can issue command like
+                <programlisting><![CDATA[
+/subsystem=datasources/data-source=oracel-ds:add(jndi-name=java:/OracleDS, pool-name=oracle-ds, driver-name=oracle, connection-url=jdbc:oracle:thin:{host}:1521:orcl,user-name={user}, password={password})
+/subsystem=datasources/data-source=oracel-ds:enable                
+                ]]></programlisting>
+                </para> </listitem>
             </orderedlist>
-            <para>Template files for different databases can found at {jboss-as}/docs/teiid/datasources directory</para>
+            
         </section>        
         <section>
             <title>File Data Sources</title>
@@ -163,7 +176,9 @@
             </connection-definitions>
         </resource-adapter>
     </resource-adapters>
-</subsystem>]]></programlisting></example>             
+</subsystem>]]></programlisting></example>      
+        <para>You can use CLI to configure the same, however it is a multi-step process. For domain mode, you must use CLI, or 
+        admin-console or AdminShell/Admin API</para>       
         </section>
         
         <section id="ws-ds">
@@ -191,6 +206,9 @@
         </resource-adapter>
     </resource-adapters>
 </subsystem>]]></programlisting></example>
+        <para>You can use CLI to configure the same, however it is a multi-step process. For domain mode, you must use CLI, or 
+        admin-console or AdminShell/Admin API</para>       
+
 			<section>
 				<title>CXF Configuration</title>
 				<para>Each web service data source may choose a particular CXF config file and port configuration. 
@@ -383,6 +401,8 @@
         </resource-adapter>
     </resource-adapters>
 </subsystem>]]></programlisting></example>
+        <para>You can use CLI to configure the same, however it is a multi-step process. For domain mode, you must use CLI, or 
+        admin-console or AdminShell/Admin API</para>       
 
             <section>
                 <title>CXF Configuration</title>
@@ -430,6 +450,8 @@
         </resource-adapter>
     </resource-adapters>
 </subsystem>]]></programlisting></example>
+        <para>You can use CLI to configure the same, however it is a multi-step process. For domain mode, you must use CLI, or 
+        admin-console or AdminShell/Admin API</para>       
         </section>
         
    </section>
@@ -483,9 +505,7 @@
    <section>
     <title>Migrating VDBs from 6.x</title>
     <para>VDBs from prior release contain an older configuration file version that is no longer supported.  
-    You can use the migration utility (bin/migrate.sh or bin/migrate.bat) supplied with the 
-    <link linkend="adminshell">AdminShell</link> download 
-    to update these VDBs for use with Teiid 7.  Note - XML and File based sources from previous releases have changed, and require manual changes to the VDB.</para>
+    Note - XML and File based sources from previous releases have changed, and require manual changes to the VDB.</para>
    </section>
    
 </chapter>

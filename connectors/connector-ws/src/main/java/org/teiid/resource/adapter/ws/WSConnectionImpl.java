@@ -261,7 +261,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 			
 			dispatch = svc.createDispatch(mcf.getPortQName(), type, mode);
 			
-			if (mcf.getSecurityType() == WSManagedConnectionFactory.SecurityType.WSSecurity 
+			if (mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.WSSecurity 
 					&& mcf.getOutInterceptors() != null) {
 				Client client = ((DispatchImpl)dispatch).getClient();
 				Endpoint ep = client.getEndpoint();
@@ -271,7 +271,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 			}
 		}
 		
-		if (mcf.getSecurityType() == WSManagedConnectionFactory.SecurityType.HTTPBasic){
+		if (mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.HTTPBasic){
 			dispatch.getRequestContext().put(Dispatch.USERNAME_PROPERTY, mcf.getAuthUserName());
 			dispatch.getRequestContext().put(Dispatch.PASSWORD_PROPERTY, mcf.getAuthPassword());
 		}

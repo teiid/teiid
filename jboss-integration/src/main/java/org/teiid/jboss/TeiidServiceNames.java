@@ -42,6 +42,7 @@ public class TeiidServiceNames {
 	public static ServiceName OBJECT_REPLICATOR = ServiceName.JBOSS.append("teiid", "object-replicator"); //$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName VDB_STATUS_CHECKER = ServiceName.JBOSS.append("teiid", "vdb-status-checker"); //$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName DS_LISTENER_BASE = ServiceName.JBOSS.append("teiid", "ds-listener"); //$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName EVENT_DISTRIBUTOR_FACTORY = ServiceName.JBOSS.append("teiid", "event-distributor-factory");//$NON-NLS-1$ //$NON-NLS-2$
 	
 	public static ServiceName translatorServiceName(String name) {
 		return ServiceName.of(TRANSLATOR_BASE, name);

@@ -55,6 +55,7 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 	private QName portQName;
 	private List<? extends Interceptor> outInterceptors;
 
+	@SuppressWarnings("serial")
 	@Override
 	public BasicConnectionFactory createConnectionFactory() throws ResourceException {
 		String configName = getConfigName();
@@ -103,8 +104,12 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 		this.endPoint = endPoint;
 	}	
 	
-	public SecurityType getSecurityType() {
+	public SecurityType getAsSecurityType() {
 		return SecurityType.valueOf(this.securityType);
+	}
+
+	public String getSecurityType() {
+		return this.securityType;
 	}
 
 	public void setSecurityType(String securityType) {
@@ -137,6 +142,46 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 	
 	public List<? extends Interceptor> getOutInterceptors() {
 		return outInterceptors;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((authPassword == null) ? 0 : authPassword.hashCode());
+		result = prime * result + ((authUserName == null) ? 0 : authUserName.hashCode());
+		result = prime * result + ((configFile == null) ? 0 : configFile.hashCode());
+		result = prime * result + ((configName == null) ? 0 : configName.hashCode());
+		result = prime * result + ((endPoint == null) ? 0 : endPoint.hashCode());
+		result = prime * result + ((securityType == null) ? 0 : securityType.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		WSManagedConnectionFactory other = (WSManagedConnectionFactory) obj;
+		if (!checkEquals(this.authPassword, other.authPassword)) {
+			return false;
+		}
+		if (!checkEquals(this.authUserName, other.authUserName)) {
+			return false;
+		}
+		if (!checkEquals(this.configFile, other.configFile)) {
+			return false;
+		}
+		if (!checkEquals(this.configName, other.configName)) {
+			return false;
+		}
+		if (!checkEquals(this.endPoint, other.endPoint)) {
+			return false;
+		}
+		if (!checkEquals(this.securityType, other.securityType)) {
+			return false;
+		}
+		return true;
 	}
 	
 }

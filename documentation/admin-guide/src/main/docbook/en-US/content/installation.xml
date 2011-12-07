@@ -39,13 +39,29 @@
         <programlisting><![CDATA[
    <jboss-install>/bin/standalone.sh --server-config=standalone-teiid.xml
          ]]></programlisting>
-        if you want to start the "standalone" profile. To start the server in "Domain" mode execute command
+        if you want to start the "standalone" profile. </para>
+        
+        <para>
+        To start the server in "Domain" mode, install the JBoss AS 7.x and Teiid on all the servers in are going to be 
+        part of the cluster. Select one of the server as the "master" domain controller, the rest of the 
+        servers will be slaves that connect to the "master" domain controller for all the administrative operations. 
+        Edit "host-teiid.xml" on all the slave servers in "jbossas/domain/configuration" directory, and make sure the 
+        "domain-controller" element is configured with ip address of the "master" server. For example
         <programlisting><![CDATA[
-   <jboss-install>/bin/domain.sh --domain-config=domain-teiid.xml
+     <domain-controller>
+       <remote host="192.168.100.1" port="9999"/>
+    </domain-controller>  
          ]]></programlisting>
-        To complete the installion for the domain mode, after the server has been started run the following command. Note that
-        this only needs to be run for once per whole domain install. Since in domain mode you can not statically deploy resources,
-        this script deploys default resources required for Teiid once the server starts using the CLI interface.
+         the port number is for the management interface, make sure they match to that of what you have in the configuration. 
+         If you want to change the "server-group" name or add unique server names to each server then modify the "servers" element.
+         Once all the configuration edits are done, then you can start JBoss AS in domain mode by executing the command         
+        <programlisting><![CDATA[
+   <jboss-install>/bin/domain.sh --domain-config=domain-teiid.xml --host-config=host-teiid.xml
+         ]]></programlisting>
+        on all the servers. Once all the servers are up, to complete the installion for the domain mode, 
+        run the following command on any one server. Note that this only needs to be run for once per whole domain install. 
+        Since in domain mode you can not statically deploy resources, this script deploys default resources required 
+        (file, ldap, salesforce and ws connectors) for Teiid once the server starts using the CLI interface.
         <programlisting><![CDATA[
    <jboss-install>/bin/jboss-admin.sh --file=scripts/teiid-domain-mode-install.cli
          ]]></programlisting>

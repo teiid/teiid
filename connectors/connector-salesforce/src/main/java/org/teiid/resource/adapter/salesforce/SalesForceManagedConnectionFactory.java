@@ -65,8 +65,12 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	public URL getURL() {
+	public URL getAsURL() {
 		return this.URL;
+	}
+	
+	public String getURL() {
+		return this.URL.toExternalForm();
 	}
 	
 	public void setURL(String uRL) {
@@ -102,12 +106,43 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 
 			@Override
 			public SalesforceConnectionImpl getConnection() throws ResourceException {
-				return new SalesforceConnectionImpl(getUsername(), getPassword(), getURL(), SalesForceManagedConnectionFactory.this);
+				return new SalesforceConnectionImpl(getUsername(), getPassword(), getAsURL(), SalesForceManagedConnectionFactory.this);
 			}
 		};
 	}
 	
 	public Bus getBus() {
 		return bus;
+	}
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((URL == null) ? 0 : URL.hashCode());
+		result = prime * result + ((password == null) ? 0 : password.hashCode());
+		result = prime * result + ((username == null) ? 0 : username.hashCode());
+		result = prime * result + ((configFile == null) ? 0 : configFile.hashCode());
+		return result;
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		SalesForceManagedConnectionFactory other = (SalesForceManagedConnectionFactory) obj;
+		if (!checkEquals(this.URL, other.URL)) {
+			return false;
+		}
+		if (!checkEquals(this.password, other.password)) {
+			return false;
+		}
+		if (!checkEquals(this.username, other.username)) {
+			return false;
+		}
+		if (!checkEquals(this.configFile, other.configFile)) {
+			return false;
+		}
+		
+		return true;
 	}
 }

@@ -3,9 +3,9 @@
 <chapter id="clustering">
    <title>Clustering in Teiid</title>
    <para>Since Teiid is installed in JBoss AS, there is no separate configuration needed on the part of the user to cluster 
-   the Teiid instances.
-   To cluster JBoss AS instances use these <ulink url="https://docs.jboss.org/author/display/AS7/Documentation">instructions</ulink> then Teiid instances
-   are clustered as well. Just make sure that you installed Teiid in every JBoss AS node and started JBoss AS instances in the 
+   the Teiid instances. Check the <link linkend="installation">installation</link> for quick instructions. See 
+   detailed JBoss AS <ulink url="https://docs.jboss.org/author/display/AS7/Documentation">instructions</ulink> here. 
+   Just make sure that you installed Teiid in every JBoss AS node and started JBoss AS instances in the 
    Domain mode before starting the cluster. 
    </para>
    

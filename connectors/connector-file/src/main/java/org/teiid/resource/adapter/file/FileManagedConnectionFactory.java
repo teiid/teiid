@@ -42,6 +42,7 @@ public class FileManagedConnectionFactory extends BasicManagedConnectionFactory{
 	private boolean allowParentPaths = true;
 	
 	@Override
+	@SuppressWarnings("serial")
 	public BasicConnectionFactory createConnectionFactory() throws ResourceException {
 		if (this.parentDirectory == null) {
 			throw new InvalidPropertyException(UTIL.getString("parentdirectory_not_set")); //$NON-NLS-1$
@@ -76,8 +77,35 @@ public class FileManagedConnectionFactory extends BasicManagedConnectionFactory{
 		return allowParentPaths;
 	}
 	
-	public void setAllowParentPaths(boolean allowParentPaths) {
+	public void setAllowParentPaths(Boolean allowParentPaths) {
 		this.allowParentPaths = allowParentPaths;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (allowParentPaths ? 1231 : 1237);
+		result = prime * result + ((fileMapping == null) ? 0 : fileMapping.hashCode());
+		result = prime * result + ((parentDirectory == null) ? 0 : parentDirectory.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		FileManagedConnectionFactory other = (FileManagedConnectionFactory) obj;
+		if (allowParentPaths != other.allowParentPaths)
+			return false;
+		if (!checkEquals(this.fileMapping, other.fileMapping)) {
+			return false;
+		}
+		if (!checkEquals(this.parentDirectory, other.parentDirectory)) {
+			return false;
+		}
+		return true;
 	}
 	
 }

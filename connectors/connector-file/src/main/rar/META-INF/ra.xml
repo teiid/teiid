@@ -30,7 +30,7 @@
       <license-required>true</license-required>
    </license>
    <resourceadapter>
-      <resourceadapter-class>org.teiid.resource.spi.BasicResourceAdapter</resourceadapter-class>
+      <resourceadapter-class>org.teiid.resource.adapter.file.FileResourceAdapter</resourceadapter-class>
 
       <outbound-resourceadapter>
          <connection-definition>
@@ -51,7 +51,7 @@
              <config-property>
                <description>{$display:"Allow Parent Paths"}</description>
                <config-property-name>AllowParentPaths</config-property-name>
-               <config-property-type>boolean</config-property-type>
+               <config-property-type>java.lang.Boolean</config-property-type>
                <config-property-value>true</config-property-value>
             </config-property>
             

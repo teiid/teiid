@@ -74,20 +74,11 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	writeElement(writer, Element.DETECTING_CHANGE_EVENTS_ELEMENT, node);
     	writeElement(writer, Element.QUERY_TIMEOUT, node);
     	writeElement(writer, Element.WORKMANAGER, node);
+
+    	writeElement(writer, Element.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT, node);
+    	writeElement(writer, Element.POLICY_DECIDER_MODULE_ELEMENT, node);
+    	writeElement(writer, Element.METADATA_REPO_MODULE_ELEMENT, node);
     	
-
-    	if (like(node, Element.AUTHORIZATION_VALIDATOR_ELEMENT)) {
-			writer.writeStartElement(Element.AUTHORIZATION_VALIDATOR_ELEMENT.getLocalName());
-			writer.writeAttribute(Element.AUTHORIZATION_VALIDATOR_MODULE_ATTRIBUTE.getLocalName(), node.get(Element.AUTHORIZATION_VALIDATOR_MODULE_ATTRIBUTE.getModelName()).asString());
-			writer.writeEndElement();
-    	}
-
-    	if (like(node, Element.POLICY_DECIDER_ELEMENT)) {
-			writer.writeStartElement(Element.POLICY_DECIDER_ELEMENT.getLocalName());
-			writer.writeAttribute(Element.POLICY_DECIDER_MODULE_ATTRIBUTE.getLocalName(), node.get(Element.POLICY_DECIDER_MODULE_ATTRIBUTE.getModelName()).asString());
-			writer.writeEndElement();
-    	}
-
     	if (like(node, Element.RESULTSET_CACHE_ELEMENT)){
     		writer.writeStartElement(Element.RESULTSET_CACHE_ELEMENT.getLocalName());
     		writeResultsetCacheConfiguration(writer, node);
@@ -100,8 +91,8 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     		writer.writeEndElement();
     	}
     	
-    	if (like(node, Element.OBJECT_REPLICATOR_ELEMENT)){
-    		writer.writeStartElement(Element.OBJECT_REPLICATOR_ELEMENT.getLocalName());
+    	if (like(node, Element.DISTRIBUTED_CACHE)){
+    		writer.writeStartElement(Element.DISTRIBUTED_CACHE.getLocalName());
     		writeObjectReplicatorConfiguration(writer, node);
     		writer.writeEndElement();
     	}
@@ -133,8 +124,8 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     }
     
     private void writeObjectReplicatorConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
-    	writeAttribute(writer, Element.OR_STACK_ATTRIBUTE, node);
-    	writeAttribute(writer, Element.OR_CLUSTER_NAME_ATTRIBUTE, node);
+    	writeAttribute(writer, Element.DC_STACK_ATTRIBUTE, node);
+    	writeAttribute(writer, Element.DC_CHANNEL_NAME_ATTRIBUTE, node);
 	}
 
 	private void writeTranslator(XMLExtendedStreamWriter writer, ModelNode node, String translatorName) throws XMLStreamException {
@@ -284,6 +275,9 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     					bootServices.get(reader.getLocalName()).set(Boolean.parseBoolean(reader.getElementText()));
     					break;
 
+    				case POLICY_DECIDER_MODULE_ELEMENT:
+    				case AUTHORIZATION_VALIDATOR_MODULE_ELEMENT:
+    				case METADATA_REPO_MODULE_ELEMENT:
     				case WORKMANAGER:    					
     					bootServices.get(reader.getLocalName()).set(reader.getElementText());
     					break;
@@ -300,20 +294,12 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     					bootServices.get(reader.getLocalName()).set(Integer.parseInt(reader.getElementText()));
     					break;
 
-    				case AUTHORIZATION_VALIDATOR_ELEMENT:
-    					parseAuthorizationValidator(reader, bootServices);
-    					break;
-    				
-    				case POLICY_DECIDER_ELEMENT:
-    					parsePolicyDecider(reader, bootServices);
-    					break;
-    				
     				case ASYNC_THREAD_POOL_ELEMENT:
     					bootServices.get(reader.getLocalName()).set(reader.getElementText());
     					break;
     					
   					// complex types
-    				case OBJECT_REPLICATOR_ELEMENT:
+    				case DISTRIBUTED_CACHE:
     					parseObjectReplicator(reader, bootServices);
     					break;
     					
@@ -378,58 +364,18 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         }  
     }
     
-    private ModelNode parseAuthorizationValidator(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
-    	if (reader.getAttributeCount() > 0) {
-    		for(int i=0; i<reader.getAttributeCount(); i++) {
-    			String attrName = reader.getAttributeLocalName(i);
-    			String attrValue = reader.getAttributeValue(i);
-    			
-    			Element element = Element.forName(attrName, Element.AUTHORIZATION_VALIDATOR_ELEMENT);
-    			switch(element) {
-    			case AUTHORIZATION_VALIDATOR_MODULE_ATTRIBUTE:
-    				node.get(element.getModelName()).set(attrValue);
-    				break;
-                default: 
-                    throw ParseUtils.unexpectedAttribute(reader, i);
-    			}    			
-    		}
-    	}
-        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT));
-    	return node;
-	}    
-    
-    private ModelNode parsePolicyDecider(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
-    	if (reader.getAttributeCount() > 0) {
-    		for(int i=0; i<reader.getAttributeCount(); i++) {
-    			String attrName = reader.getAttributeLocalName(i);
-    			String attrValue = reader.getAttributeValue(i);
-    			
-    			Element element = Element.forName(attrName, Element.POLICY_DECIDER_ELEMENT);
-    			switch(element) {
-    			case POLICY_DECIDER_MODULE_ATTRIBUTE:
-    				node.get(element.getModelName()).set(attrValue);
-    				break;
-                default: 
-                    throw ParseUtils.unexpectedAttribute(reader, i);
-    			}    			
-    		}
-    	}
-        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT));
-    	return node;
-	}      
-    
     private ModelNode parseObjectReplicator(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
     	if (reader.getAttributeCount() > 0) {
     		for(int i=0; i<reader.getAttributeCount(); i++) {
     			String attrName = reader.getAttributeLocalName(i);
     			String attrValue = reader.getAttributeValue(i);
     			
-    			Element element = Element.forName(attrName, Element.OBJECT_REPLICATOR_ELEMENT);
+    			Element element = Element.forName(attrName, Element.DISTRIBUTED_CACHE);
     			switch(element) {
-    			case OR_STACK_ATTRIBUTE:
+    			case DC_STACK_ATTRIBUTE:
     				node.get(element.getModelName()).set(attrValue);
     				break;
-    			case OR_CLUSTER_NAME_ATTRIBUTE:
+    			case DC_CHANNEL_NAME_ATTRIBUTE:
     				node.get(element.getModelName()).set(attrValue);
     				break;
                 default: 

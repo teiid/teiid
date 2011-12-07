@@ -129,4 +129,15 @@ public abstract class BasicManagedConnectionFactory implements ManagedConnection
 		}
 		return result;
 	}
+	
+	protected static boolean checkEquals(Object left, Object right) {
+		if (left == null) {
+			if (right != null)
+				return false;
+		} else if (!left.equals(right)) {
+			return false;
+		}
+		return false;
+	}
+	
 }

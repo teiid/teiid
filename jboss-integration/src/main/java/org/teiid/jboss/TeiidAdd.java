@@ -43,6 +43,10 @@ import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
+import org.jboss.as.naming.ManagedReferenceFactory;
+import org.jboss.as.naming.ServiceBasedNamingStore;
+import org.jboss.as.naming.deployment.ContextNames;
+import org.jboss.as.naming.service.BinderService;
 import org.jboss.as.server.AbstractDeploymentChainStep;
 import org.jboss.as.server.DeploymentProcessorTarget;
 import org.jboss.as.server.deployment.Phase;
@@ -76,7 +80,11 @@ import org.teiid.dqp.internal.process.DefaultAuthorizationValidator;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.service.BufferService;
+import org.teiid.events.EventDistributorFactory;
 import org.teiid.jboss.deployers.RuntimeEngineDeployer;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.replication.jboss.JGroupsObjectReplicator;
@@ -99,12 +107,13 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 		Element.DETECTING_CHANGE_EVENTS_ELEMENT,
 		Element.QUERY_TIMEOUT,
 		Element.WORKMANAGER,
-		Element.AUTHORIZATION_VALIDATOR_MODULE_ATTRIBUTE,
-		Element.POLICY_DECIDER_MODULE_ATTRIBUTE,
+		Element.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT,
+		Element.POLICY_DECIDER_MODULE_ELEMENT,
+		Element.METADATA_REPO_MODULE_ELEMENT,
 		
 		// object replicator
-		Element.OR_STACK_ATTRIBUTE,
-		Element.OR_CLUSTER_NAME_ATTRIBUTE,
+		Element.DC_STACK_ATTRIBUTE,
+		Element.DC_CHANNEL_NAME_ATTRIBUTE,
 
 		// Buffer Service
 		Element.USE_DISK_ATTRIBUTE,
@@ -210,6 +219,11 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	// VDB repository
     	final VDBRepository vdbRepository = new VDBRepository();
     	vdbRepository.setSystemFunctionManager(systemFunctionManager);
+    	if (Element.METADATA_REPO_MODULE_ELEMENT.isDefined(operation)) {
+    		MetadataRepository repo = buildService(MetadataRepository.class, Element.METADATA_REPO_MODULE_ELEMENT.asString(operation));
+    		vdbRepository.setMetadataRepository(repo);
+    	}
+    	
     	VDBRepositoryService vdbRepositoryService = new VDBRepositoryService(vdbRepository);
     	newControllers.add(target.addService(TeiidServiceNames.VDB_REPO, vdbRepositoryService).install());
 		
@@ -239,14 +253,16 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	newControllers.add(objectSerializerService.install());
     	
     	// Object Replicator
-    	if (Element.OR_STACK_ATTRIBUTE.isDefined(operation)) {
-    		String stack = Element.OR_STACK_ATTRIBUTE.asString(operation);
+    	boolean replicatorAvailable = false;
+    	if (Element.DC_STACK_ATTRIBUTE.isDefined(operation)) {
+    		String stack = Element.DC_STACK_ATTRIBUTE.asString(operation);
     		
     		String clusterName = "teiid-rep"; //$NON-NLS-1$ 
-    		if (Element.OR_CLUSTER_NAME_ATTRIBUTE.isDefined(operation)) {
-    			clusterName = Element.OR_CLUSTER_NAME_ATTRIBUTE.asString(operation);
+    		if (Element.DC_CHANNEL_NAME_ATTRIBUTE.isDefined(operation)) {
+    			clusterName = Element.DC_CHANNEL_NAME_ATTRIBUTE.asString(operation);
     		}
     		
+    		replicatorAvailable = true;
     		JGroupsObjectReplicatorService replicatorService = new JGroupsObjectReplicatorService(clusterName);
 			ServiceBuilder<JGroupsObjectReplicator> serviceBuilder = target.addService(TeiidServiceNames.OBJECT_REPLICATOR, replicatorService);
 			serviceBuilder.addDependency(ServiceName.JBOSS.append("jgroups", "stack", stack), ChannelFactory.class, replicatorService.channelFactoryInjector); //$NON-NLS-1$ //$NON-NLS-2$
@@ -258,12 +274,18 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	BufferManagerService bufferService = new BufferManagerService(buildBufferManager(operation));
     	ServiceBuilder<BufferService> bufferServiceBuilder = target.addService(TeiidServiceNames.BUFFER_MGR, bufferService);
     	bufferServiceBuilder.addDependency(TeiidServiceNames.BUFFER_DIR, String.class, bufferService.pathInjector);
-    	bufferServiceBuilder.addDependency(DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, bufferService.replicatorInjector);
+    	bufferServiceBuilder.addDependency(replicatorAvailable?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, bufferService.replicatorInjector);
     	newControllers.add(bufferServiceBuilder.install());
     	
+    	EventDistributorFactoryService edfs = new EventDistributorFactoryService();
+    	ServiceBuilder<EventDistributorFactory> edfsServiceBuilder = target.addService(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY, edfs);
+    	edfsServiceBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, edfs.vdbRepositoryInjector);
+    	edfsServiceBuilder.addDependency(replicatorAvailable?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, edfs.objectReplicatorInjector);
+    	newControllers.add(edfsServiceBuilder.install());
+    	
     	PolicyDecider policyDecider;
-    	if (Element.POLICY_DECIDER_MODULE_ATTRIBUTE.isDefined(operation)) {
-    		policyDecider = buildService(PolicyDecider.class, Element.POLICY_DECIDER_MODULE_ATTRIBUTE.asString(operation));    		
+    	if (Element.POLICY_DECIDER_MODULE_ELEMENT.isDefined(operation)) {
+    		policyDecider = buildService(PolicyDecider.class, Element.POLICY_DECIDER_MODULE_ELEMENT.asString(operation));    		
     	}
     	else {
     		DataRolePolicyDecider drpd = new DataRolePolicyDecider();
@@ -273,8 +295,8 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	}
     	
     	final AuthorizationValidator authValidator;
-    	if (Element.AUTHORIZATION_VALIDATOR_MODULE_ATTRIBUTE.isDefined(operation)) {
-    		authValidator = buildService(AuthorizationValidator.class, Element.AUTHORIZATION_VALIDATOR_MODULE_ATTRIBUTE.asString(operation));
+    	if (Element.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT.isDefined(operation)) {
+    		authValidator = buildService(AuthorizationValidator.class, Element.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT.asString(operation));
     		authValidator.setEnabled(true);
     	}
     	else {
@@ -324,7 +346,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
         engineBuilder.addDependency(TeiidServiceNames.AUTHORIZATION_VALIDATOR, AuthorizationValidator.class, engine.getAuthorizationValidatorInjector());
         engineBuilder.addDependency(TeiidServiceNames.CACHE_RESULTSET, SessionAwareCache.class, engine.getResultSetCacheInjector());
         engineBuilder.addDependency(TeiidServiceNames.CACHE_PREPAREDPLAN, SessionAwareCache.class, engine.getPreparedPlanCacheInjector());
-        engineBuilder.addDependency(DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, engine.getObjectReplicatorInjector());
+        engineBuilder.addDependency(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY, EventDistributorFactory.class, engine.getEventDistributorFactoryInjector());
         
         engineBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
         ServiceController<DQPCore> controller = engineBuilder.install(); 
@@ -332,7 +354,27 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
         ServiceContainer container =  controller.getServiceContainer();
         container.addTerminateListener(shutdownListener);
             	
-    	// Register VDB deployer
+        // add JNDI for event distributor
+		final ReferenceFactoryService<EventDistributorFactory> referenceFactoryService = new ReferenceFactoryService<EventDistributorFactory>();
+		final ServiceName referenceFactoryServiceName = TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY.append("reference-factory"); //$NON-NLS-1$
+		final ServiceBuilder<?> referenceBuilder = target.addService(referenceFactoryServiceName, referenceFactoryService);
+		referenceBuilder.addDependency(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY, EventDistributorFactory.class, referenceFactoryService.getInjector());
+		referenceBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
+		  
+		String jndiName = "teiid/event-distributor-factory";//$NON-NLS-1$
+		final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(jndiName); 
+		final BinderService binderService = new BinderService(bindInfo.getBindName());
+		final ServiceBuilder<?> binderBuilder = target.addService(bindInfo.getBinderServiceName(), binderService);
+		binderBuilder.addDependency(referenceFactoryServiceName, ManagedReferenceFactory.class, binderService.getManagedObjectInjector());
+		binderBuilder.addDependency(bindInfo.getParentContextServiceName(), ServiceBasedNamingStore.class, binderService.getNamingStoreInjector());        
+		binderBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
+					
+		newControllers.add(referenceBuilder.install());
+		newControllers.add(binderBuilder.install());
+		
+		LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("event_distributor_bound", jndiName)); //$NON-NLS-1$
+        
+        // Register VDB deployer
         context.addStep(new AbstractDeploymentChainStep() {
 			@Override
 			public void execute(DeploymentProcessorTarget processorTarget) {

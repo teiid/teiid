@@ -10,16 +10,7 @@
         <para>The Console environment does not understand Shell commands (load, help, adminhelp, etc.), since they are not directly supported by Groovy.  In the Console you should use the equivalent functional form / Groovy, e.g. instead of adminhelp, adminHelp()</para>
       </answer>
     </qandaentry>
-  
-    <qandaentry>
-      <question>
-        <para>Are there any pre-built scripts available?</para>
-      </question>
-      <answer>
-        <para>Currently no, but we will provide samples in subsequent releases.</para>
-      </answer>
-    </qandaentry>
-    
+     
     <qandaentry>
       <question>
         <para>I have written a very useful script to do XYZ, I would like this to be part of the distribution?</para>

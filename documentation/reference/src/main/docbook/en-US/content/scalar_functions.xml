@@ -1877,7 +1877,7 @@
     	<para><synopsis>ENV(key)</synopsis></para>
     	<para>The only key specific to the current session is 'sessionid'.  
                 However the preferred mechanism for getting the session id is with the session_id() function.  
-                To prevent untrusted access to system properties, this function is not enabled by default.  The ENV function may be enabled via the allowEnvFunction property in the &teiid-deployer-beans; file.</para>
+                To prevent untrusted access to system properties, this function is not enabled by default.  The ENV function may be enabled via the allowEnvFunction property in the &teiid-beans; file.</para>
     	<para>key, return value are strings</para>
      </section>
      <section>

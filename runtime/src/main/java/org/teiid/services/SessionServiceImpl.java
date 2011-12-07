@@ -361,7 +361,7 @@ public abstract class SessionServiceImpl implements SessionService {
 	}
 	
 	public void start() {
-		LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.getString("auth_type", authenticationType, securityDomainNames)); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_SECURITY, RuntimePlugin.Util.getString("auth_type", authenticationType, securityDomainNames)); //$NON-NLS-1$
         this.sessionMonitor.schedule(new TimerTask() {
         	@Override
         	public void run() {
