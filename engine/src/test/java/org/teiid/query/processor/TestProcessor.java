@@ -7653,5 +7653,35 @@ public class TestProcessor {
         		Arrays.asList(3)});
     }
     
+    @Test public void testMultipleAliasInUnionAll(){
+        String sql = "SELECT enterprise_id FROM ( " +
+                "SELECT * FROM ( " +
+                "    SELECT id, id AS display_id, 103 AS enterprise_id FROM (" +
+                "        SELECT 'x' as id, e1 FROM pm1.g1) AS nexted103) as table103Source " +
+                "UNION ALL " +
+                "SELECT  'x', 'x' AS display_id, 101 AS enterprise_id FROM (" +
+                "    SELECT 'x', e1 FROM pm1.g1) AS nested101 " +
+                "UNION ALL " +
+                "SELECT  'x', 'x' AS display_id, 100 AS enterprise_id FROM (" +
+                "    SELECT 'x', e1 FROM pm1.g1) AS nested100) as tableFrom1stSelect " +
+                "WHERE enterprise_id = 100";
+    	
+                   
+        // Create expected results - would expect these to be:
+        List[] expected = new List[] {
+        		Arrays.asList(100)
+        };  
+
+        // Construct data manager with data
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT 100 FROM pm1.g1 AS g_0", new List[] {Arrays.asList(100)});
+
+        Command command = helpParse(sql);   
+        ProcessorPlan plan = helpGetPlan(command, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder(false));
+        // Run query
+        helpProcess(plan, dataManager, expected);        
+    
+    }
+    
     private static final boolean DEBUG = false;
 }
