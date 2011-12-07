@@ -30,7 +30,6 @@ import javax.resource.ResourceException;
 
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.ResizingArrayList;
-import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
 import org.teiid.dqp.internal.process.RequestWorkItem;
@@ -38,7 +37,6 @@ import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.language.Call;
-import org.teiid.language.QueryExpression;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.CommandLogMessage.Event;
@@ -48,6 +46,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.resource.spi.WrappedConnection;
 import org.teiid.translator.DataNotAvailableException;
@@ -55,9 +54,9 @@ import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.ReusableExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
-
 
 public class ConnectorWorkItem implements ConnectorWork {
 	
@@ -74,7 +73,6 @@ public class ConnectorWorkItem implements ConnectorWork {
     private ExecutionContextImpl securityContext;
     private volatile ResultSetExecution execution;
     private ProcedureBatchHandler procedureBatchHandler;
-    private org.teiid.language.Command translatedCommand;
     private int expectedColumns;
         
     /* End state information */    
@@ -89,18 +87,13 @@ public class ConnectorWorkItem implements ConnectorWork {
         this.requestMsg = message;
         this.manager = manager;
         AtomicRequestID requestID = this.requestMsg.getAtomicRequestID();
-        this.securityContext = new ExecutionContextImpl(requestMsg.getWorkContext().getVdbName(),
-                requestMsg.getWorkContext().getVdbVersion(),                
-                requestMsg.getExecutionPayload(),                                                                       
-                requestMsg.getWorkContext().getSessionId(),                                                                      
+        this.securityContext = new ExecutionContextImpl(message.getCommandContext(),                                                                      
                 requestMsg.getConnectorName(),
-                requestMsg.getRequestID().toString(),
                 Integer.toString(requestID.getNodeID()),
                 Integer.toString(requestID.getExecutionId())
                 );
         this.securityContext.setGeneralHint(message.getGeneralHint());
         this.securityContext.setHint(message.getHint());
-        this.securityContext.setUser(requestMsg.getWorkContext().getSubject());
         this.securityContext.setBatchSize(this.requestMsg.getFetchSize());
         this.securityContext.setSession(requestMsg.getWorkContext().getSession());
         
@@ -146,6 +139,9 @@ public class ConnectorWorkItem implements ConnectorWork {
     
     public void close() {
     	this.securityContext.setRequestWorkItem(null);
+    	if (!manager.removeState(this.id)) {
+    		return; //already closed
+    	}
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing Close :", this.requestMsg.getCommand()}); //$NON-NLS-1$
     	if (!error) {
             manager.logSRCCommand(this.requestMsg, this.securityContext, Event.END, this.rowCount);
@@ -162,8 +158,6 @@ public class ConnectorWorkItem implements ConnectorWork {
         		this.connector.closeConnection(connection, connectionFactory);
         	} catch (Throwable e) {
         		LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
-        	} finally {
-        		manager.removeState(this.id);
         	}
 		    LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed connection"}); //$NON-NLS-1$
         } 
@@ -196,7 +190,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 		return new TranslatorException(t);
     }
     
-	public AtomicResultsMessage execute() throws TranslatorException, BlockedException {
+	public AtomicResultsMessage execute() throws TranslatorException {
         if(isCancelled()) {
     		throw new TranslatorException("Request canceled"); //$NON-NLS-1$
     	}
@@ -214,56 +208,25 @@ public class ConnectorWorkItem implements ConnectorWork {
 					throw new TranslatorException(QueryPlugin.Util.getString("failed_to_unwrap_connection")); //$NON-NLS-1$
 				}	
 			}
-			
+
 	        // Translate the command
 	        Command command = this.requestMsg.getCommand();
 	        this.expectedColumns = command.getProjectedSymbols().size();
 	        LanguageBridgeFactory factory = new LanguageBridgeFactory(queryMetadata);
-	        this.translatedCommand = factory.translate(command);
-	
-	        RuntimeMetadata rmd = new RuntimeMetadataImpl(queryMetadata);
-	        
-	        // Create the execution based on mode
-	        final Execution exec = connector.createExecution(this.translatedCommand, this.securityContext, rmd, (unwrapped == null) ? this.connection:unwrapped);
-	        if (this.translatedCommand instanceof Call) {
-	        	this.execution = Assertion.isInstanceOf(exec, ProcedureExecution.class, "Call Executions are expected to be ProcedureExecutions"); //$NON-NLS-1$
-	        	StoredProcedure proc = (StoredProcedure)command;
-	        	if (proc.returnParameters()) {
-	        		this.procedureBatchHandler = new ProcedureBatchHandler((Call)this.translatedCommand, (ProcedureExecution)exec);
-	        	}
-	        } else if (this.translatedCommand instanceof QueryExpression){
-	        	this.execution = Assertion.isInstanceOf(exec, ResultSetExecution.class, "QueryExpression Executions are expected to be ResultSetExecutions"); //$NON-NLS-1$
-	        } else {
-	        	Assertion.isInstanceOf(exec, UpdateExecution.class, "Update Executions are expected to be UpdateExecutions"); //$NON-NLS-1$
-	        	this.execution = new ResultSetExecution() {
-	        		private int[] results;
-	        		private int index;
-	        		
-	        		@Override
-	        		public void cancel() throws TranslatorException {
-	        			exec.cancel();
-	        		}
-	        		@Override
-	        		public void close() {
-	        			exec.close();
-	        		}
-	        		@Override
-	        		public void execute() throws TranslatorException {
-	        			exec.execute();
-	        		}
-	        		@Override
-	        		public List<?> next() throws TranslatorException,
-	        				DataNotAvailableException {
-	        			if (results == null) {
-	        				results = ((UpdateExecution)exec).getUpdateCounts();
-	        			}
-	        			if (index < results.length) {
-	        				return Arrays.asList(results[index++]);
-	        			}
-	        			return null;
-	        		}
-	        	};
-	        }
+	        org.teiid.language.Command translatedCommand = factory.translate(command);
+
+			Execution exec = this.requestMsg.getCommandContext().getReusableExecution(this.securityContext.getPartIdentifier());
+			if (exec != null) {
+				((ReusableExecution)exec).reset(translatedCommand, this.securityContext, connection);
+			} else {
+		        RuntimeMetadata rmd = new RuntimeMetadataImpl(queryMetadata);
+		        exec = connector.createExecution(translatedCommand, this.securityContext, rmd, (unwrapped == null) ? this.connection:unwrapped);
+		        if (exec instanceof ReusableExecution<?>) {
+		        	this.requestMsg.getCommandContext().putReusableExecution(this.securityContext.getPartIdentifier(), (ReusableExecution<?>) exec);
+		        }
+			}
+	        setExecution(command, translatedCommand, exec);
+			
 	        LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Obtained execution"}); //$NON-NLS-1$      
 	        //Log the Source Command (Must be after obtaining the execution context)
 	        manager.logSRCCommand(this.requestMsg, this.securityContext, Event.NEW, null); 
@@ -276,6 +239,49 @@ public class ConnectorWorkItem implements ConnectorWork {
     	} catch (Throwable t) {
     		throw handleError(t);
     	}
+	}
+
+	private void setExecution(Command command,
+			org.teiid.language.Command translatedCommand, final Execution exec) {
+		if (translatedCommand instanceof Call) {
+			this.execution = Assertion.isInstanceOf(exec, ProcedureExecution.class, "Call Executions are expected to be ProcedureExecutions"); //$NON-NLS-1$
+			StoredProcedure proc = (StoredProcedure)command;
+			if (proc.returnParameters()) 			{
+				this.procedureBatchHandler = new ProcedureBatchHandler((Call)translatedCommand, (ProcedureExecution)exec);
+			}
+		} else if (command instanceof QueryCommand){
+			this.execution = Assertion.isInstanceOf(exec, ResultSetExecution.class, "QueryExpression Executions are expected to be ResultSetExecutions"); //$NON-NLS-1$
+		} else {
+			Assertion.isInstanceOf(exec, UpdateExecution.class, "Update Executions are expected to be UpdateExecutions"); //$NON-NLS-1$
+			this.execution = new ResultSetExecution() {
+				private int[] results;
+				private int index;
+				
+				@Override
+				public void cancel() throws TranslatorException {
+					exec.cancel();
+				}
+				@Override
+				public void close() {
+					exec.close();
+				}
+				@Override
+				public void execute() throws TranslatorException {
+					exec.execute();
+				}
+				@Override
+				public List<?> next() throws TranslatorException,
+						DataNotAvailableException {
+					if (results == null) {
+						results = ((UpdateExecution)exec).getUpdateCounts();
+					}
+					if (index < results.length) {
+						return Arrays.asList(results[index++]);
+					}
+					return null;
+				}
+			};
+		}
 	}
     
     protected AtomicResultsMessage handleBatch() throws TranslatorException {
@@ -354,7 +360,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 		return response;
 	}
 
-    public static AtomicResultsMessage createResultsMessage(List[] batch) {
+    public static AtomicResultsMessage createResultsMessage(List<?>[] batch) {
         return new AtomicResultsMessage(batch);
     }    
             

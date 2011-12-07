@@ -110,12 +110,12 @@ public class TestStatement {
 		Properties p = new Properties();
 		Mockito.stub(conn.getExecutionProperties()).toReturn(p);
 		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-		statement.submitExecute("start transaction"); //$NON-NLS-1$
+		statement.submitExecute("start transaction", null); //$NON-NLS-1$
 		Mockito.verify(conn).setAutoCommit(false);
-		statement.submitExecute("commit"); //$NON-NLS-1$
+		statement.submitExecute("commit", null); //$NON-NLS-1$
 		Mockito.verify(conn).submitSetAutoCommitTrue(true);
-		statement.submitExecute("start transaction"); //$NON-NLS-1$
-		statement.submitExecute("rollback"); //$NON-NLS-1$
+		statement.submitExecute("start transaction", null); //$NON-NLS-1$
+		statement.submitExecute("rollback", null); //$NON-NLS-1$
 		Mockito.verify(conn).submitSetAutoCommitTrue(false);
 	}
 	
@@ -127,11 +127,11 @@ public class TestStatement {
 		Mockito.stub(statement.getDQP()).toReturn(dqp);
 		ResultsFuture<ResultsMessage> future = new ResultsFuture<ResultsMessage>();
 		Mockito.stub(dqp.executeRequest(Mockito.anyLong(), (RequestMessage) Mockito.anyObject())).toReturn(future);
-		statement.submitExecute("select 'hello world'");
+		statement.submitExecute("select 'hello world'", null);
 		Thread.sleep(300);
 		Mockito.verify(dqp).cancelRequest(0);
 		statement.setQueryTimeoutMS(1);
-		statement.submitExecute("select 'hello world'");
+		statement.submitExecute("select 'hello world'", null);
 		Thread.sleep(300);
 		Mockito.verify(dqp, Mockito.times(2)).cancelRequest(0);
 	}

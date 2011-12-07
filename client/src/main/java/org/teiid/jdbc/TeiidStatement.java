@@ -108,7 +108,8 @@ public interface TeiidStatement extends java.sql.Statement {
      * Note that a single Statement may only have 1 asynch query executing at a time.
      * 
      * @param callback
+     * @param options
      * @throws SQLException 
      */
-    void submitExecute(String sql, StatementCallback callback) throws SQLException;
+    void submitExecute(String sql, StatementCallback callback, RequestOptions options) throws SQLException;
 }

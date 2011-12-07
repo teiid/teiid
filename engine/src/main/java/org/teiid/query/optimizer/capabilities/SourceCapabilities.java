@@ -349,22 +349,6 @@ public interface SourceCapabilities {
 
     }
 
-    public enum Scope {
-        /**
-         * A legal value for the {@link #SCOPE} property.
-         */
-        SCOPE_GLOBAL,
-        /**
-         * A legal value for the {@link #SCOPE} property.
-         */
-        SCOPE_PER_USER
-    }
-
-    /**
-     * Determine the scope of these capabilities.
-     */
-    Scope getScope();
-
     /**
      * Returns true if the capability is supported. The capability constants are all defined in this interface with the meaning of
      * supporting that capability.

@@ -38,8 +38,9 @@ public interface TeiidPreparedStatement extends PreparedStatement {
      * Note that a single Statement may only have 1 asynch query executing at a time.
      * 
      * @param callback
+     * @param options
      * @throws SQLException 
      */
-    void submitExecute(StatementCallback callback) throws SQLException;
+    void submitExecute(StatementCallback callback, RequestOptions options) throws SQLException;
 
 }

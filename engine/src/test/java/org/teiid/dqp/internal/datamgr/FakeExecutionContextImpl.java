@@ -24,7 +24,6 @@ package org.teiid.dqp.internal.datamgr;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.teiid.dqp.internal.datamgr.ExecutionContextImpl;
 import org.teiid.translator.ExecutionContext;
 
 /**
@@ -43,15 +42,15 @@ public class FakeExecutionContextImpl extends ExecutionContextImpl {
 				"ExecutionPayload" + unique, //$NON-NLS-1$            
 				"ConnectionID" + unique, //$NON-NLS-1$
 				"ConnectorID" + unique, //$NON-NLS-1$
-				"RequestID" + unique, //$NON-NLS-1$
+				unique,
 				"PartID" + unique, //$NON-NLS-1$
 				"ExecCount" + unique); //$NON-NLS-1$
 	}
 
 	public FakeExecutionContextImpl(ExecutionContext c) {
 		super(c.getVirtualDatabaseName(), c.getVirtualDatabaseVersion(), c.getExecutionPayload(), c
-				.getConnectionIdentifier(), c.getConnectorIdentifier(), c
-				.getRequestIdentifier(), c.getPartIdentifier(), c
+				.getConnectionIdentifier(), c.getConnectorIdentifier(), Long.valueOf(c
+				.getRequestIdentifier()), c.getPartIdentifier(), c
 				.getExecutionCountIdentifier());
 	}
 

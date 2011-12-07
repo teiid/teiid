@@ -24,7 +24,6 @@ package org.teiid;
 
 import java.io.Serializable;
 import java.util.Map;
-import java.util.Properties;
 import java.util.TimeZone;
 
 import javax.security.auth.Subject;
@@ -62,14 +61,6 @@ public interface CommandContext {
 	 * @return
 	 */
 	String getConnectionID();
-	
-	/**
-	 * Get the environment properties.  The returned properties are associated only with the currently executing command.
-	 * The only built-in key/value in the properties is the key "sessionid" with the same value as getConnectionID()
-	 * @return
-	 * @deprecated
-	 */
-	Properties getEnvironmentProperties();
 	
 	/**
 	 * Get the next random double value 

@@ -43,7 +43,7 @@ class ProcedureBatchHandler {
 	private ProcedureExecution procExec;
 	private int paramCols = 0;
 	private int resultSetCols = 0;
-	private List filler;
+	private List<?> filler;
     
 	public ProcedureBatchHandler(Call proc, ProcedureExecution procExec) {
 		this.proc = proc;
@@ -65,20 +65,20 @@ class ProcedureBatchHandler {
         }
 	}
 	
-	List padRow(List row) throws TranslatorException {
+	List<?> padRow(List<?> row) throws TranslatorException {
         if (row.size() != resultSetCols) {
             throw new TranslatorException(QueryPlugin.Util.getString("ConnectorWorker.ConnectorWorker_result_set_unexpected_columns", new Object[] {proc, new Integer(resultSetCols), new Integer(row.size())})); //$NON-NLS-1$
         }
         if (paramCols == 0) {
         	return row;
         }
-        List result = new ArrayList(resultSetCols + paramCols);
+        List<Object> result = new ArrayList<Object>(resultSetCols + paramCols);
         result.addAll(row);
         result.addAll(filler);
         return result;
 	}
 	
-	List getParameterRow() throws TranslatorException {
+	List<?> getParameterRow() throws TranslatorException {
 		if (paramCols == 0) {
 			return null;
 		}

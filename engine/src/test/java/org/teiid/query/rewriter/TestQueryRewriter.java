@@ -31,7 +31,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.TimeZone;
 
 import org.junit.Before;
@@ -67,7 +66,6 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.util.ContextProperties;
 
 
 @SuppressWarnings("nls")
@@ -1078,16 +1076,13 @@ public class TestQueryRewriter {
     }
 
 
-    //note that the env is now treated as deterministic, however it is really only deterministic within a session
-    @Test public void testRewriteExecEnv() throws Exception {
-        Command command = QueryParser.getQueryParser().parseCommand("exec pm1.sq2(env('sessionid'))");             //$NON-NLS-1$
+    @Test public void testRewriteExec() throws Exception {
+        Command command = QueryParser.getQueryParser().parseCommand("exec pm1.sq2(session_id())");             //$NON-NLS-1$
         
         QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());
         
         CommandContext context = new CommandContext();
-        Properties props = new Properties();
-        props.setProperty(ContextProperties.SESSION_ID, "1"); //$NON-NLS-1$
-        context.setEnvironmentProperties(props);
+        context.setConnectionID("1");
         Command rewriteCommand = QueryRewriter.rewrite(command, RealMetadataFactory.example1Cached(), context);
         
         assertEquals("EXEC pm1.sq2('1')", rewriteCommand.toString()); //$NON-NLS-1$

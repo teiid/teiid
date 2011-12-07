@@ -181,6 +181,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		}
 		
 		AtomicRequestMessage aqr = createRequest(context.getProcessorID(), command, modelName, connectorBindingId, nodeID);
+		aqr.setCommandContext(context);
 		SourceHint sh = context.getSourceHint();
 		if (sh != null) {
 			aqr.setGeneralHint(sh.getGeneralHint());

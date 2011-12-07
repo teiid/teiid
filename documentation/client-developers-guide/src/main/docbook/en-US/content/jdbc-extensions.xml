@@ -389,7 +389,7 @@ if(warning instanceof PartialResultsWarning) {
         </section>
        </section>
        
-	<section>
+	<section id="non_blocking">
 		<title>Non-blocking Statement Execution</title>	
 		<para>JDBC query execution can indefinitely block the calling thread when a statement is executed or a resultset is being iterated.  
 		In some situations you may wish to have your calling threads held in these blocked states.  When using embedded connections, you may optionally use the 
@@ -416,10 +416,22 @@ tStmt.submitExecute(new StatementCallback() {
     @Override
     public void onComplete(Statement s) throws Exception {
         s.close();
-    }
+    }, new RequestOptions()
 );</programlisting>
 		</example>
 		<note><para>The non-blocking logic is limited to statement execution only.  Other JDBC operations, such as connection creation or batched executions do not yet have non-blocking options.</para></note>
+		
+		<section>
+			<title>Continous Execution</title>
+			<para>The <code>RequestOptions</code> object may be used to specify a special type of continuous asynch execution via the <code>continuous</code> or <code>setContinuous</code> methods.  
+			In continuous mode the statement will be continously re-executed.  This is intended for consuming real-time or other data streams processed through a SQL plan.  
+			A continuous query will only terminate on an error or when the statement is explicitly closed.  The SQL for a continuous query is no different than any other statement.  
+			Care should be taken to ensure that retrivals from non-continuous sources is appropriately cached for reuse, such as by using materialized views or session scoped temp tables.  
+			A continous query must return a result set, must be executed with a forward-only resultset, and cannot be used in the scope of a transaction.  Since resource consumptions is expected to be
+			different in a continuous plan, it does not count against the server max active plan limit.
+			Typically custom sources will be used to provide data streams.  See the Developer's Guide, in particular the section on ReusableExecutions for more.</para>
+		</section>	
+		
 	</section>
  
 </chapter>

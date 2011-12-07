@@ -258,7 +258,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				}
 				
 				final PreparedStatementImpl stmt = this.connection.prepareStatement(sql);
-                this.executionFuture = stmt.submitExecute(ResultsMode.RESULTSET);
+                this.executionFuture = stmt.submitExecute(ResultsMode.RESULTSET, null);
                 this.executionFuture.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
 	        		@Override
 	        		public void onCompletion(ResultsFuture<Boolean> future) {
@@ -341,7 +341,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     private void sqlExecute(final String sql, final ResultsFuture<Integer> completion) throws SQLException {
     	String modfiedSQL = fixSQL(sql); 
     	final StatementImpl stmt = connection.createStatement();
-        executionFuture = stmt.submitExecute(modfiedSQL);
+        executionFuture = stmt.submitExecute(modfiedSQL, null);
         executionFuture.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
     		@Override
     		public void onCompletion(ResultsFuture<Boolean> future) {
@@ -479,7 +479,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
         		stmt.setMaxRows(maxRows);
         	}
         	
-            this.executionFuture = stmt.submitExecute(ResultsMode.EITHER);
+            this.executionFuture = stmt.submitExecute(ResultsMode.EITHER, null);
             executionFuture.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
         		@Override
         		public void onCompletion(ResultsFuture<Boolean> future) {

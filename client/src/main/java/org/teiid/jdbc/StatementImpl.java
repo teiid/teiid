@@ -28,18 +28,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.TimeZone;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -311,18 +300,18 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     }
     
     @Override
-    public void submitExecute(String sql, StatementCallback callback) throws SQLException {
+    public void submitExecute(String sql, StatementCallback callback, RequestOptions options) throws SQLException {
     	NonBlockingRowProcessor processor = new NonBlockingRowProcessor(this, callback);
-    	submitExecute(sql).addCompletionListener(processor);
+    	submitExecute(sql, options).addCompletionListener(processor);
     }
     
-    public ResultsFuture<Boolean> submitExecute(String sql) throws SQLException {
-    	return executeSql(new String[] {sql}, false, ResultsMode.EITHER, false);
+    public ResultsFuture<Boolean> submitExecute(String sql, RequestOptions options) throws SQLException {
+    	return executeSql(new String[] {sql}, false, ResultsMode.EITHER, false, options);
     }
 
 	@Override
     public boolean execute(String sql) throws SQLException {
-        executeSql(new String[] {sql}, false, ResultsMode.EITHER, true);
+        executeSql(new String[] {sql}, false, ResultsMode.EITHER, true, null);
         return hasResultSet();
     }
     
@@ -332,20 +321,20 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
             return new int[0];
         }
         String[] commands = batchedUpdates.toArray(new String[batchedUpdates.size()]);
-        executeSql(commands, true, ResultsMode.UPDATECOUNT, true);
+        executeSql(commands, true, ResultsMode.UPDATECOUNT, true, null);
         return updateCounts;
     }
 
 	@Override
     public ResultSet executeQuery(String sql) throws SQLException {
-        executeSql(new String[] {sql}, false, ResultsMode.RESULTSET, true);
+        executeSql(new String[] {sql}, false, ResultsMode.RESULTSET, true, null);
         return resultSet;
     }
 
 	@Override
     public int executeUpdate(String sql) throws SQLException {
         String[] commands = new String[] {sql};
-        executeSql(commands, false, ResultsMode.UPDATECOUNT, true);
+        executeSql(commands, false, ResultsMode.UPDATECOUNT, true, null);
         return this.updateCounts[0];
     }
 
@@ -405,10 +394,24 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	}
     
 	@SuppressWarnings("unchecked")
-	protected ResultsFuture<Boolean> executeSql(String[] commands, boolean isBatchedCommand, ResultsMode resultsMode, boolean synch)
+	protected ResultsFuture<Boolean> executeSql(String[] commands, boolean isBatchedCommand, ResultsMode resultsMode, boolean synch, RequestOptions options)
         throws SQLException {
         checkStatement();
         resetExecutionState();
+        if (options != null) {
+        	if (options.isContinuous()) {
+        		if (this.getResultSetType() != ResultSet.TYPE_FORWARD_ONLY) {
+	        		String msg = JDBCPlugin.Util.getString("JDBC.forward_only_resultset"); //$NON-NLS-1$
+	                throw new TeiidSQLException(msg);
+        		}
+        		if (resultsMode == ResultsMode.EITHER) {
+        			resultsMode = ResultsMode.RESULTSET;
+        		} else if (resultsMode == ResultsMode.UPDATECOUNT) {
+	        		String msg = JDBCPlugin.Util.getString("JDBC.forward_only_resultset"); //$NON-NLS-1$
+	                throw new TeiidSQLException(msg);
+        		}
+        	}
+        }
         if (logger.isLoggable(Level.FINER)) {
 			logger.finer("Executing: requestID " + getCurrentRequestID() + " commands: " + Arrays.toString(commands) + " expecting: " + resultsMode); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
@@ -535,6 +538,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         }
         
         final RequestMessage reqMessage = createRequestMessage(commands, isBatchedCommand, resultsMode);
+        reqMessage.setRequestOptions(options);
     	ResultsFuture<ResultsMessage> pendingResult = execute(reqMessage, synch);
     	final ResultsFuture<Boolean> result = new ResultsFuture<Boolean>();
     	pendingResult.addCompletionListener(new ResultsFuture.CompletionListener<ResultsMessage>() {

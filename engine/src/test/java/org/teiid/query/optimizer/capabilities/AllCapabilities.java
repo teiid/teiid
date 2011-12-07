@@ -43,10 +43,6 @@ public class AllCapabilities implements SourceCapabilities {
         return null;
     }
 
-	public Scope getScope() {
-		return Scope.SCOPE_GLOBAL;
-	}
-	
 	@Override
 	public boolean supportsConvert(int sourceType, int targetType) {
 		return true;

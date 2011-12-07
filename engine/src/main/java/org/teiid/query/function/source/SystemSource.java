@@ -840,7 +840,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
                 new FunctionParameter[] {
                     new FunctionParameter("variablename", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Env_varname")) //$NON-NLS-1$ //$NON-NLS-2$
                      },
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Env_result")), false, Determinism.SESSION_DETERMINISTIC ) );                     //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Env_result")), false, Determinism.DETERMINISTIC ) );                     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     private void addSessionIdFunction() {

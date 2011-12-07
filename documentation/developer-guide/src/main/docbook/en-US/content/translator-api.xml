@@ -306,30 +306,60 @@ public void setFoo(String value)
 				be retrieved via the getOutputParameterValues() method.
 			</para>
 		</section>
-         
-		<section>
+
+		<section id="asynchronous_executions">
 			<title>Asynchronous Executions</title>
-    <para>
-        In some scenarios, a translator needs to execute
-        asynchronously and allow the executing thread to perform other work. To allow this, you should Throw a
-        <code>DataNotAvailableExecption</code>
-        during a retrival method, rather than explicitly waiting or sleeping for the results.
-        <note>
-            <para>
-                A <code>DataNotAvailableException</code> should not be thrown by the execute method. The
-                <code>DataNotAvailableException</code> may take a delay parameter in its
-                constructor to indicate how long the system should wait befor polling
-                for results. Any non-negative value indicates a time until the next polling should be performed.
-                The
-                <code>DataNotAvailableException.NO_POLLING</code>
-                exception (or any DataNotAvailableException with a negative delay) can be thrown to indicate that
-                the execution will call <code>ExecutionContext.dataAvailable()</code> to indicate processing should resume.
-           </para>
-       </note>
-    </para>
-    <note>
-        <para>Since the exection and the associated connection are not closed until the work has completed, care should be taken if using asynchronous executions that hold a lot of state.</para>
-    </note>
+			<para>
+				In some scenarios, a translator needs to execute
+				asynchronously and allow the executing thread to perform other work. To allow this,
+				you should Throw a <code>DataNotAvailableExecption</code>
+				during a retrival method, rather than explicitly waiting or sleeping
+				for the results.
+				<note>
+					<para>
+						A <code>DataNotAvailableException</code>
+						should not be thrown by the execute method. The
+						<code>DataNotAvailableException</code>
+						may take a delay parameter in its
+						constructor to indicate how long the system should wait befor polling
+						for results. Any non-negative value indicates a time until the next
+						polling should be performed.
+						The <code>DataNotAvailableException.NO_POLLING</code>
+						exception (or any DataNotAvailableException with a negative delay)
+						can be thrown to indicate that
+						the execution will call
+						<code>ExecutionContext.dataAvailable()</code>
+						to indicate processing should resume.
+					</para>
+				</note>
+			</para>
+			<note>
+				<para>Since the exection and the associated connection are not closed
+					until the work has completed, care should be taken if using
+					asynchronous executions that hold a lot of state.</para>
+			</note>
+		</section>
+		
+		<section>
+			<title>Reusable Executions</title>
+			<para>
+				A translator may return instances of <code>ReusableExecution</code>s for the expected <code>Execution</code> objects.
+				There can be one <code>ReusableExecution</code> per query execting node in the processing plan. 
+				The lifecycle of a <code>ReusableExecution</code> is different that a normal <code>Execution</code>.
+				After a normal creation/execute/close cycle the <code>ReusableExecution.reset</code> is called for another execution cycle.
+				This may occur indefinitely dependin on how many times a processing node executes its query.  
+				The behavior of the <code>close</code> is no different than a regular <code>Execution</code>, 
+				that is it may not be called until the end of the statement if lobs are detected and any connection associated with the 
+				<code>Execution</code> will also be closed.  When the user command is finished, the <code>ReusableExecution.dispose()</code> 
+				method will be called.
+			</para>
+			<para>				
+				In general <code>ReusableExecution</code>s are most useful for continuous query execution and will also be implemented using the
+				<code>ExecutionCotext.dataAvailable()</code> method for <xref linkend="asynchronous_executions"/>.
+				See the Client Developer's Guide for executing continuous statements.  In continuous mode the user query will be continously re-executed.  
+				A ReusableExecution allows the same Execution object to be associated with the processing plan for a given processing node for the lifetime
+				of the user query.  This can simplify asynch resource management, such as establishing queue listeners.
+			</para>
 		</section>
         
 		<section>

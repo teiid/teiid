@@ -33,10 +33,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.client.RequestMessage;
-import org.teiid.dqp.internal.datamgr.ConnectorManager;
-import org.teiid.dqp.internal.datamgr.ConnectorWorkItem;
-import org.teiid.dqp.internal.datamgr.LanguageBridgeFactory;
-import org.teiid.dqp.internal.datamgr.ProcedureBatchHandler;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
@@ -50,6 +46,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 
@@ -77,6 +74,7 @@ public class TestConnectorWorkItem {
 		request.setRequestID(new RequestID(requestid));
 		request.setConnectorName("testing"); //$NON-NLS-1$
 		request.setFetchSize(5);
+		request.setCommandContext(new CommandContext());
 		return request;
 	}
 

@@ -93,7 +93,6 @@ public abstract class VDBStatusChecker {
 				model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
 				cm = new ConnectorManager(translatorName, dsName); 
 				cm.setExecutionFactory(ef);
-				cm.setModelName(modelName);
 				cmr.addConnectorManager(sourceName, cm);
 				dsReplaced = true;
 			}

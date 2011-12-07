@@ -28,10 +28,10 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
 import javax.security.auth.Subject;
@@ -51,6 +51,8 @@ import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionService;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.SecurityFunctionEvaluator;
@@ -64,6 +66,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.TempTableStore;
+import org.teiid.translator.ReusableExecution;
 
 /** 
  * Defines the context that a command is processing in.  For example, this defines
@@ -89,8 +92,6 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    private String vdbName = ""; //$NON-NLS-1$
 	    
 	    private int vdbVersion;
-	    
-	    private Properties environmentProperties;
 	    
 	    /** Indicate whether statistics should be collected for relational node processing*/
 	    private boolean collectNodeStatistics;
@@ -138,6 +139,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		private TransactionService transactionService;
 		private SourceHint sourceHint;
 		private Executor executor = ExecutorUtils.getDirectExecutor();
+		Map<String, ReusableExecution<?>> reusableExecutions;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -153,14 +155,13 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
      * Construct a new context.
      */
     public CommandContext(Object processorID, String connectionID, String userName, 
-        Serializable commandPayload, String vdbName, int vdbVersion, Properties envProperties, boolean collectNodeStatistics) {
+        Serializable commandPayload, String vdbName, int vdbVersion, boolean collectNodeStatistics) {
         setProcessorID(processorID);
         setConnectionID(connectionID);
         setUserName(userName);
         setCommandPayload(commandPayload);
         setVdbName(vdbName);
         setVdbVersion(vdbVersion);  
-        setEnvironmentProperties(envProperties);        
         setCollectNodeStatistics(collectNodeStatistics);
     }
 
@@ -171,7 +172,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
         String vdbName, int vdbVersion) {
 
         this(processorID, connectionID, userName, null, vdbName, 
-            vdbVersion, null, false);            
+            vdbVersion, false);            
              
     }
 
@@ -289,14 +290,6 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
         this.globalState.vdbVersion = vdbVersion;
     }
 
-    public Properties getEnvironmentProperties() {
-        return globalState.environmentProperties;
-    }
-
-    public void setEnvironmentProperties(Properties properties) {
-    	globalState.environmentProperties = properties;
-    }
-    
     public Serializable getCommandPayload() {
         return this.globalState.commandPayload;
     }
@@ -648,6 +641,32 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	public void setExecutor(Executor e) {
 		this.globalState.executor = e;
+	}
+	
+	public ReusableExecution<?> getReusableExecution(String nodeId) {
+		if (this.globalState.reusableExecutions == null) {
+			return null;
+		}
+		return this.globalState.reusableExecutions.get(nodeId);
+	}
+	
+	public void putReusableExecution(String nodeId, ReusableExecution<?> execution) {
+		if (this.globalState.reusableExecutions == null) {
+			this.globalState.reusableExecutions = new ConcurrentHashMap<String, ReusableExecution<?>>();
+		}
+		this.globalState.reusableExecutions.put(nodeId, execution);
+	}
+
+	public void close() {
+		if (this.globalState.reusableExecutions != null) {
+			for (ReusableExecution<?> reusableExecution : this.globalState.reusableExecutions.values()) {
+				try {
+					reusableExecution.dispose();
+				} catch (Exception e) {
+					LogManager.logWarning(LogConstants.CTX_DQP, e, "Unhandled exception disposing reusable execution"); //$NON-NLS-1$
+				}
+			}
+		}
 	}
 	
 }

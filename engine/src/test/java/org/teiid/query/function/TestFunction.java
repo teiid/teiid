@@ -30,7 +30,6 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
-import java.util.Properties;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.FunctionExecutionException;
@@ -1119,22 +1118,14 @@ public class TestFunction {
     }
     
     @Test public void testEnv() throws Exception {
-        Properties p = new Properties();
-        String envProperty = "EnvProperty"; //$NON-NLS-1$
         String systemProperty = "SystemProperty"; //$NON-NLS-1$        
-        p.setProperty(envProperty.toLowerCase(), envProperty);
-
-        // set an environment property
-        CommandContext context = new CommandContext();
-        context.setEnvironmentProperties(p);
 
         // set the system property
         System.setProperty(systemProperty, systemProperty);
         System.setProperty(systemProperty.toLowerCase(), systemProperty+"_lowercase"); //$NON-NLS-1$
         
-        assertEquals(envProperty, FunctionMethods.env(context, envProperty));
-        assertEquals(systemProperty, FunctionMethods.env(context, systemProperty));
-        assertEquals(systemProperty+"_lowercase", FunctionMethods.env(context, systemProperty.toUpperCase())); //$NON-NLS-1$
+        assertEquals(systemProperty, FunctionMethods.env(systemProperty));
+        assertEquals(systemProperty+"_lowercase", FunctionMethods.env(systemProperty.toUpperCase())); //$NON-NLS-1$
     }
     
     @Test(expected=FunctionExecutionException.class) public void testParseIntStrictness() throws Exception {

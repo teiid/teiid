@@ -42,6 +42,7 @@ import javax.sql.DataSource;
 
 import org.h2.jdbcx.JdbcConnectionPool;
 import org.h2.jdbcx.JdbcDataSource;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
@@ -85,6 +86,10 @@ public class TestRelate {
 	    	handler.setLevel(Level.FINER);
 	    	logger.addHandler(handler);
     	}
+    }
+    
+    @AfterClass public static void oneTimeTearDown() throws Exception {
+    	server.stop();
     }
     
 	private void compareResults(SQLXML[] docs)

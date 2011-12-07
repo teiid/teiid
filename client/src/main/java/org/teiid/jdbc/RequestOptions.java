@@ -20,19 +20,29 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.query.util;
+package org.teiid.jdbc;
 
-/**
- * Defines constants that are used within the DQP, provided to the query engine as 
- * properties in the CommandContext for access via the ENV function.
- */
-public interface ContextProperties {
 
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!! NOTE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    // ALL constants defined here for use with the CommandContext and that should be 
-    // retrievable by the env() system function MUST be defined in all lower-case or
-    // they will not work. 
-        
-    public static final String SESSION_ID = "sessionid"; //$NON-NLS-1$
+public class RequestOptions {
+	
+	/**
+	 * true indicates that the query should be re-executed upon completion, such that
+	 * the current Executions and CommandContext are reused.
+	 * Continuous queries must be forward-only and return a result set.
+	 */
+	private boolean continuous;
+	
+	public boolean isContinuous() {
+		return continuous;
+	}
+	
+	public RequestOptions continuous(boolean isContinuous) {
+		this.continuous = isContinuous;
+		return this;
+	}
+	
+	public void setContinuous(boolean continuous) {
+		this.continuous = continuous;
+	}
 
 }

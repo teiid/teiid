@@ -47,7 +47,7 @@ public class TestSQLConversionVisitor {
                                                                             "Payload",  //$NON-NLS-1$
                                                                             "ConnectionID",   //$NON-NLS-1$
                                                                             "Connector", //$NON-NLS-1$
-                                                                            "RequestID",  //$NON-NLS-1$ 
+                                                                            1, 
                                                                             "PartID",  //$NON-NLS-1$ 
                                                                             "ExecCount");     //$NON-NLS-1$ 
     
@@ -367,29 +367,29 @@ public class TestSQLConversionVisitor {
     }
 
     @Test public void testVisitIDeleteWithComment() throws Exception {
-        String expected = "DELETE /*teiid sessionid:ConnectionID, requestid:RequestID.PartID*/ FROM g1 WHERE 100 >= 200 AND 500 < 600"; //$NON-NLS-1$
+        String expected = "DELETE /*teiid sessionid:ConnectionID, requestid:ConnectionID.1.PartID*/ FROM g1 WHERE 100 >= 200 AND 500 < 600"; //$NON-NLS-1$
         assertEquals(expected, getStringWithContext(TestDeleteImpl.example()));
     }
 
     @Test public void testVisitIInsertWithComment() throws Exception {
-        String expected = "INSERT /*teiid sessionid:ConnectionID, requestid:RequestID.PartID*/ INTO g1 (e1, e2, e3, e4) VALUES (1, 2, 3, 4)"; //$NON-NLS-1$
+        String expected = "INSERT /*teiid sessionid:ConnectionID, requestid:ConnectionID.1.PartID*/ INTO g1 (e1, e2, e3, e4) VALUES (1, 2, 3, 4)"; //$NON-NLS-1$
         assertEquals(expected, getStringWithContext(TestInsertImpl.example("g1"))); //$NON-NLS-1$
     }  
     
     @Test public void testVisitISelectWithComment() throws Exception {
-        String expected = "SELECT /*teiid sessionid:ConnectionID, requestid:RequestID.PartID*/ g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE 100 >= 200 AND 500 < 600 GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING 100 >= 200 AND 500 < 600 ORDER BY g1.e1, g1.e2 DESC, g1.e3, g1.e4 DESC"; //$NON-NLS-1$
+        String expected = "SELECT /*teiid sessionid:ConnectionID, requestid:ConnectionID.1.PartID*/ g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE 100 >= 200 AND 500 < 600 GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING 100 >= 200 AND 500 < 600 ORDER BY g1.e1, g1.e2 DESC, g1.e3, g1.e4 DESC"; //$NON-NLS-1$
         assertEquals(expected, getStringWithContext(TestQueryImpl.example(false)));
-        expected = "SELECT /*teiid sessionid:ConnectionID, requestid:RequestID.PartID*/ DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE 100 >= 200 AND 500 < 600 GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING 100 >= 200 AND 500 < 600 ORDER BY g1.e1, g1.e2 DESC, g1.e3, g1.e4 DESC"; //$NON-NLS-1$
+        expected = "SELECT /*teiid sessionid:ConnectionID, requestid:ConnectionID.1.PartID*/ DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE 100 >= 200 AND 500 < 600 GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING 100 >= 200 AND 500 < 600 ORDER BY g1.e1, g1.e2 DESC, g1.e3, g1.e4 DESC"; //$NON-NLS-1$
         assertEquals(expected, getStringWithContext(TestQueryImpl.example(true)));
     }
     
     @Test public void testVisitIUpdateWithComment() throws Exception {
-        String expected = "UPDATE /*teiid sessionid:ConnectionID, requestid:RequestID.PartID*/ g1 SET e1 = 1, e2 = 1, e3 = 1, e4 = 1 WHERE 1 = 1"; //$NON-NLS-1$
+        String expected = "UPDATE /*teiid sessionid:ConnectionID, requestid:ConnectionID.1.PartID*/ g1 SET e1 = 1, e2 = 1, e3 = 1, e4 = 1 WHERE 1 = 1"; //$NON-NLS-1$
         assertEquals(expected, getStringWithContext(TestUpdateImpl.example()));
     }    
     
     @Test public void testVisitIProcedureWithComment() throws Exception {
-        String expected = "{ /*teiid sessionid:ConnectionID, requestid:RequestID.PartID*/  call sq3(?,?)}"; //$NON-NLS-1$
+        String expected = "{ /*teiid sessionid:ConnectionID, requestid:ConnectionID.1.PartID*/  call sq3(?,?)}"; //$NON-NLS-1$
         assertEquals(expected, getStringWithContext(TestProcedureImpl.example()));
     }  
     

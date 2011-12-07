@@ -20,10 +20,6 @@
  * 02110-1301 USA.
  */
 
-/*
- * Date: Aug 25, 2003
- * Time: 3:53:37 PM
- */
 package org.teiid.dqp.internal.datamgr;
 
 import java.util.Arrays;
@@ -40,10 +36,10 @@ import org.teiid.core.util.Assertion;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.logging.CommandLogMessage;
-import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
@@ -51,7 +47,6 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
-import org.teiid.query.optimizer.capabilities.SourceCapabilities.Scope;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.resource.spi.WrappedConnection;
 import org.teiid.translator.ExecutionContext;
@@ -60,7 +55,7 @@ import org.teiid.translator.TranslatorException;
 
 
 /**
- * The <code>ConnectorManager</code> manages a {@link org.teiid.translator.BasicExecutionFactory Connector}
+ * The <code>ConnectorManager</code> manages an {@link ExecutionFactory}
  * and its associated workers' state.
  */
 public class ConnectorManager  {
@@ -69,7 +64,6 @@ public class ConnectorManager  {
 
 	private String translatorName;
 	private String connectionName;
-	private String modelName;
 	
     // known requests
     private ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem> requestStates = new ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem>();
@@ -143,7 +137,6 @@ public class ConnectorManager  {
 		checkStatus();
 		ExecutionFactory<Object, Object> translator = getExecutionFactory();
 		BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(translator, Arrays.asList(translatorName, connectionName));
-		resultCaps.setScope(Scope.SCOPE_GLOBAL);
 		cachedCapabilities = resultCaps;
 		return resultCaps;
     }
@@ -166,9 +159,9 @@ public class ConnectorManager  {
      * Remove the state associated with
      * the given <code>RequestID</code>.
      */
-    void removeState(AtomicRequestID id) {
+    boolean removeState(AtomicRequestID id) {
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {id, "Remove State"}); //$NON-NLS-1$
-        requestStates.remove(id);
+        return requestStates.remove(id) != null;
     }
 
     int size() {
@@ -282,11 +275,4 @@ public class ConnectorManager  {
     	return this.connectionName;
     }
     
-    public void setModelName(String modelName) {
-    	this.modelName = modelName;
-    }
-    
-    public String getModelName() {
-    	return this.modelName;
-    }
 }

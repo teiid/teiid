@@ -37,7 +37,6 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
 
 	private static final long serialVersionUID = -1779069588746365579L;
 	
-	private Scope scope = Scope.SCOPE_GLOBAL;
     private Map<Capability, Boolean> capabilityMap = new HashMap<Capability, Boolean>();
     private Map<String, Boolean> functionMap = new TreeMap<String, Boolean>(String.CASE_INSENSITIVE_ORDER);
     private Map<Capability, Object> propertyMap = new HashMap<Capability, Object>();
@@ -82,16 +81,8 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
         functionMap.put(function, Boolean.valueOf(supports));
     }
 
-    public Scope getScope() {
-        return this.scope;
-    }
-
-    public void setScope(Scope scope) {
-        this.scope = scope;
-    }
-    
     public String toString() {
-        return "BasicSourceCapabilities<"+scope+", caps=" + capabilityMap + ", funcs=" + functionMap + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        return "BasicSourceCapabilities<caps=" + capabilityMap + ", funcs=" + functionMap + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
     
     /**

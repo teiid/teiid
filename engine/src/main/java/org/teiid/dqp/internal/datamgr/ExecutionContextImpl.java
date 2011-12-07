@@ -23,6 +23,7 @@
 package org.teiid.dqp.internal.datamgr;
 
 import java.io.Serializable;
+import java.lang.ref.WeakReference;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -34,29 +35,18 @@ import org.teiid.adminapi.Session;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.dqp.internal.process.RequestWorkItem;
+import org.teiid.dqp.message.RequestID;
+import org.teiid.query.util.CommandContext;
 import org.teiid.translator.ExecutionContext;
 
 
 /**
  */
 public class ExecutionContextImpl implements ExecutionContext {
-
-    // Orginal request non-atomic request id
-    private String requestID;   
     //  Access Node ID
     private String partID;
     // currentConnector ID
     private String connectorName;    
-    // current VDB 
-    private String vdbName;
-    // Current VDB's version
-    private int vdbVersion;
-    // User Name
-    private Subject user;
-    // Payload setup on the Statement object
-    private Serializable executionPayload;
-    // ID of the parent JDBC Connection which is executing the statement
-    private String requestConnectionID;
     // Execute count of the query
     private String executeCount;
     // keep the execution object alive during the processing. default:false 
@@ -67,22 +57,35 @@ public class ExecutionContextImpl implements ExecutionContext {
     private int batchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
 	private List<Exception> warnings = new LinkedList<Exception>();
 	private Session session;
-	private RequestWorkItem worktItem;
+	private WeakReference<RequestWorkItem> worktItem;
 	private boolean dataAvailable;
 	private String generalHint;
 	private String hint;
-    
-    public ExecutionContextImpl(String vdbName, int vdbVersion,  Serializable executionPayload, 
-                                String originalConnectionID, String connectorName, String requestId, String partId, String execCount) {
-        
-        this.vdbName = vdbName;
-        this.vdbVersion = vdbVersion;
-        this.executionPayload = executionPayload;
-        this.connectorName = connectorName;
-        this.requestID = requestId;
+	private CommandContext commandContext;
+	
+	public ExecutionContextImpl(String vdbName, int vdbVersion,  Serializable executionPayload, 
+            String originalConnectionID, String connectorName, long requestId, String partId, String execCount) {
+		commandContext = new CommandContext();
+		commandContext.setVdbName(vdbName);
+		commandContext.setVdbVersion(vdbVersion);
+		commandContext.setCommandPayload(executionPayload);
+		commandContext.setConnectionID(originalConnectionID);
+		commandContext.setRequestId(new RequestID(originalConnectionID, requestId));
+		this.connectorName = connectorName;
         this.partID = partId;        
-        this.requestConnectionID = originalConnectionID;
         this.executeCount = execCount;
+	}
+    
+    public ExecutionContextImpl(CommandContext commandContext, String connectorName, String partId, String execCount) {
+        this.connectorName = connectorName;
+        this.partID = partId;        
+        this.executeCount = execCount;
+        this.commandContext = commandContext;
+    }
+    
+    @Override
+    public org.teiid.CommandContext getCommandContext() {
+    	return this.commandContext;
     }
     
     public String getConnectorIdentifier() {
@@ -91,7 +94,7 @@ public class ExecutionContextImpl implements ExecutionContext {
     
     @Override
     public String getRequestIdentifier() {
-        return this.requestID;
+        return this.commandContext.getRequestId();
     }
 
     @Override
@@ -105,29 +108,25 @@ public class ExecutionContextImpl implements ExecutionContext {
     }
     @Override
     public String getVirtualDatabaseName() {
-        return this.vdbName;
+        return this.commandContext.getVdbName();
     }
     @Override
     public int getVirtualDatabaseVersion() {
-        return this.vdbVersion;
+        return this.commandContext.getVdbVersion();
     }
     @Override
     public Subject getSubject() {
-        return this.user;
+        return this.commandContext.getSubject();
     }
     
-    public void setUser(Subject user) {
-        this.user = user;
-    }
-
     @Override
     public Serializable getExecutionPayload() {
-        return executionPayload;
+        return this.commandContext.getCommandPayload();
     }
     
     @Override
 	public String getConnectionIdentifier() {
-		return requestConnectionID;
+		return this.commandContext.getConnectionID();
 	}
     @Override
     public void keepExecutionAlive(boolean alive) {
@@ -164,17 +163,17 @@ public class ExecutionContextImpl implements ExecutionContext {
     }
 
     public int hashCode() {
-        return HashCodeUtil.hashCode(HashCodeUtil.hashCode(0, requestID), partID);
+        return HashCodeUtil.hashCode(HashCodeUtil.hashCode(0, getRequestIdentifier()), partID);
     }
 
     public String toString() {
     	String userName = null;
-    	if (this.user != null) {
-	    	for(Principal p:this.user.getPrincipals()) {
+    	if (this.getSubject() != null) {
+	    	for(Principal p:this.getSubject().getPrincipals()) {
 	    		userName = p.getName();
 	    	}
     	}
-        return "ExecutionContext<vdb=" + this.vdbName + ", version=" + this.vdbVersion + ", user=" + userName + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        return "ExecutionContext<vdb=" + this.getVirtualDatabaseName() + ", version=" + this.getVirtualDatabaseVersion() + ", user=" + userName + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
 	
     @Override
@@ -222,12 +221,12 @@ public class ExecutionContextImpl implements ExecutionContext {
 	}
 
 	public void setRequestWorkItem(RequestWorkItem item) {
-		this.worktItem = item;
+		this.worktItem = new WeakReference<RequestWorkItem>(item);
 	}
 	
 	@Override
 	public synchronized void dataAvailable() {
-		RequestWorkItem requestWorkItem = this.worktItem;
+		RequestWorkItem requestWorkItem = this.worktItem.get();
 		dataAvailable = true;
 		if (requestWorkItem != null) {
 			requestWorkItem.moreWork();

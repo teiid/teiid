@@ -1210,12 +1210,7 @@ public class TestFunctionLibrary {
     }
     
     @Test public void testInvokeEnv() throws Exception {
-        CommandContext c = new CommandContext();
-        Properties props = new Properties();
-        props.setProperty("env_test", "env_value"); //$NON-NLS-1$ //$NON-NLS-2$
-        c.setEnvironmentProperties(props);
-        helpInvokeMethod("env", new Class<?>[] {String.class}, new Object[] {"env_test"}, c, "env_value"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$        
-        helpInvokeMethod("env", new Class<?>[] {String.class}, new Object[] {null}, c, null); //$NON-NLS-1$ 
+        helpInvokeMethod("env", new Class<?>[] {String.class}, new Object[] {null}, null); //$NON-NLS-1$ 
     }
     
     @Test public void testInvokeCommandPayload() throws Exception {

@@ -51,16 +51,7 @@ import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.symbol.CaseExpression;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.SearchedCaseExpression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.query.sql.symbol.TestCaseExpression;
-import org.teiid.query.sql.symbol.TestSearchedCaseExpression;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.ValueIterator;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
@@ -320,31 +311,6 @@ public class TestExpressionEvaluator {
         assertEquals(context.getUserName(), new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(func, Collections.emptyList()) );       
     } 
     
-    /*
-     * This is the only test that depends upon the the testsrc/metamatrix.properties
-     * and testsrc/config.xml. If the implementation is changed, please update/remove
-     * these files.
-     * @throws Exception
-     */
-    @Test public void testEnv() throws Exception {
-        Function func = new Function("env", new Expression[] {}); //$NON-NLS-1$
-        FunctionDescriptor desc = RealMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("env", new Class[] {String.class} );         //$NON-NLS-1$
-        func.setFunctionDescriptor(desc);
-        
-        FakeDataManager dataMgr = new FakeDataManager();
-        
-        Properties props = new Properties();
-        props.setProperty("http_host", "testHostName"); //$NON-NLS-1$ //$NON-NLS-2$
-        props.setProperty("http_port", "8000"); //$NON-NLS-1$ //$NON-NLS-2$
-        CommandContext context = new CommandContext(new Long(1), null, null, null, null, 0, props, false);
-        
-        func.setArgs(new Expression[] {new Constant("http_host")}); //$NON-NLS-1$
-        assertEquals("testHostName", new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(func, Collections.emptyList())); //$NON-NLS-1$
-               
-        func.setArgs(new Expression[] {new Constant("http_port")}); //$NON-NLS-1$
-        assertEquals("8000", new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(func, Collections.emptyList())); //$NON-NLS-1$
-    }
-    
     public void helpTestCommandPayload(Serializable payload, String property, String expectedValue) throws Exception {
         Function func = new Function("commandpayload", new Expression[] {}); //$NON-NLS-1$
         
@@ -358,7 +324,7 @@ public class TestExpressionEvaluator {
         func.setFunctionDescriptor(desc);
         
         FakeDataManager dataMgr = new FakeDataManager();       
-        CommandContext context = new CommandContext(new Long(-1), null, "user", payload, "vdb", 1, null, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+        CommandContext context = new CommandContext(new Long(-1), null, "user", payload, "vdb", 1, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 
         if(property != null) {
             func.setArgs(new Expression[] {new Constant(property)}); 

@@ -215,7 +215,6 @@ public class TestBatchedUpdatePlanner extends TestCase {
         private FakeCapabilities(boolean supportsBatching) {
             this.supportsBatching = supportsBatching;
         }
-        public Scope getScope() {return null;}
         public boolean supportsCapability(Capability capability) {
             return !capability.equals(Capability.BATCHED_UPDATES) || supportsBatching;
         }

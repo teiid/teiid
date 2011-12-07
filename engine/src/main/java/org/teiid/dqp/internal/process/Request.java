@@ -26,7 +26,6 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Executor;
 
@@ -87,7 +86,6 @@ import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.util.ContextProperties;
 import org.teiid.query.validator.AbstractValidationVisitor;
 import org.teiid.query.validator.ValidationVisitor;
 import org.teiid.query.validator.Validator;
@@ -221,9 +219,6 @@ public class Request implements SecurityFunctionEvaluator {
 
         RequestID reqID = workContext.getRequestID(this.requestMsg.getExecutionId());
         
-        Properties props = new Properties();
-        props.setProperty(ContextProperties.SESSION_ID, workContext.getSessionId());
-        
         this.context =
             new CommandContext(
                 reqID,
@@ -232,7 +227,6 @@ public class Request implements SecurityFunctionEvaluator {
                 requestMsg.getExecutionPayload(), 
                 workContext.getVdbName(), 
                 workContext.getVdbVersion(),
-                props,
                 this.requestMsg.getShowPlan() != ShowPlan.OFF);
         this.context.setProcessorBatchSize(bufferManager.getProcessorBatchSize());
         this.context.setGlobalTableStore(this.globalTables);
@@ -367,6 +361,7 @@ public class Request implements SecurityFunctionEvaluator {
         tc.setIsolationLevel(requestMsg.getTransactionIsolation());
         this.transactionContext = tc;
         this.processor = new QueryProcessor(processPlan, context, bufferManager, processorDataManager);
+    	this.processor.setContinuous(this.requestMsg.getRequestOptions().isContinuous());
     }
 
     /**

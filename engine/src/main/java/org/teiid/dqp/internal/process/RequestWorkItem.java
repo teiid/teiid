@@ -77,6 +77,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.util.CommandContext;
 
 public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunnable {
 	
@@ -275,7 +276,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
                 state = ProcessingState.PROCESSING;
         		processNew();
                 if (isCanceled) {
-                	this.processingException = new TeiidProcessingException(SQLStates.QUERY_CANCELED, QueryPlugin.Util.getString("QueryProcessor.request_cancelled", this.requestID)); //$NON-NLS-1$
+                	setCanceledException();
                     state = ProcessingState.CLOSE;
                 } 
         	}
@@ -316,6 +317,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         	suspend();
         }
     }
+
+	private void setCanceledException() {
+		this.processingException = new TeiidProcessingException(SQLStates.QUERY_CANCELED, QueryPlugin.Util.getString("QueryProcessor.request_cancelled", this.requestID)); //$NON-NLS-1$
+	}
 
 	private void handleThrowable(Throwable e) {
 		LogManager.logDetail(LogConstants.CTX_DQP, e, "Request Thread", requestID, "- error occurred"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -424,6 +429,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
 						connectorRequest.fullyCloseSource();
 				    }
+					
+					CommandContext cc = this.processor.getContext();
+					cc.close();
 				}
 	
 				this.resultsBuffer = null;
@@ -450,6 +458,13 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				} else {
 					suspend();
 				}
+			}
+			
+	        synchronized (this) {
+		        if (this.processingException == null && this.resultsReceiver != null) {
+		        	//sanity check to ensure that something will be sent to the client
+		        	setCanceledException();
+		        }
 			}
 		} catch (Throwable t) {
 			handleThrowable(t);
@@ -478,7 +493,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				
 		boolean cachable = false;
 		CacheID cacheId = null;
-		boolean canUseCached = (requestMsg.useResultSetCache() || 
+		boolean canUseCached = !requestMsg.getRequestOptions().isContinuous() && (requestMsg.useResultSetCache() || 
 				QueryParser.getQueryParser().parseCacheHint(requestMsg.getCommandString()) != null);
 		
 		if (rsCache != null) {
@@ -554,6 +569,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		analysisRecord = request.analysisRecord;
 		transactionContext = request.transactionContext;
 		if (this.transactionContext != null && this.transactionContext.getTransactionType() != Scope.NONE) {
+			if (this.requestMsg.getRequestOptions().isContinuous()) {
+				throw new IllegalStateException("Continuous requests are not allowed to be transactional."); //$NON-NLS-1$
+			}
 			this.transactionState = TransactionState.ACTIVE;
 		}
 		if (requestMsg.isNoExec()) {
@@ -562,6 +580,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
             this.cid = null;
 		}
 	    this.returnsUpdateCount = request.returnsUpdateCount;
+	    if (this.returnsUpdateCount && this.requestMsg.getRequestOptions().isContinuous()) {
+			throw new IllegalStateException("Continuous requests are not allowed to be updates."); //$NON-NLS-1$
+	    }
 		request = null;
 	}
 	
@@ -633,7 +654,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     		} else if (!fromBuffer){
     			result = !isForwardOnly();
     		}
-	        int finalRowCount = this.resultsBuffer.isFinal()?this.resultsBuffer.getRowCount():(batch.getTerminationFlag()?batch.getEndRow():-1);
+	        int finalRowCount = (this.resultsBuffer.isFinal()&&!this.requestMsg.getRequestOptions().isContinuous())?this.resultsBuffer.getRowCount():(batch.getTerminationFlag()?batch.getEndRow():-1);
 	        
 	        response = createResultsMessage(batch.getTuples(), this.originalCommand.getProjectedSymbols());
 	        response.setFirstRow(batch.getBeginRow());

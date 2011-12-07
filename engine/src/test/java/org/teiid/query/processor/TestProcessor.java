@@ -349,7 +349,7 @@ public class TestProcessor {
 		Properties props = new Properties();
 		props.setProperty("soap_host", "my.host.com"); //$NON-NLS-1$ //$NON-NLS-2$
 		props.setProperty("soap_port", "12345"); //$NON-NLS-1$ //$NON-NLS-2$
-		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", 1, props, DEBUG); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", 1, DEBUG); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         context.setProcessorBatchSize(BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE);
         context.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
         context.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>());
@@ -4755,7 +4755,7 @@ public class TestProcessor {
 			
 		// Create expected results
 		List[] expected = new List[] { 
-			Arrays.asList(new Object[] { "http://my.host.com:12345/metamatrix-soap/services/DataService" }), //$NON-NLS-1$ 
+			Arrays.asList(new Object[] { "http://soap_host/metamatrix-soap/services/DataService" }), //$NON-NLS-1$ 
 		};    
            
 		// Plan query

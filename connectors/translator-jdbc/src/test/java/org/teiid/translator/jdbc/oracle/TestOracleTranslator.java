@@ -705,7 +705,7 @@ public class TestOracleTranslator {
         String output = "SELECT /*+ ALL_ROWS */ PARTS.PART_NAME, ROWNUM FROM PARTS"; //$NON-NLS-1$
                
         String hint = "/*+ ALL_ROWS */"; //$NON-NLS-1$
-        ExecutionContext context = new ExecutionContextImpl(null, 1, hint, null, "", null, null, null); //$NON-NLS-1$
+        ExecutionContext context = new ExecutionContextImpl(null, 1, hint, null, "", 1, null, null); //$NON-NLS-1$
         
         helpTestVisitor(getTestVDB(),
             input, 
@@ -720,7 +720,7 @@ public class TestOracleTranslator {
         String output = "SELECT PARTS.PART_NAME, ROWNUM FROM PARTS"; //$NON-NLS-1$
                
         String hint = "/*+ ALL_ROWS */ something else"; //$NON-NLS-1$
-        ExecutionContext context = new ExecutionContextImpl(null, 1, hint, null, "", null, null, null); //$NON-NLS-1$
+        ExecutionContext context = new ExecutionContextImpl(null, 1, hint, null, "", 1, null, null); //$NON-NLS-1$
         
         helpTestVisitor(getTestVDB(),
             input, 

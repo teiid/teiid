@@ -34,6 +34,7 @@ import java.util.List;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.ExternalizeUtil;
 import org.teiid.jdbc.JDBCPlugin;
+import org.teiid.jdbc.RequestOptions;
 
 
 /**
@@ -89,7 +90,13 @@ public class RequestMessage implements Externalizable {
     private long executionId;
     private int transactionIsolation;
     private boolean noExec;
+    
+    /*
+     * Used by embedded connections, could change if we add support
+     * for an asynch socket transport
+     */
     private transient boolean sync;
+    private RequestOptions requestOptions;
     
     public RequestMessage() {
     }
@@ -402,6 +409,17 @@ public class RequestMessage implements Externalizable {
 		out.writeLong(executionId);
 		out.writeInt(transactionIsolation);
 		out.writeBoolean(noExec);
+	}
+
+	public RequestOptions getRequestOptions() {
+		if (this.requestOptions == null) {
+			this.requestOptions = new RequestOptions();
+		}
+		return this.requestOptions;
+	}
+	
+	public void setRequestOptions(RequestOptions requestOptions) {
+		this.requestOptions = requestOptions;
 	}
 	
 }

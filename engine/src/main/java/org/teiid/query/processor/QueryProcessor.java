@@ -68,6 +68,8 @@ public class QueryProcessor implements BatchProducer {
     private volatile boolean requestCanceled;
     private static final int DEFAULT_WAIT = 50;       
     private boolean processorClosed;
+    private boolean continuous;
+    private int rowOffset = 1;
          
     /**
      * Construct a processor with all necessary information to process.
@@ -137,7 +139,19 @@ public class QueryProcessor implements BatchProducer {
 	        		throw new TeiidProcessingException("Query timed out"); //$NON-NLS-1$
 	        	}
 	            result = processPlan.nextBatch();
-	
+
+	            if (continuous) {
+	        		result.setRowOffset(rowOffset);
+	        		rowOffset = result.getEndRow() + 1;
+
+	        		if (result.getTerminationFlag()) {
+	        			result.setTerminationFlag(false);
+		        		this.processPlan.close();
+		        		this.processPlan.reset();
+		        		this.open = false;	
+	        		}
+	            }
+        		
 	        	if(result.getTerminationFlag()) {
 	        		done = true;
 	        		break;
@@ -263,5 +277,9 @@ public class QueryProcessor implements BatchProducer {
 	
 	public BufferManager getBufferManager() {
 		return bufferMgr;
+	}
+	
+	public void setContinuous(boolean continuous) {
+		this.continuous = continuous;
 	}
 }

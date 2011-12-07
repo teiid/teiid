@@ -260,7 +260,6 @@ class VDBService implements Service<VDBMetaData> {
 				try {
 					ExecutionFactory<Object, Object> ef = getExecutionFactory(name, repo, getTranslatorRepository(), deployment, map, new HashSet<String>());
 					cm.setExecutionFactory(ef);
-					cm.setModelName(model.getName());
 					cmr.addConnectorManager(source, cm);
 				} catch (TranslatorNotFoundException e) {
 					if (e.getCause() != null) {

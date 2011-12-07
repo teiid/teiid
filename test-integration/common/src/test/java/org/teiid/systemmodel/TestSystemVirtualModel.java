@@ -38,6 +38,7 @@ import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.FakeServer;
+import org.teiid.jdbc.RequestOptions;
 import org.teiid.jdbc.StatementCallback;
 import org.teiid.jdbc.TeiidStatement;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
@@ -211,8 +212,35 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 			public void onComplete(Statement s) {
 				result.getResultsReceiver().receiveResults(rowCount);
 			}
-		});
+		}, new RequestOptions());
 		assertEquals(4, result.get().intValue());
+	}
+	
+	@Test public void testAsynchContinuous() throws Exception {
+		Statement s = this.internalConnection.createStatement();
+		TeiidStatement ts = s.unwrap(TeiidStatement.class);
+		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
+		ts.submitExecute("select * from SYS.Schemas", new StatementCallback() {
+			int rowCount;
+			@Override
+			public void onRow(Statement s, ResultSet rs) throws SQLException {
+				rowCount++;
+				if (rowCount == 1024) {
+					s.close();
+				}
+			}
+			
+			@Override
+			public void onException(Statement s, Exception e) {
+				result.getResultsReceiver().receiveResults(rowCount);
+			}
+			
+			@Override
+			public void onComplete(Statement s) {
+				result.getResultsReceiver().receiveResults(rowCount);
+			}
+		}, new RequestOptions().continuous(true));
+		assertEquals(1024, result.get().intValue());
 	}
 	
 	@Test public void testCallableParametersByName() throws Exception {

@@ -22,14 +22,13 @@
 
 package org.teiid.translator.jdbc;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import javax.xml.bind.JAXBException;
 import javax.xml.stream.XMLStreamException;
 
 import junit.framework.Assert;
@@ -42,8 +41,8 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.language.Command;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.function.metadata.FunctionMetadataReader;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TranslatorException;
 
 
 public class TranslationHelper {

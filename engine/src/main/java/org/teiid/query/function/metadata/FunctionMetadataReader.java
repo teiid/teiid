@@ -1,7 +1,11 @@
 package org.teiid.query.function.metadata;
 
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -31,7 +35,6 @@ public class FunctionMetadataReader {
 		 XMLStreamReader reader = inputFactory.createXMLStreamReader(content);
 		 FunctionMetadataReader fmr = new FunctionMetadataReader();
 		 while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
-			 System.out.println(reader.getLocalName());
 			 switch (Namespace.forUri(reader.getNamespaceURI())) {
 			 	case XMI: {
                     Element element = Element.forName(reader.getLocalName());

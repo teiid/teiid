@@ -65,14 +65,14 @@ public class TestCompositeVDB {
     	metaGroup.addStore(metadataStore);
     	
     	ConnectorManagerRepository cmr = new ConnectorManagerRepository();
-    	cmr.addConnectorManager("source", getConnectorManager("bqt1", "FakeTranslator", "FakeConnection", getFuncsOne()));
-    	cmr.addConnectorManager("source2", getConnectorManager("bqt2", "FakeTranslator2", "FakeConnection2", getFuncsTwo()));
+    	cmr.addConnectorManager("source", getConnectorManager("FakeTranslator", "FakeConnection", getFuncsOne()));
+    	cmr.addConnectorManager("source2", getConnectorManager("FakeTranslator2", "FakeConnection2", getFuncsTwo()));
     	
     	CompositeVDB cvdb = new CompositeVDB(vdbMetaData, metaGroup, null, null, RealMetadataFactory.SFM.getSystemFunctions(),cmr);
 		return cvdb;
 	}
 	
-	private static ConnectorManager getConnectorManager(String modelName, String translatorName, String connectionName,  List<FunctionMethod> funcs) {
+	private static ConnectorManager getConnectorManager(String translatorName, String connectionName, List<FunctionMethod> funcs) {
 		final ExecutionFactory<Object, Object> ef = Mockito.mock(ExecutionFactory.class);
 		
 		Mockito.stub(ef.getPushDownFunctions()).toReturn(funcs);
@@ -82,7 +82,6 @@ public class TestCompositeVDB {
 				return ef;
 			}
 		};
-		cm.setModelName(modelName); 
 		cm.start();
 		return cm;
 	}

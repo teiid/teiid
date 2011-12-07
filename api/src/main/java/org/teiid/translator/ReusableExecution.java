@@ -20,30 +20,26 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.dqp.internal.datamgr;
+package org.teiid.translator;
 
-import org.junit.Test;
-import org.teiid.core.util.UnitTestUtil;
+import org.teiid.language.Command;
 
 /**
+ * Additional methods that may optionally be implemented for an {@link Execution}
  */
-public class TestExecutionContextImpl {
-
-    public ExecutionContextImpl createContext(long requestID, String partID) {
-        return new ExecutionContextImpl("vdb", 1, null,   //$NON-NLS-1$
-                                        "Connection", "Connector", requestID, partID, "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    }
-    
-    @Test public void testEqivalenceSemanticsSame() {
-        UnitTestUtil.helpTestEquivalence(0, createContext(100, "1"), createContext(100, "1")); //$NON-NLS-2$ //$NON-NLS-1$ 
-    }
-
-    @Test public void testEqivalenceSemanticsDifferentPart() {
-        UnitTestUtil.helpTestEquivalence(1, createContext(100, "1"), createContext(100, "2")); //$NON-NLS-2$ //$NON-NLS-1$ 
-    }
-
-    @Test public void testEqivalenceSemanticsDifferentRequest() {
-        UnitTestUtil.helpTestEquivalence(1, createContext(100, "1"), createContext(200, "1")); //$NON-NLS-2$ //$NON-NLS-1$ 
-    }
-
+public interface ReusableExecution<C> extends Execution {
+	
+	/**
+	 * Called to reinitialized the execution for use.
+	 * @param c
+	 * @param executionContext
+	 * @param connection
+	 */
+	void reset(Command c, ExecutionContext executionContext, C connection);
+	
+	/**
+	 * Called when the execution is no longer used.
+	 */
+	void dispose();
+	
 }

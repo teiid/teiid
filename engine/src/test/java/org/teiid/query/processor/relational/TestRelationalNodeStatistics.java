@@ -111,7 +111,7 @@ public class TestRelationalNodeStatistics extends TestCase {
         
         FakeRelationalNode fakeNode = new FakeRelationalNode(1, data, 100);
         fakeNode.setElements(elements);
-        CommandContext context = new CommandContext("pid", "group", null, null, null, 1, null, true); //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "group", null, null, null, 1, true); //$NON-NLS-1$ //$NON-NLS-2$
         fakeNode.initialize(context, BufferManagerFactory.getStandaloneBufferManager(), null);
         return fakeNode;
     }

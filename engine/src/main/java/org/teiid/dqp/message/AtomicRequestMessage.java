@@ -24,7 +24,6 @@
  */
 package org.teiid.dqp.message;
 
-import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.client.RequestMessage;
@@ -33,13 +32,14 @@ import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.util.CommandContext;
 
 
 /**
  * This class defines a request message for the Connector layer. This is uniquely identified
  * by AtomicRequestID.
  */
-public class AtomicRequestMessage implements Serializable {
+public class AtomicRequestMessage {
     static final long serialVersionUID = -4060941593023225562L;
 
 	/**
@@ -76,7 +76,6 @@ public class AtomicRequestMessage implements Serializable {
     private boolean partialResultsFlag;
     
     private RequestID requestID;
-    private Serializable executionPayload;
     
     private boolean exceptionOnMaxRows;
     private int maxRows;
@@ -86,13 +85,9 @@ public class AtomicRequestMessage implements Serializable {
     private DQPWorkContext workContext;
     private String generalHint;
     private String hint;
-    
-    public AtomicRequestMessage() {
-        // This is only to honor the externalizable interface..
-	}
+    private CommandContext commandContext;
     
     public AtomicRequestMessage(RequestMessage requestMessage, DQPWorkContext parent, int nodeId){
-    	this.executionPayload = requestMessage.getExecutionPayload();
     	this.workContext = parent;
     	this.requestID = new RequestID(parent.getSessionId(), requestMessage.getExecutionId());
         this.atomicRequestId = new AtomicRequestID(this.requestID, nodeId, EXECUTION_COUNT.getAndIncrement());
@@ -193,14 +188,6 @@ public class AtomicRequestMessage implements Serializable {
         return atomicRequestId.toString();
     }
 
-	public void setExecutionPayload(Serializable executionPayload) {
-		this.executionPayload = executionPayload;
-	}
-
-	public Serializable getExecutionPayload() {
-		return executionPayload;
-	}
-
 	public void setRequestID(RequestID requestID) {
 		this.requestID = requestID;
 	}
@@ -231,6 +218,14 @@ public class AtomicRequestMessage implements Serializable {
 	
 	public void setHint(String hint) {
 		this.hint = hint;
+	}
+	
+	public CommandContext getCommandContext() {
+		return commandContext;
+	}
+	
+	public void setCommandContext(CommandContext commandContext) {
+		this.commandContext = commandContext;
 	}
 
 }

@@ -67,15 +67,15 @@ import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.TransactionContext;
-import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.dqp.service.TransactionService;
+import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.events.EventDistributor;
 import org.teiid.jdbc.EnhancedTimer;
 import org.teiid.logging.CommandLogMessage;
-import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.tempdata.TempTableDataManager;
@@ -401,11 +401,14 @@ public class DQPCore implements DQP {
 	}
 
 	private void startActivePlan(RequestWorkItem workItem, boolean addToQueue) {
-		workItem.active = true;
+		boolean continuous = workItem.requestMsg.getRequestOptions().isContinuous();
+		workItem.active = !continuous;
 		if (addToQueue) {
 			this.addWork(workItem);
 		}
-		this.currentlyActivePlans++;
+		if (!continuous) {
+			this.currentlyActivePlans++;
+		}
 	}
 	
     void finishProcessing(final RequestWorkItem workItem) {

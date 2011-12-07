@@ -155,13 +155,12 @@ public class TestPreparedStatement {
     
     @Test public void testSessionSpecificFunction() throws Exception { 
         // Create query 
-    	System.setProperty("foo", "foo"); //$NON-NLS-1$ //$NON-NLS-2$
-        String preparedSql = "SELECT env('foo'), e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE e2=?"; //$NON-NLS-1$
+        String preparedSql = "SELECT session_id(), e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE e2=?"; //$NON-NLS-1$
         
         // Create expected results
         List[] expected = new List[] { 
-            Arrays.asList(new Object[] { "foo",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
-            Arrays.asList(new Object[] { "foo",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }) //$NON-NLS-1$
+            Arrays.asList(new Object[] { "6",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "6",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }) //$NON-NLS-1$
         };    
     
         List<?> values = Arrays.asList((short)0);

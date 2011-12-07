@@ -28,17 +28,7 @@ import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.NClob;
-import java.sql.Ref;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.RowId;
-import java.sql.SQLException;
-import java.sql.SQLXML;
-import java.sql.Types;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -173,7 +163,7 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
     }
     
     @Override
-    public void submitExecute(String sql, StatementCallback callback) throws TeiidSQLException {
+    public void submitExecute(String sql, StatementCallback callback, RequestOptions options) throws TeiidSQLException {
     	String msg = JDBCPlugin.Util.getString("JDBC.Method_not_supported"); //$NON-NLS-1$
         throw new TeiidSQLException(msg);
     }
@@ -197,18 +187,19 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
     }
     
     @Override
-    public void submitExecute(StatementCallback callback) throws SQLException {
+    public void submitExecute(StatementCallback callback, RequestOptions options)
+    		throws SQLException {
     	NonBlockingRowProcessor processor = new NonBlockingRowProcessor(this, callback);
-    	submitExecute(ResultsMode.EITHER).addCompletionListener(processor);
+    	submitExecute(ResultsMode.EITHER, options).addCompletionListener(processor);
     }
     
-    public ResultsFuture<Boolean> submitExecute(ResultsMode mode) throws SQLException {
-        return executeSql(new String[] {this.prepareSql}, false, mode, false);
+    public ResultsFuture<Boolean> submitExecute(ResultsMode mode, RequestOptions options) throws SQLException {
+        return executeSql(new String[] {this.prepareSql}, false, mode, false, options);
     }
 
 	@Override
     public boolean execute() throws SQLException {
-        executeSql(new String[] {this.prepareSql}, false, ResultsMode.EITHER, true);
+        executeSql(new String[] {this.prepareSql}, false, ResultsMode.EITHER, true, null);
         return hasResultSet();
     }
     
@@ -218,7 +209,7 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
    	     	return new int[0];
     	}
 	   	try{
-	   		executeSql(new String[] {this.prepareSql}, true, ResultsMode.UPDATECOUNT, true);
+	   		executeSql(new String[] {this.prepareSql}, true, ResultsMode.UPDATECOUNT, true, null);
 	   	}finally{
 	   		batchParameterList.clear();
 	   	}
@@ -227,13 +218,13 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
 
 	@Override
     public ResultSet executeQuery() throws SQLException {
-        executeSql(new String[] {this.prepareSql}, false, ResultsMode.RESULTSET, true);
+        executeSql(new String[] {this.prepareSql}, false, ResultsMode.RESULTSET, true, null);
         return resultSet;
     }
 
 	@Override
     public int executeUpdate() throws SQLException {
-        executeSql(new String[] {this.prepareSql}, false, ResultsMode.UPDATECOUNT, true);
+        executeSql(new String[] {this.prepareSql}, false, ResultsMode.UPDATECOUNT, true, null);
         return this.updateCounts[0];
     }
     

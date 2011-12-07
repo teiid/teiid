@@ -1266,13 +1266,9 @@ public final class FunctionMethods {
     }
 
     // ================= Function - ENV ========================
-    public static Object env(CommandContext context, String propertyName) {
+    public static Object env(String propertyName) {
         // All context property keys must be lowercase - we lowercase the incoming key here to match regardless of case
         String propertyNameNocase = propertyName.toLowerCase();
-        Properties envProps = context.getEnvironmentProperties();
-        if(envProps != null && envProps.containsKey(propertyNameNocase)) {
-            return envProps.getProperty(propertyNameNocase);
-        }
         String value = System.getProperty(propertyName);
         if (value == null) {
             value = System.getProperty(propertyNameNocase);
