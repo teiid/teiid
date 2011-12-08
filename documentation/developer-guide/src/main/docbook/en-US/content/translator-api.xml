@@ -268,7 +268,7 @@ public void setFoo(String value)
 			<title>ExecutionContext</title>
 			<para>The <code>org.teiid.translator.ExecutionContext</code> provides a considerable amount of information related to the current execution.  
 			An <code>ExecutionContext</code> instance is made available to each <code>Execution</code>.  Specific usage is highlighted in this guide where applicable, but you may use any informational getter method as desired.
-			Example usage would include calling <code>ExecutionContext.getRequestIdentifier()</code>, <code>ExecutionContext.getSession()</code>, etc. for logging purposes.</para>
+			Example usage would include calling <code>ExecutionContext.getRequestId()</code>, <code>ExecutionContext.getSession()</code>, etc. for logging purposes.</para>
 			
 			<section>
 				<title>Source Hints</title>
