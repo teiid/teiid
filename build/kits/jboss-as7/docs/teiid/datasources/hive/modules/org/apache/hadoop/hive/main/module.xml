@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="org.apache.hadoop.hive">
+    <resources>
+      <resource-root path="hadoop-core-0.20.203.0.jar"/>
+      <resource-root path="hive-exec-0.7.1.jar"/>
+      <resource-root path="hive-jdbc-0.7.1.jar"/>
+      <resource-root path="hive-metastore-0.7.1.jar"/>
+      <resource-root path="hive-service-0.7.1.jar"/>
+      <resource-root path="libfb303.jar"/>
+    </resources>
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.resource.api"/>
+    </dependencies>
+</

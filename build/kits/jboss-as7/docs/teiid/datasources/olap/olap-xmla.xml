@@ -1,0 +1,23 @@
+<subsystem xmlns="urn:jboss:domain:datasources:1.0">
+    <datasources>
+        <datasource jndi-name="java:/olapDS" pool-name="olapDS">
+            <!-- note here that you need to also create datasource for source, this is for mondrian as source for teiid -->
+            <connection-url>jdbc:xmla:Server=http://127.0.0.1:8080/mondrian/xmla;Provider=Mondrian;DataSource=java:foodmart;Catalog=FoodMart;</connection-url>
+            <driver>olap</driver>
+            <driver-class>org.olap4j.driver.xmla.XmlaOlap4jDriver</driver-class>
+            <transaction-isolation>-1</transaction-isolation>
+            <pool>
+                <prefill>false</prefill>
+                <use-strict-min>false</use-strict-min>
+                <flush-strategy>FailingConnectionOnly</flush-strategy>
+            </pool>
+            <security>
+                <user-name>{user}</user-name>
+                <password>{password}</password>
+            </security>
+        </datasource>                               
+        <drivers>
+            <driver name="olap" module="org.olap4j"/>
+        </drivers>
+    </datasources>
+</subsystem

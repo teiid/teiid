@@ -1,0 +1,19 @@
+<!-- If susbsytem "datasources" is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:datasources:1.0">
+    <datasources>
+        <datasource jndi-name="java:/hive" pool-name="hive-ds">
+            <connection-url>jdbc:hive://localhost:10000/default</connection-url>
+            <driver>hive</driver>
+            <pool>
+                <prefill>false</prefill>
+                <use-strict-min>false</use-strict-min>
+                <flush-strategy>FailingConnectionOnly</flush-strategy>
+            </pool>
+        </datasource>                               
+        <drivers>
+            <driver name="hive" module="org.apache.hadoop.hive">
+                <driver-class>org.apache.hadoop.hive.jdbc.HiveDriver</driver-class>
+            </driver>    
+        </drivers>
+    </datasources>
+</subsystem> 

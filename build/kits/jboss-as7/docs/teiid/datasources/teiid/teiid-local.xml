@@ -1,0 +1,24 @@
+<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:datasources:1.0">
+    <datasources>
+        <datasource jndi-name="java:/teiidDS" pool-name="teiidDS">
+            <connection-url>jdbc:teiid:{vdb}</connection-url>
+            <driver>teiid-local</driver>
+            <pool>
+                <prefill>false</prefill>
+                <use-strict-min>false</use-strict-min>
+                <flush-strategy>FailingConnectionOnly</flush-strategy>
+            </pool>
+            <security>
+                <user-name>{user}</user-name>
+                <password>{password}</password>
+            </security>
+        </datasource>                               
+        <drivers>
+            <driver name="teiid-local" module="org.jboss.teiid">
+                <driver-class>org.teiid.jdbc.TeiidDriver</driver-class>
+                <xa-datasource-class>org.teiid.jdbc.TeiidDataSource</xa-datasource-class>
+            </driver>    
+        </drivers>
+    </datasources>
+</subsystem>  

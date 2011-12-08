@@ -1,0 +1,24 @@
+<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:datasources:1.0">
+    <datasources>
+        <datasource jndi-name="java:/sqlserverDS" pool-name="sqlserverDS">
+            <connection-url>jdbc:microsoft:sqlserver://{host}:1433</connection-url>
+            <driver>sqlserver</driver>
+            <pool>
+                <prefill>false</prefill>
+                <use-strict-min>false</use-strict-min>
+                <flush-strategy>FailingConnectionOnly</flush-strategy>
+            </pool>
+            <security>
+                <user-name>{user}</user-name>
+                <password>{password}</password>
+            </security>
+        </datasource>                               
+        <drivers>
+            <driver name="sqlserver" module="com.microsoft.sqlserver">
+                <driver-class>com.microsoft.jdbc.sqlserver.SQLServerDriver</driver-class>
+                <xa-datasource-class>com.microsoft.sqlserver.jdbc.SQLServerXADataSource</xa-datasource-class>
+            </driver>    
+        </drivers>
+    </datasources>
+</subsystem>            

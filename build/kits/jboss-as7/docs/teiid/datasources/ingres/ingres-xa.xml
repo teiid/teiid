@@ -1,0 +1,50 @@
+<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:datasources:1.0">
+    <datasources>
+        <xa-datasource jndi-name="java:/ingresDS" pool-name="ingresDS" enabled="true" use-java-context="true" use-ccm="true">
+        
+            <xa-datasource-property name="DatabaseName">{database}</xa-datasource-property>
+            <xa-datasource-property name="PortNumber">21071</xa-datasource-property>
+            <xa-datasource-property name="ServerName">{host}</xa-datasource-property>
+            <xa-datasource-property name="timeZone">GMT</xa-datasource-property>
+                    
+            
+            <driver>ingres</driver>
+            
+            <!-- 
+            <new-connection-sql>select 1/new-connection-sql>
+            <transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation>
+             -->
+                     
+            <xa-pool>
+                <min-pool-size>10</min-pool-size>
+                <max-pool-size>20</max-pool-size>
+                <is-same-rm-override>true</is-same-rm-override>
+                <prefill>false</prefill>
+                <use-strict-min>false</use-strict-min>
+                <flush-strategy>FailingConnectionOnly</flush-strategy>
+                <no-tx-separate-pools/>
+            </xa-pool>
+
+            <security>
+                <user-name>{user}</user-name>
+                <password>{password}</password>
+                <!-- 
+                <security-domain>mysecurity-realm</security-domain>
+                -->
+            </security>
+             
+            <!-- 
+            <validation>
+                <check-valid-connection-sql>select 1</check-valid-connection-sql>
+            </validation>
+             -->
+        </xa-datasource>                
+        <drivers>
+            <driver name="ingres" module="com.ingres">
+                <driver-class>com.ingres.jdbc.IngresDriver</driver-class>
+                <xa-datasource-class>com.ingres.jdbc.IngresXADataSource</xa-datasource-class>
+            </driver>    
+        </drivers>
+    </datasources>
+</subsystem>
