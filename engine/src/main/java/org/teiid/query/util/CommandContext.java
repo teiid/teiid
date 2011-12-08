@@ -25,6 +25,7 @@ package org.teiid.query.util;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,7 @@ import java.util.concurrent.Executor;
 
 import javax.security.auth.Subject;
 
+import org.teiid.CommandListener;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Session;
 import org.teiid.adminapi.VDB;
@@ -140,6 +142,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		private SourceHint sourceHint;
 		private Executor executor = ExecutorUtils.getDirectExecutor();
 		Map<String, ReusableExecution<?>> reusableExecutions;
+	    Set<CommandListener> commandListeners = null;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -229,31 +232,23 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     public String toString() {
         return "CommandContext: " + globalState.processorID; //$NON-NLS-1$
     }
-
-    /**
-     * @return String
-     */
+    
+    public String getConnectionId() {
+        return globalState.connectionID;
+    }
+    
     public String getConnectionID() {
         return globalState.connectionID;
     }
 
-    /**
-     * @return String
-     */
     public String getUserName() {
         return globalState.userName;
     }
 
-    /**
-     * @return String
-     */
     public String getVdbName() {
         return globalState.vdbName;
     }
 
-    /**
-     * @return String
-     */
     public int getVdbVersion() {
         return globalState.vdbVersion;
     }
@@ -501,7 +496,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     	if (this.globalState.planCache == null) {
     		return null;
     	}
-    	CacheID id = new CacheID(new ParseInfo(), key, getVdbName(), getVdbVersion(), getConnectionID(), getUserName());
+    	CacheID id = new CacheID(new ParseInfo(), key, getVdbName(), getVdbVersion(), getConnectionId(), getUserName());
     	PreparedPlan pp = this.globalState.planCache.get(id);
     	if (pp != null) {
     		if (id.getSessionId() != null) {
@@ -518,7 +513,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     	if (this.globalState.planCache == null) {
     		return;
     	}
-    	CacheID id = new CacheID(new ParseInfo(), key, getVdbName(), getVdbVersion(), getConnectionID(), getUserName());
+    	CacheID id = new CacheID(new ParseInfo(), key, getVdbName(), getVdbVersion(), getConnectionId(), getUserName());
     	this.globalState.planCache.put(id, determinismLevel, plan, null);
     }
     
@@ -644,26 +639,66 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	}
 	
 	public ReusableExecution<?> getReusableExecution(String nodeId) {
-		if (this.globalState.reusableExecutions == null) {
-			return null;
+		synchronized (this.globalState) {
+			if (this.globalState.reusableExecutions == null) {
+				return null;
+			}
+			return this.globalState.reusableExecutions.get(nodeId);
 		}
-		return this.globalState.reusableExecutions.get(nodeId);
 	}
 	
 	public void putReusableExecution(String nodeId, ReusableExecution<?> execution) {
-		if (this.globalState.reusableExecutions == null) {
-			this.globalState.reusableExecutions = new ConcurrentHashMap<String, ReusableExecution<?>>();
+		synchronized (this.globalState) {
+			if (this.globalState.reusableExecutions == null) {
+				this.globalState.reusableExecutions = new ConcurrentHashMap<String, ReusableExecution<?>>();
+			}
+			this.globalState.reusableExecutions.put(nodeId, execution);
 		}
-		this.globalState.reusableExecutions.put(nodeId, execution);
 	}
 
 	public void close() {
-		if (this.globalState.reusableExecutions != null) {
-			for (ReusableExecution<?> reusableExecution : this.globalState.reusableExecutions.values()) {
-				try {
-					reusableExecution.dispose();
-				} catch (Exception e) {
-					LogManager.logWarning(LogConstants.CTX_DQP, e, "Unhandled exception disposing reusable execution"); //$NON-NLS-1$
+		synchronized (this.globalState) {
+			if (this.globalState.reusableExecutions != null) {
+				for (ReusableExecution<?> reusableExecution : this.globalState.reusableExecutions.values()) {
+					try {
+						reusableExecution.dispose();
+					} catch (Exception e) {
+						LogManager.logWarning(LogConstants.CTX_DQP, e, "Unhandled exception disposing reusable execution"); //$NON-NLS-1$
+					}
+				}
+				this.globalState.reusableExecutions.clear();
+			}
+			if (this.globalState.commandListeners != null) {
+				for (CommandListener listener : this.globalState.commandListeners) {
+					try {
+						listener.commandClosed(this);
+					} catch (Exception e) {
+						LogManager.logWarning(LogConstants.CTX_DQP, e, "Unhandled exception calling CommandListener"); //$NON-NLS-1$
+					}
+				}
+				this.globalState.commandListeners.clear();
+			}
+		}
+	}
+
+	@Override
+	public void addListener(CommandListener listener) {
+		if (listener != null) {
+			synchronized (this.globalState) {
+				if (this.globalState.commandListeners == null) {
+					this.globalState.commandListeners = Collections.newSetFromMap(new IdentityHashMap<CommandListener, Boolean>());
+				}
+				this.globalState.commandListeners.add(listener);
+			}
+		}
+	}
+
+	@Override
+	public void removeListener(CommandListener listener) {
+		if (listener != null) {
+			synchronized (this.globalState) {
+				if (this.globalState.commandListeners != null) {
+					this.globalState.commandListeners.remove(listener);
 				}
 			}
 		}

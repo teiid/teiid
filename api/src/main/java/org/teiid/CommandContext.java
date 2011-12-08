@@ -60,6 +60,13 @@ public interface CommandContext {
 	 * Get the connection id
 	 * @return
 	 */
+	String getConnectionId();
+	
+	/**
+	 * Get the connection id
+	 * @return
+	 * @deprecated see {@link #getConnectionId()}
+	 */
 	String getConnectionID();
 	
 	/**
@@ -124,5 +131,17 @@ public interface CommandContext {
 	 * @return
 	 */
 	VDB getVdb();
+	
+	/**
+	 * Add a listener for command events
+	 * @param listener
+	 */
+	void addListener(CommandListener listener);
+	
+	/**
+	 * Add a listener for command events
+	 * @param listener
+	 */
+	void removeListener(CommandListener listener);
 
 }

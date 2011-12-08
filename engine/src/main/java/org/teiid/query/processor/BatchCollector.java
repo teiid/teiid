@@ -124,7 +124,7 @@ public class BatchCollector {
         this.sourceNode = sourceNode;
         this.forwardOnly = forwardOnly;
         if (!this.sourceNode.hasFinalBuffer()) {
-            this.buffer = bm.createTupleBuffer(sourceNode.getOutputElements(), context.getConnectionID(), TupleSourceType.PROCESSOR);
+            this.buffer = bm.createTupleBuffer(sourceNode.getOutputElements(), context.getConnectionId(), TupleSourceType.PROCESSOR);
             this.buffer.setForwardOnly(forwardOnly);
         }
     }

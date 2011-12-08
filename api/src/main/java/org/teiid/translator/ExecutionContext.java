@@ -53,13 +53,19 @@ public interface ExecutionContext {
     /**
      * Get the identifier for the command being executed.  This can be
      * correlated back to identifiers exposed in other parts of the system.
+     * shortcut for {@link #getCommandContext()}.getRequestId()
      * @return command identifier
      */
-    String getRequestIdentifier();
+    String getRequestId();
+    
+    /**
+     * @deprecated see {@link #getRequestId()}
+     * @return
+     */
+    String getRequestID();
     
     /**
      * This specifies the node id for the atomic request in the relational plan of query. 
-     * when combined with the request identifier, uniquely identifies a command sent to a connector.    
      */
     String getPartIdentifier();
     
@@ -73,13 +79,27 @@ public interface ExecutionContext {
 
     /**
      * Get the name of the VDB this query is being run against.
+     * shortcut for {@link #getCommandContext()}.getVdbName()
      * @return VDB name, never null
+     */
+    String getVdbName();
+    
+    /**
+     * @deprecated see {@link #getVdbName()}
+     * @return
      */
     String getVirtualDatabaseName();
 
     /**
      * Get the version of the VDB this query is being run against.
-     * @return VDB version, never null
+     * shortcut for {@link #getCommandContext()}.getVdbVersion()
+     * @return VDB version
+     */
+    int getVdbVersion();
+    
+    /**
+     * @deprecated see {@link #getVdbVersion()}
+     * @return
      */
     int getVirtualDatabaseVersion();
 
@@ -88,18 +108,17 @@ public interface ExecutionContext {
      * @return User, never null
      */
     Subject getSubject();
+
+    /**
+     * Get the command payload
+     * shortcut for {@link #getCommandContext()}.getCommandPayload()
+     * @return the payload or null if one was not set by the client
+     */
+    Serializable getCommandPayload();
     
     /**
-     * Get the trusted payload passed when the user statement was executed.
-     * Teiid has no knowledge about what the payload contains - it is merely
-     * passed through the system.  It is most often used to pass security
-     * information such as credentials.
-     * 
-     * <p>Given that the Execution Payload is not authenticated by the Teiid
-     * system, connector writers are responsible for ensuring its validity. </p>
-     * 
-     * @return Trusted execution payload if one exists, otherwise null
-     * @since 4.2
+     * @deprecated see {@link #getCommandPayload()
+     * @return
      */
     Serializable getExecutionPayload();
     
@@ -117,11 +136,18 @@ public interface ExecutionContext {
         
     /**
      * Get the identifier for the connection through which 
-     * the command is being executed. This represents the original JDBC user
+     * the command is being executed. This represents the original user
      * connection to the Teiid system
+     * shortcut for {@link #getCommandContext()}.getConnectionId()
      * @return Connection identifier
      */
-    String getConnectionIdentifier();
+    String getConnectionId();
+    
+    /**
+     * @deprecated see {@link #getConnectionId()}
+     * @return
+     */
+    String getConnectionID();
     
     /**
      * When the execution is turned on with "alive=true", the execution object will not
@@ -159,6 +185,7 @@ public interface ExecutionContext {
     
     /**
      * Get the current session.
+     * shortcut for {@link #getCommandContext()}.getSession()
      * @return
      */
     Session getSession();

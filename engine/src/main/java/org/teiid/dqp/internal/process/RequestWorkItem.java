@@ -564,7 +564,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		this.resultsBuffer = collector.getTupleBuffer();
 		if (this.resultsBuffer == null) {
 			//This is just a dummy result it will get replaced by collector source
-	    	resultsBuffer = this.processor.getBufferManager().createTupleBuffer(this.originalCommand.getProjectedSymbols(), this.request.context.getConnectionID(), TupleSourceType.FINAL);
+	    	resultsBuffer = this.processor.getBufferManager().createTupleBuffer(this.originalCommand.getProjectedSymbols(), this.request.context.getConnectionId(), TupleSourceType.FINAL);
 		}
 		analysisRecord = request.analysisRecord;
 		transactionContext = request.transactionContext;

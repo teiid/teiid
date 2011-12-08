@@ -111,7 +111,7 @@ public class XMLPlan extends ProcessorPlan {
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
     	context = context.clone();
     	setContext(context);
-        TempTableStore tempTableStore = new TempTableStore(context.getConnectionID(), TransactionMode.NONE);
+        TempTableStore tempTableStore = new TempTableStore(context.getConnectionId(), TransactionMode.NONE);
         tempTableStore.setParentTempTableStore(context.getTempTableStore());
         context.setTempTableStore(tempTableStore);
         this.dataMgr = dataMgr;

@@ -93,7 +93,7 @@ public class ExecutionContextImpl implements ExecutionContext {
     }
     
     @Override
-    public String getRequestIdentifier() {
+    public String getRequestId() {
         return this.commandContext.getRequestId();
     }
 
@@ -107,11 +107,11 @@ public class ExecutionContextImpl implements ExecutionContext {
         return this.executeCount;
     }
     @Override
-    public String getVirtualDatabaseName() {
+    public String getVdbName() {
         return this.commandContext.getVdbName();
     }
     @Override
-    public int getVirtualDatabaseVersion() {
+    public int getVdbVersion() {
         return this.commandContext.getVdbVersion();
     }
     @Override
@@ -120,13 +120,13 @@ public class ExecutionContextImpl implements ExecutionContext {
     }
     
     @Override
-    public Serializable getExecutionPayload() {
+    public Serializable getCommandPayload() {
         return this.commandContext.getCommandPayload();
     }
     
     @Override
-	public String getConnectionIdentifier() {
-		return this.commandContext.getConnectionID();
+	public String getConnectionId() {
+		return this.commandContext.getConnectionId();
 	}
     @Override
     public void keepExecutionAlive(boolean alive) {
@@ -145,7 +145,7 @@ public class ExecutionContextImpl implements ExecutionContext {
             return false;
         } 
         ExecutionContext other = (ExecutionContext) obj;
-        return compareWithNull(this.getRequestIdentifier(), other.getRequestIdentifier()) && 
+        return compareWithNull(this.getRequestId(), other.getRequestId()) && 
                 compareWithNull(this.getPartIdentifier(), other.getPartIdentifier());
     }
 
@@ -163,7 +163,7 @@ public class ExecutionContextImpl implements ExecutionContext {
     }
 
     public int hashCode() {
-        return HashCodeUtil.hashCode(HashCodeUtil.hashCode(0, getRequestIdentifier()), partID);
+        return HashCodeUtil.hashCode(HashCodeUtil.hashCode(0, getRequestId()), partID);
     }
 
     public String toString() {
@@ -173,7 +173,7 @@ public class ExecutionContextImpl implements ExecutionContext {
 	    		userName = p.getName();
 	    	}
     	}
-        return "ExecutionContext<vdb=" + this.getVirtualDatabaseName() + ", version=" + this.getVirtualDatabaseVersion() + ", user=" + userName + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        return "ExecutionContext<vdb=" + this.getVdbName() + ", version=" + this.getVdbVersion() + ", user=" + userName + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
 	
     @Override
@@ -255,5 +255,31 @@ public class ExecutionContextImpl implements ExecutionContext {
 	
 	public void setHint(String hint) {
 		this.hint = hint;
+	}
+
+	@Override
+	public String getConnectionID() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Serializable getExecutionPayload() {
+		return getCommandPayload();
+	}
+
+	@Override
+	public String getRequestID() {
+		return getRequestId();
+	}
+
+	@Override
+	public String getVirtualDatabaseName() {
+		return getVdbName();
+	}
+
+	@Override
+	public int getVirtualDatabaseVersion() {
+		return getVdbVersion();
 	}
 }

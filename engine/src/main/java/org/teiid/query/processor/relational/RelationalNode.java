@@ -146,7 +146,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
     }
 
     protected String getConnectionID() {
-        return this.getProcessingState().context.getConnectionID();
+        return this.getProcessingState().context.getConnectionId();
     }
 
     protected int getBatchSize() {

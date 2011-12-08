@@ -101,7 +101,7 @@ public class RelationalPlan extends ProcessorPlan {
     	}
     	if (this.with != null) {
     		context = context.clone();
-    		tempTableStore = new TempTableStore(context.getConnectionID(), TransactionMode.NONE);
+    		tempTableStore = new TempTableStore(context.getConnectionId(), TransactionMode.NONE);
             tempTableStore.setParentTempTableStore(context.getTempTableStore());
             context.setTempTableStore(tempTableStore);
     		for (WithQueryCommand withCommand : this.with) {

@@ -223,7 +223,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 		hash |= (hash >>> 8);
 		hash &= 0x000000ff;
 		CacheID cid = new CacheID(new ParseInfo(), fullName + hash, context.getVdbName(), 
-				context.getVdbVersion(), context.getConnectionID(), context.getUserName());
+				context.getVdbVersion(), context.getConnectionId(), context.getUserName());
 		cid.setParameters(vals);
 		CachedResults results = cache.get(cid);
 		if (results != null) {

@@ -1277,7 +1277,7 @@ public final class FunctionMethods {
     }
     
     public static Object session_id(CommandContext context) {
-        return context.getConnectionID();
+        return context.getConnectionId();
     }
     
     // ================= Function - MODIFYTIMEZONE ========================

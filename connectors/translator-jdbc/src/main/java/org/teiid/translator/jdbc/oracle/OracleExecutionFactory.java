@@ -353,7 +353,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	boolean usingPayloadComment = false;
     	if (context != null) {
 	    	// Check for db hints
-		    Object payload = context.getExecutionPayload();
+		    Object payload = context.getCommandPayload();
 		    if (payload instanceof String) {
 		        String payloadString = (String)payload;
 		        if (payloadString.startsWith(HINT_PREFIX)) {

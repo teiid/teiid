@@ -116,9 +116,9 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		this.context = context;
 		this.query = command;
 
-		connectionIdentifier = context.getConnectionIdentifier();
+		connectionIdentifier = context.getConnectionId();
 		connectorIdentifier = context.getConnectorIdentifier();
-		requestIdentifier = context.getRequestIdentifier();
+		requestIdentifier = context.getRequestId();
 		partIdentifier = context.getPartIdentifier();
 	}
 

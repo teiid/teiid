@@ -505,9 +505,9 @@ public class ProcedurePlan extends ProcessorPlan {
 		        state.processor = new QueryProcessor(command, subContext, this.bufferMgr, this.dataMgr);
 		        state.ts = new BatchIterator(state.processor);
 		        if (procAssignments != null && state.processor.getOutputElements().size() - procAssignments.size() > 0) {
-		        	state.resultsBuffer = bufferMgr.createTupleBuffer(state.processor.getOutputElements().subList(0, state.processor.getOutputElements().size() - procAssignments.size()), getContext().getConnectionID(), TupleSourceType.PROCESSOR);
+		        	state.resultsBuffer = bufferMgr.createTupleBuffer(state.processor.getOutputElements().subList(0, state.processor.getOutputElements().size() - procAssignments.size()), getContext().getConnectionId(), TupleSourceType.PROCESSOR);
 		        } else if (this.blockContext != null) {
-		        	state.resultsBuffer = bufferMgr.createTupleBuffer(state.processor.getOutputElements(), getContext().getConnectionID(), TupleSourceType.PROCESSOR);
+		        	state.resultsBuffer = bufferMgr.createTupleBuffer(state.processor.getOutputElements(), getContext().getConnectionId(), TupleSourceType.PROCESSOR);
 		        }
 	            this.currentState = state;
         	}
@@ -595,7 +595,7 @@ public class ProcedurePlan extends ProcessorPlan {
     }
     
     public void push(Program program) throws XATransactionException {
-    	program.reset(this.getContext().getConnectionID());
+    	program.reset(this.getContext().getConnectionId());
     	TempTableStore tts = getTempTableStore();
 		getContext().setTempTableStore(program.getTempTableStore());
 		program.getTempTableStore().setParentTempTableStore(tts);

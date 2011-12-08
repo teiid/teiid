@@ -139,7 +139,7 @@ public abstract class JDBCBaseExecution implements Execution  {
 			statement.setFetchSize(fetchSize);
 		} catch (SQLException e) {
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
-    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, context.getRequestIdentifier(), " could not set fetch size: ", fetchSize); //$NON-NLS-1$
+    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, context.getRequestId(), " could not set fetch size: ", fetchSize); //$NON-NLS-1$
     		}
 		}
     }
@@ -191,7 +191,7 @@ public abstract class JDBCBaseExecution implements Execution  {
     		warning = toAdd.getNextWarning();
     		toAdd.setNextException(null);
     		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
-    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, context.getRequestIdentifier() + " Warning: ", warning); //$NON-NLS-1$
+    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, context.getRequestId() + " Warning: ", warning); //$NON-NLS-1$
     		}
     		context.addWarning(toAdd);
     	}

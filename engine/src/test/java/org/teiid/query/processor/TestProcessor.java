@@ -237,7 +237,7 @@ public class TestProcessor {
     	}
     	context.getNextRand(0);
         if (context.getTempTableStore() == null) {
-        	context.setTempTableStore(new TempTableStore(context.getConnectionID(), TransactionMode.ISOLATE_WRITES));
+        	context.setTempTableStore(new TempTableStore(context.getConnectionId(), TransactionMode.ISOLATE_WRITES));
         }
         if (context.getGlobalTableStore() == null) {
         	GlobalTableStoreImpl gts = new GlobalTableStoreImpl(bufferMgr, context.getMetadata());

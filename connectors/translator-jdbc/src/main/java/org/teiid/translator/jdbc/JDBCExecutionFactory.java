@@ -722,7 +722,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      */
     public String getSourceComment(ExecutionContext context, Command command) {
 	    if (addSourceComment() && context != null) {
-            return COMMENT.get().format(new Object[] {context.getConnectionIdentifier(), context.getRequestIdentifier(), context.getPartIdentifier()});
+            return COMMENT.get().format(new Object[] {context.getConnectionId(), context.getRequestId(), context.getPartIdentifier()});
 	    }
 	    return ""; //$NON-NLS-1$ 
     }
