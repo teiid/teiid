@@ -26,7 +26,6 @@ import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.teiid.adminapi.Admin;
@@ -47,8 +46,7 @@ import org.teiid.jdbc.TeiidDriver;
 
 @RunWith(Arquillian.class)
 @SuppressWarnings("nls")
-@Ignore
-public class TestDeployment {
+public class IntegrationTestDeployment {
 
 	private Admin admin;
 	

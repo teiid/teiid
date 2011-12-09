@@ -8,10 +8,8 @@
             <property name="executionType">REMOTE</property>
         </protocol>
             <configuration>
-                <property name="jbossHome">/home/rareddy/testing/jboss-as-7.1.0.Beta1</property>
-                <property name="serverConfig">standalone-teiid.xml</property>
-                <property name="managementAddress">127.0.0.1</property>
-                <property name="managementPort">9999</property>
+                <property name="jbossHome">${jbossHome}</property>
+                <property name="serverConfig">${serverConfig}</property>
                 <property name="javaVmArguments">-Xmx512m -XX:MaxPermSize=128m -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n</property>
             </configuration>        
     </container>

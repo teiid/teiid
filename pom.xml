@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+    <parent>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-parent</artifactId>
+      <version>7</version>
+    </parent>    
+    <modelVersion>4.0.0</modelVersion>
 	<groupId>org.jboss.teiid</groupId>
 	<artifactId>teiid-parent</artifactId>
 	<packaging>pom</packaging>
@@ -106,7 +111,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>2.8</version>
+            <version>${version.javadoc.plugin}</version>
             <configuration>
               <maxmemory>512m</maxmemory>
               <excludePackageNames>*.internal,com.*,net.*,org.teiid.cache,org.teiid.common.*,org.teiid.core,org.teiid.deployers,org.teiid.dqp.*,org.teiid.jboss,org.teiid.netty.*,org.teiid.odbc,org.teiid.query,org.teiid.resource.*,org.teiid.rhq.*,org.teiid.runtime,org.teiid.security,org.teiid.services,org.teiid.templates,org.teiid.test.*,org.teiid.transport,org.teiid.vdb.*</excludePackageNames>
@@ -123,30 +128,14 @@
       </build>
     </profile>
     <profile>
-      <!--
+         <!--
           This is to enable faster build for development time.
           -->
       <id>dev</id>
       <modules>
         <module>build</module>
       </modules>
-    </profile>
-    <profile>
-        <id>arquillian-tests</id>
-        <dependencies>
-            <dependency>
-                <groupId>org.jboss.spec</groupId>
-                <artifactId>jboss-javaee-6.0</artifactId>
-                <version>1.0.0.Final</version>
-                <type>pom</type>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.jboss.as</groupId>
-                <artifactId>jboss-as-arquillian-container-managed</artifactId>
-            </dependency>
-        </dependencies>
-    </profile>    
+    </profile>   
 	</profiles>
 	<build>
 	<!-- This section defines the default plugin settings inherited by child projects. -->
@@ -156,7 +145,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-jar-plugin</artifactId>
-					<version>2.2</version>
+					<version>${version.jar.plugin}</version>
 				</plugin>
 				<plugin>
 				  <artifactId>maven-assembly-plugin</artifactId>
@@ -169,17 +158,17 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
+				<version>${version.compiler.plugin}</version>
 				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
 					<showDeprecation>false</showDeprecation>
 					<showWarnings>false</showWarnings>
 				</configuration>
 			</plugin>
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.9</version>
+				<version>${version.surefire.plugin}</version>
 				<configuration>
 					<includes>
 						<include>**/*TestCase.java</include>
@@ -191,16 +180,10 @@
 			<!-- hack to prevent anonymous inner classes in Tests from being run as tests -->
 						<include>**/Test*$*.java</include>
 					</excludes>
-					<systemProperties>
-						<property>
-							<name>user.dir</name>
-							<value>${basedir}/target</value>
-						</property>
-						<property>
-							<name>java.io.tmpdir</name>
-							<value>${basedir}/target</value>
-						</property>
-					</systemProperties>
+					<systemPropertyVariables>
+						<user.dir>${basedir}/target</user.dir>
+						<java.io.tmpdir>${basedir}/target</java.io.tmpdir>
+					</systemPropertyVariables>
 				</configuration>
 			</plugin>
       <!-- 
@@ -232,7 +215,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>2.1.2</version>
+                <version>${version.source.plugin}</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -244,13 +227,6 @@
             </plugin>
 		</plugins>
 	</build>
-	<repositories>
-		<repository>
-			<id>jboss-public-repository</id>
-            <name>JBoss Public Maven Repository Group</name>
-			<url>http://repository.jboss.org/nexus/content/groups/public/</url>
-		</repository>
-	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
@@ -610,17 +586,6 @@
                <version>${version.javax.enterprise.cdi-api}</version>
             </dependency>
             <dependency>
-              <groupId>org.jboss.arquillian.junit</groupId>
-              <artifactId>arquillian-junit-container</artifactId>
-              <version>${version.org.jboss.arquillian.core}</version>
-              <exclusions>
-                <exclusion>
-                  <groupId>commons-logging</groupId>
-                  <artifactId>commons-logging</artifactId>
-                </exclusion>
-              </exclusions>
-            </dependency>
-            <dependency>
                 <groupId>com.sun.xml.bind</groupId>
                 <artifactId>jaxb-xjc</artifactId>
                 <version>${version.sun.jaxb}</version>
@@ -657,16 +622,4 @@
         <module>client-jdk15</module>
 		<module>admin</module>
   </modules>
-    <distributionManagement>
-        <repository>
-            <id>jboss-releases-repository</id>
-            <name>JBoss Releases Repository</name>
-            <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
-        </repository>
-        <snapshotRepository>
-            <id>jboss-snapshots-repository</id>
-            <name>JBoss Snapshots Repository</name>
-            <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
-        </snapshotRepository>
-    </distributionManagement>
 </project>
