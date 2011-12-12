@@ -125,6 +125,7 @@ public class TeiidDialect extends Dialect {
         registerFunction("formattimestamp", new StandardSQLFunction("formattimestamp", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("hour", new StandardSQLFunction("hour", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("minute", new StandardSQLFunction("minute", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("month", new StandardSQLFunction("month", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("monthname", new StandardSQLFunction("monthname", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("parsedate", new StandardSQLFunction("parsedate", Hibernate.DATE)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("parsetime", new StandardSQLFunction("parsetime", Hibernate.TIME)); //$NON-NLS-1$ //$NON-NLS-2$
@@ -137,6 +138,8 @@ public class TeiidDialect extends Dialect {
         registerFunction("year", new StandardSQLFunction("year", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("modifytimezone", new StandardSQLFunction("modifytimezone", Hibernate.TIMESTAMP)); //$NON-NLS-1$ //$NON-NLS-2$
 
+        registerFunction("array_get", new StandardSQLFunction("array_get", Hibernate.OBJECT)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("array_length", new StandardSQLFunction("array_length", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("convert", new StandardSQLFunction("convert")); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
