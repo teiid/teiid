@@ -385,7 +385,7 @@
             </subsystem>
             <subsystem xmlns="urn:jboss:domain:teiid:1.0">
                 <async-thread-pool>teiid-async</async-thread-pool>
-                <object-replicator stack="udp" cluster-name="teiid-rep"/>
+                <distributed-cache jgroups-stack="udp" channel="teiid-rep"/>
                 <resultset-cache container-name="teiid" name="resultset"/>
                 
                 <transport name="embedded"/>
