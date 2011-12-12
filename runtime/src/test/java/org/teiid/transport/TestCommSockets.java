@@ -259,7 +259,7 @@ public class TestCommSockets {
 	@Test public void testEnableCipherSuites() throws Exception {
 		SSLConfiguration config = new SSLConfiguration();
 		config.setEnabledCipherSuites("x,y,z");
-		assertArrayEquals(new String[] {"x","y","z"}, config.getEnabledCipherSuites());
+		assertArrayEquals(new String[] {"x","y","z"}, config.getEnabledCipherSuitesAsArray());
 	}
 	
 }
