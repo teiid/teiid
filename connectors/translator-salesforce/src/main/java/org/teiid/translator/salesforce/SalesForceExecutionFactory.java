@@ -171,5 +171,10 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     public boolean supportsCompareCriteriaOrdered() {
         return true;
     }
+    
+    @Override
+    public boolean supportsIsNullCriteria() {
+    	return true;
+    }
 
 }

@@ -28,6 +28,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.TimeZone;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
@@ -90,16 +92,16 @@ public class TestVisitors {
         contactTable.setProperty("Supports Query", Boolean.TRUE.toString()); //$NON-NLS-1$
         // Create Contact Columns
         String[] elemNames = new String[] {
-            "ContactID", "Name", "AccountId", "InitialContact"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            "ContactID", "Name", "AccountId", "InitialContact", "LastTime"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         };
         String[] elemTypes = new String[] {  
-            DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.TIMESTAMP 
+            DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.DefaultDataTypes.TIME
         };
         
         List<Column> contactCols = RealMetadataFactory.createElements(contactTable, elemNames, elemTypes);
         // Set name in source on each column
         String[] contactNameInSource = new String[] {
-           "id", "ContactName", "accountid", "InitialContact"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+           "id", "ContactName", "accountid", "InitialContact", "LastTime"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         };
         for(int i=0; i<2; i++) {
             Column obj = contactCols.get(i);
@@ -154,7 +156,7 @@ public class TestVisitors {
 		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
 		visitor.visit(command);
 		assertFalse(visitor.hasOnlyIDCriteria());
-		assertEquals("SELECT Account.id, Account.AccountName, Account.Stuff, Account.Industry FROM Account WHERE Industry IN('1','2','3')", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+		assertEquals("SELECT Account.id, Account.AccountName, Account.Stuff, Account.Industry FROM Account WHERE Account.Industry IN('1','2','3')", visitor.getQuery().toString().trim()); //$NON-NLS-1$
 		
 	}
 
@@ -194,7 +196,21 @@ public class TestVisitors {
 		Select command = (Select)translationUtility.parseCommand("SELECT Contacts.Name FROM Contacts WHERE Contacts.Name in ('x', 'y')"); //$NON-NLS-1$
 		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
 		visitor.visit(command);
-		assertEquals("SELECT Contact.ContactName FROM Contact WHERE ContactName IN('x','y')", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+		assertEquals("SELECT Contact.ContactName FROM Contact WHERE Contact.ContactName IN('x','y')", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+	}
+	
+	@Test public void testEqualsElement() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("SELECT Contacts.Name FROM Contacts WHERE Contacts.Name = Contacts.AccountId"); //$NON-NLS-1$
+		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
+		visitor.visit(command);
+		assertEquals("SELECT Contact.ContactName FROM Contact WHERE Contact.ContactName = Contact.AccountId", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+	}
+	
+	@Test public void testIsNull() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("SELECT Contacts.Name FROM Contacts WHERE Contacts.Name is not null"); //$NON-NLS-1$
+		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
+		visitor.visit(command);
+		assertEquals("SELECT Contact.ContactName FROM Contact WHERE Contact.ContactName != NULL", visitor.getQuery().toString().trim()); //$NON-NLS-1$
 	}
 	
 	@Test public void testIDCriteria() throws Exception {
@@ -205,16 +221,33 @@ public class TestVisitors {
 		Mockito.verify(sfc).retrieve("Account.id, Account.AccountName", "Account", Arrays.asList("bar"));
 	}
 	
-	@Test public void testDateTimeFormating() throws Exception {
+	@BeforeClass static public void oneTimeSetup() {
 		TimeZone.setDefault(TimeZone.getTimeZone("GMT-06:00"));
-		try {
-			Select command = (Select)translationUtility.parseCommand("select name from contacts where initialcontact = {ts'2003-03-11 11:42:10.5'}"); //$NON-NLS-1$
-			SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
-			visitor.visit(command);
-			assertEquals("SELECT Contact.ContactName FROM Contact WHERE Contact.InitialContact = 2003-03-11T11:42:10.500-06:00", visitor.getQuery().toString().trim()); //$NON-NLS-1$
-		} finally {
-			TimeZone.setDefault(null);
-		}
+	}
+	
+	@AfterClass static public void oneTimeTearDown() {
+		TimeZone.setDefault(null);
+	}
+	
+	@Test public void testDateTimeFormating() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select name from contacts where initialcontact = {ts'2003-03-11 11:42:10.5'}"); //$NON-NLS-1$
+		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
+		visitor.visit(command);
+		assertEquals("SELECT Contact.ContactName FROM Contact WHERE Contact.InitialContact = 2003-03-11T11:42:10.500-06:00", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+	}
+	
+	@Test public void testDateTimeFormating1() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select name from contacts where initialcontact in ({ts'2003-03-11 11:42:10.506'}, {ts'2003-03-11 11:42:10.8088'})"); //$NON-NLS-1$
+		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
+		visitor.visit(command);
+		assertEquals("SELECT Contact.ContactName FROM Contact WHERE Contact.InitialContact IN(2003-03-11T11:42:10.506-06:00,2003-03-11T11:42:10.80-06:00)", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+	}
+	
+	@Test public void testTimeFormatting() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select name from contacts where lasttime = {t'11:42:10'}"); //$NON-NLS-1$
+		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
+		visitor.visit(command);
+		assertEquals("SELECT Contact.ContactName FROM Contact WHERE Contact.LastTime = 11:42:10.000-06:00", visitor.getQuery().toString().trim()); //$NON-NLS-1$
 	}
 
 }
