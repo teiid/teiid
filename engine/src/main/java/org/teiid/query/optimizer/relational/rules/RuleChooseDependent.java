@@ -326,11 +326,13 @@ public final class RuleChooseDependent implements OptimizerRule {
             Expression indepExpr = (Expression) independentExpressions.get(i);
             DependentSetCriteria crit = new DependentSetCriteria(SymbolMap.getExpression(depExpr), id);
             float ndv = NewCalculateCostUtil.UNKNOWN_VALUE;
+            Float maxNdv = null;
             if (dca != null && dca.expectedNdv[i] != null) {
             	if (dca.expectedNdv[i] > 4*dca.maxNdv[i]) {
             		continue; //not necessary to use
             	}
             	ndv = dca.expectedNdv[i];
+            	maxNdv = dca.maxNdv[i];
             	crit.setMaxNdv(dca.maxNdv[i]);
             } else { 
 	            Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(indepExpr, true);
@@ -345,6 +347,9 @@ public final class RuleChooseDependent implements OptimizerRule {
             PlanNode selectNode = RelationalPlanner.createSelectNode(crit, false);
             
             selectNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
+            if (maxNdv != null) {
+            	selectNode.setProperty(NodeConstants.Info.MAX_NDV, maxNdv);
+            }
             result.add(selectNode);
         }
         
