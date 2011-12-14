@@ -23,6 +23,7 @@
 package org.teiid.translator.jdbc.mysql;
 
 import java.sql.Blob;
+import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -86,6 +87,16 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
     	Object result = super.retrieveValue(results, columnIndex, expectedType);
     	if (expectedType == TypeFacility.RUNTIME_TYPES.STRING && result instanceof Blob) {
     		return results.getString(columnIndex);
+    	}
+    	return result;
+    }
+    
+    @Override
+    public Object retrieveValue(CallableStatement results, int parameterIndex,
+    		Class<?> expectedType) throws SQLException {
+    	Object result = super.retrieveValue(results, parameterIndex, expectedType);
+    	if (expectedType == TypeFacility.RUNTIME_TYPES.STRING && result instanceof Blob) {
+    		return results.getString(parameterIndex);
     	}
     	return result;
     }
