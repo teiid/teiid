@@ -31,9 +31,10 @@ import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.MultipleElementSymbol;
-import org.teiid.query.sql.symbol.SelectSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
@@ -44,7 +45,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 public class Select implements LanguageObject {
 
     /** The set of symbols for the data elements to be selected. */
-    private List<SelectSymbol> symbols;
+    private List<Expression> symbols = new ArrayList<Expression>();
 
     /** Flag for whether duplicate removal should be performed on the results */
     private boolean distinct;
@@ -57,15 +58,15 @@ public class Select implements LanguageObject {
      * Constructs a default instance of this class.
      */
     public Select() {
-        symbols = new ArrayList<SelectSymbol>();
+        
     }
 
     /**
      * Constructs an instance of this class from an ordered set of symbols.
      * @param symbols The ordered list of symbols
      */
-    public Select( List<? extends SelectSymbol> symbols ) {
-        this.symbols = new ArrayList<SelectSymbol>( symbols );
+    public Select( List<? extends Expression> symbols ) {
+        this.addSymbols(symbols);
     }
 
     // =========================================================================
@@ -91,7 +92,7 @@ public class Select implements LanguageObject {
      * Returns an ordered list of the symbols in the select.
      * @param Get list of SelectSymbol in SELECT
      */
-    public List<SelectSymbol> getSymbols() {
+    public List<Expression> getSymbols() {
         return symbols;
     }
     
@@ -99,8 +100,8 @@ public class Select implements LanguageObject {
      * Sets an ordered list of the symbols in the select.
      * @param symbols list of SelectSymbol in SELECT
      */
-    public void setSymbols(List<? extends SelectSymbol> symbols) {
-        this.symbols = new ArrayList<SelectSymbol>(symbols);
+    public void setSymbols(List<? extends Expression> symbols) {
+        this.symbols = new ArrayList<Expression>(symbols);
     }    
 
     /**
@@ -108,28 +109,26 @@ public class Select implements LanguageObject {
      * @param index Index to get
      * @return The variable identifier at the index
      */
-    public SelectSymbol getSymbol( int index ) {
+    public Expression getSymbol( int index ) {
         return symbols.get(index);
     }
 
     /**
-     * Adds a new symbol to the list of symbols.
      * @param symbol New symbol
      */
-    public void addSymbol( SelectSymbol symbol ) {
-    	if(symbol != null) {
-	        symbols.add(symbol);
-        }
+    public void addSymbol( Expression symbol ) {
+    	if (!(symbol instanceof Symbol) && !(symbol instanceof MultipleElementSymbol)) {
+    		symbol = new ExpressionSymbol("expr" + (this.symbols.size() + 1), symbol); //$NON-NLS-1$
+    	}
+    	this.symbols.add(symbol);
     }
-
-    /**
-     * Adds a new collection of symbols to the list of symbols.
-     * @param symbols Collection of SelectSymbols
-     */
-    public void addSymbols( Collection<? extends SelectSymbol> toAdd) {
-    	if(symbols != null) {
-	        this.symbols.addAll(toAdd);
-        }
+    
+    public void addSymbols( Collection<? extends Expression> toAdd) {
+    	if (toAdd != null) {
+    		for (Expression expression : toAdd) {
+    			this.addSymbol(expression);
+			}
+    	}
     }
     
     /**
@@ -144,7 +143,7 @@ public class Select implements LanguageObject {
      * @param symbol Symbol to check for
      * @return True if the Select contains the symbol
      */
-    public boolean containsSymbol( SelectSymbol symbol ) {
+    public boolean containsSymbol( Expression symbol ) {
         return symbols.contains(symbol);
     }
 
@@ -174,17 +173,17 @@ public class Select implements LanguageObject {
 	 * single column.
 	 * @return Ordered list of SingleElementSymbol
 	 */
-	public List<SingleElementSymbol> getProjectedSymbols() { 
-		ArrayList<SingleElementSymbol> projectedSymbols = new ArrayList<SingleElementSymbol>();
-		for (SelectSymbol symbol : symbols) {
-			if(symbol instanceof SingleElementSymbol) { 
-				projectedSymbols.add((SingleElementSymbol)symbol);
-			} else {
+	public List<Expression> getProjectedSymbols() { 
+		ArrayList<Expression> projectedSymbols = new ArrayList<Expression>();
+		for (Expression symbol : symbols) {
+			if(symbol instanceof MultipleElementSymbol) { 
 			    List<ElementSymbol> multiSymbols = ((MultipleElementSymbol)symbol).getElementSymbols();
 			    if(multiSymbols != null) { 
 			        projectedSymbols.addAll(multiSymbols);
 			    }
-			}	
+			} else {
+				projectedSymbols.add(symbol);
+			}
 		}		
 		return projectedSymbols;
 	}
@@ -198,7 +197,7 @@ public class Select implements LanguageObject {
 	 * @return Deep clone
 	 */
 	public Object clone() {
-		Select copy = new Select(LanguageObject.Util.deepClone(this.symbols, SelectSymbol.class));
+		Select copy = new Select(LanguageObject.Util.deepClone(this.symbols, Expression.class));
 		copy.setDistinct( isDistinct() );
 		return copy;
 	}

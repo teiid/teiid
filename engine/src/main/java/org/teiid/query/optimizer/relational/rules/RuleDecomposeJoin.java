@@ -54,7 +54,6 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.util.CommandContext;
 
@@ -211,7 +210,7 @@ public class RuleDecomposeJoin implements OptimizerRule {
 		group = RulePlaceAccess.recontextSymbol(group, groups);
 		
 		PlanNode projectNode = NodeEditor.findNodePreOrder(newUnion, NodeConstants.Types.PROJECT);
-		List<? extends SingleElementSymbol> projectedSymbols = (List<? extends SingleElementSymbol>)projectNode.getProperty(Info.PROJECT_COLS);
+		List<? extends Expression> projectedSymbols = (List<? extends Expression>)projectNode.getProperty(Info.PROJECT_COLS);
 
     	SymbolMap newSymbolMap = RulePushAggregates.createSymbolMap(group, projectedSymbols, newUnion, metadata);
 	    PlanNode view = RuleDecomposeJoin.createSource(group, newUnion, newSymbolMap);
@@ -324,7 +323,7 @@ public class RuleDecomposeJoin implements OptimizerRule {
 		PlanNode branchSource = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
 		branchSource.addGroup(group);
 		PlanNode projectNode = NodeEditor.findNodePreOrder(unionNode, NodeConstants.Types.PROJECT);
-		branchSource.setProperty(Info.SYMBOL_MAP, SymbolMap.createSymbolMap(symbolMap.getKeys(), (List<? extends SingleElementSymbol>)projectNode.getProperty(Info.PROJECT_COLS)));
+		branchSource.setProperty(Info.SYMBOL_MAP, SymbolMap.createSymbolMap(symbolMap.getKeys(), (List<? extends Expression>)projectNode.getProperty(Info.PROJECT_COLS)));
 		unionNode.addAsParent(branchSource);
 		return branchSource;
 	}

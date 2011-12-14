@@ -105,7 +105,7 @@ public class TestAggregatePushdown {
         
         String sql = "SELECT a12.intkey, MAX(a12.stringkey), MIN(a11.intnum+a12.intnum) FROM bqt1.smalla AS a11 INNER JOIN bqt2.smalla AS a12 ON a11.stringkey = a12.stringkey GROUP BY a12.intkey"; //$NON-NLS-1$
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
-                                      new String[] {"SELECT g_0.stringkey, g_0.intkey, g_0.intnum FROM bqt2.smalla AS g_0 GROUP BY g_0.stringkey, g_0.intkey, g_0.intnum", "SELECT g_0.stringkey, g_0.intnum FROM bqt1.smalla AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
+                                      new String[] {"SELECT g_0.stringkey, g_0.intkey, g_0.intnum FROM BQT2.SmallA AS g_0 GROUP BY g_0.stringkey, g_0.intkey, g_0.intnum", "SELECT g_0.stringkey, g_0.intnum FROM BQT1.SmallA AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -136,7 +136,7 @@ public class TestAggregatePushdown {
         
         String sql = "SELECT a12.intkey, MAX(a12.stringkey), SUM(a11.intnum+a12.intnum) FROM bqt1.smalla AS a11 INNER JOIN bqt2.smalla AS a12 ON a11.stringkey = a12.stringkey GROUP BY a12.intkey"; //$NON-NLS-1$
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
-                                      new String[] {"SELECT g_0.stringkey, g_0.intkey, g_0.intnum FROM bqt2.smalla AS g_0", "SELECT g_0.stringkey, g_0.intnum FROM bqt1.smalla AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
+                                      new String[] {"SELECT g_0.stringkey, g_0.intkey, g_0.intnum FROM BQT2.SmallA AS g_0", "SELECT g_0.stringkey, g_0.intnum FROM BQT1.SmallA AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -203,7 +203,7 @@ public class TestAggregatePushdown {
         String sql = "select sum(a11.intnum) Profit, (sum(a11.intnum) / sum(a11.floatnum)) WJXBFS2 from bqt1.smalla a11 join bqt2.smallb a12 on a11.intkey=a12.intkey group by a12.intkey"; //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
-                                      new String[] {"SELECT g_0.intkey, SUM(g_0.intnum), SUM(g_0.floatnum) FROM bqt1.smalla AS g_0 GROUP BY g_0.intkey", "SELECT g_0.intkey FROM bqt2.smallb AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
+                                      new String[] {"SELECT g_0.intkey, SUM(g_0.intnum), SUM(g_0.floatnum) FROM BQT1.SmallA AS g_0 GROUP BY g_0.intkey", "SELECT g_0.intkey FROM BQT2.SmallB AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -520,7 +520,7 @@ public class TestAggregatePushdown {
         String sql = "select a11.intkey ITEM_ID, sum(a11.intnum) WJXBFS1 from bqt1.smalla a11 join bqt2.smalla a12 on (a11.stringkey = a12.stringkey) join bqt2.smallb a13 on (a11.intkey = a13.intkey) where a13.intnum in (10) group by a11.intkey"; //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
-                                      new String[] {"SELECT g_0.stringkey FROM bqt2.smalla AS g_0", "SELECT g_0.stringkey, g_0.intkey, SUM(g_0.intnum) FROM bqt1.smalla AS g_0 GROUP BY g_0.stringkey, g_0.intkey", "SELECT g_0.intkey FROM bqt2.smallb AS g_0 WHERE g_0.intnum = 10"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+                                      new String[] {"SELECT g_0.stringkey, g_0.intkey, SUM(g_0.intnum) FROM BQT1.SmallA AS g_0 GROUP BY g_0.stringkey, g_0.intkey", "SELECT g_0.stringkey FROM BQT2.SmallA AS g_0", "SELECT g_0.intkey FROM BQT2.SmallB AS g_0 WHERE g_0.intnum = 10"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             3,      // Access
@@ -573,7 +573,7 @@ public class TestAggregatePushdown {
               "select stringkey, max(intkey) from bqt1.smalla group by stringkey having count(intkey) = 1",  //$NON-NLS-1$
               metadata, null, capFinder,
               new String[] { 
-                "SELECT COUNT(g_0.intkey), g_0.stringkey, MAX(g_0.intkey) FROM bqt1.smalla AS g_0 GROUP BY g_0.stringkey"},  //$NON-NLS-1$
+                "SELECT COUNT(g_0.intkey), g_0.stringkey, MAX(g_0.intkey) FROM BQT1.SmallA AS g_0 GROUP BY g_0.stringkey"},  //$NON-NLS-1$
                 ComparisonMode.EXACT_COMMAND_STRING); 
                   
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -692,9 +692,9 @@ public class TestAggregatePushdown {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT g_0.\"MONTH\" AS c_0, g_0.\"YEAR\" AS c_1 FROM msModel.\"TIME\" AS g_0 WHERE g_0.\"YEAR\" = '1999' ORDER BY c_0", //$NON-NLS-1$
-                                                    "SELECT g_0.\"MONTH\" AS c_0, g_0.CITY AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0 WHERE (g_0.\"MONTH\" IN (<dependent values>)) AND (g_0.CITY IN (<dependent values>)) GROUP BY g_0.\"MONTH\", g_0.CITY ORDER BY c_0", //$NON-NLS-1$ 
-                                                    "SELECT g_0.CITY AS c_0, g_0.REGION AS c_1 FROM oraclemodel.GEOGRAPHY AS g_0 WHERE g_0.REGION IN ('BORDEAUX', 'POLINESIA') ORDER BY c_0"},  //$NON-NLS-1$
+                                      new String[] {"SELECT g_0.\"MONTH\" AS c_0, g_0.\"YEAR\" AS c_1 FROM msmodel.\"TIME\" AS g_0 WHERE g_0.\"YEAR\" = '1999' ORDER BY c_0", 
+        		"SELECT g_0.\"MONTH\" AS c_0, g_0.CITY AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0 WHERE (g_0.\"MONTH\" IN (<dependent values>)) AND (g_0.CITY IN (<dependent values>)) GROUP BY g_0.\"MONTH\", g_0.CITY ORDER BY c_0", 
+        		"SELECT g_0.CITY AS c_0, g_0.REGION AS c_1 FROM oraclemodel.GEOGRAPHY AS g_0 WHERE g_0.REGION IN ('BORDEAUX', 'POLINESIA') ORDER BY c_0"},  //$NON-NLS-1$
                                       ComparisonMode.EXACT_COMMAND_STRING );
 
         checkNodeTypes(plan, new int[] {
@@ -740,9 +740,9 @@ public class TestAggregatePushdown {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT g_0.\"MONTH\" AS c_0, g_0.\"YEAR\" AS c_1 FROM msModel.\"TIME\" AS g_0 WHERE g_0.\"YEAR\" = '1999' ORDER BY c_0", //$NON-NLS-1$
-                                          "SELECT g_0.\"MONTH\" AS c_0, g_0.CITY AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0 WHERE (g_0.\"MONTH\" IN (<dependent values>)) AND (g_0.CITY IN (<dependent values>)) GROUP BY g_0.\"MONTH\", g_0.CITY ORDER BY c_0", //$NON-NLS-1$ 
-                                          "SELECT g_0.CITY AS c_0, g_0.REGION AS c_1 FROM oraclemodel.GEOGRAPHY AS g_0 WHERE g_0.REGION IN ('BORDEAUX', 'POLINESIA') ORDER BY c_0"},  //$NON-NLS-1$
+                                      new String[] {"SELECT g_0.\"MONTH\" AS c_0, g_0.\"YEAR\" AS c_1 FROM msmodel.\"TIME\" AS g_0 WHERE g_0.\"YEAR\" = '1999' ORDER BY c_0", 
+        		"SELECT g_0.\"MONTH\" AS c_0, g_0.CITY AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0 WHERE (g_0.\"MONTH\" IN (<dependent values>)) AND (g_0.CITY IN (<dependent values>)) GROUP BY g_0.\"MONTH\", g_0.CITY ORDER BY c_0", 
+        		"SELECT g_0.CITY AS c_0, g_0.REGION AS c_1 FROM oraclemodel.GEOGRAPHY AS g_0 WHERE g_0.REGION IN ('BORDEAUX', 'POLINESIA') ORDER BY c_0"},  //$NON-NLS-1$
                                       ComparisonMode.EXACT_COMMAND_STRING );
 
         checkNodeTypes(plan, new int[] {
@@ -788,8 +788,8 @@ public class TestAggregatePushdown {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT g_0.\"MONTH\" AS c_0, g_1.REGION AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0, db2model.GEOGRAPHY2 AS g_1 WHERE (g_0.CITY = g_1.CITY) AND (g_1.REGION IN ('BORDEAUX', 'POLINESIA')) AND (g_0.\"MONTH\" IN (<dependent values>)) GROUP BY g_0.\"MONTH\", g_1.REGION ORDER BY c_0", //$NON-NLS-1$ 
-                                                    "SELECT g_0.\"MONTH\" AS c_0, g_0.\"YEAR\" AS c_1 FROM msModel.\"TIME\" AS g_0 WHERE g_0.\"YEAR\" = '1999' ORDER BY c_0"},  //$NON-NLS-1$
+                                      new String[] {"SELECT g_0.\"MONTH\" AS c_0, g_0.\"YEAR\" AS c_1 FROM msmodel.\"TIME\" AS g_0 WHERE g_0.\"YEAR\" = '1999' ORDER BY c_0", 
+        		"SELECT g_0.\"MONTH\" AS c_0, g_1.REGION AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0, db2model.GEOGRAPHY2 AS g_1 WHERE (g_0.CITY = g_1.CITY) AND (g_1.REGION IN ('BORDEAUX', 'POLINESIA')) AND (g_0.\"MONTH\" IN (<dependent values>)) GROUP BY g_0.\"MONTH\", g_1.REGION ORDER BY c_0"},  //$NON-NLS-1$
                                                     ComparisonMode.EXACT_COMMAND_STRING );
 
         checkNodeTypes(plan, new int[] {
@@ -1056,7 +1056,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("pm2", getAggregateCapabilities()); //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2), case when e1 is null then 0 else 1 end from (select e1, e2 from pm1.g1 union all select e1, e2 from pm2.g2) z group by case when e1 is null then 0 else 1 end", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
-            new String[]{"SELECT v_1.c_1, MAX(v_1.c_0) FROM (SELECT v_0.c_1 AS c_0, CASE WHEN v_0.c_0 IS NULL THEN 0 ELSE 1 END AS c_1 FROM (SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0) AS v_0) AS v_1 GROUP BY v_1.c_1", //$NON-NLS-1$
+            new String[]{"SELECT v_1.c_0, MAX(v_1.c_1) FROM (SELECT CASE WHEN v_0.c_0 IS NULL THEN 0 ELSE 1 END AS c_0, v_0.c_1 FROM (SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0) AS v_0) AS v_1 GROUP BY v_1.c_0", //$NON-NLS-1$
         	"SELECT g_0.e1, g_0.e2 FROM pm2.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -1083,8 +1083,8 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2), case when e1 is null then 0 else 1 end from (select e1, e2, 1 as part from pm1.g1 union all select e1, e2, 2 as part from pm1.g2) z group by case when e1 is null then 0 else 1 end, part", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
-            new String[]{"SELECT MAX(v_1.c_0), v_1.c_1 FROM (SELECT v_0.c_2 AS c_0, CASE WHEN v_0.c_0 IS NULL THEN 0 ELSE 1 END AS c_1, v_0.c_1 AS c_2 FROM (SELECT g_0.e1 AS c_0, 1 AS c_1, g_0.e2 AS c_2 FROM pm1.g1 AS g_0) AS v_0) AS v_1 GROUP BY v_1.c_1, v_1.c_2", 
-        "SELECT MAX(v_1.c_0), v_1.c_1 FROM (SELECT v_0.c_2 AS c_0, CASE WHEN v_0.c_0 IS NULL THEN 0 ELSE 1 END AS c_1, v_0.c_1 AS c_2 FROM (SELECT g_0.e1 AS c_0, 2 AS c_1, g_0.e2 AS c_2 FROM pm1.g2 AS g_0) AS v_0) AS v_1 GROUP BY v_1.c_1, v_1.c_2"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+            new String[]{"SELECT MAX(v_1.c_2), v_1.c_0 FROM (SELECT CASE WHEN v_0.c_0 IS NULL THEN 0 ELSE 1 END AS c_0, v_0.c_1, v_0.c_2 FROM (SELECT g_0.e1 AS c_0, 2 AS c_1, g_0.e2 AS c_2 FROM pm1.g2 AS g_0) AS v_0) AS v_1 GROUP BY v_1.c_0, v_1.c_1", 
+        	"SELECT MAX(v_1.c_2), v_1.c_0 FROM (SELECT CASE WHEN v_0.c_0 IS NULL THEN 0 ELSE 1 END AS c_0, v_0.c_1, v_0.c_2 FROM (SELECT g_0.e1 AS c_0, 1 AS c_1, g_0.e2 AS c_2 FROM pm1.g1 AS g_0) AS v_0) AS v_1 GROUP BY v_1.c_0, v_1.c_1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess
@@ -1114,7 +1114,7 @@ public class TestAggregatePushdown {
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
                 RealMetadataFactory.exampleBQTCached(),
                 null, getAggregatesFinder(),
-                new String[] {"SELECT g_0.DateValue FROM bqt1.smallb AS g_0"},  
+                new String[] {"SELECT g_0.DateValue FROM BQT1.SmallB AS g_0"},  
                               TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {

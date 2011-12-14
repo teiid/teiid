@@ -36,8 +36,9 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 
 
 
@@ -482,8 +483,8 @@ public class QueryResults implements
         List infos = new ArrayList(symbols.size());
         Iterator iter = symbols.iterator();
         while (iter.hasNext()) {
-            SingleElementSymbol symbol = (SingleElementSymbol)iter.next();
-            String name = symbol.getName();
+            Expression symbol = (Expression)iter.next();
+            String name = Symbol.getName(symbol);
             if (symbol instanceof AliasSymbol) {
                 AliasSymbol alias = (AliasSymbol)symbol;
                 symbol = alias.getSymbol();

@@ -54,10 +54,9 @@ import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.MultipleElementSymbol;
-import org.teiid.query.sql.symbol.SelectSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 
@@ -244,7 +243,7 @@ public final class XMLPlanner implements CommandPlanner{
      */
     static MappingDocument preMarkExcluded(Query xmlCommand, MappingDocument doc) {
         Select select = xmlCommand.getSelect();
-        SelectSymbol firstSymbol = select.getSymbol(0);
+        Expression firstSymbol = select.getSymbol(0);
 
         // 0. mark the nodes to be excluded
         if(firstSymbol instanceof MultipleElementSymbol && ((MultipleElementSymbol)firstSymbol).getGroup() == null) {
@@ -255,10 +254,10 @@ public final class XMLPlanner implements CommandPlanner{
         Collection<ElementSymbol> validElements = ElementCollectorVisitor.getElements(select, true);
         HashSet<String> elements = new HashSet<String>(validElements.size());
         for (ElementSymbol element : validElements) {
-            elements.add(element.getCanonicalName());
+            elements.add(element.getName());
         }
         
-        // keep the nodes given mark the rest of the nodes to be elementated
+        // keep the nodes given mark the rest of the nodes to be eliminated
         return MarkExcludeVisitor.markExcludedNodes(doc, elements);
      }    
         
@@ -281,13 +280,13 @@ public final class XMLPlanner implements CommandPlanner{
             return;
         }
         
-        List<SingleElementSymbol> elements = orderBy.getSortKeys();
+        List<Expression> elements = orderBy.getSortKeys();
 		List<Boolean> types = orderBy.getTypes();
 
 		for (int i = 0; i< elements.size(); i++) {
 			ElementSymbol elemSymbol = (ElementSymbol) elements.get(i);
 			
-            String nodeName = planEnv.getGlobalMetadata().getFullName(elemSymbol.getMetadataID()).toUpperCase();
+            String nodeName = planEnv.getGlobalMetadata().getFullName(elemSymbol.getMetadataID());
             MappingNode elementNode = MappingNode.findNode(planEnv.mappingDoc, nodeName); 
 
             // make sure that the name in source is defined for this node, so that it can be used

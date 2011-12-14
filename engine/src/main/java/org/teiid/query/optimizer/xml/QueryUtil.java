@@ -56,6 +56,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.util.CommandContext;
@@ -208,7 +209,7 @@ public class QueryUtil {
         for (Iterator i = projectedElements.iterator(); i.hasNext();) {
             ElementSymbol element = (ElementSymbol)i.next();
 
-            symbolMap.put(element, new ElementSymbol(newGroup + ElementSymbol.SEPARATOR + element.getShortName()));
+            symbolMap.put(element, new ElementSymbol(newGroup + Symbol.SEPARATOR + element.getShortName()));
         }
         return symbolMap;
     }

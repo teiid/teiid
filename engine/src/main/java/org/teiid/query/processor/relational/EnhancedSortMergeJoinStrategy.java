@@ -41,7 +41,7 @@ import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 
 
 /**
@@ -122,10 +122,10 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     			reorderedSortIndex[j++] = i;
     		}
     	}
-    	List<SingleElementSymbol> reordered = RelationalNode.projectTuple(reorderedSortIndex, elements);
+    	List<Expression> reordered = RelationalNode.projectTuple(reorderedSortIndex, elements);
     	if (!state.isDistinct()) {
     		//need to add a rowid, just in case
-    		reordered = new ArrayList<SingleElementSymbol>(reordered);
+    		reordered = new ArrayList<Expression>(reordered);
     		ElementSymbol id = new ElementSymbol("rowId"); //$NON-NLS-1$
     		id.setType(DataTypeManager.DefaultDataClasses.INTEGER);
     		reordered.add(keyLength, id);

@@ -40,6 +40,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.MetadataStore;
@@ -400,72 +401,31 @@ public class TestXMLProcessor {
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
        
         // Create virtual docs
-        Table doc1 = RealMetadataFactory.createXmlDocument("doc1", xmltest, createXMLMappingNode(true)); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc1, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
+        RealMetadataFactory.createXmlDocument("doc1", xmltest, createXMLMappingNode(true)); //$NON-NLS-1$
             
         RealMetadataFactory.createXmlDocument("doc1Unformatted", xmltest, createXMLMappingNode(false)); //$NON-NLS-1$
-        Table doc1b = RealMetadataFactory.createXmlDocument("doc1b", xmltest, createXMLPlan2(false, true, 0 )); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc1b, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-                                                        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
-        Table doc1c = RealMetadataFactory.createXmlDocument("doc1c", xmltest, createXMLPlan2(false, true, 1 )); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc1c, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-                                                        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
-        
-        Table docBounded = RealMetadataFactory.createXmlDocument("docBounded", xmltest, createXMLMappingBoundingNode()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(docBounded, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
-        
-        Table doc2  = RealMetadataFactory.createXmlDocument("doc2",  xmltest, createXMLPlan2(1, -1, false)); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc2, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
+        RealMetadataFactory.createXmlDocument("doc1b", xmltest, createXMLPlan2(false, true, 0 )); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc1c", xmltest, createXMLPlan2(false, true, 1 )); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("docBounded", xmltest, createXMLMappingBoundingNode()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc2",  xmltest, createXMLPlan2(1, -1, false)); //$NON-NLS-1$
         RealMetadataFactory.createXmlDocument("doc2a", xmltest, createXMLPlan2(1, 1, false)); //$NON-NLS-1$
         RealMetadataFactory.createXmlDocument("doc2b", xmltest, createXMLPlan2(1, -1, true)); //$NON-NLS-1$
         RealMetadataFactory.createXmlDocument("doc2c", xmltest, createXMLPlan2(2, -1, false)); //$NON-NLS-1$
         RealMetadataFactory.createXmlDocument("doc2d", xmltest, createXMLPlan2(2, 1, false)); //$NON-NLS-1$
         RealMetadataFactory.createXmlDocument("doc2e", xmltest, createXMLPlan2(2, 3, false)); //$NON-NLS-1$
 
-        Table doc3 = RealMetadataFactory.createXmlDocument("doc3", xmltest, createXMLPlanWithDefaults()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc3, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
-        Table doc4 = RealMetadataFactory.createXmlDocument("doc4", xmltest, createXMLPlanAdvanced()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc4, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Fake", "Catalogs.Fake.FakeChild2", "Catalogs.Fake.FakeChild2.FakeChild2a", "Catalogs.Fake.FakeChild3", "Catalogs.Fake.FakeChild3.@FakeAtt" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER,DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-        Table doc5 = RealMetadataFactory.createXmlDocument("doc5", xmltest, createXMLPlanUltraAdvanced()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc5, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.DiscontinuedItem", "Catalogs.Catalog.items.DiscontinuedItem.@ItemID", "Catalogs.Catalog.items.DiscontinuedItem.Name", "Catalogs.Catalog.items.DiscontinuedItem.Quantity", "Catalogs.Catalog.items.StatusUnknown", "Catalogs.Catalog.items.StatusUnknown.@ItemID", "Catalogs.Catalog.items.StatusUnknown.Name", "Catalogs.Catalog.items.StatusUnknown.Quantity", "Catalogs.Catalog.items.Shouldn't see", "Catalogs.Catalog.items.Shouldn't see 2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-        Table doc6 = RealMetadataFactory.createXmlDocument("doc6", xmltest, createXMLPlanUltraAdvancedExceptionOnDefault()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc6, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.DiscontinuedItem", "Catalogs.Catalog.items.DiscontinuedItem.@ItemID", "Catalogs.Catalog.items.DiscontinuedItem.Name", "Catalogs.Catalog.items.DiscontinuedItem.Quantity", "Catalogs.Catalog.items.Shouldn't see"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
-        Table doc7 = RealMetadataFactory.createXmlDocument("doc7", xmltest, createTestAttributePlan()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc7, new String[] { "FixedValueTest", "FixedValueTest.wrapper", "FixedValueTest.wrapper.@fixed", "FixedValueTest.wrapper.@key", "FixedValueTest.wrapper.@fixedAttr"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-                        
-        Table doc8 = RealMetadataFactory.createXmlDocument("doc8", xmltest, createXMLPlanNested()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc8, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name" },  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-    
-        Table doc9 = RealMetadataFactory.createXmlDocument("doc9", xmltest, createXMLPlanNested2()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc9, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name", "Catalogs.Catalog.items.item.suppliers.supplier.orders", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.@OrderID" ,"Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderDate", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderQuantity", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderStatus"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$ //$NON-NLS-18$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-            
-        Table doc9a = RealMetadataFactory.createXmlDocument("doc9a", xmltest, createXMLPlanNested2a()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc9a, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name", "Catalogs.Catalog.items.item.suppliers.supplier.orders", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.@OrderID" ,"Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderDate", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderQuantity", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderStatus"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$ //$NON-NLS-18$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-
+        RealMetadataFactory.createXmlDocument("doc3", xmltest, createXMLPlanWithDefaults()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc4", xmltest, createXMLPlanAdvanced()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc5", xmltest, createXMLPlanUltraAdvanced()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc6", xmltest, createXMLPlanUltraAdvancedExceptionOnDefault()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc7", xmltest, createTestAttributePlan()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc8", xmltest, createXMLPlanNested()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc9", xmltest, createXMLPlanNested2()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc9a", xmltest, createXMLPlanNested2a()); //$NON-NLS-1$
         RealMetadataFactory.createXmlDocument("doc9b", xmltest, createXMLPlanNested2b()); //$NON-NLS-1$
-        Table doc10 = RealMetadataFactory.createXmlDocument("doc10", xmltest, createXMLPlanNestedWithChoice()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc10, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.@OrderID" ,"Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.OrderDate", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.OrderQuantity", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.OrderStatus", "Catalogs.Catalog.items.item.suppliers.supplier.orders.ProcessingOrders" ,"Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.otherorder.@OrderID", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.otherorder"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$ //$NON-NLS-18$ //$NON-NLS-19$ //$NON-NLS-20$ //$NON-NLS-21$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-
-        Table doc10L = RealMetadataFactory.createXmlDocument("doc10L", xmltest, createXMLPlanNestedWithLookupChoice()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc10L, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.@OrderID" ,"Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.OrderDate", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.OrderQuantity", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.order.OrderStatus", "Catalogs.Catalog.items.item.suppliers.supplier.orders.ProcessingOrders" ,"Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.otherorder.@OrderID", "Catalogs.Catalog.items.item.suppliers.supplier.ProcessingOrders.otherorder"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$ //$NON-NLS-18$ //$NON-NLS-19$ //$NON-NLS-20$ //$NON-NLS-21$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-
-
-        Table doc11 = RealMetadataFactory.createXmlDocument("doc11", xmltest, createXMLPlanMultipleDocs()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc11, new String[] { "Item", "Item.@ItemID", "Item.Name", "Item.Quantity", "Item.Suppliers", "Item.Suppliers.Supplier", "Item.Suppliers.Supplier.@SupplierID", "Item.Suppliers.Supplier.Name", "Item.Suppliers.Supplier.Zip"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ 
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
+        RealMetadataFactory.createXmlDocument("doc10", xmltest, createXMLPlanNestedWithChoice()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc10L", xmltest, createXMLPlanNestedWithLookupChoice()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc11", xmltest, createXMLPlanMultipleDocs()); //$NON-NLS-1$
 
         //variations on the same recursive doc====================
         boolean useRecursiveCriteria = false;
@@ -490,49 +450,23 @@ public class TestXMLProcessor {
 
         RealMetadataFactory.createXmlDocument("doc17", xmltest, createXMLPlanWithComment()); //$NON-NLS-1$
 
-        Table doc_5266a = RealMetadataFactory.createXmlDocument("doc_5266a", xmltest, createXMLPlanNestedWithChoiceFor5266()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc_5266a, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                                                             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-
-
+        RealMetadataFactory.createXmlDocument("doc_5266a", xmltest, createXMLPlanNestedWithChoiceFor5266()); //$NON-NLS-1$
         RealMetadataFactory.createXmlDocument("doc_8917", xmltest, createXMLPlan_defect8917()); //$NON-NLS-1$
-        Table doc_9446 = RealMetadataFactory.createXmlDocument("doc_9446", xmltest, createXMLPlan_defect9446()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc_9446", xmltest, createXMLPlan_defect9446()); //$NON-NLS-1$
         RealMetadataFactory.createXmlDocument("doc_9530", xmltest, createXMLPlan_defect_9530()); //$NON-NLS-1$
-
-        RealMetadataFactory.createElements(doc_9446, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.XXXXX"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER});
         
         //Test doc w/ update mapping class transformation
         RealMetadataFactory.createXmlDocument("docUpdateTest", xmltest, createUpdateTestDoc()); //$NON-NLS-1$
 
-        Table doc_9893 = RealMetadataFactory.createXmlDocument("doc9893", xmltest, createXMLPlan_9893()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc_9893, new String[] { "Root", "Root.ItemName"}, //$NON-NLS-1$ //$NON-NLS-2$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
+        RealMetadataFactory.createXmlDocument("doc9893", xmltest, createXMLPlan_9893()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc18", xmltest, createXMLPlanNested("xmltest.suppliersX")); //$NON-NLS-1$ //$NON-NLS-2$
+        RealMetadataFactory.createXmlDocument("doc12260", xmltest, createXMLPlanCorrelatedSubqueryTransform()); //$NON-NLS-1$
 
-        Table doc18 = RealMetadataFactory.createXmlDocument("doc18", xmltest, createXMLPlanNested("xmltest.suppliersX")); //$NON-NLS-1$ //$NON-NLS-2$
-        RealMetadataFactory.createElements(doc18, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name" },  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
+        RealMetadataFactory.createXmlDocument("doc8373", xmltest, createXMLPlan_defect8373()); //$NON-NLS-1$
 
-        Table doc12260 = RealMetadataFactory.createXmlDocument("doc12260", xmltest, createXMLPlanCorrelatedSubqueryTransform()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc12260, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.numSuppliers" },  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-7$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-8$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
-
-        Table doc8373 = RealMetadataFactory.createXmlDocument("doc8373", xmltest, createXMLPlan_defect8373()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc8373, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.numSuppliers" },  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-7$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-8$
-                                                            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
-
-        Table doc8373a = RealMetadataFactory.createXmlDocument("doc8373a", xmltest, createXMLPlan_defect8373a()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc8373a, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.numSuppliers" },  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-7$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-8$
-                                                            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
-
-        Table doc8373b = RealMetadataFactory.createXmlDocument("doc8373b", xmltest, createXMLPlan_defect8373b()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc8373b, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.numSuppliers" },  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-7$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-8$
-                                                            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
-
-        Table doc13617 = RealMetadataFactory.createXmlDocument("doc13617", xmltest, createXMLPlanDefect13617()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc13617, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity" },  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-7$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ 
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER});
-        
+        RealMetadataFactory.createXmlDocument("doc8373a", xmltest, createXMLPlan_defect8373a()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc8373b", xmltest, createXMLPlan_defect8373b()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc13617", xmltest, createXMLPlanDefect13617()); //$NON-NLS-1$
 
         // recursive + staging ========================================================
 
@@ -577,17 +511,9 @@ public class TestXMLProcessor {
         // normDoc1 - for collapse
         // normDoc2 - for replace
         // normDoc3 - for preserve
-        Table normDoc1 = RealMetadataFactory.createXmlDocument("normDoc1", xmltest, createXMLPlanNormalization(MappingNodeConstants.NORMALIZE_TEXT_COLLAPSE)); //$NON-NLS-1$
-        RealMetadataFactory.createElements(normDoc1, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.DiscontinuedItem", "Catalogs.Catalog.items.DiscontinuedItem.@ItemID", "Catalogs.Catalog.items.DiscontinuedItem.Name", "Catalogs.Catalog.items.DiscontinuedItem.Quantity", "Catalogs.Catalog.items.StatusUnknown", "Catalogs.Catalog.items.StatusUnknown.@ItemID", "Catalogs.Catalog.items.StatusUnknown.Name", "Catalogs.Catalog.items.StatusUnknown.Quantity", "Catalogs.Catalog.items.Shouldn't see", "Catalogs.Catalog.items.Shouldn't see 2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$
-                                                        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-        Table normDoc2 = RealMetadataFactory.createXmlDocument("normDoc2", xmltest, createXMLPlanNormalization(MappingNodeConstants.NORMALIZE_TEXT_REPLACE)); //$NON-NLS-1$
-        RealMetadataFactory.createElements(normDoc2, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.DiscontinuedItem", "Catalogs.Catalog.items.DiscontinuedItem.@ItemID", "Catalogs.Catalog.items.DiscontinuedItem.Name", "Catalogs.Catalog.items.DiscontinuedItem.Quantity", "Catalogs.Catalog.items.StatusUnknown", "Catalogs.Catalog.items.StatusUnknown.@ItemID", "Catalogs.Catalog.items.StatusUnknown.Name", "Catalogs.Catalog.items.StatusUnknown.Quantity", "Catalogs.Catalog.items.Shouldn't see", "Catalogs.Catalog.items.Shouldn't see 2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$
-                                                            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
- 
-        Table normDoc3 = RealMetadataFactory.createXmlDocument("normDoc3", xmltest, createXMLPlanNormalization(MappingNodeConstants.NORMALIZE_TEXT_PRESERVE)); //$NON-NLS-1$
-        RealMetadataFactory.createElements(normDoc3, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.DiscontinuedItem", "Catalogs.Catalog.items.DiscontinuedItem.@ItemID", "Catalogs.Catalog.items.DiscontinuedItem.Name", "Catalogs.Catalog.items.DiscontinuedItem.Quantity", "Catalogs.Catalog.items.StatusUnknown", "Catalogs.Catalog.items.StatusUnknown.@ItemID", "Catalogs.Catalog.items.StatusUnknown.Name", "Catalogs.Catalog.items.StatusUnknown.Quantity", "Catalogs.Catalog.items.Shouldn't see", "Catalogs.Catalog.items.Shouldn't see 2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$
-                                                            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-        
+        RealMetadataFactory.createXmlDocument("normDoc1", xmltest, createXMLPlanNormalization(MappingNodeConstants.NORMALIZE_TEXT_COLLAPSE)); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("normDoc2", xmltest, createXMLPlanNormalization(MappingNodeConstants.NORMALIZE_TEXT_REPLACE)); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("normDoc3", xmltest, createXMLPlanNormalization(MappingNodeConstants.NORMALIZE_TEXT_PRESERVE)); //$NON-NLS-1$
         QueryNode vspqn1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN insert into #temp select * from stock.items where itemquantity < param; SELECT * FROM xmltest.doc1 where Item.Quantity < (select avg(itemquantity) from #temp); END"); //$NON-NLS-1$ //$NON-NLS-2$
         ColumnSet<Procedure> vsprs1 = RealMetadataFactory.createResultSet("pm1.vsprs1", new String[] { "xml" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
         ProcedureParameter vspp1 = RealMetadataFactory.createParameter("param", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
@@ -664,10 +590,7 @@ public class TestXMLProcessor {
 // =========================================================================================================
 
 		// Create virtual docs
-		Table doc9c= RealMetadataFactory.createXmlDocument("doc9c", xmltest, createXMLPlanNested2c()); //$NON-NLS-1$
-		RealMetadataFactory.createElements(doc9c, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name", "Catalogs.Catalog.items.item.orders", "Catalogs.Catalog.items.item.orders.order", "Catalogs.Catalog.items.item.orders.order.@OrderID" ,"Catalogs.Catalog.items.item.orders.order.zip", "Catalogs.Catalog.items.item.orders.order.Name"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-		
+		RealMetadataFactory.createXmlDocument("doc9c", xmltest, createXMLPlanNested2c()); //$NON-NLS-1$
 		return RealMetadataFactory.createTransformationMetadata(metadataStore, "nestedWithSibling");		
 	}
 	
@@ -789,19 +712,10 @@ public class TestXMLProcessor {
         RealMetadataFactory.createXmlDocument("doc1a", xqttest, createXQTPlanRecursive1a_5988()); //$NON-NLS-1$
         RealMetadataFactory.createXmlDocument("doc2", xqttest,   createXQTPlanRecursiveSiblings()); //$NON-NLS-1$
         RealMetadataFactory.createXmlDocument("doc3", xqttest,   createXQTPlanRecursive3_5988()); //$NON-NLS-1$
-        Table doc4 = RealMetadataFactory.createXmlDocument("doc4", xqttest,   createXQTPlanChoice_6796()); //$NON-NLS-1$
-        Table doc5 = RealMetadataFactory.createXmlDocument("doc5", xqttest,   createChoiceDefect24651()); //$NON-NLS-1$
-        Table groupDoc = RealMetadataFactory.createXmlDocument("groupDoc", xqttest,   createGroupDoc()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc4", xqttest,   createXQTPlanChoice_6796()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("doc5", xqttest,   createChoiceDefect24651()); //$NON-NLS-1$
+        RealMetadataFactory.createXmlDocument("groupDoc", xqttest,   createGroupDoc()); //$NON-NLS-1$
 
-        RealMetadataFactory.createElements(groupDoc, new String[] { "group", "group.pseudoID" /*, etc...*/ }, //$NON-NLS-1$ //$NON-NLS-2$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-        
-        RealMetadataFactory.createElements(doc4, new String[] { "root", "root.key", "root.key.keys", "root.key.keys.nestedkey", "root.wrapper.key", "root.wrapper.key.keys", "root.wrapper.key.keys.nestedkey"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-                                                               new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-        
-        RealMetadataFactory.createElements(doc5, new String[] { "root", "root.wrapper.key" }, //$NON-NLS-1$ //$NON-NLS-2$
-                                                                new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-         
         return RealMetadataFactory.createTransformationMetadata(metadataStore, "example2");
     }
 
@@ -828,10 +742,7 @@ public class TestXMLProcessor {
         new String[] { "ID"}, //$NON-NLS-1$
         new String[] {DataTypeManager.DefaultDataTypes.STRING});        
 
-        Table doc_SOAP = RealMetadataFactory.createXmlDocument("docSoap", xmltest, createXMLPlanSOAP()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(doc_SOAP, new String[] { "TaxReports", "TaxReports.TaxReport", "TaxReports.TaxReport.ArrayOfTaxID","TaxReports.TaxReport.ArrayOfTaxID.TaxID","TaxReports.TaxReport.ArrayOfTaxID.TaxID.ID"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-                                               
+        RealMetadataFactory.createXmlDocument("docSoap", xmltest, createXMLPlanSOAP()); //$NON-NLS-1$
         return RealMetadataFactory.createTransformationMetadata(metadataStore, "soap1");
     }
 	
@@ -1528,7 +1439,6 @@ public class TestXMLProcessor {
         return doc;
     }    
     
-    
     private static MappingElement createXMLPlan1Unformatted( boolean testNillable, int cardinality ) {
 
         MappingElement root = new MappingElement("Catalogs");//$NON-NLS-1$
@@ -1542,7 +1452,7 @@ public class TestXMLProcessor {
         item.setMaxOccurrs(-1);
         item.addAttribute(new MappingAttribute("ItemID", "xmltest.group.items.itemNum")); //$NON-NLS-1$ //$NON-NLS-2$
         item.addChildElement(new MappingElement("Name", "xmltest.group.items.itemName").setNillable(true)); //$NON-NLS-1$ //$NON-NLS-2$
-        item.addChildElement(new MappingElement("Quantity", "xmltest.group.items.itemQuantity")); //$NON-NLS-1$ //$NON-NLS-2$        
+        item.addChildElement(new MappingElement("Quantity", "xmltest.group.items.itemQuantity").setType(DefaultDataTypes.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$        
         return root;                                
     }
 
@@ -2014,7 +1924,7 @@ public class TestXMLProcessor {
         item.setMaxOccurrs(-1);
         item.addAttribute(new MappingAttribute("XXXXX", "xmltest.group.items.itemNum")); //$NON-NLS-1$ //$NON-NLS-2$
         item.addChildElement(new MappingElement("XXXXX", "xmltest.group.items.itemName")); //$NON-NLS-1$ //$NON-NLS-2$
-        item.addChildElement(new MappingElement("XXXXX", "xmltest.group.items.itemQuantity")); //$NON-NLS-1$ //$NON-NLS-2$
+        item.addChildElement(new MappingElement("XXXXX", "xmltest.group.items.itemQuantity").setType(DefaultDataTypes.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
         return doc;                                
     }
     
@@ -2056,7 +1966,7 @@ public class TestXMLProcessor {
 
         MappingSequenceNode sequence = root.addSequenceNode(new MappingSequenceNode());
         sequence.addChildElement(new MappingElement("ID", "xqttest.group.ID")); //$NON-NLS-1$ //$NON-NLS-2$
-        sequence.addChildElement(new MappingElement("code", "xqttest.group.Code")); //$NON-NLS-1$ //$NON-NLS-2$
+        sequence.addChildElement(new MappingElement("code", "xqttest.group.code")); //$NON-NLS-1$ //$NON-NLS-2$
 
         MappingElement supervisor = sequence.addChildElement(new MappingElement("supervisor")); //$NON-NLS-1$
         supervisor.setSource("xqttest.supervisor"); //$NON-NLS-1$
@@ -2065,7 +1975,7 @@ public class TestXMLProcessor {
 
         MappingSequenceNode sequence1 = supervisor.addSequenceNode(new MappingSequenceNode());
         sequence1.addChildElement(new MappingElement("ID", "xqttest.supervisor.ID")); //$NON-NLS-1$ //$NON-NLS-2$
-        sequence1.addChildElement(new MappingElement("code", "xqttest.supervisor.Code")); //$NON-NLS-1$ //$NON-NLS-2$
+        sequence1.addChildElement(new MappingElement("code", "xqttest.supervisor.code")); //$NON-NLS-1$ //$NON-NLS-2$
         
         MappingRecursiveElement group1 = (MappingRecursiveElement)sequence1.addChildElement(new MappingRecursiveElement("group", "xqttest.group")); //$NON-NLS-1$ //$NON-NLS-2$
         group1.setSource("xqttest.group1"); //$NON-NLS-1$
@@ -4107,8 +4017,8 @@ public class TestXMLProcessor {
 
         // check the staging base line (unknown cost)
         // one for staging and for unloading
-        Map stats = XMLProgramUtil.getProgramStats(plan.getOriginalProgram());
-        assertEquals(2, ((List)stats.get(ExecStagingTableInstruction.class)).size());
+        Map<Class<?>, List<ProcessorInstruction>> stats = XMLProgramUtil.getProgramStats(plan.getOriginalProgram());
+        assertEquals(2, stats.get(ExecStagingTableInstruction.class).size());
     }
 
     /**

@@ -86,7 +86,7 @@ public class XMLNodeMappingVisitor extends AbstractSymbolMappingVisitor {
 	    	if (!xml) {
     			return symbol;
 	    	}
-	    	String path = metadata.getFullName(metadataId).toUpperCase();
+	    	String path = metadata.getFullName(metadataId);
 	
     		// Find mapping node for specified path
     		MappingNode node = MappingNode.findNode(rootNode, path); 
@@ -134,7 +134,7 @@ public class XMLNodeMappingVisitor extends AbstractSymbolMappingVisitor {
         try {
             PreOrPostOrderNavigator.doVisit(object, mappingVisitor, PreOrPostOrderNavigator.POST_ORDER, deep);
         } catch (TeiidRuntimeException e) {
-            Throwable child = e.getChild();
+            Throwable child = e.getCause();
             
             if (child instanceof TeiidComponentException) {
                 throw (TeiidComponentException)child;

@@ -539,7 +539,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	
 	private List<Schema> getVisibleSchemas(VDBMetaData vdb, CompositeMetadataStore metadata) {
 		ArrayList<Schema> result = new ArrayList<Schema>(); 
-		for (Schema schema : metadata.getSchemas().values()) {
+		for (Schema schema : metadata.getSchemaList()) {
 			if(vdb.isVisible(schema.getName())) {
 				result.add(schema);
 			}

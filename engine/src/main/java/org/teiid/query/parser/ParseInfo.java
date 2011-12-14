@@ -23,7 +23,6 @@
 package org.teiid.query.parser;
 
 import java.io.Serializable;
-import java.util.Map;
 
 import org.teiid.core.util.PropertiesUtils;
 
@@ -33,8 +32,6 @@ public class ParseInfo implements Serializable{
 	private static final long serialVersionUID = -7323683731955992888L;
     private static final boolean ANSI_QUOTED_DEFAULT = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.ansiQuotedIdentifiers", true); //$NON-NLS-1$
 
-	public Map<String, Integer> nameCounts = null;
-	
     public int referenceCount = 0;
 
     // treat a double quoted variable as variable instead of string 

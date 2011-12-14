@@ -52,7 +52,7 @@ import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
-@SuppressWarnings("nls")
+@SuppressWarnings({"nls", "unchecked"})
 public class TestMaterialization {
 	
 	private TempMetadataAdapter metadata;
@@ -70,8 +70,8 @@ public class TestMaterialization {
 		metadata = new TempMetadataAdapter(actualMetadata, tempStore.getMetadataStore());
 		hdm = new HardcodedDataManager();
 		hdm.addData("SELECT matsrc.x FROM matsrc", new List[] {Arrays.asList((String)null), Arrays.asList("one"), Arrays.asList("two"), Arrays.asList("three")});
-		hdm.addData("SELECT mattable.info.e1, mattable.info.e2 FROM mattable.info", new List[] {Arrays.asList("a", 1), Arrays.asList("a", 2)});
-		hdm.addData("SELECT mattable.info.e2, mattable.info.e1 FROM mattable.info", new List[] {Arrays.asList(1, "a"), Arrays.asList(2, "a")});
+		hdm.addData("SELECT MATTABLE.INFO.E1, MATTABLE.INFO.E2 FROM MATTABLE.INFO", new List[] {Arrays.asList("a", 1), Arrays.asList("a", 2)});
+		hdm.addData("SELECT MATTABLE.INFO.E2, MATTABLE.INFO.E1 FROM MATTABLE.INFO", new List[] {Arrays.asList(1, "a"), Arrays.asList(2, "a")});
 		
 	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
 	    cache.setTupleBufferCache(bm);

@@ -164,7 +164,7 @@ public class TestRuleRaiseNull {
         String sql = "select b.intkey, b.x from (select intkey, intnum as x from bqt1.smalla where 1 = 0 union all select 1 as z, intkey as b from bqt1.smallb) b inner join bqt1.smalla on b.intkey = bqt1.smalla.intkey"; //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(),  
-                                                    new String[]{"SELECT g_0.intkey FROM bqt1.smallb AS g_0, bqt1.smalla AS g_1 WHERE g_1.IntKey = 1"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                                                    new String[]{"SELECT g_0.intkey FROM BQT1.SmallB AS g_0, BQT1.SmallA AS g_1 WHERE g_1.IntKey = 1"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
     
@@ -255,7 +255,7 @@ public class TestRuleRaiseNull {
         String sql = "select max(intkey), intnum from (select intkey, intnum from bqt2.smalla where 1 = 0 union all select intnum, intnum from bqt2.smalla union all select intkey, stringkey from bqt2.smalla) x group by intnum"; //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
-                                                    new String[]{"SELECT MAX(v_0.c_1), v_0.c_0 FROM (SELECT g_1.IntNum AS c_0, g_1.IntNum AS c_1 FROM bqt2.smalla AS g_1 UNION ALL SELECT g_0.StringKey AS c_0, g_0.IntKey AS c_1 FROM bqt2.smalla AS g_0) AS v_0 GROUP BY v_0.c_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                                                    new String[]{"SELECT MAX(v_0.c_1), v_0.c_0 FROM (SELECT convert(g_1.IntNum, string) AS c_0, g_1.IntNum AS c_1 FROM BQT2.SmallA AS g_1 UNION ALL SELECT g_0.StringKey AS c_0, g_0.IntKey AS c_1 FROM BQT2.SmallA AS g_0) AS v_0 GROUP BY v_0.c_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
     

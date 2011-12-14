@@ -23,10 +23,12 @@
 package org.teiid.metadata;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Simple holder for metadata.
@@ -34,7 +36,8 @@ import java.util.Map;
 public class MetadataStore implements Serializable {
 
 	private static final long serialVersionUID = -3130247626435324312L;
-	protected Map<String, Schema> schemas = new LinkedHashMap<String, Schema>();
+	protected Map<String, Schema> schemas = new TreeMap<String, Schema>(String.CASE_INSENSITIVE_ORDER);
+	protected List<Schema> schemaList = new ArrayList<Schema>(); //used for a stable ordering
 	protected Collection<Datatype> datatypes = new LinkedHashSet<Datatype>();
 	
 	public Map<String, Schema> getSchemas() {
@@ -42,7 +45,12 @@ public class MetadataStore implements Serializable {
 	}
 	
 	public void addSchema(Schema schema) {
-		this.schemas.put(schema.getCanonicalName(), schema);
+		this.schemas.put(schema.getName(), schema);
+		this.schemaList.add(schema);
+	}
+	
+	public List<Schema> getSchemaList() {
+		return schemaList;
 	}
 	
 	public void addDatatype(Datatype datatype) {

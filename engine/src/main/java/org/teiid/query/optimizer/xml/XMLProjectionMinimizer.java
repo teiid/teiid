@@ -50,7 +50,7 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SelectSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 
@@ -168,7 +168,7 @@ public class XMLProjectionMinimizer {
 								Map reverseMap = QueryUtil.createSymbolMap(new GroupSymbol(element.getAliasResultName()), 
 										rsInfo.getResultSetName(),
 										ResolverUtil.resolveElementsInGroup(QueryUtil.createResolvedGroup(element.getAliasResultName(), planEnv.getGlobalMetadata()), planEnv.getGlobalMetadata()));
-								Select select = new Select(new ArrayList<SelectSymbol>(elements));
+								Select select = new Select(new ArrayList<Expression>(elements));
 								ExpressionMappingVisitor.mapExpressions(select, reverseMap);
 								rsQuery.setSelect(select);
 							}

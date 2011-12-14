@@ -50,8 +50,6 @@ import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.SelectSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.util.CommandContext;
 
@@ -74,7 +72,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     private int schemaSize;
     
     private Object[] projection;
-    private List<SelectSymbol> originalSelect;
+    private List<Expression> originalSelect;
 	private Object modelId;
     
     protected AccessNode() {
@@ -169,18 +167,18 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		}
 		Query query = (Query)atomicCommand;
 		Select select = query.getSelect();
-		List<SelectSymbol> symbols = select.getSymbols();
+		List<Expression> symbols = select.getSymbols();
 		if (symbols.size() == 1) {
 			return;
 		}
 		boolean shouldProject = false;
 		LinkedHashMap<Expression, Integer> uniqueSymbols = new LinkedHashMap<Expression, Integer>();
 		projection = new Object[symbols.size()];
-		this.originalSelect = new ArrayList<SelectSymbol>(query.getSelect().getSymbols());
+		this.originalSelect = new ArrayList<Expression>(query.getSelect().getSymbols());
 		int i = 0;
 		int j = 0;
-		for (Iterator<SelectSymbol> iter = symbols.iterator(); iter.hasNext(); ) {
-			SingleElementSymbol ss = (SingleElementSymbol) iter.next();
+		for (Iterator<Expression> iter = symbols.iterator(); iter.hasNext(); ) {
+			Expression ss = (Expression) iter.next();
 			Expression ex = SymbolMap.getExpression(ss);
 			if (ex instanceof Constant) {
 				projection[i] = ex;
@@ -210,13 +208,13 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 				Integer index = uniqueSymbols.get(SymbolMap.getExpression(item.getSymbol()));
 				if (index != null) {
 					item.setExpressionPosition(index);
-					item.setSymbol((SingleElementSymbol) select.getSymbols().get(index));
+					item.setSymbol((Expression) select.getSymbols().get(index));
 				}
 			}
 		}
 	}
 	
-	public List<SelectSymbol> getOriginalSelect() {
+	public List<Expression> getOriginalSelect() {
 		return originalSelect;
 	}
 	

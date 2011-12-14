@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import javax.transaction.RollbackException;
 import javax.transaction.Status;
@@ -175,8 +176,8 @@ public class TempTableStore {
     private Map<String, TempTableSynchronization> synchronizations = new ConcurrentHashMap<String, TempTableSynchronization>();
     private TransactionMode transactionMode = TransactionMode.NONE;
 	
-    private TempMetadataStore tempMetadataStore = new TempMetadataStore(new ConcurrentHashMap<String, TempMetadataID>());
-    private Map<String, TempTable> tempTables = new ConcurrentHashMap<String, TempTable>();
+    private TempMetadataStore tempMetadataStore = new TempMetadataStore(new ConcurrentSkipListMap<String, TempMetadataID>(String.CASE_INSENSITIVE_ORDER));
+    private Map<String, TempTable> tempTables = new ConcurrentSkipListMap<String, TempTable>(String.CASE_INSENSITIVE_ORDER);
     private String sessionID;
     private TempTableStore parentTempTableStore;
     

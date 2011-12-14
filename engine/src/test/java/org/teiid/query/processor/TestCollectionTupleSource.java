@@ -30,14 +30,14 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 
 /**
  */
 public class TestCollectionTupleSource {
 
     @Test public void testNullSource() {
-        List<SingleElementSymbol> elements = new ArrayList<SingleElementSymbol>();
+        List<Expression> elements = new ArrayList<Expression>();
         elements.add(new ElementSymbol("x")); //$NON-NLS-1$
         elements.add(new ElementSymbol("y")); //$NON-NLS-1$
         CollectionTupleSource nts = CollectionTupleSource.createNullTupleSource();   

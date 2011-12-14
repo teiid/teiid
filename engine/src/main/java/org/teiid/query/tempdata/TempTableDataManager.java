@@ -151,7 +151,7 @@ public class TempTableDataManager implements ProcessorDataManager {
         	if (!group.isTempGroupSymbol()) {
         		return null;
         	}
-        	final String groupKey = group.getNonCorrelationName().toUpperCase();
+        	final String groupKey = group.getNonCorrelationName();
             final TempTable table = contextStore.getOrCreateTempTable(groupKey, command, bufferManager, true, true, context);
         	if (command instanceof Insert) {
         		Insert insert = (Insert)command;
@@ -183,7 +183,7 @@ public class TempTableDataManager implements ProcessorDataManager {
         }
     	if (command instanceof Create) {
     		Create create = (Create)command;
-    		String tempTableName = create.getTable().getCanonicalName();
+    		String tempTableName = create.getTable().getName();
     		if (contextStore.hasTempTable(tempTableName)) {
                 throw new QueryProcessingException(QueryPlugin.Util.getString("TempTableStore.table_exist_error", tempTableName));//$NON-NLS-1$
             }
@@ -191,13 +191,13 @@ public class TempTableDataManager implements ProcessorDataManager {
             return CollectionTupleSource.createUpdateCountTupleSource(0);	
     	}
     	if (command instanceof Drop) {
-    		String tempTableName = ((Drop)command).getTable().getCanonicalName();
+    		String tempTableName = ((Drop)command).getTable().getName();
     		contextStore.removeTempTableByName(tempTableName, context);
             return CollectionTupleSource.createUpdateCountTupleSource(0);
     	}
     	if (command instanceof AlterTempTable) {
     		AlterTempTable att = (AlterTempTable)command;
-    		TempTable tt = contextStore.getTempTable(att.getTempTable().toUpperCase());
+    		TempTable tt = contextStore.getTempTable(att.getTempTable());
     		Assertion.isNotNull(tt, "Table doesn't exist"); //$NON-NLS-1$
     		tt.setUpdatable(false);
     		if (att.getIndexColumns() != null && tt.getRowCount() > 2*tt.getTree().getPageSize(true)) {
@@ -349,7 +349,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 		if (!group.isTempGroupSymbol()) {
 			return null;
 		}
-		final String tableName = group.getNonCorrelationName().toUpperCase();
+		final String tableName = group.getNonCorrelationName();
 		boolean remapColumns = !tableName.equalsIgnoreCase(group.getName());
 		TempTable table = null;
 		if (group.isGlobalTable()) {
@@ -475,14 +475,18 @@ public class TempTableDataManager implements ProcessorDataManager {
 			String returnElementName, String keyElementName, Object keyValue)
 			throws BlockedException, TeiidComponentException,
 			TeiidProcessingException {
-    	String matTableName = CODE_PREFIX + (codeTableName + ElementSymbol.SEPARATOR + keyElementName + ElementSymbol.SEPARATOR + returnElementName).toUpperCase(); 
+		//we are not using a resolved form of a lookup, so we canonicallize with upper case
+		codeTableName = codeTableName.toUpperCase();
+		keyElementName = keyElementName.toUpperCase();
+		returnElementName = returnElementName.toUpperCase();
+    	String matTableName = CODE_PREFIX + codeTableName + ElementSymbol.SEPARATOR + keyElementName + ElementSymbol.SEPARATOR + returnElementName; 
     	QueryMetadataInterface metadata = context.getMetadata();
 
     	TempMetadataID id = context.getGlobalTableStore().getCodeTableMetadataId(codeTableName,
 				returnElementName, keyElementName, matTableName);
     	
-    	ElementSymbol keyElement = new ElementSymbol(matTableName + ElementSymbol.SEPARATOR + keyElementName);
-    	ElementSymbol returnElement = new ElementSymbol(matTableName + ElementSymbol.SEPARATOR + returnElementName);
+    	ElementSymbol keyElement = new ElementSymbol(keyElementName, new GroupSymbol(matTableName));
+    	ElementSymbol returnElement = new ElementSymbol(returnElementName, new GroupSymbol(matTableName));
     	keyElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + keyElementName))));
     	returnElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + returnElementName))));
     	

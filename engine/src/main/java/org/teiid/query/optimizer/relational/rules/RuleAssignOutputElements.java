@@ -62,7 +62,6 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
@@ -109,7 +108,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
             return plan;
         }
 
-		List<SingleElementSymbol> projectCols = (List<SingleElementSymbol>)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);
+		List<Expression> projectCols = (List<Expression>)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);
 
 		assignOutputElements(plan, projectCols, metadata, capFinder, rules, analysisRecord, context);
 
@@ -136,7 +135,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
      * @param outputElements Output elements needed for this node
      * @param metadata Metadata implementation
      */
-	private void assignOutputElements(PlanNode root, List<SingleElementSymbol> outputElements, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
+	private void assignOutputElements(PlanNode root, List<Expression> outputElements, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
 		throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 
 	    int nodeType = root.getType();
@@ -156,7 +155,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	                root.setProperty(NodeConstants.Info.OUTPUT_COLS, command.getProjectedSymbols());
 	            } else if (checkSymbols) {
 	            	Object modelId = RuleRaiseAccess.getModelIDFromAccess(root, metadata);
-	            	for (SingleElementSymbol symbol : outputElements) {
+	            	for (Expression symbol : outputElements) {
 	                    if(!RuleRaiseAccess.canPushSymbol(symbol, true, modelId, metadata, capFinder, analysisRecord)) {
 	                    	throw new QueryPlannerException(QueryPlugin.Util.getString("RuleAssignOutputElements.couldnt_push_expression", symbol, modelId)); //$NON-NLS-1$
 	                    } 
@@ -168,7 +167,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		    	if (root.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT)) {
 		    		//add missing sort columns
 			    	OrderBy elements = (OrderBy) root.getProperty(NodeConstants.Info.SORT_ORDER);
-			    	outputElements = new ArrayList<SingleElementSymbol>(outputElements);
+			    	outputElements = new ArrayList<Expression>(outputElements);
 			    	boolean hasUnrelated = false;
 			    	for (OrderByItem item : elements.getOrderByItems()) {
 			    		if (item.getExpressionPosition() == -1) {
@@ -188,16 +187,16 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		        assignOutputElements(root.getLastChild(), outputElements, metadata, capFinder, rules, analysisRecord, context);
 		        break;
 		    case NodeConstants.Types.SOURCE: {
-		        outputElements = (List<SingleElementSymbol>)determineSourceOutput(root, outputElements, metadata, capFinder);
+		        outputElements = (List<Expression>)determineSourceOutput(root, outputElements, metadata, capFinder);
 	            root.setProperty(NodeConstants.Info.OUTPUT_COLS, outputElements);
-	            List<SingleElementSymbol> childElements = filterVirtualElements(root, outputElements, metadata);
+	            List<Expression> childElements = filterVirtualElements(root, outputElements, metadata);
 	            assignOutputElements(root.getFirstChild(), childElements, metadata, capFinder, rules, analysisRecord, context);
 		        break;
 		    }
 		    case NodeConstants.Types.SET_OP: {
 		        for (PlanNode childNode : root.getChildren()) {
 		            PlanNode projectNode = NodeEditor.findNodePreOrder(childNode, NodeConstants.Types.PROJECT);
-	                List<SingleElementSymbol> projectCols = (List<SingleElementSymbol>)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);
+	                List<Expression> projectCols = (List<Expression>)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);
 	                assignOutputElements(childNode, projectCols, metadata, capFinder, rules, analysisRecord, context);
 	            }
 	            break;
@@ -210,14 +209,14 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		                execute(intoRoot.getFirstChild(), metadata, capFinder, rules, analysisRecord, context);
 		                return;
 		            }
-	            	List<SingleElementSymbol> projectCols = outputElements;
+	            	List<Expression> projectCols = outputElements;
 	            	boolean modifiedProject = false;
 	            	PlanNode sortNode = NodeEditor.findParent(root, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
 	            	if (sortNode != null && sortNode.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT)) {
 	            		//if this is the initial rule run, remove unrelated order before changing the project cols
 			            if (!finalRun) {
 		            		OrderBy elements = (OrderBy) sortNode.getProperty(NodeConstants.Info.SORT_ORDER);
-		            		projectCols = new ArrayList<SingleElementSymbol>(projectCols);
+		            		projectCols = new ArrayList<Expression>(projectCols);
 		            		for (OrderByItem item : elements.getOrderByItems()) {
 		            			if (item.getExpressionPosition() == -1) {
 		            				projectCols.remove(item.getSymbol());
@@ -241,7 +240,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            	}
 		    	}
 	            
-	            List<SingleElementSymbol> requiredInput = collectRequiredInputSymbols(root);
+	            List<Expression> requiredInput = collectRequiredInputSymbols(root);
 	            //targeted optimization for unnecessary aggregation
 	            if (root.getType() == NodeConstants.Types.GROUP && root.hasBooleanProperty(Info.IS_OPTIONAL) && NodeEditor.findParent(root, NodeConstants.Types.ACCESS) == null) {
 	            	PlanNode old = root;
@@ -279,7 +278,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	                //determine which elements go to each side of the join
 	                for (PlanNode childNode : root.getChildren()) {
 	                    Set<GroupSymbol> filterGroups = FrameUtil.findJoinSourceNode(childNode).getGroups();
-	                    List<SingleElementSymbol> filteredElements = filterElements(requiredInput, filterGroups);
+	                    List<Expression> filteredElements = filterElements(requiredInput, filterGroups);
 
 	                    // Call child recursively
 	                    assignOutputElements(childNode, filteredElements, metadata, capFinder, rules, analysisRecord, context);
@@ -290,17 +289,17 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	}
 
 	public static Set<WindowFunction> getWindowFunctions(
-			List<SingleElementSymbol> projectCols) {
+			List<Expression> projectCols) {
 		LinkedHashSet<WindowFunction> windowFunctions = new LinkedHashSet<WindowFunction>();
-		for (SingleElementSymbol singleElementSymbol : projectCols) {
+		for (Expression singleElementSymbol : projectCols) {
 			AggregateSymbolCollectorVisitor.getAggregates(singleElementSymbol, null, null, null, windowFunctions, null);
 		}
 		return windowFunctions;
 	}
 
-    private List<SingleElementSymbol> filterElements(Collection<? extends SingleElementSymbol> requiredInput, Set<GroupSymbol> filterGroups) {
-        List<SingleElementSymbol> filteredElements = new ArrayList<SingleElementSymbol>();
-        for (SingleElementSymbol element : requiredInput) {
+    private List<Expression> filterElements(Collection<? extends Expression> requiredInput, Set<GroupSymbol> filterGroups) {
+        List<Expression> filteredElements = new ArrayList<Expression>();
+        for (Expression element : requiredInput) {
             if(filterGroups.containsAll(GroupsUsedByElementsVisitor.getGroups(element))) {
                 filteredElements.add(element);
             }
@@ -320,8 +319,8 @@ public final class RuleAssignOutputElements implements OptimizerRule {
      * @throws QueryMetadataException 
      * @throws QueryPlannerException 
      */
-    static List<? extends SingleElementSymbol> determineSourceOutput(PlanNode root,
-                                           List<SingleElementSymbol> outputElements,
+    static List<? extends Expression> determineSourceOutput(PlanNode root,
+                                           List<Expression> outputElements,
                                            QueryMetadataInterface metadata,
                                            CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
         PlanNode virtualRoot = root.getLastChild();
@@ -350,7 +349,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
     		return outputElements;
         }
         OrderBy sortOrder = (OrderBy)sort.getProperty(NodeConstants.Info.SORT_ORDER);
-        List<SingleElementSymbol> topCols = FrameUtil.findTopCols(sort);
+        List<Expression> topCols = FrameUtil.findTopCols(sort);
         
         SymbolMap symbolMap = (SymbolMap)root.getProperty(NodeConstants.Info.SYMBOL_MAP);
         
@@ -386,7 +385,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
      * @return The filtered list of columns for this node (used in recursing tree)
      * @throws QueryPlannerException 
      */
-	static List<SingleElementSymbol> filterVirtualElements(PlanNode sourceNode, List<SingleElementSymbol> outputColumns, QueryMetadataInterface metadata) throws QueryPlannerException {
+	static List<Expression> filterVirtualElements(PlanNode sourceNode, List<Expression> outputColumns, QueryMetadataInterface metadata) throws QueryPlannerException {
 
 		PlanNode virtualRoot = sourceNode.getLastChild();
 
@@ -429,10 +428,10 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 			}
         }
         
-        List<SingleElementSymbol> newCols = null;
+        List<Expression> newCols = null;
         for(int i=allProjects.size()-1; i>=0; i--) {
             PlanNode projectNode = allProjects.get(i);
-            List<SingleElementSymbol> projectCols = (List<SingleElementSymbol>) projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);
+            List<Expression> projectCols = (List<Expression>) projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);
 
             newCols = RelationalNode.projectTuple(filteredIndex, projectCols, true);
             
@@ -442,7 +441,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 					if (filteredIndex[j] != -1) {
 						continue;
 					}
-					SingleElementSymbol ex = (SingleElementSymbol) outputColumns.get(j).clone();
+					Expression ex = (Expression) outputColumns.get(j).clone();
 					ExpressionMappingVisitor.mapExpressions(ex, childMap.asMap());
 					newCols.set(j, ex);
 					filteredIndex[j] = j;
@@ -506,25 +505,25 @@ public final class RuleAssignOutputElements implements OptimizerRule {
      * for instance to create a new element symbol or sort on it, etc.
      * @param node Node to collect for
      */
-	private List<SingleElementSymbol> collectRequiredInputSymbols(PlanNode node) {
+	private List<Expression> collectRequiredInputSymbols(PlanNode node) {
 
-        Set<SingleElementSymbol> requiredSymbols = new LinkedHashSet<SingleElementSymbol>();
-        Set<SingleElementSymbol> createdSymbols = new HashSet<SingleElementSymbol>();
+        Set<Expression> requiredSymbols = new LinkedHashSet<Expression>();
+        Set<Expression> createdSymbols = new HashSet<Expression>();
         
-        List<SingleElementSymbol> outputCols = (List<SingleElementSymbol>) node.getProperty(NodeConstants.Info.OUTPUT_COLS);
+        List<Expression> outputCols = (List<Expression>) node.getProperty(NodeConstants.Info.OUTPUT_COLS);
 
 		switch(node.getType()) {
 			case NodeConstants.Types.PROJECT:
             {
-                List<SingleElementSymbol> projectCols = (List<SingleElementSymbol>) node.getProperty(NodeConstants.Info.PROJECT_COLS);
-                for (SingleElementSymbol ss : projectCols) {
+                List<Expression> projectCols = (List<Expression>) node.getProperty(NodeConstants.Info.PROJECT_COLS);
+                for (Expression ss : projectCols) {
                     if(ss instanceof AliasSymbol) {
                         createdSymbols.add(ss);
                         
                         ss = ((AliasSymbol)ss).getSymbol();
                     }
                     
-                    if (ss instanceof WindowFunction || (ss instanceof ExpressionSymbol && !(ss instanceof AggregateSymbol))) {
+                    if (ss instanceof WindowFunction || ss instanceof ExpressionSymbol) {
                         createdSymbols.add(ss);
                     }
                     boolean symbolRequired = false;
@@ -573,7 +572,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 				Set<ElementSymbol> usedAggregates = new HashSet<ElementSymbol>();
 				
 				// Take credit for creating any aggregates that are needed above
-				for (SingleElementSymbol outputSymbol : outputCols) {
+				for (Expression outputSymbol : outputCols) {
 					if (!(outputSymbol instanceof ElementSymbol)) {
 						continue;
 					}
@@ -621,7 +620,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
         requiredSymbols.addAll(tempRequired);
 */        
         // Add any columns to required that are in this node's output but were not created here
-        for (SingleElementSymbol currentOutputSymbol : outputCols) {
+        for (Expression currentOutputSymbol : outputCols) {
             if(!(createdSymbols.contains(currentOutputSymbol)) ) {
                 requiredSymbols.add(currentOutputSymbol);
             }
@@ -631,15 +630,15 @@ public final class RuleAssignOutputElements implements OptimizerRule {
         //TODO: this should depend upon whether the expressions are deterministic
         if (node.getType() == NodeConstants.Types.PROJECT) {
             Set<Expression> expressions = new HashSet<Expression>();
-            for (Iterator<SingleElementSymbol> iterator = requiredSymbols.iterator(); iterator.hasNext();) {
-                SingleElementSymbol ses = iterator.next();
+            for (Iterator<Expression> iterator = requiredSymbols.iterator(); iterator.hasNext();) {
+                Expression ses = iterator.next();
                 if (!expressions.add(SymbolMap.getExpression(ses))) {
                     iterator.remove();
                 }
             }
         }
         
-        return new ArrayList<SingleElementSymbol>(requiredSymbols);
+        return new ArrayList<Expression>(requiredSymbols);
 	}
 
     /**

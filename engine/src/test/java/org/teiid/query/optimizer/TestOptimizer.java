@@ -1014,7 +1014,7 @@ public class TestOptimizer {
         List bindings = new ArrayList();
         bindings.add("pm1.g2.e1"); //$NON-NLS-1$
         helpPlan("select e1 FROM pm1.g1 WHERE e1 LIKE ?", example1(), bindings, null,  //$NON-NLS-1$
-            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 LIKE PM1.G2.e1" }, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 LIKE pm1.g2.e1" }, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
     }
     
     @Test public void testDefect6517() {
@@ -2106,7 +2106,7 @@ public class TestOptimizer {
             "SELECT MAX(sa.datevalue) FROM bqt1.smalla AS sb " + //$NON-NLS-1$
             "WHERE (sb.intkey = sa.intkey) AND (sa.stringkey = sb.stringkey) ))"; //$NON-NLS-1$
 
-        String sqlOut = "SELECT g_0.intkey FROM bqt1.smalla AS g_0 WHERE (g_0.intkey = 46) AND (g_0.stringkey = '46') AND (g_0.datevalue = (SELECT MAX(g_0.datevalue) FROM bqt1.smalla AS g_1 WHERE (g_1.intkey = g_0.intkey) AND (g_1.stringkey = g_0.stringkey)))"; //$NON-NLS-1$
+        String sqlOut = "SELECT g_0.intkey FROM BQT1.SmallA AS g_0 WHERE (g_0.intkey = 46) AND (g_0.stringkey = '46') AND (g_0.datevalue = (SELECT MAX(g_0.datevalue) FROM BQT1.SmallA AS g_1 WHERE (g_1.intkey = g_0.intkey) AND (g_1.stringkey = g_0.stringkey)))"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sqlIn, 
             RealMetadataFactory.exampleBQTCached(),
@@ -3451,7 +3451,7 @@ public class TestOptimizer {
     }
     
     @Test public void testBQT9500_126() throws Exception {
-        String sql = "SELECT IntKey, LongNum, expr FROM (SELECT IntKey, LongNum, concat(LongNum, 'abc') FROM BQT2.SmallA ) AS x ORDER BY IntKey"; //$NON-NLS-1$
+        String sql = "SELECT IntKey, LongNum, expr FROM (SELECT IntKey, LongNum, concat(LongNum, 'abc') as expr FROM BQT2.SmallA ) AS x ORDER BY IntKey"; //$NON-NLS-1$
         ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
                                       new String[] { 
                                           "SELECT g_0.IntKey AS c_0, g_0.LongNum AS c_1 FROM BQT2.SmallA AS g_0 ORDER BY c_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
@@ -4268,7 +4268,7 @@ public class TestOptimizer {
         ProcessorPlan plan = helpPlan(sql,  
                                       RealMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
-                                      new String[] {"SELECT g_1.longnum, g_2.datevalue, g_0.IntKEy, g_1.IntKEy, g_2.IntKey FROM bqt1.smalla AS g_0, bqt1.smallb AS g_1, bqt1.mediuma AS g_2 WHERE (g_0.StringKey = g_1.StringKey) AND (g_2.IntKey = g_0.IntKey) AND (g_0.IntNum > (SELECT SUM(g_3.IntNum) FROM bqt1.smalla AS g_3))"}, //$NON-NLS-1$ 
+                                      new String[] {"SELECT g_1.longnum, g_2.datevalue, g_0.IntKEy, g_1.IntKEy, g_2.IntKey FROM BQT1.SmallA AS g_0, BQT1.SmallB AS g_1, BQT1.MediumA AS g_2 WHERE (g_0.StringKey = g_1.StringKey) AND (g_2.IntKey = g_0.IntKey) AND (convert(g_0.IntNum, long) > (SELECT SUM(g_3.IntNum) FROM BQT1.SmallA AS g_3))"}, //$NON-NLS-1$ 
                                       ComparisonMode.EXACT_COMMAND_STRING );
 
         checkNodeTypes(plan, new int[] {
@@ -4512,7 +4512,7 @@ public class TestOptimizer {
         RelationalPlan plan = (RelationalPlan)helpPlan(sql,  
                                       RealMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
-                                      new String[] {"SELECT bqt1.smalla.datevalue, bqt1.smalla.intkey, bqt1.smalla.stringkey, bqt1.smalla.objectvalue FROM bqt1.smalla WHERE (bqt1.smalla.intkey = 46) AND (bqt1.smalla.stringkey = '46')"}, //$NON-NLS-1$
+                                      new String[] {"SELECT BQT1.SmallA.datevalue, BQT1.SmallA.intkey, BQT1.SmallA.stringkey, BQT1.SmallA.objectvalue FROM BQT1.SmallA WHERE (BQT1.SmallA.intkey = 46) AND (BQT1.SmallA.stringkey = '46')"}, //$NON-NLS-1$
                                       SHOULD_SUCCEED );
 
         checkNodeTypes(plan, new int[] {
@@ -4538,7 +4538,7 @@ public class TestOptimizer {
         Set<String> actualQueries = getAtomicQueries(subplan);
         
         // Compare atomic queries
-        HashSet<String> expectedQueries = new HashSet<String>(Arrays.asList(new String[] { "SELECT bqt1.smalla.datevalue FROM bqt1.smalla WHERE (bqt1.smalla.intkey = bqt1.smalla.intkey) AND (bqt1.smalla.stringkey = bqt1.smalla.stringkey)"})); //$NON-NLS-1$
+        HashSet<String> expectedQueries = new HashSet<String>(Arrays.asList(new String[] { "SELECT BQT1.SmallA.datevalue FROM BQT1.SmallA WHERE (BQT1.SmallA.intkey = BQT1.SmallA.intkey) AND (BQT1.SmallA.stringkey = BQT1.SmallA.stringkey)"})); //$NON-NLS-1$
         assertEquals("Did not get expected atomic queries for subplan: ", expectedQueries, actualQueries); //$NON-NLS-1$
 
         checkNodeTypes(subplan, new int[] {
@@ -5276,7 +5276,7 @@ public class TestOptimizer {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT g_0.intkey FROM bqt1.smalla AS g_0 ORDER BY g_0.intkey"},  //$NON-NLS-1$
+                                      new String[] {"SELECT g_0.intkey FROM BQT1.SmallA AS g_0 ORDER BY g_0.intkey"},  //$NON-NLS-1$
                                       ComparisonMode.EXACT_COMMAND_STRING );
 
         checkNodeTypes(plan, FULL_PUSHDOWN);
@@ -5396,7 +5396,7 @@ public class TestOptimizer {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT g_2.intkey FROM ((bqt1.SmallA AS g_0 CROSS JOIN bqt1.smalla AS g_1) CROSS JOIN bqt1.mediuma AS g_2) LEFT OUTER JOIN bqt1.mediumb AS g_3 ON g_2.intkey = g_3.intkey"},  //$NON-NLS-1$
+                                      new String[] {"SELECT g_2.intkey FROM ((BQT1.SmallA AS g_0 CROSS JOIN BQT1.SmallA AS g_1) CROSS JOIN BQT1.MediumA AS g_2) LEFT OUTER JOIN BQT1.MediumB AS g_3 ON g_2.intkey = g_3.intkey"},  //$NON-NLS-1$
                                       ComparisonMode.EXACT_COMMAND_STRING );
         
         checkNodeTypes(plan, FULL_PUSHDOWN);        
@@ -5538,7 +5538,7 @@ public class TestOptimizer {
         helpPlan(sql,  
                                       metadata, 
                                       null, capFinder, 
-                                      new String[] {"SELECT g_0.intkey, g_1.IntKey FROM bqt2.smalla AS g_0, bqt2.smalla AS g_1 WHERE g_0.intkey = g_1.IntKey"},  //$NON-NLS-1$ 
+                                      new String[] {"SELECT g_0.intkey, g_1.IntKey FROM BQT2.SmallA AS g_0, BQT2.SmallA AS g_1 WHERE g_0.intkey = g_1.IntKey"},  //$NON-NLS-1$ 
                                       ComparisonMode.EXACT_COMMAND_STRING ); 
              
     } 
@@ -6255,7 +6255,7 @@ public class TestOptimizer {
         String sql = "select a.e1 from (select 1 e1) a, (select e1, 1 as a, x from (select e1, CASE WHEN e1 = 'a' THEN e2 ELSE e3 END as x from pm1.g2) y group by e1, x) b where a.e1 = b.x"; //$NON-NLS-1$
         
         ProcessorPlan plan = helpPlan(sql, metadata, null, capFinder, 
-                                      new String[] {"SELECT v_0.c_0 FROM (SELECT CASE WHEN g_0.e1 = 'a' THEN g_0.e2 ELSE g_0.e3 END AS c_0 FROM pm1.g2 AS g_0 GROUP BY g_0.e1, CASE WHEN g_0.e1 = 'a' THEN g_0.e2 ELSE g_0.e3 END) AS v_0 WHERE v_0.c_0 IN (<dependent values>) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+                                      new String[] {"SELECT v_0.c_0 FROM (SELECT CASE WHEN g_0.e1 = 'a' THEN g_0.e2 ELSE convert(g_0.e3, integer) END AS c_0 FROM pm1.g2 AS g_0 GROUP BY g_0.e1, CASE WHEN g_0.e1 = 'a' THEN g_0.e2 ELSE convert(g_0.e3, integer) END) AS v_0 WHERE v_0.c_0 IN (<dependent values>) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
         
         checkNodeTypes(plan, new int[] {
             0,      // Access
@@ -6451,7 +6451,7 @@ public class TestOptimizer {
      * <p>
      * Related Defects: JBEDSP-1137
      */
-    @Test public void testAmbiguousAliasFunctionInSubQuerySource() {
+    @Test public void testAmbiguousAliasFunctionInSubQuerySource() throws Exception {
         // Create query
     	String sql = "SELECT CONVERT(A.e2, biginteger) AS e2 FROM (" + //$NON-NLS-1$
     	"   SELECT CONVERT(e2, long) AS e2 FROM pm1.g1 AS A" + //$NON-NLS-1$
@@ -6469,8 +6469,8 @@ public class TestOptimizer {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
         helpPlan(sql, metadata, null, capFinder,
-            new String[] {"SELECT CONVERT(CONVERT(e2, long), biginteger) FROM pm1.g1 AS A"}, //$NON-NLS-1$
-            SHOULD_SUCCEED );
+            new String[] {"SELECT CONVERT(CONVERT(g_0.e2, long), biginteger) FROM pm1.g1 AS g_0"}, //$NON-NLS-1$
+            ComparisonMode.EXACT_COMMAND_STRING );
     }
     
     @Test public void testNestedTable() throws Exception {
@@ -6569,7 +6569,7 @@ public class TestOptimizer {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT e1 from pm1.g1 where e1 = e2 and e1 = e3", //$NON-NLS-1$
                                       RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
                                       new String[] {
-                                          "SELECT pm1.g1.e1, pm1.g1.e3 FROM pm1.g1 WHERE pm1.g1.e1 = pm1.g1.e2"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                                          "SELECT pm1.g1.e1, pm1.g1.e3 FROM pm1.g1 WHERE pm1.g1.e1 = convert(pm1.g1.e2, string)"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     
         checkNodeTypes(plan, new int[] {
                 1,      // Access

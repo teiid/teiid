@@ -86,16 +86,6 @@ public class XMLElement implements Expression {
 	}
 
 	@Override
-	public boolean isResolved() {
-		for (Expression arg : content) {
-			if (!arg.isResolved()) {
-				return false;
-			}
-		}
-		return true;
-	}
-	
-	@Override
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}

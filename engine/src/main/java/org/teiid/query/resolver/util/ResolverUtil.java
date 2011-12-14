@@ -303,7 +303,7 @@ public class ResolverUtil {
     public static void resolveOrderBy(OrderBy orderBy, QueryCommand command, QueryMetadataInterface metadata)
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
 
-    	List<SingleElementSymbol> knownElements = command.getProjectedQuery().getSelect().getProjectedSymbols();
+    	List<Expression> knownElements = command.getProjectedQuery().getSelect().getProjectedSymbols();
     	
     	boolean isSimpleQuery = false;
     	List<GroupSymbol> fromClauseGroups = Collections.emptyList();
@@ -321,19 +321,17 @@ public class ResolverUtil {
         List<Expression> expressions = new ArrayList<Expression>(knownElements.size());
 
         for(int i=0; i<knownElements.size(); i++) {
-            SingleElementSymbol knownSymbol = knownElements.get(i);
+            Expression knownSymbol = knownElements.get(i);
             expressions.add(SymbolMap.getExpression(knownSymbol));
-            if (knownSymbol instanceof ExpressionSymbol) {
-                continue;
+            if (knownSymbol instanceof ElementSymbol || knownSymbol instanceof AliasSymbol) {
+                String name = ((Symbol)knownSymbol).getShortName();
+                
+                knownShortNames[i] = name;
             }
-            
-            String name = knownSymbol.getShortName();
-            
-            knownShortNames[i] = name;
         }
 
         for (int i = 0; i < orderBy.getVariableCount(); i++) {
-        	SingleElementSymbol sortKey = orderBy.getVariable(i);
+        	Expression sortKey = orderBy.getVariable(i);
         	if (sortKey instanceof ElementSymbol) {
         		ElementSymbol symbol = (ElementSymbol)sortKey;
         		String groupPart = null;
@@ -344,7 +342,7 @@ public class ResolverUtil {
         		String shortName = symbol.getShortName();
         		if (groupPart == null) {
         			int position = -1;
-    				SingleElementSymbol matchedSymbol = null;
+    				Expression matchedSymbol = null;
     				// walk the SELECT col short names, looking for a match on the current ORDER BY 'short name'
     				for(int j=0; j<knownShortNames.length; j++) {
     					if( !shortName.equalsIgnoreCase( knownShortNames[j] )) {
@@ -370,19 +368,16 @@ public class ResolverUtil {
                         continue;
                     }
         		}
-        	} else if (sortKey instanceof ExpressionSymbol) {
+        	} else if (sortKey instanceof Constant) {
         		// check for legacy positional
-    			ExpressionSymbol es = (ExpressionSymbol)sortKey;
-        		if (es.getExpression() instanceof Constant) {
-            		Constant c = (Constant)es.getExpression();
-        		    int elementOrder = Integer.valueOf(c.getValue().toString()).intValue();
-        		    // adjust for the 1 based index.
-        		    if (elementOrder > knownElements.size() || elementOrder < 1) {
-            		    throw new QueryResolverException(QueryPlugin.Util.getString("SQLParser.non_position_constant", c)); //$NON-NLS-1$
-        		    }
-        		    orderBy.setExpressionPosition(i, elementOrder - 1);
-        		    continue;
-        		}
+        		Constant c = (Constant)sortKey;
+    		    int elementOrder = Integer.valueOf(c.getValue().toString()).intValue();
+    		    // adjust for the 1 based index.
+    		    if (elementOrder > knownElements.size() || elementOrder < 1) {
+        		    throw new QueryResolverException(QueryPlugin.Util.getString("SQLParser.non_position_constant", c)); //$NON-NLS-1$
+    		    }
+    		    orderBy.setExpressionPosition(i, elementOrder - 1);
+    		    continue;
         	}
         	//handle order by expressions        	
         	if (command instanceof SetQuery) {
@@ -469,7 +464,7 @@ public class ResolverUtil {
 	static GroupInfo getGroupInfo(GroupSymbol group,
 			QueryMetadataInterface metadata)
 			throws TeiidComponentException, QueryMetadataException {
-		String key = GroupInfo.CACHE_PREFIX + group.getCanonicalName();
+		String key = GroupInfo.CACHE_PREFIX + group.getName();
 		GroupInfo groupInfo = (GroupInfo)metadata.getFromMetadataCache(group.getMetadataID(), key);
     	
         if (groupInfo == null) {
@@ -482,7 +477,7 @@ public class ResolverUtil {
             for (Object elementID : elementIDs) {
             	String elementName = metadata.getName(elementID);
                 // Form an element symbol from the ID
-                ElementSymbol element = new ElementSymbol(elementName, DataTypeManager.getCanonicalString(StringUtil.toUpperCase(elementName)), group);
+                ElementSymbol element = new ElementSymbol(elementName, group);
                 element.setMetadataID(elementID);
                 element.setType( DataTypeManager.getDataTypeClass(metadata.getElementType(element.getMetadataID())) );
 
@@ -552,7 +547,7 @@ public class ResolverUtil {
         throws TeiidComponentException, QueryResolverException {
         
         if (symbol.isImplicitTempGroupSymbol()) {
-            if (metadata.getMetadataStore().getTempElementElementIDs(symbol.getCanonicalName())==null) {
+            if (metadata.getMetadataStore().getTempElementElementIDs(symbol.getName())==null) {
                 addTempGroup(metadata, symbol, symbols, true);
             }
             ResolverUtil.resolveGroup(symbol, metadata);
@@ -561,11 +556,11 @@ public class ResolverUtil {
 
     public static TempMetadataID addTempGroup(TempMetadataAdapter metadata,
                                     GroupSymbol symbol,
-                                    List<? extends SingleElementSymbol> symbols, boolean tempTable) throws QueryResolverException {
-        HashSet<String> names = new HashSet<String>();
-        for (SingleElementSymbol ses : symbols) {
-            if (!names.add(ses.getShortCanonicalName())) {
-                throw new QueryResolverException(QueryPlugin.Util.getString("ResolverUtil.duplicateName", symbol, ses.getShortName())); //$NON-NLS-1$
+                                    List<? extends Expression> symbols, boolean tempTable) throws QueryResolverException {
+        Set<String> names = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+        for (Expression ses : symbols) {
+            if (!names.add(Symbol.getShortName(ses))) {
+                throw new QueryResolverException(QueryPlugin.Util.getString("ResolverUtil.duplicateName", symbol, Symbol.getShortName(ses))); //$NON-NLS-1$
             }
         }
         
@@ -578,7 +573,7 @@ public class ResolverUtil {
     
     public static TempMetadataID addTempTable(TempMetadataAdapter metadata,
                                      GroupSymbol symbol,
-                                     List<? extends SingleElementSymbol> symbols) throws QueryResolverException {
+                                     List<? extends Expression> symbols) throws QueryResolverException {
         return addTempGroup(metadata, symbol, symbols, true);
     }
 
@@ -592,47 +587,34 @@ public class ResolverUtil {
      */
     public static void resolveNullLiterals(List symbols) {
         for (int i = 0; i < symbols.size(); i++) {
-            SelectSymbol selectSymbol = (SelectSymbol) symbols.get(i);
+            Expression selectSymbol = (Expression) symbols.get(i);
             
-            if (!(selectSymbol instanceof SingleElementSymbol)) {
-                continue;
-            }
-            
-            SingleElementSymbol symbol = (SingleElementSymbol)selectSymbol;
-            
-            setTypeIfNull(symbol, DataTypeManager.DefaultDataClasses.STRING);
+            setTypeIfNull(selectSymbol, DataTypeManager.DefaultDataClasses.STRING);
         }
     }
 
-	public static void setTypeIfNull(SingleElementSymbol symbol,
+	public static void setTypeIfNull(Expression symbol,
 			Class<?> replacement) {
 		if(!DataTypeManager.DefaultDataClasses.NULL.equals(symbol.getType()) && symbol.getType() != null) {
             return;
         }
-		if(symbol instanceof AliasSymbol) {
-            symbol = ((AliasSymbol)symbol).getSymbol();
-        }
-		if(symbol instanceof ExpressionSymbol && !(symbol instanceof AggregateSymbol)) {
-		    ExpressionSymbol exprSymbol = (ExpressionSymbol) symbol;
-		    Expression expr = exprSymbol.getExpression();
-		   	
-		    if(expr instanceof Constant) {                	
-		        exprSymbol.setExpression(new Constant(null, replacement));
-		    } else if (expr instanceof AbstractCaseExpression) {
-		        ((AbstractCaseExpression)expr).setType(replacement);
-		    } else if (expr instanceof ScalarSubquery) {
-		        ((ScalarSubquery)expr).setType(replacement);                                        
-		    } else {
-		    	try {
-					ResolverUtil.setDesiredType(expr, replacement, symbol);
-				} catch (QueryResolverException e) {
-					//cannot happen
-				}
-		    }
-		} else if(symbol instanceof ElementSymbol) {
+		symbol = SymbolMap.getExpression(symbol);
+	    if(symbol instanceof Constant) {                	
+	    	((Constant)symbol).setType(replacement);
+	    } else if (symbol instanceof AbstractCaseExpression) {
+	        ((AbstractCaseExpression)symbol).setType(replacement);
+	    } else if (symbol instanceof ScalarSubquery) {
+	        ((ScalarSubquery)symbol).setType(replacement);                                        
+	    } else if(symbol instanceof ElementSymbol) {
 		    ElementSymbol elementSymbol = (ElementSymbol)symbol;
 	        elementSymbol.setType(replacement);
-		}
+		} else {
+	    	try {
+				ResolverUtil.setDesiredType(symbol, replacement, symbol);
+			} catch (QueryResolverException e) {
+				//cannot happen
+			}
+		}  
 	}
     
     /**
@@ -659,7 +641,7 @@ public class ResolverUtil {
             matchedGroups.addAll(groups);
         } else {
         	for (GroupSymbol group : groups) {
-                String fullName = group.getCanonicalName();
+                String fullName = group.getName();
                 if (nameMatchesGroup(groupContext, matchedGroups, group, fullName)) {
                     if (groupContext.length() == fullName.length()) {
                         return matchedGroups;
@@ -675,7 +657,7 @@ public class ResolverUtil {
                 String actualVdbName = metadata.getVirtualDatabaseName();
 
                 if (actualVdbName != null) {
-                    fullName = actualVdbName.toUpperCase() + ElementSymbol.SEPARATOR + fullName;
+                    fullName = actualVdbName + Symbol.SEPARATOR + fullName;
                     if (nameMatchesGroup(groupContext, matchedGroups, group, fullName)
                         && groupContext.length() == fullName.length()) {
                         return matchedGroups;
@@ -691,7 +673,7 @@ public class ResolverUtil {
     public static boolean nameMatchesGroup(String groupContext,
                                             String fullName) {
         //if there is a name match, make sure that it is the full name or a proper qualifier
-        if (fullName.endsWith(groupContext)) {
+        if (StringUtil.endsWithIgnoreCase(fullName, groupContext)) {
             int matchIndex = fullName.length() - groupContext.length();
             if (matchIndex == 0 || fullName.charAt(matchIndex - 1) == '.') {
                 return true;
@@ -735,7 +717,7 @@ public class ResolverUtil {
 		}
 		String exprTypeName = DataTypeManager.getDataTypeName(exprType);
 	
-		Collection<SingleElementSymbol> projectedSymbols = crit.getCommand().getProjectedSymbols();
+		Collection<Expression> projectedSymbols = crit.getCommand().getProjectedSymbols();
 		if (projectedSymbols.size() != 1){
 	        throw new QueryResolverException("ERR.015.008.0032", QueryPlugin.Util.getString("ERR.015.008.0032", crit.getCommand())); //$NON-NLS-1$ //$NON-NLS-2$
 		}
@@ -821,7 +803,6 @@ public class ResolverUtil {
 	    } 
 	
 	    // If that didn't work, try to strip a vdb name from potentialID
-	    String vdbName = null;
 	    if(groupID == null) {
 	    	String[] parts = potentialID.split("\\.", 2); //$NON-NLS-1$
 	    	if (parts.length > 1 && parts[0].equalsIgnoreCase(metadata.getVirtualDatabaseName())) {
@@ -832,7 +813,6 @@ public class ResolverUtil {
 	            } 
 	            if(groupID != null) {
 	            	potentialID = parts[1];
-	            	vdbName = parts[0];
 	            }
 	        }
 	    }
@@ -854,12 +834,6 @@ public class ResolverUtil {
 			        try {
 			            // get valid GroupID for possibleID - this may throw exceptions if group is invalid
 			            groupID = metadata.getGroupID(potentialID);
-			            //set group full name
-			            if(symbol.getDefinition() != null){
-			            	symbol.setDefinition(potentialID);
-			            }else{
-			            	symbol.setName(potentialID);
-			            }
 			        } catch(QueryMetadataException e) {
 			            // didn't find this group ID
 			        } 
@@ -885,14 +859,12 @@ public class ResolverUtil {
 	    }
 	    // set real metadata ID in the symbol
 	    symbol.setMetadataID(groupID);
-	    if(vdbName != null) {
-	        // reset name or definition to strip vdb name
-	        if(symbol.getDefinition() == null) {
-	            symbol.setName(potentialID);
-	        } else {
-	            symbol.setDefinition(potentialID);
-	        }
-	    }
+	    potentialID = metadata.getFullName(groupID);
+        if(symbol.getDefinition() == null) {
+            symbol.setName(potentialID);
+        } else {
+            symbol.setDefinition(potentialID);
+        }
 	    try {
 	        if (!symbol.isProcedure()) {
 	            symbol.setIsTempTable(metadata.isTemporaryTable(groupID));

@@ -22,18 +22,7 @@
 
 package org.teiid.query.optimizer.relational;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -46,7 +35,6 @@ import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 
 /**
@@ -114,7 +102,7 @@ public class PartitionAnalyzer {
 	}
 	
 	private static Map<ElementSymbol, Set<Constant>> extractPartitionInfo(Query query, List<ElementSymbol> projectedSymbols) {
-		List<SingleElementSymbol> projected = query.getSelect().getProjectedSymbols();
+		List<Expression> projected = query.getSelect().getProjectedSymbols();
 		List<Criteria> crits = Criteria.separateCriteriaByAnd(query.getCriteria());
 		Map<Expression, Set<Constant>> inMap = new HashMap<Expression, Set<Constant>>();
 		for (Criteria criteria : crits) {

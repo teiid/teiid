@@ -48,7 +48,7 @@ import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 
 /**
@@ -66,7 +66,7 @@ class IndexInfo {
 	List<Criteria> nonCoveredCriteria = new LinkedList<Criteria>();
 	List<Criteria> coveredCriteria = new LinkedList<Criteria>();
 	
-	public IndexInfo(TempTable table, final List<? extends SingleElementSymbol> projectedCols, final Criteria condition, OrderBy orderBy, boolean primary) {
+	public IndexInfo(TempTable table, final List<? extends Expression> projectedCols, final Criteria condition, OrderBy orderBy, boolean primary) {
 		this.table = table;
 		if (primary || this.table.getColumnMap().keySet().containsAll(projectedCols)) {
 			covering = true;

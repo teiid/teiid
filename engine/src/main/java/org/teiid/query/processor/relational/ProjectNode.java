@@ -41,14 +41,13 @@ import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.util.CommandContext;
 
 
 public class ProjectNode extends SubqueryAwareRelationalNode {
 
-	private List<? extends SingleElementSymbol> selectSymbols;
+	private List<? extends Expression> selectSymbols;
 
     // Derived element lookup map
     private Map elementMap;
@@ -79,11 +78,11 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
      * return List of select symbols
      * @return List of select symbols
      */
-    public List<? extends SingleElementSymbol> getSelectSymbols() {
+    public List<? extends Expression> getSelectSymbols() {
         return this.selectSymbols;
     }
 
-	public void setSelectSymbols(List<? extends SingleElementSymbol> symbols) {
+	public void setSelectSymbols(List<? extends Expression> symbols) {
 		this.selectSymbols = symbols;
 	}
 	
@@ -100,7 +99,7 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
     	Arrays.fill(this.projectionIndexes, -1);
     	
     	this.expressions = new ArrayList<Expression>(this.selectSymbols.size());
-    	for (SingleElementSymbol ses : this.selectSymbols) {
+    	for (Expression ses : this.selectSymbols) {
 			this.expressions.add(SymbolMap.getExpression(ses));
 		}
         //in the case of select with no from, there is no child node
@@ -120,7 +119,7 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
         // 3. order of input values == order of output values
         needsProject = childElements.size() != getElements().size();
         for(int i=0; i<selectSymbols.size(); i++) {
-            SingleElementSymbol symbol = selectSymbols.get(i);
+            Expression symbol = selectSymbols.get(i);
             
             if(symbol instanceof AliasSymbol) {
                 Integer index = (Integer) elementMap.get(symbol);

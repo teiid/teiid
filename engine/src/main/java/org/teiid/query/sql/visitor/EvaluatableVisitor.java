@@ -42,6 +42,7 @@ import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
@@ -113,6 +114,10 @@ public class EvaluatableVisitor extends LanguageVisitor {
     }
     
     public void visit(ExpressionSymbol obj) {
+		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
+    }
+    
+    public void visit(AliasSymbol obj) {
 		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
     }
     

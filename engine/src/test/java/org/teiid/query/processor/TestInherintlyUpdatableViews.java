@@ -46,7 +46,7 @@ public class TestInherintlyUpdatableViews {
 	@Test public void testUpdatePassThrough() throws Exception {
 		String userSql = "update vm1.gx set e1 = e2"; //$NON-NLS-1$
     	String viewSql = "select * from pm1.g1 where e3 < 5";
-    	String expectedSql = "UPDATE pm1.g1 SET e1 = pm1.g1.e2 WHERE e3 < 5";
+    	String expectedSql = "UPDATE pm1.g1 SET e1 = convert(pm1.g1.e2, string) WHERE convert(e3, integer) < 5";
         helpTest(userSql, viewSql, expectedSql, null);	
 	}
 
@@ -71,14 +71,14 @@ public class TestInherintlyUpdatableViews {
 	@Test public void testUpdatePassThroughWithAlias() throws Exception {
 		String userSql = "update vm1.gx set e1 = e2"; //$NON-NLS-1$
     	String viewSql = "select * from pm1.g1 as x where e3 < 5";
-    	String expectedSql = "UPDATE pm1.g1 SET e1 = pm1.g1.e2 WHERE e3 < 5";
+    	String expectedSql = "UPDATE pm1.g1 SET e1 = convert(pm1.g1.e2, string) WHERE convert(e3, integer) < 5";
         helpTest(userSql, viewSql, expectedSql, null);	
 	}
 	
 	@Test public void testDeletePassThrough() throws Exception {
 		String userSql = "delete from vm1.gx where e1 = e2"; //$NON-NLS-1$
     	String viewSql = "select * from pm1.g1 where e3 < 5";
-        String expectedSql = "DELETE FROM pm1.g1 WHERE (pm1.g1.e1 = pm1.g1.e2) AND (e3 < 5)";
+        String expectedSql = "DELETE FROM pm1.g1 WHERE (pm1.g1.e1 = convert(pm1.g1.e2, string)) AND (convert(e3, integer) < 5)";
         helpTest(userSql, viewSql, expectedSql, null);
 	}
 	
@@ -113,10 +113,10 @@ public class TestInherintlyUpdatableViews {
 		String viewSql = "select g2.* from pm1.g1 inner join pm1.g2 on g1.e1 = g2.e1";
 		
 		HardcodedDataManager dm = new HardcodedDataManager();
-        dm.addData("SELECT g_1.e2, g_1.e2 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_1.e3 IS NULL)", new List[] {Arrays.asList(1, 1)});
-        dm.addData("UPDATE pm1.g2 SET e1 = pm1.g2.e2 WHERE pm1.g2.e2 = 1", new List[] {Arrays.asList(1)});
+        dm.addData("SELECT convert(g_1.e2, string), g_1.e2 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_1.e3 IS NULL)", new List[] {Arrays.asList("1", 1)});
+        dm.addData("UPDATE pm1.g2 SET e1 = convert(pm1.g2.e2, string) WHERE pm1.g2.e2 = 1", new List[] {Arrays.asList(1)});
         
-		helpTest(userSql, viewSql, "CREATE VIRTUAL PROCEDURE\nBEGIN ATOMIC\nDECLARE integer VARIABLES.ROWS_UPDATED = 0;\nLOOP ON (SELECT pm1.g2.e2 AS s_0, pm1.g2.e2 AS s_1 FROM pm1.g1 INNER JOIN pm1.g2 ON g1.e1 = g2.e1 WHERE pm1.g2.e3 IS NULL) AS X\nBEGIN\nUPDATE pm1.g2 SET e1 = pm1.g2.e2 WHERE pm1.g2.e2 = X.s_1;\nVARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\nEND\nSELECT VARIABLES.ROWS_UPDATED;\nEND",
+		helpTest(userSql, viewSql, "CREATE VIRTUAL PROCEDURE\nBEGIN ATOMIC\nDECLARE integer VARIABLES.ROWS_UPDATED = 0;\nLOOP ON (SELECT convert(pm1.g2.e2, string) AS s_0, pm1.g2.e2 AS s_1 FROM pm1.g1 INNER JOIN pm1.g2 ON g1.e1 = g2.e1 WHERE pm1.g2.e3 IS NULL) AS X\nBEGIN\nUPDATE pm1.g2 SET e1 = convert(pm1.g2.e2, string) WHERE pm1.g2.e2 = X.s_1;\nVARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\nEND\nSELECT VARIABLES.ROWS_UPDATED;\nEND",
 				dm);
 	}
 	

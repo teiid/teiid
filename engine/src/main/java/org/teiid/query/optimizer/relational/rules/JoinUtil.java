@@ -153,7 +153,7 @@ public class JoinUtil {
                                           Expression expr) {
         Expression simplifiedExpression = (Expression)replaceWithNullValues(innerGroups, expr);
         try {
-            simplifiedExpression = QueryRewriter.rewriteExpression(simplifiedExpression, null, null, metadata);
+            simplifiedExpression = QueryRewriter.rewriteExpression(simplifiedExpression, null, metadata);
         } catch (TeiidException err) {
             //log the exception
             return true;

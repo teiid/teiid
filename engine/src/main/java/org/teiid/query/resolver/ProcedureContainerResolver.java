@@ -52,8 +52,8 @@ import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 
 
@@ -206,11 +206,11 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         procCommand.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(group, metadata, procCommand.getType()));
     }
 
-    public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends SingleElementSymbol> symbols) {
+    public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends Expression> symbols) {
     	return addScalarGroup(name, metadata, externalGroups, symbols, true);
     }
     
-	public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends SingleElementSymbol> symbols, boolean updatable) {
+	public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends Expression> symbols, boolean updatable) {
 		boolean[] updateArray = new boolean[symbols.size()];
 		if (updatable) {
 			Arrays.fill(updateArray, true);
@@ -218,7 +218,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 		return addScalarGroup(name, metadata, externalGroups, symbols, updateArray);
 	}
 	
-	public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends SingleElementSymbol> symbols, boolean[] updatable) {
+	public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends Expression> symbols, boolean[] updatable) {
 		GroupSymbol variables = new GroupSymbol(name);
 	    externalGroups.addGroup(variables);
 	    TempMetadataID tid = metadata.addTempGroup(name, symbols);
@@ -260,7 +260,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 			cupc.setVirtualGroup(container);
 
 			if (type == Command.TYPE_STORED_PROCEDURE) {
-				StoredProcedureInfo info = metadata.getStoredProcedureInfoForProcedure(container.getCanonicalName());
+				StoredProcedureInfo info = metadata.getStoredProcedureInfoForProcedure(container.getName());
 		        // Create temporary metadata that defines a group based on either the stored proc
 		        // name or the stored query name - this will be used later during planning
 		        String procName = info.getProcedureCallableName();
@@ -281,7 +281,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 			}
 		}
 		
-	    QueryResolver.setChildMetadata(currentCommand, childMetadata.getData(), externalGroups);
+	    QueryResolver.setChildMetadata(currentCommand, childMetadata, externalGroups);
 	}
 
 }

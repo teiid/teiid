@@ -59,10 +59,11 @@ import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.MultipleElementSymbol;
-import org.teiid.query.sql.symbol.SelectSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
@@ -282,7 +283,7 @@ public class XMLQueryResolver implements CommandResolver {
 		 */
 		MappingDocument doc = (MappingDocument) metadata.getMappingNode(docGroup.getMetadataID());
 		
-		final String prefix = group.getNonCorrelationName() + ElementSymbol.SEPARATOR;
+		final String prefix = group.getNonCorrelationName() + Symbol.SEPARATOR;
 
         doc.acceptVisitor(new Navigator(true, new MappingVisitor() {
         	@Override
@@ -323,7 +324,7 @@ public class XMLQueryResolver implements CommandResolver {
 
 		List elements = select.getSymbols();
 		for (int i = 0; i < elements.size(); i++) {
-			SelectSymbol ss = (SelectSymbol) elements.get(i);
+			Expression ss = (Expression) elements.get(i);
 
 			if (ss instanceof ElementSymbol) {
 				// Here we make an assumption that: all elements named with "xml" must use qualified name
@@ -502,7 +503,6 @@ public class XMLQueryResolver implements CommandResolver {
         String name = elem.getOutputName();
         // Resolve based on exact match
         elem.setShortName(exactMatch.getShortName());
-        elem.setShortCanonicalName(exactMatch.getShortCanonicalName());
         elem.setMetadataID(exactMatch.getMetadataID());
         elem.setType(exactMatch.getType());
         elem.setGroupSymbol(exactMatch.getGroupSymbol());

@@ -51,9 +51,6 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 
-
-/**
- */
 @SuppressWarnings({"nls", "unchecked"})
 public class TestMetaDataProcessor {
 	
@@ -89,7 +86,7 @@ public class TestMetaDataProcessor {
     }
     
     @Test public void testSimpleQuery() throws Exception {
-        Map[] metadata = helpGetMetadata("SELECT e1 FROM pm1.g1", RealMetadataFactory.example1Cached(), RealMetadataFactory.example1VDB()); //$NON-NLS-1$
+        Map[] metadata = helpGetMetadata("SELECT pm1.g1.e1 FROM pm1.g1", RealMetadataFactory.example1Cached(), RealMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNotNull(metadata);
         assertEquals(1, metadata.length);
         assertEquals("e1", metadata[0].get(ResultsMetadataConstants.ELEMENT_NAME)); //$NON-NLS-1$
@@ -185,7 +182,7 @@ public class TestMetaDataProcessor {
         MetadataResult response = helpTestQuery(metadata, sql, TestMetaDataProcessor.examplePrivatePhysicalModelVDB());
         helpCheckNumericAttributes(response, 0, 21, 19, 4);
         assertEquals("e1", response.getColumnMetadata()[0].get(ResultsMetadataConstants.ELEMENT_NAME)); //$NON-NLS-1$
-        assertEquals("win_min", response.getColumnMetadata()[0].get(ResultsMetadataConstants.ELEMENT_LABEL)); //$NON-NLS-1$
+        assertEquals("expr1", response.getColumnMetadata()[0].get(ResultsMetadataConstants.ELEMENT_LABEL)); //$NON-NLS-1$
     }
 
     @Test public void testMetadataGenerationForAllTypes() throws Exception {

@@ -68,7 +68,7 @@ public class TestResultSetMetadata extends AbstractMMQueryTestCase {
     @Test public void testCount()  throws Exception {
     	String[] expected = {
     		    "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName",	 //$NON-NLS-1$
-    		    "count	4	integer	java.lang.Integer	1	null	null	PartsSupplier" //$NON-NLS-1$
+    		    "expr1	4	integer	java.lang.Integer	1	null	null	PartsSupplier" //$NON-NLS-1$
     	};
     	executeTest("select count(*) from parts where 1=0", expected); //$NON-NLS-1$
     }
@@ -87,10 +87,10 @@ public class TestResultSetMetadata extends AbstractMMQueryTestCase {
     @Test public void testTempGroupStar()  throws Exception {
     	String[] expected = { 
 		    "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName",	 //$NON-NLS-1$
-		    "PART_ID	12	string	java.lang.String	0	FOO	null	PartsSupplier", //$NON-NLS-1$
-		    "PART_NAME	12	string	java.lang.String	1	FOO	null	PartsSupplier", //$NON-NLS-1$
-		    "PART_COLOR	12	string	java.lang.String	1	FOO	null	PartsSupplier", //$NON-NLS-1$
-		    "PART_WEIGHT	12	string	java.lang.String	1	FOO	null	PartsSupplier" //$NON-NLS-1$
+		    "PART_ID	12	string	java.lang.String	0	foo	null	PartsSupplier", //$NON-NLS-1$
+		    "PART_NAME	12	string	java.lang.String	1	foo	null	PartsSupplier", //$NON-NLS-1$
+		    "PART_COLOR	12	string	java.lang.String	1	foo	null	PartsSupplier", //$NON-NLS-1$
+		    "PART_WEIGHT	12	string	java.lang.String	1	foo	null	PartsSupplier" //$NON-NLS-1$
     	};
     	executeTest("select * from (select * from parts) foo where 1=0", expected); //$NON-NLS-1$
     }
@@ -98,7 +98,7 @@ public class TestResultSetMetadata extends AbstractMMQueryTestCase {
     @Test public void testCountAndElement()  throws Exception {
     	String[] expected = {
 	        "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName",	 //$NON-NLS-1$
-	        "count	4	integer	java.lang.Integer	1	null	null	PartsSupplier", //$NON-NLS-1$
+	        "expr1	4	integer	java.lang.Integer	1	null	null	PartsSupplier", //$NON-NLS-1$
 	        "PART_NAME	12	string	java.lang.String	1	PARTSSUPPLIER.PARTS	PartsSupplier	PartsSupplier" //$NON-NLS-1$
     	};
     	executeTest("select count(*), part_name from parts where 1=0 group by part_name", expected); //$NON-NLS-1$
@@ -118,7 +118,7 @@ public class TestResultSetMetadata extends AbstractMMQueryTestCase {
     @Test public void testCount_PreparedStatement()  throws Exception {
     	String[] expected = {
 	        "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName", //$NON-NLS-1$
-	        "count	4	integer	java.lang.Integer	1	null	null	PartsSupplier" //$NON-NLS-1$
+	        "expr1	4	integer	java.lang.Integer	1	null	null	PartsSupplier" //$NON-NLS-1$
     	};
     	executePreparedTest("select count(*) from parts where 1=0", expected); //$NON-NLS-1$
     }
@@ -126,7 +126,7 @@ public class TestResultSetMetadata extends AbstractMMQueryTestCase {
     @Test public void testCountAndElement_PreparedStatement()  throws Exception {
     	String[] expected = {
 	        "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName", //$NON-NLS-1$
-	        "count	4	integer	java.lang.Integer	1	null	null	PartsSupplier", //$NON-NLS-1$
+	        "expr1	4	integer	java.lang.Integer	1	null	null	PartsSupplier", //$NON-NLS-1$
 	        "PART_NAME	12	string	java.lang.String	1	PARTSSUPPLIER.PARTS	PartsSupplier	PartsSupplier" //$NON-NLS-1$
     	};
     	executePreparedTest("select count(*), part_name from parts where 1=0 group by part_name", expected); //$NON-NLS-1$

@@ -802,7 +802,7 @@ public class TestDependentJoins {
             "SELECT max(a.stringkey) from bqt1.smalla a, bqt2.smalla a2, bqt1.smalla a1 where a.intnum = a2.intnum and a1.stringnum = a2.stringnum and a.floatnum = a1.floatnum",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT g_1.stringnum AS c_0, g_0.intnum AS c_1, MAX(g_0.stringkey) AS c_2 FROM bqt1.smalla AS g_0, bqt1.smalla AS g_1 WHERE g_0.floatnum = g_1.floatnum GROUP BY g_1.stringnum, g_0.intnum ORDER BY c_0, c_1", "SELECT DISTINCT g_0.stringnum AS c_0, g_0.intnum AS c_1 FROM bqt2.smalla AS g_0 WHERE (g_0.stringnum IN (<dependent values>)) AND (g_0.intnum IN (<dependent values>)) ORDER BY c_0, c_1"},
+            new String[] {"SELECT g_1.stringnum AS c_0, g_0.intnum AS c_1, MAX(g_0.stringkey) AS c_2 FROM BQT1.SmallA AS g_0, BQT1.SmallA AS g_1 WHERE g_0.floatnum = g_1.floatnum GROUP BY g_1.stringnum, g_0.intnum ORDER BY c_0, c_1", "SELECT DISTINCT g_0.stringnum AS c_0, g_0.intnum AS c_1 FROM BQT2.SmallA AS g_0 WHERE (g_0.stringnum IN (<dependent values>)) AND (g_0.intnum IN (<dependent values>)) ORDER BY c_0, c_1"},
             TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {

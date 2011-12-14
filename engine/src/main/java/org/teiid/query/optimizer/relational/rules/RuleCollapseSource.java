@@ -55,26 +55,7 @@ import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.CompoundCriteria;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.From;
-import org.teiid.query.sql.lang.FromClause;
-import org.teiid.query.sql.lang.GroupBy;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.JoinPredicate;
-import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.Limit;
-import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.OrderByItem;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.lang.SubqueryFromClause;
-import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
@@ -84,7 +65,6 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
@@ -169,7 +149,7 @@ public final class RuleCollapseSource implements OptimizerRule {
 			return;
 		}
 		// ensure that all columns are comparable - they might not be if there is an intermediate project
-		for (SingleElementSymbol ses : queryCommand.getProjectedSymbols()) {
+		for (Expression ses : queryCommand.getProjectedSymbols()) {
 			if (DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(ses.getType()))) {
 				return;
 			}
@@ -239,7 +219,7 @@ public final class RuleCollapseSource implements OptimizerRule {
         }
 		Query query = new Query();
         Select select = new Select();
-        List<SingleElementSymbol> columns = (List<SingleElementSymbol>)node.getProperty(NodeConstants.Info.OUTPUT_COLS);
+        List<Expression> columns = (List<Expression>)node.getProperty(NodeConstants.Info.OUTPUT_COLS);
         prepareSubqueries(ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(columns));
         select.addSymbols(columns);
         query.setSelect(select);
@@ -498,7 +478,7 @@ public final class RuleCollapseSource implements OptimizerRule {
 		OrderBy orderBy = (OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER);
 		query.setOrderBy(orderBy);
 		if (query instanceof Query) {
-			List<SingleElementSymbol> cols = query.getProjectedSymbols();
+			List<Expression> cols = query.getProjectedSymbols();
 			for (OrderByItem item : orderBy.getOrderByItems()) {
 				item.setExpressionPosition(cols.indexOf(item.getSymbol()));
 			}
@@ -613,13 +593,8 @@ public final class RuleCollapseSource implements OptimizerRule {
 	        }
 	    }
 	    Select innerSelect = new Select();
-	    int index = 0;
 	    for (Expression expr : newSelectColumns) {
-	        if (expr instanceof SingleElementSymbol) {
-	            innerSelect.addSymbol((SingleElementSymbol)expr);
-	        } else {
-	            innerSelect.addSymbol(new ExpressionSymbol("EXPR" + index++ , expr)); //$NON-NLS-1$
-	        }
+            innerSelect.addSymbol(expr);
 	    }
 	    query.setSelect(innerSelect);
 	    Query outerQuery = null;
@@ -628,9 +603,9 @@ public final class RuleCollapseSource implements OptimizerRule {
 	    } catch (TeiidException err) {
 	        throw new TeiidRuntimeException(err);
 	    }
-	    Iterator<SingleElementSymbol> iter = outerQuery.getSelect().getProjectedSymbols().iterator();
-	    HashMap<Expression, SingleElementSymbol> expressionMap = new HashMap<Expression, SingleElementSymbol>();
-	    for (SingleElementSymbol symbol : query.getSelect().getProjectedSymbols()) {
+	    Iterator<Expression> iter = outerQuery.getSelect().getProjectedSymbols().iterator();
+	    HashMap<Expression, Expression> expressionMap = new HashMap<Expression, Expression>();
+	    for (Expression symbol : query.getSelect().getProjectedSymbols()) {
 	        expressionMap.put(SymbolMap.getExpression(symbol), iter.next());
 	    }
 	    ExpressionMappingVisitor.mapExpressions(groupBy, expressionMap);

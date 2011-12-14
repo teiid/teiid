@@ -38,7 +38,8 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 
@@ -208,12 +209,12 @@ public class AnalysisRecord {
 	 * @param projectedSymbols The list of SingleElementSymbol projected from a plan or node
 	 * @return List of output columns for sending to the client as part of the plan
 	 */                
-	public static List<String> getOutputColumnProperties(List<? extends SingleElementSymbol> projectedSymbols) {
+	public static List<String> getOutputColumnProperties(List<? extends Expression> projectedSymbols) {
 	    if(projectedSymbols != null) {
 	        List<String> outputCols = new ArrayList<String>(projectedSymbols.size());
 	        for(int i=0; i<projectedSymbols.size() ; i++) {
-	            SingleElementSymbol symbol = projectedSymbols.get(i);
-	            outputCols.add(symbol.getShortName() + " (" + DataTypeManager.getDataTypeName(symbol.getType()) + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+	            Expression symbol = projectedSymbols.get(i);
+	            outputCols.add(Symbol.getShortName(symbol) + " (" + DataTypeManager.getDataTypeName(symbol.getType()) + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 	        }
 	        return outputCols;
 	    }

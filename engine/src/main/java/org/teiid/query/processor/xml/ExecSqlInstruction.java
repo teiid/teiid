@@ -75,7 +75,7 @@ public class ExecSqlInstruction extends ProcessorInstruction {
 			XMLContext context) throws TeiidComponentException {
 		PlanExecutor executor = context.getResultExecutor(resultSetName);
         if (executor == null) {
-            executor = env.createResultExecutor(resultSetName, info);
+            executor = env.createResultExecutor(info);
             context.setResultExecutor(resultSetName, executor);
         }
 		return executor;

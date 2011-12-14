@@ -25,6 +25,7 @@ package org.teiid.metadata;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.teiid.connector.DataPlugin;
 
@@ -36,27 +37,27 @@ public class Schema extends AbstractMetadataRecord {
     private boolean isVisible = true;
     private String primaryMetamodelUri = "http://www.metamatrix.com/metamodels/Relational"; //$NON-NLS-1$
     
-    private Map<String, Table> tables = new LinkedHashMap<String, Table>();
-	private Map<String, Procedure> procedures = new LinkedHashMap<String, Procedure>();
-	private Map<String, FunctionMethod> functions = new LinkedHashMap<String, FunctionMethod>();
+    private Map<String, Table> tables = new TreeMap<String, Table>(String.CASE_INSENSITIVE_ORDER);
+	private Map<String, Procedure> procedures = new TreeMap<String, Procedure>(String.CASE_INSENSITIVE_ORDER);
+	private Map<String, FunctionMethod> functions = new TreeMap<String, FunctionMethod>(String.CASE_INSENSITIVE_ORDER);
 	
 	public void addTable(Table table) {
 		table.setParent(this);
-		if (this.tables.put(table.getCanonicalName(), table) != null) {
+		if (this.tables.put(table.getName(), table) != null) {
 			throw new DuplicateRecordException(DataPlugin.Util.getString("Schema.duplicate_table", table.getName())); //$NON-NLS-1$
 		}
 	}
 	
 	public void addProcedure(Procedure procedure) {
 		procedure.setParent(this);
-		if (this.procedures.put(procedure.getCanonicalName(), procedure) != null) {
+		if (this.procedures.put(procedure.getName(), procedure) != null) {
 			throw new DuplicateRecordException(DataPlugin.Util.getString("Schema.duplicate_procedure", procedure.getName())); //$NON-NLS-1$
 		}
 	}
 	
 	public void addFunction(FunctionMethod function) {
 		function.setParent(this);
-		if (this.functions.put(function.getCanonicalName(), function) != null) {
+		if (this.functions.put(function.getName(), function) != null) {
 			throw new DuplicateRecordException(DataPlugin.Util.getString("Schema.duplicate_function", function.getName())); //$NON-NLS-1$
 		}
 	}	

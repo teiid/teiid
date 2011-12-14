@@ -46,7 +46,6 @@ import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.util.CommandContext;
 
 
@@ -54,7 +53,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	
 	static class NodeData {
 		int nodeID;
-		List<? extends SingleElementSymbol> elements;
+		List<? extends Expression> elements;
 		Number estimateNodeCardinality;
 		Number setSizeEstimate;
 		Number depAccessEstimate;
@@ -166,16 +165,16 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         }
     }
 
-	public void setElements(List<? extends SingleElementSymbol> elements) {
+	public void setElements(List<? extends Expression> elements) {
 		this.data.elements = elements;
 	}
 	
 	@Override
-	public List<? extends SingleElementSymbol> getOutputElements() {
+	public List<? extends Expression> getOutputElements() {
 		return getElements();
 	}
 
-	public List<? extends SingleElementSymbol> getElements() {
+	public List<? extends Expression> getElements() {
 		return this.data.elements;
 	}
     	
@@ -403,9 +402,9 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         Map lookupMap = new HashMap();
         for(int i=0; i<elements.size(); i++) {
             Object element = elements.get(i);
-            lookupMap.put(element, new Integer(i));
+            lookupMap.put(element, i);
             if (element instanceof AliasSymbol) {
-                lookupMap.put(((AliasSymbol)element).getSymbol(), new Integer(i));
+                lookupMap.put(((AliasSymbol)element).getSymbol(), i);
             }
         }
         return lookupMap;

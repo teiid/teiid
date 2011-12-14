@@ -65,10 +65,6 @@ public class MappingDocument extends MappingBaseNode {
         return name;
     }
     
-    public String getCanonicalName() {
-        return name.toUpperCase();
-    }
-        
     public MappingBaseNode getRootNode() {
         return root;
     }

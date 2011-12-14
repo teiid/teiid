@@ -48,7 +48,6 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 
 /**
@@ -390,10 +389,10 @@ public class UpdateValidator {
     	
     	updateInfo.view = query;
     	
-    	List<SingleElementSymbol> projectedSymbols = query.getSelect().getProjectedSymbols();
+    	List<Expression> projectedSymbols = query.getSelect().getProjectedSymbols();
     	
     	for (int i = 0; i < projectedSymbols.size(); i++) {
-            SingleElementSymbol symbol = projectedSymbols.get(i);
+            Expression symbol = projectedSymbols.get(i);
             Expression ex = SymbolMap.getExpression(symbol);
             
             if (!metadata.elementSupports(viewSymbols.get(i).getMetadataID(), SupportConstants.Element.UPDATE)) {
@@ -401,7 +400,7 @@ public class UpdateValidator {
             }
             if (ex instanceof ElementSymbol) {
             	ElementSymbol es = (ElementSymbol)ex;
-            	String groupName = es.getGroupSymbol().getCanonicalName();
+            	String groupName = es.getGroupSymbol().getName();
         		UpdateMapping info = updateInfo.updatableGroups.get(groupName);
         		if (es.getGroupSymbol().getDefinition() != null) {
             		ElementSymbol clone = es.clone();
@@ -447,7 +446,7 @@ public class UpdateValidator {
 			}
 		} else {
 			for (GroupSymbol groupSymbol : allGroups) {
-				UpdateMapping info = updateInfo.updatableGroups.get(groupSymbol.getCanonicalName());
+				UpdateMapping info = updateInfo.updatableGroups.get(groupSymbol.getName());
 				if (info == null) {
 					continue; // not projected
 				}
@@ -486,7 +485,7 @@ public class UpdateValidator {
     }
 
     private void setUpdateFlags(GroupSymbol groupSymbol) throws QueryMetadataException, TeiidComponentException {
-    	UpdateMapping info = updateInfo.updatableGroups.get(groupSymbol.getCanonicalName());
+    	UpdateMapping info = updateInfo.updatableGroups.get(groupSymbol.getName());
 
 		if (info == null) {
 			return; // not projected

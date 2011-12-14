@@ -63,12 +63,12 @@ public class DynamicCommandResolver implements CommandResolver {
         if (dynamicCmd.getIntoGroup() == null) {
             while (columns.hasNext()) {
                 ElementSymbol column = (ElementSymbol)columns.next();
-                column.setMetadataID(new TempMetadataID(column.getShortCanonicalName(), column.getType()));
+                column.setMetadataID(new TempMetadataID(column.getShortName(), column.getType()));
             }
         } else if (dynamicCmd.getIntoGroup().isTempGroupSymbol()) {
             while (columns.hasNext()) {
                 ElementSymbol column = (ElementSymbol)columns.next();
-                column.setGroupSymbol(new GroupSymbol(dynamicCmd.getIntoGroup().getCanonicalName()));
+                column.setGroupSymbol(new GroupSymbol(dynamicCmd.getIntoGroup().getName()));
             }
         }
         
@@ -86,7 +86,7 @@ public class DynamicCommandResolver implements CommandResolver {
                 ElementSymbol id = clause.getSymbol();
                 id.setGroupSymbol(new GroupSymbol(ProcedureReservedWords.DVARS));
                 id.setType(clause.getValue().getType());
-                id.setMetadataID(new TempMetadataID(id.getCanonicalName(), id.getType()));
+                id.setMetadataID(new TempMetadataID(id.getName(), id.getType()));
             }
         }
         

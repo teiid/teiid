@@ -24,18 +24,17 @@ package org.teiid.query.metadata;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 
 import org.teiid.query.metadata.TempMetadataID.Type;
-import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 
 
 /**
@@ -45,13 +44,13 @@ public class TempMetadataStore implements Serializable {
 
 	private static final long serialVersionUID = 4055072385672022478L;
 	// UPPER CASE TEMP GROUP NAME --> TempMetadataID for group
-    private Map<String, TempMetadataID> tempGroups;     
+    private NavigableMap<String, TempMetadataID> tempGroups;     
     
     /**
      * Constructor for TempMetadataStore.
      */
     public TempMetadataStore() {
-        this(new HashMap<String, TempMetadataID>());
+        this(new TreeMap<String, TempMetadataID>(String.CASE_INSENSITIVE_ORDER));
     }
 
     /**
@@ -59,19 +58,25 @@ public class TempMetadataStore implements Serializable {
      * the parameter is null, a new empty Map will beused instead.
      * @param data Map of upper case group name to group TempMetadataID object
      */
-    public TempMetadataStore(Map<String, TempMetadataID> data) {
+    public TempMetadataStore(NavigableMap<String, TempMetadataID> data) {
         if (data == null) {
-            tempGroups = new HashMap<String, TempMetadataID>();
+            tempGroups = new TreeMap<String, TempMetadataID>(String.CASE_INSENSITIVE_ORDER);
         } else {
             tempGroups = data;
         }
+    }
+    
+    public TempMetadataStore clone() {
+    	TreeMap<String, TempMetadataID> clone = new TreeMap<String, TempMetadataID>(String.CASE_INSENSITIVE_ORDER);
+    	clone.putAll(tempGroups);
+    	return new TempMetadataStore(clone);
     }
 
     /**
      * Get all temp group and element metadata
      * @param data Map of upper case group name to group TempMetadataID object
      */
-    public Map<String, TempMetadataID> getData() {
+    public NavigableMap<String, TempMetadataID> getData() {
         return this.tempGroups;
     }
    
@@ -103,27 +108,25 @@ public class TempMetadataStore implements Serializable {
      * @param isVirtual whether or not the group is a virtual group
      * @param isTempTable whether or not the group is a temporary table
      */
-    public TempMetadataID addTempGroup(String tempGroup, List<? extends SingleElementSymbol> tempSymbols, boolean isVirtual, boolean isTempTable) { 
+    public TempMetadataID addTempGroup(String tempGroup, List<? extends Expression> tempSymbols, boolean isVirtual, boolean isTempTable) { 
         // Add the temporary group
-        String tempName = tempGroup.toUpperCase();
-        
         List<TempMetadataID> elementIDs = new ArrayList<TempMetadataID>(tempSymbols.size());
         
-        for (SingleElementSymbol symbol : tempSymbols) {
-            TempMetadataID elementID = createElementSymbol(tempName, symbol, isTempTable);
+        for (Expression symbol : tempSymbols) {
+            TempMetadataID elementID = createElementSymbol(tempGroup, symbol, isTempTable);
         
             elementIDs.add(elementID);
         }
 
         // Create group ID
-        TempMetadataID groupID = new TempMetadataID(tempName, elementIDs, isVirtual?Type.VIRTUAL:Type.TEMP);
-        this.tempGroups.put(tempName, groupID);
+        TempMetadataID groupID = new TempMetadataID(tempGroup, elementIDs, isVirtual?Type.VIRTUAL:Type.TEMP);
+        this.tempGroups.put(tempGroup, groupID);
         return groupID;
     }
 
-    private TempMetadataID createElementSymbol(String tempName, SingleElementSymbol symbol, boolean isTempTable) {
+    private TempMetadataID createElementSymbol(String tempName, Expression symbol, boolean isTempTable) {
         // Create new element name
-        String elementName = tempName + SingleElementSymbol.SEPARATOR + symbol.getShortName();
+        String elementName = tempName + Symbol.SEPARATOR + Symbol.getShortName(symbol);
         
         Object metadataID = null;
         
@@ -132,14 +135,14 @@ public class TempMetadataStore implements Serializable {
             symbol = as.getSymbol();
         }
         
-        //the following allows for orginal metadata ids to be determined for proc inputs
-        if (symbol instanceof ExpressionSymbol && !(symbol instanceof AggregateSymbol)) {
+        //the following allows for original metadata ids to be determined for proc inputs
+        if (symbol instanceof ExpressionSymbol) {
             Expression expr = ((ExpressionSymbol)symbol).getExpression();
             if (expr instanceof Reference) {
                 expr = ((Reference)expr).getExpression();
             } 
             if (expr instanceof ElementSymbol) {
-                symbol = (ElementSymbol)expr;
+                symbol = expr;
             }
         }
         
@@ -163,12 +166,10 @@ public class TempMetadataStore implements Serializable {
      * @param symbol - element to be added
      * @return metadata id.
      */
-    public TempMetadataID addElementSymbolToTempGroup(String tempGroup, SingleElementSymbol symbol) {
-        String tempName = tempGroup.toUpperCase();
-        
-        TempMetadataID groupID = this.tempGroups.get(tempName);
+    public TempMetadataID addElementSymbolToTempGroup(String tempGroup, Expression symbol) {
+        TempMetadataID groupID = this.tempGroups.get(tempGroup);
         if (groupID != null) {
-            TempMetadataID elementID = createElementSymbol(tempName, symbol, false);
+            TempMetadataID elementID = createElementSymbol(tempGroup, symbol, false);
             
             groupID.addElement(elementID);
             
@@ -183,7 +184,7 @@ public class TempMetadataStore implements Serializable {
      * @return Metadata ID or null if not found
      */
     public TempMetadataID getTempGroupID(String tempGroup) {
-        return tempGroups.get(tempGroup.toUpperCase());    
+        return tempGroups.get(tempGroup);    
     }
     
     /**
@@ -192,13 +193,13 @@ public class TempMetadataStore implements Serializable {
      * @return Metadata ID or null if not found
      */
     public TempMetadataID getTempElementID(String tempElement) {
-        int index = tempElement.lastIndexOf(SingleElementSymbol.SEPARATOR);
+        int index = tempElement.lastIndexOf(Symbol.SEPARATOR);
         if(index < 0) {
             return null;
         }
         String groupName = tempElement.substring(0, index);
             
-        TempMetadataID groupID = tempGroups.get(groupName.toUpperCase());
+        TempMetadataID groupID = tempGroups.get(groupName);
         if(groupID != null) {
         	for (TempMetadataID elementID : groupID.getElements()) {
                 if(elementID.getID().equalsIgnoreCase(tempElement)) { 
@@ -226,14 +227,14 @@ public class TempMetadataStore implements Serializable {
     }
     
     public void addElementToTempGroup(String tempGroup, ElementSymbol symbol) {
-        TempMetadataID groupID = tempGroups.get(tempGroup.toUpperCase());        
+        TempMetadataID groupID = tempGroups.get(tempGroup);        
         if(groupID != null) {
             groupID.addElement((TempMetadataID)symbol.getMetadataID());
         }
     }
     
     public TempMetadataID removeTempGroup(String tempGroup) {
-        return tempGroups.remove(tempGroup.toUpperCase());  
+        return tempGroups.remove(tempGroup);  
     }
 
 }

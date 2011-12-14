@@ -34,7 +34,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 /**
  * <p>This is a subclass of Symbol representing multiple output columns.</p>
  */
-public class MultipleElementSymbol implements SelectSymbol {
+public class MultipleElementSymbol implements Expression {
     private List<ElementSymbol> elementSymbols;
     private GroupSymbol group;
 
@@ -47,6 +47,11 @@ public class MultipleElementSymbol implements SelectSymbol {
      */
     public MultipleElementSymbol(String name){
         this.group = new GroupSymbol(name);
+    }
+    
+    @Override
+    public Class<?> getType() {
+    	return null;
     }
 
     /**
@@ -76,15 +81,6 @@ public class MultipleElementSymbol implements SelectSymbol {
 		getElementSymbols().add(symbol);
     }
 	
-    /**
-     * True if multiple element symbol has been resolved by having all referring element
-     * symbols set.
-     * @return True if symbol has been resolved
-     */
-    public boolean isResolved() {
-        return(elementSymbols != null);
-    }
-    
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }

@@ -22,14 +22,29 @@
 
 package org.teiid.query.metadata;
 
-import java.io.*;
-import java.util.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.types.*;
+import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.LRUCache;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -180,7 +195,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		if (columnIndex == -1) {
 			throw new QueryMetadataException(elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}
-		Table table = this.store.findGroup(elementName.substring(0, columnIndex).toUpperCase());
+		Table table = this.store.findGroup(elementName.substring(0, columnIndex));
 		String shortElementName = elementName.substring(columnIndex + 1);
 		for (Column column : getElementIDsInGroupID(table)) {
 			if (column.getName().equalsIgnoreCase(shortElementName)) {
@@ -191,7 +206,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     public Table getGroupID(final String groupName) throws TeiidComponentException, QueryMetadataException {
-        return getMetadataStore().findGroup(groupName.toUpperCase());
+        return getMetadataStore().findGroup(groupName);
     }
     
     public Collection<String> getGroupsForPartialName(final String partialGroupName)

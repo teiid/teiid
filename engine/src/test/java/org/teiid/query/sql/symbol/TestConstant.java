@@ -22,11 +22,10 @@
 
 package org.teiid.query.sql.symbol;
 
+import junit.framework.TestCase;
+
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.query.sql.symbol.Constant;
-
-import junit.framework.TestCase;
 
 
 public class TestConstant extends TestCase {
@@ -57,7 +56,6 @@ public class TestConstant extends TestCase {
         assertEquals("Value is incorrect: ", s, c.getValue()); //$NON-NLS-1$
         assertEquals("Type is incorrect: ", DataTypeManager.DefaultDataClasses.STRING, c.getType()); //$NON-NLS-1$
         assertEquals("Should be non-null: ", false, c.isNull()); //$NON-NLS-1$
-        assertEquals("Is not resolved: ", true, c.isResolved()); //$NON-NLS-1$
         assertEquals("Object does not equal itself", c, c); //$NON-NLS-1$
         
         Constant c2 = new Constant(s);
@@ -73,7 +71,6 @@ public class TestConstant extends TestCase {
         assertEquals("Value is incorrect: ", i, c.getValue()); //$NON-NLS-1$
         assertEquals("Type is incorrect: ", DataTypeManager.DefaultDataClasses.INTEGER, c.getType()); //$NON-NLS-1$
         assertEquals("Should be non-null: ", false, c.isNull()); //$NON-NLS-1$
-        assertEquals("Is not resolved: ", true, c.isResolved()); //$NON-NLS-1$
         assertEquals("Object does not equal itself", c, c); //$NON-NLS-1$
         
         Constant c2 = new Constant(i);
@@ -88,7 +85,6 @@ public class TestConstant extends TestCase {
         assertEquals("Value is incorrect: ", null, c.getValue()); //$NON-NLS-1$
         assertEquals("Type is incorrect: ", DataTypeManager.DefaultDataClasses.NULL, c.getType()); //$NON-NLS-1$
         assertEquals("Should be null: ", true, c.isNull()); //$NON-NLS-1$
-        assertEquals("Is not resolved: ", true, c.isResolved()); //$NON-NLS-1$
         assertEquals("Object does not equal itself", c, c); //$NON-NLS-1$
         
         Constant c2 = new Constant(null);
@@ -103,7 +99,6 @@ public class TestConstant extends TestCase {
         assertEquals("Value is incorrect: ", null, c.getValue()); //$NON-NLS-1$
         assertEquals("Type is incorrect: ", DataTypeManager.DefaultDataClasses.STRING, c.getType()); //$NON-NLS-1$
         assertEquals("Should be null: ", true, c.isNull()); //$NON-NLS-1$
-        assertEquals("Is not resolved: ", true, c.isResolved()); //$NON-NLS-1$
         assertEquals("Object does not equal itself", c, c); //$NON-NLS-1$
         
         Constant c2 = new Constant(null, DataTypeManager.DefaultDataClasses.STRING);

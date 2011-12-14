@@ -22,7 +22,6 @@
 
 package org.teiid.query.parser;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -314,29 +313,6 @@ public class SQLParserUtil {
             Object[] params = new Object[] { joinType };
             throw new ParseException(QueryPlugin.Util.getString("SQLParser.Unknown_join_type", params)); //$NON-NLS-1$
         }
-    }
-    
-    /**
-     * Generate an expression name based on the function type and previous names.
-     * @param info Parse info, including counts for each function type
-     * @param functionType Null for expression, the function name for aggregates
-     * @return New unique function name
-     */
-    String generateFunctionName(ParseInfo info, String functionType) {
-    	if (functionType == null) {
-    		functionType = "expr"; //$NON-NLS-1$
-    	} else {
-    		functionType = functionType.toLowerCase();
-    	}
-    	if (info.nameCounts == null) {
-    		info.nameCounts = new HashMap<String, Integer>();
-    	}
-        Integer num = info.nameCounts.get(functionType);
-        if (num == null) {
-        	num = 0;
-        }
-        info.nameCounts.put(functionType, num + 1);
-        return functionType + (num == 0 ? "" : ""+num); //$NON-NLS-1$   //$NON-NLS-2$  
     }
     
     int getOperator(String opString) {

@@ -27,26 +27,19 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.query.processor.xml.Condition;
-import org.teiid.query.processor.xml.IfInstruction;
-import org.teiid.query.processor.xml.ProcessorInstruction;
-import org.teiid.query.processor.xml.Program;
-import org.teiid.query.processor.xml.RecurseProgramCondition;
-import org.teiid.query.processor.xml.WhileInstruction;
-
 
 /** 
  * 
  */
 public class XMLProgramUtil {
     
-    public static Map getProgramStats(Program program) {
-        HashMap map = new HashMap();
+    public static Map<Class<?>, List<ProcessorInstruction>> getProgramStats(Program program) {
+        HashMap<Class<?>, List<ProcessorInstruction>> map = new HashMap<Class<?>, List<ProcessorInstruction>>();
         getProgramStats(program, map);
         return map;
     }
 
-    private static Map getProgramStats(Program program, Map map) {
+    private static Map<Class<?>, List<ProcessorInstruction>> getProgramStats(Program program, Map<Class<?>, List<ProcessorInstruction>> map) {
         Program childProgram = null;
         
         if (program == null) {
@@ -75,9 +68,9 @@ public class XMLProgramUtil {
                 }
             }
             
-            List instrs = (List)map.get(inst.getClass());
+            List<ProcessorInstruction> instrs = map.get(inst.getClass());
             if (instrs == null) {
-                instrs = new LinkedList();
+                instrs = new LinkedList<ProcessorInstruction>();
                 map.put(inst.getClass(), instrs);
             }
             instrs.add(inst);

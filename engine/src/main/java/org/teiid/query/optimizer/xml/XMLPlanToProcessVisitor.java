@@ -28,38 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import org.teiid.query.mapping.xml.InterceptingVisitor;
-import org.teiid.query.mapping.xml.MappingAllNode;
-import org.teiid.query.mapping.xml.MappingAttribute;
-import org.teiid.query.mapping.xml.MappingBaseNode;
-import org.teiid.query.mapping.xml.MappingChoiceNode;
-import org.teiid.query.mapping.xml.MappingCommentNode;
-import org.teiid.query.mapping.xml.MappingCriteriaNode;
-import org.teiid.query.mapping.xml.MappingDocument;
-import org.teiid.query.mapping.xml.MappingElement;
-import org.teiid.query.mapping.xml.MappingInterceptor;
-import org.teiid.query.mapping.xml.MappingRecursiveElement;
-import org.teiid.query.mapping.xml.MappingSequenceNode;
-import org.teiid.query.mapping.xml.MappingSourceNode;
-import org.teiid.query.mapping.xml.ResultSetInfo;
-import org.teiid.query.processor.xml.AbortProcessingInstruction;
-import org.teiid.query.processor.xml.AddNodeInstruction;
-import org.teiid.query.processor.xml.BlockInstruction;
-import org.teiid.query.processor.xml.Condition;
-import org.teiid.query.processor.xml.CriteriaCondition;
-import org.teiid.query.processor.xml.DefaultCondition;
-import org.teiid.query.processor.xml.EndBlockInstruction;
-import org.teiid.query.processor.xml.EndDocumentInstruction;
-import org.teiid.query.processor.xml.ExecSqlInstruction;
-import org.teiid.query.processor.xml.ExecStagingTableInstruction;
-import org.teiid.query.processor.xml.IfInstruction;
-import org.teiid.query.processor.xml.InitializeDocumentInstruction;
-import org.teiid.query.processor.xml.MoveCursorInstruction;
-import org.teiid.query.processor.xml.MoveDocInstruction;
-import org.teiid.query.processor.xml.ProcessorInstruction;
-import org.teiid.query.processor.xml.Program;
-import org.teiid.query.processor.xml.RecurseProgramCondition;
-import org.teiid.query.processor.xml.WhileInstruction;
+import org.teiid.query.mapping.xml.*;
+import org.teiid.query.processor.xml.*;
 
 
 
@@ -379,7 +349,7 @@ public class XMLPlanToProcessVisitor implements MappingInterceptor {
                 
         // this is set by root recursive node. Note that the MappingClass on recursive
         // node is same as the source on the root recursive node.
-        Program recursiveProgram = (Program)context.get(element.getMappingClass().toUpperCase());
+        Program recursiveProgram = (Program)context.get(element.getMappingClass());
         IfInstruction ifInst = new IfInstruction();
         RecurseProgramCondition recurseCondition = buildRecurseCondition(element, recursiveProgram);
         ifInst.addCondition(recurseCondition);

@@ -22,15 +22,16 @@
 
 package org.teiid.query.metadata;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 import org.jboss.vfs.VFS;
-import org.jboss.vfs.VirtualFile;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;

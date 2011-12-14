@@ -172,7 +172,7 @@ public class TestElementSymbol {
 		ElementSymbol es2 = new ElementSymbol("AbCd"); //$NON-NLS-1$
 		es2.setGroupSymbol(sampleGroup1());
 		
-		helpEquals(es1, es2, true);
+		helpEquals(es1, es2, false);
 	} 
 
 	@Test public void testSelfEquivalence(){
@@ -271,6 +271,12 @@ public class TestElementSymbol {
 		ElementSymbol e2 = new ElementSymbol("y");
 		e2.setGroupSymbol(new GroupSymbol("x"));
 		helpEquals(e1, e2, true);
+	}
+	
+	@Test public void testClone6() { 
+		ElementSymbol e1 = new ElementSymbol("x.y.z", new GroupSymbol("doc"));
+		ElementSymbol copy = e1.clone();    		
+		helpEquals(e1, copy, true);
 	}
 	
 }

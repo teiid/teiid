@@ -100,17 +100,6 @@ public class SearchedCaseExpression extends AbstractCaseExpression {
         setThen(then);
     }
 
-    /**
-     * @see org.teiid.query.sql.symbol.Expression#isResolved()
-     */
-    public boolean isResolved() {
-        for (int i = 0; i < getWhenCount(); i++) {
-            if (getThen().get(i) != null && !((Expression)getThen().get(i)).isResolved()) return false;
-        }
-        if (getElseExpression() != null && !getElseExpression().isResolved()) return false;
-        return getType() != null;
-    }
-
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }

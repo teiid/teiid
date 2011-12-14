@@ -22,26 +22,27 @@
 
 package org.teiid.query.sql.lang;
 
+import static org.junit.Assert.*;
+
+import org.junit.Test;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 
-import junit.framework.TestCase;
 
+public class TestAliasSymbol {
 
-public class TestAliasSymbol extends TestCase {
-
-    public void testAliasEquals() {
+    @Test public void testAliasEquals() {
         AliasSymbol a1 = new AliasSymbol("X", new ExpressionSymbol("x", new Constant(1))); //$NON-NLS-1$ //$NON-NLS-2$
         AliasSymbol a2 = new AliasSymbol("X", new ExpressionSymbol("x", new Constant(2))); //$NON-NLS-1$ //$NON-NLS-2$
         AliasSymbol a3 = new AliasSymbol("x", new ExpressionSymbol("x", new Constant(1))); //$NON-NLS-1$ //$NON-NLS-2$
         
-        assertEquals(a1, a3); //just a different case for the alias
+        assertFalse(a1.equals(a3)); //just a different case for the alias
         
         assertFalse(a1.equals(a2)); //different express 
     }
     
-    public void testClone() {
+    @Test public void testClone() {
         AliasSymbol a1 = new AliasSymbol("X", new ExpressionSymbol("x", new Constant(1))); //$NON-NLS-1$ //$NON-NLS-2$
         a1.setOutputName("foo"); //$NON-NLS-1$
         AliasSymbol clone = (AliasSymbol)a1.clone();

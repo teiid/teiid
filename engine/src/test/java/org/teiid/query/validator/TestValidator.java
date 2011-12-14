@@ -125,10 +125,7 @@ public class TestValidator {
         sourceNode.addChildElement(new MappingElement("c2", "test.group.e3")); //$NON-NLS-1$ //$NON-NLS-2$
         
     	Schema docModel = RealMetadataFactory.createVirtualModel("vm1", metadataStore); //$NON-NLS-1$
-        Table doc1 = RealMetadataFactory.createXmlDocument("doc1", docModel, doc); //$NON-NLS-1$
-    	RealMetadataFactory.createElements(doc1, new String[] { "a0", "a0.a1", "a0.a1.a2", "a0.a1.b2", "a0.a1.c2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-    		new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-                        
+        RealMetadataFactory.createXmlDocument("doc1", docModel, doc); //$NON-NLS-1$
     	return RealMetadataFactory.createTransformationMetadata(metadataStore, "example");
     }
 	

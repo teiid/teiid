@@ -65,8 +65,7 @@ import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.util.CommandContext;
 
 
@@ -178,7 +177,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
                 	//should return a 0 update count
                 	ProjectNode pnode = new ProjectNode(getID());
                 	pnode.setElements(accessNode.getElements());
-                	pnode.setSelectSymbols(Arrays.asList(new ExpressionSymbol("x", new Constant(0)))); //$NON-NLS-1$
+                	pnode.setSelectSymbols(Arrays.asList(new Constant(0)));
                 	return pnode;
                 }
                 // Replace existing access node with a NullNode
@@ -208,8 +207,8 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
             	if (RelationalNodeUtil.isUpdate(accessNode.getCommand())) {
             		update = true;
             		GroupingNode groupNode = new GroupingNode(getID());                    
-            		AggregateSymbol sumCount = new AggregateSymbol("SumCount", NonReserved.SUM, false, (Expression)accessNode.getElements().get(0)); //$NON-NLS-1$          		
-            		List<SingleElementSymbol> outputElements = new ArrayList<SingleElementSymbol>(1);            		
+            		AggregateSymbol sumCount = new AggregateSymbol("SumCount", NonReserved.SUM, false, accessNode.getElements().get(0)); //$NON-NLS-1$          		
+            		List<Expression> outputElements = new ArrayList<Expression>(1);            		
             		outputElements.add(sumCount); 
             		groupNode.setElements(outputElements);
             		groupNode.addChild(unionNode);
@@ -218,9 +217,8 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
             		
             		Expression intSum = ResolverUtil.getConversion(sumCount, DataTypeManager.getDataTypeName(sumCount.getType()), DataTypeManager.DefaultDataTypes.INTEGER, false, metadata.getFunctionLibrary());
             		
-            		ExpressionSymbol rowCount = new ExpressionSymbol("RowCount", intSum); //$NON-NLS-1$            		
-            		outputElements = new ArrayList<SingleElementSymbol>(1);            		
-            		outputElements.add(rowCount);             		
+            		outputElements = new ArrayList<Expression>(1);            		
+            		outputElements.add(intSum);             		
             		projectNode.setElements(outputElements);
             		projectNode.setSelectSymbols(outputElements);
             		projectNode.addChild(groupNode);
@@ -240,7 +238,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 				if (param.getParameterType() != SPParameter.IN) {
 					continue;
 				}
-				String shortName = SingleElementSymbol.getShortName(param.getName());        
+				String shortName = Symbol.getShortName(param.getName());        
 			    if(shortName.equalsIgnoreCase(MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME)) {
 		        	Constant source = (Constant)param.getExpression();
 		    		params.remove();

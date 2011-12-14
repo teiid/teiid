@@ -48,7 +48,6 @@ import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
@@ -227,12 +226,12 @@ public final class RuleMergeVirtual implements
             return root;
         }
         
-        List<? extends SingleElementSymbol> requiredElements = RuleAssignOutputElements.determineSourceOutput(frame, new ArrayList<SingleElementSymbol>(), metadata, null);
-        List<SingleElementSymbol> selectSymbols = (List<SingleElementSymbol>)parentProject.getProperty(NodeConstants.Info.PROJECT_COLS);
+        List<? extends Expression> requiredElements = RuleAssignOutputElements.determineSourceOutput(frame, new ArrayList<Expression>(), metadata, null);
+        List<Expression> selectSymbols = (List<Expression>)parentProject.getProperty(NodeConstants.Info.PROJECT_COLS);
 
         // check that it only performs simple projection and that all required symbols are projected
         LinkedHashSet<ElementSymbol> symbols = new LinkedHashSet<ElementSymbol>(); //ensuring there are no duplicates prevents problems with subqueries  
-        for (SingleElementSymbol symbol : selectSymbols) {
+        for (Expression symbol : selectSymbols) {
             Expression expr = SymbolMap.getExpression(symbol);
             if (!(expr instanceof ElementSymbol)) {
                 return root;
@@ -247,7 +246,7 @@ public final class RuleMergeVirtual implements
         }
         
         // re-order the lower projects
-        RuleAssignOutputElements.filterVirtualElements(frame, new ArrayList<SingleElementSymbol>(symbols), metadata);
+        RuleAssignOutputElements.filterVirtualElements(frame, new ArrayList<Expression>(symbols), metadata);
 
         // remove phantom select nodes
         nodeToCheck = parentProject.getFirstChild();
@@ -302,10 +301,10 @@ public final class RuleMergeVirtual implements
     }
 
 	private static void correctOrderBy(PlanNode frame,
-			List<SingleElementSymbol> selectSymbols, PlanNode startNode) {
+			List<Expression> selectSymbols, PlanNode startNode) {
 		PlanNode sort = NodeEditor.findParent(startNode, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE | NodeConstants.Types.SET_OP);
 		if (sort != null) { //special handling is needed since we are retaining the child aliases
-			List<SingleElementSymbol> childProject = (List<SingleElementSymbol>)NodeEditor.findNodePreOrder(frame, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS);
+			List<Expression> childProject = (List<Expression>)NodeEditor.findNodePreOrder(frame, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS);
 			OrderBy elements = (OrderBy)sort.getProperty(NodeConstants.Info.SORT_ORDER);
 			for (OrderByItem item : elements.getOrderByItems()) {
 				item.setSymbol(childProject.get(selectSymbols.indexOf(item.getSymbol())));
@@ -326,7 +325,7 @@ public final class RuleMergeVirtual implements
         	return false;
         }
 
-        List<SingleElementSymbol> selectSymbols = (List<SingleElementSymbol>)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);
+        List<Expression> selectSymbols = (List<Expression>)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);
         
         HashSet<GroupSymbol> groups = new HashSet<GroupSymbol>();
         for (PlanNode sourceNode : NodeEditor.findAllNodes(projectNode, NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE)) {
@@ -352,7 +351,7 @@ public final class RuleMergeVirtual implements
         }
 
         for (int i = 0; i < selectSymbols.size(); i++) {
-        	SingleElementSymbol symbol = selectSymbols.get(i);
+        	Expression symbol = selectSymbols.get(i);
             Collection scalarSubqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(symbol);
             if (!scalarSubqueries.isEmpty()) {
                 return false;

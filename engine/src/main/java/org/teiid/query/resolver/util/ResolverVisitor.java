@@ -134,9 +134,9 @@ public class ResolverVisitor extends LanguageVisitor {
         if (elementSymbol.getGroupSymbol() != null) {
         	groupContext = elementSymbol.getGroupSymbol().getName();
         }
-        String elementShortName = elementSymbol.getShortCanonicalName();
+        String elementShortName = elementSymbol.getShortName();
         if (groupContext != null) {
-            groupContext = elementSymbol.getGroupSymbol().getCanonicalName();
+            groupContext = elementSymbol.getGroupSymbol().getName();
         	try {
 				if (findShortName && internalResolveElementSymbol(elementSymbol, null, elementShortName, groupContext)) {
 		    		elementSymbol.setDisplayMode(DisplayMode.SHORT_OUTPUT_NAME);
@@ -220,7 +220,7 @@ public class ResolverVisitor extends LanguageVisitor {
         ElementSymbol resolvedSymbol = match.element;
         GroupSymbol resolvedGroup = match.group;
         String oldName = elementSymbol.getOutputName();
-        if (expectedGroupContext != null && !ResolverUtil.nameMatchesGroup(expectedGroupContext, resolvedGroup.getCanonicalName())) {
+        if (expectedGroupContext != null && !ResolverUtil.nameMatchesGroup(expectedGroupContext, resolvedGroup.getName())) {
         	return false;
         }
         elementSymbol.setIsExternalReference(isExternal);
@@ -228,7 +228,6 @@ public class ResolverVisitor extends LanguageVisitor {
         elementSymbol.setMetadataID(resolvedSymbol.getMetadataID());
         elementSymbol.setGroupSymbol(resolvedGroup);
         elementSymbol.setShortName(resolvedSymbol.getShortName());
-        elementSymbol.setShortCanonicalName(resolvedSymbol.getShortCanonicalName());
         elementSymbol.setOutputName(oldName);
         return true;
 	}
@@ -728,10 +727,10 @@ public class ResolverVisitor extends LanguageVisitor {
 	
 	    String exprTypeName = DataTypeManager.getDataTypeName(exprType);
 	    boolean changed = false;
-	    List newVals = new ArrayList();
+	    List<Expression> newVals = new ArrayList<Expression>();
 	
 	    boolean convertLeft = false;
-	    Class setType = null;
+	    Class<?> setType = null;
 	
 	    Iterator valIter = scrit.getValues().iterator();
 	    while(valIter.hasNext()) {
@@ -791,8 +790,8 @@ public class ResolverVisitor extends LanguageVisitor {
 	    final int whenCount = obj.getWhenCount();
 	    Expression expr = obj.getExpression();
 	
-	    Class whenType = null;
-	    Class thenType = null;
+	    Class<?> whenType = null;
+	    Class<?> thenType = null;
 	    // Get the WHEN and THEN types, and get a candidate type for each (for the next step)
 	    for (int i = 0; i < whenCount; i++) {
 	        if (whenType == null) {
@@ -897,7 +896,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    final int whenCount = obj.getWhenCount();
 	    // 1. Call recursively to resolve any contained CASE expressions
 	
-	    Class thenType = null;
+	    Class<?> thenType = null;
 	    // Get the WHEN and THEN types, and get a candidate type for each (for the next step)
 	    for (int i = 0; i < whenCount; i++) {
 	        if (thenType == null) {

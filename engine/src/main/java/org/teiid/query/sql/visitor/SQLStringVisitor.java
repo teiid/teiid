@@ -588,7 +588,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     @Override
     public void visit( OrderByItem obj ) {
-        SingleElementSymbol ses = obj.getSymbol();
+        Expression ses = obj.getSymbol();
         if (ses instanceof AliasSymbol) {
             AliasSymbol as = (AliasSymbol)ses;
             outputDisplayName(as.getOutputName());
@@ -810,9 +810,9 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
         beginClause(2);
 
-        Iterator<SelectSymbol> iter = obj.getSymbols().iterator();
+        Iterator<Expression> iter = obj.getSymbols().iterator();
         while (iter.hasNext()) {
-            SelectSymbol symbol = iter.next();
+            Expression symbol = iter.next();
             visitNode(symbol);
             if (iter.hasNext()) {
                 append(", "); //$NON-NLS-1$
@@ -940,7 +940,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         		append(", "); //$NON-NLS-1$
         	}
             if (obj.displayNamedParameters()) {
-                append(escapeSinglePart(ElementSymbol.getShortName(param.getParameterSymbol().getOutputName())));
+                append(escapeSinglePart(Symbol.getShortName(param.getParameterSymbol().getOutputName())));
                 append(" => "); //$NON-NLS-1$
             }
 
@@ -1189,14 +1189,14 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     private void outputShortName( ElementSymbol obj ) {
-        outputDisplayName(SingleElementSymbol.getShortName(obj.getOutputName()));
+        outputDisplayName(Symbol.getShortName(obj.getOutputName()));
     }
 
     private void outputDisplayName( String name ) {
         String[] pathParts = name.split("\\."); //$NON-NLS-1$
         for (int i = 0; i < pathParts.length; i++) {
             if (i > 0) {
-                append(ElementSymbol.SEPARATOR);
+                append(Symbol.SEPARATOR);
             }
             append(escapeSinglePart(pathParts[i]));
         }

@@ -56,6 +56,7 @@
   <li>BigDecimal division that returns a quotient that is equal to zero will have a scale of zero as well. Prior releases would typically return a zero value with a scale of 16.
   <li>The env function no longer returns the value for the session id, the session_id() function should be used instead.
   <li>The CommandContext no longer provides getEnvironmentProperties()
+  <li>Unaliased derived columns in the SELECT clause have different default names than prior releases.  The name will be exprX where X is the SELECT clause position.  
 </ul>
 
 <h4>from 7.5</h4>

@@ -35,37 +35,10 @@ import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.language.AggregateFunction;
-import org.teiid.language.AndOr;
-import org.teiid.language.Argument;
-import org.teiid.language.BatchedUpdates;
-import org.teiid.language.Call;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Condition;
+import org.teiid.language.*;
 import org.teiid.language.DerivedColumn;
-import org.teiid.language.DerivedTable;
-import org.teiid.language.Exists;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.In;
-import org.teiid.language.InsertValueSource;
-import org.teiid.language.IsNull;
-import org.teiid.language.IteratorValueSource;
-import org.teiid.language.Join;
-import org.teiid.language.Like;
-import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
-import org.teiid.language.Not;
-import org.teiid.language.QueryExpression;
-import org.teiid.language.SearchedCase;
-import org.teiid.language.SearchedWhenClause;
 import org.teiid.language.Select;
-import org.teiid.language.SortSpecification;
-import org.teiid.language.SubqueryComparison;
-import org.teiid.language.SubqueryIn;
-import org.teiid.language.TableReference;
 import org.teiid.language.WindowSpecification;
-import org.teiid.language.With;
-import org.teiid.language.WithItem;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.language.SortSpecification.Ordering;
@@ -74,50 +47,20 @@ import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.sql.lang.BatchedUpdateCommand;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.CompoundCriteria;
-import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Delete;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.GroupBy;
 import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.IsNullCriteria;
-import org.teiid.query.sql.lang.JoinPredicate;
-import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.Limit;
-import org.teiid.query.sql.lang.MatchCriteria;
-import org.teiid.query.sql.lang.NotCriteria;
 import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.OrderByItem;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.SetClause;
-import org.teiid.query.sql.lang.SetClauseList;
-import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.SubqueryCompareCriteria;
-import org.teiid.query.sql.lang.SubqueryFromClause;
-import org.teiid.query.sql.lang.SubquerySetCriteria;
-import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
-import org.teiid.query.sql.lang.WithQueryCommand;
-import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.SearchedCaseExpression;
-import org.teiid.query.sql.symbol.SelectSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.translator.TranslatorException;
 
@@ -182,13 +125,13 @@ public class LanguageBridgeFactory {
 
     /* Query */
     Select translate(Query query) {
-        List<SelectSymbol> symbols = query.getSelect().getSymbols();
+        List<Expression> symbols = query.getSelect().getSymbols();
         List<DerivedColumn> translatedSymbols = new ArrayList<DerivedColumn>(symbols.size());
-        for (Iterator<SelectSymbol> i = symbols.iterator(); i.hasNext();) {
-            SingleElementSymbol symbol = (SingleElementSymbol)i.next();
+        for (Iterator<Expression> i = symbols.iterator(); i.hasNext();) {
+            Expression symbol = i.next();
             String alias = null;
             if(symbol instanceof AliasSymbol) {
-                alias = symbol.getOutputName();
+                alias = ((AliasSymbol)symbol).getOutputName();
                 symbol = ((AliasSymbol)symbol).getSymbol();
             }
 
@@ -454,14 +397,14 @@ public class LanguageBridgeFactory {
         List<OrderByItem> items = orderBy.getOrderByItems();
         List<SortSpecification> translatedItems = new ArrayList<SortSpecification>();
         for (int i = 0; i < items.size(); i++) {
-            SingleElementSymbol symbol = items.get(i).getSymbol();
+            Expression symbol = items.get(i).getSymbol();
             Ordering direction = items.get(i).isAscending() ? Ordering.ASC: Ordering.DESC;
             
             SortSpecification orderByItem = null;                                
             if(!set && (items.get(i).isUnrelated() || symbol instanceof ElementSymbol)){
             	orderByItem = new SortSpecification(direction, translate(symbol));                                
             } else {
-            	orderByItem = new SortSpecification(direction, new ColumnReference(null, SingleElementSymbol.getShortName(symbol.getOutputName()), null, symbol.getType()));
+            	orderByItem = new SortSpecification(direction, new ColumnReference(null, Symbol.getShortName(((Symbol)symbol).getOutputName()), null, symbol.getType()));
             }
             orderByItem.setNullOrdering(items.get(i).getNullOrdering());
             translatedItems.add(orderByItem);
@@ -475,6 +418,8 @@ public class LanguageBridgeFactory {
         if (expr == null) return null;
         if (expr instanceof Constant) {
             return translate((Constant)expr);
+        } else if (expr instanceof AggregateSymbol) {
+            return translate((AggregateSymbol)expr);
         } else if (expr instanceof Function) {
             return translate((Function)expr);
         } else if (expr instanceof ScalarSubquery) {
@@ -483,8 +428,6 @@ public class LanguageBridgeFactory {
             return translate((SearchedCaseExpression)expr);
         } else if (expr instanceof ElementSymbol) {
             return translate((ElementSymbol)expr);
-        } else if (expr instanceof AggregateSymbol) {
-            return translate((AggregateSymbol)expr);
         } else if (expr instanceof ExpressionSymbol) {
             return translate((ExpressionSymbol)expr);
         } else if (expr instanceof Criteria) {
@@ -536,7 +479,7 @@ public class LanguageBridgeFactory {
         		name = function.getFunctionDescriptor().getMethod().getNameInSource();
         	}
         } else {
-        	name = SingleElementSymbol.getShortName(name);
+        	name = Symbol.getShortName(name);
         }
 
         //if there is any ambiguity in the function name it will be up to the translator logic to check the 
@@ -568,7 +511,7 @@ public class LanguageBridgeFactory {
     }
 
     ColumnReference translate(ElementSymbol symbol) {
-        ColumnReference element = new ColumnReference(translate(symbol.getGroupSymbol()), SingleElementSymbol.getShortName(symbol.getOutputName()), null, symbol.getType());
+        ColumnReference element = new ColumnReference(translate(symbol.getGroupSymbol()), Symbol.getShortName(symbol.getOutputName()), null, symbol.getType());
         if (element.getTable().getMetadataObject() == null) {
             return element;
         }
@@ -746,7 +689,7 @@ public class LanguageBridgeFactory {
 
 	private String removeSchemaName(String fullGroup) {
 		//remove the model name
-        int index = fullGroup.indexOf(ElementSymbol.SEPARATOR);
+        int index = fullGroup.indexOf(Symbol.SEPARATOR);
         if (index > 0) {
         	fullGroup = fullGroup.substring(index + 1);
         }

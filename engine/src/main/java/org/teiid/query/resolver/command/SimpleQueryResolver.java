@@ -22,16 +22,7 @@
 
 package org.teiid.query.resolver.command;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -52,28 +43,7 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.LanguageObject;
-import org.teiid.query.sql.lang.ArrayTable;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.From;
-import org.teiid.query.sql.lang.FromClause;
-import org.teiid.query.sql.lang.Into;
-import org.teiid.query.sql.lang.JoinPredicate;
-import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.SubqueryCompareCriteria;
-import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.lang.SubqueryFromClause;
-import org.teiid.query.sql.lang.SubquerySetCriteria;
-import org.teiid.query.sql.lang.TableFunctionReference;
-import org.teiid.query.sql.lang.TextTable;
-import org.teiid.query.sql.lang.UnaryFromClause;
-import org.teiid.query.sql.lang.WithQueryCommand;
-import org.teiid.query.sql.lang.XMLTable;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -83,7 +53,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 
 public class SimpleQueryResolver implements CommandResolver {
@@ -124,7 +94,7 @@ public class SimpleQueryResolver implements CommandResolver {
         	ResolverUtil.resolveOrderBy(query.getOrderBy(), query, metadata);
         }
         
-        List<SingleElementSymbol> symbols = query.getSelect().getProjectedSymbols();
+        List<Expression> symbols = query.getSelect().getProjectedSymbols();
         
         if (query.getInto() != null) {
             GroupSymbol symbol = query.getInto().getGroup();
@@ -150,13 +120,13 @@ public class SimpleQueryResolver implements CommandResolver {
             if (!discoveredGroups.add(obj.getGroupSymbol())) {
             	throw new QueryResolverException(QueryPlugin.Util.getString("SimpleQueryResolver.duplicate_with", obj.getGroupSymbol())); //$NON-NLS-1$
             }
-            List<? extends SingleElementSymbol> projectedSymbols = obj.getCommand().getProjectedSymbols();
+            List<? extends Expression> projectedSymbols = obj.getCommand().getProjectedSymbols();
             if (obj.getColumns() != null && !obj.getColumns().isEmpty()) {
             	if (obj.getColumns().size() != projectedSymbols.size()) {
             		throw new QueryResolverException(QueryPlugin.Util.getString("SimpleQueryResolver.mismatched_with_columns", obj.getGroupSymbol())); //$NON-NLS-1$
             	}
             	Iterator<ElementSymbol> iter = obj.getColumns().iterator();
-            	for (SingleElementSymbol singleElementSymbol : projectedSymbols) {
+            	for (Expression singleElementSymbol : projectedSymbols) {
             		ElementSymbol es = iter.next();
             		es.setType(singleElementSymbol.getType());
 				}
@@ -167,7 +137,7 @@ public class SimpleQueryResolver implements CommandResolver {
             obj.getGroupSymbol().setIsTempTable(true);
             List<GroupSymbol> groups = Collections.singletonList(obj.getGroupSymbol());
             if (obj.getColumns() != null && !obj.getColumns().isEmpty()) {
-	            for (SingleElementSymbol singleElementSymbol : projectedSymbols) {
+	            for (Expression singleElementSymbol : projectedSymbols) {
 	                ResolverVisitor.resolveLanguageObject(singleElementSymbol, groups, metadata);
 				}
             }
@@ -183,7 +153,7 @@ public class SimpleQueryResolver implements CommandResolver {
 	}
 
     private static GroupSymbol resolveAllInGroup(MultipleElementSymbol allInGroupSymbol, Set<GroupSymbol> groups, QueryMetadataInterface metadata) throws QueryResolverException, QueryMetadataException, TeiidComponentException {       
-        String groupAlias = allInGroupSymbol.getGroup().getCanonicalName();
+        String groupAlias = allInGroupSymbol.getGroup().getName();
         List<GroupSymbol> groupSymbols = ResolverUtil.findMatchingGroups(groupAlias, groups, metadata);
         if(groupSymbols.isEmpty() || groupSymbols.size() > 1) {
             String msg = QueryPlugin.Util.getString(groupSymbols.isEmpty()?"ERR.015.008.0047":"SimpleQueryResolver.ambiguous_all_in_group", allInGroupSymbol);  //$NON-NLS-1$ //$NON-NLS-2$
@@ -483,21 +453,21 @@ public class SimpleQueryResolver implements CommandResolver {
 			            aliasName += "_IN"; //$NON-NLS-1$
 			        }
 			        
-			        SingleElementSymbol newSymbol = new AliasSymbol(aliasName, new ExpressionSymbol(paramSymbol.getShortName(), ref));
+			        Expression newSymbol = new AliasSymbol(aliasName, new ExpressionSymbol(paramSymbol.getShortName(), ref));
 			        
 			        select.addSymbol(newSymbol);
-			        accessPatternElementNames.add(queryName + ElementSymbol.SEPARATOR + aliasName);
+			        accessPatternElementNames.add(queryName + Symbol.SEPARATOR + aliasName);
 			    }
 			}
 			
 			QueryResolver.resolveCommand(procQuery, metadata.getMetadata());
 			
-			List<SingleElementSymbol> projectedSymbols = procQuery.getProjectedSymbols();
+			List<Expression> projectedSymbols = procQuery.getProjectedSymbols();
 			
-			HashSet<String> foundNames = new HashSet<String>();
+			Set<String> foundNames = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 			
-			for (SingleElementSymbol ses : projectedSymbols) {
-			    if (!foundNames.add(ses.getShortCanonicalName())) {
+			for (Expression ses : projectedSymbols) {
+			    if (!foundNames.add(Symbol.getShortName(ses))) {
 			        throw new QueryResolverException(QueryPlugin.Util.getString("SimpleQueryResolver.Proc_Relational_Name_conflict", fullName)); //$NON-NLS-1$                            
 			    }
 			}

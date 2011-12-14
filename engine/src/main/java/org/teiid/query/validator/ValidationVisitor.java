@@ -227,7 +227,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	}
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);
         
-		Collection<SingleElementSymbol> projSymbols = obj.getCommand().getProjectedSymbols();
+		Collection<Expression> projSymbols = obj.getCommand().getProjectedSymbols();
 
 		//Subcommand should have one projected symbol (query with one expression
 		//in SELECT or stored procedure execution that returns a single value).
@@ -358,7 +358,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     @Override
     public void visit(ScalarSubquery obj) {
     	validateSubquery(obj);
-        Collection<SingleElementSymbol> projSymbols = obj.getCommand().getProjectedSymbols();
+        Collection<Expression> projSymbols = obj.getCommand().getProjectedSymbols();
 
         //Scalar subquery should have one projected symbol (query with one expression
         //in SELECT or stored procedure execution that returns a single value).
@@ -552,7 +552,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         	AggregateSymbolCollectorVisitor.getAggregates(having, aggs, invalid, null, invalidWindowFunctions, groupSymbols);
         	hasAgg = true;
         }
-        for (SingleElementSymbol symbol : select.getProjectedSymbols()) {
+        for (Expression symbol : select.getProjectedSymbols()) {
         	AggregateSymbolCollectorVisitor.getAggregates(symbol, aggs, invalid, null, null, groupSymbols);                                            
         }
         if ((!aggs.isEmpty() || hasAgg) && !invalid.isEmpty()) {
@@ -708,13 +708,13 @@ public class ValidationVisitor extends AbstractValidationVisitor {
      * @since 4.2
      */
     protected void validateSelectInto(Query query) {
-        List<SingleElementSymbol> symbols = query.getSelect().getProjectedSymbols();
+        List<Expression> symbols = query.getSelect().getProjectedSymbols();
         GroupSymbol intoGroup = query.getInto().getGroup();
         validateInto(query, symbols, intoGroup);
     }
 
     private void validateInto(LanguageObject query,
-                                List<SingleElementSymbol> symbols,
+                                List<Expression> symbols,
                                 GroupSymbol intoGroup) {
         try {
             List elementIDs = getMetadata().getElementIDsInGroupID(intoGroup.getMetadataID());
@@ -726,7 +726,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
             }
             
             for (int symbolNum = 0; symbolNum < symbols.size(); symbolNum++) {
-                SingleElementSymbol symbol = symbols.get(symbolNum);
+                Expression symbol = symbols.get(symbolNum);
                 Object elementID = elementIDs.get(symbolNum);
                 // Check if supports updates
                 if (!getMetadata().elementSupports(elementID, SupportConstants.Element.UPDATE)) {

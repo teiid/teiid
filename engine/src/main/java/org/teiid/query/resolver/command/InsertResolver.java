@@ -55,7 +55,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 
 
 /**
@@ -105,8 +105,8 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             } else {
                 for (int i = 0; i < values.size(); i++) {
                 	if (usingQuery) {
-                		SingleElementSymbol ses = (SingleElementSymbol)values.get(i);
-                    	ElementSymbol es = new ElementSymbol(ses.getShortName()); 
+                		Expression ses = (Expression)values.get(i);
+                    	ElementSymbol es = new ElementSymbol(Symbol.getShortName(ses)); 
                     	es.setType(ses.getType());
                     	insert.addVariable(es);
                     } else {

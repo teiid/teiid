@@ -33,7 +33,6 @@ import org.teiid.query.processor.relational.SourceState.ImplicitBuffer;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 
 /**
@@ -164,9 +163,9 @@ public class NestedTableJoinStrategy extends JoinStrategy {
 	}
 
 	private void updateContext(List<?> tuple,
-			List<? extends SingleElementSymbol> elements) {
+			List<? extends Expression> elements) {
 		for (int i = 0; i < elements.size(); i++) {
-			SingleElementSymbol element = elements.get(i);
+			Expression element = elements.get(i);
 			if (element instanceof ElementSymbol) {
 				if (tuple == null) {
 					joinNode.getContext().getVariableContext().remove((ElementSymbol)element);

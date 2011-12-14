@@ -125,19 +125,6 @@ public class CaseExpression extends AbstractCaseExpression {
         setThen(then);
     }
 
-    /**
-     * @see org.teiid.query.sql.symbol.Expression#isResolved()
-     */
-    public boolean isResolved() {
-       if (!expression.isResolved()) return false;
-       for (int i = 0; i < getWhenCount(); i++) {
-           if (when.get(i) != null && !((Expression)when.get(i)).isResolved()) return false;
-           if (getThen().get(i) != null && !((Expression)getThen().get(i)).isResolved()) return false;
-       }
-       if (getElseExpression() != null && !getElseExpression().isResolved()) return false;
-       return getType() != null;
-    }
-
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }

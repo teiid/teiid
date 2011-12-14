@@ -49,55 +49,18 @@ import org.teiid.query.optimizer.relational.rules.FrameUtil;
 import org.teiid.query.optimizer.relational.rules.RuleAssignOutputElements;
 import org.teiid.query.optimizer.relational.rules.RuleChooseJoinStrategy;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.processor.relational.AccessNode;
-import org.teiid.query.processor.relational.ArrayTableNode;
-import org.teiid.query.processor.relational.DependentAccessNode;
-import org.teiid.query.processor.relational.DependentProcedureAccessNode;
-import org.teiid.query.processor.relational.DependentProcedureExecutionNode;
-import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
-import org.teiid.query.processor.relational.GroupingNode;
-import org.teiid.query.processor.relational.InsertPlanExecutionNode;
-import org.teiid.query.processor.relational.JoinNode;
-import org.teiid.query.processor.relational.LimitNode;
-import org.teiid.query.processor.relational.MergeJoinStrategy;
-import org.teiid.query.processor.relational.NestedLoopJoinStrategy;
-import org.teiid.query.processor.relational.NestedTableJoinStrategy;
-import org.teiid.query.processor.relational.NullNode;
-import org.teiid.query.processor.relational.PlanExecutionNode;
-import org.teiid.query.processor.relational.ProjectIntoNode;
-import org.teiid.query.processor.relational.ProjectNode;
-import org.teiid.query.processor.relational.RelationalNode;
-import org.teiid.query.processor.relational.RelationalPlan;
-import org.teiid.query.processor.relational.SelectNode;
-import org.teiid.query.processor.relational.SortNode;
-import org.teiid.query.processor.relational.TextTableNode;
-import org.teiid.query.processor.relational.UnionAllNode;
-import org.teiid.query.processor.relational.WindowFunctionProjectNode;
-import org.teiid.query.processor.relational.XMLTableNode;
+import org.teiid.query.processor.relational.*;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.resolver.util.ResolverUtil;
-import org.teiid.query.sql.lang.ArrayTable;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.OrderByItem;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.TableFunctionReference;
-import org.teiid.query.sql.lang.TextTable;
-import org.teiid.query.sql.lang.XMLTable;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
@@ -221,7 +184,7 @@ public class PlanToProcessConverter {
                     }
 
                 } else {
-                    List<SingleElementSymbol> symbols = (List) node.getProperty(NodeConstants.Info.PROJECT_COLS);
+                    List<Expression> symbols = (List) node.getProperty(NodeConstants.Info.PROJECT_COLS);
                     
                     ProjectNode pnode = new ProjectNode(getID());
                     pnode.setSelectSymbols(symbols);
@@ -231,9 +194,9 @@ public class PlanToProcessConverter {
             			WindowFunctionProjectNode wfpn = new WindowFunctionProjectNode(getID());
             			Set<WindowFunction> windowFunctions = RuleAssignOutputElements.getWindowFunctions(symbols);
             			//TODO: check for selecting all window functions
-            			List<SingleElementSymbol> outputElements = new ArrayList<SingleElementSymbol>(windowFunctions);
+            			List<Expression> outputElements = new ArrayList<Expression>(windowFunctions);
             			//collect the other projected expressions
-            			for (SingleElementSymbol singleElementSymbol : (List<SingleElementSymbol>)node.getFirstChild().getProperty(Info.OUTPUT_COLS)) {
+            			for (Expression singleElementSymbol : (List<Expression>)node.getFirstChild().getProperty(Info.OUTPUT_COLS)) {
 							outputElements.add(singleElementSymbol);
 						}
             			wfpn.setElements(outputElements);

@@ -23,7 +23,6 @@
 package org.teiid.query.validator;
 
 import java.util.Iterator;
-import java.util.Map;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -107,9 +106,9 @@ public class Validator {
 		if (obj instanceof Command) {
 			Command command = (Command)obj;
 			visitor.currentCommand = command;
-            Map tempMetadata = command.getTemporaryMetadata();
-            if(tempMetadata != null && !tempMetadata.isEmpty()) {
-            	visitor.setMetadata(new TempMetadataAdapter(metadata, new TempMetadataStore(tempMetadata)));
+			TempMetadataStore tempMetadata = command.getTemporaryMetadata();
+            if(tempMetadata != null && !tempMetadata.getData().isEmpty()) {
+            	visitor.setMetadata(new TempMetadataAdapter(metadata, tempMetadata));
             }    
 		}
 	}

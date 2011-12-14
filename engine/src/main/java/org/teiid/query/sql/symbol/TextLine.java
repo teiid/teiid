@@ -92,16 +92,6 @@ public class TextLine implements Expression {
 	}
 
 	@Override
-	public boolean isResolved() {
-		for (DerivedColumn arg : this.expressions) {
-			if (!arg.getExpression().isResolved()) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	@Override
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}

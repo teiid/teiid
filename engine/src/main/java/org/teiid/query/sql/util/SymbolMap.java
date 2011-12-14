@@ -35,13 +35,11 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.Assertion;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.resolver.util.ResolverUtil;
-import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 
 
 public class SymbolMap {
@@ -55,7 +53,7 @@ public class SymbolMap {
     public SymbolMap clone() {
     	SymbolMap clonedMap = new SymbolMap();
     	for (Map.Entry<ElementSymbol, Expression> entry : map.entrySet()) {
-			clonedMap.addMapping((ElementSymbol)entry.getKey().clone(), (Expression)entry.getValue().clone());
+			clonedMap.addMapping(entry.getKey().clone(), (Expression)entry.getValue().clone());
 		}
     	return clonedMap;
     }
@@ -77,14 +75,11 @@ public class SymbolMap {
     }
 
     public static final Expression getExpression(Expression symbol) {
-        if (!(symbol instanceof SingleElementSymbol)) {
-            return symbol;
-        }
         if (symbol instanceof AliasSymbol) {
             symbol = ((AliasSymbol)symbol).getSymbol();
         }
 
-        if (symbol instanceof ExpressionSymbol && !(symbol instanceof AggregateSymbol)) {
+        if (symbol instanceof ExpressionSymbol) {
             ExpressionSymbol exprSymbol = (ExpressionSymbol)symbol;
             return exprSymbol.getExpression();
         }
@@ -113,7 +108,7 @@ public class SymbolMap {
     }
 
     public static final SymbolMap createSymbolMap(GroupSymbol virtualGroup,
-                                                  List<? extends SingleElementSymbol> projectCols, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+                                                  List<? extends Expression> projectCols, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
         return createSymbolMap(ResolverUtil.resolveElementsInGroup(virtualGroup, metadata), projectCols);
     }
 

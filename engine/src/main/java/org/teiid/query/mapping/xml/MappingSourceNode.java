@@ -25,6 +25,7 @@ package org.teiid.query.mapping.xml;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.teiid.core.util.Assertion;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 
@@ -153,6 +154,8 @@ public class MappingSourceNode extends MappingBaseNode {
     public ElementSymbol getMappedSymbol(ElementSymbol symbol) {
         ElementSymbol mappedSymbol = (ElementSymbol)symbolMap.get(symbol);
         if (mappedSymbol == null) {
+        	Assertion.assertTrue(symbol.getGroupSymbol() == null || !symbolMap.containsKey(symbol.getGroupSymbol()), "invalid symbol " + symbol); //$NON-NLS-1$
+
             MappingSourceNode parentSourceNode = getParentSourceNode();
             if (parentSourceNode != null) {
                 return parentSourceNode.getMappedSymbol(symbol);

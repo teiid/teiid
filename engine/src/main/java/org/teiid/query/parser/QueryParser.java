@@ -35,7 +35,6 @@ import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 
 /**
  * <p>Converts a SQL-string to an object version of a query.  This
@@ -297,14 +296,14 @@ public class QueryParser {
         return result;
     }
     
-    public SingleElementSymbol parseSelectExpression(String sql) throws QueryParserException {
+    public Expression parseSelectExpression(String sql) throws QueryParserException {
         if(sql == null) {
             throw new IllegalArgumentException(QueryPlugin.Util.getString("QueryParser.nullSqlExpr")); //$NON-NLS-1$
         }
 
         ParseInfo dummyInfo = new ParseInfo();
 
-        SingleElementSymbol result = null;
+        Expression result = null;
         try{
             result = getSqlParser(sql).selectExpression(dummyInfo);
 

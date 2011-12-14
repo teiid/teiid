@@ -22,14 +22,6 @@
 
 package org.teiid.query.sql.symbol;
 
-import org.teiid.query.sql.LanguageObject;
-
-/** 
- * This is the server's representation of a metadata symbol that can be used
- * in a SELECT statement.  It exists as a typing mechanism and to provide a single
- * additional method to get an ordered list of elements from each symbol.
- */
-public interface SelectSymbol extends LanguageObject {
-	
+public interface DerivedExpression extends Expression {
 
 }

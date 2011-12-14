@@ -24,7 +24,6 @@ package org.teiid.query.sql.lang;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -213,9 +212,6 @@ public class StoredProcedure extends ProcedureContainer {
         copy.setProcedureCallableName(getProcedureCallableName());
         copy.setProcedureID(getProcedureID());
         copy.setGroup(getGroup().clone());
-        if (getTemporaryMetadata() != null){
-            copy.setTemporaryMetadata(new HashMap(getTemporaryMetadata()));
-        }
         copy.callableName = callableName;
         copy.calledWithReturn = calledWithReturn;
         List<SPParameter> params = getParameters();

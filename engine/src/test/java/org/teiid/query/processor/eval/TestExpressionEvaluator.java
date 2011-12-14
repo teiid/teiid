@@ -59,7 +59,7 @@ import org.teiid.query.util.CommandContext;
 @SuppressWarnings("nls")
 public class TestExpressionEvaluator {
 
-    public void helpTestEval(Expression expr, SingleElementSymbol[] elementList, Object[] valueList, ProcessorDataManager dataMgr, CommandContext context, Object expectedValue) {
+    public void helpTestEval(Expression expr, Expression[] elementList, Object[] valueList, ProcessorDataManager dataMgr, CommandContext context, Object expectedValue) {
         try {
             Object actualValue = helpEval(expr, elementList, valueList, dataMgr, context);
             assertEquals("Did not get expected result", expectedValue, actualValue); //$NON-NLS-1$
@@ -68,7 +68,7 @@ public class TestExpressionEvaluator {
         }
     }
 
-    public Object helpEval(Expression expr, SingleElementSymbol[] elementList, Object[] valueList, ProcessorDataManager dataMgr, CommandContext context) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
+    public Object helpEval(Expression expr, Expression[] elementList, Object[] valueList, ProcessorDataManager dataMgr, CommandContext context) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
         Map elements = new HashMap();
         if (elementList != null) {
             for(int i=0; i<elementList.length; i++) {
@@ -100,25 +100,25 @@ public class TestExpressionEvaluator {
     @Test public void testSearchedCaseExpression1() {
         SearchedCaseExpression expr = TestSearchedCaseExpression.example(3);
         helpTestEval(expr,
-                     new SingleElementSymbol[] {new ElementSymbol("x")}, //$NON-NLS-1$
+                     new Expression[] {new ElementSymbol("x")}, //$NON-NLS-1$
                      new Object[] {new Integer(0)},
                      null,
                      null,
                      new Integer(0));
         helpTestEval(expr,
-                     new SingleElementSymbol[] {new ElementSymbol("x")}, //$NON-NLS-1$
+                     new Expression[] {new ElementSymbol("x")}, //$NON-NLS-1$
                      new Object[] {new Integer(1)},
                      null,
                      null,
                      new Integer(1));
         helpTestEval(expr,
-                     new SingleElementSymbol[] {new ElementSymbol("x")}, //$NON-NLS-1$
+                     new Expression[] {new ElementSymbol("x")}, //$NON-NLS-1$
                      new Object[] {new Integer(2)},
                      null,
                      null,
                      new Integer(2));
         helpTestEval(expr,
-                     new SingleElementSymbol[] {new ElementSymbol("x")}, //$NON-NLS-1$
+                     new Expression[] {new ElementSymbol("x")}, //$NON-NLS-1$
                      new Object[] {new Integer(3)},
                      null,
                      null,
@@ -126,14 +126,14 @@ public class TestExpressionEvaluator {
     }
     
     @Test public void testConstant() {
-        helpTestEval(new Constant("xyz", String.class), new SingleElementSymbol[0], new Object[0], null, null, "xyz"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestEval(new Constant("xyz", String.class), new Expression[0], new Object[0], null, null, "xyz"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testElement1() {
         ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
         ElementSymbol e2 = new ElementSymbol("e2"); //$NON-NLS-1$
         
-        SingleElementSymbol[] elements = new SingleElementSymbol[] {
+        Expression[] elements = new Expression[] {
             e1, e2
         };
         
@@ -148,7 +148,7 @@ public class TestExpressionEvaluator {
         ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
         ElementSymbol e2 = new ElementSymbol("e2"); //$NON-NLS-1$
         
-        SingleElementSymbol[] elements = new SingleElementSymbol[] {
+        Expression[] elements = new Expression[] {
             e1, e2
         };
         
@@ -165,7 +165,7 @@ public class TestExpressionEvaluator {
     @Test public void testElement3() throws Exception {
         ElementSymbol e2 = new ElementSymbol("e2"); //$NON-NLS-1$
         
-        SingleElementSymbol[] elements = new SingleElementSymbol[] {};
+        Expression[] elements = new Expression[] {};
         
         Object[] values = new Object[] { 
             "xyz", "abc" //$NON-NLS-1$ //$NON-NLS-2$
@@ -190,7 +190,7 @@ public class TestExpressionEvaluator {
         FunctionDescriptor desc = RealMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("concat", new Class[] { String.class, String.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
 
-        SingleElementSymbol[] elements = new SingleElementSymbol[] {
+        Expression[] elements = new Expression[] {
             e1, e2
         };
         
@@ -212,7 +212,7 @@ public class TestExpressionEvaluator {
         FunctionDescriptor desc = RealMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("concat", new Class[] { String.class, String.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
 
-        SingleElementSymbol[] elements = new SingleElementSymbol[] {
+        Expression[] elements = new Expression[] {
             e1, e2
         };
         
@@ -233,7 +233,7 @@ public class TestExpressionEvaluator {
         FunctionDescriptor desc = RealMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, String.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
 
-        SingleElementSymbol[] elements = new SingleElementSymbol[] {
+        Expression[] elements = new Expression[] {
             e1, e2
         };
         

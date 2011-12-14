@@ -158,9 +158,9 @@ public class QueryRewriter {
 		boolean oldRewriteAggs = rewriteAggs;
 		QueryMetadataInterface oldMetadata = metadata;
         
-		Map tempMetadata = command.getTemporaryMetadata();
+		TempMetadataStore tempMetadata = command.getTemporaryMetadata();
         if(tempMetadata != null) {
-        	metadata = new TempMetadataAdapter(metadata, new TempMetadataStore(tempMetadata));
+        	metadata = new TempMetadataAdapter(metadata, tempMetadata);
         }
         
         switch(command.getType()) {
@@ -421,7 +421,7 @@ public class QueryRewriter {
 		List<GroupSymbol> groups = query.getFrom().getGroups();
 		HashSet<String> names = new HashSet<String>();
 		for (GroupSymbol gs : groups) {
-			names.add(gs.getCanonicalName());
+			names.add(gs.getName());
 		}
 		for (Iterator<Criteria> crits = current.iterator(); crits.hasNext();) {
 			PlannedResult plannedResult = rmc.findSubquery(crits.next());
@@ -449,13 +449,13 @@ public class QueryRewriter {
 			crits.remove();
 			
 			GroupSymbol viewName = RulePlaceAccess.recontextSymbol(new GroupSymbol("X"), names); //$NON-NLS-1$
-			viewName.setName(viewName.getCanonicalName());
+			viewName.setName(viewName.getName());
 			viewName.setDefinition(null);
 			Query q = createInlineViewQuery(viewName, plannedResult.query, metadata, plannedResult.query.getSelect().getProjectedSymbols());
 			
-			Iterator<SingleElementSymbol> iter = q.getSelect().getProjectedSymbols().iterator();
+			Iterator<Expression> iter = q.getSelect().getProjectedSymbols().iterator();
 		    HashMap<Expression, Expression> expressionMap = new HashMap<Expression, Expression>();
-		    for (SingleElementSymbol symbol : plannedResult.query.getSelect().getProjectedSymbols()) {
+		    for (Expression symbol : plannedResult.query.getSelect().getProjectedSymbols()) {
 		        expressionMap.put(SymbolMap.getExpression(symbol), SymbolMap.getExpression(iter.next()));
 		    }
 			for (int i = 0; i < plannedResult.leftExpressions.size(); i++) {
@@ -469,7 +469,7 @@ public class QueryRewriter {
 				clause.setMakeInd(true);
 			}
 		    query.getFrom().addClause(clause);
-		    query.getTemporaryMetadata().putAll(q.getTemporaryMetadata());
+		    query.getTemporaryMetadata().getData().putAll(q.getTemporaryMetadata().getData());
 			//transform the query into an inner join 
 		}
 		query.setCriteria(Criteria.combineCriteria(query.getCriteria(), Criteria.combineCriteria(current)));
@@ -484,7 +484,7 @@ public class QueryRewriter {
 				return false;
 			}
 		} else if (query.getSelect().isDistinct()) {
-			for (SingleElementSymbol projectSymbol : query.getSelect().getProjectedSymbols()) {
+			for (Expression projectSymbol : query.getSelect().getProjectedSymbols()) {
 				Expression ex = SymbolMap.getExpression(projectSymbol);
 	            if (FunctionCollectorVisitor.isNonDeterministic(ex)) {
 	            	return true;
@@ -516,7 +516,7 @@ public class QueryRewriter {
 			return false;
 		}
 		HashSet<Expression> selectExpressions = new HashSet<Expression>();
-		for (SingleElementSymbol selectExpr : query.getSelect().getProjectedSymbols()) {
+		for (Expression selectExpr : query.getSelect().getProjectedSymbols()) {
 			selectExpressions.add(SymbolMap.getExpression(selectExpr));
 		}
 		for (Expression groupByExpr : groupBy.getSymbols()) {
@@ -570,7 +570,7 @@ public class QueryRewriter {
             return queryCommand;
         }
         Select select = queryCommand.getProjectedQuery().getSelect();
-        final List<SingleElementSymbol> projectedSymbols = select.getProjectedSymbols();
+        final List<Expression> projectedSymbols = select.getProjectedSymbols();
         
         LinkedList<OrderByItem> unrelatedItems = new LinkedList<OrderByItem>();
         
@@ -584,20 +584,20 @@ public class QueryRewriter {
 			LinkedList<OrderByItem> unrelatedItems) {
 		HashSet<Expression> previousExpressions = new HashSet<Expression>();
         for (int i = 0; i < orderBy.getVariableCount(); i++) {
-        	SingleElementSymbol querySymbol = orderBy.getVariable(i);
+        	Expression querySymbol = orderBy.getVariable(i);
         	int index = orderBy.getExpressionPosition(i);
     		boolean isUnrelated = false;
         	if (index == -1) {
     			unrelatedItems.add(orderBy.getOrderByItems().get(i));
     			isUnrelated = (querySymbol instanceof ExpressionSymbol);
         	} else {
-        		querySymbol = (SingleElementSymbol)projectedSymbols.get(index);
+        		querySymbol = (Expression)projectedSymbols.get(index);
         	}
         	Expression expr = SymbolMap.getExpression(querySymbol);
         	if (!previousExpressions.add(expr) || (queryCommand instanceof Query && EvaluatableVisitor.willBecomeConstant(expr))) {
                 orderBy.removeOrderByItem(i--);
         	} else if (!isUnrelated) {
-        		orderBy.getOrderByItems().get(i).setSymbol((SingleElementSymbol)querySymbol.clone());
+        		orderBy.getOrderByItems().get(i).setSymbol((Expression)querySymbol.clone());
         	}
         }
         if (orderBy.getVariableCount() == 0) {
@@ -632,7 +632,7 @@ public class QueryRewriter {
 	private Insert correctDatatypes(Insert insert) {
 		boolean needsView = false;
 		for (int i = 0; !needsView && i < insert.getVariables().size(); i++) {
-		    SingleElementSymbol ses = insert.getVariables().get(i);
+		    Expression ses = insert.getVariables().get(i);
 		    if (ses.getType() != insert.getQueryExpression().getProjectedSymbols().get(i).getType()) {
 		        needsView = true;
 		    }
@@ -1216,14 +1216,14 @@ public class QueryRewriter {
 	    		CompareCriteria cc = new CompareCriteria();
 	    		cc.setLeftExpression(criteria.getLeftExpression());
 	    		Query q = createInlineViewQuery(new GroupSymbol("X"), criteria.getCommand(), metadata, criteria.getCommand().getProjectedSymbols()); //$NON-NLS-1$
-	    		SingleElementSymbol ses = q.getProjectedSymbols().get(0);
+	    		Expression ses = q.getProjectedSymbols().get(0);
 	    		Expression expr = SymbolMap.getExpression(ses);
 	    		q.getSelect().clearSymbols();
 	    		AggregateSymbol.Type type = Type.MAX;
 	    		if (criteria.getOperator() == CompareCriteria.GT || criteria.getOperator() == CompareCriteria.GE) {
 	    			type = Type.MIN;
 	    		}
-	    		q.getSelect().addSymbol(new AggregateSymbol(ses.getName(), type.name(), false, expr));
+	    		q.getSelect().addSymbol(new AggregateSymbol(type.name(), type.name(), false, expr));
 	    		cc.setRightExpression(new ScalarSubquery(q));
 				cc.setOperator(criteria.getOperator());
 	    		return rewriteCriteria(cc);
@@ -1251,7 +1251,7 @@ public class QueryRewriter {
         return criteria;
     }
     
-    private Criteria simplifyWithInverse(CompareCriteria criteria) throws TeiidComponentException, TeiidProcessingException{
+    private Criteria simplifyWithInverse(CompareCriteria criteria) throws TeiidProcessingException{
         Expression leftExpr = criteria.getLeftExpression();
         
         Function leftFunction = (Function) leftExpr;
@@ -1293,7 +1293,7 @@ public class QueryRewriter {
      * @return CompareCriteria
      */
     private CompareCriteria simplifyMathematicalCriteria(CompareCriteria criteria)
-    throws TeiidComponentException, TeiidProcessingException{
+    throws TeiidProcessingException{
 
         Expression leftExpr = criteria.getLeftExpression();
         Expression rightExpr = criteria.getRightExpression();
@@ -1872,7 +1872,7 @@ public class QueryRewriter {
 		return criteria;
 	}
 	
-	public static Expression rewriteExpression(Expression expression, CreateProcedureCommand procCommand, CommandContext context, QueryMetadataInterface metadata) throws TeiidComponentException, TeiidProcessingException{
+	public static Expression rewriteExpression(Expression expression, CommandContext context, QueryMetadataInterface metadata) throws TeiidComponentException, TeiidProcessingException{
 		return new QueryRewriter(metadata, context).rewriteExpressionDirect(expression);
 	}
 
@@ -1891,7 +1891,7 @@ public class QueryRewriter {
 
                 if (value == null) {
                 	if (es.getGroupSymbol().getSchema() == null) {
-                        String grpName = es.getGroupSymbol().getCanonicalName();
+                        String grpName = es.getGroupSymbol().getName();
 		                if (grpName.equals(ProcedureReservedWords.CHANGING)) {
 		                    Assertion.failed("Changing value should not be null"); //$NON-NLS-1$
 		                } 
@@ -1911,7 +1911,9 @@ public class QueryRewriter {
             return expression;
     	}
     	boolean isBindEligible = true;
-    	if(expression instanceof Function) {
+    	if (expression instanceof AggregateSymbol) {
+    		expression = rewriteExpression((AggregateSymbol)expression);	
+    	} else if(expression instanceof Function) {
     		isBindEligible = !isConstantConvert(expression);
     		expression = rewriteFunction((Function) expression);
 		} else if (expression instanceof CaseExpression) {
@@ -1932,11 +1934,7 @@ public class QueryRewriter {
             }
             return expression;
         } else if (expression instanceof ExpressionSymbol) {
-        	if (expression instanceof AggregateSymbol) {
-        		expression = rewriteExpression((AggregateSymbol)expression);	
-        	} else {
-            	expression = rewriteExpressionDirect(((ExpressionSymbol)expression).getExpression());
-        	}
+        	expression = rewriteExpressionDirect(((ExpressionSymbol)expression).getExpression());
         } else if (expression instanceof Criteria) {
         	expression = rewriteCriteria((Criteria)expression);
         } else {
@@ -2005,7 +2003,7 @@ public class QueryRewriter {
     		SearchedCaseExpression sce = new SearchedCaseExpression(Arrays.asList(cond), Arrays.asList(ex));
     		sce.setType(ex.getType());
     		expression.setCondition(null);
-    		expression.setExpression(sce);
+    		expression.setArgs(new Expression[] {sce});
     	}
 		return expression;
 	}
@@ -2191,6 +2189,10 @@ public class QueryRewriter {
 
             if(srcType != null && tgtType != null && srcType.equals(tgtType)) {
                 return newArgs[0]; //unnecessary conversion
+            }
+            
+            if (function.isImplicit()) {
+            	function.setImplicit(false);
             }
             
             if (!(newArgs[0] instanceof Function) || tgtType == DataTypeManager.DefaultDataClasses.OBJECT) {
@@ -2448,7 +2450,7 @@ public class QueryRewriter {
     public static Query createInlineViewQuery(GroupSymbol inlineGroup,
                                                Command nested,
                                                QueryMetadataInterface metadata,
-                                               List<? extends SingleElementSymbol> actualSymbols) throws QueryMetadataException,
+                                               List<? extends Expression> actualSymbols) throws QueryMetadataException,
                                                                   QueryResolverException,
                                                                   TeiidComponentException {
         Query query = new Query();
@@ -2466,19 +2468,19 @@ public class QueryRewriter {
         inlineGroup.setMetadataID(gid);
         
         List<Class<?>> actualTypes = new ArrayList<Class<?>>(nested.getProjectedSymbols().size());
-        for (SingleElementSymbol ses : actualSymbols) {
+        for (Expression ses : actualSymbols) {
             actualTypes.add(ses.getType());
         }
-        List<SingleElementSymbol> selectSymbols = SetQuery.getTypedProjectedSymbols(ResolverUtil.resolveElementsInGroup(inlineGroup, tma), actualTypes, tma);
-        Iterator<? extends SingleElementSymbol> iter = actualSymbols.iterator();
-        for (SingleElementSymbol ses : selectSymbols) {
-        	ses = (SingleElementSymbol)ses.clone();
-        	SingleElementSymbol actual = iter.next();
-        	if (!ses.getShortCanonicalName().equals(actual.getShortCanonicalName())) {
+        List<Expression> selectSymbols = SetQuery.getTypedProjectedSymbols(ResolverUtil.resolveElementsInGroup(inlineGroup, tma), actualTypes, tma);
+        Iterator<? extends Expression> iter = actualSymbols.iterator();
+        for (Expression ses : selectSymbols) {
+        	ses = (Expression)ses.clone();
+        	Expression actual = iter.next();
+        	if (!Symbol.getShortName(ses).equals(Symbol.getShortName(actual))) {
 	        	if (ses instanceof AliasSymbol) {
-	        		((AliasSymbol)ses).setShortName(actual.getShortName());
+	        		((AliasSymbol)ses).setShortName(Symbol.getShortName(actual));
 	        	} else {
-	        		ses = new AliasSymbol(actual.getShortName(), ses);
+	        		ses = new AliasSymbol(Symbol.getShortName(actual), ses);
 	        	}
         	}
 			select.addSymbol(ses);
@@ -2492,7 +2494,7 @@ public class QueryRewriter {
         sqfc.getGroupSymbol().setMetadataID(inlineGroup.getMetadataID());
         from.addClause(sqfc);
         //copy the metadata onto the new query so that temp metadata adapters will be used in later calls
-        query.getTemporaryMetadata().putAll(store.getData()); 
+        query.getTemporaryMetadata().getData().putAll(store.getData()); 
         return query;
     }    
     
@@ -2500,15 +2502,15 @@ public class QueryRewriter {
         
         select.setSymbols(select.getProjectedSymbols());
         
-        List symbols = select.getSymbols();
+        List<Expression> symbols = select.getSymbols();
         
         HashSet<String> uniqueNames = new HashSet<String>();
         
         for(int i = 0; i < symbols.size(); i++) {
             
-            SingleElementSymbol symbol = (SingleElementSymbol)symbols.get(i);
+            Expression symbol = symbols.get(i);
             
-            String baseName = symbol.getShortCanonicalName(); 
+            String baseName = Symbol.getShortName(symbol); 
             String name = baseName;
 
             int exprID = 0;
@@ -2591,7 +2593,7 @@ public class QueryRewriter {
 		query.setOrderBy(null);
 		SymbolMap expressionMapping = SymbolMap.createSymbolMap(update.getGroup(), query.getProjectedSymbols(), metadata);
 		
-		ArrayList<SingleElementSymbol> selectSymbols = mapChangeList(update, symbolMap);
+		ArrayList<Expression> selectSymbols = mapChangeList(update, symbolMap);
 		query.setSelect(new Select(selectSymbols));
 		ExpressionMappingVisitor emv = new ExpressionMappingVisitor(expressionMapping.asMap(), true);
 		PostOrderNavigator.doVisit(query.getSelect(), emv);
@@ -2607,18 +2609,18 @@ public class QueryRewriter {
 		return createUpdateProcedure(update, query, group, correlationName);
 	}
 
-	private ArrayList<SingleElementSymbol> mapChangeList(Update update,
+	private ArrayList<Expression> mapChangeList(Update update,
 			Map<ElementSymbol, ElementSymbol> symbolMap) {
-		ArrayList<SingleElementSymbol> selectSymbols = new ArrayList<SingleElementSymbol>(update.getChangeList().getClauses().size());
+		ArrayList<Expression> selectSymbols = new ArrayList<Expression>(update.getChangeList().getClauses().size());
 		int i = 0;
 		for (SetClause clause : update.getChangeList().getClauses()) {
 			Expression ex = clause.getValue();
-			SingleElementSymbol selectSymbol = null;
+			Expression selectSymbol = null;
 			if (!EvaluatableVisitor.willBecomeConstant(ex)) {
-				if (!(ex instanceof SingleElementSymbol)) {
+				if (!(ex instanceof Expression)) {
 					selectSymbol = new ExpressionSymbol("expr", ex); //$NON-NLS-1$
 				} else {
-					selectSymbol = (SingleElementSymbol)ex;
+					selectSymbol = (Expression)ex;
 				}
 				selectSymbols.add(new AliasSymbol("s_" +i, selectSymbol)); //$NON-NLS-1$
 				ex = new ElementSymbol("s_" +i); //$NON-NLS-1$
@@ -2654,7 +2656,7 @@ public class QueryRewriter {
 		CreateProcedureCommand cupc = new CreateProcedureCommand();
 		Block parent = new Block();
 		parent.setAtomic(true);
-		ElementSymbol rowsUpdated = new ElementSymbol(ProcedureReservedWords.VARIABLES+ElementSymbol.SEPARATOR+"ROWS_UPDATED"); //$NON-NLS-1$
+		ElementSymbol rowsUpdated = new ElementSymbol(ProcedureReservedWords.VARIABLES+Symbol.SEPARATOR+"ROWS_UPDATED"); //$NON-NLS-1$
 		DeclareStatement ds = new DeclareStatement(rowsUpdated, DataTypeManager.DefaultDataTypes.INTEGER, new Constant(0));
 		parent.addStatement(ds);
 		LoopStatement ls = new LoopStatement(b, query, "X"); //$NON-NLS-1$
@@ -2682,9 +2684,9 @@ public class QueryRewriter {
 		List<Object> ids = metadata.getElementIDsInKey(pk);
 		List<Criteria> pkCriteria = new ArrayList<Criteria>(ids.size());
 		for (Object object : ids) {
-			ElementSymbol es = new ElementSymbol(correlationName + ElementSymbol.SEPARATOR + metadata.getName(object));
+			ElementSymbol es = new ElementSymbol(correlationName + Symbol.SEPARATOR + metadata.getName(object));
 			query.getSelect().addSymbol(new AliasSymbol("s_" +i, es)); //$NON-NLS-1$
-			es = new ElementSymbol(group.getName() + ElementSymbol.SEPARATOR + metadata.getName(object));
+			es = new ElementSymbol(group.getName() + Symbol.SEPARATOR + metadata.getName(object));
 			pkCriteria.add(new CompareCriteria(es, CompareCriteria.EQ, new ElementSymbol("X.s_" + i))); //$NON-NLS-1$
 			i++;
 		}
@@ -2755,7 +2757,7 @@ public class QueryRewriter {
 	public static Command createUpdateProcedure(Update update, QueryMetadataInterface metadata, CommandContext context) throws QueryResolverException, QueryMetadataException, TeiidComponentException, TeiidProcessingException {
 		QueryRewriter rewriter = new QueryRewriter(metadata, context);
 		Criteria crit = update.getCriteria();
-		ArrayList<SingleElementSymbol> selectSymbols = rewriter.mapChangeList(update, null);
+		ArrayList<Expression> selectSymbols = rewriter.mapChangeList(update, null);
 		Query query = new Query(new Select(selectSymbols), new From(Arrays.asList(new UnaryFromClause(update.getGroup()))), crit, null, null);
 		return rewriter.createUpdateProcedure(update, query, update.getGroup(), update.getGroup().getName());
 	}

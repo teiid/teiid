@@ -78,13 +78,9 @@ public class Reference implements Expression, ContextReference {
     	this.positional = ref.positional;
     	this.type = ref.type;
     	if (ref.expression != null) {
-    		this.expression = (ElementSymbol)ref.expression.clone();
+    		this.expression = ref.expression.clone();
     	}
     	this.constraint = ref.constraint;
-    }
-
-    public boolean isResolved() {
-        return (expression != null || this.type != null);
     }
 
     public int getIndex() {

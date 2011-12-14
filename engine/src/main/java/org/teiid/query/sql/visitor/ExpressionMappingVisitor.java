@@ -33,44 +33,12 @@ import java.util.Set;
 
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.lang.BetweenCriteria;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.DependentSetCriteria;
-import org.teiid.query.sql.lang.DynamicCommand;
-import org.teiid.query.sql.lang.ExpressionCriteria;
-import org.teiid.query.sql.lang.GroupBy;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.IsNullCriteria;
-import org.teiid.query.sql.lang.Limit;
-import org.teiid.query.sql.lang.MatchCriteria;
-import org.teiid.query.sql.lang.OrderByItem;
-import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.SetClause;
-import org.teiid.query.sql.lang.SetCriteria;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.SubqueryCompareCriteria;
-import org.teiid.query.sql.lang.SubquerySetCriteria;
-import org.teiid.query.sql.lang.XMLTable;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.AssignmentStatement;
-import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.CaseExpression;
-import org.teiid.query.sql.symbol.DerivedColumn;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
-import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.QueryString;
-import org.teiid.query.sql.symbol.SearchedCaseExpression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.query.sql.symbol.WindowSpecification;
-import org.teiid.query.sql.symbol.XMLElement;
-import org.teiid.query.sql.symbol.XMLParse;
-import org.teiid.query.sql.symbol.XMLSerialize;
+import org.teiid.query.sql.symbol.*;
 
 
 /**
@@ -101,7 +69,18 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     }
     
     public void visit(Select obj) {
-        replaceSymbols(obj.getSymbols(), true);
+    	List<Expression> symbols = obj.getSymbols();
+    	for (int i = 0; i < symbols.size(); i++) {
+            Expression symbol = symbols.get(i);
+            
+            if (symbol instanceof MultipleElementSymbol) {
+            	continue;
+            }
+            
+            Expression replacmentSymbol = replaceSymbol(symbol, true);
+            
+            symbols.set(i, replacmentSymbol);
+        }
     }
     
     public boolean isClone() {
@@ -141,38 +120,20 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     	obj.setExpression(replaceExpression(obj.getExpression()));
     }
     
-    private void replaceSymbols(List symbols, boolean alias) {
-        for (int i = 0; i < symbols.size(); i++) {
-            Object symbol = symbols.get(i);
-            
-            if (symbol instanceof SingleElementSymbol) {
-                SingleElementSymbol ses = (SingleElementSymbol)symbol;
-                SingleElementSymbol replacmentSymbol = replaceSymbol(ses, alias);
-                
-                symbols.set(i, replacmentSymbol);
-            }
-        }
-    }
-
-	private SingleElementSymbol replaceSymbol(SingleElementSymbol ses,
+	private Expression replaceSymbol(Expression ses,
 			boolean alias) {
-		SingleElementSymbol replacmentSymbol = null; 
-
 		Expression expr = ses;
-		if (ses instanceof ExpressionSymbol && !(ses instanceof AggregateSymbol)) {
+		String name = Symbol.getShortName(ses);
+		if (ses instanceof ExpressionSymbol) {
 		    expr = ((ExpressionSymbol)ses).getExpression();
 		}
 		
-		Expression replacement = replaceExpression(expr);
+		Expression replacmentSymbol = replaceExpression(expr);
 		
-		if (replacement instanceof SingleElementSymbol) {
-		    replacmentSymbol = (SingleElementSymbol)replacement;
-		} else {
-		    replacmentSymbol = new ExpressionSymbol(ses.getShortName(), replacement);
-		}
-		
-		if (alias && createAliases() && !replacmentSymbol.getShortCanonicalName().equals(ses.getShortCanonicalName())) {
-		    replacmentSymbol = new AliasSymbol(ses.getShortName(), replacmentSymbol);
+		if (!(replacmentSymbol instanceof Symbol)) {
+			replacmentSymbol = new ExpressionSymbol(name, replacmentSymbol);
+		} else if (alias && createAliases() && !Symbol.getShortName(replacmentSymbol).equals(name)) {
+		    replacmentSymbol = new AliasSymbol(name, replacmentSymbol);
 		}
 		return replacmentSymbol;
 	}
@@ -182,12 +143,7 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
      */
     public void visit(AliasSymbol obj) {
         Expression replacement = replaceExpression(obj.getSymbol());
-        
-        if (replacement instanceof SingleElementSymbol) {
-            obj.setSymbol((SingleElementSymbol)replacement);
-        } else {
-            obj.setSymbol(new ExpressionSymbol(obj.getName(), replacement));
-        }
+        obj.setSymbol(replacement);
     }
     
     public void visit(ExpressionSymbol expr) {
@@ -325,9 +281,7 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     }
     
     public void visit(AggregateSymbol obj) {
-    	if (obj.getExpression() != null) {
-    		obj.setExpression(replaceExpression(obj.getExpression()));
-    	}
+    	visit((Function)obj);
     	if (obj.getCondition() != null) { 
     		obj.setCondition(replaceExpression(obj.getCondition()));
     	}
@@ -347,7 +301,7 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     
     @Override
     public void visit(OrderByItem obj) {
-    	obj.setSymbol(replaceSymbol(obj.getSymbol(), true));
+    	obj.setSymbol(replaceSymbol(obj.getSymbol(), obj.getExpressionPosition() != -1));
     }
     
     public void visit(Limit obj) {

@@ -178,9 +178,4 @@ public abstract class Criteria implements Expression {
     	return DataTypeManager.DefaultDataClasses.BOOLEAN;
     }
     
-    @Override
-    public boolean isResolved() {
-    	return true;
-    }
-	
 }  // END CLASS

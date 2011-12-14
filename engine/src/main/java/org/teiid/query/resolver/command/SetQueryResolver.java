@@ -23,7 +23,6 @@
 package org.teiid.query.resolver.command;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -41,7 +40,7 @@ import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 
 
 public class SetQueryResolver implements CommandResolver {
@@ -61,9 +60,9 @@ public class SetQueryResolver implements CommandResolver {
         QueryResolver.setChildMetadata(firstCommand, setQuery);
         QueryResolver.resolveCommand(firstCommand, metadata.getMetadata(), false);
 
-        List<SingleElementSymbol> firstProject = firstCommand.getProjectedSymbols();
+        List<Expression> firstProject = firstCommand.getProjectedSymbols();
         List<Class<?>> firstProjectTypes = new ArrayList<Class<?>>();
-        for (SingleElementSymbol symbol : firstProject) {
+        for (Expression symbol : firstProject) {
             firstProjectTypes.add(symbol.getType());
         }
 
@@ -101,7 +100,7 @@ public class SetQueryResolver implements CommandResolver {
             ResolverUtil.resolveLimit(setQuery.getLimit());
         }
         
-        setQuery.setTemporaryMetadata(new HashMap(firstCommand.getTemporaryMetadata()));
+        setQuery.setTemporaryMetadata(firstCommand.getTemporaryMetadata().clone());
     }
 
     private void setProjectedTypes(SetQuery setQuery,
@@ -114,7 +113,7 @@ public class SetQueryResolver implements CommandResolver {
             List projectedSymbols = child.getProjectedSymbols();
             if (child.getOrderBy() != null) {
                 for (int j = 0; j < projectedSymbols.size(); j++) {
-                    SingleElementSymbol ses = (SingleElementSymbol)projectedSymbols.get(j);
+                    Expression ses = (Expression)projectedSymbols.get(j);
                     Class<?> targetType = firstProjectTypes.get(j);
                     if (ses.getType() != targetType && orderByContainsVariable(child.getOrderBy(), ses, j)) {
                         String sourceTypeName = DataTypeManager.getDataTypeName(ses.getType());
@@ -134,7 +133,7 @@ public class SetQueryResolver implements CommandResolver {
      * @param position 0-based index of the variable
      * @return True if the ORDER BY contains the element
      */
-    public static boolean orderByContainsVariable(OrderBy orderBy, SingleElementSymbol ses, int position) {
+    public static boolean orderByContainsVariable(OrderBy orderBy, Expression ses, int position) {
     	for (OrderByItem item : orderBy.getOrderByItems()) {
 			if (item.getExpressionPosition() == position) {
 				return true;
@@ -146,7 +145,7 @@ public class SetQueryResolver implements CommandResolver {
 	static void checkSymbolTypes(List firstProjectTypes, List projSymbols) {
         for(int j=0; j<projSymbols.size(); j++){
             Class firstProjType = (Class)firstProjectTypes.get(j);
-    		SingleElementSymbol projSymbol = (SingleElementSymbol)projSymbols.get(j);
+    		Expression projSymbol = (Expression)projSymbols.get(j);
             Class projType = projSymbol.getType();
             
             if(firstProjType.equals(projType)){

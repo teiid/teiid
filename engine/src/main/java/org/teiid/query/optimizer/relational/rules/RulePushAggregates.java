@@ -22,19 +22,7 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -69,16 +57,7 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.SetQuery.Operation;
-import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
-import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SearchedCaseExpression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
@@ -219,7 +198,7 @@ public class RulePushAggregates implements
 			return;
 		}
 		
-		List<SingleElementSymbol> copy = new ArrayList<SingleElementSymbol>(aggregates);
+		List<AggregateSymbol> copy = new ArrayList<AggregateSymbol>(aggregates);
 		aggregates.clear();
 		Map<AggregateSymbol, Expression> aggMap = buildAggregateMap(copy, metadata, aggregates);
 		
@@ -247,7 +226,7 @@ public class RulePushAggregates implements
 		
 		updateParentAggs(groupNode, context, aggMap, metadata);
 		
-		List<SingleElementSymbol> symbols = (List<SingleElementSymbol>) NodeEditor.findNodePreOrder(unionSourceParent, NodeConstants.Types.PROJECT).getProperty(Info.PROJECT_COLS);
+		List<Expression> symbols = (List<Expression>) NodeEditor.findNodePreOrder(unionSourceParent, NodeConstants.Types.PROJECT).getProperty(Info.PROJECT_COLS);
 		GroupSymbol modifiedGroup = group.clone();
 		SymbolMap symbolMap = createSymbolMap(modifiedGroup, symbols, unionSourceParent, metadata);
 		unionSourceParent.setProperty(Info.SYMBOL_MAP, symbolMap);
@@ -290,11 +269,11 @@ public class RulePushAggregates implements
 			SymbolMap oldGroupingMap = (SymbolMap) groupNode.getProperty(Info.SYMBOL_MAP);
 			GroupSymbol oldGroup = oldGroupingMap.asMap().keySet().iterator().next().getGroupSymbol();
 			SymbolMap groupingMap = RelationalPlanner.buildGroupingNode(compositeAggs, (List<? extends Expression>) groupNode.getProperty(Info.GROUP_COLS), groupNode, context, idGenerator);
-			ArrayList<SingleElementSymbol> projectCols = new ArrayList<SingleElementSymbol>(oldGroupingMap.asMap().size());
+			ArrayList<Expression> projectCols = new ArrayList<Expression>(oldGroupingMap.asMap().size());
 			SymbolMap correctedMap = new SymbolMap();
 			Map<Expression, ElementSymbol> inverseMap = groupingMap.inserseMapping();
 			for (Map.Entry<ElementSymbol, Expression> entry : oldGroupingMap.asMap().entrySet()) {
-				SingleElementSymbol ses = null;
+				Expression ses = null;
 				if (entry.getValue() instanceof AggregateSymbol) {
 					Expression ex = aggMap.get(entry.getValue());
 					if (ex instanceof AggregateSymbol) {
@@ -306,8 +285,8 @@ public class RulePushAggregates implements
 				} else {
 					ses = inverseMap.get(entry.getValue());
 				}
-				ses = (SingleElementSymbol) ses.clone();
-				projectCols.add(new AliasSymbol(entry.getKey().getShortCanonicalName(), ses));
+				ses = (Expression) ses.clone();
+				projectCols.add(new AliasSymbol(Symbol.getShortName(entry.getKey()), ses));
 				correctedMap.addMapping(entry.getKey(), SymbolMap.getExpression(ses));
 			}
 			PlanNode projectNode = groupNode.getParent();
@@ -350,7 +329,7 @@ public class RulePushAggregates implements
 					planNode, false);
 			first = false;
 		}
-		List<SingleElementSymbol> symbols = (List<SingleElementSymbol>) NodeEditor.findNodePreOrder(sourceNode, NodeConstants.Types.PROJECT).getProperty(Info.PROJECT_COLS);
+		List<Expression> symbols = (List<Expression>) NodeEditor.findNodePreOrder(sourceNode, NodeConstants.Types.PROJECT).getProperty(Info.PROJECT_COLS);
 		GroupSymbol modifiedGroup = group.clone();
 		SymbolMap symbolMap = createSymbolMap(modifiedGroup, symbols, sourceNode, metadata);
 		sourceNode.setProperty(Info.SYMBOL_MAP, symbolMap);
@@ -383,18 +362,18 @@ public class RulePushAggregates implements
 		//branches other than the first need to have their projected column names updated
 		if (!first) {
 			PlanNode sortNode = NodeEditor.findNodePreOrder(planNode, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
-			List<SingleElementSymbol> sortOrder = null;
+			List<Expression> sortOrder = null;
 			OrderBy orderBy = null;
 			if (sortNode != null) {
 				orderBy = (OrderBy)sortNode.getProperty(Info.SORT_ORDER);
 				sortOrder = orderBy.getSortKeys();
 			}
-			List<SingleElementSymbol> projectCols = FrameUtil.findTopCols(planNode);
+			List<Expression> projectCols = FrameUtil.findTopCols(planNode);
 			List<ElementSymbol> virtualElements = parentMap.getKeys();
 			for (int i = 0; i < virtualElements.size(); i++) {
 				ElementSymbol virtualElem = virtualElements.get(i);
-				SingleElementSymbol projectedSymbol = projectCols.get(i);
-				if (!projectedSymbol.getShortCanonicalName().equals(virtualElem.getShortCanonicalName())) {
+				Expression projectedSymbol = projectCols.get(i);
+				if (!Symbol.getShortName(projectedSymbol).equals(Symbol.getShortName(virtualElem))) {
 					if (sortOrder != null) {
 						int sortIndex = sortOrder.indexOf(projectedSymbol);
 						if (sortIndex > -1) {
@@ -456,12 +435,12 @@ public class RulePushAggregates implements
 		}
 	}
 	
-	private void updateSymbolName(List<SingleElementSymbol> projectCols, int i,
-			ElementSymbol virtualElem, SingleElementSymbol projectedSymbol) {
+	private void updateSymbolName(List<Expression> projectCols, int i,
+			ElementSymbol virtualElem, Expression projectedSymbol) {
 		if (projectedSymbol instanceof AliasSymbol) {
-			((AliasSymbol)projectedSymbol).setShortName(virtualElem.getShortCanonicalName());
+			((AliasSymbol)projectedSymbol).setShortName(Symbol.getShortName(virtualElem));
 		} else {
-			projectCols.set(i, new AliasSymbol(virtualElem.getShortCanonicalName(), projectedSymbol));
+			projectCols.set(i, new AliasSymbol(Symbol.getShortName(virtualElem), projectedSymbol));
 		}
 	}
 
@@ -524,7 +503,7 @@ public class RulePushAggregates implements
 	}
     
 	static SymbolMap createSymbolMap(GroupSymbol group,
-			List<? extends SingleElementSymbol> virtualElements,
+			List<? extends Expression> virtualElements,
 			PlanNode child, QueryMetadataInterface metadata)
 			throws TeiidComponentException, QueryMetadataException {
 		TempMetadataStore store = new TempMetadataStore();
@@ -555,8 +534,8 @@ public class RulePushAggregates implements
         
         while (currentNode != null) {
             if (currentNode.getType() == NodeConstants.Types.PROJECT) {
-                List<SingleElementSymbol> projectedSymbols = (List<SingleElementSymbol>)currentNode.getProperty(NodeConstants.Info.PROJECT_COLS);
-                for (SingleElementSymbol symbol : projectedSymbols) {
+                List<Expression> projectedSymbols = (List<Expression>)currentNode.getProperty(NodeConstants.Info.PROJECT_COLS);
+                for (Expression symbol : projectedSymbols) {
                     mapAggregates(ElementCollectorVisitor.getAggregates(symbol, true), symbolMap, aggregates);
                 }
                 break;
@@ -764,11 +743,11 @@ public class RulePushAggregates implements
 
             if (planNode == parentJoin.getFirstChild()) {
                 if (parentJoin.hasCollectionProperty(NodeConstants.Info.LEFT_EXPRESSIONS)) {
-                	filterJoinColumns(stagedGroupingSymbols, groups, (List<SingleElementSymbol>)parentJoin.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS));
+                	filterJoinColumns(stagedGroupingSymbols, groups, (List<Expression>)parentJoin.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS));
                 }
             } else {
                 if (parentJoin.hasCollectionProperty(NodeConstants.Info.RIGHT_EXPRESSIONS)) {
-                	filterJoinColumns(stagedGroupingSymbols, groups, (List<SingleElementSymbol>)parentJoin.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS));
+                	filterJoinColumns(stagedGroupingSymbols, groups, (List<Expression>)parentJoin.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS));
                 }
             }
 
@@ -850,12 +829,11 @@ public class RulePushAggregates implements
         return result;
     }
 
-    private static Map<AggregateSymbol, Expression> buildAggregateMap(Collection<? extends SingleElementSymbol> aggregateExpressions,
+    private static Map<AggregateSymbol, Expression> buildAggregateMap(Collection<? extends AggregateSymbol> aggregateExpressions,
                                                                         QueryMetadataInterface metadata, Set<AggregateSymbol> nestedAggregates) throws QueryResolverException,
                                                                                                         TeiidComponentException {
         Map<AggregateSymbol, Expression> aggMap = new LinkedHashMap<AggregateSymbol, Expression>();
-        for (SingleElementSymbol symbol : aggregateExpressions) {
-            AggregateSymbol partitionAgg = (AggregateSymbol)symbol;
+        for (AggregateSymbol partitionAgg : aggregateExpressions) {
            
             Expression newExpression = null;
 

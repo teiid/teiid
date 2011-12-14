@@ -25,17 +25,10 @@ package org.teiid.query.sql.symbol;
 import java.util.ArrayList;
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.ArgCheck;
-import org.teiid.query.sql.symbol.AbstractCaseExpression;
-import org.teiid.query.sql.symbol.CaseExpression;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-
-
-
-import junit.framework.TestCase;
 
 public class TestCaseExpression extends TestCase {
 
@@ -206,7 +199,6 @@ public class TestCaseExpression extends TestCase {
         
         helpTestStrictEquivalence(expr.getElseExpression(), clone.getElseExpression());
         assertEquals(expr.getType(), clone.getType());
-        assertEquals(expr.isResolved(), clone.isResolved());
     }
     
     public void testGetWhenExpression() {
@@ -262,16 +254,6 @@ public class TestCaseExpression extends TestCase {
         assertEquals(new Constant("xyz"), caseExpr.getWhenExpression(1)); //$NON-NLS-1$
         assertEquals(new Constant(new Integer(20000)), caseExpr.getThenExpression(0));
         assertEquals(new Constant(new Integer(30000)), caseExpr.getThenExpression(1));
-    }
-
-    public void testIsResolved() {
-        CaseExpression expr = example(3);
-        assertFalse(expr.isResolved());
-        ElementSymbol x = (ElementSymbol)expr.getExpression();
-        x.setType(String.class);
-        x.setMetadataID("metadataID"); //$NON-NLS-1$
-        expr.setType(Integer.class);
-        assertTrue(expr.isResolved());
     }
 
     public void testGetThenExpression() {

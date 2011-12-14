@@ -24,8 +24,8 @@ public class TestVDBMerge extends AbstractMMQueryTestCase {
     			"PartsSupplier    PartsSupplier    PARTSSUPPLIER.PARTS    Table    PARTS    true    true    mmuuid:f6276601-73fe-1edc-a81c-ecf397b10590    16    null    false    false    1",
     			"PartsSupplier    PartsSupplier    PARTSSUPPLIER.SHIP_VIA    Table    SHIP_VIA    true    true    mmuuid:0f4e9b80-73ff-1edc-a81c-ecf397b10590    4    null    false    false    2",
     			"PartsSupplier    PartsSupplier    PARTSSUPPLIER.STATUS    Table    STATUS    true    true    mmuuid:1f297200-73ff-1edc-a81c-ecf397b10590    3    null    false    false    3",
-    			"PartsSupplier    PartsSupplier    PARTSSUPPLIER.SUPPLIER_PARTS    Table    SUPPLIER_PARTS    true    true    mmuuid:3deafb00-73ff-1edc-a81c-ecf397b10590    227    null    false    false    4",
-    			"PartsSupplier    PartsSupplier    PARTSSUPPLIER.SUPPLIER    Table    SUPPLIER    true    true    mmuuid:2c371ec0-73ff-1edc-a81c-ecf397b10590    16    null    false    false    5"
+    			"PartsSupplier    PartsSupplier    PARTSSUPPLIER.SUPPLIER    Table    SUPPLIER    true    true    mmuuid:2c371ec0-73ff-1edc-a81c-ecf397b10590    16    null    false    false    4",
+    			"PartsSupplier    PartsSupplier    PARTSSUPPLIER.SUPPLIER_PARTS    Table    SUPPLIER_PARTS    true    true    mmuuid:3deafb00-73ff-1edc-a81c-ecf397b10590    227    null    false    false    5"
     	};
        executeTest("select * from tables where schemaname ='PartsSupplier'", expected); //$NON-NLS-1$
 
@@ -53,12 +53,12 @@ public class TestVDBMerge extends AbstractMMQueryTestCase {
        server.mergeVDBS(VDB2, VDB1);
        
        this.internalConnection = server.createConnection("jdbc:teiid:"+VDB1);
-       executeTest("select * from tables where schemaname='BQT1'", expectedAfter); //$NON-NLS-1$
+       executeTest("select * from tables where schemaname='BQT1' order by name", expectedAfter); //$NON-NLS-1$
        
        server.undeployVDB(VDB2);
        
        // since the connection is not closed; need to behave as if still merged
-       executeTest("select * from tables where schemaname='BQT1'", expectedAfter); //$NON-NLS-1$
+       executeTest("select * from tables where schemaname='BQT1' order by name", expectedAfter); //$NON-NLS-1$
        
        // re-connect should behave as the original
        this.internalConnection.close();

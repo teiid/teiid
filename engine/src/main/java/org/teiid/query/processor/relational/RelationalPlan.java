@@ -159,7 +159,7 @@ public class RelationalPlan extends ProcessorPlan {
     					break;
     				}
     			}
-        		this.tempTableStore.setUpdatable(withCommand.getGroupSymbol().getCanonicalName(), false);
+        		this.tempTableStore.setUpdatable(withCommand.getGroupSymbol().getName(), false);
         		withToProcess.remove(0);
         		withProcessor = null;
 			}

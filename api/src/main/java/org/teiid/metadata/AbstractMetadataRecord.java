@@ -53,7 +53,6 @@ public abstract class AbstractMetadataRecord implements Serializable {
     
     private String uuid; //globally unique id
     private String name; //contextually unique name
-    private String canonicalName;
     
     private String nameInSource;
 	
@@ -102,11 +101,10 @@ public abstract class AbstractMetadataRecord implements Serializable {
 	
 	public void setName(String name) {
 		this.name = DataTypeManager.getCanonicalString(name);
-		this.canonicalName = DataTypeManager.getCanonicalString(name.toUpperCase());
 	}
 	
 	public String getCanonicalName() {
-		return canonicalName;
+		return name.toUpperCase();
 	}
 	
     public String toString() {

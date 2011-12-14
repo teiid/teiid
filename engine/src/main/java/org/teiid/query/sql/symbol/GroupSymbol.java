@@ -22,10 +22,8 @@
 
 package org.teiid.query.sql.symbol;
 
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
-import org.teiid.core.util.StringUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageVisitor;
 
@@ -59,20 +57,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     
     private String outputDefinition;
     private String schema;
-    private String canonicalSchema;
     
-    /**
-     * Cloning constructor 
-     * @param name
-     * @param canonicalName
-     * @param definition
-     * @since 4.3
-     */
-    protected GroupSymbol(String name, String canonicalName, String definition) {
-        super(name, canonicalName);
-        setDefinition(definition);
-    }
-
 	/**
 	 * Construct a symbol with a name.
 	 * @param name Name of the symbol
@@ -91,6 +76,12 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 	public GroupSymbol(String name, String definition) {
 		super(name);
 		setDefinition(definition);
+	}
+	
+	private GroupSymbol(String schmea, String shortName, String definition) {
+		this.schema = schmea;
+		this.setShortName(shortName);
+		this.setDefinition(definition);
 	}
 	
 	public Object getModelMetadataId() {
@@ -186,7 +177,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 	 * @return -1, 0, or 1 depending on how this compares to group
 	 */
     public int compareTo(GroupSymbol o) {
-    	return getCanonicalName().compareTo(o.getCanonicalName());
+    	return getName().compareTo(o.getName());
 	}
 
 	/**
@@ -194,9 +185,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 	 * @return Deep copy of the object
 	 */
 	public GroupSymbol clone() {
-		GroupSymbol copy = new GroupSymbol(getShortName(), getCanonical(), getDefinition());
-		copy.schema = this.schema;
-		copy.canonicalSchema = this.canonicalSchema;
+		GroupSymbol copy = new GroupSymbol(schema, getShortName(), getDefinition());
 		if(getMetadataID() != null) {
 			copy.setMetadataID(getMetadataID());
 		}
@@ -225,9 +214,9 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 		GroupSymbol other = (GroupSymbol) obj;
 
 		if (this.schema == null || other.schema == null) {
-			return this.getCanonicalName().equals(other.getCanonicalName());
+			return this.getName().equals(other.getName());
 		}
-		return EquivalenceUtil.areEqual(this.getCanonicalSchema(), other.getCanonicalSchema()) && this.getShortCanonicalName().equals(other.getShortCanonicalName());
+		return EquivalenceUtil.areEqual(this.schema, other.schema) && this.getShortName().equals(other.getShortName());
 	}
     
     public boolean hasAlias() {
@@ -280,23 +269,15 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     @Override
     public String getName() {
     	if (this.schema != null) {
-    		return this.schema + SingleElementSymbol.SEPARATOR + this.getShortName();
+    		return this.schema + Symbol.SEPARATOR + this.getShortName();
     	}
     	return super.getName();
     }
     
     @Override
-    public String getCanonicalName() {
-    	if (this.schema != null) {
-    		return this.getCanonicalSchema() + SingleElementSymbol.SEPARATOR + this.getShortCanonicalName();
-    	}
-    	return super.getCanonicalName();
-    }
-    
-    @Override
     public int hashCode() {
     	if (this.schema != null) {
-    		return HashCodeUtil.hashCode(this.getCanonicalSchema().hashCode(), this.getShortCanonicalName().hashCode());
+    		return HashCodeUtil.hashCode(this.schema.hashCode(), this.getShortName().hashCode());
     	}
     	return super.hashCode();
     }
@@ -309,17 +290,9 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     	} else {
     		this.schema = null;
     	}
-    	this.canonicalSchema = null;
     	super.setShortName(name);
     }
 
-	private String getCanonicalSchema() {
-		if (this.canonicalSchema == null && this.schema != null) {
-			this.canonicalSchema = DataTypeManager.getCanonicalString(StringUtil.toUpperCase(this.schema));
-		}
-		return canonicalSchema;
-	}
-	
 	public String getSchema() {
 		return schema;
 	}

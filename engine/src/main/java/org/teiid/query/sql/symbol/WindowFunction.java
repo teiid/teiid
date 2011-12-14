@@ -24,21 +24,14 @@
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
-public class WindowFunction extends SingleElementSymbol {
+public class WindowFunction implements LanguageObject, DerivedExpression {
 	
 	private AggregateSymbol function;
 	private WindowSpecification windowSpecification;
-	
-	public WindowFunction(String name) {
-		super(name);
-	}
-	
-	protected WindowFunction(String name, String canonical) {
-		super(name, canonical);
-	}
 	
 	public AggregateSymbol getFunction() {
 		return function;
@@ -60,11 +53,6 @@ public class WindowFunction extends SingleElementSymbol {
 	@Override
 	public Class<?> getType() {
 		return function.getType();
-	}
-
-	@Override
-	public boolean isResolved() {
-		return function.isResolved();
 	}
 
 	@Override
@@ -92,7 +80,7 @@ public class WindowFunction extends SingleElementSymbol {
 	
 	@Override
 	public WindowFunction clone() {
-		WindowFunction clone = new WindowFunction(this.getName(), this.getCanonical());
+		WindowFunction clone = new WindowFunction();
 		clone.setFunction((AggregateSymbol) this.function.clone());
 		clone.setWindowSpecification(this.windowSpecification.clone());
 		return clone;

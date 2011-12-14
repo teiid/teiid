@@ -58,7 +58,7 @@ public class TestXMLResolver {
     @Test public void testXMLCriteriaShortElement() {
         CompareCriteria expected = new CompareCriteria();
         GroupSymbol gs = new GroupSymbol("xmltest.doc1"); //$NON-NLS-1$
-        ElementSymbol es = new ElementSymbol("root.node1", null, gs); //$NON-NLS-1$
+        ElementSymbol es = new ElementSymbol("root.node1", gs); //$NON-NLS-1$
         expected.setLeftExpression(es);
         expected.setOperator(CompareCriteria.EQ);
         expected.setRightExpression(new Constant("yyz")); //$NON-NLS-1$
@@ -71,7 +71,7 @@ public class TestXMLResolver {
     @Test public void testXMLCriteriaLongElement1() {
         CompareCriteria expected = new CompareCriteria();
         GroupSymbol gs = new GroupSymbol("xmltest.doc1"); //$NON-NLS-1$
-        ElementSymbol es = new ElementSymbol("root.node1", null, gs); //$NON-NLS-1$
+        ElementSymbol es = new ElementSymbol("root.node1", gs); //$NON-NLS-1$
         es.setGroupSymbol(gs);
         expected.setLeftExpression(es);
         expected.setOperator(CompareCriteria.EQ);
@@ -85,7 +85,7 @@ public class TestXMLResolver {
     @Test public void testXMLCriteriaLongElement2() {
         CompareCriteria expected1 = new CompareCriteria();
         GroupSymbol gs = new GroupSymbol("xmltest.doc4"); //$NON-NLS-1$
-        ElementSymbol es1 = new ElementSymbol("root.node1", null, gs); //$NON-NLS-1$
+        ElementSymbol es1 = new ElementSymbol("root.node1", gs); //$NON-NLS-1$
         expected1.setLeftExpression(es1);
         expected1.setOperator(CompareCriteria.EQ);
         expected1.setRightExpression(new Constant("xyz"));         //$NON-NLS-1$
@@ -98,7 +98,7 @@ public class TestXMLResolver {
     @Test public void testXMLCriteriaLongElement3() {
         GroupSymbol gs = new GroupSymbol("xmltest.doc4"); //$NON-NLS-1$
         CompareCriteria expected2 = new CompareCriteria();
-        ElementSymbol es2 = new ElementSymbol("root.node1.@node2", null, gs); //$NON-NLS-1$
+        ElementSymbol es2 = new ElementSymbol("root.node1.@node2", gs); //$NON-NLS-1$
         es2.setGroupSymbol(gs);
         expected2.setLeftExpression(es2);
         expected2.setOperator(CompareCriteria.EQ);
@@ -112,7 +112,7 @@ public class TestXMLResolver {
     @Test public void testXMLCriteriaLongElement4() {
         GroupSymbol gs = new GroupSymbol("xmltest.doc4"); //$NON-NLS-1$
         CompareCriteria expected3 = new CompareCriteria();
-        ElementSymbol es3 = new ElementSymbol("root.node3", null, gs); //$NON-NLS-1$
+        ElementSymbol es3 = new ElementSymbol("root.node3", gs); //$NON-NLS-1$
         expected3.setLeftExpression(es3);
         expected3.setOperator(CompareCriteria.EQ);
         expected3.setRightExpression(new Constant("xyz")); //$NON-NLS-1$
@@ -194,7 +194,7 @@ public class TestXMLResolver {
     @Test public void testXMLCriteriaLongElementInAnonymous() {                  
         CompareCriteria expected = new CompareCriteria();
         GroupSymbol gs = new GroupSymbol("xmltest.doc2"); //$NON-NLS-1$
-        ElementSymbol es = new ElementSymbol("root.node1.node3", null, gs); //$NON-NLS-1$
+        ElementSymbol es = new ElementSymbol("root.node1.node3", gs); //$NON-NLS-1$
         expected.setLeftExpression(es);
         expected.setOperator(CompareCriteria.EQ);
         expected.setRightExpression(new Constant("yyz")); //$NON-NLS-1$
@@ -205,14 +205,6 @@ public class TestXMLResolver {
     }    
 
     @Test public void testXMLAmbiguousShortName() {                  
-        CompareCriteria expected = new CompareCriteria();
-        ElementSymbol es = new ElementSymbol("node2"); //$NON-NLS-1$
-        GroupSymbol gs = new GroupSymbol("doc3"); //$NON-NLS-1$
-        es.setGroupSymbol(gs);
-        expected.setLeftExpression(es);
-        expected.setOperator(CompareCriteria.EQ);
-        expected.setRightExpression(new Constant("yyz")); //$NON-NLS-1$
-
         helpResolveException("select * from xmltest.doc3 where node2 = 'yyz'"); //$NON-NLS-1$
     }    
 
@@ -309,8 +301,8 @@ public class TestXMLResolver {
         
     @Test public void testContext() {                  
         GroupSymbol gs1 = new GroupSymbol("xmltest.doc1"); //$NON-NLS-1$
-        ElementSymbol es1 = new ElementSymbol("root.node1.node2.node3", null, gs1); //$NON-NLS-1$
-        ElementSymbol es2 = new ElementSymbol("root.node1", null, gs1); //$NON-NLS-1$
+        ElementSymbol es1 = new ElementSymbol("root.node1.node2.node3", gs1); //$NON-NLS-1$
+        ElementSymbol es2 = new ElementSymbol("root.node1", gs1); //$NON-NLS-1$
         Expression[] exprs = new Expression[]{es1, es2};
         
         Function context = new Function("context", exprs); //$NON-NLS-1$
@@ -327,7 +319,7 @@ public class TestXMLResolver {
 
     @Test public void testRowLimit() {                  
     	GroupSymbol gs1 = new GroupSymbol("xmltest.doc1"); //$NON-NLS-1$
-        ElementSymbol es1 = new ElementSymbol("root.node1.node2.node3", null, gs1); //$NON-NLS-1$
+        ElementSymbol es1 = new ElementSymbol("root.node1.node2.node3", gs1); //$NON-NLS-1$
         es1.setGroupSymbol(gs1);
         Expression[] exprs = new Expression[]{es1};
         
@@ -345,7 +337,7 @@ public class TestXMLResolver {
 
     @Test public void testRowLimitException() {                  
     	GroupSymbol gs1 = new GroupSymbol("xmltest.doc1"); //$NON-NLS-1$
-        ElementSymbol es1 = new ElementSymbol("root.node1.node2.node3", null, gs1); //$NON-NLS-1$
+        ElementSymbol es1 = new ElementSymbol("root.node1.node2.node3", gs1); //$NON-NLS-1$
         Expression[] exprs = new Expression[]{es1};
         
         Function context = new Function("rowlimitexception", exprs); //$NON-NLS-1$
@@ -379,7 +371,7 @@ public class TestXMLResolver {
     @Test public void testConversionInXML() {
         // Expected left expression
     	GroupSymbol gs1 = new GroupSymbol("xmltest.doc1"); //$NON-NLS-1$
-        ElementSymbol es1 = new ElementSymbol("root.node1", null, gs1); //$NON-NLS-1$
+        ElementSymbol es1 = new ElementSymbol("root.node1", gs1); //$NON-NLS-1$
 
         // Expected right expression
         Function convert = new Function("convert", new Expression[] { new Constant(new Integer(5)), new Constant("string") }); //$NON-NLS-1$ //$NON-NLS-2$
@@ -401,7 +393,7 @@ public class TestXMLResolver {
     @Test public void testXMLWithSelect1() throws Exception {
         CompareCriteria expected = new CompareCriteria();
         GroupSymbol gs = new GroupSymbol("xmltest.doc1"); //$NON-NLS-1$
-        ElementSymbol es = new ElementSymbol("root.node1", null, gs); //$NON-NLS-1$
+        ElementSymbol es = new ElementSymbol("root.node1", gs); //$NON-NLS-1$
         expected.setLeftExpression(es);
         expected.setOperator(CompareCriteria.EQ);
         expected.setRightExpression(new Constant("yyz")); //$NON-NLS-1$
@@ -418,7 +410,7 @@ public class TestXMLResolver {
     @Test public void testXMLWithSelect2() {
         CompareCriteria expected = new CompareCriteria();
         GroupSymbol gs = new GroupSymbol("xmltest.doc1"); //$NON-NLS-1$
-        ElementSymbol es = new ElementSymbol("root.node1", null, gs); //$NON-NLS-1$
+        ElementSymbol es = new ElementSymbol("root.node1", gs); //$NON-NLS-1$
         expected.setLeftExpression(es);
         expected.setOperator(CompareCriteria.EQ);
         expected.setRightExpression(new Constant("yyz")); //$NON-NLS-1$

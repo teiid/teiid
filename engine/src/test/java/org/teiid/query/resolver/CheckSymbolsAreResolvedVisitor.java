@@ -25,8 +25,15 @@ package org.teiid.query.resolver;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.teiid.query.sql.*;
-import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.symbol.CaseExpression;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.symbol.ScalarSubquery;
+import org.teiid.query.sql.symbol.SearchedCaseExpression;
 
 
 /**
@@ -35,10 +42,10 @@ import org.teiid.query.sql.symbol.*;
  */
 public class CheckSymbolsAreResolvedVisitor extends LanguageVisitor {
 
-    private Collection unresolvedSymbols;
+    private Collection<LanguageObject> unresolvedSymbols;
     
 	public CheckSymbolsAreResolvedVisitor() { 
-        unresolvedSymbols = new ArrayList();    
+        unresolvedSymbols = new ArrayList<LanguageObject>();    
     }
     
     /**
@@ -46,18 +53,18 @@ public class CheckSymbolsAreResolvedVisitor extends LanguageVisitor {
      * @return Collection of any unresolved Symbols; may
      * be empty but never null
      */
-    public Collection getUnresolvedSymbols(){
+    public Collection<LanguageObject> getUnresolvedSymbols(){
         return this.unresolvedSymbols;
     }
     
     public void visit(CaseExpression obj) {
-        if (!obj.isResolved()){
+        if (obj.getType() == null){
             this.unresolvedSymbols.add(obj);
         }
     }
     
     public void visit(ElementSymbol obj) {
-        if (!obj.isResolved()){
+        if (obj.getMetadataID() == null){
             this.unresolvedSymbols.add(obj);
         }
     }
@@ -69,25 +76,25 @@ public class CheckSymbolsAreResolvedVisitor extends LanguageVisitor {
     }
 
     public void visit(SearchedCaseExpression obj) {
-        if (!obj.isResolved()){
+        if (obj.getType() == null){
             this.unresolvedSymbols.add(obj);
         }
     }
     
     public void visit(ScalarSubquery obj) {
-        if (!obj.isResolved()){
+        if (obj.getType() == null){
             this.unresolvedSymbols.add(obj);
         }
     }
     
     public void visit(Function obj) {
-        if (!obj.isResolved()){
+        if (obj.getFunctionDescriptor() == null){
             this.unresolvedSymbols.add(obj);
         }
     }
     
     public void visit(Reference obj) {
-        if (!obj.isResolved()){
+        if (obj.getType() == null){
             this.unresolvedSymbols.add(obj);
         }
     }

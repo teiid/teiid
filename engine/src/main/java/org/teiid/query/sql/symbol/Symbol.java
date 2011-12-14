@@ -23,7 +23,6 @@
 package org.teiid.query.sql.symbol;
 
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.util.StringUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
@@ -48,11 +47,6 @@ public abstract class Symbol implements LanguageObject {
 	 */
 	private String shortName;
 
-	/** 
-	 * upper case of name
-	 */
-	private String canonicalShortName;
-	
 	/**
 	 * Prior to resolving null, after resolving it is the exact string
 	 * entered in the query.
@@ -60,20 +54,12 @@ public abstract class Symbol implements LanguageObject {
 	 * The AliasGenerator can also set this value as necessary for the data tier.
 	 */
     protected String outputName;
-    
-    /**
-     * Constructor to be used for cloning instances. Calls to String.toUpperCase() to generate the canonical names
-     * were the big performance hit during cloning, so this method allows subclasses to simply pass in the canonical name
-     * to avoid toUpperCase().
-     * @param name
-     * @param canonicalName
-     * @since 4.3
-     */
-    protected Symbol(String name, String canonicalName) {
-        this.shortName = name;
-        this.canonicalShortName = canonicalName;
-    }
 
+	/**
+	 * Character used to delimit name components in a symbol
+	 */
+	public static final String SEPARATOR = "."; //$NON-NLS-1$
+    
 	/**
 	 * Construct a symbol with a name.
 	 * @param name Name of the symbol
@@ -81,6 +67,10 @@ public abstract class Symbol implements LanguageObject {
 	 */
 	public Symbol(String name) {
 		this.setName(name);
+	}
+	
+	public Symbol() {
+		
 	}
 	
 	protected void setName(String name) {
@@ -99,8 +89,6 @@ public abstract class Symbol implements LanguageObject {
 		}
 		this.shortName = DataTypeManager.getCanonicalString(name);
 		this.outputName = null;
-        // Canonical name is lazily created
-        this.canonicalShortName = null;
 	}
 
 	/**
@@ -110,29 +98,6 @@ public abstract class Symbol implements LanguageObject {
 	public String getName() {
 		return getShortName();
 	}
-
-	/**
-	 * Get canonical name for comparisons
-	 * @return Canonical name for comparisons
-	 */
-	public String getCanonicalName() {
-        return getShortCanonicalName();
-	}
-	
-	public void setShortCanonicalName(String shortCanonicalName) {
-		this.canonicalShortName = shortCanonicalName;
-	}
-    
-	/**
-	 * Returns true if this symbol has been completely resolved with respect
-	 * to actual runtime metadata.  A resolved symbol has been validated that
-	 * it refers to actual metadata and will have references to the real metadata
-	 * IDs if necessary.  Different types of symbols determine their resolution
-	 * in different ways, so this method is abstract and must be implemented
-	 * by subclasses.
-	 * @return True if resolved with runtime metadata
-	 */
-	public abstract boolean isResolved();
 
 	/**
 	 * Returns string representation of this symbol.
@@ -147,7 +112,7 @@ public abstract class Symbol implements LanguageObject {
 	 * @return Hash code
 	 */
 	public int hashCode() {
-		return this.getCanonicalName().hashCode();
+		return this.shortName.hashCode();
 	}
 
 	/**
@@ -166,8 +131,8 @@ public abstract class Symbol implements LanguageObject {
 		if(!(obj instanceof Symbol)) {
 			return false;
 		}
-		String otherFqn = ((Symbol)obj).getCanonicalName();
-		String thisFqn = getCanonicalName();
+		String otherFqn = ((Symbol)obj).getName();
+		String thisFqn = getName();
 		return thisFqn.equals(otherFqn);
 	}
 
@@ -175,10 +140,6 @@ public abstract class Symbol implements LanguageObject {
 	 * Return a copy of this object.
 	 */
 	public abstract Object clone();
-    
-    protected final String getCanonical() {
-        return canonicalShortName;
-    }
     
     public String getOutputName() {
         return this.outputName == null ? getName() : this.outputName;
@@ -196,16 +157,33 @@ public abstract class Symbol implements LanguageObject {
     	return shortName;
     }
 
-    /**
-     * Get the short name of the element
-     * @return Short name of the symbol (un-dotted)
-     */
-    public final String getShortCanonicalName() { 
-		if (canonicalShortName == null) {
-        	canonicalShortName = DataTypeManager.getCanonicalString(StringUtil.toUpperCase(shortName));
-        }
-    	return this.canonicalShortName;
-    }
+	public static String getShortName(Expression ex) {
+		if (ex instanceof Symbol) {
+			return ((Symbol)ex).getShortName();
+		}
+		return "expr"; //$NON-NLS-1$
+	}
+	
+	public static String getName(Expression ex) {
+		if (ex instanceof Symbol) {
+			return ((Symbol)ex).getName();
+		}
+		return "expr"; //$NON-NLS-1$
+	}
+	
+	public static String getOutputName(Expression ex) {
+		if (ex instanceof Symbol) {
+			return ((Symbol)ex).getOutputName();
+		}
+		return "expr"; //$NON-NLS-1$
+	}
 
+	public static String getShortName(String name) {
+	    int index = name.lastIndexOf(Symbol.SEPARATOR);
+	    if(index >= 0) { 
+	        return name.substring(index+1);
+	    }
+	    return name;
+	}
 
 }

@@ -26,8 +26,8 @@ import java.util.List;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 
 public abstract class Alter<T extends Command> extends Command {
 	
@@ -56,7 +56,7 @@ public abstract class Alter<T extends Command> extends Command {
 	}
 	
 	@Override
-	public List<SingleElementSymbol> getProjectedSymbols() {
+	public List<Expression> getProjectedSymbols() {
 		return Command.getUpdateCommandSymbol();
 	}
 	

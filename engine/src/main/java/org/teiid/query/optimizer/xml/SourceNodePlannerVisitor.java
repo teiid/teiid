@@ -51,8 +51,9 @@ import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
@@ -112,7 +113,7 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
             baseQuery.getSelect().clearSymbols();
             for (Iterator<ElementSymbol> i = ResolverUtil.resolveElementsInGroup(groupSymbol, planEnv.getGlobalMetadata()).iterator(); i.hasNext();) {
             	ElementSymbol ses = i.next();
-                baseQuery.getSelect().addSymbol(new ElementSymbol(newGroup + SingleElementSymbol.SEPARATOR + ses.getShortName()));
+                baseQuery.getSelect().addSymbol(new ElementSymbol(newGroup + Symbol.SEPARATOR + ses.getShortName()));
             }
             
             rsInfo.setCommand(baseQuery);
@@ -193,18 +194,18 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
     private boolean areBindingsOnlyToNode(QueryNode modifiedNode, MappingSourceNode sourceNode) 
         throws TeiidComponentException {
         
-        List<SingleElementSymbol> bindings = QueryResolver.parseBindings(modifiedNode);
+        List<Expression> bindings = QueryResolver.parseBindings(modifiedNode);
 
-        String nodeStr = (sourceNode.getActualResultSetName() + ElementSymbol.SEPARATOR).toUpperCase();
+        String nodeStr = sourceNode.getActualResultSetName() + Symbol.SEPARATOR;
         
-        for (Iterator<SingleElementSymbol> i = bindings.iterator(); i.hasNext();) {
-        	SingleElementSymbol ses = i.next();
+        for (Iterator<Expression> i = bindings.iterator(); i.hasNext();) {
+        	Expression ses = i.next();
         	if (ses instanceof AliasSymbol) {
         		ses = ((AliasSymbol)ses).getSymbol();
         	}
             ElementSymbol binding = (ElementSymbol)ses;
             
-            if (!binding.getCanonicalName().startsWith(nodeStr)) {
+            if (!binding.getName().startsWith(nodeStr)) {
                 return false;
             }
         }
@@ -266,9 +267,9 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
                              QueryNode modifiedNode) throws TeiidComponentException {
         if (oldQueryNode.getBindings() != null) {
             List<String> bindings = new ArrayList<String>();
-            for (Iterator<SingleElementSymbol> i = QueryResolver.parseBindings(oldQueryNode).iterator(); i.hasNext();) {
-            	SingleElementSymbol ses = i.next();
-            	String name = ses.getName();
+            for (Iterator<Expression> i = QueryResolver.parseBindings(oldQueryNode).iterator(); i.hasNext();) {
+            	Expression ses = i.next();
+            	String name = Symbol.getName(ses);
             	boolean useName = false;
             	if (ses instanceof AliasSymbol) {
             		ses = ((AliasSymbol)ses).getSymbol();
@@ -322,7 +323,7 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
         Collection<ElementSymbol> elementsInCriteria = ElementCollectorVisitor.getElements(criteria, true);
         Map<ElementSymbol, ElementSymbol> mappedElements = new HashMap<ElementSymbol, ElementSymbol>();
 
-        List<SingleElementSymbol> projectedSymbols = transformationQuery.getProjectedSymbols();
+        List<Expression> projectedSymbols = transformationQuery.getProjectedSymbols();
         
         boolean addedProjectedSymbol = false;
         
@@ -335,12 +336,12 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
             }
             
             if (projectedSymbols.contains(symbol)) {
-                mappedElements.put(symbol, new ElementSymbol(groupName + ElementSymbol.SEPARATOR + symbol.getShortName()));
+                mappedElements.put(symbol, new ElementSymbol(groupName + Symbol.SEPARATOR + symbol.getShortName()));
                 continue;
             }
             AliasSymbol alias = getMachingAlias(projectedSymbols, symbol);
             if (alias != null) {
-                mappedElements.put(symbol, new ElementSymbol(groupName + ElementSymbol.SEPARATOR + alias.getShortName()));
+                mappedElements.put(symbol, new ElementSymbol(groupName + Symbol.SEPARATOR + alias.getShortName()));
                 continue;
             }
             // this means that the criteria symbol, is not projected, so add the element symbol
@@ -356,7 +357,7 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
             // also add to the projected elements on the temp group.
             metadata.getMetadataStore().addElementSymbolToTempGroup(newGroupSymbol.getName(), selectSymbol);
             
-            ElementSymbol upperSymbol = new ElementSymbol(groupName + ElementSymbol.SEPARATOR + selectSymbol.getShortName());
+            ElementSymbol upperSymbol = new ElementSymbol(groupName + Symbol.SEPARATOR + selectSymbol.getShortName());
             mappedElements.put(symbol, upperSymbol);
             
             //add to the symbol map.  the base symbol is not to the original group, since it doesn't really project this element 
@@ -376,7 +377,7 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
 
         String newSymbolName = elementSymbol.getShortName();
 
-        while (symbolMap.values().contains(new ElementSymbol(newGroupName + ElementSymbol.SEPARATOR + newSymbolName))) {
+        while (symbolMap.values().contains(new ElementSymbol(newGroupName + Symbol.SEPARATOR + newSymbolName))) {
             newSymbolName = elementSymbol.getShortName() + "_" + index++; //$NON-NLS-1$
         }
 
@@ -387,8 +388,8 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
      * If the element has alias wrapping, then return the matching alias element.
      * @return matched alias symbol; null otherwise.
      */
-    private AliasSymbol getMachingAlias(List<SingleElementSymbol> elementsInGroup, ElementSymbol symbol) {
-    	for (SingleElementSymbol element : elementsInGroup) {
+    private AliasSymbol getMachingAlias(List<Expression> elementsInGroup, ElementSymbol symbol) {
+    	for (Expression element : elementsInGroup) {
             if (element instanceof AliasSymbol) {
                 AliasSymbol alias = (AliasSymbol)element;
                 if (alias.getSymbol().equals(symbol)) {

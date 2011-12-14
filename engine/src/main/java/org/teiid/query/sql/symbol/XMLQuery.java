@@ -33,11 +33,6 @@ public class XMLQuery implements Expression {
 		this.emptyOnEmpty = emptyOnEmpty;
 	}
     
-    @Override
-    public boolean isResolved() {
-    	return xqueryExpression != null;
-    }
-    
     public List<DerivedColumn> getPassing() {
 		return passing;
 	}

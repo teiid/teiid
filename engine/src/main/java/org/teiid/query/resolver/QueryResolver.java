@@ -67,7 +67,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.validator.UpdateValidator;
@@ -172,8 +172,8 @@ public class QueryResolver {
 		    // Create ElementSymbols for each InputParameter
 		    final List<ElementSymbol> elements = new ArrayList<ElementSymbol>(queryNode.getBindings().size());
 		    boolean positional = true;
-		    for (SingleElementSymbol ses : parseBindings(queryNode)) {
-		    	String name = ses.getName();
+		    for (Expression ses : parseBindings(queryNode)) {
+		    	String name = Symbol.getShortName(ses);
 		    	if (ses instanceof AliasSymbol) {
 		    		ses = ((AliasSymbol)ses).getSymbol();
 		    		positional = false;
@@ -182,7 +182,7 @@ public class QueryResolver {
 		    	ResolverVisitor.resolveLanguageObject(elementSymbol, metadata);
 		    	elementSymbol.setIsExternalReference(true);
 		    	if (!positional) {
-		    		symbolMap.put(new ElementSymbol(BINDING_GROUP + ElementSymbol.SEPARATOR + name), elementSymbol.clone());
+		    		symbolMap.put(new ElementSymbol(BINDING_GROUP + Symbol.SEPARATOR + name), elementSymbol.clone());
 		    		elementSymbol.setShortName(name);
 		    	}
 		        elements.add(elementSymbol);
@@ -209,7 +209,7 @@ public class QueryResolver {
 		        
 		        ProcedureContainerResolver.addScalarGroup("INPUT", rootExternalStore, externalGroups, elements); //$NON-NLS-1$
 		        ProcedureContainerResolver.addScalarGroup(BINDING_GROUP, rootExternalStore, externalGroups, elements);
-		        QueryResolver.setChildMetadata(currentCommand, rootExternalStore.getData(), externalGroups);
+		        QueryResolver.setChildMetadata(currentCommand, rootExternalStore, externalGroups);
 		    }
 		}
 		TempMetadataStore result = resolveCommand(currentCommand, metadata, false);
@@ -228,16 +228,16 @@ public class QueryResolver {
 	 * @return
 	 * @throws TeiidComponentException
 	 */
-    public static List<SingleElementSymbol> parseBindings(QueryNode planNode) throws TeiidComponentException {
+    public static List<Expression> parseBindings(QueryNode planNode) throws TeiidComponentException {
         Collection<String> bindingsCol = planNode.getBindings();
         if (bindingsCol == null) {
             return Collections.emptyList();
         }
         
-        List<SingleElementSymbol> parsedBindings = new ArrayList<SingleElementSymbol>(bindingsCol.size());
+        List<Expression> parsedBindings = new ArrayList<Expression>(bindingsCol.size());
         for (Iterator<String> bindings=bindingsCol.iterator(); bindings.hasNext();) {
             try {
-                SingleElementSymbol binding = QueryParser.getQueryParser().parseSelectExpression(bindings.next());
+                Expression binding = QueryParser.getQueryParser().parseSelectExpression(bindings.next());
                 parsedBindings.add(binding);
             } catch (QueryParserException err) {
                 throw new TeiidComponentException(err);
@@ -253,12 +253,11 @@ public class QueryResolver {
         
         TempMetadataAdapter resolverMetadata = null;
         try {
-            Map tempMetadata = currentCommand.getTemporaryMetadata();
-            if(tempMetadata == null) {
-                currentCommand.setTemporaryMetadata(new HashMap());
+        	TempMetadataStore discoveredMetadata = currentCommand.getTemporaryMetadata();
+            if(discoveredMetadata == null) {
+            	discoveredMetadata = new TempMetadataStore();
+                currentCommand.setTemporaryMetadata(discoveredMetadata);
             }
-            
-            TempMetadataStore discoveredMetadata = new TempMetadataStore(currentCommand.getTemporaryMetadata());
             
             resolverMetadata = new TempMetadataAdapter(metadata, discoveredMetadata);
             
@@ -378,18 +377,18 @@ public class QueryResolver {
     }
 
     public static void setChildMetadata(Command subCommand, Command parent) {
-        Map childMetadataMap = parent.getTemporaryMetadata();
+    	TempMetadataStore childMetadata = parent.getTemporaryMetadata();
         GroupContext parentContext = parent.getExternalGroupContexts();
         
-        setChildMetadata(subCommand, childMetadataMap, parentContext);
+        setChildMetadata(subCommand, childMetadata, parentContext);
     }
     
-    public static void setChildMetadata(Command subCommand, Map parentTempMetadata, GroupContext parentContext) {
-        Map tempMetadata = subCommand.getTemporaryMetadata();
+    public static void setChildMetadata(Command subCommand, TempMetadataStore parentTempMetadata, GroupContext parentContext) {
+    	TempMetadataStore tempMetadata = subCommand.getTemporaryMetadata();
         if(tempMetadata == null) {
-            subCommand.setTemporaryMetadata(new HashMap(parentTempMetadata));
+            subCommand.setTemporaryMetadata(parentTempMetadata.clone());
         } else {
-            tempMetadata.putAll(parentTempMetadata);
+            tempMetadata.getData().putAll(parentTempMetadata.getData());
         }
     
         subCommand.setExternalGroupContexts(parentContext);
@@ -469,19 +468,19 @@ public class QueryResolver {
 			throws QueryMetadataException, TeiidComponentException, QueryValidatorException {
 		//ensure that null types match the view
 		List<ElementSymbol> symbols = ResolverUtil.resolveElementsInGroup(virtualGroup, qmi);
-		List<SingleElementSymbol> projectedSymbols = result.getProjectedSymbols();
+		List<Expression> projectedSymbols = result.getProjectedSymbols();
 		validateProjectedSymbols(virtualGroup, symbols, projectedSymbols);
 	}
 
 	public static void validateProjectedSymbols(GroupSymbol virtualGroup,
 			List<ElementSymbol> symbols,
-			List<SingleElementSymbol> projectedSymbols)
+			List<Expression> projectedSymbols)
 			throws QueryValidatorException {
 		if (symbols.size() != projectedSymbols.size()) {
 			throw new QueryValidatorException(QueryPlugin.Util.getString("QueryResolver.wrong_view_symbols", virtualGroup, symbols.size(), projectedSymbols.size())); //$NON-NLS-1$
 		}
 		for (int i = 0; i < projectedSymbols.size(); i++) {
-			SingleElementSymbol projectedSymbol = projectedSymbols.get(i);
+			Expression projectedSymbol = projectedSymbols.get(i);
 			
 			ResolverUtil.setTypeIfNull(projectedSymbol, symbols.get(i).getType());
 			

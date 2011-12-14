@@ -68,7 +68,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 
@@ -220,10 +220,10 @@ public class XMLStagaingQueryPlanner {
         		
         		if (parentRsInfo.getTempTable() == null) {
 	        		//create a temp table to represent the resultset
-	                List<SingleElementSymbol> projectedSymbols = parentRsInfo.getCommand().getProjectedSymbols();
-	                ArrayList<SingleElementSymbol> elements = new ArrayList<SingleElementSymbol>(projectedSymbols.size());
-	        		for (SingleElementSymbol singleElementSymbol : projectedSymbols) {
-	        			singleElementSymbol = (SingleElementSymbol) singleElementSymbol.clone();
+	                List<Expression> projectedSymbols = parentRsInfo.getCommand().getProjectedSymbols();
+	                ArrayList<Expression> elements = new ArrayList<Expression>(projectedSymbols.size());
+	        		for (Expression singleElementSymbol : projectedSymbols) {
+	        			singleElementSymbol = (Expression) singleElementSymbol.clone();
 						ResolverVisitor.resolveLanguageObject(singleElementSymbol, planEnv.getGlobalMetadata());
 						elements.add(singleElementSymbol);
 					}

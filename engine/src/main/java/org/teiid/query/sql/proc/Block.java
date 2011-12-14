@@ -32,6 +32,7 @@ import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.proc.Statement.Labeled;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
@@ -98,11 +99,11 @@ public class Block extends Statement implements Labeled {
 				statements.add(new CommandStatement(cmd));
 				stmt.setCommand(null);
 				stmt.setExpression(null);
-				String fullName = ProcedureReservedWords.VARIABLES+ElementSymbol.SEPARATOR+ProcedureReservedWords.ROWCOUNT;
 				if (stmt.getVariable().getShortName().equalsIgnoreCase(ProcedureReservedWords.ROWCOUNT) 
-						&& stmt.getVariable().getCanonicalName().equals(fullName)) {
+						&& stmt.getVariable().getGroupSymbol() != null && stmt.getVariable().getGroupSymbol().getName().equalsIgnoreCase(ProcedureReservedWords.VARIABLES)) {
 					return;
 				}
+				String fullName = ProcedureReservedWords.VARIABLES+Symbol.SEPARATOR+ProcedureReservedWords.ROWCOUNT;
 				stmt.setExpression(new ElementSymbol(fullName));
 			}
 		}

@@ -25,16 +25,7 @@ package org.teiid.query.tempdata;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -70,7 +61,7 @@ import org.teiid.query.sql.lang.SetClauseList;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.ExpressionSymbol;
 
 /**
  * A Teiid Temp Table
@@ -154,7 +145,7 @@ public class TempTable implements Cloneable {
 		private TupleBrowser browser;
 
 		private QueryTupleSource(TupleBrowser browser, Map map,
-				List<? extends SingleElementSymbol> projectedCols, Criteria condition) {
+				List<? extends Expression> projectedCols, Criteria condition) {
 			this.browser = browser;
 			this.indexes = RelationalNode.getProjectionIndexes(map, projectedCols);
 			this.eval = new Evaluator(map, null, null);
@@ -423,11 +414,11 @@ public class TempTable implements Cloneable {
 		return bm.reserveBuffers(leafBatchSize + (tree.getHeight() - 1)*keyBatchSize, BufferReserveMode.FORCE);
 	}
 
-	public TupleSource createTupleSource(final List<? extends SingleElementSymbol> projectedCols, final Criteria condition, OrderBy orderBy) throws TeiidComponentException, TeiidProcessingException {
+	public TupleSource createTupleSource(final List<? extends Expression> projectedCols, final Criteria condition, OrderBy orderBy) throws TeiidComponentException, TeiidProcessingException {
 		//special handling for count(*)
 		boolean agg = false;
-		for (SingleElementSymbol singleElementSymbol : projectedCols) {
-			if (singleElementSymbol instanceof AggregateSymbol) {
+		for (Expression singleElementSymbol : projectedCols) {
+			if (singleElementSymbol instanceof ExpressionSymbol && ((ExpressionSymbol)singleElementSymbol).getExpression() instanceof AggregateSymbol) {
 				agg = true;
 				break;
 			}
@@ -478,7 +469,7 @@ public class TempTable implements Cloneable {
 	}
 
 	private TupleSource createTupleSource(
-			final List<? extends SingleElementSymbol> projectedCols,
+			final List<? extends Expression> projectedCols,
 			final Criteria condition, OrderBy orderBy, IndexInfo ii, boolean agg)
 			throws TeiidComponentException, TeiidProcessingException {
 		TupleBrowser browser = ii.createTupleBrowser();

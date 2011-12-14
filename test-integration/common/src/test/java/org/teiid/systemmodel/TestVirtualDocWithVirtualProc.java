@@ -23,7 +23,9 @@
 package org.teiid.systemmodel;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
@@ -38,6 +40,7 @@ import org.teiid.jdbc.FakeServer;
 public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
 
     private static final String VDB = "xmlvp"; //$NON-NLS-1$
+	private static FakeServer server;
 
     public TestVirtualDocWithVirtualProc() {
     	// this is needed because the result files are generated 
@@ -45,9 +48,16 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
     	super.DELIMITER = "\t"; //$NON-NLS-1$
     }
     
-    @Before public void setUp() throws Exception {
-    	FakeServer server = new FakeServer();
+    @BeforeClass public static void oneTimeSetup() throws Exception {
+    	server = new FakeServer();
     	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/xml-vp/xmlvp_1.vdb");
+    }
+    
+    @AfterClass public static void oneTimeTeardown() throws Exception {
+    	server.stop();
+    }
+    
+    @Before public void setUp() throws Exception {
     	this.internalConnection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$	    	
     }
     
@@ -85,7 +95,7 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
 
     @Test public void testDefect15241b() throws Exception {
     	
-    	String sql = "SELECT p.Name, p.Value, UID FROM SYS.Properties p"; //$NON-NLS-1$
+    	String sql = "SELECT p.Name, p.Value, UID FROM SYS.Properties p order by p.Name"; //$NON-NLS-1$
     	String[] expected ={
 	    "Name[string]	Value[string]	UID[string]",	 //$NON-NLS-1$
 	    "NugentXAttribute	Nuuuuuge22222	mmuuid:4789b280-841c-1f15-9526-ebd0cace03e1", //$NON-NLS-1$

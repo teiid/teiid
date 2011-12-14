@@ -32,13 +32,14 @@ import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.ResultSetInfo;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.processor.xml.Program;
 import org.teiid.query.processor.xml.XMLProcessorEnvironment;
 import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.util.CommandContext;
 
 
@@ -97,7 +98,7 @@ public final class XMLPlannerEnvironment{
      * be defined here so that they are known to all for resolution.  This map should be 
      * used with a TempMetadataStore and a TempMetadataAdapter.  
      */
-    private Map globalTempMetadata = new HashMap();
+    private TempMetadataStore globalTempMetadata = new TempMetadataStore();
     
     private Map stagingTableMap = new HashMap();
     
@@ -118,7 +119,7 @@ public final class XMLPlannerEnvironment{
       
         
     TempMetadataAdapter getGlobalMetadata() {
-        return new TempMetadataAdapter(metadata, new TempMetadataStore(this.globalTempMetadata), this.stagingTableMap, this.queryNodeMap);
+        return new TempMetadataAdapter(metadata, this.globalTempMetadata, this.stagingTableMap, this.queryNodeMap);
     }
 
     public ResultSetInfo getStagingTableResultsInfo(String groupName) {
@@ -143,8 +144,8 @@ public final class XMLPlannerEnvironment{
         return this.stagingTableMap.containsKey(groupId);
     }
 
-    public void addToGlobalMetadata(Map data) {
-        this.globalTempMetadata.putAll(data);
+    public void addToGlobalMetadata(Map<String, TempMetadataID> data) {
+        this.globalTempMetadata.getData().putAll(data);
     }
     
     public void addQueryNodeToMetadata(Object metadataId, QueryNode node) {
@@ -160,7 +161,7 @@ public final class XMLPlannerEnvironment{
     }    
     
     public String getAliasName(final String rsName) {
-        String inlineViewName = rsName.replace(ElementSymbol.SEPARATOR.charAt(0), '_');
+        String inlineViewName = rsName.replace(Symbol.SEPARATOR.charAt(0), '_');
         return inlineViewName;
     }    
 }

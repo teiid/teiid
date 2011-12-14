@@ -77,7 +77,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.symbol.XMLQuery;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
@@ -278,12 +278,16 @@ public class TestResolver {
 	
 	private void helpCheckSelect(Query query, String[] elementNames) {
 		Select select = query.getSelect();
-		List<SingleElementSymbol> elements = select.getProjectedSymbols();
+		List<Expression> elements = select.getProjectedSymbols();
 		assertEquals("Wrong number of select symbols: ", elementNames.length, elements.size()); //$NON-NLS-1$
 
 		for(int i=0; i<elements.size(); i++) {
-			SingleElementSymbol symbol = elements.get(i);
-			assertEquals("Element name does not match: ", elementNames[i].toUpperCase(), symbol.getName().toUpperCase()); //$NON-NLS-1$
+			Expression symbol = elements.get(i);
+			String name = Symbol.getShortName(symbol);
+			if (symbol instanceof ElementSymbol) {
+				name = ((ElementSymbol)symbol).getName();
+			}
+			assertEquals("Element name does not match: ", elementNames[i].toUpperCase(), name.toString().toUpperCase()); //$NON-NLS-1$
 		}
 	}
 
@@ -635,7 +639,7 @@ public class TestResolver {
 	@Test public void testSelectExpressions() {
 		Query resolvedQuery = (Query) helpResolve("SELECT e1, concat(e1, 's'), concat(e1, 's') as c FROM pm1.g1"); //$NON-NLS-1$
 		helpCheckFrom(resolvedQuery, new String[] { "pm1.g1" }); //$NON-NLS-1$
-		helpCheckSelect(resolvedQuery, new String[] { "pm1.g1.e1", "expr", "c" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		helpCheckSelect(resolvedQuery, new String[] { "pm1.g1.e1", "expr2", "c" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		helpCheckElements(resolvedQuery.getSelect(),
 			new String[] { "pm1.g1.e1", "pm1.g1.e1", "pm1.g1.e1" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			new String[] { "pm1.g1.e1", "pm1.g1.e1", "pm1.g1.e1" } ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -644,7 +648,7 @@ public class TestResolver {
 	@Test public void testSelectCountStar() {
 		Query resolvedQuery = (Query) helpResolve("SELECT count(*) FROM pm1.g1"); //$NON-NLS-1$
 		helpCheckFrom(resolvedQuery, new String[] { "pm1.g1" }); //$NON-NLS-1$
-		helpCheckSelect(resolvedQuery, new String[] { "count" }); //$NON-NLS-1$
+		helpCheckSelect(resolvedQuery, new String[] { "expr1" }); //$NON-NLS-1$
 		helpCheckElements(resolvedQuery.getSelect(), new String[] { }, new String[] { } );
 	}
 	
@@ -810,7 +814,7 @@ public class TestResolver {
         Query resolvedQuery = (Query) helpResolveWithBindings("SELECT pm1.g1.e1, ? FROM pm1.g1 WHERE pm1.g1.e1 = ?", metadata, bindings); //$NON-NLS-1$
 
         helpCheckFrom(resolvedQuery, new String[] { "pm1.g1" }); //$NON-NLS-1$
-        helpCheckSelect(resolvedQuery, new String[] { "pm1.g1.e1", "expr" }); //$NON-NLS-1$ //$NON-NLS-2$
+        helpCheckSelect(resolvedQuery, new String[] { "pm1.g1.e1", "expr2" }); //$NON-NLS-1$ //$NON-NLS-2$
         helpCheckElements(resolvedQuery.getCriteria(), 
             new String[] { "pm1.g1.e1", "pm1.g2.e2" }, //$NON-NLS-1$
             new String[] { "pm1.g1.e1", "pm1.g2.e2" } ); //$NON-NLS-1$
@@ -1416,8 +1420,8 @@ public class TestResolver {
         
         List projSymbols = resolvedQuery.getSelect().getProjectedSymbols();
         assertEquals("Wrong number of projected symbols", 2, projSymbols.size()); //$NON-NLS-1$
-        assertEquals("Wrong type for first symbol", String.class, ((SingleElementSymbol)projSymbols.get(0)).getType()); //$NON-NLS-1$
-        assertEquals("Wrong type for second symbol", Double.class, ((SingleElementSymbol)projSymbols.get(1)).getType()); //$NON-NLS-1$
+        assertEquals("Wrong type for first symbol", String.class, ((Expression)projSymbols.get(0)).getType()); //$NON-NLS-1$
+        assertEquals("Wrong type for second symbol", Double.class, ((Expression)projSymbols.get(1)).getType()); //$NON-NLS-1$
     }
 
     @Test public void testLookupFunctionFailBadElement() {     
@@ -1985,17 +1989,17 @@ public class TestResolver {
     @Test public void testNestedUnionQueryWithNull() throws Exception{
         SetQuery command = (SetQuery)helpResolve("SELECT e2, e3 FROM pm1.g1 UNION (SELECT null, e3 FROM pm1.g2 UNION SELECT null, e3 from pm1.g1)"); //$NON-NLS-1$
         
-        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, ((SingleElementSymbol)command.getProjectedSymbols().get(0)).getType());
+        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, ((Expression)command.getProjectedSymbols().get(0)).getType());
     }
     
     @Test public void testUnionQueryClone() throws Exception{
         SetQuery command = (SetQuery)helpResolve("SELECT e2, e3 FROM pm1.g1 UNION SELECT e3, e2 from pm1.g1"); //$NON-NLS-1$
         
-        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, ((SingleElementSymbol)command.getProjectedSymbols().get(1)).getType());
+        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, ((Expression)command.getProjectedSymbols().get(1)).getType());
         
         command = (SetQuery)command.clone();
         
-        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, ((SingleElementSymbol)command.getProjectedSymbols().get(1)).getType());
+        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, ((Expression)command.getProjectedSymbols().get(1)).getType());
     }
     
     @Test public void testSelectIntoNoFrom() {
@@ -2089,7 +2093,7 @@ public class TestResolver {
         QueryResolver.resolveCommand(query, RealMetadataFactory.exampleBQTCached());
         
         // Check type of resolved null constant
-        SingleElementSymbol symbol = (SingleElementSymbol) query.getSelect().getSymbols().get(0);
+        Expression symbol = query.getSelect().getSymbols().get(0);
         assertNotNull(symbol.getType());
         assertEquals(DataTypeManager.DefaultDataClasses.STRING, symbol.getType());
     }
@@ -2180,7 +2184,7 @@ public class TestResolver {
     private void verifyProjectedTypes(Command c, Class[] types) {
         List projSymbols = c.getProjectedSymbols();
         for(int i=0; i<projSymbols.size(); i++) {
-            assertEquals("Found type mismatch at column " + i, types[i], ((SingleElementSymbol) projSymbols.get(i)).getType()); //$NON-NLS-1$
+            assertEquals("Found type mismatch at column " + i, types[i], ((Expression) projSymbols.get(i)).getType()); //$NON-NLS-1$
         }                
     }
     
@@ -2386,7 +2390,7 @@ public class TestResolver {
         
         CompareCriteria criteria = (CompareCriteria)((Query)cmdStmt.getCommand()).getCriteria();
         
-        assertEquals(ProcedureReservedWords.VARIABLES, ((ElementSymbol)criteria.getRightExpression()).getGroupSymbol().getCanonicalName());
+        assertEquals(ProcedureReservedWords.VARIABLES, ((ElementSymbol)criteria.getRightExpression()).getGroupSymbol().getName());
     }
     
     /**
@@ -2519,7 +2523,7 @@ public class TestResolver {
         
         Query query = (Query)helpResolve(sql);
         
-        TempMetadataStore store = new TempMetadataStore(query.getTemporaryMetadata());
+        TempMetadataStore store = query.getTemporaryMetadata();
         
         TempMetadataID id = store.getTempElementID("#temp.x"); //$NON-NLS-1$
         
@@ -2531,7 +2535,7 @@ public class TestResolver {
         
         Insert insert = (Insert)helpResolve(sql);
         
-        TempMetadataStore store = new TempMetadataStore(insert.getTemporaryMetadata());
+        TempMetadataStore store = insert.getTemporaryMetadata();
         
         TempMetadataID id = store.getTempElementID("#temp.x"); //$NON-NLS-1$
         
@@ -2672,7 +2676,7 @@ public class TestResolver {
     	String sql = "select convert(null, xml) from pm1.g1 union all select 1"; //$NON-NLS-1$
     	
     	SetQuery query = (SetQuery)helpResolve(sql, RealMetadataFactory.example1Cached());
-    	assertEquals(DataTypeManager.DefaultDataClasses.OBJECT, ((SingleElementSymbol)query.getProjectedSymbols().get(0)).getType());
+    	assertEquals(DataTypeManager.DefaultDataClasses.OBJECT, ((Expression)query.getProjectedSymbols().get(0)).getType());
     }
     
     @Test public void testUnionWithSubQuery() {
@@ -2891,7 +2895,7 @@ public class TestResolver {
     @Test public void testParamOrder() {
         Query resolvedQuery = (Query)helpResolve("SELECT * FROM (exec pm4.spRetOut()) as a", RealMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
         
-        assertEquals("a.ret", resolvedQuery.getProjectedSymbols().get(0).getName());
+        assertEquals("a.ret", resolvedQuery.getProjectedSymbols().get(0).toString());
     }
     
     @Test public void testOrderByAggregatesError() throws Exception {
@@ -2939,7 +2943,7 @@ public class TestResolver {
     
     @Test public void testXmlQueryWithParam() {
     	Query q = (Query)helpResolve("select xmlquery('/a' passing ?)");
-    	XMLQuery ex = (XMLQuery) SymbolMap.getExpression((Expression) q.getSelect().getSymbols().get(0));
+    	XMLQuery ex = (XMLQuery) SymbolMap.getExpression(q.getSelect().getSymbols().get(0));
     	assertEquals(DataTypeManager.DefaultDataClasses.XML, ex.getPassing().get(0).getExpression().getType());
     }
 

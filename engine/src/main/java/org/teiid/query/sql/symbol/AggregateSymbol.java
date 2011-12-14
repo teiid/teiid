@@ -46,7 +46,7 @@ import org.teiid.query.sql.lang.OrderBy;
  * floating point expressions not of type bigdecimal return type double and bigdecimal maps to
  * bigdecimal.</p>
  */
-public class AggregateSymbol extends ExpressionSymbol {
+public class AggregateSymbol extends Function implements DerivedExpression {
 	
 	public enum Type {
 		COUNT,
@@ -107,8 +107,8 @@ public class AggregateSymbol extends ExpressionSymbol {
      * @param canonicalName
      * @since 4.3
      */
-    protected AggregateSymbol(String name, String canonicalName, Type aggregateFunction, boolean isDistinct, Expression expression) {
-        super(name, canonicalName, expression);
+    protected AggregateSymbol(String name, Type aggregateFunction, boolean isDistinct, Expression expression) {
+        super(name, expression == null?new Expression[0]:new Expression[] {expression});
         this.aggregate = aggregateFunction;
         this.distinct = isDistinct;
     }
@@ -121,7 +121,7 @@ public class AggregateSymbol extends ExpressionSymbol {
 	 * @param expression Contained expression
 	 */
 	public AggregateSymbol(String name, String aggregateFunction, boolean isDistinct, Expression expression) {
-		super(name, expression);
+		super(name, expression == null?new Expression[0]:new Expression[] {expression});
 		this.aggregate = Type.valueOf(aggregateFunction);
 		this.distinct = isDistinct;
 	}
@@ -235,9 +235,9 @@ public class AggregateSymbol extends ExpressionSymbol {
 	public Object clone() {
 		AggregateSymbol copy = null;
 		if(getExpression() != null) {
-			copy = new AggregateSymbol(getName(), getCanonical(), getAggregateFunction(), isDistinct(), (Expression) getExpression().clone());
+			copy = new AggregateSymbol(getName(), getAggregateFunction(), isDistinct(), (Expression) getExpression().clone());
 		} else {
-			copy = new AggregateSymbol(getName(), getCanonical(), getAggregateFunction(), isDistinct(), null);
+			copy = new AggregateSymbol(getName(), getAggregateFunction(), isDistinct(), null);
 		}
 		if (orderBy != null) {
 			copy.setOrderBy(orderBy.clone());
@@ -333,6 +333,16 @@ public class AggregateSymbol extends ExpressionSymbol {
 	
 	public void setWindowed(boolean isWindowed) {
 		this.isWindowed = isWindowed;
+	}
+	
+	public Expression getExpression() {
+		if (this.getArgs().length == 0) {
+			return null;
+		}
+		if (this.getArgs().length > 1) {
+			throw new AssertionError("getExpression should not be used with a non-unary aggregate");
+		}
+		return this.getArg(0);
 	}
 
 }

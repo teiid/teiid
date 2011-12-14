@@ -63,9 +63,10 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
+import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.tempdata.TempTableStore;
 
@@ -186,7 +187,7 @@ public class MetaDataProcessor {
 					ex = ((Function)ex).getArg(0);
 				}
 				if (ex instanceof Reference) {
-					paramMap.put((Reference)ex, SingleElementSymbol.getShortName(spParameter.getName()));
+					paramMap.put((Reference)ex, Symbol.getShortName(spParameter.getName()));
 				}
 			}
         }
@@ -203,19 +204,19 @@ public class MetaDataProcessor {
     private Map[] createProjectedSymbolMetadata(Command originalCommand) throws TeiidComponentException {
         Map[] columnMetadata;
         // Allow command to use temporary metadata
-        Map tempMetadata = originalCommand.getTemporaryMetadata();
-        if(tempMetadata != null && tempMetadata.size() > 0) {
-            TempMetadataAdapter tempFacade = new TempMetadataAdapter(this.metadata, new TempMetadataStore(tempMetadata));
+        TempMetadataStore tempMetadata = originalCommand.getTemporaryMetadata();
+        if(tempMetadata != null && tempMetadata.getData().size() > 0) {
+            TempMetadataAdapter tempFacade = new TempMetadataAdapter(this.metadata, tempMetadata);
             this.metadata = tempFacade; 
         }
         
-        List<SingleElementSymbol> projectedSymbols = originalCommand.getProjectedSymbols();
+        List<Expression> projectedSymbols = originalCommand.getProjectedSymbols();
         columnMetadata = new Map[projectedSymbols.size()];
         
-        Iterator<SingleElementSymbol> symbolIter = projectedSymbols.iterator();
+        Iterator<Expression> symbolIter = projectedSymbols.iterator();
         for(int i=0; symbolIter.hasNext(); i++) {
-            SingleElementSymbol symbol = symbolIter.next();
-            String shortColumnName = SingleElementSymbol.getShortName(symbol.getOutputName());
+            Expression symbol = symbolIter.next();
+            String shortColumnName = Symbol.getShortName(Symbol.getOutputName(symbol));
             if(symbol instanceof AliasSymbol) {
                 symbol = ((AliasSymbol)symbol).getSymbol();
             }
@@ -255,14 +256,16 @@ public class MetaDataProcessor {
         return xmlMetadata;
     }
 
-    private Map createColumnMetadata(String label, SingleElementSymbol symbol) throws QueryMetadataException, TeiidComponentException {
+    private Map createColumnMetadata(String label, Expression symbol) throws QueryMetadataException, TeiidComponentException {
         if(symbol instanceof ElementSymbol) {
             return createElementMetadata(label, (ElementSymbol) symbol);        
-        } else if(symbol instanceof AggregateSymbol) {
-            return createAggregateMetadata(label, (AggregateSymbol) symbol);
-        } else if (symbol instanceof WindowFunction) {
-        	return createAggregateMetadata(label, ((WindowFunction) symbol).getFunction());
         }
+        symbol = SymbolMap.getExpression(symbol);
+    	if (symbol instanceof AggregateSymbol) {
+    		return createAggregateMetadata(label, (AggregateSymbol)symbol);
+    	} else if (symbol instanceof WindowFunction) {
+    		return createAggregateMetadata(label, ((WindowFunction)symbol).getFunction());        		
+    	}
         return createTypedMetadata(label, symbol);            
     }
     
@@ -339,13 +342,13 @@ public class MetaDataProcessor {
         Type function = symbol.getAggregateFunction();
         if(function == Type.MIN || function == Type.MAX){
             if(expression instanceof ElementSymbol) {
-                return createColumnMetadata(shortColumnName, (ElementSymbol)expression);
+                return createColumnMetadata(shortColumnName, expression);
             }
         }
         return createTypedMetadata(shortColumnName, symbol);
     }
 
-    private Map createTypedMetadata(String shortColumnName, SingleElementSymbol symbol) {
+    private Map createTypedMetadata(String shortColumnName, Expression symbol) {
         return getDefaultColumn(null, shortColumnName, symbol.getType());
     }
     

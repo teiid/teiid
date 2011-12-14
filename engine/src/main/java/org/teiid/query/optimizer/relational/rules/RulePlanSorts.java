@@ -47,7 +47,6 @@ import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.util.CommandContext;
 
@@ -90,13 +89,13 @@ public class RulePlanSorts implements OptimizerRule {
 				root = checkForProjectOptimization(node, root, metadata, capFinder, record);
 			}
 			OrderBy orderBy = (OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER);
-			List<SingleElementSymbol> orderColumns = orderBy.getSortKeys();
+			List<Expression> orderColumns = orderBy.getSortKeys();
 			List<Expression> sortExpressions = new ArrayList<Expression>(orderColumns.size());
 			PlanNode possibleSort = NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE | NodeConstants.Types.ACCESS);
 			if (possibleSort != null) {
 				boolean otherExpression = false;
 				SymbolMap groupMap = (SymbolMap)possibleSort.getProperty(Info.SYMBOL_MAP);
-				for (SingleElementSymbol singleElementSymbol : orderColumns) {
+				for (Expression singleElementSymbol : orderColumns) {
 					Expression ex = SymbolMap.getExpression(singleElementSymbol);
 					if (ex instanceof ElementSymbol) {
 						sortExpressions.add(groupMap.getMappedExpression((ElementSymbol) ex));						
@@ -154,7 +153,7 @@ public class RulePlanSorts implements OptimizerRule {
 				node.setProperty(NodeConstants.Info.IS_DUP_REMOVAL, true);
 				if (cardinalityDependent) {
 					PlanNode source = NodeEditor.findNodePreOrder(node, NodeConstants.Types.SOURCE);
-					List<SingleElementSymbol> sourceOutput = (List<SingleElementSymbol>)source.getProperty(Info.OUTPUT_COLS);
+					List<Expression> sourceOutput = (List<Expression>)source.getProperty(Info.OUTPUT_COLS);
 					PlanNode child = node.getFirstChild();
 					while (child != source) {
 						child.setProperty(Info.OUTPUT_COLS, sourceOutput);
@@ -231,14 +230,14 @@ public class RulePlanSorts implements OptimizerRule {
 		} else {
 			return root;
 		}
-		List<SingleElementSymbol> childOutputCols = (List<SingleElementSymbol>) projectNode.getFirstChild().getProperty(Info.OUTPUT_COLS);
+		List<Expression> childOutputCols = (List<Expression>) projectNode.getFirstChild().getProperty(Info.OUTPUT_COLS);
 		OrderBy orderBy = (OrderBy) node.getProperty(Info.SORT_ORDER);
-		List<SingleElementSymbol> orderByKeys = orderBy.getSortKeys();
-		for (SingleElementSymbol ss : orderByKeys) {
+		List<Expression> orderByKeys = orderBy.getSortKeys();
+		for (Expression ss : orderByKeys) {
 			if(ss instanceof AliasSymbol) {
                 ss = ((AliasSymbol)ss).getSymbol();
             }
-            if (ss instanceof ExpressionSymbol && !(ss instanceof AggregateSymbol)) {
+            if (ss instanceof ExpressionSymbol) {
                 return root; //TODO: insert a new project node to handle this case
             }
 			if (!childOutputCols.contains(ss)) {
@@ -261,7 +260,7 @@ public class RulePlanSorts implements OptimizerRule {
 				projectNode.addFirstChild(node);
 			}
 		}
-		List<SingleElementSymbol> orderByOutputSymbols = (List<SingleElementSymbol>) node.getProperty(Info.OUTPUT_COLS);
+		List<Expression> orderByOutputSymbols = (List<Expression>) node.getProperty(Info.OUTPUT_COLS);
 		boolean unrelated = false;
 		if (node.hasBooleanProperty(Info.UNRELATED_SORT)) {
 			node.setProperty(Info.UNRELATED_SORT, false);

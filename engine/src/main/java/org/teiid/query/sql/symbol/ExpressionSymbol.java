@@ -22,30 +22,11 @@
 
 package org.teiid.query.sql.symbol;
 
-import org.teiid.query.sql.*;
+import org.teiid.query.sql.LanguageVisitor;
 
-/**
- * <p>This is a subclass of Symbol representing an expression in the SELECT clause.  The
- * expression may be a constant, function, or scalar subquery.  The name of this symbol is always generated
- * and typically should not be displayed.  If necessary, the ExpressionSymbol may be 
- * wrapped by an AliasSymbol to register the name in a query.  The definition of the 
- * symbol is the functional expression.  Resolution will produce a list of groups and 
- * elements used by the expression.</p>
- */
-public class ExpressionSymbol extends SingleElementSymbol {
+public class ExpressionSymbol extends Symbol implements DerivedExpression {
 	private Expression expression;
 
-    /**
-     * Constructor used for cloning 
-     * @param name
-     * @param canonicalName
-     * @since 4.3
-     */
-    protected ExpressionSymbol(String name, String canonicalName, Expression expression) {
-        super(name, canonicalName);
-        this.expression = expression;
-    }
-    
     /**
      * Construct an ExpressionSymbol with name and expression.
      */
@@ -82,14 +63,6 @@ public class ExpressionSymbol extends SingleElementSymbol {
         visitor.visit(this);
     }
 
-    /**
-     * If elementSymbols is not null return true, else return false
-     * @return boolean True if expression symbol has been resolved to element symbols
-     */
-    public boolean isResolved() {
-        return true;
-    }
-
 	/**
 	 * Return a deep copy of this object
 	 * @return Deep copy of this object
@@ -99,7 +72,7 @@ public class ExpressionSymbol extends SingleElementSymbol {
 	    if(getExpression() != null) { 
 			clonedExpr = (Expression) getExpression().clone();		
 	    }
-	    ExpressionSymbol copy = new ExpressionSymbol(getName(), getCanonical(), clonedExpr);
+	    ExpressionSymbol copy = new ExpressionSymbol(getName(), clonedExpr);
 	    return copy;
 	}
 

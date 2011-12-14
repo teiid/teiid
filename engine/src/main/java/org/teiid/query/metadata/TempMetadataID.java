@@ -33,7 +33,7 @@ import org.teiid.metadata.AbstractMetadataRecord.DataModifiable;
 import org.teiid.metadata.AbstractMetadataRecord.Modifiable;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.sql.lang.CacheHint;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 
 /**
  * This class represents a temporary metadata ID.  A temporary metadata ID 
@@ -412,7 +412,7 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 
 	public String getName() {
 		if (this.name == null) {
-			this.name = SingleElementSymbol.getShortName(this.ID);
+			this.name = Symbol.getShortName(this.ID);
 		}
 		return this.name;
 	}

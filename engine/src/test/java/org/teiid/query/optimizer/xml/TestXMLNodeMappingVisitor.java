@@ -66,7 +66,7 @@ public class TestXMLNodeMappingVisitor extends TestCase {
         mappingDoc = SourceNodeGenaratorVisitor.extractSourceNodes(mappingDoc);
     
 		// Create criteria
-       	ElementSymbol es = new ElementSymbol("Catalogs.Catalog.Items.Item.Name", null, doc); //$NON-NLS-1$
+       	ElementSymbol es = new ElementSymbol("Catalogs.Catalog.Items.Item.Name", doc); //$NON-NLS-1$
         ResolverVisitor.resolveLanguageObject(es, metadata);
 		CompareCriteria crit = new CompareCriteria(es, CompareCriteria.EQ, new Constant("abc")); //$NON-NLS-1$
 	

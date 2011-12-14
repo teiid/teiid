@@ -22,16 +22,7 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -65,7 +56,6 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
@@ -233,12 +223,12 @@ public class FrameUtil {
             }
                             
         } else if(type == NodeConstants.Types.PROJECT) {                    
-            List<SingleElementSymbol> projectedSymbols = (List<SingleElementSymbol>)node.getProperty(NodeConstants.Info.PROJECT_COLS);
+            List<Expression> projectedSymbols = (List<Expression>)node.getProperty(NodeConstants.Info.PROJECT_COLS);
             Select select = new Select(projectedSymbols);
             ExpressionMappingVisitor.mapExpressions(select, symbolMap);
             if (rewrite) {
             	for (LanguageObject expr : select.getSymbols()) {
-					rewriteSingleElementSymbol(metadata, (SingleElementSymbol) expr);
+					rewriteSingleElementSymbol(metadata, (Expression) expr);
 				}
             }
             node.setProperty(NodeConstants.Info.PROJECT_COLS, select.getSymbols());
@@ -296,7 +286,7 @@ public class FrameUtil {
     }
 
 	private static void rewriteSingleElementSymbol(
-			QueryMetadataInterface metadata, SingleElementSymbol ses) throws QueryPlannerException {
+			QueryMetadataInterface metadata, Expression ses) throws QueryPlannerException {
 		try {
 			if (ses instanceof AliasSymbol) {
 				ses = ((AliasSymbol)ses).getSymbol();
@@ -304,7 +294,7 @@ public class FrameUtil {
 			if (ses instanceof ExpressionSymbol) {
 				ExpressionSymbol es = (ExpressionSymbol)ses;
 				if (es.getExpression() != null) {
-					es.setExpression(QueryRewriter.rewriteExpression(es.getExpression(), null, null, metadata));
+					es.setExpression(QueryRewriter.rewriteExpression(es.getExpression(), null, metadata));
 				}
 			}
 		} catch(TeiidProcessingException e) {
@@ -320,7 +310,7 @@ public class FrameUtil {
             return expression;
         }
         
-        if(expression instanceof SingleElementSymbol) { 
+        if(expression instanceof Expression) { 
             Expression mappedSymbol = (Expression) symbolMap.get(expression);
             if (mappedSymbol != null) {
                 return mappedSymbol;
@@ -535,13 +525,13 @@ public class FrameUtil {
     /**
      * Finds the closest project columns in the current frame
      */
-    static List<SingleElementSymbol> findTopCols(PlanNode node) {
+    static List<Expression> findTopCols(PlanNode node) {
     	PlanNode project = NodeEditor.findNodePreOrder(node, NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE);
         if (project == null) {
             project = NodeEditor.findParent(node, NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE);
         }
         if (project != null) {
-            return (List<SingleElementSymbol>)project.getProperty(NodeConstants.Info.PROJECT_COLS);
+            return (List<Expression>)project.getProperty(NodeConstants.Info.PROJECT_COLS);
         }
         Assertion.failed("no top cols in frame"); //$NON-NLS-1$
         return null;

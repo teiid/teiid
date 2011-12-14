@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -109,7 +110,8 @@ public class ExecResolver extends ProcedureContainerResolver {
         // the procedure was parsed with named or unnamed parameters, the keys
         // for this map will either be the String names of the parameters or
         // the Integer indices, as entered in the user query
-        Map<Object, Expression> inputExpressions = new HashMap<Object, Expression>();
+        Map<Integer, Expression> postionalExpressions = new HashMap<Integer, Expression>();
+        Map<String, Expression> namedExpressions = new TreeMap<String, Expression>(String.CASE_INSENSITIVE_ORDER);
         int adjustIndex = 0;
         for (SPParameter param : oldParams) {
             if(param.getExpression() == null) {
@@ -119,16 +121,16 @@ public class ExecResolver extends ProcedureContainerResolver {
             	continue;
             }
             if (namedParameters && param.getParameterType() != SPParameter.RETURN_VALUE) {
-                if (inputExpressions.put(param.getName().toUpperCase(), param.getExpression()) != null) {
+                if (namedExpressions.put(param.getName(), param.getExpression()) != null) {
                 	throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.duplicate_named_params", param.getName().toUpperCase())); //$NON-NLS-1$
                 }
             } else {
-                inputExpressions.put(param.getIndex() + adjustIndex, param.getExpression());
+                postionalExpressions.put(param.getIndex() + adjustIndex, param.getExpression());
             }
         }
 
         storedProcedureCommand.clearParameters();
-        int origInputs = inputExpressions.size();
+        int origInputs = postionalExpressions.size() + namedExpressions.size();
         /*
          * Take the values set from the stored procedure implementation, and match up with the
          * types of parameter it is from the metadata and then reset the newly joined parameters
@@ -159,7 +161,7 @@ public class ExecResolver extends ProcedureContainerResolver {
         	throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.return_expected", storedProcedureCommand.getGroup()));  //$NON-NLS-1$
         }
 
-        if(!namedParameters && (inputParams > inputExpressions.size())) {
+        if(!namedParameters && (inputParams > postionalExpressions.size())) {
             throw new QueryResolverException("ERR.015.008.0007", QueryPlugin.Util.getString("ERR.015.008.0007", inputParams, origInputs, storedProcedureCommand.getGroup())); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
@@ -170,7 +172,7 @@ public class ExecResolver extends ProcedureContainerResolver {
         if (storedProcedureCommand.isCalledWithReturn() && hasReturnValue) {
 	        for (SPParameter param : clonedMetadataParams) {
 	        	if (param.getParameterType() == SPParameter.RETURN_VALUE) {
-	        		Expression expr = inputExpressions.remove(exprIndex++);
+	        		Expression expr = postionalExpressions.remove(exprIndex++);
 	                param.setExpression(expr);
 	        	}
 	        }
@@ -180,8 +182,8 @@ public class ExecResolver extends ProcedureContainerResolver {
             	continue;
             }
             if (namedParameters) {
-                String nameKey = param.getParameterSymbol().getShortCanonicalName();
-                Expression expr = inputExpressions.remove(nameKey);
+                String nameKey = param.getParameterSymbol().getShortName();
+                Expression expr = namedExpressions.remove(nameKey);
                 // With named parameters, have to check on optional params and default values
                 if (expr == null && param.getParameterType() != ParameterInfo.OUT) {
                 	expr = ResolverUtil.getDefault(param.getParameterSymbol(), metadata);
@@ -193,16 +195,16 @@ public class ExecResolver extends ProcedureContainerResolver {
             	if(param.getParameterType() == SPParameter.OUT) {
             		continue;
             	}
-                Expression expr = inputExpressions.remove(exprIndex++);
+                Expression expr = postionalExpressions.remove(exprIndex++);
                 param.setExpression(expr);
             }
         }
         
         // Check for leftovers, i.e. params entered by user w/ wrong/unknown names
-        if (!inputExpressions.isEmpty()) {
-        	if (namedParameters) {
-        		throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.invalid_named_params", inputExpressions.keySet(), expected)); //$NON-NLS-1$
-        	}
+        if (!namedExpressions.isEmpty()) {
+    		throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.invalid_named_params", namedExpressions.keySet(), expected)); //$NON-NLS-1$
+        }
+        if (!postionalExpressions.isEmpty()) {
         	throw new QueryResolverException("ERR.015.008.0007", QueryPlugin.Util.getString("ERR.015.008.0007", inputParams, origInputs, storedProcedureCommand.getGroup().toString())); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
@@ -286,7 +288,7 @@ public class ExecResolver extends ProcedureContainerResolver {
     protected String getPlan(QueryMetadataInterface metadata,
                              GroupSymbol group) throws TeiidComponentException,
                                                QueryMetadataException, QueryResolverException {
-        StoredProcedureInfo storedProcedureInfo = metadata.getStoredProcedureInfoForProcedure(group.getCanonicalName());
+        StoredProcedureInfo storedProcedureInfo = metadata.getStoredProcedureInfoForProcedure(group.getName());
         
         //if there is a query plan associated with the procedure, get it.
         QueryNode plan = storedProcedureInfo.getQueryPlan();

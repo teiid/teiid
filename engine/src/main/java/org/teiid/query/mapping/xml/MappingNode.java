@@ -66,35 +66,31 @@ public abstract class MappingNode implements Cloneable, Serializable {
     }
     
     public static MappingNode findNode(MappingNode root, String partialName) {
+    	return findNode(root, partialName, 0);
+    }
+    
+    public static MappingNode findNode(MappingNode root, String partialName, int start) {
         String canonicalName = root.getName();
         
         if (canonicalName != null) {
-            //@ is optional, so we need to check for it only with attributes
-            if (partialName.startsWith("@")) { //$NON-NLS-1$
-                canonicalName = "@" + canonicalName; //$NON-NLS-1$
-            }
+            int offset = partialName.charAt(start)=='@'?1:0;
             
-            canonicalName = canonicalName.toUpperCase();
-            
-            boolean abort = true;
-            
-            if (partialName.startsWith(canonicalName)) {
-                if (partialName.length() > canonicalName.length() + 1 && partialName.charAt(canonicalName.length()) == ElementSymbol.SEPARATOR.toCharArray()[0]) {
-                    partialName = partialName.substring(canonicalName.length() + 1);
-                    abort = false;
-                } else if (partialName.length() == canonicalName.length()) {
+            if (partialName.startsWith(canonicalName, start + offset)) { 
+                if (partialName.length() - start > canonicalName.length() + 1 && partialName.charAt(start + canonicalName.length()) == '.') {
+                    start += canonicalName.length() + 1;
+                } else if (partialName.length() - start == canonicalName.length() + offset) {
                     return root;
-                } 
-            }
-            
-            if (abort) {
-                return null;
+                } else {
+                	return null;
+                }
+            } else {
+            	return null;
             }
         }
         
         for (Iterator<MappingNode> i = root.getChildren().iterator(); i.hasNext();) {
             MappingNode child = i.next();
-            MappingNode found = findNode(child, partialName);
+            MappingNode found = findNode(child, partialName, start);
             if (found != null) {
                 return found;
             }

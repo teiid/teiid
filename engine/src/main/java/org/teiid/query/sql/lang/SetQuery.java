@@ -38,8 +38,8 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
+import org.teiid.query.sql.util.SymbolMap;
 
 
 /**
@@ -130,30 +130,22 @@ public class SetQuery extends QueryCommand {
         return projectedSymbols;
     }
     
-    public static List getTypedProjectedSymbols(List acutal, List projectedTypes, QueryMetadataInterface metadata) {
-        List newProject = new ArrayList();
+    public static List<Expression> getTypedProjectedSymbols(List<? extends Expression> acutal, List<Class<?>> projectedTypes, QueryMetadataInterface metadata) {
+        List<Expression> newProject = new ArrayList<Expression>();
         for (int i = 0; i < acutal.size(); i++) {
-            SingleElementSymbol originalSymbol = (SingleElementSymbol)acutal.get(i);
-            SingleElementSymbol symbol = originalSymbol;
-            Class type = (Class)projectedTypes.get(i);
+            Expression originalSymbol = acutal.get(i);
+            Expression symbol = originalSymbol;
+            Class<?> type = projectedTypes.get(i);
             if (symbol.getType() != type) {
-                if (symbol instanceof AliasSymbol) {
-                    symbol = ((AliasSymbol)symbol).getSymbol();
-                } 
-
-                Expression expr = symbol;
-                if (symbol instanceof ExpressionSymbol) {
-                    expr = ((ExpressionSymbol)symbol).getExpression();
-                } 
-                
+            	symbol = SymbolMap.getExpression(originalSymbol);
                 try {
-                    symbol = new ExpressionSymbol(originalSymbol.getShortName(), ResolverUtil.convertExpression(expr, DataTypeManager.getDataTypeName(type), metadata));
+                    symbol = ResolverUtil.convertExpression(symbol, DataTypeManager.getDataTypeName(type), metadata);
                 } catch (QueryResolverException err) {
                     throw new TeiidRuntimeException(err);
                 }
                 
-                if (!(originalSymbol instanceof ExpressionSymbol)) {
-                    symbol = new AliasSymbol(originalSymbol.getShortName(), symbol);
+                if (originalSymbol instanceof Symbol) {
+                    symbol = new AliasSymbol(Symbol.getShortName(originalSymbol), symbol);
                 } 
             }
             newProject.add(symbol);

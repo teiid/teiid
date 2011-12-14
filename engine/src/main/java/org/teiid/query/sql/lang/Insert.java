@@ -35,7 +35,6 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 
 
 /**
@@ -257,7 +256,7 @@ public class Insert extends ProcedureContainer {
 	 * single column.
 	 * @return Ordered list of SingleElementSymbol
 	 */
-	public List<SingleElementSymbol> getProjectedSymbols(){
+	public List<Expression> getProjectedSymbols(){
         return Command.getUpdateCommandSymbol();
 	}
 	

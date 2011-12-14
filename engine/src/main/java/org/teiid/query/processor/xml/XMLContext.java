@@ -30,6 +30,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.util.VariableContext;
 
 
@@ -192,7 +193,7 @@ class XMLContext {
         		continue;
         	}
             ElementSymbol symbol = (ElementSymbol)elements.get(index);
-            variableContext.setValue(new ElementSymbol(resultSetName + ElementSymbol.SEPARATOR + symbol.getShortName()), row.get(index));
+            variableContext.setValue(new ElementSymbol(resultSetName + Symbol.SEPARATOR + symbol.getShortName()), row.get(index));
         }
     }
 }

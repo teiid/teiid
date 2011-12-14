@@ -147,7 +147,6 @@ public class TestSearchedCaseExpression extends TestCase {
         
         TestCaseExpression.helpTestStrictEquivalence(expr.getElseExpression(), clone.getElseExpression());
         assertEquals(expr.getType(), clone.getType());
-        assertEquals(expr.isResolved(), clone.isResolved());
     }
 
     public void testGetWhenCriteria() {
@@ -210,17 +209,6 @@ public class TestSearchedCaseExpression extends TestCase {
         assertEquals(new CompareCriteria(new ElementSymbol("xyz"), CompareCriteria.EQ, new Constant(new Integer(30000))), caseExpr.getWhenCriteria(1)); //$NON-NLS-1$
         assertEquals(new Constant(new Integer(20000)), caseExpr.getThenExpression(0));
         assertEquals(new Constant(new Integer(30000)), caseExpr.getThenExpression(1));
-    }
-
-    public void testIsResolved() {
-        SearchedCaseExpression expr = example(3);
-        assertFalse(expr.isResolved());
-        CompareCriteria crit = (CompareCriteria)expr.getWhenCriteria(0);
-        ElementSymbol x = (ElementSymbol)crit.getLeftExpression();
-        x.setType(String.class);
-        x.setMetadataID("metadataID"); //$NON-NLS-1$
-        expr.setType(Integer.class);
-        assertTrue(expr.isResolved());
     }
 
     public void testGetThenExpression() {

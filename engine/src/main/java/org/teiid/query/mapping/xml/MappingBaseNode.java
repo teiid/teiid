@@ -71,7 +71,7 @@ public abstract class MappingBaseNode extends MappingNode {
         if (elem.isRecursive()) {
             MappingRecursiveElement recursiveElement = (MappingRecursiveElement)elem;
             MappingBaseNode recursiveRoot = getRecursiveRootNode(recursiveElement);
-            recursiveRoot.setRootRecursiveNode(true, recursiveElement.getMappingClass().toUpperCase());
+            recursiveRoot.setRootRecursiveNode(true, recursiveElement.getMappingClass());
             addChild(elem);
         }
         else {
@@ -139,10 +139,6 @@ public abstract class MappingBaseNode extends MappingNode {
         return null;
     }
     
-    public String getCanonicalName() {
-        return getFullyQualifiedName().toUpperCase();
-    }
-            
     public void removeChildNode(MappingBaseNode toRemove) {
         getChildren().remove(toRemove);
     }

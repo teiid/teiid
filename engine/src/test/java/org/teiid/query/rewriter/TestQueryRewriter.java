@@ -58,11 +58,8 @@ import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.SearchedCaseExpression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
@@ -141,7 +138,7 @@ public class TestQueryRewriter {
     	ResolverVisitor.resolveLanguageObject(actualExp, metadata);
     	CommandContext context = new CommandContext();
     	context.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
-    	actualExp = QueryRewriter.rewriteExpression(actualExp, null, context, metadata);
+    	actualExp = QueryRewriter.rewriteExpression(actualExp, context, metadata);
     	if (expected != null) {
 	    	Expression expectedExp = QueryParser.getQueryParser().parseExpression(expected);
 	    	ResolverVisitor.resolveLanguageObject(expectedExp, metadata);
@@ -572,7 +569,7 @@ public class TestQueryRewriter {
      
     @Test public void testRewriteCrit_plusInvert() { 
         String original = "pm1.g1.e2 + 1.1 = ?"; //$NON-NLS-1$ 
-        String expected = "pm1.g1.e2 = ? - 1.1"; //$NON-NLS-1$ 
+        String expected = "convert(pm1.g1.e2, bigdecimal) = ? - 1.1"; //$NON-NLS-1$ 
          
         helpTestRewriteCriteria(original, expected);
     } 
@@ -961,7 +958,7 @@ public class TestQueryRewriter {
     }    
     
     @Test public void testRewriteCase1954SetC() {
-        helpTestRewriteCriteria("concat(pm1.g1.e2, 'string') in ('2', '3')", "concat(pm1.g1.e2, 'string') in ('2', '3')"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("concat(pm1.g1.e2, 'string') in ('2', '3')", "concat(convert(pm1.g1.e2, string), 'string') in ('2', '3')"); //$NON-NLS-1$ //$NON-NLS-2$
     }    
 
     @Test public void testRewriteCase1954SetD() {
@@ -1071,10 +1068,9 @@ public class TestQueryRewriter {
 
         Command cmd = helpTestRewriteCommand( sqlBefore, sqlAfter );
         
-        ExpressionSymbol es = (ExpressionSymbol)cmd.getProjectedSymbols().get(0);
+        Expression es = cmd.getProjectedSymbols().get(0);
         assertEquals( DataTypeManager.DefaultDataClasses.STRING, es.getType() );
     }
-
 
     @Test public void testRewriteExec() throws Exception {
         Command command = QueryParser.getQueryParser().parseCommand("exec pm1.sq2(session_id())");             //$NON-NLS-1$
@@ -1240,7 +1236,7 @@ public class TestQueryRewriter {
      */
     @Test public void testRewriteSelectInto1() {
         String sql = "select distinct e2, e2, e3, e4 into pm1.g1 from pm1.g2"; //$NON-NLS-1$
-        String expected = "INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4) SELECT X.e2 AS e1, X.E2_0 AS e2, X.e3, X.e4 FROM (SELECT DISTINCT e2, e2 AS E2_0, e3, e4 FROM pm1.g2) AS X"; //$NON-NLS-1$
+        String expected = "INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4) SELECT convert(X.e2, string) AS e1, X.e2_0 AS e2, X.e3, X.e4 FROM (SELECT DISTINCT e2, e2 AS e2_0, e3, e4 FROM pm1.g2) AS X"; //$NON-NLS-1$
                 
         helpTestRewriteCommand(sql, expected);        
     }
@@ -1277,7 +1273,7 @@ public class TestQueryRewriter {
         union = (SetQuery)QueryRewriter.rewrite(union, RealMetadataFactory.example1Cached(), null);
         
         for (QueryCommand query : union.getQueryCommands()) {
-            List<SingleElementSymbol> projSymbols = query.getProjectedSymbols();
+            List<Expression> projSymbols = query.getProjectedSymbols();
             for(int i=0; i<projSymbols.size(); i++) {
                 assertEquals("Found type mismatch at column " + i, types[i], projSymbols.get(i).getType()); //$NON-NLS-1$
             }                
@@ -1297,7 +1293,7 @@ public class TestQueryRewriter {
         procedure += "Select x from temp;\n"; //$NON-NLS-1$
         procedure += "END\n"; //$NON-NLS-1$
         
-        helpTestRewriteCommand(procedure, "CREATE VIRTUAL PROCEDURE\nBEGIN\nCREATE LOCAL TEMPORARY TABLE temp (x string, y integer, z integer);\nINSERT INTO temp (temp.x, temp.y, temp.z) SELECT X.e2 AS x, X.x AS y, X.X_0 AS z FROM (SELECT pm1.g1.e2, 1 AS x, 2 AS X_0 FROM pm1.g1 ORDER BY pm1.g1.e2 LIMIT 1) AS X;\nSELECT x FROM temp;\nEND"); //$NON-NLS-1$
+        helpTestRewriteCommand(procedure, "CREATE VIRTUAL PROCEDURE\nBEGIN\nCREATE LOCAL TEMPORARY TABLE temp (x string, y integer, z integer);\nINSERT INTO temp (temp.x, temp.y, temp.z) SELECT convert(X.e2, string) AS x, X.x AS y, X.x_0 AS z FROM (SELECT pm1.g1.e2, 1 AS x, 2 AS x_0 FROM pm1.g1 ORDER BY pm1.g1.e2 LIMIT 1) AS X;\nSELECT x FROM temp;\nEND"); //$NON-NLS-1$
     }
     
     @Test public void testRewriteNot() {
@@ -1363,119 +1359,25 @@ public class TestQueryRewriter {
     	helpTestRewriteCriteria("coalesce(convert(pm1.g1.e2, double), pm1.g1.e4) = 1", "ifnull(convert(pm1.g1.e2, double), pm1.g1.e4) = 1", true); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    /**
-     * Test <code>QueryRewriter</code>'s ability to rewrite a query that 
-     * contains an aggregate function which uses a <code>CASE</code> 
-     * expression which contains <code>BETWEEN</code> criteria as its value.
-     * <p>
-     * An aggregate function list is defined and queries are created that 
-     * use each function from the list.  The list includes:
-     * <p>
-     * "SUM", "MAX", "MIN", "AVG", "COUNT"   
-     * <p>
-     * It is expected that the BETWEEN expression will be rewritten as 
-     * <code>CompoundCriteria</code>.
-     * <p>
-     * <table>
-     * <tr><th align="left" colspan=2>For example:
-     * <tr><td width="10*"><td>SELECT SUM(CASE WHEN e2 BETWEEN 3 AND 5 
-     * THEN e2 ELSE -1 END) FROM pm1.g1
-     * <tr><th align="left" colspan=2>Is rewritten as:
-     * <tr><td width="10*"><td>SELECT SUM(CASE WHEN (e2 >= 3) AND (e2 <= 5) 
-     * THEN e2 ELSE -1 END) FROM pm1.g1
-     * </table>
-     * 
-     * @see org.teiid.query.rewriter.QueryRewriter
-     * @see org.teiid.query.sql.lang.BetweenCriteria
-     * @see org.teiid.query.sql.lang.CompoundCriteria
-     * @see org.teiid.query.sql.symbol.AggregateSymbol
-     * @see org.teiid.query.sql.symbol.SearchedCaseExpression
-     */
     @Test public void testAggregateWithBetweenInCaseInSelect() {
-    	// Define a list of aggregates to test against
-    	List<String> aggregateCommands = Arrays.asList( new String[] { "SUM", "MAX", "MIN", "AVG", "COUNT" } ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-    	
-    	// Define a query and the expected rewritten query
-    	// ?AGGREGATE? represents the string substitution for an aggregate from aggregateCommands
-    	String sqlBefore = "SELECT ?AGGREGATE?(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END) FROM pm1.g1"; //$NON-NLS-1$
-    	String sqlAfter  = "SELECT ?AGGREGATE?(CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END) FROM pm1.g1"; //$NON-NLS-1$
+    	String sqlBefore = "SELECT MAX(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END) FROM pm1.g1"; //$NON-NLS-1$
+    	String sqlAfter  = "SELECT MAX(CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END) FROM pm1.g1"; //$NON-NLS-1$
 
-    	// Iterate through the aggregateCommands
-    	for ( String aCmd : aggregateCommands ) {
-    		// Replace ?AGGREGATE? with the command from aggregateCommands
-    		String sql = sqlBefore.replace("?AGGREGATE?", aCmd); //$NON-NLS-1$
-    		String exSql = sqlAfter.replace("?AGGREGATE?", aCmd); //$NON-NLS-1$
-    		// Test QueryRewriter
-        	Command cmd = helpTestRewriteCommand( sql, exSql );
-        	// Check the rewritten command to verify that CompundCriteria replaced BetweenCriteria
-        	CompoundCriteria ccrit = (CompoundCriteria) ((SearchedCaseExpression) ((ExpressionSymbol) cmd.getProjectedSymbols().get(0)).getExpression()).getWhen().get(0);
-        	assertEquals( "e2 >= 3", ccrit.getCriteria(0).toString() ); //$NON-NLS-1$
-        	assertEquals( "e2 <= 5", ccrit.getCriteria(1).toString() ); //$NON-NLS-1$
-    	}
+    	helpTestRewriteCommand( sqlBefore, sqlAfter );
     }
     
-    /**
-     * Test <code>QueryRewriter</code>'s ability to rewrite a query that 
-     * contains a <code>CASE</code> expression which contains 
-     * <code>BETWEEN</code> criteria in the queries <code>SELECT</code> clause.
-     * <p>
-     * It is expected that the BETWEEN expression will be rewritten as 
-     * <code>CompoundCriteria</code>.
-     * <p>
-     * <table>
-     * <tr><th align="left" colspan=2>For example:
-     * <tr><td width="10*"><td>SELECT CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 
-     * ELSE -1 END FROM pm1.g1 
-     * <tr><th align="left" colspan=2>Is rewritten as:
-     * <tr><td width="10*"><td>SELECT CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 
-     * ELSE -1 END FROM pm1.g1
-     * </table>
-     * 
-     * @see org.teiid.query.rewriter.QueryRewriter
-     * @see org.teiid.query.sql.lang.BetweenCriteria
-     * @see org.teiid.query.sql.lang.CompoundCriteria
-     * @see org.teiid.query.sql.symbol.SearchedCaseExpression
-     */
     @Test public void testBetweenInCaseInSelect() {
     	String sqlBefore = "SELECT CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END FROM pm1.g1"; //$NON-NLS-1$
     	String sqlAfter = "SELECT CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END FROM pm1.g1"; //$NON-NLS-1$
     	
-    	Command cmd = helpTestRewriteCommand( sqlBefore, sqlAfter );
-    	CompoundCriteria ccrit = (CompoundCriteria) ((SearchedCaseExpression) ((ExpressionSymbol) cmd.getProjectedSymbols().get(0)).getExpression()).getWhen().get(0);
-    	assertEquals( "e2 >= 3", ccrit.getCriteria(0).toString() ); //$NON-NLS-1$
-    	assertEquals( "e2 <= 5", ccrit.getCriteria(1).toString() ); //$NON-NLS-1$
+    	helpTestRewriteCommand( sqlBefore, sqlAfter );
     }
     
-    /**
-     * Test <code>QueryRewriter</code>'s ability to rewrite a query that 
-     * contains a <code>CASE</code> expression which contains 
-     * <code>BETWEEN</code> criteria in the queries <code>WHERE</code> clause.
-     * <p>
-     * It is expected that the BETWEEN expression will be rewritten as 
-     * <code>CompoundCriteria</code>.
-     * <p>
-     * <table>
-     * <tr><th align="left" colspan=2>For example:
-     * <tr><td width="10*"><td>SELECT * FROM pm1.g1 WHERE e3 = CASE WHEN e2 
-     * BETWEEN 3 AND 5 THEN e2 ELSE -1 END 
-     * <tr><th align="left" colspan=2>Is rewritten as:
-     * <tr><td width="10*"><td>SELECT * FROM pm1.g1 WHERE e3 = CASE WHEN  
-     * (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END
-     * </table>
-     * 
-     * @see org.teiid.query.rewriter.QueryRewriter
-     * @see org.teiid.query.sql.lang.BetweenCriteria
-     * @see org.teiid.query.sql.lang.CompoundCriteria
-     * @see org.teiid.query.sql.symbol.SearchedCaseExpression
-     */
     @Test public void testBetweenInCase() {
     	String sqlBefore = "SELECT * FROM pm1.g1 WHERE e3 = CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END"; //$NON-NLS-1$
-    	String sqlAfter = "SELECT * FROM pm1.g1 WHERE e3 = CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END"; //$NON-NLS-1$
+    	String sqlAfter = "SELECT * FROM pm1.g1 WHERE convert(e3, integer) = CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END"; //$NON-NLS-1$
     	
-    	Command cmd = helpTestRewriteCommand( sqlBefore, sqlAfter );
-    	CompoundCriteria ccrit = (CompoundCriteria) ((SearchedCaseExpression) ((CompareCriteria) ((Query) cmd).getCriteria()).getRightExpression()).getWhen().get(0);
-    	assertEquals( "e2 >= 3", ccrit.getCriteria(0).toString() ); //$NON-NLS-1$
-    	assertEquals( "e2 <= 5", ccrit.getCriteria(1).toString() ); //$NON-NLS-1$
+    	helpTestRewriteCommand( sqlBefore, sqlAfter );
     }
     
     @Test public void testRewriteNullHandling() {
@@ -1627,7 +1529,7 @@ public class TestQueryRewriter {
     @Test public void testRewriteXmlTable() throws Exception {
     	String original = "select * from xmltable('/' passing 1 + 1 as a columns x string default curdate()) as x"; //$NON-NLS-1$
     	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
-    	helpTestRewriteCommand(original, "SELECT * FROM XMLTABLE('/' PASSING 2 AS a COLUMNS x string DEFAULT curdate()) AS x", metadata);
+    	helpTestRewriteCommand(original, "SELECT * FROM XMLTABLE('/' PASSING 2 AS a COLUMNS x string DEFAULT convert(curdate(), string)) AS x", metadata);
     }
     
     @Test public void testRewriteQueryString() throws Exception {

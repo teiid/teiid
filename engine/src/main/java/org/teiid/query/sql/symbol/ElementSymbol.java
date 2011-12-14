@@ -36,7 +36,7 @@ import org.teiid.query.sql.LanguageVisitor;
  * is set to false.  Common uses when this is set to true are for variables used 
  * within a command, correlated elements within a command, etc. </p>
  */
-public class ElementSymbol extends SingleElementSymbol {
+public class ElementSymbol extends Symbol implements DerivedExpression {
 
     public enum DisplayMode {
         FULLY_QUALIFIED, // symbol name 
@@ -52,16 +52,6 @@ public class ElementSymbol extends SingleElementSymbol {
     private DisplayMode displayMode = DisplayMode.OUTPUT_NAME;
 	
     /**
-     * Constructor used for cloning 
-     * @param name
-     * @param canonicalName
-     * @since 4.3
-     */
-    protected ElementSymbol(String name, String canonicalName) {
-        super(name, canonicalName);
-    }
-    
-    /**
      * Simple constructor taking just a name.  By default will display fully qualified name
      * @param name Name of the symbol, may or may not be fully qualified
      */
@@ -69,8 +59,8 @@ public class ElementSymbol extends SingleElementSymbol {
         super(name);		
     }
     
-    public ElementSymbol(String shortName, String shortCanonical, GroupSymbol group) {
-    	super(shortName, shortCanonical);
+    public ElementSymbol(String shortName, GroupSymbol group) {
+    	this.setShortName(shortName);
     	this.groupSymbol = group;
     }
     
@@ -87,17 +77,9 @@ public class ElementSymbol extends SingleElementSymbol {
     @Override
     public String getName() {
     	if (this.groupSymbol != null) {
-    		return this.groupSymbol.getName() + SingleElementSymbol.SEPARATOR + this.getShortName();
+    		return this.groupSymbol.getName() + Symbol.SEPARATOR + this.getShortName();
     	}
     	return super.getName();
-    }
-    
-    @Override
-    public String getCanonicalName() {
-    	if (this.groupSymbol != null) {
-    		return this.groupSymbol.getCanonicalName() + SingleElementSymbol.SEPARATOR + this.getShortCanonicalName();
-    	}
-    	return super.getCanonicalName();
     }
     
     @Override
@@ -115,13 +97,13 @@ public class ElementSymbol extends SingleElementSymbol {
     	if (other.groupSymbol == null) {
         	return super.equals(obj);
     	}
-    	return this.groupSymbol.equals(other.groupSymbol) && this.getShortCanonicalName().equals(other.getShortCanonicalName());
+    	return this.groupSymbol.equals(other.groupSymbol) && this.getShortName().equals(other.getShortName());
     }
     
     @Override
     public int hashCode() {
     	if (this.groupSymbol != null) {
-    		return HashCodeUtil.hashCode(this.groupSymbol.hashCode(), this.getShortCanonicalName().hashCode());
+    		return HashCodeUtil.hashCode(this.groupSymbol.hashCode(), this.getShortName().hashCode());
     	}
     	return super.hashCode();
     }
@@ -240,21 +222,12 @@ public class ElementSymbol extends SingleElementSymbol {
         visitor.visit(this);
     }
 
-    /**
-     * If metadataID is not null and type is not null return true, 
-     * else return false
-     * @return boolean if metadataID is null or not
-     */
-    public boolean isResolved() {
-        return(this.metadataID != null && this.type != null);
-    }
-	
 	/**
 	 * Return a deep copy of this object.
 	 * @return Deep copy of this object
 	 */
 	public ElementSymbol clone() {
-		ElementSymbol copy = new ElementSymbol(getShortName(), getCanonical());
+		ElementSymbol copy = new ElementSymbol(getShortName(), null);
 		if(getGroupSymbol() != null) { 
 			copy.setGroupSymbol(getGroupSymbol().clone());
 		}

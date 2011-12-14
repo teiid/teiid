@@ -33,7 +33,7 @@ import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 
 /**
@@ -76,7 +76,7 @@ public class Query extends QueryCommand {
     private Into into;
     
     /** xml projected symbols */
-    private List<SingleElementSymbol> selectList;
+    private List<Expression> selectList;
 	
     // =========================================================================
     //                         C O N S T R U C T O R S
@@ -292,7 +292,7 @@ public class Query extends QueryCommand {
 	 * single column.
 	 * @return Ordered list of SingleElementSymbol
 	 */
-	public List<SingleElementSymbol> getProjectedSymbols() {
+	public List<Expression> getProjectedSymbols() {
 		if (!getIsXML()) {
 			if(getSelect() != null) { 
                 if(getInto() != null){
@@ -304,7 +304,7 @@ public class Query extends QueryCommand {
 			return Collections.emptyList();
 		}
 		if(selectList == null){
-			selectList = new ArrayList<SingleElementSymbol>(1);
+			selectList = new ArrayList<Expression>(1);
 			ElementSymbol xmlElement = new ElementSymbol("xml"); //$NON-NLS-1$
 	        xmlElement.setType(DataTypeManager.DefaultDataClasses.XML);
 			selectList.add(xmlElement);
@@ -357,7 +357,7 @@ public class Query extends QueryCommand {
         copy.setIsXML(getIsXML());
         
         if(selectList != null){
-        	copy.selectList = LanguageObject.Util.deepClone(selectList, SingleElementSymbol.class);
+        	copy.selectList = LanguageObject.Util.deepClone(selectList, Expression.class);
         }
         
         if (into != null) {
@@ -429,8 +429,8 @@ public class Query extends QueryCommand {
 		return areResultsCachable(projectedSymbols);
 	}
 
-	public static boolean areResultsCachable(Collection<? extends SingleElementSymbol> projectedSymbols) {
-		for (SingleElementSymbol projectedSymbol : projectedSymbols) {
+	public static boolean areResultsCachable(Collection<? extends Expression> projectedSymbols) {
+		for (Expression projectedSymbol : projectedSymbols) {
 			if(projectedSymbol.getType() == DataTypeManager.DefaultDataClasses.OBJECT) {
 				return false;
 			}

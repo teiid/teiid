@@ -67,9 +67,7 @@ public class TestXMLPlanningEnhancements {
                                                               new String[] { "supplierNum", "supplierName", "supplierZipCode" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                                                               new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
                                                          
-        Table doc18a = RealMetadataFactory.createXmlDocument("doc18a", xmltest, TestXMLProcessor.createXMLPlanNested("xmltest.suppliersY")); //$NON-NLS-1$ //$NON-NLS-2$
-        RealMetadataFactory.createElements(doc18a, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name" },  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
+        RealMetadataFactory.createXmlDocument("doc18a", xmltest, TestXMLProcessor.createXMLPlanNested("xmltest.suppliersY")); //$NON-NLS-1$ //$NON-NLS-2$
         return metadata;
     }
     
@@ -78,9 +76,7 @@ public class TestXMLPlanningEnhancements {
         
         Schema xmltest = metadata.getMetadataStore().getSchemas().get("XMLTEST");
         
-        Table docJoin = RealMetadataFactory.createXmlDocument("docJoin", xmltest, createXMLPlanNestedJoin()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(docJoin, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.item.suppliers", "Catalogs.Catalog.items.item.suppliers.supplier", "Catalogs.Catalog.items.item.suppliers.supplier.@SupplierID", "Catalogs.Catalog.items.item.suppliers.supplier.zip", "Catalogs.Catalog.items.item.suppliers.supplier.Name", "Catalogs.Catalog.items.item.suppliers.supplier.orders", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.@OrderID" ,"Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderDate", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderQuantity", "Catalogs.Catalog.items.item.suppliers.supplier.orders.order.OrderStatus"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$ //$NON-NLS-18$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
+        RealMetadataFactory.createXmlDocument("docJoin", xmltest, createXMLPlanNestedJoin()); //$NON-NLS-1$
 
         QueryNode tempQueryJoin = null;
         if (!simpleTempSelect) {
@@ -147,7 +143,7 @@ public class TestXMLPlanningEnhancements {
         order.setSource("xmltest.ordersC"); //$NON-NLS-1$
         order.setMaxOccurrs(-1);
         order.addAttribute(new MappingAttribute("OrderID", "xmltest.ordersC.orderNum")); //$NON-NLS-1$ //$NON-NLS-2$
-        order.addChildElement(new MappingElement("OrderDate", "xmltest.ordersc.orderDate")); //$NON-NLS-1$ //$NON-NLS-2$
+        order.addChildElement(new MappingElement("OrderDate", "xmltest.ordersC.orderDate")); //$NON-NLS-1$ //$NON-NLS-2$
         order.addChildElement(new MappingElement("OrderQuantity", "xmltest.ordersC.orderQty")); //$NON-NLS-1$ //$NON-NLS-2$
         order.addChildElement(new MappingElement("OrderStatus", "xmltest.ordersC.orderStatus")) //$NON-NLS-1$ //$NON-NLS-2$
             .setMinOccurrs(0);                
@@ -328,7 +324,7 @@ public class TestXMLPlanningEnhancements {
  
         XMLPlan plan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc18a where supplierID<56", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
 
-        Map stats = XMLProgramUtil.getProgramStats(plan.getOriginalProgram());
+        Map<Class<?>, List<ProcessorInstruction>> stats = XMLProgramUtil.getProgramStats(plan.getOriginalProgram());
         assertNull(stats.get(ExecStagingTableInstruction.class));
     }
     
@@ -381,8 +377,8 @@ public class TestXMLPlanningEnhancements {
         XMLPlan plan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
         
         //check for staging; one for staging and for unloading
-        Map stats = XMLProgramUtil.getProgramStats(plan.getOriginalProgram());
-        assertEquals(2, ((List)stats.get(ExecStagingTableInstruction.class)).size());
+        Map<Class<?>, List<ProcessorInstruction>> stats = XMLProgramUtil.getProgramStats(plan.getOriginalProgram());
+        assertEquals(2, stats.get(ExecStagingTableInstruction.class).size());
     }
     
     /**
@@ -403,7 +399,7 @@ public class TestXMLPlanningEnhancements {
         XMLPlan plan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
         
         //check for no staging
-        Map stats = XMLProgramUtil.getProgramStats(plan.getOriginalProgram());
+        Map<Class<?>, List<ProcessorInstruction>> stats = XMLProgramUtil.getProgramStats(plan.getOriginalProgram());
         assertNull(stats.get(ExecStagingTableInstruction.class));
     }
 
@@ -417,7 +413,7 @@ public class TestXMLPlanningEnhancements {
         XMLPlan plan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9 OPTION NOCACHE", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
         
         //check for no staging
-        Map stats = XMLProgramUtil.getProgramStats(plan.getOriginalProgram());
+        Map<Class<?>, List<ProcessorInstruction>> stats = XMLProgramUtil.getProgramStats(plan.getOriginalProgram());
         assertNull(stats.get(ExecStagingTableInstruction.class));
     }    
     
@@ -431,7 +427,7 @@ public class TestXMLPlanningEnhancements {
         XMLPlan plan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9 OPTION NOCACHE XMLTEST.SUPPLIERS", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
         
         //check for no staging by the mapping class name
-        Map stats = XMLProgramUtil.getProgramStats(plan.getOriginalProgram());
+        Map<Class<?>, List<ProcessorInstruction>> stats = XMLProgramUtil.getProgramStats(plan.getOriginalProgram());
         assertNull(stats.get(ExecStagingTableInstruction.class));
         
         plan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9 OPTION NOCACHE XMLTEST.SUPPLIERS", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
@@ -449,8 +445,8 @@ public class TestXMLPlanningEnhancements {
         String expectedDoc = TestXMLProcessor.readFile("TestXMLProcessor-FullSuppliers.xml"); //$NON-NLS-1$
         
         XMLPlan xmlPlan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.docJoin", expectedDoc, metadata, dataMgr); //$NON-NLS-1$        
-        Map stats = XMLProgramUtil.getProgramStats(xmlPlan.getOriginalProgram());
-        List list = (List)stats.get(ExecSqlInstruction.class);
+        Map<Class<?>, List<ProcessorInstruction>> stats = XMLProgramUtil.getProgramStats(xmlPlan.getOriginalProgram());
+        List<ProcessorInstruction> list = stats.get(ExecSqlInstruction.class);
         
         ExecSqlInstruction instr = (ExecSqlInstruction)list.get(2);
         
@@ -489,8 +485,8 @@ public class TestXMLPlanningEnhancements {
         String expectedDoc = TestXMLProcessor.readFile("TestXMLProcessor-FullSuppliers.xml"); //$NON-NLS-1$
         
         XMLPlan xmlPlan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.docJoin", metadata, dataMgr, null, TestOptimizer.getGenericFinder(false), expectedDoc); //$NON-NLS-1$        
-        Map stats = XMLProgramUtil.getProgramStats(xmlPlan.getOriginalProgram());
-        List list = (List)stats.get(ExecSqlInstruction.class);
+        Map<Class<?>, List<ProcessorInstruction>> stats = XMLProgramUtil.getProgramStats(xmlPlan.getOriginalProgram());
+        List<ProcessorInstruction> list = stats.get(ExecSqlInstruction.class);
         
         ExecSqlInstruction instr = (ExecSqlInstruction)list.get(2);
         
@@ -529,8 +525,8 @@ public class TestXMLPlanningEnhancements {
         
         XMLPlan xmlPlan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.docJoin where context(Supplier, SupplierID) = 51", expectedDoc, metadata, dataMgr); //$NON-NLS-1$        
         //check for staging; one for staging and for unloading - only two pairs are expected
-        Map stats = XMLProgramUtil.getProgramStats(xmlPlan.getOriginalProgram());
-        assertEquals(4, ((List)stats.get(ExecStagingTableInstruction.class)).size());
+        Map<Class<?>, List<ProcessorInstruction>> stats = XMLProgramUtil.getProgramStats(xmlPlan.getOriginalProgram());
+        assertEquals(4, stats.get(ExecStagingTableInstruction.class).size());
     }
     
 }

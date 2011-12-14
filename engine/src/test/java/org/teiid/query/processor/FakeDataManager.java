@@ -41,28 +41,28 @@ import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.resolver.util.ResolverUtil;
-import org.teiid.query.sql.lang.BatchedUpdateCommand;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.Delete;
-import org.teiid.query.sql.lang.From;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.ProcedureContainer;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.TranslatableProcedureContainer;
-import org.teiid.query.sql.lang.Update;
-import org.teiid.query.sql.symbol.AliasSymbol;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 
 
 public class FakeDataManager implements ProcessorDataManager {
-	private Map<String, Object[]> tuples = new HashMap<String, Object[]>();
+	
+	static class TupleInfo {
+		List<ElementSymbol> elements;
+		List<?>[] data;
+
+		public TupleInfo(List<ElementSymbol> elements, List<?>[] data) {
+			this.elements = elements;
+			this.data = data;
+		}
+	}
+	
+	private Map<String, TupleInfo> tuples = new HashMap<String, TupleInfo>();
 	private Map<String, List<List<?>>[]> procTuples = new HashMap<String, List<List<?>>[]>();
 	
     private static final String LOG_CONTEXT = "FAKE_DATA_MANAGER"; //$NON-NLS-1$
@@ -155,12 +155,12 @@ public class FakeDataManager implements ProcessorDataManager {
     		}
 		}
 		
-		Object[] tupleInfo = tuples.get(group.getNonCorrelationName().toUpperCase());
-		List<SingleElementSymbol> elements = (List) tupleInfo[0];
-		List[] tuples = (List[]) tupleInfo[1];
+		TupleInfo tupleInfo = tuples.get(group.getNonCorrelationName().toUpperCase());
+		List<? extends Expression> elements = tupleInfo.elements;
+		List<?>[] data = tupleInfo.data;
 		
-		List<SingleElementSymbol> projectedSymbols = command.getProjectedSymbols();
-		int[] columnMap = getColumnMap(elements, projectedSymbols);
+		List<Expression> projectedSymbols = command.getProjectedSymbols();
+		int[] columnMap = getColumnMap(tupleInfo.elements, projectedSymbols);
 		
 		/* 
 		*  updateCommands is used to hold a list of commands that 
@@ -176,27 +176,27 @@ public class FakeDataManager implements ProcessorDataManager {
 			    // Build lookupMap from BOTH all the elements and the projected symbols - both may be needed here
 	            Map lookupMap = new HashMap();
 	            for(int i=0; i<elements.size(); i++) { 
-	                SingleElementSymbol element = elements.get(i);
+	                Expression element = elements.get(i);
                     mapElementToIndex(lookupMap, element, i, group);        
 	            }
 	            for(int i=0; i<projectedSymbols.size(); i++) { 
-	            	SingleElementSymbol element = projectedSymbols.get(i);
+	            	Expression element = projectedSymbols.get(i);
                     mapElementToIndex(lookupMap, element, columnMap[i], group);
 	            }
 			    
 			    List filteredTuples = new ArrayList();
-			    for(int i=0; i<tuples.length; i++) {
+			    for(int i=0; i<data.length; i++) {
 	                try {
-	    				if(new Evaluator(lookupMap, null, null).evaluate(query.getCriteria(), tuples[i])) {
-	                        filteredTuples.add(tuples[i]);
+	    				if(new Evaluator(lookupMap, null, null).evaluate(query.getCriteria(), data[i])) {
+	                        filteredTuples.add(data[i]);
 	                    }
 	                } catch(ExpressionEvaluationException e) {
 	                    throw new TeiidComponentException(e, e.getMessage());
 	                }
 			    }
 			    
-			    tuples = new List[filteredTuples.size()];
-			    filteredTuples.toArray(tuples);
+			    data = new List[filteredTuples.size()];
+			    filteredTuples.toArray(data);
 			}
 		} else if ( command instanceof Insert || command instanceof Update || command instanceof Delete) {
 			// add single update command to a list to be executed
@@ -217,18 +217,18 @@ public class FakeDataManager implements ProcessorDataManager {
 					    // Build lookupMap from BOTH all the elements and the projected symbols - both may be needed here
 			            Map<Object, Integer> lookupMap = new HashMap<Object, Integer>();
 			            for(int i=0; i<elements.size(); i++) { 
-			            	SingleElementSymbol element = elements.get(i);
+			            	Expression element = elements.get(i);
 		                    mapElementToIndex(lookupMap, element, new Integer(i), group);        
 			            }
 			            for(int i=0; i<projectedSymbols.size(); i++) { 
-			            	SingleElementSymbol element = projectedSymbols.get(i);
+			            	Expression element = projectedSymbols.get(i);
 		                    mapElementToIndex(lookupMap, element, new Integer(columnMap[i]), group);
 			            }
 					    
 					    int updated = 0;
-					    for(int i=0; i<tuples.length; i++) {
+					    for(int i=0; i<data.length; i++) {
 			                try {
-			    				if(new Evaluator(lookupMap, null, null).evaluate(update.getCriteria(), tuples[i])) {
+			    				if(new Evaluator(lookupMap, null, null).evaluate(update.getCriteria(), data[i])) {
 			                        updated++;
 			                    }
 			                } catch(ExpressionEvaluationException e) {
@@ -243,13 +243,13 @@ public class FakeDataManager implements ProcessorDataManager {
 					filteredTuples.add(Arrays.asList(1)); //TODO: check for bulk
 				}
 			}
-		    tuples = new List[filteredTuples.size()];
-		    filteredTuples.toArray(tuples);
-		    elements = new ArrayList<SingleElementSymbol>(projectedSymbols);
+		    data = new List[filteredTuples.size()];
+		    filteredTuples.toArray(data);
+		    elements = Command.getUpdateCommandSymbol();
 		    columnMap[0] = 0;
 		}		
 				
-        FakeTupleSource ts= new FakeTupleSource(elements, tuples, projectedSymbols, columnMap);
+        FakeTupleSource ts= new FakeTupleSource(elements, data, projectedSymbols, columnMap);
 		if(this.blockOnce){
             ts.setBlockOnce();
 		}
@@ -289,10 +289,10 @@ public class FakeDataManager implements ProcessorDataManager {
      * @param integer
      * @param group
      */
-    private void mapElementToIndex(Map lookupMap, SingleElementSymbol element, Integer index, GroupSymbol group) {
+    private void mapElementToIndex(Map lookupMap, Expression element, Integer index, GroupSymbol group) {
     	ElementSymbol elementSymbol = (ElementSymbol)SymbolMap.getExpression(element);
         if (group.getDefinition() != null){
-            String groupAlias = group.getCanonicalName();
+            String groupAlias = group.getName();
             elementSymbol = elementSymbol.clone();
             elementSymbol.getGroupSymbol().setName(groupAlias);
         }
@@ -300,27 +300,24 @@ public class FakeDataManager implements ProcessorDataManager {
     }    
 	
 	//   columnMap[expectedElementIndex] = allElementIndex
-	private int[] getColumnMap(List allElements, List expectedElements) {
+	private int[] getColumnMap(List<ElementSymbol> allElements, List<? extends Expression> expectedElements) {
 		int[] map = new int[expectedElements.size()];
 		
 		for(int i=0; i<expectedElements.size(); i++) { 
-		    SingleElementSymbol symbol = (SingleElementSymbol) expectedElements.get(i);
+		    Expression symbol = SymbolMap.getExpression(expectedElements.get(i));
 		    
-		    if (symbol instanceof AliasSymbol) {
-		        symbol = ((AliasSymbol)symbol).getSymbol();
-		    }
-		    
-		    String shortName = symbol.getShortName();
-		    
-		    // Find matching short name in all elements
 		    boolean foundMatch = false;
-		    for(int j=0; j<allElements.size(); j++) { 
-				SingleElementSymbol tupleSymbol = (SingleElementSymbol) allElements.get(j);
-				if(tupleSymbol.getShortName().equalsIgnoreCase(shortName)) {
-				    map[i] = j;
-				    foundMatch = true;
-				    break;
-				}
+
+		    if (symbol instanceof ElementSymbol) {
+			    // Find matching short name in all elements
+			    for(int j=0; j<allElements.size(); j++) { 
+					ElementSymbol es = allElements.get(j);
+					if(es.getShortName().equalsIgnoreCase(((ElementSymbol)symbol).getShortName())) {
+					    map[i] = j;
+					    foundMatch = true;
+					    break;
+					}
+			    }
 		    }
 		    
 		    if(! foundMatch) { 
@@ -394,11 +391,11 @@ public class FakeDataManager implements ProcessorDataManager {
 		this.recordingCommands = shouldRecord;
 	}
 
-	public void registerTuples(QueryMetadataInterface metadata, String groupName, List[] data) throws QueryResolverException, TeiidComponentException {
+	public void registerTuples(QueryMetadataInterface metadata, String groupName, List<?>[] data) throws QueryResolverException, TeiidComponentException {
 	    GroupSymbol group = new GroupSymbol(groupName);
 	    ResolverUtil.resolveGroup(group, metadata);
 	    List<ElementSymbol> elementSymbols = ResolverUtil.resolveElementsInGroup(group, metadata);
-		tuples.put(group.getName().toUpperCase(), new Object[] { elementSymbols, data });
+		tuples.put(group.getName().toUpperCase(), new TupleInfo(elementSymbols, data));
 	}
 
 	@Override

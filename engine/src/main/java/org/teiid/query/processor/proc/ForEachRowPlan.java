@@ -39,7 +39,6 @@ import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.util.CommandContext;
 
 public class ForEachRowPlan extends ProcessorPlan {
@@ -79,7 +78,7 @@ public class ForEachRowPlan extends ProcessorPlan {
 	}
 
 	@Override
-	public List<SingleElementSymbol> getOutputElements() {
+	public List<Expression> getOutputElements() {
 		return Command.getUpdateCommandSymbol();
 	}
 

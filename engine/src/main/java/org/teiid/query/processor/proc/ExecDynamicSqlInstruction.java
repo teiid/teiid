@@ -65,7 +65,6 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.ValidationVisitor;
@@ -141,19 +140,18 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 
 			Command command = QueryParser.getQueryParser().parseCommand(value.toString());
 			command.setExternalGroupContexts(dynamicCommand.getExternalGroupContexts());
-			command.setTemporaryMetadata(dynamicCommand.getTemporaryMetadata());
+			command.setTemporaryMetadata(dynamicCommand.getTemporaryMetadata().clone());
 			updateContextWithUsingValues(procEnv, localContext);
 			
-			Map tempMetadata = command.getTemporaryMetadata();
-			final TempMetadataStore metadataStore = new TempMetadataStore(tempMetadata);
+			TempMetadataStore metadataStore = command.getTemporaryMetadata();
             
             if (dynamicCommand.getUsing() != null
                             && !dynamicCommand.getUsing().isEmpty()) {
-                metadataStore.addTempGroup(Reserved.USING, new LinkedList(dynamicCommand.getUsing().getClauseMap().keySet()));
+                metadataStore.addTempGroup(Reserved.USING, new LinkedList<ElementSymbol>(dynamicCommand.getUsing().getClauseMap().keySet()));
                 GroupSymbol using = new GroupSymbol(Reserved.USING);
                 using.setMetadataID(metadataStore.getTempGroupID(Reserved.USING));
                 command.addExternalGroupToContext(using);
-                metadataStore.addTempGroup(ProcedureReservedWords.DVARS, new LinkedList(dynamicCommand.getUsing().getClauseMap().keySet()));
+                metadataStore.addTempGroup(ProcedureReservedWords.DVARS, new LinkedList<ElementSymbol>(dynamicCommand.getUsing().getClauseMap().keySet()));
                 using = new GroupSymbol(ProcedureReservedWords.DVARS);
                 using.setMetadataID(metadataStore.getTempGroupID(ProcedureReservedWords.DVARS));
                 command.addExternalGroupToContext(using);
@@ -200,7 +198,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
             dynamicProgram.addInstruction(inst);
 
             if (dynamicCommand.getIntoGroup() != null) {
-                String groupName = dynamicCommand.getIntoGroup().getCanonicalName();
+                String groupName = dynamicCommand.getIntoGroup().getName();
                 if (!procEnv.getTempTableStore().getAllTempTables().contains(groupName)) {
                 	//create the temp table in the parent scope
                 	Create create = new Create();
@@ -272,7 +270,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 			QueryProcessingException {
 		// validate project symbols
 		List dynamicExpectedColumns = dynamicCommand.getAsColumns();
-		List<SingleElementSymbol> sourceProjectedSymbolList = command.getProjectedSymbols();
+		List<Expression> sourceProjectedSymbolList = command.getProjectedSymbols();
 
 		if (dynamicExpectedColumns != null && !dynamicExpectedColumns.isEmpty()) {
 			if (dynamicExpectedColumns.size() != sourceProjectedSymbolList.size()) {
@@ -282,14 +280,15 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 			// If there is only one project symbol, we won't validate the name.
 
 			Iterator dynamicIter = dynamicExpectedColumns.iterator();
-			Iterator<SingleElementSymbol> sourceIter = sourceProjectedSymbolList.iterator();
+			Iterator<Expression> sourceIter = sourceProjectedSymbolList.iterator();
 			// Check for proper element name and datatype definition in the
 			// dynamic SQL
 			// If the projected symbol list equal to 1, we won't bother checking
 			// the name.
 			while (dynamicIter.hasNext()) {
-				SingleElementSymbol dynamicSymbol = (SingleElementSymbol) dynamicIter.next();
-				Class<?> sourceSymbolDatatype = sourceIter.next().getType();
+				Expression dynamicSymbol = (Expression) dynamicIter.next();
+				Expression sourceExpr = sourceIter.next();
+				Class<?> sourceSymbolDatatype = sourceExpr.getType();
 
 				// Check if the the dynamic sql element types are equal or
 				// implicitly convertible to the source types
@@ -302,13 +301,9 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 						&& // If the types aren't the same, and...
 						!DataTypeManager.isImplicitConversion(sourceTypeName,
 								dynamicTypeName)) { // if there's no implicit
-					// conversion between the
-					// two
-					Object[] params = new Object[] { sourceTypeName,
-							dynamicSymbol.getShortName(),
-							dynamicTypeName };
+					// conversion between the two
 					throw new QueryProcessingException(QueryPlugin.Util
-							.getString("ExecDynamicSqlInstruction.6", params)); //$NON-NLS-1$
+							.getString("ExecDynamicSqlInstruction.6", sourceTypeName, sourceExpr, dynamicTypeName)); //$NON-NLS-1$
 				}
 			}
 		}
@@ -316,7 +311,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 		// do a recursion check
 		// Add group to recursion stack
 		CommandContext context = procEnv.getContext();
-		context.pushCall(parentProcCommand.getVirtualGroup().getCanonicalName());
+		context.pushCall(parentProcCommand.getVirtualGroup().getName());
 	}
 
 	/**

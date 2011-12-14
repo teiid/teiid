@@ -64,11 +64,6 @@ public class XMLParse implements Expression {
 	}
 	
 	@Override
-	public boolean isResolved() {
-		return expression.isResolved();
-	}
-	
-	@Override
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}

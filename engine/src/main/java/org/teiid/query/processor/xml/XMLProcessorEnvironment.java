@@ -112,11 +112,11 @@ public class XMLProcessorEnvironment {
      * program stack
      */
     public boolean isRecursiveProgramInStack() {
-        Iterator stackedPrograms = this.programStack.iterator();
+        Iterator<ProgramState> stackedPrograms = this.programStack.iterator();
         // Always at least one program in the stack
-        ProgramState programState = (ProgramState)stackedPrograms.next();
+        ProgramState programState = stackedPrograms.next();
         while (programState.recursionCount == ProgramState.NOT_RECURSIVE && stackedPrograms.hasNext()) {
-            programState = (ProgramState) stackedPrograms.next();
+            programState = stackedPrograms.next();
         }
         return (programState.recursionCount > ProgramState.NOT_RECURSIVE);
     }
@@ -225,7 +225,7 @@ public class XMLProcessorEnvironment {
         return result;
     }
 
-    public PlanExecutor createResultExecutor(String resultSetName, ResultSetInfo info) 
+    public PlanExecutor createResultExecutor(ResultSetInfo info) 
         throws TeiidComponentException{
     
         // cloning the plan inside the resultset is not possible

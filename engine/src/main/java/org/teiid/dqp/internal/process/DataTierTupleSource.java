@@ -63,8 +63,8 @@ import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.ProcedureContainer;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.TranslatorException;
 
@@ -112,12 +112,12 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
         this.cwi = cwi;
         this.dtm = dtm;
         this.limit = limit;
-		List<SingleElementSymbol> symbols = this.aqr.getCommand().getProjectedSymbols();
+		List<Expression> symbols = this.aqr.getCommand().getProjectedSymbols();
 		this.schema = new Class[symbols.size()];
         this.convertToDesiredRuntimeType = new boolean[symbols.size()];
 		this.convertToRuntimeType = new boolean[symbols.size()];
 		for (int i = 0; i < symbols.size(); i++) {
-			SingleElementSymbol symbol = symbols.get(i);
+			Expression symbol = symbols.get(i);
 			this.schema[i] = symbol.getType();
 			this.convertToDesiredRuntimeType[i] = true;
 			this.convertToRuntimeType[i] = true;

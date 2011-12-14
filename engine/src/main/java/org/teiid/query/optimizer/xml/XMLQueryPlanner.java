@@ -48,6 +48,7 @@ import org.teiid.query.mapping.xml.ResultSetInfo;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
+import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.processor.ProcessorPlan;
@@ -55,21 +56,7 @@ import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.Drop;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.FromClause;
-import org.teiid.query.sql.lang.GroupContext;
-import org.teiid.query.sql.lang.Into;
-import org.teiid.query.sql.lang.JoinPredicate;
-import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.Limit;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.lang.SubqueryFromClause;
-import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -393,7 +380,7 @@ public class XMLQueryPlanner {
 		LinkedHashSet<GroupSymbol> allGroups = new LinkedHashSet<GroupSymbol>();
 		allGroups.add(gs);
 		//TODO: this group should have been marked as xml, or could attempt this step prior to place user criteria
-		if (planEnv.getGlobalMetadata().getMetadataStore().getTempGroupID(gs.getNonCorrelationName().toUpperCase()) == null) {
+		if (planEnv.getGlobalMetadata().getMetadataStore().getTempGroupID(gs.getNonCorrelationName()) == null) {
 			return;
 		}
 		MappingSourceNode parentMsn = findMappingSourceNode(planEnv, gs);
@@ -474,7 +461,7 @@ public class XMLQueryPlanner {
         planStagaingQuery(false, groupName, groupName, query, planEnv);
     }
     /**
-     * This method takes given query and adds the "into" symbol to query and resoves it
+     * This method takes given query and adds the "into" symbol to query and resolves it
      * and registers it with planner env as the staging table. Also, builds a unload query
      * to unload the staging table.
      * @throws QueryResolverException 
@@ -540,9 +527,9 @@ public class XMLQueryPlanner {
         
         // since this was staging table; this adds some temp metadata to the query node; extract
         // that metadata and inject into global metadata store for rest of the queries to use.
-        Map tempMetadata = query.getTemporaryMetadata();
-        if (tempMetadata != null && !tempMetadata.isEmpty()) {
-            planEnv.addToGlobalMetadata(tempMetadata);
+        TempMetadataStore tempMetadata = query.getTemporaryMetadata();
+        if (tempMetadata != null && !tempMetadata.getData().isEmpty()) {
+            planEnv.addToGlobalMetadata(tempMetadata.getData());
         }
         
         ResultSetInfo rsInfo = planEnv.getStagingTableResultsInfo(stageGroupName);
@@ -554,7 +541,6 @@ public class XMLQueryPlanner {
         intoGroupID.setCardinality(cardinality);
         
         // add the materialization hook for the staged table to original one.
-        //GroupSymbol groupSymbol = (GroupSymbol)query.getFrom().getGroups().get(0);
         planEnv.addStagingTable(srcGroup.getMetadataID(), intoGroupID);
         
         // plan the unload of the staging table

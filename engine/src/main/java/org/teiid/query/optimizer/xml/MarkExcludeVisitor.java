@@ -26,17 +26,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-import org.teiid.query.mapping.xml.MappingAllNode;
-import org.teiid.query.mapping.xml.MappingAttribute;
-import org.teiid.query.mapping.xml.MappingBaseNode;
-import org.teiid.query.mapping.xml.MappingChoiceNode;
-import org.teiid.query.mapping.xml.MappingDocument;
-import org.teiid.query.mapping.xml.MappingElement;
-import org.teiid.query.mapping.xml.MappingRecursiveElement;
-import org.teiid.query.mapping.xml.MappingSequenceNode;
-import org.teiid.query.mapping.xml.MappingSourceNode;
-import org.teiid.query.mapping.xml.MappingVisitor;
-import org.teiid.query.mapping.xml.Navigator;
+import org.teiid.query.mapping.xml.*;
 
 
 /** 
@@ -46,8 +36,8 @@ import org.teiid.query.mapping.xml.Navigator;
 public class MarkExcludeVisitor extends MappingVisitor{
     HashSet<String> keepNodes;
     
-    public MarkExcludeVisitor(HashSet<String> keppNodes) {
-        this.keepNodes = keppNodes;
+    public MarkExcludeVisitor(HashSet<String> keepNodes) {
+        this.keepNodes = keepNodes;
     }
 
     // User non-selectable node; just exclude
@@ -74,7 +64,7 @@ public class MarkExcludeVisitor extends MappingVisitor{
     }
      
     public void visit(MappingAttribute attribute) {
-        String name = attribute.getCanonicalName();
+        String name = attribute.getFullyQualifiedName();
         if (keepNodes.contains(name)) {
             // we need to keep this; if not already excluded
             if (!attribute.isExcluded()) {
@@ -90,7 +80,7 @@ public class MarkExcludeVisitor extends MappingVisitor{
     }
 
     public void visit(MappingElement element) {
-        String name = element.getCanonicalName();
+        String name = element.getFullyQualifiedName();
         if (keepNodes.contains(name)) {
             // we need to keep this; if not already excluded
             if (!element.isExcluded()) {

@@ -30,8 +30,6 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.mapping.xml.ResultSetInfo;
-import org.teiid.query.processor.xml.PlanExecutor;
-import org.teiid.query.processor.xml.XMLProcessorEnvironment;
 
 
 /**
@@ -47,9 +45,9 @@ public class FakeXMLProcessorEnvironment extends XMLProcessorEnvironment {
         schemaMap.put(resultSetName, schema);
     }
 
-    public PlanExecutor createResultExecutor(final String resultSetName, ResultSetInfo info) 
+    public PlanExecutor createResultExecutor(ResultSetInfo info) 
         throws TeiidComponentException{
-       return new FakePlanExecutor(resultSetName, (List)schemaMap.get(resultSetName), (List[])dataMap.get(resultSetName));
+       return new FakePlanExecutor(info.getResultSetName(), (List)schemaMap.get(info.getResultSetName()), (List[])dataMap.get(info.getResultSetName()));
     }
         
     /**

@@ -35,7 +35,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.Table;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
-import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
@@ -91,19 +91,19 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         Command command = helpResolveUpdateProcedure(proc.toString(), userUpdateStr, Table.TriggerEvent.UPDATE);
-        Map tempIDs = command.getTemporaryMetadata();
+        Map<String, TempMetadataID> tempIDs = command.getTemporaryMetadata().getData();
         assertNotNull(tempIDs);
         assertNull(tempIDs.get("LOOPCURSOR")); //$NON-NLS-1$
         assertNull(tempIDs.get("LOOPCURSOR2")); //$NON-NLS-1$
         
         Command subCommand = CommandCollectorVisitor.getCommands(command).get(0);
-        tempIDs = subCommand.getTemporaryMetadata();
+        tempIDs = subCommand.getTemporaryMetadata().getData();
         assertNotNull(tempIDs);
         assertNull(tempIDs.get("LOOPCURSOR")); //$NON-NLS-1$
         assertNull(tempIDs.get("LOOPCURSOR2")); //$NON-NLS-1$
 
         subCommand = CommandCollectorVisitor.getCommands(command).get(1);
-        tempIDs = subCommand.getTemporaryMetadata();
+        tempIDs = subCommand.getTemporaryMetadata().getData();
         assertNotNull(tempIDs);
         assertNotNull(tempIDs.get("LOOPCURSOR")); //$NON-NLS-1$
         assertNull(tempIDs.get("LOOPCURSOR2")); //$NON-NLS-1$
@@ -120,7 +120,7 @@ public class TestProcedureResolving {
 			QueryMetadataException {
 		ProcedureContainer userCommand = (ProcedureContainer)QueryParser.getQueryParser().parseCommand(userUpdateStr); 
         QueryResolver.resolveCommand(userCommand, metadata);
-        metadata = new TempMetadataAdapter(metadata, new TempMetadataStore(userCommand.getTemporaryMetadata()));
+        metadata = new TempMetadataAdapter(metadata, userCommand.getTemporaryMetadata());
         return (CreateProcedureCommand)QueryResolver.expandCommand(userCommand, metadata, null);
 	}
 
@@ -171,8 +171,8 @@ public class TestProcedureResolving {
         Block block = command.getBlock();
         
         AssignmentStatement assStmt = (AssignmentStatement)block.getStatements().get(1);
-        assertEquals(ProcedureReservedWords.VARIABLES, assStmt.getVariable().getGroupSymbol().getCanonicalName());
-        assertEquals(ProcedureReservedWords.VARIABLES, ((ElementSymbol)assStmt.getExpression()).getGroupSymbol().getCanonicalName());
+        assertEquals(ProcedureReservedWords.VARIABLES, assStmt.getVariable().getGroupSymbol().getName());
+        assertEquals(ProcedureReservedWords.VARIABLES, ((ElementSymbol)assStmt.getExpression()).getGroupSymbol().getName());
         
         Block inner = ((LoopStatement)block.getStatements().get(2)).getBlock();
         
@@ -180,7 +180,7 @@ public class TestProcedureResolving {
         
         ElementSymbol value = ElementCollectorVisitor.getElements(assStmt.getExpression(), false).iterator().next();
         
-        assertEquals("LOOPCURSOR", value.getGroupSymbol().getCanonicalName()); //$NON-NLS-1$
+        assertEquals("loopCursor", value.getGroupSymbol().getName()); //$NON-NLS-1$
     }
     
 	// variable resolution, variable used in if statement, variable compared against

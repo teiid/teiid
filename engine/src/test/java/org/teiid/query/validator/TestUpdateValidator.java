@@ -48,8 +48,9 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 import org.teiid.query.validator.UpdateValidator.UpdateType;
@@ -89,12 +90,12 @@ public class TestUpdateValidator {
 		Command command = QueryParser.getQueryParser().parseCommand(sql);
 		QueryResolver.resolveCommand(command, md);
 		
-		List<SingleElementSymbol> symbols = command.getProjectedSymbols();
+		List<Expression> symbols = command.getProjectedSymbols();
 		String[] names = new String[symbols.size()];
 		String[] types = new String[symbols.size()];
 		int i = 0;
-		for (SingleElementSymbol singleElementSymbol : symbols) {
-			names[i] = singleElementSymbol.getShortName();
+		for (Expression singleElementSymbol : symbols) {
+			names[i] = Symbol.getShortName(singleElementSymbol);
 			types[i++] = DataTypeManager.getDataTypeName(singleElementSymbol.getType());
 		}
 		

@@ -92,14 +92,4 @@ public class QueryString implements Expression {
 		return DefaultDataClasses.STRING;
 	}
 	
-	@Override
-	public boolean isResolved() {
-		for (DerivedColumn col : args) {
-			if (!col.getExpression().isResolved()) {
-				return false;
-			}
-		}
-		return true;
-	}
-	
 }

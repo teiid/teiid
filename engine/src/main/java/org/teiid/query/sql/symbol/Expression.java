@@ -32,17 +32,9 @@ import org.teiid.query.sql.LanguageObject;
 public interface Expression extends LanguageObject {
 
 	/**
-	 * Return true if expression has been fully resolved.  Typically the QueryResolver component
-	 * will handle resolution of an expression.
-	 * @return True if resolved
+	 * Get the return type of this expression. 
+	 * @return Java class may be null prior to being resolved
 	 */
-	boolean isResolved();
-	
-	/**
-	 * Get the return type of this expression.  This method will not necessarily work right 
-	 * before resolution ({@link #isResolved()} returns true).
-	 * @return Java class name
-	 */
-	Class getType();
+	Class<?> getType();
 		
 }

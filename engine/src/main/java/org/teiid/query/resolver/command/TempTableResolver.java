@@ -43,6 +43,7 @@ import org.teiid.query.sql.lang.Create;
 import org.teiid.query.sql.lang.Drop;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 
 
 
@@ -62,7 +63,7 @@ public class TempTableResolver implements CommandResolver {
             GroupSymbol group = create.getTable();
             
             //assuming that all temp table creates are local, the user must use a local name
-            if (group.getName().indexOf(ElementSymbol.SEPARATOR) != -1) {
+            if (group.getName().indexOf(Symbol.SEPARATOR) != -1) {
                 throw new QueryResolverException(QueryPlugin.Util.getString("TempTableResolver.unqualified_name_required", group.getName())); //$NON-NLS-1$
             }
 

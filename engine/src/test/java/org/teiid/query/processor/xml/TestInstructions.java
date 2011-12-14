@@ -52,6 +52,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
@@ -294,9 +295,9 @@ public class TestInstructions extends TestCase {
         temp.initialize(context,null,bufferMgr);
 
         List<ElementSymbol> schema = new ArrayList<ElementSymbol>();
-        schema.add(new ElementSymbol(resultSetName + ElementSymbol.SEPARATOR + "itemNum")); //$NON-NLS-1$
-        schema.add(new ElementSymbol(resultSetName + ElementSymbol.SEPARATOR + "itemName")); //$NON-NLS-1$
-        schema.add(new ElementSymbol(resultSetName + ElementSymbol.SEPARATOR + "itemQuantity")); //$NON-NLS-1$
+        schema.add(new ElementSymbol(resultSetName + Symbol.SEPARATOR + "itemNum")); //$NON-NLS-1$
+        schema.add(new ElementSymbol(resultSetName + Symbol.SEPARATOR + "itemName")); //$NON-NLS-1$
+        schema.add(new ElementSymbol(resultSetName + Symbol.SEPARATOR + "itemQuantity")); //$NON-NLS-1$
         
         env.addData(resultSetName, schema, new List[] { 
                     Arrays.asList( new Object[] { "001", "Lamp", new Integer(5) } ),         //$NON-NLS-1$ //$NON-NLS-2$

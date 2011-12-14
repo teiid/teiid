@@ -54,16 +54,7 @@ import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.types.BlobType;
-import org.teiid.core.types.ClobImpl;
-import org.teiid.core.types.ClobType;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.InputStreamFactory;
-import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.core.types.Sequencable;
-import org.teiid.core.types.Streamable;
-import org.teiid.core.types.TransformationException;
-import org.teiid.core.types.XMLType;
+import org.teiid.core.types.*;
 import org.teiid.core.types.XMLType.Type;
 import org.teiid.core.types.basic.StringToSQLXMLTransform;
 import org.teiid.core.util.EquivalenceUtil;
@@ -77,42 +68,8 @@ import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.function.source.XMLSystemFunctions.XmlConcat;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.LanguageObject;
-import org.teiid.query.sql.lang.AbstractSetCriteria;
-import org.teiid.query.sql.lang.CollectionValueIterator;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.CompoundCriteria;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.DependentSetCriteria;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.ExpressionCriteria;
-import org.teiid.query.sql.lang.IsNullCriteria;
-import org.teiid.query.sql.lang.MatchCriteria;
-import org.teiid.query.sql.lang.NotCriteria;
-import org.teiid.query.sql.lang.SetCriteria;
-import org.teiid.query.sql.lang.SubqueryCompareCriteria;
-import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.lang.SubquerySetCriteria;
-import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.CaseExpression;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.ContextReference;
-import org.teiid.query.sql.symbol.DerivedColumn;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
-import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.QueryString;
-import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.SearchedCaseExpression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.query.sql.symbol.TextLine;
-import org.teiid.query.sql.symbol.XMLElement;
-import org.teiid.query.sql.symbol.XMLForest;
-import org.teiid.query.sql.symbol.XMLNamespaces;
-import org.teiid.query.sql.symbol.XMLParse;
-import org.teiid.query.sql.symbol.XMLQuery;
-import org.teiid.query.sql.symbol.XMLSerialize;
+import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.XMLNamespaces.NamespaceItem;
 import org.teiid.query.sql.util.ValueIterator;
 import org.teiid.query.sql.util.ValueIteratorSource;
@@ -653,7 +610,7 @@ public class Evaluator {
 	private Object internalEvaluate(Expression expression, List<?> tuple)
 	   throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 	
-	   if(expression instanceof SingleElementSymbol) {
+	   if(expression instanceof DerivedExpression) {
 		   if (elements != null) {
 		       // Try to evaluate by lookup in the elements map (may work for both ElementSymbol and ExpressionSymbol
 		       Integer index = (Integer) elements.get(expression);
@@ -663,7 +620,7 @@ public class Evaluator {
 		   }
 		   
 	       // Otherwise this should be an ExpressionSymbol and we just need to dive in and evaluate the expression itself
-	       if (expression instanceof ExpressionSymbol && !(expression instanceof AggregateSymbol)) {            
+	       if (expression instanceof ExpressionSymbol) {            
 	           ExpressionSymbol exprSyb = (ExpressionSymbol) expression;
 	           Expression expr = exprSyb.getExpression();
 	           return internalEvaluate(expr, tuple);

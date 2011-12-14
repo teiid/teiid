@@ -30,7 +30,7 @@ import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
@@ -61,8 +61,8 @@ public class OrderBy implements LanguageObject {
      * Constructs an instance of this class from an ordered list of elements.
      * @param parameters The ordered list of SingleElementSymbol
      */
-    public OrderBy( List<? extends SingleElementSymbol> parameters ) {
-    	for (SingleElementSymbol singleElementSymbol : parameters) {
+    public OrderBy( List<? extends Expression> parameters ) {
+    	for (Expression singleElementSymbol : parameters) {
 			orderByItems.add(new OrderByItem(singleElementSymbol, ASC));
 		}
     }
@@ -72,9 +72,9 @@ public class OrderBy implements LanguageObject {
      * @param parameters The ordered list of SingleElementSymbol
      * @param types The list of directions by which the results are ordered (Boolean, true=ascending)
      */
-    public OrderBy( List<? extends SingleElementSymbol> parameters, List<Boolean> types ) {
+    public OrderBy( List<? extends Expression> parameters, List<Boolean> types ) {
     	Iterator<Boolean> typeIter = types.iterator();
-    	for (SingleElementSymbol singleElementSymbol : parameters) {
+    	for (Expression singleElementSymbol : parameters) {
 			orderByItems.add(new OrderByItem(singleElementSymbol, typeIter.next()));
 		}
     }
@@ -99,7 +99,7 @@ public class OrderBy implements LanguageObject {
      * @param index Index to get
      * @return The element at the index
      */
-    public SingleElementSymbol getVariable( int index ) {
+    public Expression getVariable( int index ) {
         return orderByItems.get(index).getSymbol();
     }
 
@@ -116,7 +116,7 @@ public class OrderBy implements LanguageObject {
      * Adds a new variable to the list of order by elements.
      * @param element Element to add
      */
-    public void addVariable( SingleElementSymbol element ) {
+    public void addVariable( Expression element ) {
     	addVariable(element, ASC);
     }
 
@@ -126,7 +126,7 @@ public class OrderBy implements LanguageObject {
      * @param element Element to add
      * @param type True for ascending, false for descending
      */
-    public void addVariable( SingleElementSymbol element, boolean type ) {
+    public void addVariable( Expression element, boolean type ) {
     	if(element != null) {
             orderByItems.add(new OrderByItem(element, type));
         }
@@ -208,8 +208,8 @@ public class OrderBy implements LanguageObject {
      * Get the list or sort key symbols.  Modifications to this list will not add or remove {@link OrderByItem}s.
      * @return
      */
-    public List<SingleElementSymbol> getSortKeys() {
-    	ArrayList<SingleElementSymbol> result = new ArrayList<SingleElementSymbol>(orderByItems.size());
+    public List<Expression> getSortKeys() {
+    	ArrayList<Expression> result = new ArrayList<Expression>(orderByItems.size());
     	for (OrderByItem item : orderByItems) {
 			result.add(item.getSymbol());
 		}

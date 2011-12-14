@@ -25,18 +25,17 @@ package org.teiid.query.sql.lang;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
@@ -109,14 +108,14 @@ public abstract class Command implements LanguageObject {
     
     public static final int TYPE_ALTER_TRIGGER = 16;
 
-    private static List<SingleElementSymbol> updateCommandSymbol;
+    private static List<Expression> updateCommandSymbol;
     
     /**
      * All temporary group IDs discovered while resolving this 
      * command.  The key is a TempMetadataID and the value is an 
      * ordered List of TempMetadataID representing the elements.
      */
-    protected Map tempGroupIDs;
+    protected TempMetadataStore tempGroupIDs;
     
     private transient GroupContext externalGroups;
 
@@ -150,11 +149,11 @@ public abstract class Command implements LanguageObject {
 		this.correlatedReferences = correlatedReferences;
 	}
 
-    public void setTemporaryMetadata(Map metadata) {
+    public void setTemporaryMetadata(TempMetadataStore metadata) {
         this.tempGroupIDs = metadata;
     }
     
-    public Map getTemporaryMetadata() {
+    public TempMetadataStore getTemporaryMetadata() {
         return this.tempGroupIDs;
     }
     
@@ -220,7 +219,7 @@ public abstract class Command implements LanguageObject {
             copy.externalGroups = (GroupContext)this.externalGroups.clone();
         }
         if(this.tempGroupIDs != null) {
-            copy.setTemporaryMetadata(new HashMap(this.tempGroupIDs));
+            copy.setTemporaryMetadata(this.tempGroupIDs.clone());
         }
         
         copy.setIsResolved(this.isResolved());
@@ -293,7 +292,7 @@ public abstract class Command implements LanguageObject {
 	 * single column.
 	 * @return Ordered list of SingleElementSymbol
 	 */
-	public abstract List<SingleElementSymbol> getProjectedSymbols();
+	public abstract List<Expression> getProjectedSymbols();
 
 	/**
 	 * Whether the results are cachable.
@@ -301,11 +300,11 @@ public abstract class Command implements LanguageObject {
 	 */
 	public abstract boolean areResultsCachable();
     
-    public static List<SingleElementSymbol> getUpdateCommandSymbol() {
+    public static List<Expression> getUpdateCommandSymbol() {
         if (updateCommandSymbol == null ) {
             ElementSymbol symbol = new ElementSymbol("Count"); //$NON-NLS-1$
             symbol.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-            updateCommandSymbol = Arrays.asList((SingleElementSymbol)symbol);
+            updateCommandSymbol = Arrays.asList((Expression)symbol);
         }
         return updateCommandSymbol;
     }

@@ -34,9 +34,9 @@ import org.teiid.query.sql.LanguageVisitor;
  * the type of it's underlying SingleElementSymbol.  AliasSymbols are typically
  * applied to ElementSymbol, ExpressionSymbol, and AggregateSymbol.
  */
-public class AliasSymbol extends SingleElementSymbol {
+public class AliasSymbol extends Symbol implements DerivedExpression {
 
-	private SingleElementSymbol symbol;
+	private Expression symbol;
 
     /**
      * Constructor used for cloning 
@@ -44,8 +44,8 @@ public class AliasSymbol extends SingleElementSymbol {
      * @param canonicalName
      * @since 4.3
      */
-    private AliasSymbol(String name, String canonicalName, SingleElementSymbol symbol) {
-        super(name, canonicalName);
+    private AliasSymbol(String name, String canonicalName, Expression symbol) {
+        super(name);
         setSymbol(symbol);
     }
     
@@ -54,16 +54,16 @@ public class AliasSymbol extends SingleElementSymbol {
 	 * @param name Name of the alias
 	 * @param symbol Underlying symbol
 	 */
-	public AliasSymbol(String name, SingleElementSymbol symbol) {
+	public AliasSymbol(String name, Expression symbol) {
 		super(name);
-		setSymbol(symbol);
+        setSymbol(symbol);
 	}
 
 	/**
 	 * Get the underlying symbol
 	 * @return Underlying symbol
 	 */
-	public SingleElementSymbol getSymbol() {
+	public Expression getSymbol() {
 		return this.symbol;
 	}
 
@@ -71,7 +71,7 @@ public class AliasSymbol extends SingleElementSymbol {
 	 * Set the underlying symbol
 	 * @param symbol New symbol
 	 */
-	public void setSymbol(SingleElementSymbol symbol) {
+	public void setSymbol(Expression symbol) {
         if(symbol instanceof AliasSymbol || symbol == null){
             Assertion.failed(QueryPlugin.Util.getString("ERR.015.010.0029")); //$NON-NLS-1$
         }
@@ -86,19 +86,6 @@ public class AliasSymbol extends SingleElementSymbol {
 		return this.symbol.getType();
 	}
 
-	/**
-	 * Returns true if this symbol has been completely resolved with respect
-	 * to actual runtime metadata.  A resolved symbol has been validated that
-	 * it refers to actual metadata and will have references to the real metadata
-	 * IDs if necessary.  Different types of symbols determine their resolution
-	 * in different ways, so this method is abstract and must be implemented
-	 * by subclasses.
-	 * @return True if resolved with runtime metadata
-	 */
-	public boolean isResolved() {
-		return this.symbol.isResolved();
-	}
-
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
@@ -107,8 +94,8 @@ public class AliasSymbol extends SingleElementSymbol {
 	 * Return a copy of this object.
 	 */
 	public Object clone() {
-		SingleElementSymbol symbolCopy = (SingleElementSymbol) this.symbol.clone();
-		AliasSymbol result = new AliasSymbol(getName(), getCanonical(), symbolCopy);
+		Expression symbolCopy = (Expression) this.symbol.clone();
+		AliasSymbol result = new AliasSymbol(getName(), getShortName(), symbolCopy);
 		result.setOutputName(this.getOutputName());
 		return result;
 	}
@@ -125,7 +112,7 @@ public class AliasSymbol extends SingleElementSymbol {
             return false;
         }
         AliasSymbol other = (AliasSymbol)obj;
-        return this.getCanonicalName().equals(other.getCanonicalName()) && this.symbol.equals(other.symbol);
+        return this.getName().equals(other.getName()) && this.symbol.equals(other.symbol);
     }
 
 }

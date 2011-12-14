@@ -35,7 +35,7 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.query.metadata.BasicQueryMetadataWrapper;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 
 
 /**
@@ -44,7 +44,7 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
  */
 public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	
-    private static final String SUFFIX = SingleElementSymbol.SEPARATOR + MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME;
+    private static final String SUFFIX = Symbol.SEPARATOR + MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME;
 	private Set<String> multiSourceModels;
     
     public MultiSourceMetadataWrapper(QueryMetadataInterface actualMetadata, Set<String> multiSourceModels){

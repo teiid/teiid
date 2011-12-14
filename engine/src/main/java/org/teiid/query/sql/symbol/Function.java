@@ -40,7 +40,7 @@ public class Function implements Expression {
 
 	private String name;
 	private Expression[] args;
-	private Class type;
+	private Class<?> type;
 	private FunctionDescriptor descriptor;
 	private boolean implicit = false;
 	
@@ -107,6 +107,10 @@ public class Function implements Expression {
 		return this.implicit;
 	}
 	
+	public void setImplicit(boolean implicit) {
+		this.implicit = implicit;
+	}
+	
 	/** 
 	 * Insert a conversion function at specified index.  This is a convenience 
 	 * method to insert a conversion into the function tree.
@@ -115,8 +119,8 @@ public class Function implements Expression {
 	 */
 	public void insertConversion(int index, FunctionDescriptor functionDescriptor) { 
 		// Get target type for conversion
-		Class type = functionDescriptor.getReturnType();
-		String typeName = DataTypeManager.getDataTypeName(type);
+		Class<?> t = functionDescriptor.getReturnType();
+		String typeName = DataTypeManager.getDataTypeName(t);
 		
 		// Pull old expression at index
 		Expression newArg[] = new Expression[] { args[index], new Constant(typeName) };
@@ -127,7 +131,7 @@ public class Function implements Expression {
 		
 		// Set function descriptor and type of new function
 		func.setFunctionDescriptor(functionDescriptor);
-		func.setType(type);
+		func.setType(t);
 		func.makeImplicit();
 	}
 
@@ -135,7 +139,7 @@ public class Function implements Expression {
 	 * Get type of function, if known
 	 * @return Java class name of type, or null if not yet resolved
 	 */
-	public Class getType() {
+	public Class<?> getType() {
 		return this.type;
 	}
 
@@ -143,7 +147,7 @@ public class Function implements Expression {
 	 * Set type of function
 	 * @param type New type
 	 */
-	public void setType(Class type) { 
+	public void setType(Class<?> type) { 
 		this.type = type;
 	}
 	
@@ -163,21 +167,6 @@ public class Function implements Expression {
 		this.descriptor = fd;
 	}
 			
-	/**
-	 * Return true if expression has been fully resolved.  Typically the QueryResolver component
-	 * will handle resolution of an expression.
-	 * @return True if resolved
-	 */
-	public boolean isResolved() { 
-		boolean resolved = true;
-		for(int i=0; i<args.length; i++) {
-			if(! args[i].isResolved()) {
-				resolved = false;
-			}				
-		}
-		return resolved;
-	}
-	
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
@@ -235,7 +224,6 @@ public class Function implements Expression {
 	 * @return Deep copy of the object
 	 */
 	public Object clone() {	
-		Expression[] args = getArgs();
 		Expression[] copyArgs = new Expression[args.length];
 		for(int i=0; i<args.length; i++) { 
             if(args[i] != null) {

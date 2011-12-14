@@ -51,9 +51,7 @@ import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
-import org.teiid.query.sql.symbol.SelectSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.util.CommandContext;
 
 
@@ -85,10 +83,10 @@ public final class TriggerActionPlanner {
 		
 		for (Map.Entry<ElementSymbol, Expression> entry : QueryResolver.getVariableValues(userCommand, false, metadata).entrySet()) {
 			if (entry.getKey().getGroupSymbol().getShortName().equalsIgnoreCase(SQLConstants.Reserved.NEW)) {
-				Expression value = entry.getValue() instanceof SingleElementSymbol ? entry.getValue() : new ExpressionSymbol("x", entry.getValue()); //$NON-NLS-1$
+				Expression value = entry.getValue();
 				params.put(entry.getKey(), value);
 				if (userCommand instanceof Update) {
-					((Query)query).getSelect().addSymbol((SelectSymbol) value);
+					((Query)query).getSelect().addSymbol(value);
 				}
 			} else {
 				params.put(entry.getKey(), entry.getValue()); 
@@ -109,13 +107,13 @@ public final class TriggerActionPlanner {
 			Map<ElementSymbol, Expression> params)
 			throws QueryMetadataException, TeiidComponentException {
 		QueryCommand query;
-		ArrayList<SelectSymbol> selectSymbols = new ArrayList<SelectSymbol>();
+		ArrayList<Expression> selectSymbols = new ArrayList<Expression>();
 		List<ElementSymbol> allSymbols = ResolverUtil.resolveElementsInGroup(ta.getView(), metadata);
 		for (ElementSymbol elementSymbol : allSymbols) {
-			params.put(new ElementSymbol(SQLConstants.Reserved.OLD + ElementSymbol.SEPARATOR + elementSymbol.getShortName()), elementSymbol);
+			params.put(new ElementSymbol(SQLConstants.Reserved.OLD + Symbol.SEPARATOR + elementSymbol.getShortName()), elementSymbol);
 			if (userCommand instanceof Update) {
 				//default to old
-				params.put(new ElementSymbol(SQLConstants.Reserved.NEW + ElementSymbol.SEPARATOR + elementSymbol.getShortName()), elementSymbol);
+				params.put(new ElementSymbol(SQLConstants.Reserved.NEW + Symbol.SEPARATOR + elementSymbol.getShortName()), elementSymbol);
 			}
 		}
 		selectSymbols.addAll(LanguageObject.Util.deepClone(allSymbols, ElementSymbol.class));

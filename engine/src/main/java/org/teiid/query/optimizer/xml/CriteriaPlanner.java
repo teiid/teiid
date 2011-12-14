@@ -44,6 +44,7 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 
@@ -131,11 +132,11 @@ public class CriteriaPlanner {
         Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(conjunct, true);
         Set<MappingSourceNode> resultSets = new HashSet<MappingSourceNode>();
         
-        String contextFullName = context.getFullyQualifiedName().toUpperCase();
+        String contextFullName = context.getFullyQualifiedName();
         
         //validate that each element's group is under the current context or is in the direct parentage
         for (ElementSymbol elementSymbol : elements) {
-            String elementFullName = elementSymbol.getCanonicalName();
+            String elementFullName = elementSymbol.getName();
             
             MappingNode node = MappingNode.findNode(mappingDoc, elementFullName);
             
@@ -144,17 +145,17 @@ public class CriteriaPlanner {
                 throw new QueryPlannerException(QueryPlugin.Util.getString("CriteriaPlanner.invalid_element", elementSymbol)); //$NON-NLS-1$
             }
             
-            String elementRsFullName = elementRsNode.getFullyQualifiedName().toUpperCase();
+            String elementRsFullName = elementRsNode.getFullyQualifiedName();
             
             //check for a match at or below the context
             if (contextFullName.equals(elementRsFullName) || 
-                            elementRsFullName.startsWith(contextFullName + ElementSymbol.SEPARATOR)) {
+                            elementRsFullName.startsWith(contextFullName + Symbol.SEPARATOR)) {
                 resultSets.add(elementRsNode);
                 continue;
             }
             
             //check for match above the context
-            if (contextFullName.startsWith(elementRsFullName + ElementSymbol.SEPARATOR)) {
+            if (contextFullName.startsWith(elementRsFullName + Symbol.SEPARATOR)) {
                 continue;
             }
             
@@ -256,7 +257,7 @@ public class CriteriaPlanner {
         
         String fullyQualifiedNodeName = planEnv.getGlobalMetadata().getFullName(((ElementSymbol)rowLimitFunction.getArg(0)).getMetadataID());
         
-        MappingNode node = MappingNode.findNode(planEnv.mappingDoc, fullyQualifiedNodeName.toUpperCase());
+        MappingNode node = MappingNode.findNode(planEnv.mappingDoc, fullyQualifiedNodeName);
         MappingSourceNode sourceNode = node.getSourceNode();
         if (sourceNode == null) {
             String msg = QueryPlugin.Util.getString("XMLPlanner.The_rowlimit_parameter_{0}_is_not_in_the_scope_of_any_mapping_class", fullyQualifiedNodeName); //$NON-NLS-1$
@@ -333,7 +334,7 @@ public class CriteriaPlanner {
         
         ElementSymbol targetContext = (ElementSymbol)contextFunction.getArg(0);
 
-        MappingNode contextNode = MappingNode.findNode(planEnv.mappingDoc, targetContext.getCanonicalName());
+        MappingNode contextNode = MappingNode.findNode(planEnv.mappingDoc, targetContext.getName());
         if (contextNode == null){
             throw new QueryPlannerException("ERR.015.004.0037", QueryPlugin.Util.getString("ERR.015.004.0037", targetContext)); //$NON-NLS-1$ //$NON-NLS-2$
         }

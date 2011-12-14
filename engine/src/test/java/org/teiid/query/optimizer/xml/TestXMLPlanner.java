@@ -218,191 +218,44 @@ public class TestXMLPlanner {
 
         // Create virtual documents
         // DOC 1
-        Table doc1 = RealMetadataFactory.createXmlDocument("doc1", vm1, doc1()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(
-                doc1,
-                new String[] {
-                    "a0", //$NON-NLS-1$
-                    "a0.a1", //$NON-NLS-1$
-                    "a0.a1.a1", //$NON-NLS-1$
-                    "a0.a1.b1", //$NON-NLS-1$
-                    "a0.a1.c1" }, //$NON-NLS-1$
-                new String[] {
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING });
-
+        RealMetadataFactory.createXmlDocument("doc1", vm1, doc1()); //$NON-NLS-1$
         // DOC 2 
-        Table doc2 = RealMetadataFactory.createXmlDocument("doc2", vm1, doc2()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(
-                doc2,
-                new String[] { "a1" }, //$NON-NLS-1$
-                new String[] { DataTypeManager.DefaultDataTypes.STRING });
-
+        RealMetadataFactory.createXmlDocument("doc2", vm1, doc2()); //$NON-NLS-1$
         // DOC 3
-        Table doc3 = RealMetadataFactory.createXmlDocument("doc3", vm1, doc3()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(
-                doc3,
-                new String[] {
-                    "root", //$NON-NLS-1$
-                    "root.n1", //$NON-NLS-1$
-                    "root.n1.m1", //$NON-NLS-1$
-                    "root.n1.m1.n2", //$NON-NLS-1$
-                    "root.n1.m1.n2.leaf1" }, //$NON-NLS-1$
-                new String[] {
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING });
-
+        RealMetadataFactory.createXmlDocument("doc3", vm1, doc3()); //$NON-NLS-1$
         // DOC 4
-        Table doc4 = RealMetadataFactory.createXmlDocument("doc4", vm1, doc4()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(
-                doc4,
-                new String[] {
-                    "root", //$NON-NLS-1$
-                    "root.n4a", //$NON-NLS-1$
-                    "root.n4a.n4b", //$NON-NLS-1$
-                    "root.n4a.n4c", //$NON-NLS-1$
-                    "root.n4a.fake", //$NON-NLS-1$
-                    "root.n4a.n4c.n4d", //$NON-NLS-1$
-                    "root.n4a.n4c.n4e", //$NON-NLS-1$
-                    "root.n4a.n4c.n4e.n4f" }, //$NON-NLS-1$
-                new String[] {
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING });
-
+        RealMetadataFactory.createXmlDocument("doc4", vm1, doc4()); //$NON-NLS-1$
         // DOC 5
-        Table doc5 = RealMetadataFactory.createXmlDocument("doc5", vm1, doc5()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(
-                doc5,
-                new String[] {
-                    "root", //$NON-NLS-1$
-                    "root.nodea", //$NON-NLS-1$
-                    "root.nodea.nodeb", //$NON-NLS-1$
-                    "root.nodea.nodec", //$NON-NLS-1$
-                    "root.nodea.nodec.noded", //$NON-NLS-1$
-                    "root.nodea.nodec.nodee", //$NON-NLS-1$
-                    "root.nodea.nodec.nodee.nodef", //$NON-NLS-1$
-                    "root.nodea.nodec.nodee.nodeg", //$NON-NLS-1$
-                    "root.nodea.nodec.nodee.nodeg.nodeh", //$NON-NLS-1$
-                    "root.nodea.nodec.nodee.nodeg.nodeI", //$NON-NLS-1$
-                    "root.nodea.nodec.nodee.nodeg.nodeI.nodeJ" }, //$NON-NLS-1$
-                new String[] {
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING });
-
+        RealMetadataFactory.createXmlDocument("doc5", vm1, doc5()); //$NON-NLS-1$
         // DOC 6
-        Table doc6 = RealMetadataFactory.createXmlDocument("doc6", vm1, doc6()); //$NON-NLS-1$
-        RealMetadataFactory.createElements(
-                doc6,
-                new String[] { "tempGroupTest" }, //$NON-NLS-1$
-                new String[] { DataTypeManager.DefaultDataTypes.STRING });
+        RealMetadataFactory.createXmlDocument("doc6", vm1, doc6()); //$NON-NLS-1$
 
         // DOC with excluded fragment
-        Table docWithExcluded = RealMetadataFactory.createXmlDocument(
+        RealMetadataFactory.createXmlDocument(
                 "vm1.docWithExcluded", //$NON-NLS-1$
                 vm1,
                 docWithExcluded());
-        RealMetadataFactory.createElements(
-                docWithExcluded,
-                new String[] {
-                    "root", //$NON-NLS-1$
-                    "root.n1", //$NON-NLS-1$
-                    "root.n1.m1", //$NON-NLS-1$
-                    "root.n1.m1.n2", //$NON-NLS-1$
-                    "root.n1.m1.n2.leaf1" }, //$NON-NLS-1$
-                new String[] {
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING });
 
         // DOC 2 with excluded fragment
-        Table doc2WithExcluded = RealMetadataFactory.createXmlDocument(
+        RealMetadataFactory.createXmlDocument(
                 "vm1.docWithExcluded2", //$NON-NLS-1$
                 vm1,
                 docWithExcluded2());
-        RealMetadataFactory.createElements(
-                doc2WithExcluded,
-                new String[] {
-                    "root", //$NON-NLS-1$
-                    "root.n1", //$NON-NLS-1$
-                    "root.n1.m1", //$NON-NLS-1$
-                    "root.n1.m2", //$NON-NLS-1$
-                    "root.n1.m3" }, //$NON-NLS-1$
-                new String[] {
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING });
-
 
         // DOC with attribute
-        Table docWithAttribute = RealMetadataFactory.createXmlDocument(
+        RealMetadataFactory.createXmlDocument(
                 "vm1.docWithAttribute", //$NON-NLS-1$
                 vm1,
                 docTestConvertCriteriaWithAttribute());
-        Table docWithAttribute3 = RealMetadataFactory.createXmlDocument(
+        RealMetadataFactory.createXmlDocument(
                 "vm1.docWithAttribute3", //$NON-NLS-1$
                 vm1,
                 docTestCriteriaWithAttribute());
-        RealMetadataFactory.createElements(
-               docWithAttribute,
-                new String[] {
-                    "root", //$NON-NLS-1$
-                    "root.myElement", //$NON-NLS-1$
-                    "root.@myAttribute"}, //$NON-NLS-1$
-                new String[] {
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING });
         // DOC with attribute2
-        Table docWithAttribute2 = RealMetadataFactory.createXmlDocument(
+        RealMetadataFactory.createXmlDocument(
                 "vm1.docWithAttribute2", //$NON-NLS-1$
                 vm1,
                 docTestConvertCriteriaWithAttribute2());
-        RealMetadataFactory.createElements(
-                docWithAttribute2,
-                new String[] {
-                    "root", //$NON-NLS-1$
-                    "root.myElement", //$NON-NLS-1$
-                    "root.@myAttribute"}, //$NON-NLS-1$
-                new String[] {
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING });
-        
-        RealMetadataFactory.createElements(
-                docWithAttribute3,
-                new String[] {
-                    "root", //$NON-NLS-1$
-                    "root.myElement", //$NON-NLS-1$
-                    "root.@type"}, //$NON-NLS-1$
-                new String[] {
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING,
-                    DataTypeManager.DefaultDataTypes.STRING });
         
         // Create the facade from the store
         return RealMetadataFactory.createTransformationMetadata(metadataStore, "example1");

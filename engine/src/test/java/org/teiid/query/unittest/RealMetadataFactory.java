@@ -38,6 +38,8 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
+import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
@@ -51,8 +53,11 @@ import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingAttribute;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingElement;
+import org.teiid.query.mapping.xml.MappingNode;
 import org.teiid.query.mapping.xml.MappingOutputter;
 import org.teiid.query.mapping.xml.MappingSequenceNode;
+import org.teiid.query.mapping.xml.MappingVisitor;
+import org.teiid.query.mapping.xml.Navigator;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -567,7 +572,7 @@ public class RealMetadataFactory {
         createAccessPattern("pm4.g2.ap1", pm4g2, elements); //e1,e2 //$NON-NLS-1$
 		elements = new ArrayList<Column>(1);
 		elements.add(pm4g2e.get(4)); //"e5"
-		KeyRecord pm4g2ap2 =createAccessPattern("pm4.g2.ap2", pm4g2, elements); //e5 //$NON-NLS-1$
+		createAccessPattern("pm4.g2.ap2", pm4g2, elements); //e5 //$NON-NLS-1$
 		// Create access patterns - pm5
 		elements = new ArrayList<Column>(1);
 		elements.add(pm5g1e.iterator().next());
@@ -855,28 +860,17 @@ public class RealMetadataFactory {
         createAccessPattern("vm1.g37.ap1", vm1g37, elements); //e1 //$NON-NLS-1$
         
         //XML STUFF =============================================
-        Table doc1 = createXmlDocument("doc1", xmltest, exampleDoc1()); //$NON-NLS-1$
-        Table doc2 = createXmlDocument("doc2", xmltest, exampleDoc2()); //$NON-NLS-1$
-        Table doc3 = createXmlDocument("doc3", xmltest, exampleDoc3()); //$NON-NLS-1$
-        Table doc4 = createXmlDocument("doc4", xmltest, exampleDoc4());         //$NON-NLS-1$
-        Table doc5 = createXmlDocument("doc5", xmltest, exampleDoc5()); //$NON-NLS-1$
-        Table doc6 = createXmlDocument("doc6", xmltest, exampleDoc6()); //$NON-NLS-1$
+        createXmlDocument("doc1", xmltest, exampleDoc1()); //$NON-NLS-1$
+        createXmlDocument("doc2", xmltest, exampleDoc2()); //$NON-NLS-1$
+        createXmlDocument("doc3", xmltest, exampleDoc3()); //$NON-NLS-1$
+        createXmlDocument("doc4", xmltest, exampleDoc4());         //$NON-NLS-1$
+        createXmlDocument("doc5", xmltest, exampleDoc5()); //$NON-NLS-1$
+        createXmlDocument("doc6", xmltest, exampleDoc6()); //$NON-NLS-1$
 
         // Defect 11479 - test ambiguous doc short names
         createXmlDocument("xmltest2.docA", vm1, exampleDoc1()); //$NON-NLS-1$
         createXmlDocument("xmltest3.docA", vm1, exampleDoc2()); //$NON-NLS-1$
 
-		createElements(doc1, new String[] { "root", "root.node1", "root.node1.node2", "root.node1.node2.node3" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-		createElements(doc2, new String[] { "root", "root.node1", "root.node1.node3" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-		createElements(doc3, new String[] { "root", "root.node1.node2", "root.node2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-		createElements(doc4, new String[] { "root", "root.@node6", "root.node1", "root.node1.@node2", "root.node3", "root.node3.@node4", "root.node3.node4", "root.node3.root.node6" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-        createElements(doc5, new String[] { "root", "root.node1", "root.node1.node2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-            
         // Create mapping classes for xmltest.doc5
         QueryNode mc1n1 = new QueryNode("SELECT e1 FROM pm1.g1 UNION ALL SELECT e1 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1mc1 = createVirtualGroup("mc1", xmltest, mc1n1); //$NON-NLS-1$
@@ -884,9 +878,6 @@ public class RealMetadataFactory {
             new String[] { "e1" }, //$NON-NLS-1$
             new String[] { DataTypeManager.DefaultDataTypes.STRING });
 
-        createElements(doc6, new String[] { "root", "root.node", "root.thenode" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-            
         //XML STUFF =============================================
 
         // Procedures and stored queries
@@ -996,12 +987,12 @@ public class RealMetadataFactory {
                                                           ), sqDefaultsNode);  
         sqDefaults.setResultSet(rsDefaults);
         
-        ColumnSet<Procedure> rsBadDefault = createResultSet("pm1.rBadDefault", new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        createResultSet("pm1.rBadDefault", new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ProcedureParameter paramBadDefaultIn = createParameter("in", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER);  //$NON-NLS-1$
         paramBadDefaultIn.setNullType(NullType.Nullable);
         paramBadDefaultIn.setDefaultValue("Clearly Not An Integer"); //$NON-NLS-1$
         QueryNode sqnBadDefault = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1 WHERE e2=pm1.sqBadDefault.in; END"); //$NON-NLS-1$ //$NON-NLS-2$
-        Procedure sqBadDefault = createVirtualProcedure("sqBadDefault", pm1, Arrays.asList(paramBadDefaultIn), sqnBadDefault);  //$NON-NLS-1$
+        createVirtualProcedure("sqBadDefault", pm1, Arrays.asList(paramBadDefaultIn), sqnBadDefault);  //$NON-NLS-1$
         
         //end case 3281
         
@@ -1165,7 +1156,7 @@ public class RealMetadataFactory {
         
         ProcedureParameter vspp3 = createParameter("param1", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
         QueryNode vspqn10 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT e2 FROM pm1.g1 WHERE e2=param1) AS mycursor BEGIN x=mycursor.e2; END END"); //$NON-NLS-1$ //$NON-NLS-2$
-        Procedure vsp10 = createVirtualProcedure("vsp10", pm1, Arrays.asList( vspp3 ), vspqn10); //$NON-NLS-1$
+        createVirtualProcedure("vsp10", pm1, Arrays.asList( vspp3 ), vspqn10); //$NON-NLS-1$
 
         //invalid
         QueryNode vspqn11 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN LOOP ON (SELECT e2 FROM pm1.g1) AS mycursor BEGIN LOOP ON (SELECT e1 FROM pm1.g1) AS mycursor BEGIN END END SELECT e1 FROM pm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -1319,9 +1310,8 @@ public class RealMetadataFactory {
         vgvp7e1.setSelectable(false);
         Column vgvp7e2 = createElement("ve2", vgvp7, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
         vgvp7e2.setSelectable(false);
-        Column vgvp7e3 = createElement("ve3", vgvp7, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
-        Column vgvp7e4 = createElement("ve4", vgvp7, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
-        
+        createElement("ve3", vgvp7, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        createElement("ve4", vgvp7, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
         
         //invalid
         QueryNode vspqn32 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT e2 FROM pm1.g1) AS #mycursor BEGIN IF(#mycursor.e2 > 10) BEGIN CONTINUE; END x=#mycursor.e2; END SELECT e1 FROM pm1.g1 WHERE x=e2; END"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -1342,7 +1332,7 @@ public class RealMetadataFactory {
         vgvp1e1.setSelectable(false);
         Column vgvp1e2 = createElement("ve2", vgvp1, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
         vgvp1e2.setSelectable(false);
-        Column vgvp1e3 = createElement("ve3", vgvp1, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        createElement("ve3", vgvp1, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
       
 		QueryNode vgvpn2 = new QueryNode("SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp2.ve1, vm1.vgvp2.ve2)) as P where P.e1='a'"); //$NON-NLS-1$ //$NON-NLS-2$
 		Table vgvp2 = createVirtualGroup("vgvp2", vm1, vgvpn2); //$NON-NLS-1$
@@ -1350,7 +1340,7 @@ public class RealMetadataFactory {
         vgvp2e1.setSelectable(false);
         Column vgvp2e2 = createElement("ve2", vgvp2, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
         vgvp2e2.setSelectable(false);
-        Column vgvp2e3 = createElement("ve3", vgvp2, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        createElement("ve3", vgvp2, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
    
 		QueryNode vgvpn3 = new QueryNode("SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp3.ve1, vm1.vgvp3.ve2)) as P, pm1.g2 where P.e1=g2.e1"); //$NON-NLS-1$ //$NON-NLS-2$
 		Table vgvp3 = createVirtualGroup("vgvp3", vm1, vgvpn3); //$NON-NLS-1$
@@ -1618,8 +1608,37 @@ public class RealMetadataFactory {
 		String doc = docToString(plan);
 		Table table = createVirtualGroup(name, model, new QueryNode(doc));
 		table.setTableType(org.teiid.metadata.Table.Type.Document);
-		table.setColumns(new ArrayList<Column>(2));
+		extractColumns(table, plan);
 		return table;
+	}
+	
+	static void extractColumns(final Table table, MappingDocument plan) {
+		MappingVisitor mv = new MappingVisitor() {
+			public void visit(MappingElement element) {
+				String type = element.getType();
+				addColumn(element, type);
+			}
+
+			private void addColumn(MappingNode element,
+					String type) {
+				if (type != null) {
+					//TODO: choose the appropriate runtime type
+					Class<?> c = DataTypeManager.getDataTypeClass(type);
+					if (c == DefaultDataClasses.OBJECT) {
+						type = DefaultDataTypes.STRING;
+					}
+				} else {
+					type = DefaultDataTypes.STRING;
+				}
+				createElement(element.getFullyQualifiedName(), table, type);
+			}
+			
+			public void visit(MappingAttribute attribute) {
+				String type = attribute.getType();
+				addColumn(attribute, type);
+			}
+		};
+		plan.acceptVisitor(new Navigator(true, mv));
 	}
 
 	public static String docToString(MappingDocument plan) {
@@ -1796,12 +1815,12 @@ public class RealMetadataFactory {
         MappingDocument doc = new MappingDocument(false);
         MappingElement root = doc.addChildElement(new MappingElement("root")); //$NON-NLS-1$
 
-        MappingSequenceNode node1 = root.addSequenceNode(new MappingSequenceNode());    
+        MappingElement node1 = root.addChildElement(new MappingElement("node1"));    
+        
         node1.addChildElement(new MappingElement("node2")); //$NON-NLS-1$
         root.addChildElement(new MappingElement("node2")); //$NON-NLS-1$
         return doc;
     }
-    
    
     // has attributes and elements
     private static MappingDocument exampleDoc4() {
@@ -2446,59 +2465,7 @@ public class RealMetadataFactory {
 	    // END MAPPING DOC ======================================================================
 	    
 	    // Create virtual docs and doc elements
-	    Table itemsDoc = createXmlDocument("itemsDoc", xmltest, doc); //$NON-NLS-1$
-	    createElements(itemsDoc, 
-	        new String[] { "Catalogs",  //$NON-NLS-1$
-	                       "Catalogs.Catalog",  //$NON-NLS-1$
-	                       "Catalogs.Catalog.items",  //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item",  //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.@ItemID",  //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.Name",  //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.Quantity", //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.Suppliers", //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.Suppliers.Supplier", //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.Suppliers.Supplier.@SupplierID", //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.Suppliers.Supplier.Name", //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.Suppliers.Supplier.Zip", //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.Suppliers.Supplier.Orders", //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.Suppliers.Supplier.Orders.Order", //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.Suppliers.Supplier.Orders.Order.@OrderID", //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.Suppliers.Supplier.Orders.Order.OrderDate", //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.Suppliers.Supplier.Orders.Order.OrderQuantity", //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.Suppliers.Supplier.Orders.Order.OrderStatus", //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.Suppliers.Supplier.Employees", //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.Suppliers.Supplier.Employees.Employee", //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.Suppliers.Supplier.Employees.Employee.@EmployeeID", //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.Suppliers.Supplier.Employees.Employee.FirstName", //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.Suppliers.Supplier.Employees.Employee.LastName", //$NON-NLS-1$
-	                       "Catalogs.Catalog.items.item.Suppliers.Supplier.Employees.Employee.@SupervisorID", //$NON-NLS-1$
-	    
-	        }, 
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.INTEGER, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       });
+	    createXmlDocument("itemsDoc", xmltest, doc); //$NON-NLS-1$
 	        
 	    // Create mapping classes - baseball players employees doc
 	    QueryNode playersNode = new QueryNode("SELECT stock.employees.employeeNum, firstName, lastName, supervisorNum FROM stock.employees WHERE specializesInItemNum is not null"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -2555,37 +2522,7 @@ public class RealMetadataFactory {
 	    // END MAPPING DOC ======================================================================
 	    
 	    // Create virtual docs and doc elements
-	    Table playersDoc = createXmlDocument("playersDoc", xmltest, doc2); //$NON-NLS-1$
-	    createElements(playersDoc, 
-	        new String[] { "BaseballPlayers",  //$NON-NLS-1$
-	                       "BaseballPlayers.Player",  //$NON-NLS-1$
-	                       "BaseballPlayers.Player.@PlayerID",  //$NON-NLS-1$
-	                       "BaseballPlayers.Player.FirstName",  //$NON-NLS-1$
-	                       "BaseballPlayers.Player.LastName",  //$NON-NLS-1$
-	                       "BaseballPlayers.Player.Manager",  //$NON-NLS-1$
-	                       "BaseballPlayers.Player.Manager.@ManagerID",  //$NON-NLS-1$
-	                       "BaseballPlayers.Player.Manager.FirstName",  //$NON-NLS-1$
-	                       "BaseballPlayers.Player.Manager.LastName",  //$NON-NLS-1$
-	                       "BaseballPlayers.Player.Manager.Owner",  //$NON-NLS-1$
-	                       "BaseballPlayers.Player.Manager.Owner.@OwnerID",  //$NON-NLS-1$
-	                       "BaseballPlayers.Player.Manager.Owner.FirstName",  //$NON-NLS-1$
-	                       "BaseballPlayers.Player.Manager.Owner.LastName",  //$NON-NLS-1$
-	    
-	        }, 
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	                       DataTypeManager.DefaultDataTypes.STRING, 
-	        });        
+	    createXmlDocument("playersDoc", xmltest, doc2); //$NON-NLS-1$
 	    return createTransformationMetadata(metadataStore, "case3225");
 	}
 

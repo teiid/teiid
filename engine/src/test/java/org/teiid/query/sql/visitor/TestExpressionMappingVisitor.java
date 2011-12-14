@@ -166,9 +166,6 @@ public class TestExpressionMappingVisitor {
         helpTest(TestSearchedCaseExpression.example(3), map, mapped);
     }
     
-    /**
-     * We do not need to create an alias if the canonical short names match
-     */
     @Test public void testSelectAlias() {
         ElementSymbol x = new ElementSymbol("y.x"); //$NON-NLS-1$
         ElementSymbol y = new ElementSymbol("z.X"); //$NON-NLS-1$
@@ -180,7 +177,21 @@ public class TestExpressionMappingVisitor {
         
         ExpressionMappingVisitor.mapExpressions(toMap, map);
         
-        assertEquals("Did not get expected mapped expression", "SELECT z.X", toMap.toString());     //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("Did not get expected mapped expression", "SELECT z.X AS x", toMap.toString());     //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testSelectAlias1() {
+        ElementSymbol x = new ElementSymbol("y.x"); //$NON-NLS-1$
+        ElementSymbol y = new ElementSymbol("z.x"); //$NON-NLS-1$
+        
+        HashMap<ElementSymbol, ElementSymbol> map = new HashMap<ElementSymbol, ElementSymbol>();
+        map.put(x, y);
+        
+        LanguageObject toMap = new Select(Arrays.asList(x));
+        
+        ExpressionMappingVisitor.mapExpressions(toMap, map);
+        
+        assertEquals("Did not get expected mapped expression", "SELECT z.x", toMap.toString());     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /**

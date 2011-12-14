@@ -33,7 +33,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
@@ -203,7 +203,7 @@ public class CreateProcedureCommand extends Command {
             //user may have not entered any query yet
             return Collections.EMPTY_LIST;
         }
-        List<? extends SingleElementSymbol> symbols = this.resultsCommand.getProjectedSymbols();
+        List<? extends Expression> symbols = this.resultsCommand.getProjectedSymbols();
         if (this.resultsCommand instanceof StoredProcedure) {
         	StoredProcedure sp = (StoredProcedure)this.resultsCommand;
         	if (sp.isCallableStatement()) {

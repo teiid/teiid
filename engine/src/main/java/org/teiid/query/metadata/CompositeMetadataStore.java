@@ -39,10 +39,8 @@ import org.teiid.metadata.Table.Type;
 
 /**
  * Aggregates the metadata from multiple stores.  
- * IMPORTANT: All strings queries should be in upper case.
  */
 public class CompositeMetadataStore extends MetadataStore {
-
 	
 	public CompositeMetadataStore(MetadataStore metadataStore) {
 		addMetadataStore(metadataStore);
@@ -56,6 +54,7 @@ public class CompositeMetadataStore extends MetadataStore {
 	
 	public void addMetadataStore(MetadataStore metadataStore) {
 		this.schemas.putAll(metadataStore.getSchemas());
+		this.schemaList.addAll(metadataStore.getSchemaList());
 		this.datatypes.addAll(metadataStore.getDatatypes());
 	}
 	

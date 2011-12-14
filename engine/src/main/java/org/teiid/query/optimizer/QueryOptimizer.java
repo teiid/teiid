@@ -24,7 +24,6 @@ package org.teiid.query.optimizer;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -89,8 +88,12 @@ public class QueryOptimizer {
 		
         boolean debug = analysisRecord.recordDebug();
         
-        Map tempMetadata = command.getTemporaryMetadata();
-        metadata = new TempMetadataAdapter(metadata, new TempMetadataStore(tempMetadata));
+        TempMetadataStore tempMetadata = command.getTemporaryMetadata();
+        if (tempMetadata != null) {
+        	metadata = new TempMetadataAdapter(metadata, tempMetadata);
+        } else if (!(metadata instanceof TempMetadataAdapter)) {
+        	metadata = new TempMetadataAdapter(metadata, new TempMetadataStore());
+        }
                 
         // Create an ID generator that can be used for all plans to generate unique data node IDs
         if(idGenerator == null) {

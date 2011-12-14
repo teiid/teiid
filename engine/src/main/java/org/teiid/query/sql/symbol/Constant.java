@@ -91,6 +91,14 @@ public class Constant implements Expression, Comparable<Constant> {
 	public Class<?> getType() {
 		return this.type;
 	}
+	
+	/**
+	 * TODO: remove me when a null type is supported
+	 * @param type
+	 */
+	public void setType(Class<?> type) {
+		this.type = type;
+	}
 
 	/**
 	 * Get value of constant
@@ -108,15 +116,6 @@ public class Constant implements Expression, Comparable<Constant> {
 		return value==null;
 	}
 
-	/**
-	 * Return true if expression has been fully resolved.  Typically the QueryResolver component
-	 * will handle resolution of an expression.
-	 * @return True if resolved
-	 */
-	public boolean isResolved() {
-		return true;
-	}
-	
     public void setMultiValued(List<?> value) {
 		this.multiValued = true;
 		this.value = value;

@@ -47,6 +47,7 @@ import org.teiid.query.sql.lang.TextTable.TextColumn;
 import org.teiid.query.sql.proc.*;
 import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
 import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.util.SymbolMap;
 
 @SuppressWarnings("nls")
 public class TestParser {
@@ -506,9 +507,8 @@ public class TestParser {
 		from.addGroup(g);
 
 		Function f = new Function("CONVERT", new Expression[] {new ElementSymbol("a", false), new Constant("string")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		ExpressionSymbol es = new ExpressionSymbol("expr", f); //$NON-NLS-1$
 		Select select = new Select();
-		select.addSymbol(es);
+		select.addSymbol(f);
 
 		Query query = new Query();
 		query.setSelect(select);
@@ -526,9 +526,8 @@ public class TestParser {
 
 		Function f = new Function("CONVERT", new Expression[] {new ElementSymbol("a", false), new Constant("timestamp")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		Function f2 = new Function("CONVERT", new Expression[] {f, new Constant("string")}); //$NON-NLS-1$ //$NON-NLS-2$
-		ExpressionSymbol es = new ExpressionSymbol("expr", f2); //$NON-NLS-1$
 		Select select = new Select();
-		select.addSymbol(es);
+		select.addSymbol(f2);
 
 		Query query = new Query();
 		query.setSelect(select);
@@ -549,9 +548,8 @@ public class TestParser {
 		Function f = new Function("concat", new Expression[] {new ElementSymbol("a", false), new Constant("x")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		Function f2 = new Function("length", new Expression[] {f}); //$NON-NLS-1$
 		Function f3 = new Function("+", new Expression[] {new Constant(new Integer(5)), f2}); //$NON-NLS-1$
-		ExpressionSymbol es = new ExpressionSymbol("expr", f3); //$NON-NLS-1$
 		Select select = new Select();
-		select.addSymbol(es);
+		select.addSymbol(f3);
 
 		Query query = new Query();
 		query.setSelect(select);
@@ -568,8 +566,7 @@ public class TestParser {
 		from.addGroup(g);
 
 		Function f = new Function("replace", new Expression[] {new ElementSymbol("a", false), new Constant("x"), new Constant("y")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-		ExpressionSymbol es = new ExpressionSymbol("y", f); //$NON-NLS-1$
-		AliasSymbol as = new AliasSymbol("y", es); //$NON-NLS-1$
+		AliasSymbol as = new AliasSymbol("y", f); //$NON-NLS-1$
 		Select select = new Select();
 		select.addSymbol(as);
 
@@ -588,9 +585,8 @@ public class TestParser {
 		from.addGroup(g);
 
 		Function f = new Function("cast", new Expression[] {new ElementSymbol("a", false), new Constant("string")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-		ExpressionSymbol es = new ExpressionSymbol("expr", f); //$NON-NLS-1$
 		Select select = new Select();
-		select.addSymbol(es);
+		select.addSymbol(f);
 
 		Query query = new Query();
 		query.setSelect(select);
@@ -608,9 +604,8 @@ public class TestParser {
 
 		Function f = new Function("cast", new Expression[] {new ElementSymbol("a", false), new Constant("timestamp")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 		Function f2 = new Function("cast", new Expression[] {f, new Constant("string")}); //$NON-NLS-1$ //$NON-NLS-2$
-		ExpressionSymbol es = new ExpressionSymbol("expr", f2); //$NON-NLS-1$
 		Select select = new Select();
-		select.addSymbol(es);
+		select.addSymbol(f2);
 
 		Query query = new Query();
 		query.setSelect(select);
@@ -627,8 +622,7 @@ public class TestParser {
         from.addGroup(g);
 
         Function f = new Function("left", new Expression[] {new ElementSymbol("fullname", false), new Constant(new Integer(3))}); //$NON-NLS-1$ //$NON-NLS-2$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f); //$NON-NLS-1$
-        AliasSymbol as = new AliasSymbol("x", es); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("x", f); //$NON-NLS-1$
         Select select = new Select();
         select.addSymbol(as);
 
@@ -647,8 +641,7 @@ public class TestParser {
         from.addGroup(g);
 
         Function f = new Function("right", new Expression[] {new ElementSymbol("fullname", false), new Constant(new Integer(3))}); //$NON-NLS-1$ //$NON-NLS-2$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f); //$NON-NLS-1$
-        AliasSymbol as = new AliasSymbol("x", es); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("x", f); //$NON-NLS-1$
         Select select = new Select();
         select.addSymbol(as);
 
@@ -667,8 +660,7 @@ public class TestParser {
         from.addGroup(g);
 
         Function f = new Function("char", new Expression[] { new Constant("x")}); //$NON-NLS-1$ //$NON-NLS-2$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f); //$NON-NLS-1$
-        AliasSymbol as = new AliasSymbol("x", es); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("x", f); //$NON-NLS-1$
         Select select = new Select();
         select.addSymbol(as);
 
@@ -687,8 +679,7 @@ public class TestParser {
         from.addGroup(g);
 
         Function f = new Function("insert", new Expression[] { new Constant("x"), new Constant(new Integer(1)), new Constant("a")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f); //$NON-NLS-1$
-        AliasSymbol as = new AliasSymbol("x", es); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("x", f); //$NON-NLS-1$
         Select select = new Select();
         select.addSymbol(as);
 
@@ -712,8 +703,7 @@ public class TestParser {
         insert.setGroup(groupSymbol);
         
         Select select = new Select();
-//        select.addSymbol( new ExpressionSymbol( new Constant( new Integer(1) ) ) );
-        select.addSymbol(  new ExpressionSymbol( "exp", new Constant( new Integer(1) ) ) );    //$NON-NLS-1$
+        select.addSymbol( new Constant( 1 ) );    //$NON-NLS-1$
 
         Query query = new Query();
         query.setSelect(select);
@@ -732,9 +722,8 @@ public class TestParser {
         from.addGroup(g);
 
         Function f = new Function("translate", new Expression[] { new Constant("x"), new Constant("x"), new Constant("y")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f); //$NON-NLS-1$
         Select select = new Select();
-        select.addSymbol(es);
+        select.addSymbol(f);
 
         Query query = new Query();
         query.setSelect(select);
@@ -752,8 +741,7 @@ public class TestParser {
 
         Function f = new Function("timestampadd", new Expression[] { //$NON-NLS-1$
             new Constant("SQL_TSI_FRAC_SECOND"), new Constant(new Integer(10)), new Constant("2003-05-01 10:20:30")}); //$NON-NLS-1$ //$NON-NLS-2$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f); //$NON-NLS-1$
-        AliasSymbol as = new AliasSymbol("x", es); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("x", f); //$NON-NLS-1$
         Select select = new Select();
         select.addSymbol(as);
 
@@ -773,8 +761,7 @@ public class TestParser {
 
         Function f = new Function("timestampadd", new Expression[] { //$NON-NLS-1$
             new Constant("SQL_TSI_SECOND"), new Constant(new Integer(10)), new Constant("2003-05-01 10:20:30")}); //$NON-NLS-1$ //$NON-NLS-2$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f); //$NON-NLS-1$
-        AliasSymbol as = new AliasSymbol("x", es); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("x", f); //$NON-NLS-1$
         Select select = new Select();
         select.addSymbol(as);
 
@@ -794,8 +781,7 @@ public class TestParser {
 
         Function f = new Function("timestampadd", new Expression[] { //$NON-NLS-1$
             new Constant("SQL_TSI_MINUTE"), new Constant(new Integer(10)), new Constant("2003-05-01 10:20:30")}); //$NON-NLS-1$ //$NON-NLS-2$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f); //$NON-NLS-1$
-        AliasSymbol as = new AliasSymbol("x", es); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("x", f); //$NON-NLS-1$
         Select select = new Select();
         select.addSymbol(as);
 
@@ -815,8 +801,7 @@ public class TestParser {
 
         Function f = new Function("timestampadd", new Expression[] { //$NON-NLS-1$
             new Constant("SQL_TSI_HOUR"), new Constant(new Integer(10)), new Constant("2003-05-01 10:20:30")}); //$NON-NLS-1$ //$NON-NLS-2$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f); //$NON-NLS-1$
-        AliasSymbol as = new AliasSymbol("x", es); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("x", f); //$NON-NLS-1$
         Select select = new Select();
         select.addSymbol(as);
 
@@ -836,8 +821,7 @@ public class TestParser {
 
         Function f = new Function("timestampadd", new Expression[] { //$NON-NLS-1$
             new Constant("SQL_TSI_DAY"), new Constant(new Integer(10)), new Constant("2003-05-01 10:20:30")}); //$NON-NLS-1$ //$NON-NLS-2$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f); //$NON-NLS-1$
-        AliasSymbol as = new AliasSymbol("x", es); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("x", f); //$NON-NLS-1$
         Select select = new Select();
         select.addSymbol(as);
 
@@ -857,8 +841,7 @@ public class TestParser {
 
         Function f = new Function("timestampadd", new Expression[] { //$NON-NLS-1$
             new Constant("SQL_TSI_WEEK"), new Constant(new Integer(10)), new Constant("2003-05-01 10:20:30")}); //$NON-NLS-1$ //$NON-NLS-2$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f); //$NON-NLS-1$
-        AliasSymbol as = new AliasSymbol("x", es); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("x", f); //$NON-NLS-1$
         Select select = new Select();
         select.addSymbol(as);
 
@@ -878,8 +861,7 @@ public class TestParser {
 
         Function f = new Function("timestampadd", new Expression[] { //$NON-NLS-1$
             new Constant("SQL_TSI_QUARTER"), new Constant(new Integer(10)), new Constant("2003-05-01 10:20:30")}); //$NON-NLS-1$ //$NON-NLS-2$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f); //$NON-NLS-1$
-        AliasSymbol as = new AliasSymbol("x", es); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("x", f); //$NON-NLS-1$
         Select select = new Select();
         select.addSymbol(as);
 
@@ -899,8 +881,7 @@ public class TestParser {
 
         Function f = new Function("timestampadd", new Expression[] { //$NON-NLS-1$
             new Constant("SQL_TSI_YEAR"), new Constant(new Integer(10)), new Constant("2003-05-01 10:20:30")}); //$NON-NLS-1$ //$NON-NLS-2$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f); //$NON-NLS-1$
-        AliasSymbol as = new AliasSymbol("x", es); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("x", f); //$NON-NLS-1$
         Select select = new Select();
         select.addSymbol(as);
 
@@ -920,8 +901,7 @@ public class TestParser {
 
         Function f = new Function("timestampdiff", new Expression[] { //$NON-NLS-1$
             new Constant("SQL_TSI_FRAC_SECOND"), new Constant("2003-05-01 10:20:10"), new Constant("2003-05-01 10:20:30")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f); //$NON-NLS-1$
-        AliasSymbol as = new AliasSymbol("x", es); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("x", f); //$NON-NLS-1$
         Select select = new Select();
         select.addSymbol(as);
 
@@ -941,9 +921,8 @@ public class TestParser {
 
         Function f = new Function("+", new Expression[] {new Constant(new Integer(5)), new Constant(new Integer(2))}); //$NON-NLS-1$
         Function f2 = new Function("+", new Expression[] {f, new Constant(new Integer(3))}); //$NON-NLS-1$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f2); //$NON-NLS-1$
         Select select = new Select();
-        select.addSymbol(es);
+        select.addSymbol(f2);
 
         Query query = new Query();
         query.setSelect(select);
@@ -961,9 +940,8 @@ public class TestParser {
 
         Function f = new Function("+", new Expression[] {new Constant(new Integer(5)), new Constant(new Integer(2))}); //$NON-NLS-1$
         Function f2 = new Function("-", new Expression[] {f, new Constant(new Integer(3))}); //$NON-NLS-1$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f2); //$NON-NLS-1$
         Select select = new Select();
-        select.addSymbol(es);
+        select.addSymbol(f2);
 
         Query query = new Query();
         query.setSelect(select);
@@ -982,9 +960,8 @@ public class TestParser {
         Function f = new Function("*", new Expression[] {new Constant(new Integer(2)), new Constant(new Integer(3))}); //$NON-NLS-1$
         Function f2 = new Function("+", new Expression[] {new Constant(new Integer(5)), f}); //$NON-NLS-1$
         
-        ExpressionSymbol es = new ExpressionSymbol("expr", f2); //$NON-NLS-1$
         Select select = new Select();
-        select.addSymbol(es);
+        select.addSymbol(f2);
 
         Query query = new Query();
         query.setSelect(select);
@@ -1002,9 +979,8 @@ public class TestParser {
 
         Function f = new Function("*", new Expression[] {new Constant(new Integer(5)), new Constant(new Integer(2))}); //$NON-NLS-1$
         Function f2 = new Function("+", new Expression[] {f, new Constant(new Integer(3))}); //$NON-NLS-1$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f2); //$NON-NLS-1$
         Select select = new Select();
-        select.addSymbol(es);
+        select.addSymbol(f2);
 
         Query query = new Query();
         query.setSelect(select);
@@ -1022,9 +998,8 @@ public class TestParser {
 
         Function f = new Function("*", new Expression[] {new Constant(new Integer(5)), new Constant(new Integer(2))}); //$NON-NLS-1$
         Function f2 = new Function("*", new Expression[] {f, new Constant(new Integer(3))}); //$NON-NLS-1$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f2); //$NON-NLS-1$
         Select select = new Select();
-        select.addSymbol(es);
+        select.addSymbol(f2);
 
         Query query = new Query();
         query.setSelect(select);
@@ -1044,9 +1019,8 @@ public class TestParser {
         Function f2 = new Function("*", new Expression[] {new Constant(new Integer(4)), new Constant(new Integer(5))}); //$NON-NLS-1$
         Function f3 = new Function("+", new Expression[] {new Constant(new Integer(1)), f}); //$NON-NLS-1$
         Function f4 = new Function("+", new Expression[] {f3, f2}); //$NON-NLS-1$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f4); //$NON-NLS-1$
         Select select = new Select();
-        select.addSymbol(es);
+        select.addSymbol(f4);
 
         Query query = new Query();
         query.setSelect(select);
@@ -1066,9 +1040,8 @@ public class TestParser {
         Function f2 = new Function("*", new Expression[] {new Constant(new Integer(3)), new Constant(new Integer(4))}); //$NON-NLS-1$
         Function f3 = new Function("+", new Expression[] {f, f2}); //$NON-NLS-1$
         Function f4 = new Function("+", new Expression[] {f3, new Constant(new Integer(5))}); //$NON-NLS-1$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f4); //$NON-NLS-1$
         Select select = new Select();
-        select.addSymbol(es);
+        select.addSymbol(f4);
 
         Query query = new Query();
         query.setSelect(select);
@@ -1087,9 +1060,8 @@ public class TestParser {
         Function f = new Function("-", new Expression[] {new Constant(new Integer(5)), new Constant(new Integer(4))}); //$NON-NLS-1$
         Function f2 = new Function("-", new Expression[] {f, new Constant(new Integer(3))}); //$NON-NLS-1$
         Function f3 = new Function("-", new Expression[] {f2, new Constant(new Integer(2))}); //$NON-NLS-1$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f3); //$NON-NLS-1$
         Select select = new Select();
-        select.addSymbol(es);
+        select.addSymbol(f3);
 
         Query query = new Query();
         query.setSelect(select);
@@ -1108,9 +1080,8 @@ public class TestParser {
         Function f = new Function("/", new Expression[] {new Constant(new Integer(5)), new Constant(new Integer(4))}); //$NON-NLS-1$
         Function f2 = new Function("/", new Expression[] {f, new Constant(new Integer(3))}); //$NON-NLS-1$
         Function f3 = new Function("/", new Expression[] {f2, new Constant(new Integer(2))}); //$NON-NLS-1$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f3); //$NON-NLS-1$
         Select select = new Select();
-        select.addSymbol(es);
+        select.addSymbol(f3);
 
         Query query = new Query();
         query.setSelect(select);
@@ -1128,9 +1099,8 @@ public class TestParser {
 
         Function f = new Function("||", new Expression[] {new Constant("a"), new Constant("b")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         Function f2 = new Function("||", new Expression[] {f, new Constant("c")}); //$NON-NLS-1$ //$NON-NLS-2$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f2); //$NON-NLS-1$
         Select select = new Select();
-        select.addSymbol(es);
+        select.addSymbol(f2);
 
         Query query = new Query();
         query.setSelect(select);
@@ -1150,9 +1120,8 @@ public class TestParser {
         Function f2 = new Function("+", new Expression[] {new Constant(new Integer(5)), f}); //$NON-NLS-1$
         Function f3 = new Function("+", new Expression[] {new Constant(new Integer(2)), new Constant(new Integer(3))}); //$NON-NLS-1$
         Function f4 = new Function("||", new Expression[] {f3, f2}); //$NON-NLS-1$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f4); //$NON-NLS-1$
         Select select = new Select();
-        select.addSymbol(es);
+        select.addSymbol(f4);
 
         Query query = new Query();
         query.setSelect(select);
@@ -1337,8 +1306,7 @@ public class TestParser {
         AggregateSymbol agg1 = new AggregateSymbol("count", "COUNT", false, new ElementSymbol("a", false)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         AggregateSymbol agg2 = new AggregateSymbol("sum", "SUM", false, new ElementSymbol("a", false)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         Function f = new Function("*", new Expression[] { agg1, agg2 }); //$NON-NLS-1$
-        ExpressionSymbol expr = new ExpressionSymbol("expr", f); //$NON-NLS-1$
-        AliasSymbol alias = new AliasSymbol("c", expr); //$NON-NLS-1$
+        AliasSymbol alias = new AliasSymbol("c", f); //$NON-NLS-1$
         select.addSymbol(alias);        
                 
         Query query = new Query();
@@ -1357,9 +1325,7 @@ public class TestParser {
 		from.addGroup(g);
 
 		Select select = new Select();
-		select.addSymbol(new ExpressionSymbol(
-			"expr",  //$NON-NLS-1$
-			new Function("-", new Expression[] { new Constant(new Integer(5)), new Constant(null) }) ) ); //$NON-NLS-1$
+		select.addSymbol(new Function("-", new Expression[] { new Constant(new Integer(5)), new Constant(null) }) ); //$NON-NLS-1$
 		select.addSymbol(new ElementSymbol("a.g1.c1")); //$NON-NLS-1$
 						
 		Query query = new Query();
@@ -1378,7 +1344,7 @@ public class TestParser {
 		from.addGroup(g);
 
 		Select select = new Select();
-		select.addSymbol(new ExpressionSymbol("expr", new Constant("abc"))); //$NON-NLS-1$ //$NON-NLS-2$
+		select.addSymbol(new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 						
 		Query query = new Query();
 		query.setSelect(select);
@@ -1397,7 +1363,7 @@ public class TestParser {
 		from.addGroup(g);
 
 		Select select = new Select();
-		select.addSymbol(new ExpressionSymbol("expr", new Constant("O'Leary"))); //$NON-NLS-1$ //$NON-NLS-2$
+		select.addSymbol(new Constant("O'Leary")); //$NON-NLS-1$ //$NON-NLS-2$
 						
 		Query query = new Query();
 		query.setSelect(select);
@@ -1415,7 +1381,7 @@ public class TestParser {
 		from.addGroup(g);
 
 		Select select = new Select();
-		select.addSymbol(new ExpressionSymbol("expr", new Constant("'abc'"))); //$NON-NLS-1$ //$NON-NLS-2$
+		select.addSymbol(new Constant("'abc'")); //$NON-NLS-1$ //$NON-NLS-2$
 						
 		Query query = new Query();
 		query.setSelect(select);
@@ -1433,7 +1399,7 @@ public class TestParser {
 		from.addGroup(g);
 
 		Select select = new Select();
-		select.addSymbol(new ExpressionSymbol("expr", new Constant("a'b'c"))); //$NON-NLS-1$ //$NON-NLS-2$
+		select.addSymbol(new Constant("a'b'c")); //$NON-NLS-1$ //$NON-NLS-2$
 						
 		Query query = new Query();
 		query.setSelect(select);
@@ -1469,7 +1435,7 @@ public class TestParser {
 		from.addGroup(g);
 
 		Select select = new Select();
-		select.addSymbol(new ExpressionSymbol("expr", new Constant(new Long(123456789012L)))); //$NON-NLS-1$
+		select.addSymbol(new Constant(new Long(123456789012L))); //$NON-NLS-1$
 						
 		Query query = new Query();
 		query.setSelect(select);
@@ -1487,7 +1453,7 @@ public class TestParser {
 		from.addGroup(g);
 
 		Select select = new Select();
-		select.addSymbol(new ExpressionSymbol("expr", new Constant(new BigInteger("1000000000000000000000000")))); //$NON-NLS-1$ //$NON-NLS-2$
+		select.addSymbol(new Constant(new BigInteger("1000000000000000000000000"))); //$NON-NLS-1$ //$NON-NLS-2$
 						
 		Query query = new Query();
 		query.setSelect(select);
@@ -1505,7 +1471,7 @@ public class TestParser {
 		from.addGroup(g);
 
 		Select select = new Select();
-		select.addSymbol(new ExpressionSymbol("expr", new Constant(new Double(1.3e8)))); //$NON-NLS-1$
+		select.addSymbol(new Constant(new Double(1.3e8))); //$NON-NLS-1$
 						
 		Query query = new Query();
 		query.setSelect(select);
@@ -1523,7 +1489,7 @@ public class TestParser {
 		from.addGroup(g);
 
 		Select select = new Select();
-		select.addSymbol(new ExpressionSymbol("expr", new Constant(new Double(-1.3e-6)))); //$NON-NLS-1$
+		select.addSymbol(new Constant(new Double(-1.3e-6))); //$NON-NLS-1$
 						
 		Query query = new Query();
 		query.setSelect(select);
@@ -1541,7 +1507,7 @@ public class TestParser {
 		from.addGroup(g);
 
 		Select select = new Select();
-		select.addSymbol(new ExpressionSymbol("expr", new Constant(new Double(-1.3e+8)))); //$NON-NLS-1$
+		select.addSymbol(new Constant(new Double(-1.3e+8))); //$NON-NLS-1$
 						
 		Query query = new Query();
 		query.setSelect(select);
@@ -1559,7 +1525,7 @@ public class TestParser {
         from.addGroup(g);
 
         Select select = new Select();
-        select.addSymbol(new ExpressionSymbol("expr", new Constant(java.sql.Date.valueOf("2002-10-02")))); //$NON-NLS-1$ //$NON-NLS-2$
+        select.addSymbol(new Constant(java.sql.Date.valueOf("2002-10-02"))); //$NON-NLS-1$ //$NON-NLS-2$
                         
         Query query = new Query();
         query.setSelect(select);
@@ -1577,7 +1543,7 @@ public class TestParser {
         from.addGroup(g);
 
         Select select = new Select();
-        select.addSymbol(new ExpressionSymbol("expr", new Constant(java.sql.Date.valueOf("2002-09-01")))); //$NON-NLS-1$ //$NON-NLS-2$
+        select.addSymbol(new Constant(java.sql.Date.valueOf("2002-09-01"))); //$NON-NLS-1$ //$NON-NLS-2$
                         
         Query query = new Query();
         query.setSelect(select);
@@ -1600,7 +1566,7 @@ public class TestParser {
         from.addGroup(g);
 
         Select select = new Select();
-        select.addSymbol(new ExpressionSymbol("expr", new Constant(java.sql.Time.valueOf("11:10:00")))); //$NON-NLS-1$ //$NON-NLS-2$
+        select.addSymbol(new Constant(java.sql.Time.valueOf("11:10:00"))); //$NON-NLS-1$ //$NON-NLS-2$
                         
         Query query = new Query();
         query.setSelect(select);
@@ -1618,7 +1584,7 @@ public class TestParser {
         from.addGroup(g);
 
         Select select = new Select();
-        select.addSymbol(new ExpressionSymbol("expr", new Constant(java.sql.Time.valueOf("5:10:00")))); //$NON-NLS-1$ //$NON-NLS-2$
+        select.addSymbol(new Constant(java.sql.Time.valueOf("5:10:00"))); //$NON-NLS-1$ //$NON-NLS-2$
                         
         Query query = new Query();
         query.setSelect(select);
@@ -1641,7 +1607,7 @@ public class TestParser {
         from.addGroup(g);
 
         Select select = new Select();
-        select.addSymbol(new ExpressionSymbol("expr", new Constant(java.sql.Timestamp.valueOf("2002-10-02 19:00:02.50")))); //$NON-NLS-1$ //$NON-NLS-2$
+        select.addSymbol(new Constant(java.sql.Timestamp.valueOf("2002-10-02 19:00:02.50"))); //$NON-NLS-1$ //$NON-NLS-2$
                         
         Query query = new Query();
         query.setSelect(select);
@@ -1665,7 +1631,7 @@ public class TestParser {
 	private void helpTestLiteral(Boolean expected, Class<?> expectedType,
 			String sql, String expectedSql) {
 		Select select = new Select();
-        select.addSymbol(new ExpressionSymbol("expr", new Constant(expected, expectedType))); //$NON-NLS-1$
+        select.addSymbol(new Constant(expected, expectedType)); //$NON-NLS-1$
                         
         Query query = new Query();
         query.setSelect(select);
@@ -2103,7 +2069,7 @@ public class TestParser {
 		from.addGroup(g);
 
 		Select select = new Select();
-		select.addSymbol(new ExpressionSymbol("expr", new Constant("g\".\"a"))); //$NON-NLS-1$ //$NON-NLS-2$
+		select.addSymbol(new Constant("g\".\"a")); //$NON-NLS-1$ //$NON-NLS-2$
 
 		Query query = new Query();
 		query.setSelect(select);
@@ -2724,9 +2690,8 @@ public class TestParser {
     @Test public void testNoFromClause(){
         Select select = new Select();
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
-        ExpressionSymbol b = new ExpressionSymbol("expr", new Constant(new Integer(5), Integer.class)); //$NON-NLS-1$
         select.addSymbol(a);
-        select.addSymbol(b);
+        select.addSymbol(new Constant(new Integer(5), Integer.class));
         Query query = new Query();
         query.setSelect(select);
         helpTest("SELECT a, 5", "SELECT a, 5", query);       //$NON-NLS-1$ //$NON-NLS-2$
@@ -2752,7 +2717,7 @@ public class TestParser {
 	/** SELECT a or b from g */
 	@Test public void testOrInSelect(){
 		Query query = new Query();
-		query.setSelect(new Select(Arrays.asList(new ExpressionSymbol("foo", new CompoundCriteria(CompoundCriteria.OR, Arrays.asList(new ExpressionCriteria(new ElementSymbol("a")), new ExpressionCriteria(new ElementSymbol("b")))))))); 
+		query.setSelect(new Select(Arrays.asList(new CompoundCriteria(CompoundCriteria.OR, Arrays.asList(new ExpressionCriteria(new ElementSymbol("a")), new ExpressionCriteria(new ElementSymbol("b"))))))); 
 		helpTest("select a or b", "SELECT (a) OR (b)", query);
 	}
 	
@@ -2835,8 +2800,7 @@ public class TestParser {
 
         Select select = new Select();
         Reference ref0 = new Reference(0);
-        ExpressionSymbol expr = new ExpressionSymbol("expr", ref0); //$NON-NLS-1$
-        select.addSymbol(expr);
+        select.addSymbol(ref0);
 
         Reference ref1 = new Reference(1);
         Criteria crit = new MatchCriteria(new ElementSymbol("b"), ref1); //$NON-NLS-1$
@@ -2984,7 +2948,7 @@ public class TestParser {
         from.addClause(sfc);
         
         Select select = new Select();
-        select.addSymbol(new ElementSymbol("x.a")); //$NON-NLS-1$
+        select.addSymbol(new ElementSymbol("X.A")); //$NON-NLS-1$
         
         Query query = new Query();
         query.setSelect(select);
@@ -3012,7 +2976,7 @@ public class TestParser {
         from.addClause(sfc);
         
         Select select = new Select();
-        select.addSymbol(new ElementSymbol("x.a")); //$NON-NLS-1$
+        select.addSymbol(new ElementSymbol("X.A")); //$NON-NLS-1$
         
         Query query = new Query();
         query.setSelect(select);
@@ -3487,7 +3451,7 @@ public class TestParser {
 		Query query = new Query();
 		Select select = new Select();
 		Constant c = new Constant("\u05e0"); //$NON-NLS-1$
-		select.addSymbol(new ExpressionSymbol("expr", c)); //$NON-NLS-1$
+		select.addSymbol(c); //$NON-NLS-1$
 		query.setSelect(select);
 
 		helpTest(sql, query.toString(), query);
@@ -3587,8 +3551,7 @@ public class TestParser {
         Query query = new Query();
         Select select = new Select();
         Function func1 = new Function("yowza_yowza", new Expression[] { }); //$NON-NLS-1$
-        ExpressionSymbol exprSymbol = new ExpressionSymbol("expr", func1); //$NON-NLS-1$
-        select.addSymbol(exprSymbol);        
+        select.addSymbol(func1);        
         query.setSelect(select);
         
         From from = new From();
@@ -3911,7 +3874,7 @@ public class TestParser {
 
         Select s2 = new Select();
         s2.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
-        s2.addSymbol(new ExpressionSymbol("expr", new ScalarSubquery(q1))); //$NON-NLS-1$
+        s2.addSymbol(new ScalarSubquery(q1)); //$NON-NLS-1$
         From f2 = new From();
         f2.addGroup(new GroupSymbol("m.g2"));        //$NON-NLS-1$
         Query q2 = new Query();
@@ -3934,7 +3897,7 @@ public class TestParser {
         q1.setFrom(f1);
 
         Select s2 = new Select();
-        s2.addSymbol(new ExpressionSymbol("expr", new ScalarSubquery(q1))); //$NON-NLS-1$
+        s2.addSymbol(new ScalarSubquery(q1)); //$NON-NLS-1$
         From f2 = new From();
         f2.addGroup(new GroupSymbol("m.g2"));        //$NON-NLS-1$
         Query q2 = new Query();
@@ -3957,7 +3920,7 @@ public class TestParser {
         q1.setFrom(f1);
 
         Select s2 = new Select();
-        s2.addSymbol(new ExpressionSymbol("expr", new ScalarSubquery(q1))); //$NON-NLS-1$
+        s2.addSymbol(new ScalarSubquery(q1)); //$NON-NLS-1$
         s2.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
         From f2 = new From();
         f2.addGroup(new GroupSymbol("m.g2"));        //$NON-NLS-1$
@@ -3982,7 +3945,7 @@ public class TestParser {
 
         Select s2 = new Select();
         s2.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
-        s2.addSymbol(new AliasSymbol("X", new ExpressionSymbol("expr", new ScalarSubquery(q1)))); //$NON-NLS-1$ //$NON-NLS-2$
+        s2.addSymbol(new AliasSymbol("X", new ScalarSubquery(q1))); //$NON-NLS-1$ //$NON-NLS-2$
         From f2 = new From();
         f2.addGroup(new GroupSymbol("m.g2"));        //$NON-NLS-1$
         Query q2 = new Query();
@@ -3998,7 +3961,7 @@ public class TestParser {
         Select s2 = new Select();
         s2.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
        
-        s2.addSymbol(new AliasSymbol("X", new ExpressionSymbol("expr", QueryParser.getQueryParser().parseExpression("(SELECT e1 FROM m.g1) + 2")))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        s2.addSymbol(new AliasSymbol("X", QueryParser.getQueryParser().parseExpression("(SELECT e1 FROM m.g1) + 2"))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         From f2 = new From();
         f2.addGroup(new GroupSymbol("m.g2"));        //$NON-NLS-1$
@@ -4015,7 +3978,7 @@ public class TestParser {
         Select s2 = new Select();
         s2.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
         
-        s2.addSymbol(new AliasSymbol("X", new ExpressionSymbol("expr", QueryParser.getQueryParser().parseExpression("3 + (SELECT e1 FROM m.g1)")))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        s2.addSymbol(new AliasSymbol("X", QueryParser.getQueryParser().parseExpression("3 + (SELECT e1 FROM m.g1)"))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         From f2 = new From();
         f2.addGroup(new GroupSymbol("m.g2"));        //$NON-NLS-1$
@@ -4032,7 +3995,7 @@ public class TestParser {
         Select s2 = new Select();
         s2.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
         
-        s2.addSymbol(new AliasSymbol("X", new ExpressionSymbol("expr", QueryParser.getQueryParser().parseExpression("(SELECT e1 FROM m.g1) + (SELECT e3 FROM m.g3)")))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        s2.addSymbol(new AliasSymbol("X", QueryParser.getQueryParser().parseExpression("(SELECT e1 FROM m.g1) + (SELECT e3 FROM m.g3)"))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         From f2 = new From();
         f2.addGroup(new GroupSymbol("m.g2"));        //$NON-NLS-1$
@@ -4049,7 +4012,7 @@ public class TestParser {
         Select s2 = new Select();
         s2.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
         
-        s2.addSymbol(new AliasSymbol("X", new ExpressionSymbol("expr", QueryParser.getQueryParser().getQueryParser().parseExpression("length((SELECT e1 FROM m.g1))")))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        s2.addSymbol(new AliasSymbol("X", QueryParser.getQueryParser().parseExpression("length((SELECT e1 FROM m.g1))"))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         From f2 = new From();
         f2.addGroup(new GroupSymbol("m.g2"));        //$NON-NLS-1$
@@ -4226,7 +4189,7 @@ public class TestParser {
         select.addSymbol(new ElementSymbol("y")); //$NON-NLS-1$
         select.addSymbol(new ElementSymbol("z")); //$NON-NLS-1$
         // The parser hard-codes the name "expr"
-        select.addSymbol(new ExpressionSymbol("expr", expr)); //$NON-NLS-1$
+        select.addSymbol(expr); //$NON-NLS-1$
         From from = new From();
         from.addGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
         Query q = new Query();
@@ -4253,7 +4216,7 @@ public class TestParser {
         select.addSymbol(new ElementSymbol("y")); //$NON-NLS-1$
         select.addSymbol(new ElementSymbol("z")); //$NON-NLS-1$
         // The parser hard-codes the name "expr"
-        select.addSymbol(new ExpressionSymbol("expr", expr)); //$NON-NLS-1$
+        select.addSymbol(expr); //$NON-NLS-1$
         From from = new From();
         from.addGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
         Query q = new Query();
@@ -4301,7 +4264,7 @@ public class TestParser {
         select.addSymbol(new ElementSymbol("y")); //$NON-NLS-1$
         select.addSymbol(new ElementSymbol("z")); //$NON-NLS-1$
         // The parser hard-codes the name "expr"
-        select.addSymbol(new ExpressionSymbol("expr", expr)); //$NON-NLS-1$
+        select.addSymbol(expr); //$NON-NLS-1$
         From from = new From();
         from.addGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
         Query q = new Query();
@@ -4327,7 +4290,7 @@ public class TestParser {
         select.addSymbol(new ElementSymbol("y")); //$NON-NLS-1$
         select.addSymbol(new ElementSymbol("z")); //$NON-NLS-1$
         // The parser hard-codes the name "expr"
-        select.addSymbol(new ExpressionSymbol("expr", expr)); //$NON-NLS-1$
+        select.addSymbol(expr); //$NON-NLS-1$
         From from = new From();
         from.addGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
         Query q = new Query();
@@ -4479,8 +4442,7 @@ public class TestParser {
     @Test public void testNationCharString() throws Exception {
         Query query = (Query) QueryParser.getQueryParser().parseCommand("SELECT N'blah' FROM m.g"); //$NON-NLS-1$
         Select select = query.getSelect();
-        ExpressionSymbol s = (ExpressionSymbol) select.getSymbol(0);
-        Constant c = (Constant) s.getExpression();
+        Constant c = (Constant) SymbolMap.getExpression(select.getSymbol(0));
         assertEquals(c, new Constant("blah")); //$NON-NLS-1$
     }
 
@@ -4608,7 +4570,7 @@ public class TestParser {
                 
         Constant as = new Constant("fooString"); //$NON-NLS-1$
 		Select select = new Select();
-		select.addSymbol(new ExpressionSymbol("expr", as)); //$NON-NLS-1$
+		select.addSymbol(as); //$NON-NLS-1$
 		
 		Query query = new Query();
 		query.setSelect(select);
@@ -4686,7 +4648,7 @@ public class TestParser {
 		select.addSymbol(new ElementSymbol("y")); //$NON-NLS-1$
 
 		OrderBy orderby = new OrderBy();
-		orderby.addVariable(new ExpressionSymbol("expr", new Constant(1)), true); //$NON-NLS-1$
+		orderby.addVariable(new Constant(1), true); //$NON-NLS-1$
 
 		Query query = new Query();
 		query.setSelect(select);
@@ -4882,8 +4844,7 @@ public class TestParser {
         Query query = new Query();
         Select select = new Select();
         Function func1 = new Function("a.x", new Expression[] { }); //$NON-NLS-1$
-        ExpressionSymbol exprSymbol = new ExpressionSymbol("expr", func1); //$NON-NLS-1$
-        select.addSymbol(exprSymbol);        
+        select.addSymbol(func1);        
         query.setSelect(select);
         
         helpTest(sql, "SELECT a.x()", query); //$NON-NLS-1$
@@ -4916,7 +4877,7 @@ public class TestParser {
         String expected = "CREATE VIRTUAL PROCEDURE\nBEGIN\nIF(x > 1)\nBEGIN\nSELECT 1;\nEND\nIF(x > 1)\nBEGIN\nSELECT 1;\nEND\nELSE\nBEGIN\nSELECT 1;\nEND\nEND"; //$NON-NLS-1$
         
         Query query = new Query();
-        query.setSelect(new Select(Arrays.asList(new ExpressionSymbol("expr", new Constant(1))))); //$NON-NLS-1$
+        query.setSelect(new Select(Arrays.asList(new Constant(1)))); //$NON-NLS-1$
         CommandStatement commandStmt = new CommandStatement(query);
         CompareCriteria criteria = new CompareCriteria(new ElementSymbol("x"), CompareCriteria.GT, new Constant(1)); //$NON-NLS-1$
         Block block = new Block();
@@ -4946,7 +4907,7 @@ public class TestParser {
         Function convert = new Function("convert", new Expression[] {new Constant(null), new Constant("blob")}); //$NON-NLS-1$ //$NON-NLS-2$
         Function convert1 = new Function("convert", new Expression[] {new Constant(null), new Constant("clob")}); //$NON-NLS-1$ //$NON-NLS-2$
         Function convert2 = new Function("convert", new Expression[] {new Constant(null), new Constant("xml")}); //$NON-NLS-1$ //$NON-NLS-2$
-        Select select = new Select(Arrays.asList(new ExpressionSymbol("expr", convert), new ExpressionSymbol("expr1", convert1), new ExpressionSymbol("expr2", convert2))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        Select select = new Select(Arrays.asList(convert, convert1, convert2)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         Query query = new Query();
         query.setSelect(select);
         
@@ -5059,9 +5020,8 @@ public class TestParser {
     @Test public void testArrayAggWithIndexing() throws Exception {
         String sql = "SELECT (array_agg(1))[1]"; //$NON-NLS-1$
         AggregateSymbol as = new AggregateSymbol("foo", Reserved.ARRAY_AGG, false, new Constant(1));
-        ExpressionSymbol expr = new ExpressionSymbol("expr", new Function("array_get", new Expression[] {as, new Constant(1)}));
         Query query = new Query();
-        query.setSelect(new Select(Arrays.asList(expr)));
+        query.setSelect(new Select(Arrays.asList(new Function("array_get", new Expression[] {as, new Constant(1)}))));
         helpTest(sql, "SELECT array_get(ARRAY_AGG(1), 1)", query);
     } 
     
@@ -5198,7 +5158,7 @@ public class TestParser {
     @Test public void testPositionalReference() throws Exception {
     	String sql = "select $1";
     	Query query = new Query();
-    	query.setSelect(new Select(Arrays.asList(new ExpressionSymbol("foo", new Reference(0)))));
+    	query.setSelect(new Select(Arrays.asList(new Reference(0))));
         helpTest(sql, "SELECT ?", query);
     }
     
@@ -5222,7 +5182,7 @@ public class TestParser {
     @Test public void testWindowFunction() throws Exception {
     	String sql = "select row_number() over (partition by x order by y) from g";
     	Query query = new Query();
-    	WindowFunction wf = new WindowFunction("expr");
+    	WindowFunction wf = new WindowFunction();
     	wf.setFunction(new AggregateSymbol("expr", "ROW_NUMBER", false, null));
     	WindowSpecification ws = new WindowSpecification();
     	ws.setPartition(new ArrayList<Expression>(Arrays.asList(new ElementSymbol("x"))));

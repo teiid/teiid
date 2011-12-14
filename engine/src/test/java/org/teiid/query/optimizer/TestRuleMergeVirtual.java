@@ -352,7 +352,7 @@ public class TestRuleMergeVirtual {
         // Plan query
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata, 
             null, capFinder,
-            new String[] { "SELECT v_0.c_0 FROM (SELECT convert(g_0.TimestampValue, date) AS c_0 FROM bqt1.smalla AS g_0, bqt1.smallb AS g_1 WHERE g_0.stringkey = g_1.stringkey) AS v_0 GROUP BY v_0.c_0" },  //$NON-NLS-1$
+            new String[] { "SELECT v_0.c_0 FROM (SELECT convert(g_0.TimestampValue, date) AS c_0 FROM BQT1.SmallA AS g_0, BQT1.SmallB AS g_1 WHERE g_0.stringkey = g_1.stringkey) AS v_0 GROUP BY v_0.c_0" },  //$NON-NLS-1$
             TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);         
     } 

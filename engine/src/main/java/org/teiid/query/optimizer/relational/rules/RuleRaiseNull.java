@@ -46,9 +46,8 @@ import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.util.CommandContext;
 
@@ -147,17 +146,17 @@ public final class RuleRaiseNull implements OptimizerRule {
                         return raiseNullNode(rootNode, parentNode, nullNode, nodes);
                     }
 
-                    List<SingleElementSymbol> newProjectSymbols = (List<SingleElementSymbol>)firstProject.getProperty(NodeConstants.Info.PROJECT_COLS);
-                    List<SingleElementSymbol> oldProjectSymbols = (List<SingleElementSymbol>)nullNode.getProperty(NodeConstants.Info.PROJECT_COLS);
+                    List<Expression> newProjectSymbols = (List<Expression>)firstProject.getProperty(NodeConstants.Info.PROJECT_COLS);
+                    List<Expression> oldProjectSymbols = (List<Expression>)nullNode.getProperty(NodeConstants.Info.PROJECT_COLS);
                     
                     for (int i = 0; i < newProjectSymbols.size(); i++) {
-                        SingleElementSymbol newSes = newProjectSymbols.get(i);
-                        SingleElementSymbol oldSes = oldProjectSymbols.get(i);
-                        if (newSes instanceof ExpressionSymbol || !newSes.getShortCanonicalName().equals(oldSes.getShortCanonicalName())) {
+                        Expression newSes = newProjectSymbols.get(i);
+                        Expression oldSes = oldProjectSymbols.get(i);
+                        if (!(newSes instanceof Symbol) || !Symbol.getShortName(newSes).equals(Symbol.getShortName(oldSes))) {
                             if (newSes instanceof AliasSymbol) {
                                 newSes = ((AliasSymbol)newSes).getSymbol();
                             }
-                            newProjectSymbols.set(i, new AliasSymbol(oldSes.getShortName(), newSes));
+                            newProjectSymbols.set(i, new AliasSymbol(Symbol.getShortName(oldSes), newSes));
                         }
                     }
                     
@@ -166,7 +165,7 @@ public final class RuleRaiseNull implements OptimizerRule {
                     if (sort != null) { //correct the sort to the new columns as well
                         OrderBy sortOrder = (OrderBy)sort.getProperty(NodeConstants.Info.SORT_ORDER);
                         for (OrderByItem item : sortOrder.getOrderByItems()) {
-                            SingleElementSymbol sortElement = item.getSymbol();
+                            Expression sortElement = item.getSymbol();
                             sortElement = newProjectSymbols.get(oldProjectSymbols.indexOf(sortElement));
                             item.setSymbol(sortElement);
                         }

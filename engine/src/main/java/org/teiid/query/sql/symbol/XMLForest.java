@@ -59,16 +59,6 @@ public class XMLForest implements Expression {
 	}
 
 	@Override
-	public boolean isResolved() {
-		for (DerivedColumn arg : args) {
-			if (!arg.getExpression().isResolved()) {
-				return false;
-			}
-		}
-		return true;
-	}
-	
-	@Override
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}

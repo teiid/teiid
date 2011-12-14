@@ -164,7 +164,7 @@ public class RelationalPlanner {
 	                	WithQueryCommand wqc = new WithQueryCommand(with.getGroupSymbol(), with.getColumns(), withCommand);
 	                	pushDownWith.add(wqc);
 	                }
-		        	names.add(with.getGroupSymbol().getCanonicalName());
+		        	names.add(with.getGroupSymbol().getName());
 				}
 	        	if (modelID != null && supportsWithPushdown) {
 	        		supportsWithPushdown = CapabilitiesUtil.supports(Capability.COMMON_TABLE_EXPRESSIONS, modelID, metadata, capFinder);
@@ -190,7 +190,7 @@ public class RelationalPlanner {
 		connectSubqueryContainers(plan); //TODO: merge with node creation
         
         // Set top column information on top node
-        List<SingleElementSymbol> topCols = Util.deepClone(command.getProjectedSymbols(), SingleElementSymbol.class);
+        List<Expression> topCols = Util.deepClone(command.getProjectedSymbols(), Expression.class);
 
         // Build rule set based on hints
         RuleStack rules = buildRules();
@@ -232,7 +232,7 @@ public class RelationalPlanner {
 			@Override
 			public void visit(UnaryFromClause obj) {
 				GroupSymbol group = obj.getGroup();
-				if (names.contains(group.getNonCorrelationName().toUpperCase())) {
+				if (names.contains(group.getNonCorrelationName())) {
 					group.setModelMetadataId(modelID);
 				}
 			}
@@ -505,7 +505,7 @@ public class RelationalPlanner {
         PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
 
         // Set output columns
-        List<SingleElementSymbol> cols = command.getProjectedSymbols();
+        List<Expression> cols = command.getProjectedSymbols();
         projectNode.setProperty(NodeConstants.Info.PROJECT_COLS, cols);
 
         // Define source of data for stored query / procedure
@@ -975,7 +975,7 @@ public class RelationalPlanner {
 			mergeTempMetadata(nestedCommand, parentCommand);
 		    PlanNode childRoot = generatePlan(nestedCommand, false);
 		    node.addFirstChild(childRoot);
-			List<SingleElementSymbol> projectCols = nestedCommand.getProjectedSymbols();
+			List<Expression> projectCols = nestedCommand.getProjectedSymbols();
 			SymbolMap map = SymbolMap.createSymbolMap(group, projectCols, metadata);
 			node.setProperty(NodeConstants.Info.SYMBOL_MAP, map);
 		} else {
@@ -1187,14 +1187,14 @@ public class RelationalPlanner {
     static void mergeTempMetadata(
         Command childCommand,
         Command parentCommand) {
-        Map childTempMetadata = childCommand.getTemporaryMetadata();
-        if (childTempMetadata != null && !childTempMetadata.isEmpty()){
+        TempMetadataStore childTempMetadata = childCommand.getTemporaryMetadata();
+        if (childTempMetadata != null && !childTempMetadata.getData().isEmpty()){
             // Add to parent temp metadata
-            Map parentTempMetadata = parentCommand.getTemporaryMetadata();
+        	TempMetadataStore parentTempMetadata = parentCommand.getTemporaryMetadata();
             if (parentTempMetadata == null){
-                parentCommand.setTemporaryMetadata(new HashMap(childTempMetadata));
+                parentCommand.setTemporaryMetadata(childTempMetadata);
             } else {
-                parentTempMetadata.putAll(childTempMetadata);
+                parentTempMetadata.getData().putAll(childTempMetadata.getData());
             }
         }
     }
@@ -1249,7 +1249,7 @@ public class RelationalPlanner {
         return QueryRewriter.rewrite(result, metadata, context);
     }
     
-	public static Query createMatViewQuery(Object matMetadataId, String matTableName, List<? extends SelectSymbol> select, boolean isGlobal) {
+	public static Query createMatViewQuery(Object matMetadataId, String matTableName, List<? extends Expression> select, boolean isGlobal) {
 		Query query = new Query();
 		query.setSelect(new Select(select));
 		GroupSymbol gs = new GroupSymbol(matTableName);

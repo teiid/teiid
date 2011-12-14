@@ -54,7 +54,6 @@ import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
@@ -117,7 +116,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
                 List projectCols = (List) parentNode.getProperty(NodeConstants.Info.PROJECT_COLS);
                 
                 for (int i = 0; i < projectCols.size(); i++) {
-                    SingleElementSymbol symbol = (SingleElementSymbol)projectCols.get(i);
+                    Expression symbol = (Expression)projectCols.get(i);
                     if(! canPushSymbol(symbol, true, modelID, metadata, capFinder, record)) {
                         return null;
                     } 
@@ -301,7 +300,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
 
     static boolean canRaiseOverGroupBy(PlanNode groupNode,
                                          PlanNode accessNode,
-                                         Collection<? extends SingleElementSymbol> aggregates,
+                                         Collection<? extends AggregateSymbol> aggregates,
                                          QueryMetadataInterface metadata,
                                          CapabilitiesFinder capFinder, AnalysisRecord record) throws QueryMetadataException,
                                                         TeiidComponentException {
@@ -322,7 +321,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
             }
         }
         if (aggregates != null) {
-            for (SingleElementSymbol aggregateSymbol : aggregates) {
+            for (AggregateSymbol aggregateSymbol : aggregates) {
                 if(! CriteriaCapabilityValidatorVisitor.canPushLanguageObject(aggregateSymbol, modelID, metadata, capFinder, record)) {
                     return false;
                 }

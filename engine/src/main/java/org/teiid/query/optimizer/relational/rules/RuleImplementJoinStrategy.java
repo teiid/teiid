@@ -50,8 +50,8 @@ import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.util.CommandContext;
@@ -115,8 +115,8 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
             	}
             }
 
-            List<SingleElementSymbol> leftExpressions = (List<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS);
-            List<SingleElementSymbol> rightExpressions = (List<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS);
+            List<Expression> leftExpressions = (List<Expression>) joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS);
+            List<Expression> rightExpressions = (List<Expression>) joinNode.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS);
             int origExpressionCount = leftExpressions.size();
 
             //check index information on each side
@@ -136,9 +136,9 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
             	List<Object> keyCols = metadata.getElementIDsInKey(key);
             	int[] reorder = new int[keyCols.size()];
             	List<Integer> toCriteria = new ArrayList<Integer>(rightExpressions.size() - keyCols.size()); 
-            	List<SingleElementSymbol> keyExpressions = right?rightExpressions:leftExpressions;
+            	List<Expression> keyExpressions = right?rightExpressions:leftExpressions;
         		for (int j = 0; j < keyExpressions.size(); j++) {
-					SingleElementSymbol ses = keyExpressions.get(j);
+					Expression ses = keyExpressions.get(j);
 					if (!(ses instanceof ElementSymbol)) {
 						continue;
 					}
@@ -156,8 +156,8 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 				}
         		List<Criteria> joinCriteria = (List<Criteria>) joinNode.getProperty(Info.NON_EQUI_JOIN_CRITERIA);
         		for (int index : toCriteria) {
-					SingleElementSymbol lses = leftExpressions.get(index);
-					SingleElementSymbol rses = rightExpressions.get(index);
+					Expression lses = leftExpressions.get(index);
+					Expression rses = rightExpressions.get(index);
 					CompareCriteria cc = new CompareCriteria(lses, CompareCriteria.EQ, rses);
 					if (joinCriteria == null || joinCriteria.isEmpty()) {
 						joinCriteria = new ArrayList<Criteria>();
@@ -178,7 +178,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 	        		&& joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER 
 	        		&& joinNode.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE) != null
 	        		&& !joinNode.hasCollectionProperty(Info.NON_EQUI_JOIN_CRITERIA)) {
-	        	Collection<SingleElementSymbol> output = (Collection<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.OUTPUT_COLS);
+	        	Collection<Expression> output = (Collection<Expression>) joinNode.getProperty(NodeConstants.Info.OUTPUT_COLS);
 	        	Collection<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(output);
 	        	if (Collections.disjoint(groups, FrameUtil.findJoinSourceNode(joinNode.getFirstChild()).getGroups())) {
 	        		pushRight = false;
@@ -205,14 +205,14 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
      * @throws TeiidComponentException 
      * @throws QueryMetadataException 
      */
-    static boolean insertSort(PlanNode childNode, List<SingleElementSymbol> expressions, PlanNode jnode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
+    static boolean insertSort(PlanNode childNode, List<Expression> expressions, PlanNode jnode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
     		boolean attemptPush) throws QueryMetadataException, TeiidComponentException {
-        Set<SingleElementSymbol> orderSymbols = new LinkedHashSet<SingleElementSymbol>(expressions); 
+        Set<Expression> orderSymbols = new LinkedHashSet<Expression>(expressions); 
 
         PlanNode sourceNode = FrameUtil.findJoinSourceNode(childNode);
         PlanNode joinNode = childNode.getParent();
 
-        Set<SingleElementSymbol> outputSymbols = new LinkedHashSet<SingleElementSymbol>((List<SingleElementSymbol>)childNode.getProperty(NodeConstants.Info.OUTPUT_COLS));
+        Set<Expression> outputSymbols = new LinkedHashSet<Expression>((List<Expression>)childNode.getProperty(NodeConstants.Info.OUTPUT_COLS));
         
         int oldSize = outputSymbols.size();
         
@@ -220,7 +220,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         
         boolean needsCorrection = outputSymbols.size() > oldSize;
                 
-        PlanNode sortNode = createSortNode(new ArrayList<SingleElementSymbol>(orderSymbols), outputSymbols);
+        PlanNode sortNode = createSortNode(new ArrayList<Expression>(orderSymbols), outputSymbols);
         
         boolean distinct = false;
         if (sourceNode.getFirstChild() != null && sourceNode.getType() == NodeConstants.Types.SOURCE && outputSymbols.size() == expressions.size() && outputSymbols.containsAll(expressions)) {
@@ -270,7 +270,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         return false;
     }
 
-    private static PlanNode createSortNode(List<SingleElementSymbol> orderSymbols,
+    private static PlanNode createSortNode(List<Expression> orderSymbols,
                                            Collection outputElements) {
         PlanNode sortNode = NodeFactory.getNewNode(NodeConstants.Types.SORT);
         sortNode.setProperty(NodeConstants.Info.SORT_ORDER, new OrderBy(orderSymbols));

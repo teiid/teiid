@@ -25,10 +25,10 @@ package org.teiid.query.metadata;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.teiid.query.sql.symbol.ElementSymbol;
 
@@ -45,10 +45,10 @@ public class GroupInfo implements Serializable {
 	
 	public GroupInfo(LinkedHashMap<Object, ElementSymbol> symbols) {
 		this.idToSymbolMap = symbols;
-		this.symbolList = Collections.unmodifiableList(new ArrayList(symbols.values()));
-		this.shortNameToSymbolMap = new HashMap<String, ElementSymbol>(symbolList.size());
+		this.symbolList = Collections.unmodifiableList(new ArrayList<ElementSymbol>(symbols.values()));
+		this.shortNameToSymbolMap = new TreeMap<String, ElementSymbol>(String.CASE_INSENSITIVE_ORDER);
 		for (ElementSymbol symbol : symbolList) {
-			shortNameToSymbolMap.put(symbol.getShortCanonicalName(), symbol);
+			shortNameToSymbolMap.put(symbol.getShortName(), symbol);
 		}
 	}
 	

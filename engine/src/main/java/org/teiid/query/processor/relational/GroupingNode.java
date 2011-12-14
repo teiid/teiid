@@ -41,17 +41,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.eval.Evaluator;
-import org.teiid.query.function.aggregate.AggregateFunction;
-import org.teiid.query.function.aggregate.ArrayAgg;
-import org.teiid.query.function.aggregate.Avg;
-import org.teiid.query.function.aggregate.ConstantFunction;
-import org.teiid.query.function.aggregate.Count;
-import org.teiid.query.function.aggregate.Max;
-import org.teiid.query.function.aggregate.Min;
-import org.teiid.query.function.aggregate.StatsFunction;
-import org.teiid.query.function.aggregate.Sum;
-import org.teiid.query.function.aggregate.TextAgg;
-import org.teiid.query.function.aggregate.XMLAgg;
+import org.teiid.query.function.aggregate.*;
 import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
@@ -61,7 +51,6 @@ import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.TextLine;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
@@ -167,7 +156,7 @@ public class GroupingNode extends RelationalNode {
 		}
 		
         // Incoming elements and lookup map for evaluating expressions
-        List<? extends SingleElementSymbol> sourceElements = this.getChildren()[0].getElements();
+        List<? extends Expression> sourceElements = this.getChildren()[0].getElements();
         this.elementMap = createLookupMap(sourceElements);
 
     	// List should contain all grouping columns / expressions as we need those for sorting
@@ -178,7 +167,7 @@ public class GroupingNode extends RelationalNode {
                 this.collectedExpressions.add(ex);
 			}
             if (removeDuplicates) {
-            	for (SingleElementSymbol ses : sourceElements) {
+            	for (Expression ses : sourceElements) {
             		collectExpression(SymbolMap.getExpression(ses));
             	}
             	distinctCols = collectedExpressions.size();
@@ -190,7 +179,7 @@ public class GroupingNode extends RelationalNode {
         // Construct aggregate function state accumulators
         functions = new AggregateFunction[getElements().size()];
         for(int i=0; i<getElements().size(); i++) {
-            Expression symbol = (Expression) getElements().get(i);
+            Expression symbol = getElements().get(i);
             if (this.outputMapping != null) {
             	symbol = outputMapping.getMappedExpression((ElementSymbol)symbol);
             }

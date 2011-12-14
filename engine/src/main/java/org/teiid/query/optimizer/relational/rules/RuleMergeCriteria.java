@@ -54,18 +54,7 @@ import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.CompoundCriteria;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.FromClause;
-import org.teiid.query.sql.lang.GroupBy;
-import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.OrderByItem;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.SubqueryCompareCriteria;
-import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
@@ -75,7 +64,6 @@ import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
@@ -296,7 +284,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		
 		try {
 			//clone the symbols as they may change during planning
-			List<SingleElementSymbol> projectedSymbols = LanguageObject.Util.deepClone(plannedResult.query.getProjectedSymbols(), SingleElementSymbol.class);
+			List<Expression> projectedSymbols = LanguageObject.Util.deepClone(plannedResult.query.getProjectedSymbols(), Expression.class);
 			//NOTE: we could tap into the relationalplanner at a lower level to get this in a plan node form,
 			//the major benefit would be to reuse the dependent join planning logic if possible.
 			if (analysisRecord != null && analysisRecord.recordDebug()) {
@@ -345,7 +333,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
             semiJoin.addLastChild(node);
             PlanNode result = current.getParent();
             NodeEditor.removeChildNode(result, current);
-            RuleImplementJoinStrategy.insertSort(semiJoin.getFirstChild(), (List<SingleElementSymbol>) plannedResult.leftExpressions, semiJoin, metadata, capFinder, true);
+            RuleImplementJoinStrategy.insertSort(semiJoin.getFirstChild(), (List<Expression>) plannedResult.leftExpressions, semiJoin, metadata, capFinder, true);
             return result;
 		} catch (QueryPlannerException e) {
 			//can't be done - probably access patterns - what about dependent
@@ -535,21 +523,21 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			}
 		}
 		HashSet<Expression> projectedSymbols = new HashSet<Expression>();
-		for (SingleElementSymbol ses : plannedResult.query.getProjectedSymbols()) {
+		for (Expression ses : plannedResult.query.getProjectedSymbols()) {
 			projectedSymbols.add(SymbolMap.getExpression(ses));
 		}
 		for (Expression ses : requiredExpressions) {
 			if (projectedSymbols.add(ses)) {
-				if (ses instanceof SingleElementSymbol) {
-					plannedResult.query.getSelect().addSymbol((SingleElementSymbol)ses);
+				if (ses instanceof Expression) {
+					plannedResult.query.getSelect().addSymbol((Expression)ses);
 				} else {
 					plannedResult.query.getSelect().addSymbol(new ExpressionSymbol("expr", (Expression) ses.clone())); //$NON-NLS-1$
 				}
 			}
 		}
-		for (SingleElementSymbol ses : (List<SingleElementSymbol>)plannedResult.rightExpressions) {
+		for (Expression ses : (List<Expression>)plannedResult.rightExpressions) {
 			if (projectedSymbols.add(SymbolMap.getExpression(ses))) {
-				plannedResult.query.getSelect().addSymbol((SingleElementSymbol)ses.clone());
+				plannedResult.query.getSelect().addSymbol((Expression)ses.clone());
 			}
 		}
 		return true;
@@ -585,7 +573,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		RuleChooseJoinStrategy.separateCriteria(leftGroups, rightGroups, plannedResult.leftExpressions, plannedResult.rightExpressions, crits, plannedResult.nonEquiJoinCriteria);
 	}
 
-	public static boolean isDistinct(Query query, List<SingleElementSymbol> expressions, QueryMetadataInterface metadata)
+	public static boolean isDistinct(Query query, List<Expression> expressions, QueryMetadataInterface metadata)
 			throws QueryMetadataException, TeiidComponentException {
 		boolean distinct = false;
 		if (query.getGroupBy() != null) {

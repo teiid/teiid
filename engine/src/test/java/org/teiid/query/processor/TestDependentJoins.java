@@ -54,7 +54,7 @@ public class TestDependentJoins {
     static ProcessorPlan helpGetPlan(String sql) {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(2));
+        caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 2);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false); //fake data manager doesn't support order by
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
@@ -232,12 +232,12 @@ public class TestDependentJoins {
        
        // Create expected results
        List[] expected = new List[] { 
-           Arrays.asList(new Object[] { "a", new Integer(0) }), //$NON-NLS-1$
-           Arrays.asList(new Object[] { "a", new Integer(0) }), //$NON-NLS-1$
-           Arrays.asList(new Object[] { "a", new Integer(0) }), //$NON-NLS-1$
-           Arrays.asList(new Object[] { "a", new Integer(0) }), //$NON-NLS-1$
-           Arrays.asList(new Object[] { "a", new Integer(3) }), //$NON-NLS-1$
-           Arrays.asList(new Object[] { "b", new Integer(2) }), //$NON-NLS-1$
+           Arrays.asList(new Object[] { "a", 0 }), //$NON-NLS-1$
+           Arrays.asList(new Object[] { "a", 0 }), //$NON-NLS-1$
+           Arrays.asList(new Object[] { "a", 0 }), //$NON-NLS-1$
+           Arrays.asList(new Object[] { "a", 0 }), //$NON-NLS-1$
+           Arrays.asList(new Object[] { "a", 3 }), //$NON-NLS-1$
+           Arrays.asList(new Object[] { "b", 2 }), //$NON-NLS-1$
        };    
        
        // Construct data manager with data
@@ -413,16 +413,16 @@ public class TestDependentJoins {
 
         // Create expected results
         List[] expected = new List[] { 
-              Arrays.asList(new Object[] { "aa ", "aa ", new Integer(0)}), //$NON-NLS-1$ //$NON-NLS-2$
-             Arrays.asList(new Object[] { "bb   ", "bb   ", new Integer(1)}), //$NON-NLS-1$ //$NON-NLS-2$
-             Arrays.asList(new Object[] { "cc  ", "cc  ", new Integer(2)}) //$NON-NLS-1$ //$NON-NLS-2$
+              Arrays.asList(new Object[] { "aa ", "aa ", 0}), //$NON-NLS-1$ //$NON-NLS-2$
+             Arrays.asList(new Object[] { "bb   ", "bb   ", 1}), //$NON-NLS-1$ //$NON-NLS-2$
+             Arrays.asList(new Object[] { "cc  ", "cc  ", 2}) //$NON-NLS-1$ //$NON-NLS-2$
         };    
 
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities depcaps = new BasicSourceCapabilities();
         depcaps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
-        depcaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1));
+        depcaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 1);
         depcaps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         if(accessNodeHandlesAliases) {
             depcaps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
@@ -486,26 +486,22 @@ public class TestDependentJoins {
         });
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
-        dataManager.addData("SELECT g_0.stringkey FROM bqt1.smallb AS g_0",  //$NON-NLS-1$ 
+        dataManager.addData("SELECT g_0.stringkey FROM BQT1.SmallB AS g_0",  //$NON-NLS-1$ 
                             new List[] { Arrays.asList(new Object[] { "1t" }), //$NON-NLS-1$
                                          Arrays.asList(new Object[] { "2" })}); //$NON-NLS-1$
-        dataManager.addData("SELECT g_0.stringkey, g_0.intkey FROM bqt1.smalla AS g_0",  //$NON-NLS-1$ 
-                            new List[] { Arrays.asList(new Object[] { "1", new Integer(1) })}); //$NON-NLS-1$
+        dataManager.addData("SELECT g_0.stringkey, g_0.intkey FROM BQT1.SmallA AS g_0",  //$NON-NLS-1$ 
+                            new List[] { Arrays.asList(new Object[] { "1", 1 })}); //$NON-NLS-1$
         
         
         List[] expected = new List[] {   
-            Arrays.asList(new Object[] { new Integer(1) }), 
+            Arrays.asList(new Object[] { 1 }), 
         };
         
         TestProcessor.helpProcess(plan, dataManager, expected);
-        
-        assertFalse(dataManager.getCommandHistory().contains("SELECT a.stringkey, a.intkey FROM bqt1.smalla AS a WHERE concat(a.stringkey, 't') IN ('1', '2')")); //$NON-NLS-1$
     }
     
     @Test public void testCase5130a() throws Exception {
-        HardcodedDataManager dataManager = helpTestDependentJoin(false);
-        
-        assertFalse(dataManager.getCommandHistory().contains("SELECT a.stringkey, a.intkey FROM bqt2.smalla AS a WHERE (concat(a.stringkey, 't') IN ('1t', '2')) AND (a.intkey IN (1))")); //$NON-NLS-1$
+        helpTestDependentJoin(false);
     }
     
     @Test public void testUnlimitedIn() throws Exception {
@@ -527,7 +523,7 @@ public class TestDependentJoins {
          
         // Plan query 
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
-                                                    new String[] {"SELECT g_0.stringkey, g_0.intkey FROM bqt1.smalla AS g_0 WHERE g_0.intkey IN (<dependent values>)", "SELECT g_0.stringkey, g_0.intkey FROM bqt2.smallb AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+                                                    new String[] {"SELECT g_0.stringkey, g_0.intkey FROM BQT1.SmallA AS g_0 WHERE g_0.intkey IN (<dependent values>)", "SELECT g_0.stringkey, g_0.intkey FROM BQT2.SmallB AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
  
         TestOptimizer.checkNodeTypes(plan, new int[] { 
             1,      // Access 
@@ -547,15 +543,15 @@ public class TestDependentJoins {
         });
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
-        dataManager.addData("SELECT g_0.stringkey, g_0.intkey FROM bqt2.smallb AS g_0",  //$NON-NLS-1$ 
-                            new List[] { Arrays.asList(new Object[] { "1t", new Integer(1) }), //$NON-NLS-1$
-                                         Arrays.asList(new Object[] { "2t", new Integer(2) })}); //$NON-NLS-1$
-        dataManager.addData("SELECT g_0.stringkey, g_0.intkey FROM bqt1.smalla AS g_0 WHERE g_0.intkey IN (1, 2)",  //$NON-NLS-1$ 
-                            new List[] { Arrays.asList(new Object[] { "1", new Integer(1) })}); //$NON-NLS-1$
+        dataManager.addData("SELECT g_0.stringkey, g_0.intkey FROM BQT2.SmallB AS g_0",  //$NON-NLS-1$ 
+                            new List[] { Arrays.asList(new Object[] { "1t", 1 }), //$NON-NLS-1$
+                                         Arrays.asList(new Object[] { "2t", 2 })}); //$NON-NLS-1$
+        dataManager.addData("SELECT g_0.stringkey, g_0.intkey FROM BQT1.SmallA AS g_0 WHERE g_0.intkey IN (1, 2)",  //$NON-NLS-1$ 
+                            new List[] { Arrays.asList(new Object[] { "1", 1 })}); //$NON-NLS-1$
         
         
         List[] expected = new List[] {   
-            Arrays.asList(new Object[] { new Integer(1) }), 
+            Arrays.asList(new Object[] { 1 }), 
         };
         
         TestProcessor.helpProcess(plan, dataManager, expected);
@@ -568,17 +564,17 @@ public class TestDependentJoins {
         dataMgr.registerTuples(
         		metadata,
             "pm1.g1", new List[] { 
-				    Arrays.asList(new Object[] { "a",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
-				    Arrays.asList(new Object[] { "b",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
-				    Arrays.asList(new Object[] { "c",   new Integer(2),     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { "a",   0,     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { "b",   1,     Boolean.TRUE,   null }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { "c",   2,     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
 				    } );       
             
         dataMgr.registerTuples(
         		metadata,
             "pm6.g1", new List[] { 
-				    Arrays.asList(new Object[] { "b",   new Integer(0) }), //$NON-NLS-1$
-				    Arrays.asList(new Object[] { "d",   new Integer(3) }), //$NON-NLS-1$
-				    Arrays.asList(new Object[] { "e",   new Integer(1) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { "b",   0 }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { "d",   3 }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { "e",   1 }), //$NON-NLS-1$
 				    } );      
     }
 
@@ -599,7 +595,7 @@ public class TestDependentJoins {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities depcaps = new BasicSourceCapabilities();
         depcaps.setCapabilitySupport(Capability.CRITERIA_IN, true);
-        depcaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1));
+        depcaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 1);
         depcaps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
 
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
@@ -734,18 +730,18 @@ public class TestDependentJoins {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] {
-                "aa ", "aa ", new Integer(0)}), //$NON-NLS-1$ //$NON-NLS-2$
+                "aa ", "aa ", 0}), //$NON-NLS-1$ //$NON-NLS-2$
             Arrays.asList(new Object[] {
-                "bb   ", "bb   ", new Integer(1)}), //$NON-NLS-1$ //$NON-NLS-2$
+                "bb   ", "bb   ", 1}), //$NON-NLS-1$ //$NON-NLS-2$
             Arrays.asList(new Object[] {
-                "cc  ", "cc  ", new Integer(2)}) //$NON-NLS-1$ //$NON-NLS-2$
+                "cc  ", "cc  ", 2}) //$NON-NLS-1$ //$NON-NLS-2$
         };
 
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities depcaps = new BasicSourceCapabilities();
         depcaps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
-        depcaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1));
+        depcaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 1);
         depcaps.setCapabilitySupport(Capability.CRITERIA_IN, true);
 
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
@@ -802,13 +798,13 @@ public class TestDependentJoins {
        
        // Create expected results
        List[] expected = new List[] { 
-           Arrays.asList(new Object[] { new Integer(0), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(0), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(0), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(0), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(1), new Integer(2) }),
-           Arrays.asList(new Object[] { new Integer(1), new Integer(2) }),
-           Arrays.asList(new Object[] { new Integer(2), new Integer(3) })
+           Arrays.asList(new Object[] { 0, 1 }),
+           Arrays.asList(new Object[] { 0, 1 }),
+           Arrays.asList(new Object[] { 0, 1 }),
+           Arrays.asList(new Object[] { 0, 1 }),
+           Arrays.asList(new Object[] { 1, 2 }),
+           Arrays.asList(new Object[] { 1, 2 }),
+           Arrays.asList(new Object[] { 2, 3 })
        };    
        
        // Construct data manager with data
@@ -820,7 +816,7 @@ public class TestDependentJoins {
        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
        BasicSourceCapabilities caps = new BasicSourceCapabilities();
        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
-       caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1000));
+       caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 1000);
        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
        
@@ -847,7 +843,7 @@ public class TestDependentJoins {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities depcaps = new BasicSourceCapabilities();
         depcaps.setCapabilitySupport(Capability.CRITERIA_IN, true);
-        depcaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1));
+        depcaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 1);
         depcaps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
 
         BasicSourceCapabilities caps = new BasicSourceCapabilities();

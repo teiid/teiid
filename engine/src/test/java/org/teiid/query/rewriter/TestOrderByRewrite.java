@@ -39,8 +39,8 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.unittest.RealMetadataFactory;
 
@@ -62,7 +62,7 @@ public class TestOrderByRewrite  {
                                    String[] elementNames,
                                    String[] elementIDs) {
         List<ElementSymbol> elements = new ArrayList<ElementSymbol>();
-        for (Iterator<SingleElementSymbol> i = langObj.getSortKeys().iterator(); i.hasNext();) {
+        for (Iterator<Expression> i = langObj.getSortKeys().iterator(); i.hasNext();) {
             ElementCollectorVisitor.getElements(i.next(), elements);
         }
 
@@ -81,8 +81,8 @@ public class TestOrderByRewrite  {
     private void helpCheckExpressionsSymbols(OrderBy langObj,
                                              String[] functionsNames) {
     	int expCount = 0;
-        for (Iterator<SingleElementSymbol> i = langObj.getSortKeys().iterator(); i.hasNext();) {
-        	SingleElementSymbol ses = i.next();
+        for (Iterator<Expression> i = langObj.getSortKeys().iterator(); i.hasNext();) {
+        	Expression ses = i.next();
             if (ses instanceof ExpressionSymbol) {
                 assertEquals("Expression Symbols does not match: ", functionsNames[expCount++], ses.toString()); //$NON-NLS-1$                        		
             }
@@ -117,7 +117,7 @@ public class TestOrderByRewrite  {
             new String[] { "pm1.g1.e3", "pm1.g1.e2", "pm1.g1.e1", "pm1.g1.e2" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         
         helpCheckExpressionsSymbols(resolvedQuery.getOrderBy(),
-            new String[] {"concat(e3, 'x')", "concat(e2, '5')"}); //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] {"concat(convert(e3, string), 'x')", "concat(convert(e2, string), '5')"}); //$NON-NLS-1$ //$NON-NLS-2$
     }
  
     @Test public void testNumberedOrderBy1_3() throws Exception {
@@ -127,7 +127,7 @@ public class TestOrderByRewrite  {
             new String[] { "pm1.g1.e3", "pm1.g1.e2", "pm1.g1.e1", "pm1.g1.e2" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         
         helpCheckExpressionsSymbols(resolvedQuery.getOrderBy(),
-            new String[] {"concat(e2, '5')", "AVG(e2)"}); //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] {"concat(convert(e2, string), '5')", "AVG(e2)"}); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testNumberedOrderBy1_4() throws Exception {

@@ -991,7 +991,7 @@ public class TestProcedureProcessor {
 
         helpTestProcessFailure(plan,
                                dataMgr,
-                               "Couldn't execute the dynamic SQL command \"EXECUTE 'EXEC pm1.sq2(''First'')' AS e1 string, e2 integer\" with the SQL statement \"'EXEC pm1.sq2(''First'')'\" due to: There is a recursive invocation of group 'PM1.SQ2'. Please correct the SQL.", metadata); //$NON-NLS-1$
+                               "Couldn't execute the dynamic SQL command \"EXECUTE 'EXEC pm1.sq2(''First'')' AS e1 string, e2 integer\" with the SQL statement \"'EXEC pm1.sq2(''First'')'\" due to: There is a recursive invocation of group 'pm1.sq2'. Please correct the SQL.", metadata); //$NON-NLS-1$
     }
     
     @Test public void testDynamicCommandIncorrectProjectSymbolCount() throws Exception {
@@ -1310,7 +1310,7 @@ public class TestProcedureProcessor {
         StringBuffer procedure = new StringBuffer("CREATE VIRTUAL PROCEDURE \n"); //$NON-NLS-1$
         procedure.append("BEGIN\n"); //$NON-NLS-1$
         procedure.append("create local temporary table t1 (e1 integer);\n"); //$NON-NLS-1$
-        procedure.append("create local temporary table t1 (e1 integer);\n"); //$NON-NLS-1$
+        procedure.append("create local temporary table T1 (e1 integer);\n"); //$NON-NLS-1$
         procedure.append("SELECT e1 from t1;\n"); //$NON-NLS-1$
         procedure.append("END"); //$NON-NLS-1$
         

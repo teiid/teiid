@@ -1713,7 +1713,7 @@ Into into(ParseInfo info) :
 Select select(ParseInfo info) :
 {
 	boolean isDistinct = false;		// unless DISTINCT keyword in SELECT
-	SelectSymbol symbol = null;
+	Expression symbol = null;
 	Select select = new Select();
 }
 {
@@ -1736,9 +1736,9 @@ Select select(ParseInfo info) :
 	}
 }
 
-SelectSymbol selectSymbol(ParseInfo info) :
+Expression selectSymbol(ParseInfo info) :
 {
-	SelectSymbol symbol = null;	
+	Expression symbol = null;	
 }
 {
 	(
@@ -1751,7 +1751,7 @@ SelectSymbol selectSymbol(ParseInfo info) :
 	}
 }
 
-SingleElementSymbol selectExpression(ParseInfo info) :
+Expression selectExpression(ParseInfo info) :
 {
 	Expression expression = null;
     String alias = null;
@@ -1763,18 +1763,11 @@ SingleElementSymbol selectExpression(ParseInfo info) :
 		[[<AS>] alias=id() ]
 	)
 	{		
-		SingleElementSymbol es = null;
-		if(!(expression instanceof SingleElementSymbol)) {
-			String functionName = generateFunctionName(info, null);
-			es = new ExpressionSymbol(functionName, expression);
-		} else {
-		    es = (SingleElementSymbol)expression;
-		}
 		if(alias != null) {
 			alias = validateAlias(alias); 
-			return new AliasSymbol(alias, es);
+			return new AliasSymbol(alias, expression);
 		}
-		return es;
+		return expression;
 	}
 }
 
@@ -1825,8 +1818,7 @@ AggregateSymbol orderedAgg(ParseInfo info) :
 	condition = filterClause(info)
 	{
 		String aggName = t.image.toUpperCase();
-		String name = generateFunctionName(info, aggName);
-		AggregateSymbol	agg = new AggregateSymbol(name, aggName, false, expression);
+		AggregateSymbol	agg = new AggregateSymbol(aggName, aggName, false, expression);
 		agg.setOrderBy(orderBy);
 		agg.setCondition(condition);
 		return agg;
@@ -1884,8 +1876,7 @@ AggregateSymbol textAgg(ParseInfo info) :
 		tf.setIncludeHeader(header);
 		tf.setExpressions(expressions);
 		tf.setEncoding(encoding);
-        String name = generateFunctionName(info, "TEXTAGG");
-		AggregateSymbol agg = new AggregateSymbol(name, "TEXTAGG", false, tf);
+		AggregateSymbol agg = new AggregateSymbol("TEXTAGG", "TEXTAGG", false, tf);
 		agg.setOrderBy(orderBy);
 		agg.setCondition(condition);
 		return agg;		
@@ -1927,13 +1918,12 @@ AggregateSymbol aggregateSymbol(ParseInfo info) :
 	)
 	{
 		func = func.toUpperCase();
-		String name = generateFunctionName(info, func);
 		if(starToken == null) { 
 			// Aggregate
-			agg = new AggregateSymbol(name, func, isDistinct, expression);
+			agg = new AggregateSymbol(func, func, isDistinct, expression);
 		} else {
 			// COUNT(*)			
-			agg = new AggregateSymbol(name, func, false, null);
+			agg = new AggregateSymbol(func, func, false, null);
 		}
 		agg.setCondition(condition);
 		return agg;
@@ -2976,7 +2966,7 @@ OrderBy orderby(ParseInfo info) :
 
 OrderByItem sortSpecification(ParseInfo info) :
 {
-    SingleElementSymbol ex = null;
+    Expression ex = null;
     boolean ascending = true;
     String nullOrdering = null;    
 }
@@ -2993,7 +2983,7 @@ OrderByItem sortSpecification(ParseInfo info) :
 	}
 }
 
-SingleElementSymbol sortKey(ParseInfo info) :
+Expression sortKey(ParseInfo info) :
 {
     Expression ex = null;
 }
@@ -3012,11 +3002,7 @@ SingleElementSymbol sortKey(ParseInfo info) :
             	throw new ParseException(QueryPlugin.Util.getString("SQLParser.non_position_constant", ex)); //$NON-NLS-1$
             }
         } 
-        if(ex instanceof ElementSymbol) {
-            return (ElementSymbol)ex;
-        } 
-        String exprName = generateFunctionName(info, null);
-        return new ExpressionSymbol(exprName, ex);
+        return ex;
     }
 }
 
@@ -3380,10 +3366,7 @@ Expression windowSpecification(Expression agg, ParseInfo info) :
     [orderBy = orderby(info)]
     <RPAREN>
     {
-        String aggName = "win_" + ((AggregateSymbol)agg).getName();
-		String name = generateFunctionName(info, aggName);
-        
-    	WindowFunction result = new WindowFunction(aggName);
+    	WindowFunction result = new WindowFunction();
     	WindowSpecification ws = new WindowSpecification();
     	result.setFunction((AggregateSymbol)agg);
     	ws.setPartition(partitionList);

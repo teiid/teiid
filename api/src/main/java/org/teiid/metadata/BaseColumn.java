@@ -123,7 +123,7 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
 	}
 
 	public void setRuntimeType(String string) {
-		runtimeType = string;
+		runtimeType = DataTypeManager.getCanonicalString(string);
 	}
 
 	public void setDatatypeUUID(String string) {

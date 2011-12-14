@@ -45,7 +45,7 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.util.CommandContext;
 
@@ -167,11 +167,11 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
         }
 	}
     
-    public static List<SingleElementSymbol> createExpressionSymbols(List<? extends Expression> expressions) {
-        List<SingleElementSymbol> result = new ArrayList<SingleElementSymbol>();
+    public static List<Expression> createExpressionSymbols(List<? extends Expression> expressions) {
+        List<Expression> result = new ArrayList<Expression>();
         for (Expression expression : expressions) {
-            if (expression instanceof SingleElementSymbol) {
-                result.add((SingleElementSymbol)expression);
+            if (expression instanceof Symbol) {
+                result.add(expression);
                 continue;
             } 
             result.add(new ExpressionSymbol("expr", expression)); //$NON-NLS-1$

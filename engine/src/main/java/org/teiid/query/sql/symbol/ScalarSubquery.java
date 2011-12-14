@@ -78,13 +78,6 @@ public class ScalarSubquery implements Expression, SubqueryContainer<QueryComman
     }
 
     /**
-     * @see org.teiid.query.sql.symbol.Expression#isResolved()
-     */
-    public boolean isResolved() {
-        return (this.getType() != null);
-    }
-
-    /**
      * @see org.teiid.query.sql.symbol.Expression#getType()
      */
     public Class<?> getType() {

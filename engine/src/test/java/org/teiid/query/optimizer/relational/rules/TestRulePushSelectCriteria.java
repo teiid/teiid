@@ -46,7 +46,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
@@ -77,7 +77,7 @@ public class TestRulePushSelectCriteria {
     	PlanNode child = p.generatePlan(subCommand, false);
     	PlanNode sourceNode = NodeEditor.findNodePreOrder(root, NodeConstants.Types.SOURCE);
     	sourceNode.addFirstChild(child);
-        sourceNode.setProperty(NodeConstants.Info.SYMBOL_MAP, SymbolMap.createSymbolMap(sourceNode.getGroups().iterator().next(), (List<SingleElementSymbol>)child.getFirstChild().getProperty(Info.PROJECT_COLS), metadata));
+        sourceNode.setProperty(NodeConstants.Info.SYMBOL_MAP, SymbolMap.createSymbolMap(sourceNode.getGroups().iterator().next(), (List<Expression>)child.getFirstChild().getProperty(Info.PROJECT_COLS), metadata));
     	//add a dummy access node
         PlanNode accessNode = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
         accessNode.addGroups(child.getFirstChild().getGroups());

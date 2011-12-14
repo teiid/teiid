@@ -24,7 +24,6 @@ package org.teiid.query.resolver.command;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -57,7 +56,7 @@ import org.teiid.query.sql.proc.*;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 
@@ -84,7 +83,7 @@ public class UpdateProcedureResolver implements CommandResolver {
         
         List<ElementSymbol> symbols = new LinkedList<ElementSymbol>();
         
-        String countVar = ProcedureReservedWords.VARIABLES + ElementSymbol.SEPARATOR + ProcedureReservedWords.ROWCOUNT;
+        String countVar = ProcedureReservedWords.VARIABLES + Symbol.SEPARATOR + ProcedureReservedWords.ROWCOUNT;
         ElementSymbol updateCount = new ElementSymbol(countVar);
         updateCount.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         symbols.add(updateCount);
@@ -99,12 +98,12 @@ public class UpdateProcedureResolver implements CommandResolver {
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving block", block}); //$NON-NLS-1$
         
         //create a new variable and metadata context for this block so that discovered metadata is not visible else where
-        TempMetadataStore store = new TempMetadataStore(new HashMap(metadata.getMetadataStore().getData()));
+        TempMetadataStore store = metadata.getMetadataStore().clone();
         metadata = new TempMetadataAdapter(metadata.getMetadata(), store);
         externalGroups = new GroupContext(externalGroups, null);
         
         //create a new variables group for this block
-        GroupSymbol variables = ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, store, externalGroups, new LinkedList<SingleElementSymbol>());
+        GroupSymbol variables = ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, store, externalGroups, new LinkedList<Expression>());
         
         for (Statement statement : block.getStatements()) {
             resolveStatement(command, statement, externalGroups, variables, metadata);
@@ -245,10 +244,10 @@ public class UpdateProcedureResolver implements CommandResolver {
 	        	}
                 Command cmd = loopStmt.getCommand();
                 resolveEmbeddedCommand(metadata, externalGroups, cmd);
-                List<SingleElementSymbol> symbols = cmd.getProjectedSymbols();
+                List<Expression> symbols = cmd.getProjectedSymbols();
                 
                 //add the loop cursor group into its own context
-                TempMetadataStore store = new TempMetadataStore(new HashMap(metadata.getMetadataStore().getData()));
+                TempMetadataStore store = metadata.getMetadataStore().clone();
                 metadata = new TempMetadataAdapter(metadata.getMetadata(), store);
                 externalGroups = new GroupContext(externalGroups, null);
                 
@@ -272,7 +271,7 @@ public class UpdateProcedureResolver implements CommandResolver {
     private TempMetadataStore resolveEmbeddedCommand(TempMetadataAdapter metadata, GroupContext groupContext,
                                 Command cmd) throws TeiidComponentException,
                                             QueryResolverException {
-        QueryResolver.setChildMetadata(cmd, metadata.getMetadataStore().getData(), groupContext);
+        QueryResolver.setChildMetadata(cmd, metadata.getMetadataStore(), groupContext);
         
         return QueryResolver.resolveCommand(cmd, metadata.getMetadata());
     }
@@ -286,7 +285,7 @@ public class UpdateProcedureResolver implements CommandResolver {
             variable.setGroupSymbol(new GroupSymbol(ProcedureReservedWords.VARIABLES));
             variable.setOutputName(outputName);
         } else {
-        	if (gs.getSchema() != null || !gs.getShortCanonicalName().equals(ProcedureReservedWords.VARIABLES)) {
+        	if (gs.getSchema() != null || !gs.getShortName().equalsIgnoreCase(ProcedureReservedWords.VARIABLES)) {
                 handleUnresolvableDeclaration(variable, QueryPlugin.Util.getString("ERR.015.010.0031", new Object[]{ProcedureReservedWords.VARIABLES, variable})); //$NON-NLS-1$
             }
         }

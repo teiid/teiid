@@ -5803,14 +5803,14 @@ public class TestProcessor {
             Arrays.asList(new Object[] { "2", new Integer(2), new Integer(6) }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "3", new Integer(3), new Integer(7) }), //$NON-NLS-1$
         };        
-        dataManager.addData("SELECT bqt1.smalla.stringkey, bqt1.smalla.intkey, bqt1.smalla.intnum FROM bqt1.smalla", data1);  //$NON-NLS-1$
+        dataManager.addData("SELECT BQT1.SmallA.stringkey, BQT1.SmallA.intkey, BQT1.SmallA.intnum FROM BQT1.SmallA", data1);  //$NON-NLS-1$
 
         List[] data2 = new List[] {
             Arrays.asList(new Object[] { "1" }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "2" }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "3" }), //$NON-NLS-1$
         };        
-        dataManager.addData("SELECT bqt2.mediumb.stringkey FROM bqt2.mediumb", data2);  //$NON-NLS-1$
+        dataManager.addData("SELECT BQT2.MediumB.stringkey FROM BQT2.MediumB", data2);  //$NON-NLS-1$
 
         // Run query
         List[] expectedResults = new List[] { 
@@ -6195,9 +6195,9 @@ public class TestProcessor {
          
         // Construct data manager with data  
         HardcodedDataManager dataManager = new HardcodedDataManager();  
-        dataManager.addData("SELECT g_0.intkey, g_0.intnum FROM bqt2.smalla AS g_0",  //$NON-NLS-1$ 
+        dataManager.addData("SELECT g_0.intkey, g_0.intnum FROM BQT2.SmallA AS g_0",  //$NON-NLS-1$ 
                             new List[] { Arrays.asList(new Object[] { new Integer(1), new Integer(1) })}); 
-        dataManager.addData("SELECT g_1.intnum AS c_0, 1 AS c_1 FROM bqt1.smalla AS g_1 UNION ALL SELECT g_0.IntKey AS c_0, g_0.IntNum AS c_1 FROM bqt1.smalla AS g_0",  //$NON-NLS-1$ 
+        dataManager.addData("SELECT g_1.intnum AS c_0, 1 AS c_1 FROM BQT1.SmallA AS g_1 UNION ALL SELECT g_0.IntKey AS c_0, g_0.IntNum AS c_1 FROM BQT1.SmallA AS g_0",  //$NON-NLS-1$ 
                 new List[] { Arrays.asList(new Object[] { new Integer(1), new Integer(1) }), 
                                  Arrays.asList(new Object[] { new Integer(1), new Integer(1) })}); 
         helpProcess(plan, dataManager, expected);  
@@ -7279,7 +7279,7 @@ public class TestProcessor {
     }
     
     @Test public void testImplicitAggregateWithInlineView() {
-        String sql = "SELECT * FROM (SELECT b.count, enterprise_id FROM (SELECT COUNT(*), 2 AS enterprise_id FROM (SELECT 'A Name' AS Name, 1 AS enterprise_id) c ) b ) a WHERE enterprise_id = 1"; //$NON-NLS-1$
+        String sql = "SELECT * FROM (SELECT b.count, enterprise_id FROM (SELECT COUNT(*) as count, 2 AS enterprise_id FROM (SELECT 'A Name' AS Name, 1 AS enterprise_id) c ) b ) a WHERE enterprise_id = 1"; //$NON-NLS-1$
         
         List[] expected = new List[] {};    
     

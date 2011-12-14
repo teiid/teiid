@@ -29,25 +29,15 @@ import java.util.Map.Entry;
 
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.OrderByItem;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.lang.SubqueryCompareCriteria;
-import org.teiid.query.sql.lang.SubqueryFromClause;
-import org.teiid.query.sql.lang.SubquerySetCriteria;
-import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.util.SymbolMap;
 
 
@@ -68,7 +58,7 @@ public class AliasGenerator extends PreOrderNavigator {
             
             Map<String, Map<String, String>> elementMap = new HashMap<String, Map<String, String>>();
             Map<String, String> groupNames = new HashMap<String, String>();
-            Map<SingleElementSymbol, String> currentSymbols;
+            Map<Expression, String> currentSymbols;
             
             boolean aliasColumns = false;
             
@@ -76,7 +66,7 @@ public class AliasGenerator extends PreOrderNavigator {
                 this.parent = parent;
             }
             
-            public String getElementName(SingleElementSymbol symbol, boolean renameGroup) {
+            public String getElementName(Expression symbol, boolean renameGroup) {
             	String name = null;
             	if (currentSymbols != null) {
             		name = currentSymbols.get(symbol);
@@ -91,9 +81,9 @@ public class AliasGenerator extends PreOrderNavigator {
             		return null;
             	}
             	ElementSymbol element = (ElementSymbol)symbol;
-            	Map<String, String> elements = this.elementMap.get(element.getGroupSymbol().getCanonicalName());
+            	Map<String, String> elements = this.elementMap.get(element.getGroupSymbol().getName());
             	if (elements != null) {
-            		name = elements.get(element.getShortCanonicalName());
+            		name = elements.get(element.getShortName());
             		if (name != null) {
             			if (renameGroup) {
             				renameGroup(element.getGroupSymbol());
@@ -116,7 +106,7 @@ public class AliasGenerator extends PreOrderNavigator {
             public void renameGroup(GroupSymbol obj) {
                 if (aliasGroups) {
                     String definition = obj.getNonCorrelationName();
-                    String newAlias = getGroupName(obj.getCanonicalName());
+                    String newAlias = getGroupName(obj.getName());
                     if (newAlias == null) {
                         return;
                     }
@@ -159,10 +149,10 @@ public class AliasGenerator extends PreOrderNavigator {
             String newName = namingContext.getElementName(obj, true);
             
             if (newName == null) {
-                newName = ElementSymbol.getShortName(obj.getOutputName());
+                newName = Symbol.getShortName(obj.getOutputName());
             }
             
-            obj.setOutputName(group.getOutputName() + ElementSymbol.SEPARATOR + newName);
+            obj.setOutputName(group.getOutputName() + Symbol.SEPARATOR + newName);
             obj.setDisplayMode(ElementSymbol.DisplayMode.OUTPUT_NAME);
         }
         
@@ -216,36 +206,29 @@ public class AliasGenerator extends PreOrderNavigator {
     
     public void visit(Select obj) {
         super.visit(obj);
-        List selectSymbols = obj.getSymbols();
-        HashMap<SingleElementSymbol, String> symbols = new HashMap<SingleElementSymbol, String>(selectSymbols.size());                
+        List<Expression> selectSymbols = obj.getSymbols();
+        HashMap<Expression, String> symbols = new HashMap<Expression, String>(selectSymbols.size());                
         for (int i = 0; i < selectSymbols.size(); i++) {
-            SingleElementSymbol symbol = (SingleElementSymbol)selectSymbols.get(i);
+            Expression symbol = selectSymbols.get(i);
 
             boolean needsAlias = visitor.namingContext.aliasColumns;
             
             String newAlias = "c_" + i; //$NON-NLS-1$
             
-            Expression expr = SymbolMap.getExpression(symbol);
+            Expression newSymbol = SymbolMap.getExpression(symbol);
             
-            SingleElementSymbol newSymbol = symbol;
-            
-            if (!(expr instanceof SingleElementSymbol)) {
-                newSymbol = new ExpressionSymbol(newSymbol.getShortName(), expr);
-            } else if (expr instanceof ElementSymbol) {
-                newSymbol = (ElementSymbol)expr;
+            if (newSymbol instanceof ElementSymbol) {
             	if (!needsAlias) {
-            		newAlias = newSymbol.getOutputName();
+            		newAlias = ((ElementSymbol)newSymbol).getOutputName();
             	} else {
-                    needsAlias &= needsAlias(newAlias, (ElementSymbol)expr);
+                    needsAlias &= needsAlias(newAlias, (ElementSymbol)newSymbol);
                 }
-            } else {
-                newSymbol = (SingleElementSymbol)expr; 
             }
                         
             symbols.put(symbol, newAlias);
             if (visitor.namingContext.aliasColumns && needsAlias) {
-                newSymbol = new AliasSymbol(symbol.getShortName(), newSymbol);
-                newSymbol.setOutputName(newAlias);
+                newSymbol = new AliasSymbol(Symbol.getShortName(symbol), newSymbol);
+                ((AliasSymbol)newSymbol).setOutputName(newAlias);
             } 
             selectSymbols.set(i, newSymbol);
         }
@@ -277,10 +260,10 @@ public class AliasGenerator extends PreOrderNavigator {
         visitor.createChildNamingContext(true);
         obj.getCommand().acceptVisitor(this);
         Map<String, String> viewGroup = new HashMap<String, String>();
-        for (Entry<SingleElementSymbol, String> entry : visitor.namingContext.currentSymbols.entrySet()) {
-        	viewGroup.put(entry.getKey().getShortCanonicalName(), entry.getValue());
+        for (Entry<Expression, String> entry : visitor.namingContext.currentSymbols.entrySet()) {
+        	viewGroup.put(Symbol.getShortName(entry.getKey()), entry.getValue());
         }
-        visitor.namingContext.parent.elementMap.put(obj.getName().toUpperCase(), viewGroup);
+        visitor.namingContext.parent.elementMap.put(obj.getName(), viewGroup);
         visitor.removeChildNamingContext();
         obj.getGroupSymbol().setOutputName(recontextGroup(obj.getGroupSymbol(), true));
     }
@@ -304,7 +287,7 @@ public class AliasGenerator extends PreOrderNavigator {
         } else {
             newAlias = "g_" + groupIndex++; //$NON-NLS-1$
         }
-        visitor.namingContext.groupNames.put(symbol.getName().toUpperCase(), newAlias);
+        visitor.namingContext.groupNames.put(symbol.getName(), newAlias);
         return newAlias;
     }
     
@@ -344,31 +327,31 @@ public class AliasGenerator extends PreOrderNavigator {
     	//add/correct aliases if necessary
         for (int i = 0; i < obj.getVariableCount(); i++) {
             OrderByItem item = obj.getOrderByItems().get(i);
-            SingleElementSymbol element = item.getSymbol();
+            Expression element = item.getSymbol();
             if (item.isUnrelated()) {
             	visitNode(element);
             	continue;
             }
             String name = visitor.namingContext.getElementName(element, false);
             boolean needsAlias = visitor.namingContext.aliasColumns;
-            if (name != null) {
-	            
-	            Expression expr = SymbolMap.getExpression(element);
-	                        
-	            if (!(expr instanceof SingleElementSymbol)) {
-	                expr = new ExpressionSymbol(element.getShortName(), expr);
-	            } else if (expr instanceof ElementSymbol) {
-	            	needsAlias &= needsAlias(name, (ElementSymbol)expr);
-	            } 
-	                        
-	            if (needsAlias) {
-	                element = new AliasSymbol(element.getShortName(), (SingleElementSymbol)expr);
-	            } else if (expr instanceof ElementSymbol) {
-	            	element = (ElementSymbol)expr;
-	            	visitNode(element);
-	            }
-	            item.setSymbol(element);
-	            element.setOutputName(name);
+            if (name == null) {
+	            continue;
+            }
+            Expression expr = SymbolMap.getExpression(element);
+                        
+            if (expr instanceof ElementSymbol) {
+            	needsAlias &= needsAlias(name, (ElementSymbol)expr);
+            } 
+                        
+            if (needsAlias) {
+                element = new AliasSymbol(Symbol.getShortName(element), expr);
+            } else if (expr instanceof ElementSymbol) {
+            	element = expr;
+            	visitNode(element);
+            }
+            item.setSymbol(element);
+            if (element instanceof Symbol) {
+            	((Symbol)element).setOutputName(name);
             }
         }
     }

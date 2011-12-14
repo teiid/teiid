@@ -105,10 +105,6 @@ public class MappingAttribute extends MappingNode {
         return "@" + super.getPathName(); //$NON-NLS-1$
     }
     
-    public String getCanonicalName() {
-        return getFullyQualifiedName().toUpperCase();
-    }
-
     /**
      * Namespace prefix
      * @return
@@ -185,4 +181,15 @@ public class MappingAttribute extends MappingNode {
         }
         return super.getSourceNode();
     }    
+    
+    public String getType() {
+        return (String)getProperty(MappingNodeConstants.Properties.BUILT_IN_TYPE);
+    }
+    
+    public MappingAttribute setType(String type) {
+        if (type != null) {
+            setProperty(MappingNodeConstants.Properties.BUILT_IN_TYPE, type);
+        }
+        return this;
+    }
 }

@@ -34,7 +34,8 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.util.VariableContext;
 
 
@@ -44,7 +45,7 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
     // the loop block
     private Program loopProgram;
     
-    private List elements;
+    private List<ElementSymbol> elements;
     private String label;
     
     public LoopInstruction(Program loopProgram, String rsName, ProcessorPlan plan, String label) {
@@ -64,20 +65,19 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
     }
 
     public void process(ProcedurePlan procEnv) throws TeiidComponentException {
-        List currentRow = procEnv.getCurrentRow(rsName); 
+        List<?> currentRow = procEnv.getCurrentRow(rsName); 
         VariableContext varContext = procEnv.getCurrentVariableContext();
         //set results to the variable context(the cursor.element is treated as variable)
         if(this.elements == null){
             List schema = procEnv.getSchema(rsName);
-            elements = new ArrayList(schema.size());
+            elements = new ArrayList<ElementSymbol>(schema.size());
             for(int i=0; i< schema.size(); i++){
-                // defect 13432 - schema may contain AliasSymbols. Cast to SingleElementSymbol instead of ElementSymbol
-                SingleElementSymbol element = (SingleElementSymbol)schema.get(i);
-                elements.add(new ElementSymbol(rsName + "." + element.getShortName()));              //$NON-NLS-1$
+                Expression element = (Expression)schema.get(i);
+                elements.add(new ElementSymbol(rsName + "." + Symbol.getShortName(element)));              //$NON-NLS-1$
             }
         }
         for(int i=0; i< elements.size(); i++){
-            varContext.setValue((ElementSymbol)elements.get(i), currentRow.get(i));               
+            varContext.setValue(elements.get(i), currentRow.get(i));               
         }
     }
     

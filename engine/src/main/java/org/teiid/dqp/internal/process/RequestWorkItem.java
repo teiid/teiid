@@ -76,7 +76,8 @@ import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.util.CommandContext;
 
 public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunnable {
@@ -696,13 +697,13 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         return result;
 	}
     
-    public ResultsMessage createResultsMessage(List<? extends List<?>> batch, List columnSymbols) {
+    public ResultsMessage createResultsMessage(List<? extends List<?>> batch, List<? extends Expression> columnSymbols) {
         String[] columnNames = new String[columnSymbols.size()];
         String[] dataTypes = new String[columnSymbols.size()];
 
         for(int i=0; i<columnSymbols.size(); i++) {
-            SingleElementSymbol symbol = (SingleElementSymbol) columnSymbols.get(i);
-            columnNames[i] = SingleElementSymbol.getShortName(symbol.getOutputName());
+            Expression symbol = columnSymbols.get(i);
+            columnNames[i] = Symbol.getShortName(Symbol.getOutputName(symbol));
             dataTypes[i] = DataTypeManager.getDataTypeName(symbol.getType());
         }
         ResultsMessage result = new ResultsMessage(batch, columnNames, dataTypes);
