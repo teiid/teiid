@@ -1716,24 +1716,16 @@
         <tbody>
           <row>
             <entry>
-              <para>DECODESTRING(x, y)</para>
+              <para>DECODESTRING(x, y [, z])</para>
             </entry>
             <entry>
               <para>Decode column x using string of value pairs y
-                and return the decoded column as a string</para>
-            </entry>
-            <entry>
-              <para>all string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>DECODESTRING(x, y, z)</para>
-            </entry>
-            <entry>
-              <para>Decode column x using string of value pairs y
-                with delimiter z and return the decoded column as a string
+                with optional delimiter z and return the decoded column as a string.
+                If a delimiter is not specified , is used.
+                y has the formate SearchDelimResultDelimSearchDelimResult[DelimDefault]
+                Returns Default if specified or x if there are no matches.
               </para>
+              <warning><para>Deprecated. Use a CASE expression instead.</para></warning>
             </entry>
             <entry>
               <para>all string</para>
@@ -1741,24 +1733,16 @@
           </row>
           <row>
             <entry>
-              <para>DECODEINTEGER(x, y)</para>
+              <para>DECODEINTEGER(x, y [, z])</para>
             </entry>
             <entry>
               <para>Decode column x using string of value pairs y
-                and return the decoded column as an integer</para>
-            </entry>
-            <entry>
-              <para>all string parameters, return integer</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>DECODEINTEGER(x,y,z)</para>
-            </entry>
-            <entry>
-              <para>Decode column x using string of value pairs y
-                with delimiter z and return the decoded column as an
-                integer</para>
+                with optional delimiter z and return the decoded column as an
+                integer. If a delimiter is not specified , is used.
+                y has the formate SearchDelimResultDelimSearchDelimResult[DelimDefault]
+                Returns Default if specified or x if there are no matches.
+                </para>
+              <warning><para>Deprecated. Use a CASE expression instead.</para></warning>
             </entry>
             <entry>
               <para>all string parameters, return integer</para>

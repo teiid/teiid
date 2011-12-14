@@ -53,6 +53,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Transform;
+import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants;
@@ -2533,7 +2534,10 @@ public class QueryRewriter {
             newCaseExpr.setElseExpression(exprs[0]);
         }
         
-        newCaseExpr.setType(function.getType());
+        newCaseExpr.setType(DefaultDataClasses.STRING);
+        if (function.getName().equalsIgnoreCase(FunctionLibrary.DECODEINTEGER)) {
+        	return ResolverUtil.getConversion(newCaseExpr, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, false, metadata.getFunctionLibrary());
+        }
         return newCaseExpr;
 	}
 	

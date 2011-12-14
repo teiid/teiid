@@ -1755,23 +1755,23 @@ public class TestQueryRewriter {
     }
     
     @Test public void testDefect16879_3(){
-    	helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b') FROM pm1.g1", "SELECT convert(CASE WHEN e1 = 'a' THEN 'b' ELSE e1 END, integer) FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testDefect16879_4(){
-    	helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b, c, d') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' WHEN e1 = 'c' THEN 'd' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b, c, d') FROM pm1.g1", "SELECT convert(CASE WHEN e1 = 'a' THEN 'b' WHEN e1 = 'c' THEN 'd' ELSE e1 END, integer) FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testDefect16879_5(){
-        helpTestRewriteCommand("SELECT decodeinteger(e1, 'null, b, c, d') FROM pm1.g1", "SELECT CASE WHEN e1 IS NULL THEN 'b' WHEN e1 = 'c' THEN 'd' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCommand("SELECT decodeinteger(e1, 'null, b, c, d') FROM pm1.g1", "SELECT convert(CASE WHEN e1 IS NULL THEN 'b' WHEN e1 = 'c' THEN 'd' ELSE e1 END, integer) FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testDefect16879_6(){
-        helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b, null, d') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' WHEN e1 IS NULL THEN 'd' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b, null, d') FROM pm1.g1", "SELECT convert(CASE WHEN e1 = 'a' THEN 'b' WHEN e1 IS NULL THEN 'd' ELSE e1 END, integer) FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testDefect16879_7(){
-        helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b, null, d, e') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' WHEN e1 IS NULL THEN 'd' ELSE 'e' END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b, null, d, e') FROM pm1.g1", "SELECT convert(CASE WHEN e1 = 'a' THEN 'b' WHEN e1 IS NULL THEN 'd' ELSE 'e' END, integer) FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testCaseExpressionThatResolvesToNull() {
