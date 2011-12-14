@@ -22,6 +22,9 @@
 
 package org.teiid.translator.jdbc.mysql;
 
+import java.sql.Blob;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,6 +33,7 @@ import org.teiid.language.Function;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.FunctionModifier;
 
 @Translator(name="mysql5", description="A translator for open source MySQL5 Database")
@@ -75,5 +79,15 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
     public String getLikeRegexString() {
     	return "REGEXP"; //$NON-NLS-1$
     }
-	
+    
+    @Override
+    public Object retrieveValue(ResultSet results, int columnIndex,
+    		Class<?> expectedType) throws SQLException {
+    	Object result = super.retrieveValue(results, columnIndex, expectedType);
+    	if (expectedType == TypeFacility.RUNTIME_TYPES.STRING && result instanceof Blob) {
+    		return results.getString(columnIndex);
+    	}
+    	return result;
+    }
+    
 }
