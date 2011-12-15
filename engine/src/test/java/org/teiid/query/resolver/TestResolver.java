@@ -2998,5 +2998,9 @@ public class TestResolver {
     	XMLQuery ex = (XMLQuery) SymbolMap.getExpression((Expression) q.getSelect().getSymbols().get(0));
     	assertEquals(DataTypeManager.DefaultDataClasses.XML, ex.getPassing().get(0).getExpression().getType());
     }
+    
+    @Test public void testImplicitTempTableWithExplicitColumns() {
+    	helpResolve("insert into #temp(x, y) select e1, e2 from pm1.g1");
+    }
 
 }

@@ -120,11 +120,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         resolveTypes(insert, metadata, values, usingQuery);
         
         if (!insert.getGroup().isResolved()) { //define the implicit temp group
-            if(insert.getQueryExpression() != null) {
-                ResolverUtil.resolveImplicitTempGroup(metadata, insert.getGroup(), insert.getQueryExpression().getProjectedSymbols());
-            }else {
-                ResolverUtil.resolveImplicitTempGroup(metadata, insert.getGroup(), insert.getVariables());
-            }
+            ResolverUtil.resolveImplicitTempGroup(metadata, insert.getGroup(), insert.getVariables());
             resolveVariables(metadata, insert, groups);
             
             //ensure that the types match
