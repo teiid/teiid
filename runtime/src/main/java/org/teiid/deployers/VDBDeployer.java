@@ -176,13 +176,23 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map = new IdentityHashMap<Translator, ExecutionFactory<Object, Object>>();
 		
 		for (Model model:deployment.getModels()) {
-			for (String source:model.getSourceNames()) {
-				if (cmr.getConnectorManager(source) != null) {
+			List<String> sourceNames = model.getSourceNames();
+			if (sourceNames.size() != new HashSet<String>(sourceNames).size()) {
+				throw new DeploymentException(RuntimePlugin.Util.getString("duplicate_source_name", model.getName(), deployment.getName(), deployment.getVersion())); //$NON-NLS-1$
+			}
+			for (String source:sourceNames) {
+				ConnectorManager cm = cmr.getConnectorManager(source);
+				String name = model.getSourceTranslatorName(source);
+				String connection = model.getSourceConnectionJndiName(source);
+				if (cm != null) {
+					if (!cm.getTranslatorName().equals(name)
+							|| !cm.getConnectionName().equals(connection)) {
+						throw new DeploymentException(RuntimePlugin.Util.getString("source_name_mismatch", source, deployment.getName(), deployment.getVersion())); //$NON-NLS-1$
+					}
 					continue;
 				}
 
-				String name = model.getSourceTranslatorName(source);
-				ConnectorManager cm = new ConnectorManager(name, model.getSourceConnectionJndiName(source));
+				cm = new ConnectorManager(name, connection);
 				ExecutionFactory<Object, Object> ef = getExecutionFactory(name, repo, deployment, map, new HashSet<String>());
 				cm.setExecutionFactory(ef);
 				cm.setModelName(model.getName());
