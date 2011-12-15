@@ -69,7 +69,7 @@ public class EvaluatableVisitor extends LanguageVisitor {
 	    
     public void visit(Function obj) {
         this.setDeterminismLevel(obj.getFunctionDescriptor().getDeterministic());
-        if (obj.getFunctionDescriptor().getPushdown() == PushDown.MUST_PUSHDOWN) {
+        if (obj.getFunctionDescriptor().getPushdown() == PushDown.MUST_PUSHDOWN || obj.getFunctionDescriptor().getDeterministic() == Determinism.NONDETERMINISTIC) {
             evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
         } else if (obj.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)
         		//TODO: if we had the context here we could plan better for non-prepared requests

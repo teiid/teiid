@@ -24,6 +24,7 @@ package org.teiid.query.tempdata;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -170,9 +171,10 @@ public class TempTableDataManager implements ProcessorDataManager {
         		Insert insert = (Insert)command;
         		TupleSource ts = insert.getTupleSource();
         		if (ts == null) {
+        			Evaluator eval = new Evaluator(Collections.emptyMap(), this, context);
         			List<Object> values = new ArrayList<Object>(insert.getValues().size());
         			for (Expression expr : (List<Expression>)insert.getValues()) {
-        				values.add(Evaluator.evaluate(expr));
+        				values.add(eval.evaluate(expr, null));
 					}
         			ts = new CollectionTupleSource(Arrays.asList(values).iterator());
         		}

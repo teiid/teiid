@@ -103,6 +103,7 @@ import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorReport;
+import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings({"nls", "unchecked"})
 public class TestProcessor {
@@ -7681,6 +7682,29 @@ public class TestProcessor {
         // Run query
         helpProcess(plan, dataManager, expected);        
     
+    }
+    
+    @Test public void testNonDeterministicPushdown() throws Exception { 
+        // Create query 
+        String sql = "SELECT RAND(), lookup('pm1.g1', 'e1', 'e2', 1) FROM pm1.g1 limit 2"; //$NON-NLS-1$
+        
+        List[] expected = new List[] { 
+            Arrays.asList(new Double(0.1), "a"),
+            Arrays.asList(new Double(0.2), "a"),
+        };    
+    
+        // Construct data manager with data
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT RAND() FROM pm1.g1", expected);
+        hdm.addData("SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1", new List<?>[] {Arrays.asList(1, "a")});
+        BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        bsc.setFunctionSupport(SourceSystemFunctions.RAND, true);
+        // Plan query
+        CommandContext cc = createCommandContext();
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
+
+        helpProcess(plan, cc, hdm, expected);
     }
     
     private static final boolean DEBUG = false;
