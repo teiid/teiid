@@ -37,6 +37,7 @@ import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
 import javax.transaction.TransactionManager;
 
+import org.infinispan.manager.CacheContainer;
 import org.jboss.as.clustering.jgroups.ChannelFactory;
 import org.jboss.as.controller.AbstractAddStepHandler;
 import org.jboss.as.controller.OperationContext;
@@ -66,8 +67,7 @@ import org.jboss.msc.value.InjectedValue;
 import org.teiid.PolicyDecider;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheConfiguration.Policy;
-import org.teiid.cache.DefaultCacheFactory;
-import org.teiid.cache.jboss.ClusterableCacheFactory;
+import org.teiid.cache.CacheFactory;
 import org.teiid.deployers.SystemVDBDeployer;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
@@ -81,7 +81,6 @@ import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.events.EventDistributorFactory;
-import org.teiid.jboss.deployers.RuntimeEngineDeployer;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataRepository;
@@ -315,21 +314,48 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	newControllers.add(target.addService(TeiidServiceNames.AUTHORIZATION_VALIDATOR, authValidatorService).install());
     	
     	// resultset cache
-    	final SessionAwareCache<CachedResults> resultsetCache = buildResultsetCache(operation);
-    	CacheService<CachedResults> resultSetService = new CacheService<CachedResults>(resultsetCache);
-    	ServiceBuilder<SessionAwareCache<CachedResults>> resultsCacheBuilder = target.addService(TeiidServiceNames.CACHE_RESULTSET, resultSetService);
-    	resultsCacheBuilder.addDependency(TeiidServiceNames.BUFFER_MGR, BufferService.class, resultSetService.bufferMgrInjector);
-    	newControllers.add(resultsCacheBuilder.install());
+    	boolean rsCache = true;
+    	if (Element.RSC_ENABLE_ATTRIBUTE.isDefined(operation) && !Element.RSC_ENABLE_ATTRIBUTE.asBoolean(operation)) {
+    		rsCache = false;
+    	}
+    		
+		String infinispanCacheContainer = null;
+    	if (Element.RSC_CONTAINER_NAME_ELEMENT.isDefined(operation)) {
+    		infinispanCacheContainer = Element.RSC_CONTAINER_NAME_ELEMENT.asString(operation);
+    	}
+
+    	String cacheName = null;
+    	if (Element.RSC_NAME_ELEMENT.isDefined(operation)) {
+    		// if null; default cache will be used
+    		cacheName = Element.RSC_NAME_ELEMENT.asString(operation);
+    	}	 
     	
-    	// prepared-plan cache
-    	final SessionAwareCache<PreparedPlan> preparedPlanCache = buildPreparedPlanCache(operation);
-    	CacheService<PreparedPlan> preparedPlanService = new CacheService<PreparedPlan>(preparedPlanCache);
+    	if (rsCache) {
+	    	ServiceName cfName = ServiceName.JBOSS.append("teiid", "infinispan-cache-factory"); //$NON-NLS-1$ //$NON-NLS-2$
+	    	CacheFactoryService cfs = new CacheFactoryService(cacheName);
+	    	ServiceBuilder<CacheFactory> cacheFactoryBuilder = target.addService(cfName, cfs);
+	    	
+	    	if (infinispanCacheContainer != null) {
+	    		cacheFactoryBuilder.addDependency(ServiceName.JBOSS.append("infinispan", infinispanCacheContainer), CacheContainer.class, cfs.cacheContainerInjector); //$NON-NLS-1$
+	    	}
+	    	newControllers.add(cacheFactoryBuilder.install());
+	    	
+	    	CacheService<CachedResults> resultSetService = new CacheService<CachedResults>(SessionAwareCache.Type.RESULTSET, buildCacheConfig(operation));
+	    	ServiceBuilder<SessionAwareCache<CachedResults>> resultsCacheBuilder = target.addService(TeiidServiceNames.CACHE_RESULTSET, resultSetService);
+	    	resultsCacheBuilder.addDependency(TeiidServiceNames.BUFFER_MGR, BufferService.class, resultSetService.bufferMgrInjector);
+	    	resultsCacheBuilder.addDependency(cfName, CacheFactory.class, resultSetService.cacheFactoryInjector);
+	    	newControllers.add(resultsCacheBuilder.install());
+    	}
+    	
+    	// prepared-plan cache (note that there is no dependency on the cache factory for 
+    	// prepared plan cache, as it is always local)
+    	CacheService<PreparedPlan> preparedPlanService = new PreparedPlanCacheService(SessionAwareCache.Type.PREPAREDPLAN, buildPreparedPlanCacheConfig(operation));
     	ServiceBuilder<SessionAwareCache<PreparedPlan>> preparedPlanCacheBuilder = target.addService(TeiidServiceNames.CACHE_PREPAREDPLAN, preparedPlanService);
     	preparedPlanCacheBuilder.addDependency(TeiidServiceNames.BUFFER_MGR, BufferService.class, preparedPlanService.bufferMgrInjector);
     	newControllers.add(preparedPlanCacheBuilder.install());
     	
     	// Query Engine
-    	final RuntimeEngineDeployer engine = buildQueryEngine(operation);
+    	final DQPCoreService engine = buildQueryEngine(operation);
     	String workManager = "default"; //$NON-NLS-1$
     	if (Element.WORKMANAGER.isDefined(operation)) {
     		workManager = Element.WORKMANAGER.asString(operation);
@@ -344,7 +370,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
         engineBuilder.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class, engine.getTranslatorRepositoryInjector());
         engineBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, engine.getVdbRepositoryInjector());
         engineBuilder.addDependency(TeiidServiceNames.AUTHORIZATION_VALIDATOR, AuthorizationValidator.class, engine.getAuthorizationValidatorInjector());
-        engineBuilder.addDependency(TeiidServiceNames.CACHE_RESULTSET, SessionAwareCache.class, engine.getResultSetCacheInjector());
+        engineBuilder.addDependency(rsCache?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.CACHE_RESULTSET, SessionAwareCache.class, engine.getResultSetCacheInjector());
         engineBuilder.addDependency(TeiidServiceNames.CACHE_PREPAREDPLAN, SessionAwareCache.class, engine.getPreparedPlanCacheInjector());
         engineBuilder.addDependency(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY, EventDistributorFactory.class, engine.getEventDistributorFactoryInjector());
         
@@ -455,7 +481,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	return bufferManger;
     }	
 
-    private SessionAwareCache<CachedResults> buildResultsetCache(ModelNode node) {
+    private CacheConfiguration buildCacheConfig(ModelNode node) {
 
     	CacheConfiguration cacheConfig = new CacheConfiguration();
     	cacheConfig.setMaxEntries(1024);
@@ -464,40 +490,15 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	cacheConfig.setLocation("resultset"); //$NON-NLS-1$
     	cacheConfig.setMaxStaleness(60);
     	
-    	if (Element.RSC_ENABLE_ATTRIBUTE.isDefined(node)) {
-    		if (!Element.RSC_ENABLE_ATTRIBUTE.asBoolean(node)) {
-    			return null;
-    		}
-    	}    	
-    	
-    	ClusterableCacheFactory cacheFactory = null;
-
-    	if (Element.RSC_CONTAINER_NAME_ELEMENT.isDefined(node)) {
-    		cacheFactory = new ClusterableCacheFactory();
-    		cacheFactory.setCacheManager(Element.RSC_CONTAINER_NAME_ELEMENT.asString(node));
-    	}
-    	else {
-    		SessionAwareCache<CachedResults> resultsetCache = new SessionAwareCache<CachedResults>(new DefaultCacheFactory(), SessionAwareCache.Type.RESULTSET, cacheConfig);
-        	return resultsetCache;    		
-    	}
-    	
-    	if (Element.RSC_NAME_ELEMENT.isDefined(node)) {
-    		cacheFactory.setResultsetCacheName(Element.RSC_NAME_ELEMENT.asString(node));
-    	}	 
-    	else {
-    		cacheFactory.setResultsetCacheName("resultset"); //$NON-NLS-1$
-    	}
-
    		if (Element.RSC_MAX_STALENESS_ELEMENT.isDefined(node)) {
     		cacheConfig.setMaxStaleness(Element.RSC_MAX_STALENESS_ELEMENT.asInt(node));
     	}
 
-   		SessionAwareCache<CachedResults> resultsetCache = new SessionAwareCache<CachedResults>(cacheFactory, SessionAwareCache.Type.RESULTSET, cacheConfig);
-    	return resultsetCache;
+   		return cacheConfig;
 	}	      
     
     
-    private SessionAwareCache<PreparedPlan> buildPreparedPlanCache(ModelNode node) {
+    private CacheConfiguration buildPreparedPlanCacheConfig(ModelNode node) {
     	CacheConfiguration cacheConfig = new CacheConfiguration();
     	if (Element.PPC_MAX_ENTRIES_ATTRIBUTE.isDefined(node)) {
     		cacheConfig.setMaxEntries(Element.PPC_MAX_ENTRIES_ATTRIBUTE.asInt(node));
@@ -516,14 +517,13 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 		cacheConfig.setType(Policy.LRU.name());
     	
     	cacheConfig.setLocation("prepared"); //$NON-NLS-1$
-    	SessionAwareCache<PreparedPlan> cache = new SessionAwareCache<PreparedPlan>(new DefaultCacheFactory(), SessionAwareCache.Type.PREPAREDPLAN, cacheConfig);
     	
-    	return cache;
+    	return cacheConfig;
 	}	    
     
     
-	private RuntimeEngineDeployer buildQueryEngine(ModelNode node) {
-		RuntimeEngineDeployer engine = new RuntimeEngineDeployer();
+	private DQPCoreService buildQueryEngine(ModelNode node) {
+		DQPCoreService engine = new DQPCoreService();
     	
     	if (Element.MAX_THREADS_ELEMENT.isDefined(node)) {
     		engine.setMaxThreads(Element.MAX_THREADS_ELEMENT.asInt(node));

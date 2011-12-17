@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.jboss.deployers;
+package org.teiid.jboss;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -53,9 +53,6 @@ import org.teiid.dqp.internal.process.TransactionServerImpl;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.TransactionService;
 import org.teiid.events.EventDistributorFactory;
-import org.teiid.jboss.IntegrationPlugin;
-import org.teiid.jboss.TeiidServiceNames;
-import org.teiid.jboss.Transport;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -63,7 +60,7 @@ import org.teiid.services.BufferServiceImpl;
 import org.teiid.vdb.runtime.VDBKey;
 
 
-public class RuntimeEngineDeployer extends DQPConfiguration implements Serializable, Service<DQPCore>  {
+public class DQPCoreService extends DQPConfiguration implements Serializable, Service<DQPCore>  {
 	private static final long serialVersionUID = -4676205340262775388L;
 		
 	private transient TransactionServerImpl transactionServerImpl = new TransactionServerImpl();
@@ -118,7 +115,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements Serializa
 		        	if (TeiidServiceNames.TRANSPORT_BASE.isParentOf(service)) {
 		        		ServiceController<?> transport = context.getController().getServiceContainer().getService(service);
 		        		if (transport != null) {
-		        			Transport t = Transport.class.cast(transport.getValue());					
+		        			TransportService t = TransportService.class.cast(transport.getValue());					
 		        			Collection<SessionMetadata> sessions = t.getActiveSessions();
 							for (SessionMetadata session:sessions) {
 								if (name.equalsIgnoreCase(session.getVDBName()) && version == session.getVDBVersion()){
@@ -130,8 +127,12 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements Serializa
 		        }
 			        
 				// dump the caches. 
-				getResultSetCacheInjector().getValue().clearForVDB(name, version);
-				getPreparedPlanCacheInjector().getValue().clearForVDB(name, version);
+		        if (getResultSetCacheInjector().getValue() != null) {
+		        	getResultSetCacheInjector().getValue().clearForVDB(name, version);
+		        }
+		        if (getPreparedPlanCacheInjector().getValue() != null) {
+		        	getPreparedPlanCacheInjector().getValue().clearForVDB(name, version);
+		        }
 			}			
 		}); 		
 

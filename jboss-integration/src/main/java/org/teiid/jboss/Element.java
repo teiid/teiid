@@ -89,9 +89,9 @@ enum Element {
 	
 	// Result set cache	
 	RESULTSET_CACHE_ELEMENT("resultset-cache"),
-	RSC_ENABLE_ATTRIBUTE("enable", "resultset-cache-enable", ModelType.BOOLEAN, false, null),
-	RSC_NAME_ELEMENT("name", "resultset-cache-name", ModelType.STRING, false, "resultset"),
-	RSC_CONTAINER_NAME_ELEMENT("container-name", "resultset-cache-container-name", ModelType.STRING, false, null),
+	RSC_ENABLE_ATTRIBUTE("enable", "resultset-cache-enable", ModelType.BOOLEAN, false, "true"),
+	RSC_NAME_ELEMENT("name", "resultset-cache-name", ModelType.STRING, false, null),
+	RSC_CONTAINER_NAME_ELEMENT("infinispan-container", "resultset-cache-infinispan-container", ModelType.STRING, false, null),
 	RSC_MAX_STALENESS_ELEMENT("max-staleness", "resultset-cache-max-staleness", ModelType.INT, false, "60"),
 	
 	//transport
@@ -113,6 +113,7 @@ enum Element {
 	PG_MAX_LOB_SIZE_ALLOWED_ELEMENT("max-lob-size-in-bytes", "pg-max-lob-size-in-bytes", ModelType.INT, false, "5242880"), //$NON-NLS-1$ //$NON-NLS-2$
 	
 	SSL_ELEMENT("ssl"),
+	SSL_ENABLE_ATTRIBUTE("enable", "ssl-enable", ModelType.BOOLEAN, false, "false"),
 	SSL_MODE_ATTRIBUTE("mode", "ssl-mode", ModelType.STRING, false, "login"),
 	SSL_AUTH_MODE_ATTRIBUTE("authentication-mode", "ssl-authentication-mode", ModelType.STRING, false, "anonymous"),
 	SSL_SSL_PROTOCOL_ATTRIBUTE("ssl-protocol", "ssl-ssl-protocol", ModelType.STRING, false, "SSLv3"),

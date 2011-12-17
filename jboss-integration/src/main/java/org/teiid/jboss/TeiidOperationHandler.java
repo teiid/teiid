@@ -84,7 +84,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 
 abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
-	List<Transport> transports = new ArrayList<Transport>();
+	List<TransportService> transports = new ArrayList<TransportService>();
 	protected VDBRepository vdbRepo;
 	protected DQPCore engine;
 	
@@ -104,7 +104,7 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
         	if (TeiidServiceNames.TRANSPORT_BASE.isParentOf(name)) {
         		ServiceController<?> transport = context.getServiceRegistry(false).getService(name);
         		if (transport != null) {
-        			this.transports.add(Transport.class.cast(transport.getValue()));
+        			this.transports.add(TransportService.class.cast(transport.getValue()));
         		}
         	}
         }
@@ -156,7 +156,7 @@ class GetActiveSessionsCount extends TeiidOperationHandler{
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
 		try {
 			int count = 0;
-			for (Transport t: this.transports) {
+			for (TransportService t: this.transports) {
 				count += t.getActiveSessionsCount();
 			}
 			context.getResult().set(count);
@@ -177,7 +177,7 @@ class ListSessions extends TeiidOperationHandler{
 	@Override
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
 		ModelNode result = context.getResult();
-		for (Transport t: this.transports) {
+		for (TransportService t: this.transports) {
 			Collection<SessionMetadata> sessions = t.getActiveSessions();
 			for (SessionMetadata session:sessions) {
 				VDBMetadataMapper.SessionMetadataMapper.INSTANCE.wrap(session, result.add());
@@ -254,7 +254,7 @@ class ListRequestsPerVDB extends TeiidOperationHandler{
 		ModelNode result = context.getResult();
 		String vdbName = operation.get(OperationsConstants.VDB_NAME).asString();
 		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION).asInt();
-			for (Transport t: this.transports) {
+			for (TransportService t: this.transports) {
 			List<RequestMetadata> requests = t.getRequestsUsingVDB(vdbName,vdbVersion);
 			for (RequestMetadata request:requests) {
 				VDBMetadataMapper.RequestMetadataMapper.INSTANCE.wrap(request, result.add());
@@ -305,7 +305,7 @@ class TerminateSession extends TeiidOperationHandler{
 		if (!operation.hasDefined(OperationsConstants.SESSION)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.SESSION+MISSING)));
 		}		
-		for (Transport t: this.transports) {
+		for (TransportService t: this.transports) {
 			t.terminateSession(operation.get(OperationsConstants.SESSION).asString());
 		}
 	}
@@ -375,7 +375,10 @@ abstract class BaseCachehandler extends BaseOperationHandler<SessionAwareCache>{
 			sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.CACHE_PREPAREDPLAN);
 		}
 		
-        return SessionAwareCache.class.cast(sc.getValue());	
+		if (sc != null) {
+			return SessionAwareCache.class.cast(sc.getValue());
+		}
+		return null;
 	}	
 }
 
@@ -417,6 +420,10 @@ class ClearCache extends BaseCachehandler {
 		}
 
 		String cacheType = operation.get(OperationsConstants.CACHE_TYPE).asString();
+		if (cache == null) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("cache_not_found", cacheType))); //$NON-NLS-1$
+		}
+		
 		if (operation.hasDefined(OperationsConstants.VDB_NAME) && operation.hasDefined(OperationsConstants.VDB_VERSION)) {
 			String vdbName = operation.get(OperationsConstants.VDB_NAME).asString();
 			int vdbVersion = operation.get(OperationsConstants.VDB_VERSION).asInt();
@@ -456,8 +463,12 @@ class CacheStatistics extends BaseCachehandler {
 		if (!operation.hasDefined(OperationsConstants.CACHE_TYPE)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.CACHE_TYPE+MISSING)));
 		}
-		ModelNode result = context.getResult();
 		String cacheType = operation.get(OperationsConstants.CACHE_TYPE).asString();
+		if (cache == null) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("cache_not_found", cacheType))); //$NON-NLS-1$
+		}
+		
+		ModelNode result = context.getResult();
 		CacheStatisticsMetadata stats = buildCacheStats(cacheType, cache);
 		VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE.wrap(stats, result);
 	}

@@ -38,7 +38,12 @@ public class JBossCacheFactory implements CacheFactory, Serializable{
 	
 
 	public JBossCacheFactory(String name, CacheContainer cm) {
-		this.cacheStore = cm.getCache(name);
+		if (name != null) {
+			this.cacheStore = cm.getCache(name);
+		}
+		else {
+			this.cacheStore = cm.getCache();
+		}
 	}
 	
 	/**

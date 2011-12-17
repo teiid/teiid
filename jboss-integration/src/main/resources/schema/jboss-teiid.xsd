@@ -215,8 +215,8 @@
                     <xs:documentation>Configuration for result set caching.</xs:documentation>
                 </xs:annotation>
                 <xs:complexType>
-                    <xs:attribute name="name" type="xs:string" use="required"/>
-                    <xs:attribute name="container-name" type="xs:string" use="required"/>
+                    <xs:attribute name="name" type="xs:string"/>
+                    <xs:attribute name="infinispan-container" type="xs:string" use="required"/>
                     <xs:attribute name="enable" type="xs:boolean" default="true"/>
                     <xs:attribute name="max-staleness" type="xs:int" default="60"/>
                 </xs:complexType>
@@ -370,7 +370,7 @@
                     </xs:attribute>
                     <xs:attribute name="ssl-protocol" type="xs:string"/>
                     <xs:attribute name="keymanagement-algorithm" type="xs:string"/>
-                    
+                    <xs:attribute name="enable" type="xs:boolean"/>
                 </xs:complexType>
             </xs:element>            
         </xs:sequence>

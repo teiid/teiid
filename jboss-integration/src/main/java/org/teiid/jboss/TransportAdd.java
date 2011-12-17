@@ -81,6 +81,7 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
 		
 		Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT,
 		
+		Element.SSL_ENABLE_ATTRIBUTE,
 		Element.SSL_MODE_ATTRIBUTE,
 		Element.SSL_AUTH_MODE_ATTRIBUTE,
 		Element.SSL_SSL_PROTOCOL_ATTRIBUTE,
@@ -137,7 +138,7 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
         final PathAddress pathAddress = PathAddress.pathAddress(address);
     	final String transportName = pathAddress.getLastElement().getValue();
     	
-    	Transport transport = new Transport();
+    	TransportService transport = new TransportService();
     	    	
     	String socketBinding = null;
 		if (Element.TRANSPORT_SOCKET_BINDING_ATTRIBUTE.isDefined(operation)) {
@@ -249,10 +250,14 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
     	boolean sslEnabled = false;
     	SSLConfiguration ssl = new SSLConfiguration();
     	ssl.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
+
+    	if (Element.SSL_ENABLE_ATTRIBUTE.isDefined(node)) {
+    		ssl.setMode(Element.SSL_ENABLE_ATTRIBUTE.asString(node));
+    		sslEnabled = true;
+    	}    	
     	
     	if (Element.SSL_MODE_ATTRIBUTE.isDefined(node)) {
     		ssl.setMode(Element.SSL_MODE_ATTRIBUTE.asString(node));
-    		sslEnabled = true;
     	}
     	
     	if (Element.SSL_SSL_PROTOCOL_ATTRIBUTE.isDefined(node)) {

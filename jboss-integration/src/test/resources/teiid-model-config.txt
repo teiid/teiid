@@ -193,11 +193,10 @@
     },
     "resultset-cache-name" => {
         "type" => STRING,
-        "description" => "Infinispan cache name for resultset",
-        "required" => false,
-        "default" => "resultset"
+        "description" => "Infinispan cache name for resultset; if not specified default cache on infinispan container is used.",
+        "required" => false
     },
-    "resultset-cache-container-name" => {
+    "resultset-cache-infinispan-container" => {
         "type" => STRING,
         "description" => "Infinispan cache container name",
         "required" => false
@@ -210,7 +209,8 @@
     },
     "resultset-cache-enable" => {
         "type" => BOOLEAN,
-        "description" => "Resultset cache enabled",
-        "required" => false
+        "description" => "Resultset cache enabled (default true)",
+        "required" => false,
+        "default" => true
     }
 }}

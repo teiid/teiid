@@ -259,7 +259,7 @@
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:teiid:1.0">
             <async-thread-pool>teiid-async</async-thread-pool>
-            <resultset-cache container-name="teiid" name="resultset"/>
+            <resultset-cache infinispan-container="teiid"/>
             
             <transport name="embedded"/>
             <transport name="jdbc" protocol="teiid" socket-binding="teiid-jdbc">

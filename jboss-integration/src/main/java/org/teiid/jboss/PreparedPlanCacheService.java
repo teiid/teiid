@@ -21,43 +21,25 @@
  */
 package org.teiid.jboss;
 
-import org.jboss.msc.service.Service;
-import org.jboss.msc.service.StartContext;
-import org.jboss.msc.service.StartException;
-import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
+import org.jboss.msc.value.Value;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
+import org.teiid.cache.DefaultCacheFactory;
+import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
-import org.teiid.dqp.service.BufferService;
 
-class CacheService<T> implements Service<SessionAwareCache<T>> {
-	
-	private SessionAwareCache<T> cache;
-	protected InjectedValue<BufferService> bufferMgrInjector = new InjectedValue<BufferService>();
-	protected InjectedValue<CacheFactory> cacheFactoryInjector = new InjectedValue<CacheFactory>();
 
-	private SessionAwareCache.Type type;
-	private CacheConfiguration config;
-	
-	public CacheService(SessionAwareCache.Type type, CacheConfiguration config){
-		this.type = type;
-		this.config = config;
+class PreparedPlanCacheService extends CacheService<PreparedPlan> {
+	public PreparedPlanCacheService(SessionAwareCache.Type type, CacheConfiguration config) {
+		super(type, config);
+		this.cacheFactoryInjector = new InjectedValue<CacheFactory>();
+		this.cacheFactoryInjector.setValue(new Value() {
+			@Override
+			public CacheFactory getValue() throws IllegalStateException, IllegalArgumentException {
+				return new DefaultCacheFactory();
+			}
+		});
 	}
 	
-	@Override
-	public void start(StartContext context) throws StartException {
-		this.cache = new SessionAwareCache<T>(cacheFactoryInjector.getValue(), this.type, this.config);
-		this.cache.setTupleBufferCache(this.bufferMgrInjector.getValue().getTupleBufferCache());
-	}
-
-	@Override
-	public void stop(StopContext context) {
-		this.cache = null;
-	}
-
-	@Override
-	public SessionAwareCache<T> getValue() throws IllegalStateException, IllegalArgumentException {
-		return this.cache;
-	}
 }

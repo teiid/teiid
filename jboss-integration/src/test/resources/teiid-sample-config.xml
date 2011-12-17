@@ -24,7 +24,7 @@
     <metadata-repository-module="javax.api"/>
      -->
     
-    <resultset-cache name="cache" container-name="container" enable="false" max-staleness="90"/>
+    <resultset-cache name="cache" infinispan-container="container" enable="false" max-staleness="90"/>
     
     <preparedplan-cache max-entries="512" max-age-in-seconds="28800"/>
     
@@ -35,7 +35,7 @@
     <transport name="odbc" protocol="pg" socket-binding="teiid-odbc" max-socket-threads="1" input-buffer-size="2" output-buffer-size="3">
         <authentication security-domain="teiid-security,teiid-security2" max-sessions-allowed="5000" sessions-expiration-timelimit="0" krb5-domain="krb5"/>
         <pg max-lob-size-in-bytes="5242880"/>
-        <ssl mode="login" authentication-mode="1-way" ssl-protocol="ssl-protocol" keymanagement-algorithm="algo">
+        <ssl enable="true" mode="login" authentication-mode="1-way" ssl-protocol="ssl-protocol" keymanagement-algorithm="algo">
             <keystore name="keystore name" password="keystore passs" type="keystore type"/>
             <truststore name="truststore name" password="truststore pass"/>
         </ssl>

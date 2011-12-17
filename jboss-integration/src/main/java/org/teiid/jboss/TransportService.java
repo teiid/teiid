@@ -66,7 +66,7 @@ import org.teiid.transport.ODBCSocketListener;
 import org.teiid.transport.SocketConfiguration;
 import org.teiid.transport.SocketListener;
 
-public class Transport implements Service<ClientServiceRegistry>, ClientServiceRegistry {
+public class TransportService implements Service<ClientServiceRegistry>, ClientServiceRegistry {
 	private enum Protocol {teiid, pg};
 	private ClientServiceRegistryImpl csr = new ClientServiceRegistryImpl();
 	private transient ILogon logon;
@@ -81,6 +81,7 @@ public class Transport implements Service<ClientServiceRegistry>, ClientServiceR
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
 	private boolean embedded;
 	private String krb5Domain;
+	private InetSocketAddress address = null;
 	
 	private final InjectedValue<SocketBinding> socketBindingInjector = new InjectedValue<SocketBinding>();
 	private final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
@@ -123,7 +124,7 @@ public class Transport implements Service<ClientServiceRegistry>, ClientServiceR
 		this.logon = new LogonImpl(this.sessionService, "teiid-cluster"); //$NON-NLS-1$
 		
     	if (this.socketConfig != null) {
-    		InetSocketAddress address = getSocketBindingInjector().getValue().getSocketAddress();
+    		this.address = getSocketBindingInjector().getValue().getSocketAddress();
     		Protocol protocol = Protocol.valueOf(socketConfig.getProtocol());
     		boolean sslEnabled = false;
     		if (this.socketConfig.getSSLConfiguration() != null) {
@@ -160,6 +161,19 @@ public class Transport implements Service<ClientServiceRegistry>, ClientServiceR
     		this.socketListener = null;
     	}
     	this.sessionService.stop();
+    	
+    	if (this.socketConfig != null) {
+    		Protocol protocol = Protocol.valueOf(socketConfig.getProtocol());
+    		if (protocol == Protocol.teiid) {
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_disabled", this.address.getHostName(), String.valueOf(this.address.getPort()))); //$NON-NLS-1$ 
+    		}
+    		else if (protocol == Protocol.pg) {
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("odbc_disabled", this.address.getHostName(), String.valueOf(this.address.getPort()))); //$NON-NLS-1$
+    		}
+    	}
+    	else {
+    		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("embedded_disabled", LocalServerConnection.TEIID_RUNTIME_CONTEXT)); //$NON-NLS-1$
+    	}
 	}	
 	
 	/**

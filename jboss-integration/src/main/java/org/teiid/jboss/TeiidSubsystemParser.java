@@ -162,6 +162,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	if (like(node, Element.SSL_ELEMENT)) {
 			writer.writeStartElement(Element.SSL_ELEMENT.getLocalName());
 			
+			writeAttribute(writer, Element.SSL_ENABLE_ATTRIBUTE, node);
 			writeAttribute(writer, Element.SSL_MODE_ATTRIBUTE, node);
 			writeAttribute(writer, Element.SSL_AUTH_MODE_ATTRIBUTE, node);
 			writeAttribute(writer, Element.SSL_SSL_PROTOCOL_ATTRIBUTE, node);
@@ -501,6 +502,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     			Element element = Element.forName(attrName, Element.SSL_ELEMENT);
     			
     			switch(element) {
+    			case SSL_ENABLE_ATTRIBUTE:
     			case SSL_MODE_ATTRIBUTE:
     			case SSL_AUTH_MODE_ATTRIBUTE:
     			case SSL_SSL_PROTOCOL_ATTRIBUTE:
