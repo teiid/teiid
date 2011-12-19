@@ -70,10 +70,12 @@
 		<para>
 			Teiid can be configured with multiple named application policies
 			that group together relevant LoginModules. Each of these application
-			policy (or domains) names can be used to fully
-			qualify user names to
+			policy (or domain) names can be used to fully qualify user names to
 			authenticate only against that domain.  The format for a qualified
-			name is username@domainname.
+			name is username@domainname.  The securityDomains property under the SessionService bean in &jboss-beans; should be used set 
+			the comma separated list of desired domains.  The securityDomains property defaults to a single domain named teiid-security.  
+			The domain for admin access may also be changed if desired via the adminSecurityDomain property, however it is expected that the admin
+			domain will be the same one that is used by the AS profile service, which by default is named jmx-console.
 		</para>
 		<para>If a user name is not fully qualified, then the installed
 			domains will be consulted in order until a domain
@@ -147,7 +149,7 @@ User and role names are entirely up to the needs of the given deployment.  For e
 						You could do one of the following for Teiid:
 						<itemizedlist>
 						 	<listitem>
-						 	<para>Reuse the jmx-console (or whatever name you choose) security domain for Teiid by changing the teiid configuration &jboss-beans; to point to jmx-console, rather than teiid-security.
+						 	<para>Reuse the jmx-console (or whatever name you choose) security domain for Teiid by changing the Teiid configuration &jboss-beans; to point to jmx-console, rather than teiid-security.
 						 	</para>
 						 	</listitem>
 
