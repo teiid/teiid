@@ -80,6 +80,7 @@ import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.symbol.Constant;
@@ -357,12 +358,33 @@ public class TempTableDataManager implements ProcessorDataManager {
 			throws TeiidComponentException, QueryMetadataException,
 			TeiidProcessingException, ExpressionEvaluationException,
 			QueryProcessingException {
-		final GroupSymbol group = query.getFrom().getGroups().get(0);
+		GroupSymbol group = query.getFrom().getGroups().get(0);
 		if (!group.isTempGroupSymbol()) {
 			return null;
 		}
 		final String tableName = group.getNonCorrelationName().toUpperCase();
-		boolean remapColumns = !tableName.equalsIgnoreCase(group.getName());
+		if (!tableName.equalsIgnoreCase(group.getName())) {
+			group = group.clone();
+			group.setName(tableName);
+			group.setDefinition(null);
+			query.getFrom().getClauses().clear();
+			query.getFrom().addClause(new UnaryFromClause(group));
+			final GroupSymbol newGroup = group;
+			//convert to the actual table symbols (this is typically handled by the languagebridgefactory
+			ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
+				@Override
+				public Expression replaceExpression(Expression element) {
+					if (element instanceof ElementSymbol) {
+						ElementSymbol es = (ElementSymbol)element;
+						es = es.clone();
+						es.setGroupSymbol(newGroup);
+						return es;
+					}
+					return element;
+				}
+			};
+			PostOrderNavigator.doVisit(query, emv);
+		}
 		TempTable table = null;
 		if (group.isGlobalTable()) {
 			final GlobalTableStore globalStore = context.getGlobalTableStore();
@@ -402,21 +424,6 @@ public class TempTableDataManager implements ProcessorDataManager {
 					context.accessedDataObject(group.getMetadataID());
 				}
 			}
-		}
-		if (remapColumns) {
-			//convert to the actual table symbols (this is typically handled by the languagebridgefactory
-			ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
-				@Override
-				public Expression replaceExpression(Expression element) {
-					if (element instanceof ElementSymbol) {
-						ElementSymbol es = (ElementSymbol)element;
-						es.getGroupSymbol().setName(tableName);
-						es.getGroupSymbol().setDefinition(null);
-					}
-					return element;
-				}
-			};
-			PostOrderNavigator.doVisit(query, emv);
 		}
 		return table.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
 	}
