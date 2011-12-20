@@ -24,6 +24,7 @@ package org.teiid.query.tempdata;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -157,9 +158,10 @@ public class TempTableDataManager implements ProcessorDataManager {
         		Insert insert = (Insert)command;
         		TupleSource ts = insert.getTupleSource();
         		if (ts == null) {
+        			Evaluator eval = new Evaluator(Collections.emptyMap(), this, context);
         			List<Object> values = new ArrayList<Object>(insert.getValues().size());
         			for (Expression expr : (List<Expression>)insert.getValues()) {
-        				values.add(Evaluator.evaluate(expr));
+        				values.add(eval.evaluate(expr, null));
 					}
         			ts = new CollectionTupleSource(Arrays.asList(values).iterator());
         		}
@@ -345,12 +347,33 @@ public class TempTableDataManager implements ProcessorDataManager {
 			throws TeiidComponentException, QueryMetadataException,
 			TeiidProcessingException, ExpressionEvaluationException,
 			QueryProcessingException {
-		final GroupSymbol group = query.getFrom().getGroups().get(0);
+		GroupSymbol group = query.getFrom().getGroups().get(0);
 		if (!group.isTempGroupSymbol()) {
 			return null;
 		}
 		final String tableName = group.getNonCorrelationName();
-		boolean remapColumns = !tableName.equalsIgnoreCase(group.getName());
+		if (!tableName.equalsIgnoreCase(group.getName())) {
+			group = group.clone();
+			group.setName(tableName);
+			group.setDefinition(null);
+			query.getFrom().getClauses().clear();
+			query.getFrom().addClause(new UnaryFromClause(group));
+			final GroupSymbol newGroup = group;
+			//convert to the actual table symbols (this is typically handled by the languagebridgefactory
+			ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
+				@Override
+				public Expression replaceExpression(Expression element) {
+					if (element instanceof ElementSymbol) {
+						ElementSymbol es = (ElementSymbol)element;
+						es = es.clone();
+						es.setGroupSymbol(newGroup);
+						return es;
+					}
+					return element;
+				}
+			};
+			PostOrderNavigator.doVisit(query, emv);
+		}
 		TempTable table = null;
 		if (group.isGlobalTable()) {
 			final GlobalTableStore globalStore = context.getGlobalTableStore();
@@ -390,21 +413,6 @@ public class TempTableDataManager implements ProcessorDataManager {
 					context.accessedDataObject(group.getMetadataID());
 				}
 			}
-		}
-		if (remapColumns) {
-			//convert to the actual table symbols (this is typically handled by the languagebridgefactory
-			ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
-				@Override
-				public Expression replaceExpression(Expression element) {
-					if (element instanceof ElementSymbol) {
-						ElementSymbol es = (ElementSymbol)element;
-						es.getGroupSymbol().setName(tableName);
-						es.getGroupSymbol().setDefinition(null);
-					}
-					return element;
-				}
-			};
-			PostOrderNavigator.doVisit(query, emv);
 		}
 		return table.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
 	}

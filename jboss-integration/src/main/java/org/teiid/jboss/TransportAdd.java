@@ -21,17 +21,13 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OPERATION_NAME;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
-import java.util.StringTokenizer;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -150,13 +146,10 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
 			LogManager.logDetail(LogConstants.CTX_SECURITY, IntegrationPlugin.Util.getString("socket_binding_not_defined",  transportName)); //$NON-NLS-1$
 		}
     	
-    	ArrayList<String> domainList = new ArrayList<String>();
+    	List<String> domainList = Collections.emptyList();
    		if (Element.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.isDefined(operation)) {
     		String domains = Element.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.asString(operation);
-    		StringTokenizer st = new StringTokenizer(domains, ","); //$NON-NLS-1$
-    		while(st.hasMoreTokens()) {
-    			domainList.add(st.nextToken());
-    		}
+    		domainList = Arrays.asList(domains.split(","));//$NON-NLS-1$
     	}  
    		transport.setAuthenticationDomains(domainList);
    		

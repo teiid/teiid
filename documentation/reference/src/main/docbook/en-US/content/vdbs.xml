@@ -103,7 +103,7 @@
                     </para>
                     <para>
                     The name of the model is used as a 
-                    top level schema name for all of the  metadata imported from the 
+                    top level schema name for all of the metadata imported from the 
                     connector.  The name should be unique among all Models in the VDB and 
                     should not contain the '.' character.
                     </para>
@@ -123,6 +123,7 @@
             
             <itemizedlist>
                 <title>Source Element</title>
+                <para>A source is a named binding of a translator and connection source to a model.</para>
                 <listitem>
                     <para>
                     <emphasis>name</emphasis>
@@ -131,7 +132,9 @@
                     The name of the source to use for this 
                     model. This can be any name you like, but will typically be the same 
                     as the model name.  Having a name different than the model name is 
-                    only useful in multi-source scenarios.	
+                    only useful in multi-source scenarios.	In multi-source, the source names under a given model must
+                    be unique.  If you have the same source bound to multiple models it may have the same name
+                    for each.  An exception will be raised if the same source name is used for different sources.
                     </para>
                 </listitem>
                 <listitem>

@@ -56,7 +56,7 @@
                <description>{$display:"Salesforce URL",$description:"URL for connecting to Salesforce",$advanced:"true"}</description>
                <config-property-name>URL</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
-               <config-property-value>https://www.salesforce.com/services/Soap/u/17.0</config-property-value>
+               <config-property-value>https://www.salesforce.com/services/Soap/u/22.0</config-property-value>
             </config-property> 
             
             <config-property>

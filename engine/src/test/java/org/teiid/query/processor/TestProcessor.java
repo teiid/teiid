@@ -94,6 +94,7 @@ import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorReport;
+import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings({"nls", "unchecked"})
 public class TestProcessor {
@@ -7621,6 +7622,59 @@ public class TestProcessor {
         
         helpProcess(plan, dataManager, new List[] {
         		Arrays.asList(3)});
+    }
+    
+    @Test public void testMultipleAliasInUnionAll(){
+        String sql = "SELECT enterprise_id FROM ( " +
+                "SELECT * FROM ( " +
+                "    SELECT id, id AS display_id, 103 AS enterprise_id FROM (" +
+                "        SELECT 'x' as id, e1 FROM pm1.g1) AS nexted103) as table103Source " +
+                "UNION ALL " +
+                "SELECT  'x', 'x' AS display_id, 101 AS enterprise_id FROM (" +
+                "    SELECT 'x', e1 FROM pm1.g1) AS nested101 " +
+                "UNION ALL " +
+                "SELECT  'x', 'x' AS display_id, 100 AS enterprise_id FROM (" +
+                "    SELECT 'x', e1 FROM pm1.g1) AS nested100) as tableFrom1stSelect " +
+                "WHERE enterprise_id = 100";
+    	
+                   
+        // Create expected results - would expect these to be:
+        List[] expected = new List[] {
+        		Arrays.asList(100)
+        };  
+
+        // Construct data manager with data
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT 100 FROM pm1.g1 AS g_0", new List[] {Arrays.asList(100)});
+
+        Command command = helpParse(sql);   
+        ProcessorPlan plan = helpGetPlan(command, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder(false));
+        // Run query
+        helpProcess(plan, dataManager, expected);        
+    
+    }
+    
+    @Test public void testNonDeterministicPushdown() throws Exception { 
+        // Create query 
+        String sql = "SELECT RAND(), lookup('pm1.g1', 'e1', 'e2', 1) FROM pm1.g1 limit 2"; //$NON-NLS-1$
+        
+        List[] expected = new List[] { 
+            Arrays.asList(new Double(0.1), "a"),
+            Arrays.asList(new Double(0.2), "a"),
+        };    
+    
+        // Construct data manager with data
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT RAND() FROM pm1.g1", expected);
+        hdm.addData("SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1", new List<?>[] {Arrays.asList(1, "a")});
+        BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        bsc.setFunctionSupport(SourceSystemFunctions.RAND, true);
+        // Plan query
+        CommandContext cc = createCommandContext();
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
+
+        helpProcess(plan, cc, hdm, expected);
     }
     
     private static final boolean DEBUG = false;
