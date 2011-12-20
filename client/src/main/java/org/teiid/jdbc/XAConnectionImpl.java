@@ -28,8 +28,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.Set;
 
 import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
@@ -99,7 +101,7 @@ public class XAConnectionImpl implements XAConnection{
         }
     }
 
-    private HashSet listeners;
+    private Set<ConnectionEventListener> listeners;
 	private XAResource resource;
 	private ConnectionImpl connection;
 	private ConnectionSource cs;
@@ -141,7 +143,7 @@ public class XAConnectionImpl implements XAConnection{
 	    
 	public synchronized void addConnectionEventListener(ConnectionEventListener listener){
 		if(listeners == null){
-			listeners = new HashSet();
+			listeners = Collections.newSetFromMap(new IdentityHashMap<ConnectionEventListener, Boolean>());
 		}
 		this.listeners.add(listener);
 	}
@@ -174,9 +176,9 @@ public class XAConnectionImpl implements XAConnection{
 	 */
 	protected synchronized void notifyListener(SQLException e){
 		if(listeners != null && !listeners.isEmpty()){
-			Iterator iter = listeners.iterator();
+			Iterator<ConnectionEventListener> iter = listeners.iterator();
 			while(iter.hasNext()){
-				ConnectionEventListener listener = (ConnectionEventListener)iter.next();
+				ConnectionEventListener listener = iter.next();
 				if(e == null){
 					//no exception
 					listener.connectionClosed(new ConnectionEvent(this));
