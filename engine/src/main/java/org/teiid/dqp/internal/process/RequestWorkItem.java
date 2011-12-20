@@ -370,6 +370,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			this.resultsBuffer = collector.collectTuples();
 			if (!doneProducingBatches) {
 				doneProducingBatches();
+				//TODO: we could perform more tracking to know what source lobs are in use
+				if (this.resultsBuffer.getLobCount() == 0) {
+					for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
+						connectorRequest.fullyCloseSource();
+				    }
+				}
 				addToCache();
 			}
 		}
@@ -519,8 +525,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				}
 				if (batch.getTerminationFlag()) {
 					doneProducingBatches();
+					addToCache();
 				}
-				addToCache();
 				synchronized (lobStreams) {
 					if (resultsBuffer.isLobs()) {
 						super.flushBatchDirect(batch, false);
@@ -919,12 +925,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 
 	private void doneProducingBatches() {
 		this.doneProducingBatches = true;
-		//TODO: we could perform more tracking to know what source lobs are in use
-		if (this.resultsBuffer.getLobCount() == 0) {
-			for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
-				connectorRequest.fullyCloseSource();
-		    }
-		}
 		dqpCore.finishProcessing(this);
 	}
 	

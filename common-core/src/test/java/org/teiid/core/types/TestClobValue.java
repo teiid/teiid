@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.Reader;
 
 import javax.sql.rowset.serial.SerialClob;
+import javax.sql.rowset.serial.SerialException;
 
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
@@ -75,6 +76,27 @@ public class TestClobValue {
         assertTrue(read.length() > 0);
                 
         assertEquals(testString, read.getSubString(1, testString.length()));
+    }
+    
+    @SuppressWarnings("serial")
+	@Test public void testReferencePersistenceError() throws Exception {
+    	String testString = "this is test clob"; //$NON-NLS-1$
+        SerialClob clob = new SerialClob(testString.toCharArray()) {
+        	@Override
+        	public Reader getCharacterStream() throws SerialException {
+        		throw new SerialException();
+        	}
+        };
+        
+        ClobType cv = new ClobType(clob);
+        cv.setReferenceStreamId(null);
+        
+        // now force to serialize
+        ClobType read = UnitTestUtil.helpSerialize(cv);
+        
+        assertTrue(read.length() > 0);
+        assertNotNull(read.getReferenceStreamId());
+        assertNull(read.getReference());
     }
     
     @Test public void testClobSubstring() throws Exception {
