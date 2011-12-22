@@ -292,15 +292,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 			
 			@Override
 			public void added(String name, int version, CompositeVDB vdb) {
-				GlobalTableStore gts = new GlobalTableStoreImpl(dqpCore.getBufferManager(), vdb.getVDB().getAttachment(TransformationMetadata.class));
-				if (objectReplicator != null) {
-					try {
-						gts = objectReplicator.replicate(name + version, GlobalTableStore.class, gts, 300000);
-					} catch (Exception e) {
-						LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("replication_failed", gts)); //$NON-NLS-1$
-					}
-				}
-				vdb.getVDB().addAttchment(GlobalTableStore.class, gts);
 				if (!recentlyRemoved.remove(new VDBKey(name, version))) {
 					return;
 				}
@@ -319,7 +310,21 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 				// dump the caches. 
 				dqpCore.clearCache(Cache.PREPARED_PLAN_CACHE.toString(), name, version);
 				dqpCore.clearCache(Cache.QUERY_SERVICE_RESULT_SET_CACHE.toString(), name, version);
-			}			
+			}	
+			
+			@Override
+			public void finishedDeployment(String name, int version,
+					CompositeVDB vdb) {
+				GlobalTableStore gts = new GlobalTableStoreImpl(dqpCore.getBufferManager(), vdb.getVDB().getAttachment(TransformationMetadata.class));
+				if (objectReplicator != null) {
+					try {
+						gts = objectReplicator.replicate(name + version, GlobalTableStore.class, gts, 300000);
+					} catch (Exception e) {
+						LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("replication_failed", gts)); //$NON-NLS-1$
+					}
+				}
+				vdb.getVDB().addAttchment(GlobalTableStore.class, gts);				
+			}
 		});
 	}	
     

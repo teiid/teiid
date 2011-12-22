@@ -74,7 +74,7 @@ public class CompositeVDB {
 		update();
 	}
 	
-	public void addChild(CompositeVDB child) {
+	public synchronized void addChild(CompositeVDB child) {
 		if (this.children == null) {
 			this.children = new LinkedHashMap<VDBKey, CompositeVDB>();
 		}
@@ -83,14 +83,14 @@ public class CompositeVDB {
 		this.mergedVDB = null;
 	}
 	
-	public void removeChild(VDBKey child) {
+	public synchronized void removeChild(VDBKey child) {
 		if (this.children != null) {
 			this.children.remove(child);
 		}
 		this.mergedVDB = null;
 	}	
 	
-	void update() {
+	synchronized void update() {
 		TransformationMetadata metadata = buildTransformationMetaData(mergedVDB, getVisibilityMap(), getMetadataStores(), getUDF(), systemFunctions, this.additionalStores);
 		mergedVDB.addAttchment(QueryMetadataInterface.class, metadata);
 		mergedVDB.addAttchment(TransformationMetadata.class, metadata);	
@@ -123,7 +123,7 @@ public class CompositeVDB {
 		return additionalStores;
 	}
 	
-	public VDBMetaData getVDB() {
+	public synchronized VDBMetaData getVDB() {
 		if (this.mergedVDB == null) {
 			this.mergedVDB = buildVDB();
 			update();
@@ -131,7 +131,7 @@ public class CompositeVDB {
 		return this.mergedVDB;
 	}
 	
-	public boolean hasChildVdb(VDBKey child) {
+	public synchronized boolean hasChildVdb(VDBKey child) {
 		if (this.children != null) {
 			return this.children.containsKey(child);
 		}
@@ -201,7 +201,7 @@ public class CompositeVDB {
 		return mergedUDF;
 	}
 	
-	private LinkedHashMap<String, Resource> getVisibilityMap() {
+	private synchronized LinkedHashMap<String, Resource> getVisibilityMap() {
 		if (this.children == null || this.children.isEmpty()) {
 			return this.visibilityMap;
 		}
@@ -219,7 +219,7 @@ public class CompositeVDB {
 		return mergedvisibilityMap;
 	}
 	
-	public MetadataStoreGroup getMetadataStores() {
+	public synchronized MetadataStoreGroup getMetadataStores() {
 		if (this.children == null || this.children.isEmpty()) {
 			return this.stores;
 		}		

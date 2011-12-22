@@ -101,12 +101,18 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 		this.repo.addListener(new VDBLifeCycleListener() {
 			
 			@Override
+			public void added(String name, int version,
+					CompositeVDB vdb) {
+				
+			}
+			
+			@Override
 			public void removed(String name, int version, CompositeVDB vdb) {
 				
 			}
 			
 			@Override
-			public void added(String name, int version, CompositeVDB vdb) {
+			public void finishedDeployment(String name, int version, CompositeVDB vdb) {
 				GlobalTableStore gts = new GlobalTableStoreImpl(dqp.getBufferManager(), vdb.getVDB().getAttachment(TransformationMetadata.class));
 				if (replicator != null) {
 					try {
