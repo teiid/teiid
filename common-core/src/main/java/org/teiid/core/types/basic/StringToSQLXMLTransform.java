@@ -60,7 +60,7 @@ public class StringToSQLXMLTransform extends Transform {
 
 	public static Type isXml(Reader reader) throws TransformationException {
 		Type type = Type.ELEMENT;
-		XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+		XMLInputFactory inputFactory = XMLType.getXmlInputFactory();
         try{        
              XMLStreamReader xmlReader = inputFactory.createXMLStreamReader(reader);
              int event = xmlReader.getEventType();
