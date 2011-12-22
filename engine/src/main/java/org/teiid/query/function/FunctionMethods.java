@@ -975,7 +975,6 @@ public final class FunctionMethods {
 
 	// ================== Function = convert =====================
 
-	@SuppressWarnings("unchecked")
 	public static Object convert(Object src, String type)
 		throws FunctionExecutionException {
 		try {
@@ -1035,8 +1034,10 @@ public final class FunctionMethods {
      * This function should never actually be called - it is here solely so the
      * lookup function can be resolved properly.  The actual function is
      * implemented in the ExpresionEvaluator
-     * @param context The context to apply the criteria in
-     * @param expression The expression on the left side of the criteria
+     * @param codeTable 
+     * @param returnElement 
+     * @param keyElement 
+     * @param keyValue 
      * @return Same as expression
      */
     public static Object lookup(Object codeTable, Object returnElement, Object keyElement, Object keyValue) {

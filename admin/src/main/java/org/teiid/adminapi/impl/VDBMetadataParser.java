@@ -24,21 +24,31 @@ package org.teiid.adminapi.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.*;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
-import javax.xml.stream.*;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
 
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
+import org.teiid.core.types.XMLType;
 
 @SuppressWarnings("nls")
 public class VDBMetadataParser {
 
 	public static VDBMetaData unmarshell(InputStream content) throws XMLStreamException {
-		 XMLInputFactory inputFactory=XMLInputFactory.newInstance();
+		 XMLInputFactory inputFactory=XMLType.getXmlInputFactory();
 		 XMLStreamReader reader = inputFactory.createXMLStreamReader(content);
 
         // elements

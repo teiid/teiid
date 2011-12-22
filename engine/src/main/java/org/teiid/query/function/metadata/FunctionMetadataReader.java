@@ -15,6 +15,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import org.teiid.core.types.XMLType;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
 
@@ -31,7 +32,7 @@ public class FunctionMetadataReader {
 	}
 
 	public static FunctionMetadataReader parseFunctions(InputStream content) throws XMLStreamException {
-		 XMLInputFactory inputFactory=XMLInputFactory.newInstance();
+		 XMLInputFactory inputFactory=XMLType.getXmlInputFactory();
 		 XMLStreamReader reader = inputFactory.createXMLStreamReader(content);
 		 FunctionMetadataReader fmr = new FunctionMetadataReader();
 		 while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
