@@ -22,11 +22,11 @@
 
 package org.teiid.net.socket;
 
+import java.io.EOFException;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.io.OptionalDataException;
 
 import org.teiid.core.util.ApplicationInfo;
 
@@ -85,7 +85,7 @@ public class Handshake implements Externalizable {
     	publicKey = (byte[])in.readObject();
     	try {
     		authType = AuthenticationType.values()[in.readByte()];
-    	} catch (OptionalDataException e) {
+    	} catch (EOFException e) {
     		
     	}
     }
