@@ -37,16 +37,26 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.DQPConfiguration;
+import org.teiid.dqp.service.AutoGenDataService;
+import org.teiid.jdbc.ConnectionImpl;
+import org.teiid.jdbc.ConnectionProfile;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TeiidDriver;
+import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
+import org.teiid.net.CommunicationException;
+import org.teiid.net.ConnectionException;
+import org.teiid.net.socket.SocketServerConnectionFactory;
+import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
 public class TestJDBCSocketTransport {
 
 	static InetSocketAddress addr;
 	static SocketListener jdbcTransport;
+	static FakeServer server;
 	
 	@BeforeClass public static void oneTimeSetup() throws Exception {
 		SocketConfiguration config = new SocketConfiguration();
@@ -57,7 +67,7 @@ public class TestJDBCSocketTransport {
 		
 		DQPConfiguration dqpConfig = new DQPConfiguration();
 		dqpConfig.setMaxActivePlans(2);
-		FakeServer server = new FakeServer(dqpConfig);
+		server = new FakeServer(dqpConfig);
 		server.setUseCallingThread(false);
 		server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
 		
@@ -68,6 +78,7 @@ public class TestJDBCSocketTransport {
 		if (jdbcTransport != null) {
 			jdbcTransport.stop();
 		}
+		server.stop();
 	}
 	
 	Connection conn;
@@ -124,6 +135,48 @@ public class TestJDBCSocketTransport {
 		for (int j = 0; j < 3; j++) {
 			Statement s = conn.createStatement();
 			assertTrue(s.execute("select * from columns c1, columns c2"));
+		}
+	}
+	
+	@Test public void testSyncTimeout() throws Exception {
+		TeiidDriver td = new TeiidDriver();
+		td.setSocketProfile(new ConnectionProfile() {
+			
+			@Override
+			public ConnectionImpl connect(String url, Properties info)
+					throws TeiidSQLException {
+				SocketServerConnectionFactory sscf = new SocketServerConnectionFactory();
+				sscf.initialize(info);
+				try {
+					return new ConnectionImpl(sscf.getConnection(info), info, url);
+				} catch (CommunicationException e) {
+					throw TeiidSQLException.create(e);
+				} catch (ConnectionException e) {
+					throw TeiidSQLException.create(e);
+				}
+			}
+		});
+		Properties p = new Properties();
+		p.setProperty("user", "testuser");
+		p.setProperty("password", "testpassword");
+		p.setProperty("org.teiid.sockets.soTimeout", "50");
+		p.setProperty("org.teiid.sockets.SynchronousTtl", "50");
+		ConnectorManagerRepository cmr = server.getConnectorManagerRepository();
+		AutoGenDataService agds = new AutoGenDataService() {
+			@Override
+			protected Object getConnectionFactory()
+					throws TranslatorException {
+				return null;
+			}
+		};
+		agds.setSleep(100);
+		cmr.addConnectorManager("source", agds);
+		try {
+			conn = td.connect("jdbc:teiid:parts@mm://"+addr.getHostName()+":" +jdbcTransport.getPort(), p);
+			Statement s = conn.createStatement();
+			assertTrue(s.execute("select * from parts"));
+		} finally {
+			server.setConnectorManagerRepository(cmr);
 		}
 	}
 	
