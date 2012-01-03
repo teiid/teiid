@@ -15,27 +15,27 @@
 	<properties>
 		<ant.version>1.7.0</ant.version>
 		<site.url>http://www.jboss.org/teiid</site.url>
-        <jbossas-version>7.1.0.Beta1</jbossas-version>
+        <jbossas-version>7.1.0.CR1b</jbossas-version>
         <version.org.jboss.jboss-common-core>2.2.17.GA</version.org.jboss.jboss-common-core>
         <version.org.jboss.staxmapper>1.0.0.Final</version.org.jboss.staxmapper>
-        <version.org.jboss.jboss-dmr>1.1.0.Final</version.org.jboss.jboss-dmr>
+        <version.org.jboss.jboss-dmr>1.1.1.Final</version.org.jboss.jboss-dmr>
         <version.org.jboss.msc.jboss-msc>1.0.1.GA</version.org.jboss.msc.jboss-msc>
-        <version.org.jboss.modules.jboss-modules>1.1.0.CR3</version.org.jboss.modules.jboss-modules>
+        <version.org.jboss.modules.jboss-modules>1.1.0.CR6</version.org.jboss.modules.jboss-modules>
         <version.org.jboss.jboss-vfs>3.1.0.CR1</version.org.jboss.jboss-vfs>
-        <version.org.picketbox>4.0.6.Beta1</version.org.picketbox>
-        <version.org.jboss.logging.jboss-logging>3.1.0.CR1</version.org.jboss.logging.jboss-logging>
-        <version.org.jboss.logging.jboss-logging-tools>1.0.0.CR4</version.org.jboss.logging.jboss-logging-tools>
+        <version.org.picketbox>4.0.6.Beta2</version.org.picketbox>
+        <version.org.jboss.logging.jboss-logging>3.1.0.CR2</version.org.jboss.logging.jboss-logging>
+        <version.org.jboss.logging.jboss-logging-tools>1.0.0.CR5</version.org.jboss.logging.jboss-logging-tools>
         <version.org.picketbox.jbosssx-client>3.0.0.CR2</version.org.picketbox.jbosssx-client>
-        <version.org.jboss.arquillian.core>1.0.0.CR5</version.org.jboss.arquillian.core>
+        <version.org.jboss.arquillian.core>1.0.0.CR7</version.org.jboss.arquillian.core>
         <version.javax.enterprise.cdi-api>1.0-SP4</version.javax.enterprise.cdi-api>
-        <version.org.jboss.netty>3.2.4.Final</version.org.jboss.netty>
+        <version.org.jboss.netty>3.2.5.Final</version.org.jboss.netty>
         <version.net.sourceforge.saxon>9.2.1.5</version.net.sourceforge.saxon>
         <version.json-simple>1.1</version.json-simple>
-        <version.org.jgroups>3.0.0.Final</version.org.jgroups>
+        <version.org.jgroups>3.0.1.Final</version.org.jgroups>
         <version.connector-api>1.5</version.connector-api>
         <version.jta>1.1</version.jta>
         <version.sun.jaxb>2.2</version.sun.jaxb>
-        <version.junit>4.8.2</version.junit>
+        <version.junit>4.10</version.junit>
 	</properties>
 	<scm>
         <connection>scm:svn:https://anonsvn.jboss.org/repos/teiid/trunk</connection>
