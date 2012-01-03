@@ -360,6 +360,24 @@ public class TestDQPCore {
         assertEquals(100, item.resultsBuffer.getRowCount());
     }
     
+    @Test public void testFinalRow() throws Exception {
+        String sql = "SELECT A.IntKey FROM BQT1.SmallA as A"; //$NON-NLS-1$
+        String userName = "1"; //$NON-NLS-1$
+        String sessionid = "1"; //$NON-NLS-1$
+        
+        RequestMessage reqMsg = exampleRequestMessage(sql);
+        reqMsg.setCursorType(ResultSet.TYPE_FORWARD_ONLY);
+        DQPWorkContext.getWorkContext().getSession().setSessionId(sessionid);
+        DQPWorkContext.getWorkContext().getSession().setUserName(userName);
+        ((BufferManagerImpl)core.getBufferManager()).setProcessorBatchSize(10);
+        Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
+        ResultsMessage rm = message.get(500000, TimeUnit.MILLISECONDS);
+        assertNull(rm.getException());
+        assertEquals(10, rm.getResultsList().size());
+        RequestWorkItem item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
+        assertEquals(10, item.resultsBuffer.getRowCount());
+    }
+    
     @Test public void testBufferReuse1() throws Exception {
     	//the sql should return 100 rows
         String sql = "SELECT IntKey FROM texttable('1112131415' columns intkey integer width 2 no row delimiter) t " +
