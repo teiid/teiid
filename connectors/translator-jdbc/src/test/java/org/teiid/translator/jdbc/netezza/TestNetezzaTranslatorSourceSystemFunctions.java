@@ -206,7 +206,7 @@ public class TestNetezzaTranslatorSourceSystemFunctions {
    
    @Test public void testBitAnd() throws Exception {
        String input = "select bitand(intkey, intnum) from bqt1.smalla"; 
-       String output = "SELECT intNand(SmallA.IntKey, SmallA.IntNum) FROM SmallA"; 
+       String output = "SELECT int4and(SmallA.IntKey, SmallA.IntNum) FROM SmallA"; 
               
        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
            input, 
@@ -214,7 +214,7 @@ public class TestNetezzaTranslatorSourceSystemFunctions {
    }
    @Test public void testBitNot() throws Exception {
        String input = "select bitnot(intkey) from bqt1.smalla"; 
-       String output = "SELECT intNnot(SmallA.IntKey) FROM SmallA"; 
+       String output = "SELECT int4not(SmallA.IntKey) FROM SmallA"; 
               
        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
            input, 
@@ -222,7 +222,7 @@ public class TestNetezzaTranslatorSourceSystemFunctions {
    }
    @Test public void testBitOr() throws Exception {
        String input = "select bitor(intkey, intnum) from bqt1.smalla"; 
-       String output = "SELECT intNor(SmallA.IntKey, SmallA.IntNum) FROM SmallA"; 
+       String output = "SELECT int4or(SmallA.IntKey, SmallA.IntNum) FROM SmallA"; 
               
        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
            input, 
@@ -230,7 +230,7 @@ public class TestNetezzaTranslatorSourceSystemFunctions {
    }
    @Test public void testBitXor() throws Exception {
        String input = "select bitxor(intkey, intnum) from bqt1.smalla"; 
-       String output = "SELECT intNxor(SmallA.IntKey, SmallA.IntNum) FROM SmallA"; 
+       String output = "SELECT int4xor(SmallA.IntKey, SmallA.IntNum) FROM SmallA"; 
               
        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
            input, 
