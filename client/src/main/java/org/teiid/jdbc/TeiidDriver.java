@@ -70,7 +70,7 @@ public class TeiidDriver implements Driver {
         }
     }
     
-    private static SocketProfile SOCKET_PROFILE = new SocketProfile();
+    private ConnectionProfile socketProfile = new SocketProfile();
     private ConnectionProfile embeddedProfile = new EmbeddedProfile();
 
     public static TeiidDriver getInstance() {
@@ -104,7 +104,7 @@ public class TeiidDriver implements Driver {
         	if (conn == ConnectionType.Embedded) {
         		myConnection = embeddedProfile.connect(url, info);
         	} else { 
-        		myConnection = SOCKET_PROFILE.connect(url, info);
+        		myConnection = socketProfile.connect(url, info);
         	}
         } catch (TeiidSQLException e) {
             logger.log(Level.SEVERE, "Could not create connection", e); //$NON-NLS-1$
@@ -120,6 +120,10 @@ public class TeiidDriver implements Driver {
     
     public void setEmbeddedProfile(ConnectionProfile embeddedProfile) {
 		this.embeddedProfile = embeddedProfile;
+	}
+    
+    public void setSocketProfile(ConnectionProfile socketProfile) {
+		this.socketProfile = socketProfile;
 	}
     
     /**

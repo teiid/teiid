@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.jboss.deployers.spi.DeploymentException;
-import org.mockito.Mockito;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -92,13 +91,24 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         this.dqp.setCacheFactory(new DefaultCacheFactory());
         this.dqp.setTransactionService(new FakeTransactionService());
         
-        cmr = Mockito.mock(ConnectorManagerRepository.class);
-        Mockito.stub(cmr.getConnectorManager("source")).toReturn(new ConnectorManager("x", "x") {
+        cmr = new ConnectorManagerRepository() {
         	@Override
-        	public SourceCapabilities getCapabilities() {
-        		return new BasicSourceCapabilities();
+        	public ConnectorManager getConnectorManager(String connectorName) {
+        		ConnectorManager cm = super.getConnectorManager(connectorName);
+        		if (cm != null) {
+        			return cm;
+        		}
+        		if (connectorName.equalsIgnoreCase("source")) {
+        			return new ConnectorManager("x", "x") {
+        	        	@Override
+        	        	public SourceCapabilities getCapabilities() {
+        	        		return new BasicSourceCapabilities();
+        	        	}
+        			};
+        		}
+        		return null;
         	}
-        });
+        };
         
         config.setResultsetCacheConfig(new CacheConfiguration(Policy.LRU, 60, 250, "resultsetcache")); //$NON-NLS-1$
         this.dqp.setCacheFactory(new DefaultCacheFactory() {
@@ -112,6 +122,14 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         
         registerClientService(ILogon.class, logon, null);
         registerClientService(DQP.class, dqp, null);
+	}
+	
+	public DQPCore getDqp() {
+		return dqp;
+	}
+	
+	public ConnectorManagerRepository getConnectorManagerRepository() {
+		return cmr;
 	}
 	
 	public void setConnectorManagerRepository(ConnectorManagerRepository cmr) {
