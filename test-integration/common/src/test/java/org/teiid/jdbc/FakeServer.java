@@ -48,8 +48,8 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.cache.Cache;
 import org.teiid.cache.CacheConfiguration;
-import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.cache.CacheConfiguration.Policy;
+import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.TupleBufferCache;
@@ -244,12 +244,18 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 		this.repo.addListener(new VDBLifeCycleListener() {
 			
 			@Override
+			public void added(String name, int version,
+					CompositeVDB vdb) {
+				
+			}
+			
+			@Override
 			public void removed(String name, int version, CompositeVDB vdb) {
 				
 			}
 			
 			@Override
-			public void added(String name, int version, CompositeVDB vdb) {
+			public void finishedDeployment(String name, int version, CompositeVDB vdb) {
 				GlobalTableStore gts = new GlobalTableStoreImpl(dqp.getBufferManager(), vdb.getVDB().getAttachment(TransformationMetadata.class));
 				if (replicator != null) {
 					try {
@@ -316,13 +322,24 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         
         this.dqp.setTransactionService(new FakeTransactionService());
         
-        cmr = Mockito.mock(ConnectorManagerRepository.class);
-        Mockito.stub(cmr.getConnectorManager("source")).toReturn(new ConnectorManager("x", "x") {
+        cmr = new ConnectorManagerRepository() {
         	@Override
-        	public SourceCapabilities getCapabilities() {
-        		return new BasicSourceCapabilities();
+        	public ConnectorManager getConnectorManager(String connectorName) {
+        		ConnectorManager cm = super.getConnectorManager(connectorName);
+        		if (cm != null) {
+        			return cm;
+        		}
+        		if (connectorName.equalsIgnoreCase("source")) {
+        			return new ConnectorManager("x", "x") {
+        	        	@Override
+        	        	public SourceCapabilities getCapabilities() {
+        	        		return new BasicSourceCapabilities();
+        	        	}
+        			};
+        		}
+        		return null;
         	}
-        });
+        };
         
         this.dqp.start(config);
         this.sessionService.setDqp(this.dqp);
@@ -333,6 +350,10 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 	
 	public DQPCore getDqp() {
 		return dqp;
+	}
+	
+	public ConnectorManagerRepository getConnectorManagerRepository() {
+		return cmr;
 	}
 	
 	public void setConnectorManagerRepository(ConnectorManagerRepository cmr) {

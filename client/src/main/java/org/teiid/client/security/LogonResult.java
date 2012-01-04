@@ -22,6 +22,7 @@
 
 package org.teiid.client.security;
 
+import java.io.EOFException;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -119,6 +120,8 @@ public class LogonResult implements Externalizable {
 		vdbVersion = in.readInt();
 		try {
 			addtionalProperties = ExternalizeUtil.readMap(in);
+		} catch (EOFException e) {
+			
 		} catch (OptionalDataException e) {
 			
 		}

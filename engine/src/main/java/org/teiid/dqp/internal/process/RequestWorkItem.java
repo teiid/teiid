@@ -376,6 +376,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			this.resultsBuffer = collector.collectTuples();
 			if (!doneProducingBatches) {
 				doneProducingBatches();
+				//TODO: we could perform more tracking to know what source lobs are in use
+				if (this.resultsBuffer.getLobCount() == 0) {
+					for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
+						connectorRequest.fullyCloseSource();
+				    }
+				}
 				addToCache();
 			}
 		}
@@ -535,8 +541,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				}
 				if (batch.getTerminationFlag()) {
 					doneProducingBatches();
+					addToCache();
 				}
-				addToCache();
 				synchronized (lobStreams) {
 					if (resultsBuffer.isLobs()) {
 						super.flushBatchDirect(batch, false);
@@ -546,8 +552,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 						return;
 					}
 					super.flushBatchDirect(batch, add);
-					//restrict the buffer size for forward only results
-					if (add && !processor.hasFinalBuffer()
+					if (!add && !processor.hasFinalBuffer()) {
+						 resultsBuffer.setRowCount(batch.getEndRow());
+					} else if (!processor.hasFinalBuffer() //restrict the buffer size for forward only results
 							&& !batch.getTerminationFlag() 
 							&& transactionState != TransactionState.ACTIVE
 							&& this.getTupleBuffer().getManagedRowCount() >= OUTPUT_BUFFER_MAX_BATCHES * this.getTupleBuffer().getBatchSize()) {
@@ -941,12 +948,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 
 	private void doneProducingBatches() {
 		this.doneProducingBatches = true;
-		//TODO: we could perform more tracking to know what source lobs are in use
-		if (this.resultsBuffer.getLobCount() == 0) {
-			for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
-				connectorRequest.fullyCloseSource();
-		    }
-		}
 		dqpCore.finishProcessing(this);
 	}
 	

@@ -294,6 +294,7 @@ public class VDBRepository implements Serializable{
 		target.addChild(source);
 		
 		notifyAdd(targetVDBName, targetVDBVersion, target);
+		notifyFinished(targetVDBName, targetVDBVersion, target);
 	}
 	
 	// this is called by mc
@@ -308,6 +309,13 @@ public class VDBRepository implements Serializable{
 		if (v!= null) {
 			updateFromMetadataRepository(v);
 			v.update();
+			notifyFinished(name, version, v);
+		}
+	}
+
+	private void notifyFinished(String name, int version, CompositeVDB v) {
+		for(VDBLifeCycleListener l:this.listeners) {
+			l.finishedDeployment(name, version, v);
 		}
 	}
 	

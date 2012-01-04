@@ -22,10 +22,10 @@
 
 package org.teiid.core.types;
 
+import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringWriter;
@@ -230,7 +230,7 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
 	 * These clobs should be small, so the wasted space should be minimal.
 	 */
 	@Override
-	protected void writeReference(final ObjectOutput out) throws IOException {
+	protected void writeReference(final DataOutput out) throws IOException {
 		Writer w = new Writer() {
 			
 			@Override

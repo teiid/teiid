@@ -19,10 +19,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.deployers;
 
-public interface VDBLifeCycleListener {
-	void added(String name, int version, CompositeVDB vdb);
-	void removed(String name, int version, CompositeVDB vdb);
-	void finishedDeployment(String name, int version, CompositeVDB vdb);
+package org.teiid.net.socket;
+
+import static org.junit.Assert.*;
+
+import java.io.FileInputStream;
+import java.io.ObjectInputStream;
+
+import org.junit.Test;
+import org.teiid.core.util.UnitTestUtil;
+
+@SuppressWarnings("nls")
+public class TestHandshake {
+
+	@Test public void testCompatibility() throws Exception {
+		ObjectInputStream ois = new ObjectInputStream(new FileInputStream(UnitTestUtil.getTestDataFile("handshake.ser")));
+		Handshake hs = (Handshake)ois.readObject();
+		assertEquals(AuthenticationType.CLEARTEXT, hs.getAuthType());
+	}
+	
 }

@@ -22,6 +22,7 @@
 
 package org.teiid.core.types;
 
+import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
@@ -147,7 +148,7 @@ public final class BlobType extends Streamable<Blob> implements Blob {
 	}
 	
 	@Override
-	protected void writeReference(final ObjectOutput out) throws IOException {
+	protected void writeReference(final DataOutput out) throws IOException {
 		try {
 			writeBinary(out, getBinaryStream(), (int)length);
 		} catch (SQLException e) {
@@ -155,7 +156,7 @@ public final class BlobType extends Streamable<Blob> implements Blob {
 		}
 	}
 
-	static void writeBinary(final ObjectOutput out, InputStream is, int length) throws IOException {
+	static void writeBinary(final DataOutput out, InputStream is, int length) throws IOException {
 		OutputStream os = new OutputStream() {
 			
 			@Override

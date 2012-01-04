@@ -133,6 +133,10 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 		        if (getPreparedPlanCacheInjector().getValue() != null) {
 		        	getPreparedPlanCacheInjector().getValue().clearForVDB(name, version);
 		        }
+			}
+
+			@Override
+			public void finishedDeployment(String name, int version, CompositeVDB vdb) {
 			}			
 		}); 		
 

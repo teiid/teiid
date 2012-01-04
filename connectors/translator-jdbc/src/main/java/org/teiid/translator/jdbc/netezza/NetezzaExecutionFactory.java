@@ -44,10 +44,10 @@ import org.teiid.translator.jdbc.LocateFunctionModifier;
 @Translator(name = "netezza", description = "A translator for Netezza Database")
 public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 
-	private static final String TIME_FORMAT = "HH24:MI:SS"; 
-	private static final String DATE_FORMAT = "YYYY-MM-DD"; 
-	private static final String DATETIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT; 
-	private static final String TIMESTAMP_FORMAT = DATETIME_FORMAT + ".MS";  
+	private static final String TIME_FORMAT = "HH24:MI:SS";  //$NON-NLS-1$
+	private static final String DATE_FORMAT = "YYYY-MM-DD";  //$NON-NLS-1$
+	private static final String DATETIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT;  //$NON-NLS-1$
+	private static final String TIMESTAMP_FORMAT = DATETIME_FORMAT + ".MS";   //$NON-NLS-1$
 
 	public NetezzaExecutionFactory() {
 		setSupportsFullOuterJoins(true);
@@ -62,51 +62,51 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 
 		//STRING FUNCTION MODIFIERS
 		////////////////////////////////////
-		registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr"));  
-		registerFunctionModifier(SourceSystemFunctions.LCASE,new AliasModifier("lower"));  
-		registerFunctionModifier(SourceSystemFunctions.UCASE,new AliasModifier("upper"));  
-		registerFunctionModifier(SourceSystemFunctions.LOCATE, new  LocateFunctionModifier(getLanguageFactory(), "INSTR", true));	  
-       	registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("||")); 
+		registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr"));   //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.LCASE,new AliasModifier("lower"));   //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.UCASE,new AliasModifier("upper"));   //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.LOCATE, new  LocateFunctionModifier(getLanguageFactory(), "INSTR", true));	   //$NON-NLS-1$
+       	registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("||"));  //$NON-NLS-1$
 		///NUMERIC FUNCTION MODIFIERS
         ////////////////////////////////////
-		registerFunctionModifier(SourceSystemFunctions.CEILING,	new AliasModifier("ceil"));  
-		registerFunctionModifier(SourceSystemFunctions.POWER,	new AliasModifier("pow"));  
-		registerFunctionModifier(SourceSystemFunctions.LOG,	new AliasModifier("LN"));
+		registerFunctionModifier(SourceSystemFunctions.CEILING,	new AliasModifier("ceil"));   //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.POWER,	new AliasModifier("pow"));   //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.LOG,	new AliasModifier("LN")); //$NON-NLS-1$
 		///BIT FUNCTION MODIFIERS
 		////////////////////////////////////
-        registerFunctionModifier(SourceSystemFunctions.BITAND, new AliasModifier("intNand")); 
-        registerFunctionModifier(SourceSystemFunctions.BITNOT, new AliasModifier("intNnot")); 
-        registerFunctionModifier(SourceSystemFunctions.BITOR, new AliasModifier("intNor")); 
-        registerFunctionModifier(SourceSystemFunctions.BITXOR, new AliasModifier("intNxor")); 
+        registerFunctionModifier(SourceSystemFunctions.BITAND, new AliasModifier("int4and"));  //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.BITNOT, new AliasModifier("int4not"));  //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.BITOR, new AliasModifier("int4or"));  //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.BITXOR, new AliasModifier("int4xor"));  //$NON-NLS-1$
 		//DATE FUNCTION MODIFIERS
         //////////////////////////////////////////
 		 registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier());
-		 registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new	ExtractModifier("DOY"));
+		 registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new	ExtractModifier("DOY")); //$NON-NLS-1$
 		 registerFunctionModifier(SourceSystemFunctions.QUARTER, new  ExtractFunctionModifier());
 		 registerFunctionModifier(SourceSystemFunctions.MONTH, new ExtractFunctionModifier());
-		 registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new  ExtractModifier("DAY"));
+		 registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new  ExtractModifier("DAY")); //$NON-NLS-1$
 		 registerFunctionModifier(SourceSystemFunctions.WEEK, new ExtractFunctionModifier());
-		 registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new  ExtractModifier("DOW"));
+		 registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new  ExtractModifier("DOW")); //$NON-NLS-1$
          registerFunctionModifier(SourceSystemFunctions.HOUR, new	ExtractFunctionModifier());
 		 registerFunctionModifier(SourceSystemFunctions.MINUTE, new  ExtractFunctionModifier());
 		 registerFunctionModifier(SourceSystemFunctions.SECOND, new ExtractFunctionModifier());
-		 registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("CURRENT_DATE")); 
-		 registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier("CURRENT_TIME")); 
+		 registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("CURRENT_DATE"));  //$NON-NLS-1$
+		 registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier("CURRENT_TIME"));  //$NON-NLS-1$
        //SYSTEM FUNCTIONS
        ////////////////////////////////////
-		registerFunctionModifier(SourceSystemFunctions.IFNULL,new AliasModifier("NVL"));  
+		registerFunctionModifier(SourceSystemFunctions.IFNULL,new AliasModifier("NVL"));   //$NON-NLS-1$
         
 
 		// DATA TYPE CONVERSION
 		///////////////////////////////////////////
 		ConvertModifier convertModifier = new ConvertModifier();
-		convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); 
-		convertModifier.addTypeMapping("byteint", FunctionModifier.BYTE); 
-		convertModifier.addTypeMapping("smallint", FunctionModifier.SHORT); 
-		convertModifier.addTypeMapping("bigint", FunctionModifier.LONG); 
-    	convertModifier.addTypeMapping("numeric(38)", FunctionModifier.BIGINTEGER); 
-    	convertModifier.addTypeMapping("numeric(38,18)", FunctionModifier.BIGDECIMAL); 
-		convertModifier.addTypeMapping("varchar(4000)", FunctionModifier.STRING); 
+		convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR);  //$NON-NLS-1$
+		convertModifier.addTypeMapping("byteint", FunctionModifier.BYTE);  //$NON-NLS-1$
+		convertModifier.addTypeMapping("smallint", FunctionModifier.SHORT);  //$NON-NLS-1$
+		convertModifier.addTypeMapping("bigint", FunctionModifier.LONG);  //$NON-NLS-1$
+    	convertModifier.addTypeMapping("numeric(38)", FunctionModifier.BIGINTEGER);  //$NON-NLS-1$
+    	convertModifier.addTypeMapping("numeric(38,18)", FunctionModifier.BIGDECIMAL);  //$NON-NLS-1$
+		convertModifier.addTypeMapping("varchar(4000)", FunctionModifier.STRING);  //$NON-NLS-1$
 		//convertModifier.addTypeMapping("nvarchar(5)", FunctionModifier.BOOLEAN);
 
  		///NO BOOLEAN, INTEGER, FLOAT, DATE, TIME, TIMESTAMP, as they are directly available in netezza
@@ -128,14 +128,14 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 			@Override
 			public List<?> translate(Function function) {
 				Expression stringValue = function.getParameters().get(0);
-				return Arrays.asList("CASE WHEN ", stringValue, " IN ('false', '0') THEN '0' WHEN ", stringValue, " IS NOT NULL THEN '1' END"); 
+				return Arrays.asList("CASE WHEN ", stringValue, " IN ('false', '0') THEN '0' WHEN ", stringValue, " IS NOT NULL THEN '1' END");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 		});
 		convertModifier.addTypeConversion(new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
 				Expression stringValue = function.getParameters().get(0);
-				return Arrays.asList("CASE WHEN ", stringValue, " = 0 THEN '0' WHEN ", stringValue, " IS NOT NULL THEN '1' END"); 
+				return Arrays.asList("CASE WHEN ", stringValue, " = 0 THEN '0' WHEN ", stringValue, " IS NOT NULL THEN '1' END");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 		}, FunctionModifier.BOOLEAN);
 		
@@ -143,25 +143,25 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 		
 
 		////////STRING TO DATATYPE CONVERSION OTHER THAN DATE/TIME
-		convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.INTEGER, new CastModifier("integer")); 
-		convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.FLOAT, new CastModifier("float"));
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DOUBLE, new CastModifier("double"));
+		convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.INTEGER, new CastModifier("integer"));  //$NON-NLS-1$
+		convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.FLOAT, new CastModifier("float")); //$NON-NLS-1$
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DOUBLE, new CastModifier("double")); //$NON-NLS-1$
     	///// STRING --> CHAR, BYTE, SHORT, LONG, BIGI, BIGD, BOOLEAN is taken care by Type Mapping
     	///// NO conversion support for NULL, CLOB, BLOB, OBJECT, XML
 		////STRING TO DATE/TIME CONVERSION////
 		//////////////////////////////////////
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("to_date", DATE_FORMAT));  
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("to_timestamp", TIME_FORMAT));  
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", TIMESTAMP_FORMAT));  
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("to_date", DATE_FORMAT));   //$NON-NLS-1$
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("to_timestamp", TIME_FORMAT));   //$NON-NLS-1$
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", TIMESTAMP_FORMAT));   //$NON-NLS-1$
 		//////DATE/TIME INTERNAL CONVERSION/////////
-		convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new CastModifier("TIME")); 
-		convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE,  new CastModifier("DATE"));  
-		convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.TIMESTAMP,  new CastModifier("TIMESTAMP")); 
+		convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new CastModifier("TIME"));  //$NON-NLS-1$
+		convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE,  new CastModifier("DATE"));   //$NON-NLS-1$
+		convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.TIMESTAMP,  new CastModifier("TIMESTAMP"));  //$NON-NLS-1$
 		//convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.TIMESTAMP, new CastModifier("TIMESTAMP")); //TIME --> TIMESTAMP --DOESN't WORK IN NETEZZA-NO FUNCTION SUPPORT
 				
 		////DATE/TIME to STRING CONVERION////
 		/////////////////////////////////////
-    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", TIMESTAMP_FORMAT));
+    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", TIMESTAMP_FORMAT)); //$NON-NLS-1$
     	///NO NETEZAA FUNCTION for DATE, TIME to STRING
 		
 
@@ -290,7 +290,7 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
     	}
 		@Override
 		public List<?> translate(Function function) {
-			return Arrays.asList("extract(",this.type," from ",function.getParameters().get(0) ,")");    				
+			return Arrays.asList("extract(",this.type," from ",function.getParameters().get(0) ,")");    				 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 	}
 
@@ -300,11 +300,11 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 			Expression booleanValue = function.getParameters().get(0);
 			if (booleanValue instanceof Function) {
 				Function nested = (Function)booleanValue;
-				if (nested.getName().equalsIgnoreCase("convert") && Number.class.isAssignableFrom(nested.getParameters().get(0).getType())) { 
+				if (nested.getName().equalsIgnoreCase("convert") && Number.class.isAssignableFrom(nested.getParameters().get(0).getType())) {  //$NON-NLS-1$
 					booleanValue = nested.getParameters().get(0);
 				}
 			}
-			return Arrays.asList("(CASE WHEN ", booleanValue, " IN ( '0', 'FALSE') THEN 0 WHEN ", booleanValue, " IS NOT NULL THEN 1 END)");
+			return Arrays.asList("(CASE WHEN ", booleanValue, " IN ( '0', 'FALSE') THEN 0 WHEN ", booleanValue, " IS NOT NULL THEN 1 END)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 
 	}
@@ -314,11 +314,11 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 			Expression booleanValue = function.getParameters().get(0);
 			if (booleanValue instanceof Function) {
 				Function nested = (Function)booleanValue;
-				if (nested.getName().equalsIgnoreCase("convert") && Number.class.isAssignableFrom(nested.getParameters().get(0).getType())) { 
+				if (nested.getName().equalsIgnoreCase("convert") && Number.class.isAssignableFrom(nested.getParameters().get(0).getType())) {  //$NON-NLS-1$
 					booleanValue = nested.getParameters().get(0);
 				}
 			}
-			return Arrays.asList("CASE WHEN ", booleanValue, " = '0' THEN 'false' WHEN ", booleanValue, " IS NOT NULL THEN 'true' END"); 
+			return Arrays.asList("CASE WHEN ", booleanValue, " = '0' THEN 'false' WHEN ", booleanValue, " IS NOT NULL THEN 'true' END");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 
 	}
@@ -331,7 +331,7 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
     	}
 		@Override
 		public List<?> translate(Function function) {
-			return Arrays.asList("cast(", function.getParameters().get(0), " AS "+this.target+")");   
+			return Arrays.asList("cast(", function.getParameters().get(0), " AS "+this.target+")");    //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 	}
     
@@ -339,7 +339,7 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 	@Override
     public List<?> translateLimit(Limit limit, ExecutionContext context) {
     	if (limit.getRowOffset() > 0) {
-    		return Arrays.asList("LIMIT ", limit.getRowLimit(), " OFFSET ", limit.getRowOffset());   
+    		return Arrays.asList("LIMIT ", limit.getRowLimit(), " OFFSET ", limit.getRowOffset());    //$NON-NLS-1$ //$NON-NLS-2$
     	}
         return null;
     }

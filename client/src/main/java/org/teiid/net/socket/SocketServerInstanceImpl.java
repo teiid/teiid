@@ -269,7 +269,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 				timeoutMillis -= now - start;
 				start = now;
 				if (timeoutMillis <= 0) {
-					throw new TimeoutException();
+					throw new TimeoutException("Read timeout after " + timeout + " milliseconds."); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
 		}
@@ -332,7 +332,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 					@Override
 					public Object get() throws InterruptedException, ExecutionException {
 						try {
-							return this.get(SocketServerConnectionFactory.getInstance().getSynchronousTtl(), TimeUnit.MILLISECONDS);
+							return this.get(instance.getSynchTimeout(), TimeUnit.MILLISECONDS);
 						} catch (TimeoutException e) {
 							throw new ExecutionException(e);
 						} 

@@ -22,6 +22,8 @@
 
 package org.teiid.core.types;
 
+import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -29,8 +31,11 @@ import java.io.ObjectOutput;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.teiid.core.CorePlugin;
+import org.teiid.core.util.AccessibleByteArrayOutputStream;
 
 
 
@@ -42,6 +47,8 @@ import org.teiid.core.CorePlugin;
  * this is the ID that client needs to reference to get the chunk of data.
  */
 public abstract class Streamable<T> implements Externalizable {
+	
+	private static final Logger logger = Logger.getLogger(Streamable.class.getName());
 
 	private static final long serialVersionUID = -8252488562134729374L;
 	
@@ -112,7 +119,7 @@ public abstract class Streamable<T> implements Externalizable {
     public void readExternal(ObjectInput in) throws IOException,
     		ClassNotFoundException {
     	length = in.readLong();
-    	referenceStreamId = (String)in.readObject();
+    	this.referenceStreamId = (String)in.readObject();
     	if (referenceStreamId == null) {
     		//we expect the data inline
     		readReference(in);
@@ -128,12 +135,27 @@ public abstract class Streamable<T> implements Externalizable {
 		} catch (SQLException e) {
 		}
     	out.writeLong(length);
-    	out.writeObject(referenceStreamId);
+    	boolean writeBuffer = false;
+    	AccessibleByteArrayOutputStream baos = null;
     	if (referenceStreamId == null) {
-    		writeReference(out);
+    		//TODO: detect when this buffering is not necessary
+    		baos = new AccessibleByteArrayOutputStream();
+    		DataOutputStream dataOutput = new DataOutputStream(baos);
+    		try {
+    			writeReference(dataOutput);
+    			dataOutput.close();
+    			writeBuffer = true;
+    		} catch (IOException e) {
+    			logger.log(Level.WARNING, e.getMessage());
+    			referenceStreamId = "error"; //$NON-NLS-1$
+    		}
     	}
+    	out.writeObject(referenceStreamId);
+		if (writeBuffer) {
+			out.write(baos.getBuffer(), 0, baos.getCount());
+		}
     }
     
-    protected abstract void writeReference(ObjectOutput out) throws IOException;
+    protected abstract void writeReference(DataOutput out) throws IOException;
     
 }

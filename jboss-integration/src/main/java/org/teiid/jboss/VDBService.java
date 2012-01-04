@@ -55,10 +55,12 @@ import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidException;
+import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.ContainerLifeCycleListener;
 import org.teiid.deployers.MetadataStoreGroup;
 import org.teiid.deployers.TranslatorUtil;
 import org.teiid.deployers.UDFMetaData;
+import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
@@ -88,6 +90,7 @@ class VDBService implements Service<VDBMetaData> {
 	private final InjectedValue<BufferServiceImpl> bufferServiceInjector = new InjectedValue<BufferServiceImpl>();
 	private final InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
 	private ContainerLifeCycleListener shutdownListener;
+	private VDBLifeCycleListener vdbListener;
 	
 	public VDBService(VDBMetaData metadata, ContainerLifeCycleListener shutdownListener) {
 		this.vdb = metadata;
@@ -121,6 +124,32 @@ class VDBService implements Service<VDBMetaData> {
 		}
 
 		createConnectorManagers(cmr, repo, this.vdb);
+		
+		this.vdbListener = new VDBLifeCycleListener() {
+			@Override
+			public void added(String name, int version, CompositeVDB vdb) {
+			}
+
+			@Override
+			public void removed(String name, int version, CompositeVDB vdb) {
+			}
+
+			@Override
+			public void finishedDeployment(String name, int version,CompositeVDB vdb) {
+				// add object replication to temp/matview tables
+				GlobalTableStore gts = new GlobalTableStoreImpl(getBuffermanager(), vdb.getVDB().getAttachment(TransformationMetadata.class));
+				if (getObjectReplicatorInjector().getValue() != null) {
+					try {
+						gts = getObjectReplicatorInjector().getValue().replicate(name + version, GlobalTableStore.class, gts, 300000);
+					} catch (Exception e) {
+						LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("replication_failed", gts)); //$NON-NLS-1$
+					}
+				}
+				vdb.getVDB().addAttchment(GlobalTableStore.class, gts);
+			}
+		};
+		
+		getVDBRepository().addListener(this.vdbListener);
 				
 		// check to see if the vdb has been modified when server is down; if it is then clear the old files
 		// This is no longer required as VDB can not modified in place in deployment directory as they held inside the data dir
@@ -205,18 +234,7 @@ class VDBService implements Service<VDBMetaData> {
 		this.vdb.removeAttachment(UDFMetaData.class);
 		this.vdb.removeAttachment(MetadataStoreGroup.class);
 		this.vdb.removeAttachment(IndexMetadataFactory.class);	
-		
-		// add object replication to temp/matview tables
-		GlobalTableStore gts = new GlobalTableStoreImpl(getBuffermanager(), vdb.getAttachment(TransformationMetadata.class));
-		if (getObjectReplicatorInjector().getValue() != null) {
-			try {
-				gts = getObjectReplicatorInjector().getValue().replicate(vdb.getName() + vdb.getVersion(), GlobalTableStore.class, gts, 300000);
-			} catch (Exception e) {
-				LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("replication_failed", gts)); //$NON-NLS-1$
-			}
-		}
-		vdb.addAttchment(GlobalTableStore.class, gts);		
-		
+				
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_deployed",vdb, valid?"active":"inactive")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$		
 	}
 
@@ -228,7 +246,7 @@ class VDBService implements Service<VDBMetaData> {
 			GlobalTableStore gts = vdb.getAttachment(GlobalTableStore.class);
 			getObjectReplicatorInjector().getValue().stop(gts);
 		}		
-		
+		getVDBRepository().removeListener(this.vdbListener);
 		getVDBRepository().removeVDB(this.vdb.getName(), this.vdb.getVersion());
 		this.vdb.setRemoved(true);
 
