@@ -1161,7 +1161,12 @@ public class NewCalculateCostUtil {
 		for (int i = 0; i < independentExpressions.size(); i++) {
 			Expression indExpr = (Expression)independentExpressions.get(i);
 			Collection<ElementSymbol> indElements = ElementCollectorVisitor.getElements(indExpr, true);
-			float indSymbolNDV = getNDVEstimate(independentNode, metadata, independentCardinality, indElements, true);
+			float indSymbolNDV = getNDVEstimate(independentNode, metadata, independentCardinality, indElements, false);
+			boolean unknownNDV = false;
+			if (indSymbolNDV == UNKNOWN_VALUE) {
+				unknownNDV = true;
+				indSymbolNDV = independentCardinality/2;
+			}
 			Expression depExpr = (Expression)dependentExpressions.get(i);
 			
 			LinkedList<Expression> depExpressions = new LinkedList<Expression>();
@@ -1220,6 +1225,7 @@ public class NewCalculateCostUtil {
 							} 
 						}
 						depSymbolNDV = Math.max((float)Math.pow(depTargetCardinality, .75), Math.min(indSymbolOrigNDV, depTargetCardinality));
+						unknownNDV = true;
 					} else {
 						depSymbolNDV = depTargetCardinality;
 					}
@@ -1235,6 +1241,10 @@ public class NewCalculateCostUtil {
 		        	} else {
 		        		dca.expectedCardinality = Math.min(dca.expectedCardinality, estimates[0]);
 		        	}
+		        }
+		        //don't use the ndv if it is unknown
+		        if (unknownNDV) {
+		        	continue;
 		        }
 		        dca.expectedNdv[i] = indSymbolNDV;
 		        //use a quick binary search to find the max ndv
