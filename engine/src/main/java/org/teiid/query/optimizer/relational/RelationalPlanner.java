@@ -408,7 +408,7 @@ public class RelationalPlanner {
         
         rules.push(RuleConstants.PLAN_SORTS);
         
-        //TODO: update plan sorts to take advantage or semi-join ordering
+        //TODO: update plan sorts to take advantage of semi-join ordering
         if (hints.hasJoin || hints.hasCriteria) {
             rules.push(new RuleMergeCriteria(idGenerator, capFinder, analysisRecord, context, metadata));
         }
@@ -431,9 +431,7 @@ public class RelationalPlanner {
             rules.push(new RulePushAggregates(idGenerator));
         }
         if(hints.hasJoin) {
-            rules.push(RuleConstants.CHOOSE_DEPENDENT);
-        }
-        if(hints.hasJoin) {
+        	rules.push(RuleConstants.CHOOSE_DEPENDENT);
             rules.push(RuleConstants.CHOOSE_JOIN_STRATEGY);
             rules.push(RuleConstants.RAISE_ACCESS);
             //after planning the joins, let the criteria be pushed back into place
@@ -444,8 +442,9 @@ public class RelationalPlanner {
         if (hints.hasSetQuery) {
             rules.push(RuleConstants.PLAN_UNIONS);
         } 
-        if(hints.hasCriteria || hints.hasJoin) {
+        if(hints.hasCriteria || hints.hasJoin || hints.hasVirtualGroups) {
             //after copy criteria, it is no longer necessary to have phantom criteria nodes, so do some cleaning
+        	//also remove possible erroneous output elements
             rules.push(RuleConstants.CLEAN_CRITERIA);
         }
         if(hints.hasJoin) {

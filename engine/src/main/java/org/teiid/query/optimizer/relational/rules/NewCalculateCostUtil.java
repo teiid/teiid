@@ -310,10 +310,14 @@ public class NewCalculateCostUtil {
 			QueryMetadataInterface metadata, float cost)
 			throws QueryMetadataException, TeiidComponentException {
 		PlanNode projectNode = NodeEditor.findNodePreOrder(node, NodeConstants.Types.PROJECT);
+		float result = cost;
 		if (projectNode != null) {
-			cost = getNDVEstimate(node.getParent(), metadata, cost, (List)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS), false);
+			result = getNDVEstimate(node.getParent(), metadata, cost, (List)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS), false);
+			if (result == UNKNOWN_VALUE) {
+				return cost;
+			}
 		}
-		return cost;
+		return result;
 	}
 
     private static void setCardinalityEstimate(PlanNode node, Float bestEstimate, boolean setColEstimates, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
