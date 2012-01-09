@@ -27,6 +27,7 @@ package org.teiid.query.processor.relational;
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.client.plan.PlanNode;
@@ -48,7 +49,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 public class ProjectIntoNode extends RelationalNode {
 
 	public enum Mode {
-		BATCH, BULK, ITERATOR, SINGLE
+		BATCH, ITERATOR, SINGLE
 	}
 	
     private static int REQUEST_CREATION = 1;
@@ -157,31 +158,13 @@ public class ProjectIntoNode extends RelationalNode {
             		requests = 0;
             	}
             	break;
-            case BULK:
-            	//convert to multivalued parameter
-                List<Constant> parameters = new ArrayList<Constant>(intoElements.size());
-                for (int i = 0; i < intoElements.size(); i++) {
-					Constant value = new Constant(null, ((ElementSymbol)intoElements.get(i)).getType());
-					value.setMultiValued(new ArrayList<Object>(currentBatch.getTuples().size()));
-                	parameters.add(value);
-				}
-                for (List row : currentBatch.getTuples()) {
-                	for (int i = 0; i < row.size(); i++) {
-                		((List<Object>)parameters.get(i).getValue()).add(row.get(i));
-                	}
-				}
-                // Create a bulk insert command batching all rows in the current batch.
-                Insert insert = new Insert(intoGroup, intoElements, parameters);
-                // Register insert command against source 
-                registerRequest(insert);
-                break;
             case BATCH:
                 // Register batched update command against source
                 int endRow = currentBatch.getEndRow();
-                List rows = new ArrayList(endRow-batchRow);
+                List<Command> rows = new ArrayList<Command>(endRow-batchRow);
                 for(int rowNum = batchRow; rowNum <= endRow; rowNum++) {
 
-                    insert = new Insert( intoGroup, 
+                    Insert insert = new Insert( intoGroup, 
                                                  intoElements, 
                                                  convertValuesToConstants(currentBatch.getTuple(rowNum), intoElements));
                     rows.add( insert );
@@ -205,9 +188,7 @@ public class ProjectIntoNode extends RelationalNode {
         checkExitConditions();
         
         // End this node's work
-        List outputRow = new ArrayList(1);
-        outputRow.add(new Integer(this.insertCount));
-        addBatchRow(outputRow);
+        addBatchRow(Arrays.asList(insertCount));
         terminateBatches();
         return pullBatch();                                                           
     }
@@ -271,11 +252,11 @@ public class ProjectIntoNode extends RelationalNode {
         return props;
     }
     
-    private List convertValuesToConstants(List values, List elements) {
-        ArrayList constants = new ArrayList(values.size());
+    private List<Constant> convertValuesToConstants(List<?> values, List<ElementSymbol> elements) {
+        ArrayList<Constant> constants = new ArrayList<Constant>(values.size());
         for(int i=0; i<elements.size(); i++) {
-            ElementSymbol es = (ElementSymbol)elements.get(i);
-            Class type = es.getType();
+            ElementSymbol es = elements.get(i);
+            Class<?> type = es.getType();
             constants.add(new Constant(values.get(i),type));
         }
         return constants;

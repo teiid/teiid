@@ -22,16 +22,18 @@
 
 package org.teiid.language;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
 
-public class Insert extends BaseLanguageObject implements Command {
+public class Insert extends BaseLanguageObject implements BatchedCommand {
     
     private NamedTable table;
     private List<ColumnReference> columns;
     private InsertValueSource valueSource;
+    private Iterator<? extends List<?>> parameterValues;
   
     public Insert(NamedTable group, List<ColumnReference> elements, InsertValueSource valueSource) {
         this.table = group;
@@ -66,5 +68,14 @@ public class Insert extends BaseLanguageObject implements Command {
     public void setValueSource(InsertValueSource values) {
     	this.valueSource = values;
     }
+    
+    @Override
+    public Iterator<? extends List<?>> getParameterValues() {
+    	return parameterValues;
+    }
+    
+    public void setParameterValues(Iterator<? extends List<?>> parameterValues) {
+		this.parameterValues = parameterValues;
+	}
 
 }

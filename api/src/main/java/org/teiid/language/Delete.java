@@ -22,15 +22,19 @@
 
 package org.teiid.language;
 
+import java.util.Iterator;
+import java.util.List;
+
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
 /**
  * Represents a DELETE command.
  */
-public class Delete extends BaseLanguageObject implements Command {
+public class Delete extends BaseLanguageObject implements BatchedCommand {
 
     private NamedTable table;
     private Condition where;
+    private Iterator<? extends List<?>> parameterValues;
     
     public Delete(NamedTable group, Condition criteria) {
         this.table = group;
@@ -72,5 +76,14 @@ public class Delete extends BaseLanguageObject implements Command {
     public void setWhere(Condition criteria) {
         this.where = criteria;
     }
+    
+    @Override
+    public Iterator<? extends List<?>> getParameterValues() {
+    	return parameterValues;
+    }
+    
+    public void setParameterValues(Iterator<? extends List<?>> parameterValues) {
+		this.parameterValues = parameterValues;
+	}
 
 }

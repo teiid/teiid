@@ -33,8 +33,6 @@ public class Literal extends BaseLanguageObject implements Expression {
     
     private Object value;
     private Class<?> type;
-    private boolean bindValue;
-    private boolean multiValued;
     private boolean isBindEligible;
     
     public Literal(Object value, Class<?> type) {
@@ -58,22 +56,6 @@ public class Literal extends BaseLanguageObject implements Expression {
         this.value = value;
     }
 
-    public boolean isBindValue() {
-        return bindValue;
-    }
-
-    public void setBindValue(boolean bindValue) {
-        this.bindValue = bindValue;
-    }
-
-	public boolean isMultiValued() {
-		return multiValued;
-	}
-
-	public void setMultiValued(boolean multiValued) {
-		this.multiValued = multiValued;
-	}
-
 	public void setType(Class<?> type) {
 		this.type = type;
 	}
@@ -81,7 +63,6 @@ public class Literal extends BaseLanguageObject implements Expression {
 	/**
 	 * Set by the optimizer if the literal was created by the evaluation of another expression.
 	 * Setting to true will not always result in the value being handled as a bind value.
-	 * That can be forced {@link #isBindValue()}
 	 * @return
 	 */
 	public boolean isBindEligible() {

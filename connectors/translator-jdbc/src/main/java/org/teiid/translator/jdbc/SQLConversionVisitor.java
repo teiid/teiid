@@ -39,20 +39,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.teiid.language.Argument;
-import org.teiid.language.Call;
-import org.teiid.language.Command;
-import org.teiid.language.Comparison;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.Function;
-import org.teiid.language.In;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Like;
-import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
-import org.teiid.language.SearchedCase;
-import org.teiid.language.SetClause;
+import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SQLConstants.Tokens;
@@ -255,12 +242,18 @@ public class SQLConversionVisitor extends SQLStringVisitor{
 		}
 		return parts;
 	}
+	
+	@Override
+	public void visit(Parameter obj) {
+        buffer.append(UNDEFINED_PARAM);
+        preparedValues.add(obj);
+	}
     
     /**
      * @see org.teiid.language.visitor.SQLStringVisitor#visit(org.teiid.language.Literal)
      */
     public void visit(Literal obj) {
-        if (this.prepared && ((replaceWithBinding && obj.isBindEligible()) || TranslatedCommand.isBindEligible(obj) || obj.isBindValue())) {
+        if (this.prepared && ((replaceWithBinding && obj.isBindEligible()) || TranslatedCommand.isBindEligible(obj))) {
             buffer.append(UNDEFINED_PARAM);
             preparedValues.add(obj);
         } else {

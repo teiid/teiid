@@ -55,10 +55,8 @@ public class SubstringFunctionModifier extends AliasModifier {
 		Boolean isNegative = null;
 		if (length instanceof Literal) {
 			Literal l = (Literal)length;
-			if (!l.isMultiValued()) {
-				int value = (Integer)l.getValue();
-				isNegative = value < 0;
-			}
+			int value = (Integer)l.getValue();
+			isNegative = value < 0;
 		}
 		Expression maxLength = new Function(
 				SourceSystemFunctions.SUBTRACT_OP,

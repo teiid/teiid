@@ -22,6 +22,7 @@
 
 package org.teiid.language;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.language.visitor.LanguageObjectVisitor;
@@ -29,11 +30,12 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 /**
  * Represents an UPDATE command in the language objects.
  */
-public class Update extends BaseLanguageObject implements Command {
+public class Update extends BaseLanguageObject implements BatchedCommand {
     
     private NamedTable table;
 	private List<SetClause> changes;
     private Condition where;
+    private Iterator<? extends List<?>> parameterValues;
     
     public Update(NamedTable group, List<SetClause> changes, Condition criteria) {
         this.table = group;
@@ -68,5 +70,14 @@ public class Update extends BaseLanguageObject implements Command {
     public void setWhere(Condition criteria) {
         this.where = criteria;
     }
+    
+    @Override
+    public Iterator<? extends List<?>> getParameterValues() {
+    	return parameterValues;
+    }
+    
+    public void setParameterValues(Iterator<? extends List<?>> parameterValues) {
+		this.parameterValues = parameterValues;
+	}
 
 }

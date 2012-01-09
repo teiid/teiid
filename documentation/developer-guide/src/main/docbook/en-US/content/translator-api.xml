@@ -465,8 +465,13 @@ public void setFoo(String value)
 	<listitem>
 		<para>
 			<code>Literal</code>
-			– represents a literal scalar value, but may also be multi-valued in
-			the case of bulk updates.
+			– represents a literal scalar value.
+		</para>
+	</listitem>
+		<listitem>
+		<para>
+			<code>Parameter</code>
+			– represents a parameter with multiple values.  The command should be an instance of BatchedCommand, which provides all values via getParameterValues.
 		</para>
 	</listitem>
 	<listitem>
@@ -585,7 +590,7 @@ public void setFoo(String value)
 			inserted into.  It will also has a list of <code>ColumnReference</code> specifying the columns 
             of the <code>NamedTable</code> that are being inserted into. It also has
             <code>InsertValueSource</code>, which will be a list of 
-            Expressions (<code>ExpressionValueSource</code>),  or a <code>QueryExpression</code>, or an Iterator (<code>IteratorValueSource</code>)</para>
+            Expressions (<code>ExpressionValueSource</code>) or a <code>QueryExpression</code></para>
     </section>
 
     <section>
@@ -1412,17 +1417,6 @@ int count = visitor.getCount();]]></programlisting>
                 </entry>
                 <entry>
                   <para>Translator supports updates with multiple value sets</para>
-                </entry>
-              </row>         
-              <row>
-                <entry>
-                  <para>InsertWithIterator</para>
-                </entry>
-                <entry>
-                  <para/>
-                </entry>
-                <entry>
-                  <para>Translator supports inserts with an iterator of values.  The values would typically be from an evaluated QueryExpression.</para>
                 </entry>
               </row>         
               <row>

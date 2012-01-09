@@ -254,10 +254,6 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		return delegate.supportsInlineViews();
 	}
 	@Override
-	public boolean supportsInsertWithIterator() {
-		return delegate.supportsInsertWithIterator();
-	}
-	@Override
 	public boolean supportsInsertWithQueryExpression() {
 		return delegate.supportsInsertWithQueryExpression();
 	}

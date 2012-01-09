@@ -23,7 +23,6 @@
 package org.teiid.translator;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -804,16 +803,6 @@ public class ExecutionFactory<F, C> {
     	return false;
     }
     
-    /**
-     * Support indicates that the connector can accept INSERTs
-     * with values specified by an {@link Iterator}
-     * @since 7.1
-     * @return
-     */
-    public boolean supportsInsertWithIterator() {
-    	return false;
-    }
-	
     public static <T> T getInstance(Class<T> expectedType, String className, Collection<?> ctorObjs, Class<? extends T> defaultClass) throws TranslatorException {
     	try {
 	    	if (className == null) {

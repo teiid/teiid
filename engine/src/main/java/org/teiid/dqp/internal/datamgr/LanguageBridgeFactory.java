@@ -25,6 +25,7 @@ package org.teiid.dqp.internal.datamgr;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -33,7 +34,7 @@ import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.language.*;
 import org.teiid.language.DerivedColumn;
@@ -67,6 +68,8 @@ import org.teiid.translator.TranslatorException;
 
 public class LanguageBridgeFactory {
     private RuntimeMetadataImpl metadataFactory = null;
+    private int valueIndex = 0;
+    private List<List<?>> allValues = new LinkedList<List<?>>();
 
     public LanguageBridgeFactory(QueryMetadataInterface metadata) {
         if (metadata != null) {
@@ -454,11 +457,17 @@ public class LanguageBridgeFactory {
     	result.setWindowSpecification(ws);
     	return result;
     }
-
-    Literal translate(Constant constant) {
+    
+    org.teiid.language.Expression translate(Constant constant) {
+    	if (constant.isMultiValued()) {
+    		Parameter result = new Parameter();
+    		result.setType(constant.getType());
+    		final List<?> values = (List<?>)constant.getValue();
+    		allValues.add(values);
+    		result.setValueIndex(valueIndex++);
+    		return result;
+    	}
         Literal result = new Literal(constant.getValue(), constant.getType());
-        result.setBindValue(constant.isMultiValued());
-        result.setMultiValued(constant.isMultiValued());
         result.setBindEligible(constant.isBindEligible());
         return result;
     }
@@ -543,44 +552,54 @@ public class LanguageBridgeFactory {
         for (ElementSymbol elementSymbol : elements) {
             translatedElements.add(translate(elementSymbol));
 		}
-        
+        Iterator<List<?>> parameterValues = null;
         InsertValueSource valueSource = null;
         if (insert.getQueryExpression() != null) {
         	valueSource = translate(insert.getQueryExpression());
         } else if (insert.getTupleSource() != null) {
         	final TupleSource ts = insert.getTupleSource();
-        	valueSource = new IteratorValueSource<List<?>>(new Iterator<List<?>>() {
-        		
-        		List<?> next;
+    		parameterValues = new Iterator<List<?>>() {
+				List<?> nextRow;
+				
+				@Override
+				public boolean hasNext() {
+					if (nextRow == null) {
+						try {
+							nextRow = ts.nextTuple();
+						} catch (TeiidComponentException e) {
+							throw new TeiidRuntimeException(e);
+						} catch (TeiidProcessingException e) {
+							throw new TeiidRuntimeException(e);
+						}
+					}
+					return nextRow != null;
+				}
+				
+				@Override
+				public List<?> next() {
+					if (nextRow == null && !hasNext()) {
+						throw new NoSuchElementException();
+					}
+					List<?> result = nextRow;
+					nextRow = null;
+					return result;
+				}
 				
 				@Override
 				public void remove() {
 					throw new UnsupportedOperationException();
 				}
-				
-				@Override
-				public List<?> next() {
-					if (hasNext()) {
-						List<?> result = next;
-						next = null;
-						return result;
-					}
-					throw new NoSuchElementException();
-				}
-				
-				@Override
-				public boolean hasNext() {
-					if (next != null) {
-						return true;
-					}
-					try {
-						next = ts.nextTuple();
-					} catch (TeiidException e) {
-						throw new TeiidRuntimeException(e);
-					}
-					return next != null;
-				}
-			}, elements.size());
+    			
+			};
+        	List<org.teiid.language.Expression> translatedValues = new ArrayList<org.teiid.language.Expression>();
+        	for (int i = 0; i < insert.getVariables().size(); i++) {
+        		ElementSymbol es = insert.getVariables().get(i);
+        		Parameter param = new Parameter();
+        		param.setType(es.getType());
+        		param.setValueIndex(i);
+                translatedValues.add(param);
+            }
+            valueSource = new ExpressionValueSource(translatedValues);
         } else {
             // This is for the simple one row insert.
             List values = insert.getValues();
@@ -591,16 +610,40 @@ public class LanguageBridgeFactory {
             valueSource = new ExpressionValueSource(translatedValues);
         }
         
-        return new org.teiid.language.Insert(translate(insert.getGroup()),
+        org.teiid.language.Insert result = new org.teiid.language.Insert(translate(insert.getGroup()),
                               translatedElements,
                               valueSource);
+        result.setParameterValues(parameterValues);
+        setBatchValues(result);
+        return result;
+    }
+    
+    private void setBatchValues(BatchedCommand bc) {
+    	if (valueIndex == 0) {
+    		return;
+    	}
+    	if (bc.getParameterValues() != null) {
+    		throw new IllegalStateException("Already set batch values"); //$NON-NLS-1$
+    	}
+    	int rowCount = allValues.get(0).size();
+    	List<List<?>> result = new ArrayList<List<?>>(rowCount);
+    	for (int i = 0; i < rowCount; i++) {
+    		List<Object> row = new ArrayList<Object>(allValues.size());
+	    	for (List<?> vals : allValues) {
+	    		row.add(vals.get(i));
+	    	}
+	    	result.add(row);
+    	}
+    	bc.setParameterValues(result.iterator());
     }
 
     /* Update */
     org.teiid.language.Update translate(Update update) {
-        return new org.teiid.language.Update(translate(update.getGroup()),
+        org.teiid.language.Update result = new org.teiid.language.Update(translate(update.getGroup()),
                               translate(update.getChangeList()),
                               translate(update.getCriteria()));
+        setBatchValues(result);
+        return result;
     }
     
     List<org.teiid.language.SetClause> translate(SetClauseList setClauseList) {
@@ -619,6 +662,7 @@ public class LanguageBridgeFactory {
     org.teiid.language.Delete translate(Delete delete) {
         org.teiid.language.Delete deleteImpl = new org.teiid.language.Delete(translate(delete.getGroup()),
                               translate(delete.getCriteria()));
+        setBatchValues(deleteImpl);
         return deleteImpl;
     }
 

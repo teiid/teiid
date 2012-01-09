@@ -29,11 +29,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.language.BatchedCommand;
 import org.teiid.language.BatchedUpdates;
 import org.teiid.language.Command;
 import org.teiid.language.Insert;
-import org.teiid.language.IteratorValueSource;
-import org.teiid.language.Literal;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
@@ -107,7 +106,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
                         }
                         pstmt = getPreparedStatement(tCommand.getSql());
                     }
-                    bindPreparedStatementValues(pstmt, tCommand, 1);
+                    bind(pstmt, tCommand.getPreparedValues(), null);
                     pstmt.addBatch();
                 } else {
                     if (previousCommand != null && previousCommand.isPrepared()) {
@@ -170,57 +169,43 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
             } else {
             	PreparedStatement pstatement = getPreparedStatement(sql);
             	
-            	if (command instanceof Insert) {
-                	Insert insert = (Insert)command;
-                	if (insert.getValueSource() instanceof IteratorValueSource) {
-                        commitType = getAutoCommit(translatedComm);
-                        if (commitType) {
-                            connection.setAutoCommit(false);
-                        }
-                		
-                		IteratorValueSource<List<Object>> ivs = (IteratorValueSource)insert.getValueSource();
-                		List<Object>[] values = new List[ivs.getColumnCount()];
-                		for (int i = 0; i < ivs.getColumnCount(); i++) {
-                			values[i] = new ArrayList<Object>();
-                			Literal literal = new Literal(values[i], insert.getColumns().get(i).getType());
-                			literal.setMultiValued(true);
-                			translatedComm.getPreparedValues().add(literal);
-                		}
-                		Iterator<List<Object>> i = ivs.getIterator();
-                		int maxBatchSize = this.executionFactory.getMaxPreparedInsertBatchSize();
-                		while (i.hasNext()) {
-                			int batchSize = 0;
-	                		while (i.hasNext() && batchSize++ < maxBatchSize) {
-	                			List<Object> next = i.next();
-	                			for (int j = 0; j < ivs.getColumnCount(); j++) {
-	                				values[j].add(next.get(j));
-	                    		}
-	                		}
-	                		updateCount += executePreparedBatch(translatedComm, pstatement, batchSize);
-                			for (int j = 0; j < ivs.getColumnCount(); j++) {
-                				values[j].clear();
-                    		}
-                		}
-                		succeeded = true;
-                		return new int[updateCount];
-                	}
-                }
+            	Iterator<? extends List<?>> vi = null;
+            	if (command instanceof BatchedCommand) {
+            		BatchedCommand batchCommand = (BatchedCommand)command;
+            		vi = batchCommand.getParameterValues();
+            	}
             	
-                int rowCount = 1;
-                for (int i = 0; i< translatedComm.getPreparedValues().size(); i++) {
-                    Literal paramValue = (Literal)translatedComm.getPreparedValues().get(i);
-                    if (paramValue.isMultiValued()) {
-                    	rowCount = ((List<?>)paramValue.getValue()).size();
-                    	break;
-                    }
-                }
-                if (rowCount > 1) {
+                if (vi != null) {
                     commitType = getAutoCommit(translatedComm);
                     if (commitType) {
                         connection.setAutoCommit(false);
                     }
+            		int maxBatchSize = (command instanceof Insert)?this.executionFactory.getMaxPreparedInsertBatchSize():Integer.MAX_VALUE;
+            		boolean done = false;
+            		outer: while (!done) {
+            			for (int i = 0; i < maxBatchSize; i++) {
+            				if (vi.hasNext()) {
+    	            			List<?> values = vi.next();
+    	            			bind(pstatement, translatedComm.getPreparedValues(), values);
+            				} else {
+            					if (i == 0) {
+	            					break outer;
+	            				}
+	            				done = true;
+	            				break;
+            				}
+            			}
+            		    int[] results = pstatement.executeBatch();
+            		    
+            		    for (int i=0; i<results.length; i++) {
+            		        updateCount += results[i];
+            		    }
+            		}
+                } else {
+                	bind(pstatement, translatedComm.getPreparedValues(), null);
+        			updateCount = pstatement.executeUpdate();
+        			addStatementWarnings();
                 }
-                updateCount = executePreparedBatch(translatedComm, pstatement, rowCount);
                 succeeded = true;
             } 
             return new int[] {updateCount};
@@ -232,23 +217,6 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
             }
         }
     }
-
-	private int executePreparedBatch(TranslatedCommand translatedComm, PreparedStatement pstatement, int rowCount)
-			throws SQLException {
-		bindPreparedStatementValues(pstatement, translatedComm, rowCount);
-		int updateCount = 0;
-		if (rowCount > 1) {
-		    int[] results = pstatement.executeBatch();
-		    
-		    for (int i=0; i<results.length; i++) {
-		        updateCount += results[i];
-		    }
-		} else {
-			updateCount = pstatement.executeUpdate();
-		}
-		addStatementWarnings();
-		return updateCount;
-	}
 
     /**
      * @param command

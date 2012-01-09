@@ -31,51 +31,7 @@ import java.util.Set;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
-import org.teiid.language.AggregateFunction;
-import org.teiid.language.AndOr;
-import org.teiid.language.Argument;
-import org.teiid.language.Call;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Command;
-import org.teiid.language.Comparison;
-import org.teiid.language.Condition;
-import org.teiid.language.Delete;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.DerivedTable;
-import org.teiid.language.Exists;
-import org.teiid.language.Expression;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.Function;
-import org.teiid.language.GroupBy;
-import org.teiid.language.In;
-import org.teiid.language.Insert;
-import org.teiid.language.IsNull;
-import org.teiid.language.IteratorValueSource;
-import org.teiid.language.Join;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Like;
-import org.teiid.language.Limit;
-import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
-import org.teiid.language.Not;
-import org.teiid.language.OrderBy;
-import org.teiid.language.QueryExpression;
-import org.teiid.language.SQLConstants;
-import org.teiid.language.ScalarSubquery;
-import org.teiid.language.SearchedCase;
-import org.teiid.language.SearchedWhenClause;
-import org.teiid.language.Select;
-import org.teiid.language.SetClause;
-import org.teiid.language.SetQuery;
-import org.teiid.language.SortSpecification;
-import org.teiid.language.SubqueryComparison;
-import org.teiid.language.SubqueryIn;
-import org.teiid.language.TableReference;
-import org.teiid.language.Update;
-import org.teiid.language.WindowFunction;
-import org.teiid.language.WindowSpecification;
-import org.teiid.language.With;
-import org.teiid.language.WithItem;
+import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Tokens;
@@ -538,17 +494,10 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
 	}
     
     @Override
-    public void visit(IteratorValueSource obj) {
-    	buffer.append(VALUES).append(Tokens.SPACE).append(Tokens.LPAREN);
-    	for (int i = 0; i < obj.getColumnCount(); i++) {
-    		if (i > 0) {
-    			buffer.append(", "); //$NON-NLS-1$
-    		}
-    		buffer.append("?"); //$NON-NLS-1$
-		}
-		buffer.append(Tokens.RPAREN);
+    public void visit(Parameter obj) {
+    	buffer.append('?');
     }
-        
+    
     public void visit(IsNull obj) {
         append(obj.getExpression());
         buffer.append(Tokens.SPACE)
@@ -664,9 +613,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(Literal obj) {
-    	if (obj.isBindValue()) {
-    		buffer.append("?"); //$NON-NLS-1$
-    	} else if (obj.getValue() == null) {
+    	if (obj.getValue() == null) {
             buffer.append(NULL);
         } else {
             Class<?> type = obj.getType();

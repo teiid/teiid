@@ -32,12 +32,13 @@ import java.util.List;
 
 import org.teiid.language.Command;
 import org.teiid.language.Literal;
+import org.teiid.language.Parameter;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TranslatorException;
 
 
 /**
@@ -77,24 +78,30 @@ public abstract class JDBCBaseExecution implements Execution  {
     /**
      * Bind the values in the TranslatedCommand to the PreparedStatement
      */
-    protected void bindPreparedStatementValues(PreparedStatement stmt, TranslatedCommand tc, int rowCount) throws SQLException {
-        List<?> params = tc.getPreparedValues();
-
-        for (int row = 0; row < rowCount; row++) {
-	        for (int i = 0; i< params.size(); i++) {
-	            Literal paramValue = (Literal)params.get(i);
-	            Object value = paramValue.getValue();
-	            if (paramValue.isMultiValued()) {
-	            	value = ((List<?>)value).get(row);
-	            }
-	            Class<?> paramType = paramValue.getType();
-	            this.executionFactory.bindValue(stmt, value, paramType, i+1);
-	        }
-	        if (rowCount > 1) {
-            	stmt.addBatch();
-            }
-        }
-    }
+	protected void bind(PreparedStatement stmt, List<?> params, List<?> batchValues)
+			throws SQLException {
+		for (int i = 0; i< params.size(); i++) {
+		    Object paramValue = params.get(i);
+		    Object value = null;
+		    Class<?> paramType = null;
+		    if (paramValue instanceof Literal) {
+		    	Literal litParam = (Literal)paramValue;
+		    	value = litParam.getValue();
+		    	paramType = litParam.getType();
+		    } else {
+		    	Parameter param = (Parameter)paramValue;
+		    	if (batchValues == null) {
+		    		throw new AssertionError("Expected batchValues when using a Parameter"); //$NON-NLS-1$
+		    	}
+		    	value = batchValues.get(param.getValueIndex());
+		    	paramType = param.getType();
+		    }
+		    this.executionFactory.bindValue(stmt, value, paramType, i+1);
+		}
+		if (batchValues != null) {
+			stmt.addBatch();
+		}
+	}
 
     // ===========================================================================================================================
     // Methods

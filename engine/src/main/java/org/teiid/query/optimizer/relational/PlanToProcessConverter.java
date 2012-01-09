@@ -171,8 +171,6 @@ public class PlanToProcessConverter {
                             SourceCapabilities caps = capFinder.findCapabilities(modelName);
                             if (caps.supportsCapability(Capability.INSERT_WITH_ITERATOR)) {
                             	pinode.setMode(org.teiid.query.processor.relational.ProjectIntoNode.Mode.ITERATOR);
-                            } else if (caps.supportsCapability(Capability.BULK_UPDATE)) {
-                            	pinode.setMode(org.teiid.query.processor.relational.ProjectIntoNode.Mode.BULK);
                             } else if (caps.supportsCapability(Capability.BATCHED_UPDATES)) {
                             	pinode.setMode(org.teiid.query.processor.relational.ProjectIntoNode.Mode.BATCH);
                             } else {

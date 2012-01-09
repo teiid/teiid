@@ -22,37 +22,37 @@
 
 package org.teiid.language;
 
-import java.util.Iterator;
-import java.util.List;
-
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
-public class IteratorValueSource<T extends List<?>> extends BaseLanguageObject implements InsertValueSource {
+public class Parameter extends BaseLanguageObject implements Expression {
 
-	private Iterator<T> iter;
-	private int columnCount;
-	
-	public IteratorValueSource(Iterator<T> iter, int columnCount) {
-		this.iter = iter;
-		this.columnCount = columnCount;
+    private Class<?> type;
+    private int valueIndex;
+    
+	@Override
+	public Class<?> getType() {
+		return type;
 	}
 	
-	/**
-	 * A memory safe iterator of the insert values.  Only 1 iterator is associated
-	 * with the value source.  Once it is consumed there are no more values.
-	 * @return
-	 */
-	public Iterator<T> getIterator() {
-		return iter;
+	public void setType(Class<?> type) {
+		this.type = type;
 	}
-	
-	public int getColumnCount() {
-		return columnCount;
-	}
-	
+
 	@Override
 	public void acceptVisitor(LanguageObjectVisitor visitor) {
 		visitor.visit(this);
 	}
 
+	public void setValueIndex(int valueIndex) {
+		this.valueIndex = valueIndex;
+	}
+
+	/**
+	 * 0-based index of the parameter values in the {@link BatchedCommand#getParameterValues()} row value
+	 * @return
+	 */
+	public int getValueIndex() {
+		return valueIndex;
+	}
+	
 }

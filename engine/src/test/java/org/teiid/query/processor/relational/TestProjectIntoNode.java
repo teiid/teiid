@@ -111,10 +111,6 @@ public class TestProjectIntoNode {
         helpTestNextBatch(100, Mode.BATCH);
     }
     
-    @Test public void testNextBatch_BulkInsert() throws Exception {
-        helpTestNextBatch(100, Mode.BULK);
-    }
-    
     @Test public void testNextBatch_NoBatching() throws Exception {
         helpTestNextBatch(100, Mode.SINGLE);
     }

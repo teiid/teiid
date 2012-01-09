@@ -95,6 +95,7 @@ public class TestInsertProcessing {
  
         caps.setCapabilitySupport(Capability.BATCHED_UPDATES, doBatching); 
         caps.setCapabilitySupport(Capability.BULK_UPDATE, doBulkInsert); 
+        caps.setCapabilitySupport(Capability.INSERT_WITH_ITERATOR, doBulkInsert);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, false);
 
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$ 
@@ -108,7 +109,7 @@ public class TestInsertProcessing {
                                          Arrays.asList(new Object[] { "2", new Integer(2), Boolean.TRUE, new Double(2) })});    //$NON-NLS-1$
         
         if (doBulkInsert) {
-            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES (?, ?, ?, ?)",  //$NON-NLS-1$ 
+            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES (...)",  //$NON-NLS-1$ 
                                 new List[] { Arrays.asList(new Object[] { new Integer(2)})});             
         } 
         else 
@@ -153,7 +154,7 @@ public class TestInsertProcessing {
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder(); 
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities(); 
-        caps.setCapabilitySupport(Capability.BULK_UPDATE, true);
+        caps.setCapabilitySupport(Capability.INSERT_WITH_ITERATOR, true);
         caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$ 
 
@@ -164,7 +165,7 @@ public class TestInsertProcessing {
         QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "foo");
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
-        dataManager.addData("INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES (?, ?)",  //$NON-NLS-1$ 
+        dataManager.addData("INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES (...)",  //$NON-NLS-1$ 
                             new List[] { Arrays.asList(new Object[] { new Integer(1) })}); 
         
         String sql = "SELECT 1, convert(1, float) INTO pm1.g1"; //$NON-NLS-1$
@@ -230,7 +231,7 @@ public class TestInsertProcessing {
     }
     
     @Test public void testInsertIntoWithSubquery_Bulk() {
-        helpInsertIntoWithSubquery( Capability.BULK_UPDATE );
+        helpInsertIntoWithSubquery( Capability.INSERT_WITH_ITERATOR );
     }
     
     @Test public void testInsertIntoWithSubquery_Pushdown() {
@@ -257,8 +258,8 @@ public class TestInsertProcessing {
         
         if (cap != null) {
         	switch (cap) {
-	        case BULK_UPDATE:
-	            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES (?, ?, ?, ?)",  //$NON-NLS-1$ 
+	        case INSERT_WITH_ITERATOR:
+	            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES (...)",  //$NON-NLS-1$ 
 	                    new List[] { Arrays.asList(new Object[] { new Integer(2)})});
 	            break;
 	        case BATCHED_UPDATES:
@@ -324,6 +325,7 @@ public class TestInsertProcessing {
  
         caps.setCapabilitySupport(Capability.BATCHED_UPDATES, doBatching); 
         caps.setCapabilitySupport(Capability.BULK_UPDATE, doBulkInsert); 
+        caps.setCapabilitySupport(Capability.INSERT_WITH_ITERATOR, doBulkInsert);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, false);
 
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$ 
@@ -337,8 +339,8 @@ public class TestInsertProcessing {
                                          Arrays.asList(new Object[] { "2", new Integer(2), Boolean.TRUE, new Double(2) })});    //$NON-NLS-1$
         
         if (doBulkInsert) {
-            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES (?, ?, ?, ?)",  //$NON-NLS-1$ 
-                                new List[] { Arrays.asList(new Object[] { new Integer(2)})});             
+            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES (...)",  //$NON-NLS-1$ 
+                                new List[] { Arrays.asList(new Object[] { new Integer(4)})});             
         } 
         else 
         if (doBatching) {

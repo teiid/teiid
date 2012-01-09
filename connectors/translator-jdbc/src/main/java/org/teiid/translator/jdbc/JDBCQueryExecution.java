@@ -36,10 +36,10 @@ import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.TranslatorException;
 
 
 /**
@@ -82,7 +82,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
                 results = getStatement().executeQuery(sql);
             } else {
             	PreparedStatement pstatement = getPreparedStatement(sql);
-                bindPreparedStatementValues(pstatement, translatedComm, 1);
+                bind(pstatement, translatedComm.getPreparedValues(), null);
                 results = pstatement.executeQuery();
             } 
             addStatementWarnings();

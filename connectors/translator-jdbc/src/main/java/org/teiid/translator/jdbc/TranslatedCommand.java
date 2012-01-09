@@ -27,12 +27,11 @@ package org.teiid.translator.jdbc;
 import java.util.List;
 
 import org.teiid.language.Command;
-import org.teiid.language.Insert;
-import org.teiid.language.IteratorValueSource;
 import org.teiid.language.Literal;
+import org.teiid.language.Parameter;
 import org.teiid.language.visitor.CollectorVisitor;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 
 
@@ -86,15 +85,14 @@ public class TranslatedCommand {
      * @return
      */
     private boolean hasBindValue(Command command) {
+        if (!CollectorVisitor.collectObjects(Parameter.class, command).isEmpty()) {
+            return true;
+        }
         for (Literal l : CollectorVisitor.collectObjects(Literal.class, command)) {
-            if (l.isBindValue() || isBindEligible(l)) {
+            if (isBindEligible(l)) {
                 return true;
             }
         }
-    	if (command instanceof Insert) {
-        	Insert insert = (Insert)command;
-        	return insert.getValueSource() instanceof IteratorValueSource<?>;
-    	}
         return false;
     }
 

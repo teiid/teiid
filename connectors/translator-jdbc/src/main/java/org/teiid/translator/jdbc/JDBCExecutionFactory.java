@@ -47,34 +47,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.sql.DataSource;
 
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.language.Argument;
-import org.teiid.language.Call;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Command;
-import org.teiid.language.Expression;
-import org.teiid.language.Function;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Limit;
-import org.teiid.language.Literal;
-import org.teiid.language.QueryExpression;
-import org.teiid.language.SQLConstants;
-import org.teiid.language.SetQuery;
+import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.ProcedureExecution;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TranslatorProperty;
-import org.teiid.translator.TypeFacility;
-import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.*;
 
 
 /**
@@ -443,11 +423,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     @Override
     public boolean supportsBulkUpdate() {
     	return true;
-    }
-    
-    @Override
-    public boolean supportsInsertWithIterator() {
-    	return super.supportsBulkUpdate();
     }
     
     @Override
