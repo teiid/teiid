@@ -28,7 +28,7 @@ public class Parameter extends BaseLanguageObject implements Expression {
 
     private Class<?> type;
     private int valueIndex;
-    private String dependentSet;
+    private String dependentValueId;
     
 	@Override
 	public Class<?> getType() {
@@ -57,16 +57,16 @@ public class Parameter extends BaseLanguageObject implements Expression {
 	}
 	
 	/**
-	 * The name of the dependent set this parameter references.  Dependent sets are available via {@link Select#getDependentSets()}
+	 * The id of the dependent values this parameter references.  Dependent values are available via {@link Select#getDependentValues()}
 	 * Will only be set for dependent join pushdown.
 	 * @return
 	 */
-	public String getDependentSet() {
-		return dependentSet;
+	public String getDependentValueId() {
+		return dependentValueId;
 	}
 	
-	public void setDependentSet(String dependentSet) {
-		this.dependentSet = dependentSet;
+	public void setDependentValueId(String dependentValueId) {
+		this.dependentValueId = dependentValueId;
 	}
 	
 }

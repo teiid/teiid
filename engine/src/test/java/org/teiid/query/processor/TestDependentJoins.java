@@ -31,6 +31,7 @@ import java.util.List;
 import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.language.Select;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
@@ -944,6 +945,11 @@ public class TestDependentJoins {
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
+        
+        Select s = (Select)dataManager.getPushdownCommands().get(1);
+        assertEquals(1, s.getDependentValues().size());
+        List<? extends List<?>> vals = s.getDependentValues().values().iterator().next();
+        assertEquals(1, vals.size());
     }
     
 }

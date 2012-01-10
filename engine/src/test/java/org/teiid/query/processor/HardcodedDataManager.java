@@ -36,6 +36,7 @@ import org.teiid.events.EventDistributor;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.util.CommandContext;
 
 
@@ -47,10 +48,10 @@ public class HardcodedDataManager implements
                                  ProcessorDataManager {
 
     // sql string to data
-    private Map<String, List[]> data = new HashMap<String, List[]>();
+    private Map<String, List<?>[]> data = new HashMap<String, List<?>[]>();
     
     // valid models - if null, any is assumed valid
-    private Set validModels;
+    private Set<String> validModels;
     
     private boolean mustRegisterCommands = true;
     
@@ -58,6 +59,7 @@ public class HardcodedDataManager implements
     
     // Collect all commands run against this class
     private List<Command> commandHistory = new ArrayList<Command>(); // Commands
+    private List<org.teiid.language.Command> pushdownCommands = new ArrayList<org.teiid.language.Command>(); // Commands
     
     private LanguageBridgeFactory lbf;
     
@@ -74,7 +76,7 @@ public class HardcodedDataManager implements
     	this.mustRegisterCommands = mustRegisterCommands;
     }
     
-    public void addData(String sql, List[] rows) {
+    public void addData(String sql, List<?>[] rows) {
         data.put(sql, rows);
     }
     
@@ -92,7 +94,7 @@ public class HardcodedDataManager implements
      * @param models
      * @since 4.2
      */
-    public void setValidModels(Set models) {
+    public void setValidModels(Set<String> models) {
         this.validModels = models;
     }
     
@@ -101,9 +103,13 @@ public class HardcodedDataManager implements
      * @return
      * @since 4.2
      */
-    public List getCommandHistory() {
+    public List<Command> getCommandHistory() {
         return this.commandHistory;
     }
+    
+    public List<org.teiid.language.Command> getPushdownCommands() {
+		return pushdownCommands;
+	}
     
     /** 
      * @see org.teiid.query.processor.ProcessorDataManager#lookupCodeValue(org.teiid.query.util.CommandContext, java.lang.String, java.lang.String, java.lang.String, java.lang.Object)
@@ -132,16 +138,18 @@ public class HardcodedDataManager implements
         } 
         this.commandHistory.add(command);
         
-        List projectedSymbols = command.getProjectedSymbols();
+        List<Expression> projectedSymbols = command.getProjectedSymbols();
 
         String commandString = null;
         if (lbf == null) {
         	commandString = command.toString();
         } else {
-        	commandString = lbf.translate(command).toString();
+        	org.teiid.language.Command cmd = lbf.translate(command);
+        	this.pushdownCommands.add(cmd);
+        	commandString = cmd.toString();
         }
         
-        List[] rows = data.get(commandString);
+        List<?>[] rows = data.get(commandString);
         if(rows == null) {
             if (mustRegisterCommands) {
                 throw new TeiidComponentException("Unknown command: " + commandString);  //$NON-NLS-1$
@@ -172,13 +180,11 @@ public class HardcodedDataManager implements
 
 	@Override
 	public EventDistributor getEventDistributor() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public MetadataRepository getMetadataRepository() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

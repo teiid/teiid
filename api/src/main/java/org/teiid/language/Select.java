@@ -38,7 +38,7 @@ public class Select extends QueryExpression {
     private Condition where;
     private GroupBy groupBy;
     private Condition having;
-    private Map<String, Iterable<List<?>>> dependentSets;
+    private Map<String, List<? extends List<?>>> dependentValues;
         
     public Select(List<DerivedColumn> derivedColumns, boolean distinct, List<TableReference> from, Condition where,
                      GroupBy groupBy, Condition having, OrderBy orderBy) {
@@ -140,13 +140,16 @@ public class Select extends QueryExpression {
     }
     
     /**
-     * @return the dependent sets or null if this is not a dependent join pushdown
+     * Gets the dependent value lists.  The lists are memory-safe.  Caution should be used
+     * to not access large lists in a non-memory safe manner.  The lists are invalid
+     * after returning results from the pushdown query.
+     * @return the map of dependent values or null if this is not a dependent join pushdown
      */
-    public Map<String, Iterable<List<?>>> getDependentSets() {
-		return dependentSets;
+    public Map<String, List<? extends List<?>>> getDependentValues() {
+		return dependentValues;
 	}
     
-    public void setDependentSets(Map<String, Iterable<List<?>>> dependentSets) {
-		this.dependentSets = dependentSets;
+    public void setDependentValues(Map<String, List<? extends List<?>>> dependentValues) {
+		this.dependentValues = dependentValues;
 	}
 }

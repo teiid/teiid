@@ -1633,9 +1633,9 @@ int count = visitor.getCount();]]></programlisting>
 		<title>Dependent Join Pushdown</title>
 		<para>Dependent joins are a technique used in federation to reduce the cost of cross source joins.  Join values from one side of a join are made available 
 		to the other side which reduces the number of tuples needed to preform the join.  Translators may indicate support for dependent join pushdown via the supportsDependentJoin capability.  The
-		handling of pushdown dependent join queries can be quite complicated.  The ordering (if present) and all of the non-dependent set constructs on the pushdown command must be honored, but if needed
+		handling of pushdown dependent join queries can be quite complicated.  The ordering (if present) and all of the non-dependent criteria constructs on the pushdown command must be honored, but if needed
 		the dependent criteria, which will be a <code>Comparison</code> with a <code>Parameter</code>, may be ignored in part or in total.  Pushdown dependent join queries will be instances of 
-		<code>Select</code> with the relevant dependent sets available via <code>Select.getDependentSets()</code>.  The dependent set is associated to Parameters by name via the <code>Parameter.getDepenentSet()</code>
+		<code>Select</code> with the relevant dependent sets available via <code>Select.getDependentSets()</code>.  The dependent set is associated to Parameters by id via the <code>Parameter.getDepenentValueId()</code>
 		 identifier.  The dependent set tuple iterators provide rows that are referenced by the column positions (available via <code>Parameter.getValueIndex()</code>) on the dependent join Comparison 
 		criteria right expression.  Care should be taken with the tuple values as they may guareenteed to be unique or ordered.  
 		</para>

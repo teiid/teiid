@@ -22,14 +22,7 @@
 
 package org.teiid.dqp.internal.datamgr;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.client.metadata.ParameterInfo;
@@ -70,7 +63,32 @@ import org.teiid.translator.TranslatorException;
 
 
 public class LanguageBridgeFactory {
-    private final class TupleSourceIterator implements Iterator<List<?>> {
+    private final class TupleBufferList extends AbstractList<List<?>> implements RandomAccess {
+		private final TupleBuffer tb;
+
+		private TupleBufferList(TupleBuffer tb) {
+			this.tb = tb;
+		}
+
+		@Override
+		public List<?> get(int index) {
+			if (index < 0 || index >= size()) {
+				throw new IndexOutOfBoundsException(String.valueOf(index));
+			}
+			try {
+				return tb.getBatch(index+1).getTuple(index+1);
+			} catch (TeiidComponentException e) {
+				throw new TeiidRuntimeException(e);
+			}
+		}
+
+		@Override
+		public int size() {
+			return tb.getRowCount();
+		}
+	}
+
+	private final class TupleSourceIterator implements Iterator<List<?>> {
 		private final TupleSource ts;
 		List<?> nextRow;
 
@@ -111,7 +129,7 @@ public class LanguageBridgeFactory {
 	private RuntimeMetadataImpl metadataFactory = null;
     private int valueIndex = 0;
     private List<List<?>> allValues = new LinkedList<List<?>>();
-    private Map<String, Iterable<List<?>>> dependentSets;
+    private Map<String, List<? extends List<?>>> dependentSets;
 
     public LanguageBridgeFactory(QueryMetadataInterface metadata) {
         if (metadata != null) {
@@ -120,25 +138,31 @@ public class LanguageBridgeFactory {
     }
 
     public org.teiid.language.Command translate(Command command) {
-        if (command == null) return null;
-        if (command instanceof Query) {
-            Select result = translate((Query)command);
-            result.setDependentSets(this.dependentSets);
-            return result;
-        } else if (command instanceof SetQuery) {
-            return translate((SetQuery)command);
-        } else if (command instanceof Insert) {
-            return translate((Insert)command);
-        } else if (command instanceof Update) {
-            return translate((Update)command);
-        } else if (command instanceof Delete) {
-            return translate((Delete)command);
-        } else if (command instanceof StoredProcedure) {
-            return translate((StoredProcedure)command);
-        } else if (command instanceof BatchedUpdateCommand) {
-            return translate((BatchedUpdateCommand)command);
-        }
-        throw new AssertionError();
+    	try {
+	        if (command == null) return null;
+	        if (command instanceof Query) {
+	            Select result = translate((Query)command);
+	            result.setDependentValues(this.dependentSets);
+	            return result;
+	        } else if (command instanceof SetQuery) {
+	            return translate((SetQuery)command);
+	        } else if (command instanceof Insert) {
+	            return translate((Insert)command);
+	        } else if (command instanceof Update) {
+	            return translate((Update)command);
+	        } else if (command instanceof Delete) {
+	            return translate((Delete)command);
+	        } else if (command instanceof StoredProcedure) {
+	            return translate((StoredProcedure)command);
+	        } else if (command instanceof BatchedUpdateCommand) {
+	            return translate((BatchedUpdateCommand)command);
+	        }
+	        throw new AssertionError();
+    	} finally {
+    		this.allValues.clear();
+    		this.dependentSets = null;
+    		this.valueIndex = 0;
+    	}
     }
     
     QueryExpression translate(QueryCommand command) {
@@ -306,17 +330,11 @@ public class LanguageBridgeFactory {
         p.setType(criteria.getExpression().getType());
         final TupleBuffer tb = criteria.getDependentValueSource().getTupleBuffer();
         p.setValueIndex(tb.getSchema().indexOf(criteria.getValueExpression()));
-        p.setDependentSet(criteria.getContextSymbol());
+        p.setDependentValueId(criteria.getContextSymbol());
         if (this.dependentSets == null) {
-        	this.dependentSets = new HashMap<String, Iterable<List<?>>>();
+        	this.dependentSets = new HashMap<String, List<? extends List<?>>>();
         }
-    	this.dependentSets.put(criteria.getContextSymbol(), new Iterable<List<?>>() {
-
-			@Override
-			public Iterator<List<?>> iterator() {
-				return new TupleSourceIterator(tb.createIndexedTupleSource());
-			}
-		});
+    	this.dependentSets.put(criteria.getContextSymbol(), new TupleBufferList(tb));
         Comparison result = new org.teiid.language.Comparison(translate(criteria.getExpression()),
                                         p, operator);
         return result;
