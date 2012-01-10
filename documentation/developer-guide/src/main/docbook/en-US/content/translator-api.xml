@@ -915,6 +915,18 @@ int count = visitor.getCount();]]></programlisting>
               </row>
               <row>
                 <entry>
+                  <para>DependentJoins</para>
+                </entry>
+                <entry>
+                  <para>Base join and criteria support</para>
+                </entry>
+                <entry>
+                  <para>Translator supports dependent join pushdown.  See <xref linkend="dependent_joins"/>.  When set the MaxDependentInPredicates and MaxInCriteriaSize values are not used by the engine, rather all
+                  independent values are made available to the pushdown command.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
                   <para>InlineViews</para>
                 </entry>
                 <entry>
@@ -1615,6 +1627,20 @@ int count = visitor.getCount();]]></programlisting>
 			the large object and use it for insert or update.</para>
 	</section>
 		
+	</section>
+	
+	<section id="dependent_joins">
+		<title>Dependent Join Pushdown</title>
+		<para>Dependent joins are a technique used in federation to reduce the cost of cross source joins.  Join values from one side of a join are made available 
+		to the other side which reduces the number of tuples needed to preform the join.  Translators may indicate support for dependent join pushdown via the supportsDependentJoin capability.  The
+		handling of pushdown dependent join queries can be quite complicated.  The ordering (if present) and all of the non-dependent set constructs on the pushdown command must be honored, but if needed
+		the dependent criteria, which will be a <code>Comparison</code> with a <code>Parameter</code>, may be ignored in part or in total.  Pushdown dependent join queries will be instances of 
+		<code>Select</code> with the relevant dependent sets available via <code>Select.getDependentSets()</code>.  The dependent set is associated to Parameters by name via the <code>Parameter.getDepenentSet()</code>
+		 identifier.  The dependent set tuple iterators provide rows that are referenced by the column positions (available via <code>Parameter.getValueIndex()</code>) on the dependent join Comparison 
+		criteria right expression.  Care should be taken with the tuple values as they may guareenteed to be unique or ordered.  
+		</para>
+		<note><para>There is no reference implementation of this functionality as all built-in translators
+		rely on the engine to handle breaking up dependent joins into simplier queries.</para></note>
 	</section>
 	
 	<section id="delegating_translator">

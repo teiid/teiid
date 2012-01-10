@@ -111,6 +111,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_LIKE_REGEX, srcCaps.supportsLikeRegex());
         setSupports(connectorID, tgtCaps, Capability.WINDOW_FUNCTION_DISTINCT_AGGREGATES, srcCaps.supportsWindowDistinctAggregates(), Capability.ELEMENTARY_OLAP, Capability.QUERY_AGGREGATES_DISTINCT);
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_ONLY_LITERAL_COMPARE, srcCaps.supportsOnlyLiteralComparison());
+        tgtCaps.setCapabilitySupport(Capability.DEPENDENT_JOIN, srcCaps.supportsDependentJoins());
         
         //TODO: as more types are added it may make more sense to just delegate calls to the executionfactory
 		for (int i = 0; i <= DataTypeManager.MAX_TYPE_CODE; i++) {

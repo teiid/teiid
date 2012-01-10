@@ -329,7 +329,8 @@ public interface SourceCapabilities {
         ELEMENTARY_OLAP("ElementaryOLAP"), //$NON-NLS-1$ 
         WINDOW_FUNCTION_ORDER_BY_AGGREGATES("WindowOrderByAggregates"), //$NON-NLS-1$
         CRITERIA_SIMILAR,
-        CRITERIA_LIKE_REGEX, 
+        CRITERIA_LIKE_REGEX,
+        DEPENDENT_JOIN,
         WINDOW_FUNCTION_DISTINCT_AGGREGATES("WindowDistinctAggregates"); //$NON-NLS-1$
         
         

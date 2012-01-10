@@ -24,13 +24,16 @@ package org.teiid.dqp.internal.datamgr;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.client.metadata.ParameterInfo;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
@@ -67,9 +70,48 @@ import org.teiid.translator.TranslatorException;
 
 
 public class LanguageBridgeFactory {
-    private RuntimeMetadataImpl metadataFactory = null;
+    private final class TupleSourceIterator implements Iterator<List<?>> {
+		private final TupleSource ts;
+		List<?> nextRow;
+
+		private TupleSourceIterator(TupleSource ts) {
+			this.ts = ts;
+		}
+
+		@Override
+		public boolean hasNext() {
+			if (nextRow == null) {
+				try {
+					nextRow = ts.nextTuple();
+				} catch (TeiidComponentException e) {
+					throw new TeiidRuntimeException(e);
+				} catch (TeiidProcessingException e) {
+					throw new TeiidRuntimeException(e);
+				}
+			}
+			return nextRow != null;
+		}
+
+		@Override
+		public List<?> next() {
+			if (nextRow == null && !hasNext()) {
+				throw new NoSuchElementException();
+			}
+			List<?> result = nextRow;
+			nextRow = null;
+			return result;
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	private RuntimeMetadataImpl metadataFactory = null;
     private int valueIndex = 0;
     private List<List<?>> allValues = new LinkedList<List<?>>();
+    private Map<String, Iterable<List<?>>> dependentSets;
 
     public LanguageBridgeFactory(QueryMetadataInterface metadata) {
         if (metadata != null) {
@@ -80,7 +122,9 @@ public class LanguageBridgeFactory {
     public org.teiid.language.Command translate(Command command) {
         if (command == null) return null;
         if (command instanceof Query) {
-            return translate((Query)command);
+            Select result = translate((Query)command);
+            result.setDependentSets(this.dependentSets);
+            return result;
         } else if (command instanceof SetQuery) {
             return translate((SetQuery)command);
         } else if (command instanceof Insert) {
@@ -250,10 +294,34 @@ public class LanguageBridgeFactory {
             return translate((SubqueryCompareCriteria)criteria);
         } else if (criteria instanceof SubquerySetCriteria) {
             return translate((SubquerySetCriteria)criteria);
+        } else if (criteria instanceof DependentSetCriteria) {
+        	return translate((DependentSetCriteria)criteria);
         }
         throw new AssertionError();
     }
+    
+    org.teiid.language.Comparison translate(DependentSetCriteria criteria) {
+        Operator operator = Operator.EQ;
+        Parameter p = new Parameter();
+        p.setType(criteria.getExpression().getType());
+        final TupleBuffer tb = criteria.getDependentValueSource().getTupleBuffer();
+        p.setValueIndex(tb.getSchema().indexOf(criteria.getValueExpression()));
+        p.setDependentSet(criteria.getContextSymbol());
+        if (this.dependentSets == null) {
+        	this.dependentSets = new HashMap<String, Iterable<List<?>>>();
+        }
+    	this.dependentSets.put(criteria.getContextSymbol(), new Iterable<List<?>>() {
 
+			@Override
+			public Iterator<List<?>> iterator() {
+				return new TupleSourceIterator(tb.createIndexedTupleSource());
+			}
+		});
+        Comparison result = new org.teiid.language.Comparison(translate(criteria.getExpression()),
+                                        p, operator);
+        return result;
+    }
+    
     org.teiid.language.Comparison translate(CompareCriteria criteria) {
         Operator operator = Operator.EQ;
         switch(criteria.getOperator()) {
@@ -558,39 +626,7 @@ public class LanguageBridgeFactory {
         	valueSource = translate(insert.getQueryExpression());
         } else if (insert.getTupleSource() != null) {
         	final TupleSource ts = insert.getTupleSource();
-    		parameterValues = new Iterator<List<?>>() {
-				List<?> nextRow;
-				
-				@Override
-				public boolean hasNext() {
-					if (nextRow == null) {
-						try {
-							nextRow = ts.nextTuple();
-						} catch (TeiidComponentException e) {
-							throw new TeiidRuntimeException(e);
-						} catch (TeiidProcessingException e) {
-							throw new TeiidRuntimeException(e);
-						}
-					}
-					return nextRow != null;
-				}
-				
-				@Override
-				public List<?> next() {
-					if (nextRow == null && !hasNext()) {
-						throw new NoSuchElementException();
-					}
-					List<?> result = nextRow;
-					nextRow = null;
-					return result;
-				}
-				
-				@Override
-				public void remove() {
-					throw new UnsupportedOperationException();
-				}
-    			
-			};
+    		parameterValues = new TupleSourceIterator(ts);
         	List<org.teiid.language.Expression> translatedValues = new ArrayList<org.teiid.language.Expression>();
         	for (int i = 0; i < insert.getVariables().size(); i++) {
         		ElementSymbol es = insert.getVariables().get(i);

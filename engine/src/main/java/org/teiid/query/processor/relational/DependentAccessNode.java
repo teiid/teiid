@@ -22,13 +22,16 @@
 
 package org.teiid.query.processor.relational;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.Query;
 
 
@@ -43,6 +46,7 @@ public class DependentAccessNode extends AccessNode {
     //plan state
     private int maxSetSize;
     private int maxPredicates;
+    private boolean pushdown;
 
     //processing state
     private DependentCriteriaProcessor criteriaProcessor;
@@ -99,6 +103,7 @@ public class DependentAccessNode extends AccessNode {
         DependentAccessNode clonedNode = new DependentAccessNode(super.getID());
         clonedNode.maxSetSize = this.maxSetSize;
         clonedNode.maxPredicates = this.maxPredicates;
+        clonedNode.pushdown = this.pushdown;
         super.copy(this, clonedNode);
         return clonedNode;
     }
@@ -134,6 +139,24 @@ public class DependentAccessNode extends AccessNode {
         Assertion.assertTrue(atomicCommand instanceof Query);
 
         Query query = (Query)atomicCommand;
+        
+        if (pushdown) {
+        	List<Criteria> newCriteria = new ArrayList<Criteria>();
+        	List<Criteria> queryCriteria = Criteria.separateCriteriaByAnd(query.getCriteria());
+            for (Criteria criteria : queryCriteria) {
+				if (!(criteria instanceof DependentSetCriteria)) {
+					newCriteria.add(criteria);
+					continue;
+				}
+				DependentSetCriteria dsc = (DependentSetCriteria)criteria;
+				dsc = dsc.clone();
+				DependentValueSource dvs = (DependentValueSource) getContext().getVariableContext().getGlobalValue(dsc.getContextSymbol());
+				dsc.setDependentValueSource(dvs);
+				newCriteria.add(dsc);
+			}
+            query.setCriteria(Criteria.combineCriteria(newCriteria));
+            return RelationalNodeUtil.shouldExecute(atomicCommand, true);
+        }
 
         if (this.criteriaProcessor == null) {
             this.criteriaProcessor = new DependentCriteriaProcessor(this.maxSetSize, this.maxPredicates, this, query.getCriteria());
@@ -176,7 +199,14 @@ public class DependentAccessNode extends AccessNode {
      * @see org.teiid.query.processor.relational.AccessNode#hasNextCommand()
      */
     protected boolean hasNextCommand() {
+    	if (pushdown) {
+    		return false;
+    	}
         return criteriaProcessor.hasNextCommand();
     }
+
+	public void setPushdown(boolean pushdown) {
+		this.pushdown = pushdown;
+	}
 
 }

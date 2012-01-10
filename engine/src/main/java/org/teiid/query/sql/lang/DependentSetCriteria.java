@@ -25,6 +25,7 @@ package org.teiid.query.sql.lang;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
+import org.teiid.query.processor.relational.DependentValueSource;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.ContextReference;
 import org.teiid.query.sql.symbol.Expression;
@@ -49,6 +50,11 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
      */
     private float ndv = NewCalculateCostUtil.UNKNOWN_VALUE;
     private float maxNdv = NewCalculateCostUtil.UNKNOWN_VALUE;
+    
+    /**
+     * set only for dependent pushdown
+     */
+    private DependentValueSource dependentValueSource;
     
     /** 
      * Construct with the left expression 
@@ -142,7 +148,7 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
      * the original object, just like Reference.
      * @return Deep copy of object
      */
-    public Object clone() {
+    public DependentSetCriteria clone() {
         Expression copy = null;
         if(getExpression() != null) {
             copy = (Expression) getExpression().clone();
@@ -164,5 +170,14 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
     		throw new UnsupportedOperationException();
     	}
     }
+    
+    public DependentValueSource getDependentValueSource() {
+		return dependentValueSource;
+	}
+    
+    public void setDependentValueSource(
+			DependentValueSource dependentValueSource) {
+		this.dependentValueSource = dependentValueSource;
+	}
     
 }

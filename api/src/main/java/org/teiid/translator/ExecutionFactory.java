@@ -930,5 +930,13 @@ public class ExecutionFactory<F, C> {
 	public boolean supportsOnlyLiteralComparison() {
 		return false;
 	}
+	
+	/**
+	 * @return true if dependent join pushdown is supported
+	 * @since 8.0
+	 */
+	public boolean supportsDependentJoins() {
+		return false;
+	}
 
 }

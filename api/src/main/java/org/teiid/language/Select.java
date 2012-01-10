@@ -23,6 +23,7 @@
 package org.teiid.language;
 
 import java.util.List;
+import java.util.Map;
 
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
@@ -37,6 +38,7 @@ public class Select extends QueryExpression {
     private Condition where;
     private GroupBy groupBy;
     private Condition having;
+    private Map<String, Iterable<List<?>>> dependentSets;
         
     public Select(List<DerivedColumn> derivedColumns, boolean distinct, List<TableReference> from, Condition where,
                      GroupBy groupBy, Condition having, OrderBy orderBy) {
@@ -136,4 +138,15 @@ public class Select extends QueryExpression {
     public Select getProjectedQuery() {
         return this;
     }
+    
+    /**
+     * @return the dependent sets or null if this is not a dependent join pushdown
+     */
+    public Map<String, Iterable<List<?>>> getDependentSets() {
+		return dependentSets;
+	}
+    
+    public void setDependentSets(Map<String, Iterable<List<?>>> dependentSets) {
+		this.dependentSets = dependentSets;
+	}
 }

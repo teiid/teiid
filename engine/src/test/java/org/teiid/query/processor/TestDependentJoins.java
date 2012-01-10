@@ -35,6 +35,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.relational.JoinNode;
@@ -915,6 +916,30 @@ public class TestDependentJoins {
         
         // Plan query
         ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        TestOptimizer.checkDependentJoinCount(plan, 1);
+
+        // Run query
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testMakeIndHintPushdown() { 
+        // Create query 
+        String sql = "SELECT pm1.g1.e1 FROM /*+ MAKEIND */ pm1.g1, pm2.g1 WHERE pm1.g1.e1 = pm2.g1.e1 AND pm1.g1.e2=pm2.g1.e2 order by pm1.g1.e1"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+        };    
+        
+        // Construct data manager with data
+        HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+        dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 ORDER BY c_0, c_1", new List[] {Arrays.asList("a", 1)});
+        dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 WHERE g_0.e1 = ? AND g_0.e2 = ? ORDER BY c_0, c_1", new List[] {Arrays.asList("a", 1)});
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.DEPENDENT_JOIN, true);
+        DefaultCapabilitiesFinder dcf = new DefaultCapabilitiesFinder(bsc);
+        // Plan query
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), dcf);
         TestOptimizer.checkDependentJoinCount(plan, 1);
 
         // Run query
