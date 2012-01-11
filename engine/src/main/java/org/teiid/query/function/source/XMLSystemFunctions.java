@@ -113,37 +113,33 @@ public class XMLSystemFunctions {
 	private static final class JsonToXmlContentHandler implements
 			ContentHandler {
 		private final XMLStreamWriter streamWriter;
-		private String currentName;
-		private LinkedList<Boolean> inArray = new LinkedList<Boolean>();
+		private boolean rootArray;
+		private LinkedList<String> nameStack = new LinkedList<String>();
 
 		private JsonToXmlContentHandler(String rootName,
 				XMLStreamWriter streamWriter) {
 			this.streamWriter = streamWriter;
-			this.currentName = rootName;
+			this.nameStack.push(rootName);
 		}
 
 		@Override
 		public boolean startObjectEntry(String key)
 				throws org.json.simple.parser.ParseException, IOException {
-			currentName = key;
-			start();
+			this.nameStack.push(key);
 			return true;
 		}
 
 		@Override
 		public boolean startObject() throws org.json.simple.parser.ParseException,
 				IOException {
-			if (inArray.peek()) {
-				start();
-			}
-			inArray.push(false);
+			start();
 			return true;
 		}
 
 		private void start()
 				throws IOException {
 			try {
-				streamWriter.writeStartElement(escapeName(currentName, true));
+				streamWriter.writeStartElement(escapeName(this.nameStack.peek(), true));
 			} catch (XMLStreamException e) {
 				throw new IOException(e);
 			}
@@ -157,23 +153,22 @@ public class XMLSystemFunctions {
 			} catch (XMLStreamException e) {
 				throw new IOException(e);
 			}
-			inArray.push(false);
-			start();
 		}
 
 		@Override
 		public boolean startArray() throws org.json.simple.parser.ParseException,
 				IOException {
-			inArray.push(true);
+			if (this.nameStack.size() == 1) {
+				this.rootArray = true;
+				start();
+			}
 			return true;
 		}
 
 		@Override
 		public boolean primitive(Object value)
 				throws org.json.simple.parser.ParseException, IOException {
-			if (inArray.peek()) {
-				start();
-			}
+			start();
 			try {
 				if (value != null) {
 					streamWriter.writeCharacters(value.toString());
@@ -184,9 +179,7 @@ public class XMLSystemFunctions {
 			} catch (XMLStreamException e) {
 				throw new IOException(e);
 			}
-			if (inArray.peek()) {
-				end();
-			}
+			end();
 			return true;
 		}
 
@@ -202,24 +195,20 @@ public class XMLSystemFunctions {
 		@Override
 		public boolean endObjectEntry()
 				throws org.json.simple.parser.ParseException, IOException {
-			end();
+			this.nameStack.pop();
 			return true;
 		}
 
 		@Override
 		public boolean endObject() throws org.json.simple.parser.ParseException,
 				IOException {
-			inArray.pop();
-			if (inArray.peek()) {
-				end();
-			}
+			end();
 			return true;
 		}
 
 		@Override
 		public void endJSON() throws org.json.simple.parser.ParseException,
 				IOException {
-			end();
 			try {
 				streamWriter.writeEndDocument();
 			} catch (XMLStreamException e) {
@@ -230,7 +219,9 @@ public class XMLSystemFunctions {
 		@Override
 		public boolean endArray() throws org.json.simple.parser.ParseException,
 				IOException {
-			inArray.pop();
+			if (this.nameStack.size() == 1 && rootArray) {
+				end();
+			}
 			return true;
 		}
 	}

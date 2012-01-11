@@ -194,7 +194,7 @@ public class TestXMLSystemFunctions {
 	
 	@Test public void testJsonToXml() throws Exception {
 		String json = "[0,{\"1\":{\"2\":{\"3\":{\"4\":[5,{\"6\":7}]}}}}]";
-		String expected = "<?xml version=\"1.0\" ?><Array><Array>0</Array><Array><_u0031_><_u0032_><_u0033_><_u0034_><_u0034_>5</_u0034_><_u0034_><_u0036_>7</_u0036_></_u0034_></_u0034_></_u0033_></_u0032_></_u0031_></Array></Array>";
+		String expected = "<?xml version=\"1.0\" ?><Array><Array>0</Array><Array><_u0031_><_u0032_><_u0033_><_u0034_>5</_u0034_><_u0034_><_u0036_>7</_u0036_></_u0034_></_u0033_></_u0032_></_u0031_></Array></Array>";
 		helpTestJson(json, "Array", expected);
 	}
 
@@ -214,13 +214,35 @@ public class TestXMLSystemFunctions {
 	@Test public void testJsonToXml1() throws Exception {
 		String json = "{ \"firstName\": \"John\", \"lastName\": \"Smith\", \"age\": 25, \"address\": { \"streetAddress\": \"21 2nd Street\", \"city\": \"New York\", \"state\": \"NY\", "+
 		         "\"postalCode\": \"10021\" }, \"phoneNumber\": [ { \"type\": \"home\", \"number\": \"212 555-1234\" }, { \"type\": \"fax\", \"number\": \"646 555-4567\" } ] }"; 
-		String expected = "<?xml version=\"1.0\" ?><Person><firstName>John</firstName><lastName>Smith</lastName><age>25</age><address><streetAddress>21 2nd Street</streetAddress><city>New York</city><state>NY</state><postalCode>10021</postalCode></address><phoneNumber><phoneNumber><type>home</type><number>212 555-1234</number></phoneNumber><number><type>fax</type><number>646 555-4567</number></number></phoneNumber></Person>";
+		String expected = "<?xml version=\"1.0\" ?><Person><firstName>John</firstName><lastName>Smith</lastName><age>25</age><address><streetAddress>21 2nd Street</streetAddress><city>New York</city><state>NY</state><postalCode>10021</postalCode></address><phoneNumber><type>home</type><number>212 555-1234</number></phoneNumber><phoneNumber><type>fax</type><number>646 555-4567</number></phoneNumber></Person>";
 		helpTestJson(json, "Person", expected);
 	}
 	
 	@Test public void testJsonToXml2() throws Exception {
 		String json = "{ \"firstName\": null }"; 
 		String expected = "<?xml version=\"1.0\" ?><Person><firstName xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:nil=\"true\"></firstName></Person>";
+		helpTestJson(json, "Person", expected);
+	}
+	
+	@Test public void testJsonToXml3() throws Exception {
+		String json = "{ \"kids\":[{ \"firstName\" : \"George\" }, { \"firstName\" : \"Jerry\" }]}"; 
+		String expected = "<?xml version=\"1.0\" ?><Person><kids><firstName>George</firstName></kids><kids><firstName>Jerry</firstName></kids></Person>";
+		helpTestJson(json, "Person", expected);
+	}
+	
+	@Test public void testJsonToXml4() throws Exception {
+		String json = "{ \"kids\":[{ \"firstName\" : \"George\" }, { \"firstName\" : \"Jerry\" }]}"; 
+		String expected = "<?xml version=\"1.0\" ?><Person><kids><firstName>George</firstName></kids><kids><firstName>Jerry</firstName></kids></Person>";
+		helpTestJson(json, "Person", expected);
+	}
+
+	/**
+	 * This shows an ambiguity with the approach in that array/object children of an array cannot be distinguished
+	 * @throws Exception
+	 */
+	@Test public void testJsonToXml5() throws Exception {
+		String json = "[[],{\"x\": 1},[]]"; 
+		String expected = "<?xml version=\"1.0\" ?><Person><Person></Person><Person><x>1</x></Person><Person></Person></Person>";
 		helpTestJson(json, "Person", expected);
 	}
 	
