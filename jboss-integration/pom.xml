@@ -91,12 +91,6 @@
     </dependency>    
        
     <dependency>
-        <groupId>log4j</groupId>
-        <artifactId>log4j</artifactId>
-        <scope>provided</scope>
-    </dependency>
-                          
-    <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-common-core</artifactId>
       <type>test-jar</type>

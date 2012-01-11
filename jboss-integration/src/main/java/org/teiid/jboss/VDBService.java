@@ -235,7 +235,7 @@ class VDBService implements Service<VDBMetaData> {
 		this.vdb.removeAttachment(MetadataStoreGroup.class);
 		this.vdb.removeAttachment(IndexMetadataFactory.class);	
 				
-		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50025, vdb, valid?"active":"inactive")); //$NON-NLS-1$ //$NON-NLS-2$		
+		LogManager.logInfo(LogConstants.CTX_RUNTIME, valid?RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,vdb.getName(), vdb.getVersion()):RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40006,vdb.getName(), vdb.getVersion()));		
 	}
 
 	@Override

@@ -9,8 +9,6 @@
         <module name="javax.xml.ws.api"/>
         <module name="javax.api"/>
         <module name="javax.resource.api"/>
-        <module name="org.apache.commons.logging" />
-        <module name="org.apache.log4j"/>
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
     </dependencies>
