@@ -331,11 +331,6 @@
 				<artifactId>teiid-txn-jbossts</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-			<dependency>
-				<groupId>org.jboss.teiid</groupId>
-				<artifactId>teiid-cache-jbosscache</artifactId>
-				<version>${project.version}</version>
-			</dependency>
             <dependency>
                 <groupId>org.jboss.teiid</groupId>
                 <artifactId>teiid-jboss-integration</artifactId>
@@ -615,7 +610,6 @@
 		<module>metadata</module>
 		<module>runtime</module>
 		<module>adminshell</module>
-		<module>cache-jbosscache</module>
 		<module>hibernate-dialect</module>
         <module>jboss-integration</module>
 		<module>test-integration</module>
