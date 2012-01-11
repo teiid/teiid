@@ -177,6 +177,7 @@ public abstract class VDBStatusChecker {
 						getExecutor().execute(runnable);
 					}
 				} else if (valid) {
+					this.vdbRepository.finishDeployment(vdb.getName(), vdb.getVersion());
 					vdb.setStatus(VDB.Status.ACTIVE);
 					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,vdb.getName(), vdb.getVersion()));
 				}
