@@ -343,9 +343,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		    	} else {
 		    		elem = cause.getMessage();
 		    	}
-		        LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.getString("ProcessWorker.processing_error", e.getMessage(), requestID, e.getClass().getName(), elem)); //$NON-NLS-1$
-		    }else {
-		        LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("ProcessWorker.error", requestID)); //$NON-NLS-1$
+		        LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30020, e.getMessage(), requestID, e.getClass().getName(), elem));
+		    } else {
+		        LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30019, requestID));
 		    }                                
 		}
 		
@@ -460,7 +460,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					try {
 		        		this.transactionService.rollback(transactionContext);
 		            } catch (XATransactionException e1) {
-		                LogManager.logWarning(LogConstants.CTX_DQP, e1, QueryPlugin.Util.getString("ProcessWorker.failed_rollback")); //$NON-NLS-1$           
+		                LogManager.logWarning(LogConstants.CTX_DQP, e1, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30028));
 		            } 
 				} else {
 					suspend();
@@ -612,7 +612,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         }            		
         
         if (determinismLevel.compareTo(Determinism.SESSION_DETERMINISTIC) <= 0) {
-			LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.getString("RequestWorkItem.cache_nondeterministic", originalCommand)); //$NON-NLS-1$
+			LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30008, originalCommand));
 		}
         dqpCore.getRsCache().put(cid, determinismLevel, cr, originalCommand.getCacheHint() != null?originalCommand.getCacheHint().getTtl():null);
 	}
@@ -942,7 +942,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		try {
 			requestCancel();
 		} catch (TeiidComponentException e) {
-			LogManager.logWarning(LogConstants.CTX_DQP, e, "Failed to cancel " + requestID); //$NON-NLS-1$
+			LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30026,requestID));
 		}
 	}
 

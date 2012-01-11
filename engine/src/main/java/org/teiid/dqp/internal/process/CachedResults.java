@@ -113,7 +113,7 @@ public class CachedResults implements Serializable, Cachable {
 			try {
 				this.accessInfo.restore();
 			} catch (TeiidException e) {
-				LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("unexpected_exception_restoring_results")); //$NON-NLS-1$
+				LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30025));
 				return false;
 			}
 		}

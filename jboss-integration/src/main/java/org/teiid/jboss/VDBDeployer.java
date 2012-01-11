@@ -81,7 +81,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		// check to see if there is old vdb already deployed.
         final ServiceController<?> controller = context.getServiceRegistry().getService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()));
         if (controller != null) {
-        	LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("redeploying_vdb", deployment)); //$NON-NLS-1$
+        	LogManager.logInfo(LogConstants.CTX_RUNTIME,  IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50019, deployment));
             controller.setMode(ServiceController.Mode.REMOVE);
         }
 		
@@ -89,7 +89,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		if (!preview) {
 			List<String> errors = deployment.getValidityErrors();
 			if (errors != null && !errors.isEmpty()) {
-				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("validity_errors_in_vdb", deployment)); //$NON-NLS-1$
+				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("validity_errors_in_vdb", RuntimePlugin.Event.TEIID40004, deployment)); //$NON-NLS-1$
 			}
 		}
 				
@@ -100,7 +100,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			String type = data.getType();
 			Translator parent = this.translatorRepository.getTranslatorMetaData(type);
 			if ( parent == null) {
-				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("translator_type_not_found", deploymentName)); //$NON-NLS-1$
+				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("translator_type_not_found", IntegrationPlugin.Event.TEIID50021, deploymentName)); //$NON-NLS-1$
 			}
 		}
 		
@@ -173,7 +173,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		vdbService.setInitialMode(Mode.PASSIVE).install();
 		
 		if (!unAvailableDS.isEmpty()) {
-			LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("vdb-inactive", deployment.getName(), deployment.getVersion(), unAvailableDS)); //$NON-NLS-1$
+			LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50021, deployment.getName(), deployment.getVersion(), unAvailableDS));
 		}
 	}
 	

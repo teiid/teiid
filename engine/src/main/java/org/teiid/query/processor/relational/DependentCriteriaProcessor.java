@@ -109,7 +109,7 @@ public class DependentCriteriaProcessor {
                     		last = next;
                     	}
                     	if (!setState.overMax && distinctCount > setState.maxNdv) {
-                    		LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DependentCriteriaProcessor.dep_join_backoff", valueSource, setState.valueExpression, setState.maxNdv)); //$NON-NLS-1$
+                    		LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30011, valueSource, setState.valueExpression, setState.maxNdv));
                     		setState.overMax = true;
                     	}
                     }

@@ -104,10 +104,10 @@ public abstract class SessionServiceImpl implements SessionService {
 		for (SessionMetadata info : sessionCache.values()) {
 			try {
     			if (!info.isEmbedded() && currentTime - info.getLastPingTime() > ServerConnection.PING_INTERVAL * 5) {
-    				LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.getString( "SessionServiceImpl.keepaliveFailed", info.getSessionId())); //$NON-NLS-1$
+    				LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40007, info.getSessionId()));
     				closeSession(info.getSessionId());
     			} else if (sessionExpirationTimeLimit > 0 && currentTime - info.getCreatedTime() > sessionExpirationTimeLimit) {
-    				LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.getString( "SessionServiceImpl.expireSession", info.getSessionId())); //$NON-NLS-1$
+    				LogManager.logInfo(LogConstants.CTX_SECURITY,RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40008, info.getSessionId()));
     				closeSession(info.getSessionId());
     			}
 			} catch (Exception e) {
@@ -130,7 +130,7 @@ public abstract class SessionServiceImpl implements SessionService {
             try {
     			dqp.terminateSession(info.getSessionId());
             } catch (Exception e) {
-                LogManager.logWarning(LogConstants.CTX_SECURITY,e,"Exception terminitating session"); //$NON-NLS-1$
+                LogManager.logWarning(LogConstants.CTX_SECURITY,e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40018));
             }
 		}
 	}
@@ -307,12 +307,12 @@ public abstract class SessionServiceImpl implements SessionService {
 	@Override
 	public boolean terminateSession(String terminatedSessionID, String adminSessionID) {
 		Object[] params = {adminSessionID, terminatedSessionID};
-		LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.getString( "SessionServiceImpl.terminateSession", params)); //$NON-NLS-1$
+		LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40009, params));
 		try {
 			closeSession(terminatedSessionID);
 			return true;
 		} catch (InvalidSessionException e) {
-			LogManager.logWarning(LogConstants.CTX_SECURITY,e,RuntimePlugin.Util.getString("SessionServiceImpl.invalid_session", new Object[] {e.getMessage()})); //$NON-NLS-1$
+			LogManager.logWarning(LogConstants.CTX_SECURITY,e,RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40019, new Object[] {e.getMessage()}));
 			return false;
 		}
 	}

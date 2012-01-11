@@ -74,16 +74,16 @@ public abstract class AdminException extends TeiidException {
      * @param msg the error message.
      * @since 4.3
      */
-    AdminException(int code, String msg) {
-        super(Integer.toString(code), msg);
+    AdminException(String code, String msg) {
+        super(code, msg);
     }
     
     AdminException(String msg, Throwable cause) {
         super(cause, msg);
     }
 
-    AdminException(int code, String msg, Throwable cause) {
-        super(cause, Integer.toString(code),msg);
+    AdminException(String code, String msg, Throwable cause) {
+        super(cause, code,msg);
     }
 
     /**

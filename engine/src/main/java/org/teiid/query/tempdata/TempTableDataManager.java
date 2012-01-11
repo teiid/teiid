@@ -302,7 +302,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 				throw new QueryProcessingException(QueryPlugin.Util.getString("TempTableDataManager.row_refresh_updatable", matViewName)); //$NON-NLS-1$
 			}
 			Constant key = (Constant)proc.getParameter(2).getExpression();
-			LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.getString("TempTableDataManager.row_refresh", matViewName, key)); //$NON-NLS-1$
+			LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30012, matViewName, key));
 			Object id = ids.iterator().next();
 			String targetTypeName = metadata.getElementType(id);
 			Object value = DataTypeManager.transformValue(key.getValue(), DataTypeManager.getDataTypeClass(targetTypeName));
@@ -432,7 +432,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 	private int loadGlobalTable(CommandContext context,
 			GroupSymbol group, final String tableName, GlobalTableStore globalStore)
 			throws TeiidComponentException, TeiidProcessingException {
-		LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.getString("TempTableDataManager.loading", tableName)); //$NON-NLS-1$
+		LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30013, tableName));
 		QueryMetadataInterface metadata = context.getMetadata();
 		List<ElementSymbol> allColumns = ResolverUtil.resolveElementsInGroup(group, metadata); 
 		TempTable table = globalStore.createMatTable(tableName, group);
@@ -463,17 +463,17 @@ public class TempTableDataManager implements ProcessorDataManager {
 				table.setUpdatable(hint.isUpdatable());
 			}
 		} catch (TeiidComponentException e) {
-			LogManager.logError(LogConstants.CTX_MATVIEWS, e, QueryPlugin.Util.getString("TempTableDataManager.failed_load", tableName)); //$NON-NLS-1$
+			LogManager.logError(LogConstants.CTX_MATVIEWS, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30015, tableName));
 			throw e;
 		} catch (TeiidProcessingException e) {
-			LogManager.logError(LogConstants.CTX_MATVIEWS, e, QueryPlugin.Util.getString("TempTableDataManager.failed_load", tableName)); //$NON-NLS-1$
+			LogManager.logError(LogConstants.CTX_MATVIEWS, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30015, tableName));
 			throw e;
 		} finally {
 			if (rowCount == -1) {
 				globalStore.failedLoad(tableName);
 			} else {
 				globalStore.loaded(tableName, table);
-				LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.getString("TempTableDataManager.loaded", tableName, rowCount)); //$NON-NLS-1$
+				LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30014, tableName, rowCount));
 			}
 		}
 		return rowCount;

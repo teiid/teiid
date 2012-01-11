@@ -35,4 +35,11 @@ public class JDBCPlugin {
 
 	public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,
 	                                                     PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
+	
+	
+	public static enum Event implements BundleUtil.Event{
+		TEIID11001, // connection details
+		TEIID11002, // connection creation failed
+		TEIID11003, // invalid hint
+	}
 }

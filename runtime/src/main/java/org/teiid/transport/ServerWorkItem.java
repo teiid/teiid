@@ -148,7 +148,7 @@ public class ServerWorkItem implements Runnable {
 		} else if (e instanceof AdminProcessingException) {
 			logProcessingException(e, context);
 		} else {
-			LogManager.logError(context, e, RuntimePlugin.Util.getString("ServerWorkItem.Received_exception_processing_request", this.socketClientInstance.getWorkContext().getSessionId())); //$NON-NLS-1$
+			LogManager.logError(context, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40017, this.socketClientInstance.getWorkContext().getSessionId()));
 		}
 
 		return new ExceptionHolder(e);
@@ -161,6 +161,6 @@ public class ServerWorkItem implements Runnable {
 		}
 		StackTraceElement elem = cause.getStackTrace()[0];
 		LogManager.logDetail(context, e, "Processing exception for session", this.socketClientInstance.getWorkContext().getSessionId()); //$NON-NLS-1$ 
-		LogManager.logWarning(context, RuntimePlugin.Util.getString("ServerWorkItem.processing_error", e.getMessage(), this.socketClientInstance.getWorkContext().getSessionId(), e.getClass().getName(), elem)); //$NON-NLS-1$
+		LogManager.logWarning(context, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40011, e.getMessage(), this.socketClientInstance.getWorkContext().getSessionId(), e.getClass().getName(), elem));
 	}
 }

@@ -235,7 +235,7 @@ public class VDBRepository implements Serializable{
 			PgCatalogMetadataStore pg = new PgCatalogMetadataStore(CoreConstants.ODBC_MODEL, getBuiltinDatatypes(), new Properties());
 			return  pg.getMetadataStore();
 		} catch (TranslatorException e) {
-			LogManager.logError(LogConstants.CTX_DQP, RuntimePlugin.Util.getString("failed_to_load_odbc_metadata")); //$NON-NLS-1$
+			LogManager.logError(LogConstants.CTX_DQP, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40002));
 		}
 		return null;
 	}

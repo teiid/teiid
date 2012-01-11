@@ -200,8 +200,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 			ldapCtx = (LdapContext) this.ldapConnection.lookup(searchDetails.getContextName());
 		} catch (NamingException ne) {			
 			if (searchDetails.getContextName() != null) {
-				LogManager.logError(LogConstants.CTX_CONNECTOR, "Attempted to search context: " //$NON-NLS-1$
-						+ searchDetails.getContextName());
+				LogManager.logError(LogConstants.CTX_CONNECTOR, LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12002, searchDetails.getContextName()));
 			}
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.createContextError"); //$NON-NLS-1$
 			throw new TranslatorException(msg); 
@@ -275,8 +274,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 			try {
 				ldapCtx.close();
 			} catch (NamingException ne) {
-	            final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.closeContextError",ne.getExplanation()); //$NON-NLS-1$
-	            LogManager.logWarning(LogConstants.CTX_CONNECTOR, msg);
+	            LogManager.logWarning(LogConstants.CTX_CONNECTOR, LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12003, ne.getExplanation()));
 			}
 		}
 	}
@@ -330,7 +328,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 			return result;
 		} catch (SizeLimitExceededException e) {
 			if (resultCount != searchDetails.getCountLimit()) {
-				String msg = "LDAP Search results exceeded size limit. Results may be incomplete."; //$NON-NLS-1$
+				String msg = LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12008);
 				TranslatorException te = new TranslatorException(e, msg);
 				if (executionFactory.isExceptionOnSizeLimitExceeded()) {
 					throw te;
@@ -340,7 +338,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 			}
 			return null; // GHH 20080326 - if size limit exceeded don't try to read more results
 		} catch (NamingException ne) {
-			throw new TranslatorException(ne, "Ldap error while processing next batch of results"); //$NON-NLS-1$
+			throw new TranslatorException(ne, LDAPPlugin.Util.gs("ldap_error")); //$NON-NLS-1$
 		}
 	}
 
@@ -436,7 +434,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 			//just a single value
 			objResult = resultAttr.get();
 		} catch (NamingException ne) {
-            final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.attrValueFetchError",modelAttrName) +" : "+ne.getExplanation(); //$NON-NLS-1$m//$NON-NLS-2$
+            final String msg = LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12004, modelAttrName) +" : "+ne.getExplanation(); //$NON-NLS-1$m
             LogManager.logWarning(LogConstants.CTX_CONNECTOR, msg);
 			throw new TranslatorException(msg);
 		}

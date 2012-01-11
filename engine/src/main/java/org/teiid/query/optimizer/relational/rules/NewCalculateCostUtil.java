@@ -980,8 +980,8 @@ public class NewCalculateCostUtil {
             	costMultiple = 0;
             }
             cost = childCost * costMultiple;
-        }catch(IllegalArgumentException e) {
-            LogManager.logWarning(LogConstants.CTX_QUERY_PLANNER, e, QueryPlugin.Util.getString("NewCalculateCostUtil.badCost")); //$NON-NLS-1$
+        } catch(IllegalArgumentException e) {
+            LogManager.logWarning(LogConstants.CTX_QUERY_PLANNER, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30029));
             // If we were unable to parse the timestamp we will revert to the divide by three estimate
             if (unknownChildCost) {
                 return UNKNOWN_VALUE;

@@ -57,7 +57,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 				try {
 					gts.updateMatViewRow((RelationalPlanner.MAT_PREFIX + schema + '.' + viewName).toUpperCase(), tuple, delete);
 				} catch (TeiidComponentException e) {
-					LogManager.logError(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.getString("replication_failed", "updateMatViewRow")); //$NON-NLS-1$ //$NON-NLS-2$
+					LogManager.logError(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40013, "updateMatViewRow")); //$NON-NLS-1$
 				}
 			}
 		}

@@ -270,7 +270,7 @@ public class MetadataProcessor {
 				column.setNativeType(sfTypeName);
 			}
 			if(null == column) {
-				LogManager.logError(LogConstants.CTX_CONNECTOR, "Unknown type returned by SalesForce: " + sfTypeName);
+				LogManager.logError(LogConstants.CTX_CONNECTOR, SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13001, sfTypeName));
 				continue;
 			} else {
 				column.setNameInSource(field.getName());

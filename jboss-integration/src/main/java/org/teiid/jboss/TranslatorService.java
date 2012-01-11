@@ -53,7 +53,7 @@ class TranslatorService implements Service<VDBTranslatorMetaData> {
 	public void stop(StopContext context) {
 		this.repositoryInjector.getValue().removeTranslatorMetadata(this.translator.getName());
 		this.statusCheckerInjector.getValue().translatorRemoved(this.translator.getName());
-		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("translator.removed", this.translator.getName())); //$NON-NLS-1$
+		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50010, this.translator.getName()));
 	}
 
 	@Override

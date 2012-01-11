@@ -63,7 +63,7 @@ public final class AdminProcessingException extends AdminException {
      * @param msg the error message.
      * @since 4.3
      */
-    public AdminProcessingException(int code, String msg) {
+    public AdminProcessingException(String code, String msg) {
         super(code, msg);
     }
     
@@ -71,7 +71,7 @@ public final class AdminProcessingException extends AdminException {
         super(msg, cause);
     }
 
-    public AdminProcessingException(int code, String msg, Throwable cause) {
+    public AdminProcessingException(String code, String msg, Throwable cause) {
         super(code, msg, cause);
     }
 

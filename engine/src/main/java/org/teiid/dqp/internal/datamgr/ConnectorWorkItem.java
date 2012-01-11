@@ -124,7 +124,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     	        LogManager.logDetail(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.getString("DQPCore.The_atomic_request_has_been_cancelled", this.id)); //$NON-NLS-1$
         	}
         } catch (TranslatorException e) {
-            LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, QueryPlugin.Util.getString("Cancel_request_failed", this.id)); //$NON-NLS-1$
+            LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30024, this.id));
         }
     }
     
@@ -343,7 +343,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 		if ( !lastBatch && currentRowCount == 0 ) {
 		    // Defect 13366 - Should send all batches, even if they're zero size.
 		    // Log warning if received a zero-size non-last batch from the connector.
-		    LogManager.logWarning(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.getString("ConnectorWorker.zero_size_non_last_batch", requestMsg.getConnectorName())); //$NON-NLS-1$
+		    LogManager.logWarning(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30004, requestMsg.getConnectorName()));
 		}
 
 		AtomicResultsMessage response = createResultsMessage(rows.toArray(new List[currentRowCount]));

@@ -114,9 +114,9 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 			LogManager.logDetail(LogConstants.CTX_RUNTIME,"VDB "+file.getName()+" has been parsed.");  //$NON-NLS-1$ //$NON-NLS-2$
 			return vdb;
 		} catch (XMLStreamException e) {
-			throw new DeploymentUnitProcessingException(e);
+			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e);
 		} catch (IOException e) {
-			throw new DeploymentUnitProcessingException(e);
+			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e);
 		}
 	}
 	
@@ -130,7 +130,7 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 		
 		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
 		if (vdb == null) {
-			LogManager.logError(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("invlaid_vdb_file",file.getName())); //$NON-NLS-1$
+			LogManager.logError(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(IntegrationPlugin.Event.TEIID50016,file.getName())); 
 			return null;
 		}
 		
@@ -158,9 +158,9 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 				}		
 			}
 		} catch(IOException e) {
-			throw new DeploymentUnitProcessingException(e); 
+			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e); 
 		} catch (XMLStreamException e) {
-			throw new DeploymentUnitProcessingException(e);
+			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e);
 		}
 				
 		LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB", file.getName(), "has been parsed."); //$NON-NLS-1$ //$NON-NLS-2$

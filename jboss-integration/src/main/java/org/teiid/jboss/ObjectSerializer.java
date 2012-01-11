@@ -21,14 +21,19 @@
  */
 package org.teiid.jboss;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 
 import org.jboss.logging.Logger;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.util.FileUtils;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.runtime.RuntimePlugin;
 
 
 public class ObjectSerializer {
@@ -114,7 +119,7 @@ public class ObjectSerializer {
 			}
 			return null;
 		} catch (Exception e) {
-			LogManager.logWarning(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.getString("invalid_metadata_file", cacheFile.getAbsolutePath())); //$NON-NLS-1$
+			LogManager.logWarning(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50043, cacheFile.getAbsolutePath()));
 		}
 		cacheFile.delete();
 		return null;

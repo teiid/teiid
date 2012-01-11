@@ -387,9 +387,7 @@ public class XMLPlan extends ProcessorPlan {
         try{
             return "XMLPlan:\n" + ProgramUtil.programToString(this.originalProgram); //$NON-NLS-1$
         } catch (Exception e){
-            e.printStackTrace();
-            LogManager.logWarning(LogConstants.CTX_XML_PLAN, e,
-                                 QueryPlugin.Util.getString("ERR.015.006.0001")); //$NON-NLS-1$
+            LogManager.logWarning(LogConstants.CTX_XML_PLAN, e, QueryPlugin.Util.getString("ERR.015.006.0001")); //$NON-NLS-1$
         }
         return "XMLPlan"; //$NON-NLS-1$
     }

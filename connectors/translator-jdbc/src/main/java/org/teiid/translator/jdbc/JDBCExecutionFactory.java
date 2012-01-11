@@ -1026,8 +1026,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             
             LogManager.logInfo(LogConstants.CTX_CONNECTOR, sb.toString());
         } catch (SQLException e) {
-            String errorStr = JDBCPlugin.Util.getString("ConnectionListener.failed_to_report_jdbc_connection_details"); //$NON-NLS-1$            
-            LogManager.logInfo(LogConstants.CTX_CONNECTOR, errorStr); 
+            LogManager.logInfo(LogConstants.CTX_CONNECTOR, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11002)); 
         }
     }
     

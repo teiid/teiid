@@ -70,6 +70,12 @@ public class TeiidRuntimeException extends RuntimeException {
         // The following setCode call should be executed after setting the message 
         setCode(code);
     }
+    
+    public TeiidRuntimeException(final String[] message) {
+        super(message[1]);
+        // The following setCode call should be executed after setting the message 
+        setCode(message[0]);
+    }    
 
     /**
      * Construct an instance with a linked exception specified.  If the exception is a {@link TeiidException} or a

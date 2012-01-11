@@ -61,7 +61,7 @@ public class TeiidExtension implements Extension {
 	public void initialize(ExtensionContext context) {
 		final SubsystemRegistration registration = context.registerSubsystem(TEIID_SUBSYSTEM);
 		
-		LogManager.setLogListener(new Log4jListener());
+		LogManager.setLogListener(new JBossLogger());
 		
 		registration.registerXMLElementWriter(parser);
 

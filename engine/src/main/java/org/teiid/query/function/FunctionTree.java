@@ -104,7 +104,7 @@ public class FunctionTree {
                 // Add to tree
                 addFunction(name, source, method);
 			} else if (!CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(name)) {
-                LogManager.logWarning(LogConstants.CTX_FUNCTION_TREE, QueryPlugin.Util.getString("ERR.015.001.0046", new Object[]{method})); //$NON-NLS-1$
+                LogManager.logWarning(LogConstants.CTX_FUNCTION_TREE, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30011, new Object[]{method}));
 			}
         }
     }

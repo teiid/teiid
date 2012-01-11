@@ -240,7 +240,7 @@ public class ThreadReuseExecutor implements Executor {
 			@Override
 			protected void afterExecute(Runnable r, Throwable t) {
 				if (t != null) {
-					LogManager.logError(LogConstants.CTX_RUNTIME, t, QueryPlugin.Util.getString("WorkerPool.uncaughtException")); //$NON-NLS-1$
+					LogManager.logError(LogConstants.CTX_RUNTIME, t, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30021));
 				}
 			}
 			
@@ -305,7 +305,7 @@ public class ThreadReuseExecutor implements Executor {
 						if (success) {
 							long warnTime = warnWaitTime;
 							if (r != null && System.currentTimeMillis() - r.getCreationTime() > warnTime) {
-								LogManager.logWarning(LogConstants.CTX_RUNTIME, QueryPlugin.Util.getString("WorkerPool.Max_thread", maximumPoolSize, poolName, highestQueueSize, warnTime)); //$NON-NLS-1$
+								LogManager.logWarning(LogConstants.CTX_RUNTIME, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30009, maximumPoolSize, poolName, highestQueueSize, warnTime));
 								warnWaitTime*=2; //we don't really care if this is synchronized
 							}
 						}

@@ -445,7 +445,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 								sleep = false;
 							} while (shouldDefrag(blockStore, segment));
 						} catch (IOException e) {
-							LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, e, "Error performing defrag"); //$NON-NLS-1$
+							LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30022));
 						} catch (InterruptedException e) {
 							throw new TeiidRuntimeException(e);
 						}
@@ -464,7 +464,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 				long newLength = (endBlock + 1) * blockStore.blockSize; 
 				blockStore.stores[segment].setLength(newLength);
 			} catch (IOException e) {
-				LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, e, "Error performing defrag truncate"); //$NON-NLS-1$
+				LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30023));
 			} finally {
 				blockStore.locks[segment].writeLock().unlock();
 			}
@@ -613,9 +613,9 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 				//entries are mutable after adding, the original should be removed shortly so just ignore
 				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Object "+ entry.getId() +" changed size since first persistence, keeping the original."); //$NON-NLS-1$ //$NON-NLS-2$
 			} else if (e == BlockOutputStream.exceededMax){
-				LogManager.logError(LogConstants.CTX_BUFFER_MGR, "Max block number exceeded.  Increase the maxStorageObjectSize to support larger storage objects.  Alternatively you could make the processor batch size smaller."); //$NON-NLS-1$
+				LogManager.logError(LogConstants.CTX_BUFFER_MGR, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30001)); 
 			} else {
-				LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, "Error persisting, attempts to read "+ entry.getId() +" later will result in an exception."); //$NON-NLS-1$ //$NON-NLS-2$
+				LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30002,entry.getId()));
 			}
 		} finally {
 			if (hasPermit) {
@@ -902,7 +902,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 				block = blockStore.writeToStorageBlock(info, is);
 			}
 		} catch (IOException e) {
-			LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, "Error transferring block to storage " + oid); //$NON-NLS-1$
+			LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30016, oid));
 		} finally {
 			//ensure post conditions
 			synchronized (info) {

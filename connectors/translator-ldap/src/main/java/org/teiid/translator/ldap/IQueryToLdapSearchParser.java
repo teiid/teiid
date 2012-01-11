@@ -400,13 +400,13 @@ public class IQueryToLdapSearchParser {
 				
 		} else {
 			if(e instanceof AggregateFunction) {
-				LogManager.logError(LogConstants.CTX_CONNECTOR, "Received IAggregate, but it is not supported. Check capabilities."); //$NON-NLS-1$
+				LogManager.logError(LogConstants.CTX_CONNECTOR, LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12001)); 
 			} else if(e instanceof Function) {
-				LogManager.logError(LogConstants.CTX_CONNECTOR, "Received IFunction, but it is not supported. Check capabilties."); //$NON-NLS-1$
+				LogManager.logError(LogConstants.CTX_CONNECTOR, LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12005)); 
 			} else if(e instanceof ScalarSubquery) {
-				LogManager.logError(LogConstants.CTX_CONNECTOR, "Received IScalarSubquery, but it is not supported. Check capabilties."); //$NON-NLS-1$
+				LogManager.logError(LogConstants.CTX_CONNECTOR, LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12006)); 
 			} else if (e instanceof SearchedCase) {
-				LogManager.logError(LogConstants.CTX_CONNECTOR, "Received ISearchedCaseExpression, but it is not supported. Check capabilties."); //$NON-NLS-1$
+				LogManager.logError(LogConstants.CTX_CONNECTOR, LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12007)); 
 			}
             final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.unsupportedElementError"); //$NON-NLS-1$
 			throw new TranslatorException(msg + e.toString()); 

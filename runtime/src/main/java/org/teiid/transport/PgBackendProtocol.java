@@ -578,9 +578,9 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		try {
 			engine = config.getServerSSLEngine();
 		} catch (IOException e) {
-			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.getString("PgBackendProtocol.ssl_error"));
+			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40016));
 		} catch (GeneralSecurityException e) {
-			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.getString("PgBackendProtocol.ssl_error"));
+			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40016));
 		}
 		ChannelBuffer buffer = ctx.getChannel().getConfig().getBufferFactory().getBuffer(1);
 		if (engine == null) {
@@ -596,11 +596,11 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		if (t instanceof SQLException) {
 			//we are just re-logging an exception raised by the engine
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_ODBC, MessageLevel.DETAIL)) {
-				LogManager.logWarning(LogConstants.CTX_ODBC, t, "Error occurred"); //$NON-NLS-1$ //$NON-NLS-2$
+				LogManager.logWarning(LogConstants.CTX_ODBC, t, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40020)); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		} else {
 			//should be in the odbc layer
-			LogManager.logError(LogConstants.CTX_ODBC, t, RuntimePlugin.Util.getString("PgBackendProtocol.unexpected_error")); //$NON-NLS-1$
+			LogManager.logError(LogConstants.CTX_ODBC, t, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40015));
 		}
 		SQLException e = TeiidSQLException.create(t);
 		startMessage('E');

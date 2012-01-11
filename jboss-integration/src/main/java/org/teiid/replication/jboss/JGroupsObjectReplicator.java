@@ -65,6 +65,7 @@ import org.teiid.Replicated;
 import org.teiid.Replicated.ReplicationMode;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ObjectInputStreamWithClassloader;
+import org.teiid.jboss.IntegrationPlugin;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.ObjectReplicator;
@@ -241,7 +242,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 				if (promise != null) {
 					promise.setResult(Boolean.FALSE);
 				}
-				LogManager.logError(LogConstants.CTX_RUNTIME, e, "error setting state " + stateId); //$NON-NLS-1$
+				LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50042,stateId));
 			} finally {
 				is.close();
 			}
@@ -443,9 +444,9 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 							}
 							break;
 						} 
-						LogManager.logWarning(LogConstants.CTX_RUNTIME, object + " failed to pull " + stateId); //$NON-NLS-1$
+						LogManager.logWarning(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50020, object, stateId));
 					} else {
-						LogManager.logWarning(LogConstants.CTX_RUNTIME, object + " timeout pulling " + stateId); //$NON-NLS-1$
+						LogManager.logWarning(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50022, object, stateId));
 					}
 				} finally {
 					synchronized (loadingStates) {

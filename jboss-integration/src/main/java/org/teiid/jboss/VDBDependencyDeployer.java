@@ -75,7 +75,7 @@ class VDBDependencyDeployer implements DeploymentUnitProcessor {
 							ModuleRootMarker.mark(jarArchiveRoot);
 							deploymentUnit.addToAttachmentList(Attachments.RESOURCE_ROOTS, jarArchiveRoot);
 						} catch (IOException e) {
-							throw new DeploymentUnitProcessingException("failed to process " + archive, e); //$NON-NLS-1$
+							throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50018.name()+IntegrationPlugin.Util.getString("failed_to_process_vdb_archive", archive), e); //$NON-NLS-1$
 						}
 					}
 				}	
@@ -92,7 +92,7 @@ class VDBDependencyDeployer implements DeploymentUnitProcessor {
 			moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("org.jboss.teiid.common-core"), false, false, false)); //$NON-NLS-1$
 			moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("javax.api"), false, false, false)); //$NON-NLS-1$
 		} catch (ModuleLoadException e) {
-			throw new DeploymentUnitProcessingException(e);
+			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50018.name(), e);
 		}
 	}
 

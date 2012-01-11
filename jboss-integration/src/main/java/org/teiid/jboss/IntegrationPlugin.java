@@ -37,5 +37,53 @@ public class IntegrationPlugin {
             locale = Locale.getDefault();
         }
         return ResourceBundle.getBundle(IntegrationPlugin.BUNDLE_NAME, locale);
-    }	
+    }
+    
+    public static enum Event implements BundleUtil.Event {
+    	TEIID50001,
+    	TEIID50002,
+    	TEIID50003,
+    	TEIID50004,
+    	TEIID50005,
+    	TEIID50006,
+    	TEIID50007, // failed to load module
+    	TEIID50008,
+    	TEIID50009,
+    	TEIID50010,
+    	TEIID50011,
+    	TEIID50012, // socket enabled
+    	TEIID50013, // Wrong socket protocol
+    	TEIID50014, // socket disabled
+    	TEIID50015, // admin max sessions
+    	TEIID50016, // invalid vdb file
+    	TEIID50017, // vdb.xml parse exception
+    	TEIID50018, // failed VDB dependency processing
+    	TEIID50019, // redeploying VDB
+    	TEIID50020, // replication error failed to pull
+    	TEIID50021, // vdb defined translator not found
+    	TEIID50022, // replication error timeout during the pull
+    	TEIID50023, // replication failed
+    	TEIID50024, // failed metadata load
+    	TEIID50025, // VDB deployed
+    	TEIID50026, // VDB undeployed
+    	TEIID50027, // metadata in-process of loading
+    	TEIID50028, // failed metadata loading
+    	TEIID50029, // dynamic metadata loaded
+    	TEIID50030, // no sources to retrieve data
+    	TEIID50031, // failed to load cached index files
+    	TEIID50032, // duplicate VDB
+    	TEIID50033, // duplicate source name in vdb
+    	TEIID50034, // Source name mismatch
+    	TEIID50035, // translator not found
+    	TEIID50036, // failed to retrive metadata
+    	TEIID50037, // odbc enabled
+    	TEIID50038, // embedded enabled
+    	TEIID50039, // socket_disabled
+    	TEIID50040, // odbc_disabled
+    	TEIID50041, // embedded disabled
+    	TEIID50042, // error state
+    	TEIID50043,
+    	TEIID50044, // vdb save failed
+    	
+    }
 }

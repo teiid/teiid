@@ -22,38 +22,32 @@
 
 package org.teiid.jboss;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.jboss.logging.Logger;
+import org.jboss.logging.Logger.Level;
 import org.teiid.logging.MessageLevel;
 
+public class JBossLogger implements org.teiid.logging.Logger {
 
-/**
- * Log4J Listener
- */
-public class Log4jListener implements org.teiid.logging.Logger {
-	
 	@Override
 	public boolean isEnabled(String context, int level) {
     	if ( context == null ) {
             return false;
         }
-    	Level logLevel = convert2Log4JLevel(level);
-        if ( logLevel == Level.OFF) {
-            return false;
-        }
+    	Level logLevel = convert2JbossLevel(level);
         Logger log = getLogger(context);
-        return log.isEnabledFor(logLevel);
+        return log.isEnabled(logLevel);
 	}
 
 	@Override
 	public void log(int level, String context, Object msg) {
-		Logger log4j = getLogger(context);
-		log4j.log(convert2Log4JLevel(level), msg);
+		Logger logger = getLogger(context);
+		logger.log(convert2JbossLevel(level), msg);
 	}
 
+	@Override
 	public void log(int level, String context, Throwable t, Object msg) {
-		Logger log4j = getLogger(context);
-		log4j.log(convert2Log4JLevel(level), msg, t);
+		Logger logger = getLogger(context);
+		logger.log(convert2JbossLevel(level), msg, t);
 	}
 	
 	/**
@@ -61,7 +55,7 @@ public class Log4jListener implements org.teiid.logging.Logger {
 	 * @param level
 	 * @return
 	 */
-    public static Level convert2Log4JLevel(int level) {
+    public static Level convert2JbossLevel(int level) {
     	switch (level) {
     	case MessageLevel.CRITICAL:
     		return Level.FATAL;
@@ -75,8 +69,6 @@ public class Log4jListener implements org.teiid.logging.Logger {
     		return Level.DEBUG;
     	case MessageLevel.TRACE:
     		return Level.TRACE;
-    	case MessageLevel.NONE:
-    		return Level.OFF;
     	}
     	return Level.DEBUG;
     }		
@@ -87,18 +79,18 @@ public class Log4jListener implements org.teiid.logging.Logger {
 	 * @return
 	 */
     public static int convert2MessageLevel(Level level) {
-    	switch (level.toInt()) {
-    	case Level.FATAL_INT:
+    	switch (level) {
+    	case FATAL:
     		return MessageLevel.CRITICAL;
-    	case Level.ERROR_INT:
+    	case ERROR:
     		return MessageLevel.ERROR;
-    	case Level.WARN_INT:
+    	case WARN:
     		return MessageLevel.WARNING;
-    	case Level.INFO_INT:
+    	case INFO:
     		return MessageLevel.INFO;
-    	case Level.DEBUG_INT:
+    	case DEBUG:
     		return MessageLevel.DETAIL; 
-    	case Level.OFF_INT:
+    	case TRACE:
     		return MessageLevel.NONE;
     	}
     	return MessageLevel.DETAIL;
@@ -109,7 +101,7 @@ public class Log4jListener implements org.teiid.logging.Logger {
      * @param context
      * @return
      */
-	public static Logger getLogger(String context) {
+	private Logger getLogger(String context) {
 		return Logger.getLogger(context);
 	}  
 					

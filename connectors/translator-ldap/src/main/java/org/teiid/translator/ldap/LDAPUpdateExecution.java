@@ -431,8 +431,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 				ldapCtx.close();
 			}
 		} catch (NamingException ne) {
-            final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.closeContextError",ne.getExplanation()); //$NON-NLS-1$
-            LogManager.logWarning(LogConstants.CTX_CONNECTOR,msg);
+            LogManager.logWarning(LogConstants.CTX_CONNECTOR, LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12003, ne.getExplanation()));
 		}
 	}
 

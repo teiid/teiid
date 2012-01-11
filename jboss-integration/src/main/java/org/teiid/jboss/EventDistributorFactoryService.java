@@ -70,9 +70,9 @@ public class EventDistributorFactoryService implements Service<EventDistributorF
 			try {
 				this.replicatableEventDistributor = objectReplicatorInjector.getValue().replicate(LocalServerConnection.TEIID_RUNTIME_CONTEXT, EventDistributor.class, ed, 0);
 			} catch (Exception e) {
-				LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("replication_failed", this)); //$NON-NLS-1$
+				LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50004, this));
 			}
-			LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("distributed_cache_enabled")); //$NON-NLS-1$
+			LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50003)); 
 		}
 		else {
 			LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("distributed_cache_not_enabled")); //$NON-NLS-1$

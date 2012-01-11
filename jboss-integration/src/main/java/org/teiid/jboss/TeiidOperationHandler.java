@@ -427,11 +427,11 @@ class ClearCache extends BaseCachehandler {
 		if (operation.hasDefined(OperationsConstants.VDB_NAME) && operation.hasDefined(OperationsConstants.VDB_VERSION)) {
 			String vdbName = operation.get(OperationsConstants.VDB_NAME).asString();
 			int vdbVersion = operation.get(OperationsConstants.VDB_VERSION).asInt();
-			LogManager.logInfo(LogConstants.CTX_DQP, IntegrationPlugin.Util.getString("clearing_cache_vdb", cacheType, vdbName, vdbVersion)); //$NON-NLS-1$
+			LogManager.logInfo(LogConstants.CTX_DQP, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50005, cacheType, vdbName, vdbVersion));
 			cache.clearForVDB(vdbName, vdbVersion);
 		}
 		else {
-			LogManager.logInfo(LogConstants.CTX_DQP, IntegrationPlugin.Util.getString("clearing_cache", cacheType)); //$NON-NLS-1$
+			LogManager.logInfo(LogConstants.CTX_DQP, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50005, cacheType));
 			cache.clearAll();
 		}
 	}

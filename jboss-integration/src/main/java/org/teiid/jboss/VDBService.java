@@ -142,7 +142,7 @@ class VDBService implements Service<VDBMetaData> {
 					try {
 						gts = getObjectReplicatorInjector().getValue().replicate(name + version, GlobalTableStore.class, gts, 300000);
 					} catch (Exception e) {
-						LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("replication_failed", gts)); //$NON-NLS-1$
+						LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50023, gts)); 
 					}
 				}
 				vdb.getVDB().addAttchment(GlobalTableStore.class, gts);
@@ -174,7 +174,7 @@ class VDBService implements Service<VDBMetaData> {
 				try {
 					store.addStore(indexFactory.getMetadataStore(getVDBRepository().getSystemStore().getDatatypes()));
 				} catch (IOException e) {
-					throw new StartException(e);
+					throw new StartException(IntegrationPlugin.Event.TEIID50031.name(), e);
 				}
 			}
 			else {
@@ -188,7 +188,7 @@ class VDBService implements Service<VDBMetaData> {
 		}
 		
 		if (store == null) {
-			LogManager.logError(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("failed_matadata_load", this.vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
+			LogManager.logError(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50024, this.vdb.getName(), vdb.getVersion()));
 		}
 		
 		LinkedHashMap<String, Resource> visibilityMap = null;
@@ -201,7 +201,7 @@ class VDBService implements Service<VDBMetaData> {
 			// add transformation metadata to the repository.
 			getVDBRepository().addVDB(this.vdb, store, visibilityMap, udf, cmr);
 		} catch (VirtualDatabaseException e) {
-			throw new StartException(e);
+			throw new StartException(IntegrationPlugin.Event.TEIID50032.name(), e);
 		}
 		
 		boolean valid = true;
@@ -212,7 +212,7 @@ class VDBService implements Service<VDBMetaData> {
 						LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB ", vdb.getName(), " metadata has been cached to data folder"); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 				} catch (IOException e1) {
-					LogManager.logWarning(LogConstants.CTX_RUNTIME, e1, RuntimePlugin.Util.getString("vdb_save_failed", vdb.getName()+"."+vdb.getVersion())); //$NON-NLS-1$ //$NON-NLS-2$			
+					LogManager.logWarning(LogConstants.CTX_RUNTIME, e1, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50044, vdb.getName(), vdb.getVersion()));		
 				}
 			}
 			if (!preview) {
@@ -235,7 +235,7 @@ class VDBService implements Service<VDBMetaData> {
 		this.vdb.removeAttachment(MetadataStoreGroup.class);
 		this.vdb.removeAttachment(IndexMetadataFactory.class);	
 				
-		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_deployed",vdb, valid?"active":"inactive")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$		
+		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50025, vdb, valid?"active":"inactive")); //$NON-NLS-1$ //$NON-NLS-2$		
 	}
 
 	@Override
@@ -256,7 +256,7 @@ class VDBService implements Service<VDBMetaData> {
 			LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+vdb.getName()+" metadata removed"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
-		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_undeployed", this.vdb)); //$NON-NLS-1$
+		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50026, this.vdb));
 	}
 
 	@Override
@@ -270,7 +270,7 @@ class VDBService implements Service<VDBMetaData> {
 		for (Model model:deployment.getModels()) {
 			List<String> sourceNames = model.getSourceNames();
 			if (sourceNames.size() != new HashSet<String>(sourceNames).size()) {
-				throw new StartException(IntegrationPlugin.Util.getString("duplicate_source_name", model.getName(), deployment.getName(), deployment.getVersion())); //$NON-NLS-1$
+				throw new StartException(IntegrationPlugin.Util.getString("duplicate_source_name", model.getName(), deployment.getName(), deployment.getVersion(), IntegrationPlugin.Event.TEIID50033)); //$NON-NLS-1$
 			}
 			for (String source:sourceNames) {
 				ConnectorManager cm = cmr.getConnectorManager(source);
@@ -279,7 +279,7 @@ class VDBService implements Service<VDBMetaData> {
 				if (cm != null) {
 					if (!cm.getTranslatorName().equals(name)
 							|| !cm.getConnectionName().equals(connection)) {
-						throw new StartException(IntegrationPlugin.Util.getString("source_name_mismatch", source, deployment.getName(), deployment.getVersion())); //$NON-NLS-1$
+						throw new StartException(IntegrationPlugin.Util.getString("source_name_mismatch", source, deployment.getName(), deployment.getVersion(),IntegrationPlugin.Event.TEIID50034)); //$NON-NLS-1$
 					}
 					continue;
 				}
@@ -291,9 +291,9 @@ class VDBService implements Service<VDBMetaData> {
 					cmr.addConnectorManager(source, cm);
 				} catch (TranslatorNotFoundException e) {
 					if (e.getCause() != null) {
-						throw new StartException(e.getCause());
+						throw new StartException(IntegrationPlugin.Event.TEIID50035.name(), e.getCause());
 					}
-					throw new StartException(e.getMessage());
+					throw new StartException(IntegrationPlugin.Event.TEIID50035.name()+" "+e.getMessage()); //$NON-NLS-1$
 				}
 			}
 		}
@@ -453,19 +453,19 @@ class VDBService implements Service<VDBMetaData> {
     	synchronized (vdb) {
 	    	if (loaded == null || !loaded) {
 	    		vdb.setStatus(VDB.Status.INACTIVE);
-	    		String failed_msg = RuntimePlugin.Util.getString(loaded==null?"failed_to_retrive_metadata":"nosources_to_retrive_metadata", vdb.getName(), vdb.getVersion(), model.getName()); //$NON-NLS-1$ //$NON-NLS-2$ 
+	    		String failed_msg = IntegrationPlugin.Util.gs(loaded==null?IntegrationPlugin.Event.TEIID50036:IntegrationPlugin.Event.TEIID50030, vdb.getName(), vdb.getVersion(), model.getName());
 		    	model.addError(ModelMetaData.ValidationError.Severity.ERROR.toString(), failed_msg); 
 		    	if (exceptionMessage != null) {
 		    		model.addError(ModelMetaData.ValidationError.Severity.ERROR.toString(), exceptionMessage);     		
 		    	}
 		    	LogManager.logWarning(LogConstants.CTX_RUNTIME, failed_msg);
 	    	} else {
-	    		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("metadata_loaded",vdb.getName(), vdb.getVersion(), model.getName())); //$NON-NLS-1$
+	    		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50029,vdb.getName(), vdb.getVersion(), model.getName())); 
 	    		model.clearErrors();
 	    		if (vdb.isValid()) {
 	    			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion());
 					vdb.setStatus(VDB.Status.ACTIVE);
-					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_activated",vdb.getName(), vdb.getVersion())); //$NON-NLS-1$    			
+					LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(RuntimePlugin.Event.TEIID40003,vdb.getName(), vdb.getVersion()));
 	    		}
 	    	}
     	}

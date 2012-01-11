@@ -362,7 +362,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 			            comment += payloadString + " "; //$NON-NLS-1$
 			            usingPayloadComment = true;
 		        	} else {
-		        		String msg = JDBCPlugin.Util.getString("OraleExecutionFactory.invalid_hint", "Execution Payload", payloadString); //$NON-NLS-1$ //$NON-NLS-2$ 
+		        		String msg = JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11003, "Execution Payload", payloadString); //$NON-NLS-1$ 
 		        		context.addWarning(new TranslatorException(msg));
 		        		LogManager.logWarning(LogConstants.CTX_CONNECTOR, msg);
 		        	}
@@ -381,7 +381,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			if (!hint.contains(HINT_PREFIX)) {
     				comment += HINT_PREFIX + ' ' + hint + ' ' + HINT_SUFFIX + ' ';
     			} else {
-    				String msg = JDBCPlugin.Util.getString("OraleExecutionFactory.invalid_hint", "Source Hint", hint); //$NON-NLS-1$ //$NON-NLS-2$
+    				String msg = JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11003, "Source Hint", hint); //$NON-NLS-1$
     				context.addWarning(new TranslatorException(msg));
 	        		LogManager.logWarning(LogConstants.CTX_CONNECTOR, msg);
     			}

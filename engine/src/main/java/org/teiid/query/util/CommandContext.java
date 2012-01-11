@@ -663,7 +663,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 					try {
 						reusableExecution.dispose();
 					} catch (Exception e) {
-						LogManager.logWarning(LogConstants.CTX_DQP, e, "Unhandled exception disposing reusable execution"); //$NON-NLS-1$
+						LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30030));
 					}
 				}
 				this.globalState.reusableExecutions.clear();
@@ -673,7 +673,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 					try {
 						listener.commandClosed(this);
 					} catch (Exception e) {
-						LogManager.logWarning(LogConstants.CTX_DQP, e, "Unhandled exception calling CommandListener"); //$NON-NLS-1$
+						LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30031));
 					}
 				}
 				this.globalState.commandListeners.clear();

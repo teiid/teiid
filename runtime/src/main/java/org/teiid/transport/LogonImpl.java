@@ -134,7 +134,7 @@ public class LogonImpl implements ILogon {
 				this.serviceTicket = context.acceptSecContext(this.serviceTicket, 0, this.serviceTicket.length);				
 				return new GSSResult(context, serviceTicket);
 			} catch (GSSException e) {
-				LogManager.logError(LogConstants.CTX_SECURITY, e, "Kerberos context login failed"); //$NON-NLS-1$
+				LogManager.logError(LogConstants.CTX_SECURITY, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40014));
 			}
 			return null;
 		}	

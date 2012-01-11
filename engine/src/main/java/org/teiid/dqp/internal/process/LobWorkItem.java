@@ -75,7 +75,7 @@ public class LobWorkItem implements Work {
             chunk = stream.getNextChunk();
             shouldClose = chunk.isLast();
         } catch (TeiidComponentException e) {            
-            LogManager.logWarning(org.teiid.logging.LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
+            LogManager.logWarning(org.teiid.logging.LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30027));
             ex = e;
         } catch (IOException e) {
 			ex = e;
@@ -102,7 +102,7 @@ public class LobWorkItem implements Work {
 				stream.close();
 			}
 		} catch (IOException e) {
-			LogManager.logWarning(org.teiid.logging.LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
+			LogManager.logWarning(org.teiid.logging.LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30027));
 		}
 		parent.removeLobStream(streamRequestId);
 	}    

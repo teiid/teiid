@@ -58,7 +58,7 @@ public final class AdminComponentException extends AdminException {
      * @param msg the error message.
      * @since 4.3
      */
-    public AdminComponentException(int code, String msg) {
+    public AdminComponentException(String code, String msg) {
         super(code, msg);
     }
     
@@ -66,7 +66,7 @@ public final class AdminComponentException extends AdminException {
         super(msg, cause);
     }
 
-    public AdminComponentException(int code, String msg, Throwable cause) {
+    public AdminComponentException(String code, String msg, Throwable cause) {
         super(code, msg, cause);
     }
 

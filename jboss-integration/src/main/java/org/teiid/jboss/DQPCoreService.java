@@ -140,7 +140,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 			}			
 		}); 		
 
-    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("engine_started", this.dqpCore.getRuntimeVersion(), new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
+    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50001, this.dqpCore.getRuntimeVersion(), new Date(System.currentTimeMillis()).toString()));
 	}	
 	
 	@Override
@@ -156,7 +156,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
     		// this bean is already shutdown
     	}
     	
-    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("engine_stopped", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$    	
+    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50002, new Date(System.currentTimeMillis()).toString())); 
     }
     
 	public void setBufferService(BufferService service) {

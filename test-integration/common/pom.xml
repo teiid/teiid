@@ -22,7 +22,7 @@
 		</dependency>
         
 		<dependency>
-  			<artifactId>teiid-cache-jbosscache</artifactId>
+  			<artifactId>teiid-jboss-integration</artifactId>
 			<groupId>org.jboss.teiid</groupId>
 		</dependency>
 		<dependency>

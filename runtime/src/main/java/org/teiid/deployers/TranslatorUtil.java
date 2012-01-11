@@ -125,7 +125,7 @@ public class TranslatorUtil {
 		}
 		caseInsensitivProps.remove(Translator.EXECUTION_FACTORY_CLASS);
 		if (!caseInsensitivProps.isEmpty()) {
-			LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("undefined_translator_props", caseInsensitivProps.keySet(), data.getName())); //$NON-NLS-1$
+			LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40001, caseInsensitivProps.keySet(), data.getName()));
 		}
 	}
 	

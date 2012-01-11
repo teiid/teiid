@@ -100,7 +100,7 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
             	module = ml.loadModule(ModuleIdentifier.create(moduleName));
             	translatorLoader = module.getClassLoader();
 	        } catch (ModuleLoadException e) {
-	            throw new OperationFailedException(e, new ModelNode().set(IntegrationPlugin.Util.getString("failed_load_module", moduleName, translatorName))); //$NON-NLS-1$
+	            throw new OperationFailedException(e, new ModelNode().set(IntegrationPlugin.Util.getString("failed_load_module", IntegrationPlugin.Event.TEIID50007, moduleName, translatorName))); //$NON-NLS-1$
 	        }
         }
         
@@ -110,12 +110,12 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
         	for (ExecutionFactory ef:serviceLoader) {
         		VDBTranslatorMetaData metadata = TranslatorUtil.buildTranslatorMetadata(ef, moduleName);
         		if (metadata == null) {
-        			throw new OperationFailedException( new ModelNode().set(IntegrationPlugin.Util.getString("error_adding_translator", translatorName))); //$NON-NLS-1$ 
+        			throw new OperationFailedException( new ModelNode().set(IntegrationPlugin.Util.getString("error_adding_translator", IntegrationPlugin.Event.TEIID50008, translatorName))); //$NON-NLS-1$ 
         		}
         		
         		metadata.addAttchment(ClassLoader.class, translatorLoader);
         		if (translatorName.equalsIgnoreCase(metadata.getName())) {
-	        		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("translator.added", metadata.getName())); //$NON-NLS-1$
+	        		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50006, metadata.getName()));
 	        		
 	        		TranslatorService translatorService = new TranslatorService(metadata);
 	        		ServiceBuilder<VDBTranslatorMetaData> builder = target.addService(TeiidServiceNames.translatorServiceName(metadata.getName()), translatorService);
@@ -129,7 +129,7 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
         }
         
         if (!added) {
-        	throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("translator.failed-to-load", translatorName, moduleName))); //$NON-NLS-1$
+        	throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("translator.failed-to-load", IntegrationPlugin.Event.TEIID50009, translatorName, moduleName))); //$NON-NLS-1$
         }
     }    
 }

@@ -68,7 +68,7 @@ public final class TranslatorDeployer implements DeploymentUnitProcessor {
         		}
         		metadata.addAttchment(ClassLoader.class, translatorLoader);
         		
-        		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("translator.added", metadata.getName())); //$NON-NLS-1$
+        		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50006, metadata.getName()));
         		
         		TranslatorService translatorService = new TranslatorService(metadata);
         		ServiceBuilder<VDBTranslatorMetaData> builder = target.addService(TeiidServiceNames.translatorServiceName(metadata.getName()), translatorService);

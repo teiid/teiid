@@ -50,6 +50,10 @@ public class BundleUtil {
 
     protected final String pluginId;
     
+    public interface Event {
+    	//String id();
+    }
+    
     /**
      * Return the {@link BundleUtil} for the class.  The bundle must be in the same package or a parent package of the class.
      * @param clazz
@@ -224,6 +228,18 @@ public class BundleUtil {
 
         return MessageFormat.format(text, parameters);
     }
+    
+	public String gs(final String key, final Object... parameters) {
+		return getString(key, parameters);
+	}
+	
+	public String gs(final Event key, final Object... parameters) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(key);
+		sb.append(" "); //$NON-NLS-1$
+		sb.append(getString(key.toString(), parameters));
+		return sb.toString();
+	}	
 
     public String getStringOrKey(final String key) {
         ArgCheck.isNotNull(key);

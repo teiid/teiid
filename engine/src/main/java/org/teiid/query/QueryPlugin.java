@@ -41,4 +41,39 @@ public class QueryPlugin { // extends Plugin {
 
 	public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,
 	                                                     PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
+	
+	
+	public static enum Event implements BundleUtil.Event{
+		TEIID30001, // buffer manager max block exceeded
+		TEIID30002, // error persisting buffer manager
+		TEIID30003, // capability required
+		TEIID30004, // zero size batch
+		TEIID30005, // rollback failed
+		TEIID30006, // invalid max active plans
+		TEIID30007, // general process worker error
+		TEIID30008, // request not deterministic
+		TEIID30009, // max threads exceeded
+		TEIID30010, // duplicate function
+		TEIID30011, // dependent criteria over max
+		TEIID30012, // mat row refresh
+		TEIID30013, // mat table loading
+		TEIID30014, // mat table loaded
+		TEIID30015, //faild to load mat table
+		TEIID30016, // error transfer
+		TEIID30017, // error persisting batch in bm
+		TEIID30018, 
+		TEIID30019, // process worker error
+		TEIID30020, // process worker error
+		TEIID30021, // uncaught exception during work
+		TEIID30022, // error defrag
+		TEIID30023, // error defrag truncate
+		TEIID30024, // cancel request failed
+		TEIID30025, // failed to restore results
+		TEIID30026, // failed to cancel
+		TEIID30027, // lob error
+		TEIID30028, // failed to rollback
+		TEIID30029, // unexpected format
+		TEIID30030, // unexpected exp1
+		TEIID30031, // unexpected exp2
+	}
 }

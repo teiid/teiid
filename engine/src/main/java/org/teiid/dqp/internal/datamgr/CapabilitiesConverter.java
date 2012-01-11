@@ -152,7 +152,7 @@ public class CapabilitiesConverter {
 		}
 		for (Capability capability : required) {
 			if (!tgtCaps.supportsCapability(capability)) {
-				LogManager.logWarning(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.getString("support_required", cap, capability, connectorID)); //$NON-NLS-1$
+				LogManager.logWarning(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30003, cap, capability, connectorID));
 				supports = false;
 			}
 		}

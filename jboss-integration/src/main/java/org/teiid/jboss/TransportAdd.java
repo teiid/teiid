@@ -183,7 +183,7 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
     	
         // add security domains
         for (String domain:domainList) {
-        	LogManager.logInfo(LogConstants.CTX_SECURITY, IntegrationPlugin.Util.getString("security_enabled", domain, transportName)); //$NON-NLS-1$
+        	LogManager.logInfo(LogConstants.CTX_SECURITY, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50011, domain, transportName));
         	transportBuilder.addDependency(ServiceName.JBOSS.append("security", "security-domain", domain), SecurityDomainContext.class, new ConcurrentMapInjector<String,SecurityDomainContext>(transport.securityDomains, domain)); //$NON-NLS-1$ //$NON-NLS-2$
         }
         

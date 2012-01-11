@@ -178,7 +178,7 @@ public abstract class VDBStatusChecker {
 					}
 				} else if (valid) {
 					vdb.setStatus(VDB.Status.ACTIVE);
-					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_activated",vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
+					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,vdb.getName(), vdb.getVersion()));
 				}
 			}
 		}
@@ -198,14 +198,14 @@ public abstract class VDBStatusChecker {
 						vdb.setStatus(VDB.Status.INACTIVE);
 						String msg = null;
 						if (translator) {
-							msg = RuntimePlugin.Util.getString("translator_not_found", vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName)); //$NON-NLS-1$
+							msg = RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40005, vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName));
 						}
 						else {
-							msg = RuntimePlugin.Util.getString("datasource_not_found", vdb.getName(), vdb.getVersion(), resourceName); //$NON-NLS-1$
+							msg = RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40012, vdb.getName(), vdb.getVersion(), resourceName); 
 						}
 						model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
 						LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);					
-						LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_inactivated",vdb.getName(), vdb.getVersion())); //$NON-NLS-1$							
+						LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40006,vdb.getName(), vdb.getVersion()));
 					}
 				}
 			}

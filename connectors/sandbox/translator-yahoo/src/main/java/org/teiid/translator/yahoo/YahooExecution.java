@@ -200,7 +200,7 @@ public class YahooExecution implements ResultSetExecution {
                         row.add(new java.sql.Date(date.getTime()));
                     } catch(ParseException e) {
                         Object[] params = new Object[] { data, e.getMessage() };
-                        LogManager.logWarning(LogConstants.CTX_CONNECTOR, YahooPlugin.Util.getString("YahooExecution.Parse_date_error", params)); //$NON-NLS-1$
+                        LogManager.logWarning(LogConstants.CTX_CONNECTOR, YahooPlugin.Util.gs(YahooPlugin.Event.TEIID14001, params)); 
                         row.add(null);
                     }
                 } else{
@@ -213,7 +213,7 @@ public class YahooExecution implements ResultSetExecution {
                         row.add(new java.sql.Time(time.getTime()));
                     } catch(ParseException e) {
                         Object[] params = new Object[] { data, e.getMessage() };
-                        LogManager.logWarning(LogConstants.CTX_CONNECTOR, YahooPlugin.Util.getString("YahooExecution.Parse_time_value", params)); //$NON-NLS-1$
+                        LogManager.logWarning(LogConstants.CTX_CONNECTOR, YahooPlugin.Util.gs(YahooPlugin.Event.TEIID14002, params));
                         row.add(null);
                     }
                 } else {

@@ -132,20 +132,20 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
     		}
     		if (protocol == Protocol.teiid) {
     	    	this.socketListener = new SocketListener(address, this.socketConfig, this.csr, getBufferServiceInjector().getValue().getBufferManager());
-    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled", address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), authenticationDomains)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50012, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), authenticationDomains)); //$NON-NLS-1$ //$NON-NLS-2$ 
     		}
     		else if (protocol == Protocol.pg) {
         		getVdbRepository().odbcEnabled();
         		ODBCSocketListener odbc = new ODBCSocketListener(address, this.socketConfig, this.csr, getBufferServiceInjector().getValue().getBufferManager(), getMaxODBCLobSizeAllowed(), this.logon);
         		odbc.setAuthenticationType(this.sessionService.getAuthenticationType());
-    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("odbc_enabled", address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), authenticationDomains)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50037, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), authenticationDomains)); //$NON-NLS-1$ //$NON-NLS-2$
     		}
     		else {
-    			throw new StartException(IntegrationPlugin.Util.getString("wrong_protocol")); //$NON-NLS-1$
+    			throw new StartException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50013));
     		}
     	}
     	else {
-    		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("embedded_enabled", LocalServerConnection.TEIID_RUNTIME_CONTEXT)); //$NON-NLS-1$    		
+    		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50038, LocalServerConnection.TEIID_RUNTIME_CONTEXT));   		
     	}
     			
 		DQP dqpProxy = proxyService(DQP.class, getDQP(), LogConstants.CTX_DQP);
@@ -165,14 +165,14 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
     	if (this.socketConfig != null) {
     		Protocol protocol = Protocol.valueOf(socketConfig.getProtocol());
     		if (protocol == Protocol.teiid) {
-    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_disabled", this.address.getHostName(), String.valueOf(this.address.getPort()))); //$NON-NLS-1$ 
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50039, this.address.getHostName(), String.valueOf(this.address.getPort()))); 
     		}
     		else if (protocol == Protocol.pg) {
-    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("odbc_disabled", this.address.getHostName(), String.valueOf(this.address.getPort()))); //$NON-NLS-1$
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50040, this.address.getHostName(), String.valueOf(this.address.getPort())));
     		}
     	}
     	else {
-    		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("embedded_disabled", LocalServerConnection.TEIID_RUNTIME_CONTEXT)); //$NON-NLS-1$
+    		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50041, LocalServerConnection.TEIID_RUNTIME_CONTEXT)); 
     	}
 	}	
 	

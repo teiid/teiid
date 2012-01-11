@@ -351,7 +351,7 @@ public class DQPCore implements DQP {
 							wi.requestCancel();
 						}
 					} catch (TeiidComponentException e) {
-						LogManager.logError(LogConstants.CTX_DQP, e, "Error processing cancellation task."); //$NON-NLS-1$
+						LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30018));
 					}
 				}
 			}, timeout));
@@ -524,7 +524,7 @@ public class DQPCore implements DQP {
 	            try {
 	                cancelRequest(reqId);
 	            } catch (TeiidComponentException err) {
-	                LogManager.logWarning(LogConstants.CTX_DQP, err, "Failed to cancel " + reqId); //$NON-NLS-1$
+	                LogManager.logWarning(LogConstants.CTX_DQP, err, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30026,reqId));
 				}
 	        }
         }
@@ -532,7 +532,7 @@ public class DQPCore implements DQP {
         try {
             transactionService.cancelTransactions(sessionId, false);
         } catch (XATransactionException err) {
-            LogManager.logWarning(LogConstants.CTX_DQP, "rollback failed for requestID=" + sessionId); //$NON-NLS-1$
+            LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30005,sessionId));
         } 
     }
 
@@ -653,7 +653,7 @@ public class DQPCore implements DQP {
         this.maxActivePlans = config.getMaxActivePlans();
         
         if (this.maxActivePlans > config.getMaxThreads()) {
-        	LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DQPCore.invalid_max_active_plan", this.maxActivePlans, config.getMaxThreads())); //$NON-NLS-1$
+        	LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30006, this.maxActivePlans, config.getMaxThreads()));
         	this.maxActivePlans = config.getMaxThreads();
         }
 
