@@ -95,8 +95,17 @@ public class TextTable extends TableFunctionReference {
     private Integer header;
     private Integer skip;
     private boolean usingRowDelimiter = true;
+    private String selector;
     
     private boolean fixedWidth;
+    
+    public String getSelector() {
+		return selector;
+	}
+    
+    public void setSelector(String selector) {
+		this.selector = selector;
+	}
     
     public Character getQuote() {
 		return quote;

@@ -1726,9 +1726,15 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
         if (obj.getSkip() != null) {
             append(SPACE);
-            append("SKIP"); //$NON-NLS-1$
+            append(NonReserved.SKIP);
             append(SPACE);
             append(obj.getSkip());
+        }
+        if (obj.getSelector() != null) {
+        	append(SPACE);
+        	append(NonReserved.SELECTOR);
+        	append(SPACE);
+        	append(escapeSinglePart(obj.getSelector()));
         }
         append(")");//$NON-NLS-1$
         append(SPACE);

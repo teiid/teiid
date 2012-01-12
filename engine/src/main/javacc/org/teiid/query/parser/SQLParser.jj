@@ -2165,6 +2165,7 @@ TextTable textTable(ParseInfo info) :
 	Character quote = null;
 	Integer header = null;
 	Integer skip = null;
+	String selector = null;
 	String aliasID = null;
 }
 {
@@ -2211,6 +2212,10 @@ TextTable textTable(ParseInfo info) :
 	  LOOKAHEAD(<ID>, { "skip".equalsIgnoreCase(getToken(1).image) }) <ID>
 	  skip = intVal()
 	]
+	[
+	  LOOKAHEAD(<ID>, { "selector".equalsIgnoreCase(getToken(1).image) }) <ID>
+	  selector = stringVal()
+	]
  	<RPAREN>
  	[<AS>] aliasID=id()
  	{
@@ -2224,6 +2229,7 @@ TextTable textTable(ParseInfo info) :
  		result.setName(validateAlias(aliasID));
  		result.setQuote(quote);
  		result.setUsingRowDelimiter(useRowDelimiter);
+ 		result.setSelector(selector);
  		return result;
  	}
 }

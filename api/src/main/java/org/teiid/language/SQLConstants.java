@@ -73,6 +73,8 @@ public class SQLConstants {
 		public static final String HEADER = "HEADER"; //$NON-NLS-1$
 		public static final String QUOTE = "QUOTE"; //$NON-NLS-1$
 		public static final String COLUMNS = "COLUMNS"; //$NON-NLS-1$
+		public static final String SELECTOR = "SELECTOR"; //$NON-NLS-1$
+		public static final String SKIP = "SKIP"; //$NON-NLS-1$
 		//xmltable
 		public static final String ORDINALITY = "ORDINALITY"; //$NON-NLS-1$
 		public static final String PASSING = "PASSING"; //$NON-NLS-1$
@@ -113,7 +115,7 @@ public class SQLConstants {
 		public static final String ENABLED = "ENABLED"; //$NON-NLS-1$
 		public static final String DISABLED = "DISABLED"; //$NON-NLS-1$
 		
-		public static final String TRIM = "TRIM";
+		public static final String TRIM = "TRIM"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {

@@ -170,6 +170,10 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				break;
 			}
 			
+			if (table.getSelector() != null && !line.startsWith(table.getSelector())) {
+				continue;
+			}
+			
 			List<String> vals = parseLine(line);
 			
 			List<Object> tuple = new ArrayList<Object>(projectionIndexes.length);

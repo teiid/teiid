@@ -75,7 +75,6 @@ import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
-import org.teiid.query.validator.UpdateValidator.UpdateType;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
 import org.teiid.translator.SourceSystemFunctions;
 
@@ -679,14 +678,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                     if(((Constant)value).isNull() && ! getMetadata().elementSupports(elementID.getMetadataID(), SupportConstants.Element.NULL)) {
                         handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0060", SQLStringVisitor.getSQLString(elementID)), elementID); //$NON-NLS-1$
                     }// end of if
-                } else if (info != null && info.getUpdateType() == UpdateType.UPDATE_PROCEDURE && getMetadata().isVirtualGroup(update.getGroup().getMetadataID()) && !EvaluatableVisitor.willBecomeConstant(value)) {
-                    // If this is an update on a virtual group, verify that no elements are in the right side
-                    Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(value, false);
-                    for (ElementSymbol element : elements) {
-                        if(! element.isExternalReference()) {
-                            handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0061", SQLStringVisitor.getSQLString(value)), value); //$NON-NLS-1$
-                        }
-                    }
                 } 
 		    }
             if (info != null && info.isInherentUpdate()) {
@@ -1213,7 +1204,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 			}
 		}
     	if (widthSet) {
-    		if (obj.getDelimiter() != null || obj.getHeader() != null || obj.getQuote() != null) {
+    		if (obj.getDelimiter() != null || obj.getHeader() != null || obj.getQuote() != null || obj.getSelector() != null) {
         		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_width"), obj); //$NON-NLS-1$
     		}
     	} else {

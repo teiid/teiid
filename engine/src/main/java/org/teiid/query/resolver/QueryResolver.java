@@ -36,9 +36,7 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.Request;
-import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -500,11 +498,7 @@ public class QueryResolver {
 	private static UpdateType determineType(String plan) {
 		UpdateType type = UpdateType.INHERENT;
 		if (plan != null) {
-			if (StringUtil.startsWithIgnoreCase(plan, SQLConstants.Reserved.CREATE)) {
-				type = UpdateType.UPDATE_PROCEDURE;
-			} else {
-				type = UpdateType.INSTEAD_OF;
-			}
+			type = UpdateType.INSTEAD_OF;
 		}
 		return type;
 	}

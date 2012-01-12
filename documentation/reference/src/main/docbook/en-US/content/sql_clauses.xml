@@ -104,7 +104,8 @@
       	</para>
       	<para>
         Usage:
-        	<synopsis label="Usage">TEXTTABLE(expression COLUMNS &lt;COLUMN&gt;, ... [NO ROW DELIMITER] [DELIMITER char] [(QUOTE|ESCAPE) char] [HEADER [integer]] [SKIP integer]) AS name</synopsis>
+        	<synopsis label="Usage">TEXTTABLE(expression COLUMNS &lt;COLUMN&gt;, ... [NO ROW DELIMITER] [DELIMITER char] [(QUOTE|ESCAPE) char] 
+        	[HEADER [integer]] [SKIP integer] [SELECTOR string]) AS name</synopsis>
         	<synopsis label="Usage">COLUMN := name datatype [WIDTH integer [NO TRIM]]</synopsis> 
       	</para>
       	<itemizedlist>
@@ -139,6 +140,10 @@
         </listitem>
         <listitem>
         	<para>SKIP specifies the number of text lines (counting every new line) to skip before parsing the contents.  HEADER may still be specified with SKP.
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>SELECTOR specifies that delemited lines should only match if the line begins with the selector string followed by a delimiter.  The selector value is a valid column value.
         	</para>
         </listitem>
         <listitem>

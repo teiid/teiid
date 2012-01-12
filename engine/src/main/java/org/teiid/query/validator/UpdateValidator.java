@@ -64,10 +64,6 @@ public class UpdateValidator {
 		 */
 		INHERENT, 
 		/**
-		 * A procedure handler has been defined
-		 */
-		UPDATE_PROCEDURE,
-		/**
 		 * An instead of trigger (TriggerAction) has been defined
 		 */
 		INSTEAD_OF

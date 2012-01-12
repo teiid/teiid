@@ -314,7 +314,17 @@ public class TestTextTable {
         sampleData1(dataManager);
         RelationalPlan plan = (RelationalPlan)helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
         helpProcess(plan, createCommandContext(), dataManager, expected);
-    } 
+    }
+	
+	@Test public void testTextTableSelector() throws Exception {
+		String sql = "select x.* from (select * from pm1.g1) y, texttable(e1 || '\n' || e2 || '\n' || e3 COLUMNS x string SELECTOR 'c') x";
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("c"),
+        };    
+
+        process(sql, expected);
+    }
 	
 	public static void process(String sql, List[] expectedResults) throws Exception {    
     	FakeDataManager dataManager = new FakeDataManager();
