@@ -1,0 +1,12 @@
+# note that driver-name could be driver's module name if you went module approach.
+/subsystem=datasources/data-source=OracleDS:add(jndi-name=java:/OracleDS,  driver-name=ojdbc6.jar, driver-class=oracle.jdbc.OracleDriver, connection-url=jdbc:oracle:thin:{host}:1521:{db-name},user-name={user}, password={password})
+
+# XA Data source
+#batch
+#/subsystem=datasources/xa-data-source=OracleDS:add(jndi-name=java:/OracleDS,  driver-name=ojdbc6.jar, xa-datasource-class=oracle.jdbc.xa.client.OracleXADataSource, user-name={user}, password={password})
+#/subsystem=datasources/xa-data-source=OracleDS/xa-datasource-properties=URL:add(value=jdbc:oracle:thin:{host}:1521:{database_name})
+#/subsystem=datasources/xa-data-source=OracleDS:enable
+#run-batch
+
+
+## If you are working in a clustered environment, prepend "/profile=ha" to all the above commands that start with "/subsystem=.." 

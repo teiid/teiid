@@ -2,8 +2,8 @@
 <subsystem xmlns="urn:jboss:domain:datasources:1.0">
     <datasources>
         <datasource jndi-name="java:/db2DS" pool-name="db2DS">
-            <connection-url>jdbc:db2://{host}:{port}/{database_name}</connection-url>
-            <driver>db2</driver>
+            <connection-url>jdbc:db2://{host}:50000/{database_name}</connection-url>
+            <driver>db2jcc4.jar</driver>
             <pool>
                 <prefill>false</prefill>
                 <use-strict-min>false</use-strict-min>
@@ -15,7 +15,7 @@
             </security>
         </datasource>                               
         <drivers>
-            <driver name="db2" module="com.ibm.db2">
+            <driver name="db2jcc4.jar" module="com.ibm.db2">
                 <driver-class>com.ibm.db2.jcc.DB2Driver</driver-class>
                 <xa-datasource-class>com.ibm.db2.jcc.DB2XADataSource</xa-datasource-class>
             </driver>    

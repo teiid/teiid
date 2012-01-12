@@ -6,11 +6,7 @@ Step 1: Deploying the JDBC Driver
 	Option 1: use the JBoss CLI tool, and deploy the "postgresql-8.3-603.jdbc3.jar" or later jar by issuing the command
 		deploy postgresql-8.3-603.jdbc3.jar
 	 
-		Note: when you use CLI based deployment, the <driver> element in the <datasources> xml fragment, must
-		be the name of the jar file deployed, and no need for adding <drivers> element in standalone-teiid.xml 
-		or domain-teiid.xml file
-			 
-	Option 2:
+	Option 2: (recommended)
 
 		1) Stop the server if it is running.
 
@@ -26,6 +22,6 @@ Step 2: Creating the datasource
 	or "postgresql-xa.xml" file under the "datasources" subsystem. You may have to edit contents according 
 	to where your postgresql server is located and credentials you need to use to access it.
 	
-	Option 2: Take a look at create-ds.cli script, and modify and execute using JBoss CLI tool.
+	Option 2: Take a look at create-postgresql-ds.cli script, and modify and execute using JBoss CLI tool.
 
- 
+ 	./Jboss-admin.sh --file create-postgresql-ds.cli

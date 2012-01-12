@@ -7,7 +7,7 @@
             <xa-datasource-property name="DatabaseName">{db-name}</xa-datasource-property>
             <xa-datasource-property name="ServerName">{host}</xa-datasource-property>        
             
-            <driver>sqlserver</driver>
+            <driver>sqljdbc4.jar</driver>
             
             <!-- 
             <new-connection-sql>select 1/new-connection-sql>
@@ -39,7 +39,7 @@
              -->
         </xa-datasource>                
         <drivers>
-            <driver name="sqlserver" module="com.microsoft.sqlserver">
+            <driver name="sqljdbc4.jar" module="com.microsoft.sqlserver">
                 <driver-class>com.microsoft.jdbc.sqlserver.SQLServerDriver</driver-class>
                 <xa-datasource-class>com.microsoft.sqlserver.jdbc.SQLServerXADataSource</xa-datasource-class>
             </driver>    

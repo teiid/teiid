@@ -3,7 +3,7 @@
     <datasources>
         <datasource jndi-name="java:/derbyDS" pool-name="derbyDS">
             <connection-url>jdbc:derby://{host}:1527/{db-name}</connection-url>
-            <driver>derby</driver>
+            <driver>derbyclient.jar</driver>
             <pool>
                 <prefill>false</prefill>
                 <use-strict-min>false</use-strict-min>
@@ -15,7 +15,7 @@
             </security>
         </datasource>                               
         <drivers>
-            <driver name="derby" module="org.apache.derby">
+            <driver name="derbyclient.jar" module="org.apache.derby">
                 <driver-class>org.apache.derby.jdbc.ClientDriver</driver-class>
                 <xa-datasource-class>org.apache.derby.jdbc.ClientXADataSource</xa-datasource-class>
             </driver>    

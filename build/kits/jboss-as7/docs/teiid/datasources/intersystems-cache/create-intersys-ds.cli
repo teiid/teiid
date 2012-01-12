@@ -1,0 +1,6 @@
+# note that driver-name could be driver's module name if you went module approach.
+/subsystem=datasources/data-source=cacheDS:add(jndi-name=java:/cacheDS,  driver-name=CacheDB.jar, driver-class=com.intersys.jdbc.CacheDriver, connection-url=jdbc:Cache://{host}:1972/{database}, user-name={user}, password={password})
+
+# No XA Data source Available
+
+# If you are working in a clustered environment, prepend "/profile=ha" to all the above commands that start with "/subsystem=.." 

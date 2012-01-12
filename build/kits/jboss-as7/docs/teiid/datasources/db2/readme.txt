@@ -6,11 +6,7 @@ Step 1: Deploying the JDBC Driver
 	Option 1: use the JBoss CLI tool, and deploy the "db2jcc4.jar" or later jar by issuing the command
 		deploy db2jcc4.jar
 		
-		Note: when you use CLI based deployment, the <driver> element in the <datasources> xml fragment, must
-		be the name of the jar file deployed, and no need for adding <drivers> element in standalone-teiid.xml 
-		or domain-teiid.xml file		
-	 
-	Option 2:
+	Option 2:(recommended)
 		1) Stop the server if it is running.
 
 		2) Overlay the "modules" directory on the "<jboss-as>/modules" directory 
@@ -25,7 +21,7 @@ Step 2: Creating the datasource
 	or "db2-xa.xml" file under the "datasources" subsystem. You may have to edit contents according 
 	to where your db2 server is located and credentials you need to use to access it.
 	
-	Option 2: Take a look at create-ds.cli script, and modify and execute using JBoss CLI tool as below 
+	Option 2: Take a look at create-db2-ds.cli script, and *modify* and execute using JBoss CLI tool as below 
 	
-	./Jboss-admin.sh --file create-ds.cli
+	./Jboss-admin.sh --file create-db2-ds.cli
 	

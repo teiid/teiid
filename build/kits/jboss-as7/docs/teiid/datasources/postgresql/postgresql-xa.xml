@@ -7,7 +7,7 @@
             <xa-datasource-property name="DatabaseName">{db-name}</xa-datasource-property>
             <xa-datasource-property name="ServerName">{host}</xa-datasource-property>        
             
-            <driver>postgresql</driver>
+            <driver>postgresql-8.3-603.jdbc3.jar</driver>
             
             <!-- 
             <new-connection-sql>select 1</new-connection-sql>
@@ -39,7 +39,7 @@
              -->
         </xa-datasource>                
         <drivers>
-            <driver name="postgresql" module="org.postgresql">
+            <driver name="postgresql-8.3-603.jdbc3.jar" module="org.postgresql">
                 <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
             </driver>
         </drivers>

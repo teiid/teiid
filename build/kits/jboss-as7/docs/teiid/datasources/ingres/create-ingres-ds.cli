@@ -1,0 +1,14 @@
+# note that driver-name could be driver's module name if you went module approach.
+/subsystem=datasources/data-source=ingresDS:add(jndi-name=java:/ingresDS,  driver-name=iijdbc.jar, driver-class=com.ingres.jdbc.IngresDriver, connection-url=jdbc:ingres://{host}:{port:21071}/{database_name}, user-name={user}, password={password})
+
+# XA Data source
+#batch
+#/subsystem=datasources/xa-data-source=ingresDS:add(jndi-name=java:/ingresDS,  driver-name=iijdbc.jar, xa-datasource-class=com.ingres.jdbc.IngresXADataSource, user-name={user}, password={password})
+#/subsystem=datasources/xa-data-source=ingresDS/xa-datasource-properties=DatabaseName:add(value={database_name})
+#/subsystem=datasources/xa-data-source=ingresDS/xa-datasource-properties=PortNumber:add(value=21071)
+#/subsystem=datasources/xa-data-source=ingresDS/xa-datasource-properties=ServerName:add(value={host})
+#/subsystem=datasources/xa-data-source=ingresDS:enable
+#run-batch
+
+
+## If you are working in a clustered environment, prepend "/profile=ha" to all the above commands that start with "/subsystem=.." 

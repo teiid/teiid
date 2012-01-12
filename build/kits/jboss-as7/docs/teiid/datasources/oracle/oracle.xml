@@ -3,7 +3,7 @@
     <datasources>
         <datasource jndi-name="java:/OracleDS" pool-name="OracleDS" enabled="true" jta="true" use-java-context="true" use-ccm="true">
             <connection-url>jdbc:oracle:thin:{host}:1521:orcl</connection-url>
-            <driver>oracle</driver>
+            <driver>ojdbc6.jar</driver>
             <pool>
                 <prefill>false</prefill>
                 <use-strict-min>false</use-strict-min>
@@ -15,7 +15,7 @@
             </security>
         </datasource>                
         <drivers>
-            <driver name="oracle" module="com.oracle">
+            <driver name="ojdbc6.jar" module="com.oracle">
                 <xa-datasource-class>oracle.jdbc.xa.client.OracleXADataSource</xa-datasource-class>
             </driver>    
         </drivers>

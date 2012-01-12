@@ -12,7 +12,7 @@
                         pool-name="teiid-ws-ds">
                         
                       <!-- End point for the web service -->
-                      <config-property name="EndPoint">endpoint url</config-property>
+                      <config-property name="EndPoint">{endpoint_url}</config-property>
                         
                         <!-- 
                             Uncomment these properties to supply specific CXF configuration for this service. This file

@@ -6,11 +6,7 @@ Step 1: Deploying the JDBC Driver
 	Option 1: use the JBoss CLI tool, and deploy the "sqljdbc4.jar" or later jar by issuing the command
 		deploy sqljdbc4.jar
 		
-		Note: when you use CLI based deployment, the <driver> element in the <datasources> xml fragment, must
-		be the name of the jar file deployed, and no need for adding <drivers> element in standalone-teiid.xml 
-		or domain-teiid.xml file		
-	 
-	Option 2:
+	Option 2: (recommended)
 		1) Stop the server if it is running.
 
 		2) Overlay the "modules" directory on the "<jboss-as>/modules" directory 
@@ -25,6 +21,6 @@ Step 2: Creating the datasource
 	or "sqlserver-xa.xml" file under the "datasources" subsystem. You may have to edit contents according 
 	to where your sqlserver server is located and credentials you need to use to access it.
 	
-	Option 2: Take a look at create-ds.cli script, and modify and execute using JBoss CLI tool as below 
+	Option 2: Take a look at create-native-ds.cli script, and modify and execute using JBoss CLI tool as below 
 	
-	./Jboss-admin.sh --file create-ds.cli	
+	./Jboss-admin.sh --file create-native-ds.cli	

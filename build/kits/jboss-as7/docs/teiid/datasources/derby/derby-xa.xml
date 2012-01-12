@@ -7,7 +7,7 @@
             <xa-datasource-property name="DatabaseName">{db-name}</xa-datasource-property>
             <xa-datasource-property name="ServerName">{host}</xa-datasource-property>        
             
-            <driver>derby</driver>
+            <driver>derbyclient.jar</driver>
             
             <!-- 
             <new-connection-sql>select 1/new-connection-sql>
@@ -39,7 +39,7 @@
              -->
         </xa-datasource>                
         <drivers>
-            <driver name="derby" module="org.apache.derby">
+            <driver name="derbyclient.jar" module="org.apache.derby">
                 <driver-class>org.apache.derby.jdbc.ClientDriver</driver-class>
                 <xa-datasource-class>org.apache.derby.jdbc.ClientXADataSource</xa-datasource-class>
             </driver>    

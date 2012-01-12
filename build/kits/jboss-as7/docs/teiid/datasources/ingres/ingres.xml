@@ -3,7 +3,7 @@
     <datasources>
         <datasource jndi-name="java:/ingresDS" pool-name="ingresDS">
             <connection-url>jdbc:ingres://{host}:{port:21071}/{database_name}</connection-url>
-            <driver>ingres</driver>
+            <driver>iijdbc.jar</driver>
             <pool>
                 <prefill>false</prefill>
                 <use-strict-min>false</use-strict-min>
@@ -15,7 +15,7 @@
             </security>
         </datasource>                               
         <drivers>
-            <driver name="ingres" module="com.ingres">
+            <driver name="iijdbc.jar" module="com.ingres">
                 <driver-class>com.ingres.jdbc.IngresDriver</driver-class>
                 <xa-datasource-class>com.ingres.jdbc.IngresXADataSource</xa-datasource-class>
             </driver>    

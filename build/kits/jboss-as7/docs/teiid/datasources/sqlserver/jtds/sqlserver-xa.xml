@@ -7,7 +7,7 @@
             <xa-datasource-property name="DatabaseName">{db-name}</xa-datasource-property>
             <xa-datasource-property name="ServerName">{host}</xa-datasource-property>        
             
-            <driver>jtds</driver>
+            <driver>jtds-1.2.5.jar</driver>
             
             <!-- 
             <new-connection-sql>select 1/new-connection-sql>
@@ -39,7 +39,7 @@
              -->
         </xa-datasource>                
         <drivers>
-            <driver name="jtds" module="net.sourceforge.jtds">
+            <driver name="jtds-1.2.5.jar" module="net.sourceforge.jtds">
                 <driver-class>net.sourceforge.jtds.jdbc.Driver</driver-class>
                 <xa-datasource-class>net.sourceforge.jtds.jdbcx.JtdsDataSource</xa-datasource-class>
             </driver>    

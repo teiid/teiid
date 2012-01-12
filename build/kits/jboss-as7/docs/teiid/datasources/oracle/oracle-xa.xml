@@ -3,11 +3,8 @@
     <datasources>
         <xa-datasource jndi-name="java:/OracleDS" pool-name="OracleDS" enabled="true" use-java-context="true" use-ccm="true">
         
-            <xa-datasource-property name="PortNumber">1557</xa-datasource-property>
-            <xa-datasource-property name="DatabaseName">{db-name}</xa-datasource-property>
-            <xa-datasource-property name="ServerName">{host}</xa-datasource-property>        
-            
-            <driver>oracle</driver>
+            <xa-datasource-property name="URL">jdbc:oracle:thin:{host}:1521:orcl</xa-datasource-property>
+            <driver>ojdbc6.jar</driver>
             
             <!-- 
             <new-connection-sql>select * from dual</new-connection-sql>
@@ -39,7 +36,7 @@
              -->
         </xa-datasource>                
         <drivers>
-            <driver name="oracle" module="com.oracle">
+            <driver name="ojdbc6.jar" module="com.oracle">
                 <xa-datasource-class>oracle.jdbc.xa.client.OracleXADataSource</xa-datasource-class>
             </driver>    
         </drivers>

@@ -6,11 +6,7 @@ Step 1: Deploying the JDBC Driver
 	Option 1: use the JBoss CLI tool, and deploy the "mysql-connector-java-5.1.5.jar" or later jar by issuing the command
 		deploy mysql-connector-java-5.1.5.jar
 		
-		Note: when you use CLI based deployment, the <driver> element in the <datasources> xml fragment, must
-		be the name of the jar file deployed, and no need for adding <drivers> element in standalone-teiid.xml 
-		or domain-teiid.xml file		
-	 
-	Option 2:
+	Option 2:(recommended)
 		1) Stop the server if it is running.
 
 		2) Overlay the "modules" directory on the "<jboss-as>/modules" directory 
@@ -27,7 +23,7 @@ Step 2: Creating the datasource
 	
 	Option 2: Take a look at create-ds.cli script, and modify and execute using JBoss CLI tool as below 
 	
-	./Jboss-admin.sh --file create-ds.cli
+	./Jboss-admin.sh --file create-mysql-ds.cli
 	
 **************************************************************************************************************	
 NOTE: MySQL JDBC driver does not include the Driver file name as the service loader mechanism as of 

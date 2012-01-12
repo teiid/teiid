@@ -7,7 +7,7 @@
             <xa-datasource-property name="DatabaseName">{db-name}</xa-datasource-property>
             <xa-datasource-property name="ServerName">{host}</xa-datasource-property>        
             
-            <driver>mysql</driver>
+            <driver>mysql-connector-java-5.1.5.jar</driver>
             
             <!-- 
             <new-connection-sql>select 1/new-connection-sql>
@@ -39,7 +39,7 @@
              -->
         </xa-datasource>                
         <drivers>
-            <driver name="mysql" module="com.mysql">
+            <driver name="mysql-connector-java-5.1.5.jar" module="com.mysql">
                 <driver-class>com.mysql.jdbc.Driver</driver-class>
                 <xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>
             </driver>    
