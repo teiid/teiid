@@ -46,6 +46,7 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.util.CommandContext;
 
 /**
@@ -65,6 +66,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	private char delimiter;
 	private int lineWidth;
     private int[] projectionIndexes;
+    private Map<String, List<String>> parentLines;
 	
     //per file state
 	private BufferedReader reader;
@@ -109,9 +111,17 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				noQuote = table.isEscape();
 				quote = table.getQuote();
 			}
+			for (TextColumn column : table.getColumns()) {
+				if (column.getSelector() != null) {
+					if (parentLines == null) {
+						parentLines = new HashMap<String, List<String>>();
+					}
+					parentLines.put(column.getSelector(), null);
+				}
+	        }
 			lineWidth = table.getColumns().size() * DataTypeManager.MAX_STRING_LENGTH;
 		}
-        Map elementMap = createLookupMap(table.getProjectedSymbols());
+        Map<Expression, Integer> elementMap = createLookupMap(table.getProjectedSymbols());
         this.projectionIndexes = getProjectionIndexes(elementMap, getElements());
 	}
 	
@@ -135,6 +145,11 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		this.textLine = 0;
 		this.cr = false;
 		this.eof = false;
+		if (this.parentLines != null) {
+			for (Map.Entry<String, List<String>> entry : this.parentLines.entrySet()) {
+				entry.setValue(null);
+			}
+		}
 	}
 	
 	public void setTable(TextTable table) {
@@ -170,30 +185,49 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				break;
 			}
 			
-			if (table.getSelector() != null && !line.startsWith(table.getSelector())) {
-				continue;
+			String parentSelector = null;
+			if (table.getSelector() != null && !line.regionMatches(0, table.getSelector(), 0, table.getSelector().length())) {
+				if (parentLines == null) {
+					continue; //doesn't match any selector
+				}
+				parentSelector = line.substring(0, table.getSelector().length());
+				
+				if (!parentLines.containsKey(parentSelector)) {
+					continue; //doesn't match any selector
+				} 
 			}
 			
 			List<String> vals = parseLine(line);
+			
+			if (parentSelector != null) {
+				this.parentLines.put(parentSelector, vals);
+				continue;
+			} else if (table.getSelector() != null && !table.getSelector().equals(vals.get(0))) {
+				continue;
+			}
 			
 			List<Object> tuple = new ArrayList<Object>(projectionIndexes.length);
 			for (int output : projectionIndexes) {
 				TextColumn col = table.getColumns().get(output);
 				String val = null;
 				int index = output;
-				if (nameIndexes != null) {
+				
+				if (col.getSelector() != null) {
+					vals = this.parentLines.get(col.getSelector());
+					index = col.getPosition() - 1;
+				} else if (nameIndexes != null) {
 					index = nameIndexes.get(col.getName());
 				}
-				if (index >= vals.size()) {
+				if (vals == null || index >= vals.size()) {
 					//throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.no_value", col.getName(), textLine, systemId)); //$NON-NLS-1$
 					tuple.add(null);
-				} else {
-					val = vals.get(index);
-					try {
-						tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
-					} catch (TransformationException e) {
-						throw new TeiidProcessingException(e, QueryPlugin.Util.getString("TextTableNode.conversion_error", col.getName(), textLine, systemId)); //$NON-NLS-1$
-					}
+					continue;
+				} 
+				val = vals.get(index);
+				try {
+					tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
+				} catch (TransformationException e) {
+					throw new TeiidProcessingException(e, QueryPlugin.Util.getString("TextTableNode.conversion_error", col.getName(), textLine, systemId)); //$NON-NLS-1$
 				}
 			}
 			addBatchRow(tuple);

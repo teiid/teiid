@@ -301,7 +301,7 @@ public class TempTable implements Cloneable {
 	
 	private int keyBatchSize;
 	private int leafBatchSize;
-	private Map<ElementSymbol, Integer> columnMap;
+	private Map<Expression, Integer> columnMap;
 	
 	private List<Integer> notNull = new LinkedList<Integer>();
 	private Map<Integer, AtomicInteger> sequences;
@@ -803,7 +803,7 @@ public class TempTable implements Cloneable {
 		return tid.getID() + " (" + columns + ")\n"; //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	Map<ElementSymbol, Integer> getColumnMap() {
+	Map<Expression, Integer> getColumnMap() {
 		return this.columnMap;
 	}
 	

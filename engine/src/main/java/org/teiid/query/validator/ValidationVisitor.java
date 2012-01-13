@@ -1193,6 +1193,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	boolean widthSet = false;
     	Character delimiter = null;
     	Character quote = null;
+    	boolean usingSelector = false;
     	for (TextTable.TextColumn column : obj.getColumns()) {
 			if (column.getWidth() != null) {
 				widthSet = true;
@@ -1202,9 +1203,18 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 			} else if (widthSet) {
     			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_invalid_width"), obj); //$NON-NLS-1$
 			}
+			if (column.getSelector() != null) {
+				usingSelector = true;
+				if (obj.getSelector() != null && obj.getSelector().equals(column.getSelector())) {
+					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_selector_required"), obj); //$NON-NLS-1$
+				}
+			}
+        	if (column.getPosition() != null && column.getPosition() < 0) {
+	    		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_negative"), obj); //$NON-NLS-1$
+	    	}
 		}
     	if (widthSet) {
-    		if (obj.getDelimiter() != null || obj.getHeader() != null || obj.getQuote() != null || obj.getSelector() != null) {
+    		if (obj.getDelimiter() != null || obj.getHeader() != null || obj.getQuote() != null || obj.getSelector() != null || usingSelector) {
         		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_width"), obj); //$NON-NLS-1$
     		}
     	} else {
@@ -1220,6 +1230,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	}
     	if (obj.getSkip() != null && obj.getSkip() < 0) {
     		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_negative"), obj); //$NON-NLS-1$
+    	}
+    	if (usingSelector && obj.getSelector() == null) {
+    		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_selector_required"), obj); //$NON-NLS-1$
     	}
     }
 

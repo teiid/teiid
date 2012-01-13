@@ -1667,6 +1667,12 @@ public class SQLStringVisitor extends LanguageVisitor {
         addHintComment(obj);
         append("TEXTTABLE("); //$NON-NLS-1$
         visitNode(obj.getFile());
+        if (obj.getSelector() != null) {
+        	append(SPACE);
+        	append(NonReserved.SELECTOR);
+        	append(SPACE);
+        	append(escapeSinglePart(obj.getSelector()));
+        }
         append(SPACE);
         append(NonReserved.COLUMNS);
 
@@ -1687,6 +1693,14 @@ public class SQLStringVisitor extends LanguageVisitor {
                 append(NO);
                 append(SPACE);
                 append(NonReserved.TRIM);
+            }
+            if (col.getSelector() != null) {
+            	append(SPACE);
+            	append(NonReserved.SELECTOR);
+            	append(SPACE);
+            	append(escapeSinglePart(col.getSelector()));
+            	append(SPACE);
+            	append(col.getPosition());
             }
             if (cols.hasNext()) {
                 append(","); //$NON-NLS-1$
@@ -1729,12 +1743,6 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(NonReserved.SKIP);
             append(SPACE);
             append(obj.getSkip());
-        }
-        if (obj.getSelector() != null) {
-        	append(SPACE);
-        	append(NonReserved.SELECTOR);
-        	append(SPACE);
-        	append(escapeSinglePart(obj.getSelector()));
         }
         append(")");//$NON-NLS-1$
         append(SPACE);

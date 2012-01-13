@@ -37,6 +37,8 @@ public class TextTable extends TableFunctionReference {
 	public static class TextColumn extends ProjectedColumn {
 		private Integer width;
 		private boolean noTrim;
+		private String selector;
+		private Integer position;
 		
 		public TextColumn(String name, String type, Integer width, boolean noTrim) {
 			super(name, type);
@@ -74,6 +76,8 @@ public class TextTable extends TableFunctionReference {
 			}
 			TextColumn other = (TextColumn)obj;
 			return EquivalenceUtil.areEqual(width, other.width)
+			&& EquivalenceUtil.areEqual(selector, other.selector)
+			&& EquivalenceUtil.areEqual(position, other.position)
 			&& noTrim == other.noTrim;
 		}
 		
@@ -82,9 +86,28 @@ public class TextTable extends TableFunctionReference {
 			TextColumn clone = new TextColumn();
 			clone.width = this.width;
 			clone.noTrim = this.noTrim;
+			clone.selector = this.selector;
+			clone.position = this.position;
 			this.copyTo(clone);
 			return clone;
 		}
+
+		public String getSelector() {
+			return selector;
+		}
+		
+		public void setSelector(String selector) {
+			this.selector = selector;
+		}
+		
+		public Integer getPosition() {
+			return position;
+		}
+		
+		public void setPosition(Integer position) {
+			this.position = position;
+		}
+		
 	}
 	
     private Expression file;

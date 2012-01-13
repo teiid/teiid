@@ -208,7 +208,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         this.children = newChildren;        
     }
 
-    protected void addBatchRow(List row) {
+    protected void addBatchRow(List<?> row) {
         if(this.getProcessingState().batchRows == null) {
             this.getProcessingState().batchRows = new ArrayList(this.getProcessingState().batchSize / 4);
         }
@@ -398,10 +398,10 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
      * @param elements List of elements
      * @return Map of element to Integer, which is the index
      */
-    public static Map createLookupMap(List elements) {
-        Map lookupMap = new HashMap();
+    public static Map<Expression, Integer> createLookupMap(List<? extends Expression> elements) {
+        Map<Expression, Integer> lookupMap = new HashMap<Expression, Integer>();
         for(int i=0; i<elements.size(); i++) {
-            Object element = elements.get(i);
+            Expression element = elements.get(i);
             lookupMap.put(element, i);
             if (element instanceof AliasSymbol) {
                 lookupMap.put(((AliasSymbol)element).getSymbol(), i);

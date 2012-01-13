@@ -104,15 +104,22 @@
       	</para>
       	<para>
         Usage:
-        	<synopsis label="Usage">TEXTTABLE(expression COLUMNS &lt;COLUMN&gt;, ... [NO ROW DELIMITER] [DELIMITER char] [(QUOTE|ESCAPE) char] 
-        	[HEADER [integer]] [SKIP integer] [SELECTOR string]) AS name</synopsis>
-        	<synopsis label="Usage">COLUMN := name datatype [WIDTH integer [NO TRIM]]</synopsis> 
+        	<synopsis label="Usage">TEXTTABLE(expression [SELECTOR string] COLUMNS &lt;COLUMN&gt;, ... [NO ROW DELIMITER] [DELIMITER char] [(QUOTE|ESCAPE) char] 
+        	[HEADER [integer]] [SKIP integer]) AS name</synopsis>
+        	<synopsis label="Usage">COLUMN := name datatype [WIDTH integer [NO TRIM]] [SELECTOR string integer]</synopsis> 
       	</para>
       	<itemizedlist>
         	<para>Parameters</para>
         <listitem>
           <para>expression - the text content to process, which should be convertable to CLOB.
           </para>
+        </listitem>
+        <listitem>
+        	<para>SELECTOR specifies that delemited lines should only match if the line begins with the selector string followed by a delimiter.  
+        	The selector value is a valid column value.  If a TEXTTABLE SELECTOR is specified, a SELECTOR may also be specified for column values.  A column SELECTOR argument will 
+        	select the nearest preceeding text line with the given SELECTOR prefix and select the value at the given 1-based integer position (which includes the selector itself).  
+        	If no such text line or position with a given line exists, a null value will be produced.   
+        	</para>
         </listitem>
         <listitem>
         	<para>NO ROW DELIMITER indicates that fixed parsing should not assume the presense of newline row delimiters.
@@ -143,10 +150,6 @@
         	</para>
         </listitem>
         <listitem>
-        	<para>SELECTOR specifies that delemited lines should only match if the line begins with the selector string followed by a delimiter.  The selector value is a valid column value.
-        	</para>
-        </listitem>
-        <listitem>
         	<para>WIDTH indicates the fixed-width length of a column in characters - not bytes.  The CR NL newline value counts as a single character.
         	</para>
         </listitem>
@@ -163,7 +166,7 @@
           </para>
         </listitem>
         <listitem>
-          <para>If width is specified, then fixed width parsing is used and ESCAPE, QUOTE, and HEADER should not be specified.
+          <para>If width is specified, then fixed width parsing is used and ESCAPE, QUOTE, SELECTOR, and HEADER should not be specified.
           </para>
         </listitem>
         <listitem>
@@ -195,6 +198,10 @@
         	</listitem>
         	<listitem>
 		        <para>As a nested table: <programlisting>SELECT x.* FROM t, TEXTTABLE(t.clobcolumn COLUMNS first string, second date SKIP 1) x</programlisting>
+				</para>		
+        	</listitem>
+        	<listitem>
+		        <para>Use of SELECTORs, returns 2 rows ['c', 'd', 'b'], ['c', 'f', 'b']: <programlisting>SELECT * FROM TEXTTABLE('a,b\nc,d\nc,f' SELECTOR 'c' COLUMNS col1 string, col2 string col3 string SELECTOR 'a' 2) x</programlisting>
 				</para>		
         	</listitem>
 		</itemizedlist>		

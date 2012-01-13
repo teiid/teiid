@@ -317,10 +317,30 @@ public class TestTextTable {
     }
 	
 	@Test public void testTextTableSelector() throws Exception {
-		String sql = "select x.* from (select * from pm1.g1) y, texttable(e1 || '\n' || e2 || '\n' || e3 COLUMNS x string SELECTOR 'c') x";
+		String sql = "select x.* from (select * from pm1.g1) y, texttable(e1 || '\n' || e2 || '\n' || e3 SELECTOR 'c' COLUMNS x string) x";
     	
         List[] expected = new List[] {
         		Arrays.asList("c"),
+        };    
+
+        process(sql, expected);
+    }
+	
+	@Test public void testTextTableSelector1() throws Exception {
+		String sql = "select x.* from texttable('cc,bb' SELECTOR 'c' COLUMNS x string) x";
+    	
+        List[] expected = new List[] {
+        };    
+
+        process(sql, expected);
+    }
+	
+	@Test public void testTextTableSelector2() throws Exception {
+		String sql = "select x.* from texttable('A,10-dec-2011,12345,3322,3000,222\nB,1,123,Sprockets Black,30,50,1500\nB,2,333,Sprockets Blue,300,5,1500' SELECTOR 'B' COLUMNS x string, y integer, z string SELECTOR 'A' 2) x";
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("B", 1, "10-dec-2011"),
+        		Arrays.asList("B", 2, "10-dec-2011"),
         };    
 
         process(sql, expected);
