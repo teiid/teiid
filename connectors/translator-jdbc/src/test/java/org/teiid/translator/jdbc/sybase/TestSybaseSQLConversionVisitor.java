@@ -250,5 +250,10 @@ public class TestSybaseSQLConversionVisitor {
         helpTestVisitor(getBQTVDB(), input, output);
     }
 
-
+    @Test public void testTimestampFunctions() {
+        helpTestVisitor(getBQTVDB(),
+            "SELECT timestampadd(sql_tsi_second, 1, timestampvalue), timestampadd(sql_tsi_frac_second, 1000, timestampvalue), timestampdiff(sql_tsi_frac_second, timestampvalue, timestampvalue) from bqt1.smalla", //$NON-NLS-1$
+            "SELECT {fn timestampadd(sql_tsi_second, 1, SmallA.TimestampValue)}, dateadd(millisecond, 1000/1000000, SmallA.TimestampValue), datediff(millisecond, SmallA.TimestampValue,SmallA.TimestampValue)*1000000 FROM SmallA"); //$NON-NLS-1$
+    }
+    
 }
