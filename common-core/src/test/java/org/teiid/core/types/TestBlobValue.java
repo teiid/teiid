@@ -71,4 +71,14 @@ public class TestBlobValue extends TestCase {
         assertEquals(testString, new String(read.getBytes(1, (int)blob.length())));
     }
     
+    public void testBlobCompare() throws Exception {
+        String testString = "this is test clob"; //$NON-NLS-1$
+        SerialBlob blob = new SerialBlob(testString.getBytes());
+        BlobType bv = new BlobType(blob);
+        
+        SerialBlob blob1 = new SerialBlob(testString.getBytes());
+        BlobType bv1 = new BlobType(blob1);
+        assertEquals(0, bv1.compareTo(bv));
+    }
+    
 }

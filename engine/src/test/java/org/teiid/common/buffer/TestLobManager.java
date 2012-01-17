@@ -69,7 +69,7 @@ public class TestLobManager {
 		
 		LobManager lobManager = new LobManager(new int[] {0, 1}, fs);
 		lobManager.setMaxMemoryBytes(4);
-		List<Streamable<? extends Object>> tuple = Arrays.asList(clob, blob);
+		List<?> tuple = Arrays.asList(clob, blob);
 		lobManager.updateReferences(tuple, ReferenceMode.CREATE);
 		lobManager.persist();
 		

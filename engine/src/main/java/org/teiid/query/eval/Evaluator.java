@@ -324,7 +324,7 @@ public class Evaluator {
     	if (leftValue == rightValue) {
     		return 0;
     	}
-        return ((Comparable<Object>)leftValue).compareTo(rightValue);
+        return Constant.compare((Comparable<?>)leftValue, (Comparable<?>)rightValue);
     }
 
 	public Boolean evaluate(MatchCriteria criteria, List<?> tuple)

@@ -87,7 +87,8 @@ public class DependentValueSource implements
         		index = buffer.getSchema().indexOf(valueExpression);
         	}
         	Assertion.assertTrue(index != -1);
-        	if (((Expression)buffer.getSchema().get(index)).getType() == DataTypeManager.DefaultDataClasses.BIG_DECIMAL) {
+        	Class<?> type = ((Expression)buffer.getSchema().get(index)).getType();
+        	if (!DataTypeManager.isHashable(type)) {
         		result = new TreeSet<Object>();
     		} else {
     			result = new HashSet<Object>();

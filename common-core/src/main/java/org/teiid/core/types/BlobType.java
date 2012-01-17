@@ -26,7 +26,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
@@ -40,7 +39,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 /**
  * Represent a value of type "blob", which can be streamable from client
  */
-public final class BlobType extends Streamable<Blob> implements Blob {
+public final class BlobType extends Streamable<Blob> implements Blob, Comparable<BlobType> {
 
 	private static final long serialVersionUID = 1294191629070433450L;
     
@@ -61,8 +60,8 @@ public final class BlobType extends Streamable<Blob> implements Blob {
     /** 
      * @see java.sql.Blob#getBytes(long, int)
      */
-    public byte[] getBytes(long pos, int length) throws SQLException {
-        return this.reference.getBytes(pos, length);
+    public byte[] getBytes(long pos, int len) throws SQLException {
+        return this.reference.getBytes(pos, len);
     }
     
     @Override
@@ -120,9 +119,9 @@ public final class BlobType extends Streamable<Blob> implements Blob {
 		this.reference.free();
 	}
 
-	public InputStream getBinaryStream(long pos, long length)
+	public InputStream getBinaryStream(long pos, long len)
 			throws SQLException {
-		return this.reference.getBinaryStream(pos, length);
+		return this.reference.getBinaryStream(pos, len);
 	}
 	
 	public static SerialBlob createBlob(byte[] bytes) {
@@ -168,6 +167,29 @@ public final class BlobType extends Streamable<Blob> implements Blob {
 			ObjectConverterUtil.write(os, is, length, false);
 		} finally {
 			is.close();
+		}
+	}
+	
+	@Override
+	public int compareTo(BlobType o) {
+		try {
+    		InputStream is1 = this.getBinaryStream();
+    		InputStream is2 = o.getBinaryStream();
+    		long len1 = this.length();
+    		long len2 = o.length();
+    		long n = Math.min(len1, len2);
+		    for (long i = 0; i < n; i++) {
+				int b1 = is1.read();
+				int b2 = is2.read();
+				if (b1 != b2) {
+				    return b1 - b2;
+				}
+		    }
+    		return Long.signum(len1 - len2);
+		} catch (SQLException e) {
+			throw new TeiidRuntimeException(e);
+		} catch (IOException e) {
+			throw new TeiidRuntimeException(e);
 		}
 	}
 	
