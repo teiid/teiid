@@ -351,5 +351,21 @@
             <parameter class="java.lang.String">translator-netezza</parameter>
             <parameter class="java.lang.String">Netezza</parameter>
         </constructor>
+    </bean>
+    
+    <!-- Excel -->
+    <bean name="translator-excel-template" class="org.teiid.templates.TranslatorDeploymentTemplate">
+        <property name="info"><inject bean="translator-excel" /> </property>
+        <property name="managedObjectFactory"> <inject bean="ManagedObjectFactory" /> </property>
+    </bean>
+
+    <bean name="translator-excel" class="org.teiid.templates.TranslatorTemplateInfo">
+        <constructor factoryMethod="createTemplateInfo">
+            <factory bean="TranslatorDeploymentTemplateInfoFactory" />
+            <parameter class="java.lang.Class">org.teiid.templates.TranslatorTemplateInfo</parameter>
+            <parameter class="java.lang.Class">org.teiid.translator.jdbc.excel.ExcelExecutionFactory</parameter>
+            <parameter class="java.lang.String">translator-excel</parameter>
+            <parameter class="java.lang.String">Excel</parameter>
+        </constructor>
     </bean> 
 </deployment>

@@ -273,12 +273,17 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
 		try {
-			JDBCMetdataProcessor metadataProcessor = new JDBCMetdataProcessor();
+			JDBCMetdataProcessor metadataProcessor = createMetadataProcessor();
 			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getImportProperties(), "importer"); //$NON-NLS-1$
 			metadataProcessor.getConnectorMetadata(conn, metadataFactory);
 		} catch (SQLException e) {
 			throw new TranslatorException(e);
 		}
+	}
+
+	protected JDBCMetdataProcessor createMetadataProcessor() {
+		JDBCMetdataProcessor metadataProcessor = new JDBCMetdataProcessor();
+		return metadataProcessor;
 	}    
 	
 	@Override

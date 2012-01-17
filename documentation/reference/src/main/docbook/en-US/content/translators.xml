@@ -254,6 +254,11 @@
                 </listitem>
                 <listitem>
                     <para>
+                    <emphasis>excel-odbc</emphasis> - for use with Excel 2003 or later via a JDBC-ODBC bridge.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
                     <emphasis>h2</emphasis> - for use with H2 version 1.1 or later.
                     </para>
                 </listitem>
@@ -294,7 +299,7 @@
                 </listitem>                
                 <listitem>
                     <para>
-                    <emphasis>informix</emphasis> - for use with any version.
+                    <emphasis>informix</emphasis> - for use with any Informix version.
                     </para>
                 </listitem>
                 <listitem>
@@ -323,6 +328,11 @@
                     should be used on the pool to set ANSI mode:  
                     </para>
                     <programlisting>set SESSION sql_mode = 'ANSI'</programlisting>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>netezza</emphasis> - for use with any Netezza version.
+                    </para>
                 </listitem>
                 <listitem>
                     <para>
