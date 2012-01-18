@@ -83,6 +83,7 @@ public class DependentCriteriaProcessor {
         private DependentValueSource dvs;
         private List<SetState> dependentSetStates = new LinkedList<SetState>();
         private String valueSource;
+        private DependentValueSource originalVs;
 
         public TupleState(String source) {
         	this.valueSource = source;
@@ -91,7 +92,7 @@ public class DependentCriteriaProcessor {
         public void sort() throws BlockedException,
                    TeiidComponentException, TeiidProcessingException {
             if (dvs == null) {
-                DependentValueSource originalVs = (DependentValueSource)dependentNode.getContext().getVariableContext().getGlobalValue(valueSource);
+                originalVs = (DependentValueSource)dependentNode.getContext().getVariableContext().getGlobalValue(valueSource);
                 if (!originalVs.isDistinct()) {
 	            	if (sortUtility == null) {
 	            		List<SingleElementSymbol> sortSymbols = new ArrayList<SingleElementSymbol>(dependentSetStates.size());
@@ -131,7 +132,9 @@ public class DependentCriteriaProcessor {
         public void close() {
             if (dvs != null) {
             	sortUtility = null;
-                dvs.getTupleBuffer().remove();
+            	if (dvs != originalVs) {
+            		dvs.getTupleBuffer().remove();
+            	}
                 dvs = null;
             }
         }
@@ -365,6 +368,11 @@ public class DependentCriteriaProcessor {
     	}
 
         hasNextCommand = !restartIndexes.isEmpty();
+        if (hasNextCommand && dependentState.size() > 1) {
+        	for (TupleState state : dependentState.values()) {
+				state.originalVs.setUnused(true);
+			}
+        }
     }
 
     protected boolean hasNextCommand() {
