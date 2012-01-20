@@ -67,12 +67,5 @@
     </fileSet>
         
   </fileSets>
-  
-  <files>
-        <file>
-            <source>target/teiid-${project.version}-docs/admin-guide/en-US/pdf/teiid_admin_guide.pdf</source>
-            <fileMode>0644</fileMode>
-        </file>
-    </files>
-    
+      
 </assembly>
