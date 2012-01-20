@@ -2,14 +2,10 @@
 <module xmlns="urn:jboss:module:1.0" name="org.jboss.teiid">
     <resources>
         <resource-root path="teiid-engine-${project.version}.jar" />
-        <!-- 
-        <resource-root path="teiid-cache-jbosscache-${project.version}.jar" />
-         -->
         <resource-root path="teiid-jboss-integration-${project.version}.jar" />
         <resource-root path="teiid-metadata-${project.version}.jar" />
         <resource-root path="teiid-runtime-${project.version}.jar" />
         <resource-root path="teiid-engine-${project.version}.jar" />
-        <resource-root path="teiid-admin-${project.version}.jar" />
         <resource-root path="saxonhe-9.2.1.5.jar" />
         <resource-root path="json-simple-1.1.jar" />
         <resource-root path="xom-1.2.jar" />
@@ -22,6 +18,7 @@
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
         <module name="org.jboss.teiid.client" />
+        <module name="org.jboss.teiid.admin" />
         <module name="javax.api" />
         <module name="javax.resource.api"/>
         <module name="org.jboss.logging" />

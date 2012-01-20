@@ -139,7 +139,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/org/jboss/teiid/main</outputDirectory>
+        <outputDirectory>modules/org/jboss/teiid/admin/main</outputDirectory>
       </binaries>
     </moduleSet>    
     
