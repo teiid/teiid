@@ -37,6 +37,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
+import org.teiid.adminapi.AdminPlugin;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
@@ -63,7 +64,7 @@ public class VDBMetadataParser {
 				parseVDB(reader, vdb);
 				return vdb;
              default: 
-                throw new XMLStreamException("Unexpected element '" + reader.getName() + "' encountered", reader.getLocation()); 
+                throw new XMLStreamException(AdminPlugin.Util.gs("unexpected_element1",reader.getName(), Element.VDB.getLocalName()), reader.getLocation()); 
             }
         }
 		return null;
@@ -98,7 +99,12 @@ public class VDBMetadataParser {
 				// this is designer specific.
 				break;
              default: 
-                throw new XMLStreamException("Unexpected element '" + reader.getName() + "' encountered", reader.getLocation()); 
+            	 throw new XMLStreamException(AdminPlugin.Util.gs("unexpected_element5",reader.getName(), 
+            			 Element.DESCRIPTION.getLocalName(),
+            			 Element.PROPERTY.getLocalName(),
+            			 Element.MODEL.getLocalName(),
+            			 Element.TRANSLATOR.getLocalName(),
+            			 Element.DATA_ROLE.getLocalName()), reader.getLocation()); 
             }
         }		
 	}
@@ -144,7 +150,10 @@ public class VDBMetadataParser {
 				policy.addMappedRoleName(reader.getElementText());
 				break;
              default: 
-                throw new XMLStreamException("Unexpected element '" + reader.getName() + "' encountered", reader.getLocation()); 
+            	 throw new XMLStreamException(AdminPlugin.Util.gs("unexpected_element2",reader.getName(), 
+            			 Element.DESCRIPTION.getLocalName(),
+            			 Element.PERMISSION.getLocalName(),
+            			 Element.MAPPED_ROLE_NAME.getLocalName()), reader.getLocation()); 
             }
         }		
 	}	
@@ -176,7 +185,14 @@ public class VDBMetadataParser {
 				break;				
 
              default: 
-                throw new XMLStreamException("Unexpected element '" + reader.getName() + "' encountered", reader.getLocation()); 
+            	 throw new XMLStreamException(AdminPlugin.Util.gs("unexpected_element7",reader.getName(), 
+            			 Element.RESOURCE_NAME.getLocalName(),
+            			 Element.ALLOW_ALTER.getLocalName(),
+            			 Element.ALLOW_CREATE.getLocalName(),
+            			 Element.ALLOW_DELETE.getLocalName(),
+            			 Element.ALLOW_EXECUTE.getLocalName(),
+            			 Element.ALLOW_READ.getLocalName(),
+            			 Element.ALLOW_UPADTE), reader.getLocation()); 
             }
         }		
 	}	
@@ -194,7 +210,8 @@ public class VDBMetadataParser {
 				parseProperty(reader, translator);
 				break;
              default: 
-                throw new XMLStreamException("Unexpected element '" + reader.getName() + "' encountered", reader.getLocation()); 
+            	 throw new XMLStreamException(AdminPlugin.Util.gs("unexpected_element1",reader.getName(), 
+            			 Element.PROPERTY.getLocalName()), reader.getLocation()); 
             }
         }		
 	}	
@@ -233,7 +250,11 @@ public class VDBMetadataParser {
 				model.addError(ve);
 				break;
              default: 
-                throw new XMLStreamException("Unexpected element '" + reader.getName() + "' encountered", reader.getLocation()); 
+            	 throw new XMLStreamException(AdminPlugin.Util.gs("unexpected_element4",reader.getName(), 
+            			 Element.DESCRIPTION.getLocalName(),
+            			 Element.PROPERTY.getLocalName(),
+            			 Element.SOURCE.getLocalName(),
+            			 Element.VALIDATION_ERROR.getLocalName()), reader.getLocation()); 
             }
         }		
 	}	
@@ -280,7 +301,7 @@ public class VDBMetadataParser {
 	    ALLOW_UPADTE("allow-update"),
 	    ALLOW_DELETE("allow-delete"),
 	    ALLOW_EXECUTE("allow-execute"),
-	    ALLOW_ALTER("allow-alyer"),
+	    ALLOW_ALTER("allow-alter"),
 	    MAPPED_ROLE_NAME("mapped-role-name"),
 	    ENTRY("entry");
 	    

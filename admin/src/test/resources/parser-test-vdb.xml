@@ -26,6 +26,10 @@
             <resource-name>myTable.T2</resource-name>
             <allow-read>false</allow-read>
             <allow-delete>true</allow-delete>
+            <allow-alter>true</allow-alter>
+            <allow-create>true</allow-create>
+            <allow-update>true</allow-update>
+            <allow-execute>true</allow-execute>
         </permission>
         <mapped-role-name>ROLE1</mapped-role-name>
         <mapped-role-name>ROLE2</mapped-role-name>
