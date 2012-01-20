@@ -118,9 +118,9 @@
                             <mainClass>net.sf.retrotranslator.transformer.Retrotranslator</mainClass>
                             <arguments>                     
                                 <argument>-srcjar</argument>
-                                <argument>${project.basedir}/target/teiid-${project.version}-client.jar</argument>
+                                <argument>${project.basedir}/target/teiid-${project.version}-jdbc.jar</argument>
                                 <argument>-destjar</argument>
-                                <argument>${project.basedir}/target/teiid-${project.version}-client-jdk15.jar</argument>            
+                                <argument>${project.basedir}/target/teiid-${project.version}-jdbc-jdk15.jar</argument>            
                                 <argument>-embed</argument>
                                 <argument>org.teiid.retroruntime</argument>                    
                             </arguments>

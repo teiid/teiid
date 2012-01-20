@@ -1,7 +1,7 @@
-<!--This script builds a JAR for the Embedded Server Installation -->
+<!--This script builds a JAR for the JDBC Client -->
 <assembly>
   
-  <id>client</id>
+  <id>jdbc</id>
   
   <formats>
     <format>jar</format>
