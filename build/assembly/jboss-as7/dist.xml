@@ -41,42 +41,18 @@
         <fileMode>0644</fileMode>
         <directoryMode>0755</directoryMode>        
     </fileSet>
+    
+    <fileSet>
+        <directory>../jboss-integration/src/main/resources/schema</directory>
+        <includes>
+            <include>jboss-teiid.xsd</include>
+        </includes>                
+        <outputDirectory>docs/schema</outputDirectory>
+        <fileMode>0644</fileMode>
+        <directoryMode>0755</directoryMode>        
+    </fileSet>    
     	
   </fileSets>
-  
-    <files>
-        <file>
-            <source>target/teiid-${project.version}-docs/admin-guide/en-US/pdf/teiid_admin_guide.pdf</source>
-            <outputDirectory>docs/teiid</outputDirectory>
-            <fileMode>0644</fileMode>
-        </file>
-        <file>
-            <source>target/teiid-${project.version}-docs/reference/en-US/pdf/teiid_reference.pdf</source>
-            <outputDirectory>docs/teiid</outputDirectory>
-            <fileMode>0644</fileMode>
-        </file>
-        <file>
-            <source>target/teiid-${project.version}-docs/quick-start-example/en-US/pdf/teiid_quick_start_example.pdf</source>
-            <outputDirectory>docs/teiid</outputDirectory>
-            <fileMode>0644</fileMode>
-        </file>
-        <file>
-            <source>target/teiid-${project.version}-docs/developer-guide/en-US/pdf/teiid_developer_guide.pdf</source>
-            <outputDirectory>docs/teiid</outputDirectory>
-            <fileMode>0644</fileMode>
-        </file>
-        <file>
-            <source>target/teiid-${project.version}-docs/client-developers-guide/en-US/pdf/teiid_client_developers_guide.pdf</source>
-            <outputDirectory>docs/teiid</outputDirectory>
-            <fileMode>0644</fileMode>
-        </file>
-        <file>
-            <source>target/teiid-${project.version}-docs/caching-guide/en-US/pdf/teiid_caching_guide.pdf</source>
-            <outputDirectory>docs/teiid</outputDirectory>
-            <fileMode>0644</fileMode>
-        </file>        
-    </files>
-     
   
   <!--  these have external dependent clients like connectors-->
   <moduleSets>

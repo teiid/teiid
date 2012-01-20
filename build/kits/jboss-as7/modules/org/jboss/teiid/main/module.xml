@@ -12,6 +12,8 @@
         <resource-root path="teiid-admin-${project.version}.jar" />
         <resource-root path="saxonhe-9.2.1.5.jar" />
         <resource-root path="json-simple-1.1.jar" />
+        <resource-root path="xom-1.2.jar" />
+        <resource-root path="nux-1.6.jar" />
         <resource-root path="conf" />
     </resources>
 

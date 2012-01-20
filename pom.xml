@@ -103,7 +103,6 @@
         <maven.javadoc.skip>true</maven.javadoc.skip>
       </properties>
       <modules>
-        <module>documentation</module>
         <module>build</module>        
       </modules>
       <build>
