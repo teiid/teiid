@@ -779,8 +779,26 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit( Query obj ) {
     	addCacheHint(obj.getCacheHint());
     	addWithClause(obj);
+        append(SELECT);
+
+    	SourceHint sh = obj.getSourceHint();
+    	if (sh != null) {
+        	append(SPACE);
+        	append(BEGIN_HINT);
+        	append("sh"); //$NON-NLS-1$
+        	if (sh.getGeneralHint() != null) {
+        		appendSourceHintValue(sh.getGeneralHint());
+        	}
+        	if (sh.getSourceHints() != null) {
+        		for (Map.Entry<String, String> entry : sh.getSourceHints().entrySet()) {
+        			append(entry.getKey());
+        			appendSourceHintValue(entry.getValue());
+        		}
+        	}
+        	append(END_HINT);
+    	}
     	if (obj.getSelect() != null) {
-    		visitDirect(obj.getSelect(), obj);
+    		visitNode(obj.getSelect());
     	}
 
         if (obj.getInto() != null) {
@@ -868,31 +886,6 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit( Select obj ) {
-        visitDirect(obj, null);
-    }
-
-	private void visitDirect(Select obj, Query query) {
-        append(SELECT);
-
-        if (query != null) {
-        	SourceHint sh = query.getSourceHint();
-        	if (sh != null) {
-	        	append(SPACE);
-	        	append(BEGIN_HINT);
-	        	append("sh"); //$NON-NLS-1$
-	        	if (sh.getGeneralHint() != null) {
-	        		appendSourceHintValue(sh.getGeneralHint());
-	        	}
-	        	if (sh.getSourceHints() != null) {
-	        		for (Map.Entry<String, String> entry : sh.getSourceHints().entrySet()) {
-	        			append(entry.getKey());
-	        			appendSourceHintValue(entry.getValue());
-	        		}
-	        	}
-	        	append(END_HINT);
-        	}
-        }
-        
 		if (obj.isDistinct()) {
             append(SPACE);
             append(DISTINCT);

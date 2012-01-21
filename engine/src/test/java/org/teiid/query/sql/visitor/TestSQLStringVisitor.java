@@ -708,7 +708,7 @@ public class TestSQLStringVisitor {
 		Select select = new Select();
 		select.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
 		
-		helpTest(select, "SELECT e1"); //$NON-NLS-1$
+		helpTest(select, " e1"); //$NON-NLS-1$
 	}
 
 	@Test public void testSelect2() {
@@ -716,7 +716,7 @@ public class TestSQLStringVisitor {
 		select.setDistinct(true);
 		select.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
 		
-		helpTest(select, "SELECT DISTINCT e1"); //$NON-NLS-1$
+		helpTest(select, " DISTINCT e1"); //$NON-NLS-1$
 	}
 
 	@Test public void testSelect3() {
@@ -724,7 +724,7 @@ public class TestSQLStringVisitor {
 		select.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
 		select.addSymbol(new ElementSymbol("e2")); //$NON-NLS-1$
 		
-		helpTest(select, "SELECT e1, e2"); //$NON-NLS-1$
+		helpTest(select, " e1, e2"); //$NON-NLS-1$
 	}
 
 	@Test public void testSetCriteria1() {

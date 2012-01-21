@@ -180,7 +180,7 @@ public class TestExpressionMappingVisitor {
         
         ExpressionMappingVisitor.mapExpressions(toMap, map);
         
-        assertEquals("Did not get expected mapped expression", "SELECT z.X", toMap.toString());     //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("Did not get expected mapped expression", " z.X", toMap.toString());     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /**
