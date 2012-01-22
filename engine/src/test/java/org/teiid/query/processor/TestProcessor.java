@@ -5208,14 +5208,19 @@ public class TestProcessor {
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder, context);
         
         // Collect reference, set value
-        VariableContext vc = new VariableContext();
+        setParameterValues(values, command, context);
+        // Run query
+        helpProcess(plan, context, dataManager, expected);
+	}
+
+	public static void setParameterValues(List<?> values, Command command,
+			CommandContext context) {
+		VariableContext vc = new VariableContext();
         Iterator<?> valIter = values.iterator();
         for (Reference ref : ReferenceCollectorVisitor.getReferences(command)) {
             vc.setGlobalValue(ref.getContextSymbol(),  valIter.next()); //$NON-NLS-1$
 		}
         context.setVariableContext(vc);
-        // Run query
-        helpProcess(plan, context, dataManager, expected);
 	}    
 
     /** defect 15348
