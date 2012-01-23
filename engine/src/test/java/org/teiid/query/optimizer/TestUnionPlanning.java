@@ -23,8 +23,10 @@
 package org.teiid.query.optimizer;
 
 import org.junit.Test;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.ProcessorPlan;
@@ -254,5 +256,36 @@ public class TestUnionPlanning {
             0,      // Sort
             2       // UnionAll
         });                                    
-    }    
+    }   
+    
+    @Test public void testUnionCosting() throws Exception {
+    	TransformationMetadata metadata = RealMetadataFactory.example1();
+    	RealMetadataFactory.setCardinality("pm1.g1", 100, metadata);
+    	RealMetadataFactory.setCardinality("pm1.g2", 100, metadata);
+    	RealMetadataFactory.setCardinality("pm1.g3", 100, metadata);
+    	RealMetadataFactory.setCardinality("pm1.g4", 100, metadata);
+    	BasicSourceCapabilities bac = new BasicSourceCapabilities();
+    	bac.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+    	bac.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT T.e1 AS e1, T.e2 AS e2, T.e3 AS e3 FROM (SELECT e1, 'a' AS e2, e3 FROM pm1.g1 UNION SELECT e1, 'b' AS e2, e3 FROM pm1.g2 UNION SELECT e1, 'c' AS e2, e3 FROM pm1.g3) AS T, vm1.g1 AS L WHERE (T.e1 = L.e1) AND (T.e3 = TRUE)", metadata, null, new DefaultCapabilitiesFinder(bac),//$NON-NLS-1$
+            new String[] { "SELECT pm1.g1.e1 FROM pm1.g1", "SELECT pm1.g1.e1, pm1.g1.e3 FROM pm1.g1 WHERE pm1.g1.e3 = TRUE", "SELECT pm1.g3.e1, pm1.g3.e3 FROM pm1.g3 WHERE pm1.g3.e3 = TRUE", "SELECT pm1.g2.e1, pm1.g2.e3 FROM pm1.g2 WHERE pm1.g2.e3 = TRUE" }, ComparisonMode.EXACT_COMMAND_STRING); 
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            4,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            2       // UnionAll
+        });                                    
+    }   
+
 }

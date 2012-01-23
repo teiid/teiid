@@ -29,10 +29,12 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.language.Select;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -45,6 +47,7 @@ import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
+import org.teiid.translator.ExecutionFactory.NullOrder;
 
 @SuppressWarnings({"unchecked", "nls"})
 public class TestDependentJoins {
@@ -830,17 +833,80 @@ public class TestDependentJoins {
    }    
     
     @Test public void testDependentJoinBackoff() throws Exception {
-        // Create query 
+        FakeDataManager dataManager = helpTestBackoff(true);
+        
+        //note that the dependent join was not actually performed
+        assertEquals(new HashSet<String>(Arrays.asList("SELECT pm1.g1.e1 FROM pm1.g1", "SELECT pm6.g1.e1 FROM pm6.g1 ORDER BY pm6.g1.e1")), 
+        		new HashSet<String>(dataManager.getQueries()));
+    }
+    
+    @Test public void testDependentJoinBackoff1() throws Exception {
+        FakeDataManager dataManager = helpTestBackoff(false);
+        
+        //note that the dependent join was performed
+        assertEquals(4, new HashSet<String>(dataManager.getQueries()).size());
+    }
+    
+    @Test public void testIssue1899() throws Exception {
+    	String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm3.g1 WHERE pm1.g1.e1=pm3.g1.e1"; //$NON-NLS-1$
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT pm3.g1.e1 FROM pm3.g1 ORDER BY pm3.g1.e1", new List<?>[] {Arrays.asList("a"), Arrays.asList("b"), Arrays.asList("c")});
+        dataManager.addData("SELECT pm1.g1.e1 FROM pm1.g1", new List<?>[] {Arrays.asList("a")});
+
+        TransformationMetadata fakeMetadata = RealMetadataFactory.example4();
+        fakeMetadata.getGroupID("pm1.g1").getAccessPatterns().clear();
+        RealMetadataFactory.setCardinality("pm1.g1", 1000, fakeMetadata);
+    	fakeMetadata.getElementID("pm1.g1.e1").setDistinctValues(40);
+        RealMetadataFactory.setCardinality("pm3.g1", 1, fakeMetadata);
+    	fakeMetadata.getElementID("pm3.g1.e1").setDistinctValues(1);
+        // Plan query
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities depcaps = new BasicSourceCapabilities();
+        depcaps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        depcaps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        depcaps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.HIGH);
+
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        caps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.HIGH);
+
+        capFinder.addCapabilities("pm3", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm1", depcaps); //$NON-NLS-1$
+
+        List[] expected = new List[] {
+            Arrays.asList(new Object[] {
+                new String("a")})}; //$NON-NLS-1$
+
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, fakeMetadata, new String[] {
+        		"SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e1 IN (<dependent values>)", 
+        		"SELECT pm3.g1.e1 FROM pm3.g1 ORDER BY pm3.g1.e1"
+        }, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
+
+        // Run query
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
+
+	private FakeDataManager helpTestBackoff(boolean setNdv) throws Exception,
+			QueryMetadataException, TeiidComponentException,
+			TeiidProcessingException {
+		// Create query 
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm6.g1 WHERE pm1.g1.e1=pm6.g1.e1"; //$NON-NLS-1$
 
         // Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
         sampleData4(dataManager);
 
-        QueryMetadataInterface fakeMetadata = RealMetadataFactory.example1();
+        TransformationMetadata fakeMetadata = RealMetadataFactory.example1();
 
         RealMetadataFactory.setCardinality("pm1.g1", 1, fakeMetadata);
+        if (setNdv) {
+        	fakeMetadata.getElementID("pm1.g1.e1").setDistinctValues(1);
+        }
         RealMetadataFactory.setCardinality("pm6.g1", 1000, fakeMetadata);
+        if (setNdv) {
+        	fakeMetadata.getElementID("pm6.g1.e1").setDistinctValues(1000);
+        }
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities depcaps = new BasicSourceCapabilities();
@@ -865,11 +931,8 @@ public class TestDependentJoins {
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
-        
-        //note that the dependent join was not actually performed
-        assertEquals(new HashSet<String>(Arrays.asList("SELECT pm1.g1.e1 FROM pm1.g1", "SELECT pm6.g1.e1 FROM pm6.g1 ORDER BY pm6.g1.e1")), 
-        		new HashSet<String>(dataManager.getQueries()));
-    }
+		return dataManager;
+	}
     
     @Test public void testDjHint() { 
         // Create query 

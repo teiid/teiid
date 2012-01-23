@@ -36,10 +36,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.teiid.language.Command;
+import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
+import org.teiid.language.Literal;
 import org.teiid.language.OrderBy;
+import org.teiid.language.SQLConstants;
 import org.teiid.language.SetQuery;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
@@ -100,10 +103,30 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.QUARTER, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.SECOND, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.WEEK, new EscapeSyntaxModifier());
-        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier());
-        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.LENGTH, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.ATAN2, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier() {
+			
+			@Override
+			public List<?> translate(Function function) {
+				if (!isFracSeconds(function)) {
+					return super.translate(function);
+				}
+				//convert from billionths to thousandths
+				return Arrays.asList("dateadd(millisecond, ", function.getParameters().get(1), "/1000000, ", function.getParameters().get(2), ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			}
+		});
+        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new EscapeSyntaxModifier() {
+			
+			@Override
+			public List<?> translate(Function function) {
+				if (!isFracSeconds(function)) {
+					return super.translate(function);
+				}
+				//convert from billionths to thousandths
+				return Arrays.asList("datediff(millisecond, ", function.getParameters().get(1), ",", function.getParameters().get(2), ")*1000000"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			}
+		});
         
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
@@ -390,5 +413,10 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
     protected boolean supportsCrossJoin() {
     	return false;
     }
+
+	private boolean isFracSeconds(Function function) {
+		Expression e = function.getParameters().get(0);
+		return (e instanceof Literal && SQLConstants.NonReserved.SQL_TSI_FRAC_SECOND.equalsIgnoreCase((String)((Literal)e).getValue()));
+	}
     
 }

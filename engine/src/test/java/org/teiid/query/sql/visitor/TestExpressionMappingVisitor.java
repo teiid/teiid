@@ -177,7 +177,7 @@ public class TestExpressionMappingVisitor {
         
         ExpressionMappingVisitor.mapExpressions(toMap, map);
         
-        assertEquals("Did not get expected mapped expression", "SELECT z.X AS x", toMap.toString());     //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("Did not get expected mapped expression", " z.X AS x", toMap.toString());     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testSelectAlias1() {
@@ -191,7 +191,7 @@ public class TestExpressionMappingVisitor {
         
         ExpressionMappingVisitor.mapExpressions(toMap, map);
         
-        assertEquals("Did not get expected mapped expression", "SELECT z.x", toMap.toString());     //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("Did not get expected mapped expression", " z.x", toMap.toString());     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /**

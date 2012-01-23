@@ -293,7 +293,7 @@ public class JDBCMetdataProcessor {
 		return TypeFacility.getDataTypeNameFromSQLType(type);
 	}
 	
-	private String quoteName(String name) {
+	protected String quoteName(String name) {
 		if (quoteNameInSource) {
 			return quoteString + StringUtil.replaceAll(name, quoteString, quoteString + quoteString) + quoteString;
 		}

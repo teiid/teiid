@@ -35,6 +35,7 @@ import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.util.CommandContext;
@@ -53,46 +54,61 @@ public final class RuleCleanCriteria implements OptimizerRule {
 
         boolean pushRaiseNull = false;
         
-        for (PlanNode critNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.SELECT)) {
-            
-            if (critNode.hasBooleanProperty(NodeConstants.Info.IS_PHANTOM)) {
-                NodeEditor.removeChildNode(critNode.getParent(), critNode);
-                continue;
-            }
-            
-            //TODO: remove dependent set criteria that has not been meaningfully pushed from its parent join
-            
-            if (critNode.hasBooleanProperty(NodeConstants.Info.IS_HAVING) || critNode.getGroups().size() != 0) {
-                continue;
-            }
-            
-            Criteria crit = (Criteria)critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-            //if not evaluatable, just move on to the next criteria
-            if (!EvaluatableVisitor.isFullyEvaluatable(crit, true)) {
-                continue;
-            }
-            //if evaluatable
-            try {
-                boolean eval = Evaluator.evaluate(crit);
-                if(eval) {
-                    NodeEditor.removeChildNode(critNode.getParent(), critNode);
-                } else {
-                    FrameUtil.replaceWithNullNode(critNode);
-                    pushRaiseNull = true;
-                }
-            //none of the following exceptions should ever occur
-            } catch(BlockedException e) {
-                throw new TeiidComponentException(e);
-            } catch (ExpressionEvaluationException e) {
-                throw new TeiidComponentException(e);
-            } 
-        } 
+        pushRaiseNull = clean(plan);
         
         if (pushRaiseNull) {
             rules.push(RuleConstants.RAISE_NULL);
         }
 
         return plan;        
+    }
+
+	private boolean clean(PlanNode plan)
+			throws TeiidComponentException {
+		boolean pushRaiseNull = false;
+		plan.setProperty(Info.OUTPUT_COLS, null);
+        for (PlanNode node : plan.getChildren()) {
+        	pushRaiseNull |= clean(node);
+        }
+        if (plan.getType() == NodeConstants.Types.SELECT) {
+        	pushRaiseNull = cleanCriteria(plan);
+        }
+		return pushRaiseNull;
+	}
+    
+    boolean cleanCriteria(PlanNode critNode) throws TeiidComponentException {
+        if (critNode.hasBooleanProperty(NodeConstants.Info.IS_PHANTOM)) {
+            NodeEditor.removeChildNode(critNode.getParent(), critNode);
+            return false;
+        }
+        
+        //TODO: remove dependent set criteria that has not been meaningfully pushed from its parent join
+        
+        if (critNode.hasBooleanProperty(NodeConstants.Info.IS_HAVING) || critNode.getGroups().size() != 0) {
+            return false;
+        }
+        
+        Criteria crit = (Criteria)critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
+        //if not evaluatable, just move on to the next criteria
+        if (!EvaluatableVisitor.isFullyEvaluatable(crit, true)) {
+            return false;
+        }
+        //if evaluatable
+        try {
+            boolean eval = Evaluator.evaluate(crit);
+            if(eval) {
+                NodeEditor.removeChildNode(critNode.getParent(), critNode);
+            } else {
+                FrameUtil.replaceWithNullNode(critNode);
+                return true;
+            }
+        //none of the following exceptions should ever occur
+        } catch(BlockedException e) {
+            throw new TeiidComponentException(e);
+        } catch (ExpressionEvaluationException e) {
+            throw new TeiidComponentException(e);
+        }
+        return false;
     }
     
     public String toString() {

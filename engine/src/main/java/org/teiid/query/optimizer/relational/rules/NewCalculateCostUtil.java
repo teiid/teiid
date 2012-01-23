@@ -287,10 +287,14 @@ public class NewCalculateCostUtil {
 			QueryMetadataInterface metadata, float cost)
 			throws QueryMetadataException, TeiidComponentException {
 		PlanNode projectNode = NodeEditor.findNodePreOrder(node, NodeConstants.Types.PROJECT);
+		float result = cost;
 		if (projectNode != null) {
-			cost = getNDVEstimate(node.getParent(), metadata, cost, (List)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS), false);
+			result = getNDVEstimate(node.getParent(), metadata, cost, (List)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS), false);
+			if (result == UNKNOWN_VALUE) {
+				return cost;
+			}
 		}
-		return cost;
+		return result;
 	}
 
     private static void setCardinalityEstimate(PlanNode node, Float bestEstimate, boolean setColEstimates, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
@@ -1138,7 +1142,12 @@ public class NewCalculateCostUtil {
 		for (int i = 0; i < independentExpressions.size(); i++) {
 			Expression indExpr = (Expression)independentExpressions.get(i);
 			Collection<ElementSymbol> indElements = ElementCollectorVisitor.getElements(indExpr, true);
-			float indSymbolNDV = getNDVEstimate(independentNode, metadata, independentCardinality, indElements, true);
+			float indSymbolNDV = getNDVEstimate(independentNode, metadata, independentCardinality, indElements, false);
+			boolean unknownNDV = false;
+			if (indSymbolNDV == UNKNOWN_VALUE) {
+				unknownNDV = true;
+				indSymbolNDV = independentCardinality/2;
+			}
 			Expression depExpr = (Expression)dependentExpressions.get(i);
 			
 			LinkedList<Expression> depExpressions = new LinkedList<Expression>();
@@ -1197,6 +1206,7 @@ public class NewCalculateCostUtil {
 							} 
 						}
 						depSymbolNDV = Math.max((float)Math.pow(depTargetCardinality, .75), Math.min(indSymbolOrigNDV, depTargetCardinality));
+						unknownNDV = true;
 					} else {
 						depSymbolNDV = depTargetCardinality;
 					}
@@ -1212,6 +1222,10 @@ public class NewCalculateCostUtil {
 		        	} else {
 		        		dca.expectedCardinality = Math.min(dca.expectedCardinality, estimates[0]);
 		        	}
+		        }
+		        //don't use the ndv if it is unknown
+		        if (unknownNDV) {
+		        	continue;
 		        }
 		        dca.expectedNdv[i] = indSymbolNDV;
 		        //use a quick binary search to find the max ndv

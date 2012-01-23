@@ -85,7 +85,7 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
     public Object retrieveValue(ResultSet results, int columnIndex,
     		Class<?> expectedType) throws SQLException {
     	Object result = super.retrieveValue(results, columnIndex, expectedType);
-    	if (expectedType == TypeFacility.RUNTIME_TYPES.STRING && result instanceof Blob) {
+    	if (expectedType == TypeFacility.RUNTIME_TYPES.STRING && (result instanceof Blob || result instanceof byte[])) {
     		return results.getString(columnIndex);
     	}
     	return result;
@@ -95,7 +95,7 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
     public Object retrieveValue(CallableStatement results, int parameterIndex,
     		Class<?> expectedType) throws SQLException {
     	Object result = super.retrieveValue(results, parameterIndex, expectedType);
-    	if (expectedType == TypeFacility.RUNTIME_TYPES.STRING && result instanceof Blob) {
+    	if (expectedType == TypeFacility.RUNTIME_TYPES.STRING && (result instanceof Blob || result instanceof byte[])) {
     		return results.getString(parameterIndex);
     	}
     	return result;

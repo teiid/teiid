@@ -155,11 +155,14 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
             try {
                 command = QueryRewriter.rewrite(command, metadata, null);                    
                 instanceNode.setCommand(command);
+                if (!instanceNode.isShouldEvaluate()) {
+                	instanceNode.minimizeProject(command);
+                }
             } catch(QueryValidatorException e) {
                 // ignore and use original command
             }
             
-            if (!RelationalNodeUtil.shouldExecute(command, false)) {
+            if (!RelationalNodeUtil.shouldExecute(command, false, true)) {
                 continue;
             }
                                 
@@ -269,7 +272,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 		    DeepPreOrderNavigator.doVisit(command, new MultiSourceElementReplacementVisitor(sourceName));
 		}
 		
-		if (!RelationalNodeUtil.shouldExecute(command, false)) {
+		if (!RelationalNodeUtil.shouldExecute(command, false, true)) {
             return null;
         }
 		
