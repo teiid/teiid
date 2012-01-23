@@ -71,10 +71,10 @@ public class EmbeddedProfile implements ConnectionProfile {
 	        try {
 	        	final Module module = Module.getCallerModuleLoader().loadModule(ModuleIdentifier.create("org.jboss.teiid")); //$NON-NLS-1$
 	        	Thread.currentThread().setContextClassLoader(module.getClassLoader());
+	        	return (ServerConnection)ReflectionHelper.create("org.teiid.transport.LocalServerConnection", Arrays.asList(info, PropertiesUtils.getBooleanProperty(info, USE_CALLING_THREAD, true)), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
 	        } catch (ModuleLoadException e) {
-	        	Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
-	        } 
-	        return (ServerConnection)ReflectionHelper.create("org.teiid.transport.LocalServerConnection", Arrays.asList(info, PropertiesUtils.getBooleanProperty(info, USE_CALLING_THREAD, true)), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
+	        	throw new TeiidRuntimeException(JDBCPlugin.Util.gs("teiid_module_load_failed")); //$NON-NLS-1$
+	        } 	        
 		} finally {
         	Thread.currentThread().setContextClassLoader(tccl);
         }

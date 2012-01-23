@@ -71,7 +71,7 @@ public class TeiidDriver implements Driver {
     }
     
     private ConnectionProfile socketProfile = new SocketProfile();
-    private ConnectionProfile embeddedProfile = new EmbeddedProfile();
+    private ConnectionProfile embeddedProfile;
 
     public static TeiidDriver getInstance() {
         return INSTANCE;
@@ -102,6 +102,14 @@ public class TeiidDriver implements Driver {
 
         try {
         	if (conn == ConnectionType.Embedded) {
+        		if (embeddedProfile == null) {
+        			try {
+        				getClass().getClassLoader().loadClass("org.jboss.modules.Module"); //$NON-NLS-1$
+        			} catch(ClassNotFoundException e) {
+        				throw new TeiidSQLException(JDBCPlugin.Util.gs("module_load_failed")); //$NON-NLS-1$
+        			}
+        			embeddedProfile = new EmbeddedProfile();
+        		}
         		myConnection = embeddedProfile.connect(url, info);
         	} else { 
         		myConnection = socketProfile.connect(url, info);
