@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import java.net.InetSocketAddress;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Properties;
@@ -107,6 +108,24 @@ public class TestJDBCSocketTransport {
 		assertTrue(s.execute("select xmlelement(name \"root\") from tables"));
 		s.getResultSet().next();
 		assertEquals("<root></root>", s.getResultSet().getString(1));
+	}
+	
+	@Test public void testVarbinary() throws Exception {
+		Statement s = conn.createStatement();
+		assertTrue(s.execute("select X'aab1'"));
+		s.getResultSet().next();
+		byte[] bytes = s.getResultSet().getBytes(1);
+		assertArrayEquals(new byte[] {(byte)0xaa, (byte)0xb1}, bytes);
+		assertArrayEquals(bytes, s.getResultSet().getBlob(1).getBytes(1, 2));
+	}
+	
+	@Test public void testVarbinaryPrepared() throws Exception {
+		PreparedStatement s = conn.prepareStatement("select cast(? as varbinary)");
+		s.setBytes(1, "hello".getBytes());
+		assertTrue(s.execute());
+		s.getResultSet().next();
+		byte[] bytes = s.getResultSet().getBytes(1);
+		assertEquals("hello", new String(bytes));
 	}
 	
 	@Test public void testXmlTableScrollable() throws Exception {

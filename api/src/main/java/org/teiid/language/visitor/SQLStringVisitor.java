@@ -634,6 +634,10 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
                 buffer.append("{d '") //$NON-NLS-1$
                       .append(val)
                       .append("'}"); //$NON-NLS-1$
+            } else if (type.equals(DataTypeManager.DefaultDataClasses.VARBINARY)) {
+            	buffer.append("X'") //$NON-NLS-1$
+            		  .append(val)
+            		  .append("'"); //$NON-NLS-1$
             } else {
                 buffer.append(Tokens.QUOTE)
                       .append(escapeString(val, Tokens.QUOTE))

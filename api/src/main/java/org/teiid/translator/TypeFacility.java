@@ -30,6 +30,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
@@ -62,6 +63,7 @@ public class TypeFacility {
 		public static final int CLOB = DataTypeManager.DefaultTypeCodes.CLOB;
 		public static final int XML = DataTypeManager.DefaultTypeCodes.XML;
 		public static final int NULL = DataTypeManager.DefaultTypeCodes.NULL;
+		public static final int VARBINARY = DataTypeManager.DefaultTypeCodes.VARBINARY;
 	}
 
     public interface RUNTIME_TYPES {
@@ -84,6 +86,8 @@ public class TypeFacility {
         public static final Class<ClobType> CLOB          = DataTypeManager.DefaultDataClasses.CLOB;
         public static final Class<XMLType> XML           = DataTypeManager.DefaultDataClasses.XML;
         public static final Class<NullType> NULL         = DataTypeManager.DefaultDataClasses.NULL;
+        public static final Class<BinaryType> VARBINARY         = DataTypeManager.DefaultDataClasses.VARBINARY;
+        
     }
     
     public static final class RUNTIME_NAMES {
@@ -106,6 +110,7 @@ public class TypeFacility {
         public static final String BLOB         = DataTypeManager.DefaultDataTypes.BLOB;
         public static final String CLOB         = DataTypeManager.DefaultDataTypes.CLOB;
         public static final String XML         	= DataTypeManager.DefaultDataTypes.XML;
+        public static final String VARBINARY         	= DataTypeManager.DefaultDataTypes.VARBINARY;
     }
     
     /**

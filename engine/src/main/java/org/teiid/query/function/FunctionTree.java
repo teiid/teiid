@@ -26,10 +26,10 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -94,7 +94,7 @@ public class FunctionTree {
     public FunctionTree(String name, FunctionMetadataSource source, boolean validateClass, ClassLoader defaultClassloader) {
         // Load data structures
     	this.validateClass = validateClass;
-
+    	boolean system = CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(name) || CoreConstants.SYSTEM_ADMIN_MODEL.equalsIgnoreCase(name);
         Collection<FunctionMethod> functions = source.getFunctionMethods();
     	for (FunctionMethod method : functions) {
 			if (!containsIndistinguishableFunction(method)){
@@ -102,7 +102,7 @@ public class FunctionTree {
 					method.setClassloader(defaultClassloader);
 				}
                 // Add to tree
-                addFunction(name, source, method);
+                addFunction(name, source, method, system);
 			} else if (!CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(name)) {
                 LogManager.logWarning(LogConstants.CTX_FUNCTION_TREE, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30011, new Object[]{method}));
 			}
@@ -196,7 +196,7 @@ public class FunctionTree {
      * @param source The function metadata source, which knows how to obtain the invocation class
      * @param method The function metadata for a particular method signature
      */
-    public FunctionDescriptor addFunction(String schema, FunctionMetadataSource source, FunctionMethod method) {
+    public FunctionDescriptor addFunction(String schema, FunctionMetadataSource source, FunctionMethod method, boolean system) {
     	String categoryKey = method.getCategory();
     	if (categoryKey == null) {
     		method.setCategory(FunctionCategoryConstants.MISCELLANEOUS);
@@ -216,20 +216,19 @@ public class FunctionTree {
 
         // Get input types for path
         List<FunctionParameter> inputParams = method.getInputParameters();
-        List<Class<?>> inputTypes = new LinkedList<Class<?>>();
+        Class<?>[] types = null;
         if(inputParams != null) {
+        	types = new Class<?>[inputParams.size()];
             for(int i=0; i<inputParams.size(); i++) {
                 String typeName = inputParams.get(i).getType();
-                inputTypes.add(DataTypeManager.getDataTypeClass(typeName));
+                Class<?> clazz = DataTypeManager.getDataTypeClass(typeName);
+                types[i] = clazz;
             }
-        }
-        Class<?>[] types = inputTypes.toArray(new Class[inputTypes.size()]);
-
-        if (method.isVarArgs()) {
-        	inputTypes.set(inputTypes.size() - 1, Array.newInstance(inputTypes.get(inputTypes.size() - 1), 0).getClass());
+        } else {
+        	types = new Class<?>[0];
         }
 
-        FunctionDescriptor descriptor = createFunctionDescriptor(source, method, inputTypes, types);
+        FunctionDescriptor descriptor = createFunctionDescriptor(source, method, types, system);
         descriptor.setSchema(schema);
         // Store this path in the function tree
         
@@ -282,12 +281,25 @@ public class FunctionTree {
 
 	private FunctionDescriptor createFunctionDescriptor(
 			FunctionMetadataSource source, FunctionMethod method,
-			List<Class<?>> inputTypes, Class<?>[] types) {
+			Class<?>[] types, boolean system) {
 		// Get return type
         FunctionParameter outputParam = method.getOutputParameter();
         Class<?> outputType = null;
         if(outputParam != null) {
             outputType = DataTypeManager.getDataTypeClass(outputParam.getType());
+        }
+        List<Class<?>> inputTypes = new ArrayList<Class<?>>(Arrays.asList(types));
+        boolean hasWrappedArg = false;
+        if (!system) {
+	        for (int i = 0; i < types.length; i++) {
+	        	if (types[i] == DataTypeManager.DefaultDataClasses.VARBINARY) {
+	        		hasWrappedArg = true;
+	        		inputTypes.set(i, byte[].class);
+	        	}
+	        }
+        }
+        if (method.isVarArgs()) {
+        	inputTypes.set(inputTypes.size() - 1, Array.newInstance(inputTypes.get(inputTypes.size() - 1), 0).getClass());
         }
 
         Method invocationMethod = null;
@@ -329,11 +341,11 @@ public class FunctionTree {
         			throw new TeiidRuntimeException("ERR.015.001.0047", QueryPlugin.Util.getString("FunctionTree.not_static", method.getName(), invocationMethod)); //$NON-NLS-1$ //$NON-NLS-2$
         		}
             }
-        } else {
-            inputTypes.add(0, CommandContext.class);
         }
 
-        return new FunctionDescriptor(method, types, outputType, invocationMethod, requiresContext);
+        FunctionDescriptor result = new FunctionDescriptor(method, types, outputType, invocationMethod, requiresContext);
+        result.setHasWrappedArgs(hasWrappedArg);
+        return result;
 	}
     
     /**

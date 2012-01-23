@@ -38,6 +38,7 @@
   <LI><B>Texttable selectors</B> - can be used to selectively parse only record lines matching a given selector string.  Selectors may also be used for column values to join data from other records positionally.
   <LI><B>Comparable LOBs</B> - the system property org.teiid.comparableLobs can be set to use CLOB and BLOB values in comparison/sorting/grouping operations.
   <LI><B>Padded String Comparison</B> - the system property org.teiid.padSpace can be set to effectively right pad strings to the same length for comparison.
+  <LI><B>VARBINARY type support</B> - the Teiid VARBINARY type can now be used to support source BINARY and VARBINARY types.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -62,6 +63,7 @@
   <li>Unaliased derived columns in the SELECT clause have different default names than prior releases.  The name will be exprX where X is the SELECT clause position.
   <li>The translator API facilities for iterator/bulk updates were combined and updated.  Multi-valued literals were replaced by the Parameter class with an associated value iterator 
       available on the BatchedCommand.  The IteratorValueSource class was also removed.
+  <li>varbinary was added as a reserved word.    
 </ul>
 
 <h4>from 7.5</h4>

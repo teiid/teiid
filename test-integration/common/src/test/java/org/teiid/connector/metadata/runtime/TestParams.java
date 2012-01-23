@@ -40,6 +40,7 @@ import org.teiid.metadata.BaseColumn.NullType;
 /** 
  * @since 4.3
  */
+@SuppressWarnings("nls")
 public class TestParams extends TestCase {
 
     private static TranslationUtility CONNECTOR_METADATA_UTILITY = createTranslationUtility(getTestVDBName());
@@ -76,16 +77,14 @@ public class TestParams extends TestCase {
     private void checkParameter(Argument param,
                                 String name,
                                 String fullName,
-                                int index,
                                 Direction direction,
                                 String nameInSource,
                                 String defaultValue,
                                 NullType nullability,
-                                Class javaType,
+                                Class<?> javaType,
                                 int length,
                                 int precision,
-                                int scale,
-                                TranslationUtility transUtil, String modeledType, String modeledBaseType, String modeledPrimitiveType) throws Exception {
+                                int scale) throws Exception {
         ProcedureParameter p = param.getMetadataObject();
         assertEquals(name, p.getName());
         assertEquals(fullName, p.getFullName());
@@ -100,12 +99,6 @@ public class TestParams extends TestCase {
         assertEquals(scale, p.getScale());
         assertEquals(null, param.getArgumentValue().getValue());
 
-        //System.out.println("\n" + p.getModeledType() + "\n" + p.getModeledBaseType() + "\n" + p.getModeledPrimitiveType());
-        
-        assertEquals(modeledType, p.getDatatypeID());
-        assertEquals(modeledBaseType, p.getBaseTypeID());
-        assertEquals(modeledPrimitiveType, p.getPrimitiveTypeID());
-        
     }
 
     public void testProcedureWithResultSet() throws Exception {
@@ -116,70 +109,50 @@ public class TestParams extends TestCase {
         checkParameter((Argument)params.get(0),
                        "in1", //$NON-NLS-1$
                        "sptest.proc1.in1", //$NON-NLS-1$
-                       1,
                        Direction.IN,
                        null,
-                       "sample default", //$NON-NLS-1$
-                       NullType.No_Nulls,
+                       "sample default",
+                       NullType.No_Nulls, //$NON-NLS-1$
                        String.class,
                        20,
                        10,
-                       5,
-                       CONNECTOR_METADATA_UTILITY, 
-                       "http://www.w3.org/2001/XMLSchema#string",  //$NON-NLS-1$
-                       "http://www.w3.org/2001/XMLSchema#anySimpleType",  //$NON-NLS-1$
-                       "http://www.w3.org/2001/XMLSchema#string"); //$NON-NLS-1$
+                       5); //$NON-NLS-1$
 
         checkParameter((Argument)params.get(1),
                        "in2", //$NON-NLS-1$
                        "sptest.proc1.in2", //$NON-NLS-1$
-                       2,
                        Direction.IN,
                        null,
-                       "15", //$NON-NLS-1$
-                       NullType.Nullable,
+                       "15",
+                       NullType.Nullable, //$NON-NLS-1$
                        Integer.class,
                        0,
                        10,
-                       0,
-                       CONNECTOR_METADATA_UTILITY, 
-                       "http://www.w3.org/2001/XMLSchema#int",  //$NON-NLS-1$
-                       "http://www.w3.org/2001/XMLSchema#long",  //$NON-NLS-1$
-                       "http://www.w3.org/2001/XMLSchema#decimal"); //$NON-NLS-1$
+                       0); //$NON-NLS-1$
 
         checkParameter((Argument)params.get(2),
                        "in3", //$NON-NLS-1$
                        "sptest.proc1.in3", //$NON-NLS-1$
-                       3,
                        Direction.IN,
                        null,
-                       "2003-04-23 09:30:00", //$NON-NLS-1$
-                       NullType.Unknown,
+                       "2003-04-23 09:30:00",
+                       NullType.Unknown, //$NON-NLS-1$
                        Timestamp.class,
                        22,
                        10,
-                       0,
-                       CONNECTOR_METADATA_UTILITY, 
-                       "http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#timestamp",  //$NON-NLS-1$
-                       "http://www.w3.org/2001/XMLSchema#string",  //$NON-NLS-1$
-                       "http://www.w3.org/2001/XMLSchema#string"); //$NON-NLS-1$
+                       0); //$NON-NLS-1$
 
         checkParameter((Argument)params.get(3),
                        "inOptional", //$NON-NLS-1$
                        "sptest.proc1.inOptional", //$NON-NLS-1$
-                       4,
                        Direction.IN,
-                       "optionalName", //$NON-NLS-1$
-                       null,
+                       "optionalName",
+                       null, //$NON-NLS-1$
                        NullType.Nullable,
                        String.class,
                        0,
                        0,
-                       0,
-                       CONNECTOR_METADATA_UTILITY, 
-                       "http://www.w3.org/2001/XMLSchema#string",  //$NON-NLS-1$
-                       "http://www.w3.org/2001/XMLSchema#anySimpleType",  //$NON-NLS-1$
-                       "http://www.w3.org/2001/XMLSchema#string"); //$NON-NLS-1$
+                       0); //$NON-NLS-1$
 
     
     }   

@@ -34,10 +34,10 @@ import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.client.metadata.MetadataResult;
 import org.teiid.client.metadata.ResultsMetadataConstants;
-import org.teiid.client.metadata.ResultsMetadataDefaults;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.types.XMLType;
 import org.teiid.dqp.internal.process.DQPCore.ClientState;
 import org.teiid.dqp.internal.process.DQPWorkContext.Version;
@@ -75,6 +75,8 @@ import org.teiid.query.tempdata.TempTableStore;
  * Handles MetaDataMessages on behalf of DQPCore.
  */
 public class MetaDataProcessor {
+
+    public final static String XML_COLUMN_NAME = "xml"; //$NON-NLS-1$
 
     // Resources
     private DQPCore requestManager;
@@ -248,10 +250,10 @@ public class MetaDataProcessor {
 
     private Map createXMLColumnMetadata(Query xmlCommand) {
         GroupSymbol doc = xmlCommand.getFrom().getGroups().get(0);
-        Map xmlMetadata = getDefaultColumn(doc.getName(), ResultsMetadataDefaults.XML_COLUMN_NAME, XMLType.class);
+        Map xmlMetadata = getDefaultColumn(doc.getName(), XML_COLUMN_NAME, XMLType.class);
 
         // Override size as XML may be big        
-        xmlMetadata.put(ResultsMetadataConstants.DISPLAY_SIZE, ResultsMetadataDefaults.XML_COLUMN_LENGTH);
+        xmlMetadata.put(ResultsMetadataConstants.DISPLAY_SIZE, JDBCSQLTypeInfo.XML_COLUMN_LENGTH);
         
         return xmlMetadata;
     }
@@ -364,7 +366,7 @@ public class MetaDataProcessor {
                 return precision;
             }
         }
-        return ResultsMetadataDefaults.getDefaultPrecision(dataType).intValue();
+        return JDBCSQLTypeInfo.getDefaultPrecision(dataType).intValue();
     }
     
     /**
@@ -416,7 +418,7 @@ public class MetaDataProcessor {
            }
        }
        // else BOOLEAN, DATE, TIME, TIMESTAMP, CHARACTER use max
-       return ResultsMetadataDefaults.getMaxDisplaySize(dataType);
+       return JDBCSQLTypeInfo.getMaxDisplaySize(dataType);
     }
 
     public Map<Integer, Object> getDefaultColumn(String tableName, String columnName, 
@@ -441,12 +443,12 @@ public class MetaDataProcessor {
         column.put(ResultsMetadataConstants.WRITABLE, Boolean.TRUE);
         column.put(ResultsMetadataConstants.CURRENCY, Boolean.FALSE);
         column.put(ResultsMetadataConstants.DATA_TYPE, DataTypeManager.getDataTypeName(javaType));
-        column.put(ResultsMetadataConstants.RADIX, ResultsMetadataDefaults.DEFAULT_RADIX);
-        column.put(ResultsMetadataConstants.SCALE, ResultsMetadataDefaults.DEFAULT_SCALE);
+        column.put(ResultsMetadataConstants.RADIX, JDBCSQLTypeInfo.DEFAULT_RADIX);
+        column.put(ResultsMetadataConstants.SCALE, JDBCSQLTypeInfo.DEFAULT_SCALE);
         column.put(ResultsMetadataConstants.SIGNED, Boolean.TRUE);
         
-        column.put(ResultsMetadataConstants.PRECISION, ResultsMetadataDefaults.getDefaultPrecision(javaType));
-        column.put(ResultsMetadataConstants.DISPLAY_SIZE, ResultsMetadataDefaults.getMaxDisplaySize(javaType));
+        column.put(ResultsMetadataConstants.PRECISION, JDBCSQLTypeInfo.getDefaultPrecision(javaType));
+        column.put(ResultsMetadataConstants.DISPLAY_SIZE, JDBCSQLTypeInfo.getMaxDisplaySize(javaType));
         return column;        
     }
     

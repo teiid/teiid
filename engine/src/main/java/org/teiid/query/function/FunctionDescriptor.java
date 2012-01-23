@@ -29,6 +29,7 @@ import java.util.Arrays;
 
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
@@ -53,6 +54,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
     private FunctionMethod method;
     private String schema; //TODO: remove me - we need to create a proper schema for udf and system functions
     private Object metadataID;
+    private boolean hasWrappedArgs;
     
     // This is transient as it would be useless to invoke this method in 
     // a different VM.  This function descriptor can be used to look up 
@@ -70,6 +72,10 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         this.invocationMethod = invocationMethod;
         this.requiresContext = requiresContext;
         this.method = method;
+	}
+	
+	public void setHasWrappedArgs(boolean hasWrappedArgs) {
+		this.hasWrappedArgs = hasWrappedArgs;
 	}
 	
 	public String getSchema() {
@@ -180,20 +186,27 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 
         // If descriptor is missing invokable method, find this VM's descriptor
         // give name and types from fd
-        Method method = getInvocationMethod();
-        if(method == null) {
+        if(invocationMethod == null) {
         	throw new FunctionExecutionException("ERR.015.001.0002", QueryPlugin.Util.getString("ERR.015.001.0002", getName())); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
         // Invoke the method and return the result
         try {
+        	if (hasWrappedArgs) {
+        		for (int i = 0; i < values.length; i++) {
+        			Object val = values[i];
+        			if (val != null && types[i] == DataTypeManager.DefaultDataClasses.VARBINARY) {
+            			values[i] = ((BinaryType)val).getBytesDirect();
+        			}
+        		}
+        	}
         	if (method.isVarArgs()) {
-        		int i = method.getParameterTypes().length;
+        		int i = invocationMethod.getParameterTypes().length;
         		Object[] newValues = Arrays.copyOf(values, i);
         		newValues[i - 1] = Arrays.copyOfRange(values, i - 1, values.length);
         		values = newValues;
         	}
-            Object result = method.invoke(null, values);
+            Object result = invocationMethod.invoke(null, values);
             return importValue(result, getReturnType());
         } catch(ArithmeticException e) {
     		throw new FunctionExecutionException(e, "ERR.015.001.0003", QueryPlugin.Util.getString("ERR.015.001.0003", getName())); //$NON-NLS-1$ //$NON-NLS-2$

@@ -1,5 +1,5 @@
 string                                                             string                                                           
-Name                                                               VDBName                                                          
+TABLE_SCHEM                                                        TABLE_CATALOG                                                    
 BQT1                                                               QT_Ora9DS                                                        
 BQT2                                                               QT_Ora9DS                                                        
 SP                                                                 QT_Ora9DS                                                        

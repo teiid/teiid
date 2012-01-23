@@ -49,7 +49,15 @@ import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.LRUCache;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
-import org.teiid.metadata.*;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ColumnSet;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ProcedureParameter.Type;
@@ -1022,52 +1030,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	return paths.toArray(new String[paths.size()]);
     }
     
-    /** 
-     * @see org.teiid.query.metadata.QueryMetadataInterface#getModeledType(java.lang.Object)
-     * @since 5.0
-     */
-    public String getModeledType(final Object elementID) throws TeiidComponentException, QueryMetadataException {
-        Datatype record = getDatatypeRecord(elementID);
-        if (record != null) {
-            return record.getDatatypeID();
-        }
-        return null;
-    }
-    
-    /** 
-     * @see org.teiid.query.metadata.QueryMetadataInterface#getModeledBaseType(java.lang.Object)
-     * @since 5.0
-     */
-    public String getModeledBaseType(final Object elementID) throws TeiidComponentException, QueryMetadataException {
-        Datatype record = getDatatypeRecord(elementID);
-        if (record != null) {
-            return record.getBasetypeID();
-        }
-        return null;
-    }
-
-    /** 
-     * @see org.teiid.query.metadata.QueryMetadataInterface#getModeledPrimitiveType(java.lang.Object)
-     * @since 5.0
-     */
-    public String getModeledPrimitiveType(final Object elementID) throws TeiidComponentException, QueryMetadataException {
-        Datatype record = getDatatypeRecord(elementID);
-        if (record != null) {
-            return record.getPrimitiveTypeID();
-        }
-        return null;
-    }
-
-    private Datatype getDatatypeRecord(final Object elementID) {
-        if (elementID instanceof Column) {
-            return ((Column)elementID).getDatatype();
-        } else if (elementID instanceof ProcedureParameter) {
-            return ((ProcedureParameter)elementID).getDatatype();
-        } else {
-            throw createInvalidRecordTypeException(elementID);            
-        }
-    }
-
 	@Override
 	public Object addToMetadataCache(Object metadataID, String key, Object value) {
         ArgCheck.isInstanceOf(AbstractMetadataRecord.class, metadataID);

@@ -28,7 +28,6 @@ import org.teiid.metadata.Column.SearchType;
 public class Datatype extends AbstractMetadataRecord {
 	
 	private static final long serialVersionUID = -7839335802224393230L;
-	private static final String OLD_PACKAGE = "com.metamatrix.common."; //$NON-NLS-1$
 	
 	public enum Type {
 		Basic,
@@ -43,9 +42,6 @@ public class Datatype extends AbstractMetadataRecord {
 		Complex
 	}
 
-	/** Delimiter used to separate the URI string from the URI fragment */
-    public static final String URI_REFERENCE_DELIMITER = "#"; //$NON-NLS-1$
-	
     private static final String DEFAULT_JAVA_CLASS_NAME = "java.lang.Object";  //$NON-NLS-1$
 
     private int length;
@@ -60,9 +56,7 @@ public class Datatype extends AbstractMetadataRecord {
     private NullType nullType;
     private String javaClassName = DEFAULT_JAVA_CLASS_NAME;
     private String runtimeTypeName;
-    private String datatypeID;
-    private String basetypeID;
-    private String primitiveTypeID;
+    private String basetypeName;
     private Variety varietyType;
 
     public int getLength() {
@@ -121,44 +115,16 @@ public class Datatype extends AbstractMetadataRecord {
         return this.runtimeTypeName;
     }
 
-    public String getDatatypeID() {
-        return this.datatypeID;
-    }
-
-    public String getBasetypeID() {
-        return this.basetypeID;
-    }
-
     public String getBasetypeName() {
-        if ( this.basetypeID != null ) {
-            final int i = getBasetypeID().lastIndexOf(URI_REFERENCE_DELIMITER);
-            if ( i != -1 && getBasetypeID().length() > (i+1)) {
-                return getBasetypeID().substring(i+1);
-            }
-        }
-        return null;
+        return this.basetypeName;
     }
-
-    public String getPrimitiveTypeID() {
-        return this.primitiveTypeID;
+    
+    public void setBasetypeName(String name) {
+    	this.basetypeName = name;	
     }
 
     public Variety getVarietyType() {
         return this.varietyType;
-    }
-
-    /**
-     * @param string
-     */
-    public void setBasetypeID(String string) {
-        basetypeID = string;
-    }
-
-    /**
-     * @param string
-     */
-    public void setPrimitiveTypeID(String string) {
-        primitiveTypeID = string;
     }
 
     /**
@@ -186,12 +152,6 @@ public class Datatype extends AbstractMetadataRecord {
      * @param string
      */
     public void setJavaClassName(String string) {
-    	if (string != null) {
-    		int index = string.indexOf(OLD_PACKAGE);
-    		if (index == 0) {
-    			string = "org.teiid.core." + string.substring(OLD_PACKAGE.length()); //$NON-NLS-1$
-    		}
-    	}
         javaClassName = string;
     }
 
@@ -252,13 +212,6 @@ public class Datatype extends AbstractMetadataRecord {
     }
 
     /**
-     * @param string
-     */
-    public void setDatatypeID(String string) {
-        datatypeID = string;
-    }
-
-    /**
      * @param s
      */
     public void setVarietyType(Variety s) {
@@ -278,8 +231,6 @@ public class Datatype extends AbstractMetadataRecord {
         sb.append(getJavaClassName());
         sb.append(", ObjectID="); //$NON-NLS-1$
         sb.append(getUUID());
-        sb.append(", datatypeID="); //$NON-NLS-1$
-        sb.append(getDatatypeID());
         return sb.toString();
     }
 

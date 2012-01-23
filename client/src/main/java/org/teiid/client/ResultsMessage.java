@@ -242,7 +242,7 @@ public class ResultsMessage implements Externalizable {
         dataTypes = ExternalizeUtil.readStringArray(in);
 
         // Row data
-        results = BatchSerializer.readBatch(in, dataTypes, (byte)0);
+        results = BatchSerializer.readBatch(in, dataTypes);
 
         // Plan Descriptions
         planDescription = (PlanNode)in.readObject();
@@ -274,7 +274,7 @@ public class ResultsMessage implements Externalizable {
         ExternalizeUtil.writeArray(out, dataTypes);
 
         // Results data
-        BatchSerializer.writeBatch(out, dataTypes, results, (byte)0);
+        BatchSerializer.writeBatch(out, dataTypes, results, clientSerializationVersion);
 
         // Plan descriptions
         out.writeObject(this.planDescription);

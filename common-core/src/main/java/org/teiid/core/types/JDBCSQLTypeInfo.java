@@ -25,10 +25,11 @@ package org.teiid.core.types;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLXML;
-
 import java.sql.Types;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <p> This is a helper class used to obtain SQL type information for java types.
@@ -37,99 +38,82 @@ import java.util.Map;
  */
 
 public final class JDBCSQLTypeInfo {
-
-
+	
+	public static class TypeInfo {
+		String name;
+		int maxDisplaySize;
+		int defaultPrecision;
+		String javaClassName;
+		int[] jdbcTypes;
+		
+		public TypeInfo(int maxDisplaySize, int precision, String name,
+				String javaClassName, int[] jdbcTypes) {
+			super();
+			this.maxDisplaySize = maxDisplaySize;
+			this.defaultPrecision = precision;
+			this.name = name;
+			this.javaClassName = javaClassName;
+			this.jdbcTypes = jdbcTypes;
+		}
+		
+	}
+	
     // Prevent instantiation
     private JDBCSQLTypeInfo() {}
-    
-    // metamatrix types    
-    public static final String STRING = DataTypeManager.DefaultDataTypes.STRING;
-    public static final String BOOLEAN = DataTypeManager.DefaultDataTypes.BOOLEAN;
-    public static final String TIME = DataTypeManager.DefaultDataTypes.TIME;
-    public static final String DATE = DataTypeManager.DefaultDataTypes.DATE;
-    public static final String TIMESTAMP = DataTypeManager.DefaultDataTypes.TIMESTAMP;
-    public static final String INTEGER = DataTypeManager.DefaultDataTypes.INTEGER;
-    public static final String FLOAT = DataTypeManager.DefaultDataTypes.FLOAT;
-    public static final String DOUBLE = DataTypeManager.DefaultDataTypes.DOUBLE;
-    public static final String BIGDECIMAL = DataTypeManager.DefaultDataTypes.BIG_DECIMAL;
-    public static final String BIGINTEGER = DataTypeManager.DefaultDataTypes.BIG_INTEGER;
-    public static final String BYTE = DataTypeManager.DefaultDataTypes.BYTE;
-    public static final String SHORT = DataTypeManager.DefaultDataTypes.SHORT;
-    public static final String LONG = DataTypeManager.DefaultDataTypes.LONG;
-    public static final String CHAR = DataTypeManager.DefaultDataTypes.CHAR;
-    public static final String OBJECT = DataTypeManager.DefaultDataTypes.OBJECT;
-    public static final String CLOB = DataTypeManager.DefaultDataTypes.CLOB;
-    public static final String BLOB = DataTypeManager.DefaultDataTypes.BLOB;
-    public static final String XML = DataTypeManager.DefaultDataTypes.XML;
-    public static final String NULL = DataTypeManager.DefaultDataTypes.NULL;
-    
-    //java class names
-    public static final String STRING_CLASS = DataTypeManager.DefaultDataClasses.STRING.getName();
-    public static final String BOOLEAN_CLASS = DataTypeManager.DefaultDataClasses.BOOLEAN.getName();
-    public static final String TIME_CLASS = DataTypeManager.DefaultDataClasses.TIME.getName();
-    public static final String DATE_CLASS = DataTypeManager.DefaultDataClasses.DATE.getName();
-    public static final String TIMESTAMP_CLASS = DataTypeManager.DefaultDataClasses.TIMESTAMP.getName();
-    public static final String INTEGER_CLASS = DataTypeManager.DefaultDataClasses.INTEGER.getName();
-    public static final String FLOAT_CLASS = DataTypeManager.DefaultDataClasses.FLOAT.getName();
-    public static final String DOUBLE_CLASS = DataTypeManager.DefaultDataClasses.DOUBLE.getName();
-    public static final String BIGDECIMAL_CLASS = DataTypeManager.DefaultDataClasses.BIG_DECIMAL.getName();
-    public static final String BYTE_CLASS = DataTypeManager.DefaultDataClasses.BYTE.getName();
-    public static final String SHORT_CLASS = DataTypeManager.DefaultDataClasses.SHORT.getName();
-    public static final String LONG_CLASS = DataTypeManager.DefaultDataClasses.LONG.getName();
-    public static final String CHAR_CLASS = DataTypeManager.DefaultDataClasses.CHAR.getName();
-    public static final String BIGINTEGER_CLASS = DataTypeManager.DefaultDataClasses.BIG_INTEGER.getName();
-    public static final String OBJECT_CLASS = DataTypeManager.DefaultDataClasses.OBJECT.getName();
-    public static final String CLOB_CLASS = Clob.class.getName();
-    public static final String BLOB_CLASS = Blob.class.getName();
-    public static final String XML_CLASS = SQLXML.class.getName();
-    
-    private static Map<String, Integer> NAME_TO_TYPE_MAP = new HashMap<String, Integer>();
-    private static Map<Integer, String> TYPE_TO_NAME_MAP = new HashMap<Integer, String>();
-    private static Map<String, String> NAME_TO_CLASSNAME = new HashMap<String, String>();
-    private static Map<String, String> CLASSNAME_TO_NAME = new HashMap<String, String>();
-    
+
+    public static final Integer DEFAULT_RADIX = 10;
+    public static final Integer DEFAULT_SCALE = 0;
+
+    // XML column constants
+    public final static Integer XML_COLUMN_LENGTH = Integer.MAX_VALUE;
+
+    private static Map<String, TypeInfo> NAME_TO_TYPEINFO = new LinkedHashMap<String, TypeInfo>();
+    private static Map<Integer, TypeInfo> TYPE_TO_TYPEINFO = new HashMap<Integer, TypeInfo>();
+    private static Map<String, TypeInfo> CLASSNAME_TO_TYPEINFO = new HashMap<String, TypeInfo>();
+
     static {
-        addTypeMapping(STRING, STRING_CLASS, Types.VARCHAR, Types.CHAR, Types.NVARCHAR, Types.NCHAR);
-        addTypeMapping(CHAR, CHAR_CLASS, Types.CHAR, false);
-        addTypeMapping(BOOLEAN, BOOLEAN_CLASS, Types.BIT, Types.BOOLEAN);
-        addTypeMapping(TIME, TIME_CLASS, Types.TIME);
-        addTypeMapping(DATE, DATE_CLASS, Types.DATE);
-        addTypeMapping(TIMESTAMP, TIMESTAMP_CLASS, Types.TIMESTAMP);
-        addTypeMapping(INTEGER, INTEGER_CLASS, Types.INTEGER);
-        addTypeMapping(FLOAT, FLOAT_CLASS, Types.REAL);
-        addTypeMapping(DOUBLE, DOUBLE_CLASS, Types.DOUBLE, Types.FLOAT);
-        addTypeMapping(BIGDECIMAL, BIGDECIMAL_CLASS, Types.NUMERIC, Types.DECIMAL);
-        addTypeMapping(BIGINTEGER, BIGINTEGER_CLASS, Types.NUMERIC, false);
-        addTypeMapping(BYTE, BYTE_CLASS, Types.TINYINT);
-        addTypeMapping(SHORT, SHORT_CLASS, Types.SMALLINT);
-        addTypeMapping(LONG, LONG_CLASS, Types.BIGINT);
-        addTypeMapping(OBJECT, OBJECT_CLASS, Types.JAVA_OBJECT);
-        addTypeMapping(CLOB, CLOB_CLASS, Types.CLOB, Types.LONGVARCHAR, Types.LONGNVARCHAR, Types.NCLOB);
-        addTypeMapping(BLOB, BLOB_CLASS, Types.BLOB, Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY);
-        
-        addTypeMapping(NULL, null, Types.NULL);
-        
-        addTypeMapping(XML, XML_CLASS, Types.SQLXML);
+    	//note the order in which these are added matters.  if there are multiple sql type mappings (e.g. biginteger and bigdecimal to numeric), the latter will be the primary
+    	addType(DataTypeManager.DefaultDataTypes.BIG_INTEGER, 20, 19, DataTypeManager.DefaultDataClasses.BIG_INTEGER.getName(), Types.NUMERIC);
+    	addType(new String[] {DataTypeManager.DefaultDataTypes.BIG_DECIMAL, "decimal"}, 22, 20, DataTypeManager.DefaultDataClasses.BIG_DECIMAL.getName(), Types.NUMERIC, Types.DECIMAL); //$NON-NLS-1$
+    	addType(DataTypeManager.DefaultDataTypes.BLOB, Integer.MAX_VALUE, Integer.MAX_VALUE, Blob.class.getName(), Types.BLOB, Types.LONGVARBINARY);
+    	addType(DataTypeManager.DefaultDataTypes.BOOLEAN, 5, 1, DataTypeManager.DefaultDataClasses.BOOLEAN.getName(), Types.BIT, Types.BOOLEAN);
+    	addType(new String[] {DataTypeManager.DefaultDataTypes.BYTE, "tinyint"}, 4, 3, DataTypeManager.DefaultDataClasses.BYTE.getName(), Types.TINYINT); //$NON-NLS-1$
+    	addType(DataTypeManager.DefaultDataTypes.CHAR, 1, 1, DataTypeManager.DefaultDataClasses.CHAR.getName(), Types.CHAR);
+    	addType(DataTypeManager.DefaultDataTypes.CLOB, Integer.MAX_VALUE, Integer.MAX_VALUE, Clob.class.getName(), Types.CLOB, Types.NCLOB, Types.LONGNVARCHAR, Types.LONGVARCHAR);
+    	addType(DataTypeManager.DefaultDataTypes.DATE, 10, 10, DataTypeManager.DefaultDataClasses.DATE.getName(), Types.DATE);
+    	addType(DataTypeManager.DefaultDataTypes.DOUBLE, 22, 20, DataTypeManager.DefaultDataClasses.DOUBLE.getName(), Types.DOUBLE, Types.FLOAT);
+    	addType(new String[] {DataTypeManager.DefaultDataTypes.FLOAT, "real"}, 22, 20, DataTypeManager.DefaultDataClasses.FLOAT.getName(), Types.REAL); //$NON-NLS-1$
+    	addType(DataTypeManager.DefaultDataTypes.INTEGER, 11, 10, DataTypeManager.DefaultDataClasses.INTEGER.getName(), Types.INTEGER);
+    	addType(new String[] {DataTypeManager.DefaultDataTypes.LONG, "bigint"}, 20, 19, DataTypeManager.DefaultDataClasses.LONG.getName(), Types.BIGINT); //$NON-NLS-1$
+    	addType(DataTypeManager.DefaultDataTypes.OBJECT, Integer.MAX_VALUE, Integer.MAX_VALUE, DataTypeManager.DefaultDataClasses.OBJECT.getName(), Types.JAVA_OBJECT);
+    	addType(new String[] {DataTypeManager.DefaultDataTypes.SHORT, "smallint"}, 6, 5, DataTypeManager.DefaultDataClasses.SHORT.getName(), Types.SMALLINT); //$NON-NLS-1$
+    	addType(new String[] {DataTypeManager.DefaultDataTypes.STRING, "varchar"}, DataTypeManager.MAX_STRING_LENGTH, DataTypeManager.MAX_STRING_LENGTH, DataTypeManager.DefaultDataClasses.STRING.getName(), Types.VARCHAR, Types.NVARCHAR, Types.CHAR, Types.NCHAR); //$NON-NLS-1$
+    	addType(DataTypeManager.DefaultDataTypes.TIME, 8, 8, DataTypeManager.DefaultDataClasses.TIME.getName(), Types.TIME);
+    	addType(DataTypeManager.DefaultDataTypes.TIMESTAMP, 29, 29, DataTypeManager.DefaultDataClasses.TIMESTAMP.getName(), Types.TIMESTAMP);
+    	addType(DataTypeManager.DefaultDataTypes.XML, Integer.MAX_VALUE, Integer.MAX_VALUE, SQLXML.class.getName(), Types.SQLXML);
+    	addType(DataTypeManager.DefaultDataTypes.NULL, 4, 1, null, Types.NULL);
+    	addType(DataTypeManager.DefaultDataTypes.VARBINARY, DataTypeManager.MAX_LOB_MEMORY_BYTES, DataTypeManager.MAX_LOB_MEMORY_BYTES, byte[].class.getName(), Types.VARBINARY, Types.BINARY);
     }
-
-	private static void addTypeMapping(String typeName, String javaClass, int sqlType, int ... secondaryTypes) {
-		addTypeMapping(typeName, javaClass, sqlType, true);
-		for (int type : secondaryTypes) {
-			TYPE_TO_NAME_MAP.put(type, typeName);
-		}
-	}
-
-	private static void addTypeMapping(String typeName, String javaClass, int sqlType, boolean preferedType) {
-		NAME_TO_TYPE_MAP.put(typeName, sqlType);
-		if (preferedType) {
-			TYPE_TO_NAME_MAP.put(sqlType, typeName);
-		}
-		if (javaClass != null) {
-			NAME_TO_CLASSNAME.put(typeName, javaClass);
-			CLASSNAME_TO_NAME.put(javaClass, typeName);
-		}
-	}
     
+	private static TypeInfo addType(String typeName, int maxDisplaySize, int precision, String javaClassName, int... sqlTypes) {
+		TypeInfo ti = new TypeInfo(maxDisplaySize, precision, typeName, javaClassName, sqlTypes);
+		NAME_TO_TYPEINFO.put(typeName, ti);
+		if (javaClassName != null) {
+			CLASSNAME_TO_TYPEINFO.put(javaClassName, ti);
+		}
+		for (int i : sqlTypes) {
+			TYPE_TO_TYPEINFO.put(i, ti);
+		}
+		return ti;
+	}
+	
+	private static void addType(String[] typeNames, int maxDisplaySize, int precision, String javaClassName, int... sqlTypes) {
+		TypeInfo ti = addType(typeNames[0], maxDisplaySize, precision, javaClassName, sqlTypes);
+		for (int i = 1; i < typeNames.length; i++) {
+			NAME_TO_TYPEINFO.put(typeNames[i], ti);
+		}
+	}
+
     /**
      * This method is used to obtain a short indicating JDBC SQL type for any object.
      * The short values that give the type info are from java.sql.Types.
@@ -142,13 +126,13 @@ public final class JDBCSQLTypeInfo {
             return Types.NULL;
         }
         
-        Integer sqlType = NAME_TO_TYPE_MAP.get(typeName);
+        TypeInfo sqlType = NAME_TO_TYPEINFO.get(typeName);
         
         if (sqlType == null) {
             return Types.JAVA_OBJECT;
         }
         
-        return sqlType.intValue();
+        return sqlType.jdbcTypes[0];
     }    
 
     /**
@@ -163,13 +147,13 @@ public final class JDBCSQLTypeInfo {
             return Types.NULL;
         }
         
-        String name = CLASSNAME_TO_NAME.get(className);
+        TypeInfo sqlType = CLASSNAME_TO_TYPEINFO.get(className);
         
-        if (name == null) {
+        if (sqlType == null) {
             return Types.JAVA_OBJECT;
         }
         
-        return getSQLType(name);
+        return sqlType.jdbcTypes[0];
     } 
     
     /**
@@ -199,46 +183,51 @@ public final class JDBCSQLTypeInfo {
      * @return A String representing the java class name for the given SQL Type.
      */
     public static final String getJavaClassName(int jdbcSQLType) {
-    	String className = NAME_TO_CLASSNAME.get(getTypeName(jdbcSQLType));
+    	TypeInfo typeInfo = TYPE_TO_TYPEINFO.get(jdbcSQLType);
     	
-    	if (className == null) {
-    		return OBJECT_CLASS;
+    	if (typeInfo == null) {
+    		return DataTypeManager.DefaultDataClasses.OBJECT.getName();
     	}
     	
-    	return className;
+    	return typeInfo.javaClassName;
     }
     
     public static final String getTypeName(int sqlType) {
-    	String name = TYPE_TO_NAME_MAP.get(sqlType);
+    	TypeInfo typeInfo = TYPE_TO_TYPEINFO.get(sqlType);
     	
-    	if (name == null) {
-    		return OBJECT;
+    	if (typeInfo == null) {
+    		return DataTypeManager.DefaultDataTypes.OBJECT;
     	}
     	
-    	return name;
+    	return typeInfo.name;
     }
 
-    public static String[] getMMTypeNames() {
-        return new String[] {
-            STRING,
-            BOOLEAN,
-            TIME,
-            DATE,
-            TIMESTAMP,
-            INTEGER,
-            FLOAT,
-            DOUBLE,
-            BIGDECIMAL,
-            BIGINTEGER,
-            BYTE,
-            SHORT,
-            LONG,
-            CHAR,
-            OBJECT,
-            CLOB,
-            BLOB,
-            XML
-        };
+    public static Set<String> getMMTypeNames() {
+    	return NAME_TO_TYPEINFO.keySet();
     }
+
+	public static Integer getMaxDisplaySize(Class<?> dataTypeClass) {
+	    return getMaxDisplaySize(DataTypeManager.getDataTypeName(dataTypeClass));
+	}
+
+	public static Integer getMaxDisplaySize(String typeName) {
+		TypeInfo ti = NAME_TO_TYPEINFO.get(typeName);
+		if (ti == null) {
+			return null;
+		}
+	    return ti.maxDisplaySize;
+	}
+
+	public static Integer getDefaultPrecision(Class<?> dataTypeClass) {
+	    return getDefaultPrecision(DataTypeManager.getDataTypeName(dataTypeClass));
+	}
+
+	public static Integer getDefaultPrecision(String typeName) {
+		TypeInfo ti = NAME_TO_TYPEINFO.get(typeName);
+		if (ti == null) {
+			return null;
+		}
+	    return ti.defaultPrecision;
+	}
 
 }

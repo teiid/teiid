@@ -22,9 +22,7 @@
 
 package org.teiid.query.function;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,11 +30,12 @@ import java.util.Collection;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
-import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.function.source.SystemSource;
 import org.teiid.query.unittest.RealMetadataFactory;
@@ -69,6 +68,10 @@ public class TestFunctionTree {
     
     public static String y() {
     	return null;
+    }
+    
+    public static String toString(byte[] bytes) {
+    	return new String(bytes);
     }
     
     @Test public void testLoadErrors() {
@@ -146,6 +149,19 @@ public class TestFunctionTree {
     	Mockito.stub(fms.getFunctionMethods()).toReturn(list);
     	FunctionTree ft = new FunctionTree("foo", fms);
     	assertEquals(1, ft.getFunctionForms(FunctionCategoryConstants.MISCELLANEOUS).size());
+    }
+    
+    @Test public void testVarbinary() throws Exception {
+    	FunctionMethod method = new FunctionMethod(
+    			"dummy", null, null, PushDown.CANNOT_PUSHDOWN, TestFunctionTree.class.getName(), "toString",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+	 	    	new FunctionParameter[] {new FunctionParameter("in", DataTypeManager.DefaultDataTypes.VARBINARY)}, //$NON-NLS-1$ 
+	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), //$NON-NLS-1$
+	 	    	false, Determinism.DETERMINISTIC);
+    	FunctionTree sys = RealMetadataFactory.SFM.getSystemFunctions();
+    	FunctionLibrary fl = new FunctionLibrary(sys, new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+    	FunctionDescriptor fd = fl.findFunction("dummy", new Class<?>[] {DataTypeManager.DefaultDataClasses.VARBINARY});
+    	String hello = "hello";
+    	assertEquals(hello, fd.invokeFunction(new Object[] {new BinaryType(hello.getBytes())}));
     }
 	
 /*

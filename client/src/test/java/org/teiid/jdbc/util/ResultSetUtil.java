@@ -261,7 +261,7 @@ public class ResultSetUtil {
         StringWriter types = new StringWriter();
         StringWriter columns = new StringWriter();
         for (int i = 1; i <= count; i++) {
-            String columnName = rsmd.getColumnName(i);
+            String columnName = rsmd.getColumnLabel(i);
             String typeName = rsmd.getColumnTypeName(i);
             if (maxColWidth == 0) {
                 // Sets the width of the column to the wider of the column name and the column type name.
@@ -553,7 +553,7 @@ public class ResultSetUtil {
         private BufferedReader in;
         private int line = 0;
         
-        private ArrayList unequalLines = new ArrayList();
+        private ArrayList<String> unequalLines = new ArrayList<String>();
         
         private ComparingPrintStream(OutputStream out, BufferedReader in) {
             super(out);
@@ -645,14 +645,14 @@ public class ResultSetUtil {
             try {
                 String expectedLine = in.readLine();
                 if (!bufferedLine.equals(expectedLine)) {
-                    unequalLines.add("\n" + new Integer(line) + ":" + bufferedLine );
+                    unequalLines.add("\n" + line + " expected: " +expectedLine+ " but was: " + bufferedLine );
                 }
             } catch (IOException e) {
                 
             }
         }
         
-        public List getUnequalLines() {
+        public List<String> getUnequalLines() {
             return unequalLines;
         }
     }

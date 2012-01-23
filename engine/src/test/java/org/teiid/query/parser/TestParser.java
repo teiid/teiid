@@ -5205,7 +5205,13 @@ public class TestParser {
     
     @Test public void testExactFixedPoint() throws QueryParserException {
 		Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT 1.1", new ParseInfo());
-		assertEquals(DataTypeManager.DefaultDataClasses.BIG_DECIMAL, ((Expression)actualCommand.getSelect().getSymbol(0)).getType());
+		assertEquals(DataTypeManager.DefaultDataClasses.BIG_DECIMAL, actualCommand.getSelect().getSymbol(0).getType());
+    }
+    
+    @Test public void testBinaryStringLiteral() throws QueryParserException {
+		Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT x'AABBCC0a'", new ParseInfo());
+		assertEquals(DataTypeManager.DefaultDataClasses.VARBINARY, actualCommand.getSelect().getSymbol(0).getType());
+		assertEquals("SELECT X'AABBCC0A'", actualCommand.toString());
     }
 
 }

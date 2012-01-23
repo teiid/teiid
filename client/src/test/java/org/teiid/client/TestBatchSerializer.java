@@ -34,6 +34,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.TimestampWithTimezone;
 
@@ -78,6 +79,7 @@ public class TestBatchSerializer extends TestCase {
                                                       DataTypeManager.DefaultDataTypes.TIME,
                                                       DataTypeManager.DefaultDataTypes.TIMESTAMP,
                                                       DataTypeManager.DefaultDataTypes.OBJECT,
+                                                      DataTypeManager.DefaultDataTypes.VARBINARY,
                                                      };
     private static String sampleString(int length) {
         char[] chars = new char[length];
@@ -92,7 +94,7 @@ public class TestBatchSerializer extends TestCase {
         
         for (int i = 0; i < rows; i++) {
         	java.util.Date d = new java.util.Date();
-            int mod = i%14;
+            int mod = i%16;
             Object[] data = { (mod == 0) ? null : new BigDecimal("" + i), //$NON-NLS-1$
                               (mod == 1) ? null : new BigInteger(Integer.toString(i)),
                               (mod == 2) ? null : ((i%2 == 0) ? Boolean.FALSE: Boolean.TRUE),
@@ -108,6 +110,7 @@ public class TestBatchSerializer extends TestCase {
                               (mod == 12) ? null : TimestampWithTimezone.createTime(d),
                               (mod == 13) ? null : TimestampWithTimezone.createTimestamp(d),
                               (mod == 14) ? null : TimestampWithTimezone.createTimestamp(d),
+                    		  (mod == 15) ? null : new BinaryType(new byte[] {(byte)i}),
                             };
             batch[i] = Arrays.asList(data);
         }

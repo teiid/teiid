@@ -41,6 +41,7 @@ import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
@@ -127,6 +128,8 @@ final class DataTypeTransformer {
             return blob.getBytes(1, (int)length);
         } else if (value instanceof String) {
         	return ((String)value).getBytes();
+        } else if (value instanceof BinaryType) {
+        	return ((BinaryType)value).getBytesDirect();
         }
         throw new TeiidSQLException(JDBCPlugin.Util.getString("DataTypeTransformer.cannot_get_bytes")); //$NON-NLS-1$
     }

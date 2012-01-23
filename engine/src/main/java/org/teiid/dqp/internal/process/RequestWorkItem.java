@@ -52,7 +52,6 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.DQPCore.CompletionListener;
 import org.teiid.dqp.internal.process.DQPCore.FutureWork;
-import org.teiid.dqp.internal.process.DQPWorkContext.Version;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestID;
@@ -714,7 +713,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
             dataTypes[i] = DataTypeManager.getDataTypeName(symbol.getType());
         }
         ResultsMessage result = new ResultsMessage(batch, columnNames, dataTypes);
-        result.setClientSerializationVersion((byte)(this.dqpWorkContext.getClientVersion().compareTo(Version.SEVEN_6) >= 0?1:0));
+        result.setClientSerializationVersion(this.dqpWorkContext.getClientVersion().getClientSerializationVersion());
         setAnalysisRecords(result);
         return result;
     }

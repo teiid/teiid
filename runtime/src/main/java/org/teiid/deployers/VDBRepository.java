@@ -55,6 +55,7 @@ public class VDBRepository implements Serializable{
 	private List<VDBLifeCycleListener> listeners = new CopyOnWriteArrayList<VDBLifeCycleListener>();
 	private SystemFunctionManager systemFunctionManager;
 	private MetadataRepository metadataRepository;
+	private Map<String, Datatype> datatypeMap = new HashMap<String, Datatype>();
 	
 	public MetadataRepository getMetadataRepository() {
 		return metadataRepository;
@@ -224,6 +225,15 @@ public class VDBRepository implements Serializable{
 	
 	public void setSystemStore(MetadataStore store) {
 		this.systemStore = store;
+		Collection<Datatype> datatypes = this.systemStore.getDatatypes();
+		for (Class<?> typeClass : DataTypeManager.getAllDataTypeClasses()) {
+			for (Datatype datatypeRecordImpl : datatypes) {
+				if (datatypeRecordImpl.getJavaClassName().equals(typeClass.getName())) {
+					datatypeMap.put(DataTypeManager.getDataTypeName(typeClass), datatypeRecordImpl);
+					break;
+				}
+			}
+		}
 	}
 	
 	public void setMetadataRepository(MetadataRepository metadataRepository) {
@@ -265,16 +275,6 @@ public class VDBRepository implements Serializable{
 	}	
 	
 	public Map<String, Datatype> getBuiltinDatatypes() {
-		Collection<Datatype> datatypes = this.systemStore.getDatatypes();
-		Map<String, Datatype> datatypeMap = new HashMap<String, Datatype>();
-		for (Class<?> typeClass : DataTypeManager.getAllDataTypeClasses()) {
-			for (Datatype datatypeRecordImpl : datatypes) {
-				if (datatypeRecordImpl.getJavaClassName().equals(typeClass.getName())) {
-					datatypeMap.put(DataTypeManager.getDataTypeName(typeClass), datatypeRecordImpl);
-					break;
-				}
-			}
-		}
 		return datatypeMap;
 	}
 	

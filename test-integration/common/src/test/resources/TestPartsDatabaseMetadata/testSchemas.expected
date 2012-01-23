@@ -1,5 +1,5 @@
 string                                                             string                                                           
-Name                                                               VDBName                                                          
+TABLE_SCHEM                                                        TABLE_CATALOG                                                    
 PartsSupplier                                                      PartsSupplier                                                    
 SYS                                                                PartsSupplier                                                    
 SYSADMIN                                                           PartsSupplier                                                    

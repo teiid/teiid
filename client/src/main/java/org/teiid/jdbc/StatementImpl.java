@@ -44,13 +44,13 @@ import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.RequestMessage.ShowPlan;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.client.metadata.ResultsMetadataConstants;
-import org.teiid.client.metadata.ResultsMetadataDefaults;
 import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.util.SqlUtil;
@@ -503,7 +503,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         				records.add(row);
         			}
         			createResultSet(records, new String[] {"PLAN_TEXT", "PLAN_XML", "DEBUG_LOG"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        					new String[] {JDBCSQLTypeInfo.CLOB, JDBCSQLTypeInfo.XML, JDBCSQLTypeInfo.CLOB});
+        					new String[] {DataTypeManager.DefaultDataTypes.CLOB, DataTypeManager.DefaultDataTypes.XML, DataTypeManager.DefaultDataTypes.CLOB});
         			return booleanFuture(true);
         		}
         		if (show.equalsIgnoreCase("ANNOTATIONS")) { //$NON-NLS-1$
@@ -518,7 +518,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         				records.add(row);
         			}
         			createResultSet(records, new String[] {"CATEGORY", "PRIORITY", "ANNOTATION", "RESOLUTION"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        					new String[] {JDBCSQLTypeInfo.STRING, JDBCSQLTypeInfo.STRING, JDBCSQLTypeInfo.STRING, JDBCSQLTypeInfo.STRING});
+        					new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
         			return booleanFuture(true);
         		}
         		if (show.equalsIgnoreCase("ALL")) { //$NON-NLS-1$
@@ -530,11 +530,11 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         				records.add(row);
         			}
         			createResultSet(records, new String[] {"NAME", "VALUE"}, //$NON-NLS-1$ //$NON-NLS-2$
-        					new String[] {JDBCSQLTypeInfo.STRING, JDBCSQLTypeInfo.STRING});
+        					new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
         			return booleanFuture(true);
         		}
         		List<List<String>> records = Collections.singletonList(Collections.singletonList(driverConnection.getExecutionProperties().getProperty(JDBCURL.getValidKey(show))));
-    			createResultSet(records, new String[] {show}, new String[] {JDBCSQLTypeInfo.STRING});
+    			createResultSet(records, new String[] {show}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
         		return booleanFuture(true);
         	}
         }
@@ -1086,7 +1086,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	    metadataMap.put(ResultsMetadataConstants.GROUP_NAME, tableName);
 	    metadataMap.put(ResultsMetadataConstants.ELEMENT_NAME, columnName);
 	    metadataMap.put(ResultsMetadataConstants.DATA_TYPE, dataType);
-	    metadataMap.put(ResultsMetadataConstants.PRECISION, ResultsMetadataDefaults.getDefaultPrecision(dataType));
+	    metadataMap.put(ResultsMetadataConstants.PRECISION, JDBCSQLTypeInfo.getDefaultPrecision(dataType));
 	    metadataMap.put(ResultsMetadataConstants.RADIX, new Integer(10));
 	    metadataMap.put(ResultsMetadataConstants.SCALE, new Integer(0));
 	    metadataMap.put(ResultsMetadataConstants.AUTO_INCREMENTING, Boolean.FALSE);
@@ -1096,7 +1096,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	    metadataMap.put(ResultsMetadataConstants.SIGNED, signed);
 	    metadataMap.put(ResultsMetadataConstants.WRITABLE, writable);
 	    metadataMap.put(ResultsMetadataConstants.CURRENCY, Boolean.FALSE);
-	    metadataMap.put(ResultsMetadataConstants.DISPLAY_SIZE, ResultsMetadataDefaults.getMaxDisplaySize(dataType));
+	    metadataMap.put(ResultsMetadataConstants.DISPLAY_SIZE, JDBCSQLTypeInfo.getMaxDisplaySize(dataType));
 	
 	    return metadataMap;
 	}

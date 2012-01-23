@@ -46,6 +46,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.sql.DataSource;
 
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
@@ -818,7 +819,9 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             param = new Double(((Float)param).doubleValue());
         } else if (TypeFacility.RUNTIME_TYPES.CHAR.equals(paramType)) {
             param = ((Character)param).toString();
-        } 
+        } else if (paramType.equals(TypeFacility.RUNTIME_TYPES.VARBINARY)) {
+        	param = ((BinaryType)param).getBytesDirect();
+        }
         
         stmt.setObject(i, param, type);
     }

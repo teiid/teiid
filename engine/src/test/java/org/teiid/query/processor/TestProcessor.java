@@ -7677,5 +7677,16 @@ public class TestProcessor {
         helpProcess(plan, cc, hdm, expected);
     }
     
+    @Test public void testVarbinary() {
+    	ProcessorPlan plan = helpGetPlan("select cast(to_chars(X'2b21', 'ascii') as string)", RealMetadataFactory.example1Cached());
+    	helpProcess(plan, new FakeDataManager(), new List<?>[] {Arrays.asList("+!")});
+    }
+    
+    @Test public void testVarbinaryOrderBy() {
+    	ProcessorPlan plan = helpGetPlan("select cast(to_chars(x, 'ascii') as string) from (select X'3132' as x union all select X'2b21') as y order by x", RealMetadataFactory.example1Cached());
+    	helpProcess(plan, new FakeDataManager(), new List<?>[] {Arrays.asList("+!"), Arrays.asList("12")});
+    }
+
+    
     private static final boolean DEBUG = false;
 }

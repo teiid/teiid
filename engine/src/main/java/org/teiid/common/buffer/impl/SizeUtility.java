@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 
 
@@ -48,6 +49,7 @@ public final class SizeUtility {
 	private static Set<Class<?>> VARIABLE_SIZE_TYPES = new HashSet<Class<?>>();
 	static {
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.STRING, new int[] {100, 256});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.VARBINARY, new int[] {100, 256});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.DATE, new int[] {20, 28});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.TIME, new int[] {20, 28});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.TIMESTAMP, new int[] {20, 28});
@@ -64,6 +66,7 @@ public final class SizeUtility {
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.BIG_INTEGER, new int[] {75, 100});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.BIG_DECIMAL, new int[] {150, 200});
 		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.STRING);
+		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.VARBINARY);
 		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.OBJECT);
 		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.BIG_INTEGER);
 		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
@@ -130,6 +133,12 @@ public final class SizeUtility {
                 return alignMemory(40 + (2 * length));
             }
             return 40;
+        } else if(type == DataTypeManager.DefaultDataClasses.VARBINARY) {
+            int length = ((BinaryType)obj).getLength();
+            if (length > 0) {
+                return alignMemory(16 + length);
+            }
+            return 16;
         } else if(type == DataTypeManager.DefaultDataClasses.BIG_DECIMAL) {
         	if (!updateEstimate) {
         		return bigDecimalEstimate;

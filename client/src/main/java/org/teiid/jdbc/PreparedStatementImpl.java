@@ -37,8 +37,6 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
-import javax.sql.rowset.serial.SerialBlob;
-
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.RequestMessage.StatementType;
@@ -48,6 +46,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.types.Streamable;
@@ -298,7 +297,7 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
     }
 
     public void setBytes(int parameterIndex, byte bytes[]) throws SQLException {
-    	setObject(parameterIndex, new SerialBlob(bytes));
+    	setObject(parameterIndex, bytes);
     }
 
     public void setCharacterStream (int parameterIndex, java.io.Reader reader, int length) throws SQLException {
@@ -379,7 +378,7 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
     }
 
     void setObject(Object parameterIndex, Object value, int targetJdbcType) throws SQLException {
-        Object targetObject = null;
+        Object targetObject = value;
 
         if(value == null) {
             setObject(parameterIndex, null);
@@ -387,45 +386,61 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
         }
 
         // get the java class name for the given JDBC type
-        String javaClassName = JDBCSQLTypeInfo.getJavaClassName(targetJdbcType);
+        String typeName = JDBCSQLTypeInfo.getTypeName(targetJdbcType);
+        int typeCode = DataTypeManager.getTypeCode(DataTypeManager.getDataTypeClass(typeName));
         // transform the value to the target datatype
-        if (targetJdbcType == Types.JAVA_OBJECT) {
-        	targetObject = value;
-        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.STRING_CLASS)) {
-            targetObject = DataTypeTransformer.getString(value);
-        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.CHAR_CLASS)) {
-            targetObject = DataTypeTransformer.getCharacter(value);
-        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.INTEGER_CLASS)) {
-            targetObject = DataTypeTransformer.getInteger(value);
-        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.BYTE_CLASS)) {
-            targetObject = DataTypeTransformer.getByte(value);
-        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.SHORT_CLASS)) {
-            targetObject = DataTypeTransformer.getShort(value);
-        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.LONG_CLASS)) {
-            targetObject = DataTypeTransformer.getLong(value);
-        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.FLOAT_CLASS)) {
-            targetObject = DataTypeTransformer.getFloat(value);
-        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.DOUBLE_CLASS)) {
-            targetObject = DataTypeTransformer.getDouble(value);
-        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.BOOLEAN_CLASS)) {
-            targetObject = DataTypeTransformer.getBoolean(value);
-        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.BIGDECIMAL_CLASS)) {
-            targetObject = DataTypeTransformer.getBigDecimal(value);
-        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.TIMESTAMP_CLASS)) {
-            targetObject = DataTypeTransformer.getTimestamp(value);
-        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.DATE_CLASS)) {
-            targetObject = DataTypeTransformer.getDate(value);
-        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.TIME_CLASS)) {
-            targetObject = DataTypeTransformer.getTime(value);
-        } else if (javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.BLOB_CLASS)) {
-            targetObject = DataTypeTransformer.getBlob(value);
-        } else if (javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.CLOB_CLASS)) {
-            targetObject = DataTypeTransformer.getClob(value);
-        } else if (javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.XML_CLASS)) {
+        switch (typeCode) {
+        case DataTypeManager.DefaultTypeCodes.STRING:
+        	targetObject = DataTypeTransformer.getString(value);
+        	break;
+        case DataTypeManager.DefaultTypeCodes.CHAR:
+        	targetObject = DataTypeTransformer.getCharacter(value);
+        	break;
+        case DataTypeManager.DefaultTypeCodes.INTEGER:
+        	targetObject = DataTypeTransformer.getInteger(value);
+        	break;
+        case DataTypeManager.DefaultTypeCodes.BYTE:
+        	targetObject = DataTypeTransformer.getByte(value);
+        	break;
+        case DataTypeManager.DefaultTypeCodes.SHORT:
+        	targetObject = DataTypeTransformer.getShort(value);
+        	break;
+        case DataTypeManager.DefaultTypeCodes.LONG:
+        	targetObject = DataTypeTransformer.getLong(value);
+        	break;
+        case DataTypeManager.DefaultTypeCodes.FLOAT:
+        	targetObject = DataTypeTransformer.getFloat(value);
+        	break;
+        case DataTypeManager.DefaultTypeCodes.DOUBLE:
+        	targetObject = DataTypeTransformer.getDouble(value);
+        	break;
+        case DataTypeManager.DefaultTypeCodes.BOOLEAN:
+        	targetObject = DataTypeTransformer.getBoolean(value);
+        	break;
+        case DataTypeManager.DefaultTypeCodes.BIGDECIMAL:
+        	targetObject = DataTypeTransformer.getBigDecimal(value);
+        	break;
+        case DataTypeManager.DefaultTypeCodes.TIMESTAMP:
+        	targetObject = DataTypeTransformer.getTimestamp(value);
+        	break;
+        case DataTypeManager.DefaultTypeCodes.DATE:
+        	targetObject = DataTypeTransformer.getDate(value);
+        	break;
+        case DataTypeManager.DefaultTypeCodes.TIME:
+        	targetObject = DataTypeTransformer.getTime(value);
+        	break;
+        case DataTypeManager.DefaultTypeCodes.BLOB:
+        	targetObject = DataTypeTransformer.getBlob(value);
+        	break;
+        case DataTypeManager.DefaultTypeCodes.CLOB:
+        	targetObject = DataTypeTransformer.getClob(value);
+        	break;
+        case DataTypeManager.DefaultTypeCodes.XML:
         	targetObject = DataTypeTransformer.getSQLXML(value);
-        } else {
-            String msg = JDBCPlugin.Util.getString("MMPreparedStatement.Err_transform_obj"); //$NON-NLS-1$
-            throw new TeiidSQLException(msg);
+        	break;
+        case DataTypeManager.DefaultTypeCodes.VARBINARY:
+        	targetObject = DataTypeTransformer.getBytes(value);
+        	break;
         }
 
         setObject(parameterIndex, targetObject);

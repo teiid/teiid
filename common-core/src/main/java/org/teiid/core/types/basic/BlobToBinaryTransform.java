@@ -22,23 +22,20 @@
 
 package org.teiid.core.types.basic;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.sql.SQLException;
 
 import org.teiid.core.CorePlugin;
-import org.teiid.core.types.ClobType;
+import org.teiid.core.types.BinaryType;
+import org.teiid.core.types.BlobType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
-import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
+import org.teiid.core.util.ObjectConverterUtil;
 
 
-public class ClobToStringTransform extends AnyToStringTransform {
+public class BlobToBinaryTransform extends Transform {
 
-	public ClobToStringTransform() {
-		super(DefaultDataClasses.CLOB);
-	}
-	
     /**
      * This method transforms a value of the source type into a value
      * of the target type.
@@ -48,30 +45,16 @@ public class ClobToStringTransform extends AnyToStringTransform {
      * the transformation fails
      */
     public Object transformDirect(Object value) throws TransformationException {
-        ClobType source = (ClobType)value;
-        BufferedReader reader = null;
+        BlobType source = (BlobType)value;
+        
         try {
-            reader = new BufferedReader (source.getCharacterStream());
-            StringBuffer contents = new StringBuffer();
-            
-            int chr = reader.read();
-            while (chr != -1 && contents.length() < DataTypeManager.MAX_STRING_LENGTH) {
-                contents.append((char)chr);
-                chr = reader.read();
-            }
-            return contents.toString();         
+        	byte[] bytes = ObjectConverterUtil.convertToByteArray(source.getBinaryStream(), DataTypeManager.MAX_LOB_MEMORY_BYTES, true);
+            return new BinaryType(bytes);         
         } catch (SQLException e) {
             throw new TransformationException(e, CorePlugin.Util.getString("failed_convert", new Object[] {getSourceType().getName(), getTargetType().getName()})); //$NON-NLS-1$            
         } catch(IOException e) {
             throw new TransformationException(e, CorePlugin.Util.getString("failed_convert", new Object[] {getSourceType().getName(), getTargetType().getName()})); //$NON-NLS-1$
-        } finally {
-        	if (reader != null) {
-        		try {
-					reader.close();
-				} catch (IOException e) {
-				}
-        	}
-        }
+        } 
     }
 
     /** 
@@ -80,4 +63,14 @@ public class ClobToStringTransform extends AnyToStringTransform {
     public boolean isExplicit() {
         return true;
     }
+
+	@Override
+	public Class<?> getSourceType() {
+		return DataTypeManager.DefaultDataClasses.BLOB;
+	}
+
+	@Override
+	public Class<?> getTargetType() {
+		return DataTypeManager.DefaultDataClasses.VARBINARY;
+	}
 }

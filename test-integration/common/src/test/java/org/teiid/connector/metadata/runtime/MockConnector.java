@@ -15,11 +15,11 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.TranslatorException;
 
 
 public class MockConnector extends ExecutionFactory<Object, Object> {
@@ -66,9 +66,6 @@ public class MockConnector extends ExecutionFactory<Object, Object> {
 		TestCase.assertEquals(String.class, elementMD.getJavaType()); 
 		TestCase.assertEquals(null, elementMD.getMaximumValue());
 		TestCase.assertEquals(null, elementMD.getMinimumValue());
-		TestCase.assertEquals("http://www.w3.org/2001/XMLSchema#anySimpleType", elementMD.getBaseTypeID()); //$NON-NLS-1$
-		TestCase.assertEquals("http://www.w3.org/2001/XMLSchema#string", elementMD.getPrimitiveTypeID()); //$NON-NLS-1$
-		TestCase.assertEquals("http://www.w3.org/2001/XMLSchema#string", elementMD.getDatatypeID()); //$NON-NLS-1$
 		TestCase.assertEquals("COLUMN1", elementMD.getNameInSource()); //$NON-NLS-1$
 		TestCase.assertEquals("STR", elementMD.getNativeType()); //$NON-NLS-1$
 		TestCase.assertEquals(NullType.Nullable, elementMD.getNullType());
@@ -94,9 +91,6 @@ public class MockConnector extends ExecutionFactory<Object, Object> {
 		TestCase.assertEquals(Integer.class, elementMD2.getJavaType());
 		TestCase.assertEquals("1", elementMD2.getMaximumValue()); //$NON-NLS-1$
 		TestCase.assertEquals("100", elementMD2.getMinimumValue()); //$NON-NLS-1$
-		TestCase.assertEquals("http://www.w3.org/2001/XMLSchema#long", elementMD2.getBaseTypeID()); //$NON-NLS-1$
-		TestCase.assertEquals("http://www.w3.org/2001/XMLSchema#decimal", elementMD2.getPrimitiveTypeID()); //$NON-NLS-1$
-		TestCase.assertEquals("http://www.w3.org/2001/XMLSchema#int", elementMD2.getDatatypeID()); //$NON-NLS-1$
 		TestCase.assertEquals("COLUMN2", elementMD2.getNameInSource()); //$NON-NLS-1$
 		TestCase.assertEquals("INT", elementMD2.getNativeType()); //$NON-NLS-1$
 		TestCase.assertEquals(NullType.No_Nulls, elementMD2.getNullType());

@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.Executors;
 
-import javax.xml.bind.JAXBException;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.vfs.TempFileProvider;

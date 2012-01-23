@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 
 public class TestSizeUtility {
@@ -144,7 +145,7 @@ public class TestSizeUtility {
     
     @Test public void testGetSizeByteArray() {
         byte[] bytes = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-        helpTestGetSize(bytes, 32);
+        helpTestGetSize(new BinaryType(bytes), 32);
     }
     
     @Test public void testResultSet() {

@@ -190,6 +190,7 @@ public class DataTypeManager {
 		public static final String BLOB = "blob"; //$NON-NLS-1$
 		public static final String CLOB = "clob"; //$NON-NLS-1$
 		public static final String XML = "xml"; //$NON-NLS-1$
+		public static final String VARBINARY = "varbinary"; //$NON-NLS-1$
 	}
 
 	public static final class DefaultDataClasses {
@@ -212,6 +213,7 @@ public class DataTypeManager {
 		public static final Class<BlobType> BLOB = BlobType.class;
 		public static final Class<ClobType> CLOB = ClobType.class;
 		public static final Class<XMLType> XML = XMLType.class;
+		public static final Class<BinaryType> VARBINARY = BinaryType.class;
 	}
 	
 	public static final class DefaultTypeCodes {
@@ -234,9 +236,10 @@ public class DataTypeManager {
 		public static final int CLOB = 16;
 		public static final int XML = 17;
 		public static final int NULL = 18;
+		public static final int VARBINARY = 19;
 	}
 	
-	public static int MAX_TYPE_CODE = DefaultTypeCodes.NULL;
+	public static int MAX_TYPE_CODE = DefaultTypeCodes.VARBINARY;
 	
     private static final Map<Class<?>, Integer> typeMap = new LinkedHashMap<Class<?>, Integer>(64);
     private static final List<Class<?>> typeList;
@@ -261,15 +264,24 @@ public class DataTypeManager {
         typeMap.put(DataTypeManager.DefaultDataClasses.CLOB, DefaultTypeCodes.CLOB);
         typeMap.put(DataTypeManager.DefaultDataClasses.XML, DefaultTypeCodes.XML);
         typeMap.put(DataTypeManager.DefaultDataClasses.NULL, DefaultTypeCodes.NULL);
+        typeMap.put(DataTypeManager.DefaultDataClasses.VARBINARY, DefaultTypeCodes.VARBINARY);
         typeList = new ArrayList<Class<?>>(typeMap.keySet());
     }    
     
     public static int getTypeCode(Class<?> source) {
-        return typeMap.get(source).intValue();
+    	Integer result = typeMap.get(source);
+    	if (result == null) {
+    		return DefaultTypeCodes.OBJECT;
+    	}
+        return result;
     }
     
     public static Class<?> getClass(int code) {
-    	return typeList.get(code);
+    	Class<?> result = typeList.get(code);
+    	if (result == null) {
+    		return DefaultDataClasses.OBJECT;
+    	}
+    	return result;
     }
 
 	/**
@@ -568,6 +580,7 @@ public class DataTypeManager {
 		DataTypeManager.addDataType(DefaultDataTypes.OBJECT, DefaultDataClasses.OBJECT);
 		DataTypeManager.addDataType(DefaultDataTypes.NULL, DefaultDataClasses.NULL);
 		DataTypeManager.addDataType(DefaultDataTypes.BLOB, DefaultDataClasses.BLOB);
+		DataTypeManager.addDataType(DefaultDataTypes.VARBINARY, DefaultDataClasses.VARBINARY);
 		DATA_TYPE_NAMES = Collections.unmodifiableSet(new LinkedHashSet<String>(dataTypeNames.keySet()));
 		dataTypeNames.put(DataTypeAliases.BIGINT, DefaultDataClasses.LONG);
 		dataTypeNames.put(DataTypeAliases.DECIMAL, DefaultDataClasses.BIG_DECIMAL);
@@ -600,8 +613,9 @@ public class DataTypeManager {
 			valueMaps.put(DefaultDataClasses.DATE, new HashedValueCache<Date>(14));
 			valueMaps.put(DefaultDataClasses.TIME, new HashedValueCache<Time>(14));
 			valueMaps.put(DefaultDataClasses.TIMESTAMP, new HashedValueCache<Timestamp>(14));
-			valueMaps.put(DefaultDataClasses.BIG_DECIMAL, new WeakReferenceHashedValueCache<BigDecimal>(16));
+			valueMaps.put(DefaultDataClasses.BIG_DECIMAL, new WeakReferenceHashedValueCache<BigDecimal>(17));
 			valueMaps.put(DefaultDataClasses.STRING, stringCache);
+			valueMaps.put(DefaultDataClasses.VARBINARY, new WeakReferenceHashedValueCache<BinaryType>(17));
 		}
 	}
 
@@ -727,8 +741,12 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.StringToCharacterTransform());
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.StringToClobTransform());
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.StringToSQLXMLTransform());
-		
+
+		DataTypeManager.addTransform(new org.teiid.core.types.basic.BinaryToBlobTransform());
+
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.ClobToStringTransform());
+
+		DataTypeManager.addTransform(new org.teiid.core.types.basic.BlobToBinaryTransform());
 		
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.SQLXMLToStringTransform());
 		
@@ -752,28 +770,28 @@ public class DataTypeManager {
 	}
 
 	static void loadSourceConversions() {
-		sourceConverters.put(Clob.class, new SourceTransform<Clob, ClobType>() {
+		addSourceTransform(Clob.class, new SourceTransform<Clob, ClobType>() {
 			@Override
 			public ClobType transform(Clob value) {
 				return new ClobType(value);
 			}
 		});
-		sourceConverters.put(char[].class, new SourceTransform<char[], ClobType>() {
+		addSourceTransform(char[].class, new SourceTransform<char[], ClobType>() {
 			@Override
 			public ClobType transform(char[] value) {
 				return new ClobType(ClobType.createClob(value));
 			}
 		});
-		sourceConverters.put(Blob.class, new SourceTransform<Blob, BlobType>() {
+		addSourceTransform(Blob.class, new SourceTransform<Blob, BlobType>() {
 			@Override
 			public BlobType transform(Blob value) {
 				return new BlobType(value);
 			}
 		});
-		addSourceTransform(byte[].class, new SourceTransform<byte[], BlobType>() {
+		addSourceTransform(byte[].class, new SourceTransform<byte[], BinaryType>() {
 			@Override
-			public BlobType transform(byte[] value) {
-				return new BlobType(BlobType.createBlob(value));
+			public BinaryType transform(byte[] value) {
+				return new BinaryType(value);
 			}
 		});
 		addSourceTransform(SQLXML.class, new SourceTransform<SQLXML, XMLType>() {

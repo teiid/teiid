@@ -664,60 +664,6 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         return actualMetadata.isProcedure(elementID);
 	}
     
-    /** 
-     * @see org.teiid.query.metadata.QueryMetadataInterface#getModeledType(java.lang.Object)
-     * @since 5.0
-     */
-    public String getModeledType(Object elementID) throws TeiidComponentException,
-                                                  QueryMetadataException {
-        
-        if (elementID instanceof TempMetadataID) {
-            TempMetadataID id = (TempMetadataID)elementID;
-            elementID = id.getOriginalMetadataID();
-            if (elementID == null) {
-                return null; 
-            }
-        }
-        
-        return actualMetadata.getModeledType(elementID);
-    }   
-    
-    /** 
-     * @see org.teiid.query.metadata.QueryMetadataInterface#getModeledBaseType(java.lang.Object)
-     * @since 5.0
-     */
-    public String getModeledBaseType(Object elementID) throws TeiidComponentException,
-                                                  QueryMetadataException {
-        
-        if (elementID instanceof TempMetadataID) {
-            TempMetadataID id = (TempMetadataID)elementID;
-            elementID = id.getOriginalMetadataID();
-            if (elementID == null) {
-                return null; 
-            }
-        }
-        
-        return actualMetadata.getModeledBaseType(elementID);
-    }   
-    
-    /** 
-     * @see org.teiid.query.metadata.QueryMetadataInterface#getModeledPrimitiveType(java.lang.Object)
-     * @since 5.0
-     */
-    public String getModeledPrimitiveType(Object elementID) throws TeiidComponentException,
-                                                  QueryMetadataException {
-        
-        if (elementID instanceof TempMetadataID) {
-            TempMetadataID id = (TempMetadataID)elementID;
-            elementID = id.getOriginalMetadataID();
-            if (elementID == null) {
-                return null; 
-            }
-        }
-        
-        return actualMetadata.getModeledPrimitiveType(elementID);
-    }   
-    
     public boolean isTemporaryTable(Object groupID) throws TeiidComponentException, QueryMetadataException {
         if(groupID instanceof TempMetadataID) {
             return ((TempMetadataID)groupID).isTempTable();

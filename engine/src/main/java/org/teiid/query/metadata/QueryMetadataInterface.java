@@ -562,42 +562,6 @@ public interface QueryMetadataInterface {
         throws TeiidComponentException, QueryMetadataException;          
 
     /**
-     * Get the design-time model type of the element specified. This element
-     * identifier was previously returned by some other method.
-     * @param elementID Element identifier
-     * @return Modeled type name
-     * @throws QueryMetadataException Metadata implementation detected a problem during the request
-     * @throws TeiidComponentException Unexpected internal system problem during request
-     * @since 5.0
-     */
-    String getModeledType(Object elementID)
-        throws TeiidComponentException, QueryMetadataException;          
-
-    /**
-     * Get the design-time model base type of the element specified. This element
-     * identifier was previously returned by some other method.
-     * @param elementID Element identifier
-     * @return Modeled base type name
-     * @throws QueryMetadataException Metadata implementation detected a problem during the request
-     * @throws TeiidComponentException Unexpected internal system problem during request
-     * @since 5.0
-     */
-    String getModeledBaseType(Object elementID)
-        throws TeiidComponentException, QueryMetadataException;          
-
-    /**
-     * Get the design-time model primitive type of the element specified. This element
-     * identifier was previously returned by some other method.
-     * @param elementID Element identifier
-     * @return Modeled primitive type name
-     * @throws QueryMetadataException Metadata implementation detected a problem during the request
-     * @throws TeiidComponentException Unexpected internal system problem during request
-     * @since 5.0
-     */
-    String getModeledPrimitiveType(Object elementID)
-        throws TeiidComponentException, QueryMetadataException;          
-
-    /**
      * Determine whether this is a procedure
      * @param groupID Group identifier
      * @return True if it is an procedure; false otherwise

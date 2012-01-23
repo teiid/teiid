@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
@@ -72,6 +73,7 @@ public class BatchSerializer {
         serializers.put(DataTypeManager.DefaultDataTypes.SHORT,         new ShortColumnSerializer());
         serializers.put(DataTypeManager.DefaultDataTypes.TIME,          new TimeColumnSerializer());
         serializers.put(DataTypeManager.DefaultDataTypes.TIMESTAMP,     new TimestampColumnSerializer());
+        serializers.put(DataTypeManager.DefaultDataTypes.VARBINARY,     new BinaryColumnSerializer());
     }
     
     private static final Map<String, ColumnSerializer> version1serializers = new HashMap<String, ColumnSerializer>(128);
@@ -83,12 +85,55 @@ public class BatchSerializer {
     	version1serializers.put(DataTypeManager.DefaultDataTypes.BLOB,     		new BlobColumnSerializer1());
     	version1serializers.put(DataTypeManager.DefaultDataTypes.XML,     		new XmlColumnSerializer1());
     	version1serializers.put(DataTypeManager.DefaultDataTypes.NULL,     		new NullColumnSerializer1());
-    	version1serializers.put(DataTypeManager.DefaultDataTypes.OBJECT,     	new ObjectColumnSerializer1());
+    	version1serializers.put(DataTypeManager.DefaultDataTypes.OBJECT,     	new ObjectColumnSerializer1(DataTypeManager.DefaultTypeCodes.VARBINARY));
+    	version1serializers.put(DataTypeManager.DefaultDataTypes.VARBINARY,     new BinaryColumnSerializer1());
     }
     
-    public static final class ObjectColumnSerializer1 extends ColumnSerializer {
+    static class BinaryColumnSerializer1 extends ColumnSerializer {
+		@Override
+		protected void writeObject(ObjectOutput out, Object obj)
+				throws IOException {
+			byte[] bytes = ((BinaryType)obj).getBytes();
+			out.writeInt(bytes.length); //in theory this could be a short, but we're not strictly enforcing the length
+			out.write(bytes);
+		}
+		
+		@Override
+		protected Object readObject(ObjectInput in) throws IOException,
+				ClassNotFoundException {
+			int length = in.readInt();
+			byte[] bytes = new byte[length];
+			in.readFully(bytes);
+			return new BinaryType(bytes);
+		}
+	}
+    
+    static class BinaryColumnSerializer extends ColumnSerializer {
+		@Override
+		protected void writeObject(ObjectOutput out, Object obj)
+				throws IOException {
+			//uses object serialization for compatibility with legacy clients
+			super.writeObject(out, ((BinaryType)obj).getBytesDirect());
+		}
+		
+		@Override
+		protected Object readObject(ObjectInput in) throws IOException,
+				ClassNotFoundException {
+			//won't actually be used
+			byte[] bytes = (byte[])super.readObject(in);
+			return new BinaryType(bytes);
+		}
+	}
+
+	public static final class ObjectColumnSerializer1 extends ColumnSerializer {
     	
-    	@Override
+		int highestKnownCode;
+		
+    	public ObjectColumnSerializer1(int highestKnownCode) {
+    		this.highestKnownCode = highestKnownCode;
+		}
+
+		@Override
     	protected void writeObject(ObjectOutput out, Object obj)
     			throws IOException {
     		int code = DataTypeManager.getTypeCode(obj.getClass());
@@ -99,7 +144,7 @@ public class BatchSerializer {
     			} else {
     				out.write((byte)0);
     			}
-    		} else if (code != DataTypeManager.DefaultTypeCodes.OBJECT) {
+    		} else if (code <= highestKnownCode && code != DataTypeManager.DefaultTypeCodes.OBJECT) {
     			ColumnSerializer s = getSerializer(DataTypeManager.getDataTypeName(obj.getClass()), (byte)1);
     			s.writeObject(out, obj);
     		} else {
@@ -532,7 +577,12 @@ public class BatchSerializer {
         if (batch == null) {
             out.writeInt(-1);
         } else {
-            out.writeInt(batch.size());
+        	if (version > 0 && batch.size() > 0) {
+                out.writeInt(-batch.size() -1);
+                out.writeByte(version);
+        	} else {
+                out.writeInt(batch.size());
+        	}
             if (batch.size() > 0) {
 	            int columns = types.length;
 	            out.writeInt(columns);
@@ -558,27 +608,29 @@ public class BatchSerializer {
     }
     
     public static List<List<Object>> readBatch(ObjectInput in, String[] types) throws IOException, ClassNotFoundException {
-    	return readBatch(in, types, (byte)1);
-    }
-    
-    public static List<List<Object>> readBatch(ObjectInput in, String[] types, byte version) throws IOException, ClassNotFoundException {
         int rows = in.readInt();
         if (rows == 0) {
             return new ArrayList<List<Object>>(0);
-        } else if (rows > 0) {
-            int columns = in.readInt();
-            List<List<Object>> batch = new ResizingArrayList<List<Object>>(rows);
-            int numBytes = rows/8;
-            int extraRows = rows % 8;
-            for (int currentRow = 0; currentRow < rows; currentRow++) {
-                batch.add(currentRow, Arrays.asList(new Object[columns]));
-            }
-            byte[] isNullBuffer = new byte[(extraRows > 0) ? numBytes + 1: numBytes];
-            for (int col = 0; col < columns; col++) {
-                getSerializer(types[col], version).readColumn(in, col, batch, isNullBuffer);
-            }
-            return batch;
         }
-        return null;
+        if (rows == -1) {
+        	return null;
+        }
+        byte version = (byte)0;
+        if (rows < 0) {
+        	rows = -(rows+1);
+        	version = in.readByte();
+        } 
+        int columns = in.readInt();
+        List<List<Object>> batch = new ResizingArrayList<List<Object>>(rows);
+        int numBytes = rows/8;
+        int extraRows = rows % 8;
+        for (int currentRow = 0; currentRow < rows; currentRow++) {
+            batch.add(currentRow, Arrays.asList(new Object[columns]));
+        }
+        byte[] isNullBuffer = new byte[(extraRows > 0) ? numBytes + 1: numBytes];
+        for (int col = 0; col < columns; col++) {
+            getSerializer(types[col], version).readColumn(in, col, batch, isNullBuffer);
+        }
+        return batch;
     }
 }

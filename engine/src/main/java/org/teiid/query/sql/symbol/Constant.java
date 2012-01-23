@@ -180,7 +180,7 @@ public class Constant implements Expression, Comparable<Constant> {
 	 * @return Hash code, based on value
 	 */
 	public int hashCode() {
-		if(this.value != null) {
+		if(this.value != null && !isMultiValued()) {
 			if (this.value instanceof BigDecimal) {
 				BigDecimal bd = (BigDecimal)this.value;
 				int xsign = bd.signum();
@@ -235,11 +235,12 @@ public class Constant implements Expression, Comparable<Constant> {
 	 */
 	public final static int compare(Comparable o1, Comparable o2) {
 		if (DataTypeManager.PAD_SPACE) {
-			if (o1 instanceof String) {
+			Class<?> clazz = o1.getClass();
+			if (clazz == String.class) {
 				CharSequence s1 = (CharSequence)o1;
 				CharSequence s2 = (CharSequence)o2;
 				return comparePadded(s1, s2);
-			} else if (o1 instanceof ClobType) {
+			} else if (clazz == ClobType.class) {
 				CharSequence s1 = ((ClobType)o1).getCharSequence();
 				CharSequence s2 = ((ClobType)o2).getCharSequence();
 				return comparePadded(s1, s2);
@@ -258,13 +259,10 @@ public class Constant implements Expression, Comparable<Constant> {
 			char c1 = s1.charAt(i);
 			char c2 = s2.charAt(i);
 			if (c1 != c2) {
-				result = c1 - c2;
-				break;
+				return c1 - c2;
 			}
 		}
-		if (result == 0 && len1 != len2) {
-			result = len1 - len2;
-		}
+		result = len1 - len2;
 		for (int j = i; j < len1; j++) {
 			if (s1.charAt(j) != ' ') {
 				return result;

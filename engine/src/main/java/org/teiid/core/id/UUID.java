@@ -167,5 +167,9 @@ public class UUID implements Serializable {
     	}
         return this.cachedExportableFormUuidString;
     }
+    
+    public static void main(String[] args) {
+		System.out.println(new UUID(java.util.UUID.randomUUID()));
+	}
 
 }

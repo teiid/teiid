@@ -77,6 +77,7 @@ MORE :
 TOKEN: /* Data types */
 {
 	<STRING: "string">
+|   <VARBINARY: "varbinary">
 |   <VARCHAR: "varchar">
 |	<BOOLEAN: "boolean">
 |	<BYTE: "byte">
@@ -398,7 +399,8 @@ TOKEN : /* User variables and literals */
 |   < STRINGVAL: (("N"|"E")? "'" ( ("''") | ~["'"] )* "'") >
 |	< #LETTER: (["a"-"z","A"-"Z"] | ["\u0153"-"\ufffd"]) >
 |	< #DIGIT: ["0"-"9"] >
-
+|   < BINARYSTRINGVAL: ("X"|"x" "'" ( <HEXIT><HEXIT> )+ "'") >
+|	< #HEXIT: (["a"-"f","A"-"F"] | <DIGIT> ) >
 }
 
 TOKEN : /* Punctuation */
@@ -3916,6 +3918,7 @@ String dataTypeString() :
 		typeToken = <OBJECT> |
 		typeToken = <BLOB> |
 		typeToken = <CLOB> |
+		typeToken = <VARBINARY> |
 		typeToken = <XML>
 		
 	)
@@ -4013,6 +4016,7 @@ Constant literal() :
 				throw new ParseException(QueryPlugin.Util.getString("SQLParser.decimal_parse", params)); //$NON-NLS-1$
 			}
 		}   |
+		t=<BINARYSTRINGVAL> { constant = new Constant(new BinaryType(javax.xml.bind.DatatypeConverter.parseHexBinary(t.image.substring(2, t.image.length() - 1))), DataTypeManager.DefaultDataClasses.VARBINARY); } |
 		t=<FALSE>    { constant = new Constant(Boolean.FALSE, DataTypeManager.DefaultDataClasses.BOOLEAN); } |
 		t=<TRUE>     { constant = new Constant(Boolean.TRUE, DataTypeManager.DefaultDataClasses.BOOLEAN); }  |
         t=<UNKNOWN>  { constant = new Constant(null, DataTypeManager.DefaultDataClasses.BOOLEAN); }       |

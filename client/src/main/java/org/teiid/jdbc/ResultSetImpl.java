@@ -27,20 +27,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.Date;
-import java.sql.NClob;
-import java.sql.Ref;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.RowId;
-import java.sql.SQLException;
-import java.sql.SQLWarning;
-import java.sql.SQLXML;
-import java.sql.Time;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +46,7 @@ import org.teiid.client.plan.PlanNode;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
@@ -323,6 +311,10 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
         else if (maxFieldSize > 0 && currentValue instanceof String) {
         	String val = (String)currentValue;
         	currentValue = val.substring(0, Math.min(maxFieldSize/2, val.length()));
+        }
+        else if (currentValue instanceof BinaryType) {
+        	BinaryType val = (BinaryType)currentValue;
+        	currentValue = val.getBytesDirect();
         }
         return currentValue;
     }

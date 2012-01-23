@@ -28,7 +28,7 @@ import org.junit.Test;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 
-
+@SuppressWarnings("nls")
 public class TestConstant {
 
 	// ################################## TEST HELPERS ################################

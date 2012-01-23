@@ -41,6 +41,8 @@ import org.teiid.metadata.Datatype.Variety;
  * RuntimeAdapter
  */
 public class RecordFactory {
+	/** Delimiter used to separate the URI string from the URI fragment */
+    public static final String URI_REFERENCE_DELIMITER = "#"; //$NON-NLS-1$
     
     public static final int INDEX_RECORD_BLOCK_SIZE = IIndexConstants.BLOCK_SIZE - 32;
     
@@ -609,12 +611,19 @@ public class RecordFactory {
         tokenIndex++;
 
         // Set the datatype and basetype identifiers
-        dt.setDatatypeID(getObjectValue(tokens.get(tokenIndex++)));
-        dt.setBasetypeID(getObjectValue(tokens.get(tokenIndex++)));
+        tokenIndex++;
+        String basetypeID = getObjectValue(tokens.get(tokenIndex++));
+        if ( basetypeID != null ) {
+            final int i = basetypeID.lastIndexOf(URI_REFERENCE_DELIMITER);
+            if ( i != -1 && basetypeID.length() > (i+1)) {
+            	basetypeID = basetypeID.substring(i+1);
+            }
+        }
+        dt.setBasetypeName(basetypeID);
 
         // Set the fullName/objectID/nameInSource
         String fullName = tokens.get(tokenIndex++);
-        int indx = fullName.lastIndexOf(Datatype.URI_REFERENCE_DELIMITER);
+        int indx = fullName.lastIndexOf(URI_REFERENCE_DELIMITER);
         if (indx > -1) {
             fullName = new String(fullName.substring(indx+1));
         } else {
@@ -665,7 +674,7 @@ public class RecordFactory {
         // Set the primitive type identifier
         if (includePrimitiveTypeIdValue(indexVersion)) {
             // The next token is the primitive type identifier
-            dt.setPrimitiveTypeID(getObjectValue(tokens.get(tokenIndex++)));
+            tokenIndex++;
         }
 
 		// The next tokens are footer values

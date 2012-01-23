@@ -51,17 +51,24 @@ public class DQPWorkContext implements Serializable {
 	private static final long serialVersionUID = -6389893410233192977L;
 	
 	public enum Version {
-		SEVEN_1("7.1"), //$NON-NLS-1$
-		SEVEN_2("7.2"), //$NON-NLS-1$
-		SEVEN_3("7.3"), //$NON-NLS-1$
-		SEVEN_4("7.4"), //$NON-NLS-1$
-		SEVEN_5("7.5"), //$NON-NLS-1$
-		SEVEN_6("7.6"); //$NON-NLS-1$
+		SEVEN_1("7.1", (byte)0), //$NON-NLS-1$
+		SEVEN_2("7.2", (byte)0), //$NON-NLS-1$
+		SEVEN_3("7.3", (byte)0), //$NON-NLS-1$
+		SEVEN_4("7.4", (byte)0), //$NON-NLS-1$
+		SEVEN_5("7.5", (byte)0), //$NON-NLS-1$
+		SEVEN_6("7.6", (byte)0), //$NON-NLS-1$
+		EIGHT_0("8.0", (byte)1); //$NON-NLS-1$
 		
 		private String string;
+		private byte clientSerializationVersion;
 		
-		private Version(String string) {
+		private Version(String string, byte clientSerializationVersion) {
 			this.string = string;
+			this.clientSerializationVersion = clientSerializationVersion;
+		}
+		
+		public byte getClientSerializationVersion() {
+			return clientSerializationVersion;
 		}
 		
 		@Override

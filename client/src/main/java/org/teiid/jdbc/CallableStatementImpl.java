@@ -26,22 +26,9 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.Date;
-import java.sql.NClob;
-import java.sql.Ref;
-import java.sql.RowId;
-import java.sql.SQLException;
-import java.sql.SQLXML;
-import java.sql.Time;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.Calendar;
 import java.util.Map;
-
-import javax.sql.rowset.serial.SerialBlob;
 
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.ResultsMode;
@@ -545,7 +532,7 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 	}
 
 	public void setBytes(String parameterName, byte[] x) throws SQLException {
-		setObject((Object)parameterName, new SerialBlob(x));
+		setObject((Object)parameterName, x);
 	}
 
 	public void setCharacterStream(String parameterName, Reader reader)

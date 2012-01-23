@@ -22,8 +22,12 @@
 
 package org.teiid.metadata.index;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.util.*;
 
 import org.jboss.vfs.VirtualFile;
@@ -33,6 +37,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.index.IEntryResult;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.internal.core.index.Index;
 import org.teiid.metadata.*;
@@ -159,7 +164,7 @@ public class IndexMetadataFactory {
 		addEntriesPlusVisibilities(vdb, new VDBMetaData());
 	}
 	
-		Map<String, AbstractMetadataRecord> getByType(char type) {
+    Map<String, AbstractMetadataRecord> getByType(char type) {
 		LinkedHashMap<String, AbstractMetadataRecord> uuidMap = allRecords.get(type);
 		if (uuidMap == null) {
 			uuidMap = new LinkedHashMap<String, AbstractMetadataRecord>();
@@ -208,6 +213,29 @@ public class IndexMetadataFactory {
 	public MetadataStore getMetadataStore(Collection<Datatype> systemDatatypes) throws IOException {
 		if (this.store == null) {
 			this.store = new MetadataStore();
+			if (systemDatatypes == null) {
+				InputStream is = this.getClass().getClassLoader().getResourceAsStream("org/teiid/metadata/types.dat"); //$NON-NLS-1$
+				try {
+					InputStreamReader isr = new InputStreamReader(is, Charset.forName("UTF-8")); //$NON-NLS-1$
+					BufferedReader br = new BufferedReader(isr);
+					String s = br.readLine();
+					String[] props = s.split("\\|"); //$NON-NLS-1$
+					while ((s = br.readLine()) != null) {
+						Datatype dt = new Datatype();
+						String[] vals = s.split("\\|"); //$NON-NLS-1$
+						Properties p = new Properties();
+						for (int i = 0; i < props.length; i++) {
+							if (vals[i].length() != 0) {
+								p.setProperty(props[i], new String(vals[i]));
+							}
+						}
+						PropertiesUtils.setBeanProperties(dt, p, null);
+						this.store.addDatatype(dt);
+					}
+				} finally {
+					is.close();
+				}
+			}
 	    	ArrayList<Index> tmp = new ArrayList<Index>();
 			for (VirtualFile f : indexFiles) {
 				Index index = new Index(f, true);
@@ -221,13 +249,17 @@ public class IndexMetadataFactory {
 				index.close(); 
 			}
 			Map<String, AbstractMetadataRecord> uuidToRecord = getByType(MetadataConstants.RECORD_TYPE.DATATYPE);
-			for (AbstractMetadataRecord datatypeRecordImpl : uuidToRecord.values()) {
-				this.store.addDatatype((Datatype) datatypeRecordImpl);
-			}
 			if (systemDatatypes != null) {
 				for (Datatype datatype : systemDatatypes) {
 					uuidToRecord.put(datatype.getUUID(), datatype);
 				}
+			} else {
+				for (Datatype datatype : this.store.getDatatypes()) {
+					uuidToRecord.put(datatype.getUUID(), datatype);
+				}
+			}
+			for (AbstractMetadataRecord datatypeRecordImpl : uuidToRecord.values()) {
+				this.store.addDatatype((Datatype) datatypeRecordImpl);
 			}
 			getModels();
 			getTables();

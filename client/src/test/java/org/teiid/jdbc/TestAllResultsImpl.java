@@ -46,7 +46,7 @@ import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.query.unittest.TimestampUtil;
 
@@ -696,7 +696,7 @@ public class TestAllResultsImpl {
 	}
     
     @Test(expected=TeiidSQLException.class) public void testResultsMessageException() throws Exception {
-        ResultsMessage resultsMsg = exampleMessage(exampleResults1(1), new String[] { "IntNum" }, new String[] { JDBCSQLTypeInfo.INTEGER }); //$NON-NLS-1$
+        ResultsMessage resultsMsg = exampleMessage(exampleResults1(1), new String[] { "IntNum" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$
         resultsMsg.setFinalRow(-1);
         ResultsMessage next = new ResultsMessage();
         next.setException(new Throwable());
@@ -769,8 +769,8 @@ public class TestAllResultsImpl {
 
 	private String[] dataTypes() {
 		String[] types = new String[2];
-		types[0] = JDBCSQLTypeInfo.INTEGER;
-		types[1] = JDBCSQLTypeInfo.STRING;
+		types[0] = DataTypeManager.DefaultDataTypes.INTEGER;
+		types[1] = DataTypeManager.DefaultDataTypes.STRING;
 		return types;
 	}
 
@@ -791,7 +791,7 @@ public class TestAllResultsImpl {
 
 	/** without metadata info. */
 	private ResultsMessage exampleResultsMsg1() {
-		return exampleMessage(exampleResults1(5), new String[] { "IntNum" }, new String[] { JDBCSQLTypeInfo.INTEGER }); //$NON-NLS-1$
+		return exampleMessage(exampleResults1(5), new String[] { "IntNum" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$
 	}
 	
 	private ResultsMessage exampleMessage(List<Object>[] results, String[] columnNames, String[] datatypes) {
@@ -809,7 +809,7 @@ public class TestAllResultsImpl {
 
 	/** without metadata info. */
 	private ResultsMessage exampleResultsMsg2() {
-		return exampleMessage(exampleResults2(), new String[] { "IntNum", "StringNum" }, new String[] { JDBCSQLTypeInfo.INTEGER, JDBCSQLTypeInfo.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
+		return exampleMessage(exampleResults2(), new String[] { "IntNum", "StringNum" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/** with limited metadata info. */
@@ -828,7 +828,7 @@ public class TestAllResultsImpl {
 
 	/** no rows. */
 	private ResultsMessage exampleResultsMsg3() {
-		return exampleMessage(new List[0], new String[] { "IntNum", "StringNum" }, new String[] { JDBCSQLTypeInfo.INTEGER, JDBCSQLTypeInfo.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
+		return exampleMessage(new List[0], new String[] { "IntNum", "StringNum" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	private static ResultsMessage exampleResultsMsg4(int begin, int length, boolean lastBatch) {
@@ -838,7 +838,7 @@ public class TestAllResultsImpl {
 		List[] results = exampleResults1(length, begin);
 		resultsMsg.setResults(results);
 		resultsMsg.setColumnNames(new String[] { "IntKey" }); //$NON-NLS-1$
-		resultsMsg.setDataTypes(new String[] { JDBCSQLTypeInfo.INTEGER }); 
+		resultsMsg.setDataTypes(new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); 
 		resultsMsg.setFirstRow(begin);
 		if (lastBatch) {
 			resultsMsg.setFinalRow(begin + results.length - 1);
@@ -865,7 +865,7 @@ public class TestAllResultsImpl {
 		ResultsMessage resultsMsg = new ResultsMessage();
 		resultsMsg.setResults(new List[] {Arrays.asList(new Timestamp(0))});
 		resultsMsg.setColumnNames(new String[] { "TS" }); //$NON-NLS-1$
-		resultsMsg.setDataTypes(new String[] { JDBCSQLTypeInfo.TIMESTAMP }); 
+		resultsMsg.setDataTypes(new String[] { DataTypeManager.DefaultDataTypes.TIMESTAMP }); 
 		resultsMsg.setFirstRow(1);
 		resultsMsg.setFinalRow(1);
 		resultsMsg.setLastRow(1);
@@ -882,7 +882,7 @@ public class TestAllResultsImpl {
 	
 	@Test public void testWasNull() throws SQLException{
 		ResultsMessage message = exampleMessage(new List[] { Arrays.asList((String)null), Arrays.asList("1") }, new String[] { "string" }, //$NON-NLS-1$
-				new String[] { JDBCSQLTypeInfo.STRING });
+				new String[] { DataTypeManager.DefaultDataTypes.STRING });
 		ResultSetImpl rs = new ResultSetImpl(message, statement);
 		assertTrue(rs.next());
 		assertEquals(Boolean.FALSE.booleanValue(), rs.getBoolean(1));
@@ -909,7 +909,7 @@ public class TestAllResultsImpl {
 		TimeZone.setDefault(TimeZone.getTimeZone("GMT-05:00")); //$NON-NLS-1$
 		ResultsMessage message = exampleMessage(new List[] { Arrays.asList(1, TimestampUtil.createTime(0, 0, 0), TimestampUtil.createDate(1, 1, 1), TimestampUtil.createTimestamp(1, 1, 1, 1, 1, 1, 1), "<root/>") }, //$NON-NLS-1$ 
 				new String[] { "int", "time", "date", "timestamp", "sqlxml" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ 
-				new String[] { JDBCSQLTypeInfo.INTEGER, JDBCSQLTypeInfo.TIME, JDBCSQLTypeInfo.DATE, JDBCSQLTypeInfo.TIMESTAMP, JDBCSQLTypeInfo.STRING });
+				new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.TIME, DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.DefaultDataTypes.STRING });
 		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
 		ResultSetImpl rs = new ResultSetImpl(message, statement);
 		assertTrue(rs.next());

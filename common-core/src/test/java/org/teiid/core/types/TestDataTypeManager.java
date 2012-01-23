@@ -159,15 +159,13 @@ public class TestDataTypeManager {
     
     @Test public void testJDBCSQLTypeInfo() {
         
-        String[] types = JDBCSQLTypeInfo.getMMTypeNames();
+        Set<String> types = JDBCSQLTypeInfo.getMMTypeNames();
         
-        for (int i = 0; i < types.length; i++) {
-            String type = types[i];
-            
+        for (String type : types) {
             assertEquals("Didn't get match for "+ type, JDBCSQLTypeInfo.getSQLType(type), JDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.getDataTypeClass(type))); //$NON-NLS-1$
             
             //the classnames will not match the runtime types for xml, clob, blob
-            if (!type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.XML) && !type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.CLOB) && !type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.BLOB)) {
+            if (!type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.NULL) && !type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.VARBINARY) && !type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.XML) && !type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.CLOB) && !type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.BLOB)) {
                 assertEquals("Didn't get match for "+ type, JDBCSQLTypeInfo.getSQLType(type), JDBCSQLTypeInfo.getSQLTypeFromClass(DataTypeManager.getDataTypeClass(type).getName())); //$NON-NLS-1$
             }
         }

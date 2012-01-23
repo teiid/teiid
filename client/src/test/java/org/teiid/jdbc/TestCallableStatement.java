@@ -38,7 +38,7 @@ import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.client.security.LogonResult;
-import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.net.ServerConnection;
 
 @SuppressWarnings("nls")
@@ -70,7 +70,7 @@ public class TestCallableStatement {
 		List<?>[] results = new List[] {Arrays.asList(null, null, null), Arrays.asList(null, 1, 2)};
 		resultsMsg.setResults(results);
 		resultsMsg.setColumnNames(new String[] { "IntNum", "Out1", "Out2" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		resultsMsg.setDataTypes(new String[] { JDBCSQLTypeInfo.INTEGER, JDBCSQLTypeInfo.INTEGER, JDBCSQLTypeInfo.INTEGER }); 
+		resultsMsg.setDataTypes(new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER }); 
 		resultsMsg.setFinalRow(results.length);
 		resultsMsg.setLastRow(results.length);
 		resultsMsg.setFirstRow(1);

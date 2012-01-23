@@ -68,8 +68,7 @@ public class TestElement extends TestCase {
     public void helpTestElement(String fullGroupName, String elementShortName, TranslationUtility transUtil,
         String nameInSource, Object defaultValue, Object minValue, Object maxValue,
         Class<?> javaType, int length, NullType nullable, int position, SearchType searchable,
-        boolean autoIncrement, boolean caseSensitive, Map<String, String> expectedProps, 
-        String modeledType, String modeledBaseType, String modeledPrimitiveType) 
+        boolean autoIncrement, boolean caseSensitive, Map<String, String> expectedProps) 
     throws Exception {
             
         Column element = getElement(fullGroupName, elementShortName, transUtil);           
@@ -85,13 +84,6 @@ public class TestElement extends TestCase {
         assertEquals(autoIncrement, element.isAutoIncremented());
         assertEquals(caseSensitive, element.isCaseSensitive());      
         
-//System.out.println("\n" + element.getModeledType() + "\n" + element.getModeledBaseType() + "\n" + element.getModeledPrimitiveType());        
-
-        assertEquals(modeledType, element.getDatatypeID());
-        assertEquals(modeledBaseType, element.getBaseTypeID());
-        assertEquals(modeledPrimitiveType, element.getPrimitiveTypeID());
-        
-               
         Map<String, String> extProps = element.getProperties();
         assertEquals(expectedProps, extProps);
     }
@@ -112,10 +104,7 @@ public class TestElement extends TestCase {
             SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            props,                // extension properties
-            "http://www.w3.org/2001/XMLSchema#string",                             // modeled type   //$NON-NLS-1$
-            "http://www.w3.org/2001/XMLSchema#anySimpleType",                             // modeled base type   //$NON-NLS-1$ 
-            "http://www.w3.org/2001/XMLSchema#string"                             // modeled primitive type   //$NON-NLS-1$
+            props
             );
     }   
 
@@ -135,10 +124,7 @@ public class TestElement extends TestCase {
             SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            props,                // extension properties
-            "http://www.w3.org/2001/XMLSchema#int",                             // modeled type   //$NON-NLS-1$
-            "http://www.w3.org/2001/XMLSchema#long",                             // modeled base type   //$NON-NLS-1$ 
-            "http://www.w3.org/2001/XMLSchema#decimal"                             // modeled primitive type   //$NON-NLS-1$
+            props
             );
     }   
 
@@ -158,10 +144,7 @@ public class TestElement extends TestCase {
             SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            props,                // extension properties
-            "http://www.w3.org/2001/XMLSchema#int",                             // modeled type   //$NON-NLS-1$
-            "http://www.w3.org/2001/XMLSchema#long",                             // modeled base type   //$NON-NLS-1$ 
-            "http://www.w3.org/2001/XMLSchema#decimal"                             // modeled primitive type   //$NON-NLS-1$
+            props
             );
     }   
 
@@ -181,10 +164,7 @@ public class TestElement extends TestCase {
             SearchType.Searchable,             // searchable
             true,                          // auto incremented
             true,                          // case sensitive
-            props,                // extension properties
-            "http://www.w3.org/2001/XMLSchema#long",                             // modeled type   //$NON-NLS-1$
-            "http://www.w3.org/2001/XMLSchema#integer",                             // modeled base type   //$NON-NLS-1$ 
-            "http://www.w3.org/2001/XMLSchema#decimal"                             // modeled primitive type   //$NON-NLS-1$
+            props
             );
     }   
 
@@ -204,10 +184,7 @@ public class TestElement extends TestCase {
             SearchType.Searchable,             // searchable
             false,                          // auto incremented
             false,                          // case sensitive
-            props,                // extension properties
-            "http://www.w3.org/2001/XMLSchema#string",                             // modeled type   //$NON-NLS-1$
-            "http://www.w3.org/2001/XMLSchema#anySimpleType",                             // modeled base type   //$NON-NLS-1$ 
-            "http://www.w3.org/2001/XMLSchema#string"                             // modeled primitive type   //$NON-NLS-1$
+            props
             );
     }   
     
@@ -227,10 +204,7 @@ public class TestElement extends TestCase {
             SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            props,                // extension properties
-            "http://www.w3.org/2001/XMLSchema#int",                             // modeled type   //$NON-NLS-1$
-            "http://www.w3.org/2001/XMLSchema#long",                             // modeled base type   //$NON-NLS-1$ 
-            "http://www.w3.org/2001/XMLSchema#decimal"                             // modeled primitive type   //$NON-NLS-1$
+            props
             );
     }   
 
@@ -250,10 +224,7 @@ public class TestElement extends TestCase {
             SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            props,                // extension properties
-            "http://www.metamatrix.com/XMLSchema/DataSets/Books/BookDatatypes#PublicationYear",                             // modeled type   //$NON-NLS-1$
-            "http://www.w3.org/2001/XMLSchema#gYear",                             // modeled base type   //$NON-NLS-1$ 
-            "http://www.w3.org/2001/XMLSchema#gYear"                             // modeled primitive type   //$NON-NLS-1$
+            props
             );
     }   
 
@@ -273,10 +244,7 @@ public class TestElement extends TestCase {
             SearchType.Unsearchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            props,                // extension properties
-            "http://www.w3.org/2001/XMLSchema#int",                             // modeled type   //$NON-NLS-1$
-            "http://www.w3.org/2001/XMLSchema#long",                             // modeled base type   //$NON-NLS-1$ 
-            "http://www.w3.org/2001/XMLSchema#decimal"                             // modeled primitive type   //$NON-NLS-1$
+            props
             );
     }   
     
@@ -296,10 +264,7 @@ public class TestElement extends TestCase {
             SearchType.Like_Only,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            props,                // extension properties
-            "http://www.w3.org/2001/XMLSchema#string",                             // modeled type   //$NON-NLS-1$
-            "http://www.w3.org/2001/XMLSchema#anySimpleType",                             // modeled base type   //$NON-NLS-1$ 
-            "http://www.w3.org/2001/XMLSchema#string"                             // modeled primitive type   //$NON-NLS-1$
+            props
             );
     }   
     
@@ -319,10 +284,7 @@ public class TestElement extends TestCase {
             SearchType.All_Except_Like,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            props,                // extension properties
-            "http://www.w3.org/2001/XMLSchema#int",                             // modeled type   //$NON-NLS-1$
-            "http://www.w3.org/2001/XMLSchema#long",                             // modeled base type   //$NON-NLS-1$ 
-            "http://www.w3.org/2001/XMLSchema#decimal"                             // modeled primitive type   //$NON-NLS-1$
+            props
             );
     }   
     
@@ -342,10 +304,7 @@ public class TestElement extends TestCase {
             SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            props,                // extension properties
-            "http://www.w3.org/2001/XMLSchema#string",                             // modeled type   //$NON-NLS-1$
-            "http://www.w3.org/2001/XMLSchema#anySimpleType",                             // modeled base type   //$NON-NLS-1$ 
-            "http://www.w3.org/2001/XMLSchema#string"                             // modeled primitive type   //$NON-NLS-1$
+            props
             );
     }
     
@@ -365,10 +324,7 @@ public class TestElement extends TestCase {
             SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            props,                // extension properties
-            "http://www.w3.org/2001/XMLSchema#int",                             // modeled type   //$NON-NLS-1$
-            "http://www.w3.org/2001/XMLSchema#long",                             // modeled base type   //$NON-NLS-1$ 
-            "http://www.w3.org/2001/XMLSchema#decimal"                             // modeled primitive type   //$NON-NLS-1$
+            props
             );
     }  
     
@@ -388,10 +344,7 @@ public class TestElement extends TestCase {
             SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            props,                // extension properties
-            "http://www.w3.org/2001/XMLSchema#string",                             // modeled type   //$NON-NLS-1$
-            "http://www.w3.org/2001/XMLSchema#anySimpleType",                             // modeled base type   //$NON-NLS-1$ 
-            "http://www.w3.org/2001/XMLSchema#string"                             // modeled primitive type   //$NON-NLS-1$
+            props
             );
     }       
     
@@ -411,10 +364,7 @@ public class TestElement extends TestCase {
             SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            props,                // extension properties
-            "http://www.w3.org/2001/XMLSchema#string",                             // modeled type   //$NON-NLS-1$
-            "http://www.w3.org/2001/XMLSchema#anySimpleType",                             // modeled base type   //$NON-NLS-1$ 
-            "http://www.w3.org/2001/XMLSchema#string"                             // modeled primitive type   //$NON-NLS-1$
+            props
             );
     }     
     
@@ -434,10 +384,7 @@ public class TestElement extends TestCase {
             SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            props,                // extension properties
-            "http://www.w3.org/2001/XMLSchema#int",                             // modeled type   //$NON-NLS-1$
-            "http://www.w3.org/2001/XMLSchema#long",                             // modeled base type   //$NON-NLS-1$ 
-            "http://www.w3.org/2001/XMLSchema#decimal"                             // modeled primitive type   //$NON-NLS-1$
+            props
             );
         
     }

@@ -186,21 +186,6 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 		return actualMetadata.getMinimumValue(elementID);
 	}
 
-	public String getModeledBaseType(Object elementID)
-			throws TeiidComponentException, QueryMetadataException {
-		return actualMetadata.getModeledBaseType(elementID);
-	}
-
-	public String getModeledPrimitiveType(Object elementID)
-			throws TeiidComponentException, QueryMetadataException {
-		return actualMetadata.getModeledPrimitiveType(elementID);
-	}
-
-	public String getModeledType(Object elementID)
-			throws TeiidComponentException, QueryMetadataException {
-		return actualMetadata.getModeledType(elementID);
-	}
-
 	public Object getModelID(Object groupOrElementID)
 			throws TeiidComponentException, QueryMetadataException {
 		return actualMetadata.getModelID(groupOrElementID);

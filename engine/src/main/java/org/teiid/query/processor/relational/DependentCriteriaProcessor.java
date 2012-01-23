@@ -103,7 +103,7 @@ public class DependentCriteriaProcessor {
                     	int distinctCount = 0;
                     	while (vi.hasNext()) {
                     		Comparable next = (Comparable) vi.next();
-                    		if (last == null || next.compareTo(last) != 0) {
+                    		if (last == null || Constant.compare(next, last) != 0) {
                     			distinctCount++;
                     		}
                     		last = next;
