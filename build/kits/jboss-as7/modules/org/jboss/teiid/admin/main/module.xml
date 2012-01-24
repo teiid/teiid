@@ -7,6 +7,7 @@
     <dependencies>
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.client" />
+        <module name="org.jboss.dmr" />
         <module name="javax.api" />
         <module name="org.jboss.as.cli"/>
     </dependencies>
