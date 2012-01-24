@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
+import org.teiid.client.SourceWarning;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
@@ -124,6 +125,26 @@ public class TestDataTierManager {
         assertNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
     }
     
+    @Test public void testDataTierTupleSourceWarnings() throws Exception {
+    	helpSetup(1);
+    	connectorManager.addWarning = true;
+    	for (int i = 0; i < 10;) {
+	    	try {
+	    		info.nextTuple();
+	    		i++;
+	    	} catch (BlockedException e) {
+	    		Thread.sleep(50);
+	    	}
+    	}
+        assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
+        assertNull(info.nextTuple());
+        assertEquals(1, workItem.getWarnings().size());
+        SourceWarning warning = (SourceWarning) workItem.getWarnings().get(0);
+		assertFalse(warning.isPartialResultsError());
+        info.closeSource();
+        assertNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
+    }
+    
     @Test public void testDataTierTupleSourceLimit() throws Exception {
     	limit = 1;
     	helpSetup(1);
@@ -147,6 +168,8 @@ public class TestDataTierManager {
     	for (int i = 0; i < 10; i++) {
 	    	try {
 	    		assertNull(info.nextTuple());
+	    		SourceWarning warning = (SourceWarning) workItem.getWarnings().get(0);
+	    		assertTrue(warning.isPartialResultsError());
 	    		return;
 	    	} catch (BlockedException e) {
 	    		Thread.sleep(50);

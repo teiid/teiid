@@ -213,6 +213,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     public List<?> nextTuple() throws TeiidComponentException, TeiidProcessingException {
     	while (true) {
     		if (arm == null) {
+    			boolean partial = false;
     			AtomicResultsMessage results = null;
     			try {
 	    			if (futureResult != null || !aqr.isSerial()) {
@@ -237,6 +238,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 	    			}
     			} catch (TranslatorException e) {
     				results = exceptionOccurred(e, true);
+    				partial = true;
     			} catch (DataNotAvailableException e) {
     				if (e.getRetryDelay() >= 0) {
 	    				workItem.scheduleWork(new Runnable() {
@@ -250,7 +252,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     				}
     				throw BlockedException.block(aqr.getAtomicRequestID(), "Blocking on DataNotAvailableException"); //$NON-NLS-1$
     			} 
-    			receiveResults(results);
+    			receiveResults(results, partial);
     		}
 	    	if (index < arm.getResults().length) {
 	    		if (limit-- == 0) {
@@ -416,14 +418,14 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		throw new TeiidProcessingException(exception, this.getConnectorName() + ": " + exception.getMessage()); //$NON-NLS-1$
 	}
 
-	void receiveResults(AtomicResultsMessage response) {
+	void receiveResults(AtomicResultsMessage response, boolean partial) {
 		this.arm = response;
 		explicitClose |= !arm.supportsImplicitClose();
         rowsProcessed += response.getResults().length;
         index = 0;
 		if (response.getWarnings() != null) {
 			for (Exception warning : response.getWarnings()) {
-				SourceWarning sourceFailure = new SourceWarning(this.aqr.getModelName(), aqr.getConnectorName(), warning, true);
+				SourceWarning sourceFailure = new SourceWarning(this.aqr.getModelName(), aqr.getConnectorName(), warning, partial);
 		        workItem.addSourceFailureDetails(sourceFailure);
 			}
 		}
