@@ -22,17 +22,7 @@
 
 package org.teiid.query.processor.relational;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
@@ -183,7 +173,7 @@ public class DependentCriteriaProcessor {
             
             if (criteria instanceof SetCriteria) {
                 SetCriteria setCriteria = (SetCriteria)criteria;
-                if (setCriteria.isNegated() || setCriteria.getNumberOfValues() <= maxSetSize) {
+                if (setCriteria.isNegated() || setCriteria.getNumberOfValues() <= maxSetSize || !setCriteria.isAllConstants()) {
                     continue;
                 }
                 SetState state = new SetState();
@@ -286,7 +276,7 @@ public class DependentCriteriaProcessor {
      * @throws TeiidComponentException
      */
     private void replaceDependentValueIterators() throws TeiidComponentException {
-    	int totalPredicates = sources.size();
+    	int totalPredicates = setStates.size();
     	if (this.maxPredicates > 0) {
         	//We have a bin packing problem if totalPredicates < sources - We'll address that case later.
     		//TODO: better handling for the correlated composite case
@@ -295,6 +285,11 @@ public class DependentCriteriaProcessor {
     	long maxSize = Integer.MAX_VALUE;
     	if (this.maxSetSize > 0) {
     		maxSize = this.maxSetSize;
+    		if (this.maxPredicates > 0 && totalPredicates > this.maxPredicates) {
+    			//scale the max based upon the number of predicates - this is not perfect, but sufficient for most situations
+    			long maxParams = this.maxPredicates * this.maxSetSize;
+    			maxSize = Math.max(1, maxParams/totalPredicates);
+    		}
     	}
     	int currentPredicates = 0;
     	for (int run = 0; currentPredicates < totalPredicates; run++) {

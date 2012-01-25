@@ -626,6 +626,10 @@ public class TestDependentJoins {
     	helpTestLargeSetInDepAccessMultiJoinCriteria(1, -1, 1, 2);
     }
     
+    @Test public void testLargeSetInDepAccessMultiJoinCriteriaSetConstraint() throws Exception {
+    	helpTestLargeSetInDepAccessMultiJoinCriteria(1, 1, 1, 2);
+    }
+    
     @Test public void testLargeSetInDepAccessMultiJoinCriteriaConcurrent() throws Exception {
     	//allows concurrent
     	helpTestLargeSetInDepAccessMultiJoinCriteria(1, -1, 4, 4);
