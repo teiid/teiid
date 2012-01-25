@@ -328,8 +328,8 @@ public interface SourceCapabilities {
         WINDOW_FUNCTION_ORDER_BY_AGGREGATES("WindowOrderByAggregates"), //$NON-NLS-1$
         CRITERIA_SIMILAR,
         CRITERIA_LIKE_REGEX, 
-        WINDOW_FUNCTION_DISTINCT_AGGREGATES("WindowDistinctAggregates"); //$NON-NLS-1$
-        
+        WINDOW_FUNCTION_DISTINCT_AGGREGATES("WindowDistinctAggregates"), //$NON-NLS-1$
+        QUERY_ONLY_SINGLE_TABLE_GROUP_BY;
         
         private final String toString;
         

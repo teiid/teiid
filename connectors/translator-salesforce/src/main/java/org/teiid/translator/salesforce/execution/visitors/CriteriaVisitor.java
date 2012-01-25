@@ -25,24 +25,12 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.teiid.core.util.TimestampWithTimezone;
-import org.teiid.language.AndOr;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Comparison;
-import org.teiid.language.Expression;
-import org.teiid.language.Function;
-import org.teiid.language.In;
-import org.teiid.language.IsNull;
-import org.teiid.language.Like;
-import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
-import org.teiid.language.Not;
+import org.teiid.language.*;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
@@ -56,7 +44,7 @@ import org.teiid.translator.salesforce.Util;
 /**
  * Parses Criteria in support of all of the ExecutionImpl classes.
  */
-public abstract class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisitor {
+public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisitor {
 
     private static final String RESTRICTEDMULTISELECTPICKLIST = "restrictedmultiselectpicklist"; //$NON-NLS-1$
 	private static final String MULTIPICKLIST = "multipicklist"; //$NON-NLS-1$
@@ -75,10 +63,9 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
     protected static final String CLOSE = ")"; //$NON-NLS-1$
 
     protected RuntimeMetadata metadata;
-    private HashMap<Comparison.Operator, String> comparisonOperators;
+    
     protected List<String> criteriaList = new ArrayList<String>();
     protected boolean hasCriteria;
-    protected Map<String, Column> columnElementsByName = new HashMap<String, Column>();
     protected List<TranslatorException> exceptions = new ArrayList<TranslatorException>();
     protected Table table;
     boolean onlyIDCriteria;
@@ -90,13 +77,6 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 
     public CriteriaVisitor( RuntimeMetadata metadata ) {
         this.metadata = metadata;
-        comparisonOperators = new HashMap<Comparison.Operator, String>();
-        comparisonOperators.put(Operator.EQ, "="); //$NON-NLS-1$
-        comparisonOperators.put(Operator.GE, ">="); //$NON-NLS-1$
-        comparisonOperators.put(Operator.GT, ">"); //$NON-NLS-1$
-        comparisonOperators.put(Operator.LE, "<="); //$NON-NLS-1$
-        comparisonOperators.put(Operator.LT, "<"); //$NON-NLS-1$
-        comparisonOperators.put(Operator.NE, "!="); //$NON-NLS-1$
     }
 
     @Override
@@ -270,19 +250,16 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         if (lExpr instanceof Function) {
             parseFunction((Function)lExpr);
         } else {
-            ColumnReference left = (ColumnReference)lExpr;
-            Column column = left.getMetadataObject();
-            String columnName = column.getNameInSource();
             StringBuilder queryString = new StringBuilder();
-            appendColumnReference(queryString, left);
+            queryString.append(getValue(lExpr, false));
             queryString.append(SPACE);
-            queryString.append(comparisonOperators.get(compCriteria.getOperator()));
+            queryString.append(compCriteria.getOperator()==Operator.NE?"!=":compCriteria.getOperator()); //$NON-NLS-1$
             queryString.append(' ');
             Expression rExp = compCriteria.getRightExpression();
             queryString.append(getValue(rExp, false));
             criteriaList.add(queryString.toString());
 
-            if (columnName.equals("IsDeleted")) { //$NON-NLS-1$
+            if (lExpr instanceof ColumnReference && "IsDeleted".equalsIgnoreCase(((ColumnReference)lExpr).getMetadataObject().getNameInSource())) { //$NON-NLS-1$
                 Literal isDeletedLiteral = (Literal)compCriteria.getRightExpression();
                 Boolean isDeleted = (Boolean)isDeletedLiteral.getValue();
                 if (isDeleted) {
@@ -292,7 +269,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         }
     }
 
-	private void appendColumnReference(StringBuilder queryString,
+	void appendColumnReference(StringBuilder queryString,
 			ColumnReference ref) {
 		queryString.append(ref.getMetadataObject().getParent().getNameInSource());
 		queryString.append('.');
@@ -368,11 +345,23 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         	} else {
         		result.append(expr.toString());
         	}
+        } else if (expr instanceof AggregateFunction) {
+        	appendAggregateFunction(result, (AggregateFunction)expr);
         } else {
             throw new RuntimeException("unknown type in SalesforceQueryExecution.getValue(): " + expr.toString()); //$NON-NLS-1$
         }
         return result.toString();
     }
+    
+	protected void appendAggregateFunction(StringBuilder result,
+			AggregateFunction af) {
+		if (af.getName().equalsIgnoreCase(SQLConstants.NonReserved.COUNT) 
+				&& (af.getExpression() == null || af.getExpression() instanceof Literal)) {
+			result.append("COUNT(Id)"); //$NON-NLS-1$
+		} else {
+			result.append(af.getName() + "(" + getValue(af.getExpression(), false) + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+	}
 
     protected void loadColumnMetadata( NamedTable group ) throws TranslatorException {
         table = group.getMetadataObject();
@@ -442,9 +431,13 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         return table.getNameInSource();
     }
     
-    protected void addCriteriaString(StringBuffer result) {
+    protected void addCriteriaString(StringBuilder result) {
+    	addCriteriaString(WHERE, result);
+	}
+    
+    protected void addCriteriaString(String clause, StringBuilder result) {
     	if(hasCriteria()) {
-			result.append(WHERE).append(SPACE);
+			result.append(clause).append(SPACE);
 			for (String string : criteriaList) {
 				result.append(string);
 			}

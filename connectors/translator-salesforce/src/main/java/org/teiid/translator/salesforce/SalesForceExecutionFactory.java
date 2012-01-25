@@ -56,7 +56,6 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 	private static final String SALESFORCE = "salesforce"; //$NON-NLS-1$
 	private static final String EXCLUDES = "excludes";//$NON-NLS-1$
 	private static final String INCLUDES = "includes";//$NON-NLS-1$
-	private String connectorStateClass;
 	private boolean auditModelFields = false;
 	
 	public SalesForceExecutionFactory() {
@@ -65,13 +64,6 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 		setSupportsOrderBy(false);
 		setSupportsOuterJoins(true);
 		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
-	}
-	
-	public String getConnectorStateClass() {
-		return this.connectorStateClass;
-	}
-	public void setConnectorStateClass(String connectorStateClass) {
-		this.connectorStateClass = connectorStateClass;
 	}
 	
 	@TranslatorProperty(display="Audit Model Fields", advanced=true)
@@ -152,6 +144,41 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     public boolean supportsAggregatesCountStar() {
         return true;
     }
+    
+    @Override
+    public boolean supportsAggregatesCount() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsAggregatesMax() {
+    	return true;
+    }
+
+    @Override
+    public boolean supportsAggregatesMin() {
+    	return true;
+    }
+
+    @Override
+    public boolean supportsAggregatesSum() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsAggregatesAvg() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsGroupBy() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsOnlySingleTableGroupBy() {
+    	return true;
+    }
 
     @Override
     public boolean supportsNotCriteria() {
@@ -172,5 +199,20 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     public boolean supportsIsNullCriteria() {
     	return true;
     }
-
+    
+    @Override
+    public boolean supportsHaving() {
+    	return true;
+    }
+    
+    @Override
+    public int getMaxFromGroups() {
+    	return 2;
+    }
+    
+    @Override
+    public boolean useAnsiJoin() {
+    	return true;
+    }
+    
 }

@@ -1069,6 +1069,17 @@ int count = visitor.getCount();]]></programlisting>
               </row>
               <row>
                 <entry>
+                  <para>OnlySingleTableGroupBy</para>
+                </entry>
+                <entry>
+                  <para>GroupBy</para>
+                </entry>
+                <entry>
+                  <para>GROUP BY is restricted to only non-join queries.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
                   <para>Having</para>
                 </entry>
                 <entry>

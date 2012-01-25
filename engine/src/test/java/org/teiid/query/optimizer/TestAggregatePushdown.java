@@ -1134,5 +1134,34 @@ public class TestAggregatePushdown {
             0       // UnionAll
         });
     }
+    
+    @Test public void testSingleTableRestriction() throws Exception {
+        String sql = "select count(*) from bqt1.smallb, bqt1.smalla"; 
+        BasicSourceCapabilities bsc = getAggregateCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_ONLY_SINGLE_TABLE_GROUP_BY, true);
+        // Plan query
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
+                RealMetadataFactory.exampleBQTCached(),
+                null, new DefaultCapabilitiesFinder(bsc),
+                new String[] {"SELECT 1 FROM bqt1.smallb AS g_0, bqt1.smalla AS g_1"},  
+                              TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            1,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            1,      // Grouping
+            0,      // Join
+            0,      // MergeJoin
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });
+    }
         
 }

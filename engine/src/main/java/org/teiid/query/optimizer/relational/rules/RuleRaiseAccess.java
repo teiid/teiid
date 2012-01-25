@@ -314,6 +314,11 @@ public final class RuleRaiseAccess implements OptimizerRule {
         	recordDebug("cannot push group by, since group by is not supported by source", groupNode, record); //$NON-NLS-1$
             return false;
         }
+        if (CapabilitiesUtil.supports(Capability.QUERY_ONLY_SINGLE_TABLE_GROUP_BY, modelID, metadata, capFinder)
+        		&& !NodeEditor.findAllNodes(groupNode, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE).isEmpty()) {
+        	recordDebug("cannot push group by, since joined group by is not supported by source", groupNode, record); //$NON-NLS-1$
+        	return false;
+        }
         if (groupCols != null) {
             for (Expression expr : groupCols) {
                 if (!canPushSymbol(expr, false, modelID, metadata, capFinder, record)) {

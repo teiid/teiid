@@ -21,8 +21,6 @@
  */
 package org.teiid.translator.salesforce.execution.visitors;
 
-import java.util.Iterator;
-
 import org.teiid.language.Delete;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
@@ -54,9 +52,9 @@ public class DeleteVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		if (!exceptions.isEmpty()) {
 			throw exceptions.get(0);
 		}
-		StringBuffer result = new StringBuffer();
+		StringBuilder result = new StringBuilder();
 		result.append(SELECT).append(SPACE);
-		result.append("Id").append(SPACE);
+		result.append("Id").append(SPACE); //$NON-NLS-1$
 		result.append(FROM).append(SPACE);
 		result.append(table.getNameInSource()).append(SPACE);
 		addCriteriaString(result);

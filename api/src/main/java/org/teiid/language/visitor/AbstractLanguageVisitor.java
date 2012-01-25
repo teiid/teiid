@@ -24,42 +24,7 @@ package org.teiid.language.visitor;
 
 import java.util.Collection;
 
-import org.teiid.language.AggregateFunction;
-import org.teiid.language.AndOr;
-import org.teiid.language.Argument;
-import org.teiid.language.BatchedUpdates;
-import org.teiid.language.Call;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Comparison;
-import org.teiid.language.Delete;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.DerivedTable;
-import org.teiid.language.Exists;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.Function;
-import org.teiid.language.GroupBy;
-import org.teiid.language.In;
-import org.teiid.language.Insert;
-import org.teiid.language.IsNull;
-import org.teiid.language.IteratorValueSource;
-import org.teiid.language.Join;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Like;
-import org.teiid.language.Limit;
-import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
-import org.teiid.language.Not;
-import org.teiid.language.OrderBy;
-import org.teiid.language.ScalarSubquery;
-import org.teiid.language.SearchedCase;
-import org.teiid.language.SearchedWhenClause;
-import org.teiid.language.Select;
-import org.teiid.language.SetClause;
-import org.teiid.language.SetQuery;
-import org.teiid.language.SortSpecification;
-import org.teiid.language.SubqueryComparison;
-import org.teiid.language.SubqueryIn;
-import org.teiid.language.Update;
+import org.teiid.language.*;
 
 
 /**
@@ -148,4 +113,12 @@ public abstract class AbstractLanguageVisitor implements LanguageObjectVisitor {
     public void visit(SetClause obj) {}
     public void visit(SearchedWhenClause obj) {}
     public void visit(IteratorValueSource obj) {}
+    @Override
+    public void visit(WindowFunction windowFunction) {}
+    @Override
+    public void visit(WindowSpecification windowSpecification) {}
+    @Override
+    public void visit(With obj) {}
+    @Override
+    public void visit(WithItem obj) {}
 }
