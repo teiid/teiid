@@ -36,8 +36,8 @@ import org.teiid.adminapi.impl.DataPolicyMetadata;
 
 public class DataRolePolicyDecider implements PolicyDecider {
 
-    private boolean allowCreateTemporaryTablesByDefault = true;
-    private boolean allowFunctionCallsByDefault = true;
+    private boolean allowCreateTemporaryTablesByDefault = false;
+    private boolean allowFunctionCallsByDefault = false;
 
 	@Override
 	public Set<String> getInaccessibleResources(PermissionType action,
