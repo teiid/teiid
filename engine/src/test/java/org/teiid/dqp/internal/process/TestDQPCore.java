@@ -360,7 +360,6 @@ public class TestDQPCore {
         assertEquals(100, item.resultsBuffer.getRowCount());
     }
     
-    @Ignore
     @Test public void testFinalRow() throws Exception {
         String sql = "SELECT A.IntKey FROM BQT1.SmallA as A"; //$NON-NLS-1$
         String userName = "1"; //$NON-NLS-1$
