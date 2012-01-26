@@ -34,16 +34,22 @@ import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.modules.Module;
-import org.jboss.msc.service.*;
+import org.jboss.msc.service.Service;
+import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
+import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceController.State;
+import org.jboss.msc.service.AbstractServiceListener;
+import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.StartContext;
+import org.jboss.msc.service.StartException;
+import org.jboss.msc.service.StopContext;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.deployers.ContainerLifeCycleListener;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
@@ -61,17 +67,15 @@ class VDBDeployer implements DeploymentUnitProcessor {
 	private TranslatorRepository translatorRepository;
 	private String asyncThreadPoolName;
 	private VDBStatusChecker vdbStatusChecker;
-	private ContainerLifeCycleListener shutdownListener;
 	
-	public VDBDeployer (TranslatorRepository translatorRepo, String poolName, VDBStatusChecker vdbStatusChecker, ContainerLifeCycleListener shutdownListener) {
+	public VDBDeployer (TranslatorRepository translatorRepo, String poolName, VDBStatusChecker vdbStatusChecker) {
 		this.translatorRepository = translatorRepo;
 		this.asyncThreadPoolName = poolName;
 		this.vdbStatusChecker = vdbStatusChecker;
-		this.shutdownListener = shutdownListener;
 	}
 	
 	public void deploy(final DeploymentPhaseContext context)  throws DeploymentUnitProcessingException {
-		DeploymentUnit deploymentUnit = context.getDeploymentUnit();
+		final DeploymentUnit deploymentUnit = context.getDeploymentUnit();
 		if (!TeiidAttachments.isVDBDeployment(deploymentUnit)) {
 			return;
 		}
@@ -125,7 +129,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		
 		// build a VDB service
 		ArrayList<String> unAvailableDS = new ArrayList<String>();
-		VDBService vdb = new VDBService(deployment, this.shutdownListener);
+		VDBService vdb = new VDBService(deployment);
 		final ServiceBuilder<VDBMetaData> vdbService = context.getServiceTarget().addService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()), vdb);
 		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
 			for (String sourceName:model.getSourceNames()) {
@@ -175,6 +179,21 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		if (!unAvailableDS.isEmpty()) {
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50021, deployment.getName(), deployment.getVersion(), unAvailableDS));
 		}
+		
+		ServiceController<?> scMain = deploymentUnit.getServiceRegistry().getService(deploymentUnit.getServiceName().append("contents")); //$NON-NLS-1$
+		scMain.addListener(new AbstractServiceListener<Object>() {
+			@Override
+		    public void serviceRemoveRequested(final ServiceController controller) {
+				final VDBMetaData vdb = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
+				
+				ServiceController<?> sc = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.OBJECT_SERIALIZER);
+				if (sc != null) {
+					ObjectSerializer serilalizer = ObjectSerializer.class.cast(sc.getValue());
+					serilalizer.removeAttachments(vdb);	
+					LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+vdb.getName()+" metadata removed"); //$NON-NLS-1$ //$NON-NLS-2$
+				}
+		    }			
+		});
 	}
 	
 	private void dataSourceDependencies(VDBMetaData deployment, DependentServices svcListener) {
@@ -260,7 +279,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 	public void undeploy(final DeploymentUnit deploymentUnit) {
 		if (!TeiidAttachments.isVDBDeployment(deploymentUnit)) {
 			return;
-		}		
+		}	
 	}
 
 }

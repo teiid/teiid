@@ -56,7 +56,6 @@ import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidException;
 import org.teiid.deployers.CompositeVDB;
-import org.teiid.deployers.ContainerLifeCycleListener;
 import org.teiid.deployers.MetadataStoreGroup;
 import org.teiid.deployers.TranslatorUtil;
 import org.teiid.deployers.UDFMetaData;
@@ -89,12 +88,10 @@ class VDBService implements Service<VDBMetaData> {
 	private final InjectedValue<ObjectSerializer> serializerInjector = new InjectedValue<ObjectSerializer>();
 	private final InjectedValue<BufferServiceImpl> bufferServiceInjector = new InjectedValue<BufferServiceImpl>();
 	private final InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
-	private ContainerLifeCycleListener shutdownListener;
 	private VDBLifeCycleListener vdbListener;
 	
-	public VDBService(VDBMetaData metadata, ContainerLifeCycleListener shutdownListener) {
+	public VDBService(VDBMetaData metadata) {
 		this.vdb = metadata;
-		this.shutdownListener = shutdownListener;
 	}
 	
 	@Override
@@ -249,12 +246,6 @@ class VDBService implements Service<VDBMetaData> {
 		getVDBRepository().removeListener(this.vdbListener);
 		getVDBRepository().removeVDB(this.vdb.getName(), this.vdb.getVersion());
 		this.vdb.setRemoved(true);
-
-		// service stopped not due to shutdown then clean-up the data files
-		if (!this.shutdownListener.isShutdownInProgress()) {
-			getSerializer().removeAttachments(vdb); 
-			LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+vdb.getName()+" metadata removed"); //$NON-NLS-1$ //$NON-NLS-2$
-		}
 
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50026, this.vdb));
 	}
@@ -465,7 +456,7 @@ class VDBService implements Service<VDBMetaData> {
 	    		if (vdb.isValid()) {
 	    			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion());
 					vdb.setStatus(VDB.Status.ACTIVE);
-					LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(RuntimePlugin.Event.TEIID40003,vdb.getName(), vdb.getVersion()));
+					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,vdb.getName(), vdb.getVersion()));
 	    		}
 	    	}
     	}
