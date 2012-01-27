@@ -376,7 +376,7 @@ public class TestDQPCore {
         assertEquals(10, rm.getResultsList().size());
         RequestWorkItem item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
         synchronized (item) {
-			while (item.isProcessing()) {
+			for (int i = 0; i < 100; i++) {
 				Thread.sleep(10);
 			}
 		}
