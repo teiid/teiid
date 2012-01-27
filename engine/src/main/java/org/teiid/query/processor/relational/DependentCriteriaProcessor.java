@@ -99,16 +99,19 @@ public class DependentCriteriaProcessor {
                 }
             	for (SetState setState : dependentSetStates) {
                     setState.valueIterator = dvs.getValueIterator(setState.valueExpression);
-                    if (setState.maxNdv > 0 && setState.maxNdv < dvs.getTupleBuffer().getRowCount()) {
-                    	ValueIterator vi = dvs.getValueIterator(setState.valueExpression);
-                    	Comparable last = null;
-                    	int distinctCount = 0;
-                    	while (vi.hasNext()) {
-                    		Comparable next = (Comparable) vi.next();
-                    		if (last == null || next.compareTo(last) != 0) {
-                    			distinctCount++;
-                    		}
-                    		last = next;
+                    int distinctCount = dvs.getTupleBuffer().getRowCount();
+                    if (setState.maxNdv > 0 && setState.maxNdv < distinctCount) {
+                    	if (dvs.getTupleBuffer().getSchema().size() >= 1) {
+                    		distinctCount = 0;
+	                    	ValueIterator vi = dvs.getValueIterator(setState.valueExpression);
+	                    	Comparable last = null;
+	                    	while (vi.hasNext()) {
+	                    		Comparable next = (Comparable) vi.next();
+	                    		if (last == null || next.compareTo(last) != 0) {
+	                    			distinctCount++;
+	                    		}
+	                    		last = next;
+	                    	}
                     	}
                     	if (!setState.overMax && distinctCount > setState.maxNdv) {
                     		LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DependentCriteriaProcessor.dep_join_backoff", valueSource, setState.valueExpression, setState.maxNdv)); //$NON-NLS-1$
