@@ -28,9 +28,9 @@ import org.teiid.language.*;
 
 
 /**
- * Visitor that visits an instance of ILanguageObject and performs an operation
+ * Visitor that visits an instance of LanguageObject and performs an operation
  * on that instance. The visit() methods of this Visitor can be selectively
- * overridden to perform operations on each type of ILanguageObject. The public
+ * overridden to perform operations on each type of LanguageObject. The public
  * visit() methods should not be called directly, as they are only used by this
  * visitor framework to let the instance invoke the type-specific visit() method
  */
@@ -40,11 +40,11 @@ public abstract class AbstractLanguageVisitor implements LanguageObjectVisitor {
     }
     
     /**
-     * Visit the ILanguageObject instance to perform the Visitor's operation on
+     * Visit the LanguageObject instance to perform the Visitor's operation on
      * that instance. This method can also be used by the subclass to visit any
-     * ILanguageObject instances that the given instance may contain.
+     * LanguageObject instances that the given instance may contain.
      * @see HierarchyVisitor
-     * @param obj an ILanguageObject instance
+     * @param obj an LanguageObject instance
      */
     public void visitNode(LanguageObject obj) {
         if (obj != null) {
@@ -53,9 +53,9 @@ public abstract class AbstractLanguageVisitor implements LanguageObjectVisitor {
     }
     
     /**
-     * Visits a Collection of ILanguageObjects in iteration order. This method
-     * can be used by subclasses to visit each ILanguageObject in the Collection
-     * @param nodes a Collection of ILanguageObjects
+     * Visits a Collection of LanguageObjects in iteration order. This method
+     * can be used by subclasses to visit each LanguageObject in the Collection
+     * @param nodes a Collection of LanguageObjects
      */
     public void visitNodes(Collection<? extends LanguageObject> nodes) {
         if (nodes != null && nodes.size() > 0) {
@@ -66,9 +66,9 @@ public abstract class AbstractLanguageVisitor implements LanguageObjectVisitor {
     }
     
     /**
-     * Visits an array of ILanguageObjects in order. This method can be used by
-     * subclasses to visit each ILanguageObject in the array.
-     * @param nodes an ILanguageObject[]
+     * Visits an array of LanguageObjects in order. This method can be used by
+     * subclasses to visit each LanguageObject in the array.
+     * @param nodes an LanguageObject[]
      */
     public void visitNodes(LanguageObject[] nodes) {
         if (nodes != null && nodes.length > 0) {

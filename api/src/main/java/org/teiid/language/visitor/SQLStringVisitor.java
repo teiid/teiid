@@ -113,7 +113,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
     
     /**
-     * Appends the string form of the ILanguageObject to the current buffer.
+     * Appends the string form of the LanguageObject to the current buffer.
      * @param obj the language object instance
      */
     public void append(LanguageObject obj) {
@@ -127,7 +127,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     /**
      * Simple utility to append a list of language objects to the current buffer
      * by creating a comma-separated list.
-     * @param items a list of ILanguageObjects
+     * @param items a list of LanguageObjects
      */
     protected void append(List<? extends LanguageObject> items) {
         if (items != null && items.size() != 0) {
@@ -143,7 +143,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     /**
      * Simple utility to append an array of language objects to the current buffer
      * by creating a comma-separated list.
-     * @param items an array of ILanguageObjects
+     * @param items an array of LanguageObjects
      */
     protected void append(LanguageObject[] items) {
         if (items != null && items.length != 0) {
@@ -991,11 +991,11 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
  
     /**
-     * Gets the SQL string representation for a given ILanguageObject.
-     * @param obj the root of the ILanguageObject hierarchy that needs to be
+     * Gets the SQL string representation for a given LanguageObject.
+     * @param obj the root of the LanguageObject hierarchy that needs to be
      * converted. This can be any subtree, and does not need to be a top-level
      * command
-     * @return the SQL representation of that ILanguageObject hierarchy
+     * @return the SQL representation of that LanguageObject hierarchy
      */
     public static String getSQLString(LanguageObject obj) {
         SQLStringVisitor visitor = new SQLStringVisitor();

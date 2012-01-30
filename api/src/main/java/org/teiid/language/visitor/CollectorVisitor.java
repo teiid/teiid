@@ -65,7 +65,7 @@ public class CollectorVisitor<T> extends HierarchyVisitor {
      * of the specified tree in the language object tree.
      * @param type Language object type to look for
      * @param object Root of the language object tree
-     * @return Collection of ILanguageObject of the specified type
+     * @return Collection of LanguageObject of the specified type
      */
     public static <T> Collection<T> collectObjects(Class<T> type, LanguageObject object) {
         CollectorVisitor<T> visitor = new CollectorVisitor<T>(type);
