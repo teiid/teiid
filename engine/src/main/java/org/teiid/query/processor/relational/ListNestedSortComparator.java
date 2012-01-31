@@ -174,7 +174,7 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
 					return -1;
 				}
             } else  {
-                compare = Constant.compare(param1, param2);
+                compare = Constant.COMPARATOR.compare(param1, param2);
             } 
             if (compare != 0) {
             	boolean asc = orderTypes != null?orderTypes.get(k):this.ascendingOrder;

@@ -749,13 +749,21 @@ public final class FunctionMethods {
 	// ================== Function = righttrim =====================
 
 	public static String rightTrim(String string, char trimChar) {
+		return rightTrim(string, trimChar, true);
+	}
+	
+	public static String rightTrim(String string, char trimChar, boolean newString) {
 		for(int i=string.length()-1; i>=0; i--) {
 			if(string.charAt(i) != trimChar) {
 				// end of trim, return what's left
 				if (i==string.length()-1) {
 					return string;
 				}
-				return new String(string.substring(0, i+1));
+				String result = string.substring(0, i+1);
+				if (newString) {
+					return new String(result);
+				}
+				return result;
 			}
 		}
 

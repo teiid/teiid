@@ -23,11 +23,17 @@
 package org.teiid.query.sql.symbol;
 
 import java.math.BigDecimal;
+import java.text.Collator;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
@@ -47,6 +53,72 @@ public class Constant implements Expression, Comparable<Constant> {
 	private boolean multiValued;
 	private boolean bindEligible;
 
+	public static final String COLLATION_LOCALE = System.getProperties().getProperty("org.teiid.collationLocale"); //$NON-NLS-1$
+
+	public static final Comparator<Object> COMPARATOR = getComparator(COLLATION_LOCALE, DataTypeManager.PAD_SPACE);
+	
+	static Comparator<Object> getComparator(String localeString, final boolean padSpace) {
+		if (localeString == null) {
+			return getComparator(padSpace);
+		}
+		String[] parts = localeString.split("_"); //$NON-NLS-1$
+		Locale locale = null;
+		if (parts.length == 1) {
+			locale = new Locale(parts[0]);
+		} else if (parts.length == 2) {
+			locale = new Locale(parts[0], parts[1]);
+		} else if (parts.length == 3) {
+			locale = new Locale(parts[0], parts[1], parts[2]);
+		} else {
+			LogManager.logError(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30032, localeString));
+			return getComparator(padSpace);
+		}
+		final Collator c = Collator.getInstance(locale);
+		LogManager.logError(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30033, locale));
+		return new Comparator<Object>() {
+			@Override
+			public int compare(Object o1, Object o2) {
+				Class<?> clazz = o1.getClass();
+				if (clazz == String.class) {
+					String s1 = (String)o1;
+					String s2 = (String)o2;
+					if (padSpace) {
+						s1 = FunctionMethods.rightTrim(s1, ' ', false);
+						s2 = FunctionMethods.rightTrim(s2, ' ', false);
+					}
+					return c.compare(s1, s2);
+				}
+				return ((Comparable<Object>)o1).compareTo(o2);
+			}
+		};
+	}
+	
+	static Comparator<Object> getComparator(boolean padSpace) {
+		if (!padSpace) {
+			return new Comparator<Object>() {
+				@Override
+				public int compare(Object o1, Object o2) {
+					return ((Comparable<Object>)o1).compareTo(o2);
+				}
+			};
+		}
+		return new Comparator<Object>() {
+			@Override
+			public int compare(Object o1, Object o2) {
+				Class<?> clazz = o1.getClass();
+				if (clazz == String.class) {
+					CharSequence s1 = (CharSequence)o1;
+					CharSequence s2 = (CharSequence)o2;
+					return comparePadded(s1, s2);
+				} else if (clazz == ClobType.class) {
+					CharSequence s1 = ((ClobType)o1).getCharSequence();
+					CharSequence s2 = ((ClobType)o2).getCharSequence();
+					return comparePadded(s1, s2);
+				}
+				return ((Comparable<Object>)o1).compareTo(o2);
+			}
+		};
+	}
 	/**
 	 * Construct a typed constant.  The specified value is not verified to be a value
 	 * of the specified type.  If this is not true, stuff probably won't work later on.
@@ -224,31 +296,9 @@ public class Constant implements Expression, Comparable<Constant> {
 		if (o.isNull()) {
 			return 1;
 		}
-		return compare((Comparable<?>)this.value, (Comparable<?>)o.getValue());
+		return COMPARATOR.compare(this.value, o.getValue());
 	}
 	
-	/**
-	 * Compare the given non-null values
-	 * @param o1
-	 * @param o2
-	 * @return
-	 */
-	public final static int compare(Comparable o1, Comparable o2) {
-		if (DataTypeManager.PAD_SPACE) {
-			Class<?> clazz = o1.getClass();
-			if (clazz == String.class) {
-				CharSequence s1 = (CharSequence)o1;
-				CharSequence s2 = (CharSequence)o2;
-				return comparePadded(s1, s2);
-			} else if (clazz == ClobType.class) {
-				CharSequence s1 = ((ClobType)o1).getCharSequence();
-				CharSequence s2 = ((ClobType)o2).getCharSequence();
-				return comparePadded(s1, s2);
-			}
-		}
-		return o1.compareTo(o2);
-	}
-
 	final static int comparePadded(CharSequence s1, CharSequence s2) {
 		int len1 = s1.length();
 		int len2 = s2.length();

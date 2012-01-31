@@ -100,11 +100,11 @@ public class DependentCriteriaProcessor {
                     setState.valueIterator = dvs.getValueIterator(setState.valueExpression);
                     if (setState.maxNdv > 0 && setState.maxNdv < dvs.getTupleBuffer().getRowCount()) {
                     	ValueIterator vi = dvs.getValueIterator(setState.valueExpression);
-                    	Comparable last = null;
+                    	Object last = null;
                     	int distinctCount = 0;
                     	while (vi.hasNext()) {
-                    		Comparable next = (Comparable) vi.next();
-                    		if (last == null || Constant.compare(next, last) != 0) {
+                    		Object next = vi.next();
+                    		if (last == null || Constant.COMPARATOR.compare(next, last) != 0) {
                     			distinctCount++;
                     		}
                     		last = next;

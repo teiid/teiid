@@ -24,6 +24,11 @@ package org.teiid.query.sql.symbol;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
 import org.junit.Test;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
@@ -155,7 +160,16 @@ public class TestConstant {
 		assertEquals(-24, Constant.comparePadded("ab ", "az "));
 		assertEquals(66, Constant.comparePadded("ab ", "a "));
 		assertEquals(0, Constant.comparePadded("a1 ", "a1"));
-
+	}
+	
+	@Test public void testCollation() {
+		Comparator<Object> c = Constant.getComparator("es", true);
+		
+		List<String> vals = Arrays.asList("ñ", "n", "o");
+		Collections.sort(vals, c);
+		assertEquals("ñ", vals.get(1));
+		
+		assertEquals(0, c.compare("a ", "a"));
 	}
     
 }

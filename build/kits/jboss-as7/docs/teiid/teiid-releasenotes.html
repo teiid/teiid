@@ -36,8 +36,12 @@
     </UL>
   <LI><B>Continuous Asynch Queries</B> to process plans in a streamed window fashion the TeiidStatement/TeiidPreparedStatement methods now take a RequestOptions object to specify continuous mode.  See the Client and Developers Guides for more.
   <LI><B>Texttable selectors</B> - can be used to selectively parse only record lines matching a given selector string.  Selectors may also be used for column values to join data from other records positionally.
-  <LI><B>Comparable LOBs</B> - the system property org.teiid.comparableLobs can be set to use CLOB and BLOB values in comparison/sorting/grouping operations.
-  <LI><B>Padded String Comparison</B> - the system property org.teiid.padSpace can be set to effectively right pad strings to the same length for comparison.
+  <LI><B>Enhanced Comparison Support</B> - see the Admin Guide more.
+    <UL>
+      <LI><B>Comparable LOBs</B> - the system property org.teiid.comparableLobs can be set to use CLOB and BLOB values in comparison/sorting/grouping operations.
+      <LI><B>Padded Comparison</B> - the system property org.teiid.padSpace can be set to effectively right pad strings to the same length for comparison.
+      <LI><B>Collation Support</B> - the system property org.teiid.collationLocale can be set to use a different collation than the Java UTF-16 default.
+    </UL>
   <LI><B>VARBINARY type support</B> - the Teiid VARBINARY type can now be used to support source BINARY and VARBINARY types.
 </UL>
 

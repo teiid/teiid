@@ -298,35 +298,6 @@ public class Evaluator {
 		return compare(criteria, leftValue, rightValue);
 	}
 
-	public static Boolean compare(CompareCriteria criteria, Object leftValue,
-			Object rightValue) throws ExpressionEvaluationException {
-		switch(criteria.getOperator()) {
-			case CompareCriteria.EQ:
-				return Boolean.valueOf(compareValues(leftValue, rightValue) == 0);
-			case CompareCriteria.NE:
-				return Boolean.valueOf(compareValues(leftValue, rightValue) != 0);
-			case CompareCriteria.LT:
-				return Boolean.valueOf((compareValues(leftValue, rightValue) < 0));
-			case CompareCriteria.LE:
-				return Boolean.valueOf((compareValues(leftValue, rightValue) <= 0));
-			case CompareCriteria.GT:
-				return Boolean.valueOf((compareValues(leftValue, rightValue) > 0));
-			case CompareCriteria.GE:
-				return Boolean.valueOf((compareValues(leftValue, rightValue) >= 0));
-			default:
-                throw new ExpressionEvaluationException("ERR.015.006.0012", QueryPlugin.Util.getString("ERR.015.006.0012", criteria.getOperator())); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-	}
-
-    private static final int compareValues(Object leftValue, Object rightValue) {
-    	assert leftValue instanceof Comparable<?>;
-    	assert rightValue instanceof Comparable<?>;
-    	if (leftValue == rightValue) {
-    		return 0;
-    	}
-        return Constant.compare((Comparable<?>)leftValue, (Comparable<?>)rightValue);
-    }
-
 	public Boolean evaluate(MatchCriteria criteria, List<?> tuple)
 		throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 
@@ -467,7 +438,7 @@ public class Evaluator {
             }
 
 			if(value != null) {
-				if(compareValues(leftValue, value) == 0) {
+				if(Constant.COMPARATOR.compare(leftValue, value) == 0) {
 					return Boolean.valueOf(!criteria.isNegated());
 				} // else try next value
 			} else {
@@ -532,30 +503,7 @@ public class Evaluator {
             Object value = valueIter.next();
 
             if(value != null) {
-            	int compare = compareValues(leftValue, value);
-                // Compare two non-null values using specified operator
-                switch(criteria.getOperator()) {
-                    case SubqueryCompareCriteria.EQ:
-                        result = Boolean.valueOf(compare == 0);
-                        break;
-                    case SubqueryCompareCriteria.NE:
-                        result = Boolean.valueOf(compare != 0);
-                        break;
-                    case SubqueryCompareCriteria.LT:
-                        result = Boolean.valueOf(compare < 0);
-                        break;
-                    case SubqueryCompareCriteria.LE:
-                        result = Boolean.valueOf(compare <= 0);
-                        break;
-                    case SubqueryCompareCriteria.GT:
-                        result = Boolean.valueOf(compare > 0);
-                        break;
-                    case SubqueryCompareCriteria.GE:
-                        result = Boolean.valueOf(compare >= 0);
-                        break;
-                    default:
-                        throw new ExpressionEvaluationException("ERR.015.006.0012", QueryPlugin.Util.getString("ERR.015.006.0012", criteria.getOperator())); //$NON-NLS-1$ //$NON-NLS-2$
-                }
+            	result = compare(criteria, leftValue, value);
 
                 switch(criteria.getPredicateQuantifier()) {
                     case SubqueryCompareCriteria.ALL:
@@ -581,6 +529,36 @@ public class Evaluator {
 
         return result;
     }
+
+	public static Boolean compare(AbstractCompareCriteria criteria, Object leftValue,
+			Object value) throws AssertionError {
+		int compare = Constant.COMPARATOR.compare(leftValue, value);
+		// Compare two non-null values using specified operator
+		Boolean result = null;
+		switch(criteria.getOperator()) {
+		    case CompareCriteria.EQ:
+		        result = Boolean.valueOf(compare == 0);
+		        break;
+		    case CompareCriteria.NE:
+		        result = Boolean.valueOf(compare != 0);
+		        break;
+		    case CompareCriteria.LT:
+		        result = Boolean.valueOf(compare < 0);
+		        break;
+		    case CompareCriteria.LE:
+		        result = Boolean.valueOf(compare <= 0);
+		        break;
+		    case CompareCriteria.GT:
+		        result = Boolean.valueOf(compare > 0);
+		        break;
+		    case CompareCriteria.GE:
+		        result = Boolean.valueOf(compare >= 0);
+		        break;
+		    default:
+		        throw new AssertionError();
+		}
+		return result;
+	}
 
     public boolean evaluate(ExistsCriteria criteria, List<?> tuple)
         throws BlockedException, TeiidComponentException, ExpressionEvaluationException {

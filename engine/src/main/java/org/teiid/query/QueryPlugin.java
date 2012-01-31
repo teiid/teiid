@@ -75,5 +75,7 @@ public class QueryPlugin { // extends Plugin {
 		TEIID30029, // unexpected format
 		TEIID30030, // unexpected exp1
 		TEIID30031, // unexpected exp2
+		TEIID30032, // invalid collation locale
+		TEIID30033, // using collation locale
 	}
 }

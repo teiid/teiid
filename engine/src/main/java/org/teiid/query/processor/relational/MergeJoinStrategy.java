@@ -323,7 +323,7 @@ public class MergeJoinStrategy extends JoinStrategy {
                 return 1;
             }
 
-            int c = Constant.compare((Comparable)rightValue, (Comparable)leftValue);
+            int c = Constant.COMPARATOR.compare(rightValue, leftValue);
             if (c != 0) {
                 return c;
             }
