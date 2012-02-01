@@ -909,11 +909,16 @@ public class DQPCore implements DQP {
 	// global txn
 	public ResultsFuture<?> start(final XidImpl xid, final int flags, final int timeout)
 			throws XATransactionException {
+		final DQPWorkContext workContext = DQPWorkContext.getWorkContext();
+		if (workContext.getSession().isEmbedded()) {
+		    //must be a synch call regardless since the txn should be associated with the thread.
+			getTransactionService().start(workContext.getSessionId(), xid, flags, timeout, true);
+			return ResultsFuture.NULL_FUTURE;
+		}
 		Callable<Void> processor = new Callable<Void>() {
 			@Override
 			public Void call() throws Exception {
-				DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-				getTransactionService().start(workContext.getSessionId(), xid, flags, timeout, workContext.getSession().isEmbedded());
+				getTransactionService().start(workContext.getSessionId(), xid, flags, timeout, false);
 				return null;
 			}
 		};
