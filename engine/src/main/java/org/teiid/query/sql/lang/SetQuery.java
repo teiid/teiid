@@ -32,6 +32,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.LanguageObject;
@@ -141,7 +142,7 @@ public class SetQuery extends QueryCommand {
                 try {
                     symbol = ResolverUtil.convertExpression(symbol, DataTypeManager.getDataTypeName(type), metadata);
                 } catch (QueryResolverException err) {
-                    throw new TeiidRuntimeException(err);
+                     throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30447, err);
                 }
                 
                 if (originalSymbol instanceof Symbol) {

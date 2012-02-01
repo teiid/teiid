@@ -33,6 +33,7 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingNode;
@@ -183,7 +184,7 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
             baseQuery.setCriteria(inputSetCriteria);
             rsInfo.setCriteriaRaised(true);
         } catch (Exception e) {
-            throw new TeiidRuntimeException(e);
+             throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30289, e);
         } 
     }
 

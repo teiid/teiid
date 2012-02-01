@@ -108,9 +108,9 @@ public class AdminFactory {
                         + host + ":" + port); //$NON-NLS-1$ 
                 return new AdminImpl(newClient);
             } 
-            System.out.println("The controller is not available at " + host + ":" + port); //$NON-NLS-1$ //$NON-NLS-2$
+            System.out.println(AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70051, host, port)); //$NON-NLS-1$ //$NON-NLS-2$
         } catch (UnknownHostException e) {
-        	throw new AdminProcessingException("Failed to resolve host '" + host + "': " + e.getLocalizedMessage()); //$NON-NLS-1$ //$NON-NLS-2$
+        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70000, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70000, host, e.getLocalizedMessage()));
         }
         return null;
     }
@@ -298,7 +298,7 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (!Util.isSuccess(outcome)) {
-	                throw new AdminProcessingException(Util.getFailureDescription(outcome));
+	                 throw new AdminProcessingException(AdminPlugin.Event.TEIID70001, Util.getFailureDescription(outcome));
 	            }
 	            List<String> drivers = getList(outcome, new AbstractMetadatMapper() {
 					@Override
@@ -311,7 +311,7 @@ public class AdminFactory {
 				});
 	            return drivers;
 	        } catch (IOException e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70002, e);
 	        }	
 		}
 		
@@ -321,7 +321,7 @@ public class AdminFactory {
 			
 			Collection<String> dsNames = getDataSourceNames();
 			if (dsNames.contains(deploymentName)) {
-				throw new AdminProcessingException(AdminPlugin.Util.getString("datasource_exists", deploymentName));
+				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70003, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70003, deploymentName));
 			}
 			
 			Set<String> resourceAdapters = getAvailableResourceAdapterNames();
@@ -332,7 +332,7 @@ public class AdminFactory {
 			
         	List<String> drivers = getInstalledJDBCDrivers();
         	if (!drivers.contains(templateName)) {
-        		throw new AdminProcessingException(AdminPlugin.Util.getString("driver_not_defined", templateName));
+        		 throw new AdminProcessingException(AdminPlugin.Event.TEIID70004, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70004, templateName));
         	}
         	
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
@@ -364,7 +364,7 @@ public class AdminFactory {
 		            }
 	            }
 	            else {
-	            	throw new AdminProcessingException(AdminPlugin.Util.getString("connection_url_required"));
+	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70005, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70005));
 	            }
 	            
 	            request = builder.buildRequest();
@@ -393,10 +393,10 @@ public class AdminFactory {
 			try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (!Util.isSuccess(outcome)) {
-	                throw new AdminProcessingException(Util.getFailureDescription(outcome));
+	                 throw new AdminProcessingException(AdminPlugin.Event.TEIID70006, Util.getFailureDescription(outcome));
 	            }
 	        } catch (IOException e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70007, e);
 	        }
 		}
 
@@ -406,7 +406,7 @@ public class AdminFactory {
 			
 			Collection<String> dsNames = getDataSourceNames();
 			if (!dsNames.contains(deployedName)) {
-				throw new AdminProcessingException(AdminPlugin.Util.getString("datasource_doesnot_exists", deployedName));
+				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70008, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70008, deployedName));
 			}
 			
 			boolean deleted = deleteDS(deployedName, false, "datasources", "data-source");
@@ -463,7 +463,7 @@ public class AdminFactory {
 	            }
 	            return true;
 	        } catch (IOException e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70009, e);
 	        }
 		}
 
@@ -473,7 +473,7 @@ public class AdminFactory {
 			try {			
 				request = buildUndeployRequest(deployedName);
 	        } catch (OperationFormatException e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70010, e);
 	        }
 			execute(request);
 		}
@@ -564,9 +564,9 @@ public class AdminFactory {
 	            }     
 	            return composite;
 			} catch (OperationFormatException e) {
-				throw new AdminProcessingException(e);
+				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70011, e);
 			} catch (IOException e) {
-				throw new AdminProcessingException(e);
+				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70012, e);
 			}      
 		}
 
@@ -583,7 +583,7 @@ public class AdminFactory {
 	            	
 	            }
 	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70013, e);
 	        }
 	        return null;
 		}
@@ -601,7 +601,7 @@ public class AdminFactory {
 	            	return Util.getList(outcome);
 	            }
 	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70014, e);
 	        }
 	        return Collections.emptyList();
 		}
@@ -614,7 +614,7 @@ public class AdminFactory {
 	                return Util.getList(outcome);
 	            }
 	        } catch (IOException e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70015, e);
 	        }
 	        return Collections.emptyList();	
 			
@@ -671,9 +671,9 @@ public class AdminFactory {
 				    	}
 				    }
 				} catch (OperationFormatException e) {
-				    throw new AdminProcessingException("Failed to build operation", e); //$NON-NLS-1$
+				     throw new AdminProcessingException(AdminPlugin.Event.TEIID70016, e, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70016));
 				} catch (IOException e) {
-					throw new AdminProcessingException("Failed to build operation", e); //$NON-NLS-1$
+					 throw new AdminProcessingException(AdminPlugin.Event.TEIID70017, e, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70017));
 				}
 			}
 			return datasourceNames;
@@ -695,7 +695,7 @@ public class AdminFactory {
 	                return templates;
 	            }
 	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70018, e);
 	        }
 	        return Collections.emptySet();					
 		}
@@ -722,7 +722,7 @@ public class AdminFactory {
 	            	}
 	            }
 	        } catch (IOException e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70019, e);
 	        }
 	        return templates;
 		}
@@ -748,7 +748,7 @@ public class AdminFactory {
 		            	}	            	
 		            }		            
 		        } catch (Exception e) {
-		        	throw new AdminProcessingException(e);
+		        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70020, e);
 		        }
 			}
 	        return null;
@@ -764,10 +764,10 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (!Util.isSuccess(outcome)) {
-	            	throw new AdminProcessingException(Util.getFailureDescription(outcome));
+	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70021, Util.getFailureDescription(outcome));
 	            }
 	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70022, e);
 	        }		
 		}
 		
@@ -781,7 +781,7 @@ public class AdminFactory {
 		                return getList(outcome, RequestMetadataMapper.INSTANCE);
 		            }
 		        } catch (Exception e) {
-		        	throw new AdminProcessingException(e);
+		        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70023, e);
 		        }
 			}
 	        return Collections.emptyList();
@@ -797,7 +797,7 @@ public class AdminFactory {
 		                return getList(outcome, RequestMetadataMapper.INSTANCE);
 		            }
 		        } catch (Exception e) {
-		        	throw new AdminProcessingException(e);
+		        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70024, e);
 		        }
 			}
 	        return Collections.emptyList();
@@ -813,7 +813,7 @@ public class AdminFactory {
 		                return getList(outcome, SessionMetadataMapper.INSTANCE);
 		            }
 		        } catch (Exception e) {
-		        	throw new AdminProcessingException(e);
+		        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70025, e);
 		        }
 			}
 	        return Collections.emptyList();
@@ -839,11 +839,11 @@ public class AdminFactory {
 			        try {
 			            ModelNode outcome = this.connection.execute(request);
 			            if (!Util.isSuccess(outcome)) {
-			                throw new AdminProcessingException(Util.getFailureDescription(outcome));
+			                 throw new AdminProcessingException(AdminPlugin.Event.TEIID70026, Util.getFailureDescription(outcome));
 			            }
 			            result = outcome.get("result");
 			        } catch (IOException e) {
-			        	throw new AdminProcessingException(e);
+			        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70027, e);
 			        }			            
 	        	}
 	        	else {
@@ -974,7 +974,7 @@ public class AdminFactory {
 		                return getList(outcome, TransactionMetadataMapper.INSTANCE);
 		            }
 		        } catch (Exception e) {
-		        	throw new AdminProcessingException(e);
+		        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70028, e);
 		        }
 			}
 	        return Collections.emptyList();
@@ -989,10 +989,10 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (!Util.isSuccess(outcome)) {
-	            	throw new AdminProcessingException(Util.getFailureDescription(outcome));
+	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70029, Util.getFailureDescription(outcome));
 	            }
 	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70030, e);
 	        }			
 		}
 
@@ -1005,10 +1005,10 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (!Util.isSuccess(outcome)) {
-	            	throw new AdminProcessingException(Util.getFailureDescription(outcome));
+	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70031, Util.getFailureDescription(outcome));
 	            }
 	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70032, e);
 	        }			
 		}		
 
@@ -1028,7 +1028,7 @@ public class AdminFactory {
 	            }
 	            
 	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70033, e);
 	        }			
 			return null;
 		}
@@ -1042,7 +1042,7 @@ public class AdminFactory {
 	                return getList(outcome, VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE);
 	            }
 	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70034, e);
 	        }
 
 	        return Collections.emptyList();
@@ -1111,7 +1111,7 @@ public class AdminFactory {
 	            	}	            	
 	            }
 	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70035, e);
 	        }			
 			return null;
 		}
@@ -1125,7 +1125,7 @@ public class AdminFactory {
 	                return getSet(outcome, VDBMetadataMapper.INSTANCE);
 	            }
 	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70036, e);
 	        }
 
 	        return Collections.emptySet();
@@ -1143,10 +1143,10 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (!Util.isSuccess(outcome)) {
-	                throw new AdminProcessingException(Util.getFailureDescription(outcome));
+	                 throw new AdminProcessingException(AdminPlugin.Event.TEIID70037, Util.getFailureDescription(outcome));
 	            }
 	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70038, e);
 	        }			
 		}
 
@@ -1160,10 +1160,10 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (!Util.isSuccess(outcome)) {
-	            	throw new AdminProcessingException(Util.getFailureDescription(outcome));
+	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70039, Util.getFailureDescription(outcome));
 	            }
 	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70040, e);
 	        }
 		}		
 		
@@ -1177,10 +1177,10 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (!Util.isSuccess(outcome)) {
-	            	throw new AdminProcessingException(Util.getFailureDescription(outcome));
+	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70041, Util.getFailureDescription(outcome));
 	            }
 	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70042, e);
 	        }		
 		}
 
@@ -1200,10 +1200,10 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (!Util.isSuccess(outcome)) {
-	            	throw new AdminProcessingException(Util.getFailureDescription(outcome));
+	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70043, Util.getFailureDescription(outcome));
 	            }
 	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70044, e);
 	        }			
 		}
 
@@ -1216,10 +1216,10 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (!Util.isSuccess(outcome)) {
-	            	throw new AdminProcessingException(Util.getFailureDescription(outcome));
+	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70045, Util.getFailureDescription(outcome));
 	            }
 	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70046, e);
 	        }				
 		}		
 		
@@ -1236,10 +1236,10 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (!Util.isSuccess(outcome)) {
-	            	throw new AdminProcessingException(Util.getFailureDescription(outcome));
+	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70047, Util.getFailureDescription(outcome));
 	            }
 	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70048, e);
 	        }				
 		}
 		
@@ -1249,10 +1249,10 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (!Util.isSuccess(outcome)) {
-	            	throw new AdminProcessingException(Util.getFailureDescription(outcome));
+	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70049, Util.getFailureDescription(outcome));
 	            }
 	        } catch (Exception e) {
-	        	throw new AdminProcessingException(e);
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70050, e);
 	        }	    	
 	    }		
     }

@@ -92,7 +92,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 		@Override
 		public void validate(Object value) throws QueryValidatorException {
 			if (((Integer)value).intValue() < 0) {
-				throw new QueryValidatorException(QueryPlugin.Util.getString(msgKey)); 
+				 throw new QueryValidatorException(QueryPlugin.Event.TEIID30242, QueryPlugin.Util.getString(msgKey));
 			}
 		}
 	}

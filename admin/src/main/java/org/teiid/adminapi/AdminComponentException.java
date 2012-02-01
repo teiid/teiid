@@ -22,6 +22,8 @@
 
 package org.teiid.adminapi;
 
+import org.teiid.core.BundleUtil;
+
 
 /**
  * An <code>AdminComponentException</code> is thrown when an error occurs as a
@@ -58,7 +60,7 @@ public final class AdminComponentException extends AdminException {
      * @param msg the error message.
      * @since 4.3
      */
-    public AdminComponentException(String code, String msg) {
+    public AdminComponentException(BundleUtil.Event code, String msg) {
         super(code, msg);
     }
     
@@ -66,8 +68,11 @@ public final class AdminComponentException extends AdminException {
         super(msg, cause);
     }
 
-    public AdminComponentException(String code, String msg, Throwable cause) {
-        super(code, msg, cause);
+    public AdminComponentException(BundleUtil.Event code, Throwable cause, String msg) {
+        super(code, cause, msg);
     }
-
+    
+    public AdminComponentException(BundleUtil.Event code, Throwable cause) {
+        super(code, cause);
+    }
 }

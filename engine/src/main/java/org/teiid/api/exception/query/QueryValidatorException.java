@@ -22,13 +22,17 @@
 
 package org.teiid.api.exception.query;
 
+import org.teiid.core.BundleUtil;
+
 /**
  * This exception is thrown if an error is discovered while validating the query.  Validation
  * checks a number of aspects of a query to ensure that the query is semantically valid.
  */
 public class QueryValidatorException extends QueryProcessingException {
 
-    /**
+	private static final long serialVersionUID = 7003393883967513820L;
+
+	/**
      * No-arg constructor required by Externalizable semantics.
      */
     public QueryValidatorException() {
@@ -45,34 +49,24 @@ public class QueryValidatorException extends QueryProcessingException {
     }
 
     /**
-     * Construct an instance with the message and error code specified.
-     *
-     * @param message A message describing the exception
-     * @param code The error code
-     */
-    public QueryValidatorException( String code, String message ) {
-        super( code, message );
-    }
-
-    /**
      * Construct an instance from a message and an exception to chain to this one.
      *
      * @param message A message describing the exception
      * @param e An exception to nest within this one
      */
-    public QueryValidatorException( Throwable e, String message ) {
+    public QueryValidatorException(Throwable e, String message ) {
         super( e, message );
     }
-
-    /**
-     * Construct an instance from a message and a code and an exception to
-     * chain to this one.
-     *
-     * @param e An exception to nest within this one
-     * @param message A message describing the exception
-     * @param code A code denoting the exception
-     */
-    public QueryValidatorException( Throwable e, String code, String message ) {
-        super( e, code, message );
+    
+    public QueryValidatorException(BundleUtil.Event event, Throwable e) {
+        super( event, e);
+    }    
+    
+    public QueryValidatorException(BundleUtil.Event event, Throwable e, String msg) {
+        super(event, e, msg);
     }
+    
+    public QueryValidatorException(BundleUtil.Event event, String msg) {
+        super(event, msg);
+    }    
 }

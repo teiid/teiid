@@ -127,7 +127,7 @@ public class FunctionMetadataValidator {
      */
     public static final void validateFunctionParameter(FunctionParameter param) throws FunctionMetadataException {
         if(param == null) {
-            throw new FunctionMetadataException("ERR.015.001.0053", QueryPlugin.Util.getString("ERR.015.001.0053")); //$NON-NLS-1$ //$NON-NLS-2$
+             throw new FunctionMetadataException(QueryPlugin.Event.TEIID30427, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30427));
         }
 
         // Validate attributes
@@ -166,7 +166,7 @@ public class FunctionMetadataValidator {
         validateIsNotNull(type, "Type"); //$NON-NLS-1$
 
         if(DataTypeManager.getDataTypeClass(type) == null) {
-            throw new FunctionMetadataException("ERR.015.001.0054", QueryPlugin.Util.getString("ERR.015.001.0054", type)); //$NON-NLS-1$ //$NON-NLS-2$
+             throw new FunctionMetadataException(QueryPlugin.Event.TEIID30428, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30428, type));
         }
     }
 
@@ -227,7 +227,7 @@ public class FunctionMetadataValidator {
      */
 	private static final void validateIsNotNull(Object object, String objName) throws FunctionMetadataException {
 		if(object == null) {
-		    throw new FunctionMetadataException("ERR.015.001.0052", QueryPlugin.Util.getString("ERR.015.001.0052", objName)); //$NON-NLS-1$ //$NON-NLS-2$
+		     throw new FunctionMetadataException(QueryPlugin.Event.TEIID30429, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30429, objName));
 		}
 	}
 
@@ -241,7 +241,7 @@ public class FunctionMetadataValidator {
      */
 	private static final void validateLength(String string, int maxLength, String strName) throws FunctionMetadataException {
 	 	if(string.length() > maxLength) {
-	 	 	throw new FunctionMetadataException("ERR.015.001.0055", QueryPlugin.Util.getString("ERR.015.001.0055",strName, new Integer(maxLength))); //$NON-NLS-1$ //$NON-NLS-2$
+	 	 	 throw new FunctionMetadataException(QueryPlugin.Event.TEIID30430, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30430,strName, new Integer(maxLength)));
 	 	}
 	}
 
@@ -254,7 +254,7 @@ public class FunctionMetadataValidator {
      */
 	private static final void validateNameCharacters(String name, String strName) throws FunctionMetadataException {
 		if (name.indexOf('.') > 0) {
-			throw new FunctionMetadataException("ERR.015.001.0057", QueryPlugin.Util.getString("ERR.015.001.0057",strName, '.')); //$NON-NLS-1$ //$NON-NLS-2$
+			 throw new FunctionMetadataException(QueryPlugin.Event.TEIID30431, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30431,strName, '.'));
 		}
 	}
 
@@ -271,7 +271,7 @@ public class FunctionMetadataValidator {
 		if(identifier.length() > 0) {
 			char firstChar = identifier.charAt(0);
 			if(! Character.isJavaIdentifierStart(firstChar)) {
-			 	throw new FunctionMetadataException("ERR.015.001.0056", QueryPlugin.Util.getString("ERR.015.001.0056",strName, new Character(firstChar))); //$NON-NLS-1$ //$NON-NLS-2$
+			 	 throw new FunctionMetadataException(QueryPlugin.Event.TEIID30432, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30432,strName, new Character(firstChar)));
 			}
 
 			// Then check the rest of the characters
@@ -279,13 +279,13 @@ public class FunctionMetadataValidator {
 				char ch = identifier.charAt(i);
 				if(! Character.isJavaIdentifierPart(ch)) {
 				    if(! allowMultiple || ! (ch == '.')) {
-					 	throw new FunctionMetadataException("ERR.015.001.0057", QueryPlugin.Util.getString("ERR.015.001.0057",strName, new Character(ch))); //$NON-NLS-1$ //$NON-NLS-2$
+					 	 throw new FunctionMetadataException(QueryPlugin.Event.TEIID30433, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30433,strName, new Character(ch)));
 				    }
 				}
 			}
 
 			if(identifier.charAt(identifier.length()-1) == '.') {
-			 	throw new FunctionMetadataException("ERR.015.001.0058", QueryPlugin.Util.getString("ERR.015.001.0058",strName)); //$NON-NLS-1$ //$NON-NLS-2$
+			 	 throw new FunctionMetadataException(QueryPlugin.Event.TEIID30434, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30434,strName));
 			}
 	    }
 	}

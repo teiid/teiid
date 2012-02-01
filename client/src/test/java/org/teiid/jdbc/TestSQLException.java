@@ -35,6 +35,7 @@ import java.sql.SQLException;
 
 import org.junit.Test;
 import org.teiid.client.ProcedureErrorInstructionException;
+import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
@@ -214,9 +215,12 @@ public class TestSQLException {
         assertEquals(exception.getNextException().getMessage(), sqlexception.getMessage());
         assertEquals(exception.getNextException().getNextException().getMessage(), nested.getMessage());
     }
-    
+	public static enum Event implements BundleUtil.Event {
+		T21,
+	}
     @Test public void testCodeAsSQLState() {
-        TeiidException sqlexception = new TeiidException("foo", "21"); //$NON-NLS-1$ //$NON-NLS-2$
+
+        TeiidException sqlexception = new TeiidException(Event.T21, "foo"); //$NON-NLS-1$ 
         
         String message = "top level message"; //$NON-NLS-1$
         

@@ -22,6 +22,7 @@
 
 package org.teiid.core.crypto;
 
+import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidException;
 
 /**
@@ -60,7 +61,7 @@ public class CryptoException extends TeiidException {
      * @param message A message describing the exception
      * @param code The error code
      */
-    public CryptoException( String code, String message ) {
+    public CryptoException(BundleUtil.Event code, String message ) {
         super( code, message );
     }
 
@@ -82,8 +83,12 @@ public class CryptoException extends TeiidException {
      * @param message A message describing the exception
      * @param code A code denoting the exception
      */
-    public CryptoException( Throwable e, String code, String message ) {
-        super( e, code, message );
+    public CryptoException(BundleUtil.Event code, Throwable e, String message ) {
+        super(code, e, message);
     }
+    
+    public CryptoException(BundleUtil.Event code, Throwable e) {
+        super(code, e);
+    }    
 
 } // END CLASS

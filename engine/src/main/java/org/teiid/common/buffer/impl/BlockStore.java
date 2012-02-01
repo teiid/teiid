@@ -32,6 +32,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.query.QueryPlugin;
 
 /**
  * Represents a FileStore that holds blocks of a fixed size.
@@ -59,7 +60,7 @@ class BlockStore {
 	int getAndSetNextClearBit(PhysicalInfo info) {
 		int result = blocksInUse.getAndSetNextClearBit();
 		if (result == -1) {
-			throw new TeiidRuntimeException("Out of blocks of size " + blockSize); //$NON-NLS-1$
+			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30059, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30059, blockSize));
 		}
 		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
 			LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Allocating storage data block", result, "of size", blockSize, "to", info); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 

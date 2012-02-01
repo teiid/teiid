@@ -147,7 +147,7 @@ public class TestRuleAccessPatternValidation {
         } catch (QueryPlannerException err) {
             //This SHOULD happen.
             final String msg = err.getMessage();
-            final String expected = "Group has an access pattern which has not been met: group(s) [pm4.g1]; access pattern(s) [Access Pattern: Unsatisfied [pm4.g1.e1] History [[pm4.g1.e1]]]"; //$NON-NLS-1$
+            final String expected = "Error Code:TEIID30278 Message:TEIID30278 Group has an access pattern which has not been met: group(s) [pm4.g1]; access pattern(s) [Access Pattern: Unsatisfied [pm4.g1.e1] History [[pm4.g1.e1]]]"; //$NON-NLS-1$
             assertEquals("Did not fail with expected QueryPlannerException", expected, msg); //$NON-NLS-1$
         }
     }
@@ -167,7 +167,7 @@ public class TestRuleAccessPatternValidation {
         } catch (QueryPlannerException err) {
             //This SHOULD happen.
             final String msg = err.getMessage();
-            final String expected = "Group has an access pattern which has not been met: group(s) [pm4.g1]; access pattern(s) [Access Pattern: Unsatisfied [pm4.g1.e1] History [[pm4.g1.e1]]]"; //$NON-NLS-1$
+            final String expected = "Error Code:TEIID30278 Message:TEIID30278 Group has an access pattern which has not been met: group(s) [pm4.g1]; access pattern(s) [Access Pattern: Unsatisfied [pm4.g1.e1] History [[pm4.g1.e1]]]"; //$NON-NLS-1$
             assertEquals("Did not fail with expected QueryPlannerException", expected, msg); //$NON-NLS-1$
         }
     }

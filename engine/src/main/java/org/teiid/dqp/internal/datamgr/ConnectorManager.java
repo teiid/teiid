@@ -113,7 +113,7 @@ public class ConnectorManager  {
 			try {
 				unwrapped = ((WrappedConnection)connection).unwrap();
 			} catch (ResourceException e) {
-				throw new TranslatorException(QueryPlugin.Util.getString("failed_to_unwrap_connection")); //$NON-NLS-1$
+				 throw new TranslatorException(QueryPlugin.Event.TEIID30480, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30480));
 			}	
 		}
 		
@@ -255,7 +255,7 @@ public class ConnectorManager  {
 					}
 				}
 			} catch (Exception e) {
-				throw new TranslatorException(e, QueryPlugin.Util.getString("connection_factory_not_found", this.connectionName)); //$NON-NLS-1$
+				 throw new TranslatorException(QueryPlugin.Event.TEIID30481, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30481, this.connectionName));
 			}   			
     	}
     	return null;
@@ -263,7 +263,7 @@ public class ConnectorManager  {
     
     private void checkStatus() throws TeiidComponentException {
     	if (stopped) {
-    		throw new TeiidComponentException(QueryPlugin.Util.getString("ConnectorManager.not_in_valid_state", this.translatorName)); //$NON-NLS-1$
+    		 throw new TeiidComponentException(QueryPlugin.Event.TEIID30482, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30482, this.translatorName));
     	}
     }
     

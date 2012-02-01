@@ -43,7 +43,7 @@ public class StringToBigIntegerTransform extends Transform {
 		try {
 			return new BigInteger(((String)value).trim());
 		} catch(NumberFormatException e) {
-			throw new TransformationException("ERR.003.029.0015", CorePlugin.Util.getString("ERR.003.029.0015", value)); //$NON-NLS-1$ //$NON-NLS-2$
+			  throw new TransformationException(CorePlugin.Event.TEIID10081, CorePlugin.Util.gs(CorePlugin.Event.TEIID10081, value));
 		}
 	}
 

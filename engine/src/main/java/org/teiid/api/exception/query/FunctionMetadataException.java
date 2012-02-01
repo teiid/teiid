@@ -22,12 +22,16 @@
 
 package org.teiid.api.exception.query;
 
+import org.teiid.core.BundleUtil;
+
 /**
  * Detected invalid function metadata during validation.
  */
 public class FunctionMetadataException extends QueryProcessingException {
 
-    /**
+	private static final long serialVersionUID = -3315048240596850619L;
+
+	/**
      * No-arg constructor required by Externalizable semantics.
      */
     public FunctionMetadataException() {
@@ -42,17 +46,7 @@ public class FunctionMetadataException extends QueryProcessingException {
     public FunctionMetadataException( String message ) {
         super( message );
     }
-
-    /**
-     * Construct an instance with the message and error code specified.
-     *
-     * @param message A message describing the exception
-     * @param code The error code
-     */
-    public FunctionMetadataException( String code, String message ) {
-        super( code, message );
-    }
-
+    
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *
@@ -62,16 +56,16 @@ public class FunctionMetadataException extends QueryProcessingException {
     public FunctionMetadataException( Throwable e, String message ) {
         super( e, message );
     }
-
-    /**
-     * Construct an instance from a message and a code and an exception to
-     * chain to this one.
-     *
-     * @param e An exception to nest within this one
-     * @param message A message describing the exception
-     * @param code A code denoting the exception
-     */
-    public FunctionMetadataException( Throwable e, String code, String message ) {
-        super( e, code, message );
+    
+    public FunctionMetadataException(BundleUtil.Event event, Throwable e) {
+        super( event, e);
+    }    
+    
+    public FunctionMetadataException(BundleUtil.Event event, Throwable e, String msg) {
+        super(event, e, msg);
     }
+    
+    public FunctionMetadataException(BundleUtil.Event event, String msg) {
+        super(event, msg);
+    }      
 }

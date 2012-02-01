@@ -205,7 +205,7 @@ public class XMLQueryResolver implements CommandResolver {
 		}
 		
 		if (subQuery && group.getDefinition() != null) {
-			throw new QueryResolverException(QueryPlugin.Util.getString("XMLQueryResolver.aliased_subquery", group)); //$NON-NLS-1$
+			 throw new QueryResolverException(QueryPlugin.Event.TEIID30129, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30129, group));
 		}
 
 		//external groups
@@ -266,11 +266,11 @@ public class XMLQueryResolver implements CommandResolver {
         
         //we throw exceptions in these cases, since the clauses will not be resolved
         if (query.getGroupBy() != null) {
-            throw new QueryResolverException(QueryPlugin.Util.getString("ERR.015.012.0031")); //$NON-NLS-1$
+             throw new QueryResolverException(QueryPlugin.Event.TEIID30130, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30130));
         }
         
         if (query.getHaving() != null) {
-            throw new QueryResolverException(QueryPlugin.Util.getString("ERR.015.012.0032")); //$NON-NLS-1$
+             throw new QueryResolverException(QueryPlugin.Event.TEIID30131, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30131));
         }	
     }
 
@@ -295,7 +295,7 @@ public class XMLQueryResolver implements CommandResolver {
         			try {
 						ResolverUtil.addTempGroup(metadata, new GroupSymbol(baseNode.getFullyQualifiedName()), Collections.EMPTY_LIST, false).setMetadataType(Type.XML);
 					} catch (QueryResolverException e) {
-						throw new TeiidRuntimeException(e);
+						 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30132, e);
 					}
         		}
         	}
@@ -341,7 +341,7 @@ public class XMLQueryResolver implements CommandResolver {
 				String symbolName = es.getName();
 				if(!subquery && (symbolName.equalsIgnoreCase("xml") || symbolName.equalsIgnoreCase(group.getName() + ".xml"))) { //$NON-NLS-1$ //$NON-NLS-2$
 					if(elements.size() != 1) {
-						throw new QueryResolverException(QueryPlugin.Util.getString("XMLQueryResolver.xml_only_valid_alone")); //$NON-NLS-1$
+						 throw new QueryResolverException(QueryPlugin.Event.TEIID30133, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30133));
 					}
 					select.clearSymbols();
                     MultipleElementSymbol all = new MultipleElementSymbol();
@@ -370,9 +370,9 @@ public class XMLQueryResolver implements CommandResolver {
                 List<ElementSymbol> elementsInNode = getElementsUnderNode(elementSymbol.getMetadataID(), validElements.values(), metadata);
                 all.setElementSymbols(elementsInNode);
 			} else if (ss instanceof ExpressionSymbol) {
-                throw new QueryResolverException(QueryPlugin.Util.getString("XMLQueryResolver.no_expressions_in_select")); //$NON-NLS-1$
+                 throw new QueryResolverException(QueryPlugin.Event.TEIID30134, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30134));
             } else if (ss instanceof AliasSymbol) {
-                throw new QueryResolverException("ERR.015.008.0070", QueryPlugin.Util.getString("ERR.015.008.0070")); //$NON-NLS-1$ //$NON-NLS-2$
+                 throw new QueryResolverException(QueryPlugin.Event.TEIID30135, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30135));
             }
             
 		}
@@ -487,7 +487,7 @@ public class XMLQueryResolver implements CommandResolver {
 	                ResolverVisitor.resolveLanguageObject(elem, Collections.EMPTY_LIST, externalGroups, metadata);
 	                return;
 	            } catch (QueryResolverException e) {
-	                throw new QueryResolverException(e, "ERR.015.008.0019", QueryPlugin.Util.getString("ERR.015.008.0019", fullName)); //$NON-NLS-1$ //$NON-NLS-2$
+	                 throw new QueryResolverException(QueryPlugin.Event.TEIID30136, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30136, fullName));
 	            }
 			}
 		}
@@ -496,7 +496,7 @@ public class XMLQueryResolver implements CommandResolver {
 
         if (partialMatches.size() != 1) {
         	// Found multiple matches
-            throw new QueryResolverException("ERR.015.008.0020", QueryPlugin.Util.getString("ERR.015.008.0020", fullName)); //$NON-NLS-1$ //$NON-NLS-2$
+             throw new QueryResolverException(QueryPlugin.Event.TEIID30137, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30137, fullName));
         } 
 
         ElementSymbol exactMatch = partialMatches.get(0);

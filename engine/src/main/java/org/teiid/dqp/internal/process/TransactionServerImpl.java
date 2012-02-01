@@ -136,7 +136,7 @@ public class TransactionServerImpl implements TransactionService {
 	public int prepare(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException {
         TransactionContext tc = checkXAState(threadId, xid, true, false);
         if (!tc.getSuspendedBy().isEmpty()) {
-            throw new XATransactionException(XAException.XAER_PROTO, QueryPlugin.Util.getString("TransactionServer.suspended_exist", xid)); //$NON-NLS-1$
+             throw new XATransactionException(QueryPlugin.Event.TEIID30505, XAException.XAER_PROTO, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30505, xid));
         }		
         
         // In the container this pass though
@@ -147,7 +147,7 @@ public class TransactionServerImpl implements TransactionService {
         try {
         	return this.xaTerminator.prepare(tc.getXid());
         } catch (XAException e) {
-            throw new XATransactionException(e);
+             throw new XATransactionException(QueryPlugin.Event.TEIID30506, e);
         }
     }
     
@@ -163,7 +163,7 @@ public class TransactionServerImpl implements TransactionService {
         	//TODO: we have no way of knowing for sure if we can safely use the onephase optimization
         	this.xaTerminator.commit(tc.getXid(), false); 
     	} catch (XAException e) {
-            throw new XATransactionException(e);
+             throw new XATransactionException(QueryPlugin.Event.TEIID30507, e);
         } finally {
     		this.transactions.removeTransactionContext(tc);
     	}
@@ -180,7 +180,7 @@ public class TransactionServerImpl implements TransactionService {
         		this.xaTerminator.rollback(tc.getXid());
         	}
     	} catch (XAException e) {
-            throw new XATransactionException(e);
+             throw new XATransactionException(QueryPlugin.Event.TEIID30508, e);
         } finally {
     		this.transactions.removeTransactionContext(tc);
     	}
@@ -198,7 +198,7 @@ public class TransactionServerImpl implements TransactionService {
     	try {
 			return this.xaTerminator.recover(flag);
 		} catch (XAException e) {
-			throw new XATransactionException(e);
+			 throw new XATransactionException(QueryPlugin.Event.TEIID30509, e);
 		}
     }
 
@@ -213,7 +213,7 @@ public class TransactionServerImpl implements TransactionService {
         	}
             this.xaTerminator.forget(xid);
         } catch (XAException err) {
-            throw new XATransactionException(err);
+             throw new XATransactionException(QueryPlugin.Event.TEIID30510, err);
         } finally {
         	this.transactions.removeTransactionContext(tc);
         }
@@ -232,7 +232,7 @@ public class TransactionServerImpl implements TransactionService {
 					checkXAState(threadId, xid, false, false);
 					tc = transactions.getOrCreateTransactionContext(threadId);
 					if (tc.getTransactionType() != TransactionContext.Scope.NONE) {
-					    throw new XATransactionException(XAException.XAER_PROTO, QueryPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
+					     throw new XATransactionException(QueryPlugin.Event.TEIID30511, XAException.XAER_PROTO, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30511));
 					}
 					tc.setTransactionTimeout(timeout);
 					tc.setXid(xid);
@@ -251,15 +251,15 @@ public class TransactionServerImpl implements TransactionService {
 						tc.setTransaction(work.get());
 					}
 				} catch (NotSupportedException e) {
-					throw new XATransactionException(e, XAException.XAER_INVAL);
+					 throw new XATransactionException(QueryPlugin.Event.TEIID30512, XAException.XAER_INVAL, e);
 				} catch (WorkException e) {
-					throw new XATransactionException(e, XAException.XAER_INVAL);
+					 throw new XATransactionException(QueryPlugin.Event.TEIID30513, XAException.XAER_INVAL, e);
 				} catch (InterruptedException e) {
-					throw new XATransactionException(e, XAException.XAER_INVAL);
+					 throw new XATransactionException(QueryPlugin.Event.TEIID30514, XAException.XAER_INVAL, e);
 				} catch (ExecutionException e) {
-					throw new XATransactionException(e, XAException.XAER_INVAL);
+					 throw new XATransactionException(QueryPlugin.Event.TEIID30515, XAException.XAER_INVAL, e);
 				} catch (SystemException e) {
-					throw new XATransactionException(e, XAException.XAER_INVAL);
+					 throw new XATransactionException(QueryPlugin.Event.TEIID30516, XAException.XAER_INVAL, e);
 				}
                 break;
             }
@@ -268,16 +268,16 @@ public class TransactionServerImpl implements TransactionService {
                 tc = checkXAState(threadId, xid, true, false);
                 TransactionContext threadContext = transactions.getOrCreateTransactionContext(threadId);
                 if (threadContext.getTransactionType() != TransactionContext.Scope.NONE) {
-                    throw new XATransactionException(XAException.XAER_PROTO, QueryPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
+                     throw new XATransactionException(QueryPlugin.Event.TEIID30517, XAException.XAER_PROTO, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30517));
                 }
                 
                 if (flags == XAResource.TMRESUME && !tc.getSuspendedBy().remove(threadId)) {
-                    throw new XATransactionException(XAException.XAER_PROTO, QueryPlugin.Util.getString("TransactionServer.resume_failed", new Object[] {xid, threadId})); //$NON-NLS-1$
+                     throw new XATransactionException(QueryPlugin.Event.TEIID30518, XAException.XAER_PROTO, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30518, new Object[] {xid, threadId}));
                 }
                 break;
             }
             default:
-                throw new XATransactionException(XAException.XAER_INVAL, QueryPlugin.Util.getString("TransactionServer.unknown_flags")); //$NON-NLS-1$
+                 throw new XATransactionException(QueryPlugin.Event.TEIID30519, XAException.XAER_INVAL, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30519));
         }
 
         tc.setThreadId(threadId);
@@ -304,7 +304,7 @@ public class TransactionServerImpl implements TransactionService {
                     break;
                 }
                 default:
-                    throw new XATransactionException(XAException.XAER_INVAL, QueryPlugin.Util.getString("TransactionServer.unknown_flags")); //$NON-NLS-1$
+                     throw new XATransactionException(QueryPlugin.Event.TEIID30520, XAException.XAER_INVAL, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30520));
             }
         } finally {
             tc.setThreadId(null);
@@ -316,15 +316,15 @@ public class TransactionServerImpl implements TransactionService {
         TransactionContext tc = transactions.getTransactionContext(xid);
         
         if (transactionExpected && tc == null) {
-            throw new XATransactionException(XAException.XAER_NOTA, QueryPlugin.Util.getString("TransactionServer.no_global_transaction", xid)); //$NON-NLS-1$
+             throw new XATransactionException(QueryPlugin.Event.TEIID30521, XAException.XAER_NOTA, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30521, xid));
         } else if (!transactionExpected) {
             if (tc != null) {
-                throw new XATransactionException(XAException.XAER_DUPID, QueryPlugin.Util.getString("TransactionServer.existing_global_transaction", new Object[] {xid})); //$NON-NLS-1$
+                 throw new XATransactionException(QueryPlugin.Event.TEIID30522, XAException.XAER_DUPID, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30522, new Object[] {xid}));
             }
             if (!threadBound) {
                 tc = transactions.getOrCreateTransactionContext(threadId);
                 if (tc.getTransactionType() != TransactionContext.Scope.NONE) {
-                    throw new XATransactionException(XAException.XAER_PROTO, QueryPlugin.Util.getString("TransactionServer.existing_transaction", new Object[] {xid, threadId})); //$NON-NLS-1$
+                     throw new XATransactionException(QueryPlugin.Event.TEIID30523, XAException.XAER_PROTO, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30523, new Object[] {xid, threadId}));
                 }
             }
             return null;
@@ -332,10 +332,10 @@ public class TransactionServerImpl implements TransactionService {
         
         if (threadBound) {
             if (!threadId.equals(tc.getThreadId())) {
-                throw new XATransactionException(XAException.XAER_PROTO, QueryPlugin.Util.getString("TransactionServer.wrong_transaction", xid)); //$NON-NLS-1$
+                 throw new XATransactionException(QueryPlugin.Event.TEIID30524, XAException.XAER_PROTO, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30524, xid));
             }
         } else if (tc.getThreadId() != null) {
-            throw new XATransactionException(XAException.XAER_PROTO, QueryPlugin.Util.getString("TransactionServer.concurrent_transaction", xid)); //$NON-NLS-1$
+             throw new XATransactionException(QueryPlugin.Event.TEIID30525, XAException.XAER_PROTO, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30525, xid));
         }
         
         return tc;
@@ -359,9 +359,9 @@ public class TransactionServerImpl implements TransactionService {
 	        	throw new InvalidTransactionException(QueryPlugin.Util.getString("TransactionServer.no_transaction", threadId)); //$NON-NLS-1$
 	        }
         } catch (InvalidTransactionException e) {
-        	throw new XATransactionException(e);
+        	 throw new XATransactionException(QueryPlugin.Event.TEIID30526, e);
 		} catch (SystemException e) {
-        	throw new XATransactionException(e);
+        	 throw new XATransactionException(QueryPlugin.Event.TEIID30527, e);
 		}
         return tc;
     }
@@ -373,9 +373,9 @@ public class TransactionServerImpl implements TransactionService {
 			tc.setTransaction(tx);
 			tc.setCreationTime(System.currentTimeMillis());
         } catch (javax.transaction.NotSupportedException err) {
-            throw new XATransactionException(err);
+             throw new XATransactionException(QueryPlugin.Event.TEIID30528, err);
         } catch (SystemException err) {
-            throw new XATransactionException(err);
+             throw new XATransactionException(QueryPlugin.Event.TEIID30529, err);
         }
 	}
 	
@@ -384,15 +384,15 @@ public class TransactionServerImpl implements TransactionService {
 		try {
 			transactionManager.commit();
 		} catch (SecurityException e) {
-			throw new XATransactionException(e);
+			 throw new XATransactionException(QueryPlugin.Event.TEIID30530, e);
 		} catch (RollbackException e) {
-			throw new XATransactionException(e);
+			 throw new XATransactionException(QueryPlugin.Event.TEIID30531, e);
 		} catch (HeuristicMixedException e) {
-			throw new XATransactionException(e);
+			 throw new XATransactionException(QueryPlugin.Event.TEIID30532, e);
 		} catch (HeuristicRollbackException e) {
-			throw new XATransactionException(e);
+			 throw new XATransactionException(QueryPlugin.Event.TEIID30533, e);
 		} catch (SystemException e) {
-			throw new XATransactionException(e);
+			 throw new XATransactionException(QueryPlugin.Event.TEIID30534, e);
 		} finally {
 			transactions.removeTransactionContext(context);
 		}
@@ -403,9 +403,9 @@ public class TransactionServerImpl implements TransactionService {
 		try {
     		this.transactionManager.rollback();
 		} catch (SecurityException e) {
-			throw new XATransactionException(e);
+			 throw new XATransactionException(QueryPlugin.Event.TEIID30535, e);
 		} catch (SystemException e) {
-			throw new XATransactionException(e);
+			 throw new XATransactionException(QueryPlugin.Event.TEIID30536, e);
 		} finally {
             transactions.removeTransactionContext(tc);
         }
@@ -415,7 +415,7 @@ public class TransactionServerImpl implements TransactionService {
 		try {
 			this.transactionManager.suspend();
 		} catch (SystemException e) {
-			throw new XATransactionException(e);
+			 throw new XATransactionException(QueryPlugin.Event.TEIID30537, e);
 		}
 	}
 	
@@ -423,9 +423,9 @@ public class TransactionServerImpl implements TransactionService {
 		try {
 			this.transactionManager.resume(context.getTransaction());
 		} catch (InvalidTransactionException e) {
-			throw new XATransactionException(e);
+			 throw new XATransactionException(QueryPlugin.Event.TEIID30538, e);
 		} catch (SystemException e) {
-			throw new XATransactionException(e);
+			 throw new XATransactionException(QueryPlugin.Event.TEIID30539, e);
 		}
 	}
 
@@ -464,7 +464,7 @@ public class TransactionServerImpl implements TransactionService {
      */
     public void begin(TransactionContext context) throws XATransactionException{
         if (context.getTransactionType() != TransactionContext.Scope.NONE) {
-            throw new XATransactionException(QueryPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
+             throw new XATransactionException(QueryPlugin.Event.TEIID30540, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30540));
         }
         beginDirect(context);
         context.setTransactionType(TransactionContext.Scope.REQUEST);
@@ -497,7 +497,7 @@ public class TransactionServerImpl implements TransactionService {
         try {
             tc.getTransaction().setRollbackOnly();
 		} catch (SystemException e) {
-			throw new XATransactionException(e);
+			 throw new XATransactionException(QueryPlugin.Event.TEIID30541, e);
 		}
     }
 
@@ -531,7 +531,7 @@ public class TransactionServerImpl implements TransactionService {
 		try {
 			cancelTransactions(threadId, false);
 		} catch (XATransactionException e) {
-			throw new AdminProcessingException(e);
+			 throw new AdminProcessingException(QueryPlugin.Event.TEIID30542, e);
 		}
 	}
 	

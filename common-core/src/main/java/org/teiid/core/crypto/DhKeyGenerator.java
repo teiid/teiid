@@ -43,6 +43,7 @@ import java.util.Properties;
 import javax.crypto.KeyAgreement;
 import javax.crypto.spec.DHParameterSpec;
 
+import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidRuntimeException;
 
 
@@ -64,7 +65,7 @@ public class DhKeyGenerator {
 			is = DhKeyGenerator.class.getResourceAsStream("dh.properties"); //$NON-NLS-1$
 			props.load(is); 
 		} catch (IOException e) {
-			throw new TeiidRuntimeException(e);
+			  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10000, e);
 		} finally {
 			try {
 				if (is != null) {
@@ -97,9 +98,9 @@ public class DhKeyGenerator {
 
 			return publicKey.getEncoded();
 		} catch (NoSuchAlgorithmException e) {
-			throw new CryptoException(e);
+			  throw new CryptoException(CorePlugin.Event.TEIID10001, e);
 		} catch (InvalidAlgorithmParameterException e) {
-			throw new CryptoException(e);
+			  throw new CryptoException(CorePlugin.Event.TEIID10002, e);
 		}
 	}
 
@@ -126,11 +127,11 @@ public class DhKeyGenerator {
 			System.arraycopy(hash, 0, symKey, 0, symKey.length);
 			return SymmetricCryptor.getSymmectricCryptor(symKey);
 		} catch (NoSuchAlgorithmException e) {
-			throw new CryptoException(e);
+			  throw new CryptoException(CorePlugin.Event.TEIID10003, e);
 		} catch (InvalidKeySpecException e) {
-			throw new CryptoException(e);
+			  throw new CryptoException(CorePlugin.Event.TEIID10004, e);
 		} catch (InvalidKeyException e) {
-			throw new CryptoException(e);
+			  throw new CryptoException(CorePlugin.Event.TEIID10005, e);
 		}
 	}
 

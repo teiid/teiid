@@ -88,7 +88,7 @@ public class Avg extends Sum {
                 try {
                     return FunctionMethods.divide((BigDecimal)sum, new BigDecimal(count));
                 } catch(ArithmeticException e) {
-                    throw new FunctionExecutionException(e, "ERR.015.001.0048", QueryPlugin.Util.getString("ERR.015.001.0048", sum, count)); //$NON-NLS-1$ //$NON-NLS-2$
+                     throw new FunctionExecutionException(QueryPlugin.Event.TEIID30424, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30424, sum, count));
                 }
             default:
                 throw new AssertionError("unknown accumulator type"); //$NON-NLS-1$

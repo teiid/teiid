@@ -35,6 +35,7 @@ import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.Table.Type;
+import org.teiid.query.QueryPlugin;
 
 
 /**
@@ -62,7 +63,7 @@ public class CompositeMetadataStore extends MetadataStore {
 			throws QueryMetadataException {
 		Schema result = getSchemas().get(fullName);
 		if (result == null) {
-	        throw new QueryMetadataException(fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+	         throw new QueryMetadataException(QueryPlugin.Event.TEIID30352, fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}
 		return result;
 	}
@@ -71,12 +72,12 @@ public class CompositeMetadataStore extends MetadataStore {
 			throws QueryMetadataException {
 		int index = fullName.indexOf(TransformationMetadata.DELIMITER_STRING);
 		if (index == -1) {
-		    throw new QueryMetadataException(fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+		     throw new QueryMetadataException(QueryPlugin.Event.TEIID30353, fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}			
 		String schema = fullName.substring(0, index);
 		Table result = getSchema(schema).getTables().get(fullName.substring(index + 1));
 		if (result == null) {
-	        throw new QueryMetadataException(fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+	         throw new QueryMetadataException(QueryPlugin.Event.TEIID30354, fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}
 		return result;
 	}

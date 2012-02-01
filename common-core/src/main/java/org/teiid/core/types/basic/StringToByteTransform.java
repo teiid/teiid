@@ -40,7 +40,7 @@ public class StringToByteTransform extends Transform {
 		try {
 			return Byte.valueOf(((String)value).trim());
 		} catch(NumberFormatException e) {
-			throw new TransformationException("ERR.003.029.0016", CorePlugin.Util.getString("ERR.003.029.0016", value));
+			  throw new TransformationException(CorePlugin.Event.TEIID10074, CorePlugin.Util.gs(CorePlugin.Event.TEIID10074, value));
 		}
 	}
 

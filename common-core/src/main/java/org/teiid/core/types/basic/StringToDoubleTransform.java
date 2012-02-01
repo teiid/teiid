@@ -40,7 +40,7 @@ public class StringToDoubleTransform extends Transform {
 		try {
 			return Double.valueOf((String)value);
 		} catch(NumberFormatException e) {
-			throw new TransformationException("ERR.003.029.0019", CorePlugin.Util.getString("ERR.003.029.0019", value)); //$NON-NLS-1$ //$NON-NLS-2$
+			  throw new TransformationException(CorePlugin.Event.TEIID10078, CorePlugin.Util.gs(CorePlugin.Event.TEIID10078, value));
 		}
 	}
 

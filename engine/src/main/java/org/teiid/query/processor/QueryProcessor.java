@@ -113,7 +113,7 @@ public class QueryProcessor implements BatchProducer {
     		try {
                 Thread.sleep(wait);
             } catch (InterruptedException err) {
-                throw new TeiidComponentException(err);
+                 throw new TeiidComponentException(QueryPlugin.Event.TEIID30159, err);
             }
 	    }
 	}
@@ -133,10 +133,10 @@ public class QueryProcessor implements BatchProducer {
 			
 	        while(currentTime < context.getTimeSliceEnd() || context.isNonBlocking()) {
 	        	if (requestCanceled) {
-	                throw new TeiidProcessingException(SQLStates.QUERY_CANCELED, QueryPlugin.Util.getString("QueryProcessor.request_cancelled", getProcessID())); //$NON-NLS-1$
+	                 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30160, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30160, getProcessID()));
 	            }
 	        	if (currentTime > context.getTimeoutEnd()) {
-	        		throw new TeiidProcessingException("Query timed out"); //$NON-NLS-1$
+	        		 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30161, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30161));
 	        	}
 	            result = processPlan.nextBatch();
 
@@ -172,7 +172,7 @@ public class QueryProcessor implements BatchProducer {
 	    	if (e instanceof TeiidComponentException) {
 	    		throw (TeiidComponentException)e;
 	    	}
-	    	throw new TeiidComponentException(e);
+	    	 throw new TeiidComponentException(QueryPlugin.Event.TEIID30162, e);
 	    }
 		if(done) {
 			closeProcessing();
@@ -265,7 +265,7 @@ public class QueryProcessor implements BatchProducer {
     		try {
                 Thread.sleep(wait);
             } catch (InterruptedException err) {
-                throw new TeiidComponentException(err);
+                 throw new TeiidComponentException(QueryPlugin.Event.TEIID30163, err);
             }
 	    }
 	}

@@ -109,7 +109,7 @@ public abstract class Transform {
 	protected void checkValueRange(Object value, Number min, Number max)
 			throws TransformationException {
 		if (((Comparable)value).compareTo(DataTypeManager.transformValue(min, getSourceType())) < 0 || ((Comparable)value).compareTo(DataTypeManager.transformValue(max, getSourceType())) > 0) {
-			throw new TransformationException(CorePlugin.Util.getString("transform.value_out_of_range", value, getSourceType().getSimpleName(), getTargetType().getSimpleName())); //$NON-NLS-1$
+			  throw new TransformationException(CorePlugin.Event.TEIID10058, CorePlugin.Util.gs(CorePlugin.Event.TEIID10058, value, getSourceType().getSimpleName(), getTargetType().getSimpleName()));
 		}
 	}
 

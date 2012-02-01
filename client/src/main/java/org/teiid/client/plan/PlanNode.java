@@ -22,7 +22,11 @@
 
 package org.teiid.client.plan;
 
-import java.io.*;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -39,6 +43,7 @@ import javax.xml.stream.XMLStreamWriter;
 
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ExternalizeUtil;
+import org.teiid.jdbc.JDBCPlugin;
 
 
 /**
@@ -176,9 +181,9 @@ public class PlanNode implements Externalizable {
 			writer.writeEndDocument();
 			return stringWriter.toString();
 		} catch (FactoryConfigurationError e) {
-			throw new TeiidRuntimeException(e);
+			 throw new TeiidRuntimeException(JDBCPlugin.Event.TEIID20002, e);
 		} catch (XMLStreamException e) {
-			throw new TeiidRuntimeException(e);
+			 throw new TeiidRuntimeException(JDBCPlugin.Event.TEIID20003, e);
 		}
     }
     

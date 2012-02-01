@@ -670,7 +670,7 @@ public final class FileUtils {
                 os.write(contents);
                 return temp;
             } catch (Exception e) {
-                throw new TeiidRuntimeException(e);
+                  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10024, e);
             } finally {
                 if (os != null) {
                     try {
@@ -767,20 +767,20 @@ public final class FileUtils {
         }
         if (!success) {
             final String msg = CorePlugin.Util.getString("FileUtils.Unable_to_create_file_in", dirPath); //$NON-NLS-1$            
-            throw new TeiidException(msg);
+              throw new TeiidException(CorePlugin.Event.TEIID10025, msg);
         }
         
 
         //test if file can be written to
         if (!tmpFile.canWrite()) {
             final String msg = CorePlugin.Util.getString("FileUtils.Unable_to_write_file_in", dirPath); //$NON-NLS-1$            
-            throw new TeiidException(msg);
+              throw new TeiidException(CorePlugin.Event.TEIID10026, msg);
         }
 
         //test if file can be read
         if (!tmpFile.canRead()) {
             final String msg = CorePlugin.Util.getString("FileUtils.Unable_to_read_file_in", dirPath); //$NON-NLS-1$            
-            throw new TeiidException(msg);
+              throw new TeiidException(CorePlugin.Event.TEIID10027, msg);
         }
 
         //test if file can be renamed
@@ -792,7 +792,7 @@ public final class FileUtils {
         }
         if (!success) {
             final String msg = CorePlugin.Util.getString("FileUtils.Unable_to_rename_file_in", dirPath); //$NON-NLS-1$            
-            throw new TeiidException(msg);
+              throw new TeiidException(CorePlugin.Event.TEIID10028, msg);
         }
 
         //test if file can be deleted
@@ -803,7 +803,7 @@ public final class FileUtils {
         }
         if (!success) {
             final String msg = CorePlugin.Util.getString("FileUtils.Unable_to_delete_file_in", dirPath); //$NON-NLS-1$            
-            throw new TeiidException(msg);
+              throw new TeiidException(CorePlugin.Event.TEIID10029, msg);
         }
     }
 

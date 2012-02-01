@@ -227,7 +227,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				try {
 					tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
 				} catch (TransformationException e) {
-					throw new TeiidProcessingException(e, QueryPlugin.Util.getString("TextTableNode.conversion_error", col.getName(), textLine, systemId)); //$NON-NLS-1$
+					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30176, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30176, col.getName(), textLine, systemId));
 				}
 			}
 			addBatchRow(tuple);
@@ -254,7 +254,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				}
 				if (table.isUsingRowDelimiter()) {
 				    if (exact && sb.length() < lineWidth) {
-				    	throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.invalid_width", sb.length(), lineWidth, textLine, systemId)); //$NON-NLS-1$
+				    	 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30177, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30177, sb.length(), lineWidth, textLine, systemId));
 				    }
 					return sb.toString();
 				}
@@ -273,7 +273,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		    		}
 		    		return sb.toString();
 		    	}
-		    	throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.line_too_long", textLine+1, systemId, maxLength)); //$NON-NLS-1$	
+		    	 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30178, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30178, textLine+1, systemId, maxLength));
 		    }
 		}
 	}
@@ -302,7 +302,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		    }
 		    return (char)c;
 		} catch (IOException e) {
-			throw new TeiidProcessingException(e);
+			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30179, e);
 		}
 	}
 
@@ -331,7 +331,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				reader = (BufferedReader)r;
 			}
 		} catch (SQLException e) {
-			throw new TeiidProcessingException(e);
+			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30180, e);
 		}
 		
 		//process the skip field
@@ -367,7 +367,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		for (TextColumn col : table.getColumns()) {
 			Integer index = nameIndexes.get(col.getName().toUpperCase());
 			if (index == null) {
-				throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.header_missing", col.getName(), systemId)); //$NON-NLS-1$
+				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30181, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30181, col.getName(), systemId));
 			}
 			nameIndexes.put(col.getName(), index);
 		}
@@ -405,7 +405,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				} 
 				line = readLine(lineWidth, false);
 				if (line == null) {
-					throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.unclosed", systemId)); //$NON-NLS-1$
+					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30182, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30182, systemId));
 				}
 			}
 			char[] chars = line.toCharArray();
@@ -435,7 +435,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 								builder.append(chr);
 							} else {
 								if (builder.toString().trim().length() != 0) {
-									throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.character_not_allowed", textLine, systemId)); //$NON-NLS-1$
+									 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30183, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30183, textLine, systemId));
 								}
 								qualified = true;
 								builder = new StringBuilder(); //start the entry over
@@ -446,11 +446,11 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				} else {
 					if (escaped) {
 						//don't understand other escape sequences yet
-						throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.unknown_escape", chr, textLine, systemId)); //$NON-NLS-1$ 
+						 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30184, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30184, chr, textLine, systemId));
 					}
 					if (wasQualified && !qualified) {
 						if (!Character.isWhitespace(chr)) {
-							throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.character_not_allowed", textLine, systemId)); //$NON-NLS-1$
+							 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30185, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30185, textLine, systemId));
 						}
 						//else just ignore
 					} else {

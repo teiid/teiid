@@ -721,7 +721,7 @@ class ExecuteQuery extends TeiidOperationHandler{
 						rm = message.get(timoutInMilli, TimeUnit.MILLISECONDS);
 					}
 			        if (rm.getException() != null) {
-			            throw new AdminProcessingException(rm.getException());
+			             throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50047, rm.getException());
 			        }
 			        
 			        if (rm.isUpdateResult()) {
@@ -985,9 +985,9 @@ abstract class VDBOperations extends BaseOperationHandler<VDBMetaData>{
 		try {
 			VDBMetadataParser.marshell(vdb, this.serializer.getVdbXmlOutputStream(vdb));
 		} catch (IOException e) {
-			throw new AdminProcessingException(e);
+			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50048, e);
 		} catch (XMLStreamException e) {
-			throw new AdminProcessingException(e);
+			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50049, e);
 		}
 	}	
 }
@@ -1015,7 +1015,7 @@ class AddDataRole extends VDBOperations {
 			DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
 			
 			if (policy == null) {
-				throw new AdminProcessingException(IntegrationPlugin.Util.getString("policy_not_found", policyName, vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
+				 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50050, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50050, policyName, vdb.getName(), vdb.getVersion()));
 			}		
 			
 			policy.addMappedRoleName(mappedRole);
@@ -1063,7 +1063,7 @@ class RemoveDataRole extends VDBOperations {
 			DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
 			
 			if (policy == null) {
-				throw new AdminProcessingException(IntegrationPlugin.Util.getString("policy_not_found", policyName, vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
+				 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50051, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50051, policyName, vdb.getName(), vdb.getVersion()));
 			}		
 			
 			policy.removeMappedRoleName(mappedRole);
@@ -1106,7 +1106,7 @@ class AddAnyAuthenticatedDataRole extends VDBOperations {
 			DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
 			
 			if (policy == null) {
-				throw new AdminProcessingException(IntegrationPlugin.Util.getString("policy_not_found", policyName, vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
+				 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50052, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50052, policyName, vdb.getName(), vdb.getVersion()));
 			}		
 			
 			policy.setAnyAuthenticated(true);
@@ -1146,7 +1146,7 @@ class RemoveAnyAuthenticatedDataRole extends VDBOperations {
 			DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
 			
 			if (policy == null) {
-				throw new AdminProcessingException(IntegrationPlugin.Util.getString("policy_not_found", policyName, vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
+				 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50053, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50053, policyName, vdb.getName(), vdb.getVersion()));
 			}		
 			
 			policy.setAnyAuthenticated(false);
@@ -1233,12 +1233,12 @@ class AssignDataSource extends VDBOperations {
 			ModelMetaData model = vdb.getModel(modelName);
 			
 			if (model == null) {
-				throw new AdminProcessingException(IntegrationPlugin.Util.getString("model_not_found", modelName, vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
+				 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50054, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50054, modelName, vdb.getName(), vdb.getVersion()));
 			}
 			
 			SourceMappingMetadata source = model.getSourceMapping(sourceName);
 			if(source == null) {
-				throw new AdminProcessingException(IntegrationPlugin.Util.getString("source_not_found", sourceName, modelName, vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
+				 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50055, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50055, sourceName, modelName, vdb.getName(), vdb.getVersion()));
 			}
 			source.setTranslatorName(translatorName);
 			source.setConnectionJndiName(dsName);

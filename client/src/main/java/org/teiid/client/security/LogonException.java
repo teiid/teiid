@@ -22,6 +22,8 @@
 
 package org.teiid.client.security;
 
+import org.teiid.core.BundleUtil;
+
 
 /**
  * This exception is thrown when an attempt to log in to obtain a session has failed.
@@ -33,7 +35,9 @@ package org.teiid.client.security;
  */
 public class LogonException extends TeiidSecurityException {
 
-    /**
+	private static final long serialVersionUID = -4407245748107257061L;
+
+	/**
      * No-Arg Constructor
      */
     public LogonException(  ) {
@@ -54,9 +58,13 @@ public class LogonException extends TeiidSecurityException {
      * @param message A message describing the exception
      * @param code The error code
      */
-    public LogonException( String code, String message ) {
-        super( code, message );
+    public LogonException( BundleUtil.Event event, String message ) {
+        super(event, message);
     }
+    
+    public LogonException( BundleUtil.Event event, Throwable t, String message ) {
+        super(event, t, message );
+    }    
 
     /**
      * Construct an instance from a message and an exception to chain to this one.
@@ -66,18 +74,6 @@ public class LogonException extends TeiidSecurityException {
      */
     public LogonException( Throwable e, String message ) {
         super( e, message );
-    }
-
-    /**
-     * Construct an instance from a message and a code and an exception to
-     * chain to this one.
-     *
-     * @param e An exception to nest within this one
-     * @param message A message describing the exception
-     * @param code A code denoting the exception
-     */
-    public LogonException( Throwable e, String code, String message ) {
-        super( e, code, message );
     }
 }
 

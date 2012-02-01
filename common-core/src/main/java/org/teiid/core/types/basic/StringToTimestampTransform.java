@@ -45,11 +45,11 @@ public class StringToTimestampTransform extends Transform {
 		try {
 			result = Timestamp.valueOf( (String) value );
 		} catch(Exception e) {
-			throw new TransformationException(e, "ERR.003.029.0024", CorePlugin.Util.getString("ERR.003.029.0024", value)); //$NON-NLS-1$ //$NON-NLS-2$
+			  throw new TransformationException(CorePlugin.Event.TEIID10059, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10059, value));
 		}
 		//validate everything except for fractional seconds
 		if (!((String)value).startsWith(result.toString().substring(0, 19))) {
-			throw new TransformationException(CorePlugin.Util.getString("transform.invalid_string_for_date", value, getTargetType().getSimpleName())); //$NON-NLS-1$
+			  throw new TransformationException(CorePlugin.Event.TEIID10060, CorePlugin.Util.gs(CorePlugin.Event.TEIID10060, value, getTargetType().getSimpleName()));
 		}
 		return result;
 	}

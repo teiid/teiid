@@ -130,7 +130,7 @@ public class ServerWorkItem implements Runnable {
 			try {
 				result.setContents(socketClientInstance.getCryptor().sealObject(result.getContents()));
 			} catch (CryptoException e) {
-				throw new TeiidRuntimeException(e);
+				 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40071, e);
 			}
 		}
 		socketClientInstance.send(result, messageKey);

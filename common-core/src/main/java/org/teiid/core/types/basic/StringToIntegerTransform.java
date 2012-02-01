@@ -40,7 +40,7 @@ public class StringToIntegerTransform extends Transform {
 		try {
 			return Integer.valueOf(((String)value).trim());
 		} catch(NumberFormatException e) {
-			throw new TransformationException("ERR.003.029.0021", CorePlugin.Util.getString("ERR.003.029.0021", value)); //$NON-NLS-1$ //$NON-NLS-2$
+			  throw new TransformationException(CorePlugin.Event.TEIID10072, CorePlugin.Util.gs(CorePlugin.Event.TEIID10072, value));
 		}
 	}
 

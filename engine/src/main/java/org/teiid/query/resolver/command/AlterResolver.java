@@ -64,7 +64,7 @@ public class AlterResolver implements CommandResolver {
 			viewTarget = false;
 		}
 		if (viewTarget && !QueryResolver.isView(alter.getTarget(), metadata)) {
-			throw new QueryResolverException(QueryPlugin.Util.getString("AlterResolver.not_a_view", alter.getTarget())); //$NON-NLS-1$
+			 throw new QueryResolverException(QueryPlugin.Event.TEIID30116, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30116, alter.getTarget()));
 		}
 		if (alter.getDefinition() != null) {
 			QueryResolver.resolveCommand(alter.getDefinition(), alter.getTarget(), type, metadata.getDesignTimeMetadata());

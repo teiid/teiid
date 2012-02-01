@@ -33,8 +33,9 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.dqp.internal.process.PreparedPlan;
-import org.teiid.metadata.Procedure;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.Procedure;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempCapabilitiesFinder;
@@ -187,7 +188,7 @@ public class QueryOptimizer {
 					result = planner.optimize(command);
 				}
 			} catch (QueryResolverException e) {
-				throw new TeiidRuntimeException(e);
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30245, e);
 			}
         }
 		
@@ -210,7 +211,7 @@ public class QueryOptimizer {
 		try {
 			command = QueryRewriter.rewrite(command, metadata, context);
 		} catch (TeiidProcessingException e) {
-			throw new QueryPlannerException(e, e.getMessage());
+			 throw new QueryPlannerException(QueryPlugin.Event.TEIID30246, e, e.getMessage());
 		}
 		result = PROCEDURE_PLANNER.optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);
 		return result;

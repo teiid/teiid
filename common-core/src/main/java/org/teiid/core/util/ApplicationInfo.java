@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
+import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidRuntimeException;
 
 
@@ -62,7 +63,7 @@ public final class ApplicationInfo implements Serializable {
 				is.close();
 			}
 		} catch (IOException e) {
-			throw new TeiidRuntimeException(e);
+			  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10045, e);
 		}
     }
     

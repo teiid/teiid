@@ -192,7 +192,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     
 	public AtomicResultsMessage execute() throws TranslatorException {
         if(isCancelled()) {
-    		throw new TranslatorException("Request canceled"); //$NON-NLS-1$
+    		 throw new TranslatorException(QueryPlugin.Event.TEIID30476, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30476));
     	}
         
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Processing NEW request:", this.requestMsg.getCommand()}); //$NON-NLS-1$                                     
@@ -205,7 +205,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 				try {
 					unwrapped = ((WrappedConnection)connection).unwrap();
 				} catch (ResourceException e) {
-					throw new TranslatorException(QueryPlugin.Util.getString("failed_to_unwrap_connection")); //$NON-NLS-1$
+					 throw new TranslatorException(QueryPlugin.Event.TEIID30477, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477));
 				}	
 			}
 
@@ -316,7 +316,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 		        		break;
 	            	} else if (this.rowCount > this.requestMsg.getMaxResultRows() && this.requestMsg.isExceptionOnMaxRows()) {
 	                    String msg = QueryPlugin.Util.getString("ConnectorWorker.MaxResultRowsExceed", this.requestMsg.getMaxResultRows()); //$NON-NLS-1$
-	                    throw new TranslatorException(msg);
+	                     throw new TranslatorException(QueryPlugin.Event.TEIID30478, msg);
 	                }
 	            }
 	        }

@@ -69,13 +69,13 @@ public class LogonImpl implements ILogon {
 		if (this.service.getGssSecurityDomain() != null && connProps.get(ILogon.KRB5TOKEN) != null) {
 			Subject user = this.service.getSubjectInContext(this.service.getGssSecurityDomain());
 			if (user == null) {
-				throw new LogonException(RuntimePlugin.Util.getString("krb5_user_not_found")); //$NON-NLS-1$
+				 throw new LogonException(RuntimePlugin.Event.TEIID40054, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40054));
 			}
 			return logon(connProps, (byte[])connProps.get(ILogon.KRB5TOKEN));
 		}
 		
 		if (!AuthenticationType.CLEARTEXT.equals(service.getAuthenticationType())) {
-			throw new LogonException(RuntimePlugin.Util.getString("wrong_logon_type_jaas")); //$NON-NLS-1$
+			 throw new LogonException(RuntimePlugin.Event.TEIID40055, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40055));
 		}
 		return logon(connProps, null);
 	}
@@ -112,9 +112,9 @@ public class LogonImpl implements ILogon {
 			}
 			return result;
 		} catch (LoginException e) {
-			throw new LogonException(e.getMessage());
+			 throw new LogonException(RuntimePlugin.Event.TEIID40056, e.getMessage());
 		} catch (SessionServiceException e) {
-			throw new LogonException(e, e.getMessage());
+			 throw new LogonException(RuntimePlugin.Event.TEIID40057, e, e.getMessage());
 		}
 	}
 	  
@@ -153,7 +153,7 @@ public class LogonImpl implements ILogon {
 	public LogonResult neogitiateGssLogin(Properties connProps, byte[] serviceTicket, boolean createSession) throws LogonException {
 		
 		if (!AuthenticationType.GSS.equals(service.getAuthenticationType())) {
-			throw new LogonException(RuntimePlugin.Util.getString("wrong_logon_type_krb5")); //$NON-NLS-1$
+			 throw new LogonException(RuntimePlugin.Event.TEIID40058, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40058));
 		}		
 		
         String user = connProps.getProperty(TeiidURL.CONNECTION.USER_NAME);
@@ -162,7 +162,7 @@ public class LogonImpl implements ILogon {
 		try {
 			String securityDomain = service.getGssSecurityDomain();
 			if (securityDomain == null) {
-				throw new LogonException(RuntimePlugin.Util.getString("no_security_domains")); //$NON-NLS-1$
+				 throw new LogonException(RuntimePlugin.Event.TEIID40059, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40059));
 			}
 			// If this KRB5 and using keytab, user and password callback handler never gets called 
 			LoginContext ctx = service.createLoginContext(securityDomain, user, password);
@@ -170,7 +170,7 @@ public class LogonImpl implements ILogon {
 			Subject subject = ctx.getSubject();
 			GSSResult result =  Subject.doAs(subject, new GssAction(serviceTicket));
 			if (result == null) {
-				throw new LogonException(RuntimePlugin.Util.getString("krb5_login_failed")); //$NON-NLS-1$
+				 throw new LogonException(RuntimePlugin.Event.TEIID40060, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40060));
 			}
 			
 			if (result.context.isEstablished()) {
@@ -188,7 +188,7 @@ public class LogonImpl implements ILogon {
 			//connProps.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$
 			return logon(connProps, result.serviceTicket);
 		} catch (LoginException e) {
-			throw new LogonException(e, RuntimePlugin.Util.getString("krb5_login_failed")); //$NON-NLS-1$
+			 throw new LogonException(RuntimePlugin.Event.TEIID40061, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40061));
 		} 
 	}
 	
@@ -235,16 +235,16 @@ public class LogonImpl implements ILogon {
 		try {
 			sessionInfo = this.service.validateSession(checkSession.getSessionID());
 		} catch (SessionServiceException e) {
-			throw new TeiidComponentException(e);
+			 throw new TeiidComponentException(RuntimePlugin.Event.TEIID40062, e);
 		}
 		
 		if (sessionInfo == null) {
-			throw new InvalidSessionException();
+			 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40063);
 		}
 		
 		SessionToken st = sessionInfo.getSessionToken();
 		if (!st.equals(checkSession)) {
-			throw new InvalidSessionException();
+			 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40064);
 		}
 		this.updateDQPContext(sessionInfo);
 	}

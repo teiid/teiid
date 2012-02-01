@@ -22,6 +22,7 @@
 
 package org.teiid.translator;
 
+import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidException;
 
 /**
@@ -48,17 +49,6 @@ public class TranslatorException extends TeiidException{
         super( message );
     }
     
-    public TranslatorException( String errorCode, String message ) {
-        super( errorCode, message);
-    }
-    
-    public TranslatorException( int errorCode, String message ) {
-        super(message, Integer.toString(errorCode));
-    } 
-    
-    public TranslatorException(Throwable e, int errorCode, String message ) {
-        super(e, Integer.toString(errorCode), message);
-    }
 
     /**
      * Construct an instance from a message and an exception to chain to this one.
@@ -75,8 +65,19 @@ public class TranslatorException extends TeiidException{
      *
      * @param e An exception to chain to this exception
      */
-    public TranslatorException( Throwable e ) {
-        super( e );
+    public TranslatorException(Throwable e) {
+        super(e);
     }  
 
+    public TranslatorException(BundleUtil.Event event, Throwable e) {
+        super(event, e);
+    }  
+
+    public TranslatorException(BundleUtil.Event event, Throwable e, String message) {
+        super(event, e, message);
+    } 
+    
+    public TranslatorException(BundleUtil.Event event, String message) {
+        super(event, message);
+    } 
 }

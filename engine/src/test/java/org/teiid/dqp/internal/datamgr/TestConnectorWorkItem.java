@@ -102,7 +102,7 @@ public class TestConnectorWorkItem {
 			fail("Expected exception from resultset mismatch"); //$NON-NLS-1$
 		} catch (TranslatorException err) {
 			assertEquals(
-					"Could not process stored procedure results for EXEC spTest8(1).  Expected 2 result set columns, but was 1.  Please update your models to allow for stored procedure results batching.", err.getMessage()); //$NON-NLS-1$
+					"Error Code:TEIID30479 Message:TEIID30479 Could not process stored procedure results for EXEC spTest8(1).  Expected 2 result set columns, but was 1.  Please update your models to allow for stored procedure results batching.", err.getMessage()); //$NON-NLS-1$
 		}
 	}
 

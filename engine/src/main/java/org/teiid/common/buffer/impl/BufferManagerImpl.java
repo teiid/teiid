@@ -119,7 +119,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 					try {
 						Thread.sleep(100); //we don't want to evict too fast, because the processing threads are more than capable of evicting
 					} catch (InterruptedException e) {
-						throw new TeiidRuntimeException(e);
+						 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30051, e);
 					}
 				}
 			}
@@ -219,7 +219,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 					try {
 						lobManager.updateReferences(list, ReferenceMode.ATTACH);
 					} catch (TeiidComponentException e) {
-						throw new TeiidRuntimeException(e);
+						 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30052, e);
 					}
 				}
 			}
@@ -625,7 +625,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 	    		try {
 					batchesFreed.await(100, TimeUnit.MILLISECONDS);
 				} catch (InterruptedException e) {
-					throw new TeiidRuntimeException(e);
+					 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30053, e);
 				}
 				if (reserveBatchSample >= this.reserveBatchBytes.get()) {
 					waitCount >>= 3;
@@ -985,9 +985,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 				ObjectOutputStream out = new ObjectOutputStream(ostream);
 				getTupleBufferState(out, buffer);
 			} catch (TeiidComponentException e) {
-				throw new TeiidRuntimeException(e);
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30054, e);
 			} catch (IOException e) {
-				throw new TeiidRuntimeException(e);
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30055, e);
 			}
 		}
 	}
@@ -1014,11 +1014,11 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 				ObjectInputStream in = new ObjectInputStream(istream);
 				setTupleBufferState(state_id, in);
 			} catch (IOException e) {
-				throw new TeiidRuntimeException(e);
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30056, e);
 			} catch(ClassNotFoundException e) {
-				throw new TeiidRuntimeException(e);
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30057, e);
 			} catch(TeiidComponentException e) {
-				throw new TeiidRuntimeException(e);
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30058, e);
 			}
 		}
 	}

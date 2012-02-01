@@ -57,7 +57,7 @@ public class SystemVDBDeployer {
 			if (!mountPoint.exists()) {
 				InputStream contents = Thread.currentThread().getContextClassLoader().getResourceAsStream(CoreConstants.SYSTEM_VDB);
 				if (contents == null) {
-					throw new TeiidRuntimeException(RuntimeMetadataPlugin.Util.getString("system_vdb_not_found")); //$NON-NLS-1$
+					 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40021, RuntimeMetadataPlugin.Util.gs(RuntimePlugin.Event.TEIID40021));
 				}
 				this.file = VFS.mountZip(contents, CoreConstants.SYSTEM_VDB, mountPoint, PROVIDER);
 			}
@@ -65,9 +65,9 @@ public class SystemVDBDeployer {
 			// uri conversion is only to remove the spaces in URL, note this only with above kind situation  
 			this.vdbRepository.setSystemStore(new IndexMetadataFactory(mountPoint).getMetadataStore(null));
 		} catch (URISyntaxException e) {
-			throw new TeiidRuntimeException(e, RuntimePlugin.Util.getString("system_vdb_load_error")); //$NON-NLS-1$
+			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40022, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40022));
 		} catch (IOException e) {
-			throw new TeiidRuntimeException(e, RuntimePlugin.Util.getString("system_vdb_load_error")); //$NON-NLS-1$
+			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40023, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40023));
 		}
 	}
 

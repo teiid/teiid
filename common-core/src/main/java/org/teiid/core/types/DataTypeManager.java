@@ -847,7 +847,7 @@ public class DataTypeManager {
 				targetClass);
 		if (transform == null) {
             Object[] params = new Object[] { sourceType, targetClass, value};
-            throw new TransformationException(CorePlugin.Util.getString("ObjectToAnyTransform.Invalid_value", params)); //$NON-NLS-1$
+              throw new TransformationException(CorePlugin.Event.TEIID10050, CorePlugin.Util.gs(CorePlugin.Event.TEIID10050, params));
 		}
 		T result = (T) transform.transform(value);
 		return getCanonicalValue(result);

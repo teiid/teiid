@@ -45,15 +45,9 @@ public class ComponentNotFoundException extends TeiidComponentException {
         super( message );
     }
 
-    /**
-     * Construct an instance with the message and error code specified.
-     *
-     * @param message A message describing the exception
-     * @param code The error code
-     */
-    public ComponentNotFoundException( String code, String message ) {
-        super( code, message );
-    }
+    public ComponentNotFoundException(BundleUtil.Event code, final String message) {
+        super(code, message);
+    }    
 
     /**
      * Construct an instance from a message and an exception to chain to this one.
@@ -73,8 +67,8 @@ public class ComponentNotFoundException extends TeiidComponentException {
      * @param message A message describing the exception
      * @param code A code denoting the exception
      */
-    public ComponentNotFoundException( Throwable e, String code, String message ) {
-        super( e, code, message );
+    public ComponentNotFoundException(BundleUtil.Event code, Throwable e, String message ) {
+        super(code, e, message);
     }
 
 } // END CLASS

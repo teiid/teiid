@@ -112,7 +112,7 @@ public final class RuleAccessPatternValidation implements OptimizerRule {
         }
         
         Object groups = node.getGroups();
-        throw new QueryPlannerException(QueryPlugin.Util.getString("ERR.015.004.0012", new Object[] {groups, accessPatterns})); //$NON-NLS-1$
+         throw new QueryPlannerException(QueryPlugin.Event.TEIID30278, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30278, new Object[] {groups, accessPatterns}));
     }
     
 	public String toString() {

@@ -44,7 +44,7 @@ public class TestCallableStatement {
 			TestPreparedStatement.helpTestProcessing(sql, Collections.EMPTY_LIST, null, new HardcodedDataManager(), RealMetadataFactory.exampleBQTCached(), true, RealMetadataFactory.exampleBQTVDB());
 			fail();
 		} catch (QueryResolverException e) {
-			assertEquals("Required parameter 'pm4.spTest9.inkey' has no value was set or is an invalid parameter.", e.getMessage()); //$NON-NLS-1$
+			assertEquals("Error Code:TEIID30089 Message:TEIID30089 Required parameter 'pm4.spTest9.inkey' has no value was set or is an invalid parameter.", e.getMessage()); //$NON-NLS-1$
 		}
 	}
 	

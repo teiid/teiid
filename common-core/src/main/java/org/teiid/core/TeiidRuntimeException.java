@@ -71,6 +71,23 @@ public class TeiidRuntimeException extends RuntimeException {
         setCode(code);
     }
     
+    public TeiidRuntimeException(BundleUtil.Event code, final String message) {
+        super(message);
+        // The following setCode call should be executed after setting the message 
+        setCode(code.toString());
+    }    
+    
+    public TeiidRuntimeException(BundleUtil.Event code, final Throwable t) {
+        super(t);
+        // The following setCode call should be executed after setting the message 
+        setCode(code.toString());
+    }    
+    
+    public TeiidRuntimeException(BundleUtil.Event code) {
+        super();
+        setCode(code.toString());
+    }    
+    
     public TeiidRuntimeException(final String[] message) {
         super(message[1]);
         // The following setCode call should be executed after setting the message 
@@ -108,10 +125,10 @@ public class TeiidRuntimeException extends RuntimeException {
      * @param code    The error code
      * @param message The error message
      */
-    public TeiidRuntimeException(final Throwable e, final String code, final String message) {
+    public TeiidRuntimeException(BundleUtil.Event event, final Throwable e, final String message) {
         super(message, e);
         // Overwrite code set in other ctor from exception.
-        setCode(code);
+        setCode(event.toString());
     }
 
 

@@ -100,7 +100,7 @@ public class MakeGSS {
         }         
         
         if (errors.length() > 0) {
-        	throw  new LogonException(errors.toString()); 
+        	 throw new LogonException(JDBCPlugin.Event.TEIID20004, errors.toString());
         }
         
         String user = props.getProperty(TeiidURL.CONNECTION.USER_NAME);
@@ -114,7 +114,7 @@ public class MakeGSS {
             PrivilegedAction action = new GssAction(logon, kerberosPrincipalName, props);
             result = Subject.doAs(sub, action);
         } catch (Exception e) {
-            throw new LogonException(e, JDBCPlugin.Util.getString("gss_auth_failed")); //$NON-NLS-1$
+             throw new LogonException(JDBCPlugin.Event.TEIID20005, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20005));
         }
 
         if (result instanceof LogonException)
@@ -124,7 +124,7 @@ public class MakeGSS {
         else if (result instanceof CommunicationException)
         	throw (CommunicationException)result;
         else if (result instanceof Exception)
-        	throw new LogonException((Exception)result, JDBCPlugin.Util.getString("gss_auth_failed")); //$NON-NLS-1$
+        	 throw new LogonException(JDBCPlugin.Event.TEIID20006, (Exception)result, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20006));
 
         return (LogonResult)result;
     }

@@ -128,7 +128,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         }
         Object[] params = new Object[]{elementName};
         String msg = QueryPlugin.Util.getString("TempMetadataAdapter.Element_____{0}_____not_found._1", params); //$NON-NLS-1$
-        throw new QueryMetadataException(msg);
+         throw new QueryMetadataException(QueryPlugin.Event.TEIID30350, msg);
     }
     
     /**
@@ -153,7 +153,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         }
         Object[] params = new Object[]{groupName};
         String msg = QueryPlugin.Util.getString("TempMetadataAdapter.Group_____{0}_____not_found._1", params); //$NON-NLS-1$
-        throw new QueryMetadataException(msg);
+         throw new QueryMetadataException(QueryPlugin.Event.TEIID30351, msg);
     }
 
     @Override

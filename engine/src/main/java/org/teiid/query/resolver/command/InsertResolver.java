@@ -146,7 +146,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         try {
             resolveList(insert.getVariables(), metadata, null, groups);
         } catch (QueryResolverException e) {
-            throw new QueryResolverException(e, QueryPlugin.Util.getString("ERR.015.012.0054", insert.getGroup(), e.getUnresolvedSymbols())); //$NON-NLS-1$
+             throw new QueryResolverException(QueryPlugin.Event.TEIID30126, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30126, insert.getGroup(), e.getUnresolvedSymbols()));
         }
     }
 
@@ -171,7 +171,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         
         // check that # of variables == # of values
         if(values.size() != insert.getVariables().size()) {
-            throw new QueryResolverException("ERR.015.008.0010", QueryPlugin.Util.getString("ERR.015.008.0010", insert.getVariables().size(), values.size())); //$NON-NLS-1$ //$NON-NLS-2$
+             throw new QueryResolverException(QueryPlugin.Event.TEIID30127, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30127, insert.getVariables().size(), values.size()));
         }
         
         Iterator valueIter = values.iterator();
@@ -193,7 +193,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
                            && !DataTypeManager.isImplicitConversion(DataTypeManager.getDataTypeName(expression.getType()),
                                                                     DataTypeManager.getDataTypeName(element.getType()))) {
                     //TODO: a special case here is a projected literal
-                    throw new QueryResolverException(QueryPlugin.Util.getString("InsertResolver.cant_convert_query_type", new Object[] {expression, expression.getType().getName(), element, element.getType().getName()})); //$NON-NLS-1$
+                     throw new QueryResolverException(QueryPlugin.Event.TEIID30128, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30128, new Object[] {expression, expression.getType().getName(), element, element.getType().getName()}));
                 }
             } else if (element.getType() == null && expression.getType() != null)  {
                 element.setType(expression.getType());

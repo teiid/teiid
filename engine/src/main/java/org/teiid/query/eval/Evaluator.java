@@ -103,7 +103,7 @@ public class Evaluator {
 			try {
 				QueryResult.serialize(row, result, SaxonXQueryExpression.DEFAULT_OUTPUT_PROPERTIES);
 			} catch (XPathException e) {
-				throw new TeiidRuntimeException(e);
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30310, e);
 			}
 		}
 	}
@@ -223,7 +223,7 @@ public class Evaluator {
         } else if (criteria instanceof ExpressionCriteria) {
         	return (Boolean)evaluate(((ExpressionCriteria)criteria).getExpression(), tuple);
 		} else {
-            throw new ExpressionEvaluationException("ERR.015.006.0010", QueryPlugin.Util.getString("ERR.015.006.0010", criteria)); //$NON-NLS-1$ //$NON-NLS-2$
+             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30311, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30311, criteria));
 		}
 	}
 
@@ -273,7 +273,7 @@ public class Evaluator {
 		try {
 			leftValue = evaluate(criteria.getLeftExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
-            throw new ExpressionEvaluationException(e, "ERR.015.006.0011", QueryPlugin.Util.getString("ERR.015.006.0011", new Object[] {"left", criteria})); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30312, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30312, "left", criteria)); //$NON-NLS-1$
 		}
 
 		// Shortcut if null
@@ -286,7 +286,7 @@ public class Evaluator {
 		try {
 			rightValue = evaluate(criteria.getRightExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
-            throw new ExpressionEvaluationException(e, "ERR.015.006.0011", QueryPlugin.Util.getString("ERR.015.006.0011", new Object[]{"right", criteria})); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30313, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30313, "right", criteria)); //$NON-NLS-1$
 		}
 
 		// Shortcut if null
@@ -307,7 +307,7 @@ public class Evaluator {
 		try {
 			value = evaluate(criteria.getLeftExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
-            throw new ExpressionEvaluationException(e, "ERR.015.006.0011", QueryPlugin.Util.getString("ERR.015.006.0011", new Object[]{"left", criteria})); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30315, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30315, "left", criteria)); //$NON-NLS-1$
 		}
 
 		// Shortcut if null
@@ -323,7 +323,7 @@ public class Evaluator {
             try {
                 leftValue = ((Sequencable)value).getCharSequence();
             } catch (SQLException err) {
-                throw new ExpressionEvaluationException(err, err.getMessage()); 
+                 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30316, err, err.getMessage());
             }
         }
 
@@ -332,7 +332,7 @@ public class Evaluator {
 		try {
 			rightValue = (String) evaluate(criteria.getRightExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
-            throw new ExpressionEvaluationException(e, "ERR.015.006.0011", QueryPlugin.Util.getString("ERR.015.006.0011", new Object[]{"right", criteria})); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30317, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30317, "right", criteria)); //$NON-NLS-1$
 		}
 
 		// Shortcut if null
@@ -375,7 +375,7 @@ public class Evaluator {
 		try {
 			leftValue = evaluate(criteria.getExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
-            throw new ExpressionEvaluationException(e, "ERR.015.006.0015", QueryPlugin.Util.getString("ERR.015.006.0015", criteria)); //$NON-NLS-1$ //$NON-NLS-2$
+             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30318, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30318, criteria));
 		}
 
 		// Shortcut if null
@@ -406,7 +406,7 @@ public class Evaluator {
     		try {
     			values = vis.getCachedSet(ref.getValueExpression());
     		} catch (TeiidProcessingException e) {
-    			throw new ExpressionEvaluationException(e, e.getMessage());
+    			 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30319, e, e.getMessage());
     		}
         	if (values != null) {
         		return values.contains(leftValue);
@@ -419,7 +419,7 @@ public class Evaluator {
         	try {
 				valueIter = evaluateSubquery((SubquerySetCriteria)criteria, tuple);
 			} catch (TeiidProcessingException e) {
-				throw new ExpressionEvaluationException(e, e.getMessage());
+				 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30320, e, e.getMessage());
 			}
         } else {
         	throw new AssertionError("unknown set criteria type"); //$NON-NLS-1$
@@ -431,7 +431,7 @@ public class Evaluator {
     			try {
     				value = evaluate((Expression) possibleValue, tuple);
     			} catch(ExpressionEvaluationException e) {
-                    throw new ExpressionEvaluationException(e, "ERR.015.006.0015", QueryPlugin.Util.getString("ERR.015.006.0015", possibleValue)); //$NON-NLS-1$ //$NON-NLS-2$
+                     throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30321, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30321, possibleValue));
     			}
             } else {
                 value = possibleValue;
@@ -461,7 +461,7 @@ public class Evaluator {
 		try {
 			value = evaluate(criteria.getExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
-            throw new ExpressionEvaluationException(e, "ERR.015.006.0015", QueryPlugin.Util.getString("ERR.015.006.0015", criteria)); //$NON-NLS-1$ //$NON-NLS-2$
+             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30322, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30322, criteria));
 		}
 
 		return (value == null ^ criteria.isNegated());
@@ -475,7 +475,7 @@ public class Evaluator {
         try {
             leftValue = evaluate(criteria.getLeftExpression(), tuple);
         } catch(ExpressionEvaluationException e) {
-            throw new ExpressionEvaluationException(e, "ERR.015.006.0015", QueryPlugin.Util.getString("ERR.015.006.0015", criteria)); //$NON-NLS-1$ //$NON-NLS-2$
+             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30323, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30323, criteria));
         }
 
         // Shortcut if null
@@ -497,7 +497,7 @@ public class Evaluator {
 		try {
 			valueIter = evaluateSubquery(criteria, tuple);
 		} catch (TeiidProcessingException e) {
-			throw new ExpressionEvaluationException(e, e.getMessage());
+			 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30324, e, e.getMessage());
 		}
         while(valueIter.hasNext()) {
             Object value = valueIter.next();
@@ -517,7 +517,7 @@ public class Evaluator {
                         }
                         break;
                     default:
-                        throw new ExpressionEvaluationException("ERR.015.006.0057", QueryPlugin.Util.getString("ERR.015.006.0057", criteria.getPredicateQuantifier())); //$NON-NLS-1$ //$NON-NLS-2$
+                         throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30326, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30326, criteria.getPredicateQuantifier()));
                 }
 
             } else { // value is null
@@ -567,7 +567,7 @@ public class Evaluator {
 		try {
 			valueIter = evaluateSubquery(criteria, tuple);
 		} catch (TeiidProcessingException e) {
-			throw new ExpressionEvaluationException(e, e.getMessage());
+			 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30327, e, e.getMessage());
 		}
         if(valueIter.hasNext()) {
             return !criteria.isNegated();
@@ -581,7 +581,7 @@ public class Evaluator {
 	    try {
 			return internalEvaluate(expression, tuple);
 	    } catch (ExpressionEvaluationException e) {
-	        throw new ExpressionEvaluationException(e, QueryPlugin.Util.getString("ExpressionEvaluator.Eval_failed", new Object[] {expression, e.getMessage()})); //$NON-NLS-1$
+	         throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30328, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30328, new Object[] {expression, e.getMessage()}));
 	    }
 	}
 	
@@ -641,7 +641,7 @@ public class Evaluator {
 	   } else if (expression instanceof XMLParse){
 		   return evaluateXMLParse(tuple, (XMLParse)expression);
 	   } else {
-	       throw new TeiidComponentException("ERR.015.006.0016", QueryPlugin.Util.getString("ERR.015.006.0016", expression.getClass().getName())); //$NON-NLS-1$ //$NON-NLS-2$
+	        throw new TeiidComponentException(QueryPlugin.Event.TEIID30329, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30329, expression.getClass().getName()));
 	   }
 	}
 
@@ -672,9 +672,9 @@ public class Evaluator {
 				}
 			}
 		} catch (TransformationException e) {
-			throw new ExpressionEvaluationException(e, e.getMessage());
+			 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30330, e, e.getMessage());
 		} catch (SQLException e) {
-			throw new ExpressionEvaluationException(e, e.getMessage());
+			 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30331, e, e.getMessage());
 		}
 		if (!xp.isDocument()) {
 			type = Type.CONTENT;
@@ -767,9 +767,9 @@ public class Evaluator {
 			}
 			return xmlQuery.getXQueryExpression().createXMLType(result.iter, this.context.getBufferManager(), emptyOnEmpty);
 		} catch (TeiidProcessingException e) {
-			throw new FunctionExecutionException(e, QueryPlugin.Util.getString("Evaluator.xmlquery", e.getMessage())); //$NON-NLS-1$
+			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30332, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30332, e.getMessage()));
 		} catch (XPathException e) {
-			throw new FunctionExecutionException(e, QueryPlugin.Util.getString("Evaluator.xmlquery", e.getMessage())); //$NON-NLS-1$
+			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30333, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30333, e.getMessage()));
 		} finally {
 			if (result != null) {
 				result.close();
@@ -796,11 +796,11 @@ public class Evaluator {
 				return serialize(xs, value);
 			}
 		} catch (SQLException e) {
-			throw new FunctionExecutionException(e, e.getMessage());
+			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30334, e);
 		} catch (TransformationException e) {
-			throw new FunctionExecutionException(e, e.getMessage());
+			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30335, e);
 		}
-		throw new FunctionExecutionException(QueryPlugin.Util.getString("Evaluator.xmlserialize")); //$NON-NLS-1$
+		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30336, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30336));
 	}
 
 	private Object serialize(XMLSerialize xs, XMLType value) throws TransformationException {
@@ -822,7 +822,7 @@ public class Evaluator {
 				}
 			}, function.getDelimiter(), function.getQuote());
 		} catch (TransformationException e) {
-			throw new ExpressionEvaluationException(e, e.getMessage());
+			 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30337, e, e.getMessage());
 		}
 	}
 
@@ -835,7 +835,7 @@ public class Evaluator {
 		try {
 			return XMLSystemFunctions.xmlForest(context, namespaces(function.getNamespaces()), nameValuePairs);
 		} catch (TeiidProcessingException e) {
-			throw new FunctionExecutionException(e, e.getMessage());
+			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30338, e, e.getMessage());
 		}
 	}
 
@@ -854,7 +854,7 @@ public class Evaluator {
 			   }
 			   return XMLSystemFunctions.xmlElement(context, function.getName(), namespaces(function.getNamespaces()), attributes, values);
 		   } catch (TeiidProcessingException e) {
-			   throw new FunctionExecutionException(e, e.getMessage());
+			    throw new FunctionExecutionException(QueryPlugin.Event.TEIID30339, e, e.getMessage());
 		   }
 	}
 	
@@ -937,7 +937,7 @@ public class Evaluator {
 	                return internalEvaluate(expr.getThenExpression(i), tuple);
 	            }
 	        } catch (ExpressionEvaluationException e) {
-	            throw new ExpressionEvaluationException(e, "ERR.015.006.0033", QueryPlugin.Util.getString("ERR.015.006.0033", "CASE", expr.getWhenCriteria(i))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30340, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30340, "CASE", expr.getWhenCriteria(i))); //$NON-NLS-1$
 	        }
 	    }
 	    if (expr.getElseExpression() != null) {
@@ -972,13 +972,13 @@ public class Evaluator {
 	    
 	    // Check for function we can't evaluate
 	    if(fd.getPushdown() == PushDown.MUST_PUSHDOWN) {
-	        throw new TeiidComponentException(QueryPlugin.Util.getString("ExpressionEvaluator.Must_push", fd.getName())); //$NON-NLS-1$
+	         throw new TeiidComponentException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, fd.getName()));
 	    }
 	
 	    // Check for special lookup function
 	    if(fd.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)) {
 	        if(dataMgr == null) {
-	            throw new ComponentNotFoundException("ERR.015.006.0055", QueryPlugin.Util.getString("ERR.015.006.0055")); //$NON-NLS-1$ //$NON-NLS-2$
+	             throw new ComponentNotFoundException(QueryPlugin.Event.TEIID30342, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30342));
 	        }
 	
 	        String codeTableName = (String) values[0];
@@ -988,7 +988,7 @@ public class Evaluator {
 	        try {
 				return dataMgr.lookupCodeValue(context, codeTableName, returnElementName, keyElementName, values[3]);
 			} catch (TeiidProcessingException e) {
-				throw new ExpressionEvaluationException(e, e.getMessage());
+				 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30343, e, e.getMessage());
 			}
 	    }
 	    
@@ -1010,14 +1010,14 @@ public class Evaluator {
 		try {
 			valueIter = evaluateSubquery(scalarSubquery, tuple);
 		} catch (TeiidProcessingException e) {
-			throw new ExpressionEvaluationException(e, e.getMessage());
+			 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30344, e, e.getMessage());
 		}
 	    if(valueIter.hasNext()) {
 	        result = valueIter.next();
 	        if(valueIter.hasNext()) {
 	            // The subquery should be scalar, but has produced
 	            // more than one result value - this is an exception case
-	            throw new ExpressionEvaluationException("ERR.015.006.0058", QueryPlugin.Util.getString("ERR.015.006.0058", scalarSubquery.getCommand())); //$NON-NLS-1$ //$NON-NLS-2$
+	             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30345, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30345, scalarSubquery.getCommand()));
 	        }
 	    }
 	    return result;
@@ -1038,7 +1038,7 @@ public class Evaluator {
 
 	private CommandContext getContext(LanguageObject expression) throws TeiidComponentException {
 		if (context == null) {
-			throw new TeiidComponentException("ERR.015.006.0033", QueryPlugin.Util.getString("ERR.015.006.0033", expression, "No value was available")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30346, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30346, expression, "No value was available")); //$NON-NLS-1$
 		}
 		return context;
 	}   

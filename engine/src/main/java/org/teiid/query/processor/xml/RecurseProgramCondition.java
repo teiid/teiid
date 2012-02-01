@@ -92,7 +92,7 @@ public class RecurseProgramCondition extends CriteriaCondition {
 
             //handle the case of exception on recursion limit reached
             if (terminate && this.exceptionOnRecursionLimit){
-                throw new TeiidComponentException("ERR.015.006.0039", QueryPlugin.Util.getString("ERR.015.006.0039")); //$NON-NLS-1$ //$NON-NLS-2$
+                 throw new TeiidComponentException(QueryPlugin.Event.TEIID30212, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30212));
             }
         }
 

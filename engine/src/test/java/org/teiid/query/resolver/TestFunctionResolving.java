@@ -48,7 +48,7 @@ public class TestFunctionResolving {
             ResolverVisitor.resolveLanguageObject(function, RealMetadataFactory.example1Cached());
             fail("excpetion expected"); //$NON-NLS-1$
         } catch (QueryResolverException err) {
-            assertEquals("Error Code:ERR.015.008.0037 Message:The conversion from char to date is not allowed.", err.getMessage()); //$NON-NLS-1$
+            assertEquals("Error Code:TEIID30071 Message:TEIID30071 The conversion from char to date is not allowed.", err.getMessage()); //$NON-NLS-1$
         } 
     }
     
@@ -80,7 +80,7 @@ public class TestFunctionResolving {
         	ResolverVisitor.resolveLanguageObject(function, RealMetadataFactory.example1Cached());
             fail("excpetion expected"); //$NON-NLS-1$
         } catch (QueryResolverException err) {
-            assertEquals("Error Code:ERR.015.008.0036 Message:The function 'LCASE(?)' has more than one possible signature.", err.getMessage()); //$NON-NLS-1$
+            assertEquals("Error Code:TEIID30069 Message:TEIID30069 The function 'LCASE(?)' has more than one possible signature.", err.getMessage()); //$NON-NLS-1$
         } 
     }
     

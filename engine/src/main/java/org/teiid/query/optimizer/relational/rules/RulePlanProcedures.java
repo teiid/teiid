@@ -118,7 +118,7 @@ public class RulePlanProcedures implements OptimizerRule {
                 defaults.add(defaultValue);
                 
                 if (defaultValue == null && !coveredParams.contains(symbol)) {
-                    throw new QueryPlannerException(QueryPlugin.Util.getString("RulePlanProcedures.no_values", symbol)); //$NON-NLS-1$
+                     throw new QueryPlannerException(QueryPlugin.Event.TEIID30270, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30270, symbol));
                 }
             }
             

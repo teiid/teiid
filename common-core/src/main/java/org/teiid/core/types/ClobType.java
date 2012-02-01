@@ -35,6 +35,7 @@ import java.sql.SQLException;
 
 import javax.sql.rowset.serial.SerialClob;
 
+import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ObjectConverterUtil;
 
@@ -164,10 +165,10 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
                 try {
                     result = ClobType.this.length();
                 } catch (SQLException err) {
-                    throw new TeiidRuntimeException(err);
+                      throw new TeiidRuntimeException(CorePlugin.Event.TEIID10051, err);
                 } 
                 if (((int)result) != result) {
-                    throw new TeiidRuntimeException("Clob value is not representable by CharSequence"); //$NON-NLS-1$                    
+                      throw new TeiidRuntimeException(CorePlugin.Event.TEIID10052, CorePlugin.Util.gs(CorePlugin.Event.TEIID10052));
                 }
                 return (int)result;
             }
@@ -180,7 +181,7 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
                 	}
                 	return buffer.charAt(index - beginPosition);
                 } catch (SQLException err) {
-                    throw new TeiidRuntimeException(err);
+                      throw new TeiidRuntimeException(CorePlugin.Event.TEIID10053, err);
                 } 
             }
 
@@ -189,7 +190,7 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
                 try {
                     return ClobType.this.getSubString(start + 1, end - start);
                 } catch (SQLException err) {
-                    throw new TeiidRuntimeException(err);
+                      throw new TeiidRuntimeException(CorePlugin.Event.TEIID10054, err);
                 }
             }
             
@@ -208,7 +209,7 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
 		try {
 			return new SerialClob(chars);
 		} catch (SQLException e) {
-			throw new TeiidRuntimeException(e);
+			  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10055, e);
 		}
 	}
 	
@@ -278,9 +279,9 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
 		    }
     		return Long.signum(len1 - len2);
 		} catch (SQLException e) {
-			throw new TeiidRuntimeException(e);
+			  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10056, e);
 		} catch (IOException e) {
-			throw new TeiidRuntimeException(e);
+			  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10057, e);
 		}
 	}
 

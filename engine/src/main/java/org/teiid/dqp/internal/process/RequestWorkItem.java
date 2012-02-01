@@ -45,6 +45,7 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
+import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
@@ -231,7 +232,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 						try {
 							requestCancel();
 						} catch (TeiidComponentException e1) {
-							throw new TeiidRuntimeException(e1);
+							 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30543, e1);
 						}
 					}
 				}
@@ -319,7 +320,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     }
 
 	private void setCanceledException() {
-		this.processingException = new TeiidProcessingException(SQLStates.QUERY_CANCELED, QueryPlugin.Util.getString("QueryProcessor.request_cancelled", this.requestID)); //$NON-NLS-1$
+		this.processingException = new TeiidProcessingException(QueryPlugin.Event.TEIID30563, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30563, this.requestID));
 	}
 
 	private void handleThrowable(Throwable e) {
@@ -762,7 +763,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				return exception;
 			}
 		}
-		return new TeiidProcessingException(exception, SQLStates.QUERY_CANCELED, exception.getMessage());
+		return new TeiidProcessingException(exception, SQLStates.QUERY_CANCELED);
 	}
     
     private static List<ParameterInfo> getParameterInfo(StoredProcedure procedure) {
@@ -819,7 +820,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	                try {
 	                    transactionService.cancelTransactions(requestID.getConnectionID(), true);
 	                } catch (XATransactionException err) {
-	                    throw new TeiidComponentException(err);
+	                     throw new TeiidComponentException(QueryPlugin.Event.TEIID30544, err);
 	                }
 	            }
         	} finally {
@@ -893,7 +894,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	Command getOriginalCommand() throws TeiidProcessingException {
 		if (this.originalCommand == null) {
 			if (this.processingException != null) {
-				throw new TeiidProcessingException(this.processingException);
+				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30545, this.processingException);
 			} 
 			throw new IllegalStateException("Original command is not available"); //$NON-NLS-1$
 		}

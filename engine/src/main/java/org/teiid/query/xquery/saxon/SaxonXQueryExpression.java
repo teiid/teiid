@@ -201,7 +201,7 @@ public class SaxonXQueryExpression {
 				context.declareGlobalVariable(StructuredQName.fromClarkName(derivedColumn.getAlias()), SequenceType.ANY_SEQUENCE, null, true);
 			} catch (XPathException e) {
 				//this is always expected to work
-				throw new TeiidRuntimeException(e, "Could not define global variable"); //$NON-NLS-1$ 
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30153, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30153));
 			}
 		}
         
@@ -210,7 +210,7 @@ public class SaxonXQueryExpression {
         try {
 			this.xQuery = context.compileQuery(xQueryString);
 		} catch (XPathException e) {
-			throw new QueryResolverException(e, QueryPlugin.Util.getString("SaxonXQueryExpression.compile_failed")); //$NON-NLS-1$
+			 throw new QueryResolverException(QueryPlugin.Event.TEIID30154, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30154));
 		}
     }
     
@@ -470,7 +470,7 @@ public class SaxonXQueryExpression {
 			try {
 				exp = eval.createExpression(path);
 			} catch (XPathException e) {
-				throw new QueryResolverException(e, QueryPlugin.Util.getString("SaxonXQueryExpression.invalid_path", xmlColumn.getName(), xmlColumn.getPath())); //$NON-NLS-1$
+				 throw new QueryResolverException(QueryPlugin.Event.TEIID30155, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30155, xmlColumn.getName(), xmlColumn.getPath()));
 			}	
 	    	xmlColumn.setPathExpression(exp);
 		}

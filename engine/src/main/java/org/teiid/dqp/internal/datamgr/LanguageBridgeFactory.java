@@ -22,7 +22,16 @@
 
 package org.teiid.dqp.internal.datamgr;
 
-import java.util.*;
+import java.util.AbstractList;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.RandomAccess;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.client.metadata.ParameterInfo;
@@ -32,32 +41,92 @@ import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.language.*;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.Select;
-import org.teiid.language.WindowSpecification;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.AndOr;
+import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
+import org.teiid.language.BatchedCommand;
+import org.teiid.language.BatchedUpdates;
+import org.teiid.language.Call;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
 import org.teiid.language.Comparison.Operator;
+import org.teiid.language.Condition;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.DerivedTable;
+import org.teiid.language.Exists;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.In;
+import org.teiid.language.InsertValueSource;
+import org.teiid.language.IsNull;
+import org.teiid.language.Join;
+import org.teiid.language.Like;
+import org.teiid.language.Literal;
+import org.teiid.language.NamedTable;
+import org.teiid.language.Not;
+import org.teiid.language.Parameter;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.SearchedCase;
+import org.teiid.language.SearchedWhenClause;
+import org.teiid.language.Select;
+import org.teiid.language.SortSpecification;
 import org.teiid.language.SortSpecification.Ordering;
+import org.teiid.language.SubqueryComparison;
 import org.teiid.language.SubqueryComparison.Quantifier;
+import org.teiid.language.SubqueryIn;
+import org.teiid.language.TableReference;
+import org.teiid.language.WindowSpecification;
+import org.teiid.language.With;
+import org.teiid.language.WithItem;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.CompoundCriteria;
+import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Delete;
+import org.teiid.query.sql.lang.DependentSetCriteria;
+import org.teiid.query.sql.lang.ExistsCriteria;
+import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.GroupBy;
 import org.teiid.query.sql.lang.Insert;
+import org.teiid.query.sql.lang.IsNullCriteria;
+import org.teiid.query.sql.lang.JoinPredicate;
+import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.Limit;
+import org.teiid.query.sql.lang.MatchCriteria;
+import org.teiid.query.sql.lang.NotCriteria;
 import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.SetClause;
+import org.teiid.query.sql.lang.SetClauseList;
+import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.lang.SetQuery;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.SubqueryCompareCriteria;
+import org.teiid.query.sql.lang.SubqueryFromClause;
+import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
-import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.lang.WithQueryCommand;
+import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.AliasSymbol;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.ScalarSubquery;
+import org.teiid.query.sql.symbol.SearchedCaseExpression;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.translator.TranslatorException;
 
@@ -78,7 +147,7 @@ public class LanguageBridgeFactory {
 			try {
 				return tb.getBatch(index+1).getTuple(index+1);
 			} catch (TeiidComponentException e) {
-				throw new TeiidRuntimeException(e);
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30483, e);
 			}
 		}
 
@@ -102,9 +171,9 @@ public class LanguageBridgeFactory {
 				try {
 					nextRow = ts.nextTuple();
 				} catch (TeiidComponentException e) {
-					throw new TeiidRuntimeException(e);
+					 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30484, e);
 				} catch (TeiidProcessingException e) {
-					throw new TeiidRuntimeException(e);
+					 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30485, e);
 				}
 			}
 			return nextRow != null;
@@ -727,7 +796,7 @@ public class LanguageBridgeFactory {
             try {
 				proc = this.metadataFactory.getProcedure(sp.getGroup().getName());
 			} catch (TranslatorException e) {
-				throw new TeiidRuntimeException(e);
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30486, e);
 			}
         }
         Class<?> returnType = null;
@@ -778,9 +847,9 @@ public class LanguageBridgeFactory {
         try {
 			group.setMetadataObject(metadataFactory.getGroup(symbol.getMetadataID()));
 		} catch (QueryMetadataException e) {
-			throw new TeiidRuntimeException(e);
+			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30487, e);
 		} catch (TeiidComponentException e) {
-			throw new TeiidRuntimeException(e);
+			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30488, e);
 		}
         return group;
     }

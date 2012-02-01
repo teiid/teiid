@@ -25,6 +25,7 @@ package org.teiid.common.buffer.impl;
 import org.teiid.common.buffer.BaseCacheEntry;
 import org.teiid.common.buffer.CacheKey;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.query.QueryPlugin;
 
 /**
  * Represents the memory buffer and storage state of an object.
@@ -74,7 +75,7 @@ final class PhysicalInfo extends BaseCacheEntry {
 			try {
 				wait();
 			} catch (InterruptedException e) {
-				throw new TeiidRuntimeException(e);
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30043, e);
 			}
 		}
 	}
@@ -84,7 +85,7 @@ final class PhysicalInfo extends BaseCacheEntry {
 			try {
 				wait();
 			} catch (InterruptedException e) {
-				throw new TeiidRuntimeException(e);
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30044, e);
 			}
 		}
 		loading = true;

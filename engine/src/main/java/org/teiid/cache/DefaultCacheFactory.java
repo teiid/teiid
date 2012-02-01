@@ -25,6 +25,7 @@ import java.io.Serializable;
 
 import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.query.QueryPlugin;
 
 
 public class DefaultCacheFactory implements CacheFactory, Serializable {
@@ -52,7 +53,7 @@ public class DefaultCacheFactory implements CacheFactory, Serializable {
 		if (!destroyed) {
 			return cacheRoot.addChild(location);
 		}
-		throw new TeiidRuntimeException("Cache system has been shutdown"); //$NON-NLS-1$
+		 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30562, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30562));
 	}
 	
 	@Override

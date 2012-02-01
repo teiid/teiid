@@ -22,6 +22,7 @@
 
 package org.teiid.client;
 
+import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidProcessingException;
 
 
@@ -31,7 +32,9 @@ import org.teiid.core.TeiidProcessingException;
  */
 public class ProcedureErrorInstructionException extends TeiidProcessingException {
 
-    /** 
+	private static final long serialVersionUID = 895480748445855790L;
+
+	/** 
      * 
      * @since 4.3
      */
@@ -47,4 +50,7 @@ public class ProcedureErrorInstructionException extends TeiidProcessingException
         super(message);
     }
 
+    public ProcedureErrorInstructionException(BundleUtil.Event event, String message) {
+        super(event, message);
+    }    
 }

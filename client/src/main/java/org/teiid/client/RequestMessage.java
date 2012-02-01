@@ -237,7 +237,7 @@ public class RequestMessage implements Externalizable {
     		if (!(txnAutoWrapMode.equals(TXN_WRAP_OFF)
     			|| txnAutoWrapMode.equals(TXN_WRAP_ON)
     			|| txnAutoWrapMode.equals(TXN_WRAP_DETECT))) {
-    			throw new TeiidProcessingException(JDBCPlugin.Util.getString("RequestMessage.invalid_txnAutoWrap", txnAutoWrapMode)); //$NON-NLS-1$
+    			 throw new TeiidProcessingException(JDBCPlugin.Event.TEIID20000, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20000, txnAutoWrapMode));
     		}
     	} 
         this.txnAutoWrapMode = txnAutoWrapMode;

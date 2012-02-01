@@ -95,7 +95,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         try {
             subCommand = parser.parseUpdateProcedure(plan);
         } catch(QueryParserException e) {
-            throw new QueryResolverException(e, "ERR.015.008.0045", QueryPlugin.Util.getString("ERR.015.008.0045", group, procCommand.getClass().getSimpleName())); //$NON-NLS-1$ //$NON-NLS-2$
+             throw new QueryResolverException(QueryPlugin.Event.TEIID30060, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30060, group, procCommand.getClass().getSimpleName()));
         }
         
         return subCommand;
@@ -173,7 +173,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
     		} else if (type == Command.TYPE_INSERT) {
     			name = "Insert"; //$NON-NLS-1$
     		}
-			throw new QueryResolverException("ERR.015.008.0009", QueryPlugin.Util.getString("ERR.015.008.0009", group, name)); //$NON-NLS-1$ //$NON-NLS-2$
+			 throw new QueryResolverException(QueryPlugin.Event.TEIID30061, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30061, group, name));
 		}
     	return info;
 	}
@@ -187,7 +187,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 		try {
 			return QueryResolver.resolveView(group, metadata.getVirtualPlan(group.getMetadataID()), SQLConstants.Reserved.SELECT, metadata).getUpdateInfo();
 		} catch (QueryValidatorException e) {
-			throw new QueryResolverException(e, e.getMessage());
+			 throw new QueryResolverException(QueryPlugin.Event.TEIID30062, e, e.getMessage());
 		}
 	}
 	

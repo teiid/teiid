@@ -58,6 +58,7 @@ import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.events.EventDistributor;
 import org.teiid.metadata.Table;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
@@ -188,7 +189,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 			try {
 				ObjectConverterUtil.write(fsisf.getOuputStream(), ((DataSource)value).getInputStream(), -1);
 			} catch (IOException e) {
-				throw new TransformationException(e, e.getMessage());
+				 throw new TransformationException(QueryPlugin.Event.TEIID30500, e, e.getMessage());
 			}
 			return new BlobType(new BlobImpl(fsisf));
 		}
@@ -201,9 +202,9 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 			try {
 				sqlxml = XMLSystemFunctions.saveToBufferManager(dtm.getBufferManager(), sxt);
 			} catch (TeiidComponentException e) {
-				throw new TeiidRuntimeException(e);
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30501, e);
 			} catch (TeiidProcessingException e) {
-				throw new TeiidRuntimeException(e);
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30502, e);
 			}
 			return new XMLType(sqlxml);
 		}
@@ -310,7 +311,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 				addWork();
 			}
 		} catch (InterruptedException e) {
-			throw new TeiidRuntimeException(e);
+			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30503, e);
 		} catch (ExecutionException e) {
 			if (e.getCause() instanceof TeiidProcessingException) {
 				throw (TeiidProcessingException)e.getCause();
@@ -413,7 +414,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		if (exception.getCause() instanceof TeiidProcessingException) {
 			throw (TeiidProcessingException)exception.getCause();
 		}
-		throw new TeiidProcessingException(exception, this.getConnectorName() + ": " + exception.getMessage()); //$NON-NLS-1$
+		 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30504, exception, this.getConnectorName() + ": " + exception.getMessage()); //$NON-NLS-1$
 	}
 
 	void receiveResults(AtomicResultsMessage response) {

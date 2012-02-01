@@ -161,7 +161,7 @@ public class TestEncryptDecrypt {
             cryptor.encrypt( "" ); //$NON-NLS-1$
             fail("expected exception"); //$NON-NLS-1$
         } catch ( CryptoException e ) {
-            assertEquals("Error Code:ERR.003.030.0073 Message:Attempt to encrypt zero-length cleartext.", e.getMessage()); //$NON-NLS-1$
+            assertEquals("Error Code:TEIID10015 Message:TEIID10015 Attempt to encrypt zero-length cleartext.", e.getMessage()); //$NON-NLS-1$
         } 
     }
 
@@ -175,7 +175,7 @@ public class TestEncryptDecrypt {
             cryptor.encrypt( (String)null );
             fail("expected exception"); //$NON-NLS-1$
         } catch ( CryptoException e ) {
-            assertEquals("Error Code:ERR.003.030.0072 Message:Attempt to encrypt null cleartext.", e.getMessage()); //$NON-NLS-1$
+            assertEquals("Error Code:TEIID10014 Message:TEIID10014 Attempt to encrypt null cleartext.", e.getMessage()); //$NON-NLS-1$
         } 
     }
 

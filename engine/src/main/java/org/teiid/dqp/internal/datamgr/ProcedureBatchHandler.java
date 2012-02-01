@@ -67,7 +67,7 @@ class ProcedureBatchHandler {
 	
 	List<?> padRow(List<?> row) throws TranslatorException {
         if (row.size() != resultSetCols) {
-            throw new TranslatorException(QueryPlugin.Util.getString("ConnectorWorker.ConnectorWorker_result_set_unexpected_columns", new Object[] {proc, new Integer(resultSetCols), new Integer(row.size())})); //$NON-NLS-1$
+             throw new TranslatorException(QueryPlugin.Event.TEIID30479, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30479, proc, new Integer(resultSetCols), new Integer(row.size())));
         }
         if (paramCols == 0) {
         	return row;

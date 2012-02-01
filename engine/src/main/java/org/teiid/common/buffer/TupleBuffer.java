@@ -290,7 +290,7 @@ public class TupleBuffer {
 	    
     public Streamable<?> getLobReference(String id) throws TeiidComponentException {
     	if (lobManager == null) {
-    		throw new TeiidComponentException(QueryPlugin.Util.getString("ProcessWorker.wrongdata")); //$NON-NLS-1$
+    		 throw new TeiidComponentException(QueryPlugin.Event.TEIID30032, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30032));
     	}
     	return lobManager.getLobReference(id);
     }

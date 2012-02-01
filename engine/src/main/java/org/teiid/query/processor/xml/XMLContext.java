@@ -82,7 +82,7 @@ class XMLContext {
             if (this.parentContext != null) {
                 return this.parentContext.getCurrentRow(aliasResultName);
             }
-            throw new TeiidComponentException(QueryPlugin.Util.getString("results_not_found", aliasResultName)); //$NON-NLS-1$
+             throw new TeiidComponentException(QueryPlugin.Event.TEIID30214, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30214, aliasResultName));
         }
         return executor.currentRow();
     }
@@ -99,7 +99,7 @@ class XMLContext {
             if (this.parentContext != null) {
                 return this.parentContext.getNextRow(aliasResultName);
             }
-            throw new TeiidComponentException(QueryPlugin.Util.getString("results_not_found", aliasResultName)); //$NON-NLS-1$
+             throw new TeiidComponentException(QueryPlugin.Event.TEIID30215, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30215, aliasResultName));
         }
         return executor.nextRow();
     }
@@ -137,7 +137,7 @@ class XMLContext {
             if (this.parentContext != null) {
                 return this.parentContext.getOutputElements(resultName);
             }
-            throw new TeiidComponentException(QueryPlugin.Util.getString("results_not_found", resultName)); //$NON-NLS-1$
+             throw new TeiidComponentException(QueryPlugin.Event.TEIID30216, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30216, resultName));
         }
         return executor.getOutputElements();        
     }

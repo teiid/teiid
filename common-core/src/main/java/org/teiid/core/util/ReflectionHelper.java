@@ -289,7 +289,7 @@ public class ReflectionHelper {
 	        } 
 	        return create(className, objArray, names, classLoader);
     	} catch (Exception e) {
-    		throw new TeiidException(e);
+    		  throw new TeiidException(CorePlugin.Event.TEIID10033, e);
     	}
     }
     	
@@ -299,7 +299,7 @@ public class ReflectionHelper {
         try {
             cls = loadClass(className,classLoader);
         } catch(Exception e) {
-            throw new TeiidException(e);
+              throw new TeiidException(CorePlugin.Event.TEIID10034, e);
         }
         Constructor<?> ctor = null;
         try {
@@ -320,13 +320,13 @@ public class ReflectionHelper {
         }
         
         if (ctor == null) {
-        	throw new TeiidException(className + " Args: " + Arrays.toString(argTypes)); //$NON-NLS-1$
+        	  throw new TeiidException(CorePlugin.Event.TEIID10035, className + CorePlugin.Event.TEIID10035 + Arrays.toString(argTypes));
         }
         
         try {
 			return ctor.newInstance(ctorObjs);
 		} catch (Exception e) {
-			throw new TeiidException(e);
+			  throw new TeiidException(CorePlugin.Event.TEIID10036, e);
 		}
     }
     

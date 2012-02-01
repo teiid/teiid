@@ -288,7 +288,7 @@ public class NodeDescriptor {
                 uri = MappingNodeConstants.INSTANCES_NAMESPACE;
             }else {
                 String msg = QueryPlugin.Util.getString("XMLPlanner.no_uri", new Object[] {namespacePrefix, name}); //$NON-NLS-1$
-                throw new TeiidComponentException(msg);
+                 throw new TeiidComponentException(QueryPlugin.Event.TEIID30213, msg);
             }
         }
         

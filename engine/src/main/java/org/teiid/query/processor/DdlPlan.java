@@ -92,14 +92,14 @@ public class DdlPlan extends ProcessorPlan {
     		if (obj.getEnabled() == null) {
     			if (obj.isCreate()) {
         			if (getPlanForEvent(t, event) != null) {
-        				throw new TeiidRuntimeException(new TeiidProcessingException(QueryPlugin.Util.getString("DdlPlan.event_already_exists", t.getName(), obj.getEvent()))); //$NON-NLS-1$
+        				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30156, new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30156, t.getName(), obj.getEvent())));
         			}
     			} else if (getPlanForEvent(t, event) == null) {
-    				throw new TeiidRuntimeException(new TeiidProcessingException(QueryPlugin.Util.getString("DdlPlan.event_not_exists", t.getName(), obj.getEvent()))); //$NON-NLS-1$
+    				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30157, new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30157, t.getName(), obj.getEvent())));
     			}
     			sql = obj.getDefinition().toString();
     		} else if (getPlanForEvent(t, event) == null) {
-				throw new TeiidRuntimeException(new TeiidProcessingException(QueryPlugin.Util.getString("DdlPlan.event_not_exists", t.getName(), obj.getEvent()))); //$NON-NLS-1$
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30158, new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30158, t.getName(), obj.getEvent())));
     		}
 			if (pdm.getMetadataRepository() != null) {
 				if (sql != null) {

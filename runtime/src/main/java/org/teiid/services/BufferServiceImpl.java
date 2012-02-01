@@ -128,9 +128,9 @@ public class BufferServiceImpl implements BufferService, Serializable {
             }
             
         } catch(TeiidComponentException e) { 
-            throw new TeiidRuntimeException(e, RuntimePlugin.Util.getString("LocalBufferService.Failed_initializing_buffer_manager._8")); //$NON-NLS-1$
+             throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40039, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40039));
         } catch(IOException e) {
-            throw new TeiidRuntimeException(e, RuntimePlugin.Util.getString("LocalBufferService.Failed_initializing_buffer_manager._8")); //$NON-NLS-1$            
+             throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40040, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40040));
         }
     }
    

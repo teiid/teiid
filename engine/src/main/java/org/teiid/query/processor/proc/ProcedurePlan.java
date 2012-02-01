@@ -251,7 +251,7 @@ public class ProcedurePlan extends ProcessorPlan {
 			throws TeiidComponentException, QueryMetadataException,
 			QueryValidatorException {
 		if (value == null && !metadata.elementSupports(param.getMetadataID(), SupportConstants.Element.NULL)) {
-		    throw new QueryValidatorException(QueryPlugin.Util.getString("ProcedurePlan.nonNullableParam", param)); //$NON-NLS-1$
+		     throw new QueryValidatorException(QueryPlugin.Event.TEIID30164, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30164, param));
 		}
 	}
 
@@ -589,7 +589,7 @@ public class ProcedurePlan extends ProcessorPlan {
 	    			ts.rollback(tc);
 	    		}
     		} catch (XATransactionException e) {
-    			throw new TeiidComponentException(e);
+    			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30165, e);
     		}
     	}
     }
@@ -647,7 +647,7 @@ public class ProcedurePlan extends ProcessorPlan {
 	private CursorState getCursorState(String rsKey) throws TeiidComponentException {
 		CursorState state = this.cursorStates.get(rsKey);
 		if (state == null) {
-			throw new TeiidComponentException(QueryPlugin.Util.getString("ERR.015.006.0037", rsKey)); //$NON-NLS-1$
+			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30166, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30166, rsKey));
 		}
 		return state;
 	}

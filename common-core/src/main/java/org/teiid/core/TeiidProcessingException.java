@@ -63,9 +63,17 @@ public class TeiidProcessingException extends TeiidException {
      * @param message A message describing the exception
      * @param code The error code
      */
-    public TeiidProcessingException( String code, String message ) {
-        super( code, message );
+    public TeiidProcessingException(BundleUtil.Event code, Throwable t, String message ) {
+        super(code, t, message );
     }
+    
+    public TeiidProcessingException(BundleUtil.Event code, final String message) {
+        super(code, message);
+    }     
+    
+    public TeiidProcessingException(BundleUtil.Event code, Throwable t) {
+        super(code, t);
+    }     
 
     /**
      * Construct an instance from a message and an exception to chain to this one.
@@ -75,18 +83,6 @@ public class TeiidProcessingException extends TeiidException {
      */
     public TeiidProcessingException( Throwable e, String message ) {
         super( e, message );
-    }
-
-    /**
-     * Construct an instance from a message and a code and an exception to
-     * chain to this one.
-     *
-     * @param e An exception to nest within this one
-     * @param message A message describing the exception
-     * @param code A code denoting the exception
-     */
-    public TeiidProcessingException( Throwable e, String code, String message ) {
-        super( e, code, message );
     }
 
 } // END CLASS

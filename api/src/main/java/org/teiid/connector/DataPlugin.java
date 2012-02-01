@@ -26,11 +26,25 @@ import java.util.ResourceBundle;
 
 import org.teiid.core.BundleUtil;
 
-public class DataPlugin { // extends Plugin {
+public class DataPlugin { 
 
     public static final String PLUGIN_ID = DataPlugin.class.getPackage().getName(); 
 
 	public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,
 	                                                     PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
 
+	public static enum Event implements BundleUtil.Event {
+		TEIID60000,
+		TEIID60001,
+		TEIID60002,
+		TEIID60003,
+		TEIID60004,
+		TEIID60005,
+		TEIID60006,
+		TEIID60007,
+		TEIID60008,
+		TEIID60009,
+		TEIID60010,
+		TEIID60011,		
+	}
 }

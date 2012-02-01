@@ -22,13 +22,15 @@
 
 package org.teiid.deployers;
 
+import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidProcessingException;
 /**
  * The base exception from which all Runtime Metadata Exceptions extend.
  */
 public class VirtualDatabaseException extends TeiidProcessingException {
 
-    public static final String NO_MODELS = "1"; //$NON-NLS-1$
+	private static final long serialVersionUID = -6654557123904497650L;
+	public static final String NO_MODELS = "1"; //$NON-NLS-1$
     public static final String MODEL_NON_DEPLOYABLE_STATE = "2";  //$NON-NLS-1$
     public static final String VDB_NON_DEPLOYABLE_STATE = "3";  //$NON-NLS-1$
 
@@ -54,8 +56,8 @@ public class VirtualDatabaseException extends TeiidProcessingException {
      * @param message A message describing the exception
      * @param code The error code
      */
-    public VirtualDatabaseException( String code, String message ) {
-        super( code, message );
+    public VirtualDatabaseException(BundleUtil.Event code, String message ) {
+        super(code, message );
     }
 
     /**
@@ -84,8 +86,8 @@ public class VirtualDatabaseException extends TeiidProcessingException {
      * @param message A message describing the exception
      * @param code A code denoting the exception
      */
-    public VirtualDatabaseException( Exception e, String code, String message ) {
-        super( e, code, message );
+    public VirtualDatabaseException(BundleUtil.Event event, Exception e, String message ) {
+        super(event, e, message );
     }
 }
 

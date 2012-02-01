@@ -319,7 +319,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                         return currentNode.getFirstChild();
                     } 
 				} catch(QueryMetadataException e) {
-                    throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0020", currentNode.getGroups())); //$NON-NLS-1$
+                     throw new QueryPlannerException(QueryPlugin.Event.TEIID30267, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30267, currentNode.getGroups()));
 				}
 			} else if(currentNode.getType() == NodeConstants.Types.JOIN) {
 				//pushing below a join is not necessary under an access node

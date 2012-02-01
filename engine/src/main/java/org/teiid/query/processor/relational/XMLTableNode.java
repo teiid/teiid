@@ -153,7 +153,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 				try {
 					this.wait();
 				} catch (InterruptedException e) {
-					throw new TeiidRuntimeException(e);
+					 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30169, e);
 				}
 			}
 			unwrapException(asynchException);
@@ -168,7 +168,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 				try {
 					item = result.iter.next();
 				} catch (XPathException e) {
-					throw new TeiidProcessingException(e, QueryPlugin.Util.getString("XMLTableNode.error", e.getMessage())); //$NON-NLS-1$
+					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30170, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30170, e.getMessage()));
 				}
 				rowCount++;
 				if (item == null) {
@@ -271,7 +271,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 						continue;
 					}
 					if (pathIter.next() != null) {
-						throw new TeiidProcessingException(QueryPlugin.Util.getString("XMLTableName.multi_value", proColumn.getName())); //$NON-NLS-1$
+						 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30171, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30171, proColumn.getName()));
 					}
 					Object value = colItem;
 					if (value instanceof AtomicValue) {
@@ -293,7 +293,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 					value = FunctionDescriptor.importValue(value, proColumn.getSymbol().getType());
 					tuple.add(value);
 				} catch (XPathException e) {
-					throw new TeiidProcessingException(e, QueryPlugin.Util.getString("XMLTableNode.path_error", proColumn.getName())); //$NON-NLS-1$
+					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30172, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30172, proColumn.getName()));
 				}
 			}
 		}
@@ -332,7 +332,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 				this.notifyAll();
 			}
 		} catch (TeiidException e) {
-			throw new TeiidRuntimeException(e);
+			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30173, e);
 		}
 	}
 

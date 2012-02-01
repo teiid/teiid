@@ -34,6 +34,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.teiid.core.CorePlugin;
 import org.teiid.core.util.ArgCheck;
 
 
@@ -72,7 +73,7 @@ public class SymmetricCryptor extends BasicCryptor {
                 return keyGen.generateKey();
             }
         } catch (GeneralSecurityException e) {
-            throw new CryptoException(e);
+              throw new CryptoException(CorePlugin.Event.TEIID10021, e);
         }
 	}
     
@@ -93,7 +94,7 @@ public class SymmetricCryptor extends BasicCryptor {
 	    	Key key = store.getKey(DEFAULT_ALIAS, DEFAULT_STORE_PASSWORD.toCharArray());
 	    	return new SymmetricCryptor(key);
         } catch (GeneralSecurityException e) {
-            throw new CryptoException(e);
+              throw new CryptoException(CorePlugin.Event.TEIID10022, e);
 		} finally {
 			stream.close();
 		}
@@ -125,7 +126,7 @@ public class SymmetricCryptor extends BasicCryptor {
     		store.setKeyEntry(DEFAULT_ALIAS, key, DEFAULT_STORE_PASSWORD.toCharArray(),null);
     		store.store(fos, DEFAULT_STORE_PASSWORD.toCharArray());
     	} catch (GeneralSecurityException e) {
-    		throw new CryptoException(e);
+    		  throw new CryptoException(CorePlugin.Event.TEIID10023, e);
     	} finally {
     		fos.close();
     	}	

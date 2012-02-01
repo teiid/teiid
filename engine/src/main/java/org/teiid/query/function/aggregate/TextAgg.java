@@ -31,13 +31,14 @@ import java.util.List;
 import javax.sql.rowset.serial.SerialBlob;
 
 import org.teiid.common.buffer.FileStore;
-import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.common.buffer.FileStore.FileStoreOutputStream;
+import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.Streamable;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.symbol.DerivedColumn;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.TextLine;
@@ -75,7 +76,7 @@ public class TextAgg extends AggregateFunction {
 			w.flush();
 			return fisf;
 		} catch (IOException e) {
-			throw new TeiidProcessingException(e);
+			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30420, e);
 		}
 	}
 
@@ -98,7 +99,7 @@ public class TextAgg extends AggregateFunction {
     		w.write(in);
 			w.flush();
 		} catch (IOException e) {
-			throw new TeiidProcessingException(e);
+			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30421, e);
 		}
     }
 
@@ -119,9 +120,9 @@ public class TextAgg extends AggregateFunction {
 			}
 			return new BlobType(new SerialBlob(Arrays.copyOf(fs.getBuffer(), fs.getCount())));
 		} catch (IOException e) {
-			throw new TeiidProcessingException(e);
+			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30422, e);
 		}  catch (SQLException e) {
-			throw new TeiidProcessingException(e);
+			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30423, e);
 		}
     }
 }

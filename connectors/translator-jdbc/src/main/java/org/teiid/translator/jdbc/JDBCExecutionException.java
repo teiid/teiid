@@ -25,6 +25,7 @@ package org.teiid.translator.jdbc;
 import java.sql.SQLException;
 import java.util.Arrays;
 
+import org.teiid.core.BundleUtil;
 import org.teiid.translator.TranslatorException;
 
 
@@ -32,9 +33,8 @@ public class JDBCExecutionException extends TranslatorException {
 
 	private static final long serialVersionUID = 1758087499488916573L;
 
-	public JDBCExecutionException(SQLException error,
-			TranslatedCommand... commands) {
-		super(error, error.getErrorCode(), commands == null || commands.length == 0 ? error.getMessage() : JDBCPlugin.Util.getString("JDBCQueryExecution.Error_executing_query__1", //$NON-NLS-1$
-						error.getMessage(), Arrays.toString(commands)));
+	public JDBCExecutionException(BundleUtil.Event event, SQLException error,TranslatedCommand... commands) {
+		super(error, commands == null || commands.length == 0 ? event.toString()+":"+error.getMessage() : event.toString()+":"+JDBCPlugin.Util.getString("JDBCQueryExecution.Error_executing_query__1", error.getMessage(), Arrays.toString(commands))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		setCode(String.valueOf(error.getErrorCode()));
 	}
 }

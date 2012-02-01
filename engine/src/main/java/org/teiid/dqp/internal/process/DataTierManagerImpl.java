@@ -135,7 +135,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	public static int getLevel(String level) throws TeiidProcessingException {
 		Integer intLevel = levelMap.get(level);
 		if (intLevel == null) {
-			throw new TeiidProcessingException(QueryPlugin.Util.getString("FunctionMethods.unknown_level", level, levelMap.keySet())); //$NON-NLS-1$
+			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30546, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30546, level, levelMap.keySet()));
 		}
 		return intLevel;
 	}
@@ -320,7 +320,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 							try {
 								clobValue = new ClobType(new SerialClob(value.toCharArray()));
 							} catch (SQLException e) {
-								throw new TeiidProcessingException(e);
+								 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30547, e);
 							}
 						}
 						rows.add(Arrays.asList(entry.getKey(), entry.getValue(), record.getUUID(), oid++, clobValue));
@@ -410,13 +410,13 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						String result = null;
 						if (value != null) {
 							if (value.length() > MAX_VALUE_LENGTH) {
-								throw new TeiidProcessingException(QueryPlugin.Util.getString("DataTierManagerImpl.max_value_length", MAX_VALUE_LENGTH)); //$NON-NLS-1$
+								 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30548, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30548, MAX_VALUE_LENGTH));
 							}
 							strVal = ObjectConverterUtil.convertToString(value.getCharacterStream());
 						}
 						AbstractMetadataRecord target = getByUuid(metadata, uuid);
 						if (target == null) {
-							throw new TeiidProcessingException(QueryPlugin.Util.getString("DataTierManagerImpl.unknown_uuid", uuid)); //$NON-NLS-1$
+							 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30549, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30549, uuid));
 						}
 						if (this.metadataRepository != null) {
 							this.metadataRepository.setProperty(vdbName, vdbVersion, target, key, strVal);
@@ -434,9 +434,9 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						}
 						return new CollectionTupleSource(rows.iterator());
 					} catch (SQLException e) {
-						throw new TeiidProcessingException(e);
+						 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30550, e);
 					} catch (IOException e) {
-						throw new TeiidProcessingException(e);
+						 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30551, e);
 					}
 				}
 				Table table = indexMetadata.getGroupID((String)((Constant)proc.getParameter(1).getExpression()).getValue());
@@ -451,7 +451,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						}
 					}
 					if (c == null) {
-						throw new TeiidProcessingException(columnName + TransformationMetadata.NOT_EXISTS_MESSAGE);
+						 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30552, columnName + TransformationMetadata.NOT_EXISTS_MESSAGE);
 					}
 					Integer distinctVals = (Integer)((Constant)proc.getParameter(3).getExpression()).getValue();
 					Integer nullVals = (Integer)((Constant)proc.getParameter(4).getExpression()).getValue();
@@ -497,7 +497,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						rows.add(Arrays.asList(new XMLType(schema)));
 					}
 				} catch (QueryMetadataException e) {
-					throw new TeiidProcessingException(e);
+					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30553, e);
 				}
 				break;
 			}
@@ -571,7 +571,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	List<String> bindings = model.getSourceNames();
 	        if (bindings == null || bindings.size() != 1) {
 	            // this should not happen, but it did occur when setting up the SystemAdmin models
-	            throw new TeiidComponentException(QueryPlugin.Util.getString("DataTierManager.could_not_obtain_connector_binding", new Object[]{modelName, workItem.getDqpWorkContext().getVdbName(), workItem.getDqpWorkContext().getVdbVersion() })); //$NON-NLS-1$
+	             throw new TeiidComponentException(QueryPlugin.Event.TEIID30554, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30554, modelName, workItem.getDqpWorkContext().getVdbName(), workItem.getDqpWorkContext().getVdbVersion()));
 	        }
 	        connectorBindingId = bindings.get(0); 
 	        Assertion.isNotNull(connectorBindingId, "could not obtain connector id"); //$NON-NLS-1$

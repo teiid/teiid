@@ -157,7 +157,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            	Object modelId = RuleRaiseAccess.getModelIDFromAccess(root, metadata);
 	            	for (Expression symbol : outputElements) {
 	                    if(!RuleRaiseAccess.canPushSymbol(symbol, true, modelId, metadata, capFinder, analysisRecord)) {
-	                    	throw new QueryPlannerException(QueryPlugin.Util.getString("RuleAssignOutputElements.couldnt_push_expression", symbol, modelId)); //$NON-NLS-1$
+	                    	 throw new QueryPlannerException(QueryPlugin.Event.TEIID30258, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30258, symbol, modelId));
 	                    } 
 					}
 	            }
@@ -330,7 +330,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
             SymbolMap symbolMap = (SymbolMap) root.getProperty(NodeConstants.Info.SYMBOL_MAP);
             if (!symbolMap.asMap().keySet().containsAll(outputElements)) {
             	outputElements.removeAll(symbolMap.asMap().keySet());
-            	throw new QueryPlannerException(QueryPlugin.Util.getString("RuleAssignOutputElements.cannot_introduce_expressions", outputElements)); //$NON-NLS-1$
+            	 throw new QueryPlannerException(QueryPlugin.Event.TEIID30259, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30259, outputElements));
             }
             return symbolMap.getKeys();
         } 

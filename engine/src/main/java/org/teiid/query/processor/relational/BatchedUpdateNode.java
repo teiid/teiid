@@ -135,7 +135,7 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
                     addBatchRow(Arrays.asList(new Object[] {tuple.get(0)}));
                 } else {
                     // Should never happen since the number of expected results is known
-                    throw new TeiidComponentException(QueryPlugin.Util.getString("BatchedUpdateNode.unexpected_end_of_batch", commandCount, numExpectedCounts)); //$NON-NLS-1$
+                     throw new TeiidComponentException(QueryPlugin.Event.TEIID30192, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30192, commandCount, numExpectedCounts));
                 }
             }
         }

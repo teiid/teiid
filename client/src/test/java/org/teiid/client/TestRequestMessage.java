@@ -100,7 +100,7 @@ public class TestRequestMessage extends TestCase {
 			rm.setTxnAutoWrapMode("foo"); //$NON-NLS-1$
 			fail("exception expected"); //$NON-NLS-1$
 		} catch (TeiidProcessingException e) {
-			assertEquals("'FOO' is an invalid transaction autowrap mode.", e.getMessage()); //$NON-NLS-1$
+			assertEquals("Error Code:TEIID20000 Message:TEIID20000 'FOO' is an invalid transaction autowrap mode.", e.getMessage()); //$NON-NLS-1$
 		}
 	}
 

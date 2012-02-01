@@ -56,10 +56,10 @@ public class ObjectConverterUtil {
               return convertToByteArray(l_blobStream);
           } catch (IOException ioe) {
                 final Object[] params = new Object[]{data.getClass().getName()};
-                throw new TeiidException(ioe,CorePlugin.Util.getString("ObjectConverterUtil.Error_translating_results_from_data_type_to_a_byte[]._1",params)); //$NON-NLS-1$
+                  throw new TeiidException(CorePlugin.Event.TEIID10030, ioe,CorePlugin.Util.gs(CorePlugin.Event.TEIID10030,params));
           } catch (SQLException sqe) {
                 final Object[] params = new Object[]{data.getClass().getName()};
-                throw new TeiidException(sqe,CorePlugin.Util.getString("ObjectConverterUtil.Error_translating_results_from_data_type_to_a_byte[]._2",params)); //$NON-NLS-1$
+                  throw new TeiidException(CorePlugin.Event.TEIID10031, sqe,CorePlugin.Util.gs(CorePlugin.Event.TEIID10031,params));
           }
     }
 
@@ -74,7 +74,7 @@ public class ObjectConverterUtil {
         	return convertFileToByteArray((File)data);
         }
         final Object[] params = new Object[]{data.getClass().getName()};
-        throw new TeiidException(CorePlugin.Util.getString("ObjectConverterUtil.Object_type_not_supported_for_object_conversion._3",params)); //$NON-NLS-1$
+          throw new TeiidException(CorePlugin.Event.TEIID10032, CorePlugin.Util.gs(CorePlugin.Event.TEIID10032,params));
     }
 
     public static byte[] convertToByteArray(final InputStream is) throws IOException {

@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.core.BundleUtil;
 import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidRuntimeException;
 
@@ -53,10 +54,11 @@ import org.teiid.core.TeiidRuntimeException;
 public final class PropertiesUtils {
 	
 	public static class InvalidPropertyException extends TeiidRuntimeException {
-		
-		public InvalidPropertyException(String propertyName, String value, Class<?> expectedType, Throwable cause) {
-			super(cause, CorePlugin.Util.getString("InvalidPropertyException.message", propertyName, value, expectedType.getSimpleName())); //$NON-NLS-1$
-		}
+		private static final long serialVersionUID = 1586068295007497776L;
+
+		public InvalidPropertyException(BundleUtil.Event event, String propertyName, String value, Class<?> expectedType, Throwable cause) {
+			super(event, cause, CorePlugin.Util.getString("InvalidPropertyException.message", propertyName, value, expectedType.getSimpleName())); //$NON-NLS-1$
+		}		
 
 	}
 
@@ -236,7 +238,7 @@ public final class PropertiesUtils {
         try {
             return Integer.parseInt(stringVal);
         } catch(NumberFormatException e) {
-            throw new InvalidPropertyException(propName, stringVal, Integer.class, e);
+              throw new InvalidPropertyException(CorePlugin.Event.TEIID10037, propName, stringVal, Integer.class, e);
         }
     }
 
@@ -252,7 +254,7 @@ public final class PropertiesUtils {
         try {
             return Long.parseLong(stringVal);
         } catch(NumberFormatException e) {
-        	throw new InvalidPropertyException(propName, stringVal, Long.class, e);
+        	  throw new InvalidPropertyException( CorePlugin.Event.TEIID10038, propName, stringVal, Long.class, e);
         }
     }
 
@@ -268,7 +270,7 @@ public final class PropertiesUtils {
         try {
             return Float.parseFloat(stringVal);
         } catch(NumberFormatException e) {
-        	throw new InvalidPropertyException(propName, stringVal, Float.class, e);
+        	  throw new InvalidPropertyException(CorePlugin.Event.TEIID10039, propName, stringVal, Float.class, e);
         }
     }
 
@@ -284,7 +286,7 @@ public final class PropertiesUtils {
         try {
             return Double.parseDouble(stringVal);
         } catch(NumberFormatException e) {
-        	throw new InvalidPropertyException(propName, stringVal, Double.class, e);
+        	  throw new InvalidPropertyException(CorePlugin.Event.TEIID10040, propName, stringVal, Double.class, e);
         }
     }
 
@@ -300,7 +302,7 @@ public final class PropertiesUtils {
         try {
             return Boolean.valueOf(stringVal);
         } catch(NumberFormatException e) {
-        	throw new InvalidPropertyException(propName, stringVal, Float.class, e);
+        	  throw new InvalidPropertyException(CorePlugin.Event.TEIID10041, propName, stringVal, Float.class, e);
         }
     }
 
@@ -708,7 +710,7 @@ public final class PropertiesUtils {
                     
                         // this will handle case where we did not resolve, mark it blank
                         if (nestedvalue == null) {
-                        	throw new TeiidRuntimeException(CorePlugin.Util.getString("PropertiesUtils.failed_to_resolve_property", nestedkey)); //$NON-NLS-1$
+                        	  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10042, CorePlugin.Util.gs(CorePlugin.Event.TEIID10042, nestedkey));
                         }                    
                         value = value.substring(0,start)+nestedvalue+value.substring(end+1);
                         modified = true;
@@ -883,7 +885,7 @@ public final class PropertiesUtils {
                     final Object[] params = new Object[] {StringUtil.valueOf(propertyValue, argType)};
                     method.invoke(bean, params);
                 } catch (Throwable e) {
-                	throw new InvalidPropertyException(propertyName, propertyValue, argType, e);
+                	  throw new InvalidPropertyException(CorePlugin.Event.TEIID10043, propertyName, propertyValue, argType, e);
                 }
 	        }
 	    }
@@ -914,7 +916,7 @@ public final class PropertiesUtils {
                 	}
                     method.invoke(bean, params);
                 } catch (Throwable e) {
-                	throw new InvalidPropertyException(propertyName, value.toString(), argType, e);
+                	  throw new InvalidPropertyException(CorePlugin.Event.TEIID10044, propertyName, value.toString(), argType, e);
                 }
 	        }
 	    }

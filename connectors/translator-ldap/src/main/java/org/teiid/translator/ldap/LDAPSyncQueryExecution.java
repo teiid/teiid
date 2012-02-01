@@ -157,7 +157,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 		String ctxName = searchDetails.getContextName();
 		String filter = searchDetails.getContextFilter();
 		if (ctxName == null || filter == null || ctrls == null) {
-			throw new TranslatorException(LogConstants.CTX_CONNECTOR, "Search context, filter, or controls were null. Cannot execute search."); //$NON-NLS-1$
+			throw new TranslatorException("Search context, filter, or controls were null. Cannot execute search."); //$NON-NLS-1$
 		}
 		setRequestControls(null);
 		// Execute the search.

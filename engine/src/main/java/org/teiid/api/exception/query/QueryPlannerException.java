@@ -22,6 +22,8 @@
 
 package org.teiid.api.exception.query;
 
+import org.teiid.core.BundleUtil;
+
 /**
  * This exception is thrown when an error occurs while planning the query.  This
  * probably indicates a problem with the query that could not be determined during
@@ -29,7 +31,9 @@ package org.teiid.api.exception.query;
  */
 public class QueryPlannerException extends QueryProcessingException {
 
-    /**
+	private static final long serialVersionUID = -4209763837004780184L;
+
+	/**
      * No-arg constructor required by Externalizable semantics.
      */
     public QueryPlannerException() {
@@ -44,17 +48,7 @@ public class QueryPlannerException extends QueryProcessingException {
     public QueryPlannerException( String message ) {
         super( message );
     }
-
-    /**
-     * Construct an instance with the message and error code specified.
-     *
-     * @param message A message describing the exception
-     * @param code The error code
-     */
-    public QueryPlannerException( String code, String message ) {
-        super( code, message );
-    }
-
+    
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *
@@ -64,16 +58,16 @@ public class QueryPlannerException extends QueryProcessingException {
     public QueryPlannerException( Throwable e, String message ) {
         super( e, message );
     }
-
-    /**
-     * Construct an instance from a message and a code and an exception to
-     * chain to this one.
-     *
-     * @param e An exception to nest within this one
-     * @param message A message describing the exception
-     * @param code A code denoting the exception
-     */
-    public QueryPlannerException( Throwable e, String code, String message ) {
-        super( e, code, message );
+    
+    public QueryPlannerException(BundleUtil.Event event, Throwable e) {
+        super( event, e);
+    }    
+    
+    public QueryPlannerException(BundleUtil.Event event, Throwable e, String msg) {
+        super(event, e, msg);
     }
+    
+    public QueryPlannerException(BundleUtil.Event event, String msg) {
+        super(event, msg);
+    }    
 }

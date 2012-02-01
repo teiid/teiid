@@ -120,20 +120,20 @@ public class MappingDocument extends MappingBaseNode {
     }     
     
     public MappingAllNode addAllNode(MappingAllNode elem) {
-        throw new TeiidRuntimeException(QueryPlugin.Util.getString("WrongTypeChild")); //$NON-NLS-1$
+         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30458, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30458));
     }
 
     public MappingChoiceNode addChoiceNode(MappingChoiceNode elem) {
-        throw new TeiidRuntimeException(QueryPlugin.Util.getString("WrongTypeChild")); //$NON-NLS-1$
+         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30459, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30459));
     }
 
     public MappingSequenceNode addSequenceNode(MappingSequenceNode elem) {
-        throw new TeiidRuntimeException(QueryPlugin.Util.getString("WrongTypeChild")); //$NON-NLS-1$
+         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30460, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30460));
     }
     
     public MappingElement addChildElement(MappingElement elem) {
         if (elem == null) {
-            throw new TeiidRuntimeException(QueryPlugin.Util.getString("root_cannotbe_null")); //$NON-NLS-1$
+             throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30461, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30461));
         }        
         fixCardinality(elem);
         setRoot(elem);
@@ -142,7 +142,7 @@ public class MappingDocument extends MappingBaseNode {
     
     public MappingSourceNode addSourceNode(MappingSourceNode elem) {
         if (elem == null) {
-            throw new TeiidRuntimeException(QueryPlugin.Util.getString("root_cannotbe_null")); //$NON-NLS-1$
+             throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30462, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30462));
         }
         setRoot(elem);
         return elem;

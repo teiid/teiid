@@ -76,7 +76,7 @@ public class CachedFinder implements CapabilitiesFinder {
         	try {
         		ConnectorManager mgr = this.connectorRepo.getConnectorManager(sourceName);
         		if (mgr == null) {
-        			throw new TranslatorException(QueryPlugin.Util.getString("CachedFinder.no_connector_found", sourceName, modelName, sourceName)); //$NON-NLS-1$
+        			 throw new TranslatorException(QueryPlugin.Event.TEIID30497, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30497, sourceName, modelName, sourceName));
         		}
         		caps = mgr.getCapabilities();
         		break;
@@ -88,11 +88,11 @@ public class CachedFinder implements CapabilitiesFinder {
         }
 
         if (exception != null) {
-        	throw new TeiidComponentException(exception);
+        	 throw new TeiidComponentException(QueryPlugin.Event.TEIID30498, exception);
         }
         
         if (caps == null) {
-        	throw new TeiidRuntimeException("No sources were given for the model " + modelName); //$NON-NLS-1$
+        	 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30499, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30499, modelName));
         }
         
         userCache.put(modelName, caps);

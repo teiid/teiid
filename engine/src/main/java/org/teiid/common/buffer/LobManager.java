@@ -141,14 +141,14 @@ public class LobManager {
 			case ATTACH:
 				if (lob.getReference() == null) {
 					if (lobHolder == null) {
-						throw new TeiidComponentException(QueryPlugin.Util.getString("ProcessWorker.wrongdata")); //$NON-NLS-1$
+						 throw new TeiidComponentException(QueryPlugin.Event.TEIID30033, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30033));
 					}
 					lob.setReference(lobHolder.lob.getReference());
 				}
 				break;
 			case CREATE:
 				if (lob.getReference() == null) {
-					throw new TeiidComponentException(QueryPlugin.Util.getString("ProcessWorker.wrongdata")); //$NON-NLS-1$					
+					 throw new TeiidComponentException(QueryPlugin.Event.TEIID30034, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30034));
 				}
 				if (lobHolder == null) {
 					this.lobReferences.put(id, new LobHolder(lob));					
@@ -162,7 +162,7 @@ public class LobManager {
     public Streamable<?> getLobReference(String id) throws TeiidComponentException {
     	LobHolder lob = this.lobReferences.get(id);
     	if (lob == null) {
-    		throw new TeiidComponentException(QueryPlugin.Util.getString("ProcessWorker.wrongdata")); //$NON-NLS-1$
+    		 throw new TeiidComponentException(QueryPlugin.Event.TEIID30035, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30035));
     	}
     	return lob.lob;
     }
@@ -225,7 +225,7 @@ public class LobManager {
 			OutputStream fsos = store.createOutputStream();
 			length = ObjectConverterUtil.write(fsos, is, bytes, -1);
 		} catch (IOException e) {
-			throw new TeiidComponentException(e);
+			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30036, e);
 		}
 		
 		// re-construct the new lobs based on the file store
@@ -256,7 +256,7 @@ public class LobManager {
 				((XMLType)persistedLob).setType(((XMLType)lob).getType());
 			}
 		} catch (SQLException e) {
-			throw new TeiidComponentException(e);
+			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30037, e);
 		}		
 		return persistedLob;		
 	}

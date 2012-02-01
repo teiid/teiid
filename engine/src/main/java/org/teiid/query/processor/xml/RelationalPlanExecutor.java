@@ -181,7 +181,7 @@ class RelationalPlanExecutor implements PlanExecutor {
             // check if we walked over the row limit
             if (this.currentRow != null && this.resultInfo.getUserRowLimit() > 0 && this.currentRowNumber > this.resultInfo.getUserRowLimit()) {
                 if (this.resultInfo.exceptionOnRowlimit()) {
-                    throw new TeiidProcessingException(QueryPlugin.Util.getString("row_limit_passed", new Object[] { new Integer(this.resultInfo.getUserRowLimit()), this.resultInfo.getResultSetName()})); //$NON-NLS-1$                
+                     throw new TeiidProcessingException(QueryPlugin.Event.TEIID30211, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30211, new Object[] { new Integer(this.resultInfo.getUserRowLimit()), this.resultInfo.getResultSetName()}));
                 }
                 // well, we did not throw a exception, that means we need to limit it to current row
                 this.currentRow = null;

@@ -259,7 +259,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
             
             int delimiterIndex = sequence.indexOf(Tokens.DOT);
             if (delimiterIndex == -1) {
-            	throw new TranslatorException("Invalid name in source sequence format.  Expected <element name>" + SEQUENCE + "<sequence name>.<sequence value>, but was " + name); //$NON-NLS-1$ //$NON-NLS-2$
+            	 throw new TranslatorException(JDBCPlugin.Event.TEIID11017, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11017, SEQUENCE, name));
             }
             String sequenceGroupName = sequence.substring(0, delimiterIndex);
             String sequenceElementName = sequence.substring(delimiterIndex + 1);

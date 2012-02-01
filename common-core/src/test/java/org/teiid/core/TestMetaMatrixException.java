@@ -71,17 +71,21 @@ public class TestMetaMatrixException extends TestCase {
         assertEquals("Test", err.getMessage()); //$NON-NLS-1$
         
     }
-
+    public static enum Event implements BundleUtil.Event {
+    	Code,
+    	propertyValuePhrase,
+    }
     public void testMetaMatrixExceptionWithCodeAndMessage() {
-        final TeiidException err = new TeiidException("Code", "Test"); //$NON-NLS-1$ //$NON-NLS-2$
+        final TeiidException err = new TeiidException(Event.Code, "Test"); //$NON-NLS-1$ 
         assertNull(err.getChild());
         assertEquals("Code", err.getCode()); //$NON-NLS-1$
         assertEquals("Error Code:Code Message:Test", err.getMessage()); //$NON-NLS-1$
         
     }
 
+    
     public void testMetaMatrixExceptionWithExceptionAndMessage() {
-        final TeiidException child = new TeiidException("propertyValuePhrase", "Child"); //$NON-NLS-1$ //$NON-NLS-2$
+        final TeiidException child = new TeiidException(Event.propertyValuePhrase, "Child"); //$NON-NLS-1$ 
         final TeiidException err = new TeiidException(child, "Test"); //$NON-NLS-1$
         assertSame(child, err.getChild());
         assertEquals("propertyValuePhrase", err.getCode()); //$NON-NLS-1$
@@ -90,8 +94,8 @@ public class TestMetaMatrixException extends TestCase {
     }
 
     public void testMetaMatrixExceptionWithExceptionAndCodeAndMessage() {
-        final TeiidException child = new TeiidException("propertyValuePhrase", "Child"); //$NON-NLS-1$ //$NON-NLS-2$
-        final TeiidException err = new TeiidException(child, "Code", "Test"); //$NON-NLS-1$ //$NON-NLS-2$
+        final TeiidException child = new TeiidException(Event.propertyValuePhrase, "Child"); //$NON-NLS-1$
+        final TeiidException err = new TeiidException(Event.Code,child, "Test"); //$NON-NLS-1$
         assertSame(child, err.getChild());
         assertEquals("Code", err.getCode()); //$NON-NLS-1$
         assertEquals("Error Code:Code Message:Test", err.getMessage()); //$NON-NLS-1$

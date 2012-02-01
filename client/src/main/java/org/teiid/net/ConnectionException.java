@@ -22,6 +22,7 @@
 
 package org.teiid.net;
 
+import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidException;
 
 /**
@@ -30,7 +31,9 @@ import org.teiid.core.TeiidException;
  * connection parameters.  
  */
 public class ConnectionException extends TeiidException {
-    /**
+	private static final long serialVersionUID = -5647655775983865084L;
+
+	/**
      * No-Arg Constructor
      */
     public ConnectionException(  ) {
@@ -58,4 +61,8 @@ public class ConnectionException extends TeiidException {
     public ConnectionException(Throwable e, String message) {
         super(e, message);
     }
+    
+    public ConnectionException(BundleUtil.Event event, Throwable e, String message) {
+        super(event, e, message);
+    }    
 }

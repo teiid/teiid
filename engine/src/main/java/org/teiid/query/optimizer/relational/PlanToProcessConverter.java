@@ -178,7 +178,7 @@ public class PlanToProcessConverter {
                             }
                         }
                     } catch(QueryMetadataException e) {
-                        throw new TeiidComponentException(e);
+                         throw new TeiidComponentException(QueryPlugin.Event.TEIID30247, e);
                     }
 
                 } else {
@@ -308,7 +308,7 @@ public class PlanToProcessConverter {
                                 processNode = correctProjectionInternalTables(node, aNode);
                             }
                         } catch (QueryMetadataException err) {
-                            throw new TeiidComponentException(err);
+                             throw new TeiidComponentException(QueryPlugin.Event.TEIID30248, err);
                         }
                         aNode.setShouldEvaluateExpressions(EvaluatableVisitor.needsProcessingEvaluation(command));
                     }
@@ -320,7 +320,7 @@ public class PlanToProcessConverter {
 	                        boolean aliasColumns = modelID != null && CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder);
 	                        command.acceptVisitor(new AliasGenerator(aliasGroups, !aliasColumns));
 	                    } catch (QueryMetadataException err) {
-	                        throw new TeiidComponentException(err);
+	                         throw new TeiidComponentException(QueryPlugin.Event.TEIID30249, err);
 	                    }
                     }
                     aNode.setCommand(command);
@@ -479,7 +479,7 @@ public class PlanToProcessConverter {
                 break;
 
 			default:
-                throw new QueryPlannerException(QueryPlugin.Util.getString("ERR.015.004.0007", NodeConstants.getNodeTypeString(node.getType()))); //$NON-NLS-1$
+                 throw new QueryPlannerException(QueryPlugin.Event.TEIID30250, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30250, NodeConstants.getNodeTypeString(node.getType())));
 		}
 
 		if(processNode != null) {
@@ -571,7 +571,7 @@ public class PlanToProcessConverter {
 			accessNode.setModelName(cbName);
 			accessNode.setModelId(modelID);
 		} catch(QueryMetadataException e) {
-            throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0009")); //$NON-NLS-1$
+             throw new QueryPlannerException(QueryPlugin.Event.TEIID30251, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30251));
 		}
 	}
 

@@ -216,7 +216,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
             procEnv.push(dynamicProgram);
 		} catch (TeiidProcessingException e) {
 			Object[] params = {dynamicCommand, dynamicCommand.getSql(), e.getMessage()};
-			throw new QueryProcessingException(e, QueryPlugin.Util.getString("ExecDynamicSqlInstruction.couldnt_execute", params)); //$NON-NLS-1$
+			 throw new QueryProcessingException(QueryPlugin.Event.TEIID30168, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30168, params));
 		} 
 	}
 

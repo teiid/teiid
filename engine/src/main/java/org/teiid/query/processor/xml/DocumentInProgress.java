@@ -38,6 +38,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.mapping.xml.MappingNodeConstants;
 import org.xml.sax.SAXException;
 
@@ -65,7 +66,7 @@ public class DocumentInProgress {
 			handler = factory.newTransformerHandler();
 			handler.setResult(new StreamResult(fsisf.getOuputStream()));
 		} catch (Exception e) {
-			throw new TeiidComponentException(e);
+			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30204, e);
 		}
         transformer = handler.getTransformer();
         transformer.setOutputProperty(OutputKeys.ENCODING, encoding);
@@ -263,7 +264,7 @@ public class DocumentInProgress {
 		try {
 			endDocument();
 		} catch (SAXException e) {
-			throw new TeiidComponentException(e);
+			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30205, e);
 		}
 		finished = true;
 	}

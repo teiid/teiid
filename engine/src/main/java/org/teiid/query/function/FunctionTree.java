@@ -317,28 +317,28 @@ public class FunctionTree {
                 	requiresContext = true;
                 }
             } catch (ClassNotFoundException e) {
-            	throw new TeiidRuntimeException(e, "ERR.015.001.0047", QueryPlugin.Util.getString("FunctionTree.no_class", method.getName(), method.getInvocationClass())); //$NON-NLS-1$ //$NON-NLS-2$
+            	 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30387, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30387, method.getName(), method.getInvocationClass()));
             } catch (NoSuchMethodException e) {
-            	throw new TeiidRuntimeException(e, "ERR.015.001.0047", QueryPlugin.Util.getString("FunctionTree.no_method", method, method.getInvocationClass(), method.getInvocationMethod())); //$NON-NLS-1$ //$NON-NLS-2$
+            	 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30388, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30388, method, method.getInvocationClass(), method.getInvocationMethod()));
             } catch (Exception e) {                
-                throw new TeiidRuntimeException(e, "ERR.015.001.0047", QueryPlugin.Util.getString("ERR.015.001.0047", method, method.getInvocationClass(), method.getInvocationMethod())); //$NON-NLS-1$ //$NON-NLS-2$
+                 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30389, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30389, method, method.getInvocationClass(), method.getInvocationMethod()));
             } 
             if (invocationMethod != null) {
             	// Check return type is non void
         		Class<?> methodReturn = invocationMethod.getReturnType();
         		if(methodReturn.equals(Void.TYPE)) {
-        			throw new TeiidRuntimeException("ERR.015.001.0047", QueryPlugin.Util.getString("FunctionTree.not_void", method.getName(), invocationMethod)); //$NON-NLS-1$ //$NON-NLS-2$
+        			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30390, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30390, method.getName(), invocationMethod));
         		}
 
         		// Check that method is public
         		int modifiers = invocationMethod.getModifiers();
         		if(! Modifier.isPublic(modifiers)) {
-        			throw new TeiidRuntimeException("ERR.015.001.0047", QueryPlugin.Util.getString("FunctionTree.not_public", method.getName(), invocationMethod)); //$NON-NLS-1$ //$NON-NLS-2$
+        			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30391, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30391, method.getName(), invocationMethod));
         		}
 
         		// Check that method is static
         		if(! Modifier.isStatic(modifiers)) {
-        			throw new TeiidRuntimeException("ERR.015.001.0047", QueryPlugin.Util.getString("FunctionTree.not_static", method.getName(), invocationMethod)); //$NON-NLS-1$ //$NON-NLS-2$
+        			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30392, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30392, method.getName(), invocationMethod));
         		}
             }
         }

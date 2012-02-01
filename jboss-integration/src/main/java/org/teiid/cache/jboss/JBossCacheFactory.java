@@ -29,6 +29,7 @@ import org.teiid.cache.Cache;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.jboss.IntegrationPlugin;
 
 
 public class JBossCacheFactory implements CacheFactory, Serializable{
@@ -53,7 +54,7 @@ public class JBossCacheFactory implements CacheFactory, Serializable{
 		if (!destroyed) {
 			return new JBossCache(this.cacheStore, config.getLocation());	
 		}
-		throw new TeiidRuntimeException("Cache system has been shutdown"); //$NON-NLS-1$
+		 throw new TeiidRuntimeException(IntegrationPlugin.Event.TEIID50066, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50066));
 	}
 	
 	public void destroy() {

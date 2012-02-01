@@ -90,7 +90,7 @@ public class CriteriaPlanner {
                     if (context == null) {
                         context = otherContext;
                     } else if (context != otherContext){
-                        throw new QueryPlannerException("ERR.015.004.0068", QueryPlugin.Util.getString("ERR.015.004.0068", criteria)); //$NON-NLS-1$ //$NON-NLS-2$
+                         throw new QueryPlannerException(QueryPlugin.Event.TEIID30300, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30300, criteria));
                     }
                 }
                 
@@ -142,7 +142,7 @@ public class CriteriaPlanner {
             
             MappingSourceNode elementRsNode = node.getSourceNode(); 
             if (elementRsNode == null) {
-                throw new QueryPlannerException(QueryPlugin.Util.getString("CriteriaPlanner.invalid_element", elementSymbol)); //$NON-NLS-1$
+                 throw new QueryPlannerException(QueryPlugin.Event.TEIID30301, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30301, elementSymbol));
             }
             
             String elementRsFullName = elementRsNode.getFullyQualifiedName();
@@ -159,7 +159,7 @@ public class CriteriaPlanner {
                 continue;
             }
             
-            throw new QueryPlannerException(QueryPlugin.Util.getString("CriteriaPlanner.invalid_context", elementSymbol, context.getFullyQualifiedName())); //$NON-NLS-1$
+             throw new QueryPlannerException(QueryPlugin.Event.TEIID30302, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30302, elementSymbol, context.getFullyQualifiedName()));
         }
         return resultSets;
     }
@@ -187,7 +187,7 @@ public class CriteriaPlanner {
    
         if (criteriaResultSets.size() != 1) {
             //TODO: this assumption could be relaxed if we allow context to be from a document perspective, rather than from a result set
-            throw new QueryPlannerException(QueryPlugin.Util.getString("CriteriaPlanner.no_context", criteria)); //$NON-NLS-1$
+             throw new QueryPlannerException(QueryPlugin.Event.TEIID30303, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30303, criteria));
         }
         return (MappingSourceNode)criteriaResultSets.iterator().next();
     }
@@ -261,7 +261,7 @@ public class CriteriaPlanner {
         MappingSourceNode sourceNode = node.getSourceNode();
         if (sourceNode == null) {
             String msg = QueryPlugin.Util.getString("XMLPlanner.The_rowlimit_parameter_{0}_is_not_in_the_scope_of_any_mapping_class", fullyQualifiedNodeName); //$NON-NLS-1$
-            throw new QueryPlannerException(msg);
+             throw new QueryPlannerException(QueryPlugin.Event.TEIID30304, msg);
         }
         
         ResultSetInfo criteriaRsInfo = sourceNode.getResultSetInfo();
@@ -270,7 +270,7 @@ public class CriteriaPlanner {
         int existingLimit = criteriaRsInfo.getUserRowLimit();
         if (existingLimit > 0 && existingLimit != rowLimit) {
             String msg = QueryPlugin.Util.getString("XMLPlanner.Criteria_{0}_contains_conflicting_row_limits", wholeCrit); //$NON-NLS-1$
-            throw new QueryPlannerException(msg);
+             throw new QueryPlannerException(QueryPlugin.Event.TEIID30305, msg);
         }
         
         criteriaRsInfo.setUserRowLimit(rowLimit, exceptionOnRowLimit);
@@ -301,13 +301,13 @@ public class CriteriaPlanner {
             //assumes that all non-xml group elements are temp elements
             boolean hasTempElement = !metadata.isXMLGroup(group.getMetadataID());
             if(!first && hasTempElement && resultSet == null) {
-                throw new QueryPlannerException("ERR.015.004.0035", QueryPlugin.Util.getString("ERR.015.004.0035", conjunct)); //$NON-NLS-1$ //$NON-NLS-2$
+                 throw new QueryPlannerException(QueryPlugin.Event.TEIID30306, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30306, conjunct));
             }
 
             if (hasTempElement) {
                 String currentResultSet = metadata.getFullName(element.getGroupSymbol().getMetadataID());
                 if (resultSet != null && !resultSet.equalsIgnoreCase(currentResultSet)) {
-                    throw new QueryPlannerException(QueryPlugin.Util.getString("CriteriaPlanner.multiple_staging", conjunct)); //$NON-NLS-1$
+                     throw new QueryPlannerException(QueryPlugin.Event.TEIID30307, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30307, conjunct));
                 } 
                 resultSet = currentResultSet;
             }
@@ -317,7 +317,7 @@ public class CriteriaPlanner {
         if (resultSet != null) {
             Collection<Function> functions = ContextReplacerVisitor.replaceContextFunctions(conjunct);
             if (!functions.isEmpty()) {
-                throw new QueryPlannerException(QueryPlugin.Util.getString("CriteriaPlanner.staging_context")); //$NON-NLS-1$
+                 throw new QueryPlannerException(QueryPlugin.Event.TEIID30308, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30308));
             }
             
             //should also throw an exception if it contains a row limit function
@@ -336,7 +336,7 @@ public class CriteriaPlanner {
 
         MappingNode contextNode = MappingNode.findNode(planEnv.mappingDoc, targetContext.getName());
         if (contextNode == null){
-            throw new QueryPlannerException("ERR.015.004.0037", QueryPlugin.Util.getString("ERR.015.004.0037", targetContext)); //$NON-NLS-1$ //$NON-NLS-2$
+             throw new QueryPlannerException(QueryPlugin.Event.TEIID30309, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30309, targetContext));
         }
         return contextNode;
     }

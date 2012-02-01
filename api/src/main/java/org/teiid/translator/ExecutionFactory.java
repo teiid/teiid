@@ -30,6 +30,7 @@ import javax.resource.ResourceException;
 import javax.resource.cci.Connection;
 import javax.resource.cci.ConnectionFactory;
 
+import org.teiid.connector.DataPlugin;
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.language.BatchedUpdates;
@@ -151,7 +152,7 @@ public class ExecutionFactory<F, C> {
 			try {
 				return (C) ((ConnectionFactory)factory).getConnection();
 			} catch (ResourceException e) {
-				throw new TranslatorException(e);
+				 throw new TranslatorException(DataPlugin.Event.TEIID60000, e);
 			}
 		}
 		throw new AssertionError("A connection factory was supplied, but no implementation was provided getConnection"); //$NON-NLS-1$
@@ -247,17 +248,17 @@ public class ExecutionFactory<F, C> {
 
 	@SuppressWarnings("unused")
 	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
-		throw new TranslatorException("Unsupported Execution"); //$NON-NLS-1$
+		 throw new TranslatorException(DataPlugin.Event.TEIID60001, DataPlugin.Util.gs(DataPlugin.Event.TEIID60001));
 	}
 
 	@SuppressWarnings("unused")
 	public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
-		throw new TranslatorException("Unsupported Execution");//$NON-NLS-1$
+		 throw new TranslatorException(DataPlugin.Event.TEIID60002,  DataPlugin.Util.gs(DataPlugin.Event.TEIID60002));
 	}
 
 	@SuppressWarnings("unused")
 	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
-		throw new TranslatorException("Unsupported Execution");//$NON-NLS-1$
+		 throw new TranslatorException(DataPlugin.Event.TEIID60003,  DataPlugin.Util.gs(DataPlugin.Event.TEIID60003));
 	}   
 	
     /** 
@@ -807,17 +808,17 @@ public class ExecutionFactory<F, C> {
     	try {
 	    	if (className == null) {
 	    		if (defaultClass == null) {
-	    			throw new TranslatorException("Neither class name nor default class specified to create an instance"); //$NON-NLS-1$
+	    			 throw new TranslatorException(DataPlugin.Event.TEIID60004, DataPlugin.Util.gs(DataPlugin.Event.TEIID60004));
 	    		}
 	    		return expectedType.cast(defaultClass.newInstance());
 	    	}
 	    	return expectedType.cast(ReflectionHelper.create(className, ctorObjs, Thread.currentThread().getContextClassLoader()));
 		} catch (TeiidException e) {
-			throw new TranslatorException(e);
+			 throw new TranslatorException(DataPlugin.Event.TEIID60005, e);
 		} catch (IllegalAccessException e) {
-			throw new TranslatorException(e);
+			 throw new TranslatorException(DataPlugin.Event.TEIID60006, e);
 		} catch(InstantiationException e) {
-			throw new TranslatorException(e);
+			 throw new TranslatorException(DataPlugin.Event.TEIID60007, e);
 		}    	
     } 
     

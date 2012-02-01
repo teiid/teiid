@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidException;
 
 
@@ -74,7 +75,7 @@ public abstract class AdminException extends TeiidException {
      * @param msg the error message.
      * @since 4.3
      */
-    AdminException(String code, String msg) {
+    AdminException(BundleUtil.Event code, String msg) {
         super(code, msg);
     }
     
@@ -82,9 +83,13 @@ public abstract class AdminException extends TeiidException {
         super(cause, msg);
     }
 
-    AdminException(String code, String msg, Throwable cause) {
-        super(cause, code,msg);
+    AdminException(BundleUtil.Event code, Throwable cause, String msg) {
+        super(code, cause, msg);
     }
+    
+    AdminException(BundleUtil.Event code, Throwable cause) {
+        super(code, cause);
+    }    
 
     /**
      * Determine whether this exception is representing

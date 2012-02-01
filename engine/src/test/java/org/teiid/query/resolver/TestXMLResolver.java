@@ -404,7 +404,7 @@ public class TestXMLResolver {
     } 
     
     @Test public void testXMLWithSelect1a() {
-        helpResolveException("select 'a' from xmltest.doc1 where node1 = 'yyz'", "Expressions cannot be selected by XML Queries"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("select 'a' from xmltest.doc1 where node1 = 'yyz'", "Error Code:TEIID30134 Message:TEIID30134 Expressions cannot be selected by XML Queries"); //$NON-NLS-1$ //$NON-NLS-2$
     } 
 
     @Test public void testXMLWithSelect2() {

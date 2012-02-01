@@ -75,13 +75,13 @@ public class BasicCryptor implements Cryptor {
             } catch (CryptoException err) {
                 //shouldn't happen
             }
-            throw new CryptoException( "ERR.003.030.0071", CorePlugin.Util.getString("ERR.003.030.0071", e.getClass().getName(), e.getMessage())); //$NON-NLS-1$ //$NON-NLS-2$
+              throw new CryptoException(CorePlugin.Event.TEIID10006,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10006, e.getClass().getName(), e.getMessage()));
         }
     }
 
     public String decrypt( String ciphertext ) throws CryptoException {
         if ( ciphertext == null ) {
-            throw new CryptoException( "ERR.003.030.0074", CorePlugin.Util.getString("ERR.003.030.0074")); //$NON-NLS-1$ //$NON-NLS-2$
+              throw new CryptoException(CorePlugin.Event.TEIID10007,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10007));
         }
         
         ciphertext = stripEncryptionPrefix(ciphertext);
@@ -91,7 +91,7 @@ public class BasicCryptor implements Cryptor {
         try {
             cipherBytes = Base64.decode(ciphertext);
         } catch ( IllegalArgumentException e ) {
-            throw new CryptoException( "ERR.003.030.0075", CorePlugin.Util.getString("ERR.003.030.0075", e.getMessage())); //$NON-NLS-1$ //$NON-NLS-2$
+              throw new CryptoException(CorePlugin.Event.TEIID10008,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10008, e.getMessage()));
         }
         // Perform standard decryption
         byte[] cleartext = decrypt( cipherBytes );
@@ -120,11 +120,11 @@ public class BasicCryptor implements Cryptor {
             decryptCipher = Cipher.getInstance( cipherAlgorithm); 
             decryptCipher.init( Cipher.DECRYPT_MODE, decryptKey );
         } catch ( NoSuchAlgorithmException e ) {
-            throw new CryptoException( e,  "ERR.003.030.0076", CorePlugin.Util.getString("ERR.003.030.0076", cipherAlgorithm )); //$NON-NLS-1$ //$NON-NLS-2$
+              throw new CryptoException(CorePlugin.Event.TEIID10009,  e,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10009, cipherAlgorithm ));
         } catch ( NoSuchPaddingException e ) {
-            throw new CryptoException( "ERR.003.030.0077", CorePlugin.Util.getString("ERR.003.030.0077", cipherAlgorithm, e.getClass().getName(),  e.getMessage() )); //$NON-NLS-1$ //$NON-NLS-2$
+              throw new CryptoException(CorePlugin.Event.TEIID10010,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10010, cipherAlgorithm, e.getClass().getName(),  e.getMessage() ));
         } catch ( InvalidKeyException e ) {
-            throw new CryptoException( e, "ERR.003.030.0079", CorePlugin.Util.getString("ERR.003.030.0079", e.getClass().getName(), e.getMessage()) ); //$NON-NLS-1$ //$NON-NLS-2$
+              throw new CryptoException(CorePlugin.Event.TEIID10011,  e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10011, e.getClass().getName(), e.getMessage()) );
         }
     }
     
@@ -144,7 +144,7 @@ public class BasicCryptor implements Cryptor {
             } catch (CryptoException err) {
                 //shouldn't happen
             }
-            throw new CryptoException( "ERR.003.030.0071", CorePlugin.Util.getString("ERR.003.030.0071", e.getClass().getName(), e.getMessage())); //$NON-NLS-1$ //$NON-NLS-2$
+              throw new CryptoException(CorePlugin.Event.TEIID10012,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10012, e.getClass().getName(), e.getMessage()));
         } 
     }
             
@@ -162,17 +162,17 @@ public class BasicCryptor implements Cryptor {
             } catch (CryptoException err) {
                 //shouldn't happen
             }
-            throw new CryptoException("ERR.003.030.0081", CorePlugin.Util.getString("ERR.003.030.0081", e.getMessage())); //$NON-NLS-1$ //$NON-NLS-2$
+              throw new CryptoException(CorePlugin.Event.TEIID10013, CorePlugin.Util.gs(CorePlugin.Event.TEIID10013, e.getMessage()));
         }
     }
 
     public String encrypt( String cleartext ) throws CryptoException {
         if ( cleartext == null ) {
-            throw new CryptoException( "ERR.003.030.0072", CorePlugin.Util.getString("ERR.003.030.0072")); //$NON-NLS-1$ //$NON-NLS-2$
+              throw new CryptoException(CorePlugin.Event.TEIID10014,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10014));
         }
         String clearString = new String(cleartext);
         if ( clearString.trim().length() == 0 && clearString.length() == 0 ) {
-            throw new CryptoException( "ERR.003.030.0073", CorePlugin.Util.getString("ERR.003.030.0073")); //$NON-NLS-1$ //$NON-NLS-2$
+              throw new CryptoException(CorePlugin.Event.TEIID10015,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10015));
         }
         // Turn char array into string and get its bytes using "standard" encoding
         byte[] clearBytes = clearString.getBytes();
@@ -196,17 +196,17 @@ public class BasicCryptor implements Cryptor {
             encryptCipher = Cipher.getInstance( cipherAlgorithm );
             encryptCipher.init( Cipher.ENCRYPT_MODE, encryptKey );
         } catch ( NoSuchAlgorithmException e ) {
-            throw new CryptoException( e, "ERR.003.030.0076", CorePlugin.Util.getString("ERR.003.030.0076", cipherAlgorithm )); //$NON-NLS-1$ //$NON-NLS-2$
+              throw new CryptoException(CorePlugin.Event.TEIID10016,  e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10016, cipherAlgorithm ));
         } catch ( NoSuchPaddingException e ) {
-            throw new CryptoException(e, "ERR.003.030.0072", CorePlugin.Util.getString("ERR.003.030.0077", cipherAlgorithm , e.getMessage() )); //$NON-NLS-1$ //$NON-NLS-2$
+              throw new CryptoException(CorePlugin.Event.TEIID10017, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10017, cipherAlgorithm , e.getMessage() ));
         } catch ( InvalidKeyException e ) {
-            throw new CryptoException( e, "ERR.003.030.0078", CorePlugin.Util.getString("ERR.003.030.0078", e.getMessage() )); //$NON-NLS-1$ //$NON-NLS-2$
+              throw new CryptoException(CorePlugin.Event.TEIID10018,  e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10018, e.getMessage() ));
         } 
     }
     
     public synchronized Object sealObject(Object object) throws CryptoException {
     	if (object != null && !(object instanceof Serializable)) {
-    		throw new CryptoException("ERR.003.030.0081", CorePlugin.Util.getString("ERR.003.030.0081", "not Serializable")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    		  throw new CryptoException(CorePlugin.Event.TEIID10019, CorePlugin.Util.gs(CorePlugin.Event.TEIID10019));
     	}
         try {
             return new SealedObject((Serializable)object, encryptCipher);        
@@ -216,7 +216,7 @@ public class BasicCryptor implements Cryptor {
             } catch (CryptoException err) {
                 //shouldn't happen
             }
-            throw new CryptoException("ERR.003.030.0081", CorePlugin.Util.getString("ERR.003.030.0081", e.getMessage())); //$NON-NLS-1$ //$NON-NLS-2$
+              throw new CryptoException(CorePlugin.Event.TEIID10020, CorePlugin.Util.gs(CorePlugin.Event.TEIID10020, e.getMessage()));
         }
     }
 

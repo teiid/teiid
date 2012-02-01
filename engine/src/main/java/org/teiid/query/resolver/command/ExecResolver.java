@@ -122,7 +122,7 @@ public class ExecResolver extends ProcedureContainerResolver {
             }
             if (namedParameters && param.getParameterType() != SPParameter.RETURN_VALUE) {
                 if (namedExpressions.put(param.getName(), param.getExpression()) != null) {
-                	throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.duplicate_named_params", param.getName().toUpperCase())); //$NON-NLS-1$
+                	 throw new QueryResolverException(QueryPlugin.Event.TEIID30138, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30138, param.getName().toUpperCase()));
                 }
             } else {
                 postionalExpressions.put(param.getIndex() + adjustIndex, param.getExpression());
@@ -158,11 +158,11 @@ public class ExecResolver extends ProcedureContainerResolver {
         }
         
         if (storedProcedureCommand.isCalledWithReturn() && !hasReturnValue) {
-        	throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.return_expected", storedProcedureCommand.getGroup()));  //$NON-NLS-1$
+        	 throw new QueryResolverException(QueryPlugin.Event.TEIID30139, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30139, storedProcedureCommand.getGroup()));
         }
 
         if(!namedParameters && (inputParams > postionalExpressions.size())) {
-            throw new QueryResolverException("ERR.015.008.0007", QueryPlugin.Util.getString("ERR.015.008.0007", inputParams, origInputs, storedProcedureCommand.getGroup())); //$NON-NLS-1$ //$NON-NLS-2$
+             throw new QueryResolverException(QueryPlugin.Event.TEIID30140, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30140, inputParams, origInputs, storedProcedureCommand.getGroup()));
         }
         
         // Walk through the resolved parameters and set the expressions from the
@@ -202,10 +202,10 @@ public class ExecResolver extends ProcedureContainerResolver {
         
         // Check for leftovers, i.e. params entered by user w/ wrong/unknown names
         if (!namedExpressions.isEmpty()) {
-    		throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.invalid_named_params", namedExpressions.keySet(), expected)); //$NON-NLS-1$
+    		 throw new QueryResolverException(QueryPlugin.Event.TEIID30141, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30141, namedExpressions.keySet(), expected));
         }
         if (!postionalExpressions.isEmpty()) {
-        	throw new QueryResolverException("ERR.015.008.0007", QueryPlugin.Util.getString("ERR.015.008.0007", inputParams, origInputs, storedProcedureCommand.getGroup().toString())); //$NON-NLS-1$ //$NON-NLS-2$
+        	 throw new QueryResolverException(QueryPlugin.Event.TEIID30142, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30142, inputParams, origInputs, storedProcedureCommand.getGroup().toString()));
         }
         
         // Create temporary metadata that defines a group based on either the stored proc
@@ -254,7 +254,7 @@ public class ExecResolver extends ProcedureContainerResolver {
             // and add implicit conversion if necessary
             Class<?> exprType = expr.getType();
             if(paramType == null || exprType == null) {
-                throw new QueryResolverException("ERR.015.008.0061", QueryPlugin.Util.getString("ERR.015.008.0061", storedProcedureCommand.getProcedureName(), param.getName())); //$NON-NLS-1$ //$NON-NLS-2$
+                 throw new QueryResolverException(QueryPlugin.Event.TEIID30143, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30143, storedProcedureCommand.getProcedureName(), param.getName()));
             }
             String tgtType = DataTypeManager.getDataTypeName(paramType);
             String srcType = DataTypeManager.getDataTypeName(exprType);
@@ -262,13 +262,13 @@ public class ExecResolver extends ProcedureContainerResolver {
                             
             if (param.getParameterType() == SPParameter.RETURN_VALUE || param.getParameterType() == SPParameter.OUT) {
             	if (!ResolverUtil.canImplicitlyConvert(tgtType, srcType)) {
-            		throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.out_type_mismatch", param.getParameterSymbol(), tgtType, srcType)); //$NON-NLS-1$
+            		 throw new QueryResolverException(QueryPlugin.Event.TEIID30144, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30144, param.getParameterSymbol(), tgtType, srcType));
             	}
             } else {
                 try {
                     result = ResolverUtil.convertExpression(expr, tgtType, metadata);
                 } catch (QueryResolverException e) {
-                    throw new QueryResolverException(e, QueryPlugin.Util.getString("ExecResolver.Param_convert_fail", new Object[] { srcType, tgtType}));                                     //$NON-NLS-1$
+                     throw new QueryResolverException(QueryPlugin.Event.TEIID30145, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30145, new Object[] { srcType, tgtType}));
                 }                                                       
                 param.setExpression(result);
             }
@@ -294,7 +294,7 @@ public class ExecResolver extends ProcedureContainerResolver {
         QueryNode plan = storedProcedureInfo.getQueryPlan();
         
         if (plan.getQuery() == null) {
-            throw new QueryResolverException("ERR.015.008.0009", QueryPlugin.Util.getString("ERR.015.008.0009", group, "Stored Procedure")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+             throw new QueryResolverException(QueryPlugin.Event.TEIID30146, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30146));
         }
         
         return plan.getQuery();

@@ -108,12 +108,12 @@ public abstract class VDBStatusChecker {
 						t = this.translatorRepository.getTranslatorMetaData(translatorName);
 					}
 					if (t == null) {
-						throw new AdminProcessingException(RuntimePlugin.Util.getString("translator_not_found", vdb.getName(), vdb.getVersion(), translatorName)); //$NON-NLS-1$
+						 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40032, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40032, vdb.getName(), vdb.getVersion(), translatorName));
 					}
 					ef = TranslatorUtil.buildExecutionFactory(t, t.getAttachment(ClassLoader.class));
 					cm.setExecutionFactory(ef);
 				} catch (TeiidException e) {
-					throw new AdminProcessingException(e.getCause());
+					 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40033, e.getCause());
 				}
 			}
 			

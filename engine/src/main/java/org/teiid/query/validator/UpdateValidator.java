@@ -173,7 +173,7 @@ public class UpdateValidator {
 			}
 			if (insert.getQueryExpression() != null) {
 				//TODO: this could be done in a loop, see about adding a validation
-				throw new QueryValidatorException(QueryPlugin.Util.getString("ValidationVisitor.insert_qe_partition", insert.getGroup())); //$NON-NLS-1$
+				 throw new QueryValidatorException(QueryPlugin.Event.TEIID30239, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30239, insert.getGroup()));
 			}
 			int partition = -1;
 			List<ElementSymbol> filteredColumns = new LinkedList<ElementSymbol>();
@@ -194,13 +194,13 @@ public class UpdateValidator {
 						if (partition == -1) {
 							partition = i;
 						} else if (partition != i) {
-							throw new QueryValidatorException(QueryPlugin.Util.getString("ValidationVisitor.insert_no_partition", insert.getGroup(), insert.getVariables())); //$NON-NLS-1$
+							 throw new QueryValidatorException(QueryPlugin.Event.TEIID30240, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30240, insert.getGroup(), insert.getVariables()));
 						}
 					}
 				}
 			}
 			if (partition == -1) {
-				throw new QueryValidatorException(QueryPlugin.Util.getString("ValidationVisitor.insert_no_partition", insert.getGroup(), insert.getVariables())); //$NON-NLS-1$
+				 throw new QueryValidatorException(QueryPlugin.Event.TEIID30241, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30241, insert.getGroup(), insert.getVariables()));
 			}
 			UpdateInfo info = this;
 			if (partition > 0) {

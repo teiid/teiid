@@ -90,6 +90,7 @@ import org.teiid.core.types.Streamable;
 import org.teiid.core.types.XMLTranslator;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.types.XMLType.Type;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.CharsetUtils;
 import org.teiid.query.util.CommandContext;
@@ -433,7 +434,7 @@ public class XMLSystemFunctions {
 				eventWriter = factory.createXMLEventWriter(writer);
 			} catch (XMLStreamException e) {
 				fs.remove();
-				throw new TeiidProcessingException(e);
+				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30437, e);
 			}
 			eventFactory = XMLEventFactory.newInstance();
 		}
@@ -450,13 +451,13 @@ public class XMLSystemFunctions {
 				convertValue(writer, eventWriter, eventFactory, object);
 			} catch (IOException e) {
 				fs.remove();
-				throw new TeiidProcessingException(e);
+				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30438, e);
 			} catch (XMLStreamException e) {
 				fs.remove();
-				throw new TeiidProcessingException(e);
+				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30439, e);
 			} catch (TransformerException e) {
 				fs.remove();
-				throw new TeiidProcessingException(e);
+				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30440, e);
 			}
 		}
 		
@@ -470,10 +471,10 @@ public class XMLSystemFunctions {
 				writer.close();
 			} catch (XMLStreamException e) {
 				fs.remove();
-				throw new TeiidProcessingException(e);
+				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30441, e);
 			} catch (IOException e) {
 				fs.remove();
-				throw new TeiidProcessingException(e);
+				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30442, e);
 			}
 	        XMLType result = new XMLType(new SQLXMLImpl(fsisf));
 	        if (type == null) {
@@ -614,7 +615,7 @@ public class XMLSystemFunctions {
 	    		return new StreamSource(new StringReader((String)value));
 	    	}
     	} catch (SQLException e) {
-			throw new TeiidProcessingException(e);
+			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30443, e);
 		}
     	throw new AssertionError("Unknown type"); //$NON-NLS-1$
     }
@@ -789,9 +790,9 @@ public class XMLSystemFunctions {
 	        success = true;
 	        return new SQLXMLImpl(fsisf);
 	    } catch(IOException e) {
-	        throw new TeiidComponentException(e);
+	         throw new TeiidComponentException(QueryPlugin.Event.TEIID30444, e);
 	    } catch(TransformerException e) {
-	        throw new TeiidProcessingException(e);
+	         throw new TeiidProcessingException(QueryPlugin.Event.TEIID30445, e);
 	    } finally {
 	    	if (!success && lobBuffer != null) {
 	    		lobBuffer.remove();

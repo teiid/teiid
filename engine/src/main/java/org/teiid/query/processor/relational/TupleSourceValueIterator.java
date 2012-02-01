@@ -25,6 +25,7 @@ package org.teiid.query.processor.relational;
 import org.teiid.common.buffer.IndexedTupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.util.ValueIterator;
 
 
@@ -53,7 +54,7 @@ class TupleSourceValueIterator implements ValueIterator{
 	    try {
             return tupleSourceIterator.hasNext();
         } catch (TeiidProcessingException err) {
-            throw new TeiidComponentException(err, err.getMessage());
+             throw new TeiidComponentException(QueryPlugin.Event.TEIID30186, err, err.getMessage());
         }
 	}
 
@@ -65,7 +66,7 @@ class TupleSourceValueIterator implements ValueIterator{
 	    try {
             return tupleSourceIterator.nextTuple().get(columnIndex);
         } catch (TeiidProcessingException err) {
-            throw new TeiidComponentException(err, err.getMessage());
+             throw new TeiidComponentException(QueryPlugin.Event.TEIID30187, err, err.getMessage());
         }
 	}
     

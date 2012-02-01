@@ -113,12 +113,12 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 				Object obj = this.socketChannel.read();
 				
 				if (!(obj instanceof Handshake)) {
-					throw new CommunicationException(JDBCPlugin.Util.getString("SocketServerInstanceImpl.handshake_error"));  //$NON-NLS-1$
+					 throw new CommunicationException(JDBCPlugin.Event.TEIID20009, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20009));
 				}
 				handshake = (Handshake)obj;
 				break;
 			} catch (ClassNotFoundException e1) {
-				throw new CommunicationException(e1);
+				 throw new CommunicationException(JDBCPlugin.Event.TEIID20010, e1, e1.getMessage());
 			} catch (SocketTimeoutException e) {
 				if (i == HANDSHAKE_RETRIES - 1) {
 					throw e;
@@ -128,7 +128,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 
         try {
             /*if (!getVersionInfo().equals(handshake.getVersion())) {
-                throw new CommunicationException(NetPlugin.Util.getString("SocketServerInstanceImpl.version_mismatch", getVersionInfo(), handshake.getVersion())); //$NON-NLS-1$
+                 throw new CommunicationException(JDBCPlugin.Event.TEIID20011, NetPlugin.Util.getString(JDBCPlugin.Event.TEIID20011, getVersionInfo(), handshake.getVersion()));
             }*/
             serverVersion = handshake.getVersion();
             authType = handshake.getAuthType();
@@ -146,8 +146,8 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
             }
             
             this.socketChannel.write(handshake);
-        } catch (CryptoException err) {
-        	throw new CommunicationException(err);
+        } catch (CryptoException e) {
+        	 throw new CommunicationException(JDBCPlugin.Event.TEIID20012, e, e.getMessage());
         }
     }
     
@@ -172,7 +172,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 	        writeFuture.get(); //client writes are blocking to ensure proper failure handling
 	        success = true;
 	    } catch (ExecutionException e) {
-        	throw new SingleInstanceCommunicationException(e);
+        	 throw new SingleInstanceCommunicationException(JDBCPlugin.Event.TEIID20013, e, e.getMessage());
 	    } finally {
 	    	if (!success) {
 	    		asynchronousListeners.remove(messageKey);	    		

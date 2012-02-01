@@ -32,9 +32,6 @@ public class TeiidComponentException extends TeiidException {
 
 	private static final long serialVersionUID = 5853804556425201591L;
 
-	/**
-     * No-arg CTOR
-     */
     public TeiidComponentException(  ) {
         super(  );
     }
@@ -56,36 +53,20 @@ public class TeiidComponentException extends TeiidException {
 		super( e );
     }
 
-    /**
-     * Construct an instance with the message and error code specified.
-     *
-     * @param message A message describing the exception
-     * @param code The error code
-     */
-    public TeiidComponentException( String code, String message ) {
-        super( code, message );
-    }
+    public TeiidComponentException(BundleUtil.Event code, final String message) {
+        super(code, message);
+    }    
+    
+    public TeiidComponentException(BundleUtil.Event code, Throwable e, final String message) {
+        super(code, e, message);
+    }    
+    
+    public TeiidComponentException(BundleUtil.Event code, Throwable e) {
+        super(code, e);
+    }     
 
-    /**
-     * Construct an instance from a message and an exception to chain to this one.
-     *
-     * @param e An exception to nest within this one
-     * @param message A message describing the exception
-     */
     public TeiidComponentException( Throwable e, String message ) {
         super( e, message );
-    }
-
-    /**
-     * Construct an instance from a message and a code and an exception to
-     * chain to this one.
-     *
-     * @param e An exception to nest within this one
-     * @param message A message describing the exception
-     * @param code A code denoting the exception
-     */
-    public TeiidComponentException( Throwable e, String code, String message ) {
-        super( e, code, message );
     }
 
 } // END CLASS

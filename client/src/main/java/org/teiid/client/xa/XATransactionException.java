@@ -24,6 +24,7 @@ package org.teiid.client.xa;
 
 import javax.transaction.xa.XAException;
 
+import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidProcessingException;
 
 
@@ -35,69 +36,33 @@ public class XATransactionException extends TeiidProcessingException {
 	private static final long serialVersionUID = 5685144848609237877L;
 	private int errorCode = XAException.XAER_RMERR;
     
-    /**
-     * No-Arg Constructor
-     */
-    public XATransactionException(  ) {
-        super( );
-    }
-    /**
-     * Construct an instance with the message specified.
-     *
-     * @param message A message describing the exception
-     */
-    public XATransactionException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Construct an instance with a linked exception specified.
-     *
-     * @param e An exception to chain to this exception
-     */
-    public XATransactionException( Throwable e ) {
-		super( e );
-    }
-
-    /**
-     * Construct an instance with the message and error code specified.
-     *
-     * @param message A message describing the exception
-     * @param code The error code
-     */
-    public XATransactionException( int code, String message ) {
-        super( message );
+    public XATransactionException(Throwable e) {
+        super(e);
+    } 
+    
+    public XATransactionException(BundleUtil.Event event, int code, Throwable e) {
+        super( event, e);
         this.errorCode = code;
-    }
-
-    /**
-     * Construct an instance from a message and an exception to chain to this one.
-     *
-     * @param e An exception to nest within this one
-     * @param message A message describing the exception
-     */
-    public XATransactionException( Throwable e, String message ) {
-        super( e, message );
-    }
-
-    /**
-     * Construct an instance from a message and a code and an exception to
-     * chain to this one.
-     *
-     * @param e An exception to nest within this one
-     * @param message A message describing the exception
-     * @param code A code denoting the exception
-     */
-    public XATransactionException( Throwable e, int code, String message ) {
-        super( e, message );
+    }    
+    
+    public XATransactionException(BundleUtil.Event event, int code, Throwable e, String msg) {
+        super(event, e, msg);
         this.errorCode = code;
     }
     
-    public XATransactionException( Throwable e, int code ) {
-        super( e );
-        this.errorCode = code;
+    public XATransactionException(BundleUtil.Event event, Throwable e) {
+        super(event, e);
     }
     
+    public XATransactionException(BundleUtil.Event event, int code, String msg) {
+        super(event, msg);
+        this.errorCode = code;
+    } 
+    
+    public XATransactionException(BundleUtil.Event event, String msg) {
+        super(event, msg);
+    }    
+
     public XAException getXAException() {
         Throwable actualException = getCause();
         if (actualException instanceof XAException) {

@@ -487,7 +487,7 @@ public abstract class MappingNode implements Cloneable, Serializable {
 			}
 			return clone;
 		} catch (CloneNotSupportedException e) {
-			throw new TeiidRuntimeException(e);
+			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30463, e);
 		}
     }
     

@@ -141,7 +141,7 @@ public class RulePlanJoins implements OptimizerRule {
                         
             //quick check for satisfiability
             if (!joinRegion.isSatisfiable()) {
-                throw new QueryPlannerException(QueryPlugin.Util.getString("RulePlanJoins.cantSatisfy", joinRegion.getUnsatisfiedAccessPatterns())); //$NON-NLS-1$
+                 throw new QueryPlannerException(QueryPlugin.Event.TEIID30275, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30275, joinRegion.getUnsatisfiedAccessPatterns()));
             }
                         
             planForDependencies(joinRegion);
@@ -376,7 +376,7 @@ public class RulePlanJoins implements OptimizerRule {
     private void planForDependencies(JoinRegion joinRegion) throws QueryPlannerException {
                 
         if (joinRegion.getJoinSourceNodes().isEmpty()) {
-            throw new QueryPlannerException(QueryPlugin.Util.getString("RulePlanJoins.cantSatisfy", joinRegion.getUnsatisfiedAccessPatterns())); //$NON-NLS-1$
+             throw new QueryPlannerException(QueryPlugin.Event.TEIID30276, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30276, joinRegion.getUnsatisfiedAccessPatterns()));
         }
         
         HashSet<GroupSymbol> currentGroups = new HashSet<GroupSymbol>();
@@ -435,7 +435,7 @@ public class RulePlanJoins implements OptimizerRule {
         }
         
         if (!dependentNodes.isEmpty()) {
-            throw new QueryPlannerException(QueryPlugin.Util.getString("RulePlanJoins.cantSatisfy", joinRegion.getUnsatisfiedAccessPatterns())); //$NON-NLS-1$
+             throw new QueryPlannerException(QueryPlugin.Event.TEIID30277, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30277, joinRegion.getUnsatisfiedAccessPatterns()));
         }
         
     }

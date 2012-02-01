@@ -154,7 +154,7 @@ public class TestSocketRemoting {
 			createFakeConnection(serverInstance);
 			fail("expected exception"); //$NON-NLS-1$
 		} catch (CommunicationException e) {
-			assertEquals("Unable to find a component used authenticate on to Teiid", e.getMessage()); //$NON-NLS-1$
+			assertEquals("Error Code:TEIID20018 Message:TEIID20018 Unable to find a component used authenticate on to Teiid", e.getMessage()); //$NON-NLS-1$
 		}
 	}
 	

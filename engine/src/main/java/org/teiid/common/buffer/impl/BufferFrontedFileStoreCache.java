@@ -159,7 +159,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 				
 		private int getOrUpdateDataBlockIndex(int index, int value, Mode mode) {
 			if (index >= MAX_DOUBLE_INDIRECT) {
-				throw new TeiidRuntimeException("Max block number exceeded.  You could try making the processor batch size smaller."); //$NON-NLS-1$
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30045, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30045));
 			}
 			int dataBlock = 0;
 			int position = 0;
@@ -447,7 +447,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 						} catch (IOException e) {
 							LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30022));
 						} catch (InterruptedException e) {
-							throw new TeiidRuntimeException(e);
+							 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30046, e);
 						}
 					}
 				}
@@ -724,11 +724,11 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 			CacheEntry ce = new CacheEntry(new CacheKey(oid, 1, 1), sizeEstimate, serializer.deserialize(dis), ref, true);
 			return ce;
         } catch(IOException e) {
-        	throw new TeiidComponentException(e, QueryPlugin.Util.getString("FileStoreageManager.error_reading", oid)); //$NON-NLS-1$
+        	 throw new TeiidComponentException(QueryPlugin.Event.TEIID30047, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30047, oid));
         } catch (ClassNotFoundException e) {
-        	throw new TeiidComponentException(e, QueryPlugin.Util.getString("FileStoreageManager.error_reading", oid)); //$NON-NLS-1$
+        	 throw new TeiidComponentException(QueryPlugin.Event.TEIID30048, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30048, oid));
         } catch (InterruptedException e) {
-        	throw new TeiidRuntimeException(e);
+        	 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30049, e);
 		} finally {
         	synchronized (info) {
 				info.pinned = false;
@@ -1028,7 +1028,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 				}
 			}
 		} catch (InterruptedException e) {
-			throw new TeiidRuntimeException(e);
+			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30050, e);
 		} finally {
 			if (writeLocked) {
 				memoryEvictionLock.writeLock().unlock();

@@ -72,7 +72,7 @@ public class LocalServerConnection implements ServerConnection {
 			InitialContext ic = new InitialContext();
 			return (ClientServiceRegistry)ic.lookup(TEIID_RUNTIME_CONTEXT);
 		} catch (NamingException e) {
-			throw new TeiidRuntimeException(e);
+			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40067, e);
 		}
 	}
 	
@@ -82,12 +82,12 @@ public class LocalServerConnection implements ServerConnection {
         } catch (LogonException e) {
             // Propagate the original message as it contains the message we want
             // to give to the user
-            throw new ConnectionException(e, e.getMessage());
+             throw new ConnectionException(RuntimePlugin.Event.TEIID40068, e, e.getMessage());
         } catch (TeiidComponentException e) {
         	if (e.getCause() instanceof CommunicationException) {
         		throw (CommunicationException)e.getCause();
         	}
-            throw new CommunicationException(e);
+             throw new CommunicationException(RuntimePlugin.Event.TEIID40069, e);
         } 	
 	}	
 	

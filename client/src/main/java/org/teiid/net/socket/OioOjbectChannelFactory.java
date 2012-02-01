@@ -39,6 +39,7 @@ import java.util.logging.Logger;
 
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.socket.SocketUtil.SSLSocketFactory;
 import org.teiid.netty.handler.codec.serialization.ObjectDecoderInputStream;
@@ -159,7 +160,7 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 				try {
 					sslSocketFactory = SocketUtil.getSSLSocketFactory(props);
 				} catch (GeneralSecurityException e) {
-					throw new CommunicationException(e);
+					 throw new CommunicationException(JDBCPlugin.Event.TEIID20027, e, e.getMessage());
 				}
 			}
 			socket = sslSocketFactory.getSocket();

@@ -221,7 +221,7 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 		try {
 			return this.sessionService.getActiveSessionsCount();
 		} catch (SessionServiceException e) {
-			throw new AdminComponentException(e);
+			 throw new AdminComponentException(IntegrationPlugin.Event.TEIID50056, e);
 		}
 	}	
 	

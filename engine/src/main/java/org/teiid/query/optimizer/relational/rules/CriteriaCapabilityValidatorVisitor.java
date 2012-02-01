@@ -536,7 +536,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
                 }
             }
         } catch(QueryMetadataException e) {
-            throw new TeiidComponentException(e);                  
+             throw new TeiidComponentException(QueryPlugin.Event.TEIID30271, e);
         }
 
         // Found no reason why this node is not eligible
@@ -558,7 +558,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 		        return null;
 		    }
 		} catch(QueryMetadataException e) {
-		    throw new TeiidComponentException(e, QueryPlugin.Util.getString("RulePushSelectCriteria.Error_getting_modelID")); //$NON-NLS-1$
+		     throw new TeiidComponentException(QueryPlugin.Event.TEIID30272, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30272));
 		}
 		return critNodeModelID;
 	}

@@ -59,7 +59,7 @@ public class AbortProcessingInstruction extends ProcessorInstruction {
         throws BlockedException, TeiidComponentException, TeiidProcessingException{
 
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, "ABORT processing now."); //$NON-NLS-1$
-        throw new TeiidComponentException(DEFAULT_MESSAGE);
+         throw new TeiidComponentException(QueryPlugin.Event.TEIID30210, DEFAULT_MESSAGE);
     }
 
     public String toString() {

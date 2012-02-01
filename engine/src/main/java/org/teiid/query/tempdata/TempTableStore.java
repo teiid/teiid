@@ -248,9 +248,9 @@ public class TempTableStore {
 				tc.getTransaction().registerSynchronization(synch);
 				success = true;
 			} catch (RollbackException e) {
-				throw new TeiidProcessingException(e);
+				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30223, e);
 			} catch (SystemException e) {
-				throw new TeiidProcessingException(e);
+				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30224, e);
 			} finally {
 				if (!success) {
 					synchronizations.remove(transactionId);
@@ -269,7 +269,7 @@ public class TempTableStore {
             try {
 				removeTempTableByName(name, null);
 			} catch (TeiidProcessingException e) {
-				throw new TeiidComponentException(e);
+				 throw new TeiidComponentException(QueryPlugin.Event.TEIID30225, e);
 			}
         }
     }
@@ -300,7 +300,7 @@ public class TempTableStore {
             }
         }
         if (columns == null) {
-        	throw new QueryProcessingException(QueryPlugin.Util.getString("TempTableStore.table_doesnt_exist_error", tempTableID)); //$NON-NLS-1$
+        	 throw new QueryProcessingException(QueryPlugin.Event.TEIID30226, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30226, tempTableID));
         }
         LogManager.logDetail(LogConstants.CTX_DQP, "Creating temporary table", tempTableID); //$NON-NLS-1$
         Create create = new Create();
@@ -328,7 +328,7 @@ public class TempTableStore {
 										throw new AssertionError("Expected active transaction"); //$NON-NLS-1$
 									}
 	        						if (!tempTable.getActive().compareAndSet(0, 1)) {
-	        	    					throw new TeiidProcessingException(QueryPlugin.Util.getString("TempTableStore.pending_update", tempTableID)); //$NON-NLS-1$ 
+	        	    					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30227, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30227, tempTableID));
 	        	    				}
 	        						synch.tables.put(tempTableID, tempTable.clone());
 								}
@@ -336,7 +336,7 @@ public class TempTableStore {
         					return tempTable;
         				}
         			} else if (tempTable.getActive().get() != 0) {
-        				throw new TeiidProcessingException(QueryPlugin.Util.getString("TempTableStore.pending_update", tempTableID)); //$NON-NLS-1$
+        				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30228, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30228, tempTableID));
     				}
     			}
     		} else if (transactionMode == TransactionMode.ISOLATE_READS) {

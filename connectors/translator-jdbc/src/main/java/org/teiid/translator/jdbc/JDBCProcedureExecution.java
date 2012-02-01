@@ -67,7 +67,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
             this.results = this.executionFactory.executeStoredProcedure(cstmt, translatedComm, procedure.getReturnType());
             addStatementWarnings();
         }catch(SQLException e){
-            throw new TranslatorException(e, JDBCPlugin.Util.getString("JDBCQueryExecution.Error_executing_query__1", sql)); //$NON-NLS-1$
+             throw new TranslatorException(JDBCPlugin.Event.TEIID11004, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11004, sql));
         }           
         
     }
@@ -105,7 +105,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
 			}
         	return result;
         } catch (SQLException e) {
-            throw new TranslatorException(e);
+             throw new TranslatorException(JDBCPlugin.Event.TEIID11005, e);
         }
     }
 

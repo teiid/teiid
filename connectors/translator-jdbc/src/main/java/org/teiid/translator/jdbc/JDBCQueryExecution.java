@@ -87,7 +87,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
             } 
             addStatementWarnings();
         } catch (SQLException e) {
-            throw new JDBCExecutionException(e, translatedComm);
+             throw new JDBCExecutionException(JDBCPlugin.Event.TEIID11008, e, translatedComm);
         }
     }
 

@@ -340,7 +340,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
         if (recursionStack == null) {
             recursionStack = new LinkedList<String>();
         } else if (recursionStack.contains(value)) {
-			throw new QueryProcessingException(QueryPlugin.Util.getString("ExecDynamicSqlInstruction.3", value)); //$NON-NLS-1$
+			 throw new QueryProcessingException(QueryPlugin.Event.TEIID30347, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30347, value));
         }
         
         recursionStack.push(value);
@@ -416,11 +416,11 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	public Object getFromContext(Expression expression) throws TeiidComponentException {
 		if (variableContext == null || !(expression instanceof ElementSymbol)) {
-			throw new TeiidComponentException("ERR.015.006.0033", QueryPlugin.Util.getString("ERR.015.006.0033", expression, "No value was available")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30348, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30348,expression, "No value was available")); //$NON-NLS-1$
 		}
 		Object value = variableContext.getValue((ElementSymbol)expression);
 		if (value == null && !variableContext.containsVariable((ElementSymbol)expression)) {
-			throw new TeiidComponentException("ERR.015.006.0033", QueryPlugin.Util.getString("ERR.015.006.0033", expression, "No value was available")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30349, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30349,expression, "No value was available"));//$NON-NLS-1$
 		}
 		return value;
 	}

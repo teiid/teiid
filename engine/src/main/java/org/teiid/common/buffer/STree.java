@@ -40,6 +40,7 @@ import org.teiid.common.buffer.LobManager.ReferenceMode;
 import org.teiid.common.buffer.SPage.SearchResult;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.processor.relational.ListNestedSortComparator;
 
 /**
@@ -132,7 +133,7 @@ public class STree implements Cloneable {
 			}
 			return clone;
 		} catch (CloneNotSupportedException e) {
-			throw new TeiidRuntimeException(e);
+			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30039, e);
 		} finally {
 			updateLock.unlock();
 		}

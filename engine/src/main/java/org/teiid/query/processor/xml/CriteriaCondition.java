@@ -31,6 +31,7 @@ import java.util.Map;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -81,7 +82,7 @@ public class CriteriaCondition extends Condition {
         try {
 			return new Evaluator(elementMap, env.getDataManager(), env.getProcessorContext()).evaluate(this.criteria, data);
 		} catch (ExpressionEvaluationException e) {
-            throw new TeiidComponentException(e);
+             throw new TeiidComponentException(QueryPlugin.Event.TEIID30207, e);
 		}
 	}
 

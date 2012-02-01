@@ -1021,7 +1021,7 @@ public final class StringUtil {
 	            line = reader.readLine();
 	        }
 	    } catch (IOException e) {
-	        throw new TeiidRuntimeException(e);
+	          throw new TeiidRuntimeException(CorePlugin.Event.TEIID10046, e);
 	    }
 	    return result.toArray(new String[result.size()]);
 	}

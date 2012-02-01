@@ -72,7 +72,7 @@ public class SetQueryResolver implements CommandResolver {
         QueryResolver.resolveCommand(rightCommand, metadata.getMetadata(), false);
 
         if (firstProject.size() != rightCommand.getProjectedSymbols().size()) {
-            throw new QueryResolverException(QueryPlugin.Util.getString("ERR.015.012.0035", setQuery.getOperation())); //$NON-NLS-1$
+             throw new QueryResolverException(QueryPlugin.Event.TEIID30147, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30147, setQuery.getOperation()));
         }
         checkSymbolTypes(firstProjectTypes, rightCommand.getProjectedSymbols());
         

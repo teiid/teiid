@@ -32,6 +32,7 @@ import java.sql.SQLException;
 
 import javax.sql.rowset.serial.SerialBlob;
 
+import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ObjectConverterUtil;
 
@@ -131,7 +132,7 @@ public final class BlobType extends Streamable<Blob> implements Blob, Comparable
 		try {
 			return new SerialBlob(bytes);
 		} catch (SQLException e) {
-			throw new TeiidRuntimeException(e);
+			  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10047, e);
 		}
 	}
 	
@@ -187,9 +188,9 @@ public final class BlobType extends Streamable<Blob> implements Blob, Comparable
 		    }
     		return Long.signum(len1 - len2);
 		} catch (SQLException e) {
-			throw new TeiidRuntimeException(e);
+			  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10048, e);
 		} catch (IOException e) {
-			throw new TeiidRuntimeException(e);
+			  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10049, e);
 		}
 	}
 	

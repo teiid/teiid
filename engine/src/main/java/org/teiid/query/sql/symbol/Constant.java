@@ -70,11 +70,11 @@ public class Constant implements Expression, Comparable<Constant> {
 		} else if (parts.length == 3) {
 			locale = new Locale(parts[0], parts[1], parts[2]);
 		} else {
-			LogManager.logError(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30032, localeString));
+			LogManager.logError(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30564, localeString));
 			return getComparator(padSpace);
 		}
 		final Collator c = Collator.getInstance(locale);
-		LogManager.logError(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30033, locale));
+		LogManager.logError(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30565, locale));
 		return new Comparator<Object>() {
 			@Override
 			public int compare(Object o1, Object o2) {

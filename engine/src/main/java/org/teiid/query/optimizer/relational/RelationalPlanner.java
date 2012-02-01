@@ -179,7 +179,7 @@ public class RelationalPlanner {
 		try {
 			plan = generatePlan(command, true);
 		} catch (TeiidProcessingException e) {
-			throw new QueryPlannerException(e, e.getMessage());
+			 throw new QueryPlannerException(QueryPlugin.Event.TEIID30252, e, e.getMessage());
 		}
 
 		if(debug) {
@@ -602,12 +602,12 @@ public class RelationalPlanner {
 			//do a workaround of row-by-row processing for update/delete
 			if (metadata.getUniqueKeysInGroup(container.getGroup().getMetadataID()).isEmpty() 
 					|| !CapabilitiesUtil.supports(Capability.CRITERIA_COMPARE_EQ, metadata.getModelID(container.getGroup().getMetadataID()), metadata, capFinder)) {
-				throw new QueryPlannerException(QueryPlugin.Util.getString("RelationalPlanner.nonpushdown_command", container)); //$NON-NLS-1$
+				 throw new QueryPlannerException(QueryPlugin.Event.TEIID30253, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30253, container));
 			}
 			
 			try {
 				if (planningLoop.get()) {
-					throw new QueryPlannerException(QueryPlugin.Util.getString("RelationalPlanner.nonpushdown_expression", container)); //$NON-NLS-1$
+					 throw new QueryPlannerException(QueryPlugin.Event.TEIID30254, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30254, container));
 				}
 				planningLoop.set(Boolean.TRUE);
 				
@@ -633,10 +633,10 @@ public class RelationalPlanner {
 					} else if (subqueryContainer instanceof ExistsCriteria) {
 						((ExistsCriteria) subqueryContainer).setShouldEvaluate(true);
 					} else {
-						throw new QueryPlannerException(QueryPlugin.Util.getString("RelationalPlanner.nonpushdown_command", container)); //$NON-NLS-1$
+						 throw new QueryPlannerException(QueryPlugin.Event.TEIID30255, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30255, container));
 					}
 				} else {
-					throw new QueryPlannerException(QueryPlugin.Util.getString("RelationalPlanner.nonpushdown_command", container)); //$NON-NLS-1$
+					 throw new QueryPlannerException(QueryPlugin.Event.TEIID30256, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30256, container));
 				}
     		}
 			ProcessorPlan plan = QueryOptimizer.optimizePlan(subqueryContainer.getCommand(), metadata, null, capFinder, analysisRecord, context);

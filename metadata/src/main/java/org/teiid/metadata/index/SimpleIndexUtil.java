@@ -104,7 +104,7 @@ public class SimpleIndexUtil {
                 }                
             }
         } catch(IOException e) {
-            throw new TeiidException(e);
+             throw new TeiidException(RuntimeMetadataPlugin.Event.TEIID80003, e);
         }
 
         return queryResult.toArray(new IEntryResult[queryResult.size()]);

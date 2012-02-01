@@ -88,7 +88,7 @@ public abstract class MappingBaseNode extends MappingNode {
         if (parent != null) {
             return parent.getRecursiveRootNode(elem);
         }
-        throw new TeiidRuntimeException(QueryPlugin.Util.getString("invalid_recurive_node", elem)); //$NON-NLS-1$
+         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30457, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30457, elem));
     }
     
     /**

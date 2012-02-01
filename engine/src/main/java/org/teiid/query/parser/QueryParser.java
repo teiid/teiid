@@ -129,7 +129,7 @@ public class QueryParser {
 
 	public Command parseCommand(String sql, ParseInfo parseInfo, boolean designerCommands) throws QueryParserException {
         if(sql == null || sql.length() == 0) {
-            throw new QueryParserException(QueryPlugin.Util.getString("QueryParser.emptysql")); //$NON-NLS-1$
+             throw new QueryParserException(QueryPlugin.Event.TEIID30377, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30377));
         }
         
     	Command result = null;
@@ -142,12 +142,12 @@ public class QueryParser {
             result.setCacheHint(SQLParserUtil.getQueryCacheOption(sql));
         } catch(ParseException pe) {
         	if(sql.startsWith(XML_OPEN_BRACKET) || sql.startsWith(XQUERY_DECLARE)) {
-            	throw new QueryParserException(pe, QueryPlugin.Util.getString("QueryParser.xqueryCompilation", sql)); //$NON-NLS-1$
+            	 throw new QueryParserException(QueryPlugin.Event.TEIID30378, pe, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30378, sql));
             }
             throw convertParserException(pe);
         } catch(TokenMgrError tme) {
         	if(sql.startsWith(XML_OPEN_BRACKET) || sql.startsWith(XQUERY_DECLARE)) {
-            	throw new QueryParserException(tme, QueryPlugin.Util.getString("QueryParser.xqueryCompilation", sql)); //$NON-NLS-1$
+            	 throw new QueryParserException(QueryPlugin.Event.TEIID30379, tme, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30379, sql));
             }
             throw handleTokenMgrError(tme);
         }
@@ -156,7 +156,7 @@ public class QueryParser {
 	
 	public CacheHint parseCacheHint(String sql) throws QueryParserException {
         if(sql == null || sql.length() == 0) {
-            throw new QueryParserException(QueryPlugin.Util.getString("QueryParser.emptysql")); //$NON-NLS-1$
+             throw new QueryParserException(QueryPlugin.Event.TEIID30380, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30380));
         }        
         return SQLParserUtil.getQueryCacheOption(sql);        
 	}	

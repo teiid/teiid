@@ -22,12 +22,16 @@
 
 package org.teiid.api.exception.query;
 
+import org.teiid.core.BundleUtil;
+
 /**
  * During processing, an invalid function was detected.
  */
 public class InvalidFunctionException extends ExpressionEvaluationException {
 
-    /**
+	private static final long serialVersionUID = -1743553921704505430L;
+
+	/**
      * No-arg constructor required by Externalizable semantics.
      */
     public InvalidFunctionException() {
@@ -44,16 +48,6 @@ public class InvalidFunctionException extends ExpressionEvaluationException {
     }
 
     /**
-     * Construct an instance with the message and error code specified.
-     *
-     * @param message A message describing the exception
-     * @param code The error code
-     */
-    public InvalidFunctionException( String code, String message ) {
-        super( code, message );
-    }
-
-    /**
      * Construct an instance from a message and an exception to chain to this one.
      *
      * @param message A message describing the exception
@@ -62,16 +56,21 @@ public class InvalidFunctionException extends ExpressionEvaluationException {
     public InvalidFunctionException( Throwable e, String message ) {
         super( e, message );
     }
-
-    /**
-     * Construct an instance from a message and a code and an exception to
-     * chain to this one.
-     *
-     * @param e An exception to nest within this one
-     * @param message A message describing the exception
-     * @param code A code denoting the exception
-     */
-    public InvalidFunctionException( Throwable e, String code, String message ) {
-        super( e, code, message );
+    
+    public InvalidFunctionException(BundleUtil.Event event) {
+        super();
+        setCode(event.toString());
+    } 
+    
+    public InvalidFunctionException(BundleUtil.Event event, Throwable e) {
+        super( event, e);
+    }    
+    
+    public InvalidFunctionException(BundleUtil.Event event, Throwable e, String msg) {
+        super(event, e, msg);
     }
+    
+    public InvalidFunctionException(BundleUtil.Event event, String msg) {
+        super(event, msg);
+    } 
 }

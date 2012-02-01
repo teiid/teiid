@@ -54,7 +54,7 @@ public class TestTransformationMetadata {
 			tm.getStoredProcedureInfoForProcedure("y"); //$NON-NLS-1$
 			fail("expected exception"); //$NON-NLS-1$
 		} catch (QueryMetadataException e) {
-			assertEquals("Procedure 'y' is ambiguous, use the fully qualified name instead", e.getMessage()); //$NON-NLS-1$
+			assertEquals("Error Code:TEIID30358 Message:TEIID30358 Procedure 'y' is ambiguous, use the fully qualified name instead", e.getMessage()); //$NON-NLS-1$
 		}
 	}
 	

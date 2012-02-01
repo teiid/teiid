@@ -31,6 +31,7 @@ import java.util.Map;
 
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingAttribute;
 import org.teiid.query.mapping.xml.MappingCriteriaNode;
@@ -48,9 +49,9 @@ import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 
@@ -103,7 +104,7 @@ public class XMLProjectionMinimizer {
 	                MappingSourceNode parent = element.getParentSourceNode();
 	                collectElementSymbols(element, bindings, parent);
 	    		} catch (TeiidException e) {
-	    			throw new TeiidRuntimeException(e);
+	    			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30298, e);
 	    		}
 	    	}
 	
@@ -175,7 +176,7 @@ public class XMLProjectionMinimizer {
 	        			}
 	        		}
 	    		} catch (TeiidException e) {
-	    			throw new TeiidRuntimeException(e);
+	    			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30299, e);
 	    		}
 	    	}
 

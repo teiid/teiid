@@ -66,7 +66,7 @@ public class VariableContext {
     	} 
     	Object value = variableMap.get(variable);
     	if (value == null && !variableMap.containsKey(variable)) {
-    		throw new TeiidComponentException("ERR.015.006.0033", QueryPlugin.Util.getString("ERR.015.006.0033", variable, "No value was available")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    		 throw new TeiidComponentException(QueryPlugin.Event.TEIID30451, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30451, variable, "No value was available")); //$NON-NLS-1$
     	}
     	return value;
     }

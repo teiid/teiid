@@ -316,7 +316,7 @@ public class QueryRewriter {
                 
                 whileStatement.setCondition(crit);
                 if(crit.equals(TRUE_CRITERIA)) {
-                    throw new QueryValidatorException(QueryPlugin.Util.getString("QueryRewriter.infinite_while")); //$NON-NLS-1$
+                     throw new QueryValidatorException(QueryPlugin.Event.TEIID30367, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30367));
                 } else if(crit.equals(FALSE_CRITERIA) || crit.equals(UNKNOWN_CRITERIA)) {
                     return;
                 } 
@@ -541,7 +541,7 @@ public class QueryRewriter {
                 try {
                     return rewriteExpressionDirect(element);
                 } catch (TeiidException err) {
-                    throw new TeiidRuntimeException(err);
+                     throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30368, err);
                 }
             }
         };
@@ -624,9 +624,9 @@ public class QueryRewriter {
             insert.setQueryExpression(query);
             return rewriteInsert(correctDatatypes(insert));
         } catch (QueryMetadataException err) {
-            throw new QueryValidatorException(err, err.getMessage());
+             throw new QueryValidatorException(QueryPlugin.Event.TEIID30369, err, err.getMessage());
         } catch (TeiidComponentException err) {
-            throw new QueryValidatorException(err, err.getMessage());
+             throw new QueryValidatorException(QueryPlugin.Event.TEIID30370, err, err.getMessage());
 		}
     }
 
@@ -642,7 +642,7 @@ public class QueryRewriter {
 		    try {
 				insert.setQueryExpression(createInlineViewQuery(new GroupSymbol("X"), insert.getQueryExpression(), metadata, insert.getVariables())); //$NON-NLS-1$
 			} catch (TeiidException err) {
-	            throw new TeiidRuntimeException(err);
+	             throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30371, err);
 	        }
 		}
 		return insert;
@@ -1087,7 +1087,7 @@ public class QueryRewriter {
                 return getCriteria(eval);                
                 
             } catch(ExpressionEvaluationException e) {
-                throw new QueryValidatorException(e, "ERR.015.009.0001", QueryPlugin.Util.getString("ERR.015.009.0001", crit)); //$NON-NLS-1$ //$NON-NLS-2$
+                 throw new QueryValidatorException(QueryPlugin.Event.TEIID30372, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30372, crit));
             }
         }
         
@@ -1344,7 +1344,7 @@ public class QueryRewriter {
                 Object result = descriptor.invokeFunction(new Object[] { const2.getValue(), const1.getValue() } );
                 combinedConst = new Constant(result, descriptor.getReturnType());
             } catch(FunctionExecutionException e) {
-            	throw new QueryValidatorException(e, "ERR.015.009.0003", QueryPlugin.Util.getString("ERR.015.009.0003", e.getMessage())); //$NON-NLS-1$ //$NON-NLS-2$
+            	 throw new QueryValidatorException(QueryPlugin.Event.TEIID30373, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30373, e.getMessage()));
         	}
         } else {
             Function conversion = new Function(descriptor.getName(), new Expression[] { rightExpr, const1 });
@@ -1904,7 +1904,7 @@ public class QueryRewriter {
                 	try {
 						return new Constant(FunctionMethods.convert(((Constant)value).getValue(), DataTypeManager.getDataTypeName(type)), es.getType());
 					} catch (FunctionExecutionException e) {
-						throw new QueryValidatorException(e, e.getMessage());
+						 throw new QueryValidatorException(QueryPlugin.Event.TEIID30374, e, e.getMessage());
 					}
                 }
                 return new Reference(es);
@@ -2421,7 +2421,7 @@ public class QueryRewriter {
 			//TODO: update error messages
 			UpdateMapping mapping = info.findInsertUpdateMapping(insert, true);
 			if (mapping == null) {
-				throw new QueryValidatorException(QueryPlugin.Util.getString("ValidationVisitor.nonUpdatable", insert.getVariables())); //$NON-NLS-1$
+				 throw new QueryValidatorException(QueryPlugin.Event.TEIID30375, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30375, insert.getVariables()));
 			}
 			Map<ElementSymbol, ElementSymbol> symbolMap = mapping.getUpdatableViewSymbols();
 			List<ElementSymbol> mappedSymbols = new ArrayList<ElementSymbol>(insert.getVariables().size());
@@ -2576,7 +2576,7 @@ public class QueryRewriter {
 			TeiidProcessingException {
 		UpdateMapping mapping = info.findUpdateMapping(update.getChangeList().getClauseMap().keySet(), false);
 		if (mapping == null) {
-			throw new QueryValidatorException(QueryPlugin.Util.getString("ValidationVisitor.nonUpdatable", update.getChangeList().getClauseMap().keySet())); //$NON-NLS-1$
+			 throw new QueryValidatorException(QueryPlugin.Event.TEIID30376, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30376, update.getChangeList().getClauseMap().keySet()));
 		}
 		Map<ElementSymbol, ElementSymbol> symbolMap = mapping.getUpdatableViewSymbols();
 		if (info.isSimple()) {

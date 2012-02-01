@@ -127,7 +127,7 @@ public class JDBCMetdataProcessor {
 				getProcedures(metadataFactory, metadata);
 			}
 		} catch (DuplicateRecordException e) {
-			throw new TranslatorException(e, JDBCPlugin.Util.getString("JDBCMetadataProcessor.not_unique")); //$NON-NLS-1$
+			 throw new TranslatorException(JDBCPlugin.Event.TEIID11006, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11006));
 		}
 		
 	}

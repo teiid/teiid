@@ -103,7 +103,7 @@ public class SocketServerConnection implements ServerConnection {
 	public synchronized SocketServerInstance selectServerInstance(boolean logoff)
 			throws CommunicationException, ConnectionException {
 		if (closed) {
-			throw new CommunicationException(JDBCPlugin.Util.getString("SocketServerConnection.closed")); //$NON-NLS-1$ 
+			 throw new CommunicationException(JDBCPlugin.Event.TEIID20016, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20016));
 		}
 		if (this.serverInstance != null && (!failOver || this.serverInstance.isOpen())) {
 			return this.serverInstance;
@@ -138,12 +138,12 @@ public class SocketServerConnection implements ServerConnection {
 			        } catch (LogonException e) {
 			            // Propagate the original message as it contains the message we want
 			            // to give to the user
-			            throw new ConnectionException(e, e.getMessage());
+			             throw new ConnectionException(JDBCPlugin.Event.TEIID20017, e, e.getMessage());
 			        } catch (TeiidComponentException e) {
 			        	if (e.getCause() instanceof CommunicationException) {
 			        		throw (CommunicationException)e.getCause();
 			        	}
-			            throw new CommunicationException(e, JDBCPlugin.Util.getString("PlatformServerConnectionFactory.Unable_to_find_a_component_used_in_logging_on_to")); //$NON-NLS-1$
+			             throw new CommunicationException(JDBCPlugin.Event.TEIID20018, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20018));
 			        } 
 				}
 				return this.serverInstance;
@@ -155,13 +155,13 @@ public class SocketServerConnection implements ServerConnection {
 			this.serverDiscovery.markInstanceAsBad(hostInfo);
 			if (knownHosts == 1) { //just a single host, use the exception
 				if (ex instanceof UnknownHostException) {
-					throw new SingleInstanceCommunicationException(ex, JDBCPlugin.Util.getString("SocketServerInstance.Connection_Error.Unknown_Host", hostInfo.getHostName())); //$NON-NLS-1$
+					 throw new SingleInstanceCommunicationException(JDBCPlugin.Event.TEIID20019, ex, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20019, hostInfo.getHostName()));
 				}
-				throw new SingleInstanceCommunicationException(ex,JDBCPlugin.Util.getString("SocketServerInstance.Connection_Error.Connect_Failed", hostInfo.getHostName(), String.valueOf(hostInfo.getPortNumber()), ex.getMessage())); //$NON-NLS-1$
+				 throw new SingleInstanceCommunicationException(JDBCPlugin.Event.TEIID20020, ex,JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20020, hostInfo.getHostName(), String.valueOf(hostInfo.getPortNumber()), ex.getMessage()));
 			}
 			log.log(Level.FINE, "Unable to connect to host", ex); //$NON-NLS-1$
 		}
-		throw new CommunicationException(JDBCPlugin.Util.getString("SocketServerInstancePool.No_valid_host_available", hostCopy.toString())); //$NON-NLS-1$
+		 throw new CommunicationException(JDBCPlugin.Event.TEIID20021, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20021, hostCopy.toString()));
 	}
 
 	private void logon(ILogon newLogon, boolean logoff) throws LogonException,
@@ -232,7 +232,7 @@ public class SocketServerConnection implements ServerConnection {
 				try {
 					return selectServerInstance(false);
 				} catch (ConnectionException e) {
-					throw new CommunicationException(e);
+					 throw new CommunicationException(JDBCPlugin.Event.TEIID20022, e, e.getMessage());
 				}
 			}
 			
@@ -299,7 +299,7 @@ public class SocketServerConnection implements ServerConnection {
 	
 	private synchronized ResultsFuture<?> isOpen() throws CommunicationException, InvalidSessionException, TeiidComponentException {
 		if (this.closed) {
-			throw new CommunicationException();
+			 throw new CommunicationException(JDBCPlugin.Event.TEIID20023, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20023));
 		}
 		return logon.ping();
 	}
@@ -332,7 +332,7 @@ public class SocketServerConnection implements ServerConnection {
 		try {
 			return selectServerInstance(false).getHostInfo().equals(((SocketServerConnection)otherService).selectServerInstance(false).getHostInfo());
 		} catch (ConnectionException e) {
-			throw new CommunicationException(e);
+			 throw new CommunicationException(JDBCPlugin.Event.TEIID20024, e, e.getMessage());
 		}
 	}
 	
@@ -358,9 +358,9 @@ public class SocketServerConnection implements ServerConnection {
 			try {
 				this.logon(logonInstance, true);
 			} catch (LogonException e) {
-				throw new ConnectionException(e);
+				 throw new ConnectionException(JDBCPlugin.Event.TEIID20025, e, e.getMessage());
 			} catch (TeiidComponentException e) {
-				throw new CommunicationException(e);
+				 throw new CommunicationException(JDBCPlugin.Event.TEIID20026, e, e.getMessage());
 			}
 		}
 	}

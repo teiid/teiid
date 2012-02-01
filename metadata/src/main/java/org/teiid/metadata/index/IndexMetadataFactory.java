@@ -196,7 +196,7 @@ public class IndexMetadataFactory {
 				IEntryResult[] results = SimpleIndexUtil.queryIndex(new Index[] {index}, new char[0], true, true, false);
 				recordFactory.getMetadataRecord(results);
 			} catch (TeiidException e) {
-				throw new TeiidRuntimeException(e);
+				 throw new TeiidRuntimeException(RuntimeMetadataPlugin.Event.TEIID80000, e);
 			}
     	}
     	//associate the annotation/extension metadata
@@ -435,7 +435,7 @@ public class IndexMetadataFactory {
 	private KeyRecord getPrimaryKey(String uuid) {
 		KeyRecord key = (KeyRecord)this.getByType(MetadataConstants.RECORD_TYPE.PRIMARY_KEY).get(uuid);
 		if (key == null) {
-            throw new TeiidRuntimeException(uuid+" PrimaryKey "+TransformationMetadata.NOT_EXISTS_MESSAGE); //$NON-NLS-1$
+             throw new TeiidRuntimeException(RuntimeMetadataPlugin.Event.TEIID80001, uuid+RuntimeMetadataPlugin.Event.TEIID80001+TransformationMetadata.NOT_EXISTS_MESSAGE);
     	}
 		return key;
 	}
@@ -457,7 +457,7 @@ public class IndexMetadataFactory {
         if(record == null) {
         	if (mustExist) {
 			// there should be only one for the UUID
-	            throw new TeiidRuntimeException(entityName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+	             throw new TeiidRuntimeException(RuntimeMetadataPlugin.Event.TEIID80002, entityName+TransformationMetadata.NOT_EXISTS_MESSAGE);
         	} 
         	return null;
 		} 

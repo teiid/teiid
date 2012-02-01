@@ -23,10 +23,13 @@
 package org.teiid.dqp.service;
 
 import org.teiid.client.security.TeiidSecurityException;
+import org.teiid.core.BundleUtil;
 
 
 public class SessionServiceException extends TeiidSecurityException {
-    /**
+	private static final long serialVersionUID = 7354291430587008894L;
+
+	/**
      * No-Arg Constructor
      */
     public SessionServiceException(  ) {
@@ -64,9 +67,10 @@ public class SessionServiceException extends TeiidSecurityException {
      * @param message The error message
      * @param code    The error code 
      */
-    public SessionServiceException( String code, String message ) {
-        super( code, message );
+    public SessionServiceException(BundleUtil.Event code, String message ) {
+        super(code, message );
     }
+    
     /**
      * Construct an instance with a linked exception, and an error code and
      * message, specified.
@@ -75,7 +79,7 @@ public class SessionServiceException extends TeiidSecurityException {
      * @param message The error message
      * @param code    The error code 
      */
-    public SessionServiceException( Throwable e, String code, String message ) {
-        super( e, code, message );
+    public SessionServiceException(BundleUtil.Event code, Throwable e,  String message ) {
+        super(code, e, message );
     }
 }

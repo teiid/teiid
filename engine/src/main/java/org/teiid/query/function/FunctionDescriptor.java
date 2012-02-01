@@ -146,7 +146,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         try {
             return super.clone();
         } catch (CloneNotSupportedException e) {
-            throw new TeiidRuntimeException(e);
+             throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30381, e);
         }
     }
     
@@ -187,7 +187,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         // If descriptor is missing invokable method, find this VM's descriptor
         // give name and types from fd
         if(invocationMethod == null) {
-        	throw new FunctionExecutionException("ERR.015.001.0002", QueryPlugin.Util.getString("ERR.015.001.0002", getName())); //$NON-NLS-1$ //$NON-NLS-2$
+        	 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30382, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30382, getName()));
         }
         
         // Invoke the method and return the result
@@ -209,13 +209,13 @@ public class FunctionDescriptor implements Serializable, Cloneable {
             Object result = invocationMethod.invoke(null, values);
             return importValue(result, getReturnType());
         } catch(ArithmeticException e) {
-    		throw new FunctionExecutionException(e, "ERR.015.001.0003", QueryPlugin.Util.getString("ERR.015.001.0003", getName())); //$NON-NLS-1$ //$NON-NLS-2$
+    		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30383, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30383, getName()));
         } catch(InvocationTargetException e) {
-            throw new FunctionExecutionException(e.getTargetException(), "ERR.015.001.0003", QueryPlugin.Util.getString("ERR.015.001.0003", getName())); //$NON-NLS-1$ //$NON-NLS-2$
+             throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e.getTargetException(), QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, getName()));
         } catch(IllegalAccessException e) {
-            throw new FunctionExecutionException(e, "ERR.015.001.0004", QueryPlugin.Util.getString("ERR.015.001.0004", method.toString())); //$NON-NLS-1$ //$NON-NLS-2$
+             throw new FunctionExecutionException(QueryPlugin.Event.TEIID30385, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30385, method.toString()));
         } catch (TransformationException e) {
-        	throw new FunctionExecutionException(e, e.getMessage());
+        	 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30386, e, e.getMessage());
 		}
 	}
 

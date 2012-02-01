@@ -86,22 +86,22 @@ public class MappingChoiceNode extends MappingBaseNode {
     }
 
     public MappingAllNode addAllNode(MappingAllNode elem) {
-        throw new TeiidRuntimeException(QueryPlugin.Util.getString("WrongTypeChild")); //$NON-NLS-1$
+         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30452, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30452));
     }
 
     public MappingChoiceNode addChoiceNode(MappingChoiceNode elem) {
-        throw new TeiidRuntimeException(QueryPlugin.Util.getString("WrongTypeChild")); //$NON-NLS-1$
+         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30453, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30453));
     }
 
     public MappingSequenceNode addSequenceNode(MappingSequenceNode elem) {
-        throw new TeiidRuntimeException(QueryPlugin.Util.getString("WrongTypeChild")); //$NON-NLS-1$
+         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30454, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30454));
     }
     
     public MappingElement addChildElement(MappingElement elem) {
-        throw new TeiidRuntimeException(QueryPlugin.Util.getString("WrongTypeChild")); //$NON-NLS-1$        
+         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30455, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30455));
     }    
     
     public MappingSourceNode addSourceNode(MappingSourceNode elem) {
-        throw new TeiidRuntimeException(QueryPlugin.Util.getString("WrongTypeChild")); //$NON-NLS-1$
+         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30456, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30456));
     }     
 }

@@ -38,6 +38,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingBaseNode;
 import org.teiid.query.mapping.xml.MappingDocument;
@@ -65,10 +66,10 @@ import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 
@@ -86,7 +87,7 @@ public class XMLStagaingQueryPlanner {
                 try {
                     stagePlannedQuery(sourceNode, planEnv);
                 } catch (Exception e) {
-                    throw new TeiidRuntimeException(e);
+                     throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30291, e);
                 }
             }
         };

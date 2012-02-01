@@ -189,7 +189,7 @@ public class Request implements SecurityFunctionEvaluator {
         globalTables = vdbMetadata.getAttachment(GlobalTableStore.class);
 
         if (metadata == null) {
-            throw new TeiidComponentException(QueryPlugin.Util.getString("DQPCore.Unable_to_load_metadata_for_VDB_name__{0},_version__{1}", this.vdbName, this.vdbVersion)); //$NON-NLS-1$
+             throw new TeiidComponentException(QueryPlugin.Event.TEIID30489, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30489, this.vdbName, this.vdbVersion));
         }
         
         // Check for multi-source models and further wrap the metadata interface
@@ -209,7 +209,7 @@ public class Request implements SecurityFunctionEvaluator {
     	this.returnsUpdateCount = !(command instanceof StoredProcedure) && !returnsResultSet;
     	if ((this.requestMsg.getResultsMode() == ResultsMode.UPDATECOUNT && !returnsUpdateCount) 
     			|| (this.requestMsg.getResultsMode() == ResultsMode.RESULTSET && !returnsResultSet)) {
-        	throw new QueryValidatorException(QueryPlugin.Util.getString(this.requestMsg.getResultsMode()==ResultsMode.RESULTSET?"Request.no_result_set":"Request.result_set")); //$NON-NLS-1$ //$NON-NLS-2$
+        	throw new QueryValidatorException(QueryPlugin.Event.TEIID30490, QueryPlugin.Util.getString(this.requestMsg.getResultsMode()==ResultsMode.RESULTSET?"Request.no_result_set":"Request.result_set")); //$NON-NLS-1$ //$NON-NLS-2$
     	}
 
     	// Create command context, used in rewriting, planning, and processing
@@ -275,7 +275,7 @@ public class Request implements SecurityFunctionEvaluator {
     
     static void referenceCheck(List<Reference> references) throws QueryValidatorException {
     	if (references != null && !references.isEmpty()) {
-    		throw new QueryValidatorException(QueryPlugin.Util.getString("Request.Invalid_character_in_query")); //$NON-NLS-1$
+    		 throw new QueryValidatorException(QueryPlugin.Event.TEIID30491, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30491));
     	}
     }
 
@@ -326,7 +326,7 @@ public class Request implements SecurityFunctionEvaluator {
         ValidatorReport report = Validator.validate(command, metadata, visitor);
         if (report.hasItems()) {
             ValidatorFailure firstFailure = report.getItems().iterator().next();
-            throw new QueryValidatorException(firstFailure.getMessage());
+             throw new QueryValidatorException(QueryPlugin.Event.TEIID30492, firstFailure.getMessage());
         }
     }
 
@@ -353,7 +353,7 @@ public class Request implements SecurityFunctionEvaluator {
                 try {
                     transactionService.begin(tc);
                 } catch (XATransactionException err) {
-                    throw new TeiidComponentException(err);
+                     throw new TeiidComponentException(QueryPlugin.Event.TEIID30493, err);
                 }
             }
         } 
@@ -440,7 +440,7 @@ public class Request implements SecurityFunctionEvaluator {
             }
             LogManager.logDetail(LogConstants.CTX_DQP, new Object[] { QueryPlugin.Util.getString("BasicInterceptor.ProcessTree_for__4"), requestId, processPlan }); //$NON-NLS-1$
         } catch (QueryMetadataException e) {
-            throw new QueryPlannerException(e, QueryPlugin.Util.getString("DQPCore.Unknown_query_metadata_exception_while_registering_query__{0}.", requestId)); //$NON-NLS-1$
+             throw new QueryPlannerException(QueryPlugin.Event.TEIID30494, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30494, requestId));
         }
     }
 

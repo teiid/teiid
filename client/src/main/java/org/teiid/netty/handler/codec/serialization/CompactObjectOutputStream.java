@@ -55,15 +55,15 @@ import org.teiid.client.security.ILogon;
 import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.security.LogonException;
 import org.teiid.client.security.LogonResult;
-import org.teiid.client.security.TeiidSecurityException;
 import org.teiid.client.security.SessionToken;
+import org.teiid.client.security.TeiidSecurityException;
 import org.teiid.client.util.ExceptionHolder;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.BaseLob;
 import org.teiid.core.types.BlobImpl;
@@ -71,11 +71,12 @@ import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.InputStreamFactory.StreamFactoryReference;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.types.XMLType;
-import org.teiid.core.types.InputStreamFactory.StreamFactoryReference;
 import org.teiid.core.util.ReaderInputStream;
+import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.net.socket.Handshake;
 import org.teiid.net.socket.Message;
 import org.teiid.net.socket.ServiceInvocationStruct;
@@ -102,7 +103,7 @@ public class CompactObjectOutputStream extends ObjectOutputStream {
     public static void addKnownClass(Class<?> clazz, byte code) {
     	KNOWN_CLASSES.put(clazz, Integer.valueOf(code));
     	if (KNOWN_CODES.put(Integer.valueOf(code), clazz) != null) {
-    		throw new TeiidRuntimeException("Duplicate class"); //$NON-NLS-1$
+    		 throw new TeiidRuntimeException(JDBCPlugin.Event.TEIID20007, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20007));
     	}
     }
     

@@ -55,6 +55,7 @@ import org.teiid.client.security.SessionToken;
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReflectionHelper;
+import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.HostInfo;
@@ -298,7 +299,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 		try {
 			url = new TeiidURL(connectionProperties.getProperty(TeiidURL.CONNECTION.SERVER_URL));
 		} catch (MalformedURLException e1) {
-			throw new ConnectionException(e1);
+			 throw new ConnectionException(JDBCPlugin.Event.TEIID20014, e1, e1.getMessage());
 		}
 		
 		String discoveryStrategyName = connectionProperties.getProperty(TeiidURL.CONNECTION.DISCOVERY_STRATEGY, URL);
@@ -311,7 +312,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 			try {
 				discovery = (ServerDiscovery)ReflectionHelper.create(discoveryStrategyName, null, this.getClass().getClassLoader());
 			} catch (TeiidException e) {
-				throw new ConnectionException(e);
+				 throw new ConnectionException(JDBCPlugin.Event.TEIID20015, e, e.getMessage());
 			}
 		}
 		

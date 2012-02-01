@@ -25,6 +25,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.runtime.RuntimePlugin;
 
 
 public class SocketConfiguration {
@@ -78,7 +79,7 @@ public class SocketConfiguration {
 				this.hostName = InetAddress.getLocalHost().getHostName();
 			}
 		} catch (UnknownHostException e) {
-			throw new TeiidRuntimeException("Failed to resolve the bind address"); //$NON-NLS-1$
+			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40065, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40065));
 		}
 	}
 
@@ -112,7 +113,7 @@ public class SocketConfiguration {
 			}
 			return addr;
 		} catch (UnknownHostException e) {
-			throw new TeiidRuntimeException("Failed to resolve the bind address"); //$NON-NLS-1$
+			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40066, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40066));
 		}		
 	}
 	

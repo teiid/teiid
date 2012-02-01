@@ -22,6 +22,7 @@
 
 package org.teiid.net.socket;
 
+import org.teiid.core.BundleUtil;
 import org.teiid.net.CommunicationException;
 
 
@@ -60,4 +61,8 @@ public class SingleInstanceCommunicationException extends CommunicationException
     public SingleInstanceCommunicationException(Throwable e, String message) {
         super(e, message);
     }
+    
+    public SingleInstanceCommunicationException(BundleUtil.Event event, Throwable e, String message) {
+        super(event, e, message);
+    }    
 }

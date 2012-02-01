@@ -123,7 +123,7 @@ public class TempTable implements Cloneable {
 			currentTuple = tuple;
 			for (int i : notNull) {
 				if (tuple.get(i) == null) {
-					throw new TeiidProcessingException(QueryPlugin.Util.getString("TempTable.not_null", columns.get(i))); //$NON-NLS-1$
+					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30236, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30236, columns.get(i)));
 				}
 			}
 			insertTuple(tuple, addRowId);
@@ -366,7 +366,7 @@ public class TempTable implements Cloneable {
 			clone.activeReaders = new AtomicInteger();
 			return clone;
 		} catch (CloneNotSupportedException e) {
-			throw new TeiidRuntimeException();
+			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30237);
 		} finally {
 			lock.readLock().unlock();
 		}
@@ -685,7 +685,7 @@ public class TempTable implements Cloneable {
 	
 	private void insertTuple(List<?> list, boolean ordered) throws TeiidComponentException, TeiidProcessingException {
 		if (tree.insert(list, ordered?InsertMode.ORDERED:InsertMode.NEW, -1) != null) {
-			throw new TeiidProcessingException(QueryPlugin.Util.getString("TempTable.duplicate_key")); //$NON-NLS-1$
+			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30238, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30238));
 		}
 	}
 	

@@ -56,14 +56,14 @@ public class ObjectToAnyTransform extends Transform {
         
         if (transform == null || transform instanceof ObjectToAnyTransform) {
             Object[] params = new Object[] { getSourceType(), targetClass, value};
-            throw new TransformationException(CorePlugin.Util.getString("ObjectToAnyTransform.Invalid_value", params)); //$NON-NLS-1$
+              throw new TransformationException(CorePlugin.Event.TEIID10075, CorePlugin.Util.gs(CorePlugin.Event.TEIID10075, params));
         }
         
         try {
             return transform.transform(value);    
         } catch (TransformationException e) {
             Object[] params = new Object[] { getSourceType(), targetClass, value};
-            throw new TransformationException(e, CorePlugin.Util.getString("ObjectToAnyTransform.Invalid_value", params)); //$NON-NLS-1$
+              throw new TransformationException(CorePlugin.Event.TEIID10076, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10076, params));
         }
     }
     

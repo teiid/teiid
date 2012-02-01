@@ -40,7 +40,7 @@ public class StringToShortTransform extends Transform {
 		try {
 			return Short.valueOf(((String)value).trim());
 		} catch(NumberFormatException e) {
-			throw new TransformationException("ERR.003.029.0023", CorePlugin.Util.getString("ERR.003.029.0023", value)); //$NON-NLS-1$ //$NON-NLS-2$
+			  throw new TransformationException(CorePlugin.Event.TEIID10071, CorePlugin.Util.gs(CorePlugin.Event.TEIID10071, value));
 		}
 	}
 

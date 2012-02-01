@@ -86,7 +86,7 @@ public class XQueryEvaluator {
 		            dynamicContext.setParameter(entry.getKey(), value);                
 		        }
 	        } catch (TransformerException e) {
-	        	throw new TeiidProcessingException(e);
+	        	 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30148, e);
 	        }
 	        if (context != null) {
 	        	Source source = XMLSystemFunctions.convertToSource(context);
@@ -121,9 +121,9 @@ public class XQueryEvaluator {
 							builder.build(FAKE_IS);
 							return result;
 						} catch (ParsingException e) {
-							throw new TeiidProcessingException(e, QueryPlugin.Util.getString("SaxonXQueryExpression.bad_context")); //$NON-NLS-1$
+							 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30149, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30149));
 						} catch (IOException e) {
-							throw new TeiidProcessingException(e, QueryPlugin.Util.getString("SaxonXQueryExpression.bad_context")); //$NON-NLS-1$
+							 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30150, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30150));
 						} finally {
 							if (!isNonBlocking) {
 								commandContext.setNonBlocking(false);
@@ -135,7 +135,7 @@ public class XQueryEvaluator {
 				try {
 					doc = xquery.config.buildDocument(source);
 				} catch (XPathException e) {
-					throw new TeiidProcessingException(e, QueryPlugin.Util.getString("SaxonXQueryExpression.bad_context")); //$NON-NLS-1$
+					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30151, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30151));
 				}
 		        dynamicContext.setContextItem(doc);
 	        }
@@ -143,7 +143,7 @@ public class XQueryEvaluator {
 	        	result.iter = xquery.xQuery.iterator(dynamicContext);
 	        	return result;
 	        } catch (TransformerException e) {
-	        	throw new TeiidProcessingException(e, QueryPlugin.Util.getString("SaxonXQueryExpression.bad_xquery")); //$NON-NLS-1$
+	        	 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30152, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30152));
 	        }       
 	    } finally {
 	    	if (result.iter == null) {

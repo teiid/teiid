@@ -34,6 +34,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionLibrary;
@@ -42,10 +43,10 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.SetQuery;
@@ -277,7 +278,7 @@ public class RulePushLimit implements OptimizerRule {
         	try {
 				return new Constant(Evaluator.evaluate(newExpr), newExpr.getType());
 			} catch (TeiidException e) {
-				throw new TeiidRuntimeException(e, "Unexpected Exception"); //$NON-NLS-1$
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30269, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30269));
 			}
         }
         return newExpr;

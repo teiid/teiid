@@ -78,7 +78,7 @@ public class DynamicCommandResolver implements CommandResolver {
         String targetType = DataTypeManager.DefaultDataTypes.STRING;
         
         if (!targetType.equals(sqlType) && !DataTypeManager.isImplicitConversion(sqlType, targetType)) {
-            throw new QueryResolverException(QueryPlugin.Util.getString("DynamicCommandResolver.SQL_String", sqlType)); //$NON-NLS-1$
+             throw new QueryResolverException(QueryPlugin.Event.TEIID30100, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30100, sqlType));
         }
         
         if (dynamicCmd.getUsing() != null && !dynamicCmd.getUsing().isEmpty()) {

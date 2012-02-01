@@ -97,7 +97,7 @@ public class MetadataFactory {
 			name.replace(AbstractMetadataRecord.NAME_DELIM_CHAR, '_');
 		} else if (name.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR) != -1) {
 			//TODO: for now this is not used
-			throw new TranslatorException(DataPlugin.Util.getString("MetadataFactory.invalid_name", name)); //$NON-NLS-1$
+			 throw new TranslatorException(DataPlugin.Event.TEIID60008, DataPlugin.Util.gs(DataPlugin.Event.TEIID60008, name));
 		}
 		Column column = new Column();
 		column.setName(name);
@@ -115,7 +115,7 @@ public class MetadataFactory {
 			BaseColumn column) throws TranslatorException {
 		Datatype datatype = dataTypes.get(type);
 		if (datatype == null) {
-			throw new TranslatorException(DataPlugin.Util.getString("MetadataFactory.unknown_datatype", type)); //$NON-NLS-1$
+			 throw new TranslatorException(DataPlugin.Event.TEIID60009, DataPlugin.Util.gs(DataPlugin.Event.TEIID60009, type));
 		}
 		column.setDatatype(datatype);
 		column.setDatatypeUUID(datatype.getUUID());
@@ -200,7 +200,7 @@ public class MetadataFactory {
 		foreignKey.setName(name);
 		setUUID(foreignKey);
 		if (pkTable.getPrimaryKey() == null) {
-			throw new TranslatorException("No primary key defined for table " + pkTable); //$NON-NLS-1$
+			 throw new TranslatorException(DataPlugin.Event.TEIID60010, DataPlugin.Util.gs(DataPlugin.Event.TEIID60010, pkTable));
 		}
 		foreignKey.setPrimaryKey(pkTable.getPrimaryKey());
 		foreignKey.setUniqueKeyID(pkTable.getPrimaryKey().getUUID());
@@ -276,7 +276,7 @@ public class MetadataFactory {
 				}
 			}
 			if (!match) {
-				throw new TranslatorException(DataPlugin.Util.getString("MetadataFactory.no_column_found", columnName)); //$NON-NLS-1$
+				 throw new TranslatorException(DataPlugin.Event.TEIID60011, DataPlugin.Util.gs(DataPlugin.Event.TEIID60011, columnName));
 			}
 		}
 	}

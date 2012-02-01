@@ -64,22 +64,22 @@ public class TempTableResolver implements CommandResolver {
             
             //assuming that all temp table creates are local, the user must use a local name
             if (group.getName().indexOf(Symbol.SEPARATOR) != -1) {
-                throw new QueryResolverException(QueryPlugin.Util.getString("TempTableResolver.unqualified_name_required", group.getName())); //$NON-NLS-1$
+                 throw new QueryResolverException(QueryPlugin.Event.TEIID30117, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30117, group.getName()));
             }
 
             //this will only check non-temp groups
             Collection exitsingGroups = metadata.getMetadata().getGroupsForPartialName(group.getName());
             if(!exitsingGroups.isEmpty()) {
-                throw new QueryResolverException(QueryPlugin.Util.getString("TempTableResolver.table_already_exists", group.getName())); //$NON-NLS-1$
+                 throw new QueryResolverException(QueryPlugin.Event.TEIID30118, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30118, group.getName()));
             }
         	if (metadata.getMetadata().hasProcedure(group.getName())) {
-        		throw new QueryResolverException(QueryPlugin.Util.getString("TempTableResolver.table_already_exists", group.getName())); //$NON-NLS-1$
+        		 throw new QueryResolverException(QueryPlugin.Event.TEIID30119, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30119, group.getName()));
         	}
             
             //now we will be more specific for temp groups
             TempMetadataID id = metadata.getMetadataStore().getTempGroupID(group.getName());
             if (id != null && !metadata.isTemporaryTable(id)) {
-                throw new QueryResolverException(QueryPlugin.Util.getString("TempTableResolver.table_already_exists", group.getName())); //$NON-NLS-1$        
+                 throw new QueryResolverException(QueryPlugin.Event.TEIID30120, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30120, group.getName()));
             }
             //if we get here then either the group does not exist or has already been defined as a temp table
             //if it has been defined as a temp table, that's ok we'll use this as the new definition and throw an

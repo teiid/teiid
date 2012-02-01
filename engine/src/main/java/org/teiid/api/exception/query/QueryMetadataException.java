@@ -22,6 +22,7 @@
 
 package org.teiid.api.exception.query;
 
+import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidComponentException;
 
 /**
@@ -32,7 +33,9 @@ import org.teiid.core.TeiidComponentException;
  */
 public class QueryMetadataException extends TeiidComponentException {
 
-    /**
+	private static final long serialVersionUID = -2109331443434830452L;
+
+	/**
      * No-arg constructor required by Externalizable semantics.
      */
     public QueryMetadataException() {
@@ -49,16 +52,6 @@ public class QueryMetadataException extends TeiidComponentException {
     }
 
     /**
-     * Construct an instance with the message and error code specified.
-     *
-     * @param message A message describing the exception
-     * @param code The error code
-     */
-    public QueryMetadataException( String code, String message ) {
-        super( code, message );
-    }
-
-    /**
      * Construct an instance from a message and an exception to chain to this one.
      *
      * @param message A message describing the exception
@@ -67,16 +60,14 @@ public class QueryMetadataException extends TeiidComponentException {
     public QueryMetadataException( Throwable e, String message ) {
         super( e, message );
     }
-
-    /**
-     * Construct an instance from a message and a code and an exception to
-     * chain to this one.
-     *
-     * @param e An exception to nest within this one
-     * @param message A message describing the exception
-     * @param code A code denoting the exception
-     */
-    public QueryMetadataException( Throwable e, String code, String message ) {
-        super( e, code, message );
+    
+    public QueryMetadataException(BundleUtil.Event event, Throwable e, String message ) {
+        super( event, e, message );
     }
+    public QueryMetadataException(BundleUtil.Event event, Throwable e) {
+        super( event, e);
+    }    
+    public QueryMetadataException(BundleUtil.Event event, String message ) {
+        super( event, message );
+    }    
 }

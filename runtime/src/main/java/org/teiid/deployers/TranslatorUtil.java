@@ -93,16 +93,16 @@ public class TranslatorUtil {
 			String executionClass = data.getPropertyValue(VDBTranslatorMetaData.EXECUTION_FACTORY_CLASS);
 			Object o = ReflectionHelper.create(executionClass, null, classLoader);
 			if(!(o instanceof ExecutionFactory)) {
-				throw new TeiidException(RuntimePlugin.Util.getString("invalid_class", executionClass));//$NON-NLS-1$	
+				 throw new TeiidException(RuntimePlugin.Event.TEIID40024, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40024, executionClass));
 			}
 			executionFactory = (ExecutionFactory)o;
 			injectProperties(executionFactory, data);
 			executionFactory.start();
 			return executionFactory;
 		} catch (InvocationTargetException e) {
-			throw new TeiidException(e);
+			 throw new TeiidException(RuntimePlugin.Event.TEIID40025, e);
 		} catch (IllegalAccessException e) {
-			throw new TeiidException(e);
+			 throw new TeiidException(RuntimePlugin.Event.TEIID40026, e);
 		}
 	}
 	
@@ -120,7 +120,7 @@ public class TranslatorUtil {
 				Method setterMethod = getSetter(ef.getClass(), method);
 				setterMethod.invoke(ef, convert(value, method.getReturnType()));
 			} else if (tp.required()) {
-				throw new TeiidException(RuntimePlugin.Util.getString("required_property_not_exists", tp.display())); //$NON-NLS-1$
+				 throw new TeiidException(RuntimePlugin.Event.TEIID40027, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40027, tp.display()));
 			}
 		}
 		caseInsensitivProps.remove(Translator.EXECUTION_FACTORY_CLASS);
@@ -157,7 +157,7 @@ public class TranslatorUtil {
 			try {
 				return clazz.getMethod(method.getName(), method.getReturnType());
 			} catch (NoSuchMethodException e1) {
-				throw new TeiidException(RuntimePlugin.Util.getString("no_set_method", setter, method.getName())); //$NON-NLS-1$
+				 throw new TeiidException(RuntimePlugin.Event.TEIID40028, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40028, setter, method.getName()));
 			}
 		}
 	}
@@ -210,7 +210,7 @@ public class TranslatorUtil {
 		if (type == Void.TYPE) { //check for setter
 			Class<?>[] types = method.getParameterTypes();
 			if (types.length != 1) {
-				throw new TeiidRuntimeException("TranslatorProperty annotation should be placed on valid getter or setter method, " + method + " is not valid."); //$NON-NLS-1$ //$NON-NLS-2$
+				 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40029, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40029, method));
 			}
 			type = types[0];
 			try {
@@ -223,7 +223,7 @@ public class TranslatorUtil {
 				}
 			}
 		} else if (method.getParameterTypes().length != 0) {
-			throw new TeiidRuntimeException("TranslatorProperty annotation should be placed on valid getter or setter method, " + method + " is not valid."); //$NON-NLS-1$ //$NON-NLS-2$
+			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40030, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40030, method));
 		} else {
 			getter = method;
 			try {
@@ -235,7 +235,7 @@ public class TranslatorUtil {
 		Object defaultValue = null;
 		if (prop.required()) {
 			if (prop.advanced()) {
-				throw new TeiidRuntimeException("TranslatorProperty annotation should not both be advanced and required " + method); //$NON-NLS-1$
+				 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40031, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40031,method));
 			}
 		} else if (getter != null) {
 			try {

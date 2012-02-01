@@ -106,7 +106,7 @@ public class XMLQueryPlanner {
                     }
                     
                 } catch (Exception e) {
-                    throw new TeiidRuntimeException(e);
+                     throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30292, e);
                 } 
             }     
             
@@ -132,7 +132,7 @@ public class XMLQueryPlanner {
                     ProcessorPlan queryPlan = optimizePlan(cmd, planEnv);
                     rsInfo.setPlan(queryPlan);                    
                 } catch (Exception e) {
-                    throw new TeiidRuntimeException(e);
+                     throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30293, e);
                 }
             }
         };
@@ -179,7 +179,7 @@ public class XMLQueryPlanner {
                 planQueryWithCriteria(sourceNode, planEnv);
             }
         } catch (QueryResolverException e) {
-            throw new TeiidComponentException(e);
+             throw new TeiidComponentException(QueryPlugin.Event.TEIID30294, e);
         }
 
         if (rsInfo.getUserRowLimit() != -1) {
@@ -318,7 +318,7 @@ public class XMLQueryPlanner {
             }
             
             if (!singleParentage) {
-                throw new QueryPlannerException(QueryPlugin.Util.getString("XMLQueryPlanner.cannot_plan", rsInfo.getCriteria())); //$NON-NLS-1$
+                 throw new QueryPlannerException(QueryPlugin.Event.TEIID30295, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30295, rsInfo.getCriteria()));
             }
             
             Query subQuery = QueryUtil.wrapQuery(new SubqueryFromClause(inlineViewName, command), inlineViewName);
@@ -399,10 +399,10 @@ public class XMLQueryPlanner {
 				MappingSourceNode childMsn = findMappingSourceNode(planEnv, groupSymbol);
 				while (childMsn != parentMsn) {
 					if (childMsn == null) {
-						throw new QueryPlannerException(QueryPlugin.Util.getString("XMLQueryPlanner.invalid_relationship", crit, parentMsn)); //$NON-NLS-1$
+						 throw new QueryPlannerException(QueryPlugin.Event.TEIID30296, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30296, crit, parentMsn));
 					}
 					if (!childMsn.getResultSetInfo().isCriteriaRaised()) {
-						throw new QueryPlannerException(QueryPlugin.Util.getString("XMLQueryPlanner.non_simple_relationship", crit, childMsn)); //$NON-NLS-1$
+						 throw new QueryPlannerException(QueryPlugin.Event.TEIID30297, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30297, crit, childMsn));
 					}
 					Query parentQuery = (Query)childMsn.getResultSetInfo().getCommand();
 					if (parentQuery.getCriteria() != null 

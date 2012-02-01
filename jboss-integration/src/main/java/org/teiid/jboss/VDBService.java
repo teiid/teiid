@@ -312,7 +312,7 @@ class VDBService implements Service<VDBMetaData> {
 			        	final Module module = Module.getCallerModuleLoader().loadModule(moduleId);
 			        	classloader = module.getClassLoader();
 			        } catch (ModuleLoadException e) {
-			            throw new TeiidException(e, RuntimePlugin.Util.getString("failed_load_module", translator.getModuleName(), translator.getName())); //$NON-NLS-1$
+			             throw new TeiidException(IntegrationPlugin.Event.TEIID50057, e, RuntimePlugin.Util.gs(IntegrationPlugin.Event.TEIID50057, translator.getModuleName(), translator.getName()));
 			        }		
 		        }
 				
@@ -512,7 +512,7 @@ class VDBService implements Service<VDBMetaData> {
 		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
 		
 		if (policy == null) {
-			throw new AdminProcessingException(IntegrationPlugin.Util.getString("policy_not_found", policyName, this.vdb.getName(), this.vdb.getVersion())); //$NON-NLS-1$
+			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50058, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50058, policyName, this.vdb.getName(), this.vdb.getVersion()));
 		}		
 		
 		policy.addMappedRoleName(mappedRole);
@@ -523,7 +523,7 @@ class VDBService implements Service<VDBMetaData> {
 		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
 		
 		if (policy == null) {
-			throw new AdminProcessingException(IntegrationPlugin.Util.getString("policy_not_found", policyName, this.vdb.getName(), this.vdb.getVersion())); //$NON-NLS-1$
+			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50059, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50059, policyName, this.vdb.getName(), this.vdb.getVersion()));
 		}		
 		
 		policy.removeMappedRoleName(mappedRole);
@@ -534,7 +534,7 @@ class VDBService implements Service<VDBMetaData> {
 		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
 		
 		if (policy == null) {
-			throw new AdminProcessingException(IntegrationPlugin.Util.getString("policy_not_found", policyName, this.vdb.getName(), this.vdb.getVersion())); //$NON-NLS-1$
+			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50060, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50060, policyName, this.vdb.getName(), this.vdb.getVersion()));
 		}		
 		
 		policy.setAnyAuthenticated(true);
@@ -545,7 +545,7 @@ class VDBService implements Service<VDBMetaData> {
 		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
 		
 		if (policy == null) {
-			throw new AdminProcessingException(IntegrationPlugin.Util.getString("policy_not_found", policyName, this.vdb.getName(), this.vdb.getVersion())); //$NON-NLS-1$
+			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50061, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50061, policyName, this.vdb.getName(), this.vdb.getVersion()));
 		}		
 		
 		policy.setAnyAuthenticated(false);
@@ -561,12 +561,12 @@ class VDBService implements Service<VDBMetaData> {
 		ModelMetaData model = this.vdb.getModel(modelName);
 		
 		if (model == null) {
-			throw new AdminProcessingException(IntegrationPlugin.Util.getString("model_not_found", modelName, this.vdb.getName(), this.vdb.getVersion())); //$NON-NLS-1$
+			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50062, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50062, modelName, this.vdb.getName(), this.vdb.getVersion()));
 		}
 		
 		SourceMappingMetadata source = model.getSourceMapping(sourceName);
 		if(source == null) {
-			throw new AdminProcessingException(IntegrationPlugin.Util.getString("source_not_found", sourceName, modelName, this.vdb.getName(), this.vdb.getVersion())); //$NON-NLS-1$
+			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50063, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50063, sourceName, modelName, this.vdb.getName(), this.vdb.getVersion()));
 		}
 		source.setTranslatorName(translatorName);
 		source.setConnectionJndiName(dsName);
@@ -578,9 +578,9 @@ class VDBService implements Service<VDBMetaData> {
 			ObjectSerializer os = getSerializer();
 			VDBMetadataParser.marshell(this.vdb, os.getVdbXmlOutputStream(this.vdb));
 		} catch (IOException e) {
-			throw new AdminProcessingException(e);
+			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50064, e);
 		} catch (XMLStreamException e) {
-			throw new AdminProcessingException(e);
+			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50065, e);
 		}
 	}
 	

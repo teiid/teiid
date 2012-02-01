@@ -102,7 +102,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 			try {
 				publicKey = keyGen.createPublicKey();
 			} catch (CryptoException e) {
-				throw new CommunicationException(e);
+				 throw new CommunicationException(RuntimePlugin.Event.TEIID40051, e);
 			}
             handshake.setPublicKey(publicKey);
         } 
@@ -133,13 +133,13 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
             
             //ensure the key information
             if (returnedPublicKey == null) {
-                throw new CommunicationException(RuntimePlugin.Util.getString("SocketClientInstance.invalid_sessionkey")); //$NON-NLS-1$
+                 throw new CommunicationException(RuntimePlugin.Event.TEIID40052, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40052));
             }
             
             try {
 				this.cryptor = keyGen.getSymmetricCryptor(returnedPublicKey);
 			} catch (CryptoException e) {
-				throw new CommunicationException(e);
+				 throw new CommunicationException(RuntimePlugin.Event.TEIID40053, e);
 			}
             this.keyGen = null;
         } else {

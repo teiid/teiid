@@ -307,7 +307,7 @@ public class TestPreparedStatement {
 	        helpGetProcessorPlan(preparedSql, values, prepCache, SESSION_ID);
 	        fail();
 		}catch(QueryResolverException qe){
-            assertEquals("Error converting parameter number 1 with value \"x\" to expected type integer.", qe.getMessage()); //$NON-NLS-1$
+            assertEquals("Error Code:TEIID30558 Message:Error converting parameter number 1 with value \"x\" to expected type integer.", qe.getMessage()); //$NON-NLS-1$
     	}    	
     	assertEquals(0, prepCache.getCacheHitCount());
     	
@@ -319,7 +319,7 @@ public class TestPreparedStatement {
 			helpGetProcessorPlan(preparedSql, values, prepCache, SESSION_ID);
 			fail();
 	   	}catch(QueryResolverException qe){
-	   	    assertEquals("The number of bound values '2' does not match the number of parameters '1' in the prepared statement.", qe.getMessage()); //$NON-NLS-1$
+	   	    assertEquals("Error Code:TEIID30556 Message:The number of bound values '2' does not match the number of parameters '1' in the prepared statement.", qe.getMessage()); //$NON-NLS-1$
     	}    	
     	
     	assertEquals(1, prepCache.getCacheHitCount());  
@@ -332,7 +332,7 @@ public class TestPreparedStatement {
 			helpGetProcessorPlan(preparedSql, values, prepCache);
 			fail();
 		}catch(QueryResolverException qe){
-			assertEquals("The number of bound values '2' does not match the number of parameters '1' in the prepared statement.", qe.getMessage()); //$NON-NLS-1$
+			assertEquals("Error Code:TEIID30556 Message:The number of bound values '2' does not match the number of parameters '1' in the prepared statement.", qe.getMessage()); //$NON-NLS-1$
     	}    	
     	
 	}	

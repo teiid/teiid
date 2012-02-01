@@ -120,11 +120,11 @@ public abstract class SessionServiceImpl implements SessionService {
 	public void closeSession(String sessionID) throws InvalidSessionException {
 		LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"closeSession", sessionID}); //$NON-NLS-1$
 		if (sessionID == null) {
-			throw new InvalidSessionException(RuntimePlugin.Util.getString("SessionServiceImpl.invalid_session", sessionID)); //$NON-NLS-1$
+			 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40041, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40041, sessionID));
 		}
 		SessionMetadata info = this.sessionCache.remove(sessionID);
 		if (info == null) {
-			throw new InvalidSessionException(RuntimePlugin.Util.getString("SessionServiceImpl.invalid_session", sessionID)); //$NON-NLS-1$
+			 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40042, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40042, sessionID));
 		}
 		if (info.getVDBName() != null) {
             try {
@@ -155,7 +155,7 @@ public abstract class SessionServiceImpl implements SessionService {
         }
 
         if (sessionMaxLimit > 0 && getActiveSessionsCount() >= sessionMaxLimit) {
-            throw new SessionServiceException(RuntimePlugin.Util.getString("SessionServiceImpl.reached_max_sessions", new Object[] {new Long(sessionMaxLimit)})); //$NON-NLS-1$
+             throw new SessionServiceException(RuntimePlugin.Event.TEIID40043, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40043, new Long(sessionMaxLimit)));
         }
         
         if (domains!= null && !domains.isEmpty() && authenticate) {
@@ -210,7 +210,7 @@ public abstract class SessionServiceImpl implements SessionService {
 		int lastIndex = vdbName.lastIndexOf('.');
 		if (firstIndex != -1) {
 			if (firstIndex != lastIndex || vdbVersion != null) {
-				throw new SessionServiceException(RuntimePlugin.Util.getString("ambigious_name", vdbName, vdbVersion)); //$NON-NLS-1$
+				 throw new SessionServiceException(RuntimePlugin.Event.TEIID40044, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40044, vdbName, vdbVersion));
 			}
 			vdbVersion = vdbName.substring(firstIndex+1);
 			vdbName = vdbName.substring(0, firstIndex);
@@ -225,18 +225,18 @@ public abstract class SessionServiceImpl implements SessionService {
 				vdb = this.vdbRepository.getVDB(vdbName, Integer.parseInt(vdbVersion));
 			}         
 		} catch (NumberFormatException e) {
-			throw new SessionServiceException(e, RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._3", vdbVersion)); //$NON-NLS-1$
+			 throw new SessionServiceException(RuntimePlugin.Event.TEIID40045, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40045, vdbVersion));
 		}
 		
 		if (vdb == null) {
-			throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._1", vdbName, vdbVersion)); //$NON-NLS-1$
+			 throw new SessionServiceException(RuntimePlugin.Event.TEIID40046, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40046, vdbName, vdbVersion));
 		}
 		
 		if (vdb.getStatus() != VDB.Status.ACTIVE) {
-			throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion)); //$NON-NLS-1$
+			 throw new SessionServiceException(RuntimePlugin.Event.TEIID40047, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40047, vdbName, vdbVersion));
 		}
 		if (vdb.getConnectionType() == ConnectionType.NONE) {
-			throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._4", vdbName, vdbVersion)); //$NON-NLS-1$
+			 throw new SessionServiceException(RuntimePlugin.Event.TEIID40048, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40048, vdbName, vdbVersion));
 		}
 		return vdb;
 	}
@@ -326,11 +326,11 @@ public abstract class SessionServiceImpl implements SessionService {
 	private SessionMetadata getSessionInfo(String sessionID)
 			throws InvalidSessionException {
 		if (sessionID == null) {
-			throw new InvalidSessionException(RuntimePlugin.Util.getString("SessionServiceImpl.invalid_session", sessionID)); //$NON-NLS-1$
+			 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40049, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40049, sessionID));
 		}
 		SessionMetadata info = this.sessionCache.get(sessionID);
 		if (info == null) {
-			throw new InvalidSessionException(RuntimePlugin.Util.getString("SessionServiceImpl.invalid_session", sessionID)); //$NON-NLS-1$
+			 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40050, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40050, sessionID));
 		}
 		return info;
 	}

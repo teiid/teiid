@@ -109,7 +109,7 @@ public class XMLNodeMappingVisitor extends AbstractSymbolMappingVisitor {
 			ElementSymbol es = msn.getMappedSymbol(new ElementSymbol(symbolName));
 			return es;
         } catch (TeiidException err) {
-            throw new TeiidRuntimeException(err);
+             throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30285, err);
         } 
     }
     
@@ -140,12 +140,12 @@ public class XMLNodeMappingVisitor extends AbstractSymbolMappingVisitor {
                 throw (TeiidComponentException)child;
             }
             
-            throw new TeiidComponentException(child);
+             throw new TeiidComponentException(QueryPlugin.Event.TEIID30286, child);
         }
 
         Collection unmappedSymbols = mappingVisitor.getUnmappedSymbols();
         if (unmappedSymbols != null && unmappedSymbols.size() > 0){
-            throw new QueryPlannerException("ERR.015.004.0046", QueryPlugin.Util.getString("ERR.015.004.0046", new Object[] {unmappedSymbols, object})); //$NON-NLS-1$ //$NON-NLS-2$
+             throw new QueryPlannerException(QueryPlugin.Event.TEIID30287, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30287, new Object[] {unmappedSymbols, object}));
         }
 
         return object;

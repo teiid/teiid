@@ -228,7 +228,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		    // Defect 16059 - Rewrite the command to replace references, etc. with values.
 			QueryRewriter.evaluateAndRewrite(atomicCommand, eval, context, metadata);
 		} catch (QueryValidatorException e) {
-		    throw new TeiidProcessingException(e, QueryPlugin.Util.getString("AccessNode.rewrite_failed", atomicCommand)); //$NON-NLS-1$
+		     throw new TeiidProcessingException(QueryPlugin.Event.TEIID30174, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30174, atomicCommand));
 		}
 	}
 	

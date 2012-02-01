@@ -35,6 +35,7 @@ import net.sf.saxon.value.GYearMonthValue;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.function.source.XMLSystemFunctions;
 
@@ -125,7 +126,7 @@ public final class XMLValueTranslator {
 				try {
 					valueStr = XMLSystemFunctions.convertToAtomicValue(value).getStringValue();
 				} catch (TransformerException e) {
-					throw new TransformationException(e, e.getMessage());
+					 throw new TransformationException(QueryPlugin.Event.TEIID30208, e, e.getMessage());
 				}
                     break;
                 case DOUBLE_CODE:
@@ -151,7 +152,7 @@ public final class XMLValueTranslator {
 				try {
 					dtv = ((DateTimeValue)XMLSystemFunctions.convertToAtomicValue(value));
 				} catch (TransformerException e) {
-					throw new TransformationException(e, e.getMessage());
+					 throw new TransformationException(QueryPlugin.Event.TEIID30209, e, e.getMessage());
 				}
                 	valueStr = new GYearMonthValue(dtv.getYear(), dtv.getMonth(), dtv.getTimezoneInMinutes()).getStringValue();
                     break;

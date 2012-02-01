@@ -22,13 +22,14 @@
 
 package org.teiid.query.processor.proc;
 
-import static org.teiid.query.analysis.AnalysisRecord.*;
+import static org.teiid.query.analysis.AnalysisRecord.PROP_EXPRESSION;
 
 import org.teiid.client.ProcedureErrorInstructionException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.logging.LogManager;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.symbol.Expression;
 
 
@@ -75,9 +76,8 @@ public class ErrorInstruction extends ProgramInstruction {
     public void process(ProcedurePlan env) throws TeiidComponentException,
     		TeiidProcessingException {
     	Object value = env.evaluateExpression(expression);
-            LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP,
-                            new Object[] {"Processing RaiseErrorInstruction with the value :", value}); //$NON-NLS-1$ 
-        throw new ProcedureErrorInstructionException(ERROR_PREFIX + (value != null ? value.toString() : "")); //$NON-NLS-1$ 
+            LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, new Object[] {"Processing RaiseErrorInstruction with the value :", value}); //$NON-NLS-1$ 
+         throw new ProcedureErrorInstructionException(QueryPlugin.Event.TEIID30167, ERROR_PREFIX + (value != null ? value.toString() : ""));
     }
  
 }

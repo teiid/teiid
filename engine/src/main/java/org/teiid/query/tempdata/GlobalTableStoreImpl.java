@@ -47,6 +47,7 @@ import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.ReplicatedObject;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -371,9 +372,9 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			oos.writeObject(null);
 			oos.close();
 		} catch (IOException e) {
-			throw new TeiidRuntimeException(e);
+			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30217, e);
 		} catch (TeiidComponentException e) {
-			throw new TeiidRuntimeException(e);
+			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30218, e);
 		}
 	}
 
@@ -390,7 +391,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			}
 			ois.close();
 		} catch (Exception e) {
-			throw new TeiidRuntimeException(e);
+			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30219, e);
 		}
 	}
 
@@ -401,9 +402,9 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			sendTable(stateId, oos, false);
 			oos.close();
 		} catch (IOException e) {
-			throw new TeiidRuntimeException(e);
+			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30220, e);
 		} catch (TeiidComponentException e) {
-			throw new TeiidRuntimeException(e);
+			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30221, e);
 		}
 	}
 
@@ -435,7 +436,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		} catch (Exception e) {
 			MatTableInfo info = this.getMatTableInfo(stateId);
 			info.setState(MatState.FAILED_LOAD, null);	
-			throw new TeiidRuntimeException(e);
+			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30222, e);
 		}
 	}
 

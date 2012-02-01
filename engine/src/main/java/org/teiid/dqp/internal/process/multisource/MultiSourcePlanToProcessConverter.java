@@ -109,7 +109,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 			try {
 				return multiSourceModify((AccessNode)node);
 			} catch (TeiidProcessingException e) {
-				throw new QueryPlannerException(e, e.getMessage());
+				 throw new QueryPlannerException(QueryPlugin.Event.TEIID30560, e, e.getMessage());
 			} 
 		} else if (node instanceof ProjectIntoNode) {
 			throw new AssertionError("Multisource insert with query expression not allowed not allowed, should have been caught in validation."); //$NON-NLS-1$
@@ -170,7 +170,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
         }
         
         if (hasOutParams && accessNodes.size() != 1) {
-        	throw new QueryPlannerException(QueryPlugin.Util.getString("MultiSource.out_procedure", accessNode.getCommand())); //$NON-NLS-1$
+        	 throw new QueryPlannerException(QueryPlugin.Event.TEIID30561, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30561, accessNode.getCommand()));
         }
 
         switch(accessNodes.size()) {

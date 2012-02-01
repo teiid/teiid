@@ -40,7 +40,7 @@ public class StringToLongTransform extends Transform {
 		try {
 			return Long.valueOf(((String)value).trim());
 		} catch(NumberFormatException e) {
-			throw new TransformationException("ERR.003.029.0022", CorePlugin.Util.getString("ERR.003.029.0022", value)); //$NON-NLS-1$ //$NON-NLS-2$
+			  throw new TransformationException(CorePlugin.Event.TEIID10073, CorePlugin.Util.gs(CorePlugin.Event.TEIID10073, value));
 		}
 	}
 

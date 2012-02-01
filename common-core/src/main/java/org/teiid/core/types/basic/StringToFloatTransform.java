@@ -40,7 +40,7 @@ public class StringToFloatTransform extends Transform {
 		try {
 			return Float.valueOf((String)value);
 		} catch(NumberFormatException e) {
-			throw new TransformationException("ERR.003.029.0020", CorePlugin.Util.getString("ERR.003.029.0020", value)); //$NON-NLS-1$ //$NON-NLS-2$
+			  throw new TransformationException(CorePlugin.Event.TEIID10077, CorePlugin.Util.gs(CorePlugin.Event.TEIID10077, value));
 		}
 	}
 

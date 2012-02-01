@@ -148,7 +148,7 @@ public class TestSocketServerConnection {
 			new SocketServerConnection(instanceFactory, false, discovery, p);
 			fail("exception expected"); //$NON-NLS-1$
 		} catch (CommunicationException e) {
-			assertEquals("No valid host available. Attempted connections to: [host1:1, host2:2]", e.getMessage()); //$NON-NLS-1$
+			assertEquals("Error Code:TEIID20021 Message:TEIID20021 No valid host available. Attempted connections to: [host1:1, host2:2]", e.getMessage()); //$NON-NLS-1$
 		}
 	}
 	

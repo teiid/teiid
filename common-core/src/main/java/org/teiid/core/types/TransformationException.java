@@ -22,6 +22,7 @@
 
 package org.teiid.core.types;
 
+import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidProcessingException;
 
 /**
@@ -30,7 +31,9 @@ import org.teiid.core.TeiidProcessingException;
  */
 public class TransformationException extends TeiidProcessingException {
 
-    /**
+	private static final long serialVersionUID = -4112567582638012800L;
+
+	/**
      * No-Arg Constructor
      */
     public TransformationException(  ) {
@@ -42,18 +45,9 @@ public class TransformationException extends TeiidProcessingException {
      * @param message A message describing the exception
      */
     public TransformationException( String message ) {
-        super( message );
+        super(message);
     }
 
-    /**
-     * Construct an instance with the message and error code specified.
-     *
-     * @param message A message describing the exception
-     * @param code The error code
-     */
-    public TransformationException( String code, String message ) {
-        super( code, message );
-    }
 
     /**
      * Construct an instance from a message and an exception to chain to this one.
@@ -64,17 +58,12 @@ public class TransformationException extends TeiidProcessingException {
     public TransformationException( Exception e, String message ) {
         super( e, message );
     }
-
-    /**
-     * Construct an instance from a message and a code and an exception to
-     * chain to this one.
-     *
-     * @param e An exception to nest within this one
-     * @param message A message describing the exception
-     * @param code A code denoting the exception
-     */
-    public TransformationException( Exception e, String code, String message ) {
-        super( e, code, message );
+    public TransformationException(BundleUtil.Event event, String message) {
+        super(event, message);
     }
+    public TransformationException(BundleUtil.Event event, Throwable t, String message) {
+        super(event, t, message);
+    }    
+    
 }
 

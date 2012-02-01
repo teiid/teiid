@@ -26,6 +26,7 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -33,9 +34,9 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.util.CommandContext;
@@ -104,9 +105,9 @@ public final class RuleCleanCriteria implements OptimizerRule {
             }
         //none of the following exceptions should ever occur
         } catch(BlockedException e) {
-            throw new TeiidComponentException(e);
+             throw new TeiidComponentException(QueryPlugin.Event.TEIID30273, e);
         } catch (ExpressionEvaluationException e) {
-            throw new TeiidComponentException(e);
+             throw new TeiidComponentException(QueryPlugin.Event.TEIID30274, e);
         }
         return false;
     }

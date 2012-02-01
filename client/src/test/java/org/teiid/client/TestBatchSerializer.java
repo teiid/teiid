@@ -141,7 +141,7 @@ public class TestBatchSerializer extends TestCase {
         try {
             helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.DOUBLE}, new List[] {Arrays.asList(new Object[] {"Hello!"})}); //$NON-NLS-1$
         } catch (RuntimeException e) {
-            assertEquals("The modeled datatype double for column 0 doesn't match the runtime type \"java.lang.String\". Please ensure that the column's modeled datatype matches the expected data.", e.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID20001 The modeled datatype double for column 0 doesn't match the runtime type \"java.lang.String\". Please ensure that the column's modeled datatype matches the expected data.", e.getMessage()); //$NON-NLS-1$
         }
     }
 }

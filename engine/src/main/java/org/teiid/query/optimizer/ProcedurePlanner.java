@@ -297,7 +297,7 @@ public final class ProcedurePlanner implements CommandPlanner {
                 break;
             }
 			default:
-	        	throw new QueryPlannerException(QueryPlugin.Util.getString("ProcedurePlanner.bad_stmt", stmtType)); //$NON-NLS-1$
+	        	 throw new QueryPlannerException(QueryPlugin.Event.TEIID30243, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30243, stmtType));
 		}
 		return instruction;
     }

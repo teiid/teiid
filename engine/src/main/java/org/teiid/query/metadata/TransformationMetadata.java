@@ -201,7 +201,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     public Column getElementID(final String elementName) throws TeiidComponentException, QueryMetadataException {
     	int columnIndex = elementName.lastIndexOf(TransformationMetadata.DELIMITER_STRING);
 		if (columnIndex == -1) {
-			throw new QueryMetadataException(elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+			 throw new QueryMetadataException(QueryPlugin.Event.TEIID30355, elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}
 		Table table = this.store.findGroup(elementName.substring(0, columnIndex));
 		String shortElementName = elementName.substring(columnIndex + 1);
@@ -210,7 +210,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 				return column;
 			}
         }
-        throw new QueryMetadataException(elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+         throw new QueryMetadataException(QueryPlugin.Event.TEIID30356, elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
     }
 
     public Table getGroupID(final String groupName) throws TeiidComponentException, QueryMetadataException {
@@ -306,7 +306,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         StoredProcedureInfo result = getStoredProcInfoDirect(name);
         
 		if (result == null) {
-			throw new QueryMetadataException(name+NOT_EXISTS_MESSAGE);
+			 throw new QueryMetadataException(QueryPlugin.Event.TEIID30357, name+NOT_EXISTS_MESSAGE);
 		}
     	
         return result;
@@ -383,7 +383,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         	Schema schema = (Schema)storedProcedureInfo.getModelID();
 	        if(name.equalsIgnoreCase(storedProcedureInfo.getProcedureCallableName()) || vdbMetaData == null || vdbMetaData.isVisible(schema.getName())){
 	        	if (result != null) {
-	    			throw new QueryMetadataException(QueryPlugin.Util.getString("ambiguous_procedure", name)); //$NON-NLS-1$
+	    			 throw new QueryMetadataException(QueryPlugin.Event.TEIID30358, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30358, name));
 	    		}
 	        	result = storedProcedureInfo;
 	        }
@@ -478,7 +478,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
         Table tableRecord = (Table) groupID;
         if (!tableRecord.isVirtual()) {
-            throw new QueryMetadataException(QueryPlugin.Util.getString("TransformationMetadata.QueryPlan_could_not_be_found_for_physical_group__6")+tableRecord.getFullName()); //$NON-NLS-1$
+             throw new QueryMetadataException(QueryPlugin.Event.TEIID30359, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30359, tableRecord.getFullName()));
         }
         LiveTableQueryNode queryNode = new LiveTableQueryNode(tableRecord);
 
@@ -497,7 +497,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
-            throw new QueryMetadataException(QueryPlugin.Util.getString("TransformationMetadata.InsertPlan_could_not_be_found_for_physical_group__8")+tableRecordImpl.getFullName()); //$NON-NLS-1$
+             throw new QueryMetadataException(QueryPlugin.Event.TEIID30360, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30360, tableRecordImpl.getFullName()));
         }
         return tableRecordImpl.isInsertPlanEnabled()?tableRecordImpl.getInsertPlan():null;
     }
@@ -506,7 +506,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
-        	throw new QueryMetadataException(QueryPlugin.Util.getString("TransformationMetadata.InsertPlan_could_not_be_found_for_physical_group__10")+tableRecordImpl.getFullName());         //$NON-NLS-1$
+        	 throw new QueryMetadataException(QueryPlugin.Event.TEIID30361, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30361,tableRecordImpl.getFullName()));
         }
         return tableRecordImpl.isUpdatePlanEnabled()?tableRecordImpl.getUpdatePlan():null;
     }
@@ -515,7 +515,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
-            throw new QueryMetadataException(QueryPlugin.Util.getString("TransformationMetadata.DeletePlan_could_not_be_found_for_physical_group__12")+tableRecordImpl.getFullName()); //$NON-NLS-1$
+             throw new QueryMetadataException(QueryPlugin.Event.TEIID30362, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30362,tableRecordImpl.getFullName()));
         }
         return tableRecordImpl.isDeletePlanEnabled()?tableRecordImpl.getDeletePlan():null;
     }
@@ -743,7 +743,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                 mappingDoc = reader.loadDocument(inputStream);
                 mappingDoc.setName(groupName);
             } catch (Exception e){
-                throw new TeiidComponentException(e, QueryPlugin.Util.getString("TransformationMetadata.Error_trying_to_read_virtual_document_{0},_with_body__n{1}_1", groupName, mappingDoc)); //$NON-NLS-1$
+                 throw new TeiidComponentException(QueryPlugin.Event.TEIID30363, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30363, groupName, mappingDoc));
             } finally {
             	try {
 					inputStream.close();
@@ -835,7 +835,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         	}
         	
         	if (schema == null) {
-        		throw new QueryMetadataException(QueryPlugin.Util.getString("TransformationMetadata.Error_trying_to_read_schemas_for_the_document/table____1")+groupName);             //$NON-NLS-1$		
+        		 throw new QueryMetadataException(QueryPlugin.Event.TEIID30364, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30364,groupName));
         	}
         	schemas.add(schema);
         }
@@ -959,7 +959,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		try {
 			return ObjectConverterUtil.convertToByteArray(f.openStream());
 		} catch (IOException e) {
-			throw new TeiidComponentException(e);
+			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30365, e);
 		}
     }
     
@@ -1010,7 +1010,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     		}
 			return ObjectConverterUtil.convertToString(new ByteArrayInputStream(bytes));
 		} catch (IOException e) {
-			throw new TeiidComponentException(e);
+			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30366, e);
 		}
     }
     

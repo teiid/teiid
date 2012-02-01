@@ -41,5 +41,18 @@ public class JDBCPlugin {
 		TEIID11001, // connection details
 		TEIID11002, // connection creation failed
 		TEIID11003, // invalid hint
+		TEIID11004,
+		TEIID11005,
+		TEIID11006,
+		TEIID11008,
+		TEIID11009,
+		TEIID11010,
+		TEIID11011,
+		TEIID11012,
+		TEIID11013,
+		TEIID11014,
+		TEIID11015,
+		TEIID11016,
+		TEIID11017,
 	}
 }

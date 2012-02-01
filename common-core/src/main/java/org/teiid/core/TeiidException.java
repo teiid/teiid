@@ -46,11 +46,21 @@ public class TeiidException extends Exception {
     public TeiidException(String message) {
         super(message);
     }
-
-    public TeiidException(String errorCode, String message) {
+    
+    public TeiidException(BundleUtil.Event code, final String message) {
         super(message);
-        this.code = errorCode;
-    }
+        setCode(code.toString());
+    }  
+    
+    public TeiidException(BundleUtil.Event code, Throwable t, final String message) {
+        super(message, t);
+        setCode(code.toString());
+    }  
+    
+    public TeiidException(BundleUtil.Event code, Throwable t) {
+        super(t);
+        setCode(code.toString());
+    }    
 
     public TeiidException(Throwable e) {
         this(e, e != null? e.getMessage() : null);        
@@ -59,11 +69,6 @@ public class TeiidException extends Exception {
     public TeiidException(Throwable e, String message) {
         super(message, e);
         setCode(getCode(e));
-    }
-    
-    public TeiidException(Throwable e, String errorCode, String message) {
-        super(message, e);
-        this.code = errorCode;
     }
     
     public String getCode() {

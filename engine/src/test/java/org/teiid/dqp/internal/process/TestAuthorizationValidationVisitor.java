@@ -138,7 +138,7 @@ public class TestAuthorizationValidationVisitor {
 
         svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1.sq1")); //$NON-NLS-1$
         svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1.xyz")); //$NON-NLS-1$
-        
+        svc.setAllowCreateTemporaryTables(true);
         return svc;
     }
     

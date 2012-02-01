@@ -502,7 +502,7 @@ public class DQPCore implements DQP {
     RequestWorkItem getRequestWorkItem(RequestID reqID) throws TeiidProcessingException {
     	RequestWorkItem result = this.requests.get(reqID);
     	if (result == null) {
-    		throw new TeiidProcessingException(QueryPlugin.Util.getString("DQPCore.The_request_has_been_closed.", reqID));//$NON-NLS-1$
+    		 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30495, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30495, reqID));
     	}
     	return result;
     }
@@ -662,7 +662,7 @@ public class DQPCore implements DQP {
         try {
 			this.bufferManager.initialize();
 		} catch (TeiidComponentException e) {
-			throw new TeiidRuntimeException(e);
+			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30496, e);
 		}
         
         this.userRequestSourceConcurrency = config.getUserRequestSourceConcurrency();

@@ -24,12 +24,15 @@ package org.teiid.api.exception.query;
 
 import java.util.*;
 
+import org.teiid.core.BundleUtil;
+
 /**
  * This exception represents the case where the query submitted could not resolved
  * when it is checked against the metadata
  */
 public class QueryResolverException extends QueryProcessingException {
 
+	private static final long serialVersionUID = 752912934870580744L;
 	private transient List problems;
 
     /**
@@ -49,16 +52,6 @@ public class QueryResolverException extends QueryProcessingException {
     }
 
     /**
-     * Construct an instance with the message and error code specified.
-     *
-     * @param message A message describing the exception
-     * @param code The error code
-     */
-    public QueryResolverException( String code, String message ) {
-        super( code, message );
-    }
-
-    /**
      * Construct an instance from a message and an exception to chain to this one.
      *
      * @param message A message describing the exception
@@ -68,18 +61,18 @@ public class QueryResolverException extends QueryProcessingException {
         super( e, message );
     }
 
-    /**
-     * Construct an instance from a message and a code and an exception to
-     * chain to this one.
-     *
-     * @param e An exception to nest within this one
-     * @param message A message describing the exception
-     * @param code A code denoting the exception
-     */
-    public QueryResolverException( Throwable e, String code, String message ) {
-        super( e, code, message );
+    public QueryResolverException(BundleUtil.Event event, Throwable e) {
+        super( event, e);
+    }    
+    
+    public QueryResolverException(BundleUtil.Event event, Throwable e, String msg) {
+        super(event, e, msg);
     }
-	
+    
+    public QueryResolverException(BundleUtil.Event event, String msg) {
+        super(event, msg);
+    }	
+    
 	/**
 	 * Set the list of unresolved symbols during QueryResolution
 	 * @param unresolvedSymbols List of <UnresolvedSymbolDescription> objects
@@ -106,7 +99,4 @@ public class QueryResolverException extends QueryProcessingException {
 	public List getUnresolvedSymbols() {
 		return this.problems;
 	}
-	
-	
-
 }

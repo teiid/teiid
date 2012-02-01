@@ -248,7 +248,7 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
     	        p = Pattern.compile(newPattern, Pattern.DOTALL);
     	        patternCache.put(key, p);
     		} catch(PatternSyntaxException e) {
-                throw new ExpressionEvaluationException(e, "ERR.015.006.0014", QueryPlugin.Util.getString("ERR.015.006.0014", new Object[]{originalPattern, e.getMessage()})); //$NON-NLS-1$ //$NON-NLS-2$
+                 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30448, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30448, new Object[]{originalPattern, e.getMessage()}));
     		}
         }
         return p;
@@ -327,7 +327,7 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 		                }
 	            	} else {
 		                if (escaped) {
-		                    throw new ExpressionEvaluationException(QueryPlugin.Util.getString("MatchCriteria.invalid_escape", new Object[] {pattern, new Character(escape)})); //$NON-NLS-1$
+		                     throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30449, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30449, new Object[] {pattern, new Character(escape)}));
 		                }
 		                appendCharacter(newPattern, character);
 	            	}
@@ -335,7 +335,7 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	        }
 	        
 	        if (escaped) {
-	            throw new ExpressionEvaluationException(QueryPlugin.Util.getString("MatchCriteria.invalid_escape", new Object[] {pattern, new Character(escape)})); //$NON-NLS-1$	
+	             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30450, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30450, new Object[] {pattern, new Character(escape)}));
 	        }
 	        
 	        if (!endsWithMatchAny) {

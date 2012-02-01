@@ -87,7 +87,7 @@ public class QueryUtil {
                 query = QueryParser.getQueryParser().parseCommand(queryNode.getQuery());
                 QueryResolver.resolveWithBindingMetadata(query, env.getGlobalMetadata().getDesignTimeMetadata(), queryNode, true);
             } catch (TeiidException e) {
-                throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0054", new Object[]{groupName, queryNode.getQuery()})); //$NON-NLS-1$
+                 throw new QueryPlannerException(QueryPlugin.Event.TEIID30281, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30281, new Object[]{groupName, queryNode.getQuery()}));
 			}
         } 
         return query;
@@ -106,7 +106,7 @@ public class QueryUtil {
         try {
             return QueryRewriter.rewrite(query, metadata, context);
         } catch(TeiidProcessingException e) {
-            throw new QueryPlannerException(e, e.getMessage());
+             throw new QueryPlannerException(QueryPlugin.Event.TEIID30282, e, e.getMessage());
         }
     }
 
@@ -129,7 +129,7 @@ public class QueryUtil {
             ResolverUtil.resolveGroup(gs, metadata);
             queryNode = metadata.getVirtualPlan(gs.getMetadataID());
         } catch (QueryResolverException e) {
-            throw new QueryPlannerException(e, "ERR.015.004.0029", QueryPlugin.Util.getString("ERR.015.004.0029", groupName)); //$NON-NLS-1$ //$NON-NLS-2$
+             throw new QueryPlannerException(QueryPlugin.Event.TEIID30283, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30283, groupName));
         }
         return queryNode;
     }    
@@ -157,7 +157,7 @@ public class QueryUtil {
             ResolverUtil.resolveGroup(group, metadata);
             return group;
         } catch (QueryResolverException e) {
-            throw new TeiidComponentException(e);
+             throw new TeiidComponentException(QueryPlugin.Event.TEIID30284, e);
         }
     }
         

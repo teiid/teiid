@@ -45,10 +45,10 @@ public class StringToTimeTransform extends Transform {
 		try {
 			result = Time.valueOf((String)value);
 		} catch(Exception e) {
-			throw new TransformationException(e, "ERR.003.029.0025", CorePlugin.Util.getString("ERR.003.029.0025", value)); //$NON-NLS-1$ //$NON-NLS-2$
+			  throw new TransformationException(CorePlugin.Event.TEIID10068, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10068, value));
 		}
 		if (!result.toString().equals(value)) {
-			throw new TransformationException(CorePlugin.Util.getString("transform.invalid_string_for_date", value, getTargetType().getSimpleName())); //$NON-NLS-1$
+			  throw new TransformationException(CorePlugin.Event.TEIID10069, CorePlugin.Util.gs(CorePlugin.Event.TEIID10069, value, getTargetType().getSimpleName()));
 		}
 		return result;
 	}

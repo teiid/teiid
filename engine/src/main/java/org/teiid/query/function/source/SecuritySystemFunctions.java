@@ -24,6 +24,7 @@ package org.teiid.query.function.source;
 
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.SecurityFunctionEvaluator;
 import org.teiid.query.util.CommandContext;
 
@@ -41,7 +42,7 @@ public class SecuritySystemFunctions {
         try {
             return eval.hasRole(SecurityFunctionEvaluator.DATA_ROLE, roleName);
         } catch (TeiidComponentException err) {
-            throw new FunctionExecutionException(err, err.getMessage());
+             throw new FunctionExecutionException(QueryPlugin.Event.TEIID30435, err, err.getMessage());
         }
     }
 	
@@ -56,7 +57,7 @@ public class SecuritySystemFunctions {
         try {
             return eval.hasRole(roleType, roleName);
         } catch (TeiidComponentException err) {
-            throw new FunctionExecutionException(err, err.getMessage());
+             throw new FunctionExecutionException(QueryPlugin.Event.TEIID30436, err, err.getMessage());
         }
     }
     

@@ -204,7 +204,7 @@ public class FileStorageManager implements StorageManager {
      */
     public void initialize() throws TeiidComponentException {
         if(this.directory == null) {
-        	throw new TeiidComponentException(QueryPlugin.Util.getString("FileStoreageManager.no_directory")); //$NON-NLS-1$
+        	 throw new TeiidComponentException(QueryPlugin.Event.TEIID30040, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30040));
         }
 
         dirFile = new File(this.directory);
@@ -218,10 +218,10 @@ public class FileStorageManager implements StorageManager {
     private static void makeDir(File file) throws TeiidComponentException {
     	if(file.exists()) {
             if(! file.isDirectory()) {
-            	throw new TeiidComponentException(QueryPlugin.Util.getString("FileStoreageManager.not_a_directory", file.getAbsoluteFile())); //$NON-NLS-1$
+            	 throw new TeiidComponentException(QueryPlugin.Event.TEIID30041, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30041, file.getAbsoluteFile()));
             }
         } else if(! file.mkdirs()) {
-        	throw new TeiidComponentException(QueryPlugin.Util.getString("FileStoreageManager.error_creating", file.getAbsoluteFile())); //$NON-NLS-1$
+        	 throw new TeiidComponentException(QueryPlugin.Event.TEIID30042, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30042, file.getAbsoluteFile()));
         }
     }
     

@@ -22,6 +22,7 @@
 
 package org.teiid.client.security;
 
+import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidProcessingException;
 
 public class TeiidSecurityException extends TeiidProcessingException {
@@ -41,8 +42,8 @@ public class TeiidSecurityException extends TeiidProcessingException {
      * @param message The error message
      * @param code    The error code 
      */
-    public TeiidSecurityException( Throwable e, String code, String message ) {
-        super( e, code, message );
+    public TeiidSecurityException(BundleUtil.Event code, Throwable t, String message ) {
+        super(code, t, message);
     }
     /**
      * Construct an instance with an error code and message specified.
@@ -50,7 +51,7 @@ public class TeiidSecurityException extends TeiidProcessingException {
      * @param message The error message
      * @param code    The error code 
      */
-    public TeiidSecurityException( String code, String message ) {
+    public TeiidSecurityException(BundleUtil.Event code, String message ) {
         super( code, message );
     }
     /**

@@ -35,6 +35,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Transform;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
@@ -301,7 +302,7 @@ public class FunctionLibrary {
         }
         
         if (ambiguous || result == null) {
-            throw new InvalidFunctionException();
+             throw new InvalidFunctionException(QueryPlugin.Event.TEIID30418);
         }
         
 		return getConverts(result, types);
@@ -333,7 +334,7 @@ public class FunctionLibrary {
         Transform result = DataTypeManager.getTransform(sourceType, targetType);
         //Else see if an implicit conversion is possible.
         if(result == null){
-            throw new InvalidFunctionException();
+             throw new InvalidFunctionException(QueryPlugin.Event.TEIID30419);
         }
         return result;
 	}

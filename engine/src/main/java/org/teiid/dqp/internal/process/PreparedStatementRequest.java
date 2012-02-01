@@ -187,7 +187,7 @@ public class PreparedStatementRequest extends Request {
 			TeiidComponentException, QueryResolverException, QueryPlannerException, QueryValidatorException {
 		List<List<?>> paramValues = (List<List<?>>) requestMsg.getParameterValues();
 		if (paramValues.isEmpty()) {
-			throw new QueryValidatorException("No batch values sent for prepared batch update"); //$NON-NLS-1$
+			 throw new QueryValidatorException(QueryPlugin.Event.TEIID30555, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30555));
 		}
 		boolean supportPreparedBatchUpdate = false;
 		Command command = null;
@@ -261,7 +261,7 @@ public class PreparedStatementRequest extends Request {
 	    //the size of the values must be the same as that of the parameters
 	    if (params.size() != values.size()) {
 	        String msg = QueryPlugin.Util.getString("QueryUtil.wrong_number_of_values", new Object[] {new Integer(values.size()), new Integer(params.size())}); //$NON-NLS-1$
-	        throw new QueryResolverException(msg);
+	         throw new QueryResolverException(QueryPlugin.Event.TEIID30556, msg);
 	    }
 	
 	    //the type must be the same, or the type of the value can be implicitly converted
@@ -277,10 +277,10 @@ public class PreparedStatementRequest extends Request {
                     value = Evaluator.evaluate(expr);
 				} catch (ExpressionEvaluationException e) {
                     String msg = QueryPlugin.Util.getString("QueryUtil.Error_executing_conversion_function_to_convert_value", new Integer(i + 1), value, DataTypeManager.getDataTypeName(param.getType())); //$NON-NLS-1$
-                    throw new QueryResolverException(msg);
+                    throw new QueryResolverException(QueryPlugin.Event.TEIID30557, msg);
 				} catch (QueryResolverException e) {
 					String msg = QueryPlugin.Util.getString("QueryUtil.Error_executing_conversion_function_to_convert_value", new Integer(i + 1), value, DataTypeManager.getDataTypeName(param.getType())); //$NON-NLS-1$
-                    throw new QueryResolverException(msg);
+                    throw new QueryResolverException(QueryPlugin.Event.TEIID30558, msg);
 				}
 	        }
 	        	        

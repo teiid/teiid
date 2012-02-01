@@ -118,12 +118,12 @@ public class SimpleQueryResolver implements CommandResolver {
             QueryResolver.resolveCommand(queryExpression, metadata.getMetadata(), false);
 
             if (!discoveredGroups.add(obj.getGroupSymbol())) {
-            	throw new QueryResolverException(QueryPlugin.Util.getString("SimpleQueryResolver.duplicate_with", obj.getGroupSymbol())); //$NON-NLS-1$
+            	 throw new QueryResolverException(QueryPlugin.Event.TEIID30101, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30101, obj.getGroupSymbol()));
             }
             List<? extends Expression> projectedSymbols = obj.getCommand().getProjectedSymbols();
             if (obj.getColumns() != null && !obj.getColumns().isEmpty()) {
             	if (obj.getColumns().size() != projectedSymbols.size()) {
-            		throw new QueryResolverException(QueryPlugin.Util.getString("SimpleQueryResolver.mismatched_with_columns", obj.getGroupSymbol())); //$NON-NLS-1$
+            		 throw new QueryResolverException(QueryPlugin.Event.TEIID30102, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30102, obj.getGroupSymbol()));
             	}
             	Iterator<ElementSymbol> iter = obj.getColumns().iterator();
             	for (Expression singleElementSymbol : projectedSymbols) {
@@ -190,7 +190,7 @@ public class SimpleQueryResolver implements CommandResolver {
             try {
 				visitor.throwException(false);
 			} catch (TeiidException e) {
-				throw new TeiidRuntimeException(e);
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30103, e);
 			}
         }
                 
@@ -210,7 +210,7 @@ public class SimpleQueryResolver implements CommandResolver {
             try {
                 ResolverUtil.resolveGroup(obj, metadata);
             } catch (TeiidException err) {
-                throw new TeiidRuntimeException(err);
+                 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30104, err);
             }
         }
                         
@@ -223,7 +223,7 @@ public class SimpleQueryResolver implements CommandResolver {
             try {
                 QueryResolver.resolveCommand(command, metadata.getMetadata(), false);
             } catch (TeiidException err) {
-                throw new TeiidRuntimeException(err);
+                 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30105, err);
             }
         }
         
@@ -240,7 +240,7 @@ public class SimpleQueryResolver implements CommandResolver {
                 }
                 obj.setElementSymbols(elementSymbols);
             } catch (TeiidException err) {
-                throw new TeiidRuntimeException(err);
+                 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30106, err);
             } 
         }
 
@@ -288,7 +288,7 @@ public class SimpleQueryResolver implements CommandResolver {
         	try {
 				obj.setFile(ResolverUtil.convertExpression(obj.getFile(), DataTypeManager.DefaultDataTypes.CLOB, metadata));
 			} catch (QueryResolverException e) {
-				throw new TeiidRuntimeException(e);
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30107, e);
 			}
 			postTableFunctionReference(obj, saved);
             //set to fixed width if any column has width specified
@@ -324,7 +324,7 @@ public class SimpleQueryResolver implements CommandResolver {
 					column.setDefaultExpression(ex);
 				}
 			} catch (TeiidException e) {
-				throw new TeiidRuntimeException(e);
+				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30108, e);
 			}
         }
         
@@ -357,7 +357,7 @@ public class SimpleQueryResolver implements CommandResolver {
             try {
                 ResolverUtil.addTempGroup(metadata, obj.getGroupSymbol(), obj.getProjectedSymbols(), false);
             } catch (QueryResolverException err) {
-                throw new TeiidRuntimeException(err);
+                 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30109, err);
             }
             obj.getGroupSymbol().setMetadataID(metadata.getMetadataStore().getTempGroupID(obj.getGroupSymbol().getName()));
             //now resolve the projected symbols
@@ -367,7 +367,7 @@ public class SimpleQueryResolver implements CommandResolver {
                 try {
 					ResolverVisitor.resolveLanguageObject(symbol, groups, null, metadata);
 				} catch (TeiidException e) {
-					throw new TeiidRuntimeException(e);
+					 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30110, e);
 				}				
 			}
         }
@@ -383,7 +383,7 @@ public class SimpleQueryResolver implements CommandResolver {
             try {
                 ResolverUtil.addTempGroup(metadata, obj.getGroupSymbol(), obj.getCommand().getProjectedSymbols(), false);
             } catch (QueryResolverException err) {
-                throw new TeiidRuntimeException(err);
+                 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30111, err);
             }
             obj.getGroupSymbol().setMetadataID(metadata.getMetadataStore().getTempGroupID(obj.getGroupSymbol().getName())); 
         }
@@ -393,14 +393,14 @@ public class SimpleQueryResolver implements CommandResolver {
             visitNode(group);
             try {
 	            if (!group.isProcedure() && metadata.isXMLGroup(group.getMetadataID())) {
-	                throw new QueryResolverException("ERR.015.008.0003", QueryPlugin.Util.getString("ERR.015.008.0003")); //$NON-NLS-1$ //$NON-NLS-2$
+	                 throw new QueryResolverException(QueryPlugin.Event.TEIID30112, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30112));
 	            }
 	            discoveredGroup(group);
 	            if (group.isProcedure()) {
 	                createProcRelational(obj);
 	            }
             } catch(TeiidException e) {
-                throw new TeiidRuntimeException(e);                        
+                 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30113, e);
 			}
         }
         
@@ -468,7 +468,7 @@ public class SimpleQueryResolver implements CommandResolver {
 			
 			for (Expression ses : projectedSymbols) {
 			    if (!foundNames.add(Symbol.getShortName(ses))) {
-			        throw new QueryResolverException(QueryPlugin.Util.getString("SimpleQueryResolver.Proc_Relational_Name_conflict", fullName)); //$NON-NLS-1$                            
+			         throw new QueryResolverException(QueryPlugin.Event.TEIID30114, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30114, fullName));
 			    }
 			}
 			
@@ -524,9 +524,9 @@ public class SimpleQueryResolver implements CommandResolver {
 			for (GroupSymbol group : discoveredGroups) {
 				if (!this.currentGroups.add(group)) {
 	                String msg = QueryPlugin.Util.getString("ERR.015.008.0046", group.getName()); //$NON-NLS-1$
-	                QueryResolverException qre = new QueryResolverException("ERR.015.008.0046", msg); //$NON-NLS-1$
+	                QueryResolverException qre = new QueryResolverException(msg);
 	                qre.addUnresolvedSymbol(new UnresolvedSymbolDescription(group.toString(), msg));
-	                throw new TeiidRuntimeException(qre);
+	                 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30115, qre);
 	            }
 			}
             discoveredGroups.clear();

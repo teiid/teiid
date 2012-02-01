@@ -22,6 +22,8 @@
 
 package org.teiid.adminapi;
 
+import org.teiid.core.BundleUtil;
+
 
 /**
  * An <code>AdminProcessingException</code> indicates that an error occured during processing as a result
@@ -63,7 +65,7 @@ public final class AdminProcessingException extends AdminException {
      * @param msg the error message.
      * @since 4.3
      */
-    public AdminProcessingException(String code, String msg) {
+    public AdminProcessingException(BundleUtil.Event code, String msg) {
         super(code, msg);
     }
     
@@ -71,8 +73,11 @@ public final class AdminProcessingException extends AdminException {
         super(msg, cause);
     }
 
-    public AdminProcessingException(String code, String msg, Throwable cause) {
-        super(code, msg, cause);
+    public AdminProcessingException(BundleUtil.Event code, Throwable cause, String msg) {
+    	super(code, cause, msg);
     }
 
+    public AdminProcessingException(BundleUtil.Event code, Throwable cause) {
+    	super(code, cause);
+    }
 }

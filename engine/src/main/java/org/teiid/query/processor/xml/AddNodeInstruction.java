@@ -147,7 +147,7 @@ public class AddNodeInstruction extends ProcessorInstruction {
             String elem = (isElement ? QueryPlugin.Util.getString("AddNodeInstruction.element__1" ) : QueryPlugin.Util.getString("AddNodeInstruction.attribute__2")); //$NON-NLS-1$ //$NON-NLS-2$
             Object[] params = new Object[]{elem, this.descriptor.getQName(), this.descriptor.getNamespaceURI(), this.descriptor.getNamespaceURIs()};
             String msg = QueryPlugin.Util.getString("AddNodeInstruction.Unable_to_add_xml_{0}_{1},_namespace_{2},_namespace_declarations_{3}_3", params); //$NON-NLS-1$
-            throw new TeiidComponentException(msg);
+             throw new TeiidComponentException(QueryPlugin.Event.TEIID30206, msg);
         }
         
         env.incrementCurrentProgramCounter();

@@ -194,7 +194,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
         } else if (type == Command.TYPE_DELETE) {
             return ((Delete)command).getGroup();
         }
-        throw new TeiidRuntimeException(QueryPlugin.Util.getString("BatchedUpdatePlanner.unrecognized_command", command)); //$NON-NLS-1$
+         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30244, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30244, command));
     }
     
     /**

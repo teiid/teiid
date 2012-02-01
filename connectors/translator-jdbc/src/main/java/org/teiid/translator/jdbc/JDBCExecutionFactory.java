@@ -235,7 +235,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 		try {
 	    	return ds.getConnection();
 		} catch (SQLException e) {
-			throw new TranslatorException(e);
+			 throw new TranslatorException(JDBCPlugin.Event.TEIID11009, e);
 		}
     }
     
@@ -258,7 +258,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getImportProperties(), "importer"); //$NON-NLS-1$
 			metadataProcessor.getConnectorMetadata(conn, metadataFactory);
 		} catch (SQLException e) {
-			throw new TranslatorException(e);
+			 throw new TranslatorException(JDBCPlugin.Event.TEIID11010, e);
 		}
 	}
 

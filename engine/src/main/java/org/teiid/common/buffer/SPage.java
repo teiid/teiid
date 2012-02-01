@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.teiid.client.ResizingArrayList;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.query.QueryPlugin;
 
 /**
  * A linked list Page entry in the tree
@@ -124,7 +125,7 @@ class SPage implements Cloneable {
 			}
 			return clone;
 		} catch (CloneNotSupportedException e) {
-			throw new TeiidRuntimeException(e);
+			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30038, e);
 		}
 	}
 	

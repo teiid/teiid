@@ -24,6 +24,7 @@ package org.teiid.deployers;
 import java.util.ArrayList;
 
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.runtime.RuntimePlugin;
 
 
 /**
@@ -56,7 +57,7 @@ public class ExtendedPropertyMetadata {
 		}
 		
 		if (!encodedData.endsWith("}")) { //$NON-NLS-1$
-			throw new TeiidRuntimeException("The description field = "+encodedData+" does not end with \"}\""); //$NON-NLS-1$ //$NON-NLS-2$
+			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40034, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40034, encodedData));
 		}
 		encodedData = encodedData.substring(1, encodedData.length()-1);
 		

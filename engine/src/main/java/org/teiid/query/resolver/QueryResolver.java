@@ -238,7 +238,7 @@ public class QueryResolver {
                 Expression binding = QueryParser.getQueryParser().parseSelectExpression(bindings.next());
                 parsedBindings.add(binding);
             } catch (QueryParserException err) {
-                throw new TeiidComponentException(err);
+                 throw new TeiidComponentException(QueryPlugin.Event.TEIID30063, err);
             }
         }
         return parsedBindings;
@@ -276,7 +276,7 @@ public class QueryResolver {
             // Resolve this command
             resolver.resolveCommand(currentCommand, resolverMetadata, resolveNullLiterals);            
         } catch(QueryMetadataException e) {
-            throw new QueryResolverException(e, e.getMessage());
+             throw new QueryResolverException(QueryPlugin.Event.TEIID30064, e, e.getMessage());
         }
 
         // Flag that this command has been resolved.
@@ -429,7 +429,7 @@ public class QueryResolver {
                 try {
                 	result = QueryParser.getQueryParser().parseCommand(qnode.getQuery());
                 } catch(QueryParserException e) {
-                    throw new QueryResolverException(e, "ERR.015.008.0011", QueryPlugin.Util.getString("ERR.015.008.0011", virtualGroup)); //$NON-NLS-1$ //$NON-NLS-2$
+                     throw new QueryResolverException(QueryPlugin.Event.TEIID30065, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30065, virtualGroup));
                 }
                 
                 bindings = qnode.getBindings();
@@ -475,7 +475,7 @@ public class QueryResolver {
 			List<Expression> projectedSymbols)
 			throws QueryValidatorException {
 		if (symbols.size() != projectedSymbols.size()) {
-			throw new QueryValidatorException(QueryPlugin.Util.getString("QueryResolver.wrong_view_symbols", virtualGroup, symbols.size(), projectedSymbols.size())); //$NON-NLS-1$
+			 throw new QueryValidatorException(QueryPlugin.Event.TEIID30066, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30066, virtualGroup, symbols.size(), projectedSymbols.size()));
 		}
 		for (int i = 0; i < projectedSymbols.size(); i++) {
 			Expression projectedSymbol = projectedSymbols.get(i);

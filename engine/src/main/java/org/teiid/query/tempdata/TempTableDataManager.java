@@ -187,7 +187,7 @@ public class TempTableDataManager implements ProcessorDataManager {
     		Create create = (Create)command;
     		String tempTableName = create.getTable().getName();
     		if (contextStore.hasTempTable(tempTableName)) {
-                throw new QueryProcessingException(QueryPlugin.Util.getString("TempTableStore.table_exist_error", tempTableName));//$NON-NLS-1$
+                 throw new QueryProcessingException(QueryPlugin.Event.TEIID30229, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30229, tempTableName));
             }
     		contextStore.addTempTable(tempTableName, create, bufferManager, true, context);
             return CollectionTupleSource.createUpdateCountTupleSource(0);	
@@ -286,11 +286,11 @@ public class TempTableDataManager implements ProcessorDataManager {
 			Object pk = metadata.getPrimaryKey(groupID);
 			String matViewName = metadata.getFullName(groupID);
 			if (pk == null) {
-				throw new QueryProcessingException(QueryPlugin.Util.getString("TempTableDataManager.row_refresh_pk", matViewName)); //$NON-NLS-1$
+				 throw new QueryProcessingException(QueryPlugin.Event.TEIID30230, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30230, matViewName));
 			}
 			List<?> ids = metadata.getElementIDsInKey(pk);
 			if (ids.size() > 1) {
-				throw new QueryProcessingException(QueryPlugin.Util.getString("TempTableDataManager.row_refresh_composite", matViewName)); //$NON-NLS-1$
+				 throw new QueryProcessingException(QueryPlugin.Event.TEIID30231, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30231, matViewName));
 			}
 			String matTableName = RelationalPlanner.MAT_PREFIX+matViewName.toUpperCase();
 			MatTableInfo info = globalStore.getMatTableInfo(matTableName);
@@ -299,7 +299,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			}
 			TempTable tempTable = globalStore.getTempTableStore().getTempTable(matTableName);
 			if (!tempTable.isUpdatable()) {
-				throw new QueryProcessingException(QueryPlugin.Util.getString("TempTableDataManager.row_refresh_updatable", matViewName)); //$NON-NLS-1$
+				 throw new QueryProcessingException(QueryPlugin.Event.TEIID30232, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30232, matViewName));
 			}
 			Constant key = (Constant)proc.getParameter(2).getExpression();
 			LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30012, matViewName, key));
@@ -334,11 +334,11 @@ public class TempTableDataManager implements ProcessorDataManager {
 		try {
 			Object groupID = metadata.getGroupID(viewName);
 			if (!metadata.hasMaterialization(groupID) || metadata.getMaterialization(groupID) != null) {
-				throw new QueryProcessingException(QueryPlugin.Util.getString("TempTableDataManager.not_implicit_matview", viewName)); //$NON-NLS-1$
+				 throw new QueryProcessingException(QueryPlugin.Event.TEIID30233, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30233, viewName));
 			}
 			return groupID;
 		} catch (QueryMetadataException e) {
-			throw new TeiidProcessingException(e);
+			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30234, e);
 		}
 	}
 
@@ -391,7 +391,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 					try {
 						info.wait(30000);
 					} catch (InterruptedException e) {
-						throw new TeiidComponentException(e);
+						 throw new TeiidComponentException(QueryPlugin.Event.TEIID30235, e);
 					}
 				}
 			}

@@ -126,7 +126,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
             }
             succeeded = true;
         } catch (SQLException e) {
-        	throw new JDBCExecutionException(e, tCommand);
+        	 throw new JDBCExecutionException(JDBCPlugin.Event.TEIID11011, e, tCommand);
         } finally {
             if (commitType) {
                 restoreAutoCommit(!succeeded, null);
@@ -147,7 +147,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
             }
             commands.clear();
         } catch (SQLException err) {
-            throw new JDBCExecutionException(err, commands.toArray(new TranslatedCommand[commands.size()]));
+             throw new JDBCExecutionException(JDBCPlugin.Event.TEIID11012, err, commands.toArray(new TranslatedCommand[commands.size()]));
         }
     }
 
@@ -210,7 +210,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
             } 
             return new int[] {updateCount};
         } catch (SQLException err) {
-        	throw new JDBCExecutionException(err, translatedComm);
+        	 throw new JDBCExecutionException(JDBCPlugin.Event.TEIID11013, err, translatedComm);
         } finally {
         	if (commitType) {
                 restoreAutoCommit(!succeeded, translatedComm);
@@ -227,7 +227,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
     	try {
             return connection.getAutoCommit();
         } catch (SQLException err) {
-        	throw new JDBCExecutionException(err, tCommand);
+        	 throw new JDBCExecutionException(JDBCPlugin.Event.TEIID11014, err, tCommand);
         }
     }
 
@@ -245,13 +245,13 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
                 connection.rollback();
             }
         } catch (SQLException err) {
-        	throw new JDBCExecutionException(err, tCommand);
+        	 throw new JDBCExecutionException(JDBCPlugin.Event.TEIID11015, err, tCommand);
         } finally {
         	try {
         		connection.commit(); // in JbossAs setAutocommit = true does not trigger the commit.
         		connection.setAutoCommit(true);
         	} catch (SQLException err) {
-            	throw new JDBCExecutionException(err, tCommand);
+            	 throw new JDBCExecutionException(JDBCPlugin.Event.TEIID11016, err, tCommand);
             }
         }
     }

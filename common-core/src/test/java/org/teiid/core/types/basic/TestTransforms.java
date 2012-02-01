@@ -22,7 +22,10 @@
 
 package org.teiid.core.types.basic;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -33,14 +36,13 @@ import java.sql.Timestamp;
 import org.junit.Test;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
+import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.TestDataTypeManager;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.XMLType;
-import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
-import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
-import org.teiid.core.types.basic.StringToSQLXMLTransform;
 import org.teiid.query.unittest.TimestampUtil;
 
 
@@ -203,7 +205,7 @@ public class TestTransforms {
             transform.transform("1"); //$NON-NLS-1$
             fail("expected exception"); //$NON-NLS-1$
         } catch (TransformationException e) {
-            assertEquals("Error Code:ERR.003.029.0025 Message:Invalid conversion from type class java.lang.Object with value '1' to type class java.sql.Time", e.getMessage()); //$NON-NLS-1$
+            assertEquals("Error Code:TEIID10076 Message:TEIID10076 Invalid conversion from type class java.lang.Object with value '1' to type class java.sql.Time", e.getMessage()); //$NON-NLS-1$
         }
     }
     
@@ -225,7 +227,7 @@ public class TestTransforms {
     }
     
     @Test public void testStringToTimestampOutOfRange() throws Exception {
-    	helpTransformException("2005-13-01 11:13:01", DefaultDataClasses.TIMESTAMP, "The string representation '2005-13-01 11:13:01' of a Timestamp value is not valid."); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTransformException("2005-13-01 11:13:01", DefaultDataClasses.TIMESTAMP, "Error Code:TEIID10060 Message:TEIID10060 The string representation '2005-13-01 11:13:01' of a Timestamp value is not valid."); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testStringToTimeTimestampWithWS() throws Exception {
@@ -241,11 +243,11 @@ public class TestTransforms {
     }
     
     @Test public void testRangeCheck() throws Exception {
-    	helpTransformException(300, DataTypeManager.DefaultDataClasses.BYTE, "The Integer value '300' is outside the of range for Byte"); //$NON-NLS-1$
+    	helpTransformException(300, DataTypeManager.DefaultDataClasses.BYTE, "Error Code:TEIID10058 Message:TEIID10058 The Integer value '300' is outside the of range for Byte"); //$NON-NLS-1$
     }
     
     @Test public void testRangeCheck1() throws Exception {
-    	helpTransformException(new Double("1E11"), DataTypeManager.DefaultDataClasses.INTEGER, "The Double value '100,000,000,000' is outside the of range for Integer"); //$NON-NLS-1$ //$NON-NLS-2$  
+    	helpTransformException(new Double("1E11"), DataTypeManager.DefaultDataClasses.INTEGER, "Error Code:TEIID10058 Message:TEIID10058 The Double value '100,000,000,000' is outside the of range for Integer"); //$NON-NLS-1$ //$NON-NLS-2$  
     }
 
 

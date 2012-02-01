@@ -63,12 +63,12 @@ public class VDBRepository implements Serializable{
 	
 	public void addVDB(VDBMetaData vdb, MetadataStoreGroup stores, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr) throws VirtualDatabaseException {
 		if (getVDB(vdb.getName(), vdb.getVersion()) != null) {
-			throw new VirtualDatabaseException(RuntimePlugin.Util.getString("duplicate_vdb", vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
+			 throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40035, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40035, vdb.getName(), vdb.getVersion()));
 		}
 		
 		// get the system VDB metadata store
 		if (this.systemStore == null) {
-			throw new VirtualDatabaseException(RuntimePlugin.Util.getString("system_vdb_load_error")); //$NON-NLS-1$
+			 throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40036, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40036));
 		}	
 		
 		if (this.odbcEnabled && odbcStore == null) {
@@ -281,12 +281,12 @@ public class VDBRepository implements Serializable{
 	public void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException{
 		CompositeVDB source = this.vdbRepo.get(new VDBKey(sourceVDBName, sourceVDBVersion));
 		if (source == null) {
-			throw new AdminProcessingException(RuntimePlugin.Util.getString("vdb_not_found", sourceVDBName, sourceVDBVersion)); //$NON-NLS-1$
+			 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40037, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40037, sourceVDBName, sourceVDBVersion));
 		}
 		
 		CompositeVDB target = this.vdbRepo.get(new VDBKey(targetVDBName, targetVDBVersion));
 		if (target == null) {
-			throw new AdminProcessingException(RuntimePlugin.Util.getString("vdb_not_found", sourceVDBName, sourceVDBVersion)); //$NON-NLS-1$
+			 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40038, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40038, sourceVDBName, sourceVDBVersion));
 		}		
 
 		notifyRemove(targetVDBName, targetVDBVersion, target);

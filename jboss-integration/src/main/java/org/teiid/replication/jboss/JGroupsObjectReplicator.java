@@ -567,7 +567,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 			if (e instanceof Exception) {
 				throw (Exception)e;
 			}
-			throw new TeiidRuntimeException(e);
+			 throw new TeiidRuntimeException(IntegrationPlugin.Event.TEIID50067, e);
 		} finally {
 			if (!success) {
 				channel.close();

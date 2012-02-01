@@ -22,7 +22,19 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -31,6 +43,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -42,10 +55,10 @@ import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.rewriter.QueryRewriter;
@@ -57,8 +70,17 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.SetQuery.Operation;
-import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
+import org.teiid.query.sql.symbol.AliasSymbol;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.ExpressionSymbol;
+import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.SearchedCaseExpression;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
@@ -109,7 +131,7 @@ public class RulePushAggregates implements
                 try {
 					pushGroupNodeOverUnion(metadata, capFinder, groupNode, child, groupingExpressions, setOp, context, analysisRecord);
 				} catch (QueryResolverException e) {
-					throw new TeiidComponentException(e);
+					 throw new TeiidComponentException(QueryPlugin.Event.TEIID30264, e);
 				}
                 continue;
             }
@@ -511,7 +533,7 @@ public class RulePushAggregates implements
         try {
 			group.setMetadataID(ResolverUtil.addTempGroup(tma, group, virtualElements, false));
 		} catch (QueryResolverException e) {
-			throw new TeiidComponentException(e);
+			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30265, e);
 		}
     	List<ElementSymbol> projectedSymbols = ResolverUtil.resolveElementsInGroup(group, metadata);
     	SymbolMap symbolMap = SymbolMap.createSymbolMap(projectedSymbols, 
@@ -698,7 +720,7 @@ public class RulePushAggregates implements
 		try {
 			aggMap = buildAggregateMap(aggregates, metadata, newAggs);
 		} catch (QueryResolverException e) {
-			throw new QueryPlannerException(e, e.getMessage());
+			 throw new QueryPlannerException(QueryPlugin.Event.TEIID30266, e);
 		}
         updateParentAggs(groupNode, context, aggMap, metadata);
         return newAggs;

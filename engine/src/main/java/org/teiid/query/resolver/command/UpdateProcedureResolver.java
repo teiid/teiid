@@ -140,7 +140,7 @@ public class UpdateProcedureResolver implements CommandResolver {
         	            case ParameterInfo.OUT:
         	            case ParameterInfo.RETURN_VALUE:
         	            	if (param.getExpression() != null && !isAssignable(metadata, param)) {
-        	                    throw new QueryResolverException(QueryPlugin.Util.getString("UpdateProcedureResolver.only_variables", param.getExpression())); //$NON-NLS-1$
+        	                     throw new QueryResolverException(QueryPlugin.Event.TEIID30121, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30121, param.getExpression()));
         	            	}
         	            	sp.setCallableStatement(true);
         	            	break;
@@ -203,7 +203,7 @@ public class UpdateProcedureResolver implements CommandResolver {
                 	AssignmentStatement assStmt = (AssignmentStatement)statement;
                     ResolverVisitor.resolveLanguageObject(assStmt.getVariable(), null, externalGroups, metadata);
                     if (!metadata.elementSupports(assStmt.getVariable().getMetadataID(), SupportConstants.Element.UPDATE)) {
-                        throw new QueryResolverException(QueryPlugin.Util.getString("UpdateProcedureResolver.only_variables", assStmt.getVariable())); //$NON-NLS-1$
+                         throw new QueryResolverException(QueryPlugin.Event.TEIID30122, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30122, assStmt.getVariable()));
                     }
                     //don't allow variable assignments to be external
                     assStmt.getVariable().setIsExternalReference(false);
@@ -214,7 +214,7 @@ public class UpdateProcedureResolver implements CommandResolver {
 	                Class<?> varType = exprStmt.getExpectedType();
 	        		Class<?> exprType = exprStmt.getExpression().getType();
 	        		if (exprType == null) {
-	        		    throw new QueryResolverException(QueryPlugin.Util.getString("ResolveVariablesVisitor.datatype_for_the_expression_not_resolvable")); //$NON-NLS-1$
+	        		     throw new QueryResolverException(QueryPlugin.Event.TEIID30123, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30123));
 	        		}
 	        		String varTypeName = DataTypeManager.getDataTypeName(varType);
 	        		exprStmt.setExpression(ResolverUtil.convertExpression(exprStmt.getExpression(), varTypeName, metadata));          
@@ -234,13 +234,13 @@ public class UpdateProcedureResolver implements CommandResolver {
                 String groupName = loopStmt.getCursorName();
 
                 if (metadata.getMetadataStore().getTempGroupID(groupName) != null) {
-                    throw new QueryResolverException(QueryPlugin.Util.getString("ERR.015.012.0065")); //$NON-NLS-1$
+                     throw new QueryResolverException(QueryPlugin.Event.TEIID30124, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30124));
                 }
                 
 	        	//check - cursor name should not start with #
 	        	if(GroupSymbol.isTempGroupName(loopStmt.getCursorName())){
 	        		String errorMsg = QueryPlugin.Util.getString("ResolveVariablesVisitor.reserved_word_for_temporary_used", loopStmt.getCursorName()); //$NON-NLS-1$
-	        		throw new QueryResolverException(errorMsg);
+	        		 throw new QueryResolverException(QueryPlugin.Event.TEIID30125, errorMsg);
 	        	}
                 Command cmd = loopStmt.getCommand();
                 resolveEmbeddedCommand(metadata, externalGroups, cmd);

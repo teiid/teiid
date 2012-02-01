@@ -97,10 +97,10 @@ public class ArrayTableNode extends SubqueryAwareRelationalNode {
 				try {
 					array = ((java.sql.Array)array).getArray();
 				} catch (SQLException e) {
-					throw new TeiidProcessingException(e);
+					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30188, e);
 				}
 			} else {
-				throw new FunctionExecutionException(QueryPlugin.Util.getString("FunctionMethods.not_array_value", array.getClass())); //$NON-NLS-1$
+				 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30189, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30189, array.getClass()));
 			}
 		}
 		
@@ -110,9 +110,9 @@ public class ArrayTableNode extends SubqueryAwareRelationalNode {
 				Object val = Array.get(array, output);
 				tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
 			} catch (TransformationException e) {
-				throw new TeiidProcessingException(e, QueryPlugin.Util.getString("ArrayTableNode.conversion_error", col.getName())); //$NON-NLS-1$
+				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30190, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30190, col.getName()));
 			} catch (ArrayIndexOutOfBoundsException e) {
-				throw new FunctionExecutionException(QueryPlugin.Util.getString("FunctionMethods.array_index", output + 1)); //$NON-NLS-1$
+				 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30191, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30191, output + 1));
 			}
 		}
 		addBatchRow(tuple);

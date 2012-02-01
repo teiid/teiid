@@ -62,7 +62,7 @@ public class MoveDocInstruction extends ProcessorInstruction {
                 try {
                     doc.moveToParent();
                 } catch (SAXException err) {
-                    throw new TeiidComponentException(err, "Failed to move UP in document");  //$NON-NLS-1$
+                     throw new TeiidComponentException(QueryPlugin.Event.TEIID30193, err, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30193));
                 }
                 break;
             case DOWN:

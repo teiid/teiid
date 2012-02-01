@@ -56,7 +56,7 @@ public class Min extends AggregateFunction {
                     minValue = valueComp;
                 }
             } else {
-                throw new FunctionExecutionException("ERR.015.001.0050", QueryPlugin.Util.getString("ERR.015.001.0050", "MIN", value.getClass().getName())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30426, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30426, "MIN", value.getClass().getName())); //$NON-NLS-1$
             }
         }
     }

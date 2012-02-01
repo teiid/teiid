@@ -210,7 +210,7 @@ enum Element {
         		node.get(type, name, DEFAULT).set(this.defaultValue);
         	}
         	else {
-        		throw new TeiidRuntimeException();
+        		 throw new TeiidRuntimeException(IntegrationPlugin.Event.TEIID50045);
         	}
         }        
     }
@@ -234,7 +234,7 @@ enum Element {
     			model.get(getModelName()).set(operation.get(getModelName()).asBoolean());
     		}
     		else {
-    			throw new TeiidRuntimeException();
+    			 throw new TeiidRuntimeException(IntegrationPlugin.Event.TEIID50046);
     		}
     	}
     }

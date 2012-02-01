@@ -71,7 +71,7 @@ public final class RuleValidateWhereAll implements OptimizerRule {
             if(CapabilitiesUtil.requiresCriteria(modelID, metadata, capFinder) 
             		&& hasNoCriteria((Command) node.getProperty(NodeConstants.Info.ATOMIC_REQUEST))) {
                 String modelName = metadata.getFullName(modelID);
-                throw new QueryPlannerException(QueryPlugin.Util.getString("ERR.015.004.0024", modelName)); //$NON-NLS-1$
+                 throw new QueryPlannerException(QueryPlugin.Event.TEIID30268, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30268, modelName));
             }
 		}
 

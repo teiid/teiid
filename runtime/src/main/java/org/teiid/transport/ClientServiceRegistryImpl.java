@@ -81,7 +81,7 @@ public class ClientServiceRegistryImpl implements ClientServiceRegistry {
 	public ClientService getClientService(String iface) throws ComponentNotFoundException {
 		ClientService cs = clientServices.get(iface);
 		if (cs == null) {
-			throw new ComponentNotFoundException(RuntimePlugin.Util.getString("ServerWorkItem.Component_Not_Found", type, iface)); //$NON-NLS-1$
+			 throw new ComponentNotFoundException(RuntimePlugin.Event.TEIID40070, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40070, type, iface));
 		}
 		return cs;
 	}
