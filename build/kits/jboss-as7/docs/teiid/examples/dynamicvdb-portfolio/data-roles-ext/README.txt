@@ -14,7 +14,7 @@ Reference Guide's Data Roles chapter.
 To deploy the VDB, follow same steps as before in the previous example.
 
 To define the new users and their roles to be used with this example,copy both the teiid-security-user.properties, 
-teiid-security-roles.properties into "<jboss-as>/server/<profile>/conf/props" directory. Server restart is required after this 
+teiid-security-roles.properties into "<jboss-as>/modules/org/jboss/teiid/conf" directory. Server restart is required after this 
 operation.
 
 

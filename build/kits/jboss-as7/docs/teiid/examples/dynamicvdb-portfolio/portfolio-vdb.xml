@@ -27,7 +27,7 @@
             pre-defined translators, or you can create one. ConnectionFactories 
             or DataSources in JBoss AS they are typically defined using "xxx-ds.xml" files. 
         -->
-        <source name="text-connector" translator-name="file" connection-jndi-name="java:marketdata-file"/>
+        <source name="text-connector" translator-name="file" connection-jndi-name="java:/marketdata-file"/>
     </model>
 
     <model name="Accounts">
@@ -41,9 +41,9 @@
         <property name="importer.useFullSchemaName" value="false"/>
            
          <!--
-            This connector is defined to reference the HSQL localDS" 
+            This connector is defined to reference the H2 localDS" 
           -->
-        <source name="hsql-connector" translator-name="hsql" connection-jndi-name="java:DefaultDS"/>
+        <source name="h2-connector" translator-name="h2" connection-jndi-name="java:/accounts-ds"/>
     </model>
 
 </vdb>

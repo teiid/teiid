@@ -1,31 +1,31 @@
 Dynamicvdb-portfolio demonstrates how to federate data from a relational data source with a
-text file-based data source.  This example uses the HSQL database which is referenced as 
-the PortfolioDS data source in the server, but the creation SQL could be adapted to another 
+text file-based data source.  This example uses the H2 database which is referenced as 
+the "accouts-ds" data source in the server, but the creation SQL could be adapted to another 
 database if you choose.
 
 
 Data Source(s) setup:
 
--	Start the server (if not already started)
--	go to the JMX console (http://localhost:8080/jmx-console/) and select:   database=localDB,service=Hypersonic 
-to present bean options.  Now invoke "startDatabaseManager" to bring up HSQL Database Manager.
--	Use the File/Open Script menu option to load the teiid-examples/dynamicvdb-portfolio/customer-schema.sql script and and then click Execute SQL to create the required tables and insert the example data.
+- Edit the contents of "standalone-teiid.xml" file, and add contents of following files to create H2, CSV data sources
 
-
+	(1) portfolio-ds.xml.xml - under "datasources" subsystem element
+	(2) marketdata-file-ds.xml - under "resource-adapter" subsystem
+	
 Teiid Deployment:
 
+Copy the following files to the "<jboss.home>/standalone/deployments" directory
 
-Copy the following files to the <jboss.home>/server/default/deploy directory.
+     (1) portfolio-vdb.xml
+     (2) portfolio-vdb.xml.dodeploy
 
-	(1) portfolio-vdb.xml
-	(2) marketdata-file-ds.xml
-	
+
+make sure the VDB is deloyed in the AS7 console.	
 	
 Query Demonstrations:
 
 ==== Using the simpleclient example ====
 
-1) Change your working directory to teiid-examples/simpleclient
+1) Change your working directory to "<jboss-install>/docs/teiid/examples/simpleclient"
 
 2) Use the simpleclient example run script, using the following format
 
