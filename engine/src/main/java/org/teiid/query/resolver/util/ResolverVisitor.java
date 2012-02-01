@@ -307,7 +307,7 @@ public class ResolverVisitor extends LanguageVisitor {
         try {
             resolveFunction(obj, this.metadata.getFunctionLibrary());
         } catch(QueryResolverException e) {
-        	if ("ERR.015.008.0036".equals(e.getCode()) || "ERR.015.008.0035".equals(e.getCode())) { //$NON-NLS-1$ //$NON-NLS-2$
+        	if (QueryPlugin.Event.TEIID30069.name().equals(e.getCode()) || QueryPlugin.Event.TEIID30067.name().equals(e.getCode())) {
 	        	if (unresolvedFunctions == null) {
 	        		unresolvedFunctions = new LinkedHashMap<Function, QueryResolverException>();
 	        	}
