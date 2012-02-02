@@ -73,11 +73,6 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	}
 	
 	@Override
-	public void start() throws TranslatorException {
-		this.delegate.start();
-	}
-	
-	@Override
 	public boolean areLobsUsableAfterClose() {
 		return delegate.areLobsUsableAfterClose();
 	}
