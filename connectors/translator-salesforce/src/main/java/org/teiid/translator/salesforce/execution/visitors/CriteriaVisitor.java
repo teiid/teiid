@@ -37,6 +37,7 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.salesforce.Constants;
 import org.teiid.translator.salesforce.SalesForcePlugin;
 import org.teiid.translator.salesforce.Util;
 
@@ -365,7 +366,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
 
     protected void loadColumnMetadata( NamedTable group ) throws TranslatorException {
         table = group.getMetadataObject();
-        String supportsQuery = table.getProperties().get("Supports Query"); //$NON-NLS-1$
+        String supportsQuery = table.getProperty(Constants.SUPPORTS_QUERY, true);
         if (!Boolean.valueOf(supportsQuery)) {
             throw new TranslatorException(table.getNameInSource() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported")); //$NON-NLS-1$ //$NON-NLS-2$
         }

@@ -59,6 +59,8 @@ public abstract class AbstractMetadataRecord implements Serializable {
 	
 	private LinkedHashMap<String, String> properties;
 	private String annotation;
+
+	public static final String RELATIONAL_URI = "{http://www.teiid.org/ext/relational/2012}"; //$NON-NLS-1$
 	
 	public String getUUID() {
 		if (uuid == null) {
@@ -133,6 +135,18 @@ public abstract class AbstractMetadataRecord implements Serializable {
     	}
     	return properties;
 	}
+    
+    public String getProperty(String key, boolean checkUnqualified) {
+    	String value = getProperties().get(key);
+    	if (value != null || !checkUnqualified) {
+    		return value;
+    	}
+    	int index = key.indexOf('}');
+    	if (index > 0 && index < key.length() &&  key.charAt(0) == '{') {
+    		key = key.substring(index + 1, key.length());
+    	}
+    	return getProperties().get(key);
+    }
     
     /**
      * The preferred setter for extension properties.

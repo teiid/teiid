@@ -47,18 +47,9 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.index.IEntryResult;
 import org.teiid.core.util.StringUtil;
 import org.teiid.internal.core.index.Index;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnSet;
-import org.teiid.metadata.Datatype;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
-import org.teiid.metadata.VdbConstants;
+import org.teiid.metadata.*;
+import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
 
@@ -500,6 +491,35 @@ public class IndexMetadataFactory {
 		    		if(transformRecord != null) {
 		    			procedureRecord.setQueryPlan(transformRecord.getTransformation());
 		    		}
+		        } else if (procedureRecord.isFunction()) {
+		        	boolean deterministic = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "deterministic", true)); //$NON-NLS-1$
+		        	FunctionParameter outputParam = null;
+		        	List<FunctionParameter> args = new ArrayList<FunctionParameter>(procedureRecord.getParameters().size() - 1);
+		        	boolean valid = true;
+		        	for (ProcedureParameter param : procedureRecord.getParameters()) {
+						FunctionParameter fp = new FunctionParameter();
+						fp.setName(param.getName());
+						fp.setDescription(param.getAnnotation());
+						fp.setType(param.getRuntimeType());
+						switch (param.getType()) {
+						case ReturnValue:
+							if (outputParam != null) {
+								valid = false;
+							}
+							outputParam = fp;
+							break;
+						case In:
+							args.add(fp);
+							break;
+						default:
+							valid = false;
+						}
+					}
+		        	if (valid && outputParam != null) {
+			        	model.addFunction(new FunctionMethod(procedureRecord.getName(), procedureRecord.getAnnotation(), model.getName(), PushDown.MUST_PUSHDOWN, 
+			        			null, null, args.toArray(new FunctionParameter[args.size()]), outputParam, false, deterministic?Determinism.DETERMINISTIC:Determinism.NONDETERMINISTIC));
+			        	continue;
+		        	}
 		        }
 				model.addProcedure(procedureRecord);
 			}

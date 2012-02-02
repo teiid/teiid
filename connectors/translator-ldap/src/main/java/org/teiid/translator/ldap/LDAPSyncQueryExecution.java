@@ -80,7 +80,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -458,15 +457,11 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 
 		// MPW: 3-11-07: Added support for java.lang.Integer conversion.
 		if(TypeFacility.RUNTIME_TYPES.TIMESTAMP.equals(modelAttrClass)) {
-			Map<String, String> p = modelElement.getProperties();
-
-			String timestampFormat = p.get("Format"); //$NON-NLS-1$
-			SimpleDateFormat dateFormat;
+			String timestampFormat = modelElement.getFormat();
 			if(timestampFormat == null) {
 				timestampFormat = LDAPConnectorConstants.ldapTimestampFormat;
-				
 			}
-			dateFormat = new SimpleDateFormat(timestampFormat);
+			SimpleDateFormat dateFormat = new SimpleDateFormat(timestampFormat);
 			try {
 				if(strResult != null) {
 					Date dateResult = dateFormat.parse(strResult);

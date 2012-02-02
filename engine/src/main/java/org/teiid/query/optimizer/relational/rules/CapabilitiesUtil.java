@@ -236,7 +236,7 @@ public class CapabilitiesUtil {
             if (!caps.supportsFunction(function.getFunctionDescriptor().getName())) {
                 return false;
             }
-        } else if (!schema.getFullName().equalsIgnoreCase(metadata.getFullName(modelID))) {
+        } else if (!isSameConnector(modelID, schema, metadata, capFinder)) {
         	return false; //not the right schema
         }
         

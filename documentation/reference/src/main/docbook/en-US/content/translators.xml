@@ -547,15 +547,15 @@
         <section>
         	<title>Native Queries</title>
         	<para>Both physical tables and procedures may optionally have native queries associated with them.  No validation of the native query is performed, it is simply used in a straight-forward manner to generate the source SQL.  
-        	For a physical table setting the teiid:native-query extension metadata to the desired query string will have Teiid execute the native query as an inline view in the source query.  
-        	This feature should only be used against sources that support inline views.  For example on a physical table y with nameInSource=x and teiid:native-query=select c from g, the Teiid source query
+        	For a physical table setting the {http://www.teiid.org/ext/relational/2012}native-query extension metadata to the desired query string will have Teiid execute the native query as an inline view in the source query.  
+        	This feature should only be used against sources that support inline views.  For example on a physical table y with nameInSource="x" and {http://www.teiid.org/ext/relational/2012}native-query="select c from g", the Teiid source query
         	"SELECT c FROM y" would generate the SQL query "SELECT c FROM (select c from g) as x".  Note that the column names in the native query must match the nameInSource of the physical table columns for the resulting SQL
         	to be valid.</para>
-        	<para>For physical procedures you may also set the teiid:native-query extension metadata to a desired query string with the added ability to positionally reference IN parameters.  A parameter reference has the form
+        	<para>For physical procedures you may also set the {http://www.teiid.org/ext/relational/2012}native-query extension metadata to a desired query string with the added ability to positionally reference IN parameters.  A parameter reference has the form
         	$integer, e.g. $1.  Note that 1 based indexing is used and that only IN parameters may be referenced.  Dollar-sign integer is reserved in physical procedure native queries.  To use a $integer directly, it must be escaped with another $, e.g. $$1.
-        	By default bind values will be used for parameter values.  In some situations you may wish to bind values directly into the resulting SQL.  The teiid:non-prepared extension metadata property may be set to false to turn off
+        	By default bind values will be used for parameter values.  In some situations you may wish to bind values directly into the resulting SQL.  The {http://www.teiid.org/ext/relational/2012}non-prepared extension metadata property may be set to false to turn off
         	parameter binding.  Note this option should be used with caution as inbound may allow for SQL injection attacks if not properly validated.  The native query does not need to call a stored procedure.  Any SQL that returns
-        	a result set positionally matching the result set expected by the physical stored procedure metadata will work.  For example on a stored procedure x with teiid:native-query=select c from g where c1 = $1 and c2 = '$$1', the Teiid source query
+        	a result set positionally matching the result set expected by the physical stored procedure metadata will work.  For example on a stored procedure x with {http://www.teiid.org/ext/relational/2012}native-query="select c from g where c1 = $1 and c2 = '$$1'", the Teiid source query
         	"CALL x(?)" would generate the SQL query "select c from g where c1 = ? and c2 = '$1'".  Note that ? in this example will be replaced with the actual value bound to parameter 1.
         	</para>
         </section>

@@ -39,25 +39,13 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.teiid.language.Argument;
-import org.teiid.language.Call;
-import org.teiid.language.Command;
-import org.teiid.language.Comparison;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.Function;
-import org.teiid.language.In;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Like;
-import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
-import org.teiid.language.SearchedCase;
-import org.teiid.language.SetClause;
+import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.visitor.SQLStringVisitor;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Procedure;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TypeFacility;
@@ -68,9 +56,8 @@ import org.teiid.translator.TypeFacility;
  * to produce a SQL String.  This class is expected to be subclassed.
  */
 public class SQLConversionVisitor extends SQLStringVisitor{
-	
-	public static final String TEIID_NATIVE_QUERY = "teiid:native-query"; //$NON-NLS-1$
-	public static final String TEIID_NON_PREPARED = "teiid:non-prepared"; //$NON-NLS-1$
+	public static final String TEIID_NATIVE_QUERY = AbstractMetadataRecord.RELATIONAL_URI + "native-query"; //$NON-NLS-1$
+	public static final String TEIID_NON_PREPARED = AbstractMetadataRecord.RELATIONAL_URI + "non-prepared"; //$NON-NLS-1$
 
     private static DecimalFormat DECIMAL_FORMAT = 
         new DecimalFormat("#############################0.0#############################"); //$NON-NLS-1$    
@@ -193,10 +180,10 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     public void visit(Call obj) {
     	Procedure p = obj.getMetadataObject();
     	if (p != null) {
-	    	String nativeQuery = p.getProperties().get(TEIID_NATIVE_QUERY);
+	    	String nativeQuery = p.getProperty(TEIID_NATIVE_QUERY, false);
 	    	if (nativeQuery != null) {
 	    		List<Object> parts = parseNativeQueryParts(nativeQuery);
-	    		this.prepared = !Boolean.valueOf(p.getProperties().get(TEIID_NON_PREPARED));
+	    		this.prepared = !Boolean.valueOf(p.getProperty(TEIID_NON_PREPARED, false));
 	    		if (this.prepared) {
 	    			this.preparedValues = new ArrayList<Object>();
 	    		}
@@ -425,7 +412,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
 	@Override
 	protected void appendBaseName(NamedTable obj) {
 		if (obj.getMetadataObject() != null) {
-			String nativeQuery = obj.getMetadataObject().getProperties().get(TEIID_NATIVE_QUERY);
+			String nativeQuery = obj.getMetadataObject().getProperty(TEIID_NATIVE_QUERY, false);
 	    	if (nativeQuery != null) {
 	    		buffer.append(Tokens.LPAREN).append(nativeQuery).append(Tokens.RPAREN);
 	    		if (obj.getCorrelationName() == null) {
