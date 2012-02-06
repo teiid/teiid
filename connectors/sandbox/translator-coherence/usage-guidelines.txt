@@ -1,0 +1,60 @@
+Here are the usage guidelines for using the Coherence translator/connector.
+
+--------------
+Features
+-------------
+1.	SQL queries support:  Comprisons (EQ, LT, GT, etc.), Like, In
+
+-------------
+Modeling Guidelines
+-------------
+
+
+1.	JavaBean convention is used.  The column name (or nameinsource if used) are used in finding the get/set method on the cached object.  
+	What does that mean?
+
+    Example:
+    	Object:   Trade
+    	Attribute:   TradeId  (getter/setter:  getTradeId/setTradeId)
+    	
+	   in the Designer, if the column name is not the name of the a attribute, then the nameInSource will have to be set to the Attribute name
+	   			example:  	columnName:		TRADE_ID
+							nameInSource:   TradeId
+								
+	The process of getting the trade id value from the Trade object will take the nameInSource (if not provided, then use column name) and prepend "get".
+	Therefore, the method name:   getTradeId  must exist on the Trade object.
+	
+	
+2.	The Coherence Cache Name will be set on the Coherence Connector, see it for configuration.
+
+
+
+------------
+Limitations
+------------
+
+	-	A Designer modeled table can only be referencing 1 collection in the root object. 
+		If the root object contains multiple collection type objects, then a table will need to be modeled for each collection.    This will allow the 
+		the Teiid engine to perform the join across collections.
+	-	Cannot put criteria on a column that comes from an object that is in a Collection.  This is a coherence limitation out-of-the-box.  This can
+		be implemented to enable this capability.
+		
+		
+---------------------
+TBD:  The following are things to be added:
+---------------------
+
+	a.  Enable the mapping of a column to a property.  Using this syntax structure: property.<propertyName>
+		set the nameInSource to this value.
+			
+	b.	Enable the support for Boolean.   This would use the "is" prefix to the getter method. (note, this has been coded for, but not tested)
+	
+	c.	enable the abiltiy to a criteria for a column from an object in the collection
+	
+	d.	Because all sql criteria has to mapped to Coherence filters, only some have been mapped so far.  There are others that need to be added so that 
+		the following features will be enabled:
+		-	Limit
+		-	Between
+		-	and others 
+		
+		see http://www.exforsys.com/reviews/oracle-coherence.html for information  and examples
