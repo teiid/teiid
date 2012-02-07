@@ -281,11 +281,16 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	    
 	    public Pattern translate(String pattern, char escape) throws ExpressionEvaluationException {
 	        List<?> key = Arrays.asList(pattern, escape);
-	        Pattern result = cache.get(key);
+	        Pattern result = null;
+	        synchronized (cache) {
+	        	result = cache.get(key);
+	        }
 	        if (result == null) {
 		        String newPattern = getPatternString(pattern, escape);
 		        result = getPattern(newPattern, pattern, flags);
-		        cache.put(key, result);
+		        synchronized (cache) {
+			        cache.put(key, result);
+				}
 	        }
 	        return result;
 	    }
