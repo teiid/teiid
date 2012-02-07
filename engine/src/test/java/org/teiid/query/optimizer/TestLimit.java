@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataStore;
@@ -33,6 +35,7 @@ import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.TestOptimizer.DependentProjectNode;
 import org.teiid.query.optimizer.TestOptimizer.DependentSelectNode;
 import org.teiid.query.optimizer.TestOptimizer.DupRemoveNode;
@@ -43,18 +46,7 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestProcessor;
-import org.teiid.query.processor.relational.AccessNode;
-import org.teiid.query.processor.relational.DependentAccessNode;
-import org.teiid.query.processor.relational.GroupingNode;
-import org.teiid.query.processor.relational.LimitNode;
-import org.teiid.query.processor.relational.MergeJoinStrategy;
-import org.teiid.query.processor.relational.NestedLoopJoinStrategy;
-import org.teiid.query.processor.relational.NullNode;
-import org.teiid.query.processor.relational.PlanExecutionNode;
-import org.teiid.query.processor.relational.ProjectNode;
-import org.teiid.query.processor.relational.SelectNode;
-import org.teiid.query.processor.relational.SortNode;
-import org.teiid.query.processor.relational.UnionAllNode;
+import org.teiid.query.processor.relational.*;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
@@ -649,7 +641,7 @@ public class TestLimit {
         TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN, NODE_TYPES);
     }
 
-    @Test public void testInlineView() {
+    @Test public void testInlineView() throws TeiidComponentException, TeiidProcessingException {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         //caps.setCapabilitySupport(SourceCapabilities.QUERY_ORDERBY, true);
@@ -660,10 +652,10 @@ public class TestLimit {
 
         String sql = "SELECT * FROM (SELECT * FROM pm3.g1) as v1 limit 100";//$NON-NLS-1$
         String[] expectedSql = new String[] {
-            "SELECT pm3.g1.e1, pm3.g1.e2, pm3.g1.e3, pm3.g1.e4 FROM pm3.g1 LIMIT 100" //$NON-NLS-1$
+            "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm3.g1 AS g_0 LIMIT 100" //$NON-NLS-1$
             };
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
-                                                    null, capFinder, expectedSql, true);  
+                                                    null, capFinder, expectedSql, ComparisonMode.EXACT_COMMAND_STRING);  
 
         TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN, NODE_TYPES);
     }
@@ -674,10 +666,12 @@ public class TestLimit {
      * down (because they change row order or row count) if there is already a limit node in that plan branch,
      * which can only be placed above LIMIT with an inline view. This test acts as a gatekeeper for avoiding
      * several of those pushdowns.
+     * @throws TeiidProcessingException 
+     * @throws TeiidComponentException 
      * 
      * @since 4.3
      */
-    @Test public void testInlineViewAboveLimitNotMerged() {
+    @Test public void testInlineViewAboveLimitNotMerged() throws TeiidComponentException, TeiidProcessingException {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
@@ -689,10 +683,10 @@ public class TestLimit {
 
         String sql = "SELECT * FROM (SELECT * FROM pm3.g1 limit 100) as v1 order by e1";//$NON-NLS-1$
         String[] expectedSql = new String[] {
-            "SELECT v_0.c_0, v_0.c_1, v_0.c_2, v_0.c_3 FROM (SELECT pm3.g1.e1 AS c_0, pm3.g1.e2 AS c_1, pm3.g1.e3 AS c_2, pm3.g1.e4 AS c_3 FROM pm3.g1 LIMIT 100) AS v_0 ORDER BY c_0" //$NON-NLS-1$
+            "SELECT v_0.c_0, v_0.c_1, v_0.c_2, v_0.c_3 FROM (SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm3.g1 AS g_0 LIMIT 100) AS v_0 ORDER BY c_0" //$NON-NLS-1$
             };
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
-                                                    null, capFinder, expectedSql, true);  
+                                                    null, capFinder, expectedSql, ComparisonMode.EXACT_COMMAND_STRING);  
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
@@ -719,7 +713,7 @@ public class TestLimit {
         TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN, NODE_TYPES);
     }
     
-    @Test public void testInlineViewJoin() {
+    @Test public void testInlineViewJoin() throws TeiidComponentException, TeiidProcessingException {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
@@ -728,10 +722,10 @@ public class TestLimit {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         String sql = "SELECT x FROM ((SELECT e1 as x FROM pm1.g1 LIMIT 700) c INNER JOIN (SELECT e1 FROM pm1.g2) d ON d.e1 = c.x) order by x LIMIT 5";//$NON-NLS-1$
-        String[] expectedSql = new String[] {"SELECT e1 FROM pm1.g1 LIMIT 700", "SELECT e1 FROM pm1.g2"};//$NON-NLS-1$ //$NON-NLS-2$
+        String[] expectedSql = new String[] {"SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 LIMIT 700", "SELECT g_0.e1 FROM pm1.g2 AS g_0"};//$NON-NLS-1$ //$NON-NLS-2$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
-                                      null, capFinder, expectedSql, true);  
+                                      null, capFinder, expectedSql, ComparisonMode.EXACT_COMMAND_STRING);  
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
                                         2,      // Access
