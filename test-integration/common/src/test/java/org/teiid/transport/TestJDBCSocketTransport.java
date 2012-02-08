@@ -109,6 +109,13 @@ public class TestJDBCSocketTransport {
 		assertEquals("<root></root>", s.getResultSet().getString(1));
 	}
 	
+	@Test public void testLobStreaming1() throws Exception {
+		Statement s = conn.createStatement();
+		assertTrue(s.execute("select cast('' as clob) from tables"));
+		s.getResultSet().next();
+		assertEquals("", s.getResultSet().getString(1));
+	}
+	
 	@Test public void testXmlTableScrollable() throws Exception {
 		Statement s = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 		assertTrue(s.execute("select * from xmltable('/root/row' passing (select xmlelement(name \"root\", xmlagg(xmlelement(name \"row\", xmlforest(t.name)) order by t.name)) from tables as t, columns as t1) columns \"Name\" string) as x"));

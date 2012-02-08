@@ -229,7 +229,12 @@ final class DataTypeTransformer {
     		return ((SQLXML)value).getString();
     	} else if (value instanceof Clob) {
     		Clob c = (Clob)value;
-    		return c.getSubString(1, c.length()>Integer.MAX_VALUE?Integer.MAX_VALUE:(int)c.length());
+    		long length = c.length();
+    		if (length == 0) {
+    			//there is a bug in SerialClob with 0 length
+    			return ""; //$NON-NLS-1$ 
+    		}
+    		return c.getSubString(1, length>Integer.MAX_VALUE?Integer.MAX_VALUE:(int)length);
     	}
     	return transform(value, String.class, "String"); //$NON-NLS-1$
     }
