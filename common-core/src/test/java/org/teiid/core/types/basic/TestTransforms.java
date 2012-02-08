@@ -40,7 +40,6 @@ import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
-import org.teiid.core.types.basic.StringToSQLXMLTransform;
 import org.teiid.query.unittest.TimestampUtil;
 
 
@@ -225,7 +224,7 @@ public class TestTransforms {
     }
     
     @Test public void testStringToTimestampOutOfRange() throws Exception {
-    	helpTransformException("2005-13-01 11:13:01", DefaultDataClasses.TIMESTAMP, "The string representation '2005-13-01 11:13:01' of a Timestamp value is not valid."); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTransformException("2005-13-01 11:13:01", DefaultDataClasses.TIMESTAMP, null); //$NON-NLS-1$
     }
     
     @Test public void testStringToTimeTimestampWithWS() throws Exception {
