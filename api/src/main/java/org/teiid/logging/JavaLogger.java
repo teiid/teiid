@@ -22,6 +22,7 @@
 
 package org.teiid.logging;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,23 +31,34 @@ import java.util.logging.Logger;
  */
 public class JavaLogger implements org.teiid.logging.Logger {
 	
+	private ConcurrentHashMap<String, Logger> loggers = new ConcurrentHashMap<String, Logger>();
+	
 	@Override
 	public boolean isEnabled(String context, int msgLevel) {
-		Logger logger = Logger.getLogger(context);
+		Logger logger = getLogger(context);
     	
     	Level javaLevel = convertLevel(msgLevel);
     	return logger.isLoggable(javaLevel);
 	}
 
+	private Logger getLogger(String context) {
+		Logger logger = loggers.get(context);
+		if (logger == null) {
+			logger = Logger.getLogger(context);
+			loggers.put(context, logger);
+		}
+		return logger;
+	}
+
     public void log(int level, String context, Object msg) {
-    	Logger logger = Logger.getLogger(context);
+    	Logger logger = getLogger(context);
     	
     	Level javaLevel = convertLevel(level);
 		logger.log(javaLevel, msg.toString());
     }
     
     public void log(int level, String context, Throwable t, Object msg) {
-    	Logger logger = Logger.getLogger(context);
+    	Logger logger = getLogger(context);
     	
     	Level javaLevel = convertLevel(level);
 		logger.log(javaLevel, msg != null ? msg.toString() : null, t);

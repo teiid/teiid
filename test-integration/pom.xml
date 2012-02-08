@@ -19,6 +19,18 @@
 		<apache.ant.version>1.7.0</apache.ant.version>
 	</properties>
 
+	<profiles>
+		<profile>
+			<!--
+				This profile is activated manually, as in "mvn ... -P release ..."
+			-->
+			<id>perf</id>
+			<modules>
+				<module>perf</module>
+			</modules>
+		</profile>
+	</profiles>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>

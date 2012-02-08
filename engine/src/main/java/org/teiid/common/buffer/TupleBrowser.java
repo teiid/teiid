@@ -24,7 +24,6 @@ package org.teiid.common.buffer;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.teiid.common.buffer.SPage.SearchResult;
@@ -53,6 +52,8 @@ public class TupleBrowser implements TupleSource {
 	private boolean direction;
 	
 	private boolean inPartial;
+	
+	private ArrayList<SearchResult> places = new ArrayList<SearchResult>();
 
 	/**
 	 * Construct a value based browser.  The {@link TupleSource} should already be in the
@@ -98,9 +99,8 @@ public class TupleBrowser implements TupleSource {
 			if (!isPartialKey && lowerBound != null && this.tree.comparator.compare(upperBound, lowerBound) < 0) {
 				valid = false;
 			}
-			LinkedList<SearchResult> places = new LinkedList<SearchResult>();
-			this.tree.find(upperBound, places);
-			SearchResult upper = places.getLast();
+			this.tree.find(upperBound, getPlaces());
+			SearchResult upper = places.get(places.size() - 1);
 			bound = upper.page;
 			boundIndex = upper.index;
 			if (boundIndex < 0) {
@@ -141,10 +141,9 @@ public class TupleBrowser implements TupleSource {
 	}
 
 	private boolean setPage(List<?> lowerBound) throws TeiidComponentException {
-		LinkedList<SearchResult> places = new LinkedList<SearchResult>();
-		this.tree.find(lowerBound, places);
+		this.tree.find(lowerBound, getPlaces());
 		
-		SearchResult sr = places.getLast();
+		SearchResult sr = places.get(places.size() - 1);
 		page = sr.page;
 		index = sr.index;
 		boolean result = true;
@@ -154,6 +153,11 @@ public class TupleBrowser implements TupleSource {
 		}
 		values = sr.values;
 		return result;
+	}
+	
+	private ArrayList<SearchResult> getPlaces() {
+		places.clear();
+		return places;
 	}
 	
 	@Override
@@ -233,6 +237,11 @@ public class TupleBrowser implements TupleSource {
 				page = page.prev;
 			}
 		}
+	}
+	
+	public void reset(TupleSource ts) throws TeiidComponentException {
+		this.valueSet = ts;
+		resetState();
 	}
 
 	private void resetState() throws TeiidComponentException {

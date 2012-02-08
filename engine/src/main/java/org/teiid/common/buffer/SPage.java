@@ -27,9 +27,9 @@ import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.util.Collections;
 import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -132,7 +132,7 @@ class SPage implements Cloneable {
 		return id;
 	}
 	
-	static SearchResult search(SPage page, List k, LinkedList<SearchResult> parent) throws TeiidComponentException {
+	static SearchResult search(SPage page, List k, List<SearchResult> parent) throws TeiidComponentException {
 		List<List<?>> previousValues = null;
 		for (;;) {
 			List<List<?>> values = page.getValues();
@@ -152,8 +152,8 @@ class SPage implements Cloneable {
 							SPage childPage = page;
 							List oldKey = null;
 							List newKey = page.stree.extractKey(values.get(0));
-							for (Iterator<SearchResult> desc = parent.descendingIterator(); desc.hasNext();) {
-								SearchResult sr = desc.next();
+							for (ListIterator<SearchResult> desc = parent.listIterator(); desc.hasPrevious();) {
+								SearchResult sr = desc.previous();
 								int parentIndex = Math.max(0, -sr.index - 2);
 								if (oldKey == null) {
 									oldKey = sr.values.set(parentIndex, newKey); 

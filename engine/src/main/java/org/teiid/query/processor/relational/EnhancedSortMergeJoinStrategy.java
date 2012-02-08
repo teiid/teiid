@@ -38,7 +38,6 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
-import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
@@ -55,6 +54,25 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
  */
 public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 	
+	private final class SingleTupleSource implements TupleSource {
+		boolean returned;
+		List keyTuple;
+
+		@Override
+		public List<?> nextTuple() throws TeiidComponentException,
+				TeiidProcessingException {
+			if (!returned) {
+				returned = true;
+				return keyTuple;
+			}
+			return null;
+		}
+
+		@Override
+		public void closeSource() {
+		}
+	}
+
 	private boolean semiDep;
 	
 	private TupleSource currentSource;
@@ -62,6 +80,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 	private SourceState notSortedSource;
 	private List<?> currentTuple;
 	private TupleBrowser tb;
+	private SingleTupleSource keyTs;
 	private int reserved;
 	private STree index;
 	private int[] reverseIndexes;
@@ -99,6 +118,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	this.notSortedSource = null;
     	this.sortedTuple = null;
     	this.reverseIndexes = null;
+    	this.keyTs = null;
     }
     
     /**
@@ -177,6 +197,9 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     		this.index.removeRowIdFromKey();
     		state.markDistinct(true);
     	}
+    	keyTs = new SingleTupleSource();
+    	keyTs.keyTuple = new ArrayList<Object>(notSortedSource.getExpressionIndexes().length);
+		tb = new TupleBrowser(this.index, keyTs, OrderBy.ASC);
     }
     
     @Override
@@ -189,8 +212,8 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     
     private boolean shouldIndexIfSmall(SourceState source) throws TeiidComponentException, TeiidProcessingException {
     	Number cardinality = source.getSource().getEstimateNodeCardinality();
-    	return (source.hasBuffer() || (cardinality != null && cardinality.floatValue() != NewCalculateCostUtil.UNKNOWN_VALUE && cardinality.floatValue() <= this.joinNode.getBatchSize())) 
-    	&& (source.getRowCount() <= this.joinNode.getBatchSize());
+    	return (source.hasBuffer() || (cardinality != null && cardinality.floatValue() != NewCalculateCostUtil.UNKNOWN_VALUE && cardinality.floatValue() <= source.getSource().getBatchSize() / 4)) 
+    	&& (source.getRowCount() <= source.getSource().getBatchSize() / 2);
     }
     
     @Override
@@ -318,8 +341,10 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 	    			this.joinNode.addBatchRow(outputTuple(this.leftSource.getOuterVals(), tuple));
 	    			continue;
 	    		}
-	        	List<?> key = RelationalNode.projectTuple(this.notSortedSource.getExpressionIndexes(), this.currentTuple);
-	        	tb = new TupleBrowser(this.index, new CollectionTupleSource(Arrays.asList(key).iterator()), OrderBy.ASC);
+	    		this.keyTs.keyTuple.clear();
+	        	RelationalNode.projectTuple(this.notSortedSource.getExpressionIndexes(), this.currentTuple, this.keyTs.keyTuple, false);
+	        	keyTs.returned = false;
+	        	tb.reset(keyTs);
 	    	}
 	    	if (sortedTuple == null) {
 	    		sortedTuple = tb.nextTuple();
