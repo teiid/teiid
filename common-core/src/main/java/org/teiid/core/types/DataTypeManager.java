@@ -81,6 +81,8 @@ import org.teiid.core.util.PropertiesUtils;
 public class DataTypeManager {
 	
 	private static final boolean USE_VALUE_CACHE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.useValueCache", false); //$NON-NLS-1$
+	private static final boolean COMPARABLE_LOBS = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.comparableLobs", false); //$NON-NLS-1$
+	public static final boolean PAD_SPACE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.padSpace", false); //$NON-NLS-1$
 	
 	private static boolean valueCacheEnabled;
 	
@@ -854,8 +856,8 @@ public class DataTypeManager {
 	
     public static boolean isNonComparable(String type) {
         return DataTypeManager.DefaultDataTypes.OBJECT.equals(type)
-            || DataTypeManager.DefaultDataTypes.BLOB.equals(type)
-            || DataTypeManager.DefaultDataTypes.CLOB.equals(type)
+            || (!COMPARABLE_LOBS && DataTypeManager.DefaultDataTypes.BLOB.equals(type))
+            || (!COMPARABLE_LOBS && DataTypeManager.DefaultDataTypes.CLOB.equals(type))
             || DataTypeManager.DefaultDataTypes.XML.equals(type);
     }
     
@@ -892,4 +894,14 @@ public class DataTypeManager {
     	}
     	return stringCache.getValue(value);
     }
+    
+	public static boolean isHashable(Class<?> type) {
+		if (type == DataTypeManager.DefaultDataClasses.STRING) {
+			return !PAD_SPACE;
+		}
+		return !(type == DataTypeManager.DefaultDataClasses.BIG_DECIMAL
+				|| type == DataTypeManager.DefaultDataClasses.BLOB
+				|| type == DataTypeManager.DefaultDataClasses.CLOB);
+	}
+
 }

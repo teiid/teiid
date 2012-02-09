@@ -127,4 +127,14 @@ public class TestClobValue {
     	assertEquals("aa", clob.getSubString(1, 3));
     }
     
+    public void testClobCompare() throws Exception {
+        String testString = "this is test clob"; //$NON-NLS-1$
+        SerialClob clob = new SerialClob(testString.toCharArray());
+        ClobType ct = new ClobType(clob);
+        
+        SerialClob clob1 = new SerialClob(testString.toCharArray());
+        ClobType ct1 = new ClobType(clob1);
+        assertEquals(0, ct1.compareTo(ct));
+    }
+    
 }

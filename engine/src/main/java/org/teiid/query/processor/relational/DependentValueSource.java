@@ -35,7 +35,6 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.ValueIterator;
 import org.teiid.query.sql.util.ValueIteratorSource;
 
@@ -88,7 +87,8 @@ public class DependentValueSource implements
         		index = buffer.getSchema().indexOf(valueExpression);
         	}
         	Assertion.assertTrue(index != -1);
-        	if (((SingleElementSymbol)buffer.getSchema().get(index)).getType() == DataTypeManager.DefaultDataClasses.BIG_DECIMAL) {
+        	Class<?> type = ((Expression)buffer.getSchema().get(index)).getType();
+        	if (!DataTypeManager.isHashable(type)) {
         		result = new TreeSet<Object>();
     		} else {
     			result = new HashSet<Object>();

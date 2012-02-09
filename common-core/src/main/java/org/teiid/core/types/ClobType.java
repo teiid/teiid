@@ -43,7 +43,7 @@ import org.teiid.core.util.ObjectConverterUtil;
  * This is wrapper on top of a "clob" object, which implements the "java.sql.Clob"
  * interface. This class also implements the Streamable interface
  */
-public final class ClobType extends Streamable<Clob> implements Clob, Sequencable {
+public final class ClobType extends Streamable<Clob> implements Clob, Sequencable, Comparable<ClobType> {
 
 	private static final long serialVersionUID = 2753412502127824104L;
     
@@ -71,8 +71,8 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
     /** 
      * @see java.sql.Clob#getSubString(long, int)
      */
-    public String getSubString(long pos, int length) throws SQLException {
-        return this.reference.getSubString(pos, length);
+    public String getSubString(long pos, int len) throws SQLException {
+        return this.reference.getSubString(pos, len);
     }
     
     @Override
@@ -200,8 +200,8 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
 		this.reference.free();
 	}
 
-	public Reader getCharacterStream(long pos, long length) throws SQLException {
-		return this.reference.getCharacterStream(pos, length);
+	public Reader getCharacterStream(long pos, long len) throws SQLException {
+		return this.reference.getCharacterStream(pos, len);
 	}
 	
 	public static SerialClob createClob(char[] chars) {
@@ -258,6 +258,29 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
 			ObjectConverterUtil.write(w, r, (int)length, false);
 		} finally {
 			r.close();
+		}
+	}
+	
+	@Override
+	public int compareTo(ClobType o) {
+		try {
+    		Reader cs1 = this.getCharacterStream();
+    		Reader cs2 = o.getCharacterStream();
+    		long len1 = this.length();
+    		long len2 = o.length();
+    		long n = Math.min(len1, len2);
+		    for (long i = 0; i < n; i++) {
+				int c1 = cs1.read();
+				int c2 = cs2.read();
+				if (c1 != c2) {
+				    return c1 - c2;
+				}
+		    }
+    		return Long.signum(len1 - len2);
+		} catch (SQLException e) {
+			throw new TeiidRuntimeException(e);
+		} catch (IOException e) {
+			throw new TeiidRuntimeException(e);
 		}
 	}
 

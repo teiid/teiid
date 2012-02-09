@@ -35,5 +35,15 @@
 			Target size in bytes of the ODBC results buffer.  This is not a hard maximum, lobs and wide rows may use larger buffers.
 			</para>
 		</listitem>
+		<listitem>
+			<para><emphasis>org.teiid.comparableLobs</emphasis> - defaults to false.  
+			Set to true to allow blob and clob values to be comparable in Teiid.  Source type metadata will determine if the comparison can be pushed down.
+			</para>
+		</listitem>
+		<listitem>
+			<para><emphasis>org.teiid.padSpace</emphasis> - defaults to false.  
+			Set to true to compare strings as if PAD SPACE collation is being used, that is strings are effectively right padded to the same length for comparison.  If this property is set, it is not necessary to use the trimStrings translator option.
+			</para>
+		</listitem>
 	</itemizedlist>
 </appendix>

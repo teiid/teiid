@@ -414,25 +414,7 @@ public class GroupingNode extends RelationalNode {
 		if (indexes == null) {
 			return true;
 		}
-		for(int i=indexes.length-1; i>=0; i--) {
-            Object oldValue = oldTuple.get(indexes[i]);
-            Object newValue = newTuple.get(indexes[i]);
-
-            if(oldValue == null) {
-                if(newValue != null) {
-                    return false;
-                }
-            } else {
-                if(newValue == null) {
-                    return false;
-                }
-                if(! oldValue.equals(newValue)) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
+        return MergeJoinStrategy.compareTuples(newTuple, oldTuple, indexes, indexes, true) == 0;
     }
 
     private void updateAggregates(List<?> tuple)

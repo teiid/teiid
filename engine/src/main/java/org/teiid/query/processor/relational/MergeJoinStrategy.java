@@ -28,6 +28,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.processor.relational.SourceState.ImplicitBuffer;
 import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.symbol.Constant;
 
 
 /**
@@ -302,11 +303,17 @@ public class MergeJoinStrategy extends JoinStrategy {
                              List rightProbe,
                              int[] leftExpressionIndecies,
                              int[] rightExpressionIndecies) {
-        for (int i = 0; i < leftExpressionIndecies.length; i++) {
+        return compareTuples(leftProbe, rightProbe, leftExpressionIndecies,
+				rightExpressionIndecies, grouping);
+    }
+
+	public static int compareTuples(List<?> leftProbe, List<?> rightProbe,
+			int[] leftExpressionIndecies, int[] rightExpressionIndecies, boolean nullEquals) {
+		for (int i = 0; i < leftExpressionIndecies.length; i++) {
             Object leftValue = leftProbe.get(leftExpressionIndecies[i]);
             Object rightValue = rightProbe.get(rightExpressionIndecies[i]);
             if (rightValue == null) {
-                if (grouping && leftValue == null) {
+                if (nullEquals && leftValue == null) {
                     continue;
                 }
                 return -1;
@@ -316,7 +323,7 @@ public class MergeJoinStrategy extends JoinStrategy {
                 return 1;
             }
 
-            int c = ((Comparable)rightValue).compareTo(leftValue);
+            int c = Constant.compare((Comparable)rightValue, (Comparable)leftValue);
             if (c != 0) {
                 return c;
             }

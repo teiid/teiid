@@ -22,22 +22,14 @@
 
 package org.teiid.query.sql.symbol;
 
+import static org.junit.Assert.*;
+
+import org.junit.Test;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.query.sql.symbol.Constant;
-
-import junit.framework.TestCase;
 
 
-public class TestConstant extends TestCase {
-
-	// ################################## FRAMEWORK ################################
-	
-	public TestConstant(String name) { 
-		super(name);
-	}	
-	
-	// ################################## TEST HELPERS ################################
+public class TestConstant {
 
 	public static final Constant sample1() { 
 		String s = "the string"; //$NON-NLS-1$
@@ -51,7 +43,7 @@ public class TestConstant extends TestCase {
 	
 	// ################################## ACTUAL TESTS ################################
 	
-	public void testString() {
+	@Test public void testString() {
 		String s = "the string"; //$NON-NLS-1$
         Constant c = new Constant(s);
         assertEquals("Value is incorrect: ", s, c.getValue()); //$NON-NLS-1$
@@ -67,7 +59,7 @@ public class TestConstant extends TestCase {
         assertEquals("Cloned object not equal to original: ", c, cc); //$NON-NLS-1$
 	}
 
-	public void testInteger() {
+	@Test public void testInteger() {
 		Integer i = new Integer(5);
         Constant c = new Constant(i);
         assertEquals("Value is incorrect: ", i, c.getValue()); //$NON-NLS-1$
@@ -83,7 +75,7 @@ public class TestConstant extends TestCase {
         assertEquals("Cloned object not equal to original: ", c, cc); //$NON-NLS-1$
 	}
 
-	public void testNoTypeNull() {
+	@Test public void testNoTypeNull() {
         Constant c = new Constant(null);
         assertEquals("Value is incorrect: ", null, c.getValue()); //$NON-NLS-1$
         assertEquals("Type is incorrect: ", DataTypeManager.DefaultDataClasses.NULL, c.getType()); //$NON-NLS-1$
@@ -98,7 +90,7 @@ public class TestConstant extends TestCase {
         assertEquals("Cloned object not equal to original: ", c, cc); //$NON-NLS-1$
     }
 
-	public void testTypedNull() {
+	@Test public void testTypedNull() {
         Constant c = new Constant(null, DataTypeManager.DefaultDataClasses.STRING);
         assertEquals("Value is incorrect: ", null, c.getValue()); //$NON-NLS-1$
         assertEquals("Type is incorrect: ", DataTypeManager.DefaultDataClasses.STRING, c.getType()); //$NON-NLS-1$
@@ -116,7 +108,7 @@ public class TestConstant extends TestCase {
         assertEquals("Typed null not equal to non-typed null: ", c, c3); //$NON-NLS-1$
     }
         
-	public void testClone() { 
+	@Test public void testClone() { 
 	    // Use this object as the "object"-type value for c1
 	    StringBuffer value = new StringBuffer("x"); //$NON-NLS-1$
 	    
@@ -134,20 +126,20 @@ public class TestConstant extends TestCase {
 		assertTrue("Cloned object has not changed, but should have", ((StringBuffer)copy.getValue()).toString().equals("xy"));						 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testSelfEquivalence(){
+	@Test public void testSelfEquivalence(){
 		Object s1 = sample1();
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, s1, s1);
 	}
 
-	public void testEquivalence(){
+	@Test public void testEquivalence(){
 		Object s1 = sample1();
 		Object s1a = sample1();
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
 	}
 	
-	public void testNonEquivalence(){
+	@Test public void testNonEquivalence(){
 		Object s1 = sample1();
 		Object s2 = sample2();
 		int equals = -1;
@@ -157,6 +149,15 @@ public class TestConstant extends TestCase {
            // do nothing - this is caught because the method above compares two different objects
            // this exception should be thrown
         }
+	}
+	
+	@Test public void testPaddedStringComparison(){
+		assertEquals(1, Constant.comparePadded("a", ""));
+		assertEquals(0, Constant.comparePadded("a", "a "));
+		assertEquals(-24, Constant.comparePadded("ab ", "az "));
+		assertEquals(66, Constant.comparePadded("ab ", "a "));
+		assertEquals(0, Constant.comparePadded("a1 ", "a1"));
+
 	}
     
 }

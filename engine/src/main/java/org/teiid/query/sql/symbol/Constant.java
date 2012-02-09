@@ -25,6 +25,7 @@ package org.teiid.query.sql.symbol;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageVisitor;
@@ -224,7 +225,58 @@ public class Constant implements Expression, Comparable<Constant> {
 		if (o.isNull()) {
 			return 1;
 		}
-		return ((Comparable)this.value).compareTo(o.getValue());
+		return compare((Comparable<?>)this.value, (Comparable<?>)o.getValue());
+	}
+	
+	/**
+	 * Compare the given non-null values
+	 * @param o1
+	 * @param o2
+	 * @return
+	 */
+	public final static int compare(Comparable o1, Comparable o2) {
+		if (DataTypeManager.PAD_SPACE) {
+			if (o1 instanceof String) {
+				CharSequence s1 = (CharSequence)o1;
+				CharSequence s2 = (CharSequence)o2;
+				return comparePadded(s1, s2);
+			} else if (o1 instanceof ClobType) {
+				CharSequence s1 = ((ClobType)o1).getCharSequence();
+				CharSequence s2 = ((ClobType)o2).getCharSequence();
+				return comparePadded(s1, s2);
+			}
+		}
+		return o1.compareTo(o2);
+	}
+
+	final static int comparePadded(CharSequence s1, CharSequence s2) {
+		int len1 = s1.length();
+		int len2 = s2.length();
+		int n = Math.min(len1, len2);
+		int i = 0;
+		int result = 0;
+		for (; i < n; i++) {
+			char c1 = s1.charAt(i);
+			char c2 = s2.charAt(i);
+			if (c1 != c2) {
+				result = c1 - c2;
+				break;
+			}
+		}
+		if (result == 0 && len1 != len2) {
+			result = len1 - len2;
+		}
+		for (int j = i; j < len1; j++) {
+			if (s1.charAt(j) != ' ') {
+				return result;
+			}
+		}
+		for (int j = i; j < len2; j++) {
+			if (s2.charAt(j) != ' ') {
+				return result;
+			}
+		}
+		return 0;
 	}
 	
 	public boolean isBindEligible() {
