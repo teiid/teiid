@@ -364,7 +364,7 @@
             <factory bean="TranslatorDeploymentTemplateInfoFactory" />
             <parameter class="java.lang.Class">org.teiid.templates.TranslatorTemplateInfo</parameter>
             <parameter class="java.lang.Class">org.teiid.translator.jdbc.excel.ExcelExecutionFactory</parameter>
-            <parameter class="java.lang.String">translator-excel</parameter>
+            <parameter class="java.lang.String">translator-excel-odbc</parameter>
             <parameter class="java.lang.String">Excel</parameter>
         </constructor>
     </bean> 
