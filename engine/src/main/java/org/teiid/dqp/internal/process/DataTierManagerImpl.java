@@ -35,8 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import javax.sql.rowset.serial.SerialClob;
-
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -48,6 +46,7 @@ import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.XMLType;
@@ -63,18 +62,7 @@ import org.teiid.dqp.service.BufferService;
 import org.teiid.events.EventDistributor;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnStats;
-import org.teiid.metadata.Datatype;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.MetadataRepository;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
-import org.teiid.metadata.TableStats;
+import org.teiid.metadata.*;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.TempMetadataID;
@@ -328,11 +316,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						String value = entry.getValue();
 						Clob clobValue = null;
 						if (value != null) {
-							try {
-								clobValue = new ClobType(new SerialClob(value.toCharArray()));
-							} catch (SQLException e) {
-								throw new TeiidProcessingException(e);
-							}
+							clobValue = new ClobType(ClobImpl.createClob(value.toCharArray()));
 						}
 						rows.add(Arrays.asList(entry.getKey(), entry.getValue(), record.getUUID(), oid++, clobValue));
 					}
@@ -440,7 +424,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 							if (result == null) {
 								rows.add(Arrays.asList((Clob)null));
 							} else {
-								rows.add(Arrays.asList(new ClobType(new SerialClob(result.toCharArray()))));
+								rows.add(Arrays.asList(new ClobType(ClobImpl.createClob(result.toCharArray()))));
 							}
 						}
 						return new CollectionTupleSource(rows.iterator());

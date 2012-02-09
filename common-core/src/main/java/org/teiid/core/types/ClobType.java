@@ -204,6 +204,14 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
 		return this.reference.getCharacterStream(pos, len);
 	}
 	
+	/**
+	 * 
+	 * @param chars
+	 * @return
+	 * @deprecated
+	 * @see use {@link ClobImpl#createClob(char[])} instead
+	 */
+	@Deprecated
 	public static SerialClob createClob(char[] chars) {
 		try {
 			return new SerialClob(chars);
@@ -218,11 +226,7 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
 		for (int i = 0; i < chars.length; i++) {
 			chars[i] = in.readChar();
 		}
-		try {
-			this.reference = new SerialClob(chars);
-		} catch (SQLException e) {
-			throw new IOException(e);
-		}
+		this.reference = ClobImpl.createClob(chars);
 	}
 	
 	/**

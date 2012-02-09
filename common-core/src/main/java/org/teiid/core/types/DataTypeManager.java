@@ -780,7 +780,7 @@ public class DataTypeManager {
 		sourceConverters.put(char[].class, new SourceTransform<char[], ClobType>() {
 			@Override
 			public ClobType transform(char[] value) {
-				return new ClobType(ClobType.createClob(value));
+				return new ClobType(ClobImpl.createClob(value));
 			}
 		});
 		sourceConverters.put(Blob.class, new SourceTransform<Blob, BlobType>() {

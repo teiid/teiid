@@ -24,19 +24,18 @@ package org.teiid.translator.ws;
 
 import java.sql.Blob;
 import java.sql.Clob;
-import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.Arrays;
 import java.util.List;
 
 import javax.activation.DataSource;
-import javax.sql.rowset.serial.SerialClob;
 import javax.xml.ws.Dispatch;
 import javax.xml.ws.WebServiceException;
 import javax.xml.ws.Service.Mode;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.http.HTTPBinding;
 
+import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
@@ -90,7 +89,7 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 
 			DataSource ds = null;
 			if (payload instanceof String) {
-				ds = new InputStreamFactory.ClobInputStreamFactory(new SerialClob(((String)payload).toCharArray()));
+				ds = new InputStreamFactory.ClobInputStreamFactory(ClobImpl.createClob(((String)payload).toCharArray()));
 			} else if (payload instanceof SQLXML) {
 				ds = new InputStreamFactory.SQLXMLInputStreamFactory((SQLXML)payload);
 			} else if (payload instanceof Clob) {
@@ -100,8 +99,6 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 			}
 			
 			returnValue = dispatch.invoke(ds);
-		} catch (SQLException e) {
-			throw new TranslatorException(e);
 		} catch (WebServiceException e) {
 			throw new TranslatorException(e);
 		} 
