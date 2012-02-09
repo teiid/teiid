@@ -328,6 +328,8 @@
                     should be used on the pool to set ANSI mode:  
                     </para>
                     <programlisting>set SESSION sql_mode = 'ANSI'</programlisting>
+                    <para>If retrieving timestamp values, you should set zeroDateTimeBehavior=convertToNull on the URL, otherwise MySQL or Teiid may throw an exception
+                    retriieving '0000-00-00 00:00:00'</para>
                 </listitem>
                 <listitem>
                     <para>
