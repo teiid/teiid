@@ -23,7 +23,6 @@
 package org.teiid.query.metadata;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -49,16 +48,7 @@ import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.LRUCache;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnSet;
-import org.teiid.metadata.Datatype;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ProcedureParameter.Type;
@@ -805,18 +795,14 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         if (schemaPaths == null) {
         	return schemas;
         }
-        File f = new File(tableRecord.getResourcePath());
-        String path = f.getParent();
-        if (File.separatorChar != '/') {
-        	path = path.replace(File.separatorChar, '/');
-        }
+        String path = getParentPath(tableRecord.getResourcePath());
         for (String string : schemaPaths) {
         	String parentPath = path;
         	boolean relative = false;
         	while (string.startsWith("../")) { //$NON-NLS-1$
         		relative = true;
         		string = string.substring(3);
-        		parentPath = new File(parentPath).getParent();
+        		parentPath = getParentPath(parentPath);
         	}
         	SQLXMLImpl schema = null;
         	if (!relative) {
@@ -837,6 +823,19 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         
         return schemas;
     }
+
+	private String getParentPath(String path) {
+		if (path == null) {
+			return ""; //$NON-NLS-1$
+		}
+		int index = path.lastIndexOf('/');
+        if (index > 0) {
+        	path = path.substring(0, index);
+        } else {
+        	path = ""; //$NON-NLS-1$
+        }
+		return path;
+	}
 
     public String getNameInSource(final Object metadataID) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(AbstractMetadataRecord.class, metadataID);
