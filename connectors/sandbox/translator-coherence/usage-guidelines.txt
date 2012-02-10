@@ -27,8 +27,14 @@ Modeling Guidelines
 	
 2.	The Coherence Cache Name will be set on the Coherence Connector, see it for configuration.
 
+-	Top level object must have a primary key defined for the attribute that's the key to finding the object in the cache
 
-
+3.  Model a container object (collection, array, map) as another table.
+	-   on the child table, add the primary key column on the parent table to the child table (column must not be updatable)
+	-	a foreign key must be defined, using the primary key on parent and the parent column added to the child (in above step),
+		the nameInSource for the foreign key is the name of the method (excluding get/set prefix)
+	
+	
 ------------
 Limitations
 ------------

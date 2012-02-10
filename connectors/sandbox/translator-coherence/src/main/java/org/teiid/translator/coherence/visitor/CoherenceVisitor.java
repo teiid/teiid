@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.coherence;
+package org.teiid.translator.coherence.visitor;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -49,6 +49,7 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.resource.adapter.coherence.CoherenceFilterUtil;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.coherence.CoherencePlugin;
 
 import com.tangosol.util.Filter;
 
@@ -91,6 +92,11 @@ public class CoherenceVisitor extends HierarchyVisitor {
     
     public TranslatorException getException() {
         return this.exception;
+    }
+    
+    public Filter createFilter(String criteria)  throws TranslatorException {
+        return CoherenceFilterUtil.createFilter(criteria);
+        
     }
 
     
@@ -138,19 +144,28 @@ public class CoherenceVisitor extends HierarchyVisitor {
 	            final String msg = CoherencePlugin.Util.getString("CoherenceVisitor.missingComparisonExpression"); //$NON-NLS-1$
 				exception = new TranslatorException(msg); 
 			}
-	
-	        if(rhs instanceof Literal) {
-	            Literal literal = (Literal) rhs;
-	            filter = CoherenceFilterUtil.createCompareFilter(lhsString, literal.getValue(), op, literal.getType() );
-	            
-	        } else {
-	            Literal literal = (Literal) lhs;
-	            filter = CoherenceFilterUtil.createCompareFilter(rhsString, literal.getValue(), op, literal.getType() );
-	        	
-	        }
+
+			if (rhs instanceof Literal || lhs instanceof Literal) {
+		        if(rhs instanceof Literal) {
+		            Literal literal = (Literal) rhs;
+		            addCompareCriteria(lhsString, literal.getValue(), op, literal.getType() );
+		            
+//		            filter = CoherenceFilterUtil.createCompareFilter(lhsString, literal.getValue(), op, literal.getType() );
+		            
+		        } else {
+		            Literal literal = (Literal) lhs;
+		            addCompareCriteria(rhsString, literal.getValue(), op, literal.getType() );
+//		            filter = CoherenceFilterUtil.createCompareFilter(rhsString, literal.getValue(), op, literal.getType() );
+		        	
+		        }
+			}
 		}catch (TranslatorException t) {
 			exception = t;
 		}
+    }
+    
+    public void addCompareCriteria(String columnname, Object value, Operator op, Class<?> type ) throws TranslatorException {
+        filter = CoherenceFilterUtil.createCompareFilter(columnname, value, op, type);
     }
     
     public void visit(Like obj) {
@@ -191,11 +206,16 @@ public class CoherenceVisitor extends HierarchyVisitor {
 	            
 	        }
 	        
-	        filter = CoherenceFilterUtil.createInFilter(lhsString, parms, type);
+	        addInCriteria(lhsString, parms, type);
+//	        filter = CoherenceFilterUtil.createInFilter(lhsString, parms, type);
 		}catch (TranslatorException t) {
 			exception = t;
 		}
 	        
+    }
+    
+    public void addInCriteria(String columnname, List<Object> parms, Class<?> type ) throws TranslatorException {
+        filter = CoherenceFilterUtil.createInFilter(columnname, parms, type);
     }
     
     private Class addParmFromExpression(Expression expr, List parms ) {
@@ -231,7 +251,16 @@ public class CoherenceVisitor extends HierarchyVisitor {
 		}
 		return attributeName;
 	}
-		
+
+	public String getNameFromTable(Table e) {
+		String tableName = e.getNameInSource();
+		if (tableName == null || tableName.equals("")) { //$NON-NLS-1$
+			tableName = e.getName();
+			// If name in source is not set, then fall back to the column name.
+		}
+		return tableName;
+	}
+
     /**
      * Helper method for getting runtime {@link org.teiid.connector.metadata.runtime.Element} from a
      * {@link org.teiid.language.DerivedColumn}.

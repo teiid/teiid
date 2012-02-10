@@ -15,6 +15,7 @@ import org.teiid.resource.adapter.coherence.CoherenceConnection;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.coherence.visitor.CoherenceVisitor;
 
 
 /**
@@ -60,7 +61,7 @@ public class CoherenceExecution implements ResultSetExecution {
 				throws TranslatorException {
 
 		try {
-			List objects = this.connection.get(visitor.getFilter());
+			List<Object> objects = this.connection.get(visitor.getFilter());
 					//"Id in (" + parm + ")", this.connection.getCacheName());
 			
 			if (objects == null)

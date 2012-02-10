@@ -35,25 +35,72 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.coherence.visitor.CoherenceVisitor;
 
 
 public abstract class SourceCacheAdapter {
-    
-    protected MetadataFactory metadataFactory = null;
+  
+  protected MetadataFactory metadataFactory = null;
+
+	/*****************
+	 * Methods for Adding the source metadata
+	 *****************/
+	
+      protected Schema addSchema(String s) throws TranslatorException {
+    	  Schema sc = new Schema();
+    	  sc.setName(s);
+    	  sc.setPhysical(true);
+    	  metadataFactory.getMetadataStore().addSchema(sc);
+    	  return sc;
+    	  
+      }
+	  protected Table addTable(String t) throws TranslatorException {
+		  return metadataFactory.addTable(t); //$NON-NLS-1$
+	  }
+
+	  protected KeyRecord addPrimaryKey(String name, List<String> columnNames, Table table) throws TranslatorException {
+		  return metadataFactory.addPrimaryKey(name, columnNames, table); //$NON-NLS-1$
+	  }
+
+	  protected KeyRecord addForeignKey(String name, List<String> columnNames, Table pktable, Table table) throws TranslatorException {
+		  return metadataFactory.addForiegnKey(name, columnNames, pktable, table);
+	  }
+	  
+	  protected void addColumn(String columnName, String nameInSource, String dataType, Table t) throws TranslatorException {
+		  Column c = metadataFactory.addColumn(columnName, dataType, t); //$NON-NLS-1$
+		  c.setNameInSource(nameInSource);	  
+	  }
+	 
+	  /**
+	   * END of Methods for Adding source metadata
+	   */
  
     /**
      * Called so the implementor can defined its table/column metadata
      * Use the methods @see #addTable and @see #addColumn.
      */
-  abstract void addMetadata() throws TranslatorException;
+  public void addMetadata() throws TranslatorException {
+	  
+  }
+  
+  /**
+   * Called to request the class name for the specified <code>objectName</code>
+   * @param objectName is the name of the object for which the class name is being requested
+   * @return String class name for the specified objectName
+   * @throws TranslatorException
+   */
+//  public abstract String getMappedClass(String objectName) throws TranslatorException;
   
   /**
    * Called to translate the list of <code>objects</code> returned from the Coherence cache.
@@ -168,8 +215,7 @@ public abstract class SourceCacheAdapter {
 								// when a collection is found, need to find the value for the row
 								// in order to do that, need to pick where retrieve process left off
 								List<String> tokens = StringUtil.getTokens(n, ".");
-								final ParmHolder holder = ParmHolder.createParmHolder(visitor.getTableName(), tokens, attributeTypes[i]);
-								Object colvalue =  retrieveValue(holder, colt, collectionNodeDepth + 1);
+								Object colvalue = getValue(visitor.getTableName(), tokens, attributeTypes[i], colt, collectionNodeDepth + 1);
 								row.add(colvalue);
 								
 							} else {
@@ -214,15 +260,12 @@ public abstract class SourceCacheAdapter {
     	addMetadata();
     }
 
-  protected Table addTable(String t) throws TranslatorException {
-	  return metadataFactory.addTable(t); //$NON-NLS-1$
+  public Object getValue(String tableName, List<String> nameTokens, Class type, Object cachedObject, int level ) throws TranslatorException {
+		final ParmHolder holder = ParmHolder.createParmHolder(tableName, nameTokens, type);
+		Object value =  retrieveValue(holder, cachedObject, level);
+		return value;
+
   }
-  
-  protected void addColumn(String columnName, String nameInSource, String dataType, Table t) throws TranslatorException {
-	  Column c = metadataFactory.addColumn(columnName, dataType, t); //$NON-NLS-1$
-	  c.setNameInSource(nameInSource);	  
-  }
- 
 
 		
 private Object retrieveValue(ParmHolder holder, Object cachedObject, int level) throws TranslatorException {
@@ -254,17 +297,20 @@ private Object retrieveValue(ParmHolder holder, Object cachedObject, int level) 
 		 
 		 final Object value = m.invoke(cachedObject, null);
 		 
-		 if (atTheBottom) {
-			 return value;
-		 }
-		 
 		 // if an array or collection, return, this will be processed after all objects are obtained
 		 // in order the number of rows can be created
+		 if (value == null) {
+			 return null;
+		 }
 		  if (value.getClass().isArray() || value instanceof Collection || value instanceof Map) {
 			  holder.setCollection(level);  
 //			  System.out.println("Found Collection: " + methodName);
 			  return value;
 		  }
+			 
+			 if (atTheBottom) {
+				 return value;
+			 }
 
 		  return retrieveValue(holder, value, ++level);
 
@@ -284,63 +330,85 @@ private Object retrieveValue(ParmHolder holder, Object cachedObject, int level) 
 	 }
   }
 
+  public Object createObjectFromMetadata(String metadataName) throws TranslatorException {
+//	  String mappedClass = getMappedClass(metadataName);
+	  return createObject(metadataName);
+	  
+  }
 
-  public static Object createObject(String objectClassName) throws TranslatorException {
+  private Object createObject(String objectClassName) throws TranslatorException {
 		try {
 			
-			Object classObj =  ReflectionHelper
+			return  ReflectionHelper
 					.create(objectClassName,
 							null, null);
-			return classObj;
 		} catch (Exception e1) {
 			throw new TranslatorException(e1);
 		}
 	  
   }
   
-  public static Object setValue(String tableName, String columnName, Object cachedObject, Object value, Class classtype) throws TranslatorException {
+  public Object setValue(String tableName, String columnName, Object cachedObject, Object value, Class classtype) throws TranslatorException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Adding value to attribute: " + columnName); //$NON-NLS-1$
+		
 	 try {
 		 ArrayList argTypes = new ArrayList(1);
 		 argTypes.add(classtype);
 		 Method m = findBestMethod(cachedObject.getClass(), "set" + columnName, argTypes);
-		 Object newValue = getArg(m, value);
+		 
+		 Class[] setTypes = m.getParameterTypes();
+		 
+		 
+		 Object newValue = null;
+		 if (value instanceof Collection || value instanceof Map || value.getClass().isArray() ) {
+			 newValue = value;
+		 } else {
+			 newValue = DataTypeManager.transformValue(value, setTypes[0]);
+		 }
+	//	 Object newValue = getArg(m, value);
 			 m.invoke(cachedObject, new Object[] {newValue});
 		 	
 		 	LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Set value " + value); //$NON-NLS-1$
-		 return value;
+		 return newValue;
 	 } catch (InvocationTargetException x) {
+		 x.printStackTrace();
 		 Throwable cause = x.getCause();
 		 System.err.format("invocation of %s failed: %s%n",
 				 "set" + columnName, cause.getMessage());
 		 LogManager.logError(LogConstants.CTX_CONNECTOR, "Error calling set" + columnName + ":" + cause.getMessage());
 		 return null;
 	 } catch (Exception e) {
+		 e.printStackTrace();
 		 throw new TranslatorException(e.getMessage());
 	 }
 
 }  
   
-  private static Object getArg(Method m, int value) {
+
+  private  Object getArg(Method m, int value) {
 	  return Integer.valueOf(value);
   }
-  private static Object getArg(Method m, double value) {
+  private  Object getArg(Method m, double value) {
 	  return Double.valueOf(value);
   }
-  private static Object getArg(Method m, long value) {
+  private  Object getArg(Method m, long value) {
 	  return Long.valueOf(value);
   }
-  private static Object getArg(Method m, float value) {
+  private  Object getArg(Method m, float value) {
 	  return Float.valueOf(value);
   }
-  private static Object getArg(Method m, short value) {
+  private  Object getArg(Method m, short value) {
 	  return Short.valueOf(value);
   }
-  private static Object getArg(Method m, boolean value) {
+  private  Object getArg(Method m, boolean value) {
 	  return Boolean.valueOf(value);
   }
+  
+  private  Object getArg(Method m, Long value) {
+	  return value.longValue();
+  }
 
-  private static Object getArg(Method m, Object value) throws Exception {
+  private  Object getArg(Method m, Object value) throws Exception {
 	  return value;
   }
 
@@ -397,7 +465,7 @@ private Object retrieveValue(ParmHolder holder, Object cachedObject, int level) 
 //  }
   
   
-  private static Method findBestMethod(Class objectClass, String methodName, List argumentsClasses) throws SecurityException, NoSuchMethodException {
+  private  Method findBestMethod(Class objectClass, String methodName, List argumentsClasses) throws SecurityException, NoSuchMethodException {
       ReflectionHelper rh = new ReflectionHelper(objectClass);
       
       if (argumentsClasses == null) {
@@ -430,7 +498,7 @@ final class ParmHolder {
 		
 	}
 	
-	static ParmHolder createParmHolder(String tablename, List<String> parsedAttributeName,  Class type) {
+	static ParmHolder createParmHolder(String tablename, List<String> parsedAttributeName,  Class<?> type) {
 			
 		holder.tableName = tablename;
 		holder.nameNodes = parsedAttributeName;

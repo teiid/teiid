@@ -28,6 +28,7 @@ import java.util.List;
 import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.core.util.ReflectionHelper;
+import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.metadata.MetadataFactory;
@@ -38,62 +39,73 @@ import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.UpdateExecution;
 
 
 @Translator(name="coherence", description="A Coherence translator")
 public class CoherenceExecutionFactory extends ExecutionFactory<ConnectionFactory, CoherenceConnection> {
 
-
 	public static final int MAX_SET_SIZE = 100;
-	
+	   
+    private static SourceCacheAdapter cacheTranslator =  null;
     
-    private SourceCacheAdapter cacheTranslator =  null;
+    private MetadataFactory metadataFactory = null;
 	
 	
 	public CoherenceExecutionFactory() {
 		super();
-		setMaxInCriteriaSize(MAX_SET_SIZE);
+		this.setMaxInCriteriaSize(MAX_SET_SIZE);
+		this.setMaxDependentInPredicates(1);
+		this.setSourceRequired(false);
+		this.setSupportsOrderBy(false);
+		this.setSupportsSelectDistinct(false);
+		this.setSupportsInnerJoins(false);
+		this.setSupportsFullOuterJoins(false);
+		this.setSupportsOuterJoins(false);
+
 	}
 	
     @Override
     public void start() throws TranslatorException {
-    	super.start();
+    	super.start();    	
     }
 
     @Override
     public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, CoherenceConnection connection)
     		throws TranslatorException {
-    	createCacheTranslator(connection);
+     	createCacheTranslator(connection);
+
     	return new CoherenceExecution((Select)command, metadata, connection, cacheTranslator);
     }    
+    
+	@Override
+	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, CoherenceConnection connection) throws TranslatorException {
+		createCacheTranslator(connection);
+
+		return new CoherenceUpdateExecution(command, connection, metadata, executionContext, cacheTranslator);
+	}   
 
     
     public List getSupportedFunctions() {
         return Collections.EMPTY_LIST;
     }
 
-    public boolean supportsCompareCriteriaEquals() {
-        return true;
-    }
-
-    public boolean supportsInCriteria() {
-        return true;
-    }
-    
-    @Override
-    public boolean isSourceRequired() {
-    	return false;
-    }
     
     @Override
     public void getMetadata(MetadataFactory metadataFactory,
     		CoherenceConnection conn) throws TranslatorException {
-    	
-    	cacheTranslator.setMetadataFactory(metadataFactory);
+    	this.metadataFactory = metadataFactory;
+    }
+    
+    public SourceCacheAdapter getCacheTranslator() {
+    	return this.cacheTranslator;
     }
     
     
-	private void createCacheTranslator(CoherenceConnection conn) throws TranslatorException {
+	private synchronized void createCacheTranslator(CoherenceConnection conn) throws TranslatorException {
+		if (cacheTranslator != null) {
+			return;
+		}
 		if (conn.getCacheTranslatorClassName() == null) {
 			throw new TranslatorException(
 					CoherencePlugin.Util
@@ -102,9 +114,12 @@ public class CoherenceExecutionFactory extends ExecutionFactory<ConnectionFactor
 
 		try {
 			String classname = conn.getCacheTranslatorClassName();
-			this.cacheTranslator = (SourceCacheAdapter) ReflectionHelper
+			cacheTranslator = (SourceCacheAdapter) ReflectionHelper
 					.create(classname,
 							null, null);
+			
+	    	cacheTranslator.setMetadataFactory(metadataFactory);
+
 		} catch (Exception e1) {
 			throw new TranslatorException(e1);
 		}

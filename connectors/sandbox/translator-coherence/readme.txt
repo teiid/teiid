@@ -21,14 +21,13 @@ setup
 
 	1.	see coherence_connector for deployment
 	2.	copy the translator-coherence-<version>.jar to server/<profile>/deploy/teiid/connectors directory
-	2.	copy the implementation of SourceCacheAdapter to the server/<profile>/lib directory
-	3. 	start server
+
 
 
 Exmaple: To use the example vdb (Trade.vdb), do the following (with the server shutdown)
 
-	1.	copy translator-coherence-<version>-tests.jar to the <profile>/lib directory
-	2.	copy the Trade.vdb, located in src/test/resources, to <profile>/deploy directory
+	1.	set above "setup"
+	2.	copy the Trade.vdb, located in src/test/resources/Coherence_Designer_Project, to <profile>/deploy directory
 	3.	in coherence-ds.xml, set the CacheName property to "Trades" and CacheTranslatorClassName property to "org.teiid.translator.coherence.TradesCacheSource"
 		TradeCacheSource will load the cache upon initial use
 	4.  start JBoss server
