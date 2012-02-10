@@ -47,7 +47,7 @@
                <config-property-type>java.lang.String</config-property-type>
             </config-property>  
             <config-property>
-               <description>{$display:"Coherence Object Translator Class Name",$description:"Name of the class to translate objects in Coherence Cache",$required:"true"}</description>
+               <description>{$display:"Coherence Object Translator Class Name",$description:"Name of the class to translate objects in Coherence Cache"}</description>
                <config-property-name>CacheTranslatorClassName</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
                <config-property-value>org.teiid.translator.coherence.SourceCacheAdapter</config-property-value>

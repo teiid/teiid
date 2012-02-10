@@ -38,7 +38,7 @@ public interface CoherenceConnection {
 	
 		
 	/**
-	 * Returns the objects from the Coherence Cache based on the <code>criteria</code> filter sepcified.
+	 * Returns the objects from the Coherence Cache based on the <code>criteria</code> filter specified.
 	 * @param criteria
 	 * @return List of objects found in the cache.
 	 * @throws ResourceException
@@ -50,5 +50,21 @@ public interface CoherenceConnection {
 	 * @return String name of the cache translator class
 	 */
 	public String getCacheTranslatorClassName();
+	
+	/**
+	 * Call to add a new top level object to the cache.
+	 * @param key to the object in the cache
+	 * @param object to be added to the cache
+	 * @throws ResourceException
+	 */
+	public void add(Object key, Object object) throws ResourceException;
+	
+	
+	/**
+	 * Call to remove the object based on its <code>key</code> that was specified
+	 * @param key of object to be removed
+	 * @throws ResourceException
+	 */
+	public void remove(Object key) throws ResourceException;
 	
 }

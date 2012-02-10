@@ -32,10 +32,10 @@ Deployment:
 
 deploy the following files to the jboss as server
 
--  copy target/connector-coherence-<version>.rar  to  server/<profile>/deploy/teiid directory
+-  copy target/connector-coherence-<version>.rar  to  server/<profile>/deploy/teiid/connectors directory
 -  copy src/main/resources/coherence-ds.xml to  server/<profile>/deploy  directory
 	a. Set the CacheName in the coherence-ds.xml
-	b. Set the CacheTranslatorClassName in the coherence-ds.xml
+	b. (OPTIONAL - CONFIGURABLE) Set the CacheTranslatorClassName in the coherence-ds.xml
 -  copy the coherence.jar to the <profile>/lib directory
 
 -  see the translator_coherence to deploy the translator deployment

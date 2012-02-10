@@ -14,8 +14,8 @@
             <!-- Coherence Cache Name (required)-->
       <config-property name="CacheName">Trades</config-property>
        
-           <!-- Coherence Object Translator Class Name (required)-->
-      <config-property name="CacheTranslatorClassName">org.teiid.translator.coherence.TradesCacheSource</config-property>
+           <!-- (OPTIONAL) Coherence Object Translator Class Name -->
+      <!-- config-property name="CacheTranslatorClassName">org.teiid.translator.coherence.SourceCacheAdapter</config-property-->
 
       <max-pool-size>20</max-pool-size>
 

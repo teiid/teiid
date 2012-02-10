@@ -21,15 +21,17 @@
  */
 package org.teiid.resource.adapter.coherence;
 
-import javax.resource.ResourceException;
-
 import org.teiid.core.BundleUtil;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
+import javax.resource.ResourceException;
+
 public class CoherenceManagedConnectionFactory extends BasicManagedConnectionFactory {
 	
 	private static final long serialVersionUID = -1832915223199053471L;
+	private static final String DEFAULT_CACHE_ADAPTER_CLASS_NAME = "org.teiid.translator.coherence.SourceCacheAdapter";
+	
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(CoherenceManagedConnectionFactory.class);
 
 	private String cacheName;
@@ -44,7 +46,7 @@ public class CoherenceManagedConnectionFactory extends BasicManagedConnectionFac
 		}
 		
 		if (cacheTranslatorClassName == null) {
-			throw new ResourceException(UTIL.getString("CoherenceVisitor.cacheTranslatorClassName_not_set")); //$NON-NLS-1$
+			cacheTranslatorClassName = DEFAULT_CACHE_ADAPTER_CLASS_NAME;
 		}	
 		
 		return new BasicConnectionFactory() {

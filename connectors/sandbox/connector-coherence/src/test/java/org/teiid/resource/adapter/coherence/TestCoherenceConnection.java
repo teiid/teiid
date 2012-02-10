@@ -226,6 +226,46 @@ public class TestCoherenceConnection extends TestCase  {
 		assertEquals("Did not get expected number of trades", 1, trades.size());
 
 
+	}
+	
+	@Test
+	public void testAddAndRemoveTrade() throws Exception {
+
+		CoherenceManagedConnectionFactory f = new CoherenceManagedConnectionFactory();
+		f.setCacheName(CACHE_NAME);
+		f.setCacheTranslatorClassName(OBJECT_TRANSLATOR);
+
+		CoherenceConnection conn = (CoherenceConnection) f.createConnectionFactory().getConnection();
+
+		Trade trade = new Trade();
+		trade.setId(999);
+		trade.setName("NameIs " + 999);
+		trade.setLegs(null);
+		conn.add(999l, trade);
+
+		
+		// NOTE:  Coherence, because the datatype of ID is long, wants the "l" appended to the value
+		Filter criteria = CoherenceFilterUtil.createFilter("Id = 999l");
+
+		List<?> trades = conn.get(criteria);
+		assertNotNull(trades);
+		assertEquals("Did not get expected 999 trade", 1, trades.size());
+				
+		long l = 999l;
+		criteria = CoherenceFilterUtil.createCompareFilter("Id",  l, Comparison.Operator.EQ, Long.class);
+		
+		trades = conn.get(CoherenceFilterUtil.createFilter("Id = 999l"));
+		assertNotNull(trades);
+		assertEquals("Did not get expected 999 trade", 1, trades.size());
+
+
+		conn.remove(l);
+		
+		trades = conn.get(CoherenceFilterUtil.createFilter("Id = 999l"));
+		assertNotNull(trades);
+		assertEquals("Expected no trade", 0, trades.size());
+
+
 	}	
 }
 
