@@ -43,7 +43,8 @@ public class SystemFunctionManager {
 	
 			// Validate the system source - should never fail
 	        ActivityReport report = new ActivityReport("Function Validation"); //$NON-NLS-1$
-	       	validateSource(systemSource, report);
+	        Collection functionMethods = systemSource.getFunctionMethods();
+	    	FunctionMetadataValidator.validateFunctionMethods(functionMethods,report);
 			if(report.hasItems()) {
 			    // Should never happen as SystemSourcTe doesn't change
 			    System.err.println(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$
@@ -55,17 +56,6 @@ public class SystemFunctionManager {
     
     public FunctionLibrary getSystemFunctionLibrary() {
     	return new FunctionLibrary(getSystemFunctions());
-    }
-    
-    /**
-     * Validate all function metadata in the source with the FunctionMetadataValidator.  Add
-     * any problems to the specified report.
-     * @param source Source of function metadata
-     * @param report Report to update with any problems
-     */
-    private void validateSource(FunctionMetadataSource source, ActivityReport report) {
-        Collection functionMethods = source.getFunctionMethods();
-    	FunctionMetadataValidator.validateFunctionMethods(functionMethods,report);
     }
     
     public boolean isAllowEnvFunction() {

@@ -1558,15 +1558,21 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
 
         records.add(Arrays.asList(createTypeInfoRow("boolean",  "{b'", "}", Boolean.TRUE, Boolean.TRUE, 0))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         records.add(Arrays.asList(createTypeInfoRow("byte", null, null, Boolean.TRUE, Boolean.TRUE, 0))); //$NON-NLS-1$ 
+        records.add(Arrays.asList(createTypeInfoRow("tinyint", null, null, Boolean.TRUE, Boolean.TRUE, 0))); //$NON-NLS-1$
         records.add(Arrays.asList(createTypeInfoRow("long", null, null, Boolean.FALSE, Boolean.FALSE, 10))); //$NON-NLS-1$ 
+        records.add(Arrays.asList(createTypeInfoRow("bigint", null, null, Boolean.FALSE, Boolean.FALSE, 10))); //$NON-NLS-1$
         records.add(Arrays.asList(createTypeInfoRow("char", "'", "'", Boolean.TRUE, Boolean.TRUE, 0))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         records.add(Arrays.asList(createTypeInfoRow("bigdecimal",null, null, Boolean.FALSE, Boolean.TRUE, 10))); //$NON-NLS-1$ 
+        records.add(Arrays.asList(createTypeInfoRow("decimal",null, null, Boolean.FALSE, Boolean.TRUE, 10))); //$NON-NLS-1$
         records.add(Arrays.asList(createTypeInfoRow("biginteger", null, null, Boolean.FALSE, Boolean.FALSE, 10))); //$NON-NLS-1$ 
         records.add(Arrays.asList(createTypeInfoRow("integer",  null, null, Boolean.FALSE, Boolean.FALSE, 10))); //$NON-NLS-1$ 
         records.add(Arrays.asList(createTypeInfoRow("short", null, null, Boolean.FALSE, Boolean.FALSE, 10))); //$NON-NLS-1$ 
+        records.add(Arrays.asList(createTypeInfoRow("smallint", null, null, Boolean.FALSE, Boolean.FALSE, 10))); //$NON-NLS-1$
         records.add(Arrays.asList(createTypeInfoRow("float", null, null, Boolean.FALSE, Boolean.FALSE, 10))); //$NON-NLS-1$ 
+        records.add(Arrays.asList(createTypeInfoRow("real", null, null, Boolean.FALSE, Boolean.FALSE, 10))); //$NON-NLS-1$
         records.add(Arrays.asList(createTypeInfoRow("double",  null, null, Boolean.FALSE, Boolean.FALSE, 10))); //$NON-NLS-1$ 
         records.add(Arrays.asList(createTypeInfoRow("string", "'", "'", Boolean.TRUE, Boolean.TRUE, 0))); //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
+        records.add(Arrays.asList(createTypeInfoRow("varchar", "'", "'", Boolean.TRUE, Boolean.TRUE, 0))); //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
         records.add(Arrays.asList(createTypeInfoRow("xml", null, null, Boolean.TRUE, Boolean.TRUE, 0))); //$NON-NLS-1$ 
         records.add(Arrays.asList(createTypeInfoRow("date", "{d'", "}", Boolean.TRUE, Boolean.TRUE, 0))); //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
         records.add(Arrays.asList(createTypeInfoRow("time", "{t'", "}", Boolean.TRUE, Boolean.TRUE, 0))); //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$

@@ -24,8 +24,6 @@ package org.teiid.translator.salesforce;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.teiid.translator.TranslatorException;
-
 
 public class Util {
 
@@ -50,12 +48,6 @@ public class Util {
 		return result.toString();
 	}
 	
-	public static void validateQueryLength(StringBuffer query) throws TranslatorException {
-		if(query.length() >= 10000) {
-			throw new TranslatorException(SalesForcePlugin.Util.getString("Util.query.exceeds.max.length")); //$NON-NLS-1$
-		}
-	}
-
 	private static String timeZone;
 	
 	public static String getDefaultTimeZoneString() {

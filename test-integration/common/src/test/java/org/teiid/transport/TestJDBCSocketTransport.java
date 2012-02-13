@@ -110,6 +110,13 @@ public class TestJDBCSocketTransport {
 		assertEquals("<root></root>", s.getResultSet().getString(1));
 	}
 	
+	@Test public void testLobStreaming1() throws Exception {
+		Statement s = conn.createStatement();
+		assertTrue(s.execute("select cast('' as clob) from tables"));
+		s.getResultSet().next();
+		assertEquals("", s.getResultSet().getString(1));
+	}
+	
 	@Test public void testVarbinary() throws Exception {
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select X'aab1'"));

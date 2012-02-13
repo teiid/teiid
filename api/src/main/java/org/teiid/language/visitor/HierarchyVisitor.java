@@ -57,13 +57,13 @@ import org.teiid.language.With;
 import org.teiid.language.WithItem;
 
 /**
- * Visits each node in  a hierarchy of ILanguageObjects. The default
+ * Visits each node in  a hierarchy of LanguageObjects. The default
  * implementation of each visit() method is simply to visit the children of a
- * given ILanguageObject, if any exist, with this HierarchyVisitor (without
+ * given LanguageObject, if any exist, with this HierarchyVisitor (without
  * performing any actions on the node). A subclass can selectively override
  * visit() methods to delegate the actions performed on a node to another
  * visitor by calling that Visitor's visit() method. This implementation makes
- * no guarantees about the order in which the children of an ILanguageObject are
+ * no guarantees about the order in which the children of an LanguageObject are
  * visited.
  * @see DelegatingHierarchyVisitor
  */

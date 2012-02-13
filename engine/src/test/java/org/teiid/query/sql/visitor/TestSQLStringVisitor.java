@@ -1506,7 +1506,7 @@ public class TestSQLStringVisitor {
 	    obj.setAsClauseSet(true);	    
 	    obj.setIntoGroup(new GroupSymbol("#g")); //$NON-NLS-1$
 	    
-	    helpTest(obj, "EXECUTE 'SELECT a1 FROM g WHERE a2 = 5' AS a1 string INTO #g"); //$NON-NLS-1$
+	    helpTest(obj, "EXECUTE IMMEDIATE 'SELECT a1 FROM g WHERE a2 = 5' AS a1 string INTO #g"); //$NON-NLS-1$
     }
 
     @Test public void testScalarSubquery() {

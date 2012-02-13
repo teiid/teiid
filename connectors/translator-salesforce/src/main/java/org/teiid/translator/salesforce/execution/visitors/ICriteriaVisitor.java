@@ -27,8 +27,6 @@ public interface ICriteriaVisitor {
 
 	public boolean hasCriteria();
 
-	public void setHasCriteria(boolean hasCriteria, boolean isIdCriteria);
-
 	public boolean hasOnlyIDCriteria();
 
 	public String getTableName() throws TranslatorException;

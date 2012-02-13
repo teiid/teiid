@@ -29,9 +29,6 @@ import java.util.List;
 import javax.resource.ResourceException;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.ws.BindingProvider;
-import javax.xml.ws.handler.Handler;
-import javax.xml.ws.handler.HandlerResolver;
-import javax.xml.ws.handler.PortInfo;
 
 import org.apache.cxf.Bus;
 import org.apache.cxf.BusFactory;
@@ -44,27 +41,7 @@ import org.teiid.translator.salesforce.execution.DeletedObject;
 import org.teiid.translator.salesforce.execution.DeletedResult;
 import org.teiid.translator.salesforce.execution.UpdatedResult;
 
-import com.sforce.soap.partner.CallOptions;
-import com.sforce.soap.partner.DeleteResult;
-import com.sforce.soap.partner.DeletedRecord;
-import com.sforce.soap.partner.DescribeGlobalResult;
-import com.sforce.soap.partner.DescribeSObjectResult;
-import com.sforce.soap.partner.GetDeletedResult;
-import com.sforce.soap.partner.GetUpdatedResult;
-import com.sforce.soap.partner.InvalidFieldFault;
-import com.sforce.soap.partner.InvalidIdFault;
-import com.sforce.soap.partner.LoginFault;
-import com.sforce.soap.partner.LoginResult;
-import com.sforce.soap.partner.MalformedQueryFault;
-import com.sforce.soap.partner.MruHeader;
-import com.sforce.soap.partner.ObjectFactory;
-import com.sforce.soap.partner.PackageVersionHeader;
-import com.sforce.soap.partner.QueryOptions;
-import com.sforce.soap.partner.QueryResult;
-import com.sforce.soap.partner.SaveResult;
-import com.sforce.soap.partner.SessionHeader;
-import com.sforce.soap.partner.SforceService;
-import com.sforce.soap.partner.Soap;
+import com.sforce.soap.partner.*;
 import com.sforce.soap.partner.sobject.SObject;
 
 public class SalesforceConnectionImpl extends BasicConnection implements SalesforceConnection {

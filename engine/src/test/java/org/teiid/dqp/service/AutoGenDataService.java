@@ -61,6 +61,7 @@ public class AutoGenDataService extends ConnectorManager{
     private final AtomicInteger executeCount = new AtomicInteger();
     private final AtomicInteger closeCount = new AtomicInteger();
     private boolean useIntCounter;
+	public boolean addWarning;
 
     public AutoGenDataService() {
     	super("FakeConnector","FakeConnector"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -148,6 +149,9 @@ public class AutoGenDataService extends ConnectorManager{
 					}
 					dataNotAvailable = -2;
 					throw new DataNotAvailableException(delay);
+				}
+				if (addWarning) {
+					msg.setWarnings(Arrays.asList(new Exception()));
 				}
 				return msg;
 			}

@@ -3180,7 +3180,7 @@ public class TestParser {
         
         CommandStatement cmdStmt = new CommandStatement(sqlCmd);
    
-        helpStmtTest("exec string 'SELECT a1 FROM g WHERE a2 = 5' as a1 string into #g;", "EXECUTE 'SELECT a1 FROM g WHERE a2 = 5' AS a1 string INTO #g;", //$NON-NLS-1$ //$NON-NLS-2$
+        helpStmtTest("exec string 'SELECT a1 FROM g WHERE a2 = 5' as a1 string into #g;", "EXECUTE IMMEDIATE 'SELECT a1 FROM g WHERE a2 = 5' AS a1 string INTO #g;", //$NON-NLS-1$ //$NON-NLS-2$
         cmdStmt);       
     }
     
@@ -3209,7 +3209,7 @@ public class TestParser {
         
         CommandStatement cmdStmt = new CommandStatement(sqlCmd);
    
-        helpStmtTest("execute string z as a1 string, a2 integer into #g update 1;", "EXECUTE z AS a1 string, a2 integer INTO #g UPDATE 1;", //$NON-NLS-1$ //$NON-NLS-2$
+        helpStmtTest("execute IMMEDIATE z as a1 string, a2 integer into #g update 1;", "EXECUTE IMMEDIATE z AS a1 string, a2 integer INTO #g UPDATE 1;", //$NON-NLS-1$ //$NON-NLS-2$
         cmdStmt);       
     }
     
@@ -3227,7 +3227,7 @@ public class TestParser {
         
         CommandStatement cmdStmt = new CommandStatement(sqlCmd);
    
-        helpStmtTest("execute immediate z using a=b;", "EXECUTE z USING a = b;", //$NON-NLS-1$ //$NON-NLS-2$
+        helpStmtTest("execute immediate z using a=b;", "EXECUTE IMMEDIATE z USING a = b;", //$NON-NLS-1$ //$NON-NLS-2$
         cmdStmt);       
     }
 

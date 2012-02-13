@@ -48,6 +48,7 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.salesforce.Constants;
 import org.teiid.translator.salesforce.SalesforceConnection;
@@ -136,11 +137,11 @@ public class TestVisitors {
 		assertEquals("SELECT Account.id, Account.AccountName, Account.Stuff, Account.Industry FROM Account WHERE (Account.AccountName != 'foo') OR (Account.Stuff != 'bar')", visitor.getQuery().toString().trim()); //$NON-NLS-1$
 	}
 	
-	@Test public void testCountStart() throws Exception {
+	@Test public void testCountStar() throws Exception {
 		Select command = (Select)translationUtility.parseCommand("select count(*) from Account"); //$NON-NLS-1$
 		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
 		visitor.visit(command);
-		assertEquals("SELECT count() FROM Account", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+		assertEquals("SELECT COUNT(Id) FROM Account", visitor.getQuery().toString().trim()); //$NON-NLS-1$
 	}
 	
 	@Test public void testNotLike() throws Exception {
@@ -150,14 +151,12 @@ public class TestVisitors {
 		assertEquals("SELECT Account.id, Account.AccountName, Account.Stuff, Account.Industry FROM Account WHERE (NOT (Account.AccountName LIKE '%foo')) OR (Account.Stuff = 'bar')", visitor.getQuery().toString().trim()); //$NON-NLS-1$
 	}
 
-	
 	@Test public void testIN() throws Exception {
 		Select command = (Select)translationUtility.parseCommand("select * from Account where Industry IN (1,2,3)"); //$NON-NLS-1$
 		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
 		visitor.visit(command);
 		assertFalse(visitor.hasOnlyIDCriteria());
 		assertEquals("SELECT Account.id, Account.AccountName, Account.Stuff, Account.Industry FROM Account WHERE Account.Industry IN('1','2','3')", visitor.getQuery().toString().trim()); //$NON-NLS-1$
-		
 	}
 
 	@Test public void testOnlyIDsIN() throws Exception {
@@ -230,24 +229,40 @@ public class TestVisitors {
 	}
 	
 	@Test public void testDateTimeFormating() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select name from contacts where initialcontact = {ts'2003-03-11 11:42:10.5'}"); //$NON-NLS-1$
-		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
-		visitor.visit(command);
-		assertEquals("SELECT Contact.ContactName FROM Contact WHERE Contact.InitialContact = 2003-03-11T11:42:10.500-06:00", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+		String sql = "select name from contacts where initialcontact = {ts'2003-03-11 11:42:10.5'}";
+		String source = "SELECT Contact.ContactName FROM Contact WHERE Contact.InitialContact = 2003-03-11T11:42:10.500-06:00";
+		helpTest(sql, source);
 	}
 	
-	@Test public void testDateTimeFormating1() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select name from contacts where initialcontact in ({ts'2003-03-11 11:42:10.506'}, {ts'2003-03-11 11:42:10.8088'})"); //$NON-NLS-1$
+	private void helpTest(String sql, String source) throws TranslatorException {
+		Select command = (Select)translationUtility.parseCommand(sql); //$NON-NLS-1$
 		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
 		visitor.visit(command);
-		assertEquals("SELECT Contact.ContactName FROM Contact WHERE Contact.InitialContact IN(2003-03-11T11:42:10.506-06:00,2003-03-11T11:42:10.80-06:00)", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+		assertEquals(source, visitor.getQuery().toString().trim()); //$NON-NLS-1$
+	}
+
+	@Test public void testDateTimeFormating1() throws Exception {
+		String sql = "select name from contacts where initialcontact in ({ts'2003-03-11 11:42:10.506'}, {ts'2003-03-11 11:42:10.8088'})";
+		String source = "SELECT Contact.ContactName FROM Contact WHERE Contact.InitialContact IN(2003-03-11T11:42:10.506-06:00,2003-03-11T11:42:10.80-06:00)";
+		helpTest(sql, source);
 	}
 	
 	@Test public void testTimeFormatting() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select name from contacts where lasttime = {t'11:42:10'}"); //$NON-NLS-1$
-		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
-		visitor.visit(command);
-		assertEquals("SELECT Contact.ContactName FROM Contact WHERE Contact.LastTime = 11:42:10.000-06:00", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+		String sql = "select name from contacts where lasttime = {t'11:42:10'}";
+		String source = "SELECT Contact.ContactName FROM Contact WHERE Contact.LastTime = 11:42:10.000-06:00";
+		helpTest(sql, source);
+	}
+	
+	@Test public void testAggregateSelect() throws Exception {
+		String sql = "select max(name), count(1) from contacts";
+		String source = "SELECT MAX(Contact.ContactName), COUNT(Id) FROM Contact";
+		helpTest(sql, source);
+	}
+	
+	@Test public void testAggregateGroupByHaving() throws Exception {
+		String sql = "select max(name), lasttime from contacts group by lasttime having min(InitialContact) in ({ts'2003-03-11 11:42:10.506'}, {ts'2003-03-11 11:42:10.8088'})";
+		String source = "SELECT MAX(Contact.ContactName), Contact.LastTime FROM Contact GROUP BY Contact.LastTime HAVING MIN(Contact.InitialContact) IN(2003-03-11T11:42:10.506-06:00,2003-03-11T11:42:10.80-06:00)";
+		helpTest(sql, source);
 	}
 
 }

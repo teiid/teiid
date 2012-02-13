@@ -39,6 +39,8 @@ import javax.resource.ResourceException;
 
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.AggregateFunction;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Expression;
 import org.teiid.language.Join;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
@@ -66,6 +68,8 @@ import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
 
 public class QueryExecutionImpl implements ResultSetExecution {
+
+	private static final String AGGREGATE_RESULT = "AggregateResult"; //$NON-NLS-1$
 
 	private static final Pattern dateTimePattern = Pattern.compile("^(?:(\\d{4}-\\d{2}-\\d{2})T)?(\\d{2}:\\d{2}:\\d{2}(?:.\\d+)?)(.*)"); //$NON-NLS-1$
 	
@@ -162,18 +166,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	@SuppressWarnings("unchecked")
 	@Override
 	public List next() throws TranslatorException, DataNotAvailableException {
-		List<?> result;
-		if (query.getProjectedQuery().getDerivedColumns().get(0)
-				.getExpression() instanceof AggregateFunction) {
-			if (results == null) {
-				return null;
-			}
-			result = Arrays.asList(results.getSize());
-			results = null;
-			
-		} else {
-			result = getRow(results);
-		}
+		List<?> result = getRow(results);
 		return result;
 	}
 
@@ -256,19 +249,8 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			String sObjectName = typeElement.getFirstChild().getNodeValue();
 			Object[] row = new Object[visitor.getSelectSymbolCount()];
 			for (int j = 0; j < visitor.getSelectSymbolCount(); j++) {
-				Column element = visitor.getSelectSymbolMetadata(j);
-				AbstractMetadataRecord parent = element.getParent();
-				Table table;
-				if(parent instanceof Table) {
-					table = (Table)parent;
-				} else {
-					parent = parent.getParent();
-					if(parent instanceof Table) {
-						table = (Table)parent;
-					} else {
-						throw new TranslatorException("Could not resolve Table for column " + element.getName()); //$NON-NLS-1$
-					}
-				}
+				Column element = ((ColumnReference)visitor.getSelectSymbolMetadata(j)).getMetadataObject();
+				AbstractMetadataRecord table = element.getParent();
 				if(table.getNameInSource().equals(sObjectName)) {
 					Integer index = visitor.getSelectSymbolIndex(sObjectName + ':' + element.getNameInSource());
 					// id gets dropped from the result if it is not the
@@ -280,8 +262,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 							throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.missing.field")+ element.getNameInSource()); //$NON-NLS-1$
 						}
 					} else {
-						Object cell;
-						cell = sObject.getElementsByTagName("sf:" + element.getNameInSource()).item(0); //$NON-NLS-1$
+						Object cell = sObject.getElementsByTagName("sf:" + element.getNameInSource()).item(0); //$NON-NLS-1$
 						setElementValueInColumn(j, cell, row);
 					}
 				}
@@ -290,13 +271,16 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			return result;
 		}
 
-		private List<Object[]> extractDataFromFields(SObject sObject,
-			List<Object> fields, List<Object[]> result) throws TranslatorException {
-			Map<String,Integer> fieldToIndexMap = sObjectToResponseField.get(sObject.getType());
-			for (int j = 0; j < visitor.getSelectSymbolCount(); j++) {
-				Column element = visitor.getSelectSymbolMetadata(j);
+	private List<Object[]> extractDataFromFields(SObject sObject,
+		List<Object> fields, List<Object[]> result) throws TranslatorException {
+		Map<String,Integer> fieldToIndexMap = sObjectToResponseField.get(sObject.getType());
+		int aggCount = 0;
+		for (int j = 0; j < visitor.getSelectSymbolCount(); j++) {
+			Expression ex = visitor.getSelectSymbolMetadata(j);
+			if (ex instanceof ColumnReference) {
+				Column element = ((ColumnReference)ex).getMetadataObject();
 				Table table = (Table)element.getParent();
-				if(table.getNameInSource().equals(sObject.getType())) {
+				if(table.getNameInSource().equals(sObject.getType()) || AGGREGATE_RESULT.equalsIgnoreCase(sObject.getType())) {
 					Integer index = fieldToIndexMap.get(element.getNameInSource());
 					// id gets dropped from the result if it is not the
 					// first field in the querystring. Add it back in.
@@ -307,28 +291,36 @@ public class QueryExecutionImpl implements ResultSetExecution {
 							throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.missing.field")+ element.getNameInSource()); //$NON-NLS-1$
 						}
 					} else {
-						Object cell;
-						cell = getCellDatum(element, (Element)fields.get(index));
+						Object cell = getCellDatum(element.getNameInSource(), element.getJavaType(), (Element)fields.get(index));
 						setValueInColumn(j, cell, result);
 					}
 				}
+			} else if (ex instanceof AggregateFunction) {
+				String name = SelectVisitor.AGG_PREFIX + (aggCount++);
+				Integer index = fieldToIndexMap.get(name); 
+				if (null == index) {
+					throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.missing.field")+ ex); //$NON-NLS-1$
+				}
+				Object cell = getCellDatum(name, ex.getType(), (Element)fields.get(index));
+				setValueInColumn(j, cell, result);
 			}
-			return result;
+		}
+		return result;
 	}
 		
 	private void setElementValueInColumn(int columnIndex, Object value, Object[] row) {
-			if(value instanceof Element) {
-				Element element = (Element)value;
-				if (!Boolean.parseBoolean(element.getAttribute(XSI_NIL))) {
-					if (element.getFirstChild() != null) {
-						row[columnIndex] = element.getFirstChild().getNodeValue();
-					} else {
-						row[columnIndex] = ""; //$NON-NLS-1$
-					}
+		if(value instanceof Element) {
+			Element element = (Element)value;
+			if (!Boolean.parseBoolean(element.getAttribute(XSI_NIL))) {
+				if (element.getFirstChild() != null) {
+					row[columnIndex] = element.getFirstChild().getNodeValue();
+				} else {
+					row[columnIndex] = ""; //$NON-NLS-1$
 				}
-			} else {
-				row[columnIndex] = value;
 			}
+		} else {
+			row[columnIndex] = value;
+		}
 	}
 
 	private void setValueInColumn(int columnIndex, Object value, List<Object[]> result) {
@@ -352,8 +344,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			List<Object> fields) throws TranslatorException {
 		if (!sObjectToResponseField.containsKey(sObjectName)) {
 			logFields(sObjectName, fields);
-			Map<String, Integer> responseFieldToIndexMap;
-			responseFieldToIndexMap = new HashMap<String, Integer>();
+			Map<String, Integer> responseFieldToIndexMap = new HashMap<String, Integer>();
 			for (int x = 0; x < fields.size(); x++) {
 				Element element = (Element) fields.get(x);
 				responseFieldToIndexMap.put(element.getLocalName(), x);
@@ -380,30 +371,29 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	 * TODO: the logic here should be aware of xsi:type information and use a standard conversion
 	 * library.  Conversion to teiid types should then be a secondary effort - and will be automatically handled above here.
 	 */
-	@SuppressWarnings("unchecked")
-	private Object getCellDatum(Column element, Element elem) throws TranslatorException {
-		if(!element.getNameInSource().equals(elem.getLocalName())) {
-			throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.column.mismatch1") + element.getNameInSource() + SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.column.mismatch2") + elem.getLocalName()); //$NON-NLS-1$ //$NON-NLS-2$
+	private Object getCellDatum(String name, Class<?> type, Element elem) throws TranslatorException {
+		if(!name.equals(elem.getLocalName())) {
+			throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.column.mismatch1") + name + SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.column.mismatch2") + elem.getLocalName()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		if (Boolean.parseBoolean(elem.getAttribute(XSI_NIL))) {
 			return null;
 		}
 		String value = elem.getTextContent();
-		Object result = value;
-		Class type = element.getJavaType();
-		
-		if(type.equals(String.class)) {
-			result = value;
-		} else if (!value.isEmpty()) {
-			result = value;
-			if (type.equals(java.sql.Timestamp.class) || type.equals(java.sql.Time.class)) {
-				if (cal == null) {
-					cal = Calendar.getInstance();
-				}
-				result = parseDateTime(value, type, cal);
-			}
+		if (value == null) {
+			return null;
 		}
-		return result;
+		if (value.isEmpty()) {
+			if (type == String.class) {
+				return value;
+			}
+			return null;
+		} else if (type.equals(java.sql.Timestamp.class) || type.equals(java.sql.Time.class)) {
+			if (cal == null) {
+				cal = Calendar.getInstance();
+			}
+			return parseDateTime(value, type, cal);
+		}
+		return value;
 	}
 
 	static Object parseDateTime(String value, Class<?> type, Calendar cal)

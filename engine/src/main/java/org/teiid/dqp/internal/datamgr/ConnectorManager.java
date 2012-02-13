@@ -44,9 +44,14 @@ import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.metadata.FunctionMetadataValidator;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
+import org.teiid.query.report.ActivityReport;
+import org.teiid.query.report.ReportItem;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.resource.spi.WrappedConnection;
 import org.teiid.translator.ExecutionContext;
@@ -122,10 +127,32 @@ public class ConnectorManager  {
 		} finally {
 			executionFactory.closeConnection(connection, connectionFactory);
 		}
+		validateMetadata(factory.getMetadataStore(), modelName);
 		return factory.getMetadataStore();
 	}    
     
-    public List<FunctionMethod> getPushDownFunctions(){
+    private void validateMetadata(MetadataStore metadataStore, String schemaName) throws TranslatorException {
+    	if (metadataStore.getSchemas().size() != 1) {
+    		throw new TranslatorException(QueryPlugin.Event.TEIID30580, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30580, schemaName));
+    	}
+    	Map.Entry<String, Schema> schemaEntry = metadataStore.getSchemas().entrySet().iterator().next();
+    	if (!schemaName.equalsIgnoreCase(schemaEntry.getKey())) {
+    		throw new TranslatorException(QueryPlugin.Event.TEIID30580, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30580, schemaName)); 
+    	}
+    	Schema s = schemaEntry.getValue();
+    	for (Table t : s.getTables().values()) {
+			if (t.getColumns() == null || t.getColumns().size() == 0) {
+				throw new TranslatorException(QueryPlugin.Event.TEIID30580, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30580, t.getFullName())); 
+			}
+		}
+    	ActivityReport<ReportItem> report = new ActivityReport<ReportItem>("Translator metadata load " + schemaName); //$NON-NLS-1$
+		FunctionMetadataValidator.validateFunctionMethods(s.getFunctions().values(),report);
+		if(report.hasItems()) {
+		    throw new TranslatorException(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$
+		}
+	}
+
+	public List<FunctionMethod> getPushDownFunctions(){
     	return getExecutionFactory().getPushDownFunctions();
     }
     

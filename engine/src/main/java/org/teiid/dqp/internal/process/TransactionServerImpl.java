@@ -239,7 +239,12 @@ public class TransactionServerImpl implements TransactionService {
 					tc.setTransactionType(TransactionContext.Scope.GLOBAL);
 					if (singleTM) {
 						tc.setTransaction(transactionManager.getTransaction());
-						assert tc.getTransaction() != null;
+						if (tc.getTransaction() == null) {
+						    //the current code currently does not handle the case of embedded connections where
+							//someone is manually initiating txns - that is there is no thread bound txn.
+							//in theory we could inflow the txn and then change all of the methods to check singleTM off of the context
+						    throw new XATransactionException(QueryPlugin.Event.TEIID30590, XAException.XAER_INVAL, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30590));
+						}
 					} else {
 						FutureWork<Transaction> work = new FutureWork<Transaction>(new Callable<Transaction>() {
 							@Override

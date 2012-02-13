@@ -37,20 +37,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import org.teiid.language.Call;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Command;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.Expression;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.Function;
-import org.teiid.language.Insert;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Limit;
-import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
-import org.teiid.language.QueryExpression;
-import org.teiid.language.Select;
+import org.teiid.language.*;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.visitor.CollectorVisitor;
@@ -607,7 +594,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
     	if (oracleSuppliedDriver && obj instanceof Call) {
     		Call call = (Call)obj;
-    		if (call.getReturnType() == null && call.getMetadataObject() != null && call.getMetadataObject().getProperties().get(SQLConversionVisitor.TEIID_NATIVE_QUERY) == null) { 
+    		if (call.getReturnType() == null && call.getMetadataObject() != null && call.getMetadataObject().getProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, false) == null) { 
     			//oracle returns the resultset as a parameter
     			call.setReturnType(RefCursorType.class);
     		}

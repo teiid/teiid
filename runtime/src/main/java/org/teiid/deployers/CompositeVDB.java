@@ -174,7 +174,6 @@ public class CompositeVDB {
 			mergedUDF.addFunctions(this.udf);
 		}
 		if (this.stores != null) {
-			//schema scoped source functions - this is only a dynamic vdb concept
 			for(MetadataStore store:this.stores.getStores()) {
 				for (Schema schema:store.getSchemas().values()) {
 					Collection<FunctionMethod> funcs = schema.getFunctions().values();

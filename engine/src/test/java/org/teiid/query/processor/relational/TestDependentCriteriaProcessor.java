@@ -42,6 +42,18 @@ public class TestDependentCriteriaProcessor {
 	@Test public void testNegatedSetCriteria() throws Exception {
 		DependentAccessNode dan = new DependentAccessNode(0);
 		SetCriteria sc = new SetCriteria(new ElementSymbol("e1"), Arrays.asList(new Constant(1), new Constant(2))); //$NON-NLS-1$
+		sc.setAllConstants(true);
+		sc.negate();
+		DependentCriteriaProcessor dcp = new DependentCriteriaProcessor(1, -1, dan, sc);
+		Criteria result = dcp.prepareCriteria();
+		assertEquals(sc, result);  
+		assertFalse(dcp.hasNextCommand());
+	}
+	
+	@Test public void testSetCriteria() throws Exception {
+		DependentAccessNode dan = new DependentAccessNode(0);
+		SetCriteria sc = new SetCriteria(new ElementSymbol("e1"), Arrays.asList(new Constant(1), new Constant(2))); //$NON-NLS-1$
+		sc.setAllConstants(true);
 		DependentCriteriaProcessor dcp = new DependentCriteriaProcessor(1, -1, dan, sc);
 		Criteria result = dcp.prepareCriteria();
 		assertEquals(new CompareCriteria(new ElementSymbol("e1"), CompareCriteria.EQ, new Constant(1)), result); //$NON-NLS-1$ 
@@ -57,6 +69,7 @@ public class TestDependentCriteriaProcessor {
 			cc.getVariableContext().setGlobalValue(reference.getContextSymbol(), 1);
 		}
 		SetCriteria sc = new SetCriteria(new ElementSymbol("e1"), references); //$NON-NLS-1$
+		sc.setAllConstants(true);
 		DependentCriteriaProcessor dcp = new DependentCriteriaProcessor(1, -1, dan, sc);
 		Criteria result = dcp.prepareCriteria();
 		assertEquals(new CompareCriteria(new ElementSymbol("e1"), CompareCriteria.EQ, new Constant(1)), result); //$NON-NLS-1$ 

@@ -98,16 +98,20 @@ public class DependentCriteriaProcessor {
                 }
             	for (SetState setState : dependentSetStates) {
                     setState.valueIterator = dvs.getValueIterator(setState.valueExpression);
-                    if (setState.maxNdv > 0 && setState.maxNdv < dvs.getTupleBuffer().getRowCount()) {
-                    	ValueIterator vi = dvs.getValueIterator(setState.valueExpression);
-                    	Object last = null;
-                    	int distinctCount = 0;
-                    	while (vi.hasNext()) {
-                    		Object next = vi.next();
-                    		if (last == null || Constant.COMPARATOR.compare(next, last) != 0) {
-                    			distinctCount++;
+                    int distinctCount = dvs.getTupleBuffer().getRowCount();
+                    if (setState.maxNdv > 0 && setState.maxNdv < distinctCount) {
+	                    if (dvs.getTupleBuffer().getSchema().size() >= 1) {
+		                    distinctCount = 0;
+    	                	ValueIterator vi = dvs.getValueIterator(setState.valueExpression);
+        	            	Object last = null;
+            	        	distinctCount = 0;
+	                    	while (vi.hasNext()) {
+    	                		Object next = vi.next();
+        	            		if (last == null || Constant.COMPARATOR.compare(next, last) != 0) {
+            	        			distinctCount++;
+                	    		}
+                    			last = next;
                     		}
-                    		last = next;
                     	}
                     	if (!setState.overMax && distinctCount > setState.maxNdv) {
                     		LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30011, valueSource, setState.valueExpression, setState.maxNdv));
@@ -172,7 +176,7 @@ public class DependentCriteriaProcessor {
             
             if (criteria instanceof SetCriteria) {
                 SetCriteria setCriteria = (SetCriteria)criteria;
-                if (setCriteria.isNegated() || setCriteria.getNumberOfValues() <= maxSetSize) {
+                if (setCriteria.isNegated() || setCriteria.getNumberOfValues() <= maxSetSize || !setCriteria.isAllConstants()) {
                     continue;
                 }
                 SetState state = new SetState();
@@ -275,7 +279,7 @@ public class DependentCriteriaProcessor {
      * @throws TeiidComponentException
      */
     private void replaceDependentValueIterators() throws TeiidComponentException {
-    	int totalPredicates = sources.size();
+    	int totalPredicates = setStates.size();
     	if (this.maxPredicates > 0) {
         	//We have a bin packing problem if totalPredicates < sources - We'll address that case later.
     		//TODO: better handling for the correlated composite case
@@ -284,6 +288,11 @@ public class DependentCriteriaProcessor {
     	long maxSize = Integer.MAX_VALUE;
     	if (this.maxSetSize > 0) {
     		maxSize = this.maxSetSize;
+    		if (this.maxPredicates > 0 && totalPredicates > this.maxPredicates) {
+    			//scale the max based upon the number of predicates - this is not perfect, but sufficient for most situations
+    			long maxParams = this.maxPredicates * this.maxSetSize;
+    			maxSize = Math.max(1, maxParams/totalPredicates);
+    		}
     	}
     	int currentPredicates = 0;
     	for (int run = 0; currentPredicates < totalPredicates; run++) {

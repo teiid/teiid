@@ -146,7 +146,7 @@ public class TestProcessor {
 		}
     }
 	
-    static ProcessorPlan helpGetPlan(Command command, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context) throws TeiidException {
+    public static ProcessorPlan helpGetPlan(Command command, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context) throws TeiidException {
 		if(DEBUG) System.out.println("\n####################################\n" + command); //$NON-NLS-1$
 		AnalysisRecord analysisRecord = new AnalysisRecord(false, DEBUG);
 		if (!(metadata instanceof TempMetadataAdapter)) {
@@ -227,7 +227,7 @@ public class TestProcessor {
         }
     }
         
-    public static void doProcess(ProcessorPlan plan, ProcessorDataManager dataManager, List[] expectedResults, CommandContext context) throws Exception {
+    public static int doProcess(ProcessorPlan plan, ProcessorDataManager dataManager, List[] expectedResults, CommandContext context) throws Exception {
     	BufferManager bufferMgr = context.getBufferManager();
     	if (bufferMgr == null) {
 	        BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
@@ -253,6 +253,7 @@ public class TestProcessor {
         	context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(bufferMgr, dataManager, new DefaultCapabilitiesFinder(), null, context.getMetadata()));
         }
         TupleBuffer id = null;
+        int rowCount = 0;
         try {
             QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
             //processor.setNonBlocking(true);
@@ -268,6 +269,7 @@ public class TestProcessor {
             if (id == null) {
             	fail("did not complete processing");
             }
+            rowCount = id.getRowCount();
             if ( expectedResults != null ) {
             	examineResults(expectedResults, bufferMgr, id);
             }
@@ -276,6 +278,7 @@ public class TestProcessor {
         		id.remove();
         	}
         }
+        return rowCount;
     }
 
     /** 

@@ -70,6 +70,8 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     
 	public PostgreSQLExecutionFactory() {
 		setDatabaseVersion(EIGHT_0);
+		setMaxDependentInPredicates(1);
+		setMaxInCriteriaSize(Short.MAX_VALUE - 50); //set a value that is safely smaller than the max in case there are other parameters
 	}
 	
     public void start() throws TranslatorException {

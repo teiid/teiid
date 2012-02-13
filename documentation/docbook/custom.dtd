@@ -1,5 +1,5 @@
-<!ENTITY versionNumber "7.6">
-<!ENTITY copyrightYear "2011">
+<!ENTITY versionNumber "7.7">
+<!ENTITY copyrightYear "2012">
 <!ENTITY copyrightHolder "Red Hat, Inc.">
 <!ENTITY url "http://www.jboss.org/teiid/">
 <!ENTITY docUrl "&url;/docs.html">

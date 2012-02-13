@@ -34,6 +34,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 
 import org.junit.Test;
+import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
@@ -149,7 +150,7 @@ public class TestTransforms {
         /*timestamp-13*/{new Timestamp(System.currentTimeMillis()), new Timestamp(System.currentTimeMillis()), new Timestamp(System.currentTimeMillis())},
         /*object-14*/  {null, null, null},  
         /*blob-15*/    {null, null, null},
-        /*clob-16*/    {new ClobType(ClobType.createClob("ClobData".toCharArray())), new ClobType(ClobType.createClob("0".toCharArray())), new ClobType(ClobType.createClob("123".toCharArray()))}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+        /*clob-16*/    {new ClobType(ClobImpl.createClob("ClobData".toCharArray())), new ClobType(ClobImpl.createClob("0".toCharArray())), new ClobType(ClobImpl.createClob("123".toCharArray()))}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         /*xml-17*/     {new XMLType(new SQLXMLImpl("<foo>bar</foo>")), new XMLType(new SQLXMLImpl("<foo>bar</foo>")), new XMLType(new SQLXMLImpl("<foo>bar</foo>"))}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
      }; 
     
@@ -227,7 +228,7 @@ public class TestTransforms {
     }
     
     @Test public void testStringToTimestampOutOfRange() throws Exception {
-    	helpTransformException("2005-13-01 11:13:01", DefaultDataClasses.TIMESTAMP, "Error Code:TEIID10060 Message:TEIID10060 The string representation '2005-13-01 11:13:01' of a Timestamp value is not valid."); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTransformException("2005-13-01 11:13:01", DefaultDataClasses.TIMESTAMP, null); //$NON-NLS-1$
     }
     
     @Test public void testStringToTimeTimestampWithWS() throws Exception {

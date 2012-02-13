@@ -27,9 +27,11 @@ import static org.junit.Assert.*;
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
 import java.util.Collection;
+import java.util.Map;
 
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -61,6 +63,15 @@ public class TestMultipleModelIndexes {
 		ObjectInputStream ois = new ObjectInputStream(new FileInputStream(UnitTestUtil.getTestDataFile("schema.ser")));
 		Schema schema = (Schema) ois.readObject();
 		assertNotNull(schema.getFunctions());
+	}
+	
+	@Test public void testFunctionMetadata() throws Exception {
+		TransformationMetadata tm = VDBMetadataFactory.getVDBMetadata(UnitTestUtil.getTestDataPath() + "/TEIIDDES992_VDB.vdb");
+		Map<String, FunctionMethod> functions = tm.getMetadataStore().getSchema("TEIIDDES992").getFunctions();
+		assertEquals(1, functions.size());
+		FunctionMethod fm = functions.values().iterator().next();
+		assertEquals("sampleFunction", fm.getName());
+		assertEquals(1, fm.getInputParameters().size());
 	}
 	
 }

@@ -316,8 +316,10 @@ public class PlanToProcessConverter {
                     if (command instanceof QueryCommand) {
 	                    try {
 	                        command = (Command)command.clone();
-	                        boolean aliasGroups = modelID != null && CapabilitiesUtil.supportsGroupAliases(modelID, metadata, capFinder);
-	                        boolean aliasColumns = modelID != null && CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder);
+	                        boolean aliasGroups = modelID != null && (CapabilitiesUtil.supportsGroupAliases(modelID, metadata, capFinder) 
+	                        		|| CapabilitiesUtil.supports(Capability.QUERY_FROM_INLINE_VIEWS, modelID, metadata, capFinder));
+	                        boolean aliasColumns = modelID != null && (CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder)
+	                        		|| CapabilitiesUtil.supports(Capability.QUERY_FROM_INLINE_VIEWS, modelID, metadata, capFinder));
 	                        command.acceptVisitor(new AliasGenerator(aliasGroups, !aliasColumns));
 	                    } catch (QueryMetadataException err) {
 	                         throw new TeiidComponentException(QueryPlugin.Event.TEIID30249, err);

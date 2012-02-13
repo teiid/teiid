@@ -810,18 +810,14 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         if (schemaPaths == null) {
         	return schemas;
         }
-        File f = new File(tableRecord.getResourcePath());
-        String path = f.getParent();
-        if (File.separatorChar != '/') {
-        	path = path.replace(File.separatorChar, '/');
-        }
+        String path = getParentPath(tableRecord.getResourcePath());
         for (String string : schemaPaths) {
         	String parentPath = path;
         	boolean relative = false;
         	while (string.startsWith("../")) { //$NON-NLS-1$
         		relative = true;
         		string = string.substring(3);
-        		parentPath = new File(parentPath).getParent();
+        		parentPath = getParentPath(parentPath);
         	}
         	SQLXMLImpl schema = null;
         	if (!relative) {
@@ -842,6 +838,19 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         
         return schemas;
     }
+
+	private String getParentPath(String path) {
+		if (path == null) {
+			return ""; //$NON-NLS-1$
+		}
+		int index = path.lastIndexOf('/');
+        if (index > 0) {
+        	path = path.substring(0, index);
+        } else {
+        	path = ""; //$NON-NLS-1$
+        }
+		return path;
+	}
 
     public String getNameInSource(final Object metadataID) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(AbstractMetadataRecord.class, metadataID);

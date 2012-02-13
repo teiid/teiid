@@ -38,6 +38,8 @@ import org.teiid.common.buffer.CacheKey;
  */
 public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 	
+	private static final long DEFAULT_HALF_LIFE = 1<<17;
+	private static final long MIN_INTERVAL = 1<<10;
 	//TODO: until Java 7 ConcurrentSkipListMap has a scaling bug in that
 	//the level function limits the effective map size to ~ 2^16
 	//above which it performs comparably under multi-threaded load to a synchronized LinkedHashMap
@@ -49,7 +51,7 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 	
 	public LrfuEvictionQueue(AtomicLong clock) {
 		this.clock = clock;
-		setHalfLife(1<<17);
+		setHalfLife(DEFAULT_HALF_LIFE);
 	}
 
 	public boolean remove(V value) {
@@ -61,6 +63,10 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 	}
 	
 	public void touch(V value) {
+		long tick = clock.get();
+		if (tick - MIN_INTERVAL < value.getKey().getLastAccess()) {
+			return;
+		}
 		evictionQueue.remove(value.getKey());
 		recordAccess(value);
 		evictionQueue.put(value.getKey(), value);

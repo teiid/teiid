@@ -12,7 +12,6 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.salesforce.Util;
 
 
 /**
@@ -37,38 +36,23 @@ public class JoinQueryVisitor extends SelectVisitor {
 		super(metadata);
 	}
 
-	// Has to be a left outer join
+	// Has to be a left outer join of only 2 tables.  criteria must be a compare
 	@Override
 	public void visit(Join join) {
 		try {
 			TableReference left = join.getLeftItem();
-			if (left instanceof NamedTable) {
-				NamedTable leftGroup = (NamedTable) left;
-				leftTableInJoin = leftGroup.getMetadataObject();
-				loadColumnMetadata(leftGroup);
-			}
+			NamedTable leftGroup = (NamedTable) left;
+			leftTableInJoin = leftGroup.getMetadataObject();
+			loadColumnMetadata(leftGroup);
 
 			TableReference right = join.getRightItem();
-			if (right instanceof NamedTable) {
-				NamedTable rightGroup = (NamedTable) right;
-				rightTableInJoin = rightGroup.getMetadataObject();
-				loadColumnMetadata((NamedTable) right);
-			}
-			super.visit(join);
-		} catch (TranslatorException ce) {
-			exceptions.add(ce);
-		}
-
-	}
-
-	@Override
-	public void visit(Comparison criteria) {
-		// Find the criteria that joins the two tables
-		Expression rExp = criteria.getRightExpression();
-		if (rExp instanceof ColumnReference) {
+			NamedTable rightGroup = (NamedTable) right;
+			rightTableInJoin = rightGroup.getMetadataObject();
+			loadColumnMetadata((NamedTable) right);
+			Comparison criteria = (Comparison) join.getCondition();
 			Expression lExp = criteria.getLeftExpression();
+			Expression rExp = criteria.getRightExpression();
 			if (isIdColumn(rExp) || isIdColumn(lExp)) {
-
 				Column rColumn = ((ColumnReference) rExp).getMetadataObject();
 				String rTableName = rColumn.getParent().getNameInSource();
 
@@ -86,11 +70,13 @@ public class JoinQueryVisitor extends SelectVisitor {
 				} else {
 					// Only add the criteria to the query if it is not the join criteria.
 					// The join criteria is implicit in the salesforce syntax.
-					super.visit(criteria);
+					super.visit(criteria); //TODO: not valid
 				}
+			} else {
+				super.visit(criteria); //TODO: not valid
 			}
-		} else {
-			super.visit(criteria);
+		} catch (TranslatorException ce) {
+			exceptions.add(ce);
 		}
 	}
 
@@ -103,12 +89,12 @@ public class JoinQueryVisitor extends SelectVisitor {
 		if (!exceptions.isEmpty()) {
 			throw exceptions.get(0);
 		}
-		StringBuffer select = new StringBuffer();
+		StringBuilder select = new StringBuilder();
 		select.append(SELECT).append(SPACE);
 		addSelect(leftTableInJoin.getNameInSource(), select, true);
 		select.append(OPEN);
 		
-		StringBuffer subselect = new StringBuffer();
+		StringBuilder subselect = new StringBuilder();
 		subselect.append(SELECT).append(SPACE);
 		addSelect(rightTableInJoin.getNameInSource(), subselect, false);
 		subselect.append(SPACE);
@@ -119,8 +105,8 @@ public class JoinQueryVisitor extends SelectVisitor {
 		select.append(FROM).append(SPACE);
 		select.append(leftTableInJoin.getNameInSource()).append(SPACE);
 		addCriteriaString(select);
+		appendGroupByHaving(select);
 		select.append(limitClause);
-		Util.validateQueryLength(select);
 		return select.toString();			
 	}
 
@@ -128,33 +114,29 @@ public class JoinQueryVisitor extends SelectVisitor {
 		return childTable.equals(leftTableInJoin);
 	}
 
-	void addSelect(String tableNameInSource, StringBuffer result, boolean addComma) {
+	void addSelect(String tableNameInSource, StringBuilder result, boolean addComma) {
 		boolean firstTime = true;
 		for (DerivedColumn symbol : selectSymbols) {
 			Expression expression = symbol.getExpression();
 			if (expression instanceof ColumnReference) {
 				Column element = ((ColumnReference) expression).getMetadataObject();
 				String tableName = element.getParent().getNameInSource();
-				if(!isParentToChildJoin() && tableNameInSource.equals(tableName) ||
-						isParentToChildJoin()) {
-					if (!firstTime) {
-						result.append(", "); //$NON-NLS-1$						
-					} else {
-						firstTime = false;
-					}
-					result.append(tableName);
-					result.append('.');
-					result.append(element.getNameInSource());
-				} else {
+				if(!isParentToChildJoin() && !tableNameInSource.equals(tableName)) {
 					continue;
 				}
+				if (!firstTime) {
+					result.append(", "); //$NON-NLS-1$
+				} else {
+					firstTime = false;
+				}
+				appendColumnReference(result, (ColumnReference) expression);
 			} else if (expression instanceof AggregateFunction) {
 				if (!firstTime) {
 					result.append(", "); //$NON-NLS-1$
 				} else {
 					firstTime = false;
 				}
-				result.append("count()"); //$NON-NLS-1$
+				appendAggregateFunction(result, (AggregateFunction)expression);
 			} else {
 				throw new AssertionError("Unknown select symbol type" + symbol); //$NON-NLS-1$
 			}

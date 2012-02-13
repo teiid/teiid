@@ -52,11 +52,11 @@ public class UpdateVisitor extends CriteriaVisitor implements IQueryProvidingVis
 
 	public String getQuery() throws TranslatorException {
 		if (!exceptions.isEmpty()) {
-			throw ((TranslatorException) exceptions.get(0));
+			throw exceptions.get(0);
 		}
-		StringBuffer result = new StringBuffer();
+		StringBuilder result = new StringBuilder();
 		result.append(SELECT).append(SPACE);
-		result.append("Id").append(SPACE);
+		result.append("Id").append(SPACE); //$NON-NLS-1$
 		result.append(FROM).append(SPACE);
 		result.append(table.getNameInSource()).append(SPACE);
 		addCriteriaString(result);

@@ -779,7 +779,7 @@ public class DataTypeManager {
 		addSourceTransform(char[].class, new SourceTransform<char[], ClobType>() {
 			@Override
 			public ClobType transform(char[] value) {
-				return new ClobType(ClobType.createClob(value));
+				return new ClobType(ClobImpl.createClob(value));
 			}
 		});
 		addSourceTransform(Blob.class, new SourceTransform<Blob, BlobType>() {

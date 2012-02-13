@@ -356,6 +356,11 @@ public class TestDQPCore {
         assertEquals(10, rm.getResultsList().size());
         RequestWorkItem item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
         while(item.isProcessing());
+        synchronized (item) {
+			for (int i = 0; i < 100; i++) {
+				Thread.sleep(10);
+			}
+		}
         assertEquals(10, item.resultsBuffer.getRowCount());
     }
     

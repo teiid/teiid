@@ -22,6 +22,7 @@
 
 package org.teiid.core.types.basic;
 
+import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
@@ -37,8 +38,9 @@ public class StringToClobTransform extends Transform {
 	 * the transformation fails
 	 */
 	public Object transformDirect(Object value) throws TransformationException {
-        String contents = (String)value;                
-		return new ClobType(ClobType.createClob(contents.toCharArray()));
+        String contents = (String)value;
+        //TODO: if the value is too large, we should store in a file buffer
+		return new ClobType(ClobImpl.createClob(contents.toCharArray()));
 	}
 
 	/**

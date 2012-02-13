@@ -148,6 +148,7 @@ public class TestBufferFrontedFileStoreCache {
 	
 	@Test public void testEviction() throws Exception {
 		BufferFrontedFileStoreCache cache = createLayeredCache(1<<15, 1<<15);
+		assertEquals(3, cache.getMaxMemoryBlocks());
 		
 		CacheEntry ce = new CacheEntry(2l);
 		Serializer<Integer> s = new SimpleSerializer();

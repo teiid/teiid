@@ -23,16 +23,16 @@
 package org.teiid.core.types;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.io.StringReader;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.sql.Clob;
 import java.sql.SQLException;
-
-import javax.sql.rowset.serial.SerialClob;
 
 import org.teiid.core.CorePlugin;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -83,6 +83,29 @@ public class ClobImpl extends BaseLob implements Clob {
 		super(streamFactory);
 		this.len = length;
 	}
+    
+    public ClobImpl(final char[] chars) {
+    	this(new InputStreamFactory() {
+    		
+    		String str = new String(chars);
+
+			@Override
+			public InputStream getInputStream() throws IOException {
+				return new ByteArrayInputStream(str.getBytes());
+			}
+			
+			@Override
+			public Reader getCharacterStream() throws IOException {
+				return new StringReader(str);
+			}
+			
+			@Override
+			public StorageMode getStorageMode() {
+				return StorageMode.MEMORY;
+			}
+    		
+    	}, chars.length);
+    }
 
 	/**
      * Gets the <code>CLOB</code> value designated by this <code>Clob</code>
@@ -202,7 +225,7 @@ public class ClobImpl extends BaseLob implements Clob {
     	if (searchstr == null) {
             return -1;
         }
-    	return position(new SerialClob(searchstr.toCharArray()), start);
+    	return position(new ClobImpl(searchstr.toCharArray()), start);
     }
     	    
 	public Reader getCharacterStream(long arg0, long arg1) throws SQLException {
@@ -228,6 +251,10 @@ public class ClobImpl extends BaseLob implements Clob {
 
 	public void truncate(long arg0) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
+	}
+
+	public static Clob createClob(char[] chars) {
+		return new ClobImpl(chars);
 	}
 
 }

@@ -35,8 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import javax.sql.rowset.serial.SerialClob;
-
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -48,6 +46,7 @@ import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.XMLType;
@@ -317,11 +316,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						String value = entry.getValue();
 						Clob clobValue = null;
 						if (value != null) {
-							try {
-								clobValue = new ClobType(new SerialClob(value.toCharArray()));
-							} catch (SQLException e) {
-								 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30547, e);
-							}
+							clobValue = new ClobType(ClobImpl.createClob(value.toCharArray()));
 						}
 						rows.add(Arrays.asList(entry.getKey(), entry.getValue(), record.getUUID(), oid++, clobValue));
 					}
@@ -429,7 +424,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 							if (result == null) {
 								rows.add(Arrays.asList((Clob)null));
 							} else {
-								rows.add(Arrays.asList(new ClobType(new SerialClob(result.toCharArray()))));
+								rows.add(Arrays.asList(new ClobType(ClobImpl.createClob(result.toCharArray()))));
 							}
 						}
 						return new CollectionTupleSource(rows.iterator());

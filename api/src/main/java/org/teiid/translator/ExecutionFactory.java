@@ -522,6 +522,14 @@ public class ExecutionFactory<F, C> {
     public boolean supportsGroupBy() {
     	return false;
     }
+    
+    /**
+     * Whether the source supports grouping only over a single table
+     * @return
+     */
+    public boolean supportsOnlySingleTableGroupBy() {
+    	return false;
+    }
 
     /**
      * Whether the source supports the HAVING clause
