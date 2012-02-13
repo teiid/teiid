@@ -26,7 +26,9 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -591,7 +593,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 			hasPermit = true;
 			blockManager = getBlockManager(s.getId(), entry.getId(), EMPTY_ADDRESS);
 			BlockOutputStream bos = new BlockOutputStream(blockManager, memoryBlocks);
-			ObjectOutput dos = new DataObjectOutputStream(bos);
+			ObjectOutput dos = new ObjectOutputStream(bos);
 			dos.writeLong(s.getId());
 			dos.writeLong(entry.getId());
 			dos.writeInt(entry.getSizeEstimate());
@@ -719,7 +721,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 			if (lock != null) {
 				is = readIntoMemory(info, is, lock, memoryBlocks);
 			}
-			ObjectInput dis = new DataObjectInputStream(is);
+			ObjectInput dis = new ObjectInputStream(is);
 			dis.readFully(HEADER_SKIP_BUFFER);
 			int sizeEstimate = dis.readInt();
 			CacheEntry ce = new CacheEntry(new CacheKey(oid, 1, 1), sizeEstimate, serializer.deserialize(dis), ref, true);

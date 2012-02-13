@@ -25,7 +25,13 @@ package org.teiid.query.eval;
 import static org.junit.Assert.*;
 import static org.teiid.query.processor.TestProcessor.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.sql.Date;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,6 +47,7 @@ import javax.xml.stream.XMLStreamWriter;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryParserException;
+import org.teiid.client.BatchSerializer;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
@@ -51,6 +58,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.AccessibleByteArrayOutputStream;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -370,6 +378,70 @@ public class TestEnginePerformance {
 	
 	@Test public void runLike_16() throws Exception {
 		helpTestLike(50000, 16);
+	}
+	
+	@Test public void runBatchSerialization_String() throws Exception {
+		String[] types = new String[] {DataTypeManager.DefaultDataTypes.STRING};
+		int size = 1024;
+		
+		final List<List<?>> batch = new ArrayList<List<?>>();
+		for (int i = 0; i < size; i++) {
+			batch.add(Arrays.asList(String.valueOf(i)));
+		}
+		helpTestBatchSerialization(types, batch, 50000, 2);
+	}
+	
+	@Test public void runBatchSerialization_Time() throws Exception {
+		final String[] types = new String[] {DataTypeManager.DefaultDataTypes.TIME};
+		int size = 1024;
+		
+		final List<List<?>> batch = new ArrayList<List<?>>();
+		for (int i = 0; i < size; i++) {
+			batch.add(Arrays.asList(new Time(i)));
+		}
+		helpTestBatchSerialization(types, batch, 50000, 2);
+	}
+	
+	@Test public void runBatchSerialization_Date() throws Exception {
+		final String[] types = new String[] {DataTypeManager.DefaultDataTypes.DATE};
+		int size = 1024;
+		
+		final List<List<?>> batch = new ArrayList<List<?>>();
+		for (int i = 0; i < size; i++) {
+			batch.add(Arrays.asList(new Date(i)));
+		}
+		helpTestBatchSerialization(types, batch, 50000, 2);
+	}
+	
+	private void helpTestBatchSerialization(final String[] types,
+			final List<List<?>> batch, int iterations, int threadCount)
+			throws InterruptedException, Exception {
+		runTask(iterations, threadCount, new Task() {
+			
+			@Override
+			public Void call() throws Exception {
+				writeReadBatch(types, batch);
+				return null;
+			}
+		});
+	}
+
+	private List<List<Object>> writeReadBatch(String[] types, List<List<?>> batch)
+			throws IOException, ClassNotFoundException {
+		AccessibleByteArrayOutputStream baos = new AccessibleByteArrayOutputStream(5000);
+		ObjectOutputStream out = new ObjectOutputStream(baos);
+		BatchSerializer.writeBatch(out, types, batch);
+        out.flush();
+        
+        byte[] bytes = baos.getBuffer();
+        
+        ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytes, 0, baos.getCount());
+        ObjectInputStream in = new ObjectInputStream(bytesIn);
+        List<List<Object>> newBatch = BatchSerializer.readBatch(in, types);
+        out.close();
+        in.close();
+        assertEquals(batch.size(), newBatch.size());
+        return newBatch;
 	}
 
 	private void helpTestLike(int iterations, int threads) throws QueryParserException,
