@@ -3,27 +3,27 @@
     <parent>
         <artifactId>sandbox</artifactId>
         <groupId>org.jboss.teiid.connectors</groupId>
-        <version>7.7.0.CR1</version>
+        <version>7.7.0.CR1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>connector-coherence</artifactId>
     <groupId>org.jboss.teiid.connectors.sandbox</groupId>
     <name>Coherence Connector</name>
-    <version>7.7.0.CR1</version>
+    <version>7.7.0.CR1-SNAPSHOT</version>
     <packaging>rar</packaging>
     <description>This connector reads data from a Coherence cache</description>
     <dependencies>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-api</artifactId>
-            <version>7.7.0.CR1</version>
+            <version>7.7.0.CR1-SNAPSHOT</version>
              <scope>provided</scope>
         </dependency>
         
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-common-core</artifactId>  
-            <version>7.7.0.CR1</version>
+            <version>7.7.0.CR1-SNAPSHOT</version>
              <scope>provided</scope>
         </dependency>
         <dependency>

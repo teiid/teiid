@@ -3,12 +3,12 @@
     <!--  parent>
         <artifactId>sandbox</artifactId>
         <groupId>org.jboss.teiid.connectors</groupId>
-        <version>7.7.0.CR1</version>
+        <version>7.7.0.CR1-SNAPSHOT</version>
     </parent-->
     <modelVersion>4.0.0</modelVersion>
     <artifactId>translator-coherence</artifactId>
     <groupId>org.jboss.teiid.connectors.sandbox</groupId>
-    <version>7.7.0.CR1</version>
+    <version>7.7.0.CR1-SNAPSHOT</version>
     <name>Coherence Translator</name>
     <description>This is the tranlator for a Coherence connector</description>
 
@@ -17,7 +17,7 @@
          <dependency>
         	<artifactId>connector-coherence</artifactId>
     		<groupId>org.jboss.teiid.connectors.sandbox</groupId>
-    		<version>7.7.0.CR1</version>
+    		<version>7.7.0.CR1-SNAPSHOT</version>
     		<scope>compile</scope>
 			<classifier>lib</classifier>
         </dependency>   
@@ -36,7 +36,7 @@
 			<dependency>
 				<groupId>org.jboss.teiid</groupId>
 				<artifactId>teiid-api</artifactId>
-				<version>7.7.0.CR1</version>
+				<version>7.7.0.CR1-SNAPSHOT</version>
 				<scope>provided</scope>
 			</dependency>
 			<dependency>
@@ -57,7 +57,7 @@
 				<groupId>org.jboss.teiid</groupId>
 				<artifactId>teiid-metadata</artifactId>
 				<type>test-jar</type>
-				<version>7.7.0.CR1</version>
+				<version>7.7.0.CR1-SNAPSHOT</version>
 				<scope>test</scope>
 			</dependency>
         
@@ -65,38 +65,38 @@
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-api</artifactId>
-            <version>7.7.0.CR1</version>
+            <version>7.7.0.CR1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-common-core</artifactId>
-            <version>7.7.0.CR1</version>
+            <version>7.7.0.CR1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         -->
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-engine</artifactId>
-            <version>7.7.0.CR1</version>
+            <version>7.7.0.CR1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>  
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-metadata</artifactId>
-            <version>7.7.0.CR1</version>
+            <version>7.7.0.CR1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>    
          <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-runtime</artifactId>
-            <version>7.7.0.CR1</version>
+            <version>7.7.0.CR1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>   
          <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-client</artifactId>
-            <version>7.7.0.CR1</version>
+            <version>7.7.0.CR1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>             
 
