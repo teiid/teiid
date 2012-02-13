@@ -293,5 +293,17 @@ public class MetadataFactory {
 		setUUID(function);
 		this.schema.addFunction(function);
 		return function;
-	}		
+	}
+	
+	/**
+	 * Set to false to disable correcting column and other names to be valid Teiid names.
+	 * @param autoCorrectColumnNames
+	 */
+	public void setAutoCorrectColumnNames(boolean autoCorrectColumnNames) {
+		this.autoCorrectColumnNames = autoCorrectColumnNames;
+	}
+	
+	public void setMetadataStore(MetadataStore metadataStore) {
+		this.store = metadataStore;
+	}
 }
