@@ -766,5 +766,23 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     	}
     	return this.actualMetadata.getPrimaryKey(metadataID);
     }
+    
+    @Override
+    public boolean isMultiSource(Object modelId) throws QueryMetadataException,
+    		TeiidComponentException {
+    	if (modelId instanceof TempMetadataID) {
+    		return false;
+    	}
+    	return this.actualMetadata.isMultiSource(modelId);
+    }
+    
+    @Override
+    public boolean isMultiSourceElement(Object elementId)
+    		throws QueryMetadataException, TeiidComponentException {
+    	if (elementId instanceof TempMetadataID) {
+    		return false;
+    	} 
+    	return this.actualMetadata.isMultiSourceElement(elementId);
+    }
 
 }

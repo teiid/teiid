@@ -22,24 +22,26 @@
 
 package org.teiid.dqp.internal.process.multisource;
 
+import static org.junit.Assert.*;
+
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataID;
+import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.unittest.RealMetadataFactory;
 
+@SuppressWarnings("nls")
+public class TestMultiSourceMetadataWrapper {
 
-
-/** 
- * @since 4.2
- */
-public class TestMultiSourceMetadataWrapper extends TestCase {
-
-    public void testMultiSourcePseudoElement() throws Exception {
+    @Test public void testMultiSourcePseudoElement() throws Exception {
         HashSet<String> multiSourceModels = new HashSet<String>();
         multiSourceModels.add("BQT1");
         MultiSourceMetadataWrapper wrapper = new MultiSourceMetadataWrapper(RealMetadataFactory.exampleBQTCached(), multiSourceModels);
@@ -71,5 +73,14 @@ public class TestMultiSourceMetadataWrapper extends TestCase {
         assertEquals(0, wrapper.getRadix(instanceElementID));
         assertEquals(MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME, SingleElementSymbol.getShortName(fullName));
         assertEquals(fullName, wrapper.getFullName(groupID) + SingleElementSymbol.SEPARATOR + MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME);
+        
+        
+        TempMetadataAdapter tma = new TempMetadataAdapter(wrapper, new TempMetadataStore());
+        ElementSymbol elementSymbol = new ElementSymbol("y");
+        elementSymbol.setType(DataTypeManager.DefaultDataClasses.STRING);
+		TempMetadataID id = tma.getMetadataStore().addTempGroup("x", Arrays.asList(elementSymbol));
+        
+        assertFalse(tma.isMultiSourceElement(id.getElements().get(0)));
+        assertTrue(tma.isMultiSourceElement(instanceElementID));
     }
 }
