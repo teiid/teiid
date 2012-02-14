@@ -46,14 +46,14 @@ public class TestLocalBufferService {
         BufferServiceImpl svc = new BufferServiceImpl();
         svc.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid/1");
         svc.setUseDisk(true);
-        
+        svc.setInlineLobs(false);
         svc.start();
         // all the properties are set
         assertTrue("Not Directory", svc.getBufferDirectory().isDirectory()); //$NON-NLS-1$
         assertTrue("does not exist", svc.getBufferDirectory().exists()); //$NON-NLS-1$
         assertTrue("does not end with one", svc.getBufferDirectory().getParent().endsWith("1")); //$NON-NLS-1$ //$NON-NLS-2$
         assertTrue(svc.isUseDisk());
-        
+        assertFalse(svc.isInlineLobs());
         BufferManagerImpl mgr = svc.getBufferManager();
         SplittableStorageManager ssm = (SplittableStorageManager)((BufferFrontedFileStoreCache)mgr.getCache()).getStorageManager();
         assertTrue(((FileStorageManager)ssm.getStorageManager()).getDirectory().endsWith(svc.getBufferDirectory().getName()));
