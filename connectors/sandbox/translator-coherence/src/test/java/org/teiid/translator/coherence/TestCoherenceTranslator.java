@@ -31,6 +31,7 @@ import junit.framework.TestCase;
 import org.teiid.cdk.api.ConnectorHost;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.KeyRecord;
@@ -67,8 +68,9 @@ public class TestCoherenceTranslator extends TestCase  {
 			
 		CoherenceExecutionFactory execFactory = new CoherenceExecutionFactory();
 			
-		host = new ConnectorHost(execFactory, conn, getTradeTranslationUtility());
-				///UnitTestUtil.getTestDataPath() + "/Coherence_Designer_Project/Trade.vdb");
+		host = new ConnectorHost(execFactory, conn,
+				//getTradeTranslationUtility());
+				UnitTestUtil.getTestDataPath() + "/Coherence_Designer_Project/Trade.vdb");
 	}
 	
 	@Override
@@ -83,7 +85,7 @@ public class TestCoherenceTranslator extends TestCase  {
 	public void testInsertAndDelete() throws Exception {
 		StringBuilder tradeSQL = new StringBuilder();
 		
-					tradeSQL.append("INSERT INTO Trade_Update.Trade (tradeid, name) VALUES (");
+					tradeSQL.append("INSERT INTO Trade_Object.Trade (tradeid, name) VALUES (");
 					tradeSQL.append(99);
 					tradeSQL.append(",");
 					tradeSQL.append(" 'TradeName ");
@@ -92,7 +94,7 @@ public class TestCoherenceTranslator extends TestCase  {
 												
 		host.executeCommand(tradeSQL.toString());
 		
-		List actualResults = host.executeCommand("select * From Trade_Update.Trade where Trade_Update.Trade.TradeID = 99");
+		List actualResults = host.executeCommand("select * From Trade_Object.Trade where Trade_Object.Trade.TradeID = 99");
 		//tradeid, name
         // Compare actual and expected results
 		// should get back the 10 legs for each trade (3) totaling 30
@@ -101,7 +103,7 @@ public class TestCoherenceTranslator extends TestCase  {
         
 //		tradeSQL = new StringBuilder();
 //		
-//		tradeSQL.append("INSERT INTO Trade_Update.Leg (tradeid, LegID, name, Notational) VALUES (");
+//		tradeSQL.append("INSERT INTO Trade_Object.Leg (tradeid, LegID, name, Notational) VALUES (");
 //		tradeSQL.append(99);
 //		tradeSQL.append(",");
 //		tradeSQL.append(1);
@@ -117,7 +119,7 @@ public class TestCoherenceTranslator extends TestCase  {
 //
 //		tradeSQL = new StringBuilder();
 //		
-//		tradeSQL.append("INSERT INTO Trade_Update.Leg (tradeid, LegID, name, Notational) VALUES (");
+//		tradeSQL.append("INSERT INTO Trade_Object.Leg (tradeid, LegID, name, Notational) VALUES (");
 //		tradeSQL.append(99);
 //		tradeSQL.append(",");
 //		tradeSQL.append(2);
@@ -134,16 +136,16 @@ public class TestCoherenceTranslator extends TestCase  {
 		
 		
 //		actualResults = host.executeCommand(
-//	      		"SELECT Trade_Update.Trade.TradeID, Trade_Update.Trade.Name, Trade_Update.Leg.LegID, Trade_Update.Leg.Notational, Trade_Update.Leg.Name AS LegName " +
-//	        	" FROM Trade_Update.Trade, Trade_Update.Leg " +
-//	        	 "WHERE	Trade_Update.Trade.TradeID = Trade_Update.Leg.TradeID and Trade_Update.Trade.TradeID = 99");
+//	      		"SELECT Trade_Object.Trade.TradeID, Trade_Object.Trade.Name, Trade_Object.Leg.LegID, Trade_Object.Leg.Notational, Trade_Object.Leg.Name AS LegName " +
+//	        	" FROM Trade_Object.Trade, Trade_Object.Leg " +
+//	        	 "WHERE	Trade_Object.Trade.TradeID = Trade_Object.Leg.TradeID and Trade_Object.Trade.TradeID = 99");
 //
 //	     assertEquals("Did not get expected number of rows", 2, actualResults.size()); //$NON-NLS-1$
         
  
-		actualResults = host.executeCommand("DELETE FROM Trade_Update.Trade Where Trade_Update.Trade.TradeID = 99");
+		actualResults = host.executeCommand("DELETE FROM Trade_Object.Trade Where Trade_Object.Trade.TradeID = 99");
 		
-		actualResults = host.executeCommand("select * From Trade_Update.Trade where Trade_Update.Trade.TradeID = 99");
+		actualResults = host.executeCommand("select * From Trade_Object.Trade where Trade_Object.Trade.TradeID = 99");
 		//tradeid, name
         // Compare actual and expected results
 		// should get back the 10 legs for each trade (3) totaling 30
@@ -153,6 +155,26 @@ public class TestCoherenceTranslator extends TestCase  {
         
              
 	}	
+	
+//	public void testUpdateChildOfExisingParent() throws Exception {
+//		StringBuilder tradeSQL = new StringBuilder();
+//		
+//		
+//		tradeSQL.append("INSERT INTO Trade_Object.Leg (tradeid, LegID, name, Notational) VALUES (");
+//		tradeSQL.append(99);
+//		tradeSQL.append(",");
+//		tradeSQL.append(1);
+//		tradeSQL.append(",");		
+//		tradeSQL.append(" 'Leg ");
+//		tradeSQL.append(1);
+//		tradeSQL.append("',");		
+//		tradeSQL.append(1.24);
+//		tradeSQL.append(")");
+////									
+////		System.out.println(tradeSQL.toString());
+////		host.executeCommand(tradeSQL.toString());												
+//		host.executeCommand(tradeSQL.toString());
+//	}	
 
 	/**
 	 * This will instantiate the {@link CoherenceManagedConnectionFactory} and
@@ -163,9 +185,9 @@ public class TestCoherenceTranslator extends TestCase  {
 	public void testGet1TradeWith10Legs() throws Exception {
 			
 		List<List> actualResults = host.executeCommand(
-	      		"SELECT Trade_Update.Trade.TradeID, Trade_Update.Trade.Name, Trade_Update.Leg.LegID, Trade_Update.Leg.Notational, Trade_Update.Leg.Name AS LegName " +
-	        	" FROM Trade_Update.Trade, Trade_Update.Leg " +
-	        	 "WHERE	Trade_Update.Trade.TradeID = Trade_Update.Leg.TradeID ");
+	      		"SELECT Trade_Object.Trade.TradeID, Trade_Object.Trade.Name, Trade_Object.Leg.LegID, Trade_Object.Leg.Notational, Trade_Object.Leg.Name AS LegName " +
+	        	" FROM Trade_Object.Trade, Trade_Object.Leg " +
+	        	 "WHERE	Trade_Object.Trade.TradeID = Trade_Object.Leg.TradeID ");
 		
 	    //    		"SELECT * FROM Trade.Trad " +
 	      //  			" WHERE Trade.Trade.TradeID = Trade.Trade.TradeID");
@@ -191,7 +213,7 @@ public class TestCoherenceTranslator extends TestCase  {
 
 	public void testGetAllTrades() throws Exception {
 		
-		List actualResults = host.executeCommand("select * From Trade_Update.Trade");
+		List actualResults = host.executeCommand("select * From Trade_Object.Trade");
 		//tradeid, name
         // Compare actual and expected results
 		// should get back the 10 legs for each trade (3) totaling 30
@@ -201,27 +223,27 @@ public class TestCoherenceTranslator extends TestCase  {
 	
 	public void testTradesAndLegsWhereTradeLessThanGreatThan() throws Exception {
 		
-		String prefix = "SELECT Trade_Update.Trade.TradeID, Trade_Update.Trade.Name, Trade_Update.Leg.LegID, Trade_Update.Leg.Notational, Trade_Update.Leg.Name AS LegName " +
-    	" FROM Trade_Update.Trade, Trade_Update.Leg " +
-   	 "WHERE	Trade_Update.Trade.TradeID = Trade_Update.Leg.TradeID and ";
-
-		List actualResults = host.executeCommand(prefix + "Trade_Update.Trade.TradeID > 2");
+		String prefix = "SELECT Trade_Object.Trade.TradeID, Trade_Object.Trade.Name, Trade_Object.Leg.LegID, Trade_Object.Leg.Notational, Trade_Object.Leg.Name AS LegName " +
+    	" FROM Trade_Object.Trade, Trade_Object.Leg " +
+   	 "WHERE	Trade_Object.Trade.TradeID = Trade_Object.Leg.TradeID and ";
+		
+		List actualResults = host.executeCommand(prefix + "Trade_Object.Trade.TradeID > 2");
 		
         assertEquals("Did not get expected number of rows", 10, actualResults.size()); //$NON-NLS-1$
         
-		actualResults = host.executeCommand(prefix + "Trade_Update.Trade.TradeID < 3");
+		actualResults = host.executeCommand(prefix + "Trade_Object.Trade.TradeID < 3");
 		
         assertEquals("Did not get expected number of rows", 20, actualResults.size()); //$NON-NLS-1$
 
-		actualResults = host.executeCommand(prefix + "Trade_Update.Trade.TradeID <= 3");
+		actualResults = host.executeCommand(prefix + "Trade_Object.Trade.TradeID <= 3");
 		
         assertEquals("Did not get expected number of rows", 30, actualResults.size()); //$NON-NLS-1$
         
-        actualResults = host.executeCommand(prefix + "Trade_Update.Trade.TradeID >= 1");
+        actualResults = host.executeCommand(prefix + "Trade_Object.Trade.TradeID >= 1");
 		
         assertEquals("Did not get expected number of rows", 30, actualResults.size()); //$NON-NLS-1$
         
-		actualResults = host.executeCommand(prefix + "Trade_Update.Trade.TradeID < 1");
+		actualResults = host.executeCommand(prefix + "Trade_Object.Trade.TradeID < 1");
 		
         assertEquals("Did not get expected number of rows", 0, actualResults.size()); //$NON-NLS-1$
               
@@ -232,18 +254,18 @@ public class TestCoherenceTranslator extends TestCase  {
 
 	public void testLikeTradesWithLegs() throws Exception {
 
-		String prefix = "SELECT Trade_Update.Trade.TradeID, Trade_Update.Trade.Name, Trade_Update.Leg.LegID, Trade_Update.Leg.Notational, Trade_Update.Leg.Name AS LegName " +
-    	" FROM Trade_Update.Trade, Trade_Update.Leg " +
-   	 "WHERE	Trade_Update.Trade.TradeID = Trade_Update.Leg.TradeID and ";
+		String prefix = "SELECT Trade_Object.Trade.TradeID, Trade_Object.Trade.Name, Trade_Object.Leg.LegID, Trade_Object.Leg.Notational, Trade_Object.Leg.Name AS LegName " +
+    	" FROM Trade_Object.Trade, Trade_Object.Leg " +
+   	 "WHERE	Trade_Object.Trade.TradeID = Trade_Object.Leg.TradeID and ";
 
 	
-		List actualResults = host.executeCommand(prefix + " Trade_Update.Trade.Name like 'Trade%' ");
+		List actualResults = host.executeCommand(prefix + " Trade_Object.Trade.Name like 'Trade%' ");
 		
         // Compare actual and expected results
 		// should get back the 10 legs for each trade (3) totaling 30
         assertEquals("Did not get expected number of rows", 30, actualResults.size()); //$NON-NLS-1$
         
-        actualResults = host.executeCommand(prefix + " Trade_Update.Trade.Name like '%2%' ");
+        actualResults = host.executeCommand(prefix + " Trade_Object.Trade.Name like '%2%' ");
 		
         // Compare actual and expected results
 		// should get back the 10 legs for each trade (3) totaling 30
@@ -257,7 +279,7 @@ public class TestCoherenceTranslator extends TestCase  {
 	public TranslationUtility getTradeTranslationUtility() {
 		MetadataStore metadataStore = new MetadataStore();
         // Create TRADE
-        Schema trading = RealMetadataFactory.createPhysicalModel("Trade_Update", metadataStore); //$NON-NLS-1$
+        Schema trading = RealMetadataFactory.createPhysicalModel("Trade_Object", metadataStore); //$NON-NLS-1$
         
         // Create physical groups
         Table trade = RealMetadataFactory.createPhysicalGroup("TRADE", trading); //$NON-NLS-1$
@@ -299,24 +321,28 @@ public class TestCoherenceTranslator extends TestCase  {
                 DataTypeManager.DefaultDataTypes.LONG,
                 DataTypeManager.DefaultDataTypes.DOUBLE,
         		DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.LONG
+        		DataTypeManager.DefaultDataTypes.LONG
                        };
         
         List<Column> legcols = RealMetadataFactory.createElements(leg, legNames, legTypes);
         
         // Set name in source on each column
         String[] legnameInSource = new String[] {
-                "Legs.LegId",           
-                "Legs.Notational",
-                "Legs.Name",
-                "TradeID"
+                "LegId",           
+                "Notational",
+                "Name",
+                "TradeId"
         };
         for(int i=0; i<legnameInSource.length; i++) {
             legcols.get(i).setNameInSource(legnameInSource[i]);
         }
+        legcols.get(3).setSelectable(false);
+        legcols.get(3).setUpdatable(false);
         
         List<Column> legkeys = new ArrayList(1);
         keys.add(legcols.get(0));
+        
+        
         
         RealMetadataFactory.createKey(Type.Primary, "Leg_ID_PK", leg, legkeys);
         
@@ -335,9 +361,9 @@ public class TestCoherenceTranslator extends TestCase  {
         Schema tradeview = RealMetadataFactory.createVirtualModel("Trade_View", metadataStore);
         
         QueryNode qn = new QueryNode(
-        		"SELECT Trade_Update.Trade.TradeID, Trade_Update.Trade.Name, Trade_Update.Leg.LegID, Trade_Update.Leg.Notational, Trade_Update.Leg.Name AS LegName " +
-        	" FROM Trade_Update.Trade, Trade_Update.Leg " +
-        	 "WHERE	Trade_Update.Trade.TradeID = Trade_Update.Leg.TradeID " +    		
+        		"SELECT Trade_Object.Trade.TradeID, Trade_Object.Trade.Name, Trade_Object.Leg.LegID, Trade_Object.Leg.Notational, Trade_Object.Leg.Name AS LegName " +
+        	" FROM Trade_Object.Trade, Trade_Object.Leg " +
+        	 "WHERE	Trade_Object.Trade.TradeID = Trade_Object.Leg.TradeID " +    		
         		"SELECT * FROM Trade.Trad " +
         			" WHERE Trade.Trade.TradeID = Trade.Trade.TradeID");
         

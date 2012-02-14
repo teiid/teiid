@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>Coherence</name>
+	<comment>No Product Application, version 7.1.0.v20110215-1224-H420-GA</comment>
+	<projects>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.teiid.designer.core.modelBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>org.teiid.designer.core.modelNature</nature>
+	</natures>
+</projectDescription>

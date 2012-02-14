@@ -9,7 +9,9 @@ Features
 Modeling Guidelines
 -------------
 
-
+*************
+general rules:
+*************
 1.	JavaBean convention is used.  The column name (or nameinsource if used) are used in finding the get/set method on the cached object.  
 	What does that mean?
 
@@ -24,43 +26,63 @@ Modeling Guidelines
 	The process of getting the trade id value from the Trade object will take the nameInSource (if not provided, then use column name) and prepend "get".
 	Therefore, the method name:   getTradeId  must exist on the Trade object.
 	
+2.   the nameInSource for a table will contain the full class name of the object to be created
+
+
+*************
+specific rules:
+*************
+
+-	table defined for the root object 
+	a.  the table must have a primary key defined, this is the key the root object by which its found in the Coherence cache
 	
-2.	The Coherence Cache Name will be set on the Coherence Connector, see it for configuration.
+	
+	
+-   model a container object (i.e., Collection, Map, Array) in the root as a separate table
+	a.  a foreign key must be defined to the root table for which its contained, with the nameInSource must be the name of the 
+		method to call on the root object (see JavaBean convention)
+	b.	the foreign key column on the root must be added to the child table so that the key value can be included in the sql statements (INSERT/UPDATE/DELETE) in order
+		for the root object can be found.  Change the column NOT to updateable or selectable.
+	c.	a primary key must be defined
 
--	Top level object must have a primary key defined for the attribute that's the key to finding the object in the cache
+	
 
-3.  Model a container object (collection, array, map) as another table.
-	-   on the child table, add the primary key column on the parent table to the child table (column must not be updatable)
-	-	a foreign key must be defined, using the primary key on parent and the parent column added to the child (in above step),
-		the nameInSource for the foreign key is the name of the method (excluding get/set prefix)
+
+*****************
+Setup
+*****************
+	
+	
+1.	The Coherence Cache Name will be set on the Coherence Connector, see it for configuration.
+
 	
 	
 ------------
 Limitations
 ------------
 
-	-	A Designer modeled table can only be referencing 1 collection in the root object. 
-		If the root object contains multiple collection type objects, then a table will need to be modeled for each collection.    This will allow the 
-		the Teiid engine to perform the join across collections.
-	-	Cannot put criteria on a column that comes from an object that is in a Collection.  This is a coherence limitation out-of-the-box.  This can
-		be implemented to enable this capability.
+	-	There is NO JOIN criteria to specify when querying the root and child object, only conditional criteria.  This is because 	
+	    it a  coherence limitation out-of-the-box.  This can be implemented to enable this capability.	
+	-	See TBD below
 		
 		
 ---------------------
 TBD:  The following are things to be added:
 ---------------------
 
-	a.  Enable the mapping of a column to a property.  Using this syntax structure: property.<propertyName>
+	-	Enable UPDATE query
+	-   Enable the mapping of a column to a property.  Using this syntax structure: property.<propertyName>
 		set the nameInSource to this value.
-			
-	b.	Enable the support for Boolean.   This would use the "is" prefix to the getter method. (note, this has been coded for, but not tested)
-	
-	c.	enable the abiltiy to a criteria for a column from an object in the collection
-	
-	d.	Because all sql criteria has to mapped to Coherence filters, only some have been mapped so far.  There are others that need to be added so that 
+		
+	-	Transaction support is not fully implemented.   Example, object locking during the duration of the processing in the translator.
+					
+	-	Because all sql criteria has to mapped to Coherence filters, only some have been mapped so far.  There are others that need to be added so that 
 		the following features will be enabled:
 		-	Limit
 		-	Between
 		-	and others 
 		
 		see http://www.exforsys.com/reviews/oracle-coherence.html for information  and examples
+		
+		
+

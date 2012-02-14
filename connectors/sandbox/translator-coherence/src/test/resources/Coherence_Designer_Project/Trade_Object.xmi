@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="ASCII"?>
+<xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:diagram="http://www.metamatrix.com/metamodels/Diagram" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core" xmlns:relational="http://www.metamatrix.com/metamodels/Relational">
+  <mmcore:ModelAnnotation xmi:uuid="mmuuid:abbd65a2-2896-4819-9428-fa8ba13a1b71" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="PHYSICAL" ProducerName="Teiid Designer" ProducerVersion="7.4.2.v20111104-1235-H672-Final">
+    <modelImports xmi:uuid="mmuuid:48ca1629-21c3-4df9-b1ac-16b2a1783c7c" name="XMLSchema" modelLocation="http://www.w3.org/2001/XMLSchema" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
+    <modelImports xmi:uuid="mmuuid:4f6cc788-01c2-4574-923a-a87393ef6838" name="SimpleDatatypes-instance" modelLocation="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
+  </mmcore:ModelAnnotation>
+  <diagram:DiagramContainer xmi:uuid="mmuuid:060329df-f071-436c-91d8-8de84f4a38b3">
+    <diagram xmi:uuid="mmuuid:0d512295-f6e7-418d-8409-f7e689137c68" type="packageDiagramType" target="mmuuid/abbd65a2-2896-4819-9428-fa8ba13a1b71">
+      <diagramEntity xmi:uuid="mmuuid:0556cf27-0b7f-4670-ba1d-f958c70d1619" name="Trade" modelObject="mmuuid/5b23705c-0091-412a-9e79-c61ed02bd618" xPosition="131" yPosition="57"/>
+      <diagramEntity xmi:uuid="mmuuid:ada12275-d21b-4036-bcc9-c869229899ab" name="Leg" modelObject="mmuuid/3c3beef7-0a75-4bbb-9aaa-7ea240da41f3" xPosition="516" yPosition="235"/>
+    </diagram>
+  </diagram:DiagramContainer>
+  <relational:BaseTable xmi:uuid="mmuuid:5b23705c-0091-412a-9e79-c61ed02bd618" name="Trade" nameInSource="org.teiid.translator.coherence.Trade" cardinality="1">
+    <columns xmi:uuid="mmuuid:9ac8e953-1818-4ce6-a9d8-14d1a8539370" name="TradeID" nameInSource="TradeId" nativeType="Long" uniqueKeys="mmuuid/48e9ee81-01d2-4696-b63f-6a9f6f326aef">
+      <type href="http://www.w3.org/2001/XMLSchema#long"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:139a5ee2-44dc-4b5f-b3d0-68a269ffd7a1" name="Name" nameInSource="Name" nativeType="String" caseSensitive="false">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:9e0828ec-d634-4211-8e44-6f94f3092a27" name="Legs" nativeType="Collection" selectable="false" updateable="false">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </columns>
+    <primaryKey xmi:uuid="mmuuid:48e9ee81-01d2-4696-b63f-6a9f6f326aef" name="TradeID_PK" nameInSource="" columns="mmuuid/9ac8e953-1818-4ce6-a9d8-14d1a8539370" foreignKeys="mmuuid/3a3196cd-3e6c-48bf-aa02-e6c99fb1fafe"/>
+  </relational:BaseTable>
+  <relational:BaseTable xmi:uuid="mmuuid:3c3beef7-0a75-4bbb-9aaa-7ea240da41f3" name="Leg" nameInSource="org.teiid.translator.coherence.Leg" cardinality="10">
+    <columns xmi:uuid="mmuuid:3ad9207c-b90f-4aca-bd66-8cd9b3a0e2a3" name="LegID" nameInSource="LegId" nativeType="Long" uniqueKeys="mmuuid/ea715b26-57e0-4245-b3a4-d326dcde47aa">
+      <type href="http://www.w3.org/2001/XMLSchema#long"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:3ef7317b-0b54-4bbe-b634-aee7910cc5ca" name="Notational" nameInSource="Notational" nativeType="Double">
+      <type href="http://www.w3.org/2001/XMLSchema#double"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:19abbb02-6270-4e16-8daa-539e4d024808" name="Name" nameInSource="Name" nativeType="String">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:937693a2-bd2b-40eb-971d-8eee24fca82a" name="TradeID" nameInSource="TradeId" nativeType="Long" selectable="false" updateable="false" foreignKeys="mmuuid/3a3196cd-3e6c-48bf-aa02-e6c99fb1fafe">
+      <type href="http://www.w3.org/2001/XMLSchema#long"/>
+    </columns>
+    <foreignKeys xmi:uuid="mmuuid:3a3196cd-3e6c-48bf-aa02-e6c99fb1fafe" name="LegToTrade_FK" nameInSource="Legs" columns="mmuuid/937693a2-bd2b-40eb-971d-8eee24fca82a" uniqueKey="mmuuid/48e9ee81-01d2-4696-b63f-6a9f6f326aef"/>
+    <primaryKey xmi:uuid="mmuuid:ea715b26-57e0-4245-b3a4-d326dcde47aa" name="LegID_PK" columns="mmuuid/3ad9207c-b90f-4aca-bd66-8cd9b3a0e2a3"/>
+  </relational:BaseTable>
+  <mmcore:AnnotationContainer xmi:uuid="mmuuid:146acc5c-ec00-4c47-b40f-bcde7a260d72"/>
+</xmi:XMI>
