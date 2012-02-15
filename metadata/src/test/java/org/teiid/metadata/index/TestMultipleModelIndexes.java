@@ -51,6 +51,14 @@ public class TestMultipleModelIndexes {
 		assertNotNull(t.getColumns().get(0).getDatatype());
 	}
 	
+	@Test public void testUniqueReferencedKey() throws Exception {
+		TransformationMetadata tm = VDBMetadataFactory.getVDBMetadata(UnitTestUtil.getTestDataPath() + "/keys.vdb");
+		Collection fks = tm.getForeignKeysInGroup(tm.getGroupID("x.a"));
+		assertEquals(1, fks.size());
+		Object pk = tm.getPrimaryKeyIDForForeignKeyID(fks.iterator().next());
+		assertNotNull(pk);
+	}
+	
 	@Test public void testSchemaLoad() throws Exception {
 		TransformationMetadata tm = VDBMetadataFactory.getVDBMetadata(UnitTestUtil.getTestDataPath() + "/Test.vdb");
 		

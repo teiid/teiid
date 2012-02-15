@@ -26,12 +26,16 @@ import static org.junit.Assert.*;
 
 import java.sql.Connection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Properties;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.VDBRepository;
+import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
@@ -45,7 +49,17 @@ import org.teiid.translator.jdbc.teiid.TeiidExecutionFactory;
 /**
  */
 @SuppressWarnings("nls")
-public class TestDymamicImportedMetaData {
+public class TestDynamicImportedMetaData {
+
+	private FakeServer server;
+	
+	@Before public void setup() {
+		this.server = new FakeServer();
+	}
+	
+	@After public void tearDown() {
+		this.server.stop();
+	}
 
 	private MetadataFactory getMetadata(Properties importProperties, Connection conn)
 			throws TranslatorException {
@@ -62,8 +76,21 @@ public class TestDymamicImportedMetaData {
     	return new MetadataFactory(schema, vdbRepository.getBuiltinDatatypes(), importProperties);
 	}
 	
+	@Test public void testUniqueReferencedKey() throws Exception {
+		server.deployVDB("vdb", UnitTestUtil.getTestDataPath() + "/keys.vdb");
+    	Connection conn = server.createConnection("jdbc:teiid:vdb"); //$NON-NLS-1$
+    	
+    	Properties importProperties = new Properties();
+    	importProperties.setProperty("importer.importKeys", "true");
+    	importProperties.setProperty("importer.schemaPattern", "x");
+    	MetadataFactory mf = getMetadata(importProperties, conn);
+    	Table t = mf.getMetadataStore().getSchemas().get("TEST").getTables().get("VDB.X.A");
+    	List<ForeignKey> fks = t.getForeignKeys();
+    	assertEquals(1, fks.size());
+    	assertNotNull(fks.get(0).getPrimaryKey());
+	}
+	
     @Test public void testProcImport() throws Exception {
-    	FakeServer server = new FakeServer();
     	server.deployVDB("vdb", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
     	Connection conn = server.createConnection("jdbc:teiid:vdb"); //$NON-NLS-1$
     	
@@ -75,7 +102,6 @@ public class TestDymamicImportedMetaData {
     }
     
     @Test public void testDuplicateException() throws Exception {
-    	FakeServer server = new FakeServer();
     	MetadataFactory mf = createMetadataFactory("x", new Properties());
     	MetadataFactory mf1 = createMetadataFactory("y", new Properties());
     	
@@ -107,7 +133,6 @@ public class TestDymamicImportedMetaData {
     }
     
     @Test public void testUseCatalog() throws Exception {
-    	FakeServer server = new FakeServer();
     	MetadataFactory mf = createMetadataFactory("x", new Properties());
     	
     	Table dup = mf.addTable("dup");

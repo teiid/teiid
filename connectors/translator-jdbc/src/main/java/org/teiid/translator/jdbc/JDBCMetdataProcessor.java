@@ -28,8 +28,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -86,6 +88,7 @@ public class JDBCMetdataProcessor {
 	private boolean quoteNameInSource = true;
 	private boolean useProcedureSpecificName;
 	private boolean useCatalogName = true;
+	private boolean autoCreateUniqueConstraints = true;
 	
 	private Set<String> unsignedTypes = new HashSet<String>();
 	private String quoteString;
@@ -112,15 +115,13 @@ public class JDBCMetdataProcessor {
 		
 		try {
 			Map<String, TableInfo> tableMap = getTables(metadataFactory, metadata);
-			
+			HashSet<TableInfo> tables = new LinkedHashSet<TableInfo>(tableMap.values());
 			if (importKeys) {
-				getPrimaryKeys(metadataFactory, metadata, tableMap);
-				
-				getForeignKeys(metadataFactory, metadata, tableMap);
-			}
-			
-			if (importIndexes) {
-				getIndexes(metadataFactory, metadata, tableMap);
+				getPrimaryKeys(metadataFactory, metadata, tables);
+				getIndexes(metadataFactory, metadata, tables, !importIndexes);
+				getForeignKeys(metadataFactory, metadata, tables, tableMap);
+			} else if (importIndexes) {
+				getIndexes(metadataFactory, metadata, tables, false);
 			}
 			
 			if (importProcedures) {
@@ -214,8 +215,9 @@ public class JDBCMetdataProcessor {
 			table.setSupportsUpdate(true);
 			String remarks = tables.getString(5);
 			table.setAnnotation(remarks);
-			tableMap.put(fullName, new TableInfo(tableCatalog, tableSchema, tableName, table));
-			tableMap.put(tableName, new TableInfo(tableCatalog, tableSchema, tableName, table));
+			TableInfo ti = new TableInfo(tableCatalog, tableSchema, tableName, table);
+			tableMap.put(fullName, ti);
+			tableMap.put(tableName, ti);
 		}
 		tables.close();
 		
@@ -301,10 +303,10 @@ public class JDBCMetdataProcessor {
 	}
 
 	private void getPrimaryKeys(MetadataFactory metadataFactory,
-			DatabaseMetaData metadata, Map<String, TableInfo> tableMap)
+			DatabaseMetaData metadata, Collection<TableInfo> tables)
 			throws SQLException, TranslatorException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing primary keys"); //$NON-NLS-1$
-		for (TableInfo tableInfo : tableMap.values()) {
+		for (TableInfo tableInfo : tables) {
 			ResultSet pks = metadata.getPrimaryKeys(tableInfo.catalog, tableInfo.schema, tableInfo.name);
 			TreeMap<Short, String> keyColumns = null;
 			String pkName = null;
@@ -330,26 +332,31 @@ public class JDBCMetdataProcessor {
 	}
 	
 	private void getForeignKeys(MetadataFactory metadataFactory,
-			DatabaseMetaData metadata, Map<String, TableInfo> tableMap) throws SQLException, TranslatorException {
+			DatabaseMetaData metadata, Collection<TableInfo> tables, Map<String, TableInfo> tableMap) throws SQLException, TranslatorException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing foreign keys"); //$NON-NLS-1$
-		for (TableInfo tableInfo : tableMap.values()) {
+		for (TableInfo tableInfo : tables) {
 			ResultSet fks = metadata.getImportedKeys(tableInfo.catalog, tableInfo.schema, tableInfo.name);
 			TreeMap<Short, String> keyColumns = null;
+			TreeMap<Short, String> referencedKeyColumns = null;
 			String fkName = null;
 			TableInfo pkTable = null;
 			short savedSeqNum = Short.MAX_VALUE;
 			while (fks.next()) {
 				String columnName = fks.getString(8);
 				short seqNum = fks.getShort(9);
+				String pkColumnName = fks.getString(4);
+				
 				if (seqNum <= savedSeqNum) {
 					if (keyColumns != null) {
-						metadataFactory.addForiegnKey(fkName, new ArrayList<String>(keyColumns.values()), pkTable.table, tableInfo.table);
+						metadataFactory.addForiegnKey(fkName, new ArrayList<String>(keyColumns.values()), new ArrayList<String>(referencedKeyColumns.values()), pkTable.table, tableInfo.table, autoCreateUniqueConstraints);
 					}
 					keyColumns = new TreeMap<Short, String>();
+					referencedKeyColumns = new TreeMap<Short, String>();
 					fkName = null;
 				}
 				savedSeqNum = seqNum;
 				keyColumns.put(seqNum, columnName);
+				referencedKeyColumns.put(seqNum, pkColumnName);
 				if (fkName == null) {
 					String tableCatalog = fks.getString(1);
 					String tableSchema = fks.getString(2);
@@ -367,16 +374,16 @@ public class JDBCMetdataProcessor {
 				} 
 			}
 			if (keyColumns != null) {
-				metadataFactory.addForiegnKey(fkName, new ArrayList<String>(keyColumns.values()), pkTable.table, tableInfo.table);
+				metadataFactory.addForiegnKey(fkName, new ArrayList<String>(keyColumns.values()), new ArrayList<String>(referencedKeyColumns.values()), pkTable.table, tableInfo.table, autoCreateUniqueConstraints);
 			}
 			fks.close();
 		}
 	}
 
 	private void getIndexes(MetadataFactory metadataFactory,
-			DatabaseMetaData metadata, Map<String, TableInfo> tableMap) throws SQLException, TranslatorException {
+			DatabaseMetaData metadata, Collection<TableInfo> tables, boolean uniqueOnly) throws SQLException, TranslatorException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing index info"); //$NON-NLS-1$
-		for (TableInfo tableInfo : tableMap.values()) {
+		for (TableInfo tableInfo : tables) {
 			ResultSet indexInfo = metadata.getIndexInfo(tableInfo.catalog, tableInfo.schema, tableInfo.name, false, importApproximateIndexes);
 			TreeMap<Short, String> indexColumns = null;
 			String indexName = null;
@@ -390,7 +397,7 @@ public class JDBCMetdataProcessor {
 				}
 				short ordinalPosition = indexInfo.getShort(8);
 				if (ordinalPosition <= savedOrdinalPosition) {
-					if (indexColumns != null) {
+					if (indexColumns != null && (!uniqueOnly || !nonUnique)) {
 						metadataFactory.addIndex(indexName, nonUnique, new ArrayList<String>(indexColumns.values()), tableInfo.table);
 					}
 					indexColumns = new TreeMap<Short, String>();
@@ -407,7 +414,7 @@ public class JDBCMetdataProcessor {
 					}
 				}
 			}
-			if (indexColumns != null) {
+			if (indexColumns != null && (!uniqueOnly || !nonUnique)) {
 				metadataFactory.addIndex(indexName, nonUnique, new ArrayList<String>(indexColumns.values()), tableInfo.table);
 			}
 			indexInfo.close();
@@ -484,6 +491,11 @@ public class JDBCMetdataProcessor {
 	
 	public void setUseCatalogName(boolean useCatalog) {
 		this.useCatalogName = useCatalog;
+	}
+	
+	public void setAutoCreateUniqueConstraints(
+			boolean autoCreateUniqueConstraints) {
+		this.autoCreateUniqueConstraints = autoCreateUniqueConstraints;
 	}
 	
 }

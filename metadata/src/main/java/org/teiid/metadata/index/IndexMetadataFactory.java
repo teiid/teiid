@@ -363,7 +363,11 @@ public class IndexMetadataFactory {
 				}
 		        tableRecord.setForiegnKeys(getByParent(tableRecord.getUUID(), MetadataConstants.RECORD_TYPE.FOREIGN_KEY, ForeignKey.class, false));
 		        for (ForeignKey foreignKeyRecord : tableRecord.getForeignKeys()) {
-		        	foreignKeyRecord.setPrimaryKey(getPrimaryKey(foreignKeyRecord.getUniqueKeyID()));
+		        	KeyRecord pk = (KeyRecord) getRecordByType(foreignKeyRecord.getUniqueKeyID(), MetadataConstants.RECORD_TYPE.PRIMARY_KEY, false);
+		        	if (pk == null) {
+		        		pk = (KeyRecord) getRecordByType(foreignKeyRecord.getUniqueKeyID(), MetadataConstants.RECORD_TYPE.UNIQUE_KEY);
+		        	}
+		        	foreignKeyRecord.setPrimaryKey(pk);
 		        	loadColumnSetRecords(foreignKeyRecord, uuidColumnMap);
 		        	foreignKeyRecord.setParent(tableRecord);
 				}
@@ -378,7 +382,7 @@ public class IndexMetadataFactory {
 					columnSetRecordImpl.setParent(tableRecord);
 				}
 		        if (tableRecord.getPrimaryKey() != null) {
-		        	KeyRecord primaryKey = getPrimaryKey(tableRecord.getPrimaryKey().getUUID());
+		        	KeyRecord primaryKey = (KeyRecord) getRecordByType(tableRecord.getPrimaryKey().getUUID(), MetadataConstants.RECORD_TYPE.PRIMARY_KEY);
 		        	loadColumnSetRecords(primaryKey, uuidColumnMap);
 		        	primaryKey.setParent(tableRecord);
 		        	tableRecord.setPrimaryKey(primaryKey);
