@@ -275,8 +275,11 @@ public class TestCoherenceTranslator extends TestCase  {
 	}		
 
    
-    
-	public TranslationUtility getTradeTranslationUtility() {
+    /**
+     * this is used as an alternative to loading the vdb
+     * @return
+     */
+	private TranslationUtility getTradeTranslationUtility() {
 		MetadataStore metadataStore = new MetadataStore();
         // Create TRADE
         Schema trading = RealMetadataFactory.createPhysicalModel("Trade_Object", metadataStore); //$NON-NLS-1$

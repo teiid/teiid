@@ -89,6 +89,10 @@ public class CoherenceExecutionFactory extends ExecutionFactory<ConnectionFactor
     public List getSupportedFunctions() {
         return Collections.EMPTY_LIST;
     }
+    
+    public boolean supportsCompareCriteriaEquals() {
+    	return true;
+    }
 
     
     @Override
