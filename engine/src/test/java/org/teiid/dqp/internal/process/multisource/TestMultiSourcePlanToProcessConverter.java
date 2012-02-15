@@ -38,6 +38,9 @@ import org.teiid.core.id.IDGenerator;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempCapabilitiesFinder;
+import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -92,8 +95,6 @@ public class TestMultiSourcePlanToProcessConverter {
     }
     
     public void helpTestMultiSourcePlan(QueryMetadataInterface metadata, String userSql, String multiModel, int sourceCount, ProcessorDataManager dataMgr, List<?>[] expectedResults, VDBMetaData vdb, List<?> params) throws Exception {
-        
-    	DQPWorkContext dqpContext = RealMetadataFactory.buildWorkContext(metadata, vdb);
      
         Set<String> multiSourceModels = vdb.getMultiSourceModelNames();
         for (String model:multiSourceModels) {
@@ -106,7 +107,10 @@ public class TestMultiSourcePlanToProcessConverter {
             }
         }
         
-        MultiSourceMetadataWrapper wrapper = new MultiSourceMetadataWrapper(metadata, multiSourceModels); 
+        QueryMetadataInterface wrapper = new MultiSourceMetadataWrapper(metadata, multiSourceModels);
+        wrapper = new TempMetadataAdapter(wrapper, new TempMetadataStore());
+    	DQPWorkContext dqpContext = RealMetadataFactory.buildWorkContext(wrapper, vdb);
+        
         AnalysisRecord analysis = new AnalysisRecord(false, DEBUG);
         
         Command command = TestResolver.helpResolve(userSql, wrapper);               
@@ -117,14 +121,14 @@ public class TestMultiSourcePlanToProcessConverter {
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
         bsc.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
         fakeFinder.addCapabilities(multiModel, bsc); 
-
-        CapabilitiesFinder finder = new MultiSourceCapabilitiesFinder(fakeFinder, multiSourceModels);
         
+        CapabilitiesFinder finder = new MultiSourceCapabilitiesFinder(fakeFinder, multiSourceModels);
+        finder = new TempCapabilitiesFinder(finder);
         IDGenerator idGenerator = new IDGenerator();
         
         Properties props = new Properties();
         CommandContext context = new CommandContext("0", "test", "user", null, vdb.getName(), vdb.getVersion(), props, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        context.setPlanToProcessConverter(new MultiSourcePlanToProcessConverter(metadata, idGenerator, analysis, finder, multiSourceModels, dqpContext, context));
+        context.setPlanToProcessConverter(new MultiSourcePlanToProcessConverter(wrapper, idGenerator, analysis, finder, multiSourceModels, dqpContext, context));
 
         ProcessorPlan plan = QueryOptimizer.optimizePlan(command, wrapper, idGenerator, finder, analysis, context);
                         
@@ -344,6 +348,18 @@ public class TestMultiSourcePlanToProcessConverter {
         final MultiSourceDataManager dataMgr = new MultiSourceDataManager();
         dataMgr.setMustRegisterCommands(true);
         dataMgr.addData("EXEC MultiModel.proc('b')", new List<?>[] {Arrays.asList(1)}); //$NON-NLS-1$
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
+    }
+    
+    @Test public void testTempInsert() throws Exception {
+    	final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
+        final String userSql = "INSERT INTO #x select * from MultiModel.Phys"; //$NON-NLS-1$
+        final String multiModel = "MultiModel"; //$NON-NLS-1$
+        final int sources = 3;
+        final List<?>[] expected = new List<?>[] { Arrays.asList(3)};
+        final MultiSourceDataManager dataMgr = new MultiSourceDataManager();
+        dataMgr.setMustRegisterCommands(true);
+        dataMgr.addData("SELECT g_0.a, g_0.b FROM MultiModel.Phys AS g_0", new List<?>[] {Arrays.asList("a", "b")}); //$NON-NLS-1$
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
     }
 

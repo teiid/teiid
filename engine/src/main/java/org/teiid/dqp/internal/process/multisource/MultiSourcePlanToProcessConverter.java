@@ -113,7 +113,10 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 				throw new QueryPlannerException(e, e.getMessage());
 			} 
 		} else if (node instanceof ProjectIntoNode) {
-			throw new AssertionError("Multisource insert with query expression not allowed not allowed, should have been caught in validation."); //$NON-NLS-1$
+			ProjectIntoNode pin = (ProjectIntoNode)node;
+			if(this.multiSourceModels.contains(pin.getModelName())) {
+				throw new AssertionError("Multisource insert with query expression not allowed, should have been caught in validation."); //$NON-NLS-1$
+	        }
 		}
 		
 		return node;
