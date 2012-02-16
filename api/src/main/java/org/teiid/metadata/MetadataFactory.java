@@ -350,5 +350,10 @@ public class MetadataFactory {
 	
 	public void setMetadataStore(MetadataStore metadataStore) {
 		this.store = metadataStore;
+		if (this.store.getSchemas().isEmpty()) {
+			this.store.addSchema(schema);
+		} else {
+			this.schema = this.store.getSchemas().values().iterator().next();
+		}
 	}
 }
