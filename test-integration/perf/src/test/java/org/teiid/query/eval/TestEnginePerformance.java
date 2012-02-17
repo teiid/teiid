@@ -83,7 +83,6 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
@@ -203,7 +202,7 @@ public class TestEnginePerformance {
 		return data;
 	}
 	
-	public void helpTestSort(Mode mode, int expectedRowCount, List<? extends SingleElementSymbol> sortElements, List<?>[] data, List<? extends SingleElementSymbol> elems, BufferManager bufferManager) throws TeiidComponentException, TeiidProcessingException {
+	public void helpTestSort(Mode mode, int expectedRowCount, List<? extends Expression> sortElements, List<?>[] data, List<? extends Expression> elems, BufferManager bufferManager) throws TeiidComponentException, TeiidProcessingException {
 		CommandContext context = new CommandContext ("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
 		
 		BlockingFakeRelationalNode dataNode = new BlockingFakeRelationalNode(0, data);
@@ -221,7 +220,7 @@ public class TestEnginePerformance {
         process(sortNode, expectedRowCount);
 	}
 	
-	public void helpTestEquiJoin(int expectedRowCount, List<?>[] leftData, List<?>[] rightData, List<? extends SingleElementSymbol> elems, BufferManager bufferManager, JoinStrategy joinStrategy, JoinType joinType) throws TeiidComponentException, TeiidProcessingException {
+	public void helpTestEquiJoin(int expectedRowCount, List<?>[] leftData, List<?>[] rightData, List<? extends Expression> elems, BufferManager bufferManager, JoinStrategy joinStrategy, JoinType joinType) throws TeiidComponentException, TeiidProcessingException {
 		CommandContext context = new CommandContext ("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
 		
 		FakeRelationalNode dataNode1 = new FakeRelationalNode(1, leftData);

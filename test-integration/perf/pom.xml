@@ -3,26 +3,11 @@
 	<parent>
 		<artifactId>teiid-test-integration</artifactId>
 		<groupId>org.jboss.teiid</groupId>
-		<version>7.7.0.CR1</version>
+		<version>8.0.0.beta1-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>test-integration-perf</artifactId>
-	<name>Common Integration Tests</name>
+	<name>Performance Integration Tests</name>
 	<description>Performance tests that do not require external dependencies</description>
 	
-	<dependencies>
-		<dependency>
-  			<artifactId>teiid-cache-jbosscache</artifactId>
-			<groupId>org.jboss.teiid</groupId>
-		</dependency>
-		<dependency>
-			<groupId>jgroups</groupId>
-			<artifactId>jgroups</artifactId>
-		</dependency>
-		<dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-		</dependency>
-	</dependencies>
-     
 </project>
