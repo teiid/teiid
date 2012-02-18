@@ -497,6 +497,8 @@ public class IndexMetadataFactory {
 		    		}
 		        } else if (procedureRecord.isFunction()) {
 		        	boolean deterministic = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "deterministic", true)); //$NON-NLS-1$
+		        	boolean nullOnNull = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "null-on-null", false)); //$NON-NLS-1$
+		        	boolean varargs = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "varargs", false)); //$NON-NLS-1$
 		        	FunctionParameter outputParam = null;
 		        	List<FunctionParameter> args = new ArrayList<FunctionParameter>(procedureRecord.getParameters().size() - 1);
 		        	boolean valid = true;
@@ -520,8 +522,13 @@ public class IndexMetadataFactory {
 						}
 					}
 		        	if (valid && outputParam != null) {
-			        	model.addFunction(new FunctionMethod(procedureRecord.getName(), procedureRecord.getAnnotation(), model.getName(), PushDown.MUST_PUSHDOWN, 
-			        			null, null, args.toArray(new FunctionParameter[args.size()]), outputParam, false, deterministic?Determinism.DETERMINISTIC:Determinism.NONDETERMINISTIC));
+			        	FunctionMethod function = new FunctionMethod(procedureRecord.getName(), procedureRecord.getAnnotation(), model.getName(), PushDown.MUST_PUSHDOWN, 
+			        			null, null, args.toArray(new FunctionParameter[args.size()]), outputParam, false, deterministic?Determinism.DETERMINISTIC:Determinism.NONDETERMINISTIC);
+			        	function.setNullOnNull(nullOnNull);
+			        	if (varargs && !function.getInputParameters().isEmpty()) {
+			        		function.getInputParameters().get(args.size() - 1).setVarArg(varargs);
+			        	}
+						model.addFunction(function);
 			        	continue;
 		        	}
 		        }
