@@ -27,20 +27,21 @@ import java.util.Collection;
 import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.function.FunctionMetadataSource;
-import org.teiid.query.function.metadata.FunctionMethod;
 
-
+@SuppressWarnings("nls")
 public class FakeFunctionMetadataSource implements FunctionMetadataSource {
 
     public Collection<org.teiid.metadata.FunctionMethod> getFunctionMethods() {
         List<org.teiid.metadata.FunctionMethod> methods = new ArrayList<org.teiid.metadata.FunctionMethod>();
         methods.add(new FunctionMethod("xyz", "", "misc", PushDown.MUST_PUSHDOWN,  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                                        FakeFunctionMetadataSource.class.getName(), "xyz", //$NON-NLS-1$
-                                       new FunctionParameter[0],  
-                                       new FunctionParameter("out", "integer"))); //$NON-NLS-1$ //$NON-NLS-2$
+                                       null,  
+                                       new FunctionParameter("out", "integer"), true, Determinism.DETERMINISTIC)); //$NON-NLS-1$ //$NON-NLS-2$
         
         FunctionParameter p1 = new FunctionParameter("astring", "string");  //$NON-NLS-1$  //$NON-NLS-2$
         FunctionParameter result = new FunctionParameter("trimstring", "string"); //$NON-NLS-1$  //$NON-NLS-2$
@@ -60,7 +61,7 @@ public class FakeFunctionMetadataSource implements FunctionMetadataSource {
         return methods;
     }
     
-    public Class getInvocationClass(String className, ClassLoader cl) throws ClassNotFoundException { 
+    public Class<?> getInvocationClass(String className, ClassLoader cl) throws ClassNotFoundException { 
         return Class.forName(className, true, cl); 
     }
     

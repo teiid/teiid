@@ -117,7 +117,7 @@ public class FunctionMethod extends AbstractMetadataRecord {
     }
        
     public FunctionMethod(String name, String description, String category, FunctionParameter[] inputParams, FunctionParameter outputParam) {
-    	this(name, description, category, PushDown.MUST_PUSHDOWN, null, null, inputParams, outputParam, true, Determinism.DETERMINISTIC);
+    	this(name, description, category, PushDown.MUST_PUSHDOWN, null, null, inputParams!=null?Arrays.asList(inputParams):null, outputParam, true, Determinism.DETERMINISTIC);
     }
     
     public FunctionMethod(String name,
@@ -126,7 +126,7 @@ public class FunctionMethod extends AbstractMetadataRecord {
                           PushDown pushdown,
                           String invocationClass,
                           String invocationMethod,
-                          FunctionParameter[] inputParams,
+                          List<FunctionParameter> inputParams,
                           FunctionParameter outputParam,
                           boolean nullOnNull,
                           Determinism deterministic) {
@@ -137,14 +137,18 @@ public class FunctionMethod extends AbstractMetadataRecord {
         setPushdown(pushdown);
         setInvocationClass(invocationClass);
         setInvocationMethod(invocationMethod);
-        if (inputParams != null) {
-        	setInputParameters(Arrays.asList(inputParams));
-        }
+        setInputParameters(inputParams);
         setOutputParameter(outputParam); 
         setNullOnNull(nullOnNull);
         setDeterminism(deterministic);
     }
     
+    public FunctionMethod(String name, String description, String category, 
+        String invocationClass, String invocationMethod, 
+        FunctionParameter[] inputParams, FunctionParameter outputParam) {
+        this(name, description, category, PushDown.CAN_PUSHDOWN, invocationClass, invocationMethod, inputParams!=null?Arrays.asList(inputParams):null, outputParam, true, Determinism.DETERMINISTIC);
+    }
+
     /**
      * Return name of method
      * @return Name
@@ -298,7 +302,9 @@ public class FunctionMethod extends AbstractMetadataRecord {
      */
     public void setInputParameters(List<FunctionParameter> params) { 
         this.inParameters.clear();
-        this.inParameters.addAll(params);
+        if (params != null) {
+        	this.inParameters.addAll(params);
+        }
     }
     
     /**

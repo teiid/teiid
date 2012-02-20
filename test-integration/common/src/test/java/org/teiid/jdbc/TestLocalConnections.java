@@ -160,7 +160,7 @@ public class TestLocalConnections {
     			};
     		}
     	});
-    	FunctionMethod function = new FunctionMethod("foo", null, FunctionCategoryConstants.MISCELLANEOUS, PushDown.CANNOT_PUSHDOWN, TestLocalConnections.class.getName(), "blocking", new FunctionParameter[0], new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER), true, FunctionMethod.Determinism.NONDETERMINISTIC);
+    	FunctionMethod function = new FunctionMethod("foo", null, FunctionCategoryConstants.MISCELLANEOUS, PushDown.CANNOT_PUSHDOWN, TestLocalConnections.class.getName(), "blocking", null, new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER), false, FunctionMethod.Determinism.NONDETERMINISTIC);
     	HashMap<String, Collection<FunctionMethod>> udfs = new HashMap<String, Collection<FunctionMethod>>();
     	udfs.put("test", Arrays.asList(function));
     	server.deployVDB("PartsSupplier", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb", udfs);

@@ -533,7 +533,7 @@ public class IndexMetadataFactory {
 					}
 		        	if (valid && outputParam != null) {
 			        	model.addFunction(new FunctionMethod(procedureRecord.getName(), procedureRecord.getAnnotation(), model.getName(), PushDown.MUST_PUSHDOWN, 
-			        			null, null, args.toArray(new FunctionParameter[args.size()]), outputParam, false, deterministic?Determinism.DETERMINISTIC:Determinism.NONDETERMINISTIC));
+			        			null, null, args, outputParam, false, deterministic?Determinism.DETERMINISTIC:Determinism.NONDETERMINISTIC));
 			        	continue;
 		        	}
 		        }

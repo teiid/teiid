@@ -22,19 +22,15 @@
 
 package org.teiid.query.function.metadata;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
 
 
-public class TestFunctionMethod extends TestCase {
+public class TestFunctionMethod {
 
-    public TestFunctionMethod(String name) {
-        super(name);
-    }
-
-    public void testEquivalence1() {
+    @Test public void testEquivalence1() {
         FunctionParameter p1 = new FunctionParameter("in", "string"); //$NON-NLS-1$ //$NON-NLS-2$
         FunctionParameter pout = new FunctionParameter("out", "string"); //$NON-NLS-1$ //$NON-NLS-2$
         
@@ -45,7 +41,7 @@ public class TestFunctionMethod extends TestCase {
         UnitTestUtil.helpTestEquivalence(0, m1, m1);
     }
     
-    public void testEquivalence11() {
+    @Test public void testEquivalence11() {
         FunctionParameter pout = new FunctionParameter("out", "string"); //$NON-NLS-1$ //$NON-NLS-2$
         
         FunctionMethod m1 = new FunctionMethod("length", "", FunctionCategoryConstants.STRING, //$NON-NLS-1$ //$NON-NLS-2$
@@ -55,7 +51,7 @@ public class TestFunctionMethod extends TestCase {
         UnitTestUtil.helpTestEquivalence(0, m1, m1);
     }    
     
-    public void testEquivalence2() {
+    @Test public void testEquivalence2() {
         FunctionParameter p1 = new FunctionParameter("in", "string"); //$NON-NLS-1$ //$NON-NLS-2$
         FunctionParameter pout = new FunctionParameter("out", "string"); //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -73,7 +69,7 @@ public class TestFunctionMethod extends TestCase {
         UnitTestUtil.helpTestEquivalence(1, m1, m2);
     }
 
-    public void testEquivalence3() {
+    @Test public void testEquivalence3() {
         FunctionParameter p1 = new FunctionParameter("in", "string"); //$NON-NLS-1$ //$NON-NLS-2$
         FunctionParameter pout = new FunctionParameter("out", "string"); //$NON-NLS-1$ //$NON-NLS-2$
 

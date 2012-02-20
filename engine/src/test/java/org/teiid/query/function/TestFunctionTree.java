@@ -24,6 +24,7 @@ package org.teiid.query.function;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -77,7 +78,7 @@ public class TestFunctionTree {
     @Test public void testLoadErrors() {
     	FunctionMethod method = new FunctionMethod(
     			"dummy", null, null, PushDown.CAN_PUSHDOWN, "nonexistentClass", "noMethod",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-	 	    	new FunctionParameter[0], 
+	 	    	new ArrayList<FunctionParameter>(0), 
 	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), false, Determinism.DETERMINISTIC); //$NON-NLS-1$
     	
     	//allowed, since we're not validating the class
@@ -140,7 +141,7 @@ public class TestFunctionTree {
     @Test public void testNullCategory() {
     	FunctionMethod method = new FunctionMethod(
     			"dummy", null, null, PushDown.MUST_PUSHDOWN, "nonexistentClass", "noMethod",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-	 	    	new FunctionParameter[0], 
+    			new ArrayList<FunctionParameter>(0), 
 	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), //$NON-NLS-1$
 	 	    	false, Determinism.DETERMINISTIC);
     	
@@ -154,9 +155,9 @@ public class TestFunctionTree {
     @Test public void testVarbinary() throws Exception {
     	FunctionMethod method = new FunctionMethod(
     			"dummy", null, null, PushDown.CANNOT_PUSHDOWN, TestFunctionTree.class.getName(), "toString",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-	 	    	new FunctionParameter[] {new FunctionParameter("in", DataTypeManager.DefaultDataTypes.VARBINARY)}, //$NON-NLS-1$ 
+	 	    	Arrays.asList(new FunctionParameter("in", DataTypeManager.DefaultDataTypes.VARBINARY)), //$NON-NLS-1$ 
 	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), //$NON-NLS-1$
-	 	    	false, Determinism.DETERMINISTIC);
+	 	    	true, Determinism.DETERMINISTIC);
     	FunctionTree sys = RealMetadataFactory.SFM.getSystemFunctions();
     	FunctionLibrary fl = new FunctionLibrary(sys, new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
     	FunctionDescriptor fd = fl.findFunction("dummy", new Class<?>[] {DataTypeManager.DefaultDataClasses.VARBINARY});
