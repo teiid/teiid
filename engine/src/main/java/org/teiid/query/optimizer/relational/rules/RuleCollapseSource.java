@@ -55,26 +55,7 @@ import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.CompoundCriteria;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.From;
-import org.teiid.query.sql.lang.FromClause;
-import org.teiid.query.sql.lang.GroupBy;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.JoinPredicate;
-import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.Limit;
-import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.OrderByItem;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.lang.SubqueryFromClause;
-import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
@@ -263,6 +244,13 @@ public final class RuleCollapseSource implements OptimizerRule {
         }
 		PlanNode groupNode = NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE);
 		if (groupNode != null) {
+			if (query.getOrderBy() != null) {
+				query.setOrderBy(query.getOrderBy().clone());
+			}
+			if (query.getHaving() != null) {
+				query.setHaving((Criteria) query.getHaving().clone());
+			}
+			query.setSelect(query.getSelect().clone());
 	        SymbolMap symbolMap = (SymbolMap) groupNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
 	      
 	        //map back to expression form

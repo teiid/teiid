@@ -4106,6 +4106,31 @@ public class TestProcessor {
        // Run query
        helpProcess(plan, dataManager, expected);
    }
+   
+   @Test public void testPushedGroupingWithOrderBy() { 
+       // Create query 
+       final String sql = "SELECT e1, e2, count(*) as Count FROM pm1.g1 as DB GROUP BY e1, e2 ORDER BY e1"; //$NON-NLS-1$
+        
+       // Create expected results
+       List[] expected = new List[] { 
+    	       Arrays.asList(new Object[] { "a", 1, 2 }),
+    	       Arrays.asList(new Object[] { "b", 1, 2 }) //$NON-NLS-1$
+       };    
+       
+       // Construct data manager with data
+       HardcodedDataManager dataManager = new HardcodedDataManager();
+       dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2, COUNT(*) FROM pm1.g1 GROUP BY pm1.g1.e1, pm1.g1.e2", new List<?>[] {Arrays.asList("b", 1, 2), Arrays.asList("a", 1, 2)});
+       FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+       BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+       bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+       bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
+       capFinder.addCapabilities("pm1", bsc);
+       // Plan query
+       ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), capFinder);
+
+       // Run query
+       helpProcess(plan, dataManager, expected);
+   }
 
    /**
     * Test <code>QueryProcessor</code>'s ability to process a query containing 

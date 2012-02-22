@@ -197,7 +197,7 @@ public class Select implements LanguageObject {
 	 * Return a deep copy of this Select.
 	 * @return Deep clone
 	 */
-	public Object clone() {
+	public Select clone() {
 		Select copy = new Select(LanguageObject.Util.deepClone(this.symbols, SelectSymbol.class));
 		copy.setDistinct( isDistinct() );
 		return copy;
