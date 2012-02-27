@@ -120,6 +120,12 @@
                         Values less than 1 indicate to use only one in predicate per dependent value pushed (which matches the pre-7.4 behavior).</entry>
                         <entry>-1</entry>
                     </row>
+                    <row>
+                        <entry>CopyLobs</entry>
+                        <entry>If true, then returned lobs (clob, blob, sql/xml) will be copied by the engine in a memory safe manner.  
+                        Use this option if the source does not support memory safe lobs or you want to disconnect lobs from the source connection.</entry>
+                        <entry>false</entry>
+                    </row>
                 </tbody>
             </tgroup>
         </table>
@@ -330,6 +336,7 @@
                     <programlisting>set SESSION sql_mode = 'ANSI'</programlisting>
                     <para>If retrieving timestamp values, you should set zeroDateTimeBehavior=convertToNull on the URL, otherwise MySQL or Teiid may throw an exception
                     retriieving '0000-00-00 00:00:00'</para>
+                    <para>If retrieving large result sets, you should consider setting useCursorFetch=true on the URL, otherwise MySQL will fully fetch result sets into memory on the Teiid instance.</para>
                 </listitem>
                 <listitem>
                     <para>

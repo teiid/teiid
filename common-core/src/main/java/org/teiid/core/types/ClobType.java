@@ -240,7 +240,7 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
 			@Override
 			public void write(char[] cbuf, int off, int len) throws IOException {
 				for (int i = off; i < len; i++) {
-					out.writeShort(cbuf[i]);
+					out.writeChar(cbuf[i]);
 				}
 			}
 			
@@ -259,7 +259,10 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
 			throw new IOException(e);
 		}
 		try {
-			ObjectConverterUtil.write(w, r, (int)length, false);
+			int chars = ObjectConverterUtil.write(w, r, (int)length, false);
+			if (length != chars) {
+				throw new IOException("Expected length " + length + " but was " + chars + " for " + this.reference); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			}
 		} finally {
 			r.close();
 		}

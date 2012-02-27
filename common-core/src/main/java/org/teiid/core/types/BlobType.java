@@ -151,7 +151,7 @@ public final class BlobType extends Streamable<Blob> implements Blob, Comparable
 		try {
 			writeBinary(out, getBinaryStream(), (int)length);
 		} catch (SQLException e) {
-			throw new IOException();
+			throw new IOException(e);
 		}
 	}
 
@@ -164,7 +164,10 @@ public final class BlobType extends Streamable<Blob> implements Blob, Comparable
 			}
 		};
 		try {
-			ObjectConverterUtil.write(os, is, length, false);
+			int bytes = ObjectConverterUtil.write(os, is, length, false);
+			if (bytes != length) {
+				throw new IOException("Expected length " + length + " but was " + bytes); //$NON-NLS-1$ //$NON-NLS-2$
+			}
 		} finally {
 			is.close();
 		}
