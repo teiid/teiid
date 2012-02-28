@@ -59,6 +59,12 @@ public class TestMultipleModelIndexes {
 		assertNotNull(pk);
 	}
 	
+	@Test public void testIndex() throws Exception {
+		TransformationMetadata tm = VDBMetadataFactory.getVDBMetadata(UnitTestUtil.getTestDataPath() + "/ora.vdb");
+		Collection indexes = tm.getIndexesInGroup(tm.getGroupID("ORACLE_BQT.SMALLA"));
+		assertEquals(1, indexes.size());
+	}
+	
 	@Test public void testSchemaLoad() throws Exception {
 		TransformationMetadata tm = VDBMetadataFactory.getVDBMetadata(UnitTestUtil.getTestDataPath() + "/Test.vdb");
 		

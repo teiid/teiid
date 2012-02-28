@@ -376,8 +376,11 @@ public class IndexMetadataFactory {
 					loadColumnSetRecords(columnSetRecordImpl, uuidColumnMap);
 					columnSetRecordImpl.setParent(tableRecord);
 				}
-		        tableRecord.setIndexes(getByParent(tableRecord.getUUID(), MetadataConstants.RECORD_TYPE.INDEX, KeyRecord.class, false));
-		        for (KeyRecord columnSetRecordImpl : tableRecord.getIndexes()) {
+		        List<KeyRecord> indexRecords = tableRecord.getIndexes();
+				for (int i = 0; i < indexRecords.size(); i++) {
+		        	indexRecords.set(i, (KeyRecord) getRecordByType(indexRecords.get(i).getUUID(), MetadataConstants.RECORD_TYPE.INDEX));
+		        }
+		        for (KeyRecord columnSetRecordImpl : indexRecords) {
 					loadColumnSetRecords(columnSetRecordImpl, uuidColumnMap);
 					columnSetRecordImpl.setParent(tableRecord);
 				}

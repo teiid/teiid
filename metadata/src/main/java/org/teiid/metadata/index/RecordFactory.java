@@ -44,6 +44,7 @@ import org.teiid.metadata.Table;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.Datatype.Variety;
+import org.teiid.metadata.KeyRecord.Type;
 
 
 /**
@@ -422,7 +423,16 @@ public class RecordFactory {
         	table.setPrimaryKey(pk);
         }
 
-        tokenIndex+=4; //skip reading uuids for associated records
+        List<String> indexes = getStrings(tokens.get(++tokenIndex), getListDelimiter(indexVersion));
+        if (!indexes.isEmpty()) {
+        	table.setIndexes(new ArrayList<KeyRecord>(indexes.size()));
+	        for (String string : indexes) {
+	        	KeyRecord index = new KeyRecord(Type.Index);
+	        	index.setUUID(string);
+	        	table.getIndexes().add(index);
+			}
+        }
+        tokenIndex+=3; //skip reading uuids for associated records
 
         if(includeMaterializationFlag(indexVersion)) {
             // The next token are the UUIDs for the materialized table ID
