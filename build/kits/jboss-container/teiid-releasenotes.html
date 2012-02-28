@@ -226,7 +226,125 @@ The following components have been updated:
 
 <h2><a name="Details">Detailed Release Notes</a></h2>
         Detailed Release Notes - Teiid - Version ${project.version}
-
+    
+<h2>        Bug
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1465'>TEIID-1465</a>] -         Join between char and varchar
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1820'>TEIID-1820</a>] -         like_regex only matches full string patterns
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1852'>TEIID-1852</a>] -         Misc. Salesforce Translator Issues
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1863'>TEIID-1863</a>] -         Default Salesforce URL in teiid-connector-salesforce.rar needs update to SF v22
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1864'>TEIID-1864</a>] -         TIMESTAMPADD of SQL_TSI_FRAC_SECOND fails for Sybase 15 with JConnect 6.0.5 driver
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1867'>TEIID-1867</a>] -         Duplicate metadata for multisource models
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1868'>TEIID-1868</a>] -         Internal Materialized View - Load/Refresh and Assertion Failed
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1869'>TEIID-1869</a>] -         Simple capabilities with PostgreSQL 8.3 using decodeinteger causes comm failure
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1870'>TEIID-1870</a>] -         Querying random number from DB2 v97 does not push down to source
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1871'>TEIID-1871</a>] -         Teiid is handling MySQL5.0 returning DAYNAME as a blob
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1872'>TEIID-1872</a>] -         Implicit temp table creation fails with insert and explicit columns
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1873'>TEIID-1873</a>] -         Security documentation does not provide adequate information to integrate additional domains for authentication
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1876'>TEIID-1876</a>] -         Netezza translator using INTNNOT when it should use INT4NOT
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1878'>TEIID-1878</a>] -         Problem with accessing custom generated materialized views
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1879'>TEIID-1879</a>] -         Teradata Query Testing - Unhandled exception causing SOCKET CLOSED condition
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1882'>TEIID-1882</a>] -         EOFException with 7.6 client against a 7.4 server
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1883'>TEIID-1883</a>] -         Query timeout is superceded by synch ttl
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1884'>TEIID-1884</a>] -         COMMAND Logging incorrectly reporting END USER COMMAND record count in EDS for forward only resultsets
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1893'>TEIID-1893</a>] -         TeiidException when executing SELECT subquery with more than 2 UNIONs
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1895'>TEIID-1895</a>] -         Properly escape the column references for Excel based data
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1896'>TEIID-1896</a>] -         incorrect xml generated from jsontoxml with nested arrays
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1899'>TEIID-1899</a>] -         Getting Assertion when running Inner Merge Join query with SELECT COUNT(*) on top
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1904'>TEIID-1904</a>] -         Prepared statement for SOURCE_NAME in multi-source mode throws exception Message:Unable to evaluate
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1907'>TEIID-1907</a>] -         SQLStringVisitor should create call visitNode on Select
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1912'>TEIID-1912</a>] -         large dependent join query produces IOException against PostgreSQL database
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1915'>TEIID-1915</a>] -         XMLTableNode streaming processing can hang
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1920'>TEIID-1920</a>] -         Dynamic sql using a non-literal requires a keyword
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1921'>TEIID-1921</a>] -         Error with embedded Teiid DataSource and transactions
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1922'>TEIID-1922</a>] -         BaseDelegateTranslator&#39;s start method is being called before the delegate execution factory is set.
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1927'>TEIID-1927</a>] -         BLOB/CLOB errors while using teiid 7.6 JDBC
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1929'>TEIID-1929</a>] -         inline view support implies column/table alias support
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1931'>TEIID-1931</a>] -         buffer setting maxStorageObjectSize is not factored into maxMemoryBlocks
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1933'>TEIID-1933</a>] -         0 size CLOBs in teiid cause unexpected problems
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1934'>TEIID-1934</a>] -         Problem connecting to Teiid 7.7 Beta1
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1935'>TEIID-1935</a>] -         TransformationMetadata.getXMLSchemas relative paths fail on windows
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1938'>TEIID-1938</a>] -         inline lob setting is ignored
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1939'>TEIID-1939</a>] -         MultiSource metadata error with TempMetadataIDs
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1946'>TEIID-1946</a>] -         After changing model to replace primary key with a unique key, the deployment of the vdb errors saying PrimaryKey does not exist
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1949'>TEIID-1949</a>] -         AssertionError with Teiid order by over pushed group by
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1951'>TEIID-1951</a>] -         CommandLogging is refers to the old MMx connectorBindingName, when it should refer to it a translator
+</li>
+</ul>
+                
+<h2>        Enhancement
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1903'>TEIID-1903</a>] -         Additional aggregates and grouping should be supported by salesforce
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1932'>TEIID-1932</a>] -         Add comparable lob logic to 7.7
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1936'>TEIID-1936</a>] -         Make it straight-forward for translators to cache their metadata
+</li>
+</ul>
+                    
+<h2>        Quality Risk
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1829'>TEIID-1829</a>] -         Clarify source warnings
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1874'>TEIID-1874</a>] -         Add metadata validation for dynamic vdb imported metadata
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1908'>TEIID-1908</a>] -         Add standard type names to DatabaseMetadata.getTypeInfo
+</li>
+</ul>
+                
+<h2>        Task
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1862'>TEIID-1862</a>] -         add regression test for nested selects using UNION ALL and multiple aliases of the same column.
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1902'>TEIID-1902</a>] -         Update extension metadata property keys
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1926'>TEIID-1926</a>] -         Add optional teiid through-put performance tests
+</li>
+</ul>
+                
 <h2><a name="Documentation">Documentation and Help</a></h2>
 
 The <a href="http://www.jboss.org/teiid/">Teiid community project</a> is hosted on jboss.org.
