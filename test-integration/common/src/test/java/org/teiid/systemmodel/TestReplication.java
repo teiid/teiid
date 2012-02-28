@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.HashMap;
 
 import org.jboss.as.clustering.jgroups.ChannelFactory;
+import org.jboss.as.server.ServerEnvironment;
 import org.jgroups.Channel;
 import org.jgroups.JChannel;
 import org.junit.BeforeClass;
@@ -132,6 +133,11 @@ public class TestReplication {
 					@Override
 					public Channel createChannel(String id) throws Exception {
 						return new JChannel(this.getClass().getClassLoader().getResource("tcp.xml"));
+					}
+
+					@Override
+					public ServerEnvironment getServerEnvironment() {
+						return null;
 					}
 				});
 

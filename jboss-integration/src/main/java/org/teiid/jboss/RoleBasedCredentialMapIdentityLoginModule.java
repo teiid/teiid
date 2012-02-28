@@ -42,9 +42,9 @@ import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.LoginException;
 
 import org.jboss.logging.Logger;
-import org.jboss.resource.security.AbstractPasswordCredentialLoginModule;
 import org.jboss.security.Base64Utils;
 import org.jboss.security.SimplePrincipal;
+import org.picketbox.datasource.security.AbstractPasswordCredentialLoginModule;
 
 /**
  * A credential mapping login module that associates currently logged in
@@ -171,7 +171,6 @@ public class RoleBasedCredentialMapIdentityLoginModule extends AbstractPasswordC
 			if (userRole != null && rolePassword != null) {
 				this.mappedRole = userRole;
 				PasswordCredential cred = new PasswordCredential(userRole, decode(rolePassword));
-				cred.setManagedConnectionFactory(getMcf());
 				SecurityActions.addCredentials(this.subject, cred);		
 			}
 			return super.commit();

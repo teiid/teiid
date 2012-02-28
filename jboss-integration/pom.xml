@@ -64,7 +64,7 @@
         <artifactId>jboss-as-security</artifactId>
         <scope>provided</scope>        
     </dependency>    
-
+    
     <!-- This dependency is to read the ra.xml file details -->
     <dependency>
         <groupId>org.jboss.as</groupId>
@@ -78,11 +78,11 @@
         <scope>provided</scope>
     </dependency> 
     
-    <dependency>
+<!--     <dependency>
         <groupId>org.picketbox</groupId>
         <artifactId>jbosssx-client</artifactId>
         <scope>provided</scope>
-    </dependency>
+    </dependency> -->
       
     <dependency>
         <groupId>org.jboss.as</groupId>

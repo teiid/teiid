@@ -100,7 +100,7 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
             	module = ml.loadModule(ModuleIdentifier.create(moduleName));
             	translatorLoader = module.getClassLoader();
 	        } catch (ModuleLoadException e) {
-	            throw new OperationFailedException(e, new ModelNode().set(IntegrationPlugin.Util.getString("failed_load_module", IntegrationPlugin.Event.TEIID50007, moduleName, translatorName))); //$NON-NLS-1$
+	            throw new OperationFailedException(e, new ModelNode().set(IntegrationPlugin.Util.getString("failed_load_translator_module", IntegrationPlugin.Event.TEIID50007, moduleName, translatorName))); //$NON-NLS-1$
 	        }
         }
         

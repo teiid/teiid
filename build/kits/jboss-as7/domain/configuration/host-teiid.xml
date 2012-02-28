@@ -9,6 +9,11 @@
                     <properties path="mgmt-users.properties" relative-to="jboss.domain.config.dir"/>
                 </authentication>
             </security-realm>
+            <security-realm name="ApplicationRealm">
+                <authentication>
+                    <properties path="application-users.properties" relative-to="jboss.domain.config.dir" />
+                </authentication>
+            </security-realm>
         </security-realms>
         <management-interfaces>
             <native-interface security-realm="ManagementRealm">
@@ -33,11 +38,20 @@
         <interface name="public">
            <inet-address value="${jboss.bind.address:127.0.0.1}"/>
         </interface>
+        <interface name="unsecure">
+            <!-- Used for IIOP sockets in the standarad configuration.
+                 To secure JacORB you need to setup SSL -->
+            <inet-address value="127.0.0.1"/>
+        </interface>
     </interfaces>
 
  	<jvms>
  	   <jvm name="default">
           <heap size="64m" max-size="256m"/>
+          <permgen size="256m" max-size="256m"/>
+            <jvm-options>
+                <option value="-server"/>
+            </jvm-options>
        </jvm>
  	</jvms>
 
@@ -51,11 +65,17 @@
            </jvm>
            -->
         </server>
-        <!-- 
+        <!--
         <server name="server-two" group="main-server-group" auto-start="true">
+            <!-- server-two avoids port conflicts by incrementing the ports in
+                 the default socket-group declared in the server-group -->
             <socket-bindings port-offset="150"/>
         </server>
+        <server name="server-three" group="other-server-group" auto-start="false">
+            <!-- server-three avoids port conflicts by incrementing the ports in
+                 the default socket-group declared in the server-group -->
+            <socket-bindings port-offset="250"/>
+        </server>
         -->
-
     </servers>
 </host>

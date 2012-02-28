@@ -12,6 +12,6 @@
         <module name="org.jboss.teiid.api" />
         <module name="org.jboss.teiid.translator.salesforce.api"/>
         <module name="org.jboss.ws.cxf.jbossws-cxf-client"/>
-        <module name="org.springframework.spring"/>        
+        <module name="org.springframework.spring" optional="true"/>        
     </dependencies>
 </module>
