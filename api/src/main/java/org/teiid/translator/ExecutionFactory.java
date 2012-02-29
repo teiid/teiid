@@ -108,6 +108,7 @@ public class ExecutionFactory<F, C> {
 	private boolean requiresCriteria;
 	private int maxInSize = DEFAULT_MAX_IN_CRITERIA_SIZE;
 	private int maxDependentInPredicates = DEFAULT_MAX_IN_CRITERIA_SIZE;
+	private boolean copyLobs;
 	
 	private LinkedList<FunctionMethod> pushdownFunctionMethods = new LinkedList<FunctionMethod>();
 	
@@ -129,7 +130,16 @@ public class ExecutionFactory<F, C> {
 	
 	public void setImmutable(boolean arg0) {
 		this.immutable = arg0;
-	}	
+	}
+
+	@TranslatorProperty(display="Copy LOBs",description="If true, returned LOBs will be copied, rather than streamed from the source",advanced=true)
+	public boolean isCopyLobs() {
+		return copyLobs;
+	}
+	
+	public void setCopyLobs(boolean copyLobs) {
+		this.copyLobs = copyLobs;
+	}
 	
 	/**
 	 * Return a connection object from the given connection factory.

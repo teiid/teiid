@@ -371,5 +371,10 @@ public class ConnectorWorkItem implements ConnectorWork {
 	public boolean isDataAvailable() {
 		return this.securityContext.isDataAvailable();
 	}
+	
+	@Override
+	public boolean copyLobs() {
+		return this.connector.isCopyLobs();
+	}
 
 }

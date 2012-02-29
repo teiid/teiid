@@ -87,6 +87,9 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     
     private boolean[] convertToRuntimeType;
     private boolean[] convertToDesiredRuntimeType;
+    private boolean[] isLob;
+    private FileStore lobStore;
+    private byte[] lobBuffer;
     private Class<?>[] schema;
     
     private int limit = -1;
@@ -116,11 +119,13 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		this.schema = new Class[symbols.size()];
         this.convertToDesiredRuntimeType = new boolean[symbols.size()];
 		this.convertToRuntimeType = new boolean[symbols.size()];
+		this.isLob = new boolean[symbols.size()];
 		for (int i = 0; i < symbols.size(); i++) {
 			SingleElementSymbol symbol = symbols.get(i);
 			this.schema[i] = symbol.getType();
 			this.convertToDesiredRuntimeType[i] = true;
 			this.convertToRuntimeType[i] = true;
+			this.isLob[i] = DataTypeManager.isLOB(this.schema[i]);
 		}
         
     	Assertion.isNull(workItem.getConnectorRequest(aqr.getAtomicRequestID()));
@@ -140,7 +145,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		}, this, 100);
 	}
 
-	private List<?> correctTypes(List<Object> row) throws TransformationException {
+	private List<?> correctTypes(List<Object> row) throws TransformationException, TeiidComponentException {
 		//TODO: add a proper intermediate schema
 		for (int i = 0; i < row.size(); i++) {
 			Object value = row.get(i);
@@ -148,12 +153,11 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 				continue;
 			}
 			if (convertToRuntimeType[i]) {
-				boolean lob = !arm.supportsCloseWithLobs() && DataTypeManager.isLOB(value.getClass());
 				Object result = convertToRuntimeType(value, this.schema[i]);
 				if (value == result && !DataTypeManager.DefaultDataClasses.OBJECT.equals(this.schema[i])) {
 					convertToRuntimeType[i] = false;
 				} else {
-					if (lob && DataTypeManager.isLOB(result.getClass()) && DataTypeManager.isLOB(this.schema[i])) {
+					if (isLob[i] && !cwi.copyLobs() && !arm.supportsCloseWithLobs() && DataTypeManager.isLOB(value.getClass())) {
 						explicitClose = true;
 					}				
 					row.set(i, result);
@@ -163,13 +167,19 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 			if (convertToDesiredRuntimeType[i]) {
 				if (value != null) {
 					Object result = DataTypeManager.transformValue(value, value.getClass(), this.schema[i]);
-					if (value == result) {
+					if (isLob[i] && cwi.copyLobs()) {
+						if (lobStore == null) {
+							lobStore = dtm.getBufferManager().createFileStore("lobs"); //$NON-NLS-1$
+							lobBuffer = new byte[1 << 14];
+						}
+						result = dtm.getBufferManager().persistLob((Streamable<?>) result, lobStore, lobBuffer);
+					} else if (value == result) {
 						convertToDesiredRuntimeType[i] = false;
 						continue;
 					}
 					row.set(i, result);
 				}
-			} else {
+			} else if (DataTypeManager.isValueCacheEnabled()) {
 				row.set(i, DataTypeManager.getCanonicalValue(value));
 			}
 		}
@@ -393,6 +403,8 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
      * @see TupleSource#closeSource()
      */
     public void closeSource() {
+    	lobBuffer = null;
+    	lobStore = null; //can still be referenced by lobs and will be cleaned-up by reference
     	cancelAsynch = true;
     	if (!explicitClose) {
         	fullyCloseSource();

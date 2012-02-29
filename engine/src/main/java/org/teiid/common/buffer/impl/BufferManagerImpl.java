@@ -48,23 +48,13 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.teiid.client.BatchSerializer;
 import org.teiid.client.ResizingArrayList;
-import org.teiid.common.buffer.AutoCleanupUtil;
-import org.teiid.common.buffer.BatchManager;
-import org.teiid.common.buffer.BufferManager;
-import org.teiid.common.buffer.Cache;
-import org.teiid.common.buffer.CacheEntry;
-import org.teiid.common.buffer.CacheKey;
-import org.teiid.common.buffer.FileStore;
-import org.teiid.common.buffer.LobManager;
-import org.teiid.common.buffer.STree;
-import org.teiid.common.buffer.Serializer;
-import org.teiid.common.buffer.StorageManager;
-import org.teiid.common.buffer.TupleBuffer;
+import org.teiid.common.buffer.*;
 import org.teiid.common.buffer.AutoCleanupUtil.Removable;
 import org.teiid.common.buffer.LobManager.ReferenceMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.Streamable;
 import org.teiid.core.types.DataTypeManager.WeakReferenceHashedValueCache;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.logging.LogConstants;
@@ -282,7 +272,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				}
 				long count = readCount.incrementAndGet();
 				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-					LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, id, id, "reading batch", batch, "from storage, total reads:", count); //$NON-NLS-1$ //$NON-NLS-2$
+					LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, id, "reading batch", batch, "from storage, total reads:", count); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 				ce = cache.get(o, batch, this.ref);
 				if (ce == null) {
@@ -991,6 +981,12 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	
 	public int getMemoryCacheEntries() {
 		return memoryEntries.size();
+	}
+	
+	@Override
+	public Streamable<?> persistLob(Streamable<?> lob, FileStore store,
+			byte[] bytes) throws TeiidComponentException {
+		return LobManager.persistLob(lob, store, bytes, inlineLobs, DataTypeManager.MAX_LOB_MEMORY_BYTES);
 	}
 	
 }

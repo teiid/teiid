@@ -24,6 +24,8 @@ package org.teiid.dqp.internal.process;
 
 import static org.junit.Assert.*;
 
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -31,6 +33,9 @@ import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.SourceWarning;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.core.types.ClobType;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.InputStreamFactory.StorageMode;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.message.AtomicRequestMessage;
@@ -45,6 +50,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
+@SuppressWarnings("nls")
 public class TestDataTierManager {
     
     private DQPCore rm;
@@ -107,6 +113,33 @@ public class TestDataTierManager {
         request.setCommand(command);
         request.setConnectorName("FakeConnectorID"); //$NON-NLS-1$
         info = new DataTierTupleSource(request, workItem, connectorManager.registerRequest(request), dtm, limit);
+    }
+    
+    @Test public void testCopyLobs() throws Exception {
+    	connectorManager.copyLobs = true;
+    	helpSetup("SELECT cast(stringkey as clob) from bqt1.smalla", 1);
+    	for (int i = 0; i < 10;) {
+	    	try {
+	    		List<?> tuple = info.nextTuple();
+	    		ClobType clob = (ClobType)tuple.get(0);
+	    		assertEquals(StorageMode.MEMORY, InputStreamFactory.getStorageMode(clob));
+	    		i++;
+	    	} catch (BlockedException e) {
+	    		Thread.sleep(50);
+	    	}
+    	}
+    	connectorManager.copyLobs = false;
+    	helpSetup("SELECT cast(stringkey as clob) from bqt1.smalla", 1);
+    	for (int i = 0; i < 10;) {
+	    	try {
+	    		List<?> tuple = info.nextTuple();
+	    		ClobType clob = (ClobType)tuple.get(0);
+	    		assertEquals(StorageMode.OTHER, InputStreamFactory.getStorageMode(clob));
+	    		i++;
+	    	} catch (BlockedException e) {
+	    		Thread.sleep(50);
+	    	}
+    	}
     }
     
     @Test public void testDataTierTupleSource() throws Exception {

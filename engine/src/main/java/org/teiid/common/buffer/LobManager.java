@@ -35,8 +35,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.sql.rowset.serial.SerialBlob;
+
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.types.BaseLob;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
@@ -190,60 +191,79 @@ public class LobManager {
 		byte[] bytes = new byte[1 << 14]; 
 
 		for (Map.Entry<String, LobHolder> entry : this.lobReferences.entrySet()) {
-			entry.getValue().lob = persistLob(entry.getValue().lob, lobStore, bytes);
+			entry.getValue().lob = detachLob(entry.getValue().lob, lobStore, bytes);
 		}
 	}    
     
-	private Streamable<?> persistLob(final Streamable<?> lob, final FileStore store, byte[] bytes) throws TeiidComponentException {
+	public Streamable<?> detachLob(final Streamable<?> lob, final FileStore store, byte[] bytes) throws TeiidComponentException {
+		// if this is not attached, just return
+		if (InputStreamFactory.getStorageMode(lob) != StorageMode.OTHER) {
+			return lob;
+		}
 		
-		// if this is already saved to disk just return
-		if (lob.getReference() instanceof BaseLob) {
-			try {
-				BaseLob baseLob = (BaseLob)lob.getReference();
-				InputStreamFactory isf = baseLob.getStreamFactory();
-				if (isf.getStorageMode() == StorageMode.PERSISTENT) {
+		return persistLob(lob, store, bytes, inlineLobs, maxMemoryBytes);
+	}
+
+	public static Streamable<?> persistLob(final Streamable<?> lob,
+			final FileStore store, byte[] bytes, boolean inlineLobs, int maxMemoryBytes) throws TeiidComponentException {
+		try {
+			//inline
+			long byteLength = lob.length()*(lob instanceof ClobType?2:1);
+			if (lob.getReferenceStreamId() == null || (inlineLobs 
+					&& (byteLength <= maxMemoryBytes))) {
+				lob.setReferenceStreamId(null);
+				if (InputStreamFactory.getStorageMode(lob) == StorageMode.MEMORY) {
 					return lob;
 				}
-			} catch (SQLException e) {
-				// go through regular persistence.
+				
+				if (lob instanceof BlobType) {
+					BlobType b = (BlobType)lob;
+					byte[] blobBytes = b.getBytes(1, (int)byteLength);
+					b.setReference(new SerialBlob(blobBytes));
+					return b;
+				} else if (lob instanceof ClobType) {
+					ClobType c = (ClobType)lob;
+					String s = c.getSubString(1, (int)(byteLength>>>1));
+					c.setReference(ClobImpl.createClob(s.toCharArray()));
+					return c;
+				} else {
+					XMLType x = (XMLType)lob;
+					String s = x.getString();
+					x.setReference(new SQLXMLImpl(s));
+					return x;
+				}
 			}
-		}
-		long offset = store.getLength();
-		int length = 0;
-		Streamable<?> persistedLob;
-					
-		try {
+			
 			InputStream is = null;
 	    	if (lob instanceof BlobType) {
 	    		is = new BlobInputStreamFactory((Blob)lob).getInputStream();
-	    	}
-	    	else if (lob instanceof ClobType) {
+	    	} else if (lob instanceof ClobType) {
 	    		is = new ClobInputStreamFactory((Clob)lob).getInputStream();
 	    	} else {
 	    		is = new SQLXMLInputStreamFactory((SQLXML)lob).getInputStream();
 	    	}
+
+			long offset = store.getLength();
+			Streamable<?> persistedLob;
+						
 			OutputStream fsos = store.createOutputStream();
-			length = ObjectConverterUtil.write(fsos, is, bytes, -1);
-		} catch (IOException e) {
-			throw new TeiidComponentException(e);
-		}
-		
-		// re-construct the new lobs based on the file store
-		final long lobOffset = offset;
-		final int lobLength = length;
-		InputStreamFactory isf = new InputStreamFactory() {
-			@Override
-			public InputStream getInputStream() throws IOException {
-				return store.createInputStream(lobOffset, lobLength);
-			}
+			byteLength = ObjectConverterUtil.write(fsos, is, bytes, -1);
 			
-			@Override
-			public StorageMode getStorageMode() {
-				return StorageMode.PERSISTENT;
-			}
-		};			
+			// re-construct the new lobs based on the file store
+			final long lobOffset = offset;
+			final long lobLength = byteLength;
+			InputStreamFactory isf = new InputStreamFactory() {
+				@Override
+				public InputStream getInputStream() throws IOException {
+					return store.createInputStream(lobOffset, lobLength);
+				}
+				
+				@Override
+				public StorageMode getStorageMode() {
+					return StorageMode.PERSISTENT;
+				}
+			};			
 		
-		try {
 			if (lob instanceof BlobType) {
 				persistedLob = new BlobType(new BlobImpl(isf));
 			}
@@ -255,10 +275,12 @@ public class LobManager {
 				((XMLType)persistedLob).setEncoding(((XMLType)lob).getEncoding());
 				((XMLType)persistedLob).setType(((XMLType)lob).getType());
 			}
+			return persistedLob;		
 		} catch (SQLException e) {
 			throw new TeiidComponentException(e);
-		}		
-		return persistedLob;		
+		} catch (IOException e) {
+			throw new TeiidComponentException(e);
+		}
 	}
 	
 	public int getLobCount() {
@@ -267,6 +289,5 @@ public class LobManager {
 
 	public void remove() {
 		this.lobReferences.clear();
-		
 	}
 }

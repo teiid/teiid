@@ -35,9 +35,9 @@ import org.teiid.language.Literal;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TranslatorException;
 
 
 /**
