@@ -33,16 +33,7 @@ import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -158,7 +149,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	private Map<CachedInstance, CachedInstance> instancePool = new LinkedHashMap<CachedInstance, CachedInstance>();
 
 	//config properties
-	private long synchronousTtl = 120000l;
+	private long synchronousTtl = 240000l;
 	private int maxCachedInstances=16;
 
 	public static synchronized SocketServerConnectionFactory getInstance() {
