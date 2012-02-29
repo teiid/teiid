@@ -1038,12 +1038,12 @@ public class TestJoinOptimization {
         RealMetadataFactory.setCardinality("bqt2.smallb", 15662, metadata); //$NON-NLS-1$
          
         TestOptimizer.helpPlan(
-            "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallB, BQT1.Smalla, bqt2.smallb where bqt2.smallb.intkey = bqt1.smallb.intkey and bqt2.smallb.intkey = bqt1.smalla.intkey",  //$NON-NLS-1$
+            "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallB, BQT1.Smalla, bqt2.smallb where bqt2.smallb.intkey = bqt1.smallb.intkey and bqt2.smallb.stringkey = bqt1.smalla.stringkey",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT g_0.intkey AS c_0 FROM BQT1.Smalla AS g_0 ORDER BY c_0", 
+            new String[] {"SELECT g_0.stringkey AS c_0, g_0.intkey AS c_1 FROM bqt2.smallb AS g_0 ORDER BY c_0", 
             		"SELECT g_0.intkey AS c_0 FROM BQT1.SmallB AS g_0 ORDER BY c_0", 
-            		"SELECT g_0.intkey AS c_0 FROM bqt2.smallb AS g_0 ORDER BY c_0"}, //$NON-NLS-1$ //$NON-NLS-2$
+            		"SELECT g_0.stringkey AS c_0, g_0.IntKey AS c_1 FROM BQT1.Smalla AS g_0 ORDER BY c_0"}, //$NON-NLS-1$ //$NON-NLS-2$
             ComparisonMode.EXACT_COMMAND_STRING );
 
     }

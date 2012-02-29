@@ -560,7 +560,7 @@ public class TestVirtualDepJoin {
     }
     
     @Test public void testVirtualAccessVirtualDep() throws Exception {
-        String sql = "SELECT a.e0, b.e2 FROM vTest.vGroup a inner join vTest.vGroup b on (a.e0 = b.e2 and a.e1 = b.e2) where b.e0=1 and b.e1='2'"; //$NON-NLS-1$
+        String sql = "SELECT a.e0, b.e2 FROM vTest.vGroup a inner join vTest.vGroup b on (a.e0 = b.e2 and a.e1 = b.e0) where b.e0=1 and b.e1='2'"; //$NON-NLS-1$
         
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
@@ -568,8 +568,8 @@ public class TestVirtualDepJoin {
         finder.addCapabilities("test", caps); //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), null, finder, 
-                                                    new String[] {"SELECT g_0.e2 AS c_0 FROM test.\"group\" AS g_0 WHERE (g_0.e0 = 1) AND (g_0.e1 = '2') ORDER BY c_0", //$NON-NLS-1$
-        														  "SELECT g_0.e0 AS c_0, g_0.e1 AS c_1, g_0.e0 AS c_2 FROM test.\"group\" AS g_0 WHERE (g_0.e0 IN (<dependent values>)) AND (g_0.e1 IN (<dependent values>)) ORDER BY c_2, c_1"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                                                    new String[] {"SELECT g_0.e0 AS c_0, g_0.e0 AS c_1 FROM test.\"group\" AS g_0 WHERE (g_0.e1 = '1') AND (g_0.e0 IN (<dependent values>)) ORDER BY c_1", 
+        	"SELECT g_0.e2 AS c_0 FROM test.\"group\" AS g_0 WHERE (g_0.e0 = 1) AND (g_0.e1 = '2') ORDER BY c_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -594,7 +594,7 @@ public class TestVirtualDepJoin {
      *
      */
     @Test public void testVirtualAccessVirtualDep2() {
-        String sql = "SELECT a.e0, b.e2 FROM vTest.vGroup a makenotdep inner join vTest.vGroup b on (a.e0 = b.e2 and a.e1 = b.e2) where b.e0=1 and b.e1='2'"; //$NON-NLS-1$
+        String sql = "SELECT a.e0, b.e2 FROM vTest.vGroup a makenotdep inner join vTest.vGroup b on (a.e0 = b.e2 and a.e1 = b.e0) where b.e0=1 and b.e1='2'"; //$NON-NLS-1$
         
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$

@@ -22,11 +22,11 @@
 
 package org.teiid.query.processor.relational;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.teiid.common.buffer.IndexedTupleSource;
 import org.teiid.common.buffer.STree;
@@ -51,21 +51,39 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
  * Degrades to a normal merge join if the tuples are balanced.
  * 
  * Refined in 7.4 to use a full index if it is small enough or a repeated merge, rather than a partitioning approach (which was really just a single level index)
+ * 
+ * TODO: add a tree method for insert that reuses a place list
  */
 public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 	
-	private final class SingleTupleSource implements TupleSource {
+	private final class SingleTupleSource extends AbstractList<Object> implements TupleSource {
 		boolean returned;
-		List keyTuple;
+		private int[] indexes;
+		private List<?> keyTuple;
 
 		@Override
 		public List<?> nextTuple() throws TeiidComponentException,
 				TeiidProcessingException {
 			if (!returned) {
 				returned = true;
-				return keyTuple;
+				return this;
 			}
 			return null;
+		}
+		
+		@Override
+		public Object get(int index) {
+			return keyTuple.get(indexes[index]);
+		}
+		
+		@Override
+		public int size() {
+			return indexes.length;
+		}
+		
+		public void setValues(List<?> values) {
+			returned = false;
+			this.keyTuple = values;
 		}
 
 		@Override
@@ -127,16 +145,17 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
      * TODO: reuse existing temp table indexes
      */
     public void createIndex(SourceState state, boolean sorted) throws TeiidComponentException, TeiidProcessingException {
-    	int keyLength = state.getExpressionIndexes().length;
+    	int[] expressionIndexes = state.getExpressionIndexes();
+		int keyLength = expressionIndexes.length;
     	List elements = state.getSource().getOutputElements();
 
     	//TODO: minimize reordering, or at least detect when it's not necessary
-    	int[] reorderedSortIndex = Arrays.copyOf(state.getExpressionIndexes(), elements.size());
-    	Set<Integer> used = new HashSet<Integer>();
-    	for (int i : state.getExpressionIndexes()) {
+    	LinkedHashSet<Integer> used = new LinkedHashSet<Integer>(); 
+    	for (int i : expressionIndexes) {
 			used.add(i);
     	}
-    	int j = state.getExpressionIndexes().length;
+    	int[] reorderedSortIndex = Arrays.copyOf(expressionIndexes, keyLength + elements.size() - used.size());
+    	int j = keyLength;
     	for (int i = 0; i < elements.size(); i++) {
     		if (!used.contains(i)) {
     			reorderedSortIndex[j++] = i;
@@ -166,12 +185,12 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     		//detect if sorted and distinct
     		List<?> originalTuple = its.nextTuple();
     		//remove the tuple if it has null
-    		for (int i : state.getExpressionIndexes()) {
+    		for (int i : expressionIndexes) {
     			if (originalTuple.get(i) == null) {
     				continue outer;
     			}
     		}
-    		if (sortedDistinct && lastTuple != null && this.compare(lastTuple, originalTuple, state.getExpressionIndexes(), state.getExpressionIndexes()) == 0) {
+    		if (sortedDistinct && lastTuple != null && this.compare(lastTuple, originalTuple, expressionIndexes, expressionIndexes) == 0) {
     			sortedDistinct = false;
     		}
     		lastTuple = originalTuple;
@@ -198,7 +217,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     		state.markDistinct(true);
     	}
     	keyTs = new SingleTupleSource();
-    	keyTs.keyTuple = new ArrayList<Object>(notSortedSource.getExpressionIndexes().length);
+    	keyTs.indexes = this.notSortedSource.getExpressionIndexes();
 		tb = new TupleBrowser(this.index, keyTs, OrderBy.ASC);
     }
     
@@ -341,9 +360,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 	    			this.joinNode.addBatchRow(outputTuple(this.leftSource.getOuterVals(), tuple));
 	    			continue;
 	    		}
-	    		this.keyTs.keyTuple.clear();
-	        	RelationalNode.projectTuple(this.notSortedSource.getExpressionIndexes(), this.currentTuple, this.keyTs.keyTuple, false);
-	        	keyTs.returned = false;
+	    		this.keyTs.setValues(this.currentTuple);
 	        	tb.reset(keyTs);
 	    	}
 	    	if (sortedTuple == null) {

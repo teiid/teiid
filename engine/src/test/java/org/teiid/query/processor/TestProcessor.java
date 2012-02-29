@@ -7060,10 +7060,6 @@ public class TestProcessor {
         helpProcess(plan, manager, expected);
     }
 
-    /**
-     * Here a merge join will be used since there is at least one equi join predicate.
-     * TODO: this can be optimized further
-     */
     @Test public void testCase6193_1() throws Exception { 
         // Create query 
         String sql = "select a.INTKEY, b.intkey from bqt1.smalla a LEFT OUTER JOIN bqt2.SMALLA b on a.intkey=b.intkey and a.intkey=5 where a.intkey <10 "; //$NON-NLS-1$
@@ -7101,12 +7097,12 @@ public class TestProcessor {
             0,      // DependentProject
             0,      // DupRemove
             0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            1,      // MergeJoinStrategy
+            1,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
             0,      // Null
             0,      // PlanExecution
             1,      // Project
-            1,      // Select
+            2,      // Select
             0,      // Sort
             0       // UnionAll
         });
@@ -7729,6 +7725,24 @@ public class TestProcessor {
         ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
 
         helpProcess(plan, cc, hdm, expected);
+    }
+    
+    @Test public void testDupCriteria() {
+        String sql = "select * from pm1.g1 a left outer join pm1.g2 b on a.e1 = b.e1 where b.e2 = a.e1"; //$NON-NLS-1$
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        FakeDataManager fdm = new FakeDataManager();
+        sampleData1(fdm);
+        helpProcess(plan, fdm, new List[0]);
+    }
+    
+    @Test public void testDupCriteria1() {
+        String sql = "select count(*) from pm1.g1 a left outer join pm1.g2 b on a.e1 = b.e1 where b.e1 = a.e1"; //$NON-NLS-1$
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        FakeDataManager fdm = new FakeDataManager();
+        sampleData1(fdm);
+        helpProcess(plan, fdm, new List[] {Arrays.asList(11)});
     }
     
     private static final boolean DEBUG = false;
