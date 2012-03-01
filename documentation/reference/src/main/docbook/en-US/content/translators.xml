@@ -262,6 +262,11 @@
                     <para>
                     <emphasis>excel-odbc</emphasis> - for use with Excel 2003 or later via a JDBC-ODBC bridge.
                     </para>
+                </listitem>                
+                <listitem>
+                    <para>
+                    <emphasis>greenplum</emphasis> - for use with the Greenplum database.
+                    </para>
                 </listitem>
                 <listitem>
                     <para>

@@ -209,6 +209,22 @@
         </constructor>
     </bean>
 
+    <!-- Greenplum -->
+    <bean name="translator-greenplum-template" class="org.teiid.templates.TranslatorDeploymentTemplate">
+        <property name="info"><inject bean="translator-greenplum" /> </property>
+        <property name="managedObjectFactory"> <inject bean="ManagedObjectFactory" /> </property>
+    </bean>
+
+    <bean name="translator-greenplum" class="org.teiid.templates.TranslatorTemplateInfo">
+        <constructor factoryMethod="createTemplateInfo">
+            <factory bean="TranslatorDeploymentTemplateInfoFactory" />
+            <parameter class="java.lang.Class">org.teiid.templates.TranslatorTemplateInfo</parameter>
+            <parameter class="java.lang.Class">org.teiid.translator.jdbc.postgresql.GreenplumExecutionFactory</parameter>
+            <parameter class="java.lang.String">translator-greenplum</parameter>
+            <parameter class="java.lang.String">Greenplum</parameter>
+        </constructor>
+    </bean>
+
     <!-- SQL SERVER -->
     <bean name="translator-sqlserver-template" class="org.teiid.templates.TranslatorDeploymentTemplate">
         <property name="info"><inject bean="translator-sqlserver" /> </property>
