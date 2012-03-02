@@ -42,9 +42,9 @@ public class TestFileConnection {
 		BasicConnectionFactory bcf = fmcf.createConnectionFactory();
 		FileConnection fc = (FileConnection)bcf.getConnection();
 		File f = fc.getFile("x");
-		assertEquals("foo/y", f.getPath());
+		assertEquals("foo" + File.separator + "y", f.getPath());
 		f = fc.getFile("n");
-		assertEquals("foo/n", f.getPath());
+		assertEquals("foo" + File.separator + "n", f.getPath());
 	}
 	
 	@Test(expected=ResourceException.class) public void testParentPaths() throws Exception {
@@ -53,7 +53,7 @@ public class TestFileConnection {
 		fmcf.setAllowParentPaths(false);
 		BasicConnectionFactory bcf = fmcf.createConnectionFactory();
 		FileConnection fc = (FileConnection)bcf.getConnection();
-		fc.getFile("../x");
+		fc.getFile(".." + File.separator + "x");
 	}
 	
 	@Test public void testParentPaths1() throws Exception {
@@ -62,7 +62,7 @@ public class TestFileConnection {
 		fmcf.setAllowParentPaths(true);
 		BasicConnectionFactory bcf = fmcf.createConnectionFactory();
 		FileConnection fc = (FileConnection)bcf.getConnection();
-		fc.getFile("../x");
+		fc.getFile(".." + File.separator + "x");
 	}
 
 }
