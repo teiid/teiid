@@ -1637,7 +1637,7 @@ public class QueryRewriter {
         	return getSimpliedCriteria(crit, leftExpr, crit.getOperator() != CompareCriteria.EQ, true);
         }
         Constant other = ResolverUtil.convertConstant(leftExprTypeName, DataTypeManager.getDataTypeName(rightConstant.getType()), result);
-        if (other == null || ((Comparable)rightConstant.getValue()).compareTo(other.getValue()) != 0) {
+        if (other == null || rightConstant.compareTo(other) != 0) {
         	return getSimpliedCriteria(crit, leftExpr, crit.getOperator() != CompareCriteria.EQ, true);
         }
         
@@ -1770,8 +1770,8 @@ public class QueryRewriter {
         }
     	Object value = ((Constant)rightExpr).getValue();
     	try {
-    		Object result = descriptor.invokeFunction(new Object[] {((Constant)rightExpr).getValue(), format});
-    		result = leftFunction.getFunctionDescriptor().invokeFunction(new Object[] { result, format } );
+    		Object result = descriptor.invokeFunction(new Object[] {context, ((Constant)rightExpr).getValue(), format});
+    		result = leftFunction.getFunctionDescriptor().invokeFunction(new Object[] {context, result, format } );
     		if (((Comparable)value).compareTo(result) != 0) {
     			return getSimpliedCriteria(crit, leftExpr, crit.getOperator() != CompareCriteria.EQ, true);
     		}
@@ -1917,7 +1917,7 @@ public class QueryRewriter {
        
        // Passed all the checks, so build the optimized version
        try {
-    	   Timestamp ts = FunctionMethods.parseTimestamp(timestampValue, dateFormat + timeFormat);
+    	   Timestamp ts = FunctionMethods.parseTimestamp(this.context, timestampValue, dateFormat + timeFormat);
            Constant dateConstant = new Constant(TimestampWithTimezone.createDate(ts));
            CompareCriteria dateCompare = new CompareCriteria(formatDateFunction.getArgs()[0], CompareCriteria.EQ, dateConstant);
 
@@ -2237,6 +2237,29 @@ public class QueryRewriter {
 			FunctionDescriptor descriptor = funcLibrary.findFunction(actualName, types);
 			function.setFunctionDescriptor(descriptor);
 		}
+		
+		if(functionLowerName.startsWith("parse")) { //$NON-NLS-1$
+            String type = functionLowerName.substring(5);
+            if (PARSE_FORMAT_TYPES.contains(type) && Number.class.isAssignableFrom(function.getType()) && !type.equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
+            	Function result = new Function(SourceSystemFunctions.PARSEBIGDECIMAL, function.getArgs());
+				FunctionDescriptor descriptor = 
+					funcLibrary.findFunction(SourceSystemFunctions.PARSEBIGDECIMAL, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING });
+				result.setFunctionDescriptor(descriptor);
+				result.setType(DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
+				return rewriteFunction(ResolverUtil.getConversion(result, DataTypeManager.DefaultDataTypes.BIG_DECIMAL, DataTypeManager.getDataTypeName(function.getType()), false, metadata.getFunctionLibrary()));
+            }
+        } else if(functionLowerName.startsWith("format")) { //$NON-NLS-1$
+            String type = functionLowerName.substring(6);
+            if (PARSE_FORMAT_TYPES.contains(type) && Number.class.isAssignableFrom(function.getArg(0).getType()) && !type.equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
+            	Function bigDecimalParam = ResolverUtil.getConversion(function.getArg(0), DataTypeManager.getDataTypeName(function.getArg(0).getType()), DataTypeManager.DefaultDataTypes.BIG_DECIMAL, false, metadata.getFunctionLibrary());
+            	Function result = new Function(SourceSystemFunctions.FORMATBIGDECIMAL, new Expression[] {bigDecimalParam, function.getArg(1)});
+				FunctionDescriptor descriptor = 
+					funcLibrary.findFunction(SourceSystemFunctions.FORMATBIGDECIMAL, new Class[] { DataTypeManager.DefaultDataClasses.BIG_DECIMAL, DataTypeManager.DefaultDataClasses.STRING });
+				result.setFunctionDescriptor(descriptor);
+				result.setType(DataTypeManager.DefaultDataClasses.STRING);
+				return rewriteFunction(result);
+            }
+        }
 		
 		Integer code = FUNCTION_MAP.get(functionLowerName);
 		if (code != null) {

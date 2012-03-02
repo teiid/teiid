@@ -171,7 +171,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 	public Object invokeFunction(Object[] values) throws FunctionExecutionException {
 
         if (!isNullDependent()) {
-        	for (int i = 0; i < values.length; i++) {
+        	for (int i = requiresContext?1:0; i < values.length; i++) {
 				if (values[i] == null) {
 					return null;
 				}

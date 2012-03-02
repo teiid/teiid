@@ -56,19 +56,7 @@ import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverVisitor;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.CompoundCriteria;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.IsNullCriteria;
-import org.teiid.query.sql.lang.MatchCriteria;
-import org.teiid.query.sql.lang.ProcedureContainer;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.lang.SetCriteria;
-import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -561,9 +549,9 @@ public class TestQueryRewriter {
                                 "pm1.g1.e2 = 1234" );         //$NON-NLS-1$
     }
     
-    @Test public void testRewriteCrit_formatInteger1() {
+    @Test public void testRewriteCrit_formatInteger1() throws QueryMetadataException, TeiidComponentException, TeiidProcessingException {
         helpTestRewriteCriteria("formatInteger(pm1.g1.e2, '#5') = '105'", //$NON-NLS-1$
-                                "formatInteger(pm1.g1.e2, '#5') = '105'" );         //$NON-NLS-1$
+                                "formatbigdecimal(convert(pm1.g1.e2, bigdecimal), '#5') = '105'", true );         //$NON-NLS-1$
     }
 
     @Ignore(value="Cannot deterime if the format is narrowing")

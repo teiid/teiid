@@ -40,6 +40,9 @@ import org.teiid.translator.TranslatorException;
 
 
 /**
+ * This class is misnamed.  Since connector managers are in process and cache their own
+ * capabilities, there is no need to cache again here.  Also we want to pick up any 
+ * changes if a source has it's translator modified.
  */
 public class CachedFinder implements CapabilitiesFinder {
 
@@ -95,7 +98,6 @@ public class CachedFinder implements CapabilitiesFinder {
         	throw new TeiidRuntimeException("No sources were given for the model " + modelName); //$NON-NLS-1$
         }
         
-        userCache.put(modelName, caps);
         return caps;
     }
         

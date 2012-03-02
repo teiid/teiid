@@ -37,6 +37,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.function.source.XMLSystemFunctions;
+import org.teiid.query.util.CommandContext;
 
 
 
@@ -105,7 +106,7 @@ public final class XMLValueTranslator {
      * @throws TransformationException 
      * @since 5.0
      */
-    public static String translateToXMLValue(Object value, Class<?> runtimeType, String builtInType) throws FunctionExecutionException, TransformationException {
+    public static String translateToXMLValue(Object value, Class<?> runtimeType, String builtInType, CommandContext context) throws FunctionExecutionException, TransformationException {
         if (value == null) {
             return null;
         }
@@ -141,10 +142,10 @@ public final class XMLValueTranslator {
                     valueStr = bigIntegerTogMonth((BigInteger)value);
                     break;
                 case GMONTHDAY_CODE:
-                    valueStr = FunctionMethods.format((Timestamp)value, GMONTHDAY_FORMAT);
+                    valueStr = FunctionMethods.format(context, (Timestamp)value, GMONTHDAY_FORMAT);
                     break;
                 case GYEAR_CODE:
-                    valueStr = FunctionMethods.format((BigInteger)value, GYEAR_FORMAT);
+                    valueStr = FunctionMethods.format(context, (BigInteger)value, GYEAR_FORMAT);
                     break;
                 case GYEARMONTH_CODE:
 				DateTimeValue dtv;

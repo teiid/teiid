@@ -189,7 +189,7 @@ public class TestFunction {
     }
     
     public static void helpTestParseTimestamp(String tsStr, String format, String expected) throws FunctionExecutionException {
-        Object actual = FunctionMethods.parseTimestamp(tsStr, format);
+        Object actual = FunctionMethods.parseTimestamp(new CommandContext(), tsStr, format);
         assertEquals("parseTimestamp(" + tsStr + ", " + format + ") failed", expected.toString(), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                      new Constant(actual).toString()); 
     }
@@ -1138,15 +1138,15 @@ public class TestFunction {
     }
     
     @Test(expected=FunctionExecutionException.class) public void testParseIntStrictness() throws Exception {
-    	FunctionMethods.parseInteger("a 1 a", "#"); //$NON-NLS-1$ //$NON-NLS-2$
+    	FunctionMethods.parseBigDecimal(new CommandContext(), "a 1 a", "#"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testParseDateStrictness() throws Exception {
-    	assertEquals(TimestampUtil.createTimestamp(108, 0, 1, 0, 0, 0, 0), FunctionMethods.parseTimestamp(" 2007-13-01", "yyyy-MM")); //$NON-NLS-1$ //$NON-NLS-2$
+    	assertEquals(TimestampUtil.createTimestamp(108, 0, 1, 0, 0, 0, 0), FunctionMethods.parseTimestamp(new CommandContext(), " 2007-13-01", "yyyy-MM")); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testParseTimeWhitespace() throws Exception {
-    	assertEquals(TimestampUtil.createTime(15, 0, 0), FunctionMethods.parseTimestamp(" 15:00:00 ", "HH:mm:ss")); //$NON-NLS-1$ //$NON-NLS-2$
+    	assertEquals(TimestampUtil.createTime(15, 0, 0), FunctionMethods.parseTimestamp(new CommandContext(), " 15:00:00 ", "HH:mm:ss")); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testMod() {

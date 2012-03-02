@@ -1052,10 +1052,10 @@ public final class FunctionMethods {
     }
 
 	// ================== Format date/time/timestamp TO String ==================
-	public static String format(Date date, String format)
+	public static String format(CommandContext context, Date date, String format)
 		throws FunctionExecutionException {
 		try {
-            SimpleDateFormat sdf = new SimpleDateFormat(format);
+            SimpleDateFormat sdf = CommandContext.getDateFormat(context, format);
             return sdf.format(date);
 		} catch (IllegalArgumentException iae) {
 			throw new FunctionExecutionException("ERR.015.001.0042", QueryPlugin.Util.getString("ERR.015.001.0042" , //$NON-NLS-1$ //$NON-NLS-2$
@@ -1064,9 +1064,9 @@ public final class FunctionMethods {
 	}
 
 	//	================== Parse String TO date/time/timestamp  ==================
-	private static Date parseDateHelper(String date, String format)
+	private static Date parseDateHelper(CommandContext context, String date, String format)
 			throws FunctionExecutionException {
-		DateFormat df = new SimpleDateFormat(format);
+		DateFormat df = CommandContext.getDateFormat(context, format);
 		try {
 			return df.parse(date);
 		} catch (ParseException e) {
@@ -1075,16 +1075,16 @@ public final class FunctionMethods {
 		}
 	}
 	
-	public static Timestamp parseTimestamp(String timestamp, String format)
+	public static Timestamp parseTimestamp(CommandContext context, String timestamp, String format)
 		throws FunctionExecutionException {
-        return new Timestamp(parseDateHelper(timestamp, format).getTime());
+        return new Timestamp(parseDateHelper(context, timestamp, format).getTime());
 	}
 
 	//	================== Format number TO String ==================
-	public static String format(Number number, String format)
+	public static String format(CommandContext context, Number number, String format)
 	throws FunctionExecutionException {
 		try {
-	        DecimalFormat df = new DecimalFormat(format);
+	        DecimalFormat df = CommandContext.getDecimalFormat(context, format);
 	        return df.format(number);
 		} catch (IllegalArgumentException iae) {
 			throw new FunctionExecutionException("ERR.015.001.0042", QueryPlugin.Util.getString("ERR.015.001.0042" , //$NON-NLS-1$ //$NON-NLS-2$
@@ -1093,49 +1093,41 @@ public final class FunctionMethods {
 	}
 
 	//	================== Parse String TO numbers ==================
-	public static Object parseInteger(String number, String format)
+	public static Object parseInteger(CommandContext context, String number, String format)
 		throws FunctionExecutionException {
-		Number intNum = parseNumberHelper(number, format);
+		Number intNum = parseBigDecimal(context, number, format);
 		return new Integer(intNum.intValue());
 	}
 
-	public static Object parseLong(String number, String format)
+	public static Object parseLong(CommandContext context, String number, String format)
 		throws FunctionExecutionException {
-		Number longNum = parseNumberHelper(number, format);
+		Number longNum = parseBigDecimal(context, number, format);
 		return new Long(longNum.longValue());
 	}
 
-	public static Object parseDouble(String number, String format)
+	public static Object parseDouble(CommandContext context, String number, String format)
 		throws FunctionExecutionException {
-		Number doubleNum = parseNumberHelper(number, format);
+		Number doubleNum = parseBigDecimal(context, number, format);
 		return new Double(doubleNum.doubleValue());
 	}
 
-	public static Object parseFloat(String number, String format)
+	public static Object parseFloat(CommandContext context, String number, String format)
 		throws FunctionExecutionException {
-		Number longNum = parseNumberHelper(number, format);
+		Number longNum = parseBigDecimal(context, number, format);
 		return new Float(longNum.floatValue());
 	}
 
-	public static Object parseBigInteger(String number, String format)
+	public static Object parseBigInteger(CommandContext context, String number, String format)
 		throws FunctionExecutionException {
-		Number bigIntegerNum = parseNumberHelper(number, format);
+		Number bigIntegerNum = parseBigDecimal(context, number, format);
 		return new BigInteger(bigIntegerNum.toString());
 	}
 
-	public static Object parseBigDecimal(String number, String format)
+	public static BigDecimal parseBigDecimal(CommandContext context, String number, String format)
 		throws FunctionExecutionException {
-		Number bigDecimalNum = parseNumberHelper(number, format);
-		return new BigDecimal(bigDecimalNum.toString());
-	}
-
-	// ============== Helper Function for format/parse numbers ==================
-
-	private static Number parseNumberHelper(String number, String format)
-		throws FunctionExecutionException {
-		DecimalFormat df= new DecimalFormat(format);
+		DecimalFormat df= CommandContext.getDecimalFormat(context, format);
 		try {
-			return df.parse(number);
+			return (BigDecimal) df.parse(number);
 		} catch (ParseException e) {
 			throw new FunctionExecutionException("ERR.015.001.0043", QueryPlugin.Util.getString("ERR.015.001.0043" , //$NON-NLS-1$ //$NON-NLS-2$
 					number,format));

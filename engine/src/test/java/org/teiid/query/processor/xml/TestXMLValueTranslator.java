@@ -34,6 +34,7 @@ import org.junit.Test;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.query.unittest.TimestampUtil;
+import org.teiid.query.util.CommandContext;
 
 
 public class TestXMLValueTranslator {
@@ -49,54 +50,54 @@ public class TestXMLValueTranslator {
     @Test public void test24HourDateTimeTranslation() throws Exception {
         Timestamp ts = TimestampUtil.createTimestamp(100, 0, 2, 14, 14, 5, 6000);
         
-        String value = XMLValueTranslator.translateToXMLValue(ts, DataTypeManager.DefaultDataClasses.TIMESTAMP, XMLValueTranslator.DATETIME);
+        String value = XMLValueTranslator.translateToXMLValue(ts, DataTypeManager.DefaultDataClasses.TIMESTAMP, XMLValueTranslator.DATETIME, new CommandContext());
         assertEquals("2000-01-02T20:14:05.000006Z", value); //$NON-NLS-1$
     }
     
     @Test public void testDateTimeTranslation() throws Exception {
         Timestamp ts = TimestampUtil.createTimestamp(100, 0, 2, 3, 4, 5, 6);
         
-        String value = XMLValueTranslator.translateToXMLValue(ts, DataTypeManager.DefaultDataClasses.TIMESTAMP, XMLValueTranslator.DATETIME);
+        String value = XMLValueTranslator.translateToXMLValue(ts, DataTypeManager.DefaultDataClasses.TIMESTAMP, XMLValueTranslator.DATETIME, new CommandContext());
         assertEquals("2000-01-02T09:04:05Z", value); //$NON-NLS-1$
         
         ts.setNanos(6000);
         
-        value = XMLValueTranslator.translateToXMLValue(ts, DataTypeManager.DefaultDataClasses.TIMESTAMP, XMLValueTranslator.DATETIME);
+        value = XMLValueTranslator.translateToXMLValue(ts, DataTypeManager.DefaultDataClasses.TIMESTAMP, XMLValueTranslator.DATETIME, new CommandContext());
         assertEquals("2000-01-02T09:04:05.000006Z", value); //$NON-NLS-1$
         
         ts.setNanos(0);
 
-        value = XMLValueTranslator.translateToXMLValue(ts, DataTypeManager.DefaultDataClasses.TIMESTAMP, XMLValueTranslator.DATETIME);
+        value = XMLValueTranslator.translateToXMLValue(ts, DataTypeManager.DefaultDataClasses.TIMESTAMP, XMLValueTranslator.DATETIME, new CommandContext());
         assertEquals("2000-01-02T09:04:05Z", value); //$NON-NLS-1$
         
         ts = TimestampUtil.createTimestamp(-2000, 0, 2, 3, 4, 5, 6);
 
-        value = XMLValueTranslator.translateToXMLValue(ts, DataTypeManager.DefaultDataClasses.TIMESTAMP, XMLValueTranslator.DATETIME);
+        value = XMLValueTranslator.translateToXMLValue(ts, DataTypeManager.DefaultDataClasses.TIMESTAMP, XMLValueTranslator.DATETIME, new CommandContext());
         assertEquals("-0102-12-30T09:04:05Z", value); //$NON-NLS-1$
     }
     
     @Test public void testgYearTranslation() throws Exception {
-        String value = XMLValueTranslator.translateToXMLValue(new BigInteger("5"), DataTypeManager.DefaultDataClasses.BIG_INTEGER, XMLValueTranslator.GYEAR); //$NON-NLS-1$
+        String value = XMLValueTranslator.translateToXMLValue(new BigInteger("5"), DataTypeManager.DefaultDataClasses.BIG_INTEGER, XMLValueTranslator.GYEAR, new CommandContext()); //$NON-NLS-1$
         assertEquals("0005", value); //$NON-NLS-1$
 
-        value = XMLValueTranslator.translateToXMLValue(new BigInteger("-10000"), DataTypeManager.DefaultDataClasses.BIG_INTEGER, XMLValueTranslator.GYEAR); //$NON-NLS-1$
+        value = XMLValueTranslator.translateToXMLValue(new BigInteger("-10000"), DataTypeManager.DefaultDataClasses.BIG_INTEGER, XMLValueTranslator.GYEAR, new CommandContext()); //$NON-NLS-1$
         assertEquals("-10000", value); //$NON-NLS-1$
     }
     
     @Test public void testgYearMonthTranslation() throws Exception {
         Timestamp ts = TimestampUtil.createTimestamp(100, 0, 4, 6, 8, 10, 12);
         
-        String value = XMLValueTranslator.translateToXMLValue(ts, DataTypeManager.DefaultDataClasses.TIMESTAMP, XMLValueTranslator.GYEARMONTH); 
+        String value = XMLValueTranslator.translateToXMLValue(ts, DataTypeManager.DefaultDataClasses.TIMESTAMP, XMLValueTranslator.GYEARMONTH, new CommandContext()); 
         assertEquals("2000-01Z", value); //$NON-NLS-1$
         
         ts = TimestampUtil.createTimestamp(-30000, 0, 4, 6, 8, 10, 12);
         
-        value = XMLValueTranslator.translateToXMLValue(ts, DataTypeManager.DefaultDataClasses.TIMESTAMP, XMLValueTranslator.GYEARMONTH); 
+        value = XMLValueTranslator.translateToXMLValue(ts, DataTypeManager.DefaultDataClasses.TIMESTAMP, XMLValueTranslator.GYEARMONTH, new CommandContext()); 
         assertEquals("-28102-06Z", value); //$NON-NLS-1$
     }
     
     @Test public void testDefaultTranslation() throws Exception {
-        String value = XMLValueTranslator.translateToXMLValue("", DataTypeManager.DefaultDataClasses.STRING, XMLValueTranslator.STRING); //$NON-NLS-1$
+        String value = XMLValueTranslator.translateToXMLValue("", DataTypeManager.DefaultDataClasses.STRING, XMLValueTranslator.STRING, new CommandContext()); //$NON-NLS-1$
         assertNull(value); 
     }
     
