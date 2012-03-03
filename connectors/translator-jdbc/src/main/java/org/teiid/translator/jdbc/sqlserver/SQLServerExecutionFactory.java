@@ -95,8 +95,8 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 		formatMap.put("dd MMM yyyy kk:mm:ss:SSS", 113); //$NON-NLS-1$
 		formatMap.put("yyyy-MM-dd kk:mm:ss", 120); //$NON-NLS-1$
 		formatMap.put("yyyy-MM-dd kk:mm:ss.SSS", 121); //$NON-NLS-1$
-		formatMap.put("yyyy-MM-ddTkk:mm:ss.SSS", 126); //$NON-NLS-1$
-		formatMap.put("yyyy-MM-ddTkk:mm:ss.SSST", 127); //$NON-NLS-1$
+		formatMap.put("yyyy-MM-dd'T'kk:mm:ss.SSS", 126); //$NON-NLS-1$
+		formatMap.put("yyyy-MM-dd'T'kk:mm:ss.SSS'Z'", 127); //$NON-NLS-1$
 		formatMap.put("dd MMM yyyy hh:mm:ss:SSSa", 130); //$NON-NLS-1$
 		formatMap.put("dd/mm/yyyy hh:mm:ss:SSSa", 131); //$NON-NLS-1$
 	}
@@ -310,7 +310,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     }
     
     @Override
-    public boolean supportsOnlyLiteralFormat() {
+    public boolean supportsOnlyFormatLiterals() {
     	return true;
     }
     
