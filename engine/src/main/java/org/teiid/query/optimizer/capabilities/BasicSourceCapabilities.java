@@ -23,7 +23,12 @@
 package org.teiid.query.optimizer.capabilities;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
+
+import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.ExecutionFactory.Format;
 
 /**
  */
@@ -35,6 +40,7 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
     private Map<Capability, Boolean> capabilityMap = new HashMap<Capability, Boolean>();
     private Map<String, Boolean> functionMap = new TreeMap<String, Boolean>(String.CASE_INSENSITIVE_ORDER);
     private Map<Capability, Object> propertyMap = new HashMap<Capability, Object>();
+    private ExecutionFactory<?, ?> translator;
 
     /**
      * Construct a basic capabilities object.
@@ -94,5 +100,16 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
     public Object getSourceProperty(Capability propertyName) {
         return this.propertyMap.get(propertyName);
     }
+    
+    public void setTranslator(ExecutionFactory<?, ?> translator) {
+		this.translator = translator;
+	}
+    
+    public boolean supportsFormatLiteral(String literal, Format format) {
+    	if (this.translator == null) {
+    		return false;
+    	}
+		return this.translator.supportsFormatLiteral(literal, format);
+	}
     
 }

@@ -935,5 +935,28 @@ public class ExecutionFactory<F, C> {
 	public boolean supportsLikeRegex() {
 		return false;
 	}
+	
+	public enum Format {
+		NUMBER,
+		DATE
+	}
+	
+	/**
+	 * See also {@link #supportsFormatLiteral(String, Format)}
+	 * @return true if only literal formats are supports.
+	 */
+	public boolean supportsOnlyFormatLiterals() {
+		return false;
+	}
+	
+	/**
+	 * 
+	 * @param literal
+	 * @param format
+	 * @return true if the given Java format string is supported
+	 */
+	public boolean supportsFormatLiteral(String literal, Format format) {
+		return false;
+	}
 
 }

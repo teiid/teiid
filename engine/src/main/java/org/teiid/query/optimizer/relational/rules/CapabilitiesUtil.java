@@ -419,7 +419,7 @@ public class CapabilitiesUtil {
         return connectorID != null && connectorID.equals(caps1.getSourceProperty(Capability.CONNECTOR_ID));
     }
 
-    private static SourceCapabilities getCapabilities(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
+    static SourceCapabilities getCapabilities(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
         throws QueryMetadataException, TeiidComponentException {
 
         // Find capabilities

@@ -28,15 +28,22 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.teiid.language.AggregateFunction;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
+import org.teiid.language.Literal;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
 
@@ -46,14 +53,64 @@ import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
 @Translator(name="sqlserver", description="A translator for Microsoft SQL Server Database")
 public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 	
+	private class ParseFormatFunctionModifier extends FunctionModifier {
+		@Override
+		public List<?> translate(Function function) {
+			return Arrays.asList("CONVERT(" + getTarget() + ", ", function.getParameters().get(0), ", ", formatMap.get(((Literal)function.getParameters().get(1)).getValue()), ")" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		}
+		
+		String getTarget() {
+			return "DATETIME"; //$NON-NLS-1$ 
+		}
+	}
+
 	public static final String V_2005 = "2005"; //$NON-NLS-1$
 	public static final String V_2008 = "2008"; //$NON-NLS-1$
+	
+	private Map<String, Integer> formatMap = new HashMap<String, Integer>();
 	
 	//TEIID-31 remove mod modifier for SQL Server 2008
 	public SQLServerExecutionFactory() {
 		setDatabaseVersion(V_2005);
 		setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
 		setMaxDependentInPredicates(JDBCExecutionFactory.DEFAULT_MAX_DEPENDENT_PREDICATES);
+		formatMap.put("MM/dd/yy", 1); //$NON-NLS-1$
+		formatMap.put("yy.MM.dd", 2); //$NON-NLS-1$
+		formatMap.put("dd/MM/yy", 3); //$NON-NLS-1$
+		formatMap.put("dd-MM-yy", 4); //$NON-NLS-1$
+		formatMap.put("dd-MM-yy", 5); //$NON-NLS-1$
+		formatMap.put("dd MMM yy", 6); //$NON-NLS-1$
+		formatMap.put("MMM dd, yy", 7); //$NON-NLS-1$
+		formatMap.put("hh:mm:ss", 8); //$NON-NLS-1$
+		formatMap.put("MM-dd-yy", 10); //$NON-NLS-1$
+		formatMap.put("yy/MM/dd", 11); //$NON-NLS-1$
+		formatMap.put("yyMMdd", 12); //$NON-NLS-1$
+		formatMap.put("kk:MM:ss:SSS", 14); //$NON-NLS-1$
+		for (Map.Entry<String, Integer> entry : new HashSet<Map.Entry<String, Integer>>(formatMap.entrySet())) {
+			formatMap.put(entry.getKey().replace("yy", "yyyy"), entry.getValue() + 100); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		
+		formatMap.put("MMM dd yyyy hh:mma", 100); //$NON-NLS-1$
+		formatMap.put("MMM dd yyyy hh:mm:ss:SSSa", 109); //$NON-NLS-1$
+		formatMap.put("dd MMM yyyy kk:mm:ss:SSS", 113); //$NON-NLS-1$
+		formatMap.put("yyyy-MM-dd kk:mm:ss", 120); //$NON-NLS-1$
+		formatMap.put("yyyy-MM-dd kk:mm:ss.SSS", 121); //$NON-NLS-1$
+		formatMap.put("yyyy-MM-ddTkk:mm:ss.SSS", 126); //$NON-NLS-1$
+		formatMap.put("yyyy-MM-ddTkk:mm:ss.SSST", 127); //$NON-NLS-1$
+		formatMap.put("dd MMM yyyy hh:mm:ss:SSSa", 130); //$NON-NLS-1$
+		formatMap.put("dd/mm/yyyy hh:mm:ss:SSSa", 131); //$NON-NLS-1$
+	}
+	
+	@Override
+	public void start() throws TranslatorException {
+		super.start();
+		registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new ParseFormatFunctionModifier());
+		registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new ParseFormatFunctionModifier() {
+			@Override
+			String getTarget() {
+				return "VARCHAR"; //$NON-NLS-1$
+			}
+		}); 
 	}
 	
 	@Override
@@ -157,7 +214,8 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$
         supportedFunctions.add("IFNULL"); //$NON-NLS-1$
         supportedFunctions.add("NVL");      //$NON-NLS-1$ 
-        
+        supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP);
+        supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
         return supportedFunctions;
     }
     
@@ -240,6 +298,20 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     @Override
     public boolean supportsWindowOrderByWithAggregates() {
     	return false;
+    }
+    
+    @Override
+    public boolean supportsFormatLiteral(String literal,
+    		org.teiid.translator.ExecutionFactory.Format format) {
+    	if (format == Format.NUMBER) {
+    		return false; //TODO: add support
+    	}
+    	return formatMap.containsKey(literal);
+    }
+    
+    @Override
+    public boolean supportsOnlyLiteralFormat() {
+    	return true;
     }
     
 }

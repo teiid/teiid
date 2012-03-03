@@ -110,6 +110,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_SIMILAR, srcCaps.supportsSimilarTo());
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_LIKE_REGEX, srcCaps.supportsLikeRegex());
         setSupports(connectorID, tgtCaps, Capability.WINDOW_FUNCTION_DISTINCT_AGGREGATES, srcCaps.supportsWindowDistinctAggregates(), Capability.ELEMENTARY_OLAP, Capability.QUERY_AGGREGATES_DISTINCT);
+        tgtCaps.setCapabilitySupport(Capability.ONLY_FORMAT_LITERALS, srcCaps.supportsOnlyFormatLiterals());
         
         List<String> functions = srcCaps.getSupportedFunctions();
         if(functions != null && functions.size() > 0) {

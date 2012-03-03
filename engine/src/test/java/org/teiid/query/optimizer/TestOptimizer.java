@@ -56,24 +56,7 @@ import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.optimizer.relational.rules.RuleChooseDependent;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.processor.relational.AccessNode;
-import org.teiid.query.processor.relational.DependentAccessNode;
-import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
-import org.teiid.query.processor.relational.GroupingNode;
-import org.teiid.query.processor.relational.JoinNode;
-import org.teiid.query.processor.relational.JoinStrategy;
-import org.teiid.query.processor.relational.MergeJoinStrategy;
-import org.teiid.query.processor.relational.NestedLoopJoinStrategy;
-import org.teiid.query.processor.relational.NestedTableJoinStrategy;
-import org.teiid.query.processor.relational.NullNode;
-import org.teiid.query.processor.relational.PlanExecutionNode;
-import org.teiid.query.processor.relational.ProjectIntoNode;
-import org.teiid.query.processor.relational.ProjectNode;
-import org.teiid.query.processor.relational.RelationalNode;
-import org.teiid.query.processor.relational.RelationalPlan;
-import org.teiid.query.processor.relational.SelectNode;
-import org.teiid.query.processor.relational.SortNode;
-import org.teiid.query.processor.relational.UnionAllNode;
+import org.teiid.query.processor.relational.*;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.TestResolver;
@@ -87,6 +70,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorReport;
+import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings({"nls", "unchecked"})
@@ -6561,6 +6545,41 @@ public class TestOptimizer {
                 0,      // PlanExecution
                 1,      // Project
                 0,      // Select
+                0,      // Sort
+                0       // UnionAll
+            });                                    
+    }
+    
+    @Test public void testParseFormat() throws Exception {
+    	BasicSourceCapabilities caps = getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.ONLY_FORMAT_LITERALS, true);
+    	caps.setFunctionSupport(SourceSystemFunctions.FORMATTIMESTAMP, true);
+    	caps.setFunctionSupport(SourceSystemFunctions.PARSEBIGDECIMAL, true);
+    	caps.setTranslator(new ExecutionFactory<Object, Object> () {
+    		@Override
+    		public boolean supportsFormatLiteral(String literal,
+    				org.teiid.translator.ExecutionFactory.Format format) {
+    			return (format == Format.DATE && literal.equals("yyyy")) || (format == Format.NUMBER && literal.equals("$"));
+    		}
+    	});
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT stringkey from bqt1.smalla where formattimestamp(timestampvalue, 'yyyy') = '1921' and parsebigdecimal(stringkey, '$') = 1 and formattimestamp(timestampvalue, 'yy') = '19'", //$NON-NLS-1$
+                                      RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(caps),
+                                      new String[] {
+                                          "SELECT g_0.timestampvalue, g_0.stringkey FROM bqt1.smalla AS g_0 WHERE (formattimestamp(g_0.timestampvalue, 'yyyy') = '1921') AND (parsebigdecimal(g_0.stringkey, '$') = 1)"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    
+        checkNodeTypes(plan, new int[] {
+                1,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                1,      // Select
                 0,      // Sort
                 0       // UnionAll
             });                                    

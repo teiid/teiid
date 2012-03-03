@@ -26,17 +26,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.optimizer.QueryOptimizer;
+import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
-import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.BatchedUpdatePlan;
 import org.teiid.query.processor.ProcessorPlan;
@@ -52,8 +53,6 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorReport;
-
-import junit.framework.TestCase;
 
 
 
@@ -210,19 +209,14 @@ public class TestBatchedUpdatePlanner extends TestCase {
         helpTestPlanner(sql, expectedBatching, finder);
     }
 
-    private static final class FakeCapabilities implements SourceCapabilities {
+    private static final class FakeCapabilities extends BasicSourceCapabilities {
         private boolean supportsBatching = false;
         private FakeCapabilities(boolean supportsBatching) {
             this.supportsBatching = supportsBatching;
         }
-        public Scope getScope() {return null;}
         public boolean supportsCapability(Capability capability) {
             return !capability.equals(Capability.BATCHED_UPDATES) || supportsBatching;
         }
-        public boolean supportsFunction(String functionName) {return false;}
-        // since 4.4
-        public Object getSourceProperty(Capability propertyName) {return null;}
-        
     }
     
     private static final boolean DEBUG = false;
