@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
@@ -89,6 +90,9 @@ public class JDBCMetdataProcessor {
 	
 	private Set<String> unsignedTypes = new HashSet<String>();
 	private String quoteString;
+	
+	private Pattern excludeTables;
+	private Pattern excludeProcedures;
 	
 	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
 			throws SQLException, TranslatorException {
@@ -149,6 +153,9 @@ public class JDBCMetdataProcessor {
 				}
 			}
 			String fullProcedureName = getFullyQualifiedName(procedureCatalog, procedureSchema, procedureName);
+			if (excludeProcedures != null && excludeProcedures.matcher(fullProcedureName).matches()) {
+				continue;
+			}
 			Procedure procedure = metadataFactory.addProcedure(useFullSchemaName?fullProcedureName:procedureName);
 			procedure.setNameInSource(getFullyQualifiedName(procedureCatalog, procedureSchema, nameInSource, true));
 			ResultSet columns = metadata.getProcedureColumns(catalog, procedureSchema, procedureName, null);
@@ -209,6 +216,9 @@ public class JDBCMetdataProcessor {
 			String tableSchema = tables.getString(2);
 			String tableName = tables.getString(3);
 			String fullName = getFullyQualifiedName(tableCatalog, tableSchema, tableName);
+			if (excludeTables != null && excludeTables.matcher(fullName).matches()) {
+				continue;
+			}
 			Table table = metadataFactory.addTable(useFullSchemaName?fullName:tableName);
 			table.setNameInSource(getFullyQualifiedName(tableCatalog, tableSchema, tableName, true));
 			table.setSupportsUpdate(true);
@@ -484,6 +494,14 @@ public class JDBCMetdataProcessor {
 	
 	public void setUseCatalogName(boolean useCatalog) {
 		this.useCatalogName = useCatalog;
+	}
+	
+	public void setExcludeProcedures(String excludeProcedures) {
+		this.excludeProcedures = Pattern.compile(excludeProcedures, Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+	}
+	
+	public void setExcludeTables(String excludeTables) {
+		this.excludeTables = Pattern.compile(excludeTables, Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 	}
 	
 }

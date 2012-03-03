@@ -28,6 +28,8 @@ import java.sql.Connection;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
@@ -47,6 +49,16 @@ import org.teiid.translator.jdbc.teiid.TeiidExecutionFactory;
 @SuppressWarnings("nls")
 public class TestDymamicImportedMetaData {
 
+	FakeServer server;
+	
+	@Before public void setup() {
+		server = new FakeServer();
+	}
+	
+	@After public void teardown() {
+		server.stop();
+	}
+	
 	private MetadataFactory getMetadata(Properties importProperties, Connection conn)
 			throws TranslatorException {
 		MetadataFactory mf = createMetadataFactory("test", importProperties);
@@ -63,7 +75,6 @@ public class TestDymamicImportedMetaData {
 	}
 	
     @Test public void testProcImport() throws Exception {
-    	FakeServer server = new FakeServer();
     	server.deployVDB("vdb", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
     	Connection conn = server.createConnection("jdbc:teiid:vdb"); //$NON-NLS-1$
     	
@@ -71,11 +82,25 @@ public class TestDymamicImportedMetaData {
     	importProperties.setProperty("importer.importProcedures", Boolean.TRUE.toString());
     	MetadataFactory mf = getMetadata(importProperties, conn);
     	Procedure p = mf.getMetadataStore().getSchemas().get("TEST").getProcedures().get("VDB.SYS.GETXMLSCHEMAS");
+    	assertEquals(29, mf.getMetadataStore().getSchemas().get("TEST").getTables().size());
+    	assertEquals(8, mf.getMetadataStore().getSchemas().get("TEST").getProcedures().size());
     	assertEquals(1, p.getResultSet().getColumns().size());
     }
     
+    @Test public void testExcludes() throws Exception {
+    	server.deployVDB("vdb", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
+    	Connection conn = server.createConnection("jdbc:teiid:vdb"); //$NON-NLS-1$
+    	
+    	Properties importProperties = new Properties();
+    	importProperties.setProperty("importer.importProcedures", Boolean.TRUE.toString());
+    	importProperties.setProperty("importer.excludeTables", "VDB\\.SYS\\..*");
+    	importProperties.setProperty("importer.excludeProcedures", "VDB\\..*");
+    	MetadataFactory mf = getMetadata(importProperties, conn);
+    	assertEquals(18, mf.getMetadataStore().getSchemas().get("TEST").getTables().size());
+    	assertEquals(0, mf.getMetadataStore().getSchemas().get("TEST").getProcedures().size());
+    }
+    
     @Test public void testDuplicateException() throws Exception {
-    	FakeServer server = new FakeServer();
     	MetadataFactory mf = createMetadataFactory("x", new Properties());
     	MetadataFactory mf1 = createMetadataFactory("y", new Properties());
     	
@@ -107,7 +132,6 @@ public class TestDymamicImportedMetaData {
     }
     
     @Test public void testUseCatalog() throws Exception {
-    	FakeServer server = new FakeServer();
     	MetadataFactory mf = createMetadataFactory("x", new Properties());
     	
     	Table dup = mf.addTable("dup");
