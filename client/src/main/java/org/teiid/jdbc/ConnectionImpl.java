@@ -22,28 +22,16 @@
 
 package org.teiid.jdbc;
 
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.Connection;
-import java.sql.NClob;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLClientInfoException;
-import java.sql.SQLException;
-import java.sql.SQLWarning;
-import java.sql.SQLXML;
-import java.sql.Savepoint;
-import java.sql.Statement;
-import java.sql.Struct;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -90,7 +78,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     private boolean inLocalTxn;
 
     // collection of all open statements on this connection
-    private Collection<StatementImpl> statements = new ArrayList<StatementImpl>();
+    private Collection<StatementImpl> statements = Collections.newSetFromMap(new ConcurrentHashMap<StatementImpl, Boolean>());
     // cached DatabaseMetadata
     private DatabaseMetaDataImpl dbmm;
 

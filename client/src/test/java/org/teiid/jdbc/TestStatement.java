@@ -28,9 +28,12 @@ import java.sql.ResultSet;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
@@ -121,19 +124,36 @@ public class TestStatement {
 	
 	@Test public void testAsynchTimeout() throws Exception {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
-		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		final StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		statement.setQueryTimeoutMS(1);
 		DQP dqp = Mockito.mock(DQP.class);
 		Mockito.stub(statement.getDQP()).toReturn(dqp);
+		final AtomicInteger counter = new AtomicInteger();
+		Mockito.stub(dqp.cancelRequest(0)).toAnswer(new Answer<Boolean>() {
+			@Override
+			public Boolean answer(InvocationOnMock invocation) throws Throwable {
+				synchronized (statement) {
+					counter.incrementAndGet();
+					statement.notifyAll();
+				}
+				return true;
+			}
+		});
 		ResultsFuture<ResultsMessage> future = new ResultsFuture<ResultsMessage>();
 		Mockito.stub(dqp.executeRequest(Mockito.anyLong(), (RequestMessage) Mockito.anyObject())).toReturn(future);
 		statement.submitExecute("select 'hello world'");
-		Thread.sleep(300);
-		Mockito.verify(dqp).cancelRequest(0);
+		synchronized (statement) {
+			while (counter.get() != 1) {
+				statement.wait();
+			}
+		}
 		statement.setQueryTimeoutMS(1);
 		statement.submitExecute("select 'hello world'");
-		Thread.sleep(300);
-		Mockito.verify(dqp, Mockito.times(2)).cancelRequest(0);
+		synchronized (statement) {
+			while (counter.get() != 2) {
+				statement.wait();
+			}
+		}
 	}
 	
 	@Test public void testTimeoutProperty() throws Exception {
