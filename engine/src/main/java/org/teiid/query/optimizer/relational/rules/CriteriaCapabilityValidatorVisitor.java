@@ -277,6 +277,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
             		markInvalid(obj, obj.getName() + " literal parse " + c + " not supported by source"); //$NON-NLS-1$ //$NON-NLS-2$
                     return;
             	}
+            	c.setBindEligible(false);
             }
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));

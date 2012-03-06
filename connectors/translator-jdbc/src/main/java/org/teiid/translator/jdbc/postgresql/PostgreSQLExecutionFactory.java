@@ -52,6 +52,7 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.ModFunctionModifier;
 import org.teiid.translator.jdbc.oracle.LeftOrRightFunctionModifier;
 import org.teiid.translator.jdbc.oracle.MonthOrDayNameFunctionModifier;
+import org.teiid.translator.jdbc.oracle.OracleFormatFunctionModifier;
 
 
 
@@ -108,6 +109,9 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier()); 
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$
+        
+        registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new OracleFormatFunctionModifier("TO_TIMESTAMP(")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new OracleFormatFunctionModifier("TO_CHAR(")); //$NON-NLS-1$
         
         registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier("%", getLanguageFactory(), Arrays.asList(TypeFacility.RUNTIME_TYPES.BIG_INTEGER, TypeFacility.RUNTIME_TYPES.BIG_DECIMAL))); //$NON-NLS-1$ 
 
@@ -457,6 +461,8 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 //        
         supportedFunctions.add(SourceSystemFunctions.ARRAY_GET);
         supportedFunctions.add(SourceSystemFunctions.ARRAY_LENGTH);
+        supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP); 
+        supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
         return supportedFunctions;
     }
     
@@ -520,6 +526,20 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsLikeRegex() {
     	return true;
+    }
+    
+    @Override
+    public boolean supportsOnlyFormatLiterals() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsFormatLiteral(String literal,
+    		org.teiid.translator.ExecutionFactory.Format format) {
+    	if (format == Format.NUMBER) {
+    		return false;
+    	}
+    	return OracleFormatFunctionModifier.supportsLiteral(literal);
     }
     
 }

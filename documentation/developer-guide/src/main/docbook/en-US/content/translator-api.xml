@@ -1401,6 +1401,28 @@ int count = visitor.getCount();]]></programlisting>
                   <para>Translator supports aggregate conditions.</para>
                 </entry>
               </row>
+              <row>
+                <entry>
+                  <para>OnlyFormatLiterals</para>
+                </entry>
+                <entry>
+                  <para>function support for a parse/format function and an implementation of the supportsFormatLiteral method.</para>
+                </entry>
+                <entry>
+                  <para>Translator supports only literal format patterns that must be validated by the supportsFormatLiteral method</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>FormatLiteral</para>
+                </entry>
+                <entry>
+                  <para>OnlyFormatLiterals</para>
+                </entry>
+                <entry>
+                  <para>Translator supports the given literal format string.</para>
+                </entry>
+              </row>
             </tbody>
           </tgroup>
         </table>

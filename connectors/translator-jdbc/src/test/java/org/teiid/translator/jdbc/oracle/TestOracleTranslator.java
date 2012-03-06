@@ -901,5 +901,14 @@ public class TestOracleTranslator {
 		Mockito.verify(cs, Mockito.never()).getObject(1);
 		Mockito.verify(cs, Mockito.times(1)).setObject(1, 2, Types.INTEGER);
 	}
+	
+    @Test public void testParseFormat() throws Exception {
+        String input = "select parsetimestamp(smalla.timestampvalue, 'yyyy.MM.dd'), formattimestamp(smalla.timestampvalue, 'yy.MM.dd') from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT TO_TIMESTAMP(to_char(cast(g_0.TimestampValue AS timestamp), 'YYYY-MM-DD HH24:MI:SS.FF'), YYYY.MM.DD), TO_CHAR(g_0.TimestampValue, YY.MM.DD) FROM SmallA g_0"; //$NON-NLS-1$
+               
+		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        Command obj = commandBuilder.getCommand(input, true, true);
+        TranslationHelper.helpTestVisitor(output, TRANSLATOR, obj);
+    }
 
 }
