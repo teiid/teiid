@@ -1820,7 +1820,7 @@ AggregateSymbol orderedAgg(ParseInfo info) :
 	condition = filterClause(info)
 	{
 		String aggName = t.image.toUpperCase();
-		AggregateSymbol	agg = new AggregateSymbol(aggName, aggName, false, expression);
+		AggregateSymbol	agg = new AggregateSymbol(aggName, false, expression);
 		agg.setOrderBy(orderBy);
 		agg.setCondition(condition);
 		return agg;
@@ -1878,7 +1878,7 @@ AggregateSymbol textAgg(ParseInfo info) :
 		tf.setIncludeHeader(header);
 		tf.setExpressions(expressions);
 		tf.setEncoding(encoding);
-		AggregateSymbol agg = new AggregateSymbol("TEXTAGG", "TEXTAGG", false, tf);
+		AggregateSymbol agg = new AggregateSymbol("TEXTAGG", false, tf);
 		agg.setOrderBy(orderBy);
 		agg.setCondition(condition);
 		return agg;		
@@ -1922,10 +1922,10 @@ AggregateSymbol aggregateSymbol(ParseInfo info) :
 		func = func.toUpperCase();
 		if(starToken == null) { 
 			// Aggregate
-			agg = new AggregateSymbol(func, func, isDistinct, expression);
+			agg = new AggregateSymbol(func, isDistinct, expression);
 		} else {
 			// COUNT(*)			
-			agg = new AggregateSymbol(func, func, false, null);
+			agg = new AggregateSymbol(func, false, null);
 		}
 		agg.setCondition(condition);
 		return agg;
