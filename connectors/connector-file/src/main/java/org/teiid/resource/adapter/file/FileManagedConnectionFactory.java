@@ -73,7 +73,7 @@ public class FileManagedConnectionFactory extends BasicManagedConnectionFactory{
 		this.fileMapping = fileMapping;
 	}
 	
-	public boolean isAllowParentPaths() {
+	public Boolean isAllowParentPaths() {
 		return allowParentPaths;
 	}
 	

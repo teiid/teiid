@@ -64,7 +64,7 @@ public class LDAPManagedConnectionFactory extends BasicManagedConnectionFactory 
 		this.ldapAdminUserPassword = ldapAdminUserPassword;
 	}
 	
-	public long getLdapTxnTimeoutInMillis() {
+	public Long getLdapTxnTimeoutInMillis() {
 		return ldapTxnTimeoutInMillis;
 	}
 	

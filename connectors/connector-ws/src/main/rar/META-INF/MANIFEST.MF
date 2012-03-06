@@ -1,1 +1,1 @@
-Dependencies: javax.jws.api,org.jboss.ws.cxf.jbossws-cxf-client services,javax.wsdl4j.api,org.jboss.teiid.common-core,org.jboss.teiid.api,javax.api
+Dependencies: javax.jws.api,org.apache.cxf,javax.wsdl4j.api,org.jboss.teiid.common-core,org.jboss.teiid.api,javax.api
